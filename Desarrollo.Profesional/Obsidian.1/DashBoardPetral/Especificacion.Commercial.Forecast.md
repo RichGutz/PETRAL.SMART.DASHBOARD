@@ -44,7 +44,8 @@ Para procesar la corrida masiva, el Frontend transmitirÃ¡ un array estructurad
       "vessel_id": "MOQUEGUA",
       "quantity": 13500,
       "monthly_frequency": 2,
-      "forecast_bunker_price_ifo": 450.0
+      "forecast_bunker_price_ifo": 895.14,
+      "forecast_bunker_price_mdo": 1460.30
     },
     {
       "month_index": "2026-02",
@@ -54,7 +55,8 @@ Para procesar la corrida masiva, el Frontend transmitirÃ¡ un array estructurad
       "vessel_id": "TABLONES",
       "quantity": 13500,
       "monthly_frequency": 1,
-      "forecast_bunker_price_ifo": 450.0
+      "forecast_bunker_price_ifo": null,
+      "forecast_bunker_price_mdo": null
     }
   ]
 }
@@ -93,10 +95,12 @@ El diseño del componente visual transformará la configuración estática en un
 - **Acción Trigger:** Al dar clic en "Añadir al Forecast", este "ladrillo" lógico se envía al motor de backend, y el resultado numérico se inyecta dinámicamente como una nueva fila en la Matriz.
 
 ### B. Matriz Financiera Viva (Custom React Table 1:1 con Mockup)
-- **Construcción Nativa Customizada:** En lugar de librerías de tablas planas, se desarrollará un componente React estrictamente apegado al diseño HTML/CSS original (`commercial_forecast_H2_2026.html`).
+- **Construcción Nativa Customizada:** En lugar de librerías de tablas planas, se desarrolló un componente React estrictamente apegado al diseño HTML/CSS original (`commercial_forecast_H2_2026.html`).
 - **Agrupación Visual Jerárquica (`rowspan`):** La tabla fusionará automáticamente las celdas de jerarquía (Cliente > Ruta > Buque) usando la propiedad `rowspan` calculada dinámicamente en React, creando un "mosaico" limpio y ordenado.
 - **Identidad Visual Premium:** Renderizado de texto vertical (`writing-mode: vertical-rl`) usando los colores dinámicos exactos del mockup (Ej: Azul Marino para SPCC, Teal para Marcona, Celeste para Moquegua) permitiendo reconocimiento visual instantáneo.
 - **Formateo y Estilos:** Cifras en fuente tabular (`tabular-nums`), filas de "Voyage Result" destacadas, y un estilo general alineado al CSS corporativo provisto.
+- **Despliegue Interactivo de Ledger Unitario (Expandible):** La primera fila de cada bloque (`Viajes (freq)`) es expandible. Al hacer clic, inyecta dinámicamente 16 filas adicionales que desglosan la radiografía exacta del viaje (Operativo, Tiempos/Costos y Financiero), incluyendo costos granulares de Bunker (IFO y MDO separados).
+- **Subtotales de Cliente:** Al final del bloque de cada Cliente se inserta automáticamente un "TOTAL CLIENTE" consolidando los Gross Revenues, Port Costs, Bunker Costs y Voyage Results acumulados.
 
 ### C. Gráfico Cruzado Dinámico (`Apache ECharts`)
 - **Interactividad Bidireccional (Cross-Filtering):** Debajo del Grid, un lienzo de ECharts muestra líneas de tendencia temporal. Si el Director Comercial ajusta el "Precio de Búnker Estimado" o el "Flete", el framework reactivo despacha un recálculo masivo al Backend y **toda la tabla pivot y el gráfico Apache ECharts se recalculan y animan en tiempo real**.

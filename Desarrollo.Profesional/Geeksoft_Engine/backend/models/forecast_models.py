@@ -11,6 +11,7 @@ class ProjectionLine(BaseModel):
     monthly_frequency: float = Field(..., description="Número de veces que se repite el viaje en el mes")
     forecast_bunker_price_ifo: Optional[float] = Field(None, description="Precio proyectado de IFO (What-if)")
     forecast_bunker_price_mdo: Optional[float] = Field(None, description="Precio proyectado de MDO (What-if)")
+    custom_tariff: Optional[float] = Field(None, description="Tarifa manual comercial (sobrescribe contrato)")
 
 class ForecastRequest(BaseModel):
     start_date: str = Field(..., description="Fecha de inicio, ej. '2026-07-01'")

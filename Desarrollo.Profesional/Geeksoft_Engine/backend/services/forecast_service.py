@@ -46,23 +46,27 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         
         # Buscar Tarifa en contract_tariffs según quantity
         freight_rate = 0
-        tariffs_data = safe_fetch(supabase, "contract_tariffs")
         
-        matching_tariffs = [
-            t for t in tariffs_data 
-            if t.get("client_id") == client and t.get("destination_port_id") == line.destination_port_id
-        ]
-        
-        if matching_tariffs:
-            for tariff in matching_tariffs:
-                if tariff.get("min_tonnage", 0) <= line.quantity <= tariff.get("max_tonnage", 999999):
-                    freight_rate = tariff.get("freight_rate", 0)
-                    break
+        if getattr(line, 'custom_tariff', None) is not None:
+            freight_rate = line.custom_tariff
+        else:
+            tariffs_data = safe_fetch(supabase, "contract_tariffs")
             
-            # Fallback: Si el buque excede el tonelaje maximo del contrato, aplicamos la tarifa del mayor bracket
-            if freight_rate == 0:
-                highest_bracket = max(matching_tariffs, key=lambda x: x.get("max_tonnage", 0))
-                freight_rate = highest_bracket.get("freight_rate", 0)
+            matching_tariffs = [
+                t for t in tariffs_data 
+                if t.get("client_id") == client and t.get("destination_port_id") == line.destination_port_id
+            ]
+            
+            if matching_tariffs:
+                for tariff in matching_tariffs:
+                    if tariff.get("min_tonnage", 0) <= line.quantity <= tariff.get("max_tonnage", 999999):
+                        freight_rate = tariff.get("freight_rate", 0)
+                        break
+                
+                # Fallback: Si el buque excede el tonelaje maximo del contrato, aplicamos la tarifa del mayor bracket
+                if freight_rate == 0:
+                    highest_bracket = max(matching_tariffs, key=lambda x: x.get("max_tonnage", 0))
+                    freight_rate = highest_bracket.get("freight_rate", 0)
         
         # Agencia Costs
         ag_orig = next((a.get("cost", 15000) for a in agency_data if (a.get("client_id") == client or a.get("client_id") == "DEFAULT") and a.get("port_id") == line.origin_port_id), 15000)
@@ -122,6 +126,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "distancia_total": inputs["route_distance"],
             "carga_unit": inputs["quantity"],
             "flete_unit": inputs["freight_rate"],
+            "net_income_unit": unit_result["net_income"],
             "sea_days_unit": unit_result["sea_days"],
             "port_days_unit": unit_result["port_days"],
             "total_duration_unit": unit_result["total_duration"],

@@ -5,11 +5,12 @@ import './ForecastGrid.css';
 interface ForecastGridProps {
     data: any;
     months: string[];
-    projectionLines?: any[];
-    onFrequencyChange?: (client: string, route: string, vessel: string, month: string, freq: number) => void;
+    projectionLines: any[];
+    onFrequencyChange?: (client_id: string, route_key: string, vessel_id: string, month_index: string, newFrequency: number) => void;
+    onTariffChange?: (client_id: string, route_key: string, vessel_id: string, month_index: string, newTariff: number) => void;
 }
 
-export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projectionLines = [], onFrequencyChange }) => {
+export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projectionLines, onFrequencyChange, onTariffChange }) => {
     
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
@@ -42,7 +43,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                 Object.entries(vessels).forEach(([vessel, monthData]: any) => {
                     const rowKey = `${client}-${route}-${vessel}`;
                     const isExpanded = !!expandedRows[rowKey];
-                    const numSubRows = isExpanded ? 16 : 0; // 13 metrics + 3 category headers
+                    const numSubRows = isExpanded ? 17 : 0; // 14 metrics + 3 category headers
                     const vesselRowSpan = 5 + numSubRows;
                     
                     clientRowSpanRef.value += vesselRowSpan;
@@ -77,13 +78,15 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                     voyageResult.forEach((v, i) => clientVoyageResult[i] += v);
 
                     const sum = (arr: number[]) => arr.reduce((a,b) => a+b, 0);
+                    const calcPct = (arr: number[]) => arr.map((v, i) => revenues[i] ? (v / revenues[i]) * 100 : 0);
+                    const calcTotalPct = (totalVal: number, totalRev: number) => totalRev ? (totalVal / totalRev) * 100 : 0;
 
                     const metrics = [
-                        { name: "Viajes (freq)", values: trips, total: sum(trips), isCurrency: false, isTotal: false, isExpandable: true, rowKey, isExpanded },
-                        { name: "Gross Revenue", values: revenues, total: sum(revenues), isCurrency: true, isTotal: false },
-                        { name: "Port Costs", values: portCosts, total: sum(portCosts), isCurrency: true, isTotal: false },
-                        { name: "Bunker Costs", values: bunker, total: sum(bunker), isCurrency: true, isTotal: false },
-                        { name: "Voyage Result", values: voyageResult, total: sum(voyageResult), isCurrency: true, isTotal: true }
+                        { name: "Viajes (freq)", values: trips, total: sum(trips), pct: null, totalPct: null, isCurrency: false, isTotal: false, isExpandable: true, rowKey, isExpanded },
+                        { name: "Gross Revenue", values: revenues, total: sum(revenues), pct: revenues.map(r => r ? 100 : 0), totalPct: sum(revenues) ? 100 : 0, isCurrency: true, isTotal: false },
+                        { name: "Port Costs", values: portCosts, total: sum(portCosts), pct: calcPct(portCosts), totalPct: calcTotalPct(sum(portCosts), sum(revenues)), isCurrency: true, isTotal: false },
+                        { name: "Bunker Costs", values: bunker, total: sum(bunker), pct: calcPct(bunker), totalPct: calcTotalPct(sum(bunker), sum(revenues)), isCurrency: true, isTotal: false },
+                        { name: "Voyage Result", values: voyageResult, total: sum(voyageResult), pct: calcPct(voyageResult), totalPct: calcTotalPct(sum(voyageResult), sum(revenues)), isCurrency: true, isTotal: true }
                     ];
 
                     metrics.forEach((metric, index) => {
@@ -104,6 +107,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                                 { name: "Distancia (MN)", key: "distancia_total", curr: false },
                                 { name: "Carga Transportada (MT)", key: "carga_unit", curr: false },
                                 { name: "Flete (USD/MT)", key: "flete_unit", curr: true },
+                                { name: "Gross Revenue (USD)", key: "net_income_unit", curr: true },
                                 { isHeader: true, name: "▶ Tiempos / Costos" },
                                 { name: "Sea Days", key: "sea_days_unit", curr: false },
                                 { name: "Port/Idle Days", key: "port_days_unit", curr: false },
@@ -127,10 +131,15 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                                         client: null,
                                         route: null,
                                         vessel: null,
+                                        clientName: client,
+                                        routeName: route,
+                                        vesselName: vessel,
                                         metric: {
                                             name: sub.name,
                                             values: months.map(() => null),
                                             total: null,
+                                            pct: null,
+                                            totalPct: null,
                                             isCurrency: false,
                                             isTotal: false,
                                             isSubRowMetric: true,
@@ -144,10 +153,15 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                                         client: null,
                                         route: null,
                                         vessel: null,
+                                        clientName: client,
+                                        routeName: route,
+                                        vesselName: vessel,
                                         metric: {
                                             name: sub.name,
                                             values: vals,
                                             total: 0,
+                                            pct: null,
+                                            totalPct: null,
                                             isCurrency: sub.curr,
                                             isTotal: false,
                                             isSubRowMetric: true,
@@ -169,11 +183,14 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
             const sum = (arr: number[]) => arr.reduce((a,b) => a+b, 0);
             clientRowSpanRef.value += 4; // 4 rows for subtotal
 
+            const clientCalcPct = (arr: number[]) => arr.map((v, i) => clientGrossRevenue[i] ? (v / clientGrossRevenue[i]) * 100 : 0);
+            const clientCalcTotalPct = (totalVal: number, totalRev: number) => totalRev ? (totalVal / totalRev) * 100 : 0;
+
             const subMetrics = [
-                { name: "Gross Revenue", values: clientGrossRevenue, total: sum(clientGrossRevenue), isCurrency: true, isTotal: false },
-                { name: "Port Costs", values: clientPortCosts, total: sum(clientPortCosts), isCurrency: true, isTotal: false },
-                { name: "Bunker Costs", values: clientBunkerCosts, total: sum(clientBunkerCosts), isCurrency: true, isTotal: false },
-                { name: "Voyage Result", values: clientVoyageResult, total: sum(clientVoyageResult), isCurrency: true, isTotal: true }
+                { name: "Gross Revenue", values: clientGrossRevenue, total: sum(clientGrossRevenue), pct: clientGrossRevenue.map(r => r ? 100 : 0), totalPct: sum(clientGrossRevenue) ? 100 : 0, isCurrency: true, isTotal: false },
+                { name: "Port Costs", values: clientPortCosts, total: sum(clientPortCosts), pct: clientCalcPct(clientPortCosts), totalPct: clientCalcTotalPct(sum(clientPortCosts), sum(clientGrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "Bunker Costs", values: clientBunkerCosts, total: sum(clientBunkerCosts), pct: clientCalcPct(clientBunkerCosts), totalPct: clientCalcTotalPct(sum(clientBunkerCosts), sum(clientGrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "Voyage Result", values: clientVoyageResult, total: sum(clientVoyageResult), pct: clientCalcPct(clientVoyageResult), totalPct: clientCalcTotalPct(sum(clientVoyageResult), sum(clientGrossRevenue)), isCurrency: true, isTotal: true }
             ];
 
             const subtotalRouteRowSpanRef = { value: 4 };
@@ -227,7 +244,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                         {months.map(m => {
                             const date = new Date(`${m}-02`);
                             const formatted = new Intl.DateTimeFormat('es-ES', { month: 'short', year: '2-digit' }).format(date).replace('.', '');
-                            return <th key={m} className="p-3 text-right border border-slate-700 capitalize">{formatted}</th>;
+                            return <th key={m} className="p-3 text-center border border-slate-700 capitalize">{formatted}</th>;
                         })}
                         <th className="p-3 text-right border border-slate-700 bg-slate-900">TOTAL</th>
                     </tr>
@@ -277,14 +294,46 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                                                 }}
                                                 className="w-14 p-1 text-right text-xs font-bold border border-slate-200 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white"
                                             />
+                                        ) : row.metric.name === "Flete (USD/MT)" && row.clientName === "SPOT" ? (
+                                            <input 
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={v}
+                                                onChange={(e) => {
+                                                    const val = parseFloat(e.target.value) || 0;
+                                                    onTariffChange && onTariffChange(row.clientName, row.routeName, row.vesselName, months[colIdx], val);
+                                                }}
+                                                className="w-16 p-1 text-right text-xs font-bold border border-slate-300 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white text-petral-blue"
+                                            />
                                         ) : (
-                                            row.metric.isCurrency ? formatCurrency(v) : formatNumber(v)
+                                            row.metric.isCurrency ? (
+                                                <div className="flex justify-between items-center w-full min-w-[100px]">
+                                                    <span className="text-left font-medium">{formatCurrency(v)}</span>
+                                                    {row.metric.pct && row.metric.pct[colIdx] !== null ? (
+                                                        <span className="text-xs text-slate-500 bg-slate-100 px-1 py-[2px] rounded border border-slate-200 min-w-[3rem] text-center ml-2">
+                                                            {row.metric.pct[colIdx].toFixed(1)}%
+                                                        </span>
+                                                    ) : null}
+                                                </div>
+                                            ) : formatNumber(v)
                                         )
                                     )}
                                 </td>
                             ))}
                             <td className={`p-3 text-right tabular-nums font-bold border border-slate-200 ${row.metric.isTotal ? 'bg-slate-200' : 'bg-slate-50'} ${row.isSubRow ? 'text-slate-300' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
-                                {row.metric.isCategoryHeader ? '' : (row.metric.isSubRowMetric ? '-' : (row.metric.isCurrency ? formatCurrency(row.metric.total) : formatNumber(row.metric.total)))}
+                                {row.metric.isCategoryHeader ? '' : (row.metric.isSubRowMetric ? '-' : (
+                                    row.metric.isCurrency ? (
+                                        <div className="flex justify-between items-center w-full min-w-[100px]">
+                                            <span className="text-left font-medium">{formatCurrency(row.metric.total)}</span>
+                                            {row.metric.totalPct !== null && row.metric.totalPct !== undefined ? (
+                                                <span className="text-xs text-slate-600 bg-white px-1 py-[2px] rounded border border-slate-300 min-w-[3rem] text-center ml-2">
+                                                    {row.metric.totalPct.toFixed(1)}%
+                                                </span>
+                                            ) : null}
+                                        </div>
+                                    ) : formatNumber(row.metric.total)
+                                ))}
                             </td>
                         </tr>
                     ))}

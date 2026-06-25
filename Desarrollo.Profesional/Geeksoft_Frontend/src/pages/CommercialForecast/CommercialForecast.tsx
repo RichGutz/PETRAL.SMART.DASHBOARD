@@ -120,6 +120,24 @@ export const CommercialForecast: React.FC = () => {
             return prev;
         });
     };
+    const handleTariffChange = (client_id: string, route_key: string, vessel_id: string, month_index: string, newTariff: number) => {
+        setProjectionLines(prev => {
+            const destination_port_id = route_key.split('-')[1];
+            const existingIndex = prev.findIndex(p => 
+                p.month_index === month_index && 
+                p.vessel_id === vessel_id &&
+                p.destination_port_id === destination_port_id &&
+                p.client_id === client_id
+            );
+
+            if (existingIndex >= 0) {
+                const clone = [...prev];
+                clone[existingIndex] = { ...clone[existingIndex], custom_tariff: newTariff };
+                return clone;
+            }
+            return prev;
+        });
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 p-8 font-sans">
@@ -154,16 +172,15 @@ export const CommercialForecast: React.FC = () => {
                         {loading && <span className="text-xs text-petral-teal font-medium flex items-center gap-2"><div className="animate-spin h-3 w-3 border-2 border-petral-teal border-t-transparent rounded-full"></div> Recalculando...</span>}
                     </div>
                     
-                    <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} />
+                    <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} onTariffChange={handleTariffChange} />
                 </section>
                 
                 {/* 3. ECharts Summary */}
-                <section className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mt-2">
-                    <div className="mb-4">
+                <section className="flex flex-col gap-2 relative mt-4">
+                    <div>
                         <h2 className="text-lg font-semibold text-slate-800">Análisis de Tendencia (Cross-Filtering)</h2>
-                        <p className="text-xs text-slate-400">Voyage Result Mensual (USD)</p>
                     </div>
-                    <InteractiveChart data={data} />
+                    <InteractiveChart data={data} months={dynamicMonths} />
                 </section>
             </main>
         </div>

@@ -32,14 +32,16 @@ Este archivo maestro indexa las especificaciones de ingeniería, velocidades ope
 ### ⛽ Parámetros de Consumo (Bunker Principal: IFO)
 
 - **bunker_consumption_sea_ifo:** 14.5 // Toneladas Métricas (MT) consumidas por día navegando
-    
 - **bunker_consumption_idle_ifo:** 3.5 // MT consumidas por día en espera
 - **bunker_consumption_load_ifo:** 3.5 // MT consumidas por día cargando
 - **bunker_consumption_disch_ifo:** 5.0 // MT consumidas por día descargando
+- **bunker_consumption_sea_mdo:** 0.0 // MDO navegando
 - **bunker_consumption_idle_mdo:** 0.0 // MDO
 - **bunker_consumption_load_mdo:** 0.0 // MDO
 - **bunker_consumption_disch_mdo:** 0.0 // MDO
-    
+
+> [!IMPORTANT]
+> Estas variables granulares de consumo en puerto y navegación son obligatorias en la DB de Supabase para calcular la rentabilidad precisa del viaje (Voyage Result). El motor P&L ignorará variables faltantes, asumiendo 0.
 
 ### 🛡️ Capacidades de Almacenamiento (ROB Inicial Máximo)
 

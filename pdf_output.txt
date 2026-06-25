@@ -1,0 +1,1253 @@
+Geeksoft P&L Engine - Introducción Ejecutiva al Ledger
+Este documento físico actúa como libro blanco de cálculo (Ledger). Su objetivo es hacer 100% transparente
+la matemática financiera que hay detrás de las rentabilidades de Naviera Petral. Antes de revisar las cifras
+oficiales, te presentamos de forma sencilla las reglas de negocio clave que el sistema evalúa:
+1. Lógica de Tiempos y Cuellos de Botella (La Ley del Triple Mínimo)
+   El motor evalúa 3 limitantes para definir la tasa real de flujo (carga/descarga):
+   - [c_load / c_disch]: La tasa exigida por el acuerdo o contrato comercial.
+   - [t_load_rate / p_disch_limit]: La presión máxima física de las tuberías y bombas de tierra (Terminal).
+   - [v_intake / v_pump]: La capacidad física de recepción o empuje a bordo del barco (Fierro).
+   El sistema escoge ciegamente el MENOR de los tres, aislando matemáticamente el cuello de botella físico real.
+2. Fricción Ambiental y Consumo de Bunker
+   La distancia real de la ruta es expandida por un Factor Climático (ej. 3% o 4%) que simula las corrientes y
+   vientos de la costa peruana y chilena. Esto castiga los tiempos de forma realista para cubrir el margen de error del IFO.
+3. Estructura de Rentabilidad Operativa (Voyage Result)
+   El margen neto del viaje deduce el 100% de los costos de puerto y el Bunker total consumido.
+4. Indicadores de Desempeño Financiero (TCE & Valor Corporativo)
+   - TCE Real (Time Charter Equivalent): Divide el Voyage Result entre los días totales, dictando la renta diaria real.
+   - Utilidad Nominal: Al Voyage Result se le resta el [tce_req] (TCE Requerido, ej. $15,000 diarios para el B/T Tablones)
+     multiplicado por la duración del viaje.
+En las páginas siguientes se desglosa la prueba inamovible para la matriz completa de flota y rutas de Petral.
+
+
+Ledger Matemático - Geeksoft P&L Engine
+|  Caso de Prueba: B/T TABLONES  |  Ruta: ILO - MATARANI (69 NM)
+Fundamento Conceptual y Fórmulas
+1. Tasa Real de Carga (Origen):
+actual_load = MIN(c_load, v_intake, t_load_rate)
+2. Tasa Real de Descarga (Destino):
+actual_discharge = MIN(c_disch, v_pump, p_disch_limit)
+3. Días de Puerto (port_days):
+port_days = ((Q / act_load) + over) + ((Q / act_disch) + over) / 24
+4. Días de Mar (sea_days) [Dinámico]:
+sea_days = ((dist * (is_round_trip ? 2 : 1)) * (1 + w_factor)) / (speed * 24)
+5. Costo Total de Bunker (Granular Dual-Fuel):
+bunker = SUM(t_fase * c_fase)_ifo * p_ifo + SUM(t_fase * c_fase)_mdo * p_mdo
+donde fases = sea_days, idle_days, load_days, disch_days
+6. Resultado del Viaje (voyage_result):
+result = (Q * F) - port_costs - bunker
+7. Duración Total (total_duration):
+total_duration = sea_days + port_days
+8. Rendimiento Diario (TCE Real):
+tce_real = voyage_result / total_duration
+9. Utilidad Nominal (pl_vs_required):
+pl_vs_required = voyage_result - (tce_req * total_duration)
+Reemplazo Aritmético Exacto
+1. Reemplazo de Carga:
+MIN(99,999.00, 500.00, 500.00) = 500.00
+2. Reemplazo de Descarga:
+MIN(99,999.00, 450.00, 300.00) = 300.00
+3. Reemplazo de Tiempos en Puerto:
+((13,500/500)+6 + (13,500/300)+6) / 24 = 3.500000 d
+4. Reemplazo de Tiempos en Mar (Ida y Vuelta):
+((69.00 * 2) * 1.03) / (11.00 * 24) = 0.538409 días
+5. Reemplazo Bunker Dual:
+((22.60 IFO * $895.14)) = $20,230.37
+6. Reemplazo Resultado de Viaje:
+(13,500.00 * 19.01) - 41,000.00 - 20,230.34 - 0.00 = $195,404.63
+7. Reemplazo Duración Total:
+0.538409 + 3.500000 = 4.038409 días
+8. Reemplazo Rendimiento Diario (TCE):
+$195,404.63 / 4.038409 = $48,386.54 USD/día
+9. Reemplazo Utilidad Nominal:
+$195,404.63 - ($15,000.00 * 4.038409) = $134,828.50 USD
+MATRIZ DE CONCILIACIÓN: GEEKSOFT ENGINE vs PETRAL CORPORATIVO (MATARANI)
+Operativo
+PETRAL
+GEEKSOFT
+Δ
+Distancia Total (MN)
+138.00
+138.00
+0.00
+Carga (MT)
+13,500.00
+13,500.00
+0.00
+Flete (USD)
+19.01
+19.01
+0.00
+Total Freight Income US$
+256,635.00
+256,635.00
+-0.00
+Total Agency US$
+41,000.00
+41,000.00
+0.00
+Bunker IFO (MT)
+-
+22.60
+-
+Bunker MDO (MT)
+-
+0.00
+-
+Tiempos/Costos
+PETRAL
+GEEKSOFT
+Δ
+Sea Days
+0.5384
+0.5384
+0.0000
+Port/Idle Days
+3.5417
+3.5000
+-0.0417
+Duración
+4.0801
+4.0384
+-0.0417
+Bunker Total
+20,601.88
+20,230.37
+-371.51
+ - IFO (US$)
+-
+20,230.34
+-
+ - MDO (US$)
+-
+0.00
+-
+Financiero
+PETRAL
+GEEKSOFT
+Δ
+Income
+256,635.00
+256,635.00
+-0.00
+Port Costs
+41,000.00
+41,000.00
+0.00
+Bunker Costs
+20,601.88
+20,230.37
+-371.51
+Voyage Result
+195,033.12
+195,404.63
+371.51
+TCE (USD/Día)
+47,801.35
+48,386.54
+585.19
+PCM (USD)
+1,454,116.96
+1,471,918.47
+17,801.51
+P/L (USD)
+133,831.98
+134,828.50
+996.52
+DESVIACIÓN DETECTADA ($371.51) - REVISAR DELTAS EN TABLAS
+
+
+Ledger Matemático - Geeksoft P&L Engine
+|  Caso de Prueba: B/T TABLONES  |  Ruta: ILO - SAN JUAN DE MARCONA (283 NM)
+Fundamento Conceptual y Fórmulas
+1. Tasa Real de Carga (Origen):
+actual_load = MIN(c_load, v_intake, t_load_rate)
+2. Tasa Real de Descarga (Destino):
+actual_discharge = MIN(c_disch, v_pump, p_disch_limit)
+3. Días de Puerto (port_days):
+port_days = ((Q / act_load) + over) + ((Q / act_disch) + over) / 24
+4. Días de Mar (sea_days) [Dinámico]:
+sea_days = ((dist * (is_round_trip ? 2 : 1)) * (1 + w_factor)) / (speed * 24)
+5. Costo Total de Bunker (Granular Dual-Fuel):
+bunker = SUM(t_fase * c_fase)_ifo * p_ifo + SUM(t_fase * c_fase)_mdo * p_mdo
+donde fases = sea_days, idle_days, load_days, disch_days
+6. Resultado del Viaje (voyage_result):
+result = (Q * F) - port_costs - bunker
+7. Duración Total (total_duration):
+total_duration = sea_days + port_days
+8. Rendimiento Diario (TCE Real):
+tce_real = voyage_result / total_duration
+9. Utilidad Nominal (pl_vs_required):
+pl_vs_required = voyage_result - (tce_req * total_duration)
+Reemplazo Aritmético Exacto
+1. Reemplazo de Carga:
+MIN(99,999.00, 500.00, 500.00) = 500.00
+2. Reemplazo de Descarga:
+MIN(99,999.00, 450.00, 300.00) = 300.00
+3. Reemplazo de Tiempos en Puerto:
+((13,500/500)+6 + (13,500/300)+6) / 24 = 3.500000 d
+4. Reemplazo de Tiempos en Mar (Ida y Vuelta):
+((283.00 * 2) * 1.03) / (11.00 * 24) = 2.208258 días
+5. Reemplazo Bunker Dual:
+((45.98 IFO * $895.14)) = $41,156.84
+6. Reemplazo Resultado de Viaje:
+(13,500.00 * 22.82) - 67,000.00 - 41,156.84 - 0.00 = $199,913.16
+7. Reemplazo Duración Total:
+2.208258 + 3.500000 = 5.708258 días
+8. Reemplazo Rendimiento Diario (TCE):
+$199,913.16 / 5.708258 = $35,021.75 USD/día
+9. Reemplazo Utilidad Nominal:
+$199,913.16 - ($15,000.00 * 5.708258) = $114,289.29 USD
+MATRIZ DE CONCILIACIÓN: GEEKSOFT ENGINE vs PETRAL CORPORATIVO (SAN JUAN DE MARCONA)
+Operativo
+PETRAL
+GEEKSOFT
+Δ
+Distancia Total (MN)
+566.00
+566.00
+0.00
+Carga (MT)
+13,500.00
+13,500.00
+0.00
+Flete (USD)
+22.82
+22.82
+0.00
+Total Freight Income US$
+308,070.00
+308,070.00
+0.00
+Total Agency US$
+67,000.00
+67,000.00
+0.00
+Bunker IFO (MT)
+-
+45.98
+-
+Bunker MDO (MT)
+-
+0.00
+-
+Tiempos/Costos
+PETRAL
+GEEKSOFT
+Δ
+Sea Days
+2.2083
+2.2083
+0.0000
+Port/Idle Days
+3.5417
+3.5000
+-0.0417
+Duración
+5.7499
+5.7083
+-0.0417
+Bunker Total
+42,275.73
+41,156.84
+-1,118.89
+ - IFO (US$)
+-
+41,156.84
+-
+ - MDO (US$)
+-
+0.00
+-
+Financiero
+PETRAL
+GEEKSOFT
+Δ
+Income
+308,070.00
+308,070.00
+0.00
+Port Costs
+67,000.00
+67,000.00
+0.00
+Bunker Costs
+42,275.73
+41,156.84
+-1,118.89
+Voyage Result
+198,794.27
+199,913.16
+1,118.89
+TCE (USD/Día)
+34,573.37
+35,021.75
+448.38
+PCM (USD)
+1,051,721.96
+1,065,361.57
+13,639.61
+P/L (USD)
+112,545.40
+114,289.29
+1,743.89
+DESVIACIÓN DETECTADA ($1,118.89) - REVISAR DELTAS EN TABLAS
+
+
+Ledger Matemático - Geeksoft P&L Engine
+|  Caso de Prueba: B/T TABLONES  |  Ruta: ILO - MEJILLONES (335 NM)
+Fundamento Conceptual y Fórmulas
+1. Tasa Real de Carga (Origen):
+actual_load = MIN(c_load, v_intake, t_load_rate)
+2. Tasa Real de Descarga (Destino):
+actual_discharge = MIN(c_disch, v_pump, p_disch_limit)
+3. Días de Puerto (port_days):
+port_days = ((Q / act_load) + over) + ((Q / act_disch) + over) / 24
+4. Días de Mar (sea_days) [Dinámico]:
+sea_days = ((dist * (is_round_trip ? 2 : 1)) * (1 + w_factor)) / (speed * 24)
+5. Costo Total de Bunker (Granular Dual-Fuel):
+bunker = SUM(t_fase * c_fase)_ifo * p_ifo + SUM(t_fase * c_fase)_mdo * p_mdo
+donde fases = sea_days, idle_days, load_days, disch_days
+6. Resultado del Viaje (voyage_result):
+result = (Q * F) - port_costs - bunker
+7. Duración Total (total_duration):
+total_duration = sea_days + port_days
+8. Rendimiento Diario (TCE Real):
+tce_real = voyage_result / total_duration
+9. Utilidad Nominal (pl_vs_required):
+pl_vs_required = voyage_result - (tce_req * total_duration)
+Reemplazo Aritmético Exacto
+1. Reemplazo de Carga:
+MIN(99,999.00, 500.00, 500.00) = 500.00
+2. Reemplazo de Descarga:
+MIN(99,999.00, 450.00, 300.00) = 300.00
+3. Reemplazo de Tiempos en Puerto:
+((13,500/500)+6 + (13,500/300)+6) / 24 = 3.500000 d
+4. Reemplazo de Tiempos en Mar (Ida y Vuelta):
+((335.00 * 2) * 1.03) / (11.00 * 24) = 2.614015 días
+5. Reemplazo Bunker Dual:
+((51.66 IFO * $895.14)) = $46,241.78
+6. Reemplazo Resultado de Viaje:
+(13,500.00 * 20.87) - 55,000.00 - 46,241.77 - 0.00 = $180,503.22
+7. Reemplazo Duración Total:
+2.614015 + 3.500000 = 6.114015 días
+8. Reemplazo Rendimiento Diario (TCE):
+$180,503.22 / 6.114015 = $29,522.86 USD/día
+9. Reemplazo Utilidad Nominal:
+$180,503.22 - ($15,000.00 * 6.114015) = $88,792.99 USD
+MATRIZ DE CONCILIACIÓN: GEEKSOFT ENGINE vs PETRAL CORPORATIVO (MEJILLONES)
+Operativo
+PETRAL
+GEEKSOFT
+Δ
+Distancia Total (MN)
+670.00
+670.00
+0.00
+Carga (MT)
+13,500.00
+13,500.00
+0.00
+Flete (USD)
+20.87
+20.87
+0.00
+Total Freight Income US$
+281,745.00
+281,745.00
+0.00
+Total Agency US$
+55,000.00
+55,000.00
+0.00
+Bunker IFO (MT)
+-
+51.66
+-
+Bunker MDO (MT)
+-
+0.00
+-
+Tiempos/Costos
+PETRAL
+GEEKSOFT
+Δ
+Sea Days
+2.6140
+2.6140
+0.0000
+Port/Idle Days
+3.5417
+3.5000
+-0.0417
+Duración
+6.1557
+6.1140
+-0.0417
+Bunker Total
+50,042.28
+46,241.78
+-3,800.50
+ - IFO (US$)
+-
+46,241.77
+-
+ - MDO (US$)
+-
+0.00
+-
+Financiero
+PETRAL
+GEEKSOFT
+Δ
+Income
+281,745.00
+281,745.00
+0.00
+Port Costs
+55,000.00
+55,000.00
+0.00
+Bunker Costs
+50,042.28
+46,241.78
+-3,800.50
+Voyage Result
+176,702.72
+180,503.22
+3,800.50
+TCE (USD/Día)
+28,705.63
+29,522.86
+817.23
+PCM (USD)
+873,225.26
+898,085.44
+24,860.18
+P/L (USD)
+84,367.50
+88,792.99
+4,425.49
+DESVIACIÓN DETECTADA ($3,800.50) - REVISAR DELTAS EN TABLAS
+
+
+Ledger Matemático - Geeksoft P&L Engine
+|  Caso de Prueba: B/T MOQUEGUA  |  Ruta: ILO - MATARANI (69 NM)
+Fundamento Conceptual y Fórmulas
+1. Tasa Real de Carga (Origen):
+actual_load = MIN(c_load, v_intake, t_load_rate)
+2. Tasa Real de Descarga (Destino):
+actual_discharge = MIN(c_disch, v_pump, p_disch_limit)
+3. Días de Puerto (port_days):
+port_days = ((Q / act_load) + over) + ((Q / act_disch) + over) / 24
+4. Días de Mar (sea_days) [Dinámico]:
+sea_days = ((dist * (is_round_trip ? 2 : 1)) * (1 + w_factor)) / (speed * 24)
+5. Costo Total de Bunker (Granular Dual-Fuel):
+bunker = SUM(t_fase * c_fase)_ifo * p_ifo + SUM(t_fase * c_fase)_mdo * p_mdo
+donde fases = sea_days, idle_days, load_days, disch_days
+6. Resultado del Viaje (voyage_result):
+result = (Q * F) - port_costs - bunker
+7. Duración Total (total_duration):
+total_duration = sea_days + port_days
+8. Rendimiento Diario (TCE Real):
+tce_real = voyage_result / total_duration
+9. Utilidad Nominal (pl_vs_required):
+pl_vs_required = voyage_result - (tce_req * total_duration)
+Reemplazo Aritmético Exacto
+1. Reemplazo de Carga:
+MIN(99,999.00, 500.00, 500.00) = 500.00
+2. Reemplazo de Descarga:
+MIN(99,999.00, 400.00, 300.00) = 300.00
+3. Reemplazo de Tiempos en Puerto:
+((13,500/500)+6 + (13,500/300)+6) / 24 = 3.500000 d
+4. Reemplazo de Tiempos en Mar (Ida y Vuelta):
+((69.00 * 2) * 1.03) / (12.00 * 24) = 0.493542 días
+5. Reemplazo Bunker Dual:
+((24.22 IFO * $895.14) + (4.44 MDO * $1,460.30)) = $28,156.46
+6. Reemplazo Resultado de Viaje:
+(13,500.00 * 19.01) - 39,000.00 - 21,676.35 - 6,480.08 = $189,478.54
+7. Reemplazo Duración Total:
+0.493542 + 3.500000 = 3.993542 días
+8. Reemplazo Rendimiento Diario (TCE):
+$189,478.54 / 3.993542 = $47,446.24 USD/día
+9. Reemplazo Utilidad Nominal:
+$189,478.54 - ($13,000.00 * 3.993542) = $137,562.50 USD
+MATRIZ DE CONCILIACIÓN: GEEKSOFT ENGINE vs PETRAL CORPORATIVO (MATARANI)
+Operativo
+PETRAL
+GEEKSOFT
+Δ
+Distancia Total (MN)
+138.00
+138.00
+0.00
+Carga (MT)
+13,500.00
+13,500.00
+0.00
+Flete (USD)
+19.01
+19.01
+0.00
+Total Freight Income US$
+256,635.00
+256,635.00
+-0.00
+Total Agency US$
+39,000.00
+39,000.00
+0.00
+Bunker IFO (MT)
+-
+24.22
+-
+Bunker MDO (MT)
+-
+4.44
+-
+Tiempos/Costos
+PETRAL
+GEEKSOFT
+Δ
+Sea Days
+0.5384
+0.4935
+-0.0449
+Port/Idle Days
+3.5417
+3.5000
+-0.0417
+Duración
+4.0801
+3.9935
+-0.0865
+Bunker Total
+18,560.53
+28,156.46
+9,595.93
+ - IFO (US$)
+-
+21,676.35
+-
+ - MDO (US$)
+-
+6,480.08
+-
+Financiero
+PETRAL
+GEEKSOFT
+Δ
+Income
+256,635.00
+256,635.00
+-0.00
+Port Costs
+39,000.00
+39,000.00
+0.00
+Bunker Costs
+18,560.53
+28,156.46
+9,595.93
+Voyage Result
+199,074.47
+189,478.54
+-9,595.93
+TCE (USD/Día)
+48,791.86
+47,446.24
+-1,345.62
+PCM (USD)
+1,484,248.30
+1,443,314.68
+-40,933.62
+P/L (USD)
+146,033.49
+137,562.50
+-8,470.99
+DESVIACIÓN DETECTADA ($9,595.93) - REVISAR DELTAS EN TABLAS
+
+
+Ledger Matemático - Geeksoft P&L Engine
+|  Caso de Prueba: B/T MOQUEGUA  |  Ruta: ILO - SAN JUAN DE MARCONA (283 NM)
+Fundamento Conceptual y Fórmulas
+1. Tasa Real de Carga (Origen):
+actual_load = MIN(c_load, v_intake, t_load_rate)
+2. Tasa Real de Descarga (Destino):
+actual_discharge = MIN(c_disch, v_pump, p_disch_limit)
+3. Días de Puerto (port_days):
+port_days = ((Q / act_load) + over) + ((Q / act_disch) + over) / 24
+4. Días de Mar (sea_days) [Dinámico]:
+sea_days = ((dist * (is_round_trip ? 2 : 1)) * (1 + w_factor)) / (speed * 24)
+5. Costo Total de Bunker (Granular Dual-Fuel):
+bunker = SUM(t_fase * c_fase)_ifo * p_ifo + SUM(t_fase * c_fase)_mdo * p_mdo
+donde fases = sea_days, idle_days, load_days, disch_days
+6. Resultado del Viaje (voyage_result):
+result = (Q * F) - port_costs - bunker
+7. Duración Total (total_duration):
+total_duration = sea_days + port_days
+8. Rendimiento Diario (TCE Real):
+tce_real = voyage_result / total_duration
+9. Utilidad Nominal (pl_vs_required):
+pl_vs_required = voyage_result - (tce_req * total_duration)
+Reemplazo Aritmético Exacto
+1. Reemplazo de Carga:
+MIN(99,999.00, 500.00, 500.00) = 500.00
+2. Reemplazo de Descarga:
+MIN(99,999.00, 400.00, 300.00) = 300.00
+3. Reemplazo de Tiempos en Puerto:
+((13,500/500)+6 + (13,500/300)+6) / 24 = 3.500000 d
+4. Reemplazo de Tiempos en Mar (Ida y Vuelta):
+((283.00 * 2) * 1.03) / (12.00 * 24) = 2.024236 días
+5. Reemplazo Bunker Dual:
+((47.18 IFO * $895.14) + (4.44 MDO * $1,460.30)) = $48,709.24
+6. Reemplazo Resultado de Viaje:
+(13,500.00 * 22.82) - 62,000.00 - 42,229.12 - 6,480.08 = $197,360.76
+7. Reemplazo Duración Total:
+2.024236 + 3.500000 = 5.524236 días
+8. Reemplazo Rendimiento Diario (TCE):
+$197,360.76 / 5.524236 = $35,726.34 USD/día
+9. Reemplazo Utilidad Nominal:
+$197,360.76 - ($13,000.00 * 5.524236) = $125,545.69 USD
+MATRIZ DE CONCILIACIÓN: GEEKSOFT ENGINE vs PETRAL CORPORATIVO (SAN JUAN DE MARCONA)
+Operativo
+PETRAL
+GEEKSOFT
+Δ
+Distancia Total (MN)
+566.00
+566.00
+0.00
+Carga (MT)
+13,500.00
+13,500.00
+0.00
+Flete (USD)
+22.82
+22.82
+0.00
+Total Freight Income US$
+308,070.00
+308,070.00
+0.00
+Total Agency US$
+62,000.00
+62,000.00
+0.00
+Bunker IFO (MT)
+-
+47.18
+-
+Bunker MDO (MT)
+-
+4.44
+-
+Tiempos/Costos
+PETRAL
+GEEKSOFT
+Δ
+Sea Days
+2.2083
+2.0242
+-0.1840
+Port/Idle Days
+3.5417
+3.5000
+-0.0417
+Duración
+5.7499
+5.5242
+-0.2257
+Bunker Total
+39,487.00
+48,709.24
+9,222.24
+ - IFO (US$)
+-
+42,229.12
+-
+ - MDO (US$)
+-
+6,480.08
+-
+Financiero
+PETRAL
+GEEKSOFT
+Δ
+Income
+308,070.00
+308,070.00
+0.00
+Port Costs
+62,000.00
+62,000.00
+0.00
+Bunker Costs
+39,487.00
+48,709.24
+9,222.24
+Voyage Result
+206,583.00
+197,360.76
+-9,222.24
+TCE (USD/Día)
+35,927.95
+35,726.34
+-201.61
+PCM (USD)
+1,092,928.29
+1,086,795.37
+-6,132.92
+P/L (USD)
+131,833.98
+125,545.69
+-6,288.29
+DESVIACIÓN DETECTADA ($9,222.24) - REVISAR DELTAS EN TABLAS
+
+
+Ledger Matemático - Geeksoft P&L Engine
+|  Caso de Prueba: B/T MOQUEGUA  |  Ruta: ILO - MEJILLONES (335 NM)
+Fundamento Conceptual y Fórmulas
+1. Tasa Real de Carga (Origen):
+actual_load = MIN(c_load, v_intake, t_load_rate)
+2. Tasa Real de Descarga (Destino):
+actual_discharge = MIN(c_disch, v_pump, p_disch_limit)
+3. Días de Puerto (port_days):
+port_days = ((Q / act_load) + over) + ((Q / act_disch) + over) / 24
+4. Días de Mar (sea_days) [Dinámico]:
+sea_days = ((dist * (is_round_trip ? 2 : 1)) * (1 + w_factor)) / (speed * 24)
+5. Costo Total de Bunker (Granular Dual-Fuel):
+bunker = SUM(t_fase * c_fase)_ifo * p_ifo + SUM(t_fase * c_fase)_mdo * p_mdo
+donde fases = sea_days, idle_days, load_days, disch_days
+6. Resultado del Viaje (voyage_result):
+result = (Q * F) - port_costs - bunker
+7. Duración Total (total_duration):
+total_duration = sea_days + port_days
+8. Rendimiento Diario (TCE Real):
+tce_real = voyage_result / total_duration
+9. Utilidad Nominal (pl_vs_required):
+pl_vs_required = voyage_result - (tce_req * total_duration)
+Reemplazo Aritmético Exacto
+1. Reemplazo de Carga:
+MIN(99,999.00, 500.00, 500.00) = 500.00
+2. Reemplazo de Descarga:
+MIN(99,999.00, 400.00, 300.00) = 300.00
+3. Reemplazo de Tiempos en Puerto:
+((13,500/500)+6 + (13,500/300)+6) / 24 = 3.500000 d
+4. Reemplazo de Tiempos en Mar (Ida y Vuelta):
+((335.00 * 2) * 1.03) / (12.00 * 24) = 2.396181 días
+5. Reemplazo Bunker Dual:
+((52.76 IFO * $895.14) + (4.44 MDO * $1,460.30)) = $53,703.38
+6. Reemplazo Resultado de Viaje:
+(13,500.00 * 20.87) - 51,000.00 - 47,223.29 - 6,480.08 = $177,041.62
+7. Reemplazo Duración Total:
+2.396181 + 3.500000 = 5.896181 días
+8. Reemplazo Rendimiento Diario (TCE):
+$177,041.62 / 5.896181 = $30,026.49 USD/día
+9. Reemplazo Utilidad Nominal:
+$177,041.62 - ($13,000.00 * 5.896181) = $100,391.27 USD
+MATRIZ DE CONCILIACIÓN: GEEKSOFT ENGINE vs PETRAL CORPORATIVO (MEJILLONES)
+Operativo
+PETRAL
+GEEKSOFT
+Δ
+Distancia Total (MN)
+670.00
+670.00
+0.00
+Carga (MT)
+13,500.00
+13,500.00
+0.00
+Flete (USD)
+20.87
+20.87
+0.00
+Total Freight Income US$
+281,745.00
+281,745.00
+0.00
+Total Agency US$
+51,000.00
+51,000.00
+0.00
+Bunker IFO (MT)
+-
+52.76
+-
+Bunker MDO (MT)
+-
+4.44
+-
+Tiempos/Costos
+PETRAL
+GEEKSOFT
+Δ
+Sea Days
+2.6140
+2.3962
+-0.2178
+Port/Idle Days
+3.5417
+3.5000
+-0.0417
+Duración
+6.1557
+5.8962
+-0.2595
+Bunker Total
+47,071.94
+53,703.38
+6,631.44
+ - IFO (US$)
+-
+47,223.29
+-
+ - MDO (US$)
+-
+6,480.08
+-
+Financiero
+PETRAL
+GEEKSOFT
+Δ
+Income
+281,745.00
+281,745.00
+0.00
+Port Costs
+51,000.00
+51,000.00
+0.00
+Bunker Costs
+47,071.94
+53,703.38
+6,631.44
+Voyage Result
+183,673.06
+177,041.62
+-6,631.44
+TCE (USD/Día)
+29,837.97
+30,026.49
+188.52
+PCM (USD)
+907,671.11
+913,405.90
+5,734.79
+P/L (USD)
+103,649.20
+100,391.27
+-3,257.93
+DESVIACIÓN DETECTADA ($6,631.44) - REVISAR DELTAS EN TABLAS
+
+
+Ledger Matemático - Geeksoft P&L Engine
+|  Caso de Prueba: M/N CONCON TRADER  |  Ruta: ILO - MATARANI (69 NM)
+Fundamento Conceptual y Fórmulas
+1. Tasa Real de Carga (Origen):
+actual_load = MIN(c_load, v_intake, t_load_rate)
+2. Tasa Real de Descarga (Destino):
+actual_discharge = MIN(c_disch, v_pump, p_disch_limit)
+3. Días de Puerto (port_days):
+port_days = ((Q / act_load) + over) + ((Q / act_disch) + over) / 24
+4. Días de Mar (sea_days) [Dinámico]:
+sea_days = ((dist * (is_round_trip ? 2 : 1)) * (1 + w_factor)) / (speed * 24)
+5. Costo Total de Bunker (Granular Dual-Fuel):
+bunker = SUM(t_fase * c_fase)_ifo * p_ifo + SUM(t_fase * c_fase)_mdo * p_mdo
+donde fases = sea_days, idle_days, load_days, disch_days
+6. Resultado del Viaje (voyage_result):
+result = (Q * F) - port_costs - bunker
+7. Duración Total (total_duration):
+total_duration = sea_days + port_days
+8. Rendimiento Diario (TCE Real):
+tce_real = voyage_result / total_duration
+9. Utilidad Nominal (pl_vs_required):
+pl_vs_required = voyage_result - (tce_req * total_duration)
+Reemplazo Aritmético Exacto
+1. Reemplazo de Carga:
+MIN(99,999.00, 600.00, 500.00) = 500.00
+2. Reemplazo de Descarga:
+MIN(99,999.00, 500.00, 300.00) = 300.00
+3. Reemplazo de Tiempos en Puerto:
+((13,500/500)+6 + (13,500/300)+6) / 24 = 3.500000 d
+4. Reemplazo de Tiempos en Mar (Ida y Vuelta):
+((69.00 * 2) * 1.03) / (11.00 * 24) = 0.538409 días
+5. Reemplazo Bunker Dual:
+((22.60 IFO * $895.14)) = $20,230.37
+6. Reemplazo Resultado de Viaje:
+(13,500.00 * 19.01) - 42,500.00 - 20,230.34 - 0.00 = $193,904.63
+7. Reemplazo Duración Total:
+0.538409 + 3.500000 = 4.038409 días
+8. Reemplazo Rendimiento Diario (TCE):
+$193,904.63 / 4.038409 = $48,015.10 USD/día
+9. Reemplazo Utilidad Nominal:
+$193,904.63 - ($20,000.00 * 4.038409) = $113,136.45 USD
+MATRIZ DE CONCILIACIÓN: GEEKSOFT ENGINE vs PETRAL CORPORATIVO (MATARANI)
+Operativo
+PETRAL
+GEEKSOFT
+Δ
+Distancia Total (MN)
+138.00
+138.00
+0.00
+Carga (MT)
+13,500.00
+13,500.00
+0.00
+Flete (USD)
+19.01
+19.01
+0.00
+Total Freight Income US$
+256,635.00
+256,635.00
+-0.00
+Total Agency US$
+42,500.00
+42,500.00
+0.00
+Bunker IFO (MT)
+-
+22.60
+-
+Bunker MDO (MT)
+-
+0.00
+-
+Tiempos/Costos
+PETRAL
+GEEKSOFT
+Δ
+Sea Days
+0.5384
+0.5384
+0.0000
+Port/Idle Days
+3.5417
+3.5000
+-0.0417
+Duración
+4.0801
+4.0384
+-0.0417
+Bunker Total
+20,360.91
+20,230.37
+-130.54
+ - IFO (US$)
+-
+20,230.34
+-
+ - MDO (US$)
+-
+0.00
+-
+Financiero
+PETRAL
+GEEKSOFT
+Δ
+Income
+256,635.00
+256,635.00
+-0.00
+Port Costs
+42,500.00
+42,500.00
+0.00
+Bunker Costs
+20,360.91
+20,230.37
+-130.54
+Voyage Result
+193,774.09
+193,904.63
+130.54
+TCE (USD/Día)
+47,492.77
+48,015.10
+522.33
+PCM (USD)
+1,444,730.00
+1,460,619.46
+15,889.46
+P/L (USD)
+112,172.58
+113,136.45
+963.87
+DESVIACIÓN DETECTADA ($130.54) - REVISAR DELTAS EN TABLAS
+
+
+Ledger Matemático - Geeksoft P&L Engine
+|  Caso de Prueba: M/N CONCON TRADER  |  Ruta: ILO - SAN JUAN DE MARCONA (283 NM)
+Fundamento Conceptual y Fórmulas
+1. Tasa Real de Carga (Origen):
+actual_load = MIN(c_load, v_intake, t_load_rate)
+2. Tasa Real de Descarga (Destino):
+actual_discharge = MIN(c_disch, v_pump, p_disch_limit)
+3. Días de Puerto (port_days):
+port_days = ((Q / act_load) + over) + ((Q / act_disch) + over) / 24
+4. Días de Mar (sea_days) [Dinámico]:
+sea_days = ((dist * (is_round_trip ? 2 : 1)) * (1 + w_factor)) / (speed * 24)
+5. Costo Total de Bunker (Granular Dual-Fuel):
+bunker = SUM(t_fase * c_fase)_ifo * p_ifo + SUM(t_fase * c_fase)_mdo * p_mdo
+donde fases = sea_days, idle_days, load_days, disch_days
+6. Resultado del Viaje (voyage_result):
+result = (Q * F) - port_costs - bunker
+7. Duración Total (total_duration):
+total_duration = sea_days + port_days
+8. Rendimiento Diario (TCE Real):
+tce_real = voyage_result / total_duration
+9. Utilidad Nominal (pl_vs_required):
+pl_vs_required = voyage_result - (tce_req * total_duration)
+Reemplazo Aritmético Exacto
+1. Reemplazo de Carga:
+MIN(99,999.00, 600.00, 500.00) = 500.00
+2. Reemplazo de Descarga:
+MIN(99,999.00, 500.00, 300.00) = 300.00
+3. Reemplazo de Tiempos en Puerto:
+((13,500/500)+6 + (13,500/300)+6) / 24 = 3.500000 d
+4. Reemplazo de Tiempos en Mar (Ida y Vuelta):
+((283.00 * 2) * 1.03) / (11.00 * 24) = 2.208258 días
+5. Reemplazo Bunker Dual:
+((45.98 IFO * $895.14)) = $41,156.84
+6. Reemplazo Resultado de Viaje:
+(13,500.00 * 22.82) - 84,500.00 - 41,156.84 - 0.00 = $182,413.16
+7. Reemplazo Duración Total:
+2.208258 + 3.500000 = 5.708258 días
+8. Reemplazo Rendimiento Diario (TCE):
+$182,413.16 / 5.708258 = $31,956.01 USD/día
+9. Reemplazo Utilidad Nominal:
+$182,413.16 - ($20,000.00 * 5.708258) = $68,248.01 USD
+MATRIZ DE CONCILIACIÓN: GEEKSOFT ENGINE vs PETRAL CORPORATIVO (SAN JUAN DE MARCONA)
+Operativo
+PETRAL
+GEEKSOFT
+Δ
+Distancia Total (MN)
+566.00
+566.00
+0.00
+Carga (MT)
+13,500.00
+13,500.00
+0.00
+Flete (USD)
+22.82
+22.82
+0.00
+Total Freight Income US$
+308,070.00
+308,070.00
+0.00
+Total Agency US$
+84,500.00
+84,500.00
+0.00
+Bunker IFO (MT)
+-
+45.98
+-
+Bunker MDO (MT)
+-
+0.00
+-
+Tiempos/Costos
+PETRAL
+GEEKSOFT
+Δ
+Sea Days
+2.2083
+2.2083
+0.0000
+Port/Idle Days
+3.5417
+3.5000
+-0.0417
+Duración
+5.7499
+5.7083
+-0.0417
+Bunker Total
+41,287.38
+41,156.84
+-130.54
+ - IFO (US$)
+-
+41,156.84
+-
+ - MDO (US$)
+-
+0.00
+-
+Financiero
+PETRAL
+GEEKSOFT
+Δ
+Income
+308,070.00
+308,070.00
+0.00
+Port Costs
+84,500.00
+84,500.00
+0.00
+Bunker Costs
+41,287.38
+41,156.84
+-130.54
+Voyage Result
+182,282.62
+182,413.16
+130.54
+TCE (USD/Día)
+31,701.74
+31,956.01
+254.27
+PCM (USD)
+964,367.00
+972,101.94
+7,734.94
+P/L (USD)
+67,284.13
+68,248.01
+963.88
+DESVIACIÓN DETECTADA ($130.54) - REVISAR DELTAS EN TABLAS
+
+
+Ledger Matemático - Geeksoft P&L Engine
+|  Caso de Prueba: M/N CONCON TRADER  |  Ruta: ILO - MEJILLONES (335 NM)
+Fundamento Conceptual y Fórmulas
+1. Tasa Real de Carga (Origen):
+actual_load = MIN(c_load, v_intake, t_load_rate)
+2. Tasa Real de Descarga (Destino):
+actual_discharge = MIN(c_disch, v_pump, p_disch_limit)
+3. Días de Puerto (port_days):
+port_days = ((Q / act_load) + over) + ((Q / act_disch) + over) / 24
+4. Días de Mar (sea_days) [Dinámico]:
+sea_days = ((dist * (is_round_trip ? 2 : 1)) * (1 + w_factor)) / (speed * 24)
+5. Costo Total de Bunker (Granular Dual-Fuel):
+bunker = SUM(t_fase * c_fase)_ifo * p_ifo + SUM(t_fase * c_fase)_mdo * p_mdo
+donde fases = sea_days, idle_days, load_days, disch_days
+6. Resultado del Viaje (voyage_result):
+result = (Q * F) - port_costs - bunker
+7. Duración Total (total_duration):
+total_duration = sea_days + port_days
+8. Rendimiento Diario (TCE Real):
+tce_real = voyage_result / total_duration
+9. Utilidad Nominal (pl_vs_required):
+pl_vs_required = voyage_result - (tce_req * total_duration)
+Reemplazo Aritmético Exacto
+1. Reemplazo de Carga:
+MIN(99,999.00, 600.00, 500.00) = 500.00
+2. Reemplazo de Descarga:
+MIN(99,999.00, 500.00, 300.00) = 300.00
+3. Reemplazo de Tiempos en Puerto:
+((13,500/500)+6 + (13,500/300)+6) / 24 = 3.500000 d
+4. Reemplazo de Tiempos en Mar (Ida y Vuelta):
+((335.00 * 2) * 1.03) / (11.00 * 24) = 2.614015 días
+5. Reemplazo Bunker Dual:
+((51.66 IFO * $895.14)) = $46,241.78
+6. Reemplazo Resultado de Viaje:
+(13,500.00 * 20.87) - 95,500.00 - 46,241.77 - 0.00 = $140,003.22
+7. Reemplazo Duración Total:
+2.614015 + 3.500000 = 6.114015 días
+8. Reemplazo Rendimiento Diario (TCE):
+$140,003.22 / 6.114015 = $22,898.74 USD/día
+9. Reemplazo Utilidad Nominal:
+$140,003.22 - ($20,000.00 * 6.114015) = $17,722.92 USD
+MATRIZ DE CONCILIACIÓN: GEEKSOFT ENGINE vs PETRAL CORPORATIVO (MEJILLONES)
+Operativo
+PETRAL
+GEEKSOFT
+Δ
+Distancia Total (MN)
+670.00
+670.00
+0.00
+Carga (MT)
+13,500.00
+13,500.00
+0.00
+Flete (USD)
+20.87
+20.87
+0.00
+Total Freight Income US$
+281,745.00
+281,745.00
+0.00
+Total Agency US$
+95,500.00
+95,500.00
+0.00
+Bunker IFO (MT)
+-
+51.66
+-
+Bunker MDO (MT)
+-
+0.00
+-
+Tiempos/Costos
+PETRAL
+GEEKSOFT
+Δ
+Sea Days
+2.6140
+2.6140
+0.0000
+Port/Idle Days
+3.5417
+3.5000
+-0.0417
+Duración
+6.1557
+6.1140
+-0.0417
+Bunker Total
+48,872.32
+46,241.78
+-2,630.54
+ - IFO (US$)
+-
+46,241.77
+-
+ - MDO (US$)
+-
+0.00
+-
+Financiero
+PETRAL
+GEEKSOFT
+Δ
+Income
+281,745.00
+281,745.00
+0.00
+Port Costs
+95,500.00
+95,500.00
+0.00
+Bunker Costs
+48,872.32
+46,241.78
+-2,630.54
+Voyage Result
+137,372.68
+140,003.22
+2,630.54
+TCE (USD/Día)
+22,316.40
+22,898.74
+582.34
+PCM (USD)
+678,864.99
+696,579.56
+17,714.57
+P/L (USD)
+14,259.04
+17,722.92
+3,463.88
+DESVIACIÓN DETECTADA ($2,630.54) - REVISAR DELTAS EN TABLAS
