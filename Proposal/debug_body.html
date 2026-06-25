@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    
+<style>
+    @media print {
+        @page { 
+            margin: 15mm 25mm 20mm 25mm; 
+            size: A4 portrait;
+        }
+        body { 
+            font-family: 'Arial', sans-serif; 
+            font-size: 11pt; 
+            line-height: 1.4; 
+            color: #000; 
+            background: #fff;
+            margin: 0;
+            padding: 0;
+        }
+        h1 { 
+            font-size: 18pt; 
+            font-weight: bold; 
+            color: #0f2c59;
+            margin-top: 25pt; 
+            margin-bottom: 15pt; 
+            page-break-before: always; 
+            border-bottom: 1.5px solid #0f2c59;
+            padding-bottom: 5px;
+        }
+        h1:first-of-type {
+            page-break-before: auto;
+        }
+        h2 { 
+            font-size: 14pt; 
+            font-weight: bold; 
+            color: #0f2c59;
+            margin-top: 20pt; 
+            margin-bottom: 10pt; 
+        }
+        h3 { 
+            font-size: 12pt; 
+            font-weight: bold; 
+            color: #0f2c59;
+            margin-top: 15pt; 
+            margin-bottom: 10pt; 
+            font-style: italic;
+        }
+        p, ul, ol { margin-bottom: 10pt; text-align: justify; }
+        li { margin-bottom: 6pt; }
+        hr { display: none; }
+        
+        /* Cabeza y Pie Fijos */
+        .header-print {
+            position: fixed;
+            top: 2mm;
+            right: -2mm;
+            left: 0;
+            text-align: right;
+            padding-bottom: 5px;
+            z-index: 100;
+        }
+        .header-print img {
+            height: 90px;
+            margin-right: -5px;
+        }
+        .footer-print {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            font-size: 10pt;
+            color: #555;
+            text-align: center;
+            border-top: 1px solid #000;
+            padding-top: 5px;
+            background: white;
+            z-index: 100;
+        }
+
+        .header-space { height: 28mm; }
+        .footer-space { height: 15mm; }
+
+        .cover-page { 
+            page-break-after: always; 
+            padding-top: 50mm;
+            text-align: left;
+            position: relative;
+        }
+        .cover-title { font-size: 32pt; font-weight: bold; line-height: 1.1; margin-bottom: 20pt; color: #0f2c59; }
+        .cover-subtitle { font-size: 16pt; color: #555; line-height: 1.5; }
+        
+        .toc-page { page-break-after: always; page-break-inside: avoid; padding-top: 15mm; }
+        .toc-list { font-size: 12pt; line-height: 2.0; margin-top: 20pt; list-style-type: none; padding-left: 0; }
+        .toc-list li { margin-bottom: 10pt; padding-bottom: 4pt; color: #000; text-decoration: none; border-bottom: none; }
+
+        table.page-wrapper {
+            width: 100%;
+            border-collapse: collapse;
+            border: none !important;
+            margin: 0;
+        }
+        table.page-wrapper > tbody > tr > td,
+        table.page-wrapper > thead > tr > td,
+        table.page-wrapper > tfoot > tr > td {
+            padding: 0;
+            vertical-align: top;
+            border: none !important;
+            background: none;
+        }
+        
+        table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 9.5pt; }
+        th, td { border: 1px solid #ddd; padding: 5px 6px; text-align: left; }
+        th { background-color: rgba(0, 74, 153, 0.1); }
+    }
+</style>
+
+
+    <style>
+    @page {
+        size: A4 landscape;
+        margin: 5mm 15mm 15mm 15mm;
+    }
+    .header-print img {
+        height: 100px !important;
+    }
+    body, p, li, td, th {
+        font-size: 16pt !important;
+        line-height: 1.4 !important;
+    }
+    h1 {
+        font-size: 32pt !important;
+        page-break-before: always;
+    }
+    h2 {
+        font-size: 26pt !important;
+        page-break-before: always;
+    }
+    .cover-page {
+        padding-top: 20mm !important;
+    }
+    .cover-title { 
+        font-size: 40pt !important; 
+        margin-bottom: 10pt !important;
+    }
+    .cover-subtitle { 
+        font-size: 18pt !important; 
+        line-height: 1.4 !important;
+    }
+    </style>
+    </head>
+<body>
+    <div class="header-print"><img src="file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Boiler.Plate/PPTS.HERMOSAS/logo_final_v3.png"></div>
+
+    <div class="footer-print">
+        PROPUESTA COMERCIAL | NAVIERA PETRAL | GEEKSOFT
+    </div>
+
+    <table class="page-wrapper">
+        <thead><tr><td><div class="header-space"></div></td></tr></thead>
+        <tbody><tr><td>
+<h2>2. Arquitectura y Desarrollo del Sistema</h2>
+<p>Para la construcción del sistema, proponemos reemplazar los silos de información con un Stack Tecnológico de última generación, robusto y escalable.</p>
+<div style="display: flex; justify-content: space-between; margin-top: 20px;">
+    <div style="width: 32%; border: 2px solid #0f2c59; border-radius: 8px; padding: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <h3 style="color: #0f2c59; margin-top: 0;">Base de Datos</h3>
+        <strong style="font-size: 16pt; color: #1e8449;">SUPABASE</strong><br>
+        <span style="font-size: 10pt; color: #555;">(PostgreSQL)</span>
+        <p style="font-size: 11pt; text-align: justify; margin-top: 10px;">Actuará como la única fuente de verdad, centralizando maestros, tarifas y flota con seguridad bancaria.</p>
+    </div>
+
+    <div style="width: 32%; border: 2px solid #0f2c59; border-radius: 8px; padding: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <h3 style="color: #0f2c59; margin-top: 0;">Backend & UI</h3>
+        <strong style="font-size: 16pt; color: #1e8449;">STREAMLIT</strong><br>
+        <span style="font-size: 10pt; color: #555;">(Python)</span>
+        <p style="font-size: 11pt; text-align: justify; margin-top: 10px;">Desarrollo ultra-rápido de dashboards interactivos y lógica matemática dura libre de errores de celda.</p>
+    </div>
+
+    <div style="width: 32%; border: 2px solid #0f2c59; border-radius: 8px; padding: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <h3 style="color: #0f2c59; margin-top: 0;">Infraestructura</h3>
+        <strong style="font-size: 16pt; color: #1e8449;">CONTABO</strong><br>
+        <span style="font-size: 10pt; color: #555;">(Cloud VPS)</span>
+        <p style="font-size: 11pt; text-align: justify; margin-top: 10px;">Servidor dedicado en la nube que garantizará que Petral tenga acceso continuo 24/7 a la herramienta.</p>
+    </div>
+</div>
+
+<hr />
+<h2>3. Implementación y Acompañamiento</h2>
+<p>El éxito de la herramienta no solo depende del código, sino de la adopción de los usuarios.</p>
+<table style="width: 100%; border: none; margin-top: 15px;">
+  <tr>
+    <td style="width: 50%; vertical-align: top; padding-right: 10px;">
+        <div style="background-color: #e3f2fd; padding: 15px; border-left: 5px solid #1565c0; border-radius: 4px;">
+            <strong style="color: #1565c0; font-size: 14pt;">1. Pruebas y Onboarding</strong><br><br>
+            <span style="font-size: 12pt;">Involucramiento directo del equipo operativo y gerencial para asegurar el entendimiento y capacitación sobre la plataforma con datos reales.</span>
+        </div>
+    </td>
+    <td style="width: 50%; vertical-align: top; padding-left: 10px;">
+        <div style="background-color: #e8f5e9; padding: 15px; border-left: 5px solid #2e7d32; border-radius: 4px;">
+            <strong style="color: #2e7d32; font-size: 14pt;">2. Acompañamiento In Situ (1 Mes)</strong><br><br>
+            <span style="font-size: 12pt;">Presencia trabajando codo a codo para ver cómo operan en el día a día. Nos permite identificar mejoras UI/UX al instante, corregir bugs menores y calibrar el motor algorítmico.</span>
+        </div>
+    </td>
+  </tr>
+</table>
+
+<div style="margin-top: 30px; text-align: center; font-size: 14pt; color: #0f2c59; font-weight: bold;">
+    Construyendo el futuro de la logística marítima.
+</div>
+</td></tr></tbody>
+        <tfoot><tr><td><div class="footer-space"></div></td></tr></tfoot>
+    </table>
+</body>
+</html>

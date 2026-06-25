@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test 3D Satellite Map</title>
+
+    <!-- MapLibre GL CSS -->
+    <link href='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css' rel='stylesheet' />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+
+        .view-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            min-width: 250px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-value {
+            color: #2196F3;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #2196F3;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #2196F3;
+            cursor: pointer;
+            border: none;
+        }
+
+        .bearing-dial {
+            width: 80px;
+            height: 80px;
+            border: 3px solid #333;
+            border-radius: 50%;
+            position: relative;
+            margin: 10px auto;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            cursor: grab;
+        }
+
+        .bearing-dial:active {
+            cursor: grabbing;
+        }
+
+        .bearing-needle {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            width: 3px;
+            height: 40%;
+            background: #f44336;
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(0deg);
+            transition: transform 0.1s;
+        }
+
+        .bearing-needle::before {
+            content: 'N';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            color: #f44336;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Interactive View Controls -->
+    <div class="view-controls">
+        <!-- Pitch Control (Ángulo Cenital) -->
+        <div class="control-group">
+            <div class="control-label">
+                <span>📐 Ángulo Cenital</span>
+                <span class="control-value" id="pitch-value">60°</span>
+            </div>
+            <input type="range" id="pitch-slider" min="0" max="85" value="60" step="1">
+        </div>
+
+        <!-- Bearing Control (Rotación/Norte) -->
+        <div class="control-group">
+            <div class="control-label">
+                <span>🧭 Rotación Norte</span>
+                <span class="control-value" id="bearing-value">-20°</span>
+            </div>
+            <div class="bearing-dial" id="bearing-dial">
+                <div class="bearing-needle" id="bearing-needle"></div>
+            </div>
+            <input type="range" id="bearing-slider" min="-180" max="180" value="-20" step="1">
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Load GeoJSON data -->
+    <script src="../shougang_polygon.js"></script>
+    <script src="../perimeter_sides.js"></script>
+    <script src="../railway_marcona_andahuaylas.js"></script>
+
+    <!-- MapLibre GL JS -->
+    <script src='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js'></script>
+
+    <script>
+        // Create 3D map with pitch (airplane approach view)
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: {
+                'version': 8,
+                'glyphs': 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+                'sources': {
+                    'satellite': {
+                        'type': 'raster',
+                        'tiles': [
+                            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+                        ],
+                        'tileSize': 256
+                    }
+                },
+                'layers': [{
+                    'id': 'satellite-layer',
+                    'type': 'raster',
+                    'source': 'satellite',
+                    'minzoom': 0,
+                    'maxzoom': 22
+                }]
+            },
+            center: [-75.220, -15.220], // Centered between Shougang and Petral
+            zoom: 13,
+            pitch: 60, // Airplane approach angle
+            bearing: -20, // Slight rotation for better view
+            antialias: true
+        });
+
+        map.on('load', () => {
+            console.log('✅ 3D Satellite Map Loaded!');
+
+            // Add Shougang Island polygon (YELLOW)
+            if (typeof SHOUGANG_POLYGON_FEATURE !== 'undefined') {
+                map.addSource('shougang', {
+                    'type': 'geojson',
+                    'data': SHOUGANG_POLYGON_FEATURE
+                });
+
+                map.addLayer({
+                    'id': 'shougang-fill',
+                    'type': 'fill',
+                    'source': 'shougang',
+                    'paint': {
+                        'fill-color': '#ffeb3b',
+                        'fill-opacity': 0
+                    }
+                });
+
+                map.addLayer({
+                    'id': 'shougang-outline',
+                    'type': 'line',
+                    'source': 'shougang',
+                    'paint': {
+                        'line-color': '#ffeb3b',
+                        'line-width': 4,
+                        'line-opacity': 0.9,
+                        'line-dasharray': [2, 1]
+                    }
+                });
+
+                console.log('✅ Shougang Island (yellow dashed)');
+            }
+
+            // Add Petral perimeter (CYAN)
+            if (typeof PERIMETER_SIDES_GEOJSON !== 'undefined') {
+                map.addSource('petral', {
+                    'type': 'geojson',
+                    'data': PERIMETER_SIDES_GEOJSON
+                });
+
+                map.addLayer({
+                    'id': 'petral-fill',
+                    'type': 'fill',
+                    'source': 'petral',
+                    'paint': {
+                        'fill-color': '#00d4ff',
+                        'fill-opacity': 0
+                    }
+                });
+
+                map.addLayer({
+                    'id': 'petral-outline',
+                    'type': 'line',
+                    'source': 'petral',
+                    'paint': {
+                        'line-color': '#00d4ff',
+                        'line-width': 3,
+                        'line-opacity': 0.8,
+                        'line-dasharray': [2, 1]
+                    }
+                });
+
+                console.log('✅ Petral Perimeter (cyan dashed)');
+            }
+
+            // Add conveyor belt line (EXACT COORDINATES - 3 points to avoid ocean)
+            // Start: 15°14'30"S 75°11'04"W = -15.241667°, -75.184444°
+            // Waypoint: 15°11'53"S 75°13'38"W = -15.198056°, -75.227222°
+            // End: 15°11'34"S 75°14'37"W = -15.192778°, -75.243611°
+            map.addSource('conveyor', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': [
+                            [-75.184444, -15.241667],  // Shougang island (exact DMS)
+                            [-75.227222, -15.198056],  // Waypoint (avoid ocean)
+                            [-75.243611, -15.192778]   // Petral border (exact DMS)
+                        ]
+                    }
+                }
+            });
+
+            // Brown conveyor base
+            map.addLayer({
+                'id': 'conveyor-base',
+                'type': 'line',
+                'source': 'conveyor',
+                'paint': {
+                    'line-color': '#795548',
+                    'line-width': 6,
+                    'line-opacity': 0.8
+                }
+            });
+
+            // Orange animated flow
+            map.addLayer({
+                'id': 'conveyor-flow',
+                'type': 'line',
+                'source': 'conveyor',
+                'paint': {
+                    'line-color': '#ff7043',
+                    'line-width': 3,
+                    'line-opacity': 0.7,
+                    'line-dasharray': [2, 2]
+                }
+            });
+
+            console.log('✅ Conveyor belt 1 added (Main island to Petral)');
+
+            // Add conveyor belt 2 (Island 2 to Waypoint)
+            // Island 2: 15°20'01"S 75°08'47"W = -15.333611°, -75.146389°
+            map.addSource('conveyor2', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': [
+                            [-75.146389, -15.333611],  // Isla Mediana (Sources from here)
+                            [-75.186111, -15.251944],  // New Waypoint
+                            [-75.227222, -15.198056]   // Main Waypoint
+                        ]
+                    }
+                }
+            });
+
+            map.addLayer({
+                'id': 'conveyor2-base',
+                'type': 'line',
+                'source': 'conveyor2',
+                'paint': {
+                    'line-color': '#2E7D32',      // Dark Green
+                    'line-width': 6,
+                    'line-opacity': 0.8
+                }
+            });
+
+            map.addLayer({
+                'id': 'conveyor2-flow',
+                'type': 'line',
+                'source': 'conveyor2',
+                'paint': {
+                    'line-color': '#76FF03',      // Lime Green
+                    'line-width': 3,
+                    'line-opacity': 0.7,
+                    'line-dasharray': [2, 2]
+                }
+            });
+
+            console.log('✅ Conveyor belt 2 added (Island 2 to Waypoint)');
+
+            // Add conveyor belt 3 (Island 3 to Waypoint)
+            // Island 3: 15°18'39"S 75°05'56"W = -15.310833°, -75.098889°
+            map.addSource('conveyor3', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': [
+                            [-75.098889, -15.310833],  // Island 3
+                            [-75.227222, -15.198056]   // Waypoint
+                        ]
+                    }
+                }
+            });
+
+            map.addLayer({
+                'id': 'conveyor3-base',
+                'type': 'line',
+                'source': 'conveyor3',
+                'paint': {
+                    'line-color': '#6A1B9A',      // Dark Purple
+                    'line-width': 6,
+                    'line-opacity': 0.8
+                }
+            });
+
+            map.addLayer({
+                'id': 'conveyor3-flow',
+                'type': 'line',
+                'source': 'conveyor3',
+                'paint': {
+                    'line-color': '#E040FB',      // Magenta/Purple
+                    'line-width': 3,
+                    'line-opacity': 0.7,
+                    'line-dasharray': [2, 2]
+                }
+            });
+
+            console.log('✅ Conveyor belt 3 added (Island 3 to Waypoint)');
+
+            // Add distance labels for conveyor belts
+            // Segment 1a: Island 1 to Waypoint (6.61 km)
+            map.addSource('label-conveyor1a', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [
+                            (-75.184444 + -75.227222) / 2,  // Midpoint lon
+                            (-15.241667 + -15.198056) / 2   // Midpoint lat
+                        ]
+                    },
+                    'properties': {
+                        'distance': '6.61 km'
+                    }
+                }
+            });
+
+            map.addLayer({
+                'id': 'label-conveyor1a-layer',
+                'type': 'symbol',
+                'source': 'label-conveyor1a',
+                'layout': {
+                    'text-field': ['get', 'distance'],
+                    'text-size': 14,
+                    'text-offset': [0, -1]
+                },
+                'paint': {
+                    'text-color': '#FFFFFF',
+                    'text-halo-color': '#795548',
+                    'text-halo-width': 2
+                }
+            });
+
+            // Segment 1b: Waypoint to Petral (1.56 km)
+            map.addSource('label-conveyor1b', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [
+                            (-75.227222 + -75.243611) / 2,
+                            (-15.198056 + -15.192778) / 2
+                        ]
+                    },
+                    'properties': {
+                        'distance': '1.56 km'
+                    }
+                }
+            });
+
+            map.addLayer({
+                'id': 'label-conveyor1b-layer',
+                'type': 'symbol',
+                'source': 'label-conveyor1b',
+                'layout': {
+                    'text-field': ['get', 'distance'],
+                    'text-size': 14,
+                    'text-offset': [0, -1]
+                },
+                'paint': {
+                    'text-color': '#FFFFFF',
+                    'text-halo-color': '#795548',
+                    'text-halo-width': 2
+                }
+            });
+
+            // Segment 2: Island 2 to Waypoint (17.81 km)
+            map.addSource('label-conveyor2', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [
+                            (-75.146389 + -75.186111 + -75.227222) / 3, // Avg lon
+                            (-15.333611 + -15.251944 + -15.198056) / 3  // Avg lat
+                        ]
+                    },
+                    'properties': {
+                        'distance': '17.48 km' // Recalculated estimate
+                    }
+                }
+            });
+
+            map.addLayer({
+                'id': 'label-conveyor2-layer',
+                'type': 'symbol',
+                'source': 'label-conveyor2',
+                'layout': {
+                    'text-field': ['get', 'distance'],
+                    'text-size': 14,
+                    'text-offset': [0, -1]
+                },
+                'paint': {
+                    'text-color': '#FFFFFF',
+                    'text-halo-color': '#2E7D32',
+                    'text-halo-width': 2
+                }
+            });
+
+            // Segment 3: Island 3 to Waypoint (18.67 km)
+            map.addSource('label-conveyor3', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [
+                            (-75.098889 + -75.227222) / 2,
+                            (-15.310833 + -15.198056) / 2
+                        ]
+                    },
+                    'properties': {
+                        'distance': '18.67 km'
+                    }
+                }
+            });
+
+            map.addLayer({
+                'id': 'label-conveyor3-layer',
+                'type': 'symbol',
+                'source': 'label-conveyor3',
+                'layout': {
+                    'text-field': ['get', 'distance'],
+                    'text-size': 14,
+                    'text-offset': [0, -1]
+                },
+                'paint': {
+                    'text-color': '#FFFFFF',
+                    'text-halo-color': '#6A1B9A',
+                    'text-halo-width': 2
+                }
+            });
+
+            console.log('✅ Distance labels added to all conveyor segments');
+
+            // Add labels for Islands with Elevation
+            // 1. Isla Grande (474m)
+            map.addSource('label-isla-grande', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [-75.098889, -15.310833]
+                    },
+                    'properties': {
+                        'title': 'Isla Grande\n(474 m)'
+                    }
+                }
+            });
+
+            map.addLayer({
+                'id': 'label-isla-grande-layer',
+                'type': 'symbol',
+                'source': 'label-isla-grande',
+                'layout': {
+                    'text-field': ['get', 'title'],
+                    'text-size': 16,
+                    'text-offset': [0, -2],
+                    'text-anchor': 'bottom'
+                },
+                'paint': {
+                    'text-color': '#FFFFFF',
+                    'text-halo-color': '#000000',
+                    'text-halo-width': 2
+                }
+            });
+
+            // 2. Isla Mediana (Antes Isla Chica, 59m)
+            map.addSource('label-isla-mediana-new', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [-75.146389, -15.333611]
+                    },
+                    'properties': {
+                        'title': 'Isla Mediana\n(59 m)'
+                    }
+                }
+            });
+
+            map.addLayer({
+                'id': 'label-isla-mediana-new-layer',
+                'type': 'symbol',
+                'source': 'label-isla-mediana-new',
+                'layout': {
+                    'text-field': ['get', 'title'],
+                    'text-size': 16,
+                    'text-offset': [0, -2],
+                    'text-anchor': 'bottom'
+                },
+                'paint': {
+                    'text-color': '#FFFFFF',
+                    'text-halo-color': '#000000',
+                    'text-halo-width': 2
+                }
+            });
+
+            // 3. Isla Chica (Antes Isla Mediana, 135m)
+            map.addSource('label-isla-chica-new', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [-75.184444, -15.241667]
+                    },
+                    'properties': {
+                        'title': 'Isla Chica\n(135 m)'
+                    }
+                }
+            });
+
+            map.addLayer({
+                'id': 'label-isla-chica-new-layer',
+                'type': 'symbol',
+                'source': 'label-isla-chica-new',
+                'layout': {
+                    'text-field': ['get', 'title'],
+                    'text-size': 16,
+                    'text-offset': [0, -2],
+                    'text-anchor': 'bottom'
+                },
+                'paint': {
+                    'text-color': '#FFFFFF',
+                    'text-halo-color': '#000000',
+                    'text-halo-width': 2
+                }
+            });
+
+            console.log('✅ Island labels added');
+
+            // Add railway line (Marcona-Andahuaylas)
+            if (typeof RAILWAY_MARCONA_ANDAHUAYLAS !== 'undefined') {
+                map.addSource('railway', {
+                    'type': 'geojson',
+                    'data': RAILWAY_MARCONA_ANDAHUAYLAS
+                });
+
+                map.addLayer({
+                    'id': 'railway-line',
+                    'type': 'line',
+                    'source': 'railway',
+                    'paint': {
+                        'line-color': '#FFD700',      // Gold/Yellow
+                        'line-width': 5,
+                        'line-opacity': 0.9,
+                        'line-dasharray': [3, 2]      // Thick dashed
+                    }
+                });
+
+                console.log('✅ Railway line added');
+            }
+        });
+
+        // Enable navigation controls
+        map.addControl(new maplibregl.NavigationControl());
+
+        // Interactive View Controls
+        const pitchSlider = document.getElementById('pitch-slider');
+        const pitchValue = document.getElementById('pitch-value');
+        const bearingSlider = document.getElementById('bearing-slider');
+        const bearingValue = document.getElementById('bearing-value');
+        const bearingNeedle = document.getElementById('bearing-needle');
+        const bearingDial = document.getElementById('bearing-dial');
+
+        // Pitch slider control
+        pitchSlider.addEventListener('input', (e) => {
+            const pitch = parseInt(e.target.value);
+            pitchValue.textContent = pitch + '°';
+            map.setPitch(pitch);
+        });
+
+        // Bearing slider control
+        bearingSlider.addEventListener('input', (e) => {
+            const bearing = parseInt(e.target.value);
+            bearingValue.textContent = bearing + '°';
+            bearingNeedle.style.transform = `translateX(-50%) rotate(${bearing}deg)`;
+            map.setBearing(bearing);
+        });
+
+        // Bearing dial drag control
+        let isDragging = false;
+
+        bearingDial.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            updateBearingFromMouse(e);
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                updateBearingFromMouse(e);
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        function updateBearingFromMouse(e) {
+            const rect = bearingDial.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+            const degrees = Math.round((angle * 180 / Math.PI) + 90);
+            const normalizedDegrees = degrees > 180 ? degrees - 360 : degrees;
+
+            bearingSlider.value = normalizedDegrees;
+            bearingValue.textContent = normalizedDegrees + '°';
+            bearingNeedle.style.transform = `translateX(-50%) rotate(${normalizedDegrees}deg)`;
+            map.setBearing(normalizedDegrees);
+        }
+
+        // Initialize needle position
+        bearingNeedle.style.transform = `translateX(-50%) rotate(-20deg)`;
+    </script>
+</body>
+
+</html>

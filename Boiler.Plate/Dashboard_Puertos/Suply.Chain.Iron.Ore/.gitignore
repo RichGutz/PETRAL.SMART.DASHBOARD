@@ -1,0 +1,12 @@
+# Archivos grandes - No subir a Git
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.flv
+*.wmv
+*.webm
+
+# Archivos temporales de video
+temp_video.*
+Bulk Material Handling Systems*.mp4

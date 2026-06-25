@@ -1,0 +1,3007 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Tramo_1_Oeste_Corregido</name>
+    <description>Viaje corregido por avance físico (Longitud) para eliminar teletransportación.</description>
+    <Style id="tramo1Style">
+      <LineStyle>
+        <color>ff0000ff</color>
+        <width>4</width>
+      </LineStyle>
+    </Style>
+    <Folder>
+      <name>Puntos GPS (Ordenados Oeste)</name>
+      <Placemark>
+        <name>Pto 1 (ID:72)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9978192,-14.9934271,517</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 2 (ID:89)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9979963,-14.9931164,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 3 (ID:87)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9979987,-14.9931228,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 4 (ID:91)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.998,-14.9931151,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 5 (ID:93)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.998001,-14.9931129,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 6 (ID:74)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.998002,-14.9930948,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 7 (ID:75)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980022,-14.993094,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 8 (ID:83)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980031,-14.993138,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 9 (ID:76)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980104,-14.9931054,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 10 (ID:85)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.998013,-14.9931176,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 11 (ID:73)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980188,-14.9930333,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 12 (ID:92)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980275,-14.993118,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 13 (ID:94)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980275,-14.993118,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 14 (ID:84)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.998029,-14.9931062,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 15 (ID:86)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.998029,-14.9931062,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 16 (ID:88)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.998029,-14.9931062,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 17 (ID:90)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.998029,-14.9931062,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 18 (ID:79)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980393,-14.9930939,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 19 (ID:82)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980467,-14.9930711,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 20 (ID:80)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980469,-14.9931109,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 21 (ID:81)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980488,-14.993121,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 22 (ID:103)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980586,-14.9930677,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 23 (ID:95)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980594,-14.9930737,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 24 (ID:101)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980595,-14.9930716,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 25 (ID:99)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.99806,-14.9930736,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 26 (ID:78)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.998062,-14.9931016,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 27 (ID:77)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980636,-14.993104,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 28 (ID:98)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980731,-14.9930727,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 29 (ID:100)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980731,-14.9930727,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 30 (ID:102)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9980731,-14.9930727,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 31 (ID:96)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.998092,-14.9930747,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 32 (ID:104)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-74.9991978,-14.991501,508</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 33 (ID:71)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0003948,-15.0010649,526</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 34 (ID:105)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0010029,-14.9902423,502</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 35 (ID:106)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0044282,-14.9893595,494</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 36 (ID:109)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0044282,-14.9893595,494</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 37 (ID:70)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0045111,-15.0117585,528</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 38 (ID:53)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0057185,-15.0480501,552</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 39 (ID:59)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0057646,-15.0480706,552</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 40 (ID:68)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0057646,-15.0480706,552</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 41 (ID:66)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0057795,-15.0480533,552</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 42 (ID:67)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.005781,-15.0480499,552</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 43 (ID:52)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0058014,-15.048082,552</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 44 (ID:54)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0058305,-15.0481228,552</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 45 (ID:97)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0058387,-15.0480837,552</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 46 (ID:56)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0058393,-15.0480891,552</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 47 (ID:62)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0058407,-15.0480804,549</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 48 (ID:63)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0058407,-15.0480804,549</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 49 (ID:65)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0058408,-15.0480818,549</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 50 (ID:58)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0058429,-15.0480828,549</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 51 (ID:61)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0058444,-15.0480883,549</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 52 (ID:64)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0058465,-15.0480826,549</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 53 (ID:57)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0058507,-15.0480803,549</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 54 (ID:55)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0058654,-15.0481039,549</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 55 (ID:69)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0063168,-15.0424651,554</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 56 (ID:51)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0064659,-15.0415536,557</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 57 (ID:107)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0066271,-14.9894438,489</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 58 (ID:50)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0072579,-15.0300837,562</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 59 (ID:49)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0072579,-15.0300837,562</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 60 (ID:48)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0073524,-15.0185675,538</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 61 (ID:60)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0074381,-15.0234138,553</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 62 (ID:108)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0097818,-14.9881893,482</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 63 (ID:110)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0113341,-14.9890761,488</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 64 (ID:137)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0113341,-14.9890761,488</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 65 (ID:144)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0113341,-14.9890761,488</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 66 (ID:111)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0132911,-14.990074,492</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 67 (ID:112)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0132911,-14.990074,492</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 68 (ID:113)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0132911,-14.990074,492</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 69 (ID:139)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.01461,-14.9910276,489</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 70 (ID:145)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.01461,-14.9910276,489</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 71 (ID:114)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0169998,-14.9926892,487</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 72 (ID:140)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0181109,-14.9937636,488</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 73 (ID:147)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0181109,-14.9937636,488</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 74 (ID:115)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0208227,-14.9954623,486</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 75 (ID:142)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0233559,-14.9958724,484</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 76 (ID:164)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0233559,-14.9958724,484</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 77 (ID:119)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0267312,-14.9960813,485</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 78 (ID:118)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0267312,-14.9960813,485</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 79 (ID:150)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0286608,-14.9971892,490</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 80 (ID:162)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0286608,-14.9971892,490</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 81 (ID:120)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0308667,-14.9978397,485</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 82 (ID:121)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0308667,-14.9978397,485</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 83 (ID:146)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0322612,-14.9981784,489</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 84 (ID:151)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0322612,-14.9981784,489</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 85 (ID:117)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0353553,-14.9988007,482</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 86 (ID:163)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0375795,-14.9991684,482</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 87 (ID:166)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0375795,-14.9991684,482</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 88 (ID:116)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0409901,-14.9995368,477</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 89 (ID:148)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0429126,-14.9994188,476</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 90 (ID:154)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0429126,-14.9994188,476</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 91 (ID:123)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0465943,-14.9992398,475</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 92 (ID:124)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0465943,-14.9992398,475</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 93 (ID:149)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0489857,-14.9992923,477</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 94 (ID:155)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0489857,-14.9992923,477</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 95 (ID:125)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0526611,-14.9993793,475</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 96 (ID:126)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0526611,-14.9993793,475</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 97 (ID:165)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0547005,-14.9996462,479</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 98 (ID:168)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0547005,-14.9996462,479</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 99 (ID:127)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0578248,-15.0002529,476</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 100 (ID:128)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0578248,-15.0002529,476</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 101 (ID:152)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0597736,-15.0007457,479</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 102 (ID:158)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0597736,-15.0007457,479</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 103 (ID:129)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0622265,-15.0010572,481</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 104 (ID:130)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0622265,-15.0010572,481</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 105 (ID:153)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0640258,-15.0011994,478</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 106 (ID:169)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0640258,-15.0011994,478</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 107 (ID:131)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0665667,-15.0012955,474</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 108 (ID:132)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0665667,-15.0012955,474</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 109 (ID:167)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0680238,-15.0018298,474</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 110 (ID:159)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0680238,-15.0018298,474</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 111 (ID:122)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0700428,-15.0033885,484</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 112 (ID:156)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0714235,-15.003845,486</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 113 (ID:160)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0714235,-15.003845,486</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 114 (ID:133)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0720749,-15.0058763,486</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 115 (ID:157)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0726592,-15.0074037,486</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 116 (ID:170)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0726592,-15.0074037,486</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 117 (ID:135)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0735208,-15.0097817,488</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 118 (ID:134)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0735411,-15.0099262,488</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 119 (ID:136)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0743525,-15.0118171,487</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 120 (ID:174)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0753353,-15.0142574,488</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 121 (ID:175)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0753353,-15.0142574,488</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 122 (ID:138)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0756548,-15.0151933,488</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 123 (ID:141)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0763879,-15.0172757,489</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 124 (ID:143)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0775099,-15.0200594,491</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 125 (ID:161)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0776804,-15.0214135,493</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 126 (ID:172)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0784464,-15.0234689,496</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 127 (ID:173)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0784464,-15.0234689,496</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 128 (ID:171)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0784739,-15.0235884,496</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 129 (ID:178)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0791112,-15.0252394,500</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 130 (ID:176)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0800133,-15.027724,506</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 131 (ID:177)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0800595,-15.0278738,506</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 132 (ID:179)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0806539,-15.0294642,509</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 133 (ID:180)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0815559,-15.0319001,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 134 (ID:181)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0815768,-15.0320375,515</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 135 (ID:182)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.082274,-15.0337822,521</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 136 (ID:184)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0831098,-15.0359991,526</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 137 (ID:183)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0831557,-15.0361292,526</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 138 (ID:188)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0836222,-15.0373094,530</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 139 (ID:185)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0838202,-15.0378563,533</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 140 (ID:186)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0840703,-15.038663,535</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 141 (ID:187)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0846979,-15.0402869,541</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 142 (ID:189)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0858041,-15.0433906,551</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 143 (ID:195)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0865947,-15.0451638,557</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 144 (ID:190)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0867391,-15.0455219,560</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 145 (ID:191)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0877209,-15.047562,566</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 146 (ID:196)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0880442,-15.0481982,566</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 147 (ID:192)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0884712,-15.0491536,570</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 148 (ID:200)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0884712,-15.0491536,570</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 149 (ID:204)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0884712,-15.0491536,570</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 150 (ID:193)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0900743,-15.0514655,583</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 151 (ID:194)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0912095,-15.0525621,589</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 152 (ID:205)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0914071,-15.0527659,589</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 153 (ID:215)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0929908,-15.0543338,595</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 154 (ID:216)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0929908,-15.0543338,595</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 155 (ID:197)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0933718,-15.0547875,597</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 156 (ID:206)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0944164,-15.0555968,601</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 157 (ID:217)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0951247,-15.0562679,607</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 158 (ID:218)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0951247,-15.0562679,607</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 159 (ID:198)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0963018,-15.0575212,617</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 160 (ID:207)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0972667,-15.0584185,623</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 161 (ID:199)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0989245,-15.0597823,630</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 162 (ID:213)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0993801,-15.0601509,633</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 163 (ID:214)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0993801,-15.0601509,633</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 164 (ID:220)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0993801,-15.0601509,633</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 165 (ID:219)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.0993801,-15.0601509,633</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 166 (ID:208)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1001231,-15.0607546,638</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 167 (ID:201)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1001231,-15.0607546,638</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 168 (ID:202)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1019492,-15.0622711,651</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 169 (ID:203)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1029359,-15.0632079,659</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 170 (ID:209)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1045827,-15.0645468,674</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 171 (ID:210)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1057703,-15.065509,681</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 172 (ID:211)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1075799,-15.0669944,702</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 173 (ID:212)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1087222,-15.0679128,707</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 174 (ID:221)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1101336,-15.0690716,721</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 175 (ID:222)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1113863,-15.0697739,724</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 176 (ID:224)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1114149,-15.0697782,724</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 177 (ID:225)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1133344,-15.0704765,729</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 178 (ID:232)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1134803,-15.0705199,733</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 179 (ID:233)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1134803,-15.0705199,733</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 180 (ID:234)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1134803,-15.0705199,733</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 181 (ID:231)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1134803,-15.0705199,733</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 182 (ID:248)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1142385,-15.0707101,737</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 183 (ID:230)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1158578,-15.0718399,746</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 184 (ID:226)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1162105,-15.0721213,746</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 185 (ID:227)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1170456,-15.0728344,753</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 186 (ID:249)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1171671,-15.0729444,753</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 187 (ID:235)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1194066,-15.0760524,784</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 188 (ID:236)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1194066,-15.0760524,784</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 189 (ID:237)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1194066,-15.0760524,784</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 190 (ID:238)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1194066,-15.0760524,784</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 191 (ID:239)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1194116,-15.076083,784</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 192 (ID:242)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1194164,-15.076083,784</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 193 (ID:243)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1194164,-15.076083,784</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 194 (ID:229)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1194195,-15.0760697,784</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 195 (ID:228)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1194382,-15.0760957,784</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 196 (ID:253)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1194404,-15.0760857,784</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 197 (ID:252)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1194412,-15.076087,784</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 198 (ID:251)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1194444,-15.076088,784</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 199 (ID:250)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1194516,-15.076097,784</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 200 (ID:223)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1194646,-15.0760981,784</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 201 (ID:240)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1206196,-15.0772694,790</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 202 (ID:254)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1207178,-15.0773397,790</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 203 (ID:241)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1238428,-15.0796351,797</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 204 (ID:255)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1239509,-15.0797657,797</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 205 (ID:244)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1258787,-15.0823771,826</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 206 (ID:245)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1263857,-15.0830036,825</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 207 (ID:256)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1264873,-15.0831395,825</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 208 (ID:259)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1265141,-15.0831375,825</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 209 (ID:246)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1291683,-15.0863602,848</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 210 (ID:247)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1292676,-15.0864937,849</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 211 (ID:260)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1315526,-15.089696,872</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 212 (ID:257)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1320566,-15.0902774,879</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 213 (ID:418)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1321787,-15.090414,879</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 214 (ID:449)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1321787,-15.090414,879</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 215 (ID:261)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1336962,-15.0929462,872</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 216 (ID:278)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340183,-15.0938364,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 217 (ID:286)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340183,-15.0938364,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 218 (ID:422)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340333,-15.0940597,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 219 (ID:457)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340333,-15.0940597,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 220 (ID:421)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340407,-15.0940575,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 221 (ID:455)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340407,-15.0940575,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 222 (ID:419)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340424,-15.0938695,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 223 (ID:451)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340424,-15.0938695,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 224 (ID:420)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340457,-15.0940612,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 225 (ID:453)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340457,-15.0940612,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 226 (ID:258)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.134046,-15.0940764,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 227 (ID:262)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340491,-15.0940746,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 228 (ID:281)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340497,-15.0940299,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 229 (ID:292)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340497,-15.0940299,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 230 (ID:263)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340672,-15.0940636,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 231 (ID:279)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340803,-15.0940376,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 232 (ID:288)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340803,-15.0940376,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 233 (ID:280)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340803,-15.0940376,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 234 (ID:290)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1340803,-15.0940376,866</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 235 (ID:282)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.13595,-15.0951302,880</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 236 (ID:294)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.13595,-15.0951302,880</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 237 (ID:423)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1360862,-15.0952093,880</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 238 (ID:460)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1360862,-15.0952093,880</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 239 (ID:264)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1362746,-15.0953059,880</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 240 (ID:284)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.140769,-15.0978599,865</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 241 (ID:296)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.140769,-15.0978599,865</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 242 (ID:424)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1409139,-15.0979442,858</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 243 (ID:265)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.14093,-15.0979428,858</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 244 (ID:266)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.14093,-15.0979428,858</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 245 (ID:444)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421052,-15.0986265,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 246 (ID:448)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421052,-15.0986265,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 247 (ID:450)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421052,-15.0986265,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 248 (ID:445)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421052,-15.0986265,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 249 (ID:446)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421052,-15.0986265,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 250 (ID:443)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421058,-15.0986258,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 251 (ID:442)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421107,-15.0986201,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 252 (ID:440)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421134,-15.0986107,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 253 (ID:441)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421151,-15.0986192,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 254 (ID:428)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421212,-15.098599,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 255 (ID:429)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421222,-15.0985988,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 256 (ID:431)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421227,-15.0986016,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 257 (ID:432)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421227,-15.0986016,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 258 (ID:433)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421227,-15.0986016,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 259 (ID:434)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421227,-15.0986016,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 260 (ID:436)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421227,-15.0986016,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 261 (ID:437)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421227,-15.0986016,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 262 (ID:438)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421227,-15.0986016,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 263 (ID:439)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421227,-15.0986016,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 264 (ID:435)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421227,-15.0986016,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 265 (ID:430)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421228,-15.0986009,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 266 (ID:425)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421229,-15.0985984,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 267 (ID:427)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421237,-15.0985976,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 268 (ID:426)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421254,-15.0985976,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 269 (ID:285)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 270 (ID:287)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 271 (ID:289)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 272 (ID:291)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 273 (ID:293)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 274 (ID:295)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 275 (ID:297)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 276 (ID:298)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 277 (ID:299)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 278 (ID:300)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 279 (ID:301)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 280 (ID:303)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 281 (ID:304)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 282 (ID:305)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 283 (ID:306)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 284 (ID:307)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 285 (ID:308)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 286 (ID:309)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 287 (ID:310)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 288 (ID:311)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 289 (ID:313)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 290 (ID:314)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 291 (ID:316)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 292 (ID:318)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 293 (ID:320)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 294 (ID:323)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 295 (ID:324)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 296 (ID:327)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 297 (ID:302)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 298 (ID:312)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421255,-15.0986115,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 299 (ID:335)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421307,-15.0986035,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 300 (ID:348)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421307,-15.0986035,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 301 (ID:333)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421309,-15.0985956,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 302 (ID:346)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421309,-15.0985956,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 303 (ID:315)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421345,-15.098609,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 304 (ID:317)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421345,-15.098609,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 305 (ID:328)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421345,-15.098609,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 306 (ID:330)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421345,-15.098609,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 307 (ID:319)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421348,-15.0986088,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 308 (ID:321)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421348,-15.0986088,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 309 (ID:325)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421348,-15.0986088,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 310 (ID:326)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421348,-15.0986088,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 311 (ID:329)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421348,-15.0986088,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 312 (ID:332)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421348,-15.0986088,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 313 (ID:334)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421348,-15.0986088,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 314 (ID:336)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421348,-15.0986088,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 315 (ID:338)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421348,-15.0986088,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 316 (ID:343)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421348,-15.0986088,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 317 (ID:345)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421348,-15.0986088,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 318 (ID:322)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421348,-15.0986088,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 319 (ID:331)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421348,-15.0986088,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 320 (ID:341)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421348,-15.0986088,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 321 (ID:454)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421373,-15.0986243,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 322 (ID:452)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.142138,-15.0986267,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 323 (ID:337)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421564,-15.0986241,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 324 (ID:350)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1421564,-15.0986241,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 325 (ID:456)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1422031,-15.0986658,845</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 326 (ID:339)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1469009,-15.1013256,798</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 327 (ID:352)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1469009,-15.1013256,798</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 328 (ID:458)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1471799,-15.1014959,798</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 329 (ID:340)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1545271,-15.1056429,758</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 330 (ID:354)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1545271,-15.1056429,758</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 331 (ID:459)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1547987,-15.1057904,758</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 332 (ID:342)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1619393,-15.1098634,738</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 333 (ID:356)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1619393,-15.1098634,738</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 334 (ID:461)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1621891,-15.1100058,734</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 335 (ID:344)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1693079,-15.114082,746</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 336 (ID:357)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1693079,-15.114082,746</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 337 (ID:267)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.176002,-15.1178309,753</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 338 (ID:347)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1767399,-15.1179236,754</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 339 (ID:359)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1767399,-15.1179236,754</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 340 (ID:268)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1830988,-15.1218672,741</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 341 (ID:349)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1837119,-15.1222305,742</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 342 (ID:361)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1837119,-15.1222305,742</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 343 (ID:363)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1907091,-15.1232603,726</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 344 (ID:351)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1907091,-15.1232603,726</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 345 (ID:269)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1930367,-15.1221298,725</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 346 (ID:353)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1965051,-15.1227286,722</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 347 (ID:365)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.1965051,-15.1227286,722</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 348 (ID:270)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2004569,-15.1239449,709</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 349 (ID:355)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2015334,-15.1243546,706</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 350 (ID:366)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2015334,-15.1243546,706</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 351 (ID:271)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2073002,-15.1265355,698</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 352 (ID:272)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2084957,-15.1267661,696</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 353 (ID:273)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2084957,-15.1267661,696</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 354 (ID:358)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2087248,-15.1268067,696</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 355 (ID:368)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2087248,-15.1268067,696</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 356 (ID:360)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2165494,-15.1292334,694</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 357 (ID:370)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2165494,-15.1292334,694</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 358 (ID:362)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2229644,-15.1319334,698</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 359 (ID:372)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2229644,-15.1319334,698</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 360 (ID:364)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2279031,-15.1322089,686</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 361 (ID:374)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2279031,-15.1322089,686</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 362 (ID:367)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2309796,-15.1309756,677</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 363 (ID:376)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2309796,-15.1309756,677</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 364 (ID:369)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2330346,-15.1298326,669</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 365 (ID:378)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2330346,-15.1298326,669</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 366 (ID:380)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2341012,-15.1326401,643</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 367 (ID:371)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2341012,-15.1326401,643</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 368 (ID:274)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2353938,-15.1340636,636</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 369 (ID:275)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2353938,-15.1340636,636</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 370 (ID:373)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2360355,-15.1342423,632</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 371 (ID:382)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2360355,-15.1342423,632</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 372 (ID:375)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.237018,-15.1373275,625</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 373 (ID:384)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.237018,-15.1373275,625</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 374 (ID:386)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2384826,-15.1404241,600</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 375 (ID:377)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2384826,-15.1404241,600</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 376 (ID:379)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2405395,-15.1423072,591</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 377 (ID:399)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2405395,-15.1423072,591</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 378 (ID:381)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.242834,-15.1453338,572</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 379 (ID:400)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.242834,-15.1453338,572</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 380 (ID:383)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2453668,-15.1472598,556</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 381 (ID:401)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2453668,-15.1472598,556</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 382 (ID:385)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2480753,-15.1462476,533</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 383 (ID:402)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2480753,-15.1462476,533</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 384 (ID:403)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2517958,-15.1455557,512</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 385 (ID:387)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2517958,-15.1455557,512</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 386 (ID:388)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2555256,-15.1448023,487</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 387 (ID:404)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2555256,-15.1448023,487</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 388 (ID:389)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2592501,-15.1449249,474</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 389 (ID:405)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2592501,-15.1449249,474</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 390 (ID:390)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2626752,-15.1449363,473</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 391 (ID:406)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2626752,-15.1449363,473</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 392 (ID:391)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2654669,-15.1442786,462</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 393 (ID:407)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2654669,-15.1442786,462</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 394 (ID:392)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2682308,-15.1434066,459</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 395 (ID:408)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2682308,-15.1434066,459</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 396 (ID:393)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2705703,-15.1424523,459</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 397 (ID:397)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2705703,-15.1424523,459</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 398 (ID:394)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2730768,-15.1415926,454</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 399 (ID:409)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2730768,-15.1415926,454</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 400 (ID:395)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2758337,-15.1415118,445</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 401 (ID:398)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2758337,-15.1415118,445</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 402 (ID:276)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2797809,-15.1410851,441</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 403 (ID:396)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2801282,-15.1410318,441</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 404 (ID:410)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2801282,-15.1410318,441</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 405 (ID:277)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2837356,-15.1408076,436</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 406 (ID:464)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2858728,-15.1464817,361</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 407 (ID:468)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2858728,-15.1464817,361</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 408 (ID:462)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.286275,-15.1437053,410</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 409 (ID:470)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.286275,-15.1437053,410</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 410 (ID:465)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.286275,-15.1437053,410</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 411 (ID:283)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2864545,-15.142121,423</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 412 (ID:417)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2867461,-15.1428664,414</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 413 (ID:411)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2867557,-15.1429433,414</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 414 (ID:412)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2867637,-15.1429406,414</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 415 (ID:415)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2867645,-15.142871,414</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 416 (ID:416)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2867688,-15.1428887,414</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 417 (ID:413)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2867719,-15.1428933,414</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 418 (ID:414)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2867745,-15.1428922,414</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 419 (ID:467)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2879565,-15.1574647,172</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 420 (ID:469)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2884802,-15.1462595,324</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 421 (ID:466)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2884993,-15.1539713,232</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 422 (ID:447)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2888538,-15.1510757,266</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 423 (ID:463)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2888829,-15.150932,266</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 424 (ID:471)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2892321,-15.1552964,196</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 425 (ID:472)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-75.2904869,-15.147592,303</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Pto 426 (ID:47)</name>
+        <Point>
+          <altitudeMode>absolute</altitudeMode>
+          <coordinates>-77.0169863,-12.0894175,139</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+    <Placemark>
+      <name>Ruta Tramo 1</name>
+      <styleUrl>#tramo1Style</styleUrl>
+      <LineString>
+        <tessellate>1</tessellate>
+        <altitudeMode>absolute</altitudeMode>
+        <coordinates>-74.9978192,-14.9934271,517 -74.9979963,-14.9931164,515 -74.9979987,-14.9931228,515 -74.998,-14.9931151,515 -74.998001,-14.9931129,515 -74.998002,-14.9930948,515 -74.9980022,-14.993094,515 -74.9980031,-14.993138,515 -74.9980104,-14.9931054,515 -74.998013,-14.9931176,515 -74.9980188,-14.9930333,515 -74.9980275,-14.993118,515 -74.9980275,-14.993118,515 -74.998029,-14.9931062,515 -74.998029,-14.9931062,515 -74.998029,-14.9931062,515 -74.998029,-14.9931062,515 -74.9980393,-14.9930939,515 -74.9980467,-14.9930711,515 -74.9980469,-14.9931109,515 -74.9980488,-14.993121,515 -74.9980586,-14.9930677,515 -74.9980594,-14.9930737,515 -74.9980595,-14.9930716,515 -74.99806,-14.9930736,515 -74.998062,-14.9931016,515 -74.9980636,-14.993104,515 -74.9980731,-14.9930727,515 -74.9980731,-14.9930727,515 -74.9980731,-14.9930727,515 -74.998092,-14.9930747,515 -74.9991978,-14.991501,508 -75.0003948,-15.0010649,526 -75.0010029,-14.9902423,502 -75.0044282,-14.9893595,494 -75.0044282,-14.9893595,494 -75.0045111,-15.0117585,528 -75.0057185,-15.0480501,552 -75.0057646,-15.0480706,552 -75.0057646,-15.0480706,552 -75.0057795,-15.0480533,552 -75.005781,-15.0480499,552 -75.0058014,-15.048082,552 -75.0058305,-15.0481228,552 -75.0058387,-15.0480837,552 -75.0058393,-15.0480891,552 -75.0058407,-15.0480804,549 -75.0058407,-15.0480804,549 -75.0058408,-15.0480818,549 -75.0058429,-15.0480828,549 -75.0058444,-15.0480883,549 -75.0058465,-15.0480826,549 -75.0058507,-15.0480803,549 -75.0058654,-15.0481039,549 -75.0063168,-15.0424651,554 -75.0064659,-15.0415536,557 -75.0066271,-14.9894438,489 -75.0072579,-15.0300837,562 -75.0072579,-15.0300837,562 -75.0073524,-15.0185675,538 -75.0074381,-15.0234138,553 -75.0097818,-14.9881893,482 -75.0113341,-14.9890761,488 -75.0113341,-14.9890761,488 -75.0113341,-14.9890761,488 -75.0132911,-14.990074,492 -75.0132911,-14.990074,492 -75.0132911,-14.990074,492 -75.01461,-14.9910276,489 -75.01461,-14.9910276,489 -75.0169998,-14.9926892,487 -75.0181109,-14.9937636,488 -75.0181109,-14.9937636,488 -75.0208227,-14.9954623,486 -75.0233559,-14.9958724,484 -75.0233559,-14.9958724,484 -75.0267312,-14.9960813,485 -75.0267312,-14.9960813,485 -75.0286608,-14.9971892,490 -75.0286608,-14.9971892,490 -75.0308667,-14.9978397,485 -75.0308667,-14.9978397,485 -75.0322612,-14.9981784,489 -75.0322612,-14.9981784,489 -75.0353553,-14.9988007,482 -75.0375795,-14.9991684,482 -75.0375795,-14.9991684,482 -75.0409901,-14.9995368,477 -75.0429126,-14.9994188,476 -75.0429126,-14.9994188,476 -75.0465943,-14.9992398,475 -75.0465943,-14.9992398,475 -75.0489857,-14.9992923,477 -75.0489857,-14.9992923,477 -75.0526611,-14.9993793,475 -75.0526611,-14.9993793,475 -75.0547005,-14.9996462,479 -75.0547005,-14.9996462,479 -75.0578248,-15.0002529,476 -75.0578248,-15.0002529,476 -75.0597736,-15.0007457,479 -75.0597736,-15.0007457,479 -75.0622265,-15.0010572,481 -75.0622265,-15.0010572,481 -75.0640258,-15.0011994,478 -75.0640258,-15.0011994,478 -75.0665667,-15.0012955,474 -75.0665667,-15.0012955,474 -75.0680238,-15.0018298,474 -75.0680238,-15.0018298,474 -75.0700428,-15.0033885,484 -75.0714235,-15.003845,486 -75.0714235,-15.003845,486 -75.0720749,-15.0058763,486 -75.0726592,-15.0074037,486 -75.0726592,-15.0074037,486 -75.0735208,-15.0097817,488 -75.0735411,-15.0099262,488 -75.0743525,-15.0118171,487 -75.0753353,-15.0142574,488 -75.0753353,-15.0142574,488 -75.0756548,-15.0151933,488 -75.0763879,-15.0172757,489 -75.0775099,-15.0200594,491 -75.0776804,-15.0214135,493 -75.0784464,-15.0234689,496 -75.0784464,-15.0234689,496 -75.0784739,-15.0235884,496 -75.0791112,-15.0252394,500 -75.0800133,-15.027724,506 -75.0800595,-15.0278738,506 -75.0806539,-15.0294642,509 -75.0815559,-15.0319001,515 -75.0815768,-15.0320375,515 -75.082274,-15.0337822,521 -75.0831098,-15.0359991,526 -75.0831557,-15.0361292,526 -75.0836222,-15.0373094,530 -75.0838202,-15.0378563,533 -75.0840703,-15.038663,535 -75.0846979,-15.0402869,541 -75.0858041,-15.0433906,551 -75.0865947,-15.0451638,557 -75.0867391,-15.0455219,560 -75.0877209,-15.047562,566 -75.0880442,-15.0481982,566 -75.0884712,-15.0491536,570 -75.0884712,-15.0491536,570 -75.0884712,-15.0491536,570 -75.0900743,-15.0514655,583 -75.0912095,-15.0525621,589 -75.0914071,-15.0527659,589 -75.0929908,-15.0543338,595 -75.0929908,-15.0543338,595 -75.0933718,-15.0547875,597 -75.0944164,-15.0555968,601 -75.0951247,-15.0562679,607 -75.0951247,-15.0562679,607 -75.0963018,-15.0575212,617 -75.0972667,-15.0584185,623 -75.0989245,-15.0597823,630 -75.0993801,-15.0601509,633 -75.0993801,-15.0601509,633 -75.0993801,-15.0601509,633 -75.0993801,-15.0601509,633 -75.1001231,-15.0607546,638 -75.1001231,-15.0607546,638 -75.1019492,-15.0622711,651 -75.1029359,-15.0632079,659 -75.1045827,-15.0645468,674 -75.1057703,-15.065509,681 -75.1075799,-15.0669944,702 -75.1087222,-15.0679128,707 -75.1101336,-15.0690716,721 -75.1113863,-15.0697739,724 -75.1114149,-15.0697782,724 -75.1133344,-15.0704765,729 -75.1134803,-15.0705199,733 -75.1134803,-15.0705199,733 -75.1134803,-15.0705199,733 -75.1134803,-15.0705199,733 -75.1142385,-15.0707101,737 -75.1158578,-15.0718399,746 -75.1162105,-15.0721213,746 -75.1170456,-15.0728344,753 -75.1171671,-15.0729444,753 -75.1194066,-15.0760524,784 -75.1194066,-15.0760524,784 -75.1194066,-15.0760524,784 -75.1194066,-15.0760524,784 -75.1194116,-15.076083,784 -75.1194164,-15.076083,784 -75.1194164,-15.076083,784 -75.1194195,-15.0760697,784 -75.1194382,-15.0760957,784 -75.1194404,-15.0760857,784 -75.1194412,-15.076087,784 -75.1194444,-15.076088,784 -75.1194516,-15.076097,784 -75.1194646,-15.0760981,784 -75.1206196,-15.0772694,790 -75.1207178,-15.0773397,790 -75.1238428,-15.0796351,797 -75.1239509,-15.0797657,797 -75.1258787,-15.0823771,826 -75.1263857,-15.0830036,825 -75.1264873,-15.0831395,825 -75.1265141,-15.0831375,825 -75.1291683,-15.0863602,848 -75.1292676,-15.0864937,849 -75.1315526,-15.089696,872 -75.1320566,-15.0902774,879 -75.1321787,-15.090414,879 -75.1321787,-15.090414,879 -75.1336962,-15.0929462,872 -75.1340183,-15.0938364,866 -75.1340183,-15.0938364,866 -75.1340333,-15.0940597,866 -75.1340333,-15.0940597,866 -75.1340407,-15.0940575,866 -75.1340407,-15.0940575,866 -75.1340424,-15.0938695,866 -75.1340424,-15.0938695,866 -75.1340457,-15.0940612,866 -75.1340457,-15.0940612,866 -75.134046,-15.0940764,866 -75.1340491,-15.0940746,866 -75.1340497,-15.0940299,866 -75.1340497,-15.0940299,866 -75.1340672,-15.0940636,866 -75.1340803,-15.0940376,866 -75.1340803,-15.0940376,866 -75.1340803,-15.0940376,866 -75.1340803,-15.0940376,866 -75.13595,-15.0951302,880 -75.13595,-15.0951302,880 -75.1360862,-15.0952093,880 -75.1360862,-15.0952093,880 -75.1362746,-15.0953059,880 -75.140769,-15.0978599,865 -75.140769,-15.0978599,865 -75.1409139,-15.0979442,858 -75.14093,-15.0979428,858 -75.14093,-15.0979428,858 -75.1421052,-15.0986265,845 -75.1421052,-15.0986265,845 -75.1421052,-15.0986265,845 -75.1421052,-15.0986265,845 -75.1421052,-15.0986265,845 -75.1421058,-15.0986258,845 -75.1421107,-15.0986201,845 -75.1421134,-15.0986107,845 -75.1421151,-15.0986192,845 -75.1421212,-15.098599,845 -75.1421222,-15.0985988,845 -75.1421227,-15.0986016,845 -75.1421227,-15.0986016,845 -75.1421227,-15.0986016,845 -75.1421227,-15.0986016,845 -75.1421227,-15.0986016,845 -75.1421227,-15.0986016,845 -75.1421227,-15.0986016,845 -75.1421227,-15.0986016,845 -75.1421227,-15.0986016,845 -75.1421228,-15.0986009,845 -75.1421229,-15.0985984,845 -75.1421237,-15.0985976,845 -75.1421254,-15.0985976,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421255,-15.0986115,845 -75.1421307,-15.0986035,845 -75.1421307,-15.0986035,845 -75.1421309,-15.0985956,845 -75.1421309,-15.0985956,845 -75.1421345,-15.098609,845 -75.1421345,-15.098609,845 -75.1421345,-15.098609,845 -75.1421345,-15.098609,845 -75.1421348,-15.0986088,845 -75.1421348,-15.0986088,845 -75.1421348,-15.0986088,845 -75.1421348,-15.0986088,845 -75.1421348,-15.0986088,845 -75.1421348,-15.0986088,845 -75.1421348,-15.0986088,845 -75.1421348,-15.0986088,845 -75.1421348,-15.0986088,845 -75.1421348,-15.0986088,845 -75.1421348,-15.0986088,845 -75.1421348,-15.0986088,845 -75.1421348,-15.0986088,845 -75.1421348,-15.0986088,845 -75.1421373,-15.0986243,845 -75.142138,-15.0986267,845 -75.1421564,-15.0986241,845 -75.1421564,-15.0986241,845 -75.1422031,-15.0986658,845 -75.1469009,-15.1013256,798 -75.1469009,-15.1013256,798 -75.1471799,-15.1014959,798 -75.1545271,-15.1056429,758 -75.1545271,-15.1056429,758 -75.1547987,-15.1057904,758 -75.1619393,-15.1098634,738 -75.1619393,-15.1098634,738 -75.1621891,-15.1100058,734 -75.1693079,-15.114082,746 -75.1693079,-15.114082,746 -75.176002,-15.1178309,753 -75.1767399,-15.1179236,754 -75.1767399,-15.1179236,754 -75.1830988,-15.1218672,741 -75.1837119,-15.1222305,742 -75.1837119,-15.1222305,742 -75.1907091,-15.1232603,726 -75.1907091,-15.1232603,726 -75.1930367,-15.1221298,725 -75.1965051,-15.1227286,722 -75.1965051,-15.1227286,722 -75.2004569,-15.1239449,709 -75.2015334,-15.1243546,706 -75.2015334,-15.1243546,706 -75.2073002,-15.1265355,698 -75.2084957,-15.1267661,696 -75.2084957,-15.1267661,696 -75.2087248,-15.1268067,696 -75.2087248,-15.1268067,696 -75.2165494,-15.1292334,694 -75.2165494,-15.1292334,694 -75.2229644,-15.1319334,698 -75.2229644,-15.1319334,698 -75.2279031,-15.1322089,686 -75.2279031,-15.1322089,686 -75.2309796,-15.1309756,677 -75.2309796,-15.1309756,677 -75.2330346,-15.1298326,669 -75.2330346,-15.1298326,669 -75.2341012,-15.1326401,643 -75.2341012,-15.1326401,643 -75.2353938,-15.1340636,636 -75.2353938,-15.1340636,636 -75.2360355,-15.1342423,632 -75.2360355,-15.1342423,632 -75.237018,-15.1373275,625 -75.237018,-15.1373275,625 -75.2384826,-15.1404241,600 -75.2384826,-15.1404241,600 -75.2405395,-15.1423072,591 -75.2405395,-15.1423072,591 -75.242834,-15.1453338,572 -75.242834,-15.1453338,572 -75.2453668,-15.1472598,556 -75.2453668,-15.1472598,556 -75.2480753,-15.1462476,533 -75.2480753,-15.1462476,533 -75.2517958,-15.1455557,512 -75.2517958,-15.1455557,512 -75.2555256,-15.1448023,487 -75.2555256,-15.1448023,487 -75.2592501,-15.1449249,474 -75.2592501,-15.1449249,474 -75.2626752,-15.1449363,473 -75.2626752,-15.1449363,473 -75.2654669,-15.1442786,462 -75.2654669,-15.1442786,462 -75.2682308,-15.1434066,459 -75.2682308,-15.1434066,459 -75.2705703,-15.1424523,459 -75.2705703,-15.1424523,459 -75.2730768,-15.1415926,454 -75.2730768,-15.1415926,454 -75.2758337,-15.1415118,445 -75.2758337,-15.1415118,445 -75.2797809,-15.1410851,441 -75.2801282,-15.1410318,441 -75.2801282,-15.1410318,441 -75.2837356,-15.1408076,436 -75.2858728,-15.1464817,361 -75.2858728,-15.1464817,361 -75.286275,-15.1437053,410 -75.286275,-15.1437053,410 -75.286275,-15.1437053,410 -75.2864545,-15.142121,423 -75.2867461,-15.1428664,414 -75.2867557,-15.1429433,414 -75.2867637,-15.1429406,414 -75.2867645,-15.142871,414 -75.2867688,-15.1428887,414 -75.2867719,-15.1428933,414 -75.2867745,-15.1428922,414 -75.2879565,-15.1574647,172 -75.2884802,-15.1462595,324 -75.2884993,-15.1539713,232 -75.2888538,-15.1510757,266 -75.2888829,-15.150932,266 -75.2892321,-15.1552964,196 -75.2904869,-15.147592,303 -77.0169863,-12.0894175,139</coordinates>
+      </LineString>
+    </Placemark>
+  </Document>
+</kml>

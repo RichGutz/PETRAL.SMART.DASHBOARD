@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plano Topográfico - DQM Perímetros</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #f0f2f5;}
+        #map { height: 100vh; width: 100vw; }
+        
+        #controlPanel {
+            position: absolute; top: 15px; right: 15px; z-index: 2000;
+            background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 2px solid #0f2c59;
+            width: 250px;
+        }
+        .btn-export {
+            display: block; width: 100%; padding: 12px;
+            background: #e91e63; color: #fff; font-weight: bold; border: none; border-radius: 4px;
+            cursor: pointer; text-transform: uppercase; font-size: 14px;
+        }
+        .btn-export:hover { background: #c2185b; }
+    </style>
+</head>
+<body>
+    <!-- Botón volver al dashboard -->
+    <div style="position: absolute; top: 20px; left: 20px; z-index: 2000;">
+        <a href="https://petral.geeksoft.tech/dashboard.html" title="Volver al Dashboard" style="text-decoration: none; font-size: 24px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 50%; border: 2px solid #0f2c59; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">🏠</a>
+    </div>
+
+    <div id="controlPanel">
+        <h3 style="margin-top:0; color:#0f2c59; font-size:16px; border-bottom:2px solid #e91e63; padding-bottom:5px;">Opciones</h3>
+        <button id="btnExport" class="btn-export">Guardar Plano HD</button>
+    </div>
+    <div id="map"></div>
+
+    <script>window.L_PREFER_CANVAS = true;</script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+    <script>
+        // Centramos el mapa aproximadamente entre ambos polígonos
+        var map = L.map('map', { zoomControl: false, attributionControl: false }).setView([-12.049800, -77.138500], 19);
+        L.control.zoom({ position: 'bottomleft' }).addTo(map);
+        L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{ maxZoom: 22, subdomains:['mt0','mt1','mt2','mt3'] }).addTo(map);
+
+        // ==========================================
+        // POLÍGONO 1 (NORTE)
+        // ==========================================
+        var ptsPoly1 = [ 
+            [-12.049244, -77.138673], [-12.049904, -77.137614], [-12.050386, -77.137920], 
+            [-12.049595, -77.139165], [-12.049534, -77.139110], [-12.049467, -77.139029], 
+            [-12.049394, -77.138918], [-12.049334, -77.138825], [-12.049279, -77.138731] 
+        ];
+        L.polygon(ptsPoly1, {color: "#e91e63", weight: 3, fillOpacity: 0.1, dashArray: '10, 10'}).addTo(map);
+
+        var centerPoly1 = [-12.049785, -77.138353];
+        var outPoly1 = [-12.049785, -77.136800]; // Fuera hacia el Este
+        L.polyline([outPoly1, centerPoly1], {color: "#e91e63", weight: 3, dashArray: '5,5'}).addTo(map);
+        L.circleMarker(centerPoly1, {radius: 5, color: "#e91e63", fillColor: "#fff", fillOpacity: 1, weight: 3}).addTo(map);
+        var area1Icon = L.divIcon({ className: '', html: '<div style="background:rgba(255,255,255,0.95); border:3px solid #e91e63; box-shadow:0 2px 10px rgba(0,0,0,0.4); border-radius:6px; padding:10px 20px; font-weight:bold; color:#e91e63; font-size:14px; text-align:center; white-space:nowrap; transform: translate(-50%, -50%);">Área Lote Norte<br>9,376.6 m²</div>', iconSize: null });
+        L.marker(outPoly1, {icon: area1Icon}).addTo(map);
+
+        for (var i = 0; i < ptsPoly1.length; i++) {
+            var p1 = L.latLng(ptsPoly1[i]);
+            var p2 = L.latLng(ptsPoly1[(i+1)%ptsPoly1.length]);
+            var dist = map.distance(p1, p2).toFixed(1);
+            var mid = [(p1.lat + p2.lat)/2, (p1.lng + p2.lng)/2];
+            
+            var dy = mid[0] - centerPoly1[0];
+            var dx = mid[1] - centerPoly1[1];
+            var len = Math.sqrt(dx*dx + dy*dy);
+            var outDist = 0.00015; // Proyección hacia afuera
+            if (len > 0) {
+                var outPoint = [mid[0] + (dy/len)*outDist, mid[1] + (dx/len)*outDist];
+                L.polyline([outPoint, mid], {color: "#e91e63", weight: 2}).addTo(map);
+                L.circleMarker(mid, {radius: 4, color: "#e91e63", fillColor: "#fff", fillOpacity: 1, weight: 2}).addTo(map);
+                var lbl = L.divIcon({ className: '', html: '<div style="background:rgba(255,255,255,0.95); font-size:12px; font-weight:bold; color:#e91e63; padding:5px 10px; border-radius:4px; text-align:center; transform: translate(-50%, -50%); border:2px solid #e91e63; box-shadow:0 2px 5px rgba(0,0,0,0.3); white-space:nowrap; min-width:50px;">' + dist + ' m</div>', iconSize: null });
+                L.marker(outPoint, {icon: lbl, interactive: false}).addTo(map);
+            }
+        }
+
+        // ==========================================
+        // POLÍGONO 2 (SUR)
+        // ==========================================
+        var ptsPoly2 = [ 
+            [-12.050386, -77.137921], [-12.050926, -77.138264], [-12.050080, -77.139635], [-12.049596, -77.139164] 
+        ];
+        L.polygon(ptsPoly2, {color: "#2196F3", weight: 3, fillOpacity: 0.1, dashArray: '10, 10'}).addTo(map);
+
+        var centerPoly2 = [-12.050248, -77.138752];
+        var outPoly2 = [-12.050248, -77.136800]; // Fuera hacia el Este (misma longitud para alinear visualmente)
+        L.polyline([outPoly2, centerPoly2], {color: "#2196F3", weight: 3, dashArray: '5,5'}).addTo(map);
+        L.circleMarker(centerPoly2, {radius: 5, color: "#2196F3", fillColor: "#fff", fillOpacity: 1, weight: 3}).addTo(map);
+        var area2Icon = L.divIcon({ className: '', html: '<div style="background:rgba(255,255,255,0.95); border:3px solid #2196F3; box-shadow:0 2px 10px rgba(0,0,0,0.4); border-radius:6px; padding:10px 20px; font-weight:bold; color:#2196F3; font-size:14px; text-align:center; white-space:nowrap; transform: translate(-50%, -50%);">Área Lote Sur<br>12,070.3 m²</div>', iconSize: null });
+        L.marker(outPoly2, {icon: area2Icon}).addTo(map);
+
+        for (var i = 0; i < ptsPoly2.length; i++) {
+            var p1 = L.latLng(ptsPoly2[i]);
+            var p2 = L.latLng(ptsPoly2[(i+1)%ptsPoly2.length]);
+            var dist = map.distance(p1, p2).toFixed(1);
+            var mid = [(p1.lat + p2.lat)/2, (p1.lng + p2.lng)/2];
+            
+            var dy = mid[0] - centerPoly2[0];
+            var dx = mid[1] - centerPoly2[1];
+            var len = Math.sqrt(dx*dx + dy*dy);
+            var outDist = 0.00015; // Proyección hacia afuera
+            if (len > 0) {
+                var outPoint = [mid[0] + (dy/len)*outDist, mid[1] + (dx/len)*outDist];
+                L.polyline([outPoint, mid], {color: "#2196F3", weight: 2}).addTo(map);
+                L.circleMarker(mid, {radius: 4, color: "#2196F3", fillColor: "#fff", fillOpacity: 1, weight: 2}).addTo(map);
+                var lbl = L.divIcon({ className: '', html: '<div style="background:rgba(255,255,255,0.95); font-size:12px; font-weight:bold; color:#2196F3; padding:5px 10px; border-radius:4px; text-align:center; transform: translate(-50%, -50%); border:2px solid #2196F3; box-shadow:0 2px 5px rgba(0,0,0,0.3); white-space:nowrap; min-width:50px;">' + dist + ' m</div>', iconSize: null });
+                L.marker(outPoint, {icon: lbl, interactive: false}).addTo(map);
+            }
+        }
+
+        // ==========================================
+        // EXPORTACIÓN A IMAGEN
+        // ==========================================
+        document.getElementById('btnExport').addEventListener('click', function() {
+            var btn = this;
+            var originalText = btn.innerText;
+            btn.innerText = "Generando...";
+            btn.style.opacity = "0.5";
+            
+            htmlToImage.toJpeg(document.getElementById('map'), { quality: 0.95 })
+            .then(function (dataUrl) {
+                var link = document.createElement('a');
+                link.download = 'DQM_Perimetros_Callao.jpeg';
+                link.href = dataUrl;
+                link.click();
+                btn.innerText = originalText;
+                btn.style.opacity = "1";
+            });
+        });
+
+    </script>
+</body>
+</html>

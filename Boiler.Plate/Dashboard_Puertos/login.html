@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TANK - Acceso Restringido</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00bcd4;
+            --bg: #0a0a12;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .login-card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 15px;
+            width: 320px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            border-bottom: 3px solid var(--primary);
+        }
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            letter-spacing: 5px;
+            color: var(--primary);
+        }
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #546e7a;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #444;
+            color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            border-radius: 4px;
+            font-family: 'Rajdhani';
+            outline: none;
+        }
+        input:focus {
+            border-color: var(--primary);
+        }
+        button {
+            width: 100%;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 12px;
+            font-family: 'Orbitron';
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        button:hover {
+            filter: brightness(1.2);
+            box-shadow: 0 0 15px var(--primary);
+        }
+        #error-msg {
+            color: #ff5252;
+            font-size: 12px;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h1>TANK</h1>
+        <div class="input-group">
+            <label>Usuario</label>
+            <input type="text" id="user" autocomplete="off">
+        </div>
+        <div class="input-group">
+            <label>Contraseña</label>
+            <input type="password" id="pass">
+        </div>
+        <button onclick="checkLogin()">AUTENTICAR</button>
+        <div id="error-msg">Credenciales Inválidas</div>
+    </div>
+
+    <script>
+        function checkLogin() {
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+            
+            if(u === 'PETRAL' && p === 'TANK2026') {
+                localStorage.setItem('auth_mark', 'true');
+                window.location.href = 'dashboard.html';
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+            }
+        }
+        
+        // Enter key support
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') checkLogin();
+        });
+    </script>
+</body>
+</html>

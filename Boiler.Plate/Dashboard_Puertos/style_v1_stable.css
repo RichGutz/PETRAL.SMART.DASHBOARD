@@ -1,0 +1,530 @@
+:root {
+    --primary-bg: #f4f7f6;
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --accent-cyan: #008f8a;
+    /* Teal/Dark Cyan for light bg */
+    --accent-red: #e74c3c;
+    --accent-green: #27ae60;
+    --text-main: #2c3e50;
+    --text-dim: #546e7a;
+    --panel-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Rajdhani', sans-serif;
+    background-color: var(--primary-bg);
+    color: var(--text-main);
+    overflow: hidden;
+}
+
+/* ... Map Container ... */
+#map {
+    height: 100vh;
+    width: 100%;
+    z-index: 1;
+    background: #e6e6e6;
+    /* Fallback */
+}
+
+.app-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* Floating Header */
+.top-bar {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    border: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: var(--panel-shadow);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo h1 {
+    margin: 0;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 2px;
+    font-size: 1.5rem;
+    color: #2c3e50;
+    text-shadow: none;
+}
+
+.highlight {
+    color: var(--accent-red);
+}
+
+.pulse-icon {
+    width: 10px;
+    height: 10px;
+    background: var(--accent-red);
+    border-radius: 50%;
+    box-shadow: 0 0 0 rgba(231, 76, 60, 0.4);
+    animation: pulse 2s infinite;
+}
+
+.status-indicator {
+    font-size: 0.9rem;
+    color: var(--accent-green);
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    box-shadow: none;
+}
+
+/* Sidebar & Panels */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 15px;
+    color: var(--text-main);
+    box-shadow: var(--panel-shadow);
+}
+
+.sidebar {
+    position: absolute;
+    top: 100px;
+    left: 20px;
+    width: 320px;
+    max-height: calc(100vh - 140px);
+    padding: 20px;
+    z-index: 1000;
+    transform: translateX(0);
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s;
+    overflow-y: auto;
+}
+
+.sidebar.hidden {
+    transform: translateX(-350px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 24px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: var(--accent-red);
+}
+
+h2 {
+    margin-top: 0;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+    border-bottom: 2px solid var(--accent-cyan);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    color: var(--text-main);
+}
+
+h3 {
+    font-size: 1rem;
+    color: var(--text-dim);
+    margin-bottom: 15px;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.6);
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid var(--glass-border);
+}
+
+.stat-card:nth-child(3) {
+    grid-column: span 2;
+}
+
+.stat-card .label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.stat-card .value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--accent-cyan);
+    font-family: 'Orbitron', sans-serif;
+}
+
+/* List */
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+li {
+    background: rgba(255, 255, 255, 0.6);
+    margin-bottom: 8px;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 3px solid transparent;
+    transition: transform 0.2s;
+}
+
+li:hover {
+    transform: translateX(5px);
+    border-left-color: var(--accent-cyan);
+    background: #fff;
+}
+
+.ship-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.ship-item.tanker-glow {
+    /* Subtle highlight for tankers */
+    background: rgba(231, 76, 60, 0.05);
+}
+
+.time {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--accent-cyan);
+    font-size: 0.9rem;
+    min-width: 50px;
+}
+
+.ship-name {
+    font-weight: bold;
+    flex-grow: 1;
+    margin: 0 10px;
+    color: var(--text-main);
+}
+
+.ship-details {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-align: right;
+}
+
+/* Controls */
+.controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px;
+    display: flex;
+    gap: 10px;
+    z-index: 1000;
+}
+
+.btn-control {
+    background: transparent;
+    border: 1px solid var(--text-dim);
+    color: var(--text-dim);
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: all 0.3s;
+}
+
+.btn-control:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-main);
+    border-color: var(--text-main);
+}
+
+.btn-control.active {
+    background: var(--accent-cyan);
+    color: white;
+    border-color: var(--accent-cyan);
+    box-shadow: 0 2px 10px rgba(0, 143, 138, 0.3);
+}
+
+/* Animations */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Markers */
+.custom-marker {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.marker-pin {
+    width: 20px;
+    /* Reduced from 30 */
+    height: 20px;
+    border-radius: 50% 50% 50% 0;
+    background: var(--accent-cyan);
+    position: absolute;
+    transform: rotate(-45deg);
+    left: 50%;
+    top: 50%;
+    margin: -10px 0 0 -10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.marker-pin.tanker-mode {
+    background: var(--accent-red);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.marker-ring {
+    width: 30px;
+    /* Reduced from 40 */
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--accent-cyan);
+    opacity: 0.5;
+    animation: pulse 2s infinite;
+}
+
+/* Labels */
+.port-label-container {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    font-family: 'Rajdhani', sans-serif;
+}
+
+.port-name-label {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--accent-cyan);
+    font-weight: bold;
+    color: var(--text-main);
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+}
+
+/* --- Boat Info Marker Styles --- */
+.boat-info-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    /* Align right to push content left */
+    align-items: center;
+}
+
+.boat-visual-container {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--accent-cyan);
+    border-radius: 20px;
+    /* Pillow shape for single line */
+    padding: 0 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    font-family: 'Rajdhani', sans-serif;
+    height: 32px;
+    /* Fixed height for clean look */
+    white-space: nowrap;
+}
+
+.boat-shape {
+    font-size: 24px;
+    line-height: 1;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
+    margin-right: 5px;
+}
+
+.boat-data-table {
+    display: none;
+    /* Deprecated */
+}
+
+/* New Compact Row Styles */
+.info-group {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.lbl-compact {
+    color: var(--text-dim);
+    text-transform: uppercase;
+    font-weight: 600;
+    font-size: 10px;
+}
+
+.val-compact {
+    color: var(--text-main);
+    font-weight: bold;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+}
+
+.divider {
+    color: var(--glass-border);
+    font-weight: 300;
+    margin: 0 2px;
+}
+
+.mine-label-leader {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.mine-label-content {
+    background: rgba(255, 255, 255, 0.85);
+    padding: 2px 6px;
+    border-radius: 0 4px 4px 0;
+    border-left: 2px solid var(--text-dim);
+    /* The "Leader Line" anchor */
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 600;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.dept-label-permanent {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: rgba(50, 50, 50, 0.5);
+    /* Darker text for white bg */
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.8);
+}
+
+/* Custom Tooltip Dark (Legacy/Usage if needed) */
+.custom-tooltip-dark {
+    background: rgba(30, 40, 50, 0.95);
+    border: 1px solid var(--accent-cyan);
+    border-radius: 8px;
+    color: #ecf0f1;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    padding: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.custom-tooltip-dark .leaflet-tooltip-content {
+    margin: 0;
+}
+
+.custom-tooltip-dark::before {
+    border-top-color: rgba(30, 40, 50, 0.95);
+}
+
+/* Permanent Road Tag */
+.road-label-container {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.road-tag {
+    background: rgba(255, 255, 255, 0.85);
+    /* Light bg for readability on map */
+    color: #2c3e50;
+    /* Dark text */
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #bdc3c7;
+    font-weight: bold;
+    font-size: 11px;
+    font-family: 'Rajdhani', sans-serif;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-shadow: none;
+}
+
+/* Custom Popup Dark (Reusing tooltip style mostly) */
+.custom-popup-dark .leaflet-popup-content-wrapper {
+    background: rgba(30, 40, 50, 0.95);
+    border: 1px solid var(--accent-cyan);
+    border-radius: 8px;
+    color: #ecf0f1;
+    font-family: 'Rajdhani', sans-serif;
+}
+
+.custom-popup-dark .leaflet-popup-tip {
+    background: rgba(30, 40, 50, 0.95);
+    border: 1px solid var(--accent-cyan);
+    /* Border on tip is tricky in Leaflet, usually ignored */
+}
+
+.custom-popup-dark .leaflet-popup-content {
+    margin: 10px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+    color: #ecf0f1;
+}

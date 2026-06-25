@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APN Live Traffic Control</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css?v=2.1">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Floating Header -->
+
+
+        <!-- NEW: Port Filters (Top Left Independent) -->
+        <div id="port-filter-ribbon" class="glass-panel"
+            style="position: absolute; top: 20px; left: 20px; width: 340px; z-index: 1100; padding: 10px; display:flex; flex-direction:column; gap:5px;">
+            <div class="panel-header-toggle" onclick="togglePanel('port-filter-ribbon')">
+                <span class="control-label"
+                    style="margin:0; font-size:11px; text-transform:uppercase; color:#546e7a; font-weight:bold;">
+                    🛠️ FUNCIONES Y HERRAMIENTAS
+                </span>
+                <button class="btn-minimize">−</button>
+            </div>
+
+            <!-- Row 1: Port/Terminal Filters -->
+            <div style="display:flex; gap:5px; justify-content:space-between; flex-wrap: wrap;">
+                <button class="btn-control active" style="flex:1; font-size:9px; padding:3px 0;"
+                    onclick="setMapFilter('all')">Todos</button>
+                <button class="btn-control" style="flex:1; font-size:9px; padding:3px 0;"
+                    onclick="setMapFilter('north')">Norte</button>
+                <button class="btn-control" style="flex:1; font-size:9px; padding:3px 0;"
+                    onclick="setMapFilter('center')">Centro</button>
+                <button class="btn-control" style="flex:1; font-size:9px; padding:3px 0;"
+                    onclick="setMapFilter('south')">Sur</button>
+                <button class="btn-control"
+                    style="flex:1.2; font-size:9px; padding:3px 0; color:#ff9800; border-color:#ff9800;"
+                    onclick="selectPortByCode('TRALS')">TRALSA</button>
+                <button class="btn-control"
+                    style="flex:1.2; font-size:9px; padding:3px 0; color:#ff5722; border-color:#ff5722;"
+                    onclick="selectPortByCode('VALER')">VALERO</button>
+            </div>
+
+            <!-- Row 2: Tools Navigation -->
+            <div style="display:flex; gap:5px; justify-content:space-between;">
+                <a href="elevation_profile.html" class="btn-control"
+                    style="flex:1; font-size:9px; padding:4px 0; text-align:center; text-decoration:none; color:inherit; display:flex; align-items:center; justify-content:center;">
+                    Elevacion Z
+                </a>
+                <a href="terrain_3d_cut.html" target="_blank" class="btn-control"
+                    style="flex:1; font-size:9px; padding:4px 0; text-align:center; text-decoration:none; color:#00e676; border-color:#00e676; display:flex; align-items: center; justify-content:center;">
+                    3D (Corte)
+                </a>
+                <a href="Suply.Chain.Iron.Ore/ubicacion_fajas_map.html" target="_blank" class="btn-control"
+                    style="flex:1; font-size:9px; padding:4px 0; text-align:center; text-decoration:none; color:#ff6b6b; border-color:#ff6b6b; display:flex; align-items:center; justify-content:center;">
+                    Supply Chain
+                </a>
+                <a href="Suply.Chain.Iron.Ore/ore_flow_isometric.html" class="btn-control"
+                    style="flex:1; font-size:9px; padding:4px 0; text-align:center; text-decoration:none; color:#00bcd4; border-color:#00bcd4; display:flex; align-items: center; justify-content:center;">
+                    Layout Equipos
+                </a>
+            </div>
+
+            <!-- User ID Input -->
+            <div style="display:flex; gap:5px; margin-top:5px;">
+                <input id="user-id" type="text" placeholder="Tu nombre (ej: RG)" maxlength="20"
+                    style="flex:1; background:#1a1a2e; border:1px solid #444; color:#fff; font-family:'Rajdhani'; font-size:10px; padding:4px 6px; border-radius:4px;">
+            </div>
+            <!-- Row 3: GPS Navigation -->
+            <div style="display:flex; gap:5px; justify-content:space-between; margin-top:5px;">
+                <button id="btn-gps" class="btn-control"
+                    style="flex:1; font-size:9px; padding:4px 0; color:#2196f3; border-color:#2196f3;"
+                    onclick="toggleGPS()">
+                    GPS OFF
+                </button>
+                <button id="btn-follow-me" class="btn-control"
+                    style="flex:1; font-size:9px; padding:4px 0; color:#e91e63; border-color:#e91e63;"
+                    onclick="toggleFollowMe()">
+                    Follow Me
+                </button>
+                <button id="btn-record" class="btn-control"
+                    style="flex:1; font-size:9px; padding:4px 0; color:#ffc107; border-color:#ffc107;"
+                    onclick="toggleRecording()">
+                    ⏺ GRABAR
+                </button>
+            </div>
+        </div>
+
+        <!-- NEW: Mineral Logistics Calculator Panel -->
+        <div id="logistics-panel" style="display: none;">
+            <div class="panel-header">
+                <h3>🚛 Logística Minera</h3>
+                <span class="panel-subtitle">Proyección de Flota vs Capacidad (Ruta 30A)</span>
+            </div>
+
+            <div class="input-group">
+                <label>Hierro Apurímac (MT/Año)</label>
+                <input type="text" id="input-hierro" value="0" oninput="calculateLogistics()">
+            </div>
+            <div class="input-group">
+                <label>Los Chancas (MT/Año)</label>
+                <input type="text" id="input-chancas" value="0" oninput="calculateLogistics()">
+            </div>
+            <div class="input-group">
+                <label>Trapiche (MT/Año)</label>
+                <input type="text" id="input-trapiche" value="0" oninput="calculateLogistics()">
+            </div>
+
+            <hr style="border-color:rgba(255,255,255,0.1); margin:10px 0;">
+
+            <div class="input-group">
+                <label>Capacidad (Camiones/Día)</label>
+                <input type="number" id="input-capacity" value="750" step="50" min="100"
+                    style="color:#ffd700; border-color:#ffd700;" oninput="calculateLogistics()">
+            </div>
+
+            <div class="results-section">
+                <div class="result-row">
+                    <span>Camiones (Bajada):</span>
+                    <strong id="res-trucks">0 🚛 /día</strong>
+                </div>
+                <div class="result-row">
+                    <span>Eventos Totales (Bajada+Subida):</span>
+                    <strong id="res-events">0 viajes/día</strong>
+                </div>
+
+                <div class="capacity-meter">
+                    <div class="meter-label">
+                        <span>Impacto del Proyecto (vs Capacidad)</span>
+                        <span id="res-saturation">0%</span>
+                    </div>
+                    <div class="progress-bar-bg" style="display: flex;">
+                        <div id="bar-base" class="progress-bar-fill" style="background-color: #555; width: 0%"></div>
+                        <div id="bar-new" class="progress-bar-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- NEW: Fuel Logistics Calculator Panel -->
+        <div id="fuel-logistics-panel" class="glass-panel"
+            style="position: absolute; top: 110px; left: 20px; width: 280px; z-index: 1000; padding: 15px; border-radius: 10px; display: none;">
+            <div class="panel-header">
+                <h3 style="color:#ff4444;">⛽ Logística Combustibles</h3>
+                <span class="panel-subtitle">Proyección Abastecimiento Diesel</span>
+            </div>
+
+            <div class="input-group">
+                <label>Volumen Diesel Valero 2025 (m³)</label>
+                <input type="text" id="input-fuel-vol" value="1,749,229" oninput="calculateFuelLogistics()">
+            </div>
+            <div class="input-group">
+                <label>% Destinado a MARK</label>
+                <input type="number" id="input-fuel-pct" value="30" step="1" min="0" max="100"
+                    oninput="calculateFuelLogistics()">
+            </div>
+            <div class="input-group">
+                <label>Factor Conversión (m³ a gal)</label>
+                <input type="number" id="input-fuel-conv" value="264.172" step="0.001"
+                    oninput="calculateFuelLogistics()">
+            </div>
+            <div class="input-group">
+                <label>Volumen Cisterna (gal)</label>
+                <input type="number" id="input-fuel-tanker" value="9000" step="100" oninput="calculateFuelLogistics()">
+            </div>
+
+            <hr style="border-color:rgba(255,255,255,0.1); margin:10px 0;">
+
+            <div class="results-section">
+                <div class="result-row">
+                    <span>Volumen Total:</span>
+                    <strong id="res-fuel-total" style="color:#00e676;">0 gal</strong>
+                </div>
+                <div class="result-row">
+                    <span>Cisternas (Ida):</span>
+                    <strong id="res-fuel-trucks">0 🚛 /día</strong>
+                </div>
+                <div class="result-row">
+                    <span>Eventos Totales (Ida+Vuelta):</span>
+                    <strong id="res-fuel-events" style="color:#ff4444;">0 viajes/día</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div id="map"></div>
+
+        <!-- Floating Sidebar (Hidden by default, shows on click) -->
+        <aside id="port-details" class="sidebar glass-panel hidden">
+            <button class="close-btn" onclick="closeSidebar()">&times;</button>
+            <h2 id="detail-title">Seleccione un Puerto</h2>
+            <div class="radar-scan"></div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="label">Naves en Puerto</span>
+                    <span class="value" id="stat-ships">--</span>
+                </div>
+                <div class="stat-card">
+                    <span class="label">Próx. Arribos</span>
+                    <span class="value" id="stat-arrivals">--</span>
+                </div>
+                <div class="stat-card">
+                    <span class="label">Operaciones</span>
+                    <span class="value" id="stat-ops">Active</span>
+                </div>
+            </div>
+
+            <div class="recent-activity">
+                <h3>Tráfico Reciente</h3>
+                <ul id="ship-list">
+                    <li><span class="time">--:--</span> Esperando datos...</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Unified Dashboard Controls Panel (Vertical 3-Column Layout) -->
+        <div id="layer-controls-panel" class="glass-panel"
+            style="position: absolute; top: 220px; left: 20px; width: 340px; z-index: 1100; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+            
+            <div class="panel-header-toggle" onclick="togglePanel('layer-controls-panel')">
+                <span class="control-label"
+                    style="margin:0; font-size:11px; text-transform:uppercase; color:#546e7a; font-weight:bold;">
+                    🗺️ CAPAS Y PERÍMETROS
+                </span>
+                <button class="btn-minimize">−</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: start;">
+                <!-- Column 1: Perímetros -->
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 8px; color: #546e7a; font-weight: 700; margin-bottom: 2px;">PERÍMETROS</span>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-shougang" onchange="toggleShougang()"><span class="toggle-text">Shougang</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-marcobre" onchange="toggleMarcobre()"><span class="toggle-text">Marcobre</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-generacion" onchange="toggleGeneracion()"><span class="toggle-text">Gen. Elec.</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-san-fernando" onchange="toggleSanFernando()"><span class="toggle-text">San Fernando</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-amortiguamiento" onchange="toggleAmortiguamiento()"><span class="toggle-text">Zona Amort.</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-area-acuatica" onchange="toggleAreaAcuatica()"><span class="toggle-text">DICAPI Acuát.</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-area-riberena" onchange="toggleAreaRiberena()"><span class="toggle-text">DICAPI Riber.</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-sunarp-1" onchange="toggleSunarp1()"><span class="toggle-text" style="color: #FF5733;">SUNARP 1</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-sunarp-2" onchange="toggleSunarp2()"><span class="toggle-text" style="color: #33FF57;">SUNARP 2</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-sunarp-3" onchange="toggleSunarp3()"><span class="toggle-text" style="color: #3357FF;">SUNARP 3</span></label>
+                </div>
+
+                <!-- Column 2: VÍAS & PETRAL -->
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 8px; color: #546e7a; font-weight: 700; margin-bottom: 2px;">VÍAS & PETRAL</span>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-railway" onchange="toggleRailway()"><span class="toggle-text">Ferrocarril</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-infra-roads" onchange="toggleInfraRoads()"><span class="toggle-text">PE-1S</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-extra-roads" onchange="toggleExtraRoads()"><span class="toggle-text">PE-30</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-ferrocarril-ext" onchange="toggleFerrocarrilExt()"><span class="toggle-text" style="color: #9c27b0;">Ferro EXT</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-ferrocarril-ext-labels" onchange="toggleFerrocarrilExtLabels()"><span class="toggle-text" style="color: #9c27b0; font-size:9px;">Etiq. EXT</span></label>
+                    <hr style="border:0; border-top:1px solid rgba(0,0,0,0.05); margin: 2px 0;">
+                    <label class="toggle-control"><input type="checkbox" id="toggle-perimeter" onchange="togglePerimeter()"><span class="toggle-text">Borde P.</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-perimeter-labels" onchange="togglePerimeterLabels()"><span class="toggle-text">Et. Borde</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-port-labels" onchange="togglePortLabels()"><span class="toggle-text">Et. Puertos</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-land-labels" onchange="toggleLandLabels()"><span class="toggle-text">Et. Tierra</span></label>
+                </div>
+
+                <!-- Column 3: RUTAS -->
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 8px; color: #546e7a; font-weight: 700; margin-bottom: 2px;">RUTAS</span>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-red-route" onchange="toggleRedRoute()"><span class="toggle-text" style="color: #f44336;">Roja</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-purple-route" onchange="togglePurpleRoute()"><span class="toggle-text" style="color: #9c27b0;">Morada</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-green-route" onchange="toggleGreenRoute()"><span class="toggle-text" style="color: #00ff00;">Verde</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-green-route-labels" onchange="toggleGreenRouteLabels()"><span class="toggle-text" style="font-size: 9px;">Etiq. Verde</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-garita-1s" onchange="toggleGarita1S()"><span class="toggle-text" style="color: #ff9800;">1S.GARITA</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-garita-1s-labels" onchange="toggleGarita1SLabels()"><span class="toggle-text" style="color: #ff9800; font-size:9px;">Et. KM 1S</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-coastal-route" onchange="toggleCoastalRoute()"><span class="toggle-text" style="color: #00bfff;">Costera</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-coastal-route-labels" onchange="toggleCoastalRouteLabels()"><span class="toggle-text" style="font-size: 9px;">Et. Costera</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-servidumbre" onchange="toggleServidumbre()"><span class="toggle-text" style="color: #ff0000;">SERVID.</span></label>
+                    <label class="toggle-control"><input type="checkbox" id="toggle-servidumbre-labels" onchange="toggleServidumbreLabels()"><span class="toggle-text" style="color: #ff0000; font-size: 9px;">Et. SERV.</span></label>
+                </div>
+            </div>
+
+            <hr style="border-color:rgba(0,0,0,0.05); margin:5px 0;">
+
+            <!-- Bottom Row: Tools & Type -->
+            <div style="display:flex; gap:8px; align-items:center; justify-content: space-between;">
+                <label class="toggle-control" style="margin:0;"><input type="checkbox" id="toggle-calculators" onchange="toggleCalculators()"><span class="toggle-text" style="font-weight:700;">CALCS</span></label>
+                <div style="display:flex; gap:4px;">
+                    <button class="btn-control active" id="btn-map-standard" style="padding: 2px 6px; font-size: 8px;" onclick="setMapType('standard')">Plano</button>
+                    <button class="btn-control" id="btn-map-satellite" style="padding: 2px 6px; font-size: 8px;" onclick="setMapType('satellite')">Satélite</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- GeoJSON Data -->
+    <script src="peru_geo.js"></script>
+
+    <!-- Real-Time Ship Data -->
+    <script src="ships_data.js"></script>
+
+    <!-- Mining Projects Data -->
+    <script src="mines_data.js"></script>
+    <script src="terrain_data.js"></script>
+    <script src="south_corridor_data.js"></script>
+    <script src="infrastructure_roads.js"></script>
+    <script src="road_pe30b.js"></script>
+    <script src="road_pe30a.js"></script>
+    <script src="shougang_polygon.js"></script>
+    <script src="san_fernando.js"></script>
+    <script src="layer_amortiguamiento.js"></script>
+    <script src="railway_marcona_andahuaylas.js"></script>
+    <script src="layer_marcobre.js"></script>
+    <script src="layer_jz.js"></script>
+    <script src="layer_servidumbre.js"></script>
+    <script src="layer_servidumbre_labels.js"></script>
+    <script src="layer_generacion_electrica.js"></script>
+    <script src="layer_san_fernando_road.js"></script>
+    <script src="layer_area_acuatica.js"></script>
+    <script src="layer_area_riberena.js"></script>
+    <script src="layer_red_route.js"></script>
+    <script src="layer_purple_route.js"></script>
+    <script src="landmark_intersection.js"></script>
+    <script src="new_green_route.js?v=2"></script>
+    <script src="coastal_route.js?v=2"></script>
+    <script src="perimeter_sides.js"></script>
+    <script src="layer_ferrocarril_ext.js"></script>
+    <script src="layer_ferrocarril_ext_labels.js"></script>
+    <script src="layer_sunarp_1.js"></script>
+    <script src="layer_sunarp_2.js"></script>
+    <script src="layer_sunarp_3.js"></script>
+    <script src="layer_1S_Garita.js"></script>
+    <script src="port_layout_simulation.js"></script>
+
+    <!-- App Logic -->
+    <script src="script.js?v=11.22"></script>
+</body>
+
+</html>

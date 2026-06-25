@@ -1,0 +1,176 @@
+# 📑 Nota Técnica: Motor de Cálculo P&L y Unit Economics — B/T Tablones
+
+## 📊 1. Diccionario de Variables (Mapeo de Datos — Supabase)
+
+El agente debe utilizar estrictamente estos nombres de variables para mantener la consistencia entre el frontend (React), el backend (Python/API) y la base de datos (PostgreSQL):
+
+### A. Parámetros de Operación Comercial (Inputs de UI)
+
+- `quantity` _(float)_: Cantidad de carga transportada en Toneladas Métricas (MT). _[Valor base: 13,500]_
+    
+- `freight_rate` _(float)_: Tarifa de flete pactada por tonelada en USD. _[Valor base: 19.01]_
+    
+
+### B. Parámetros de Ruta y Logística (Maestros)
+
+- `route_distance` _(float)_: Distancia del viaje en Millas Náuticas (NM). _[Valor base: 69]_
+    
+- `vessel_speed` _(float)_: Velocidad promedio de navegación de la nave en nudos. _[Valor base: 11]_
+    
+- `weather_factor` _(float)_: Margen de tolerancia por fricción climática o corrientes en porcentaje. _[Valor base: 0.03 (3%)]_
+    
+- `port_overhead_hours` _(float)_: Horas fijas muertas por burocracia/maniobras en cada nodo portuario. _[Valor base: 6.0]_
+    
+- `load_rate` _(float)_: Tasa de bombeo/carga del terminal de origen en MT por hora. _[Valor base: 500]_
+    
+- `discharge_rate` _(float)_: Tasa de bombeo/descarga del terminal de destino en MT por hora. _[Valor base: 300]_
+    
+
+### C. Parámetros de Costos Fijos y Estructura de Gastos (Maestros)
+
+- `agency_costs_origin` _(float)_: Gastos de aduana, agenciamiento e impuestos fijos en el puerto de origen. _[Valor base: 23,000]_
+    
+- `agency_costs_destination` _(float)_: Gastos de aduana, agenciamiento e impuestos fijos en el puerto de destino. _[Valor base: 18,000]_
+    
+- `bunker_price_ifo` _(float)_: Precio promedio de inventario del combustible IFO en USD/MT. _[Valor base: 895.14]_
+    
+- `tce_required` _(float)_: Costo de oportunidad diario (meta mínima de la gerencia) en USD/día. _[Valor base: 15,000]_
+    
+
+### D. Perfil Técnico de Consumos (Maestro Flota)
+
+- `consumption_sea_ifo` _(float)_: Consumo diario de combustible IFO navegando en mar abierto (MT/día). _[Valor base: 14.5]_
+    
+- `consumption_port_ifo` _(float)_: Consumo diario de combustible IFO detenido en puerto/espera (MT/día). _[Valor base: 3.5]_
+    
+
+## 📐 2. Modelo Matemático y Fórmulas de Ingeniería
+
+El agente debe ejecutar los cálculos de forma **secuencial y dependiente**, respetando el orden físico y temporal del viaje:
+
+### Fase I: Simulación de Tiempos (Duración en Días)
+
+1. **Días de Mar (`sea_days`):**
+    
+    $$\text{sea\_days} = \frac{\text{route\_distance} \times (1 + \text{weather\_factor})}{\text{vessel\_speed} \times 24}$$
+    
+2. **Días de Puerto (`port_days`):**
+    
+    $$\text{port\_days} = \frac{\left(\frac{\text{quantity}}{\text{load\_rate}} + \text{port\_overhead\_hours}\right) + \left(\frac{\text{quantity}}{\text{discharge\_rate}} + \text{port\_overhead\_hours}\right)}{24}$$
+    
+3. **Duración Total del Viaje (`total_duration`):**
+    
+    $$\text{total\_duration} = \text{sea\_days} + \text{port\_days}$$
+    
+
+### Fase II: P&L del Viaje (Unit Economics)
+
+4. **Ingreso de Flete Neto (`net_income`):**
+    
+    $$\text{net\_income} = \text{quantity} \times \text{freight\_rate}$$
+    
+5. **Costos Totales de Puerto y Aduana (`total_port_costs`):**
+    
+    $$\text{total\_port\_costs} = \text{agency\_costs\_origin} + \text{agency\_costs\_destination}$$
+    
+6. **Costo de Combustible del Viaje (`total_bunker_costs`):**
+    
+    $$\text{total\_bunker\_costs} = \left[(\text{sea\_days} \times \text{consumption\_sea\_ifo}) + (\text{port\_days} \times \text{consumption\_port\_ifo})\right] \times \text{bunker\_price\_ifo}$$
+    
+7. **Margen Bruto de Utilidad Operativa (`voyage_result`):**
+    
+    $$\text{voyage\_result} = \text{net\_income} - \text{total\_port\_costs} - \text{total\_bunker\_costs}$$
+    
+
+### Fase III: Indicadores Clave de Rendimiento (KPIs)
+
+8. **Rendimiento Diario Equivalente (`tce_real`):**
+    
+    $$\text{tce\_real} = \frac{\text{voyage\_result}}{\text{total\_duration}}$$
+    
+9. **Utilidad sobre Meta Mínima de Oficina (`pl_vs_required`):**
+    
+    $$\text{pl\_vs\_required} = \text{voyage\_result} - (\text{tce\_required} \times \text{total\_duration})$$
+    
+
+## 💻 3. Pseudocódigo de Implementación (Estructura de Referencia)
+
+El agente debe implementar el motor matemático siguiendo esta estructura lógica limpia (puede ser adaptada a funciones de base de datos en Supabase o a servicios de API en FastAPI):
+
+Plaintext
+
+```
+FUNCTION calculate_voyage_pnl(inputs):
+    // 1. Desempaquetar variables del objeto inputs
+    Q                 = inputs.quantity
+    F                 = inputs.freight_rate
+    dist              = inputs.route_distance
+    speed             = inputs.vessel_speed
+    w_factor          = inputs.weather_factor
+    overhead          = inputs.port_overhead_hours
+    r_load            = inputs.load_rate
+    r_disch           = inputs.discharge_rate
+    ag_orig           = inputs.agency_costs_origin
+    ag_dest           = inputs.agency_costs_destination
+    p_ifo             = inputs.bunker_price_ifo
+    tce_req           = inputs.tce_required
+    c_sea             = inputs.consumption_sea_ifo
+    c_port            = inputs.consumption_port_ifo
+
+    // 2. Cálculos de Tiempos
+    sea_days = (dist * (1 + w_factor)) / (speed * 24)
+    
+    hours_at_origin = (Q / r_load) + overhead
+    hours_at_dest   = (Q / r_disch) + overhead
+    port_days       = (hours_at_origin + hours_at_dest) / 24
+    
+    total_duration  = sea_days + port_days
+
+    // 3. Cálculos Financieros (P&L)
+    net_income         = Q * F
+    total_port_costs   = ag_orig + ag_dest
+    total_bunker_costs = ((sea_days * c_sea) + (port_days * c_port)) * p_ifo
+    voyage_result      = net_income - total_port_costs - total_bunker_costs
+
+    // 4. KPIs de Rendimiento Gerencial
+    tce_real        = voyage_result / total_duration
+    pl_vs_required  = voyage_result - (tce_req * total_duration)
+
+    // 5. Retornar Estructura JSON para la UI y Consolidador
+    RETURN {
+        "sea_days": ROUND(sea_days, 6),
+        "port_days": ROUND(port_days, 6),
+        "total_duration": ROUND(total_duration, 6),
+        "net_income": ROUND(net_income, 2),
+        "total_port_costs": ROUND(total_port_costs, 2),
+        "total_bunker_costs": ROUND(total_bunker_costs, 2),
+        "voyage_result": ROUND(voyage_result, 2),
+        "tce_real": ROUND(tce_real, 2),
+        "pl_vs_required": ROUND(pl_vs_required, 2)
+    }
+END FUNCTION
+```
+
+## 🏁 4. Criterio de Aceptación e Integridad (Test Unitario Inamovible)
+
+Para dar por válido el desarrollo en **Antigravity IDE**, el agente debe probar el algoritmo con este caso de prueba exacto (Ruta: Ilo-Matarani) y verificar la convergencia absoluta con el Excel Financiero de **Geeksoft**:
+
+- **Valores de Entrada del Test:**
+    
+    `Q = 13500`, `F = 19.01`, `dist = 69`, `speed = 11`, `w_factor = 0.03`, `overhead = 6`, `r_load = 500`, `r_disch = 300`, `ag_orig = 23000`, `ag_dest = 18000`, `p_ifo = 895.14`, `tce_req = 15000`, `c_sea = 14.5`, `c_port = 3.5`.
+    
+- **Resultados Esperados del Test (Margen de error permitido: $\pm 0.01\text{ USD}$):**
+    
+    - `total_duration` $\rightarrow$ **$4.080076\text{ días}$**
+        
+    - `net_income` $\rightarrow$ **$\$256,635.00\text{ USD}$**
+        
+    - `total_port_costs` $\rightarrow$ **$\$41,000.00\text{ USD}$**
+        
+    - `total_bunker_costs` $\rightarrow$ **$\$20,601.88\text{ USD}$**
+        
+    - `voyage_result` $\rightarrow$ **$\$195,033.12\text{ USD}$**
+        
+    - `tce_real` $\rightarrow$ **$\$47,801.35\text{ USD/día}$** _(Métrica clave para Apache ECharts)_
+        
+    - `pl_vs_required` $\rightarrow$ **$\$133,831.98\text{ USD}$**

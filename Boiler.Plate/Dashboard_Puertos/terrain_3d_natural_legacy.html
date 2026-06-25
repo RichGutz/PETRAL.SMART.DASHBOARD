@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelo 3D - Terreno Natural</title>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <!-- Data Source -->
+    <script src="terrain_mesh_natural.js"></script>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        #plot3d {
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn-back {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #546e7a;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="controls-panel">
+        <h2 style="margin: 0 0 10px 0; font-size: 18px; color: #333;">Terreno Natural</h2>
+        <div style="font-size: 12px; color: #666;">
+            Vista original sin excavación.
+        </div>
+        <a href="index.html" class="btn-back">← Volver al Mapa</a>
+    </div>
+
+    <div id="plot3d"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof TERRAIN_MESH_DATA === 'undefined') {
+                alert("Datos no encontrados.");
+                return;
+            }
+
+            // The legacy data provided in terrain_mesh_natural.js is already a Trace object (x,y,z, type='mesh3d')
+            // However, we need to ensure the layout is correct (aspect ratio, etc.)
+
+            // Calculate local coordinates if needed, but legacy data usually had Lat/Lon/Z directly?
+            // Let's check the data format again. 
+            // x: [-75.25...], y: [-15.16...], z: [352...]
+            // The X/Y are Geo Coordinates. Plotly mesh3d works with local coords better for aspect ratio.
+
+            const data = TERRAIN_MESH_DATA;
+
+            // Override colorscale if needed
+            data.colorscale = 'Earth';
+            data.intensity = data.z; // Ensure coloring by height
+            data.showscale = true;
+            data.colorbar = { title: 'Altitud (m)', len: 0.5 };
+
+            const layout = {
+                paper_bgcolor: '#f4f7f6',
+                plot_bgcolor: '#f4f7f6',
+                scene: {
+                    aspectmode: 'data', // This might distort if X/Y are degrees and Z is meters
+                    // We might need a manual aspect ratio adjustment
+                    // 1 deg lat ~ 111km. 1 m = 0.000009 deg.
+                    // This is tricky.
+                    // Let's stick to 'data' first and see. If it's flat, we need aspectratio: {x: 1, y: 1, z: 0.1} etc.
+                },
+                margin: { t: 0, b: 0, l: 0, r: 0 }
+            };
+
+            // Fix Aspect Ratio for Lat/Lon vs Meters
+            // Avg Lat ~ -15.1
+            const cosLat = Math.cos(-15.1 * Math.PI / 180);
+            // 1 deg Lat = 111132 m
+            // 1 deg Lon = 111320 * cos(-15.1) = 107550 m
+            // Z is meters.
+            // To make Z visually strictly proportional to X/Y in degrees:
+            // We need to exaggerate Z heavily in the plot values OR use `aspectratio`.
+
+            // Let's convert X/Y to meters locally for display, like the main viewer.
+            // Origin
+            const minX = Math.min(...data.x);
+            const minY = Math.min(...data.y);
+
+            const x_m = data.x.map(lon => (lon - minX) * 107550);
+            const y_m = data.y.map(lat => (lat - minY) * 111132);
+
+            // Create NEW trace with meters
+            const traceKm = {
+                type: 'mesh3d',
+                x: x_m,
+                y: y_m,
+                z: data.z,
+                intensity: data.z,
+                colorscale: 'Earth',
+                flatshading: true
+            };
+
+            const layoutKm = {
+                title: '',
+                scene: {
+                    aspectmode: 'data', // Now X, Y, Z are all in meters!
+                    camera: { eye: { x: 1.5, y: 1.5, z: 1.5 } }
+                }
+            };
+
+            Plotly.newPlot('plot3d', [traceKm], layoutKm, { responsive: true });
+        });
+    </script>
+</body>
+
+</html>

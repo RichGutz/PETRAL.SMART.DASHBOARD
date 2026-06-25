@@ -1,0 +1,144 @@
+import graphviz
+import os
+
+def generate_etl_flowchart():
+    base_name = "FLUJOGRAMA_ETL_Supabase_V4"
+    output_filename = base_name
+    
+    print(f"Generando Flujograma ETL V4 (Fixed): {output_filename}.pdf")
+    
+    potential_paths = [
+        r"C:\Program Files\Graphviz\bin",
+        r"C:\Program Files (x86)\Graphviz\bin",
+    ]
+    for p in potential_paths:
+        if os.path.exists(p) and p not in os.environ["PATH"]:
+            os.environ["PATH"] += os.pathsep + p
+
+    dot_code = """
+    digraph ETLFlow {
+        rankdir=TB;
+        splines=ortho;
+        nodesep=0.5;
+        ranksep=0.8;
+        
+        # Angosto y centrado globalmente
+        ratio=auto;
+        
+        node [shape=box, style="filled,rounded", fontname="Arial", fontsize=10, margin="0.2,0.1"];
+        edge [fontname="Arial", fontsize=9];
+
+        # ==========================================
+        #  NIVEL 1: ARCHIVOS ORIGEN (LEGACY)
+        # ==========================================
+        subgraph cluster_lvl1 {
+            label = "NIVEL 1: DECENAS DE ARCHIVOS MENSUALES"; style="filled"; color="#ECEFF1"; fontcolor="#455A64";
+            
+            subgraph cluster_files {
+                label = "INPUTS DE EXCEL (CAJAS SEPARADAS)"; style="filled"; fillcolor="#FFF3E0"; color="#FF9800";
+                
+                F1 [label="📊 Facturación\\nAutor: Operaciones (Ingredientes)\\n(Viajes, Fechas, B/L, Tarifas)", shape=note, fillcolor="#FFE0B2"];
+                F2 [label="📊 Margen Operación\\nAutor: J. Neyra / M.E. Castro / S. Gálvez\\n(Consolidado Mensual)", shape=note, fillcolor="#FFE0B2"];
+                F3 [label="📊 Resultado (Presupuestal)\\nAutor: Navitranso\\n(P&L Detallado Mensual)", shape=note, fillcolor="#FFE0B2"];
+                
+                # Apilado vertical para mantener el diagrama angosto y centrado
+                F1 -> F2 -> F3 [style=invis, weight=100];
+            }
+        }
+
+        # ==========================================
+        #  NIVEL 2: ORQUESTADOR ETL (PYTHON)
+        # ==========================================
+        subgraph cluster_lvl2 {
+            label = "NIVEL 2: MOTOR ETL"; style="filled,dashed"; fillcolor="#E0F7FA"; color="#006064";
+            
+            BatchLoop [label="🔄 BATCH LOOP\\n(Iterar sobre todos los Excels)", shape=component, fillcolor="#80DEEA", penwidth=2];
+            
+            subgraph cluster_parsers {
+                label = "PARSERS (PANDAS BOILERPLATE)"; style="filled"; fillcolor="#B2EBF2"; color="#00838F";
+                ParseFact [label="🛠️ Parser Facturación", shape=rect, fillcolor="white"];
+                ParseMarg [label="🛠️ Parser Margen", shape=rect, fillcolor="white"];
+                ParseRes [label="🛠️ Parser Resultado", shape=rect, fillcolor="white"];
+                
+                # Apilado vertical para alinear al centro
+                ParseFact -> ParseMarg -> ParseRes [style=invis, weight=100];
+            }
+            
+            DataValidator [label="✅ Validador Pydantic\\n(Limpia NaNs, Fechas)", shape=diamond, fillcolor="#4DD0E1"];
+        }
+
+        # ==========================================
+        #  NIVEL 3: DESTINO (SUPABASE)
+        # ==========================================
+        subgraph cluster_lvl3 {
+            label = "NIVEL 3: BASE DE DATOS (SUPABASE)"; style="filled,dashed"; fillcolor="#E1F5FE"; color="#0277BD";
+            
+            SupabaseAPI [label="🚀 Supabase REST API", shape=component, fillcolor="#81D4FA", penwidth=2];
+            
+            subgraph cluster_tables {
+                label = "TABLAS RELACIONALES (SQL)"; style="filled"; fillcolor="#B3E5FC"; color="#0288D1";
+                T_Viajes [label="🚢 tabla: viajes_facturacion", shape=record, fillcolor="white"];
+                T_Margen [label="💰 tabla: margen_mensual", shape=record, fillcolor="white"];
+                T_Presupuesto [label="📈 tabla: control_presupuestal", shape=record, fillcolor="white"];
+                
+                # Apilado vertical para alinear al centro
+                T_Viajes -> T_Margen -> T_Presupuesto [style=invis, weight=100];
+            }
+        }
+
+        # ==========================================
+        #  NIVEL 4: REPORTERÍA Y FORECAST
+        # ==========================================
+        subgraph cluster_lvl4 {
+            label = "NIVEL 4: REPORTERÍA (STREAMLIT)"; style="filled,dashed"; fillcolor="#F1F8E9"; color="#558B2F";
+            
+            DashboardEngine [label="⚙️ Lógica de Dashboards y KPIs", shape=component, fillcolor="#C5E1A5"];
+            ForecastEngine [label="🔮 Motor de Forecast\\n(Proyección a Fin de Año)", shape=component, fillcolor="#DCE775"];
+            
+            subgraph cluster_views {
+                label = "VISTAS FRONTEND"; style="filled"; fillcolor="#DCEDC8"; color="#689F38";
+                ViewDash [label="📊 Dashboard Ejecutivo\\n(Moquegua / Tablones)", shape=note, fillcolor="#AED581"];
+                ViewForecast [label="📈 Simulador Forecast\\n(Análisis Sensibilidad)", shape=note, fillcolor="#AED581"];
+                
+                # Apilado vertical
+                ViewDash -> ViewForecast [style=invis, weight=100];
+            }
+        }
+
+        # --- CONEXIONES REALES ---
+        # ELIMINADO EL CONSTRAINT=FALSE AQUI PARA QUE NIVEL 1 ESTÉ ENCIMA DE NIVEL 2
+        F3 -> BatchLoop;
+        
+        # Conectamos BatchLoop con el primero de los parsers (ParseFact)
+        BatchLoop -> ParseFact;
+        
+        # Conectamos el último de los parsers (ParseRes) al validador
+        ParseRes -> DataValidator;
+        
+        # Lvl 2 a Lvl 3
+        DataValidator -> SupabaseAPI [label=" Bulk Insert", color="#00838F", penwidth=2];
+        
+        # Conectamos Supabase al primero de la pila de tablas (T_Viajes)
+        SupabaseAPI -> T_Viajes;
+        
+        # Conectamos la última tabla al motor de reportería
+        T_Presupuesto -> DashboardEngine [color="#1E88E5"];
+        
+        # Lvl 3 a Lvl 4
+        DashboardEngine -> ViewDash;
+        DashboardEngine -> ForecastEngine [style=dashed];
+        ForecastEngine -> ViewForecast;
+    }
+    """
+    
+    try:
+        src = graphviz.Source(dot_code)
+        output_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = src.render(filename=os.path.join(output_dir, output_filename), format='pdf', view=False, cleanup=True)
+        print(f"Generado exitosamente: {os.path.abspath(file_path)}")
+        
+    except Exception as e:
+        print(f"Error generando flujograma: {e}")
+
+if __name__ == "__main__":
+    generate_etl_flowchart()

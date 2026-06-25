@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ubicación Fajas y Rutas - 3D Map</title>
+
+    <!-- MapLibre GL CSS -->
+    <link href='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css' rel='stylesheet' />
+
+    <!-- Turf.js for Geospatial Calcs -->
+    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            background: #1a1a1a;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        /* RIBBON CONTROL (Top Bar) */
+        .ribbon-control {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            padding: 8px 20px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            color: #333;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: max-content;
+            max-width: 95vw;
+        }
+
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding-right: 10px;
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .toggle-group:last-child {
+            border-right: none;
+            padding-right: 0;
+        }
+
+        .toggle-group input {
+            cursor: pointer;
+            width: 14px;
+            height: 14px;
+        }
+
+        .toggle-label {
+            font-size: 13px;
+            font-weight: 600;
+            user-select: none;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sub-label {
+            font-size: 11px;
+            color: #666;
+            margin-left: 2px;
+        }
+
+        /* VIEW CONTROLS (Top Right) */
+        .view-controls {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            color: #333;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .control-header-val {
+            color: #00d4ff;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #444;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #00d4ff;
+            cursor: pointer;
+            border: 2px solid rgba(0, 0, 0, 0.5);
+        }
+
+        .bearing-dial {
+            width: 70px;
+            height: 70px;
+            border: 2px solid #555;
+            border-radius: 50%;
+            position: relative;
+            margin: 10px auto;
+            background: radial-gradient(circle, #333 0%, #111 100%);
+            cursor: grab;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+
+        .bearing-dial:active {
+            cursor: grabbing;
+        }
+
+        .bearing-needle {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            width: 2px;
+            height: 40%;
+            background: #f44336;
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(0deg);
+            transition: transform 0.1s;
+        }
+
+        .bearing-needle::before {
+            content: 'N';
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            color: #f44336;
+            font-size: 12px;
+        }
+
+        /* LABELS */
+        .elev-label-container {
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            border: 1px solid #00e676;
+            border-radius: 4px;
+            padding: 2px 4px;
+            font-size: 10px;
+            font-family: 'Rajdhani', sans-serif;
+            text-align: center;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            transform: translate(-50%, -100%);
+            /* Centered above point */
+            pointer-events: none;
+            /* Let clicks pass through */
+        }
+
+        .elev-label-container.coastal {
+            border-color: #00bfff;
+        }
+
+        .elev-label-container b {
+            color: #ffeb3b;
+        }
+
+        /* PERMANENT LENGTH LABELS (Distinct Style) */
+        .length-label {
+            background: transparent;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: bold;
+            font-size: 14px;
+            text-shadow:
+                -1px -1px 0 #000,
+                1px -1px 0 #000,
+                -1px 1px 0 #000,
+                1px 1px 0 #000;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* Loading Overlay */
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 2000;
+            text-align: center;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .area-label {
+            background: rgba(255, 235, 59, 0.9);
+            color: black;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        /* BACK BUTTON STYLE */
+        .btn-back {
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: all 0.2s;
+            white-space: nowrap;
+            /* Positioning logic handled in HTML placement */
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-back:hover {
+            border-color: #06b6d4;
+            color: #06b6d4;
+            background: #f0f9ff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loading">
+        <h3>Cargando Datos de Elevación...</h3>
+        <p>Analizando ~90 puntos de control</p>
+    </div>
+
+    <!-- RIBBON CONTROL -->
+    <div class="ribbon-control">
+
+        <!-- Back Button -->
+        <a href="../dashboard.html" class="btn-control">⬅ Volver al Mapa</a>
+        <div style="width: 10px;"></div>
+
+        <!-- Shougang -->
+        <div class="toggle-group" title="Concesión Shougang">
+            <input type="checkbox" id="toggle-shougang-poly" checked>
+            <span class="toggle-label" style="color: #ffd700;">Shougang</span>
+        </div>
+
+        <!-- Petral -->
+        <div class="toggle-group" title="Perímetro Petral">
+            <input type="checkbox" id="toggle-petral-poly" checked>
+            <span class="toggle-label" style="color: #00d4ff;">Petral</span>
+        </div>
+
+        <!-- Fajas -->
+        <div class="toggle-group" title="Líneas de las Fajas (Marrón, Verde, Morada)">
+            <input type="checkbox" id="toggle-conveyors-lines" checked>
+            <span class="toggle-label" style="color: #4caf50;">Fajas <span class="sub-label">(Línea)</span></span>
+        </div>
+        <div class="toggle-group" title="Etiquetas de Fajas">
+            <input type="checkbox" id="toggle-conveyors-labels">
+            <span class="toggle-label" style="color: #4caf50;">Fajas <span class="sub-label">(Etiq)</span></span>
+        </div>
+
+        <!-- Costera -->
+        <div class="toggle-group" title="Ruta Costera">
+            <input type="checkbox" id="toggle-coastal-line" checked>
+            <span class="toggle-label" style="color: #00bfff;">Costera <span class="sub-label">(Línea)</span></span>
+        </div>
+        <div class="toggle-group" title="Etiquetas Costera">
+            <input type="checkbox" id="toggle-coastal-labels">
+            <span class="toggle-label" style="color: #00bfff;">Costera <span class="sub-label">(Etiq)</span></span>
+        </div>
+
+        <!-- Tren -->
+        <div class="toggle-group" title="Ferrocarril Marcona-Andahuaylas">
+            <input type="checkbox" id="toggle-railway" checked>
+            <span class="toggle-label" style="color: #ffca28;">Tren</span>
+        </div>
+
+        <!-- A. Marítima -->
+        <div class="toggle-group" title="Área Acuática DICAPI">
+            <input type="checkbox" id="toggle-acuatica">
+            <span class="toggle-label" style="color: #00bfff;">A. Marítima</span>
+        </div>
+
+        <!-- A. Ribereña -->
+        <div class="toggle-group" title="Área Ribereña DICAPI">
+            <input type="checkbox" id="toggle-riberena">
+            <span class="toggle-label" style="color: #ff4500;">A. Ribereña</span>
+        </div>
+
+        <!-- Islas -->
+        <div class="toggle-group" title="Áreas de las Islas">
+            <input type="checkbox" id="toggle-islands" checked>
+            <span class="toggle-label" style="color: #ff9800;">Islas</span>
+        </div>
+    </div>
+
+    <!-- VIEW CONTROLS -->
+    <div class="view-controls">
+        <!-- Pitch Control -->
+        <div class="control-group">
+            <div class="control-header">
+                <span>📐 Ángulo Cenital</span>
+                <span class="control-header-val" id="pitch-value">50°</span>
+            </div>
+            <input type="range" id="pitch-slider" min="0" max="85" value="50" step="1">
+        </div>
+
+        <!-- Bearing Control -->
+        <div class="control-group">
+            <div class="control-header">
+                <span>🧭 Orientación</span>
+                <span class="control-header-val" id="bearing-value">-15°</span>
+            </div>
+            <div class="bearing-dial" id="bearing-dial">
+                <div class="bearing-needle" id="bearing-needle"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- External Data -->
+    <script src="../shougang_polygon.js"></script>
+    <script src="../perimeter_sides.js"></script>
+    <script src="../coastal_route.js"></script>
+    <script src="../railway_marcona_andahuaylas.js"></script>
+
+    <!-- INLINED DICAPI DATA (Robust Method) -->
+    <script>
+        const AREA_ACUATICA_GEOJSON = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "Área Acuática",
+                        "area_m2": 284552.168,
+                        "layer": "area_acuatica"
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [-75.25333638888888, -15.196233333333334],
+                                [-75.25584944444444, -15.193564722222222],
+                                [-75.25241444444444, -15.190513888888889],
+                                [-75.25115777777778, -15.191848333333333],
+                                [-75.24790722222222, -15.188961666666668],
+                                [-75.24825083333333, -15.189266666666667],
+                                [-75.24791388888889, -15.189624444444444],
+                                [-75.24740833333334, -15.190094166666666],
+                                [-75.24716444444445, -15.190485833333334],
+                                [-75.24716777777778, -15.190654166666667],
+                                [-75.24705722222222, -15.190656944444445],
+                                [-75.25333638888888, -15.196233333333334]
+                            ]
+                        ]
+                    }
+                }
+            ]
+        };
+
+        const AREA_RIBERENA_GEOJSON = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "Área Ribereña",
+                        "area_m2": 9999.969,
+                        "layer": "area_riberena"
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [-75.24705722222222, -15.190656944444445],
+                                [-75.24716777777778, -15.190654166666667],
+                                [-75.24716444444445, -15.190485833333334],
+                                [-75.24740833333334, -15.190094166666666],
+                                [-75.24791388888889, -15.189624444444444],
+                                [-75.24825083333333, -15.189266666666667],
+                                [-75.24790722222222, -15.188961666666668],
+                                [-75.24757027777778, -15.189319444444445],
+                                [-75.24706472222222, -15.18978888888889],
+                                [-75.24682111111112, -15.190180833333333],
+                                [-75.24682416666667, -15.190349166666667],
+                                [-75.24671388888889, -15.190351944444444],
+                                [-75.24705722222222, -15.190656944444445]
+                            ]
+                        ]
+                    }
+                }
+            ]
+        };
+    </script>
+
+    <!-- MapLibre -->
+    <script src='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js'></script>
+
+    <script>
+        // Init Map
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: {
+                'version': 8,
+                'sources': {
+                    'satellite': {
+                        'type': 'raster',
+                        'tiles': [
+                            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+                        ],
+                        'tileSize': 256
+                    }
+                },
+                'layers': [{
+                    'id': 'satellite-layer',
+                    'type': 'raster',
+                    'source': 'satellite',
+                    'minzoom': 0,
+                    'maxzoom': 22
+                }]
+            },
+            center: [-75.18, -15.25],
+            zoom: 12,
+            pitch: 50,
+            bearing: -15,
+            antialias: true
+        });
+
+        // Add Navigation
+        map.addControl(new maplibregl.NavigationControl());
+
+        // --- DATA DEFINITIONS ---
+
+        // 1. Conveyor Routes (GeoJSON Lines)
+        // Brown: Isla Chica -> Main WP -> Pier
+        const COORDS_BROWN = [
+            [-75.184444, -15.241667],
+            [-75.227222, -15.198056],
+            [-75.243611, -15.192778]
+        ];
+
+        // Green: Isla Mediana -> WP -> Main WP
+        const COORDS_GREEN = [
+            [-75.146389, -15.333611],
+            [-75.186111, -15.251944],
+            [-75.227222, -15.198056]
+        ];
+
+        // Purple: Isla Grande -> Main WP
+        const COORDS_PURPLE = [
+            [-75.098889, -15.310833],
+            [-75.227222, -15.198056]
+        ];
+
+        let elevationMarkers = [];
+        let islandMarkers = [];
+
+        // LOAD HANDLER
+        map.on('load', async () => {
+            console.log("Map Loaded. Starting data processing...");
+
+            // --- 0A. SHOUGANG POLYGON ---
+            if (typeof SHOUGANG_POLYGON_FEATURE !== 'undefined') {
+                map.addSource('shougang-poly', {
+                    'type': 'geojson',
+                    'data': SHOUGANG_POLYGON_FEATURE
+                });
+                map.addLayer({
+                    'id': 'shougang-poly-fill',
+                    'type': 'fill',
+                    'source': 'shougang-poly',
+                    'paint': { 'fill-color': '#ffd700', 'fill-opacity': 0.05 }
+                });
+                map.addLayer({
+                    'id': 'shougang-poly-line',
+                    'type': 'line',
+                    'source': 'shougang-poly',
+                    'paint': { 'line-color': '#ffd700', 'line-width': 2, 'line-opacity': 0.8, 'line-dasharray': [4, 3] }
+                });
+            }
+
+            // --- 0B. PETRAL PERIMETER ---
+            if (typeof PERIMETER_SIDES_GEOJSON !== 'undefined') {
+                map.addSource('petral-poly', {
+                    'type': 'geojson',
+                    'data': PERIMETER_SIDES_GEOJSON
+                });
+                map.addLayer({
+                    'id': 'petral-poly-fill',
+                    'type': 'fill',
+                    'source': 'petral-poly',
+                    'paint': { 'fill-color': '#00d4ff', 'fill-opacity': 0.05 }
+                });
+                map.addLayer({
+                    'id': 'petral-poly-line',
+                    'type': 'line',
+                    'source': 'petral-poly',
+                    'paint': { 'line-color': '#00d4ff', 'line-width': 2, 'line-opacity': 0.8, 'line-dasharray': [4, 3] }
+                });
+            }
+
+            // --- 1. RENDER ISLANDS & CALCULATE AREA ---
+            renderIslands();
+
+            // --- 2. RENDER CONVEYOR LINES ---
+            addConveyorLine('conveyor-brown', COORDS_BROWN, '#795548');
+            addConveyorLine('conveyor-green', COORDS_GREEN, '#2E7D32');
+            addConveyorLine('conveyor-purple', COORDS_PURPLE, '#6A1B9A');
+
+            // --- 3. RENDER COASTAL ROUTE ---
+            if (typeof COASTAL_ROUTE_GEOJSON !== 'undefined') {
+                map.addSource('coastal-route', {
+                    'type': 'geojson',
+                    'data': COASTAL_ROUTE_GEOJSON
+                });
+                map.addLayer({
+                    'id': 'coastal-route-line',
+                    'type': 'line',
+                    'source': 'coastal-route',
+                    'layout': { 'line-join': 'round', 'line-cap': 'round' },
+                    'paint': { 'line-color': '#00bfff', 'line-width': 4, 'line-opacity': 0.8 }
+                });
+            }
+
+            // --- 4. RENDER RAILWAY ---
+            if (typeof RAILWAY_MARCONA_ANDAHUAYLAS !== 'undefined') {
+                map.addSource('railway', {
+                    'type': 'geojson',
+                    'data': RAILWAY_MARCONA_ANDAHUAYLAS
+                });
+                map.addLayer({
+                    'id': 'railway-line',
+                    'type': 'line',
+                    'source': 'railway',
+                    'paint': {
+                        'line-color': '#ffca28',
+                        'line-width': 4,
+                        'line-opacity': 0.9,
+                        'line-dasharray': [3, 4]
+                    }
+                });
+            }
+
+            // --- A. MARITIMA (DICAPI) ---
+            if (typeof AREA_ACUATICA_GEOJSON !== 'undefined') {
+                map.addSource('acuatica-poly', {
+                    'type': 'geojson',
+                    'data': AREA_ACUATICA_GEOJSON
+                });
+                map.addLayer({
+                    'id': 'acuatica-poly-fill',
+                    'type': 'fill',
+                    'source': 'acuatica-poly',
+                    'layout': { 'visibility': 'none' }, // Start hidden
+                    'paint': { 'fill-color': '#00bfff', 'fill-opacity': 0.3 }
+                });
+                map.addLayer({
+                    'id': 'acuatica-poly-line',
+                    'type': 'line',
+                    'source': 'acuatica-poly',
+                    'layout': { 'visibility': 'none' },
+                    'paint': { 'line-color': '#00bfff', 'line-width': 2 }
+                });
+            }
+
+            // --- A. RIBEREÑA (DICAPI) ---
+            if (typeof AREA_RIBERENA_GEOJSON !== 'undefined') {
+                map.addSource('riberena-poly', {
+                    'type': 'geojson',
+                    'data': AREA_RIBERENA_GEOJSON
+                });
+                map.addLayer({
+                    'id': 'riberena-poly-fill',
+                    'type': 'fill',
+                    'source': 'riberena-poly',
+                    'layout': { 'visibility': 'none' }, // Start hidden
+                    'paint': { 'fill-color': '#ff4500', 'fill-opacity': 0.3 }
+                });
+                map.addLayer({
+                    'id': 'riberena-poly-line',
+                    'type': 'line',
+                    'source': 'riberena-poly',
+                    'layout': { 'visibility': 'none' },
+                    'paint': { 'line-color': '#ff4500', 'line-width': 2 }
+                });
+            }
+
+            // --- 5. PERMANENT CONVEYOR LENGTH LABELS (Always Visible) ---
+            addPermanentLabel([(-75.184444 + -75.227222) / 2, (-15.241667 + -15.198056) / 2], '6.61 km'); // Brown 1
+            addPermanentLabel([(-75.227222 + -75.243611) / 2, (-15.198056 + -15.192778) / 2], '1.56 km'); // Brown 2
+            addPermanentLabel([(-75.146389 + -75.186111 + -75.227222) / 3, (-15.333611 + -15.251944 + -15.198056) / 3], '17.48 km'); // Green
+            addPermanentLabel([(-75.098889 + -75.227222) / 2, (-15.310833 + -15.198056) / 2], '18.67 km'); // Purple
+
+            // --- 6. GENERATE 500m LABELS (Dynamic Elevation) ---
+            const pointsToQuery = [];
+
+            // Helper to generate 500m points
+            const generatePoints = (coords, colorClass) => {
+                const line = turf.lineString(coords);
+                const lengthKm = turf.length(line, { units: 'kilometers' });
+                const points = [];
+
+                // Every 0.5 km
+                for (let d = 0; d <= lengthKm; d += 0.5) {
+                    const pt = turf.along(line, d, { units: 'kilometers' });
+                    const lng = pt.geometry.coordinates[0];
+                    const lat = pt.geometry.coordinates[1];
+
+                    points.push({
+                        lat: lat,
+                        lng: lng,
+                        km: d,
+                        colorClass: colorClass
+                    });
+                }
+                return points;
+            };
+
+            // Generate points
+            const ptsBrown = generatePoints(COORDS_BROWN, 'brown');
+            const ptsGreen = generatePoints(COORDS_GREEN, 'green');
+            const ptsPurple = generatePoints(COORDS_PURPLE, 'purple');
+
+            // Coastal Route Points
+            let ptsCoastal = [];
+            if (typeof COASTAL_ROUTE_GEOJSON !== 'undefined') {
+                const coastalCoords = COASTAL_ROUTE_GEOJSON.features[0].geometry.coordinates;
+                ptsCoastal = generatePoints(coastalCoords, 'coastal');
+            }
+
+            // Combined list
+            const allPoints = [...ptsBrown, ...ptsGreen, ...ptsPurple, ...ptsCoastal];
+
+            console.log(`Querying elevation for ${allPoints.length} points...`);
+
+            // Batch Query
+            const CHUNK_SIZE = 40;
+            const chunks = [];
+            for (let i = 0; i < allPoints.length; i += CHUNK_SIZE) {
+                chunks.push(allPoints.slice(i, i + CHUNK_SIZE));
+            }
+
+            try {
+                for (const chunk of chunks) {
+                    const locations = chunk.map(p => `${p.lat},${p.lng}`).join('|');
+                    const url = `https://api.open-elevation.com/api/v1/lookup?locations=${locations}`;
+
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (data && data.results) {
+                        data.results.forEach((res, idx) => {
+                            chunk[idx].alt = res.elevation;
+                        });
+                    }
+                }
+
+                // Create Markers (Elevation Labels) - Checkboxes determine initial visibility
+                createLabels(allPoints);
+                document.getElementById('loading').style.display = 'none';
+
+            } catch (err) {
+                console.error("Elevation fetch failed", err);
+                document.getElementById('loading').innerHTML = "<h3>Error</h3><p>Could not fetch elevations via API.</p>";
+            }
+
+        });
+
+        // 6. A. Marítima (DICAPI)
+        document.getElementById('toggle-acuatica').addEventListener('change', (e) => {
+            const val = e.target.checked ? 'visible' : 'none';
+            if (map.getLayer('acuatica-poly-fill')) map.setLayoutProperty('acuatica-poly-fill', 'visibility', val);
+            if (map.getLayer('acuatica-poly-line')) map.setLayoutProperty('acuatica-poly-line', 'visibility', val);
+        });
+
+        // 7. A. Ribereña (DICAPI)
+        document.getElementById('toggle-riberena').addEventListener('change', (e) => {
+            const val = e.target.checked ? 'visible' : 'none';
+            if (map.getLayer('riberena-poly-fill')) map.setLayoutProperty('riberena-poly-fill', 'visibility', val);
+            if (map.getLayer('riberena-poly-line')) map.setLayoutProperty('riberena-poly-line', 'visibility', val);
+        });
+
+        // --- FUNCTIONS ---
+
+        function addConveyorLine(id, coords, color) {
+            map.addSource(id, {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': coords
+                    }
+                }
+            });
+            map.addLayer({
+                'id': id,
+                'type': 'line',
+                'source': id,
+                'layout': { 'line-join': 'round', 'line-cap': 'round' },
+                'paint': {
+                    'line-color': color,
+                    'line-width': 5,
+                    'line-opacity': 0.9
+                }
+            });
+        }
+
+        function addPermanentLabel(coords, text) {
+            const el = document.createElement('div');
+            el.className = 'length-label';
+            el.innerHTML = text;
+
+            new maplibregl.Marker({
+                element: el,
+                anchor: 'center'
+            })
+                .setLngLat(coords)
+                .addTo(map);
+        }
+
+        function createLabels(points) {
+            // Get initial state of checkboxes
+            const showFajas = document.getElementById('toggle-conveyors-labels').checked;
+            const showCoastal = document.getElementById('toggle-coastal-labels').checked;
+
+            points.forEach(p => {
+                const el = document.createElement('div');
+                const isCoastal = p.colorClass === 'coastal';
+                el.className = `elev-label-container ${isCoastal ? 'coastal' : ''}`;
+
+                // Set initial style based on checkbox
+                if (isCoastal) {
+                    if (!showCoastal) el.style.display = 'none';
+                } else {
+                    if (!showFajas) el.style.display = 'none';
+                }
+
+                if (p.colorClass === 'green') el.style.borderColor = '#00e676';
+                if (p.colorClass === 'purple') el.style.borderColor = '#9c27b0';
+                if (p.colorClass === 'brown') el.style.borderColor = '#795548';
+
+                el.innerHTML = `KM ${p.km.toFixed(1)}<br><b>Alt: ${Math.round(p.alt)}m</b>`;
+
+                // Add to map
+                const marker = new maplibregl.Marker({
+                    element: el,
+                    anchor: 'bottom' // Pin at bottom so label floats above
+                })
+                    .setLngLat([p.lng, p.lat])
+                    .addTo(map);
+
+                // Add simple circle marker at the base
+                const dot = document.createElement('div');
+                dot.style.width = '6px';
+                dot.style.height = '6px';
+                dot.style.borderRadius = '50%';
+                dot.style.backgroundColor = isCoastal ? '#00bfff' : '#00e676';
+                dot.style.border = '1px solid white';
+
+                // Set initial style for dot too
+                if (isCoastal) {
+                    if (!showCoastal) dot.style.display = 'none';
+                } else {
+                    if (!showFajas) dot.style.display = 'none';
+                }
+
+                const dotMarker = new maplibregl.Marker({ element: dot })
+                    .setLngLat([p.lng, p.lat])
+                    .addTo(map);
+
+                // Store reference for toggling. 
+                // Group: 'fajas' (brown, green, purple) or 'coastal'
+                const group = (p.colorClass === 'coastal') ? 'coastal' : 'fajas';
+                elevationMarkers.push({ label: marker, dot: dotMarker, group: group });
+            });
+        }
+
+        function renderIslands() {
+            if (typeof SHOUGANG_RAW_COORDS === 'undefined') return;
+
+            const toTurfPoly = (indices) => {
+                const coords = indices.map(i => {
+                    const c = SHOUGANG_RAW_COORDS[i];
+                    return [c[1], c[0]];
+                });
+                if (coords[0][0] !== coords[coords.length - 1][0] || coords[0][1] !== coords[coords.length - 1][1]) {
+                    coords.push(coords[0]);
+                }
+                return turf.polygon([coords]);
+            };
+
+            const idxChica = Array.from({ length: 7 }, (_, i) => i + 15);
+            const polyChica = toTurfPoly(idxChica);
+
+            const idxGrande = Array.from({ length: 4 }, (_, i) => i + 22);
+            const polyGrande = toTurfPoly(idxGrande);
+
+            const idxMediana = Array.from({ length: 5 }, (_, i) => i + 2);
+            const polyMediana = toTurfPoly(idxMediana);
+
+            // Calculate Areas (Ha)
+            const areaChica = turf.area(polyChica) / 10000;
+            const areaGrande = turf.area(polyGrande) / 10000;
+            const areaMediana = turf.area(polyMediana) / 10000;
+
+            console.log("Areas calculated:", areaChica, areaGrande, areaMediana);
+
+            // Render Polygons and Labels
+            const addIsland = (name, poly, area, color) => {
+                const id = 'poly-' + name;
+                map.addSource(id, {
+                    'type': 'geojson',
+                    'data': poly
+                });
+                map.addLayer({
+                    'id': id,
+                    'type': 'fill',
+                    'source': id,
+                    'paint': {
+                        'fill-color': color,
+                        'fill-opacity': 0.4,
+                        'fill-outline-color': '#000'
+                    }
+                });
+
+                const center = turf.centerOfMass(poly);
+                const el = document.createElement('div');
+                el.className = 'area-label';
+                el.innerHTML = `${name}<br>${area.toFixed(2)} Ha`;
+
+                const marker = new maplibregl.Marker({ element: el })
+                    .setLngLat(center.geometry.coordinates)
+                    .addTo(map);
+
+                islandMarkers.push({ marker: marker, layerId: id });
+            };
+
+            addIsland("Isla Chica", polyChica, areaChica, '#ff9800');   // Orange
+            addIsland("Isla Grande", polyGrande, areaGrande, '#ffd700');// Gold
+            addIsland("Isla Mediana", polyMediana, areaMediana, '#4caf50'); // Green
+        }
+
+        // --- RIBBON CONTROLS ---
+
+        // 1. Shougang Poly
+        document.getElementById('toggle-shougang-poly').addEventListener('change', (e) => {
+            const val = e.target.checked ? 'visible' : 'none';
+            if (map.getLayer('shougang-poly-fill')) map.setLayoutProperty('shougang-poly-fill', 'visibility', val);
+            if (map.getLayer('shougang-poly-line')) map.setLayoutProperty('shougang-poly-line', 'visibility', val);
+        });
+
+        // 2. Petral Poly
+        document.getElementById('toggle-petral-poly').addEventListener('change', (e) => {
+            const val = e.target.checked ? 'visible' : 'none';
+            if (map.getLayer('petral-poly-fill')) map.setLayoutProperty('petral-poly-fill', 'visibility', val);
+            if (map.getLayer('petral-poly-line')) map.setLayoutProperty('petral-poly-line', 'visibility', val);
+        });
+
+        // 3. Fajas LINES
+        document.getElementById('toggle-conveyors-lines').addEventListener('change', (e) => {
+            const val = e.target.checked ? 'visible' : 'none';
+            ['conveyor-brown', 'conveyor-green', 'conveyor-purple'].forEach(id => {
+                if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', val);
+            });
+        });
+
+        // 4. Fajas LABELS
+        document.getElementById('toggle-conveyors-labels').addEventListener('change', (e) => {
+            const show = e.target.checked;
+            elevationMarkers.forEach(m => {
+                if (m.group === 'fajas') {
+                    const display = show ? 'block' : 'none';
+                    m.label.getElement().style.display = display;
+                    m.dot.getElement().style.display = display;
+                }
+            });
+        });
+
+        // 5. Coastal LINE
+        document.getElementById('toggle-coastal-line').addEventListener('change', (e) => {
+            const val = e.target.checked ? 'visible' : 'none';
+            if (map.getLayer('coastal-route-line')) map.setLayoutProperty('coastal-route-line', 'visibility', val);
+        });
+
+        // 6. Coastal LABELS
+        document.getElementById('toggle-coastal-labels').addEventListener('change', (e) => {
+            const show = e.target.checked;
+            elevationMarkers.forEach(m => {
+                if (m.group === 'coastal') {
+                    const display = show ? 'block' : 'none';
+                    m.label.getElement().style.display = display;
+                    m.dot.getElement().style.display = display;
+                }
+            });
+        });
+
+        // 7. Railway
+        document.getElementById('toggle-railway').addEventListener('change', (e) => {
+            const val = e.target.checked ? 'visible' : 'none';
+            if (map.getLayer('railway-line')) map.setLayoutProperty('railway-line', 'visibility', val);
+        });
+
+        // 8. Islands
+        document.getElementById('toggle-islands').addEventListener('change', (e) => {
+            const show = e.target.checked;
+            const val = show ? 'visible' : 'none';
+
+            // Toggle Layers
+            islandMarkers.forEach(obj => {
+                if (map.getLayer(obj.layerId)) map.setLayoutProperty(obj.layerId, 'visibility', val);
+                obj.marker.getElement().style.display = show ? 'block' : 'none';
+            });
+        });
+
+        // --- VIEW CONTROLS (Pitch & Bearing) ---
+        const pitchSlider = document.getElementById('pitch-slider');
+        const pitchValue = document.getElementById('pitch-value');
+        // Slider removed
+        const bearingValue = document.getElementById('bearing-value');
+        const bearingNeedle = document.getElementById('bearing-needle');
+        const bearingDial = document.getElementById('bearing-dial');
+
+        // Pitch slider control
+        pitchSlider.addEventListener('input', (e) => {
+            const pitch = parseInt(e.target.value);
+            pitchValue.textContent = pitch + '°';
+            map.setPitch(pitch);
+        });
+
+        // Toggle logic handled by updateBearingFromMouse directly now
+
+
+        // Bearing dial drag control
+        let isDragging = false;
+
+        bearingDial.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            updateBearingFromMouse(e);
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                updateBearingFromMouse(e);
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        function updateBearingFromMouse(e) {
+            const rect = bearingDial.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+            const degrees = Math.round((angle * 180 / Math.PI) + 90);
+            const normalizedDegrees = degrees > 180 ? degrees - 360 : degrees;
+
+            // Updated: Removed slider update
+            bearingValue.textContent = normalizedDegrees + '°';
+            bearingNeedle.style.transform = `translateX(-50%) rotate(${normalizedDegrees}deg)`;
+            map.setBearing(normalizedDegrees);
+        }
+
+        // Initialize Needle Style (default -15deg)
+        bearingNeedle.style.transform = `translateX(-50%) rotate(-15deg)`;
+
+    </script>
+</body>
+
+</html>

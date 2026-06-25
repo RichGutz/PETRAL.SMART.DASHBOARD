@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>Viaje_Fusionado_con_Pines</name>
+	<gx:CascadingStyle kml:id="__managed_style_28540A62153E1D2236AE">
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>4.8</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+				<displayMode>hide</displayMode>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_1686275E5D3E1D2236AE">
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>3.2</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+				<displayMode>hide</displayMode>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_084283F48B3E1D2236AE">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_1686275E5D3E1D2236AE</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_28540A62153E1D2236AE</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Placemark id="0848ED60833E1D2236A0">
+		<name>TRAMO.FALTANTE.HASTA.GARITA</name>
+		<LookAt>
+			<longitude>-75.28551347115832</longitude>
+			<latitude>-15.15769423446787</latitude>
+			<altitude>185.5646061896372</altitude>
+			<heading>0.2023260522603849</heading>
+			<tilt>0.3425277391385359</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>2010.314643093443</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_084283F48B3E1D2236AE</styleUrl>
+		<LineString>
+			<coordinates>
+				-75.28123234161131,-15.14071121742034,0 -75.28253581505024,-15.1406270864542,0 -75.28349487083031,-15.14075684677889,0 -75.28441357690815,-15.14092163060186,0 -75.28539343037006,-15.14085015802758,0 -75.28570959323076,-15.14100681087761,0 -75.28610994496962,-15.14154741640539,0 -75.28644286626282,-15.14209121145252,0 -75.28656583991126,-15.1427410612301,0 -75.28629899579632,-15.14334892509643,0 -75.28629203292141,-15.14373499269854,0 -75.28586965287067,-15.14431316746581,0 -75.28552727989569,-15.14511291413461,0 -75.28542124639073,-15.14561208853635,0 -75.2852782593461,-15.14612873854607,0 -75.28555679761679,-15.14640219515266,0 -75.28633600039628,-15.14657671425598,0 -75.28707263481503,-15.14644478469082,0 -75.28790558447812,-15.14630248123818,0 -75.28883396018107,-15.14621667456385,0 -75.28959149810265,-15.14634194574577,0 -75.28993646580561,-15.14670519800483,0 -75.29038462995898,-15.14745142588733,0 -75.2906220964154,-15.14797468304837,0 -75.29038945111091,-15.14864427331786,0 -75.28985756190478,-15.14931141755342,0 -75.28924495331098,-15.14999886100463,0 -75.28885643736479,-15.15109758045271,0 -75.28857689292585,-15.15179600174775,0 -75.28865266153487,-15.1531047349759,0 -75.28849116269852,-15.15404072288065,0 -75.28851278334758,-15.15470020255251,0 -75.28901910870607,-15.15510276117735,0 -75.28944914741911,-15.15579837410728,0 -75.28925285662294,-15.15622181712089,0 -75.28882356377468,-15.15660634862826,0 -75.28831007357681,-15.15704264401355,0 -75.28797200322276,-15.1575633672475,0 -75.28724676010391,-15.1583099139079,0 -75.2868981993108,-15.1587167888883,0 -75.28652081256033,-15.15901936434646,0 -75.28622726353014,-15.15952368142357,0 -75.28617494790822,-15.15978971143445,0 -75.28652055806494,-15.15998215980188,0 -75.28634407653718,-15.16019575515242,0 -75.28586400107787,-15.16031957976532,0 
+			</coordinates>
+		</LineString>
+	</Placemark>
+</Document>
+</kml>

@@ -1,0 +1,85 @@
+[2026-06-17] TranscripciÛn de audio completada. Solicitud de nuevo proyecto para Naviera Petral (Rentabilidad, Reporte, Forecast) con Supabase y Streamlit.
+[2026-06-17] Usuario detiene el desarrollo de cÛdigo para enfocarse en el entendimiento profundo y relaciÛn entre los 3 archivos Excel.
+[2026-06-17] Usuario deduce lÛgica de 'Voy. No' como Primary Key en archivo FacturaciÛn. Queda pendiente validaciÛn con MarÌa Elena.
+[2026-06-17] Usuario identifica la Llave Primaria Compuesta: Buque (desde el Tab) + Voy. No. Actualizado el documento de an·lisis.
+[2026-06-17] Usuario pensÛ que faltaba Junio. Se verificÛ que los viajes 775, 776 y 777 corresponden a Junio (xx/06/2026).
+[2026-06-17] Fin de la sesiÛn de trabajo. Logros: Flujogramas verticales completados, script de extracciÛn FacturaciÛn V1 funcional, modelo de base de datos SQL generado.
+2026-06-18 09:14:13 - Creado archivo MD en Research.Shipping para documentar proceso de contratacion de barcos
+2026-06-18 09:16:33 - Se agregaron los conceptos Voyage Charter, Time Charter y COA al MD
+2026-06-18 09:17:27 - Ampliado el documento MD con detalles comerciales y riesgos para Voyage Charter, Time Charter y COA
+2026-06-18 09:18:16 - Se agrego el ejemplo de empresa minera en COA y la tabla Resumen Rapido de Cobros
+2026-06-18 09:19:06 - Se actualizo la tabla resumen especificando Armador (Dueno) y Fletador (Cliente)
+2026-06-18 11:49:34 - Se registro la regla de negocio sobre la convergencia del Margen Bruto entre los Excels de Petral y el SAP de Transoceanica. Se creo el Implementation Plan.
+2026-06-18 11:53:02 - Se actualizaron las definiciones de ETL (Extract, Transform, Load) dentro del Implementation Plan.
+2026-06-18 15:00:03 - Se genero la Guia_Reunion_Petral_Flujo_Operaciones.md en la carpeta Documentation a partir de la transcripcion del audio y el analisis de los Excels.
+2026-06-18 15:02:52 - Se genero el script FLUJOGRAMA_Guia_Reunion.py y su respectivo PDF mediante graphviz en la carpeta Documentation para apoyar en la reunion virtual.
+2026-06-18 15:06:10 - Se refactorizo el flujograma a una estructura vertical compacta y consolidada en nodos HTML.
+2026-06-18 15:10:51 - Se revirtio el FLUJOGRAMA_Guia_Reunion a la version anterior a peticion del usuario.
+2026-06-18 15:15:40 - Se genero el script y PDF FLUJOGRAMA_Guia_Reunion_V2.py con las preguntas integradas, preservando la V1 original.
+2026-06-18 15:18:11 - Se genero V3 del Flujograma. Estructura arreglada: Flujo cascada vertical estricto, con un solo box por nivel que contiene internamente elementos horizontales lado a lado.
+2026-06-18 15:22:55 - Se genero V4 del Flujograma anadiendo Otras Rutas, Dispatch y preguntas sobre cobro de COA por tonelada.
+2026-06-18 15:28:28 - Se genero V5 del Flujograma integrando una bateria de preguntas clave en el bloque de Egresos.
+2026-06-18 15:34:43 - Se transcribio SLIDE.UNIT.ECONOMICS.ogg. Se analizo el cambio de Unit Economics de Buque a Viaje y la problematica de Cost Allocation.
+2026-06-18 15:44:05 - Se genero PRESENTACION_REUNION_COMPLETA.pdf uniendo el flujograma V5 y el slide de Unit Economics.
+2026-06-18 18:19:31 - Se transcribio Alcance.Reu.Petral y se actualizo el implementation_plan.md con el alcance de la herramienta de Forecast a nivel Gross Margin.
+2026-06-18 18:26:08 - Se genero el script y PDF de arquitectura FLUJOGRAMA_Arquitectura_Forecast_Petral.py inspirado en el CRM V18.
+2026-06-18 18:28:26 - Se corrigio el flujograma de Arquitectura a formato de cascada vertical (HTML tables).
+2026-06-18 18:46:05 - Se actualizo a V5 con reportes Mensual, Trimestral y Anual, y funcion repetir viaje.
+2026-06-18 18:49:02 - Se actualizo a V6 corrigiendo en el M√≥dulo 3 la denominacion de 'consumo' por 'capacidad' de combustible.
+2026-06-19 - Se rediseÒo completamente la Propuesta Comercial (PPT), evolucionando a la versiÛn V32. Se estructurÛ en 4 Fases y 3 Pilares EstratÈgicos (Forecast, Proformador SPOT, Control de GestiÛn). Se generaron mockups visuales en Python (Matplotlib) para los dashboards, incluyendo el Tablero de Control del Simulador SPOT y Tracking de Varianza. Se superaron retos de CSS/Weasyprint para compresiÛn de tablas en un solo slide sin saltos de p·gina indeseados.
+
+[2026-06-20] Tarea completada: A√±adida nueva slide de Roadmap AGILE en PROPOSAL_PETRAL_PPT_V1.md. Se preserv√≥ el slide anterior y se gener√≥ el PDF.
+
+[2026-06-20] Tarea completada: Reemplazadas flechas estrechas por un diagrama de flujo SVG tipo LOOP en la slide de Roadmap AGILE para aprovechar el espacio inferior.
+
+[2026-06-20] Tarea completada: Textos de descripci√≥n del paso 1 y paso 2 actualizados en la nueva slide de Roadmap AGILE seg√∫n solicitud.
+
+[2026-06-20] Tarea completada: Slide original del Roadmap eliminada. Solo se mantiene la versi√≥n AGILE.
+
+[2026-06-20] Tarea completada: Extra√≠das las rutas de FLUJOGRAMA_Arquitectura_Forecast_Petral_V8.py y creado el archivo estilos_rutas.txt con colores HEX estandarizados.
+
+[2026-06-20] Tarea completada: Actualizado estilos_rutas.txt con sistema dual: Colores por ruta y Texturas semi-transparentes por barco.
+
+[2026-06-20] Tarea completada: Texturas de barcos actualizadas en estilos_rutas.txt a formas geom√©tricas limpias (cuadrados, esferas, estrellas, tri√°ngulos).
+[2026-06-21] Tarea completada: GeneraciÛn de versiÛn V60 de la propuesta comercial con correcciones exclusivas en el slide de Pilar C (Control de GestiÛn) para cambiar el gr·fico a EjecuciÛn de Gross Profit, reajustar viewBox y escala del SVG (evitando cortes en el tÌtulo del eje Y derecho) y reubicar las etiquetas del mes en Y=250 para evitar la superposiciÛn de los nombres verticales de los barcos. Se comprimiÛ tambiÈn la leyenda horizontal de este slide.
+
+[2026-06-21] Tarea completada: Inserci√≥n de un slide comparativo independiente (Estado Actual vs. Estado Futuro) en la versi√≥n V60 de la propuesta, posicionado inmediatamente despu√©s de la Fase 2. El slide est√° estructurado en una tabla comparativa HTML de alto impacto y un comentario de negocio destacado. Se corrigi√≥ un problema de compilaci√≥n en WeasyPrint cambiando el contenedor de display: flex a display: block.
+
+[2026-06-21] Tarea completada: Inserci√≥n de dos slides independientes en la versi√≥n V60: 1. Roadmap AGILE + Pricing L√≥gico (posicionado tras el Roadmap original, con las 5 fases superiores y el box 6 horizontal de soporte recurrente abajo). 2. Esquema L√≥gico de Pricing (como el √∫ltimo slide de la presentaci√≥n, estructurando en 6 pasos la l√≥gica de cobro sin montos fijos). Compilaci√≥n a PDF completada exitosamente.
+
+[2026-06-21] Tarea completada: Refinaci√≥n de slides en la versi√≥n V60: 1. Integraci√≥n de la Fase 6 en el Roadmap Agile original con box horizontal inferior y texto del organismo vivo. 2. Eliminaci√≥n de la diapositiva duplicada intermedia. 3. Conservaci√≥n del slide final de Esquema L√≥gico de Pricing al final de la presentaci√≥n. Compilaci√≥n a PDF completada exitosamente.
+
+[2026-06-21 12:00] V60: Se dividio el slide comparativo en dos partes (Parte 1: 3 filas, Parte 2: 2 filas). Se removieron emojis ‚ùå y ‚úÖ de las cabeceras. Se aplico un estilo css especifico .tabla-comparativa con font-size: 11pt !important para garantizar que ambas tablas quepan perfectamente en dos diapositivas y no se desborden.
+
+[2026-06-21 12:12] V61: Creacion de la version V61 para evitar bloqueos de permisos de archivo en Windows. Se aplicaron los ajustes de las leyendas del Pilar A (alineacion en una sola linea, eliminacion del espacio abismal y nowrap en CONCON T.) y la compactacion de las tablas comparativas.
+
+[2026-06-21 12:35] V61: Inyeccion de las dos diapositivas finales. Slide 15: Spaghetti Map (costa de Peru y rutas vectoriales en SVG) y Slide 16: Bubble Chart multidimensional con participacion de buques en graficos de pastel internos. Compilacion exitosa del PDF.
+
+[2026-06-21 12:48] V61: Aislamiento del desarrollo de slides nuevos en PROPOSAL_PETRAL_PPT_V61_slides_nuevos.html. Se restauro la propuesta original V61 de produccion a su estado limpio sin inyeccion de nuevos slides. Se logro el zoom del Callao al sur, fondo claro en el mapa y Bubble Chart gigante.
+
+[2026-06-21 13:05] V61_slides_nuevos: Ajustada la proyeccion del mapa para desplazar a Callao hacia abajo y evitar cortes en el borde superior. Se incrementaron los offsets de orbita en X (hasta 290px) para las rutas mas largas (Ilo-Callao, Callao-Matarani) haciendolas muy convexas hacia el Pacifico. Se amplio la dispersion de lineas paralelas a 8px para permitir el conteo visual de los viajes. En el Bubble Chart, se inyectaron los codigos de buque dentro de los sectores circulares y se coloco el monto del Gross Margin fuera de la burbuja (arriba).
+
+[2026-06-21 13:08] V61_slides_nuevos: Removido el bloque explicativo a la derecha del Spaghetti Map en el Slide 1. El mapa fue centrado horizontalmente a pantalla completa (ancho 100%) y la leyenda de rutas fue ubicada de manera ordenada y centrada al pie, identico al estilo del Bubble Chart.
+
+2026-06-21: El usuario solicita aumentar diametro de burbujas 20% y duplicar espaciado entre burbujas. Se crea generate_slides.py en la carpeta Proposal. Se implementa una escala 1:1 (720x450, viewBox 800x450) para que no se encoja el grafico en WeasyPrint, y se desplaza el eje X a y=390 para evitar solapamientos. Compilado PDF de prueba V13 con WeasyPrint en exactamente 2 paginas.
+
+2026-06-21: A solicitud directa del usuario, se inyectan los dos nuevos slides de analisis de trafico como refuerzo del Pilar C en PROPOSAL_PETRAL_PPT_V61.html. Compilado PDF final de produccion con build_ppt.py.
+2026-06-21: Se generÛ la versiÛn V63 solucionando el traslape de la palabra 'buques' sobre la serie 'Ilo-Callao' en el slide del Pilar A. Se estructurÛ la leyenda en dos filas verticales con Flexbox y se cerraron correctamente las etiquetas SVG en el HTML. PaginaciÛn de 17 p·ginas estables.
+2026-06-21: Actualizado el archivo Instrucciones_GRAFICOS_MOCK_PROPOSAL.md con las directrices de la V63 y compilado con Èxito el PDF de instrucciones con convert_md_to_pdf.py.
+2026-06-22: Transcrito el audio COTIZACION.PROYECTAR.COTIZAR.ogg y creado borrador de COTIZACION_MODULAR_PETRAL.md en base al requerimiento de hacer el pricing modular.
+2026-06-22: Modificada la cotizaciÛn modular en COTIZACION_MODULAR_PETRAL.md usando el formato de tabla HTML (vertical) con el mismo estilo de la diapositiva 'Comparativa TecnolÛgica'.
+2026-06-22: Generado el archivo COTIZACION_MODULAR_PETRAL.pdf autom·ticamente usando convert_md_to_pdf.py
+2026-06-22: Restaurada la cotizaciÛn al formato vertical (filas) y orientada la p·gina a Landscape en el generador de PDF.
+2026-06-22: Creada VersiÛn 2 de la propuesta (COTIZACION_MODULAR_PETRAL_V2) con 5 columnas: Etapa, DescripciÛn, Comentarios, Horas y Tarifa.
+2026-06-22: Corregidos los nombres de los usuarios y aplicados los resaltados en negrita (azul) a las descripciones de todas las etapas en la V2.
+2026-06-22: V2 actualizada: Nombre Jorge Neyra corregido, columna Etapa angostada y columnas reordenadas (Comentarios, Tarifa Horaria, Horas, Total sin IGV).
+2026-06-22: V2 actualizada: AÒadido sombreado transparente alterno (rgba) a las filas de la tabla para mejorar lectura.
+2026-06-22: Transcrito audio comentarios.para.cotizacion.ogg y aÒadidos a la columna Comentarios en la versiÛn V2.
+2026-06-22: Modificado PROPOSAL_PETRAL_PPT_V63.html para eliminar la capa blanca que ocultaba el logo y mostrar el pie de p·gina globalmente.
+2026-06-22: AÒadido logo de Geeksoft y pie de p·gina en la cotizaciÛn COTIZACION_MODULAR_PETRAL_V2.md copiando el estilo de la presentaciÛn HTML.
+2026-06-22: Lectura de PDF editado. CreaciÛn de versiÛn V3 de la cotizaciÛn con horas, tarifas y el total general (7,250 USD) integrado al Markdown y generado a PDF.
+2026-06-22: CreaciÛn de V4 dividiendo la tabla en tres p·ginas (One-Timers Parte 1, Parte 2, y Costos Recurrentes). Se angostaron columnas numÈricas para maximizar el ancho de texto. Total estimado ajustado a ,750 (sin sumar la etapa 6).
+2026-06-22: CreaciÛn de V5 cambiando tarifa de diseÒo a 100 USD/hr y horas de desarrollo a 90. Renombrado de columnas a Tarifa USD/hr y Hrs. Total actualizado a ,000.
+2026-06-22: CreaciÛn de V6 reduciendo el margen superior de @page a 26mm para acercar la tabla al logo dejando un espacio prudente.
+2026-06-22: CreaciÛn de V7. Se eliminaron las cabeceras (headers) de las tablas 2 y 3. Se redujo el margen superior de @page a 23mm.
+2026-06-22: CreaciÛn de V9 armando una sub-tabla para dividir a los 4 Usuarios Clave en dos columnas, aplanando la fila para ahorrar espacio vertical adicional.

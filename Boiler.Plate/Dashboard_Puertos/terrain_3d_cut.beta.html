@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelo 3D de Terreno - Triángulo Perímetro</title>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <!-- Data Source (Auto-generated) -->
+    <script src="terrain_mesh_cut.js"></script>
+    <script src="layer_area_acuatica.js?v=3"></script>
+    <script src="layer_area_riberena.js?v=3"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f4f7f6;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        #plot3d {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+        }
+
+        h3 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+
+        p {
+            margin: 0 0 15px 0;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #059669;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .color-box {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="controls">
+        <h3>Modelo Digital 3D (Alta Resolución)</h3>
+        <p>Malla 50m | Extensión +1km N/E</p>
+        <a href="dashboard.html" class="btn">⬅ Volver al Mapa</a>
+
+        <div style="margin-top: 15px; border-top: 1px solid #ddd; padding-top: 10px;">
+            <strong>Movimiento de Tierras:</strong>
+            <div id="stats-panel" style="font-size: 11px; margin-top: 5px; line-height: 1.4;">
+                Calculando...
+            </div>
+        </div>
+
+
+    </div>
+
+    <div id="plot3d"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof TERRAIN_MESH_DATA === 'undefined') {
+                alert("Datos no encontrados. Ejecute generate_terrain_alternative.py primero.");
+                return;
+            }
+
+            // Update Stats Panel
+            if (TERRAIN_MESH_DATA.stats) {
+                const s = TERRAIN_MESH_DATA.stats;
+                // Handle different property names from different generator versions
+                const rawVol = s.cut_volume_mm3 !== undefined ? s.cut_volume_mm3 : (s.cut_volume_m3 / 1000000);
+                const volStr = typeof rawVol === 'number' ? rawVol.toFixed(2) : "0.00";
+
+                // Estadio Nacional Volume = 1 MM m3 approx.
+                const estadios = Math.round(rawVol); // rawVol is already in MM m3
+
+                const panel = document.getElementById('stats-panel');
+                panel.innerHTML = `
+                    <div><strong>Nivel Corte:</strong> ${s.cut_level} m.s.n.m</div>
+                    <div style="color: #d32f2f; font-weight: bold;">Vol. Corte: ${volStr} MM m³</div>
+                    <div style="font-size: 10px; color: #555; margin-top: 3px;">
+                        (Equivalente a ~${estadios} Estadios Nacionales llenos de tierra)
+                    </div>
+                `;
+            } else {
+                document.getElementById('stats-panel').innerHTML = "Datos de volumen no disponibles.";
+            }
+
+            // --- 1. Coordinate System Setup (Local Meters) ---
+            // Origin: Bottom-Left of Bounding Box
+            const originIon = Math.min(...TERRAIN_MESH_DATA.x);
+            const originLat = Math.min(...TERRAIN_MESH_DATA.y);
+
+            // WGS84 Constants approx
+            const R = 6378137;
+            const D2R = Math.PI / 180;
+            const latRad = originLat * D2R;
+            const metersPerDegLat = 111132.954 - 559.822 * Math.cos(2 * latRad); // Approx
+            const metersPerDegLon = 111412.84 * Math.cos(latRad);
+
+            // Helpers for conversion
+            const toX = (lon) => (lon - originIon) * metersPerDegLon;
+            const toY = (lat) => (lat - originLat) * metersPerDegLat;
+
+            const x_meters = TERRAIN_MESH_DATA.x.map(toX);
+            const y_meters = TERRAIN_MESH_DATA.y.map(toY);
+            const z_meters = TERRAIN_MESH_DATA.z || TERRAIN_MESH_DATA.z_natural;
+
+            // --- 2. Terrain Surface Trace ---
+            // --- 2. Terrain Surface Trace (Mountain Only) ---
+            // Uses explicit indices to define the hole
+            const terrainTrace = {
+                x: x_meters,
+                y: y_meters,
+                z: TERRAIN_MESH_DATA.z_natural, // Natural Z
+
+                i: TERRAIN_MESH_DATA.terrain_i,
+                j: TERRAIN_MESH_DATA.terrain_j,
+                k: TERRAIN_MESH_DATA.terrain_k,
+
+                type: 'mesh3d',
+                intensity: TERRAIN_MESH_DATA.z_natural,
+                colorscale: 'Earth',
+                opacity: 0.9,
+                flatshading: false,
+                lighting: { ambient: 0.5, diffuse: 0.8, roughness: 0.7, specular: 0.1 },
+                hoverinfo: 'z',
+                name: 'Terreno',
+                showscale: true,
+                colorbar: { title: 'Altitud (m)', len: 0.5, x: 0.95 }
+            };
+
+            // --- 2.0 Floor Trace (Inside Cut) ---
+            // Shares X/Y with terrain but uses different Z and Indices
+            let floorTrace = null;
+            if (TERRAIN_MESH_DATA.floor_i && TERRAIN_MESH_DATA.floor_i.length > 0) {
+                floorTrace = {
+                    x: x_meters,
+                    y: y_meters,
+                    z: TERRAIN_MESH_DATA.z_floor, // Flattened 30m Z
+
+                    i: TERRAIN_MESH_DATA.floor_i,
+                    j: TERRAIN_MESH_DATA.floor_j,
+                    k: TERRAIN_MESH_DATA.floor_k,
+
+                    type: 'mesh3d',
+                    intensity: TERRAIN_MESH_DATA.z_floor,
+                    colorscale: 'Earth',
+                    opacity: 1.0,
+                    flatshading: true,
+                    name: 'Suelo Excavado',
+                    hoverinfo: 'z',
+                    showscale: false
+                };
+            }
+
+            // --- 2.1 Vertical Walls Trace ---
+            let wallTrace = null;
+            if (TERRAIN_MESH_DATA.wall_x && TERRAIN_MESH_DATA.wall_x.length > 0) {
+                // Convert wall coords to meters
+                const wx_m = TERRAIN_MESH_DATA.wall_x.map(toX);
+                const wy_m = TERRAIN_MESH_DATA.wall_y.map(toY);
+                const wz_m = TERRAIN_MESH_DATA.wall_z;
+
+                wallTrace = {
+                    x: wx_m,
+                    y: wy_m,
+                    z: wz_m,
+                    type: 'mesh3d',
+                    color: '#A0522D', // Rock/Soil color
+                    opacity: 1.0,
+                    flatshading: true,
+                    name: 'Pared de Corte',
+                    hoverinfo: 'none' // Static
+                };
+            }
+
+            // --- 2.2 Hex Wall Trace (Wireframe) ---
+            let hexTrace = null;
+            if (TERRAIN_MESH_DATA.hex_x && TERRAIN_MESH_DATA.hex_x.length > 0) {
+                const hx_m = TERRAIN_MESH_DATA.hex_x.map(val => val === null ? null : toX(val));
+                const hy_m = TERRAIN_MESH_DATA.hex_y.map(val => val === null ? null : toY(val));
+                const hz_m = TERRAIN_MESH_DATA.hex_z;
+
+                hexTrace = {
+                    x: hx_m,
+                    y: hy_m,
+                    z: hz_m,
+                    mode: 'lines',
+                    type: 'scatter3d',
+                    line: {
+                        color: '#000000', // Black
+                        width: 2 // Thin
+                    },
+                    name: 'Malla Hexagonal',
+                    hoverinfo: 'none'
+                };
+            }
+
+            // --- 2.2 Zero Points Trace (Debug) ---
+            let zeroTrace = null;
+            if (TERRAIN_MESH_DATA.zero_pts && TERRAIN_MESH_DATA.zero_pts.x && TERRAIN_MESH_DATA.zero_pts.x.length > 0) {
+                const zx_m = TERRAIN_MESH_DATA.zero_pts.x.map(toX);
+                const zy_m = TERRAIN_MESH_DATA.zero_pts.y.map(toY);
+                // Lift them slightly so they are visible even if z=0 is below base
+                const zz_m = TERRAIN_MESH_DATA.zero_pts.z.map(z => z + 5);
+
+                zeroTrace = {
+                    x: zx_m,
+                    y: zy_m,
+                    z: zz_m,
+                    mode: 'markers',
+                    type: 'scatter3d',
+                    marker: { size: 4, color: '#ef4444', symbol: 'x' },
+                    name: 'Datos Faltantes (0m)',
+                    hoverinfo: 'text',
+                    hovertext: 'Sin Datos'
+                };
+            }
+
+
+
+            // --- 2.3 DICAPI Areas (Acuática & Ribereña) ---
+            function createPolygonTrace(geojson, name, color, zLevel, opacity) {
+                if (typeof geojson === 'undefined' || !geojson.features || !geojson.features.length) return null;
+                // Supports simple Polygon geometry (outer ring only for simplicity)
+                const coords = geojson.features[0].geometry.coordinates[0];
+                const x = coords.map(p => toX(p[0]));
+                const y = coords.map(p => toY(p[1]));
+                // Z-level slightly above 0 or terrain to avoid z-fighting, flat plane
+                const z = new Array(x.length).fill(zLevel);
+
+                return {
+                    x: x,
+                    y: y,
+                    z: z,
+                    type: 'mesh3d',
+                    color: color,
+                    opacity: opacity,
+                    delaunayaxis: 'z', // Triangulate along Z to fill the shape
+                    name: name,
+                    hoverinfo: 'name'
+                };
+            }
+
+            // Área Acuática: Light Blue, Transparent
+            const acuaticaTrace = createPolygonTrace(
+                typeof AREA_ACUATICA_GEOJSON !== 'undefined' ? AREA_ACUATICA_GEOJSON : undefined,
+                'Área Acuática',
+                '#00bfff', // Deep Sky Blue
+                30,        // Elevation (e.g., Sea Level or slightly above)
+                0.3        // Transparency
+            );
+
+            // Área Ribereña: Orange/Red, Transparent
+            const riberenaTrace = createPolygonTrace(
+                typeof AREA_RIBERENA_GEOJSON !== 'undefined' ? AREA_RIBERENA_GEOJSON : undefined,
+                'Área Ribereña',
+                '#ff4500', // Orange Red
+                35,        // Slightly higher to overlap cleanly if needed
+                0.3
+            );
+
+            // --- 3. Perimeter Lines (A, B, C) Traces ---
+            // Vertices from analyze_perimeter_sides.py
+            const V1 = [-75.25695083552709, -15.165498334382889]; // NE
+            const V2 = [-75.26825393885237, -15.172534472456562]; // NW
+            const V3 = [-75.23798892224755, -15.197477563030073]; // S
+
+            // Convert Vertices to Local Grid
+            const p1 = { x: toX(V1[0]), y: toY(V1[1]) };
+            const p2 = { x: toX(V2[0]), y: toY(V2[1]) };
+            const p3 = { x: toX(V3[0]), y: toY(V3[1]) };
+
+            // OFICIAL DISTANCES (Synchronized with 2D Map)
+            const distA = "1.44 km";
+            const distB = "4.10 km";
+            const distC = "4.27 km";
+
+            // Height for triangle sides (slightly elevated above terrain)
+            const SIDE_HEIGHT = 50; // 50m above terrain
+
+            // Side A: V1 -> V2 (Green) - Label at Midpoint
+            const midA = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+            const lineA = {
+                x: [p1.x, midA.x, p2.x],
+                y: [p1.y, midA.y, p2.y],
+                z: [SIDE_HEIGHT, SIDE_HEIGHT, SIDE_HEIGHT],
+                mode: 'lines+text',
+                type: 'scatter3d',
+                line: { color: '#10b981', width: 8 },
+                text: ['', `LADO A: ${distA}`, ''],
+                textposition: 'top center',
+                textfont: { size: 14, color: '#000000', family: 'Arial Black' },
+                texttemplate: '%{text}',
+                cliponaxis: false,
+                name: 'Lado A',
+                hoverinfo: 'name'
+            };
+
+            // Side B: V1 -> V3 (Amber) - Label at Midpoint
+            const midB = { x: (p1.x + p3.x) / 2, y: (p1.y + p3.y) / 2 };
+            const lineB = {
+                x: [p1.x, midB.x, p3.x],
+                y: [p1.y, midB.y, p3.y],
+                z: [SIDE_HEIGHT, SIDE_HEIGHT, SIDE_HEIGHT],
+                mode: 'lines+text',
+                type: 'scatter3d',
+                line: { color: '#f59e0b', width: 8 },
+                text: ['', `LADO B: ${distB}`, ''],
+                textposition: 'middle right',
+                textfont: { size: 14, color: '#000000', family: 'Arial Black' },
+                texttemplate: '%{text}',
+                cliponaxis: false,
+                name: 'Lado B',
+                hoverinfo: 'name'
+            };
+
+            // Side C: V2 -> V3 (Blue) - Label at Midpoint
+            const midC = { x: (p2.x + p3.x) / 2, y: (p2.y + p3.y) / 2 };
+            const lineC = {
+                x: [p2.x, midC.x, p3.x],
+                y: [p2.y, midC.y, p3.y],
+                z: [SIDE_HEIGHT, SIDE_HEIGHT, SIDE_HEIGHT],
+                mode: 'lines+text',
+                type: 'scatter3d',
+                line: { color: '#3b82f6', width: 8 },
+                text: ['', `LADO C: ${distC}`, ''],
+                textposition: 'middle left',
+                textfont: { size: 14, color: '#000000', family: 'Arial Black' },
+                texttemplate: '%{text}',
+                cliponaxis: false,
+                name: 'Lado C',
+                hoverinfo: 'name'
+            };
+
+            // Vertex markers (small spheres at corners)
+            const vertices = {
+                x: [p1.x, p2.x, p3.x],
+                y: [p1.y, p2.y, p3.y],
+                z: [SIDE_HEIGHT, SIDE_HEIGHT, SIDE_HEIGHT],
+                mode: 'markers',
+                type: 'scatter3d',
+                marker: { size: 8, color: '#ef4444', symbol: 'circle' },
+                name: 'Vértices',
+                hovertext: ['V1 (NE)', 'V2 (NW)', 'V3 (S)'],
+                hoverinfo: 'text'
+            };
+
+            const dataPlot = [
+                terrainTrace,
+                lineA, lineB, lineC,
+                vertices
+            ];
+
+            if (floorTrace) dataPlot.push(floorTrace);
+
+            if (wallTrace) {
+                dataPlot.push(wallTrace);
+            }
+            if (hexTrace) {
+                dataPlot.push(hexTrace);
+            }
+            if (zeroTrace) {
+                dataPlot.push(zeroTrace);
+            }
+            if (acuaticaTrace) dataPlot.push(acuaticaTrace);
+            if (riberenaTrace) dataPlot.push(riberenaTrace);
+
+            const layout = {
+                title: '',
+                paper_bgcolor: '#f4f7f6',
+                plot_bgcolor: '#f4f7f6',
+                font: { family: 'Segoe UI, sans-serif' },
+                scene: {
+                    aspectmode: 'data', // True 1:1 Scale
+                    xaxis: { title: 'Este (m)', showgrid: true, gridcolor: '#ddd', zerolinecolor: '#ccc' },
+                    yaxis: { title: 'Norte (m)', showgrid: true, gridcolor: '#ddd', zerolinecolor: '#ccc' },
+                    zaxis: { title: 'Altitud (m)', showgrid: true, gridcolor: '#ddd', zerolinecolor: '#ccc' },
+                    camera: {
+                        eye: { x: 0, y: -2.5, z: 1.5 }, // Start looking North
+                        up: { x: 0, y: 0, z: 1 }       // Lock Z as UP
+                    },
+                    dragmode: 'turntable', // Better for terrain rotation
+                    annotations: [
+                        {
+                            showarrow: false,
+                            x: (p1.x + p2.x) / 2, y: Math.max(p1.y, p2.y) + 500, z: 0, // Approx labeling north
+                            text: "NORTE",
+                            xanchor: "center",
+                            yanchor: "bottom",
+                            font: { color: "#333", size: 16 }
+                        }
+                    ]
+                },
+                margin: { t: 0, b: 0, l: 0, r: 0 },
+                showlegend: false // Legend handled by UI
+            };
+
+            Plotly.newPlot('plot3d', dataPlot, layout, { responsive: true, displayModeBar: true });
+        });
+    </script>
+</body>
+
+</html>

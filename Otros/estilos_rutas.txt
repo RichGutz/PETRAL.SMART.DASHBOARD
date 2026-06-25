@@ -1,0 +1,42 @@
+# SISTEMA DE DISEÑO VISUAL PARA FORECAST (MOCKUPS PILAR A)
+
+## REGLA PRINCIPAL (DUAL ENCODING)
+- **COLOR DE FONDO** = Representa la RUTA.
+- **TEXTURA SEMI-TRANSPARENTE (OVERLAY)** = Representa el BARCO.
+De esta forma, en un gráfico de barras apiladas (stack) o en el calendario, se puede identificar simultáneamente qué ruta se está operando y qué buque la está ejecutando.
+
+---
+
+## 1. COLORES POR RUTA (HEX Colors)
+Paleta de colores estandarizada, plana y sin texturas (Base):
+
+### Cliente NEXA
+- Callao-Marcona: #3b82f6 (Azul)
+- Callao-Matarani: #8b5cf6 (Violeta)
+
+### Cliente SPCC
+- Ilo-Mejillones: #f59e0b (Ámbar)
+- Ilo-Matarani: #ef4444 (Rojo)
+- Ilo-Marcona: #10b981 (Esmeralda)
+- Ilo-Callao: #06b6d4 (Cian)
+
+---
+
+## 2. TEXTURAS POR BARCO (CSS Patterns / SVG Overlays)
+Cada barco tiene una textura geométrica semi-transparente estandarizada que se superpone al color de la ruta (evitando achurados intrusivos):
+
+- **TABLÓN**: 
+  - **Textura**: Cuadraditos (Little Squares)
+  - **Opacidad**: Semi-transparente (ej. opacity: 0.25)
+  
+- **MOQUEGUA**: 
+  - **Textura**: Esferitas / Punteado (Polka Dots)
+  - **Opacidad**: Semi-transparente (ej. opacity: 0.25)
+
+- **CONCON TRADER**:
+  - **Textura**: Estrellitas (Stars)
+  - **Opacidad**: Semi-transparente (ej. opacity: 0.25)
+
+- **HUEMEL**:
+  - **Textura**: Triángulos (Triangles)
+  - **Opacidad**: Semi-transparente (ej. opacity: 0.25)

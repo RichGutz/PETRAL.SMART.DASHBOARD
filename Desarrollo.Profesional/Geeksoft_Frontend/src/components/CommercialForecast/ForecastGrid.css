@@ -1,0 +1,13 @@
+.table-container {
+    background: white;
+}
+
+.vertical-text {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    vertical-align: middle;
+}

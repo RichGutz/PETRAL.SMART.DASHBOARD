@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan de Trabajo - Visita Marcona</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a237e;
+            --secondary: #0d47a1;
+            --accent: #2979ff;
+            --text-dark: #212121;
+            --text-light: #757575;
+            --bg-light: #f5f7fa;
+            --white: #ffffff;
+            --border: #e0e0e0;
+        }
+
+        @media print {
+            body {
+                background: white !important;
+                padding: 0 !important;
+            }
+
+            .container {
+                box-shadow: none !important;
+                border: none !important;
+                max-width: 100% !important;
+                margin: 20px auto !important;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            h2 {
+                page-break-before: auto;
+            }
+
+            img {
+                page-break-inside: avoid;
+                max-height: 400px;
+                display: block;
+                margin: 20px auto;
+            }
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--white);
+            padding: 50px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 30px;
+            margin-bottom: 40px;
+        }
+
+        .logo-placeholder {
+            font-weight: 700;
+            font-size: 24px;
+            color: var(--primary);
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin: 0;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h2 {
+            font-size: 22px;
+            color: var(--secondary);
+            border-left: 5px solid var(--primary);
+            padding-left: 15px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            font-size: 18px;
+            color: var(--text-dark);
+            margin-top: 25px;
+        }
+
+        .meta-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--text-light);
+            margin-top: 10px;
+        }
+
+        img {
+            width: 100%;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin: 30px auto;
+            border: 1px solid var(--border);
+            display: block;
+        }
+
+        footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .print-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="print-button no-print" onclick="window.print()">Imprimir a PDF</button>
+
+    <div class="container">
+        <header>
+            <div class="logo-placeholder">PETRAL S.A.</div>
+            <div class="meta-info">
+                <span>Fecha: 09 de marzo de 2026</span>
+                <span>Ubicación: Marcona, Perú</span>
+            </div>
+        </header>
+
+        <!-- SYNC_START -->
+<h1>PLAN DE TRABAJO: VISITA DE CAMPO MARCONA</h1>
+<h2>1. Objetivos de la Visita</h2>
+<p>Realizar una inspección técnica de las vías de acceso al terreno de <strong>PETRAL</strong> para documentar el estado actual, identificar obstrucciones y validar la logística de movilidad.</p>
+<h2>2. Nomenclatura Oficial de Rutas</h2>
+<p>Para la coordinación y reporte, se utilizarán los siguientes nombres (ya integrados en el Dashboard):<br />
+- <strong>PETRAL BORDE:</strong> Perímetro del terreno.<br />
+- <strong>RUTA VERDE:</strong> Acceso Norte vía concesión Shougang.<br />
+- <strong>RUTA ROJA:</strong> Tramo Panamericana Sur (1S) a San Juan de Marcona.<br />
+- <strong>RUTA MORADA:</strong> Conexión Pueblo Marcona a inicio de Servidumbre.<br />
+- <strong>SERVIDUMBRE:</strong> Tramo de acceso final (Lado Sur).</p>
+<h2>3. Itinerario Detallado</h2>
+<h3>DÍA 1: Inspección de Acceso Sur y Servidumbre</h3>
+<ul>
+<li><strong>Ruta:</strong> Panamericana Sur → <strong>RUTA ROJA</strong> → San Juan de Marcona → <strong>RUTA MORADA</strong> → <strong>SERVIDUMBRE</strong>.</li>
+<li><strong>Actividades:</strong><ol>
+<li>Recorrido completo de la <strong>SERVIDUMBRE</strong> hasta el <strong>PETRAL BORDE</strong> (Lado Sur).</li>
+<li>Identificación de obstrucciones físicas o interferencias.</li>
+<li>Documentación fotográfica georeferenciada.</li>
+</ol>
+</li>
+<li><strong>Meta:</strong> Confirmar la viabilidad del ingreso sur y estado de la servidumbre.</li>
+</ul>
+<p><img alt="Mapa Ruta Sur" src="Imagenes.Rutas.Viaje/Ruta.SUR.png" /></p>
+<h3>DÍA 2: Inspección de Acceso Norte (Ruta Verde)</h3>
+<ul>
+<li><strong>Ruta:</strong> Panamericana Sur → <strong>RUTA VERDE</strong> → <strong>PETRAL BORDE</strong> (Lado Norte).</li>
+<li><strong>Actividades:</strong><ol>
+<li>Recorrido por la <strong>RUTA VERDE</strong> evaluando el estado de la vía.</li>
+<li>Verificación de puntos de control en el lateral norte del terreno.</li>
+</ol>
+</li>
+<li><strong>Meta:</strong> Validar la ruta alternativa norte y su conexión estratégica.</li>
+</ul>
+<p><img alt="Mapa Ruta Norte" src="Imagenes.Rutas.Viaje/Ruta.NORTE.png" /></p>
+<hr />
+<h2>4. Instrucciones de Uso del Dashboard (Modo Garmin)</h2>
+<p>El Dashboard de Puertos ha sido optimizado para funcionar como un dispositivo de seguimiento GPS (similar a un Garmin) durante la expedición, incluso en zonas sin cobertura de internet.</p>
+<h3>Configuración Inicial (Con Señal)</h3>
+<ol>
+<li><strong>Acceder:</strong> Abrir <code>petral.geeksoft.tech/dashboard.html</code> en Chrome móvil.</li>
+<li><strong>Identificación:</strong> Ingresar sus iniciales o ID en el campo <strong>"Tu nombre (ej: RG)"</strong>.</li>
+<li><strong>Activar GPS:</strong> Presionar el botón <strong>GPS OFF</strong> (cambiará a <strong>GPS ON</strong>). Esperar a que el punto azul aparezca en el mapa.</li>
+<li><strong>Seguimiento:</strong> Presionar <strong>Follow Me</strong> para que el mapa se centre automáticamente en su posición.</li>
+</ol>
+<h3>Durante el Recorrido (Grabación)</h3>
+<ol>
+<li><strong>Iniciar Grabación:</strong> Presionar el botón <strong>⏺ GRABAR</strong>. El botón cambiará a <strong>🔴 REC ON</strong>.</li>
+<li><strong>Frecuencia:</strong> El dispositivo registrará su posición cada <strong>1 minuto</strong>.</li>
+<li><strong>Mantener Pantalla:</strong> El sistema activará el "Wake Lock" para evitar que la pantalla se bloquee mientras se graba. <strong>No minimice el navegador.</strong></li>
+</ol>
+<h3>Operación Offline (Sin Señal en el Desierto)</h3>
+<ol>
+<li><strong>Almacenamiento Local:</strong> Si pierde la señal de internet, el app guardará automáticamente los puntos en la memoria del teléfono (localStorage).</li>
+<li><strong>Sincronización Automática:</strong> Al recuperar señal, el sistema detectará la conexión y enviará <strong>todos los puntos acumulados</strong> masiva y automáticamente a la base de datos.</li>
+</ol>
+<p><em>Actualizado el 09 de marzo de 2026 con instrucciones de seguimiento GPS.</em></p>
+<p><em>Actualizado el 09 de marzo de 2026 con instrucciones de seguimiento GPS.</em></p>
+<!-- SYNC_END -->
+
+        <footer>
+            <p>Documento generado por Antigravity AI para PETRAL S.A. &copy; 2026</p>
+            <p>Este documento es para uso técnico interno exclusivo.</p>
+        </footer>
+    </div>
+
+</body>
+
+</html>

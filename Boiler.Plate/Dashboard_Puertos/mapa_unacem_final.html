@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plano Topográfico - DQM en UNACEM</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #f0f2f5;}
+        #map { height: 100vh; width: 100vw; }
+        
+        #controlPanel {
+            position: absolute; top: 15px; right: 15px; z-index: 2000;
+            background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 2px solid #0f2c59;
+            width: 280px;
+        }
+        #controlPanel h3 { margin: 0 0 15px 0; color: #0f2c59; font-size: 16px; text-transform: uppercase; border-bottom: 2px solid #e91e63; padding-bottom: 5px; }
+        .control-group { margin-bottom: 15px; }
+        .control-group label { display: block; font-size: 12px; font-weight: bold; color: #333; margin-bottom: 5px; }
+        .control-group input[type="range"] { width: 100%; cursor: pointer; }
+        .val-display { float: right; color: #e91e63; font-weight: bold; }
+        
+        .switch-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; background: #e3f2fd; padding: 8px; border-radius: 4px; border: 1px solid #bbdefb; }
+        .switch-container label { margin-bottom: 0; font-size: 13px; color: #1565c0; cursor: pointer; }
+        .switch-container input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
+
+        .instructions { font-size: 11px; color: #555; background: #fff3cd; padding: 8px; border-radius: 4px; border: 1px solid #ffeeba; margin-top: 15px; }
+
+        .cota-label {
+            font-size: 11px; font-weight: bold; color: #FFEB3B; background: rgba(0,0,0,0.6);
+            padding: 2px 5px; border-radius: 3px; border: 1px solid #FFEB3B;
+            white-space: nowrap; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <!-- Botón volver al dashboard -->
+    <div style="position: absolute; top: 20px; left: 20px; z-index: 2000;">
+        <a href="https://petral.geeksoft.tech/dashboard.html" title="Volver al Dashboard" style="text-decoration: none; font-size: 24px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 50%; border: 2px solid #0f2c59; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">🏠</a>
+    </div>
+
+    <div id="controlPanel">
+        <h3>Plano Acotado Vectorial</h3>
+        
+        <div class="control-group">
+            <label>Rotación del Layout <span id="valRot" class="val-display">0°</span></label>
+            <input type="range" id="sliderRot" min="0" max="360" value="0">
+        </div>
+
+        <div class="switch-container">
+            <label for="checkEspejo"><b>Activar Modo Espejo</b></label>
+            <input type="checkbox" id="checkEspejo" checked>
+        </div>
+
+        <div class="instructions">
+            <b>Nuevas Funciones:</b><br>
+            1. Las <b>cotas de los tanques</b> giran automáticamente.<br>
+            2. Se calcularon las medidas del <b>perímetro</b> real.<br>
+            3. Las <b>áreas</b> tienen líneas de llamada hacia afuera.
+        </div>
+    </div>
+
+    <!-- Botón de Exportación HD -->
+    <div style="position:absolute; bottom:25px; left:20px; z-index:1000; padding:10px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.5); background: white;">
+        <button onclick="downloadMapHD(event)" style="padding:8px 15px; font-size:13px; font-weight:bold; cursor:pointer; color:#fff; border:none; border-radius:4px; background:#e91e63; text-transform:uppercase;">📸 Guardar Plano HD</button>
+    </div>
+
+    <script>window.L_PREFER_CANVAS = true;</script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+    <script>
+        var map = L.map('map', { zoomControl: false, attributionControl: false }).setView([-12.248800, -76.934500], 19);
+        L.control.zoom({ position: 'bottomleft' }).addTo(map);
+        L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{ maxZoom: 22, subdomains:['mt0','mt1','mt2','mt3'] }).addTo(map);
+
+        // ==========================================
+        // GEOMETRÍA FIJA (Nuevo Terreno UNACEM)
+        // ==========================================
+        var ptsUnacem = [ [-12.247890, -76.934482], [-12.248419, -76.933753], [-12.249831, -76.934635], [-12.249380, -76.935376] ];
+        L.polygon(ptsUnacem, {color: "#e91e63", weight: 3, fillOpacity: 0.05, dashArray: '10, 10'}).addTo(map);
+
+        // Acotación de Perímetro con Call-Outs Hacia Afuera
+        var centerPoly = [-12.248874, -76.934561]; // Centroide geodésico calculado
+        
+        // Etiqueta de Área Total (Fuera del terreno con línea de llamada al centro)
+        var totalAreaOut = [-12.247500, -76.935500]; // Fuera al Noroeste
+        L.polyline([totalAreaOut, centerPoly], {color: "#e91e63", weight: 3, dashArray: '5,5'}).addTo(map);
+        L.circleMarker(centerPoly, {radius: 5, color: "#e91e63", fillColor: "#fff", fillOpacity: 1, weight: 3}).addTo(map);
+        
+        var totalAreaIcon = L.divIcon({ className: '', html: '<div style="background:rgba(255,255,255,0.95); border:3px solid #e91e63; box-shadow:0 2px 10px rgba(0,0,0,0.4); border-radius:6px; padding:10px 20px; font-weight:bold; color:#e91e63; font-size:14px; text-align:center; white-space:nowrap; transform: translate(-50%, -50%);">Área Total del Terreno<br>18,073.5 m²</div>', iconSize: null });
+        L.marker(totalAreaOut, {icon: totalAreaIcon}).addTo(map);
+
+        // Línea Divisoria (Bisección Paralela)
+        var ptsLineaDivisoria = [ [-12.248129, -76.934153], [-12.249575, -76.935056] ];
+        L.polyline(ptsLineaDivisoria, {color: "#9C27B0", weight: 4, dashArray: '8, 8'}).addTo(map);
+
+        // Call-Outs para las Áreas Divididas
+        var center10k = [-12.248988, -76.934400];
+        var out10k = [-12.249800, -76.933500]; // Fuera al Sureste
+        L.polyline([out10k, center10k], {color: "#9C27B0", weight: 2}).addTo(map);
+        L.circleMarker(center10k, {radius: 4, color: "#9C27B0", fillColor: "#fff", fillOpacity: 1, weight: 2}).addTo(map);
+        var area10kIcon = L.divIcon({ className: '', html: '<div style="min-width:130px; background:rgba(255,255,255,0.95); border:2px solid #9C27B0; box-shadow:0 2px 5px rgba(0,0,0,0.3); border-radius:4px; padding:8px; font-weight:bold; color:#9C27B0; font-size:13px; text-align:center; white-space:nowrap; transform: translate(-50%, -50%);">Lote A<br>10,000.0 m²</div>', iconSize: null });
+        L.marker(out10k, {icon: area10kIcon}).addTo(map);
+
+        var center8k = [-12.248733, -76.934761];
+        var out8k = [-12.249700, -76.935800]; // Rotado ~20 grados horario respecto a la posición anterior
+        L.polyline([out8k, center8k], {color: "#9C27B0", weight: 2}).addTo(map);
+        L.circleMarker(center8k, {radius: 4, color: "#9C27B0", fillColor: "#fff", fillOpacity: 1, weight: 2}).addTo(map);
+        var area8kIcon = L.divIcon({ className: '', html: '<div style="min-width:130px; background:rgba(255,255,255,0.95); border:2px solid #9C27B0; box-shadow:0 2px 5px rgba(0,0,0,0.3); border-radius:4px; padding:8px; font-weight:bold; color:#9C27B0; font-size:13px; text-align:center; white-space:nowrap; transform: translate(-50%, -50%);">Lote B<br>8,073.5 m²</div>', iconSize: null });
+        L.marker(out8k, {icon: area8kIcon}).addTo(map);
+
+        for (var i = 0; i < ptsUnacem.length; i++) {
+            var p1 = L.latLng(ptsUnacem[i]);
+            var p2 = L.latLng(ptsUnacem[(i+1)%ptsUnacem.length]);
+            var dist = map.distance(p1, p2).toFixed(1);
+            var mid = [(p1.lat + p2.lat)/2, (p1.lng + p2.lng)/2];
+            
+            // Vector desde el centroide hasta el punto medio para proyectar hacia afuera
+            var dy = mid[0] - centerPoly[0];
+            var dx = mid[1] - centerPoly[1];
+            var len = Math.sqrt(dx*dx + dy*dy);
+            var outDist = 0.00035; // Aprox 38 metros hacia afuera geográficamente
+            var outPoint = [mid[0] + (dy/len)*outDist, mid[1] + (dx/len)*outDist];
+
+            // Dibujar Línea de Llamada
+            L.polyline([outPoint, mid], {color: "#e91e63", weight: 2}).addTo(map);
+            L.circleMarker(mid, {radius: 4, color: "#e91e63", fillColor: "#fff", fillOpacity: 1, weight: 2}).addTo(map);
+
+            // Dibujar Etiqueta Flotante
+            var lbl = L.divIcon({ className: '', html: '<div style="background:rgba(255,255,255,0.95); font-size:12px; font-weight:bold; color:#e91e63; padding:5px 10px; border-radius:4px; text-align:center; transform: translate(-50%, -50%); border:2px solid #e91e63; box-shadow:0 2px 5px rgba(0,0,0,0.3); white-space:nowrap; min-width:50px;">Lado: ' + dist + ' m</div>', iconSize: null });
+            L.marker(outPoint, {icon: lbl, interactive: false}).addTo(map);
+        }
+
+        // ==========================================
+        // MOTOR VECTORIAL DINÁMICO (Layout DQM)
+        // ==========================================
+        var layoutGroup = L.layerGroup().addTo(map);
+        var centerPos = L.latLng(-12.248800, -76.934500); 
+        var pivotMarker = L.marker(centerPos, { draggable: true, zIndexOffset: 2000 }).addTo(map);
+
+        function getOffsetLatLng(baseLat, baseLng, dx, dy) {
+            var latOffset = dy / 111320;
+            var lngOffset = dx / (111320 * Math.cos(baseLat * Math.PI / 180));
+            return [baseLat + latOffset, baseLng + lngOffset];
+        }
+
+        function rotatePoint(x, y, angleDeg) {
+            var rad = angleDeg * Math.PI / 180;
+            var rx = x * Math.cos(rad) - y * Math.sin(rad);
+            var ry = x * Math.sin(rad) + y * Math.cos(rad);
+            return [rx, ry];
+        }
+
+        // Función auxiliar para dibujar una cota geométrica (línea + texto)
+        function drawCota(x1, y1, x2, y2, angle, lat, lng, text) {
+            var rot1 = rotatePoint(x1, y1, angle);
+            var rot2 = rotatePoint(x2, y2, angle);
+            var p1 = getOffsetLatLng(lat, lng, rot1[0], rot1[1]);
+            var p2 = getOffsetLatLng(lat, lng, rot2[0], rot2[1]);
+            
+            // Línea de Cota principal
+            L.polyline([p1, p2], {color: '#FFEB3B', weight: 2}).addTo(layoutGroup);
+            
+            // Remates (Ticks) perpendiculares en los extremos
+            var tickL = 1.5; // largo del remate
+            var rotTick1_A = rotatePoint(x1, y1 + tickL, angle);
+            var rotTick1_B = rotatePoint(x1, y1 - tickL, angle);
+            L.polyline([getOffsetLatLng(lat, lng, rotTick1_A[0], rotTick1_A[1]), getOffsetLatLng(lat, lng, rotTick1_B[0], rotTick1_B[1])], {color: '#FFEB3B', weight: 2}).addTo(layoutGroup);
+            
+            var rotTick2_A = rotatePoint(x2, y2 + tickL, angle);
+            var rotTick2_B = rotatePoint(x2, y2 - tickL, angle);
+            L.polyline([getOffsetLatLng(lat, lng, rotTick2_A[0], rotTick2_A[1]), getOffsetLatLng(lat, lng, rotTick2_B[0], rotTick2_B[1])], {color: '#FFEB3B', weight: 2}).addTo(layoutGroup);
+
+            // Texto centrado encima de la línea
+            var cx = (x1 + x2) / 2;
+            var cy = (y1 + y2) / 2 + 3; // Ligeramente desplazado (arriba en nuestro Y local)
+            var rotC = rotatePoint(cx, cy, angle);
+            var pC = getOffsetLatLng(lat, lng, rotC[0], rotC[1]);
+            
+            var lbl = L.divIcon({ className: 'cota-label', html: text, iconSize: [0,0], iconAnchor: [0, 0] });
+            // Necesitamos aplicar un pequeño transform local para que el divIcon flote correctamente en el centro
+            var htmlLabel = '<div class="cota-label" style="transform: translate(-50%, -50%);">' + text + '</div>';
+            var lblCentered = L.divIcon({ className: '', html: htmlLabel, iconSize: [0,0] });
+            L.marker(pC, {icon: lblCentered, interactive: false}).addTo(layoutGroup);
+        }
+
+        function drawVectors() {
+            layoutGroup.clearLayers();
+            var angle = parseFloat(document.getElementById('sliderRot').value);
+            var isMirror = document.getElementById('checkEspejo').checked;
+            var m = isMirror ? -1 : 1; 
+
+            var lat = pivotMarker.getLatLng().lat;
+            var lng = pivotMarker.getLatLng().lng;
+
+            var radioTanque = 8.5; 
+            var separacion = 5;
+            var paso = (radioTanque * 2) + separacion; // 22m
+
+            for (var i = 0; i < 6; i++) {
+                var x = (i * paso) - 55; 
+                var y = 0;
+                var rot = rotatePoint(x, y, angle);
+                var geoPos = getOffsetLatLng(lat, lng, rot[0], rot[1]);
+
+                if (i < 4) {
+                    // Tanques Base
+                    L.circle(geoPos, { radius: radioTanque, color: '#0f2c59', weight: 2, fillColor: '#1976D2', fillOpacity: 0.6 }).addTo(layoutGroup);
+                     
+                    // Estaciones
+                    var estAncho = 6;
+                    var estLargo = 12;
+                    var yEst = -14 * m; 
+                    
+                    var ptsEstacion = [
+                        [x - estAncho/2, yEst - estLargo/2],
+                        [x + estAncho/2, yEst - estLargo/2],
+                        [x + estAncho/2, yEst + estLargo/2],
+                        [x - estAncho/2, yEst + estLargo/2]
+                    ];
+                    var geoEstacion = ptsEstacion.map(p => {
+                        var rotEst = rotatePoint(p[0], p[1], angle);
+                        return getOffsetLatLng(lat, lng, rotEst[0], rotEst[1]);
+                    });
+                    L.polygon(geoEstacion, {color: '#8BC34A', weight: 2, fillColor: '#4CAF50', fillOpacity: 0.7}).addTo(layoutGroup);
+                     
+                } else {
+                    // Tanques Expansión
+                    L.circle(geoPos, { radius: radioTanque, color: '#9e9e9e', weight: 2, dashArray: '5,5', fillOpacity: 0.3 }).addTo(layoutGroup);
+                }
+            }
+
+            // COTAS DINÁMICAS (Se anclan al Tanque 1 y espacio Tanque 1-2)
+            var xTanque1 = 0 * paso - 55; // -55
+            var yCota = 12 * m; // Arriba de los tanques
+            
+            // Cota Diámetro (T1)
+            drawCota(xTanque1 - radioTanque, yCota, xTanque1 + radioTanque, yCota, angle, lat, lng, "Ø 17.0m");
+            
+            // Cota Separación (T1 a T2)
+            var xTanque2 = 1 * paso - 55; // -33
+            drawCota(xTanque1 + radioTanque, yCota, xTanque2 - radioTanque, yCota, angle, lat, lng, "5.0m");
+
+
+            // RUTA DE CAMIONES
+            var rutaPts = [];
+            rutaPts.push([-65, -25 * m]);
+            rutaPts.push([65, -25 * m]);
+            
+            for(var a=0; a<=180; a+=10) {
+                var radA = a * Math.PI / 180;
+                var curvaX = 65 + 20 * Math.sin(radA);
+                var curvaY = (-5 * m) - (20 * Math.cos(radA) * m); 
+                rutaPts.push([curvaX, curvaY]);
+            }
+            
+            rutaPts.push([65, 15 * m]);
+            rutaPts.push([-65, 15 * m]);
+
+            var rutaGeo = rutaPts.map(p => {
+                var rot = rotatePoint(p[0], p[1], angle);
+                return getOffsetLatLng(lat, lng, rot[0], rot[1]);
+            });
+
+            L.polyline(rutaGeo, {color: '#424242', weight: 8, opacity: 0.8, lineCap: 'round', lineJoin: 'round'}).addTo(layoutGroup);
+            L.polyline(rutaGeo, {color: '#FFEB3B', weight: 2, dashArray: '10, 10', opacity: 1}).addTo(layoutGroup);
+        }
+
+        document.getElementById('sliderRot').addEventListener('input', function() {
+            document.getElementById('valRot').innerText = this.value + "°";
+            drawVectors();
+        });
+        document.getElementById('checkEspejo').addEventListener('change', drawVectors);
+        pivotMarker.on('drag', drawVectors);
+
+        drawVectors();
+
+        map.on('click', function(e) {
+            var coord = e.latlng.lat.toFixed(6) + ", " + e.latlng.lng.toFixed(6);
+            L.popup()
+             .setLatLng(e.latlng)
+             .setContent("<b style='color:#e91e63;'>Coordenada GPS:</b><br><input type='text' value='" + coord + "' style='width:180px; font-family:monospace; border:1px solid #ccc; padding:4px; margin-top:5px; border-radius:3px;' onclick='this.select()'>")
+             .openOn(map);
+        });
+
+        // Boilerplate HD
+        window.downloadMapHD = function(event) {
+            if (typeof htmlToImage === 'undefined') return alert("Error de librería.");
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "⏳ GENERANDO...";
+            btn.style.opacity = "0.7";
+            btn.disabled = true;
+
+            document.getElementById('controlPanel').style.display = 'none';
+            btn.parentElement.style.display = 'none';
+
+            htmlToImage.toPng(document.body, { pixelRatio: 3, backgroundColor: "#f0f2f5" })
+            .then(dataUrl => {
+                const link = document.createElement('a');
+                link.download = 'Plano_Acotado_UNACEM.png';
+                link.href = dataUrl;
+                link.click();
+            }).catch(err => {
+                console.error("Error:", err);
+                alert("Hubo un error al generar la imagen.");
+            }).finally(() => {
+                btn.innerText = originalText;
+                btn.style.opacity = "1";
+                btn.disabled = false;
+                document.getElementById('controlPanel').style.display = 'block';
+                btn.parentElement.style.display = 'block';
+            });
+        };
+    </script>
+</body>
+</html>

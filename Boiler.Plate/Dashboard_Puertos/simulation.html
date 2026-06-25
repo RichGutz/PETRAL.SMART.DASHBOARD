@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulación Montecarlo - Proyecto TANK</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+    <script>
+        if (localStorage.getItem('auth_mark') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .sim-container {
+            width: 95%;
+            max-width: 1300px;
+            padding: 20px 0;
+            background: transparent;
+            border-radius: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: #4caf50;
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 2px;
+        }
+        .header p {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        .main-layout {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .visual-panel {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            min-height: 350px;
+        }
+        .dist-panel {
+            width: 320px; /* Un poco más ancho para el 2x2 de variables */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .var-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .dist-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .dist-option {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+        .dist-option:hover {
+            background: rgba(0, 188, 212, 0.1);
+            border-color: #00bcd4;
+        }
+        .dist-option.active {
+            background: rgba(0, 188, 212, 0.2);
+            border-color: #00bcd4;
+            box-shadow: 0 0 15px rgba(0, 188, 212, 0.2);
+        }
+        .dist-option svg {
+            width: 100%;
+            height: 35px;
+            margin-bottom: 5px;
+        }
+        .dist-option span {
+            display: block;
+            font-size: 10px;
+            font-family: 'Orbitron';
+            color: #94a3b8;
+        }
+        .dist-option.active span {
+            color: #00bcd4;
+            font-weight: bold;
+        }
+        .sim-control {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .sim-control label {
+            display: block;
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .sim-control input[type="range"] {
+            width: 100%;
+            accent-color: #4caf50;
+        }
+        .val-display {
+            float: right;
+            color: #4caf50;
+            font-family: 'Orbitron';
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .kpi-card {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-bottom: 3px solid #4caf50;
+        }
+        .kpi-card .label {
+            display: block;
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 5px;
+        }
+        .kpi-card .value {
+            font-size: 20px;
+            font-family: 'Orbitron';
+            font-weight: bold;
+        }
+        #btn-play-sim {
+            width: 100%;
+            padding: 15px;
+            background: #4caf50;
+            border: none;
+            color: #0f172a;
+            font-family: 'Orbitron';
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        #btn-play-sim:hover {
+            background: #66bb6a;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
+        }
+        #sim-current-day {
+            margin-top: 20px;
+            font-family: 'Orbitron';
+            font-size: 18px;
+            color: #00bcd4;
+        }
+        #sim-current-stock {
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sim-container">
+        <div class="header">
+            <h1>🔬 SIMULACIÓN MONTECARLO</h1>
+            <p>Optimización Logística de Inventarios - Proyecto TANK</p>
+        </div>
+
+        <div class="main-layout">
+            <!-- Col 1: All Configuration (Left) -->
+            <div class="dist-panel">
+                <div style="font-size: 10px; color:#00bcd4; font-family:'Orbitron'; margin-bottom:5px; text-align:center; letter-spacing: 1px;">CURVAS PROBABILÍSTICAS</div>
+                <div class="dist-grid">
+                    <div class="dist-option active" data-dist="normal">
+                        <svg viewBox="0 0 100 40"><path d="M5,35 Q30,35 50,5 Q70,35 95,35" stroke="currentColor" fill="none" stroke-width="2" style="color: #00bcd4;"/></svg>
+                        <span>NORMAL</span>
+                    </div>
+                    <div class="dist-option" data-dist="uniform">
+                        <svg viewBox="0 0 100 40"><path d="M5,35 H30 V10 H70 V35 H95" stroke="currentColor" fill="none" stroke-width="2" style="color: #607d8b;"/></svg>
+                        <span>UNIFORM</span>
+                    </div>
+                    <div class="dist-option" data-dist="exponential">
+                        <svg viewBox="0 0 100 40"><path d="M5,5 Q10,35 95,35" stroke="currentColor" fill="none" stroke-width="2" style="color: #607d8b;"/></svg>
+                        <span>EXPON</span>
+                    </div>
+                    <div class="dist-option" data-dist="chi">
+                        <svg viewBox="0 0 100 40"><path d="M5,35 C15,35 25,5 45,15 C65,25 85,35 95,35" stroke="currentColor" fill="none" stroke-width="2" style="color: #607d8b;"/></svg>
+                        <span>CHI-2</span>
+                    </div>
+                    <div class="dist-option" data-dist="weibull">
+                        <svg viewBox="0 0 100 40"><path d="M5,35 C20,35 30,5 60,10 C80,15 90,35 95,35" stroke="currentColor" fill="none" stroke-width="2" style="color: #607d8b;"/></svg>
+                        <span>WEIBULL</span>
+                    </div>
+                    <div class="dist-option" data-dist="triangular">
+                        <svg viewBox="0 0 100 40"><path d="M5,35 L50,5 L95,35 Z" stroke="currentColor" fill="none" stroke-width="2" style="color: #607d8b;"/></svg>
+                        <span>TRIANG</span>
+                    </div>
+                </div>
+
+                <div style="font-size: 10px; color:#4caf50; font-family:'Orbitron'; margin-top:15px; margin-bottom:5px; text-align:center; letter-spacing: 1px;">VARIABLES</div>
+                <div class="var-grid">
+                    <div class="sim-control" style="padding: 10px;">
+                        <label style="font-size: 9px;">Vagones <span class="val-display" id="val-wagons">10</span></label>
+                        <input type="range" id="sim-wagons" min="0" max="30" value="10">
+                    </div>
+                    <div class="sim-control" style="padding: 10px;">
+                        <label style="font-size: 9px;">Freq (D) <span class="val-display" id="val-freq">14</span></label>
+                        <input type="range" id="sim-freq" min="5" max="30" value="14">
+                    </div>
+                    <div class="sim-control" style="padding: 10px;">
+                        <label style="font-size: 9px;">Var (±) <span class="val-display" id="val-var">3</span></label>
+                        <input type="range" id="sim-var" min="0" max="10" value="3">
+                    </div>
+                    <div class="sim-control" style="padding: 10px;">
+                        <label style="font-size: 9px;">Días/Sem <span class="val-display" id="val-days">7</span></label>
+                        <input type="range" id="sim-days" min="5" max="7" value="7">
+                    </div>
+                </div>
+
+                <button id="btn-play-sim" onclick="simulationController.togglePlayback()">
+                    ▶ SIMULAR AÑO
+                </button>
+            </div>
+
+            <!-- Col 2: Visuals -->
+            <div class="visual-panel">
+                <div id="tank-container"></div>
+                <div style="display:flex; gap:30px; margin-top:5px;">
+                    <div id="sim-current-day" style="font-size:14px;">Día: 1</div>
+                    <div id="sim-current-stock" style="font-size:14px; color:#4caf50;">0 MT</div>
+                </div>
+                <!-- Bitácora de Arribos Detallada -->
+                <div style="margin-top: 15px; width: 100%;">
+                    <div style="font-size: 9px; color: #00bcd4; font-family: 'Orbitron'; margin-bottom: 5px; text-align: center;">ARRIBOS Y VOLUMEN ACUMULADO (MT)</div>
+                    <div id="ship-log-grid" style="display: grid; grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(4, 22px); gap: 2px; background: rgba(255,255,255,0.03); padding: 5px; border-radius: 5px;">
+                        <!-- Se llenará dinámicamente: Fila1:Días, Fila2:Vol, Fila3:Días, Fila4:Vol -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Col 3: Output KPIs (Far Right) -->
+            <div class="output-panel">
+                <div style="font-size: 11px; color:#4caf50; font-family:'Orbitron'; margin-bottom:15px; text-align:center; letter-spacing: 2px;">RESULTADOS MONTECARLO</div>
+                <div class="kpi-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="kpi-card" style="border-bottom-color: #f44336; padding: 20px;">
+                        <span class="label" style="font-size: 12px;">Riesgo Parada</span>
+                        <span id="kpi-risk" class="value" style="font-size: 28px;">---</span>
+                    </div>
+                    <div class="kpi-card" style="border-bottom-color: #ff9800; padding: 20px;">
+                        <span class="label" style="font-size: 12px;">Días Tope</span>
+                        <span id="kpi-stoppage" class="value" style="font-size: 28px;">---</span>
+                    </div>
+                    <div class="kpi-card" style="border-bottom-color: #2196f3; padding: 20px;">
+                        <span class="label" style="font-size: 12px;">Rotación BASE</span>
+                        <span id="kpi-rot-base" class="value" style="font-size: 28px;">---</span>
+                    </div>
+                    <div class="kpi-card" style="border-bottom-color: #9c27b0; padding: 20px;">
+                        <span class="label" style="font-size: 12px;">Rotación BUFFER</span>
+                        <span id="kpi-rot-buffer" class="value" style="font-size: 28px;">---</span>
+                    </div>
+                </div>
+                <!-- Box de Volumen Total Acumulado -->
+                <div class="kpi-card" style="margin-top: 15px; border-bottom-color: #4caf50; padding: 25px; background: rgba(76, 175, 80, 0.05);">
+                    <span class="label" style="font-size: 14px; color: #4caf50; letter-spacing: 2px;">THROUGHPUT ANUAL TOTAL (MT)</span>
+                    <span id="kpi-total-volume" class="value" style="font-size: 42px; display: block; margin-top: 10px;">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="simulation_core/engine/montecarlo_engine.js"></script>
+    <script src="simulation_core/ui/tank_visualizer.js"></script>
+    <script src="simulation_core/simulation_controller.js"></script>
+    <script>
+        // Auto-initialize when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            initSimulation();
+        });
+    </script>
+</body>
+</html>

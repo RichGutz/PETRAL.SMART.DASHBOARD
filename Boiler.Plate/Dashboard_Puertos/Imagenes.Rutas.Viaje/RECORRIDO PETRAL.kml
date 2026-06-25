@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document id="1Of4vfZDF96Z2q7eAVrz-5-UIwW0NEzTT">
+	<name>RECORRIDO PETRAL</name>
+	<gx:CascadingStyle kml:id="__managed_style_2A272792C73E1D6BF4FB">
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>2</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_1B0EA21A633E1D6BF4FB">
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>1.33333</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_00876ECBED3E1D6BF4FB">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_1B0EA21A633E1D6BF4FB</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_2A272792C73E1D6BF4FB</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Placemark id="032AF769323E1890AB13">
+		<name>vértice de terreno </name>
+		<LookAt>
+			<longitude>-75.25692960534526</longitude>
+			<latitude>-15.1655564876723</latitude>
+			<altitude>337.1512409739205</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>3176.955398451537</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_00876ECBED3E1D6BF4FB</styleUrl>
+		<LineString>
+			<coordinates>
+				-75.28567289999999,-15.1434388,0 -75.28630866893575,-15.14326148519116,0 -75.28564828533025,-15.14347816651746,0 -75.28509287306338,-15.14382030587543,0 -75.28416363322185,-15.14438843322527,0 -75.28277379809968,-15.1449922568971,0 -75.28216532087548,-15.14522069827932,0 -75.28183189494597,-15.14530699586884,0 -75.28145471033616,-15.14544211491162,0 -75.28078865721689,-15.1459270018385,0 -75.28048059164016,-15.14645541407358,0 -75.28003395735021,-15.14701678651203,0 -75.27943783421323,-15.14777960860888,0 -75.27936772480366,-15.14792134045729,0 -75.27834521383623,-15.14900056811113,0 -75.27785379180564,-15.14949339073741,0 -75.27647449847372,-15.15080773863984,0 -75.27576141935177,-15.15115905881348,0 -75.2745977393742,-15.15151435455149,0 -75.27387778695383,-15.15188311186889,0 -75.27303302369113,-15.1521850725784,0 -75.27278838797511,-15.15227293673516,0 -75.27256339047531,-15.15236532759624,0 -75.27256339047531,-15.15236532759624,0 -75.27228156181638,-15.15240647061219,0 -75.27208005863473,-15.15241079415533,0 -75.27180595449695,-15.15250754579812,0 -75.27127500422432,-15.15262617276627,0 -75.2709350886137,-15.15266981176193,0 -75.26922616923808,-15.15303302032985,0 -75.26766829345651,-15.15376684363502,0 -75.26481791951782,-15.15511601523303,0 -75.26439929293129,-15.15531143658919,0 -75.26238409533519,-15.15740893850753,0 -75.26147412956846,-15.15907112466484,0 -75.25852810062028,-15.16189829990372,0 -75.25737224385102,-15.16336472054558,0 -75.25724484794954,-15.16353670449174,0 -75.25688118943319,-15.16409421009279,0 -75.256935986201,-15.16551007827748,0 
+			</coordinates>
+		</LineString>
+	</Placemark>
+	<Placemark id="0E470E42F03E18B5973E">
+		<name>bajada</name>
+		<LookAt>
+			<longitude>-75.25622533482775</longitude>
+			<latitude>-15.17694987185923</latitude>
+			<altitude>175.4094094963074</altitude>
+			<heading>0</heading>
+			<tilt>0</tilt>
+			<gx:fovy>29.99999999999999</gx:fovy>
+			<range>4852.797813600047</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_00876ECBED3E1D6BF4FB</styleUrl>
+		<LineString>
+			<coordinates>
+				-75.25693453547206,-15.16551250684695,0 -75.25678501338962,-15.16607196797555,0 -75.25670312405855,-15.16667024332061,0 -75.25546264379652,-15.17161128703533,0 -75.25624618917372,-15.17690731243761,0 
+			</coordinates>
+		</LineString>
+	</Placemark>
+</Document>
+</kml>

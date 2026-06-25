@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supply Chain 3D - Iron Ore Flow | Petral Analysis</title>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <!-- Data Sources -->
+    <script src="../terrain_mesh_3d.js"></script>
+    <script src="../shougang_polygon.js"></script>
+    <script src="../perimeter_sides.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        #plot3d {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 300px;
+        }
+
+        h3 {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        p {
+            margin: 0 0 15px 0;
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 13px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .legend-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .legend-section strong {
+            color: #00d4ff;
+            font-size: 14px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            margin-top: 8px;
+            color: #ccc;
+        }
+
+        .color-box {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+        }
+
+        .flow-indicator {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(0, 212, 255, 0.1);
+            border-left: 3px solid #00d4ff;
+            border-radius: 4px;
+        }
+
+        .flow-indicator p {
+            margin: 0;
+            font-size: 11px;
+            color: #00d4ff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="controls">
+        <h3>⛏️ Supply Chain 3D</h3>
+        <p>Flujo completo de mineral de hierro</p>
+        <a href="../dashboard.html" class="btn-control">⬅ Volver al Mapa</a>
+
+        <div class="flow-indicator">
+            <p><strong>FLUJO:</strong> Isla → Faja (4km) → Puerto</p>
+        </div>
+
+        <div class="legend-section">
+            <strong>Componentes:</strong>
+            <div class="legend-item">
+                <div class="color-box" style="background:#90a4ae;"></div> Dumpers (Recepción)
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background:#8d6e63;"></div> Stockpiles (Acopio)
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background:#ffb300;"></div> Reclaimers
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background:#795548;"></div> Faja Transportadora
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background:#455a64;"></div> Puerto (Pier + Shiploader)
+            </div>
+            <div class="legend-item">
+                <div class="color-box" style="background:#37474f;"></div> Buque Cape Size
+            </div>
+        </div>
+    </div>
+
+    <div id="plot3d"></div>
+
+    <script src="supply_chain_3d.js"></script>
+</body>
+
+</html>

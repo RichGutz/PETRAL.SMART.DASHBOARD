@@ -1,0 +1,6318 @@
+--- Page 1 ---
+
+
+
+	
+
+
+
+--- Page 2 ---
+2
+
+
+--- Page 3 ---
+3
+CONTENIDO
+1.	
+Resumen Ejecutivo.......................................................................................9
+2.	
+Situación del sector energético peruano.................................................19
+2.1	
+Sector Energía....................................................................................19
+2.1.1	 Oferta de Energía Primaria......................................................19
+2.1.2	 Demanda de Energía Primaria................................................20
+2.2	
+Situación Actual del Sector Eléctrico Peruano...................................21
+2.2.1	 Autogeneración de electricidad...............................................22
+2.2.2	 Demanda de electricidad en el SEIN......................................23
+2.2.3	 Oferta de electricidad (Capacidad Efectiva)............................27
+2.2.4	 Generación Eléctrica Renovable.............................................27
+2.3	
+Cartera de Proyectos de Energía renovable en el País....................36
+3.	
+Abastecimiento de electricidad del sector minero.................................40
+3.1	
+Panorama del sector minero..............................................................40
+3.2	
+Contratos de compra venta de electricidad de la minería.................45
+3.2.1	 Plazos de contratación............................................................48
+3.2.2	 Precios de compra de electricidad del sector minería............49
+3.3	
+Mineras que han implementado energías renovables.......................52
+3.4	
+Mineras con contratos con energía renovable...................................53
+3.5	
+Regiones mineras con potencial de energía renovable....................54
+3.6	
+Empresas mineras con interés en desarrollar
+	
+energías renovables...........................................................................61
+4.	
+Incentivos y barreras para las energías renovables en la minería.......65
+4.1	
+Incentivos u Oportunidades...............................................................65
+4.1.1	 En el aspecto regulatorio.........................................................65
+4.1.2	 En el aspecto técnico...............................................................66
+4.1.3	 En el aspecto económico.........................................................66
+4.1.4	 En el aspecto político...............................................................67
+4.1.5	 En el aspecto ambiental..........................................................68
+4.1.6	 En el aspecto comercial...........................................................69
+4.1.7	 En el aspecto social.................................................................69
+4.2	
+Barreras..............................................................................................71
+4.2.1	 Regulatorias.............................................................................71
+
+
+--- Page 4 ---
+4
+4.2.2	 Políticas e institucionales.........................................................72
+4.2.3	 Técnicas...................................................................................72
+4.2.4	 Económicas y de mercado......................................................72
+4.2.5	 Culturales.................................................................................73
+4.2.6	 Permisologia............................................................................74
+5.	
+Agenda Pendiente y Recomendaciones..................................................74
+6.	
+Bibliografía..................................................................................................80
+7.	
+Anexos:........................................................................................................83
+7.1	
+Marco regulatorio del sector eléctrico................................................83
+7.1.1	 Marco Regulatorio RER...........................................................86
+Impressum..............................................................................................................88
+ÍNDICE DE GRÁFICOS
+Gráfico 1: Suministro de Energía Primaria Total 1990-2017.................................19
+Gráfico 2: Suministro de Energía por Tipo de Combustible..................................20
+Gráfico 3: Consumo de Energía por Sector...........................................................21
+Gráfico 4: Participación de fuentes de energía en el consumo
+final nacional, 2018..................................................................................................21
+Gráfico 5: Generación de electricidad por fuentes, 2019......................................24
+Gráfico 6: Generación Nacional de Electricidad 2009 – 2019...............................25
+Gráfico 7: Crecimiento máximo de la demanda de electricidad, 2009-2019........26
+Gráfico 8: Consumo final de energía eléctrica por sectores (%)...........................26
+Gráfico 9: Potencia Efectiva y Demanda 2009-2019.............................................27
+Gráfico 10: Generación de electricidad con fuentes renovables
+conectadas al SEIN, 2019.......................................................................................29
+Gráfico 11: Plantas Solares Fotovoltaicas en operación.......................................31
+Gráfico 12: Potencial de generación de eléctrica por tipo de residuo...................35
+Gráfico 13: Participación de la Minería en el PBI del país....................................40
+Gráfico 14: Ingresos Tributarios Mineros...............................................................40
+Gráfico 15: Participación de los productos mineros en las exportaciones............41
+Gráfico 16: Evolución Anual de las Inversiones Mineras.......................................42
+Gráfico 17: Participación de fuentes de energía en el consumo
+final del sector Minero.............................................................................................45
+Gráfico 18: Ventas de Energía por actividad Económica en
+el Mercado Libre (MWh)..........................................................................................46
+
+
+--- Page 5 ---
+5
+Gráfico 19: Evolución histórica de Precios Libres.
+Precios en Barra y Costos Marginales....................................................................49
+Gráfico 20: Detalle del Precio Medio del Mercado Libre por
+Actividad Económica...............................................................................................50
+Gráfico 21: Comparativa de Costo Global de Electricidad de
+Energías Renovables 2010-2019............................................................................67
+Gráfico 22: Mano de Obra de las Energías Renovable en el mundo....................70
+ÍNDICE DE TABLAS
+Tabla 1: Capacidad y Autogeneración de Electricidad
+de la minería e Industria..........................................................................................22
+Tabla 2: Capacidad y Autogeneración de Electricidad
+en la Minería por tecnología....................................................................................23
+Tabla 3: Fuentes de Energías Renovables, Diciembre 2019.................................28
+Tabla 4: Regiones con alto potencial solar.............................................................30
+Tabla 5: Sistemas Solares Fotovoltaicos instalados..............................................30
+Tabla 6: Regiones con Alto Potencial Eólico..........................................................32
+Tabla 7: Centrales de Generación de Energía Eólica Instalados, 2019................32
+Tabla 8: Regiones con Gran Potencial Hidroeléctrico............................................33
+Tabla 9: Áreas Geotérmicas Potenciales...............................................................34
+Tabla 10: Potencial de Energía Biomasa por Región............................................35
+Tabla 11: Capacidad Instalada de Biomasa y Biogás............................................36
+Tabla 12: Proyectos Comprometidos con energías renovables............................37
+Tabla 13: Oferta de Generación de Energía Renovable (ERNC)
+en Fase de Estudio..................................................................................................39
+Tabla 14: Proyectos Mineros en Cartera y su demanda eléctrica
+en MW y GWh.........................................................................................................44
+Tabla 15: Ventas de Energía por Tipo de Suministrador
+en MWh a febrero 2020...........................................................................................46
+Tabla 16: Ventas de Energía por Empresa Minera en MWh a febrero 2020.........47
+Tabla 17: Potencia contratada por tipo de industria...............................................48
+Tabla 18: Vigencia de los Contratos en el Sector Minero......................................48
+Tabla 19: Vigencia de acuerdo a su año de suscripción........................................49
+Tabla 20: Año de Firma de Contrato, vigencia y precio promedio.........................50
+Tabla 21: Promedio de Precios del Mercado Libre por Empresa Minera..............51
+Tabla 22: Empresas Mineras con Generación Propia con
+Recursos Energéticos Renovables.........................................................................52
+Tabla 23: Empresas Mineras con contratos con empresa
+de generación hidroeléctrica...................................................................................53
+
+
+--- Page 6 ---
+6
+Tabla 24: Potencia y Energía del Sector Minero suministrada
+con matriz variada...................................................................................................54
+Tabla 25: Demanda de Potencia y Energía de la minería en
+el 2019 - Zona Norte................................................................................................55
+Tabla 26: Demanda de Proyectos en Potencia y Energía
+al 2024 – Zona Norte...............................................................................................56
+Tabla 27: Demanda de Potencia y Energía en el 2019 – Zona Centro.................58
+Tabla 28: Demanda de Proyectos en Potencia y Energía
+al 2024 – Zona Centro.............................................................................................58
+Tabla 29: Demanda de Potencia y Energía en el
+2019 – Zona Sur......................................................................................................59
+Tabla 30: Demanda de Proyectos en Potencia y Energía
+al 2024 – Zona Sur..................................................................................................60
+Tabla 31: Consultas previas efectuadas para proyectos mineros.........................71
+Tabla 32: Plan de Acción para fomentar el uso de los RER en
+el Sector Minero.......................................................................................................79
+Tabla 33: Relación de Normas principales del Sector Energía del Perú...............83
+Tabla 34: Potencia y Energía adjudicada por tipo de
+fuente en Subastas RER.........................................................................................87
+ÍNDICE DE ILUSTRACIONES
+Ilustración 1: Mapa mundial de Irradiación Solar Horizontal................................29
+Ilustración 2: Evolución Anual de las Inversiones Mineras...................................43
+Ilustración 3: Mapa de Regiones con Potencial de Energias Renovables...........55
+Ilustración 4: Mapa de Proyectos Mineros en la Zona Norte................................57
+Ilustración 5: Mapa de Proyectos Mineros en la Zona Centro..............................59
+Ilustración 6: Mapa de Proyectos Mineros en la Zona Sur...................................61
+LISTA DE ACRÓNIMOS
+ANA
+Autoridad Nacional del Agua
+BCRP
+Banco Central de Reserva del Perú
+BID
+Banco Interamericano de Desarrollo
+BNE
+Balance Nacional de Energía
+BT
+Baja Tensión
+CAPEX
+Inversiones de capital
+CMNUCC
+Convención Marco de Naciones Unidas 
+sobre Cambio Climático
+
+
+--- Page 7 ---
+7
+CMgCP
+Costo Marginal de Corto Plazo
+CIRA
+Certificado de Inexistencia de Restos Arqueológico
+COES
+Comité de Operación Económica del 
+Sistema Interconectado Nacional
+COFIDE
+Corporación Financiera de Desarrollo
+CT
+Central Térmica
+DGCCD
+Dirección General de Cambio Climático y Desertificación
+DGEE
+Dirección General de Eficiencia Energética
+DGE
+Dirección General de Electricidad
+DGER
+Dirección General de Electrificación Rural
+DGM
+Dirección General de Minería
+DIA
+Declaración de Impacto Ambiental
+D.L.
+Decreto Ley
+DREM
+Dirección Regional de Energía y Minas
+D.S.
+Decreto Supremo
+EIA
+Estudio de Impacto Ambiental
+EIA-sd
+Estudio de Impacto Ambiental Semi Detallado
+FONAFE
+Fondo Nacional de Financiamiento de la 
+Actividad Empresarial del Estado
+GLP
+Gas Licuado de Petróleo
+GNL
+Gas Natural Licuado
+IEA
+Agencia Internacional de Energía
+INDECOPI
+Instituto Nacional de Defensa de la Competencia y de la 
+Protección de la Propiedad Intelectual
+INEI
+Instituto Nacional de Estadística e Informática
+INGEMMET
+Instituto Geológico Minero y Metalúrgico
+IRENA
+Agencia Internacional de Energías Renovables
+IPCC
+Panel Intergubernamental de Cambio Climático
+JICA
+Agencia Internacional de Cooperación Japonesa
+LASE
+Ley de Afianzamiento de la Seguridad Energética
+LGER
+Ley General de Electrificación Rural
+LCE
+Ley de Concesiones Eléctricas
+MCP
+Mercado de Corto Plazo
+
+
+--- Page 8 ---
+8
+MEF
+Ministerio de Economía y Finanzas
+MINEM
+Ministerio de Energía y Minas
+MINAM
+Ministerio del Ambiente
+MINAGRI
+Ministerio de Agricultura y Riego
+MT
+Media Tensión
+MME
+Mercado Mayorista de Electricidad
+NASA
+Administración Nacional de Aeronáutica y el Espacio
+ODS
+Objetivo de Desarrollo Sostenible
+OEFA
+Organismo de Evaluación y Fiscalización Ambiental
+OIT
+Organización Internacional del Trabajo
+OPEX
+Costos de operación y funcionamiento
+OSINERGMIN
+Organismo Nacional de Regulación en Energía y Minería
+PAMA
+Programa de Adecuación Medio Ambiental
+PIUP
+Procesos Industriales y Uso de Productos
+PPA
+Power Purchase Agreement
+PROINVERSION
+Agencia de Promoción de la Inversión Privada
+PBI
+Producto Bruto Interno
+RER
+Recursos Energéticos Renovables
+RLCE
+Reglamento de la Ley de Concesiones Eléctricas
+SEIN
+Sistema Eléctrico Interconectado Nacional
+SISE
+Ley del Sistema de Seguridad Energética
+SPT
+Sistema Principal de Transmisión Eléctrica
+TPES
+Oferta Total de Energía Primaria
+TUO
+Texto Único Ordenado
+UTM
+Universal Transversal Mercator
+USCUSS
+Uso de Suelo, Cambio de Uso de Suelo y Silvicultura
+VAD
+Valor Agregado de Distribución
+VNR
+Valor Nuevo de Reemplazo
+
+
+--- Page 9 ---
+9
+1. RESUMEN EJECUTIVO
+1. Potencial de Recursos Energéticos Renovables en Perú
+El Perú es el tercer país más grande de América del Sur, con una población de 32,13 
+millones de habitantes en el año 2019 (INEI, 2020) y un Producto Bruto Interno por 
+habitante (PBI/per cápita) de US $6.977 (Banco Mundial, 2020). Es un país megadiverso, 
+incluye diferentes hábitats desde la Región de la Costa del Pacífico en el Oeste, 
+hasta la zona Amazónica tropical en el Este, y la formación montañosa denominada 
+la Cordillera de los Andes, recorre el territorio de Norte a Sur.
+El Perú cuenta con abundantes recursos naturales, y está catalogado entre los 
+principales países del mundo con importantes yacimientos mineros y recursos 
+energéticos. Por lo tanto es un importante productor de metales y minerales como 
+el oro, cobre, plata, plomo, zinc, hierro, estaño, molibdeno, entre otros. Sus recursos 
+energéticos incluyen reservas de gas natural y recurso hídrico para generación 
+hidroeléctrica, lo cual ha permitido cubrir el crecimiento de la demanda eléctrica en 
+los últimos 20 años; adicionalmente cuenta con un importante potencial de recursos 
+energéticos renovables no convencionales, como solar, eólico, biomasa, y geotérmico, 
+los cuales poco se han desarrollado.
+El Perú cuenta con abundantes recursos energéticos renovables, se estima que el 
+potencial de energía renovable estaría en el orden de los 118.950 MW, que equivale 
+a 17 veces la demanda máxima de electricidad del país en el 2019 (7.017 MW).
+Energía Renovable
+Capacidad 
+Instalada MW
+Potencial
+MW
+Porcentaje de 
+recurso utilizado
+Hidroeléctrico 
+(convencional ≥20MW)
+4.748,37
+70.000
+7,23%
+Hidroeléctrico (non-
+convencional <20MW
+319,28
+Viento
+375,46
+20.500
+1,83%
+Solar
+285,02
+25.000*
+1,14%
+Biomasa
+61,24
+450*
+13,61%
+Geotérmico
+0
+3.000
+0,0%
+TOTAL
+5.789,37
+118.950
+4,86%
+*Números son referenciales de Apeger (2016), no hay estudios oficiales para estimar los MW de 
+potencial para solar y biomasa
+Fuente: COES, 2020.
+Fuentes de Energías Renovables, Diciembre 2019
+Como se puede observar la capacidad de la generación renovable utilizada actualmente 
+es menor al 5% de todo su potencial total, por lo cual representa una oportunidad 
+de inversión en vista a la continua reducción en el costo de estas tecnologías en 
+los últimos años.
+
+
+--- Page 10 ---
+10
+Fuente: Elaboración propia.
+Suministrador
+Máxima 
+Demanda 
+MW
+Recurso RER 
+% RER
+Recurso 
+Térmico
+% Térmico
+SEIN
+2.451,0
+1.241,8
+51%
+1.209,2
+49%
+AUTOGENERACIÓN
+357,6
+114,4
+32%
+243,2
+68%
+TOTAL
+2.808,6
+1.356,2
+48%
+1.452,4
+52%
+Abastecimiento del sector Minero por tipo de fuente conectada al SEIN y con Autogeneración
+El abastecimiento de energía eléctrica de la minería se realiza desde el SEIN (87.3%) y con Autogeneración 
+(12.7%) con hidroeléctricas. El abastecimiento desde el SEIN se realiza a través de contratos PPA con Empresas 
+Generadoras y Distribuidoras. De acuerdo al último reporte de clientes libres de OSINERGMIN - Febrero 2020, 
+la potencia contratada del sector minero se encuentra en el orden de los 2.450,7 MW y la autogeneración en 
+el orden de los 358 MW, sumando una demanda de potencia total de 2.808,6 MW. De este total, el cual 48% 
+pertenece a Generación Renovables y el 52% a Generación Térmica.
+3. Abastecimiento Eléctrico Futuro de la minería peruana con Renovables
+Al 2019 la potencia efectiva del parque generador del SEIN fue de 12.637 MW y la demanda máxima estuvo en el 
+orden de los 7.018 MW. Esto significó un margen de reserva aritmético de 5.619 MW. Conforme a las proyecciones 
+de demanda vegetativa (que incluye el efecto Covid-19) más la cartera de proyectos especiales que incluye a 
+los proyectos mineros, se estima que al año 2025 se acabará la sobreoferta y se requerirá el ingreso de nuevo 
+parque generador de energía eléctrica en el SEIN. De acuerdo con la información proporcionada por el COES 
+el sector minero requerirá de 1.213 MW adicionales en el período 2021-2025.
+Participación de fuentes de energía en el consumo final del sector Minero
+Fuente: Balance Nacional Energético, Ministerio de Energía y Minas, Publicación 2019.
+Electricidad
+75,2%
+Fuel Oil
+0,03%
+Diesel B5
+17,4%
+Gasolina Motor
+0,001%
+Carbón Vegetal
+0,002%
+Energía Solar
+0,001%
+Gasohol
+1,5%
+Gas Licuado
+3,4%
+Leña
+0,003%
+Gas Distribuido
+2,5%
+2. Abastecimiento Energético del Sector Minero Peruano
+De acuerdo al último Balance Energético Nacional (BNE) del 2019, el Sector minero 
+peruano se abastece de Energía eléctrica en un 75.2% y de Energía Fósil con 
+Combustible Diesel en un 17.4%, asi como Gas Distribuido en un 2.5%, tal y como 
+se aprecia en el siguiente gráfico.
+
+
+--- Page 11 ---
+11
+Futuros de Oferta de Generación y Margen de Reserva en el SEIN
+Fuente: Elaboración Propia
+Pot. Efect. Actual
+Oferta Comprometida
+Oferta Faltante
+Máxima Demanda y Proyección
+18.000
+16.000
+14.000
+12.000
+10.000
+8.000
+6.000
+4.000
+2.000
+0
+2019
+2020
+2021
+2022
+2023
+2024
+2028
+2029
+2030
+2025
+2530
+3030
+3620
+2026
+2027
+1365
+506
+1876
+Futuro de la Oferta y Margen de Reserva (MW)
+Bajo ese escenario, algunas empresas mineras ya vienen realizando estudios para 
+incrementar su parque de autoconsumo teniendo en cuenta que las tecnologías 
+renovables vienen reduciendo sus costos de inversión, lo cual fomentaría la 
+reducción de costos en las mineras ante una eventual alza de precios y poca oferta 
+de generación desde el 2025.
+Es por ello que la información recopilada se muestra en orden de certeza los futuros 
+proyectos renovables del sector minero, que estarían en el orden de los 317 MW, 
+que equivale a poco más del 10,3% de la potencia que consume actualmente todas 
+las empresas mineras conectadas al SEIN
+Potencial de Energias Renovables a Desarrollar por el Sector Minero
+Nº
+Minera
+Tecnología
+Potencia Estimada (MW)
+Estado
+1
+Compañía Minera Volcan
+Hidroeléctrica
+14
+Concesión Definitiva 
+En tramite
+2
+Compañía Minera Poderosa
+Hidroeléctrica
+43
+Concesión Definitiva
+3
+Minera Cerro Verde
+Fotovoltaica
+200
+En estudios
+4
+Minera Antapaccay
+Fotovoltaica
+20
+En estudios
+5
+Minera San Gabriel
+Fotovoltaica
+20
+En Estudios
+6
+Minera Yanacocha
+Eólica
+20
+En Estudios
+TOTAL
+317
+Fuente: Elaboración Propia
+Por otro lado, existen 8.142 MW de proyectos renovables no convencionales 
+actualmente en fase de Estudios de pre-operatividad en el COES, de los cuales 
+6.042 MW es la capacidad de los proyectos eólicos y 2.100 MW es la capacidad 
+de proyectos solares fotovoltaicos. Esto hace predecir que los próximos proyectos 
+de generación eléctrica del SEIN para los próximos años no solo serán renovables 
+no convencionales, sino que abastecerán al crecimiento minero con contratos PPA.
+MW
+
+
+--- Page 12 ---
+12
+4. Oportunidades para la Promoción del Desarrollo de la Generación Eléctrica 
+con Recursos Energéticos Renovables
+	§ En el año 2019 Osinergmin publicó Resolución de Consejo Directivo Nº 073-2019-
+OS/CD que otorgó potencia firme a las centrales de generación con tecnología 
+eólica. Esto significa que estas centrales ahora pueden comercializar energía y 
+potencia en la red nacional del SEIN y los titulares de generación de estas centrales 
+pueden contratar con empresas del sector minero. Por otro lado, las empresas 
+mineras pueden comprar electricidad a empresas generadoras con tecnología 
+eólica o con un mix de generación que incluya a esta tecnología.
+	§ De acuerdo con lo manifestado por Osinergmin en las entrevistas, el esquema 
+de mercado libre actual permite que los clientes industriales y mineros puedan 
+comprar energía RER sin necesidad de comprar potencia, siempre que tengan el 
+respaldo de un proyecto de fuente térmica (por tener un costo bajo) que le permita 
+migrar a un combustible más limpio para el desarrollo de su actividad productiva. 
+Esto representa una oportunidad para las mineras que cuentan con generación 
+térmica de respaldo que pueden aportar potencia firme.
+	§ El Autoconsumo de electricidad está permitido en la Regulación Eléctrica Actual 
+desde la Ley primigenia 25844 de 1993. Esto representa una oportunidad para el 
+sector minero que desea incurrir en generación eléctrica con Energías Renovables 
+en un porcentaje dado y comprar la electricidad faltante a la Red Electrica Nacional.
+	§ El Perú es firmante del acuerdo de París, y se ha comprometido a realizar la 
+reducción de emisiones de gases de efecto invernadero a nivel nacional en el 
+sector energía, industria, transporte, forestal y agrícola. Esto es una oportunidad 
+para fomentar que el sector minero pueda aportar al cumplimiento del país sobre 
+dicho acuerdo en las metas relacionadas al sector energía.
+	§ Existe una tendencia de los mercados de compradores de minerales y metales de 
+exigir a las empresas mineras productoras, certificaciones e información sobre la 
+trazabilidad del mineral para que sea producido con energías limpias y con menores 
+emisiones de GEI entre otros atributos. En base a estas exigencias que deberían 
+llegar al Peru en el mediano plazo existe el interés de contar con mayores fuentes 
+de energías limpias, entre ellas las energias renovables.
+	§ Existen iniciativas privadas voluntarias que promueven la venta y certificación de 
+energía renovable a clientes libres como el caso de la generadora Statkraft Perú. 
+A través de este certificado la empresa que compra la energía puede demostrar 
+que esta proviene de fuentes 100% renovables. A la fecha una empresa minera 
+ha firmado un PPA que incluye la certificación de energía renovable. Esta es 
+una oportunidad para las empresas mineras que desean reducir sus emisiones 
+obtengan una certificación que puedan mostrar a sus partes interesadas.
+
+
+--- Page 13 ---
+13
+5. Barreras a solucionar para la Promoción del Desarrollo de Generación 
+Eléctrica con Recursos Energéticos Renovables
+	§ En los últimos años, la prima (peaje) de las subastas RER ha aumentado por 
+efecto de la reducción del costo marginal lo que ha generado entre otros aspectos 
+que no se hayan efectuado nuevas subastas desde el 2015. Por ende, se estima 
+necesario que para el desarrollo de las RER se elimine la venta de potencia atada 
+a la energía asociada que permita que las RER puedan vender en ciertos bloques 
+horarios sin necesidad de determinar si tienen potencia firme que respalde dicha 
+venta.
+	§ El Reglamento del DL1002 ha definido que para el caso de las eólicas y solares la 
+Potencia Firme es igual a cero. Si bien existen opiniones técnicas que recomiendan 
+cambiar dicha situación hasta la fecha no hay un marco jurídico que lo respalde. 
+Por efecto de la modificación del Procedimiento Técnico 26 que regula el Cálculo 
+de la Potencia Firme del COES, y en el marco del artículo 110° del RLCE, se define 
+la metodología de la potencia firme de las eólicas sea igual a la potencia media 
+de las horas punta porque se aplica en un periodo de escasez, aplicándosele un 
+factor de planta que le permita suscribir contratos de potencia con energía. Para 
+el caso de las tecnologías solares fotovoltaicas no se les ha otorgado potencia 
+firme y esto constiuye una barrera a la libre competencia en la red nacional.
+	§ A mediano y largo plazo se estima mayor presencia de las RER en la matriz eléctrica 
+nacional, por ende, una limitante que se puede apreciar es que las inyecciones 
+de energía eléctrica de las RER aportan variaciones en la tensión del SEIN (de 
+acuerdo al COES), por lo que seria necesario fortalecer el esquema de los servicios 
+complementarios, con la finalidad de dotar de confiabilidad y seguridad al SEIN.
+	§ Actualmente debido a los bajos precios del mercado eléctrico debido a la sobre 
+oferta y declaración de precios del gas, las tecnologías eólicas y solares no 
+resultan tan competitivas. Esto constituye hoy en día una barrera de entrada de los 
+proyectos de energías renovables que podría cambiar pronto con el sinceramiento 
+de costos variables de las tecnologias térmicas a gas natural.
+	§ El plazo de contratación de compra de electricidad del sector minero en operación 
+es de aproximadamente 5 a 10 años, sin embargo en los últimos dos años estos 
+plazos han disminuido a 3 años de vigencia de manera temporal por la sobre oferta 
+de generación. Esto es una barrera de entrada para el desarrollo de proyectos 
+RER que requieren como minimo de 10 años de contrato PPA para poder financiar 
+los proyectos.
+
+
+--- Page 14 ---
+14
+	§ El sector minero está enfocado en objetivos y metas propias de su sector y cuenta 
+con su propia terminología. Cuando los funcionarios comerciales de las empresas 
+eléctricas con tecnología renovable o no renovable les hablan de oportunidades 
+de negocio, a priori no hay un entendimiento de ambas partes por las barreras de 
+terminología que emplea cada parte. Ambos tienen que conocer sus costumbres, 
+terminología e indicadores, para poder entenderse y concretar oportunidades de 
+negocio.
+6. Agenda Pendiente para el Desarrollo de Generación Eléctrica con Recursos 
+Energéticos Renovables en el sector Minero
+	§ La Política Energética del país data del año 2010 en la cual se propone como 
+objetivo desarrollar las Energías Renovables No Convencionales en la Matriz 
+Eléctrica nacional con un valor de 5% hasta el año 2040. Habiéndose alcanzado y 
+superado dicho objetivo al año 2019 (5,1% de Renovables en la Matriz del SEIN), 
+se hace necesario la actualización de la Política Energética y Plan Energético 
+Nacional para fomentar una mayor participación de Energías Renovables en la 
+Matriz Eléctrica Nacional y elevar su participación.
+	§ Se tiene como agenda pendiente publicar el Plan Nacional de Energías Renovables, 
+que está indicado en el artículo 11° del Decreto Legislativo 1002 del año 2008 que 
+dice textualmente: “El MINEM elaborará en un plazo máximo de 01 (un) año a 
+partir de la vigencia del presente Decreto Legislativo, el Plan Nacional de Energías 
+Renovables, el mismo que estará en concordancia con los Planes Regionales de 
+Energías Renovables y que se enmarcará en un Plan Nacional de Energía. El 
+Plan Nacional de Energías Renovables incluirá aquellas estrategias, programas 
+y proyectos a desarrollarse utilizando energías renovables, que tienden a mejorar 
+la calidad de vida de la población y proteger el medio ambiente.”. A la fecha aún 
+no ha sido publicado el Plan Nacional de Energías Renovables.
+	§ El D.S. Nº 038-2018 que determina que la Máxima Demanda del SEIN debe darse 
+únicamente en las horas punta del Sistema (17 a 23 horas) venció en diciembre 
+de 2019, y a pesar de que no ha sido ampliado, se sigue aplicando en el sector 
+eléctrico nacional. Sin embargo, en los últimos 4 años la máxima demanda mensual 
+del SEIN de los meses de enero, febrero, marzo y abril ha ocurrido en horas del 
+día y de la tarde entre las 11 y 16 horas donde hay presencia de luz solar, es decir 
+fuera del horario de 17 a 23 horas. Por lo tanto, es necesario reevaluar y actualizar 
+el cálculo de la máxima demanda en las horas punta reales del Sistema, con lo 
+cual ameritaría que a las tecnologías solares se les reconozca potencia firme 
+porque vienen participando en la máxima demanda mensual del SEIN (4 meses 
+al año que representa el 30% de participación), y precisamente es coincidente 
+con el factor de planta promedio en el país para estas tecnologías.
+
+
+--- Page 15 ---
+15
+	§ Una tarea pendiente del MINEM es la emisión del Reglamento de Generación 
+Distribuida, toda vez que con la Resolución Ministerial 292-2018-MEM/DM de fecha 
+02 de agosto de 2018, se publicó el “Proyecto del Reglamento de Generación 
+Distribuida” recibiéndose diversos comentarios y sugerencias para la mejora de 
+los alcances y la vigencia de la Ley de Generación Distribuida (Decreto Legislativo 
+1221 del 2015) lo cual permitirá que las actividades del mercado eléctrico mejoren 
+sus niveles de competitividad y sostenibilidad. Para el Sector Minero será una 
+oportunidad para invertir en generación de energías renovables para Autoconsumo 
+y el excedente pueda ser comercializada a la red nacional de electricidad (SEIN).
+	§ Es necesario que el MINEM modifique el marco regulatorio actual para que se 
+les permita a las Energías Renovables No Convencionales, en especial a las 
+Fotovoltaicas, contratar la venta de su energía generada al SEIN sin necesidad 
+de contar con potencia firme, que es un requisito para poder comercializar su 
+energía y potencia asociada en el SEIN.
+	§ Es necesario tener dos mercados para el sector eléctrico, uno para potencia y otro 
+para energía, con el fin de dar viabilidad a los proyectos solares y eólicos, una 
+alternativa es con bloques horarios o generación hibrida. Comercialmente facilitaría 
+separar la Potencia y la Energía, para ello se debe de innovar en el tema de los 
+contratos y en los roles del COES. En la práctica lo que realmente se comercializa 
+es la energía y no la potencia, porque la potencia se garantiza ya en el sistema. Para 
+el caso de las Tecnologías Solares no tienen ingresos por potencia, pero la puede 
+garantizar el sistema. Es por ello que se podría firmar contratos solo de energía. 
+Esto esta pendiente de corregir en la regulación actual.
+	§ Con relación a la Electromovilidad a la fecha se encuentra pendiente por parte 
+de Osinermign la fijación tarifaria de las estaciones de carga que contribuyan al 
+crecimiento del parque automotor que permita la reducción de emisiones de CO2 
+y contribuya al aprovechamiento de la sobreoferta eléctrica y en específico del 
+potencial solar del Perú (para el caso de vehículos eléctricos que tienen como 
+fuente directa de carga a los paneles solares) mediante el almacenamiento de 
+la energía en baterías de litio. Esta norma pendiente contribuirá a que el Sector 
+Minero, intensivo en transporte, pueda disminuir sus emisiones de GEI con la 
+transición de sus vehículos de combustión interna a vehículos eléctricos.
+
+
+--- Page 16 ---
+16
+	§ Recientemente con la Resolución Ministerial Nro. 102-2020-MINEM/DM se aprobó 
+el Proyecto de Reglamento para optimizar el uso del Gas Natural y creación del 
+Gestor del Gas Natural con la finalidad de recibir comentarios y observaciones de 
+los agentes del mercado. Al respecto, el Proyecto de Reglamento tiene por objeto 
+optimizar, promover y articular la expansión y mejor aprovechamiento del Gas 
+Natural en el Perú permitiendo un mejor desarrollo de actividades económicas y 
+generando mercados más competitivos. Dicho proyecto normativo le atribuye al 
+COES la función de Gestor de Gas Natural. Las disposiciones del Reglamento 
+resultan aplicables a las operaciones de contratación de suministro de gas natural 
+y/o capacidad de transporte de gas natural de los generadores eléctricos que 
+se realicen en el mercado primario y operaciones del mercado secundario. Esta 
+norma se encuentra en análisis por parte del MINEM y las implicancias de la misma 
+recaerán de manera directa en el precio del Costo Marginal por la influencia del 
+gas natural. Para el sector minero, significará que los precios del mercado libre 
+subirán al emplearse precios reales y por ello cobra mayor importancia la inversión 
+en autoconsumo con energías renovables.
+	§ De acuerdo a las opiniones de expertos entrevistados, debe haber un sinceramiento 
+del precio del gas natural, de forma que permita determinar la real competencia de 
+las fuentes de generación. Recientemente (a fines de agosto de 2020) se hizo de 
+público conocimiento un pronunciamiento del Poder Judicial que determinó que las 
+centrales térmicas a Gas natural ya no podrán declarar sus costos variables como 
+Cero, lo cual traerá como consecuencia el incremento de los costos marginales a 
+valores de 25 a 30 US$/MWh a partir del 2021 y del orden de 45 a 50 US$/MWh 
+para la zona sur de país. Está pendiente que el MINEM se pronuncie y emita 
+directivas a las empresas generadoras térmicas y publique el procedimiento a 
+seguir para el cálculo de los costos variables de las centrales térmicas a gas, 
+haciendo cumplir el dictamen legal.
+	§ En línea con las tendencias internacionales, se viene evaluando incentivar un 
+mayor uso de energía eléctrica limpia en la red nacional, con la dación de algún 
+tipo de impuesto medioambiental como el Carbón Tax, que no existe en el Perú, y 
+que incluya a todas las industrias como la eléctrica y minera, de manera gradual. 
+Un ejemplo claro para fomentar las energías limpias es Chile, en donde se paga 
+un impuesto por Tonelada de carbono emitido. De llegar este tipo de regulación 
+a Perú, las mineras tendrían que desarrollar proyectos de energías limpias como 
+autogeneración o en su defecto adquirir energías limpias del SEIN mediante 
+contratos PPA, siendo una buena oportunidad para el desarrollo de más proyectos 
+RER en el País.
+
+
+--- Page 17 ---
+17
+	§ Está pendiente la creación de un sistema de aseguramiento de la calidad de los 
+suministros e instalaciones de energías renovables no convencionales y que 
+se acredite para su uso a nivel nacional, con apoyo de gremios, certificadoras, 
+laboratorios u otros organismos pertinentes. Este mismo sistema podría proponer 
+las competencias laborales que necesitan los técnicos y profesionales para que 
+trabajen en el sector de energía renovable, asi como proponer el programa de 
+formación complementaria para su promoción y aplicación en el sector minero 
+entre otros sectores.
+	§ El Sector minero en su conjunto tiene pendiente realizar una evaluación del potencial 
+energético renovable en sus áreas de concesión minera para poder aprovechar de 
+la mejor manera el o los recursos energéticos disponibles para emplearlos como 
+Autoconsumo de electricidad y de esta manera reducir sus costos y emisiones 
+de huella de carbono.
+	§ Invertir en Renovables para el Cierre de Minas es una muy buena oportunidad para 
+no crear una afectación social ya que según el IRENA las renovables requieren 
+mayor mano de obra en la operación y mantenimiento y además que se prolonga 
+la vida de la mina más alla del ciclo de operación minera para usos energéticos, 
+educativos, culturales y de turismo.
+	§ Las metas para reducir las emisiones de GEI (NDCs) del sector energía se han 
+basado en objetivos y planes del sector público, no obstante, no se hace visible 
+la implementación de las energías renovables en sectores específicos como el 
+minero. Esto es un punto importante si se quiere lograr la implementación de estas 
+contribuciones en el país y sobre todo lograr mayor competititividad y sostenibildiad 
+en el sector minero.
+
+
+--- Page 18 ---
+18
+7. Plan de Acción en el Corto, Mediano y Largo Plazo (Propuesta)
+Plan de acción propuesto para las renovables en el sector minero
+Objetivos de 
+Corto Plazo
+Objetivos de Mediano y Largo Plazo
+Comentario
+2021
+2022
+2023
+2024
+2025
+2026
+2027
+2028
+2029
+2030
+1.1
+Marco Legal y Regulatorio
+1.1.1
+Actualización de la Política 
+Energética del 2010.
+Incremento de la Participación 
+de Renovables para el 2030.
+1.1.2
+Elaboración del Plan 
+Nacional de Energías 
+Renovables.
+D.L. 1002 del 2008, sostuvo 
+un plazo máximo de 1 año, 
+para desarrollar el Plan. Sigue 
+pendiente.
+1.1.3
+Actualizar Cálculo de la 
+máxima demanda. D.S. Nº 
+038-2018.
+Reevaluación del horario de la 
+hora punta, D.S.038 (Vencido)
+1.1.4
+Potencia Firme para las 
+Solares.
+Debe ser equivalente a su factor 
+de plantas como las eólicas.
+1.1.5
+Aprobación de Reglamento 
+de Generación Distribuida.
+Definir mecanismo de 
+retribución.
+1.1.6
+Declaración de Precios del 
+Gas Natural.
+Se recomienda que el COES sea 
+el que despache el Gas Natural 
+con costos reales.
+1.1.7
+Planificación de la 
+Generación.
+Al igual que el Plan de 
+Transmisión, se debe contar 
+con un Plan de Generación con 
+revisión periódica.
+1.1.8
+Separación de la venta 
+de potencia y energía en 
+el SEIN.
+Las ventas de energía se 
+podrían dar en bloques horarios 
+como en Chile y vender a las 
+mineras.
+1.1.9
+Impuesto por emisiones a 
+la industria en general.
+En caso de darse este impuesto 
+debe ser gradual, para que 
+la industria se prepare y se 
+fomente las renovables.
+1.1.10
+Reducción de la Huella de 
+Carbono e incentivos por 
+uso de energías limpias.
+Normativa para exigencias de 
+reducción de huella de carbono 
+e incentivos a quienes las 
+implementen.
+1.1.11
+Creación de Organismo de 
+Formación y Acreditación 
+en Energías Renovables.
+Esto lo podrían realizar las 
+asociaciones renovables para 
+difundir su uso en los sectores 
+del país incluido el minero.
+1.2
+Sector Minero
+1.2.1
+Capacitación en Energías 
+Renovables.
+El Sector Minero requiere ser 
+capacitado en tecnologías 
+renovables.
+1.2.2
+Evaluación de Potencial en 
+Energías Renovables.
+Trabajo en conjunto del sector 
+energético y minero.
+1.2.3
+Desarrollo de proyectos 
+Renovables en zonas 
+mineras.
+La minería debe evaluar sus 
+recursos renovables, para 
+desarrollar proyectos de 
+autoconsumo de electricidad.
+
+
+--- Page 19 ---
+19
+2. SITUACIÓN DEL SECTOR ENERGÉTICO PERUANO
+2.1. Sector Energía
+El sector energético peruano está conformado por las fuentes de generación de 
+energía primaria (petróleo, carbón, gas natural, hidroelectricidad, radiación solar, viento 
+y biomasa). La generación de electricidad es una fuente de energía secundaria que 
+se produce a partir de las fuentes primarias. Para analizar mejor al sector energía 
+del país describiremos a continuación como se encuentra la oferta y la demanda de 
+energía a nivel primario.
+2.1.1 Oferta de Energía Primaria
+El crecimiento económico del Perú en los últimos años se refleja en el incremento 
+en la demanda de energía en diferentes sectores. Para cubrir esta demanda, el país 
+ha incrementado el Suministro Total de Energía Primaria (TPES, por sus siglas en 
+inglés) en 117% en los últimos 27 años, de 474 PJ en 1990 a 1.029 en 2017. En 
+el gráfico 1 se muestra el crecimiento del suministro de energía primaria total en el 
+Perú desde 1990 al 2017 (IEA, 2020).
+Gráfico 1: Suministro de Energía Primaria Total 1990-2017
+Fuente: Agencia Internacional de la Energía (IEA) 2020
+Petróleo
+Hidro
+Gas Natural
+Carbón
+Biocombustibles
+1200
+1000
+800
+600
+400
+200
+0
+PetaJoules (PJ)
+23,6%
+18,0%
+14,2%
+12,5%
+34,4%
+8,2%
+41,1%
+24,9%
+7,8%
+49,1%
+11,2%
+61,3%
+7,9%
+63,6%
+1990
+2000
+2010
+2017
+Como se puede apreciar en el gráfico anterior, el suministro de Energía Primaria 
+Total (TPES) en el país está dominado por los combustibles fósiles (petróleo, gas 
+natural, carbón), que representan el 75.8% del total para el 2017. El gas natural 
+se ha incrementado desde el año 2000, de 21 PJ a valores de 294 PJ en el 2017, 
+y acercándose al petróleo como una de las fuentes de energía más importantes 
+en el país. La oferta de petróleo (producción e importación), ha experimentado un 
+decrecimiento porcentual entre los años 2010 y 2017, mientras que la hidroelectricidad, 
+los biocombustibles y el carbón prácticamente han mantenido su participación 
+porcentual.
+
+
+--- Page 20 ---
+20
+Gráfico 2: Suministro de Energía por Tipo de Combustible
+Fuente: Agencia Internacional de la Energía (IEA) 2020
+En el gráfico anterior se aprecia que el Perú continúa dependiendo de los combustibles 
+fósiles como el petróleo, cuyo uso continúa en crecimiento. No obstante, desde el 
+2017 se mantienen las mismas cifras de suministro energético del año 2010.
+Respecto al gas natural, se aprecia una tendencia creciente desde su llegada a Lima 
+en el año 2004, luego en el año 2016 y 2017 se aprecia una disminución debido 
+al incremento de la energía hidroeléctrica en el SEIN y a la baja masificación en la 
+industria y el hogar.
+Por otro lado, el carbón mineral viene disminuyendo su uso y la hidroelectricidad y 
+los biocombustibles en general continúan en aumento.
+2.1.2 Demanda de Energía Primaria
+El consumo de energía a nivel usuario final está dominado por los sectores de 
+transporte e industria, que sumados representan el 71% del total de consumo de 
+energía, seguido del sector residencial en un 20% y el sector comercial y de servicios 
+públicos con un 6% (IEA,2020), según se muestra en el gráfico 3.
+500
+450
+400
+350
+300
+250
+200
+150
+100
+50
+0
+PetaJoules (PJ)
+1990
+1994
+1998
+2002
+2006
+2010
+2014
+2017
+Carbón
+Petróleo
+Gas Natural
+Hidro
+Biocombustibles
+
+
+--- Page 21 ---
+21
+Gráfico 3: Consumo de Energía por Sector
+Residencial
+20%
+Transporte 
+43%
+Industria
+28%
+Comercio y 
+Servicios Públicos
+6%
+Agricultura
+Forestería
+1%
+Pesca
+0,4%
+Otros
+1,6%
+Fuente, IEA, 2020
+El Gráfico siguiente muestra la participación de fuentes de energía primaria y 
+secundaria en el consumo total de energía final, de acuerdo al último Balance 
+Nacional de Energía (BNE), elaborado por el Ministerio de Energía y Minas (MINEM) 
+y publicado en el año 2019. En este gráfico se aprecia que la electricidad representa 
+sólo el 20.5% del total de consumo de energía del país.
+Gráfico 4: Participación de fuentes de energía en el consumo final nacional, 2018
+11,4%
+63,5%
+20,5%
+2,8% 1,6%
+0,2%
+Electricidad
+Hidrocarburos
+Leña, bosta y yareta
+Carbón mineral
+Bagazo y carbón vegetal
+Energía solar
+Fuente: MINEM, 2019
+
+
+--- Page 22 ---
+22
+2.2 Situación Actual del Sector Eléctrico Peruano
+El mercado peruano para comercialización de electricidad, está conformado por dos 
+tipos de sistemas: el Sistema Eléctrico Interconectado Nacional - SEIN y los Sistemas 
+Aislados, a través de 81 empresas principalmente generadoras de electricidad, 
+distribuidoras e industriales (MINEM 2019). El SEIN representa el 90% del total de 
+la electricidad producida en el mercado eléctrico, mientras que el 10% diferencial 
+de electricidad se produce en los Sistemas Aislados (como es el caso del sistema 
+Aislado de Iquitos - Loreto). La tasa de electrificación total del país es de 97%, con 
+un coeficiente de electrificación rural del 95% 1 (OSINERGMIN, 2020).
+Las empresas de la pequeña, mediana y gran minería formal peruana se abastecen 
+de electricidad desde el SEIN. Existen en el país pequeña minería informal e ilegal 
+que se abastecen de grupos generadores térmicos Diesel, de manera aislada, que 
+no forman parte del alcance del presente estudio.
+El MINEM, en el año 2014 adjudicó un proceso para construir una Línea de Transmisión 
+de 220kV y de 600 Km desde la ciudad de Moyobamba a la ciudad de Iquitos, para 
+integrar esta última zona al SEIN. No obstante, este proyecto no prosperó y se canceló 
+debido a los altos costos y permisos sociales y ambientales, como la obtención del 
+Estudio de Impacto Ambiental (EIA). En este contexto, existe una oportunidad para 
+que este sistema aislado desarrolle proyectos de energías renovables y reduzca la 
+generación térmica existente para el abastecimiento del crecimiento de la demanda 
+de electricidad.
+2.2.1 Autogeneración de electricidad
+Existe también otro tipo de titulares de generación de electricidad para uso propio o para 
+autoconsumo, que no forman parte del mercado de electricidad para comercialización 
+de energía. Este es el caso de algunas empresas industriales y mineras, las cuales 
+han sido identificadas en el Anuario de Estadística Eléctrica del MINEM al año 2019. 
+El total de empresas que producen electricidad tanto conectadas al SEIN como 
+en Sistema Aislado para autoconsumo suman 77, de las cuales 41 son empresas 
+mineras, según el MINEM al año 2019.
+En la siguiente tabla se muestra la potencia instalada y efectiva, así como la generación 
+de energía de las empresas industriales y mineras que producen electricidad para 
+consumo propio.
+1 Página web de OSINERGMING: https://observatorio.osinergmin.gob.pe/evolucion-coeficiente-electrificacion)
+Sector
+Potencia 
+Instalada 
+(MW)
+Potencia 
+Efectiva (MW)
+Generación
+(GWh)
+Tasa 
+Generación
+(%)
+Industria
+673,9
+521,8
+1.349,5
+62,3%
+Minería
+472,2
+363,6
+816,3
+37,7%
+TOTAL
+1.146,1
+888,4
+2.162,7
+100,0%
+Tabla 1: Capacidad y Autogeneración de Electricidad de la minería e Industria
+Fuente: MINEM, 2019
+
+
+--- Page 23 ---
+23
+En la siguiente tabla se muestra la capacidad de autogeneración de la minería 
+por tecnología. Cabe destacar que algunas empresas mineras han invertido en 
+autogeneración renovable hidroeléctrica que vienen operando con un 70% de factor 
+de planta, a diferencia de las centrales térmicas que se encuentran como reserva 
+fría solo para casos de emergencia, las cuales tienen un factor de planta de 37%.
+Tabla 2: Capacidad y Autogeneración de Electricidad en la Minería por tecnología
+Fuente: MINEM, 2019
+Tipo de 
+Central
+Potencia 
+Instalada 
+(MW)
+Potencia 
+Efectiva (MW)
+Generación 
+(MWh)
+Tasa 
+Generación 
+(%)
+Centrales 
+Hidroeléctrica
+133,9
+120,4
+737.612,2
+90,4%
+Centrales 
+Térmicas
+338,3
+243,2
+78.668,3
+9,6%
+TOTAL
+472,2
+363,6
+816.280,5
+100,0%
+2.2.2 Demanda de electricidad en el SEIN
+La demanda de electricidad en el SEIN se mide tanto en energía (GWh) como en 
+Potencia (MW). La demanda en energía coincide con la generación de electricidad 
+del parque generador que precisamente se enciende para cubrir dicha demanda. 
+Existe otro indicador de demanda, que es la máxima demanda de potencia anual. 
+Este es un indicador para el pago de potencia.
+2.2.2.1 Demanda de energía el SEIN
+La demanda de energía eléctrica en el SEIN se expresa por su equivalente que 
+es la generación de electricidad en el SEIN. Para el año 2019 esta demanda de 
+energía fue de 52.889,14 GWh, siendo el aporte de la generación con hidroeléctricas 
+convencionales de 53,6% que equivalió a 28.323 GWh, y la participación del gas 
+natural fue de 37,7%, que equivalió a 19.950 GWh. Por otro lado, la participación 
+de la generación con energías renovables no convencionales incluyendo a las mini 
+hidros fue de 8,52%, que equivalió a 4.504,94 GWh en el año 2019 (COES, 2020).
+
+
+--- Page 24 ---
+24
+Es importante resaltar la diferencia entre la generación de energía hidroeléctrica 
+convencional y no convencional. La generación de hidroelectricidad convencional se 
+refiere a sistemas hidroeléctricos mayores de 20 MW, los cuales son considerados 
+como renovables convencionales, mientras que las hidroeléctricas no convencionales, 
+se refieren a sistemas de hidroeléctricas menores a 20MW, las cuales están incluidas 
+en la categoría de renovables propiamente dichos.
+Antes del año 2008, el MINEM no diferenciaba entre la generación hidroeléctrica 
+convencional y no convencional. Como fue descrito, en el año 2008, con el Decreto 
+Legislativo 1002, se establecieron los lineamientos para las energías renovables, 
+separando la categoría de hidroeléctrica convencional (>20 MW) de la no convencional 
+(< 20 MW). Como resultado, la categoría de hidroeléctrica no convencional, representa 
+las plantas instaladas después del 2008.
+En los últimos 10 años, la demanda de energía, o la generación total de electricidad, 
+se ha incrementado de 30.922 GWh en el 2009 a 52.889 GWh en 2019 (MINEM, 
+2019; COES 2020). Esto representa un incremento de 21.7967 GWh, o 71% en los 
+últimos 10 años.
+La tasa promedio anual de incremento de generación eléctrica en los últimos 10 años 
+fue de 5,1% (COES, 2020). El Gráfico siguiente resume la producción histórica de 
+electricidad del 2009 al 2019.
+Gráfico 5: Generación de electricidad por fuentes, 2019
+Fuente: Reporte Anual de Operación del SEIN 2019, COES 2020
+Gas Natural
+37,7%
+Hidroeléctricas
+53,6%
+Carbón & 
+Diesel & R500
+0,2%
+Solar
+1,4%
+Eólico
+3,1%
+Mini Hidro
+3,5%
+Bazago
+0,4%
+Biogás
+0,1%
+RER
+8,5%
+En el gráfico siguiente se muestra la contribución de la producción de electricidad por 
+fuente de generación para el año 2019. Se puede apreciar que de las tecnologías 
+renovables no convencionales, la que tiene mayor participación es la mini hidráulica 
+con 3,5%, seguido por la eólica con 3,1% y la solar fotovoltaica con 1,4%.
+
+
+--- Page 25 ---
+25
+La contribución de la generación de electricidad de plantas térmicas se ha incrementado 
+significativamente desde el año 2004, con el desarrollo y utilización del gas natural del 
+Proyecto Camisea. En el periodo 2009 - 2019, la generación térmica de electricidad 
+en el SEIN se incrementó de 11.502 GWh a 20.061 GWh, que representa un 74,4% 
+de crecimiento en los últimos 10 años, principalmente por la participación del gas 
+natural en la matriz eléctrica nacional, que permitió el desarrollo de importantes 
+proyectos mineros en el país en dicho periodo. Por otro lado, como resultado del 
+impulso del gas natural, se ha reducido la contribución de la generación de energía 
+hidroeléctrica de 76% en el 2004 a 54% en el 2019 (COES, 2019).
+Hidro
+Termoeléctrico
+Renovables
+60000
+50000
+40000
+30000
+20000
+10000
+0
+2009
+2010
+2011
+2012
+2013
+2014
+2015
+2016
+2017
+2018
+2019
+GWh
+Gráfico 6: Generación Nacional de Electricidad 2009 – 2019
+Fuente: Reporte anual de Operación del SEIN 2019, COES, 2020
+
+
+--- Page 26 ---
+26
+2.2.2.2 Demanda Máxima de Electricidad (Demanda de Potencia)
+Entre los años 2009 y 2019, la demanda máxima de electricidad del SEIN se 
+incrementó de 4.322 MW a 7.017 MW, un incremento de 2.695 MW (62%). El 
+incremento promedio anual de la demanda durante este periodo fue de 4,8%. En 
+el Gráfico siguiente se ilustra el crecimiento de la máxima demanda de electricidad 
+del 2009 al 2019.
+De acuerdo al último Balance Nacional de Energía 2018 elaborado por el MINEM 
+en el 2019, el sector minero-metalúrgico e industrial, representó el 57,6% del total 
+de demanda nacional.
+Fuente: Reporte Anual de Operaciones del SEIN 2019, COES, 2020
+8000
+7000
+6000
+5000
+4000
+3000
+2000
+1000
+0
+2009
+4322
+2010
+4579
+2011
+4961
+2012
+5291
+2013
+5575
+2014
+5737
+2015
+6275
+2016
+6492
+2017
+6596
+2018
+6885
+2019
+7017
+MW
+Gráfico 7: Crecimiento máximo de la demanda de electricidad, 2009-2019
+2,5%
+4,3%
+0,8%
+0,1%
+Minero - Metalúrgico
+Industrial
+Residencial
+Comercial
+Pesquera
+Público
+Transporte
+Agropecuario y Agroindustria
+24,8%
+20,6%
+32,8%
+14,1%
+Gráfico 8: Consumo final de energía eléctrica por sectores (%)
+Fuente: Balance Nacional de Energía 2018; MINEM, 2019
+
+
+--- Page 27 ---
+27
+Del 2009 al 2019, la potencia efectiva se ha incrementado en 6.390 MW. En este 
+periodo, la tasa anual del incremento de la potencia efectiva ha sido de 9,4%, lo que 
+ha excedido la tasa de incremento de la demanda máxima (4,8%), garantizando que 
+se cubra el crecimiento en la demanda eléctrica. En los últimos 6 años la capacidad 
+o potencia instalada se ha incrementado en 4.000 MW debido al ingreso de nuevas 
+hidroeléctricas de gran tamaño (~1100 MW), y plantas termoeléctricas (~1.500 MW), 
+así como el desarrollo de centrales con energía renovables (1.000 MW).
+En el año 2016, se instaló una reserva fría de 1,500 MW de combustible diésel, llamada 
+“Nodo Energético del Sur” (COES, 2016), en la zona sur del Perú, para ser utilizado 
+en caso de emergencia y preparado para generar con gas natural proveniente del 
+gasoducto sur peruano. La idea es que con la llegada proyectada del gasoducto sur, 
+previsto para el 2028, el uso del diésel se reemplace con el gas natural de Camisea. 
+La construcción del gasoducto del sur, (Gasoducto Sur Peruano) empezó en mayo 
+del 2015, y la tubería de US$ 7.000 millones se ha completado a un 35%. En enero 
+del 2017, el Ministerio de Economía del Perú canceló el contrato de construcción 
+del gaseoducto, como resultado de las investigaciones a la empresa contratista.
+2.2.4 Generación Eléctrica Renovable
+En el 2008, el MINEM aprobó el Decreto Legislativo 1002, estableciendo la primera 
+meta para el desarrollo de las energías renovables en el país. Se estableció que 
+para el 2013, el 5% de la energía total consumida en el sistema interconectado debía 
+provenir de fuentes renovables no convencionales. Las pequeñas hidroeléctricas 
+no fueron incluidas en el 5% para apoyar al desarrollo de la energía solar, eólica, 
+biomasa y geotérmica.
+2.2.3 Oferta de electricidad (Capacidad Efectiva)
+Debido a la creciente demanda de electricidad, el Perú ha continuado incrementando 
+la capacidad de oferta de generación de energía para cubrir esta demanda. En el 
+gráfico siguiente se ilustra el crecimiento de la capacidad efectiva u oferta de potencia, 
+junto con la máxima demanda del SEIN en el período 2009 al 2019.
+Gráf﻿iico 9: Potencia Efectiva y Demanda 2009-2019
+Fuente: Estadística Anual de Operaciones 2019 SEIN, COES 2020
+14000
+12000
+10000
+8000
+6000
+4000
+2000
+0
+2009
+6246
+2010
+6875
+2011
+6868
+2012
+7755
+2013
+8680
+2014
+2015
+10088
+12078
+11958
+12581
+12637
+2016
+2017
+2018
+2019
+MW
+Capacidad
+Demanda
+9083
+
+
+--- Page 28 ---
+28
+Tabla 3: Fuentes de Energías Renovables, Diciembre 2019
+Energía 
+Renovable
+Capacidad 
+Instalada MW
+Potencial MW
+Porcentaje de 
+recurso utilizado
+Hidroeléctrico 
+(convencional 
+≥20MW)
+4.748,37
+70.000
+7,23%
+Hidroeléctrico 
+(non-convencional 
+<20MW
+319,28
+Viento
+375,46
+20.500
+1,83%
+Solar
+285,02
+25.000*
+1,14%
+Biomasa
+61,24
+450*
+13,61%
+Geotérmico
+0
+3.000
+0,0%
+TOTAL
+5.789,37
+118.950
+4,86%
+*Números son referenciales de Apeger (2016), no hay estudios oficiales para estimar los MW de 
+potencial para solar y biomasa
+Fuente: COES, 2020.
+A fines del año 2019 la generación de energía renovable no convencional en el 
+SEIN alcanzó el 5,0% de participación de la demanda nacional, y considerando a 
+las centrales hidroeléctricas menores de 20 MW representó el 8,5% de la generación 
+total de electricidad en el SEIN.
+La Tabla siguiente resume la capacidad instalada y el potencial total por tipo de 
+energía renovable en el SEIN.
+El potencial total de energía renovable de Perú se estima en 118.950 MW, cerca de 
+17 veces la demanda máxima de electricidad del país en 2019 (7.017 MW) y según 
+la tabla precedente las fuentes de energía renovables están subutilizadas en el país. 
+La capacidad de generación hidroeléctrica es la mayor fuente de energía renovable y 
+se utiliza solo el 7,23% de su potencial. La fuente eólica (1,83%), geotérmica (0%) y 
+solar (1,14%), que en total utilizan menos del 5% de su potencial total, representando 
+una oportunidad de inversión en vista de la continua reducción en el costo de estas 
+tecnologías en los últimos años.
+En 2019, la generación con fuentes renovables incluyendo la mini hidroeléctrica fue 
+de 4.504,94 GWh, representando el 8,5% del total de energía eléctrica de la red. 
+La participación de la energía mini-hidroeléctrica es de 41%, mientras que la eólica 
+36%, la energía solar 17% y la generación con biomasa y biogás el 6%.
+
+
+--- Page 29 ---
+29
+En el Gráfico siguiente se muestra la generación eléctrica con fuentes renovables.
+Fuente: COES, 2020
+Gráfico 10: Generación de electricidad con fuentes renovables conectadas al SEIN, 
+2019
+Eólica
+Hidroeléctrica
+Solar
+Biomasa+Biogás
+36%
+41%
+17%
+6%
+2.2.4.1 Energía Solar
+El potencial solar del Perú es uno de los más altos a nivel mundial, recibiendo 2.050-
+2.550 kWh/m2 de irradiación solar por año (Meteonorm, 2016). En comparación, 
+Alemania que es uno de los líderes en tecnología solar, recibe menos de 1.050 
+kWh/m2 por año. En la siguiente Ilustración, se muestra el mapa solar mundial de 
+la irradiación solar horizontal.
+Ilustración 1: Mapa mundial de Irradiación Solar Horizontal
+Fuente: SolarGIS
+Promedios de largo plazo de la irradiación global horizontal (GHI)
+MAPA DE RECURSO SOLAR
+IRRADIACIÓN GLOBAL HORIZONTAL
+Totales anuales
+803
+949
+1095
+1241
+1387
+1534
+1680
+1826
+1972
+2118
+2264
+2410
+2556
+2702
+Totales diarios:
+2.2
+2.6
+3.0
+3.4
+3.8
+4.2
+4.6
+5.0
+5.4
+5.8
+6.2
+6.6
+7.0
+7.4
+kWh/m2
+Este mapa esta publicado por el Grupo Banco Mundial, financiado por ESMAP y preparado por Solargis. Para más información y términos de uso por favor visite http://globalsolaratlas.info.
+
+
+--- Page 30 ---
+30
+En junio del 2003, el MINEM publicó el Atlas de Energía Solar del Perú, detallando 
+el recurso solar disponible en el Perú, el cual varía de región en región, y con niveles 
+altos promedio que llegan a 6,5-7,0 kWh/m2 por día en áreas de la costa sur y las 
+menores bajando a 4,5-5,0 kWh/m2 por día en el norte de la Amazonía cerca de 
+Ecuador (MINEM, 2003). Por comparación, los promedios anuales más altos de 
+Canadá alcanzan 4,5-5,2 kWh/m2 cerca de Alberta (Djebbar, 2011)
+En la tabla siguiente, se muestran las regiones con mayor potencial solar en el país.
+Región
+Energía Solar Diaria Promedio (kWh/m2)
+Arequipa
+6,08
+Ica
+5,50
+Moquegua
+6,04
+Piura
+5,54
+Tacna
+5,83
+Tumbes
+5,67
+Fuente: Atlas de Energía Solar del Perú Solar, MINEM 2003
+Tabla 4: Regiones con alto potencial solar
+A finales del 2019, la capacidad instalada de sistemas solares fue de 280,48 MW, 
+generando 761,73 GWh en el mismo año (COES, 2020). Como se mencionó antes, la 
+capacidad instalada total solo representa el 1,14% del potencial. Los parques solares 
+más grandes están localizados en la parte sur del país, en el año 2018 entraron en 
+operación la Central Solar Rubi con una potencia de 144,48 MW e Intipampa con 
+una potencia de 40 MW. En la tabla siguiente se muestra un resumen del Parque 
+solar instalado en el país a la fecha. (octubre 2020)
+Tabla 5: Sistemas Solares Fotovoltaicos instalados
+Fuente: MINEM, 2019
+Central
+Desarrollador/
+Operador
+Región
+Potencia (MW)
+Inicio de operación
+C.S. Repartición
+GTS Repartición SAC.
+T-Solar (Spain)
+Arequipa
+20
+Jul 2012
+C.S. Majes Solar
+GTS Majes SAC.
+T-Solar (Spain)
+Arequipa
+20
+Jul 2012
+C.S. Tacna Solar
+Tacna Solar SAC
+Solarpack (Spain)
+Tacna
+20
+Oct 2012
+C.S. Panamericana Solar
+Panamerica Solar SAC
+Solarpack (Spain)
+Moquegua
+20
+Dic 2012
+C.S. Moquegua FV
+Moquegua FV SAC
+Solarpack (Spain)
+Moquegua
+16
+Dic 2014
+C.S. Rubi
+ENEL Green Power 
+Perú S.A.
+Moquegua
+144,48
+Ene 2018
+C.S. Intipampa
+ENGIE Energía 
+Perú S.A.
+Moquegua
+40
+Mar 2018
+280,48 MW
+
+
+--- Page 31 ---
+31
+2.2.4.2 Energía Eólica
+Las regiones del Perú con mayor potencial de generación eólica se encuentran en la 
+línea costera, y en la zona norte andina (Lambayeque, Piura y Cajamarca). En estas 
+regiones, la velocidad del viento se aproxima a 8-11m/s. En el 2016, el MINEM publicó 
+el Atlas Eólico del Perú, el cual estima que el potencial general de la generación de 
+energía eólica es de 28,4 GW, con 20,5 GW considerado tecnológicamente viable de 
+desarrollar. El MINEM no incluyó el potencial eólico mar adentro en este estudio. En 
+la tabla siguiente, se muestran las regiones con el mayor potencial de energía eólica.
+Gráfico 11: Plantas Solares Fotovoltaicas en operación
+Fuente: COES, 2020
+C.S. Rubí
+C.S. Intipampa
+C.S. Moquegua FV
+C.S. Majes
+C.S. Panamericana Solar
+C.S. Repartición
+C.S. Tacna Solar
+55%
+14%
+6%
+6%
+7%
+6%
+6%
+
+
+--- Page 32 ---
+32
+Tabla 6: Regiones con Alto Potencial Eólico
+Fuente: Atlas Eólico Peruano, MINEM, 2016
+El alto potencial eólico se encuentra en las regiones de Lambayeque y Piura, ubicadas 
+en la costa norte, y en Ica en la costa sur. Estacionalmente, el mayor potencial de 
+recurso eólico está disponible durante los meses de invierno (mayo a noviembre), 
+y los menores son en los meses de verano (diciembre – abril). Esto complementa 
+con la disponibilidad de recurso hídrico para la generación hidroeléctrica, el cual es 
+mayor en el verano y menor en el invierno.
+En el 2019, la capacidad instalada eólica fue de 375,81 MW, generando 1.646,16 
+GWh (COES, 2020), lo cual da un factor de planta promedio de 50% en todo el 
+parque eólico nacional. Como se mencionó en la tabla anterior, la capacidad total 
+instalada solo representó el 1,83% del potencial. Las dos centrales eólicas de mayor 
+capacidad en Perú están ubicadas en la región Ica. La Central Eólica Wayra cuenta 
+con una potencia de 132,3 MW, seguido de la Central Eólica Tres Hermanas con una 
+potencia de 97,2MW (TheWindPower.net, 2017). En la siguiente tabla se presenta 
+un resumen de los proyectos eólicos en operación en el país:
+Central
+Desarrollador / Operador
+Región
+Potencia MW
+Inicio de 
+operación
+C.E. Parque 
+Eólico Marcona
+Parque Eólico Marcona
+Cobra (España)
+Ica
+32,3
+Abril 2014
+C.E. Cupisnique
+Energía Eólica S.A.
+ContourGlobal (US)
+La Libertad
+83,15
+Agosto 2014
+C.E. Talara
+Energía Eólica S.A.
+ContourGlobal (US)
+Piura
+30,86
+Agosto 2014
+C.E. Tres Hermanas
+Parque Eólico Tres 
+Hermanas S.A.C.
+/ Cobra (España)
+Ica
+97,2
+Marzo 2016
+C.E. Wayra
+ENEL Green Energy 
+Perú SAC
+Ica
+132,3
+Mayo 2018
+Tabla 7: Centrales de Generación de Energía Eólica Instalados, 2019
+Fuente: thewindpower.net, 2017; COES, 2020
+Región
+Potencial Total MW
+Potencial utilizable MW
+Amazonas
+417
+129
+Ancash
+816
+708
+Arequipa
+1.176
+1.020
+Cajamarca
+1.173
+891
+Ica
+5.295
+2.280
+La Libertad
+1.185
+921
+Lambayeque
+9.114
+7.017
+Lima
+618
+429
+Piura
+8.601
+7.098
+28.395 MW
+20.493 MW
+375,81 MW
+
+
+--- Page 33 ---
+33
+2.2.4.3 Energía Hidroeléctrica
+En marzo del 2011, el MINEM publicó el Atlas de Potencial Hidroeléctrico del Perú, 
+estimando un potencial bruto para pequeñas hidroeléctricas (1 a 20 MW) y para 
+medianas (20 a 100MW) de 98.460 MW, y con un potencial de 69.445 MW viable para 
+su desarrollo. El estudio solo proporcionó una combinación de potencial estimado 
+para las plantas de tamaño pequeño y mediano, y no proporcionó una estimación 
+de cada categoría individualmente. Las hidroeléctricas menores a 1 MW no fueron 
+incluidas en el estudio.
+El mayor potencial para las pequeñas y medianas hidroeléctricas se encuentran en 
+Cusco. La siguiente tabla muestra las regiones con mayor potencial hidroeléctrico.
+Región
+Potencial Total (MW)
+Potencial utilizable (MW)
+Amazonas
+3.385
+2.635
+Ancash
+4.199
+2.891
+Cajamarca
+3.981
+3.680
+Cusco
+14.653
+9.056
+Huánuco
+6.958
+5.221
+Junín
+5.064
+3.550
+La Libertad
+2.810
+2.228
+Lima
+2.829
+2.160
+Loreto
+11.570
+9.085
+Madre de Dios
+12.816
+8.122
+Puno
+6.416
+4.639
+San Martin
+7.496
+4.289
+Ucayali
+4.076
+2.399
+Tabla 8: Regiones con Gran Potencial Hidroeléctrico
+Fuente: Atlas de Potencial Hidroeléctrico del Perú. MINEM 2011
+Como se mencionó el potencial hidroeléctrico varía durante el año y está basado en 
+las tasas de precipitación. El mayor potencial ocurre en verano (diciembre – abril). 
+Desde la primera subasta de energía renovable del año 2009 se han instalado 298,9 
+MW de pequeñas centrales hidroeléctricas en el SEIN.
+86.253 MW
+59.955 MW
+
+
+--- Page 34 ---
+34
+2.2.4.4 Energía Geotérmica
+El Perú se localiza en el Anillo de Fuego del Pacífico una región volcánica activa que 
+se emplaza desde la punta de América del Sur hasta la costa de América del Norte 
+cruzando el Estrecho de Bering y debajo de Japón y Nueva Zelanda. En Perú la 
+Placa de Nazca bajo la placa de América del Sur resulta en la activación de volcanes 
+y los altos niveles de actividad geotérmica en la Región de los Andes. En el periodo 
+del 2010 al 2012 con el financiamiento de la Agencia de Cooperación Internacional 
+Japonesa (JICA), el MINEM contrató a una firma japonesa para desarrollar un estudio 
+sobre el potencial geotérmico para generación de energía. Este estudio dividió al 
+Perú en 6 áreas de mayor potencial geotérmico, con 61 sitios geotérmicos estimando 
+un total de potencial de generación de electricidad de 2.860 MW.
+Como se muestra en la tabla siguiente, las regiones con mayor potencial geotérmico 
+se encuentran en Cusco – Puno y el Eje Volcánico del Sur. En febrero de 2012 la 
+Corporación de Desarrollo de la Energía (EDC), una compañía de energía geotérmica, 
+en asociación con la australiana Hot Rock Limited (HRL) establecieron acciones 
+para codesarrollar los proyectos Quellaapacheta y Chocopata en el sur del país. 
+Quellaapacheta está ubicada en la Provincia de Mariscal Nieto y Chocopata en 
+la Provincia del Espinar. Las dos compañías establecieron subsidiarias en el país 
+pero en setiembre del 2012 EDC anunció que después de llevar a cabo estudios 
+preliminares en Chocopota no procederían con el proyecto.
+2.2.4.5 Energía de la Biomasa
+El incremento del uso de la biomasa para la generación de energía conlleva a pensar 
+que puede ser un impacto negativo en la deforestación, fertilidad del suelo, seguridad 
+alimentaria y protección de la biodiversidad. Debido a estas preocupaciones la 
+producción de energía con residuos de la biomasa (en vez de biomasa cultivada) 
+se enfocan en agricultura, forestería y procesos industriales conectados.
+Tabla 9: Áreas Geotérmicas Potenciales
+Fuente: Plan Maestro para el Desarrollo de la Energía Geotérmica en Perú. Matsuda y Lima. 2015.
+Área Geotérmica
+Potencia (MW)
+Cajamarca-La Libertad
+193
+Callejón de Huaylas
+236
+Churin
+125
+Central
+32
+Eje Volcánico Sur
+1.597
+Cusco-Puno
+524
+Otros (Norte del Perú)
+152
+TOTAL
+1.893
+2.649.887 MW
+
+
+--- Page 35 ---
+35
+En el sector agrícola se producen cantidades de residuos como subproductos de la 
+cosecha y después del procesamiento. Estos residuos son generados en el proceso 
+de la madera, en los cortes, leñas y aserrín.
+En el 2013 se publicó el Estudio sobre Potencial Energético de la Biomasa Residual 
+en el Perú, estimando el potencial de energía de la biomasa. El estudio se basó en 
+las estadísticas de la producción agrícola y forestal del 2003 al 2011. Concluyó que 
+los residuos agrícolas y forestales con cantidades de 10,2 MM Ton anuales tienen 
+potencial de generar 2,9 MM toe (toneladas equivalentes de petróleo) o 125 PJ por año.
+Región
+Potencial de Energía (TOE)
+Ancash
+148.001
+Cajamarca
+88.682
+Ica
+186.577
+La Libertad
+777.646
+Lambayeque
+499.979
+Lima
+387.378
+Piura
+349.061
+San Martin
+212.563
+Tabla 10: Potencial de Energía Biomasa por Región
+Fuente: Potencial de la Biomasa Residual en Perú. Assureira and Assureira. 2013
+El gran potencial de la biomasa para generación de energía proviene de los residuos 
+del maíz, el corte de la caña de azúcar, el bagazo, los residuos de algodón, residuos 
+de cascarillas de arroz y residuos de espárrago. El porcentaje por cada tipo de residuo 
+se muestra en el gráfico siguiente.
+Gráfico 12: Potencial de generación de eléctrica por tipo de residuo
+Fuente: Potencial de la Biomasa Residual en Perú. Assureira y Assureira. 2013
+Bagazo
+Follaje caña de azucar
+Pajilla de arroz
+Residuos de algodón
+Cáscara de arroz
+Residuos de espárrago
+Madera
+17,4%
+20,6%
+5,7%
+13,6%
+4,5
+2,2%
+0,8%
+
+
+--- Page 36 ---
+36
+Para la generación de la energía eléctrica, el recurso más importante de la bioenergía 
+es el biogás generado por la descomposición anaeróbica de residuos de plantas 
+y animales. Los residuos utilizados incluyen bagazo, cascarilla de arroz, residuos 
+forestales y estiércol de ganado.
+En el año 2019 el país contaba con una capacidad instalada de biomasa más biogás 
+del orden de 61,24 MW generado por 6 proyectos administrados por cinco empresas 
+peruanas que son: Agro-aurora, Aipsa, Bio-energía del Chira, Petramas y San Jacinto. 
+Los proyectos de Petramas incluyen la captura y generación de energía del biogás 
+del relleno sanitario de Huaycoloro, Santa Catalina y La Gringa. Paramonga opera 
+una planta de cogeneración de bagazo en Lima y genera energía eléctrica de los 
+residuos de la operación de la azucarera. Estos proyectos se resumen a continuación.
+2.3 Cartera de Proyectos de Energía renovable en el País
+En la última década una serie de sucesos han impactado en el sector energético, 
+como la disminución significativa en los costos de las tecnologías renovables, así 
+como su desarrollo. Esto ha llevado a que el Perú experimente un cambio en su 
+cartera de proyectos mediante un suministro eléctrico competitivo seguro y fiable 
+en base a estas nuevas tecnologías y sobre todo en contribuir en la reducción de 
+CO2 en el país, por lo cual la cartera de proyectos comprometidos se ha enfocado 
+en base a energías renovables.
+Tabla 11: Capacidad Instalada de Biomasa y Biogás
+Central
+Desarrollador / Operador
+Región
+Fuente
+Potencia MW
+Inicio de 
+operaciones
+C.T. Paramonga 1
+Paramonga
+Lima
+Bagazo
+23
+Marzo 2010
+C.T. Huaycoloro
+Petramas
+Lima
+Biogás
+4,8
+Oct 2011
+C.T. La Gringa V
+Petramas
+Lima
+Biogás
+3,2
+Sep 2015
+C.T. Catalina
+Petramas
+Lima
+Biogás
+2,4
+Dic 2017
+C.T. Caña Brava
+Bioenergía del Chira S.A.
+Piura
+Bagazo
+0
+Oct 2019
+C.T. Agroaurora
+Agroaurora S.A.C.
+Piura
+Bagazo
+27,8
+Mar 2019
+Fuente: Estadística de Operaciones 2019 (COES. 2020)
+61,2 MW
+
+
+--- Page 37 ---
+37
+Tabla 12: Proyectos Comprometidos con energías renovables.
+Fuente: Elaboración propia a partir de datos de COES 2020.
+Fecha
+Proyecto
+Potencia 
+(MW)
+Tecnología
+Empresa
+2020
+CH La Virgen
+84
+Hidroeléctrica
+La Virgen
+CH El Carmen
+9
+Hidroeléctrica – RER
+Generación Andina
+CH Manta
+20
+Hidroeléctrica – RER
+Peruana de Inversiones 
+en En. Renovables.
+CE Huambos
+18
+Eólico
+GR Paino SAC
+CE Duna
+18
+Eólico
+GR Taruca SAC
+2021
+CH Centauro 
+- Etapa I
+10
+Hidroeléctrica
+Corporación Minera del Perú S.A.
+2022
+CH Laguna Azul
+20
+Hidroeléctrica – RER
+CH Mamacocha S.R.L.
+CH Ayanunga
+20
+Hidroeléctrica – RER
+Energetica Monzon SAC
+CH Hydrika 6
+9
+Hidroeléctrica – RER
+Hydrika SAC
+CH Karpa
+20
+Hidroeléctrica – RER
+Hidroeléctrica Karpa SAC
+CH Santa Lorenza I
+19
+Hidroeléctrica – RER
+Empresa de Generación 
+Eléctrica Santa Lorenza SAC
+2023
+CH Colca
+12
+Hidroeléctrica – RER
+Hydrika SAC
+CH Hydrika 2
+4
+Hidroeléctrica – RER
+Hydrika SAC
+CH Centauro 
+- Etapa II
+10
+Hidroeléctrica
+Corporación Minera del Perú S.A.
+CH Hydrika 4
+8
+Hidroeléctrica – RER
+Hydrika SAC
+CH Hydrika 1
+7
+Hidroeléctrica – RER
+Hydrika SAC
+CH Huatziroki I
+11
+Hidroeléctrica – RER
+Empresa de Generación 
+Hidraulica Selva S.A.
+ CH Hydrika 5
+10
+Hidroeléctrica – RER
+Hydrika SAC
+2024
+CH Shima
+9
+Hidroeléctrica – RER
+Energia Hidro S.A.C.
+CH Hydrika 3
+10
+Hidroeléctrica – RER
+Hydrika SAC
+CH Kusa
+16
+Hidroeléctrica – RER
+Concesionaria Hidroeléctrica 
+Sur Medio S.A
+CH Alli
+15
+Hidroeléctrica – RER
+Concesionaria Hidroeléctrica 
+Sur Medio S.A
+TOTAL
+359 MW
+
+
+--- Page 38 ---
+38
+Luego de la cuarta subasta RER que se realizó a finales del 2015 y adjudicó proyectos 
+a inicios del 2016 no se ha realizado una nueva subasta hace 5 años. Mientras tanto 
+el mercado de proyectos de energía renovable ha continuado desarrollando estudios 
+de Pre-Operatividad en el COES del orden de 8.142 MW.
+Los proyectos RER- Eólicos que se están desarrollando a nivel estudios preliminares 
+con preoperatividad se encuentran en la zona norte del país como Piura, Lambayeque 
+y Cajamarca del orden de 3.592 MW. Asi mismo, también se vienen desarrollando 
+proyectos eólicos en la zona costera sur en la región Ica (Independencia. Marcona 
+y Poroma) del orden de 2.450 MW.
+Por otro lado, los Proyectos RER-Solares que se están desarrollando en nivel 
+estudios preliminares con preoperatividad se encuentran en la zona sur del país, en 
+las regiones de Ica. Arequipa y Moquegua con una total de 2.100 MW.
+Cabe mencionar que la mayoría de proyectos renovables en el país son eólicos 
+que suman 6.042 MW debido a que desde el 2019 ya cuentan con Potencia Firme 
+que pueden comercializar en el SEIN sin necesidad de subastas públicas. En la 
+tabla siguiente se muestran la lista de todos los proyectores RER en cartera para 
+conectarse al SEIN.
+
+
+--- Page 39 ---
+39
+Tabla 13: Oferta de Generación de Energía Renovable (ERNC) en Fase de Estudio
+Fuente: COES. 2020
+item
+Proyecto
+Tipo
+Potencia (MW)
+1
+CE Niña 1
+Eólica
+100
+2
+CE Niña 2
+Eólica
+100
+3
+CE Niña 3
+Eólica
+100
+4
+CE Niña 4
+Eólica
+150
+5
+CE Niña 5
+Eólica
+150
+6
+CE Piura 1
+Eólica
+200
+7
+CE Piura 2
+Eólica
+200
+8
+CE Piura 3
+Eólica
+250
+9
+CE Piura 4
+Eólica
+250
+10
+CE Piura 5
+Eólica
+200
+11
+CE Celendin 1
+Eólica
+250
+12
+CE Celendin 2
+Eólica
+250
+13
+CE Celendin 3
+Eólica
+200
+14
+CE Celendin 4
+Eólica
+200
+15
+CE Celendin 5
+Eólica
+200
+16
+CE Chiclayo
+Eólica
+150
+17
+CE Guadalupe 1
+Eólica
+120
+18
+CE Guadalupe 2
+Eólica
+200
+19
+CE Trujillo
+Eólica
+115
+20
+CE Chimbote
+Eólica
+57
+21
+CE Paramonga
+Eólica
+150
+22
+CS Moyobamba
+Solar
+100
+23
+CE Marcona 1
+Eólica
+250
+24
+CE Marcona 2
+Eólica
+150
+25
+CE Marcona 3
+Eólica
+250
+26
+CE Marcona 4
+Eólica
+100
+27
+CE Marcona 5
+Eólica
+350
+28
+CE Poroma 1
+Eólica
+200
+29
+CE Poroma 2
+Eólica
+200
+30
+CE Poroma 3
+Eólica
+200
+31
+CE Poroma 4
+Eólica
+200
+32
+CE Independencia 1
+Eólica
+150
+33
+CE Independencia 2
+Eólica
+200
+34
+CE Independencia 3
+Eólica
+200
+35
+CS Moquegua 1
+Solar
+100
+36
+CS Moquegua 2
+Solar
+150
+37
+CS Moquegua 3
+Solar
+50
+38
+CS Moltalvo 1
+Solar
+100
+39
+CS Moltalvo 2
+Solar
+150
+40
+CS San José 1
+Solar
+150
+41
+CS San José 2
+Solar
+150
+42
+CS San José 3
+Solar
+200
+43
+CS San José 4
+Solar
+200
+44
+CS Socabaya 1
+Solar
+100
+45
+CS Socabaya 2
+Solar
+50
+46
+CS Socabaya 3
+Solar
+50
+47
+CS Socabaya 4
+Solar
+200
+48
+CS Ocoña 1
+Solar
+200
+49
+CS Marcona 1
+Solar
+150
+8.142
+
+
+--- Page 40 ---
+40
+3.	ABASTECIMIENTO DE ELECTRICIDAD 
+DEL SECTOR MINERO
+3.1 Panorama del sector minero
+En el año 2019 el sector minero representó el 9,1% del PBI del Perú. La recaudación 
+de impuestos como ingresos fiscales en el sector minería está al 8,1% y representa 
+un 60,2% de las Exportaciones totales.
+Gráfico 13: Participación de la Minería en el PBI del país
+Fuente: BCRP – Proyecta MINEM
+PBI Minero Metálico
+2010
+8,9%
+2011
+8,2%
+2012
+7,9%
+2013
+7,8%
+2014
+7,4%
+2015
+8,3%
+2016
+9,7%
+2017
+9,9%
+2018
+9,3%
+2019
+9,1%
+100.000
+75.000
+50.000
+25.000
+-
+20,0%
+16,0%
+12,0%
+8,0%
+4,0%
+0,0%
+PBI (S/Millones)
+PBI Minería (S/ Millones)
+Part. Minera Metálica (%)
+Gráfico 14: Ingresos Tributarios Mineros
+Tributarios Mineros (S/)
+12.000
+10.000
+8.000
+6.000
+4.000
+2.000
+-
+Ingreso Tributario Minero (S/)
+Part. Ingreso Tributario (%)
+Ingresos Tributarios Mineros
+20,0%
+16,0%
+12,0%
+8,0%
+4,0%
+0,0%
+2011 2012 2013 2014 2015 2016 2017 2018 2019 2020
+17,5%
+14,7%
+9,4% 9,2%
+5,6% 5,4%
+8,6%
+10,8%
+8,1%
+7,5%
+Fuente: SUNAT – Proyecta MINEM
+
+
+--- Page 41 ---
+41
+Gráfico 15: Participación de los productos mineros en las exportaciones
+Fuente: BCRP – Proyecta MINEM
+En cuanto a la evolución anual de las inversiones mineras si bien desde el 2016 
+hasta el 2019 se presentó un incremento de los mismos por efecto de inversiones en 
+nuevos proyectos mineros y ampliación de los existentes de acuerdo a la Declaración 
+Estadística Mensual del Ministerio de Energía y Minas, al año 2020 los resultados 
+podrían variar por efecto de la crisis generada por el COVID-19.
+Participación de los productos mineros en las exportaciones
+USD 8.536 MM
+-24,1%
+38,7%
+18,5%
+4,5%
+4,0%
+4,5%
+1,1%%
+38,7%
+Cobre
+Oro
+Zinc
+Plomo
+Otros
+Mineros no Metálicos
+Resto de Productos
+
+
+--- Page 42 ---
+42
+Gráfico 16: Evolución Anual de las Inversiones Mineras
+Considerando el descenso en las inversiones de exploración, el MINEM está 
+analizando la modificación del Reglamento de Exploraciones Mineras con la que 
+sea más óptimo, competitivo, ágil y que permita reducir barreras burocráticas con 
+la finalidad de atraer mayores inversiones.
+Para tales efectos, el MINEM está considerando ampliar los supuestos de comunicación 
+previa, reemplazo de talleres de participación ciudadana que aplique en terrenos 
+eriazos o en áreas de titularidad del propio administrado, eliminar el plazo de 21 
+días de coordinación para la realización de los talleres de participación ciudadana 
+para una Ficha Técnica Ambiental (FTA), excluir a las calicatas de la definición de 
+componentes principales e incorporar un mecanismo para que la responsabilidad del 
+titular minero no se extienda pese a haber efectuado el cierre de sus componentes.
+El Perú concentra su actividad minera principalmente en la zona centro y sur del 
+país, tal como se puede apreciar en la figura mostrada a continuación.
+Fuente: Bioletín Estadístico Minero – MINEM
+Evolución Anual de las Inversiones Mineras
+(US$ Millones)
+US$ Millones
+10.000
+7.500
+5.000
+2.500
+-
+2011
+6.378
+2012
+7.498
+2013
+8.864
+2014
+8.079
+2015
+6.825
+2016
+3.334
+2017
+3.928
+2018
+4.947
+2019
+6.157
+2020*
+3.667
+*Periodo correspondiente de enero a noviembre de 2020.
+
+
+--- Page 43 ---
+43
+Ilustración 2: Evolución Anual de las Inversiones Mineras
+Fuente: BBVA Research
+Loreto
+Amazonas
+Tumbes
+Piura
+Cajamarca
+San Martín
+La Libertad
+Áncash
+Huánuco
+Ucayali
+Madre de Dios
+Cusco
+Ayacucho
+Huancavelica
+Arequipa
+Tacna
+Apurímac
+Pasco
+Junin
+Moquegua
+Puno
+Ica
+Lima
+Lambayeque
+Quecher Main
+USD 300 millones
+Inicio de operación: 2019
+Ampliación de 
+Toromocho
+USD 1.300 millones
+Inicio de operación: 2020
+Mina Justa
+USD 1.600 millones
+Inicio de operación: 2020
+Ampliación de 
+Marcona**
+USD 1.100 millones
+Inicio de operación: 2019
+Relaves B2 San Rafael
+USD 200 millones
+Inicio de operación: 2019
+Quellaveco
+USD 5.300 millones
+Inicio de operación: 2022
+Cobre
+Oro
+Estaño
+Inversión en nuevos proyectos mineros por zonas geográficas* (USD millones)
+
+
+--- Page 44 ---
+44
+En cuanto a los proyectos mineros en cartera y el estado en que se encuentran, en 
+la tabla mostrada a continuación se puede apreciar que 5 proyectos se encuentran 
+en etapa de construcción y el inicio de las operaciones de 4 de ellos se estima a 
+realizarse en el 2021 mientras que el quinto proyecto culminará en el 2023:
+Tabla 14: Proyectos Mineros en Cartera y su demanda eléctrica en MW y GWh.
+Fuente: GPAE – Osinergmin. Reporte Semestral de Monitoreo del Mercado de Productos Mineros.
+COES – Proyección de Demanda Eléctrica – Plan de Transmisión.
+Nº
+Proyecto
+Empresa
+Ubicación
+Producto 
+Principal
+Etapa de 
+Avance
+Puesta en 
+Marcha
+Inversión 
+MMUS$
+Demanda 
+MW
+Demanda 
+GWh/año
+1
+Mina Justa
+Marcobre 
+S.A.C.
+Ica
+Cobre
+Construcción
+2021
+1.600
+84
+625
+2
+Ampliación 
+Toromocho
+Minera 
+Chinalco Perú 
+S.A.
+Junín
+Cobre
+Construcción
+2021
+1.355
+83
+444
+3
+Ariana
+Ariana 
+Operaciones 
+Mineras S.A.C.
+Junín
+Cobre
+Construcción
+2021
+125
+10
+71
+4
+Quellaveco
+Anglo American 
+Quellaveco 
+S.A.
+Moquegua
+Cobre
+Construcción
+2022
+5.300
+163
+1.214
+5
+Ampliación 
+Santa Maria
+Compañía 
+Minera 
+Poderosa S.A.
+La Libertad
+Oro
+Construcción
+2022
+110
+13
+105
+6
+Optimiación 
+Inmaculada
+Compañía 
+Minera Ares 
+S.A.
+Ayacucho
+Oro
+Factibilidad
+2021
+136
+13
+94
+7
+Integración 
+Coroccohuayco
+Compañía 
+Minera 
+Antapaccay 
+S.A.
+Cusco
+Cobre
+Factibilidad
+2022
+590
+43
+344
+8
+Ampliación 
+Pachapaqui
+ICM 
+Pachapaqui 
+S.A.C.
+Ancash
+Zinc
+Factibilidad
+2023
+117
+10
+75
+9
+Corani
+Bear Creek 
+Mining S.A.C.
+Puno
+Plata
+Ingeniería de 
+Detalle
+2023
+585
+40
+290
+10
+San Gabriel (Ex 
+Chucapaca)
+Compañía 
+de Minas 
+Buenaventura 
+S.A.A.
+Moquegua
+Oro
+Pre-Factibilidad
+2023
+431
+18
+126
+11
+Yanacocha 
+Sulfuros
+Minera 
+Yanacocha 
+S.R.L.
+Cajamarca
+Cobre
+Factibilidad
+2023
+2.100
+75
+415
+12
+Pampa de 
+Pongo
+Jinzhao Mining 
+Perú S.A.
+Arequipa
+Hierro
+Ingeniería de 
+Detalle
+2024
+2.200
+247
+1.947
+13
+Zafranal
+Compañía 
+Minera Zafranal 
+S.A.C.
+Arequipa
+Cobre
+Factibilidad
+2024
+1.157
+96
+800
+14
+Magistral
+Nexa 
+Resources 
+Perú S.A.A.
+Ancash
+Cobre
+Factibilidad
+2023
+480
+38
+271
+15
+Haquira
+Minera Antares 
+Perú S.A.C.
+Apurimac
+Cobre
+Pre-Factibilidad
+2025
+1.860
+180
+1.576
+16
+Los Chancas
+Southerm 
+Perú Cooper 
+Corporation
+Apurimac
+Cobre
+Pre-Factibilidad
+2025
+2.800
+100
+820
+TOTAL
+20.946
+1.213
+9.217
+Asimismo, 7 proyectos mineros se encuentran en etapa de factibilidad y prefactibilidad 
+y 4 proyectos en ingeniería de detalle y evaluación ambiental y social. Los proyectos 
+en cartera antes mencionados suman una inversión de USD 21.000 millones.
+
+
+--- Page 45 ---
+45
+La energía es fundamental para las actividades del sector minero. Esto debido a los 
+procesos y al tratamiento de los minerales que requieren de diferentes equipos que 
+en su mayoría consumen energía eléctrica. Sin embargo, también se tiene consumo 
+de combustibles fósiles, pero orientados mayormente hacia el movimiento de tierra 
+por maquinaria pesada, transporte de minerales y transporte de personal.
+El consumo de energía en la mina y de la planta de beneficio depende de varios 
+factores tales como la capacidad de la planta, la tecnología empleada en los procesos 
+y el nivel de automatización. Es por ello que el sector minero suministra su energía 
+a través de contratos con empresas eléctricas o puede producir su energía por 
+centrales propias (hidroeléctricas, térmicas, y centrales RENC)
+De acuerdo al último Balance Nacional Energético (BNE) publicado por la Dirección 
+General de Eficiencia Energética del Ministerio de Energía y Minas en 2019, el 
+consumo de energía del sector minero fue de 75.847 TJ, de los cuales las fuentes 
+de energía más consumidas fueron la electricidad y el diésel en un 75,2% y 17,4% 
+respectivamente.
+3.2 Contratos de compra venta de electricidad de la minería
+Por otra parte, la Ley para asegurar el Desarrollo Eficiente de la Generación Eléctrica 
+– Ley Nº 28832, en su artículo 1º define como Usuarios Libres a aquellos usuarios 
+no sujetos a regulación de precios por la energía y potencia que consumen, de la 
+cual el sector minero forma parte como gran usuario libre.
+Debido a esto el sector Minero participa en el Mercado de Corto Plazo, donde la 
+compra y venta de energía se efectúa sobre la base de los costos marginales de 
+corto plazo, teniendo de esta manera la capacidad de negociación para acordar los 
+niveles de precio de generación con su suministrador, que pueden ser empresas 
+distribuidoras o empresas generadoras pertenecientes al SEIN.
+De acuerdo a la información registrada en febrero 2020 por Osinergmin, la actividad 
+económica que mostró el mayor consumo de energía del mercado libre fue el sector 
+minero con un aporte del 54% de participación tal como se visualiza en el siguiente 
+gráfico.
+Gráfico 17: Participación de fuentes de energía en el consumo final del sector Minero.
+Fuente: Balance Nacional Energético. Ministerio de Energía y Minas. Publicación 2019.
+Electricidad
+75,2%
+Fuel Oil
+0,03%
+Diesel B5
+17,4%
+Gasolina Motor
+0,001%
+Carbón Vegetal
+0,002%
+Energía Solar
+0,001%
+Gasohol
+1,5%
+Gas Licuado
+3,4%
+Leña
+0,003%
+Gas Distribuido
+2,5%
+
+
+--- Page 46 ---
+46
+Del total de energía consumida por el sector minero el 98% corresponde a contratos 
+con empresas generadoras y solo el 2% con contratos con distribuidoras, como se 
+visualiza en la siguiente tabla.
+Gráfico 18: Ventas de Energía por actividad Económica en el Mercado Libre (MW.h)
+Fuente: Osinergmin. Mercado Libre Febrero 2020.
+Otros
+15,4%
+Minería
+54,0%
+Industrial Metalúrgica
+7,4%
+Alimentos
+4,3%
+Cementos
+3,8%
+Químicos
+3,7%
+Vidrios, cauchos y plásticos
+3,5%
+Textiles
+59,19%
+Fundición
+1,6%
+Papel
+1,5%
+Bebidas
+1,3%
+Cerámicos
+0,9%
+Tabla 15: Ventas de Energía por Tipo de Suministrador en MWh a febrero 2020
+Fuente: Osinergmin. Mercado Libre Febrero 2020.
+Tipo
+Suministrador
+Energía Total en BRG (MW.h)
+Porcentaje
+Generadoras
+Electroperú
+293.194,24
+23,3%
+Kallpa
+290.206,37
+23,1%
+Enel Generación Perú
+246.818,89
+19,6%
+Engie
+207.220,58
+16,5%
+Huanza
+49.166,99
+3,9%
+Shougesa
+41.951,20
+3,3%
+Statkraft
+34.606,83
+2,8%
+Celepsa
+20.899,86
+1,7%
+Orazul Energy Perú
+11.723,12
+0,9%
+Termochilca
+9.693,36
+0,8%
+Huanchor
+9.609,52
+0,8%
+Atria Energía
+5.732,75
+0,5%
+San Gabán
+5.707,61
+0,5%
+Sdf Energía
+3.363,54
+0,3%
+Termoselva
+1.561,62
+0,1%
+Fénix Power
+837,86
+0,1%
+Total Generadoras
+1.232.294,34
+98%
+Distribuidoras
+Hidrandina
+9.243,66
+0,7%
+Enel Distribución Perú
+5.307,93
+0,4%
+Seal
+3.315,98
+0,3%
+Electro Dunas
+3.064,98
+0,2%
+Electro Puno
+1.909,81
+0,2%
+Electro Sur Este
+1.561,74
+0,1%
+Electrocentro
+720,91
+0,1%
+Coelvisac
+401,82
+0,0%
+Total Distribuidoras
+25.526,84
+2%
+TOTAL
+1.257.821,18
+100%
+
+
+--- Page 47 ---
+47
+A continuación se muestra el consumo de energía por empresas mineras de las cuales 
+se destaca Sociedad Minera Cerro Verde, que es la minera que mayor consumo 
+obtuvo en el periodo febrero 2020 con un total de 278.885,2 MWh que corresponde 
+al 22,2% del total de consumo de las empresas mineras.
+Tabla 16: Ventas de Energía por Empresa Minera en MWh a febrero 2020.
+Fuente: Osinergmin. Mercado Libre Febrero 2020.
+Nº
+Empresa
+Tipo 
+Mineral
+U,M. 
+Producción
+Producción 
+2019
+Suminisrador
+Máxima 
+Demanda 
+MW
+Consumo 
+de Energía 
+MWh
+Consumo 
+de Energía 
+Total MWh
+Porcentaje 
+Consumo 
+de Energía
+1
+Sociedad Minera Cerro Verde
+Cobre
+TMF
+473.980
+Electroperú
+519,3
+192,924
+278.885,2
+22,2%
+Kallpa
+127,8
+66,186
+Engie
+33,6
+19,776
+2
+Southerm Perú Copper
+Cobre
+TMF
+414.394
+Electroperú
+111,0
+67,293
+179.447,5
+14,3%
+Kallpa
+183,4
+112,155
+3
+Compañía Minera Antamina
+Cobre
+TMF
+459.513
+Engie
+135,6
+77,628
+77.628,3
+6,2%
+Zinc
+TMF
+365.752
+Plata
+Kg. Finos
+492.969
+4
+Minera Chinalco
+Zinc
+TMF
+190.014
+Enel Generación
+115,4
+68,143
+68.142,7
+5,4%
+5
+Minera Las Bambas
+Plata
+TMF
+382.524
+Enel Generación
+152,3
+67,833
+67.832,6
+5,4%
+6
+Compañía Minera Antapaccay
+Cobre
+TMF
+109.629
+Kallpa
+120,1
+67,827
+67.827,4
+5,4%
+7
+Hudbay Perú SAC
+Cobre
+TMF
+113.910
+Enel Generación
+92,5
+60,074
+60.073,7
+4,8%
+8
+Compañia Minera Volcán 
+(Chungar, Cerro Alpamarca y 
+Vinchos)
+Cobre
+TMF
+5.157
+Engie
+93,1
+47,992
+47.992,1
+3,8%
+Zinc
+TMF
+168.782
+Plomo
+TMF
+7.400
+9
+Minera Yanacocha
+Oro
+Gr. Finos
+16.285.718
+Engie
+57,7
+36,233
+36.232,8
+2,9%
+10
+Nexa Resource (Atacocha, El 
+Porvenir, Milpo))
+Cobre
+TMF
+39.279
+Electroperú
+69,8
+32,978
+32.997,8
+2,6%
+Zinc
+TMF
+189.484
+Plata
+Kg. Finos
+285.382
+11
+Shougang Hierro Peru
+Hierro
+TMF
+9.666.412
+Enel Generación
+57,0
+25,051
+25.051,4
+2,0%
+Shougesa
+12
+Compañía de Minas 
+Buenaventura
+Oro
+Gr. Finos
+4.315.678
+Huanza
+46,3
+24,004
+24.004,3
+1,9%
+13
+Sociedad Minera El Brocal
+Cobre
+TMF
+43.664
+Huanza
+38,0
+22,581
+22.580,5
+1,8%
+14
+Minsur
+Oro
+Gr. Finos
+3.164.002
+Engie
+23,7
+13,521
+19.228,5
+1,5%
+San Gaban
+10,0
+5,708
+15
+Minera Los Quenuales
+Zinc
+TMF
+39.709
+StatKraft
+21,8
+10,915
+18.775,1
+1,5%
+Plata
+Kg. Finos
+98.414
+Enel Generación
+15,1
+7,861
+Plomo
+TMF
+8.181
+16
+Compañía Minera Ares
+Oro
+Gr. Finos
+6.718.692
+Celepsa
+22,9
+13,454
+17.433,6
+1,4%
+SDF Energía
+5,7
+3,364
+Plata
+Kg. Finos
+415.774
+Enel Generación
+4,5
+616
+17
+Minera Barrick Misquichilca
+Oro
+Gr. Finos
+5.773.470
+Orazul Energy Perú
+19,6
+11,723
+11.723,1
+0,9%
+18
+Gold Fields La Cima
+Cobre
+TMF
+32.158
+Kallpa
+19,5
+11,368
+11.368,3
+0,9%
+Oro
+Gr. Finos
+4.927.110
+19
+Minera Shouxin Perú
+Cobre
+TMF
+17.083
+Enel Generación
+18,7
+11,233
+11.222,8
+0,9%
+Hierro
+TMF
+453.596
+20
+Compañía Minera Condestable
+Cobre
+TMF
+18.158
+StatKraft
+15,9
+9,508
+9.508,2
+0,8%
+21
+Minera Aurífera Retamas
+Oro
+Gr. Finos
+4.772.529
+Kallpa
+14,2
+8,215
+8.214,6
+0,7%
+22
+Sociedad Minera Corona 
+(Yauricocha)
+Cobre
+TMF
+10.933
+StatKraft
+10,9
+6,592
+8.592,1
+0,5%
+23
+Compañía Minera Poderosa
+Oro
+Gr. Finos
+9.345.226
+Hidrandina
+10,7
+6,554
+6.554,2
+0,5%
+24
+Compañía Minera Argentum
+Zin
+TMF
+26.207
+StatKraft
+12,2
+6,553
+6.552,6
+0,5%
+25
+TrevalliPeru
+Zinc
+TMF
+39.163
+Huanchor
+11,5
+6,474
+6.4674,0
+0,5%
+Plomo
+TMF
+5.839
+26
+Otras Mineras
+135.497,8
+10,8%
+TOTAL
+1.257.821,2
+100%
+La potencia contratada del sector minero equivale 2.450 MW que representa el 57,4% 
+de los clientes libres al mes de febrero de 2020 como se muestra en la siguiente tabla.
+
+
+--- Page 48 ---
+48
+Tabla 17: Potencia contratada por tipo de industria
+Fuente: Osinergmin. Mercado Libre Febrero 2020.
+Tipo de Industria
+Potencia Contratada (MW)
+%
+MInería
+2.450,97
+57,4%
+Metalúrgica
+349,66
+8,2%
+Alimentos y Bebidas
+321,07
+7,5%
+Comercio
+279,76
+6,5%
+Fundición
+204,23
+4,8%
+Cementos
+201,60
+4,7%
+Agroindustria
+180,89
+4,2%
+Químicas
+157,50
+3,7%
+Cerámicos
+42,40
+1,0%
+Hidrocarburos
+36,73
+0,9%
+Otros
+46,90
+1,1%
+TOTAL
+4.271,70
+100%
+3.2.1 Plazos de contratación
+Debido a la sobreoferta de generación la vigencia de los contratos con los clientes 
+libres ha ido disminuyendo con los años. A febrero 2020 de los 2.303 contratos de 
+clientes libres declarados en Osinergmin, 164 corresponden a empresas mineras, 
+de los cuales 122 son contratos con empresas generadoras y 42 son con empresas 
+distribuidoras. A continuación se muestra la vigencia de los contratos en años en el 
+sector minero.
+Estos contratos como se aprecia en las tablas siguientes han tenido una tendencia 
+a disminuir los plazos de contratación desde hace 2 años. Esto motivado por la 
+sobreoferta de generación, la cual se estima que se estabilizará a partir del 2024, 
+y la vigencia de estos estaría en el orden de los 5 a 6 años tal y como se firmaban 
+entre los años 2015 al 2018.
+Años para el 
+Vencimiento
+Total de Contratos
+Porcentaje
+Contratos con el 
+Generador
+Contratos con el 
+Distribuidor
+Hasta 1 año
+11
+6%
+8
+3
+De 1 a 2 años
+3
+1%
+1
+2
+De 2 a 5 años
+61
+37%
+29
+32
+De 5 a 10 años
+56
+34%
+52
+4
+De 10 a 15 años
+19
+11%
+18
+1
+Mayor a 15 años
+14
+8%
+14
+0
+TOTAL
+164
+100%
+ 122
+42
+Tabla 18: Vigencia de los Contratos en el Sector Minero
+Fuente: Osinergmin Febrero 2020
+
+
+--- Page 49 ---
+49
+Año de Firma de 
+Contratos
+Cantidad de Contratos
+Vigencia Promedio de 
+Contratos
+2019-2020
+40
+3 años
+2015-2018
+83
+6 años
+Anterior al 2015
+41
+11 años
+TOTAL
+164
+Tabla 19: Vigencia de acuerdo a su año de suscripción.
+Fuente: Osinergmin Febrero 2020
+3.2.2 Precios de compra de electricidad del sector minería
+La evolución de los precios del mercado libre, precios en barra y costos marginales 
+en los últimos 10 años han sufrido una variación importante. En el periodo 2009 al 
+2015 los precios monómicos (energía + potencia) del mercado libre crecieron de 
+50 a 60 US$/MWh, luego en los últimos 5 años, del 2015 al 2020 estos precios del 
+mercado libre han bajado de 60 a 44 US$/MWh debido a la guerra de generadores 
+por conseguir firmar contratos con clientes libres al existir sobre oferta de capacidad.
+Por otro lado, el precio regulado o precio en barra ha venido subiendo permanentemente 
+en los últimos 10 años de 38 US$/MWh a 60 US$/MWh debido a los sobre cargos o 
+distorsiones del mercado eléctrico que han sido cargados al peaje principal y que son 
+cerca de 10 conceptos, entre ellos: FISE, FOSE, RER, Sistemas Aislados, grandes 
+hidroeléctricas, proyectos de transmisión, Gasoducto del Sur en su momento, entre 
+otros.
+Cabe mencionar que hoy en día la tarifa al usuario final se compone del precio 
+monómico de energía más potencia que representa el 50 a 60% de la tarifa final y 
+el 40% a 50% restante está conformado por los peajes (20% a 25%) y otros cargos 
+(20% a 25%).
+Por su parte los costos marginales o costo de oportunidad desde el año 2009 al 
+2020 han venido bajando año a año de 40 US$/MWh a cerca de 10 US$/MWh 
+principalmente por la sobre oferta de generación y por la declaración de los precios 
+del gas natural.
+Gráfico 19: Evolución histórica de Precios Libres. Precios en Barra y Costos Marginales.
+Fuente: Osinergmin Febrero 2020.
+US$/MWh
+80
+70
+60
+50
+40
+30
+20
+10
+-
+ene-09
+abr-09
+jul-09
+oct-09
+ene-10
+abr-10
+jul-10
+oct-10
+ene-11
+abr-11
+jul-11
+oct-11
+ene-12
+abr-12
+jul-12
+oct-12
+ene-13
+abr-13
+jul-13
+oct-13
+ene-14
+abr-14
+jul-14
+oct-14
+ene-15
+abr-15
+jul-15
+oct-15
+ene-16
+abr-16
+jul-16
+oct-16
+ene-17
+abr-17
+jul-17
+oct-17
+ene-18
+abr-18
+jul-18
+oct-18
+ene-19
+abr-19
+jul-19
+oct-19
+ene-20
+Mercado Libre
+Regulado en Barra
+Costo Marginal
+
+
+--- Page 50 ---
+50
+En febrero 2020 el Precio Medio del Mercado Libre fue de 44,5 US$/MWh de acuerdo 
+a la información de Osinergmin, del cual se indica que para el sector Minero el precio 
+medio estuvo en 47,24 US$/MWh. El detalle de los precios medios, máximos y 
+mínimos por actividad económica se presenta a continuación.
+Gráfico 20: Detalle del Precio Medio del Mercado Libre por Actividad Económica
+Fuente: Osinergmin Febrero 2020
+US$/MWh
+60,0
+55,0
+50,0
+45,0
+40,0
+35,0
+30,0
+25,0
+Fundición
+Cementos
+Saneamiento
+Minería
+Pesquería
+Cerámicos
+Bebidas
+Agroindustria
+Bancos y Financieras
+Químicos
+Salud
+cables
+Comercio
+Vidrios, Cauchos y Plásticos
+Alimentos
+Papel
+Transporte
+Construcción
+Textiles
+Hidrocarburos
+Industria Metalúrgica
+Precio Medio por Actividad
+Precio Medio Libre Total
+Precio Regulado en Barra Lima
+Precio Medio libre por Actividad Económica Febrero 2020
+Otro aspecto relevante sobre los precios del sector minero, es que en los últimos 2 
+años (2019-2020) la tendencia ha sido a firmar contratos de corta duración (promedio 
+3 años) debido a la incertidumbre del mercado por el ingreso del gasoducto sur 
+peruano y al alto margen de reserva debido a la sobreoferta de generación, que ha 
+llevado a que los precios tengan tendencia a la baja en los últimos años.
+Tabla 20: Año de Firma de Contrato, vigencia y precio promedio
+Año de Firma de 
+Contrato
+Contratos
+Cantidad
+Vigencia 
+Promedio
+Precio Promedio 
+US$/MWh
+2019-2020
+40
+3 años
+45,26
+2015-2018
+83
+6 años
+47,73
+Anterior al 2015
+41
+11 años
+51,03
+TOTAL
+164
+47,24
+Fuente: Osinergmin Febrero 2020
+
+
+--- Page 51 ---
+51
+Tabla 21: Promedio de Precios del Mercado Libre por Empresa Minera
+Nº
+Empresa
+Suminisrador
+Máxima 
+Demanda 
+MW
+Consumo 
+de Energía 
+MWh
+Año de 
+Firma de 
+Contrato
+Vigencia de 
+Contrato 
+años
+Precio 
+Medio 
+US$MWh
+Precio 
+Promedio 
+US$MWh
+1
+Sociedad Minera 
+Cerro Verde
+Electroperú
+519,3
+192.923,7
+2014
+15
+39,2
+47,0
+Kallpa
+127,8
+66.185,6
+2011
+10
+65,9
+Engie
+33,6
+19.776,0
+2016
+6
+43,6
+2
+Southerm Perú Copper
+Electroperú
+111,0
+67.292,8
+2017
+20
+54,1
+52,4
+Kallpa
+183,4
+112.154,7
+2017
+10
+50,7
+3
+Compañía Minera 
+Antamina
+Engie
+135,6
+77.628,3
+2015
+18
+65,8
+65,8
+4
+Minera Chinalco
+Enel Generación
+115,4
+68.142,7
+2011
+15
+45,9
+45,9
+5
+Minera Las Bambas
+Enel Generación
+152,3
+67.832,6
+2017
+10
+39,7
+39,7
+6
+Compañía Minera 
+Antapaccay
+Kallpa
+120,1
+67.827,4
+2011
+14
+43,1
+43,1
+7
+Hudbay Perú SAC
+Enel Generación
+92,5
+60.073,7
+2014
+12
+61,0
+61,0
+8
+Compañia Minera 
+Volcán (Chungar, Cerro 
+Alpamarca y Vinchos)
+Engie
+93,1
+47.992,1
+2018
+6
+36,0
+36,0
+9
+Minera Yanacocha
+Engie
+57,7
+36.232,8
+2016
+4
+31,9
+31,9
+10
+Nexa Resource (Atacocha, 
+El Porvenir, Milpo))
+Electroperú
+69,8
+32.977,8
+2020
+7
+30,6
+30,6
+11
+Shougang Hierro Peru
+Enel Generación
+57,0
+25.051,4
+2018
+5
+44,3
+39,1
+Shougesa
+2019
+1
+37,3
+12
+Compañía de Minas 
+Buenaventura
+Huanza
+46,3
+24.004,3
+2013
+11
+65,8
+65,8
+13
+Sociedad Minera El Brocal
+Huanza
+38,0
+22.580,5
+2014
+10
+66,3
+66,3
+14
+Minsur
+Engie
+23,7
+13.520,9
+2017
+5
+39,2
+37,1
+San Gaban
+10,0
+5.707,6
+2019
+3
+31,1
+15
+Minera Los Quenuales
+StatKraft
+21,8
+10.914,5
+2013
+10
+42,4
+42,4
+16
+Compañía Minera Ares
+Celepsa
+15,1
+13.454,2
+2014
+11
+50,2
+58,5
+SDF Energía
+5,7
+3.363,5
+2014
+12
+51,9
+Enel Generación
+4,5
+615,9
+2016
+5
+73,4
+17
+Minera Barrick Misquichilca
+Orazul Energy 
+Perú
+19,6
+11.723,1
+2014
+6
+37,5
+37,5
+18
+Gold Fields La Cima
+Kallpa
+19,5
+11.368,3
+2017
+10
+56,0
+56,0
+19
+Minera Shouxin Perú
+Enel Generación
+18,7
+11.222,8
+2017
+6
+58,0
+58,0
+20
+Compañía Minera 
+Condestable
+StatKraft
+15,9
+9.508,2
+2014
+11
+43,3
+43,3
+21
+Minera Aurífera Retamas
+Kallpa
+14,2
+8.214,6
+2016
+5
+38,1
+38,1
+22
+Sociedad Minera 
+Corona (Yauricocha)
+StatKraft
+10,9
+6.592,1
+2013
+10
+56,0
+56,0
+23
+Compañía Minera 
+Poderosa
+Hidrandina
+10,7
+6.554,2
+2011
+8
+41,2
+41,2
+24
+Compañía Minera 
+Argentum
+StatKraft
+12,2
+6.552,6
+2018
+5
+32,9
+32,9
+25
+TrevalliPeru
+Huanchor
+11,5
+6.474,0
+2019
+5
+46,3
+46,3
+Fuente: Osinergmin Febrero 2020
+
+
+--- Page 52 ---
+52
+3.3 Mineras que han implementado energías renovables
+La energía eléctrica es un elemento importante en las actividades mineras, y en la 
+actualidad dispone de dos formas de generación propias: las centrales hidroeléctricas 
+y las centrales termoeléctricas provenientes de generadores a petróleo.
+En el Anuario Estadístico del Ministerio de Energía y Minas del 2018 se indica que 
+en total 14 empresas mineras han implementado autogeneración con recurso RER 
+(Centrales hidroeléctricas) de las cuales en su mayoría se encuentran en sistemas 
+aislados.
+En total se han implementado 114,4 MW de Potencia Efectiva en base a estos 
+recursos, el cual equivale solo al 0,88% del total de Potencia Efectiva del SEIN al 
+2019 por lo cual la autogeneración minera es un recurso mínimo y poco explorado 
+en el sector actualmente.
+A continuación, se muestra las empresas mineras que han implementado 
+autogeneración con recursos renovables.
+Tabla 22: Empresas Mineras con Generación Propia con Recursos Energéticos 
+Renovables.
+Fuente: MINEM. 2018.
+Nº
+Empresa
+Tipo de 
+Central
+Central de Generación
+Sistema
+Potencia 
+Instalada MW
+Potencia 
+Efectiva MW
+Producción Anual 
+(MWh) - 2018
+Estado
+Minería Metálica
+1
+Compañía Minera Poderosa
+Hidráulico
+C.H. El Tingo
+Aislado
+1,7
+1,7
+6.148,3
+Operativo
+2
+Compañía Minera Raura
+Hidráulico
+C.H. Cashaucro
+Aislado
+4,1
+3,7
+25.371,1
+Operativo
+3
+Compañía Minera Santa Luisa
+Hidráulico
+C.H. Huallanca Nueva
+Aislado
+4,3
+4,3
+29.811,6
+Operativo
+Hidráulico
+C.H. Pallca
+Aislado
+1,0
+1,0
+2.782,6
+Operativo
+4
+Compañía de MInas Buenaventura
+Hidráulico
+C.H. Huancarama
+Aislado
+3,9
+3,9
+11.602,2
+Operativo
+Hidráulico
+C.H. Huapa
+Aislado
+0,9
+0,8
+5.700,5
+Operativo
+Hidráulico
+C.H. Ingenio
+Aislado
+1,3
+1,3
+7.276,3
+Operativo
+Hidráulico
+C.H. Patón
+Aislado
+3,5
+3,3
+23.020,7
+Operativo
+Hidráulico
+C.H. Tucsipampa
+Aislado
+1,3
+1,2
+-
+Operativo
+6
+Compañía Minera Volcán 
+(Administradora Chungar)
+Hidráulico
+C.H. Baños I
+Aislado
+1,2
+0,9
+6.679,2
+Operativo
+Hidráulico
+C.H. Baños II
+Aislado
+0,9
+0,9
+6.779,5
+Operativo
+Hidráulico
+C.H. Baños III
+Aislado
+1,0
+1,0
+7.308,5
+Operativo
+Hidráulico
+C.H. Baños IV
+Aislado
+4,9
+4,9
+33.233,3
+Operativo
+Hidráulico
+C.H. Baños V
+Aislado
+9,2
+9,2
+72.313,8
+Operativo
+Hidráulico
+C.H. Cacray
+Aislado
+0,2
+0,2
+531,9
+Operativo
+Hidráulico
+C.H. Francois
+Aislado
+0,2
+0,0
+-
+Inoperativo
+Hidráulico
+C.H. Huanchay
+Aislado
+2,0
+1,4
+8.242,2
+Operativo
+Hidráulico
+C.H. San José
+Aislado
+2,2
+1,5
+9.355,3
+Operativo
+Hidráulico
+C.H. Shagua
+Aislado
+1,1
+1,1
+6.913,3
+Operativo
+Hidráulico
+C.H. Tingo
+Aislado
+0,0
+0,0
+7.563,6
+Operativo
+Hidráulico
+C.H. Yanahuin
+Aislado
+0,5
+0,5
+1.641,2
+Operativo
+7
+Compañía Minera San 
+Ignacio de Morococha
+Hidráulico
+C.H. Monobamba
+Aislado
+11,5
+11,5
+63.705,1
+Operativo
+8
+Compañía Minera San Valentín
+Hidráulico
+C.H. Llapay
+Aislado
+3,8
+1,3
+11.226,1
+Operativo
+9
+Consorcio Minera Horizonte
+Hidráulico
+C.H. Pías 1
+SEIN
+12,6
+12,0
+72.076,7
+Operativo
+10
+Empresa Minera Los Quenuales
+Hidráulico
+C.H. Rapaz II
+Aislado
+1,7
+1,4
+4.331,7
+Operativo
+11
+Nexa Resouces (Atacocha, El 
+Porvenir)
+Hidráulico
+C.H. Chaprin
+Aislado
+5,4
+5,2
+36.004,1
+Operativo
+Hidráulico
+C.H. Marcapampa
+Aislado
+1,2
+1,0
+4.845,0
+Operativo
+Hidráulico
+C.H. Candelaria
+Aislado
+4,7
+3,7
+23.063,8
+Operativo
+12
+Sociedad Minera El Brocal
+Hidráulico
+C.H. Jupayragra
+Aislado
+1,9
+1,3
+8.108,7
+Operativo
+Hidráulico
+C.H. Río Blanco
+Aislado
+1,4
+0,9
+6.761,8
+Operativo
+Hidráulico
+C.H. Sacsamarca
+Aislado
+0,2
+0,1
+1.079,9
+Operativo
+Hidráulico
+C.H. Yauli
+Aislado
+0,8
+0,5
+3.671,3
+Operativo
+13
+Southern Perú Cooper
+Hidráulico
+C.H. Cuajone
+Aislado
+9,0
+6,5
+40.681,8
+Operativo
+14
+ICM Pachapaqui
+Hidráulico
+C.H. San JUdas Tadeo
+Aislado
+0,9
+0,4
+1.035,0
+Operativo
+Hidráulico
+C.H. San Martín de Porres
+Aislado
+1,6
+0,4
+568,1
+Operativo
+15
+Castrovirreyna Compañia Minera
+Hidráulico
+C.H. Santa Inés
+Aislado
+1,0
+1,0
+1.469,6
+Operativo
+Sub-Total 01
+103,2
+89,7
+550.893,8
+Minería No Metálica
+14
+Unión Andina de Cementos
+Hidráulico
+C.H. Carpapata I
+SEIN
+5,6
+5,6
+46.912,9
+Operativo
+Hidráulico
+C.H. Carpapata II
+SEIN
+6,3
+6,3
+50.251,9
+Operativo
+Hidráulico
+C.H. Carpapata III
+SEIN
+12,8
+12,8
+89.553,7
+Operativo
+Sub-Total 02
+24,7
+24,7
+186.718,46
+TOTAL
+127,9
+114,4
+737.612,24
+
+
+--- Page 53 ---
+53
+3.4 Mineras con contratos con energía renovable
+En el Perú los contratos de los clientes libres se firman en base a la energía y potencia 
+suministrada. Las empresas mineras con el fin de reducir sus costos operativos 
+buscan en el mercado los mejores precios en base a la disponibilidad, ubicación y 
+confiabilidad del sistema, al tener un parque generador diverso y disgregado, son 
+pocas las empresas mineras que firman contratos de compra de energía únicamente 
+de las empresas de generación con energía limpia (Centrales Hidroeléctricas) y esto 
+se debe en mayor proporción a la cercanía de las centrales a las unidades mineras, 
+tal y como se presenta en la tabla siguiente.
+Tabla 23: Empresas Mineras con contratos con empresas de generación hidroeléctrica
+Fuente: Osinergmin Feb 2020. Elaboración propia.
+Nº
+Empresa
+Clientes
+Máxima 
+Demanda 
+MW
+Consumo de 
+Energía 
+MWh
+1
+Empresa de Generación 
+Huanza
+Compañía de Minas Buenaventura
+46,3
+24.004,3
+Sociedad Minera El Brocal
+38,0
+22.580,5
+2
+Celepsa
+Compañía Minera Ares
+22,9
+13.454.2
+3
+Huanchor
+Trevali Peru
+11,5
+6.474,0
+Compañía Minera Kolpa
+5,2
+3.135,5
+5
+Orazul Energy Perú
+Minera Barrick Misquichilca
+19,6
+11.723,1
+6
+San Gaban
+Minsur
+10,0
+5.707,6
+7
+StatKraft
+Minera Los Quenuales
+21,8
+10.914,5
+Compañía Minera Condestable
+15,9
+9.508,2
+Sociedad Minera Corona 
+(Yauricocha)
+10,9
+6.592,1
+Compañía Minera Argentum
+12,2
+6.552,6
+8
+Electroperu
+Cerro Verde
+519,3
+192.923,7
+Southern Peru Cooper
+111,0
+67.292,8
+9
+Atria
+Conjunto de Pequeñas Mineras
+10,4
+5.732,8
+TOTAL
+854,9
+386.595,8
+Por otra parte también hay contratos con empresas que dentro de su matriz manejan 
+centrales hidroeléctricas y centrales térmicas pero en menor participación tal como 
+se visualiza en la siguiente tabla obteniendo en promedio que de estos contratos la 
+potencia contratada se encuentra en el orden de los 386,9 MW.
+
+
+--- Page 54 ---
+54
+En este contexto, y mientras siga aumentando el parque de generación RER, 
+las mineras tendrán mayor posibilidad de comprar energía limpia del SEIN, esto 
+acompañado de los menores precios de generación con estas tecnologías y a 
+incentivos del Estado peruano como beneficios tributarios y la autogeneración para 
+fomentar la generación RER y comprar energía limpia en el sistema.
+Certificados de Energías Renovables
+Es importante señalar que existen empresas privadas como es el caso de Statkraft 
+que está promoviendo la venta de energía y firma de PPA que incluya una certificación 
+de energías renovables. Es decir, se garantiza que la venta de energía proviene de 
+fuentes renovables al 100% y por lo tanto con cero emisiones de GEI, reduciendo 
+la huella de carbono del usuario final de la energía. Esta certificación está avalada 
+por I-REC.
+En julio del 2020, Southern Peak Mining LP operador de la mina Condestable (Lima) 
+suscribió un PPA por 18 MW hasta el 2033 por un suministro eléctrico por 132 GWh 
+anuales con Statkraft. Por lo tanto, Minera Condestable se convierte en la primera 
+minera del país en obtener un Certificado de Energía Renovable 2 3.
+3.5 Regiones mineras con potencial de energía renovable
+Para desarrollar y analizar futuros planes de desarrollo de energía para el sector 
+minero hemos dividido el país en zonas norte, centro y sur con su potencial de 
+Recursos Energéticos Renovables como se muestra a continuación:
+	§ Zona norte – Potencial Eólico (Cajamarca, Lambayeque, La Libertad y Piura)
+	§ Zona Centro – Potencia Hidroeléctrico (Lima, Ancash, Junín, Pasco, Huánuco y 
+Huancavelica)
+	§ Zona Sur – Potencial Solar (Ica, Arequipa, Moquegua, Tacna, Cusco y Puno).
+Tabla 24: Potencia y Energía del Sector Minero suministrada con matriz variada.
+Fuente: Osinergmin Feb 2020. Elaboración propia.
+Nº
+Empresa
+Máxima 
+Demanda 
+MW
+Consumo de 
+Energía 
+MWh
+% Energía 
+Hidráulica
+% Energía 
+Térmica
+1
+Enel 
+Generación
+465,8
+246.818,9
+46%
+54%
+2
+Kallpa
+507,7
+290.206,4
+26%
+74%
+3
+Engie
+369,3
+207.220,6
+11%
+89%
+Total
+1.342,9
+744.245,8
+Hidráulico
+386,9
+211.784,6
+Térmico
+955,9
+532.461,2
+2 Ver: https://minerandina.com/es/southern-peaks-firma-con-statkraft-para-abastecerse-de-energia-limpia/ 
+3 Ver: https://www.statkraft.com.pe/comunicaciones/noticias/statkraft-peru-cierra-contrato-de-suministro-electrico-con-southern-
+peaks-mining-lp/
+
+
+--- Page 55 ---
+55
+Zona Norte:
+La zona norte del Perú es caracterizada por yacimientos principalmente de oro, 
+cobre y plata entre los cuales se destaca la Región Cajamarca, la cual está llamada a 
+convertirse en la región minera cuprífera del norte peruano. Esto gracias a los futuros 
+proyectos de Cobre entre ellos la expansión de Sulfuros de Yanacocha que tiene 
+prevista entrada en operación en el 2023 y otros proyectos que aún se encuentran 
+en etapa de desarrollo como Conga y el Galeno.
+En el 2019, como parte del abastecimiento de energía al sector minero se tuvo para 
+la zona norte una demanda eléctrica minera de 810 GWh tal y como se visualiza 
+en la siguiente tabla.
+Ilustración 3: Mapa de Regiones con Potencial de Energias Renovables
+Fuente: Elaboración propia
+Loreto
+Amazonas
+Tumbes
+Piura
+Cajamarca
+San Martín
+La Libertad
+Áncash
+Huánuco
+Ucayali
+Madre de Dios
+Cusco
+Ayacucho
+Huancavelica
+Arequipa
+Tacna
+Apurímac
+Pasco
+Junin
+Moquegua
+Puno
+Ica
+Lima
+Lambayeque
+Zona Norte - Potencial Eólico Utilizable
+- Piura:	
+7.098 MW
+- Lambayeque: 	
+7.017 MW
+- Cajamarca:	
+891 MW
+- La Libertad:	
+921 MW
+- TOTAL	
+15.927 MW
+Zona Sur - Potencial Solar Utilizable
+- Ica:	
+5,50 kWh/m2
+- Arequipa: 	
+6,08 kWh/m2
+- Moquegua:	
+6,04 kWh/m2
+- Tacna:	
+5,83 kWh/m2
+Zona Centro - Potencial Hidroeléctrico Utilizable
+- Ancash:	
+2.891 MW
+- Huánaco: 	
+5.211 MW
+- Junín:	
+3.550 MW
+- Lima:	
+2.160 MW
+- TOTAL	
+13.822 MW
+Fuente: COES-2020. Calculo de Demanda “Actualización de Plan de Transmisión 2021-2030”
+Tabla 25: Demanda de Potencia y Energía de la minería en el 2019 - Zona Norte
+Zona
+Empresa Minera
+Demanda Energía 
+2019
+GWh
+Demanda Potencia
+2019
+MW
+Norte
+Gold Fields La Cima
+148
+20
+Compañía Minera Miski Mayo
+100
+14
+La Arena
+26
+3
+Minera Yanacocha
+426
+57
+Minera Aurifera Retamas
+94
+14
+Consorcio Minero Horizonte
+16
+5
+TOTAL
+810
+113
+
+
+--- Page 56 ---
+56
+De acuerdo a la información del Ministerio de Energía y Minas y la proyección de 
+Demanda de electricidad del COES en su “Actualización del Plan de Transmisión 
+2021-2030”, se tiene para la zona norte proyectos mineros comprometidos hasta el 
+2024 con una demanda de energía eléctrica de 520 GWh elevando la demanda en 
+dicha zona en 64,2% con respecto al año 2019.
+Tal y como se indicó la zona norte del Perú cuenta con uno de los mejores potenciales 
+en energía Eólica, de acuerdo al último Atlas Eólico nacional.
+Tabla 26: Demanda de Proyectos en Potencia y Energía al 2024 – Zona Norte
+Fuente: COES-2020. Calculo de Demanda “Actualización de Plan de Transmisión 2021-2030”
+Zona
+Empresa Minera
+Demanda 
+Energía 
+GWh
+Demanda 
+Potencia 2019 
+MW
+Norte 
+(Proyectos)
+Minera Yanacocha Sulfuros
+415
+75
+Ampliación Santa Maria 
+(Minera Poderosa)
+105
+13
+TOTAL
+520
+88
+
+
+--- Page 57 ---
+57
+Ilustración 4: Mapa de Proyectos Mineros en la Zona Norte
+Fuente: Elaboración propia
+Zona Centro:
+La zona centro minera se encuentra ubicada en la Sierra Central del Perú. Esta 
+zona es ventajosa debido a sus características geológicas, ya que gran parte de 
+sus yacimientos son polimetálicos (plomo, zinc, estaño, molibdeno, etc), otra ventaja 
+notable para la zona central es su cercanía a la capital y al suministro de energía, que 
+al contar con una infraestructura más robusta y un sistema en anillo de las líneas de 
+transmisión hace que esta zona cuente con mayor confiabilidad de abastecimiento.
+Loreto
+Amazonas
+Tumbes
+Piura
+Cajamarca
+San Martín
+La Libertad
+Áncash
+Huánuco
+Ucayali
+Madre de Dios
+Cusco
+Ayacucho
+Huancavelica
+Arequipa
+Tacna
+Apurímac
+Pasco
+Junin
+Moquegua
+Puno
+Ica
+Lima
+Lambayeque
+Yanacocha 
+Sulfuros
+Ampliación 
+Santa María
+
+
+--- Page 58 ---
+58
+De entre las principales mineras que encontramos en esta zona se encuentra Minera 
+Antamina, Minera Chinalco y Minera Volcan. En el año 2019 el consumo total de 
+energía para el sector minero estuvo en el orden de los 3.717 GWh tal y como se 
+visualiza en la siguiente tabla:
+Tabla 27: Demanda de Potencia y Energía en el 2019 – Zona Centro
+Fuente: COES-2020. Calculo de Demanda “Actualización de Plan de Transmisión 2021-2030”
+Zona
+Empresa Minera
+Demanda 
+Energía 2019 
+GWh
+Demanda 
+Potencia 2019 
+MW
+Centro
+Minera Casapalca
+92
+14
+Minera Los Quenuales
+93
+12
+Doe Run (Ex Cobriza)
+56
+9
+Minera Volcan (incluye Chungar. 
+Cerro. Alpamarca y Vinchos)
+567
+80
+Sociedad Minera Corona (Yauricocha)
+69
+9
+Compañía Minera Argentum
+48
+6
+Minera Antamina
+984
+128
+Minera Chinalco (Toromocho)
+924
+115
+Minera Milpo
+285
+37
+Sociedad Minera El Brocal
+282
+38
+UM El Porvenir
+112
+14
+Compañía de Minas 
+Buenaventura (Uchucchauca)
+188
+24
+Compañía de Minas 
+Buenaventura (Julcani)
+17
+2
+TOTAL
+3.717
+489
+Así mismo, para los futuros proyectos en minería en la zona Centro se tiene un 
+crecimiento estimado de 861 GWh el cual corresponde a 23,2% de la demanda 
+actual, que se presenta a continuación:
+Tabla 28: Demanda de Proyectos en Potencia y Energía al 2024 – Zona Centro
+Fuente: COES-2020. Calculo de Demanda “Actualización de Plan de Transmisión 2021-203”
+Zona
+Empresa Minera
+Demanda 
+Energía GWh
+Demanda 
+Potencia MW
+Centro
+Ampliación Toromocho 
+ (Minera Chinalco)
+444
+83
+Ariana 
+(Ariana Operaciones Mineras)
+71
+10
+Pachapaqui (ICM Pachapaqui)
+75
+10
+Magistral (Nexa Resources)
+271
+38
+TOTAL
+861
+141
+En esta zona debido a la geografía y a los grandes desniveles se encuentra el mejor 
+potencial hidroeléctrico del país.
+
+
+--- Page 59 ---
+59
+Ilustración 5: Mapa de Proyectos Mineros en la Zona Centro
+Fuente: Elaboración propia
+Loreto
+Amazonas
+Tumbes
+Piura
+Cajamarca
+San Martín
+La Libertad
+Áncash
+Huánuco
+Ucayali
+Madre de Dios
+Cusco
+Ayacucho
+Huancavelica
+Arequipa
+Tacna
+Apurímac
+Pasco
+Junin
+Moquegua
+Puno
+Ica
+Lima
+Lambayeque
+Magistral
+Ampliación
+Pachapaqui
+Ampliación
+Toromocho
+Ariana
+Zona Sur:
+El mayor potencial de minería peruana se encuentra en la zona sur del país, la cual se 
+caracteriza por tener yacimientos variados de oro, plata, cobre, hierro y polimetálicos, 
+por lo cual gran parte de las empresas de la Gran Minería se concentran en esta 
+zona (Cerro Verde, Southern, Las Bambas, Shougang, etc) llegando a alcanzar los 
+8.826 GWh de demanda de energía, tal y como se presenta en la siguiente tabla:
+Tabla 29: Demanda de Potencia y Energía en el 2019 – Zona Sur
+Fuente: COES-2020. Calculo de Demanda “Actualización de Plan de Transmisión 2021-2030”
+Zona
+Empresa Minera
+Demanda Energía
+2019 
+GWh
+Demanda Potencia 
+2019 
+MW
+Sur
+Shougang Hierro Perú
+477
+68
+Southern Perú Cooper
+2.188
+294
+Minera Cerro Verde
+3.045
+428
+Minera Antapaccay
+797
+120
+Hudbay Perú
+718
+92
+Las Bambas
+1.166
+139
+Minera Ares Cotaruse
+221
+28
+Minsur
+148
+26
+Compañía de Minas 
+Buenaventura (Orcopampa)
+66
+10
+TOTAL
+8.826
+1.205
+
+
+--- Page 60 ---
+60
+Tal es la trascendencia de la minería en la zona sur del país que gran parte de los 
+proyectos que se tienen en cartera hasta el 2024 pertenecen a esta zona, alcanzando 
+un crecimiento de la demanda del 88,8% con respecto al 2019, el cual se presenta 
+a continuación:
+Debido al gran dinamismo esta zona es propicia para la ejecución de nuevos 
+proyectos en energía renovable, ya sea por iniciativa del sector minero o por empresas 
+generadoras, el cual se puede aprovechar por el gran potencial solar y geotérmico 
+y a la baja confiabilidad que se tiene en el sistema de transmisión del sur.
+Tabla 30: Demanda de Proyectos en Potencia y Energía al 2024 – Zona Sur
+Fuente: COES-2020. Calculo de Demanda “Actualización de Plan de Transmisión 2021-2030”
+Zona
+Empresa Minera
+Demanda 
+Energía 
+GWh
+Demanda 
+Potencia 
+MW
+Sur
+Mina Justa (Mar Cobre)
+625
+84
+Quellaveco (Anglo American)
+1.214
+163
+Inmaculada (Minera Ares)
+94
+13
+Integración Coroccohuayco 
+(Minera Antapaccay)
+344
+43
+Corani 
+(Bear Creek Mining)
+290
+40
+San Gabriel (Buenaventura)
+126
+18
+Pampas de Pongo
+1.947
+247
+Zafranal
+800
+96
+Haquira
+1.576
+180
+Los Chancas
+820
+100
+TOTAL
+7.836
+984
+
+
+--- Page 61 ---
+61
+Ilustración 6: Mapa de Proyectos Mineros en la Zona Sur
+Fuente: Elaboración propia
+3.6 Empresas mineras con interés en desarrollar energías renovables
+Dentro del sector minero, la implementación de energía renovable para autoconsumo 
+aún es muy escasa y son muy pocas las empresas mineras que han entrado en 
+este ámbito debido a que no es parte de la cartera de negocios. No obstante, en los 
+últimos años cada vez más se ve el interés del sector en implementar este tipo de 
+recurso, sobre todo para reducir sus costos de producción con precio de energía más 
+barata de lo contratado actualmente, así como generar confiabilidad de despacho 
+en sus operaciones.
+En este aspecto se ha recopilado información de las empresas mineras que han 
+venido desarrollando proyectos RER, por medio de fuentes oficiales como Osinergmin 
+y el Ministerio de Energía y Minas, así como por medio de entrevistas y/o diálogos 
+con directivos y gerentes del sector minero – energético. Para tal efecto se visualiza 
+a continuación extractos de estos proyectos y su contexto de implementación de 
+mayor a menor certeza de implementación.
+Loreto
+Amazonas
+Tumbes
+Piura
+Cajamarca
+San Martín
+La Libertad
+Áncash
+Huánuco
+Ucayali
+Madre de Dios
+Cusco
+Ayacucho
+Huancavelica
+Arequipa
+Tacna
+Apurímac
+Pasco
+Junin
+Moquegua
+Puno
+Ica
+Lima
+Lambayeque
+Las Chancas
+Haquira
+Corani
+Coroccohuayco
+Zafranal
+San Gabriel
+Mina Justa
+Inmaculada
+Pampas de Pongo
+Quellaveco
+
+
+--- Page 62 ---
+62
+Empresa:
+Compañía Minera Poderosa
+Ubicación:
+La Libertad
+Proyectos:
+C.H. Cativen I
+C.H. Cativen II
+C.H. Nimpana
+Tecnología:
+Hidroeléctrica
+Potencia Instalada:
+43 MW
+Caudal de diseño:
+3,1 m3/s
+Estado
+Puesta en Operación 2025
+Contexto: La compañía minera Poderosa concentra su actividad minera en el distrito 
+de Pataz, La Libertad; debido a que en los últimos años se encuentra en proceso de 
+expansión y desarrollo vio conveniente satisfacer su demanda energética actual y futura 
+mediante el desarrollo de infraestructura propia para generar electricidad. Es por ello 
+que se encuentra desarrollando el Proyecto de “Aprovechamiento hidroenergético de 
+las cuencas de los ríos Lavasen y Quishuar” para el desarrollo de 43 MW de Potencia 
+en tres centrales hidroeléctricas.
+Empresa:
+Compañía Minera Volcan
+Ubicación:
+Zona Centro
+Proyecto:
+Ampliación CH Tingo
+Tecnología:
+Hidroeléctrica
+Potencia Instalada:
+de 1MW a 15 MW
+Caudal de diseño:
+4 m3/s
+Estado
+Puesta en Operación 2024
+Contexto: La empresa minera Volcan cuenta a la fecha con 23 MW de capacidad 
+instalada en sus sistemas aislados que despachan a sus unidades mineras (Chungar, 
+Alpamarca, Cerro, Vinchos, etc), así mismo dentro de sus empresas de generación 
+eléctrica cuenta con la operación de dos centrales hidroeléctricas (CH. Huanchor 20 
+MW y CH. Rucuy 20 MW) las cuales ya tiene contratos con terceros. Por tal motivo, 
+para cubrir la demanda faltante se tuvo que firmar contrato con ENGIE en 2018. Esto ha 
+llevado a que se estudie la ampliación de la CH Tingo para cubrir la demanda faltante. 
+el proyecto se encuentra a espera de la aprobación de la ampliación de la Concesión 
+Definitiva para su construcción. Inversión aproximada de 37 MMUSD.
+
+
+--- Page 63 ---
+63
+Empresa:
+Minera Cerro Verde
+Ubicación:
+Arequipa
+Proyecto:
+Solar-Fotovoltaico
+Tecnología:
+Fotovoltaico
+Potencia Instalada:
+200 MW
+Estado:
+Stand By
+Contexto: Los altos costos operativos que presenta la Minera Cerro Verde, el tiempo 
+de vida de la mina que se estima hasta el 2042 y la cercanía a la subestación San José 
+de 220 Kv, ha hecho que la minera realice estudios de prefactibilidad para un proyecto 
+de energía fotovoltaica de 200MW, el cual ayudaría a reducir sus costos de producción 
+y a su vez aprovechar el vencimiento de su contrato con la generadora Kallpa (Precio 
+Actual 65 US$/MWh). Sin embargo, debido al COVID-19 este proyecto ha quedado 
+en stand-by. La alternativa que maneja la minera es realizar un contrato BOT para la 
+construcción del proyecto que se espera que se retome en los próximos años.
+Empresa:
+Compañía Minera Antapaccay
+Ubicación:
+Cuzco
+Proyecto:
+Solar-Fotovoltaico
+Tecnologia:
+Fotovoltaico
+Potencia Instalada:
+20 MW
+Estado:
+Stand By
+Contexto: Se han realizado estudios preliminares con potencia solar para generar 
+aproximadamente 20 MW como autogeneración. esto con el fin de generar parte de 
+la energía que se requiere para su Proyecto Minero Coroccohuayco el cual se estima 
+que tendrá una demanda de 40 MW.
+A la fecha estos estudios se encuentran paralizados debido al COVID-19 y se retomarían 
+en los próximos años.
+
+
+--- Page 64 ---
+64
+Empresa:
+Minera Chinalco
+Ubicación:
+Junín
+Proyecto:
+Solar-Fotovoltaico
+Tecnología:
+Fotovoltaico
+Potencia Instalada:
+Por Definir
+Estado:
+Stand By
+Contexto: Dentro de sus políticas de eficiencia energética Chinalco deberá identificar 
+proyectos con energías renovables posiblemente fotovoltaico dentro de su área de 
+influencia que logren generar por lo menos 15% de su máxima demanda. Los estudios 
+para identificar dichos proyectos a la fecha se encuentran en stand by y no se cuenta con 
+fecha definida para retomarlos cabe indicar que la potencia que actualmente consume 
+Chinalco bordea los 180 MW.
+Empresa:
+Buenaventura
+Ubicación:
+Zona Sur
+Proyecto:
+San Gabriel
+Tecnología:
+Solares
+Potencia Instalada:
+20 MW
+Estado:
+En estudios
+Contexto: Dentro de las políticas de Buenaventura. se encuentra su auto sostenibilidad, 
+con lo cual planean ser auto productores de energía eléctrica para sus unidades mineras. 
+Es por ello que cuentan con una empresa de generación: Conenhua y con su subsidiaria 
+Empresa de Generación Huanza. Con esta experiencia se ejecutó el proyecto Central 
+Hidroeléctrica Huanza que cuenta con 98 MW de capacidad instalada en el SEIN y 
+cuenta con contratos firmados de PPAs con las unidades mineras de Buenaventura.
+Dentro de sus objetivos a largo plazo plantean ser los primeros en operar con 100% de 
+tecnologías verdes, es por ello que se viene estudiando potenciales eólicos y solares 
+en las zonas norte y sur respectivamente. Actualmente se viene estudiando el potencial 
+solar en la zona sur de aproximadamente 20 MW para su futuro proyecto minero San 
+Gabriel ubicado en el departamento de Moquegua y otros potenciales en la zona norte 
+básicamente para sus procesos de cierre de mina.
+
+
+--- Page 65 ---
+65
+Empresa:
+Yanacocha
+Ubicación:
+Zona Norte
+Proyecto:
+Eolico
+Tecnología:
+Eolico
+Potencia Instalada:
+20 MW
+Estado:
+En estudios de evaluación
+Contexto: Yanacocha tiene una vida útil hasta el 2028 y se informo que parte de las 
+operaciones de la Mina se encuentran en proceso de cierre. Se espera continuar con 
+el cierre en el transcurso de los siguientes 20 años. No obstante, dentro de su cartera 
+de Proyectos Mineros se encuentra el proyecto de sulfuros, que es la modificación de 
+algunos componentes de la planta actual para el procesamiento de cobre con el cual 
+se podría ampliar la vida útil de algunas zonas de la mina hasta el 2040. El proyecto 
+minero se encuentra en etapa de factibilidad, pero la toma de decisión de continuar o 
+no se tomará el próximo año. Independientemente de si va o no el proyecto de sulfuros 
+Yanacocha implementará una central eólica cerca a la mina de una potencia aproximada 
+de 20MW con el fin de usarla para abastecimiento de electricidad para el cierre de mina 
+o para el proyecto sulfuros, como parte de política abastecimiento 100% renovables.
+4. INCENTIVOS Y BARRERAS PARA LAS ENERGÍAS 
+RENOVABLES EN LA MINERÍA
+En el siguiente capítulo se describen los principales incentivos u oportunidades así 
+como los factores que entorpecen o barreras existentes para promover la integración 
+de energías renovables en el sector minero.
+4.1 Incentivos u Oportunidades
+Para la promoción de las energías renovables en el sector minero peruano se han 
+identificado diversos tipos de incentivos u oportunidades en los aspectos regulatorios, 
+tecnológicos, económicos, políticos, ambientales y comerciales, los cuales se 
+describen a continuación.
+4.1.1 En el aspecto regulatorio
+	§ El Estado peruano decidió promover las Energías Renovables con la emisión 
+del Decreto Legislativo N° 1002 como una forma de diversificar la cartera de 
+generación de electricidad en el SEIN y reducir las emisiones de CO2. Por tal 
+motivo, las empresas mineras pueden encontrar en dicha norma una oportunidad 
+de invertir en Energías Renovables como negocio eléctrico o como autogeneración 
+beneficiándose de los mecanimos tributarios como la depreciación acelerada en 
+el impuesto a la renta en un escenario de cinco (5) años, asi como la devolución 
+del IGV de aquellos bienes de capital adquiridos para el desarrollo del proyecto 
+y de los convenios de estabilidad jurídica.
+	§ En el año 2019 Osinergmin publicó la Resolución de Consejo Directivo Nº 
+073-2019-OS/CD que otorgó potencia firme a las centrales de generación con 
+tecnología eólica. Esto significa que estas centrales ahora pueden comercializar 
+energía y potencia en la red nacional del SEIN y los titulares de generación de 
+estas centrales pueden contratar con empresas del sector minero. Por otro lado 
+las empresas mineras pueden comprar electricidad a empresas generadoras 
+con tecnología eólica o con un mix de generación que incluya a esta tecnología.
+
+
+--- Page 66 ---
+66
+	§ De acuerdo con la entrevista realizada al COES, a largo plazo se estima que hay 
+oportunidades de aumentar la participación de las RER no convencionales en la 
+matriz eléctrica nacional debido a la disminución de la sobreoferta de generación 
+para los próximos 4 años, además de los bajos costos que presentan para su 
+desarrollo y el menor tiempo de implementación comparado con otras tecnologías.
+	§ El Autoconsumo de electricidad está permitido en la Regulación Eléctrica Actual 
+desde la Ley primigenia 25844 de 1993. Esto representa una oportunidad para el 
+sector minero que desea incurrir en generación eléctrica con Energías Renovables 
+en un porcentaje dado y comprar la electricidad faltante a la Red Electrica Nacional.
+4.1.2 En el aspecto técnico
+	§ En el sector eléctrico existen congestiones por capacidad en las redes de transmisión 
+del norte y sur del Perú, ello genera incremento de costos para los actores del 
+mercado al tener que encender generación más cara como la generación térmica 
+a Diesel. Estos sobrecostos son asumidos por los generadores en virtud al 
+contrato de suministro y por los clientes libres que se encuentran en la zona de 
+influencia. Por ello, se considera como una oportunidad el contar con proyectos 
+de generación solar fotovoltaica en el sur del país, y con generación eólica en 
+el norte, que aportarían generación local en dichas zonas logrando disminuir la 
+congestión de líneas y los costos de generación y transmisión eléctrica, reduciendo 
+de esta manera las congestiones.
+	§ Los nuevos proyectos mineros del sur del país tienen una oportunidad de contemplar 
+en su diseño el abastecimiento de electricidad con generación propia con energías 
+renovables solares fotovoltaicas o CSP, por seguridad energética, debido a que 
+el sur del país es deficitario en generación de electricidad que proviene del centro 
+del país a través de líneas de transmisión eléctrica que en pocos años llegarán 
+a su máxima capacidad.
+	§ En el norte del país existen yacimientos mineros que en sus áreas de concesión 
+cuentan con importantes registros de vientos que superan los 8 m/s de acuerdo 
+al Atlas eólico Nacional y pueden desarrollar auto generación con energía eólica 
+para sus operaciones mineras o para los cierres mineros.
+	§ En el sur del país existe una de las radiaciones solares más altas del mundo 
+con valores de 6,5 kWh-m2/dia equivalente a 2.300 kWh/kW y representa una 
+oportunidad para el sector minero, ya que precisamente allí se encuentran las 
+operaciones mineras más importantes del país como Cerro Verde, Southern, 
+Las Bambas, Antapaccay, Minsur y Quellaveco entre otras. Asimismo, en el sur 
+se encuentran la mayor cartera de proyectos mineros nuevos como San Gabriel, 
+Mina Justa, Corocohuayco, Inmaculada, Corani, Pampa de Pongo, Haquira, entre 
+otros, además de Tia María.
+4.1.3 En el aspecto económico
+	§ En la actualidad los costos de las tecnologías RER no convencionales se han 
+reducido en forma sostenible respecto de los costos iniciales del año 2010. En 
+este aspecto, se identifica una oportunidad en la inversión y desarrollo de dichas 
+tecnologías respecto de los beneficios que pueden generar en un proyecto minero. 
+De acuerdo a la publicación del IRENA 2020 las tecnologías solares fotovoltaicas 
+han tenido una reducción de costos nivelados promedio de 378 US$/MWh en el 
+2010 a 68 US$/MWh en el 2019 y las tecnologías eolicas un costo promedio 86 
+US$/MWh en el 2010 a 53 US$/MWh en el 2019. Cabe mencionar que los costos 
+nivelados (LCOE) incluyen inversión más operación y mantenimiento.
+	§ Según IRENA 2020, el costo unitario de las tecnologías renovables es el más bajo 
+en comparación con otras tecnologías de generación de electricidad basadas en 
+
+
+--- Page 67 ---
+67
+Gráfico 21: Comparativa de Costo Global de Electricidad de Energías Renovables 
+2010-2019
+Fuente: REN21- 2020. IRENA
+	§ El esquema de mercado libre actual permite que los clientes industriales y mineros 
+puedan comprar energía RER sin necesidad de comprar potencia, siempre que 
+tengan el respaldo de un proyecto de fuente térmica (por tener un costo bajo) que 
+les permiten migrar a un combustible más limpio para el desarrollo de su actividad 
+productiva. Esto representa una oportunidad para las mineras que cuentan con 
+generación térmica de respaldo que pueden aportar potencia firme.
+4.1.4 En el aspecto político
+	§ El retraso del Gasoducto Sur Peruano, representa una oportunidad para el desarrollo 
+de proyectos RER. Considerando que los proyectos Mineros esperados para 
+los años siguientes requerirán de mayor consumo de potencia y energía para el 
+combustibles fósiles.
+USD2019/MWh
+400
+300
+200
+100
+0
+Capacidad (MW)
+76
+66
+49
+73
+115
+86
+53
+2010 2019
+2010 2019
+2010 2019
+2010 2019
+2010 2019
+2010 2019
+2010 2019
+37
+47
+378
+68
+182
+346
+161
+Rango de costos
+de combustibles fósiles
+Biopoder
+Energía
+geotermica
+Energía
+hidroeléctrica
+Solar
+PV
+Concentración
+de energía
+solar térmica
+Energía eólica
+marina
+Energía eólica
+terrestre
+5th percentil
+95th percentil
+< 1
+100
+200
+300
+
+
+--- Page 68 ---
+68
+año 2025 del orden de 1.213 MW y 9.217 GWh/año respectivamente, fecha en 
+la que se estima se acabará la sobreoferta de generación y se requerirán 506 
+MW aproximadamente para dicho año. Cabe mencionar que existe una cartera 
+de proyectos RER de 2.000 MW en solares fotovoltaicos y 6.142 MW en Eólicos 
+con estudios de Pre-Operatividad en trámite.
+	§ A fines de agosto 2020 el Poder Judicial dictaminó la Anulación del D.S. 043-
+2017-EM. que rige la declaración de precios del gas natural desde el 2017, con 
+lo cual las centrales térmicas a Gas Natural ya no podrán declarar sus costos 
+variables como nulos, por lo tanto, todos los costos serán auditados de ahora en 
+adelante. De acuerdo con la opinión de diferentes especialistas entrevistados la 
+eliminación de la declaración de precios del gas tendrá como efecto inmediato el 
+alza de los costos marginales (Mercado Spot) de 10 US$/MWh al orden de los 
+25 a 30 US$/MWh, es por ello que al incoporar los costos reales del gas natural 
+traerá consecuencias perjudiciales para los generadores térmicos que han firmado 
+contratos a 20 a 25 US$/MWh con las empresas mineras e industriales, ya que la 
+energía costará más cara en el mercado spot. Por ende se tendrían que renegociar 
+los contratos en el corto y mediano plazo. Esto representa una oportunidad para 
+que las mineras apuesten por el autoconsumo con renovables ante a inminente 
+subida de precios de electricidad del mercado.
+4.1.5 En el aspecto ambiental
+	§ En el aspecto ambiental la generación con energías renovables permite el cambio 
+de la matriz energética en las centrales de generación térmica que requieren 
+cumplir con la normativa ambiental relacionada a límites máximos permisibles y 
+estándares de la calidad del aire. Esto se daría principalmente en aquellas plantas 
+térmicas que operan en sistemas aislados y en la industria minera que cuenta con 
+generación con combustibles fósiles para autoconsumo.
+	§ El Perú es firmante del acuerdo de París, y se ha comprometido a realizar la 
+reducción de emisiones de gases de efecto invernadero a nivel nacional en el 
+sector energía, industria, transporte, forestal y agrícola. Esto es una oportunidad 
+para fomentar que el sector minero pueda aportar al cumplimiento del país sobre 
+dicho acuerdo en las metas relacionadas al sector energía.
+	§ Por otro lado, el sector minero es altamente intensivo en el consumo de combustibles 
+fósiles en el transporte de personal operativo (propio y de contratistas) así como 
+del personal de dirección, y para trasporte logístico de insumos y materiales. Toda 
+esta movilización se realiza en vehículos que consumen petróleo Diesel y gasolinas. 
+En este consumo de fósiles existe una gran oportunidad ambiental de reducir las 
+emisiones contaminantes a la atmósfera y de reducir costos y ganar eficiencia 
+con el uso de vehículos eléctricos. Esta es una oportunidad para la reducción de 
+costos y mejoras tecnológicas con la electromovilidad y las energías renovables.
+	§ De acuerdo a los comentarios de varios actores mineros, en el mediano plazo las 
+empresas mineras estarían realizando inversiones para el cambio de los equipos 
+mineros a diesel (scoops. perforadoras. camiones. etc) por equipos eléctricos, por 
+lo cual la demanda de energía eléctrica aumentaría en las unidades mineras. Bajo 
+este contexto es una oportunidad para que se inicien inversiones en generación 
+renovable y baterías, lo cual contribuirá a la reducción de los GEI.
+
+
+--- Page 69 ---
+69
+	§ Respecto a la gestión de emisiones de GEI. el sector minero fue uno de los 
+pioneros en desarrollar inventarios corporativos de GEI y han iniciado el desarrollo 
+de políticas de cambio climático en el país con la finalidad de alinearlas con las 
+políticas de sus casas matrices. La información de los inventarios de GEI de 
+las operaciones mineras se reportan de manera voluntaria como parte de los 
+Reportes de Sostenibilidad, y además en los reportes de sostenibilidad corporativa 
+de la Superintendencia del Mercado de Valores (SMV). El MINAM ha creado la 
+plataforma Huella Carbono Perú para promover el reporte de esta información 
+como un medio de promoción de su compromiso ambiental y también para que 
+las empresas puedan reportar su avance en la reducción de emisiones de GEI 
+y neutralización. No obstante, esta plataforma fue lanzada a fines del 2019 y a 
+la fecha aún no registra información de empresas del sector minero, siendo esta 
+una oportunidad para que las empresas mineras cuenten con una Certificación 
+de la Gestión de sus emisiones que en un futuro próximo serán exigidas por los 
+mercados internacionales.
+	§ Existen iniciativas privadas voluntarias que promueven la venta y certificación de 
+energía renovable a clientes libres. A través de este certificado la empresa que 
+compra la energía puede demostrar que esta proviene de fuentes 100% renovables. 
+A la fecha una empresa minera ha firmado un PPA que incluye la certificación 
+de energía renovable. Esta es una oportunidad para las empresas mineras que 
+desean reducir sus emisiones, para que obtengan una certificación que puedan 
+mostrar a sus partes interesadas.
+4.1.6 En el aspecto comercial
+	§ Las empresas mineras que producen sus minerales y metales con energías 
+renovables le dan un mayor valor agregado a su producción y con el tiempo serán 
+más atractivas hacia los compradores que comenzarán a pagar un valor unitario 
+de mineral por encima del mercado internacional. Prueba de ello es que hay 
+grandes empresas que están incursionando en la minería climática como Apple 
+y Tesla empleando minerales y metales producidos con Energías Renovables lo 
+cual ha incrementado el valor de sus acciones.
+	§ Existe una tendencia de los mercados de compradores de minerales y metales de 
+exigir a las empresas mineras productoras certificaciones e información sobre la 
+trazabilidad del mineral para que sea producido con energías limpias y con menores 
+emisiones de GEI entre otros atributos. En estas exigencias que deberían llegar 
+al Perú en el mediano plazo existe el interés de contar con mayores fuentes de 
+energías limpias, entre ellas las energias renovables.
+	§ El producir minerales verdes será una tendencia cada vez más común en los 
+mercados, por imagen y responsabilidad social corporativa. A nivel local la minería 
+peruana no goza de buena reputación, lo que ha llevado en los últimos años a 
+diversos conflictos sociales por temas ambientales. Es por ello que la minería 
+puede dar señales de estar apostando por la innovación con soluciones mas 
+limpias para la protección ambiental de su entorno apostando por las energías 
+renovables y la eficiencia energética.
+4.1.7 En el aspecto social
+	§ Las tecnologías renovables solar fotovoltaica y eólica ofrecen una mayor cantidad 
+de puestos de trabajo para la operación y mantenimiento en comparación a las 
+demás tecnologías como hidroeléctrica y térmicas con combustibles fósiles, de 
+acuerdo al IRENA (Agencia Internacional de Energías Renovables) como se 
+muestra a continuación.
+
+
+--- Page 70 ---
+70
+Gráfico 22: Mano de Obra de las Energías Renovable en el mundo
+Fuente: IRENA Renewable Energy and Jobs Annual Review 2019
+1,66
+2,21
+2,04
+2,16
+2,06
+1,99
+2,05
+7,28
+8,55
+9,50
+10,04
+10,13
+10,98
+10,53
+5,6
+6,3
+7,5
+7,9
+8,1
+8,9
+8,5
+Solar Fotovoltaica
+Bioenergíaa
+Energía eólica
+Calefacción solar/
+Refrigeración
+  
+Otrosb
+Energía
+hidroeléctrica
+Total
+Subtotal
+ 
+2017
+2018
+2016
+2015
+2014
+2013
+2012
+10
+8
+6
+4
+2
+0
+3
+2
+1
+0
+Millones de
+empleos
+0,89
+0,75
+2,40
+1,36
+0,22
+0,50
+0,83
+2,27
+2,50
+1,03
+2,99
+2,50
+1,08
+2,88
+2,77
+1,16
+2,74
+3,09
+1,15
+3,06
+3,37
+1,16
+3,18
+3,61
+0,76
+0,94
+0,83
+0,80
+0,81
+0,23
+0,19
+0,20
+0,24
+0,16
+0,18
+	§ Por otro lado, para cubrir el déficit de brechas en el acceso al servicio eléctrico, 
+los RER constituyen una oportunidad para el Desarrollo de la electrificación en 
+zonas rurales, aisladas y de frontera. En ese sentido, con la aprobación del nuevo 
+Reglamento de Electrificación Rural, aprobado por Decreto Supremo Nro. 018-
+2020-EM se promueven las inversiones en equipamiento para el uso productivo en 
+actividades económicas y el desarrollo de capacitación en temas de uso eficiente, 
+uso productivo y energías renovables a los usuarios. De esta forma las empresas 
+mineras pueden optar por desarrollar programas de responsabilidad social apoyando 
+actividades sostenibles con energías renovables en las comunidades aledañas.
+	§ Invertir en Renovables para el Cierre de Minas es una buena oportunidad para 
+no crear una afectación social ya que las renovables requieren mano de obra en 
+la operación y mantenimiento de dichas tecnologías.
+
+
+--- Page 71 ---
+71
+4.2 Barreras
+4.2.1 Regulatorias
+	§ La consulta previa es un derecho que tiene como finalidad el diálogo entre los pueblos 
+originarios y el Estado. Se accede a este mecanismo mediante la participación 
+libre del derecho de elección del ciudadano en el marco del Convenio 169 de la 
+OIT. La implementación de la consulta previa en el Perú si bien es una medida 
+para el desarrollo responsable de diversas actividades económicas también es 
+considerada como una actividad que le genera mayores plazos e incertidumbre y 
+que afecta a diversos proyectos de inversión pública a nivel nacional sobre todo 
+en minería. En el caso de proyectos de electricidad con energías renovables a la 
+fecha son muy pocos (cerca de 4) los que requieren procesos de consulta previa 
+por no ser proyectos catalogados o clasificados para que demanden una consulta 
+previa. En el caso de proyectos mineros, se puede apreciar los procesos cerrados 
+en la siguiente tabla:
+	§ En los últimos años, la prima (peaje) de las subastas RER ha aumentado por 
+efecto de la reducción del costo marginal lo que ha generado entre otros aspectos 
+que no se hayan efectuado nuevas subastas desde el 2015. Por ende, se estima 
+necesario que para el desarrollo de las RER se elimine la venta de potencia atada 
+a la energía asociada que permita que las RER puedan vender en ciertos bloques 
+horarios sin necesidad de determinar si tienen potencia firme que respalde dicha 
+venta.
+Tabla 31: Consultas previas efectuadas para proyectos mineros
+Consultas Previas
+1
+Exploración Aurora
+2
+Exploración Toropunto
+3
+Exploración Misha
+4
+Exploración La Merced
+5
+Exploración Apumayo
+6
+Exploración Apumayo
+7
+Exploración Corcapunta
+8
+Exploración Guadalupe
+9
+Exploración Puquiopata
+10
+Exploración Anama
+11
+Exploración Pantera
+12
+Exploración Capilla
+13
+Exploración Corani
+14
+Exploración Ares
+15
+Exploración Pinaya
+Fuente: Elaboración propia con datos del MINEM
+
+
+--- Page 72 ---
+72
+	§ El Reglamento del DL1002 ha definido que para el caso de las eólicas y solares la 
+potencia firme es igual a cero. Si bien existen opiniones técnicas que recomiendan 
+cambiar dicha situación hasta la fecha no hay un marco jurídico que lo respalde. 
+Por efecto de la modificación del Procedimiento Técnico 26 que regula el Cálculo 
+de la Potencia Firme del COES y en el marco del artículo 110° del RLCE, se define 
+la metodología de la potencia firme de las eólicas sea igual a la potencia media 
+de las horas punta porque se aplica en un periodo de escasez, aplicándosele un 
+factor de planta que le permita suscribir contratos de potencia con energía. Para 
+el caso de las Solares fotovoltaicos no se les ha otorgado potencia firme y esto 
+constiuye una barrera a la libre competencia en la red nacional.
+	§ Una barrera aplicable a las RER eólicas y solares es que con su ingreso se generan 
+intermitencias y se requiere desarrollar el mercado de servicios complementarios 
+a efectos de evitar los sobrecostos que asumen los generadores convencionales 
+por las distorsiones que estarían aportando algunas RER.
+4.2.2 Políticas e institucionales
+	§ La necesidad de definición por parte del Ejecutivo del desarrollo del Gasoducto Sur 
+Peruano en la zona sur del país es una barrera para la planificación energética; 
+toda vez que la toma de decisiones sobre su ingreso permitirá equilibrar la política 
+de planificación de proyectos de generación al 2025 – 2030.
+	§ Una barrera institucional es la ausencia de un planeamiento energético actualizado 
+respecto a la participación de las energías renovables no convencionales en el largo 
+plazo (2040-2050) y con una visión transversal que incluya a diversos sectores 
+como energía, transportes, minería, ambiente entre otros.
+4.2.3 Técnicas
+	§ Para el caso de proyectos renovables en unidades mineras de la sierra del Perú 
+con potencia instalada de 10 MW a 20 MW en promedio, se requieren como 
+mínimo 20 a 404 hectáreas de terreno plano o semiplano que no es fácil de 
+encontrar en la sierra central debido a la presencia de la cordillera de los andes. 
+Esto constituiría una barrera técnica que con el tiempo se irá reduciendo con el 
+incrementro de potencia de los paneles solare, y con su mayor uso en lugares 
+con altas inclinaciones de terreno.
+	§ Una barrera técnica de los aerogeneradores la constituye la altura sobre el nivel 
+del mar porque en dichos casos la densidad del aire se reduce y por lo tanto 
+se reducirá también la potencia y energía generada. La ubicación de muchos 
+proyectos u operaciones mineras del país están sobre los 3.500 a 4.000 metros 
+sobre el nivel del mar y a pesar de poseer buen viento, al estar en zonas de 
+mucha altura se podrá generar menor potencia y energía comparada a la que se 
+produciría en la costa (a nivel del mar). Por supuesto esto se compensa con una 
+buena cantidad de vientos.
+4.2.4 Económicas y de mercado
+	§ El desarrollo de nuevos proyectos RER en subastas deben ser pagados en la tarifa 
+final del usuario regulado como una resta de la tarifa adjudicada y el costo marginal. 
+Como el Costo Marginal de Corto Plazo (CMgCP) se ha venido reduciendo debido 
+a los bajos o nulos precios del gas natural declarados por los generadores en el 
+COES, ha originado que se incrementen injustificadamente el efecto del costo de 
+las Primas RER pagados por los clientes finales. Esto se ha convertido en una 
+barrera para que no se vuelvan a desarrollar nuevas subastas RER desde el año 
+2015, y que se solucionaría con el incremento del costo marginal del mercado.
+4 Para instalar un (1) Megawatio de capacidad instalada solar fotovoltaica se requieren de 2 hectáras aproximadamente
+
+
+--- Page 73 ---
+73
+En la actualidad los precios del mercado SPOT se encuentran bajos por efecto 
+de la Sobreoferta de generación y la demanda disminuida; por lo que se estima 
+que la generación para el norte y sur del país hasta el 2025 no requerirá de más 
+proyectos de generación eléctrica. Sin embargo, el escenario cambiará en función 
+al desarrollo de proyectos mineros, toda vez que si el sector crece y se habilita 
+el corredor minero del sur sí se requerirá mayor generación RER; lo cual puede 
+verse afectado si el gas natural llegase a desarrollarse en el sur del país puesto 
+que por la confiabilidad que ofrece dicha fuente podría ser más atractivo para las 
+mineras. En otras palabras, si se tomase la decisión de ejecutar el Gasoducto 
+sur peruano para el año 2027 o 2028 en adelante podría representar una barrera 
+para nuevos proyectos RER a partir de dicho año.
+	§ Actualmente debido a los bajos precios de contratación del mercado eléctrico 
+debido a la sobre oferta y declaración de precios del gas, las tecnologías eólicas 
+y solares no resultan tan competitivas. Esto constituye una barrera de entrada de 
+los proyectos de energías renovables.
+	§ El plazo de contratación de compra de electricidad del sector minero es de 
+aproximadamente 5 a 10 años, sin embargo en los últimos dos años estos plazos 
+han disminuido a 3 años de vigencia, esto es una barrera de entrada para el 
+desarrollo de proyectos RER que requieren como minimo de 10 años de contrato 
+PPA para poder financiar los proyectos.
+4.2.5 Culturales
+	§ El sector minero está enfocado en objetivos y metas propias de su sector y cuenta 
+con su propia terminología. Cuando los funcionarios comerciales de las empresas 
+eléctricas con tecnología renovable o no renovable les hablan de oportunidades 
+de negocio, a priori no hay un entendimiento de ambas partes por las barreras de 
+terminología que emplea cada una. Ambos tienen que conocer sus costumbres, 
+terminología e indicadores, para poder entenderse y concretar oportunidades de 
+negocio.
+	§ Existe una impresión en el sector minero que las tecnologías renovables al ser 
+intermitentes no les van a garantizar un servicio permanente, al margen de los 
+bajos precios y rapidez de instalación.
+	§ La prioridad del minero siempre será la producción ligada a actividades de seguridad. 
+Todo lo que es permisología ambiental o social, se ve como más carga de trabajo 
+en lugar de una oportunidad de innovación con renovables.
+	§ Una barrera del sector minero es la poca cultura energética que impide muchas 
+veces desarrollar proyectos renovables. Por ejemplo, un entrevistado del sector 
+proveedores de tecnología en energía renovable manifestó los siguiente: “Pocas 
+son las empresas mineras que tienen una cultura energética, ya que muchas no 
+les dan el peso requerido a la energía que impacta seriamente a su eficiencia 
+y costos, así como no tener una confiabilidad de su suministro ante cualquier 
+imprevisto. Mayor importancia es incrementar el ciclo de vida de la unidad minera, 
+que los impactos de eficiencia y confiabilidad de sus sistemas eléctricos”.
+	§ Algunos entrevistados manifiestan que el sector minero aún ve con desconfianza 
+las inversiones en los recursos renovables, esto debido a las malas experiencias 
+en sus proyectos pilotos, ya que los proveedores que emplearon no cuentan con 
+homologación y no existe tampoco un organismo que regule y supervise a estas 
+empresas cuyos productos no resultaron de buena calidad.
+
+
+--- Page 74 ---
+74
+4.2.6 Permisologia
+	§ La obtención de permisos para obtener una concesión eléctrica actualmente es 
+muy engorrosa para el sector minero. Debido a que deben regirse no solo a la 
+regulación eléctrica sino también a la regulación minera, resultando de esta manera 
+largos plazos de aprobación y retrasando la inversión, por lo cual se recomendaría 
+que para los proyectos de energía eléctrica independientemente del rubro de la 
+empresa promotora se enmarquen en la legislación eléctrica.
+5. AGENDA PENDIENTE Y RECOMENDACIONES
+Para el Sector Público
+	§ La Política Energética del país data del año 2010 en la cual se propone como 
+objetivo desarrollar las Energías Renovables No Convencionales en la Matriz 
+Eléctrica nacional con un valor de 5% hasta el año 2040. Habiéndose alcanzado y 
+superado dicho objetivo al año 2019 (5,1% de Renovables en la Matriz del SEIN), 
+se hace necesario la actualización de la Política Energética y Plan Energético 
+Nacional para fomentar una mayor participación de Energías Renovables en la 
+Matriz Eléctrica Nacional y elevar su participación.
+	§ Se tiene como agenda pendiente publicar el Plan Nacional de Energías Renovables, 
+que está indicado en el artículo 11° del Decreto Legislativo 1002 del año 2008 que 
+dice textualmente: “El MINEM elaborará en un plazo máximo de 01 (un) año a 
+partir de la vigencia del presente Decreto Legislativo, el Plan Nacional de Energías 
+Renovables, el mismo que estará en concordancia con los Planes Regionales de 
+Energías Renovables y que se enmarcará en un Plan Nacional de Energía. El 
+Plan Nacional de Energías Renovables incluirá aquellas estrategias, programas y 
+proyectos a desarrollarse utilizando energías renovables. que tienden a mejorar la 
+calidad de vida de la población y proteger el medio ambiente.” A la fecha de cierre 
+de este estudio aún no ha sido publicado el Plan Nacional de Energías Renovables.
+	§ El D.S. Nº 038-2018 que determina que la Máxima Demanda del SEIN debe darse 
+únicamente en las horas punta del Sistema (17 a 23 horas) venció en diciembre 
+2019, y a pesar de que no ha sido ampliado, se sigue aplicando en el sector eléctrico 
+nacional. Sin embargo, en los últimos 4 años la máxima demanda mensual del 
+SEIN de los meses de enero, febrero, marzo y abril ha ocurrido en horas del día y 
+de la tarde entre las 11 y 16 horas donde hay presencia de luz solar. Es decir, fuera 
+del horario de 17 a 23 horas. Por lo tanto, es necesario reevaluar y actualizar el 
+cálculo de la máxima demanda en las horas punta reales del sistema, con lo cual 
+ameritaría que a las tecnologías solares se les reconozca potencia firme porque 
+vinen participando en la máxima demanda mensual del SEIN (4 meses al año que 
+representa el 30% de participación), y precisamente es coincidente con el factor 
+de planta de estas tecnologías.
+
+
+--- Page 75 ---
+75
+	§ Una tarea pendiente del MINEM es la emisión del Reglamento de Generación 
+Distribuida, toda vez que con la Resolución Ministerial 292-2018-MEM/DM de fecha 
+02 de agosto de 2018, se publicó el “Proyecto del Reglamento de Generación 
+Distribuida” recibiéndose diversos comentarios y sugerencias para la mejora de 
+los alcances y la vigencia de la Ley de Generación Distribuida (Decreto Legislativo 
+1221 del 2015) lo cual permitirá que las actividades del mercado eléctrico mejoren 
+sus niveles de competitividad y sostenibilidad. Para el sector minero será una 
+oportunidad para invertir en generación de energías renovables para autoconsumo 
+y el excedente pueda ser comercializada a la red nacional de electricidad (SEIN).
+	§ El MINEM tiene pendiente concluir con el diseño e implementación del Sistema 
+de Planificación e Información Energética Nacional (SPEN) con la finalidad de 
+permitir la planificación y el desarrollo de un Plan Energético Nacional al 2040 
+que permita asegurar la sostenibilidad energética del futuro integrando a todas 
+las fuentes de energías y con la participación conjunta del MINEM. Gobiernos 
+Regionales y entidades públicas vinculadas al sector energía y minas mediante 
+el uso de software de gran envergadura que permita que la matriz energética a 
+largo plazo se encuentre debidamente diversificada. Dicho Sistema a la fecha se 
+encuentra pendiente de aprobación. Se espera que con el SPEN se establezcan 
+metas cuantificables del porcentaje de participación de las Energías Renovables 
+en la Matriz Eléctrica Nacional del país.
+	§ Es necesario que el MINEM modifique el marco regulatorio actual para que se 
+les permita a las Energías Renovables No Convencionales, en especial a las 
+fotovoltaicas, contratar la venta de su energía generada al SEIN sin necesidad 
+de contar con potencia firme, que es un requisito para poder comercializar su 
+energía y potencia asociada en el SEIN.
+	§ Es necesario tener dos mercados para el sector eléctrico, uno para potencia y 
+otro para energía, con el fin de dar viabilidad a los proyectos solares y eólicos. 
+Una alternativa es con bloques horarios o generación hibrida. Comercialmente 
+facilitaría separar la Potencia y la Energía, para ello se debe de innovar en el 
+tema de los contratos y en los roles del COES. En la práctica lo que realmente 
+se comercializa es la energía y no la potencia, porque la potencia se garantiza 
+ya en el sistema. Para el caso de las tecnologías solares no tienen ingresos por 
+potencia, pero la puede garantizar el sistema. Es por ello que se podría firmar 
+contratos solo de energía. Esto esta pendiente de corregir en la regulación actual.
+	§ Con relación a la Electromovilidad se encuentra pendiente por parte de Osinermign 
+la fijación tarifaria de las estaciones de carga que contribuyan al crecimiento del 
+parque automotor que permita la reducción de emisiones de CO2 y contribuya al 
+aprovechamiento de la sobreoferta eléctrica y en específico del potencial solar 
+del Perú (para el caso de vehículos eléctricos que tienen como fuente directa 
+de carga a los paneles solares) mediante el almacenamiento de la energía en 
+baterías de litio. Esta norma pendiente contribuirá a que el Sector Minero, intensivo 
+en transporte, pueda disminuir sus emisiones de GEI con la transición de sus 
+vehículos de combustión interna a vehículos eléctricos.
+
+
+--- Page 76 ---
+76
+	§ El COES ha encargado la realización de un Estudio de los Servicios Complementarios 
+de Energía en el Perú y su Adaptación para inclusión de Tecnologías no 
+Convencionales. En dicho Estudio se viene analizando que al ser las RER las que 
+generan las intermitencias en el sistema es necesario contar con un mecanismo 
+legal que permita no solo la competencia o promoción de otras RER sino de la 
+prestación y compensación de los servicios complementarios que reduzcan las 
+variaciones generadas por dichas fuentes y que no deben ser cargadas solo a 
+los generadores convencionales sin reconocimiento de los costos, sino que debe 
+generarse competencia y estos cargos deben ser remunerados.
+	§ Asimismo, está pendiente la posibilidad de incorporar en la prestación de servicios 
+complementarios de Generación a las Battery Energy Storage Systems (BESS) 
+como sistemas de almacenamiento que en un primer momento permita cargar 
+y descargar energía para prestar servicios complementarios de regulación de 
+frecuencia primaria, secundaria, terciaria, regulación de tensión y otros servicios 
+complementarios; y en un mediano y largo plazo la propuesta apunta a que los 
+operadores de almacenamiento presten servicios transversales en las actividades de 
+generación (para el recorte de la demanda de punta como arbitraje y almacenamiento 
+de energía RER), transmisión y distribución (para la reducción de congestiones 
+y mecanismos de desconexión de carga y generación) y al mercado libre (peak 
+shaving para clientes libres).
+	§ De acuerdo a las 28 entrevistas realizadas a los diferentes actores, se pudo inferir 
+que se requiere de un sistema o registro que permita a la ciudadanía en general 
+conocer el estado de los trámites administrativos referidos al sector eléctrico y 
+minero, tanto de los liderados por el MINEM como de los Gobiernos Regionales 
+con el fin de evitar duplicidad de trámites y de conocer posible superposición de 
+proyectos renovables y no renovables. Para tales efectos, los expertos consideran 
+que el sistema debe aplicar el principio administrativo de predictibilidad indicado 
+en el TUO de la Ley General del Procedimiento Administrativo.
+	§ Recientemente con la Resolución Ministerial Nro. 102-2020-MINEM/DM se aprobó 
+el Proyecto de Reglamento para optimizar el uso del Gas Natural y creación del 
+Gestor del Gas Natural con la finalidad de recibir comentarios y observaciones de 
+los agentes del mercado. Al respecto, el proyecto de reglamento tiene por objeto 
+optimizar, promover y articular la expansión y mejor aprovechamiento del Gas 
+Natural en el Perú permitiendo un mejor desarrollo de actividades económicas y 
+generando mercados más competitivos. Dicho proyecto normativo le atribuye al 
+COES la función de Gestor de Gas Natural. Las disposiciones del Reglamento 
+resultan aplicables a las operaciones de contratación de suministro de gas natural 
+y/o capacidad de transporte de gas natural de los generadores eléctricos que 
+se realicen en el mercado primario y operaciones del mercado secundario. Esta 
+norma se encuentra en análisis por parte del MINEM y las implicancias de la misma 
+recaerán de manera directa en el precio del Costo Marginal por la influencia del 
+gas natural. Para el sector minero, significará que los precios del mercado libre 
+subirán al emplearse precios reales y por ello cobra mayor importancia la inversión 
+en autoconsumo con energías renovables.
+	§ De acuerdo a las opiniones de expertos entrevistados, debe haber un sinceramiento 
+del precio del gas natural de forma que permita determinar la real competencia de 
+las fuentes de generación. Recientemente (a fines de agosto de 2020) se hizo de 
+público conocimiento un pronunciamiento del Poder Judicial que determinó que 
+las centrales térmicas a Gas ya no podrán declarar sus costos variables como 
+cero, lo cual traerá como consecuencia el incremento de los costos marginales 
+a valores de 25 a 30 US$/MWh a partir del 2021 y del orden de 45 a 50 US$/
+MWh para la zona sur de país. Está pendiente que el MINEM se pronuncie y de 
+directivas a las empresas generadoras térmicas y publique el procedimiento a 
+seguir para el cálculo de los costos variables de las centrales térmicas a gas, 
+haciendo cumplir el dictamen legal.
+
+
+--- Page 77 ---
+77
+	§ Recientemente el MINEM ha propuesto la modificación del Reglamento de la 
+Generación de Electricidad con Energías Renovables, aprobado por Decreto 
+Supremo Nro. 012-2011-EM, en lo que se refiere a la promoción de la generación 
+de geotermia en el Perú incluyendo la definición de Energía Garantizada aplicable 
+al desarrollo de proyectos geotérmicos que hayan sido adjudicados. Asimismo, 
+el MINEM se auto faculta a subastar el suministro con energía geotérmica en 
+determinadas zonas geográficas. Por lo tanto, estaría pendiente publicar una subasta 
+RER para promover la energía geotérmica en zonas centro y sur del país que son 
+precisamente zonas mineras que podrían comprar dicha electricidad generada.
+	§ Está pendiente incentivar un mayor uso de energía eléctrica limpia en la red 
+nacional, con la dación de un tipo de impuesto medioambiental como el Carbon 
+Tax, que no existe en el Perú, y que incluya a todas las industrias como la eléctrica 
+y minera de manera gradual. Un ejemplo claro para fomentar las energías limpias 
+es Chile, en donde se paga un impuesto por Tonelada de carbono emitido. De 
+llegar este tipo de regulación a Perú con un impuesto que tiene antecedentes en 
+otros países, las mineras apostarían más por la autogeneración o en su defecto 
+adquirir energías limpias del SEIN mediante contratos PPA, siendo una buena 
+oportunidad para el desarrollo de más proyectos RER en el País.
+	§ Se tiene pendiente fomentar el uso de recursos energéticos renovables en la 
+minería e industria nacional para reducir emisiones. Un ejemplo claro es la ausencia 
+de mecanismos para el fomento del uso de cementos adicionados o híbridos, es 
+decir que han sido elaborados con menor cantidad de Clinker y por lo tanto tienen 
+una menor emisión de CO2 por tonelada producida.
+	§ Está pendiente ampliar el plazo de los Beneficios Tributarios de las renovables 
+como la Depreciación Acelerada que vence en el 2025.
+	§ Está pendiente la creación de un sistema de aseguramiento de la calidad de los 
+suministros e instalaciones de energías renovables no convencionales y que 
+se acredite para su uso a nivel nacional, con apoyo de gremios, certificadoras, 
+laboratorios u otros organismos pertinentes. Este mismo sistema podría proponer 
+las competencias laborales que necesitan los técnicos y profesionales para que 
+trabajen en el sector de energía renovable, asi como proponer el programa de 
+formación complementaria para su promoción y aplicación en el sector minero 
+entre otros sectores.
+Para el Sector Privado
+	§ Los gremios del sector de energía renovable del país como la Sociedad Peruana 
+de Energías Renovables (SPR), la Cámara Peruana de Energías Renovables 
+(CAPERER), la Asociación Peruana de la Energía Solar y del Ambiente (APES), entre 
+otros, tienen el reto de lograr una mayor adhesión de miembros y de fortalecerse 
+proponiendo normas, capacitando y dando recomendaciones a la autoridad del 
+sector energía y minas sobre la ruta a seguir en el corto, mediano y largo plazo 
+para promover las renovables en el sector minero e industrial entre otros sectores.
+	§ Los actores del sector energía renovable (generadores, tecnología, consultores, 
+Epecistas, instituciones gubernamentales, academia, observatorios, entre otros) 
+tienen pendiente aunar esfuerzos para sensibilizar y capacitar al sector minero 
+en las oportunidades que ofrecen las energías renovables en especifico sobre las 
+tecnologías Solar fotovoltaica, Termosolar de Concentración (CSP), Geotermia, 
+Eólica e Hidroeléctrica entre otras para aplicarla de mayor manera durante el ciclo 
+de vida de un proyecto minero.
+	§ El Sector minero en su conjunto tiene pendiente realizar una evaluación del potencial 
+energético renovable en sus áreas de concesión minera para poder aprovechar de 
+la mejor manera el o los recursos energéticos disponibles para emplearlos como 
+autoconsumo de electricidad y de esta manera reducir sus costos y emisiones 
+de huella de carbono.
+
+
+--- Page 78 ---
+78
+	§ Se tiene pendiente realizar la promoción de PPAs Verdes, es decir, contratos de 
+electricidad producida con energías renovables como es el caso de Southern Peaks 
+con Starkraft Perú fomentando la competitividad en mercados internacionales.
+	§ Las Empresas generadoras de electricidad del país con Energías Renovables 
+tienen pendiente promover o proponer esquemas de financiamiento al sector 
+minero para desarrollar proyectos renovables en sus áreas de jurisdicción minera 
+(concesiones) mediante contratos BOT o BOOT  como se viene desarrollando 
+en otros países.
+	§ Está pendiente por parte del sector minero la generación de información de los 
+recursos energéticos renovables en sus áreas de concesión minera y del manejo 
+y uso de KPIs sobre consumo de diveras fuentes de energía y su eficiencia en 
+todo el ciclo de vida de la actividad. En especial en la fase de cierre de minas 
+que se presenta mejor para la aplicación de renovables por su largo plazo y bajas 
+tasas de financiamiento.
+	§ Invertir en Renovables para el Cierre de Minas es una muy buena oportunidad 
+para no crear una afectación social ya que las renovables requieren mano de obra 
+en la operación y mantenimiento de dichas tecnologías.
+	§ Las metas para reducir las emisiones de GEI (NDCs) del sector energía se han 
+basado en objetivos y planes del sector público, no obstante, no se hace visible 
+la implementación de las energías renovables en sectores específicos como el 
+minero, lo cual es un punto importante si se quiere lograr la implementación de 
+estas contribuciones en el país y sobre todo lograr competititividad y sostenibildiad 
+en el sector minero.
+Plan de Accion Propuesto
+En base a los puntos indicados, se plantea el siguiente “Plan de acción para las 
+Renovables en el Sector Minero” en el corto, mediano y largo plazo que incluyen 
+condiciones habilitantes y acciones especificas para la implementación.
+
+
+--- Page 79 ---
+79
+Fuente: Elaboración propia.
+Tabla 32: Plan de Acción para fomentar el uso de los RER en el Sector Minero. (Propuesta)
+Plan de acción propuesto para las renovables en el sector minero
+Objetivos de 
+Corto Plazo
+Objetivos de Mediano y Largo Plazo
+Comentario
+2021
+2022
+2023
+2024
+2025
+2026
+2027
+2028
+2029
+2030
+1.1
+Marco Legal y Regulatorio
+1.1.1
+Actualización de la Política 
+Energética del 2010.
+Incremento de la Participación 
+de Renovables para el 2030.
+1.1.2
+Elaboración del Plan 
+Nacional de Energías 
+Renovables.
+D.L. 1002 del 2008, sostuvo 
+un plazo máximo de 1 año, 
+para desarrollar el Plan. Sigue 
+pendiente.
+1.1.3
+Actualizar Cálculo de la 
+máxima demanda. D.S. Nº 
+038-2018.
+Reevaluación del horario de la 
+hora punta, D.S.038 (Vencido)
+1.1.4
+Potencia Firme para las 
+Solares.
+Debe ser equivalente a su factor 
+de plantas como las eólicas.
+1.1.5
+Aprobación de Reglamento 
+de Generación Distribuida.
+Definir mecanismo de 
+retribución.
+1.1.6
+Declaración de Precios del 
+Gas Natural.
+Se recomienda que el COES sea 
+el que despache el Gas Natural 
+con costos reales.
+1.1.7
+Planificación de la 
+Generación.
+Al igual que el Plan de 
+Transmisión, se debe contar 
+con un Plan de Generación con 
+revisión periódica.
+1.1.8
+Separación de la venta 
+de potencia y energía en 
+el SEIN.
+Las ventas de energía se 
+podrían dar en bloques horarios 
+como en Chile y vender a las 
+mineras.
+1.1.9
+Impuesto por emisiones a 
+la industria en general.
+En caso de darse, este impuesto 
+debe ser gradual, para que 
+la industria se prepare y se 
+fomente las renovables.
+1.1.10
+Reducción de la Huella de 
+Carbono e incentivos por 
+uso de energías limpias.
+Normativa para exigencias de 
+reducción de huella de carbono 
+e incentivos a quienes las 
+implementen.
+1.1.11
+Creación de Organismo de 
+Formación y Acreditación 
+en Energías Renovables.
+Esto lo podrían realizar las 
+asociaciones renovables para 
+difundir su uso en los sectores 
+del país incluido el minero.
+1.2
+Sector Minero
+1.2.1
+Capacitación en Energías 
+Renovables.
+El Sector Minero requiere ser 
+capacitado en tecnologías 
+renovables.
+1.2.2
+Evaluación de Potencial en 
+Energías Renovables.
+Trabajo en conjunto del sector 
+energético y minero.
+1.2.3
+Desarrollo de proyectos 
+Renovables en zonas 
+mineras.
+La minería debe evaluar sus 
+recursos renovables, para 
+desarrollar proyectos de 
+autoconsumo de electricidad.
+
+
+--- Page 80 ---
+80
+6.	BIBLIOGRAFÍA
+BCRP.2020. Reporte de la Inflación Junio 2020
+https://www.bcrp.gob.pe/docs/Publicaciones/Reporte-Inflacion/2020/junio/ri-junio-
+2020-recuadro-2.pdf
+Banco Mundial. 2020. Dato PBI per cápita. recuperado el 02 de julio del 2020.
+https://datos.bancomundial.org/indicator/NY.GDP.PCAP.
+CD?end=2019&locations=PE&start=1960&view=chart
+BVL. 2017. Incorporación de criterios de sostenibilidad en el mercado peruano.
+https://www.bvl.com.pe/ipgc/Reporte_PIR2017_%20Incorporacion_criterios_de_
+sostenibilidad_en_el_mercado_de_valores_peruano.pdf
+COES. 2018. Estadística de Operaciones 2017
+https://www.coes.org.pe/Portal/Publicaciones/Estadisticas/
+COES. 2019. Estadística de Operaciones 2018
+https://www.coes.org.pe/Portal/Publicaciones/Estadisticas/
+COES. 2020. Estadística de Operaciones 2019.
+https://www.coes.org.pe/Portal/publicaciones/estadisticas/estadistica2019
+IEA. 2020. Estadísticas claves del Perú año 2018. Recuperado el 30 de junio del 
+2020. https://www.iea.org/countries/peru
+MINAM.2020. Resolución Ministerial N° 110-2020. Pre- publicación del proyecto 
+“Guía para el funcionamiento de la herramientas Huella de Carbono Perú”.
+https://cdn.www.gob.pe/uploads/document/file/868712/RM._110-2020-MINAM.pdf
+MINEM. 2018. Balance Nacional de Energía año 2017
+http://www.minem.gob.pe/minem/archivos/file/DGEE/eficiencia%20energetica/
+publicaciones/BNE%202017.pdf
+MINEM.2019. Balance Nacional de Energía año 2018
+http://www.minem.gob.pe/_publicacion.php?idSector=12&idPublicacion=610
+MINEM. 2020. Anuario minero 2019. Ministerio de Energía y Minas. Primera 
+Edición.
+http://www.minem.gob.pe/minem/archivos/file/Mineria/PUBLICACIONES/
+ANUARIOS/2019/AM2019.pdf
+MINEM. 2020. Supervisión de contratos de proyectos de generación y transmisión 
+de energía eléctrica en operación.
+http://www.osinerg.gob.pe/seccion/centro_documental/electricidad/Documentos/
+Publicaciones/Compendio-Proyectos-GTE-Operacion-enero-2020.pdf
+MINEM.2020. Anuario Ejecutivo de Electricidad 2019. Recuperado el 2 de julio 
+2020
+http://www.minem.gob.pe/_publicacion.php?idSector=6&idPublicacion=614
+
+
+--- Page 81 ---
+81
+MINEM. 2016. Mapa Eólico del Perú 2016. Recuperado el 2 de julio 2020
+http://www.minem.gob.pe/minem/archivos/file/Electricidad/publicaciones/Atlas_
+Eolico_Final.pdf
+Schmerler. Daniel; Velarde. José Carlos; Rodríguez. Abel y Solís. Ben (Editores) 
+(2019). Energías renovables: experiencia y perspectivas en la ruta del Perú hacia 
+la transición energética. Osinergmin. Lima-Perú.
+https://cdn.www.gob.pe/uploads/document/file/606976/Osinergmin-Energias-
+Renovables-Experiencia-Perspectivas.pdf
+OSINERGMIN. 2019. Reporte de Análisis Económico Sectorial del Sector Minería: 
+Relación actual y futura entre el sector minero y el sector eléctrico Año 8 – N° 12– 
+diciembre 2019.
+Recuperado el 02 de julio del 2020
+https://www.osinergmin.gob.pe/seccion/centro_documental/Institucional/Estudios_
+Economicos/RAES/RAES-Mineria-diciembre-2019-GPAE-OS.pdf
+OSINERGMIN. 2020. Supervisión de Contratos de Proyectos de Generación 
+y Transmisión de Energía Eléctrica en Operación. Enero 2020. Lima Perú. 
+Recuperado el 01 de julio 2020 de
+http://www.osinerg.gob.pe/seccion/centro_documental/electricidad/Documentos/
+Publicaciones/Compendio-Proyectos-GTE-Operacion-enero-2020.pdf
+PROINVERSION. 2019. Inversiones Extranjeras en Sectores Económicos.
+https://www.investinperu.pe/modulos/JER/PlantillaStandard.
+aspx?are=0&prf=0&jer=5652&sec=1
+Tamayo. Jesús; Salvador. Julio; Vásquez. Arturo y Víctor Zurita (Editores) (2017). 
+La industria de la minería en el Perú: 20 años de contribución al crecimiento y 
+desarrollo económico del país. Osinergmin. Lima-Perú.
+https://www.osinergmin.gob.pe/seccion/centro_documental/Institucional/Estudios_
+Economicos/Libros/Osinergmin-Industria-Mineria-Peru-20anios.pdf
+Sociedad Minera Cerro Verde. 2019. Memoria Anual
+https://www.bvl.com.pe/hhii/CM0006/20190225225401/
+MEMORIA32ANUAL322018.PDF
+Empresa Minera Antapaccay. Reporte de Sostenibilidad 2018
+http://glencoreperupublicaciones.com/publication/1c15fda3/mobile/
+MINAM. 2015. Aprueban al Estrategia Nacional ante el Cambio Climático
+http://www.minam.gob.pe/wp-content/uploads/2015/09/DS_011-2015-minam.pdf
+MINEM. 2016. Reporte Anual de Gases de Efecto Invernadero – Sector Energía
+MINAM. 2018. Informe Final - Grupo de Trabajo Multisectorial de naturaleza 
+temporal encargado de generar información técnica para orientar la 
+implementación de las Contribuciones Nacionalmente Determinadas (GTM-NDC)
+http://www.minam.gob.pe/cambioclimatico/wpcontent/uploads/
+sites/127/2019/01/190107_Informe-final-GTM-NDC_v17dic18.pdfPA%C3%91OL.
+pdf
+
+
+--- Page 82 ---
+82
+MINAM. 2019. Reglamento de la Ley Marco sobre Cambio Climático
+http://www.minam.gob.pe/cambioclimatico/wp-content/uploads/sites/127/2018/12/
+REGLAMENTO-DE-LA-LEY-MARCO-SOBRE-CAMBIO-CLIMATICO_20.12.pdf
+MINAM. 2019. Catálogo de Medidas de Mitigación sobre las Contribuciones 
+Nacionales Determinadas.
+https://cdn.www.gob.pe/uploads/document/file/426371/CATALOGO_
+MITIGACION_baja_con_observaciones_levantadas.pdf
+MINAM. 2020. Decreto Supremo N°006 – 2020 - MINAM. creación de la Comisión 
+Multisectorial de carácter permanente denominada “Comisión de Alto Nivel de 
+Cambio Climático (CANCC)”. 4 de Julio del 2020.
+https://busquedas.elperuano.pe/normaslegales/decreto-supremo-que-
+crea-la-comision-multisectorial-de-carac-decreto-supremo-no-006-2020-
+minam-1869809-1/
+PRODUCE. 2018. Programación Tentativa Sectorial - Mitigación – Ministerio de la 
+Producción.
+WBCSD. 2009. The Cement Sustainable Initiative. Cement Industry Energy - 
+Getting the Number Right.
+http://ficem.org/CIC-descargas/Suiza/CSI/Cement-Industry-Energy-and-CO2-
+Performance_Getting-the-Numbers-Right.pdf
+SMV. 2015. Resolución SMV Nº 033-2015-SMV/01 https://www.smv.gob.pe/sil/
+RGG0211199800000007.pdf
+SMV. 2020. Resolución de Superintendente Nº 00018-2020SMV/2 Publicado el 
+12/02/2020. Sobre Reporte de Sostenibilidad Corporativa.
+
+
+--- Page 83 ---
+83
+7.	ANEXOS:
+7.1 Marco regulatorio del sector eléctrico
+El marco regulatorio vigente en el Perú para el desarrollo de la industria eléctrica se 
+rige fundamentalmente por los dispositivos legales mostrados en la siguiente Tabla:
+Tabla 33: Relación de Normas principales del Sector Energía del Perú
+Nro.
+Norma del sector energía peruano
+Año
+1
+Ley de Concesiones Eléctricas (LCE) aprobada por Decreto Ley N° 25844.
+1992
+2
+Reglamento de la Ley de Concesiones Eléctricas (RLCE) aprobado por Decreto Supremo Nº 
+009-93-EM.
+1993
+3
+Reglamento de Protección Ambiental en las Actividades Eléctricas aprobado por Decreto Supremo 
+029-94-EM.
+1994
+4
+Norma Técnica de Calidad de los Servicios Eléctricos (NTCSE) aprobada por Decreto Supremo 
+N° 020-97-EM.
+1997
+5
+Ley Marco de los Organismos Reguladores aprobada por Ley N° 27332.
+2000
+6
+Ley del Fondo de Compensación Social Eléctrica (FOSE) aprobada por Ley Nº 27510.
+2001
+7
+Ley de Transparencia y Simplificación de los Procedimientos Regulatorios de Tarifas aprobada 
+por Ley Nº 27838.
+2002
+8
+Ley Marco del Sistema Nacional de Gestión Ambiental aprobada por Ley Nº 28245.
+2004
+9
+Ley para Asegurar el Desarrollo Eficiente de la Generación Eléctrica (LADEG) aprobada por Ley 
+Nº 28832.
+2006
+10
+Código Nacional de Electricidad aprobado por Resolución Ministerial Nº 037-2006-MEM/DM.
+2006
+11
+Reglamento de Cogeneración aprobado por Decreto Supremo Nro. 037-2006-EM.
+2006
+12
+Reglamento del Mecanismo de Compensación para sistemas Aislados aprobado por Decreto 
+Supremo 069-2006-EM.
+2006
+13
+Reglamento de la Ley General de Electrificación Rural aprobado por Decreto Supremo 025-2007-EM.
+2007
+14
+Decreto Legislativo de Promoción de la Inversión para la Generación de Electricidad con el Uso 
+de Energías Renovables (LRER) aprobado por Decreto Legislativo Nº 1002.
+2008
+15
+Política Nacional del Ambiente aprobada por Decreto Supremo Nº 012-2009-MINAM.
+2009
+16
+Reglamento de Usuarios Libres aprobado por Decreto Supremo Nro. 020-2009-EM.
+2009
+17
+Política Energética Nacional del Perú 2010-2040 aprobada por Decreto Supremo N° 064-2010-EM.
+2010
+18
+Resolución OSINERGMIN N° 001-2010-OS/CD – Procedimiento de cálculo de prima para la 
+generación RER.
+2010
+19
+Reglamento de la Ley Orgánica de Recursos Geotérmicos aprobado por Decreto Supremo Nro. 
+019-2010-EM.
+2010
+
+
+--- Page 84 ---
+84
+Fuente: Elaboración Propia
+20
+Reglamento de Generación de Electricidad con Energías Renovables aprobado por Decreto 
+Supremo Nro. 012-2011-EM.
+2011
+21
+Ley Nº 29785. Ley del Derecho a la Consulta Previa a los Pueblos Indígenas u Ordinario. 
+Reconocido en el Convenio 169 de la Organización Internacional del Trabajo.
+2011
+22
+Ley Nº 29852. Ley del Sistema de Seguridad Energética (SISE) y del Fondo de Inclusión Social 
+Energético (FISE);
+2012
+23
+Ley Nº 29970. Ley de Afianzamiento de la Seguridad Energética (LASE) y de Promoción del 
+Desarrollo de la Petroquímica del Sur;
+2012
+24
+Reglamento de la LASE en el tema de Asegurar Capacidad de Generación. aprobado por Decreto 
+Supremo Nº 038-2013-EM;
+2013
+25
+Reglamento de la generación de electricidad con energías renovables en áreas no conectadas 
+a red. aprobado por Decreto Supremo N° 020-2013-EM
+2013
+26
+Resolución OSINERGMIN N° 035-2013- OS/CD – Procedimiento sobre el Ingreso. Modificación 
+y Retiro de instalaciones en el SEIN (Procedimiento N° 20 del COES).
+2013
+27
+Ley que mejora la Regulación de la Distribución para Promover el Acceso a la Energía Eléctrica 
+en el Perú (Generación Distribuida). Decreto Legislativo Nro. 1221.
+2015
+28
+Resolución OSINERGMIN N° 078-2016-OS/CD – Procedimiento sobre Determinación de la Energía 
+Dejada de Inyectar por Causas Ajenas al Generador RER (Procedimiento N° 38 del COES).
+2016
+29
+Decreto Legislativo 1362 por la que se aprueba la Ley Marco de Promoción de la Inversión Privada 
+mediante Asociaciones Público-Privadas y Proyectos en Activos.
+2018
+30
+Reglamento del Decreto Legislativo N° 1362. Decreto Legislativo que regula la Promoción de la 
+Inversión Privada mediante Asociaciones Público-Privadas y Proyectos en Activos aprobado por 
+Decreto Supremo Nro. 240-2018-EF.
+2018
+31
+Resolución OSINERGMIN N° 200-2009-OS/ CD – Procedimiento sobre hibridación para generación 
+RER.
+2019
+32
+Resolución OSINERGMIN N° 144-2019-OS/CD que modifica el numeral 8.6.3 del Procedimiento 
+Técnico del COES Nº 26 “Cálculo de la Potencia Firme” (PR-26) aprobado anteriormente mediante 
+la resolución Ministerial Nº 344-2004-MEM/DM y que otorga potencia firme a las tecnologías eólicas.
+2019
+33
+Reglamento para la Protección Ambiental en las Actividades Eléctricas. Decreto Supremo N° 
+014-2019-EM. Reemplaza al D.S.29-94-EM de 1994.
+2019
+34
+Reglamento de la Ley General de Electrificación Rural. aprobado por Decreto Supremo 018-2020-EM
+2020
+35
+Proyecto de Decreto Supremo que modifica diversas disposiciones del Sector Electricidad. 
+Resolución Ministerial Nro. 175-2020-MINEM/DM.
+2020
+36
+Decreto Supremo Nro. 022-2020-EM que aprueba disposiciones sobre la infraestructura de carga 
+y abastecimiento de electricidad para la movilidad eléctrica
+2020
+
+
+--- Page 85 ---
+85
+Norma reciente de Electromovilidad
+Mediante Decreto Supremo Nro. 022-2020-EM publicado en el 21 de agosto de 2020 
+en el Diario Oficial El Peruano, se aprobaron las disposiciones sobre la infraestructura 
+de carga y abastecimiento de energía eléctrica para la movilidad eléctrica. El objetivo 
+principal de dicha norma es generar el uso eficiente de la energía y coayudar a reducir 
+el consumo de combustible fósil, disminuir la emisión de gases de efecto invernadero 
+y otros contaminantes, y dar cumplimiento de los compromisos internacionales en 
+materia ambiental ratificados por el Perú, así como reducir daños en la salud pública.
+El referido Decreto Supremo indica que la carga de baterías para la movilidad eléctrica 
+tiene carácter comercial y se efectúa en condiciones de competencia, acceso público 
+y de prestación nacional mediante el uso de infraestructura de carga que accede 
+a las redes eléctricas y garantiza la interoperabilidad. Para tales efectos, personas 
+naturales o jurídicas pueden acceder a brindar el servicio siempre que demuestren 
+que cuentan con los requisitos técnicos y de seguridad; pudiendo incluso participar 
+los actuales centros de abastecimiento. La norma también prevé la posibilidad de 
+carga privada de baterías sin fin comercial para el consumo propio o consumo dentro 
+de las mismas instalaciones del titular del suministro.
+El Decreto Supremo ha mantenido que la Supervisión y Fiscalización queden a cargo 
+de Osinergmin preservando la seguridad ante la presunción de existencia de peligro 
+para las personas o propiedades. Además, estará a cargo de publicar los precios 
+del servicio de carga de baterías, según lo que reporten las estaciones de carga; 
+velando por la competencia, eficiencia y equidad de los precios entre el proveedor 
+y usuario del servicio.
+En lo que respecta al reemplazo de la flota vehicular se autoriza a entidades públicas 
+a sustituirlas en el marco del Plan Referencial del Uso Eficiente de la Energía del 
+MINEM. Otra de las disposiciones es la priorización de por lo menos un estacionamiento 
+para vehículos eléctricos.
+Con relación a la vigencia de la norma el Decreto Supremo establece que en el 
+plazo de un año deberá aprobarse el reglamento para la instalación y operación de 
+la infraestructura de carga de movilidad eléctrica.
+En ese sentido, las entidades públicas involucradas en el desarrollo y gestión de 
+la electromovilidad tienen un año para implementar la normativa que permita el 
+reemplazo de la flota vehicular mediante sistemas eficientes y poco contaminantes, 
+lo que además se debe realizar bajo los principios de competencia, eficiencia y 
+equidad para los participantes.
+Esta es una buena señal que permitirá que el sector minero pueda adaptarse a 
+contratar sus flotas de transporte de mineral y buses de personal con vehículos 
+eléctricos y que puedan instalar sus propias estaciones de recarga de electricidad 
+para dichos vehículos.
+
+
+--- Page 86 ---
+86
+7.1.1 Marco Regulatorio RER
+En el año 2008 se publicó el Decreto Legislativo Nro. 1002, que establece la Promoción 
+de la Inversión para la Generación de Electricidad con el uso de Energías Renovables; 
+el cual determina como prioridad el desarrollo y promoción de las fuentes de energía 
+renovable, definidas como Recursos Energéticos Renovables (RER) que involucran 
+las fuentes: solar, eólica, geotermia, biomasa e hidroeléctricas menores a 20 MW 
+de capacidad.
+La promoción de la generación de electricidad con recursos energéticos renovables 
+- RER está asignada al MINEM, quien es la autoridad nacional competente.
+El D.L. 1002 estableció que para el año 2013 un 5% del consumo total de electricidad 
+en el Sistema Eléctrico Interconectado Nacional (SEIN) debería provenir de energías 
+renovables no convencionales. La pequeña hidroeléctrica, menor a 20 MW, no se 
+incluyó en dicho porcentaje con la finalidad de promover la instalación de las centrales 
+de generación con módulos solares fotovoltaicos, turbinas eólicas, combustión de 
+biomasa, mareomotriz y geotérmica.
+La promoción normativa establece que el uso de energías renovables sustentadas en 
+el mecanismo de las Primas RER se desarrollará bajo las siguientes consideraciones:
+	§ Determinación de un porcentaje máximo en que debe participar la electricidad 
+generada a partir de las RER en el consumo nacional de electricidad5, sin considerar 
+en el porcentaje a las centrales hidroeléctricas.
+	§ Asignación de las cuotas de participación y tarifas estables a largo plazo entre 
+las centrales RER definidas en cada subasta;
+	§ Despacho prioritario de las RER en la generación de electricidad;
+	§ Valorización de la Inyección neta de energía eléctrica producida con RER 
+considerando: (i) Costos Marginales de Corto Plazo (CMgCP) y (ii) un monto 
+por concepto de Prima6, determinado como la diferencia entre la valorización de 
+sus inyecciones de energía neta a la correspondiente Tarifa de Adjudicación y 
+la valorización de los CMgCP. El resultado es pagado durante el año siguiente 
+considerando una actualización aplicando la tasa de descuento de 12% de acuerdo 
+con el artículo 79 de la LCE.
+	§ Primas liquidadas o pagadas por todos los usuarios eléctricos del país mediante 
+los recargos en el Peaje por Conexión (tarifa de transmisión eléctrica).
+	§ Beneficio tributario de la depreciación acelerada de activos en 5 años para efectos 
+del impuesto a la renta.
+	§ Devolución del Impuesto General a las Ventas – IGV que gravan la importación 
+de bienes de capital nuevos.
+5 En la actualidad se mantiene el porcentaje objetivo de las RER (excluyendo las hidroeléctricas) es 5% del consumo de energía. Sin 
+perjuicio de ello, el MINEM cada dos (2) años debe establecer el porcentaje objetivo por tipo de tecnología.
+6 Las Primas son pagadas por todos los usuarios eléctricos del país a través de los recargos en el Peaje por Conexión como parte de 
+las tarifas de transmisión eléctrica.
+
+
+--- Page 87 ---
+87
+De acuerdo con lo establecido en el Decreto Supremo Nro. 012-2011-EM. Reglamento 
+de Generación de Electricidad con Energías Renovables y modificatorias, la 
+adjudicación de la potencia y energía de las RER se efectúan mediante Subasta 
+Pública.
+Mediante las Subastas Públicas llevadas a cabo por OSINERGMIN todos los 
+participantes entregan sus ofertas de energía anual (MWh) y el precio asociado (en 
+US$/MWh); adjudicándoseles las Primas RER a las ofertas que ofrecen los menores 
+precios hasta cubrir las cuotas de energía previamente definidas según información 
+del COES y OSINERGMIN.
+En el marco de las Subastas Públicas establecidas en el Reglamento RER, el 
+OSINERGMIN ha adjudicado potencia y energía a través del desarrollo de cuatro 
+Subastas RER. En ese sentido, en la siguiente Tabla se muestra el detalle de la 
+Potencia (MW) y Energía (GWh/año) adjudicada por cada fuente RER:
+Fuente: Elaboración Propia
+Tabla 34: Potencia y Energía adjudicada por tipo de fuente en Subastas RER.
+Tecnología
+Potencia 
+MW
+Energía Adjudicada 
+GWh/año
+Hidroeléctrica
+411,65
+2.497,97
+Eólica
+252,00
+1.154,36
+Solar
+200,48
+566,40
+Biomasa
+7,50
+54,72
+TOTAL
+871,63
+4.273,45
+El cálculo de la Potencia Firme de las unidades de generación RER se efectúa 
+considerando lo señalado por el COES, a través de sus procedimientos técnicos. 
+Actualmente a las centrales eólicas y solares se les asigna cero como potencia 
+firme. El ingreso por potencia de todo Generador RER forma parte de los Ingresos 
+Garantizados por Potencia Firme del SEIN.
+Los Generadores RER tienen el derecho de “Open Access” sobre las redes de 
+transmisión y distribución; en consecuencia, pagan por el costo incremental incurrido en 
+el uso de las redes de distribución. Cabe indicar que el costo incremental se determina 
+en función a las inversiones en mejoras, reforzamientos y/o ampliaciones de las 
+redes de distribución para permitir técnicamente la inyección de energía producida.
+Con relación a los sistemas de transmisión y/o distribución del SEIN, los generadores 
+cuya producción se basa en RERs, como ya se ha mencionado tienen prioridad 
+para conectarse.
+Los titulares de concesiones de generación de energía eléctrica mediante el uso de 
+tecnologías RER requieren de Concesión Definitiva por parte del MINEM y con ello 
+se les asigna el derecho de solicitar al MINEM la imposición de servidumbres que 
+corresponda para el desarrollo del proyecto.
+
+
+--- Page 88 ---
+88
+Impressum 
+Publicado por
+Deutsche Gesellschaft für Internationale Zusammenarbeit (GIZ) GmbH 
+Como empresa federal, la GIZ asiste al Gobierno de la República Federal de Alemania 
+en su labor para alcanzar sus objetivos en el ámbito de la cooperación internacional 
+para el desarrollo sostenible
+Domicilios de la empresa
+Bonn y Eschborn, Alemania
+Proyecto “Cooperación regional para la gestión sustentable de los recursos mineros 
+en los países andinos“ – Proyecto financiado por el Ministerio Federal de Cooperación 
+Económica y Desarrollo e implementado por la oficina de la GIZ en Chile
+Federico Froebel 1776 – Providencia – Santiago de Chile
+T +56 2 2719 3900
+F + 56 2 2719 3934
+giz-chile@giz.de
+www.giz.de | www.minsus.net
+Versión
+Enero del 2021
+Diseño y diagramación
+Willy Román A. | www.wrdesign.cl
+Autores
+José Antonio Estela – Consultor externo – Sami Energy
+César Rodríguez – Consultor externo – Sami Energy
+Tania Zamora – Consultora externa Sami Energy (parte del equipo hasta julio de 2020)
+Alexandra Ching – Consultora externo – Sami Energy
+Coordinación
+Nicolas Maennling – Asesor principal GIZ
+Víctor Andrés Garzón – Asesor técnico
+Los links a documentos o páginas web que se han introducido fueron visitados y 
+consultados en el periodo de redacción de este documento, entre junio y octubre de 
+2020, cualquier cambio en los mismos o su inutilización posterior no son atribuibles 
+a GIZ. La responsabilidad de los contenidos es de quienes lo publican. Los mapas 
+utilizados se usan como recursos explicativos y no constituyen reconocimiento de 
+fronteras, la GIZ no asume responsabilidad por estos mapas acerca de su exactitud.
+La GIZ es responsable del contenido de la presente publicación
+Por encargo del Ministerio Federal de Cooperación Económica y Desarrollo (BMZ) 
+de Alemania
+
+
+--- Page 89 ---
+89
+
+
+--- Page 90 ---
+

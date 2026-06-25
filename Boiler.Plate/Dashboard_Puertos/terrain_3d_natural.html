@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelo 3D - Terreno Natural (Expandido)</title>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <!-- Data Source: Hybrid Union (Original Nat + High Res expansion) -->
+    <script src="terrain_mesh_natural_expanded.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f1f5f9;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        #plot3d {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            border: 1px solid #cbd5e1;
+        }
+
+        .controls h3 {
+            margin: 0;
+            font-size: 14px;
+            color: #1e293b;
+        }
+
+        .controls p {
+            margin: 5px 0 10px 0;
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #334155;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: #0f172a;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="controls">
+        <h3>Terreno Natural</h3>
+        <p>Híbrido: Original + Alta Res. Expandido</p>
+        <a href="dashboard.html" class="btn">⬅ Volver al Mapa</a>
+    </div>
+    <div id="plot3d"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof TERRAIN_MESH_DATA === 'undefined') {
+                alert("Datos no encontrados.");
+                return;
+            }
+
+            const data = TERRAIN_MESH_DATA;
+
+            // Coordinate System Setup
+            let originLon = Infinity, originLat = Infinity;
+            for (let v of data.x) if (v < originLon) originLon = v;
+            for (let v of data.y) if (v < originLat) originLat = v;
+
+            const latRad = originLat * (Math.PI / 180);
+            const metersPerDegLat = 111132.954 - 559.822 * Math.cos(2 * latRad);
+            const metersPerDegLon = 111412.84 * Math.cos(latRad);
+
+            const toX = (lon) => (lon - originLon) * metersPerDegLon;
+            const toY = (lat) => (lat - originLat) * metersPerDegLat;
+
+            const x_m = data.x.map(toX);
+            const y_m = data.y.map(toY);
+
+            const terrainTrace = {
+                type: 'mesh3d',
+                x: x_m, y: y_m, z: data.z,
+                i: data.terrain_i, j: data.terrain_j, k: data.terrain_k,
+                intensity: data.z,
+                colorscale: 'Earth',
+                opacity: 1.0,
+                flatshading: false,
+                lighting: { ambient: 0.6, diffuse: 0.8, roughness: 0.8, specular: 0.05 },
+                name: 'Terreno Natural'
+            };
+
+            const layout = {
+                scene: {
+                    aspectmode: 'data',
+                    xaxis: { title: 'E (m)' }, yaxis: { title: 'N (m)' }, zaxis: { title: 'Alt (m)' },
+                    camera: { eye: { x: 1.2, y: 1.2, z: 1.0 } }
+                },
+                margin: { t: 0, b: 0, l: 0, r: 0 },
+                paper_bgcolor: '#f1f5f9'
+            };
+
+            Plotly.newPlot('plot3d', [terrainTrace], layout, { responsive: true });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeekSoft | Portal de Acceso</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --text-dark: #0f172a;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background: #ffffff;
+            /* Pure white start */
+        }
+
+        /* Canvas covers everything */
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Floating Content Wrapper */
+        .content-wrapper {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            /* Let clicks pass through to canvas if needed, but form needs events */
+        }
+
+        /* Floating Invisible Card */
+        .login-card {
+            background: transparent;
+            /* INVISIBLE CONTAINER */
+            box-shadow: none;
+            /* NO SHADOW/BORDER */
+            padding: 2rem;
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+            pointer-events: auto;
+            /* Re-enable clicks for form */
+            animation: floatUp 1s ease-out;
+        }
+
+        @keyframes floatUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            width: 150px;
+            margin-bottom: 2rem;
+            background: none !important;
+            /* FORCE TRANSPARENCY */
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+        }
+
+        /* Floating Inputs */
+        .input-group {
+            margin-bottom: 1.2rem;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-size: 0.7rem;
+            color: #475569;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.9rem 1.2rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e2e8f0;
+            border-radius: 50px;
+            /* Pill shape for modern floaty look */
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            /* Subtle float shadow */
+        }
+
+        input:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.15);
+            border-color: #3b82f6;
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            background: #0f172a;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            /* Pill shape */
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.4);
+            background: #1e293b;
+        }
+
+        .copyright {
+            margin-top: 2.5rem;
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="canvas-container"></canvas>
+
+    <div class="content-wrapper">
+        <div class="login-card">
+            <!-- LOGO FIXED v3 -->
+            <img src="logo_final_v3.png" alt="GeekSoft Logo" class="logo">
+
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="username">Usuario</label>
+                    <input type="text" id="username" placeholder="ID CLIENTE" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit">INGRESAR</button>
+                <p id="error-msg"
+                    style="color: #ef4444; font-size: 0.8rem; margin-top: 1rem; display: none; font-weight: 600;">Acceso
+                    Denegado</p>
+            </form>
+
+            <p class="copyright">© 2026 GEEK SOFT.</p>
+        </div>
+    </div>
+
+    <script>
+        // --- ANTIGRAVITY v2: COLORFUL NANO-PARTICLES ---
+        const canvas = document.getElementById('canvas-container');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        // CONFIG: Smaller size, colorful palette
+        const PARTICLE_COUNT = 250; // More particles since they are smaller
+        const SYMBOLS = ['0', '1'];
+        // Antigravity Palette: Vivid tech colors + Google-ish accents
+        const COLORS = [
+            '#3b82f6', // Blue
+            '#8b5cf6', // Violet
+            '#ec4899', // Pink
+            '#06b6d4', // Cyan
+            '#10b981', // Emerald
+            '#6366f1'  // Indigo
+        ];
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.z = Math.random() * 3 + 0.5; // Depth
+                this.symbol = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+                this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+                // SMALLER SIZE: 8px to 16px (varied by depth)
+                this.baseSize = Math.random() * 8 + 8;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5 - 0.1; // Gentle float up
+                this.opacity = Math.random() * 0.5 + 0.2;
+            }
+
+            update() {
+                this.x += this.vx * this.z;
+                this.y += this.vy * this.z;
+
+                // Mouse Repel Physics
+                if (mouse.x && mouse.y) {
+                    const dx = this.x - mouse.x;
+                    const dy = this.y - mouse.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const radius = 200;
+
+                    if (dist < radius) {
+                        const force = (radius - dist) / radius;
+                        const angle = Math.atan2(dy, dx);
+                        const push = force * 2; // Stronger push
+
+                        this.vx += Math.cos(angle) * push * 0.1;
+                        this.vy += Math.sin(angle) * push * 0.1;
+                    }
+                }
+
+                // Screen Wrap
+                if (this.x < -50) this.x = width + 50;
+                if (this.x > width + 50) this.x = -50;
+                if (this.y < -50) this.y = height + 50;
+                if (this.y > height + 50) this.y = -50;
+            }
+
+            draw() {
+                const size = this.baseSize * this.z * 0.6; // Scale down perspective
+                ctx.font = `700 ${size}px 'Rajdhani'`;
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.opacity;
+                ctx.fillText(this.symbol, this.x, this.y);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        let mouse = { x: null, y: null };
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+        window.addEventListener('mouseleave', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        function init() {
+            resize();
+            particles = [];
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(new Particle());
+            }
+            animate();
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        init();
+
+        // --- AUTH ---
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value.trim().toLowerCase();
+            const pass = document.getElementById('password').value;
+
+            const valid = (user === 'petral' && pass === 'MARK2026') ||
+                (user === 'admin' && pass === 'geeksoft');
+
+            if (valid) {
+                const btn = document.querySelector('button');
+                btn.innerHTML = 'VERIFICADO';
+                btn.style.background = '#10b981';
+                localStorage.setItem('auth_mark', 'true');
+                setTimeout(() => { window.location.href = './dashboard.html'; }, 800);
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+                // Shake effect
+                const form = document.querySelector('.login-card');
+                form.style.transform = "translateX(5px)";
+                setTimeout(() => form.style.transform = "translateX(-5px)", 100);
+                setTimeout(() => form.style.transform = "translateX(5px)", 200);
+                setTimeout(() => form.style.transform = "translateY(0)", 300);
+            }
+        });
+    </script>
+</body>
+
+</html>

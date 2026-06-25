@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flujo de Mineral - Vista Isométrica</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-shadow: none;
+        }
+
+        #canvas-container {
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
+            padding: 20px;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+            flex-wrap: wrap;
+        }
+
+        .btn-back {
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 700;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-back:hover {
+            border-color: #06b6d4;
+            color: #06b6d4;
+            background: #f0f9ff;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        button.active {
+            background: #ff9800;
+        }
+
+        .btn-actions-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1001;
+        }
+
+        .info-panel {
+            position: absolute;
+            top: 120px;
+            /* Ajustado para no solapar con los botones */
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            max-width: 250px;
+            display: none;
+        }
+
+        .info-panel.active {
+            display: block;
+        }
+
+        .info-panel h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .info-panel p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🏭 Flujo de Mineral de Hierro - Vista Isométrica Interactiva</h1>
+
+    <div id="canvas-container">
+        <!-- Canvas con espacio suficiente para evitar cortes -->
+        <canvas id="flowCanvas" width="1300" height="1000"></canvas>
+        <div class="info-panel" id="infoPanel">
+            <h3 id="infoTitle">Equipo</h3>
+            <p id="infoDescription">Pasa el cursor sobre los equipos para ver detalles</p>
+        </div>
+    </div>
+
+    <div class="controls">
+        <a href="../dashboard.html" class="btn-back">⬅ Volver al Mapa</a>
+    </div>
+
+    <div class="btn-actions-container">
+        <button onclick="toggleAnimation()">▶️ Animar Flujo</button>
+        <button onclick="toggleLabels()">🏷️ Etiquetas</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('flowCanvas');
+        const ctx = canvas.getContext('2d');
+        const infoPanel = document.getElementById('infoPanel');
+
+        let animating = false;
+        let animationFrame = 0;
+        let showLabels = true;
+        let hoveredEquipment = null;
+
+        // Cargar imágenes
+        const images = {};
+        const imageFiles = {
+            wagonTipper: 'assets/wagon_tipper.png',
+            truckTipper: 'assets/truck_tipper.png',
+            reclaimer: 'assets/reclaimer.png',
+            shipLoader: 'assets/ship_loader.png',
+            conveyor: 'assets/conveyor.png'
+        };
+
+        let loadedCount = 0;
+        const totalImages = Object.keys(imageFiles).length;
+
+        // Cargar todas las imágenes
+        Object.keys(imageFiles).forEach(key => {
+            images[key] = new Image();
+            images[key].onload = () => {
+                loadedCount++;
+                if (loadedCount === totalImages) render();
+            };
+            images[key].onerror = () => {
+                console.warn(`No se pudo cargar: ${imageFiles[key]}`);
+                loadedCount++;
+                if (loadedCount === totalImages) render();
+            };
+            images[key].src = imageFiles[key];
+        });
+
+        // Equipos con imágenes y posiciones ajustadas
+        const equipment = [
+            { id: 'wagon', name: 'Volteador de Vagones', x: 50, y: 50, w: 200, h: 200, img: 'wagonTipper', desc: 'Recibe vagones de tren y los voltea para descargar el mineral' },
+            { id: 'truck', name: 'Plataforma de Camiones', x: 50, y: 300, w: 180, h: 180, img: 'truckTipper', desc: 'Plataforma inclinada para descarga de camiones' },
+            { id: 'reclaimer', name: 'Reclaimer', x: 350, y: 120, w: 220, h: 220, img: 'reclaimer', desc: 'Mezcla, crea y recupera material de stockpiles' },
+            { id: 'conveyor', name: 'Faja Transportadora', x: 650, y: 180, w: 320, h: 100, img: 'conveyor', desc: 'Transporta mineral desde isla hasta el puerto' },
+            { id: 'shiploader', name: 'Ship Loader', x: 800, y: 350, w: 500, h: 500, img: 'shipLoader', desc: 'Carga el mineral en los buques' }
+        ];
+
+        function drawFlowArrow(x1, y1, x2, y2) {
+            ctx.save();
+            ctx.strokeStyle = animating ? '#2ECC71' : '#BDC3C7';
+            ctx.lineWidth = 5;
+            ctx.setLineDash(animating ? [20, 10] : []);
+            ctx.lineDashOffset = animating ? -animationFrame * 4 : 0;
+
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            // Arrowhead
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            ctx.fillStyle = animating ? '#2ECC71' : '#BDC3C7';
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - 25 * Math.cos(angle - Math.PI / 6), y2 - 25 * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(x2 - 25 * Math.cos(angle + Math.PI / 6), y2 - 25 * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Dibujar flechas de flujo (ajustadas a nuevas posiciones)
+            drawFlowArrow(250, 150, 350, 200);  // Wagon -> Reclaimer
+            drawFlowArrow(230, 400, 350, 300);  // Truck -> Reclaimer
+            drawFlowArrow(570, 230, 650, 230);  // Reclaimer -> Conveyor
+            drawFlowArrow(970, 230, 1000, 450); // Conveyor -> Ship Loader (ajustado al nuevo centro)
+
+            // Dibujar equipos
+            equipment.forEach(eq => {
+                const isHovered = hoveredEquipment === eq.id;
+
+                if (images[eq.img] && images[eq.img].complete) {
+                    ctx.save();
+                    if (isHovered) {
+                        ctx.shadowColor = '#F39C12';
+                        ctx.shadowBlur = 30;
+                    }
+                    // Aumentar un poco el área de dibujo para evitar micro-cortes
+                    ctx.drawImage(images[eq.img], eq.x, eq.y, eq.w, eq.h);
+                    ctx.restore();
+                }
+
+                // Etiquetas
+                if (showLabels) {
+                    ctx.fillStyle = '#2C3E50';
+                    ctx.font = 'bold 16px Segoe UI';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(eq.name, eq.x + eq.w / 2, eq.y - 15);
+                }
+            });
+        }
+
+        function toggleAnimation() {
+            animating = !animating;
+            if (animating) animate();
+            else render();
+        }
+
+        function animate() {
+            if (animating) {
+                animationFrame++;
+                render();
+                requestAnimationFrame(animate);
+            }
+        }
+
+        function toggleLabels() {
+            showLabels = !showLabels;
+            render();
+        }
+
+        // Mouse hover - detección ajustada
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            // Calcular coordenadas reales considerando posible escalado del canvas
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mx = (e.clientX - rect.left) * scaleX;
+            const my = (e.clientY - rect.top) * scaleY;
+
+            let found = false;
+            equipment.forEach(eq => {
+                // Margen de detección un poco más generoso que el dibujo
+                if (mx >= eq.x && mx <= eq.x + eq.w && my >= eq.y && my <= eq.y + eq.h) {
+                    hoveredEquipment = eq.id;
+                    document.getElementById('infoTitle').textContent = eq.name;
+                    document.getElementById('infoDescription').textContent = eq.desc;
+                    infoPanel.classList.add('active');
+                    found = true;
+                }
+            });
+
+            if (!found) {
+                hoveredEquipment = null;
+                infoPanel.classList.remove('active');
+            }
+
+            render();
+        });
+
+        // Render inicial
+        render();
+    </script>
+</body>
+
+</html>

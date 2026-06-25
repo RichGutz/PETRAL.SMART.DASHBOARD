@@ -1,0 +1,82 @@
+Frontend (El Cliente): React o Vue + Tailwind CSS + Apache ECharts. (Se encarga de la visualización fluida a 60 FPS y la maquetación exacta de tus 4 niveles del flujograma).
+
+Base de Datos y Autenticación: Supabase (PostgreSQL). (Almacena tus maestros, gestiona los accesos y calcula el P&L básico mediante funciones SQL integradas si quieres máxima velocidad).
+
+Cálculos Avanzados (Opcional): Una API pequeña en FastAPI (Python) conectada a Supabase, dedicada únicamente a procesar algoritmos complejos de Forecast que en JavaScript serían tediosos de programar.
+
+https://echarts.apache.org/examples/en/index.html#chart-type-matrix
+
+https://github.com/ecomfe/awesome-echarts
+
+https://superset.apache.org/
+
+El "Stack" Ideal para un Vibe Coder
+Para mantener la fricción al mínimo, no te compliques configurando entornos desde cero. Usa esto:
+
+Vite + React (o Vue) + Tailwind CSS: Es el estándar actual. Levanta en 2 segundos y cualquier herramienta de IA lo entiende a la perfección.
+
+Cursor / Lovable.dev / v0.dev (shadcn): Si usas v0.dev o Lovable, puedes literalmente describir tu interfaz en lenguaje natural ("Quiero un layout de dashboard oscuro con un sidebar a la izquierda...") y te genera el componente visual exacto con Tailwind listo para copiar.
+
+Tu Estrategia de Prompting (Paso a Paso)
+Para el Forecast Petral, no le pidas "un dashboard". Pídele piezas del flujograma por separado:
+
+Paso 1: El Contenedor Base y el Layout
+No empieces por los datos, empieza por el cascarón.
+
+Prompt: "Actúa como un desarrollador experto en React y Tailwind CSS. Necesito maquetar la estructura principal de un dashboard para control marítimo y forecast. Quiero un diseño limpio con un Sidebar a la izquierda para la navegación y un área principal espaciosa a la derecha que use un sistema de rejilla (CSS Grid) para colocar tarjetas de gráficos de manera responsiva."
+
+Paso 2: El Input Operativo (Nivel 2 de tu flujograma)
+Aquí creas el formulario dinámico.
+
+Prompt: "Ahora vamos a crear un componente dentro del dashboard que sea el 'Ingreso Rápido de Viajes'. Necesito un formulario con Tailwind que tenga tres selectores dinámicos: Cliente, Destino y Buque. También debe incluir un botón llamativo que diga 'Clonar Viaje'. Haz que el diseño sea compacto, tipo tarjeta, usando tonos naranja sutiles de fondo."
+
+Paso 3: Conectar Apache ECharts (Nivel 4)
+Para meter ECharts mediante prompts, el truco es pasarles el JSON de configuración directo de la documentación oficial.
+
+Prompt: "Quiero integrar un gráfico Treemap de Apache ECharts en una de las tarjetas del dashboard usando la librería echarts-for-react. Aquí tienes la estructura base de la opción que quiero usar de la documentación: [Pegas aquí el objeto option = {...} que te copiaste de la web de ECharts]. Por favor, adáptalo a un componente de React que sea responsivo y se ajuste al tamaño de su contenedor usando el método resize."
+
+⚠️ Los baches donde un Vibe Coder se puede estancar
+Como no quieres meterte a fondo a picar código, ten cuidado con estos dos puntos en tus prompts:
+
+La reactividad cruzada (El truco de JS): Cuando quieras que al hacer clic en un barco del gráfico se filtre la tabla, pídeselo explícitamente a la IA usando "Estados de React" (useState).
+
+Ejemplo de prompt: "Necesito que al hacer clic en una barra del gráfico de ECharts, este dispare un evento que actualice un estado global llamado buqueSeleccionado, y que mi tabla de abajo reaccione mostrando solo los viajes de ese buque."
+
+Las llamadas directas a Supabase: No dejes que la IA adivine tus tablas. Pásale el esquema de tu base de datos.
+
+Ejemplo de prompt: "Voy a conectar el formulario a Supabase. Mi tabla se llama viajes y tiene las columnas id, cliente_id, buque_id y destino. Genera la función de inserción usando el cliente oficial de Supabase en JavaScript."
+
+
+Aquí tienes las mejores opciones gratis que Gemini, Cursor o cualquier herramienta de prompts va a entender a la perfección:
+
+1. shadcn/ui (El Rey Indiscutible)
+No es una librería de componentes tradicional, sino una colección de componentes reutilizables que se copian directamente en tu carpeta de código.
+
+Por qué es perfecto para ti: Está hecho nativamente con Tailwind CSS y React. Al estar el código directamente en tu proyecto, le puedes pedir a Gemini: "Modifica el componente de tabla que me bajé de shadcn para que las filas cambien a color naranja al pasar el mouse", y lo hará sin romper nada.
+
+Qué incluye gratis: Tablas dinámicas, modales, formularios, calendarios, selectores complejos, menús desplegables (dropdowns), etc.
+
+Web: ui.shadcn.com
+
+2. Aceternity UI (Para el factor "Wow")
+Si quieres que tu ERP deje a todos con la boca abierta con animaciones fluidas, efectos de tarjetas en 3D, fondos dinámicos y transiciones modernas, esta es la opción.
+
+Por qué usarlo: Todo es gratis, usa Tailwind CSS y Framer Motion. Es ideal para la pantalla de inicio, el login, o los contenedores principales de tus paneles de control.
+
+Web: ui.aceternity.com
+
+3. Tailwind UI (Sección Gratis) y Meraki UI
+Meraki UI: Es una galería de componentes de Tailwind listos para copiar y pegar (pantallas de login, sidebars, tablas de datos, estadísticas). Es 100% gratis.
+
+Tailwind UI: Es la librería oficial de los creadores de Tailwind. Es de pago, pero tiene una sección de ejemplos gratuitos muy amplia (Layouts de dashboards, cabeceras, etc.) que puedes replicar solo mirando el código.
+
+El Workflow definitivo para un Vibe Coder (v0.dev)
+Dado que usas IA para programar, hay una herramienta gratuita de los creadores de Next.js (Vercel) llamada v0.dev que tienes que empezar a usar ya mismo.
+
+Entras a v0.dev.
+
+Le escribes en español: "Quiero un sidebar para un ERP de transporte marítimo usando Tailwind y componentes de shadcn".
+
+La IA te genera la interfaz en tiempo real. Puedes verla, interactuar con ella y, cuando te guste, te da el comando exacto para pegarla en tu proyecto de Vite + React.
+
+Combinando Vite + React + Tailwind + shadcn/ui, tu velocidad para migrar el flujo del Forecast Petral va a ser absurdamente rápida, y visualmente va a parecer un software de Silicon Valley.

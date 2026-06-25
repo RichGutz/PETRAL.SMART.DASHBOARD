@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satellite Image Fetcher</title>
+</head>
+
+<body>
+    <h1>Fetching Satellite Image...</h1>
+    <p>Center: -15.18°, -75.25° (Marcona area)</p>
+    <p>Zoom: 14</p>
+    <img id="satImage" style="max-width: 100%; border: 2px solid #333;">
+
+    <script>
+        // Coordinates for Marcona area (Shougang + Petral)
+        const centerLat = -15.18;
+        const centerLon = -75.25;
+        const zoom = 14;
+        const width = 1200;
+        const height = 800;
+
+        // Using Google Maps Static API
+        const apiKey = 'YOUR_GOOGLE_MAPS_API_KEY'; // User needs to provide this
+
+        // Alternative: Use Mapbox Static API (free tier available)
+        const mapboxToken = 'YOUR_MAPBOX_TOKEN';
+
+        // Mapbox Static API URL
+        const mapboxUrl = `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/${centerLon},${centerLat},${zoom},0/${width}x${height}?access_token=${mapboxToken}`;
+
+        // For now, show placeholder
+        document.getElementById('satImage').src = 'https://placehold.co/1200x800?text=Satellite+Image+Placeholder';
+
+        console.log('Mapbox URL:', mapboxUrl);
+        console.log('User needs to provide API key');
+    </script>
+</body>
+
+</html>

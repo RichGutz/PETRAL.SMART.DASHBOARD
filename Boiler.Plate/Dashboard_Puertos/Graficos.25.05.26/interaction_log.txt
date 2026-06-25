@@ -1,0 +1,92 @@
+================================================================================
+LOG DE SESIÓN LOCAL - 2026-05-25
+Carpeta de Trabajo: C:\Users\rguti\Petral.MARK\Dashboard_Puertos\Graficos.25.05.26
+================================================================================
+
+[2026-05-25 10:10] CREACIÓN DE BRANCH DE RESPALDO Y CAMBIO A MAIN
+- Se creó con éxito la rama local de respaldo: 'funcional.24.05.26.PRE.GRAFICOS.PPT.FINAL'.
+- Se añadieron y confirmaron en dicho branch todos los archivos con modificaciones locales en el proyecto.
+- Se retornó a la rama principal 'main', dejándola en un estado limpio, idéntica a 'origin/main'.
+
+[2026-05-25 10:20] TRANSCRIPCIÓN DE AUDIO DE WHATSAPP
+- Archivo de audio original: C:\Users\rguti\Petral.MARK\Dashboard_Puertos\audio_transcrip\WhatsApp Ptt 2026-05-25 at 10.13.20 AM.ogg
+- Script utilizado: C:\Users\rguti\Petral.MARK\Dashboard_Puertos\audio_transcrip\transcribe_whisper.py
+- Resultado guardado en: C:\Users\rguti\Petral.MARK\Dashboard_Puertos\audio_transcrip\WhatsApp Ptt 2026-05-25 at 10.13.20 AM.ogg_whisper.txt
+- Resumen del requerimiento: Crear versiones simplificadas y locales del Dashboard en una carpeta aislada para extraer gráficos limpios (capturas de pantalla) para una presentación, sin alterar el Dashboard original de producción.
+
+[2026-05-25 10:26] ANOTACIÓN DE FLUJO DEL DASHBOARD PARA LA PRIMERA IMAGEN
+- Dashboard de referencia: https://petral.geeksoft.tech/dashboard.html
+- Flujo e interacción requerida:
+  1. Activar 'Capas y Perímetros'.
+  2. Activar 'Etiquetas Puertos'.
+  3. Activar 'Etiquetas Tierras y Puertos del Sur'.
+  4. Realizar zoom en Pisco y Marcona, verificando la correcta visualización de sus calados.
+  5. Activar 'Hierro Apurímac' para mostrar sus 3 rutas logísticas principales:
+     * Ruta 1: Hierro Apurímac -> Pisco
+     * Ruta 2: Hierro Apurímac -> Marcona
+     * Ruta 3: Hierro Apurímac -> Matarani
+- Estado actual: Tomando notas. No se creará código ni se modificará nada hasta tener el plan de la primera imagen estructurado y aprobado.
+
+[2026-05-25 10:54] IMPLEMENTACION COMPLETADA - Grafico 1 (Ferrobamba)
+  - grafico1.html: Incluido script.js (../script.js) ANTES de script_local.js
+  - script_local.js: Reescrito con logica correcta:
+      * PORT_CONFIG filtrado en-memoria (solo PEPIO y PESQN)
+      * Array 'ports[]' recalculado en-place con splice()
+      * MINING_PROJECTS mutado: solo Ferrobamba [-13.806910, -73.252020]
+      * CONFIG.initialCenter/Zoom ajustado
+      * DOMContentLoaded registrado DESPUES de script.js (corre post-initApp)
+      * Auto-traza 2 rutas OSRM desde Ferrobamba
+  - CERO lineas de produccion modificadas (candado 3 en efecto)
+
+[2026-05-25 11:07] MEJORAS APLICADAS - 3 modificaciones Grafico 1
+  MOD-01: Ferrobamba auto-label via showMineDetails (mine-label-leader CSS)
+  MOD-02: window.renderPorts sobreescrita - eliminado indicador tanquero
+  MOD-03: window.createInfoBoatIcon sobreescrita - nombre puerto + SUPRAMAX/PANAMAX/CAPESIZE
+  ARCHIVO TOCADO: solo Graficos.25.05.26\script_local.js
+  DASHBOARD: intacto (solo-lectura, cero cambios)
+
+[2026-05-25 11:25] IMPLEMENTACIÓN COMPLETADA - V4
+  MOD-04: Extracción de distancias y tiempos de viaje OSRM y renderizado en burbujas flotantes
+  - Se modificó script_local.js para interceptar la llamada asíncrona de calculateAndDrawRoutes.
+  - Al recibir los datos OSRM, actualiza PORT_CONFIG y la lista ports.
+  - Fuerza el redibujado de los puertos llamando a renderPorts(ports).
+  - Se modificó createInfoBoatIcon para soportar una 4ta fila donde se renderizan los datos de ruta, incluyendo un estado animado de carga ("Calculando ruta terrestre...").
+  - Se expandió la burbuja de información del puerto a un tamaño fijo de 230x100px para evitar cortes.
+  - Todo probado y verificado a nivel de sintaxis JS.
+
+[2026-05-25 12:18] IMPLEMENTACIÓN COMPLETADA - V5
+  MOD-05: Ajustes de visualización y pulido de burbujas/etiquetas:
+  - Burbujas de puertos Pisco/San Nicolás cambiadas a fondo blanco con textos internos de alto contraste oscuro (dorado oscuro, cian oscuro, naranja oscuro y texto negro).
+  - Desplazamiento horizontal de las burbujas hacia el mar (oeste) ampliado a 270px en offset para alejarlas de la costa.
+  - Landmark y etiqueta Ferrobamba unificados en un divIcon inline para evitar tooltips.
+  - Remoción de etiquetas originales en tierra de Pisco y San Nicolás desactivando bindTooltip en renderPorts.
+  MOD-06: Callouts, Wrap Text y Whitelist en carreteras:
+  - Etiquetas viales con líneas de llamada (callouts) formadas por un micro-punto en la vía, una línea vertical de conector (22px) y la etiqueta flotante superior.
+  - Wrap Text de ancho máximo 90px para romper líneas largas en etiquetas.
+  - Filtro estricto que solo permite carreteras aprobadas y excluye absolutamente calles y avenidas.
+  - Se creó respaldo script_local_V4.js antes de aplicar los cambios.
+
+[2026-05-25 12:44] AJUSTE DE DISEÑO - V5 FINAL
+  - Se ajustó condicionalmente el dibujo de las etiquetas de 'Carretera Paracas - Puerto General San Martín' y 'Carretera San Juan de Marcona'.
+  - Ahora se dibujan por debajo del trazo vial (hacia abajo) para evitar superposición con otras etiquetas, usando flex-direction orientado y anclaje superior en la caja divIcon (iconAnchor [60, 0]).
+  - Se creó una copia de respaldo script_local_V5.js previo a este ajuste.
+
+[2026-05-25 12:56] IMPLEMENTACIÓN COMPLETADA - V6 FINAL (MOD-07)
+  - Se modificó script_local.js para trazar las rutas OSRM directamente con calculateAndDrawRoutes, evitando la llamada a showMineDetails.
+  - Se fuerza la clase 'hidden' en el panel lateral flotante (#port-details) para mantenerlo oculto de forma permanente.
+
+[2026-05-25 13:00] IMPLEMENTACIÓN DEFINITIVA - V6 FINAL (MOD-08)
+  - Se añadieron instrucciones en DOMContentLoaded de script_local.js para ocultar por completo los dos paneles flotantes de la izquierda: el ribbon de herramientas (#port-filter-ribbon) y el panel de capas (#layer-controls-panel) aplicando display: none !important.
+  - Esto remueve todo ruido visual en pantalla, dejando el mapa 100% limpio y despejado para capturas de imagen perfectas.
+
+[2026-05-25 19:30] IMPLEMENTACIÓN DEFINITIVA Y PRECISA DE CORTES VIALES
+- Se reconfiguró la ruta de San Nicolás en Gráfico 1 (Ferrobamba) a color Morado (#9c27b0) sin realizar cortes, agregando dos landmarks visuales mediante líneas de llamada de Leaflet en las coordenadas exactas de corte:
+  * Garita 1S: [-14.84671, -74.91329]
+  * Inicio Carretera a Marcona: [-15.13951, -74.97555]
+- Se corrigió la segmentación y trazado en Gráfico 2 (Triángulo PETRAL):
+  * Se calcularon los índices OSRM exactos para las coordenadas proporcionadas.
+  * Se descartó el Tramo 1 (Ferrobamba a Garita 1S).
+  * Se pintó en Amarillo (#ffc107) el Tramo 2 (desde Garita 1S hasta Carretera a Marcona).
+  * Se pintó en Morado (#9c27b0) el Tramo 3 (desde Carretera a Marcona hasta el Puerto de San Nicolás).
+- Se colocaron etiquetas Leader Labels de llamada precisas en Gráfico 2 en los puntos de inicio correspondientes.
+- Se documentaron detalladamente las coordenadas y tramos en la tabla de PLAN_mejoras_grafico2.md.

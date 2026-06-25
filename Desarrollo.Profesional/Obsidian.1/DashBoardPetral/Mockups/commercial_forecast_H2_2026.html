@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geeksoft Commercial Forecast</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background-color: #f8fafc;
+        padding: 2rem;
+        margin: 0;
+        color: #0f172a;
+    }
+    h2 {
+        color: #1e293b;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+    }
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        overflow: hidden;
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+    th {
+        background-color: #1e3a8a;
+        color: white;
+        padding: 12px 8px;
+        text-align: center;
+        border: 1px solid #3b82f6;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    td {
+        padding: 8px 12px;
+        border: 1px solid #e2e8f0;
+    }
+    .vertical-text {
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        text-align: center;
+        font-weight: bold;
+        letter-spacing: 2px;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+    .client-cell { background-color: #1e3a8a; color: white; border: 1px solid #1e3a8a; }
+    .route-MATARANI { background-color: #0369a1; color: white; border: 1px solid #0284c7; }
+    .route-MARCONA { background-color: #0f766e; color: white; border: 1px solid #0d9488; }
+    .route-MEJILLONES { background-color: #4338ca; color: white; border: 1px solid #4f46e5; }
+    .vessel-MOQUEGUA { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .vessel-TABLONES { background-color: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; }
+    .metric-cell { text-align: left; font-weight: 500; color: #334155; }
+    .number-cell { text-align: right; font-variant-numeric: tabular-nums; }
+    .vr-row { background-color: #f1f5f9; font-weight: bold; color: #0f172a; border-top: 2px solid #cbd5e1; }
+    .vr-row td.number-cell { background-color: #f1f5f9; }
+    .grand-total-row { background-color: #0f172a; color: white; font-weight: bold; font-size: 14px; }
+    .grand-total-row td { border-color: #334155; padding: 14px 12px; }
+    
+    /* Hover effects for rows */
+    tbody tr:hover:not(.grand-total-row) {
+        background-color: #f8fafc;
+    }
+    .vr-row:hover {
+        background-color: #e2e8f0 !important;
+    }
+</style>
+</head>
+<body>
+    <div style="max-width: 1400px; margin: 0 auto;">
+        <h2>Geeksoft Commercial Forecast - Matriz P&L H2 2026</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">Cliente</th>
+                        <th style="width: 40px;">Ruta</th>
+                        <th style="width: 40px;">Buque</th>
+                        <th style="width: 150px; text-align: left;">Métricas</th>
+                        <th>Jul 2026</th>
+                        <th>Ago 2026</th>
+                        <th>Sep 2026</th>
+                        <th>Oct 2026</th>
+                        <th>Nov 2026</th>
+                        <th>Dic 2026</th>
+                        <th>TOTAL H2</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class=''>
+                        <td rowspan='30' class='vertical-text client-cell'>SPCC</td>
+                        <td rowspan='10' class='vertical-text route-MATARANI'>ILO - MATARANI</td>
+                        <td rowspan='5' class='vertical-text vessel-MOQUEGUA'>MOQUEGUA</td>
+                        <td class='metric-cell'>Viajes (freq)</td>
+                        <td class='number-cell'>3</td>
+                        <td class='number-cell'>2</td>
+                        <td class='number-cell'>4</td>
+                        <td class='number-cell'>2</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>5</td>
+                        <td class='number-cell' style='font-weight: bold;'>16</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Gross Revenue</td>
+                        <td class='number-cell'>$769,905</td>
+                        <td class='number-cell'>$513,270</td>
+                        <td class='number-cell'>$1,026,540</td>
+                        <td class='number-cell'>$513,270</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$1,283,175</td>
+                        <td class='number-cell' style='font-weight: bold;'>$4,106,160</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Port Costs</td>
+                        <td class='number-cell'>$120,000</td>
+                        <td class='number-cell'>$80,000</td>
+                        <td class='number-cell'>$160,000</td>
+                        <td class='number-cell'>$80,000</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$200,000</td>
+                        <td class='number-cell' style='font-weight: bold;'>$640,000</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Bunker Costs</td>
+                        <td class='number-cell'>$50,678</td>
+                        <td class='number-cell'>$33,786</td>
+                        <td class='number-cell'>$67,571</td>
+                        <td class='number-cell'>$33,786</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$84,464</td>
+                        <td class='number-cell' style='font-weight: bold;'>$270,285</td>
+                    </tr>
+                    <tr class='vr-row'>
+                        <td class='metric-cell'>Voyage Result</td>
+                        <td class='number-cell'>$599,227</td>
+                        <td class='number-cell'>$399,484</td>
+                        <td class='number-cell'>$798,969</td>
+                        <td class='number-cell'>$399,484</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$998,711</td>
+                        <td class='number-cell' style='font-weight: bold;'>$3,195,875</td>
+                    </tr>
+                    <tr class=''>
+                        <td rowspan='5' class='vertical-text vessel-TABLONES'>TABLONES</td>
+                        <td class='metric-cell'>Viajes (freq)</td>
+                        <td class='number-cell'>2</td>
+                        <td class='number-cell'>1</td>
+                        <td class='number-cell'>2</td>
+                        <td class='number-cell'>3</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='font-weight: bold;'>8</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Gross Revenue</td>
+                        <td class='number-cell'>$513,270</td>
+                        <td class='number-cell'>$256,635</td>
+                        <td class='number-cell'>$513,270</td>
+                        <td class='number-cell'>$769,905</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='font-weight: bold;'>$2,053,080</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Port Costs</td>
+                        <td class='number-cell'>$80,000</td>
+                        <td class='number-cell'>$40,000</td>
+                        <td class='number-cell'>$80,000</td>
+                        <td class='number-cell'>$120,000</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='font-weight: bold;'>$320,000</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Bunker Costs</td>
+                        <td class='number-cell'>$19,436</td>
+                        <td class='number-cell'>$9,718</td>
+                        <td class='number-cell'>$19,436</td>
+                        <td class='number-cell'>$29,154</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='font-weight: bold;'>$77,745</td>
+                    </tr>
+                    <tr class='vr-row'>
+                        <td class='metric-cell'>Voyage Result</td>
+                        <td class='number-cell'>$413,834</td>
+                        <td class='number-cell'>$206,917</td>
+                        <td class='number-cell'>$413,834</td>
+                        <td class='number-cell'>$620,751</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='font-weight: bold;'>$1,655,335</td>
+                    </tr>
+                    <tr class=''>
+                        <td rowspan='10' class='vertical-text route-MARCONA'>ILO - MARCONA</td>
+                        <td rowspan='5' class='vertical-text vessel-MOQUEGUA'>MOQUEGUA</td>
+                        <td class='metric-cell'>Viajes (freq)</td>
+                        <td class='number-cell'>1</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>2</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='font-weight: bold;'>3</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Gross Revenue</td>
+                        <td class='number-cell'>$308,070</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$616,140</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='font-weight: bold;'>$924,210</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Port Costs</td>
+                        <td class='number-cell'>$64,500</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$129,000</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='font-weight: bold;'>$193,500</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Bunker Costs</td>
+                        <td class='number-cell'>$26,766</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$53,532</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='font-weight: bold;'>$80,297</td>
+                    </tr>
+                    <tr class='vr-row'>
+                        <td class='metric-cell'>Voyage Result</td>
+                        <td class='number-cell'>$216,804</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$433,608</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='font-weight: bold;'>$650,413</td>
+                    </tr>
+                    <tr class=''>
+                        <td rowspan='5' class='vertical-text vessel-TABLONES'>TABLONES</td>
+                        <td class='metric-cell'>Viajes (freq)</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>3</td>
+                        <td class='number-cell'>2</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>4</td>
+                        <td class='number-cell'>2</td>
+                        <td class='number-cell' style='font-weight: bold;'>11</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Gross Revenue</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$924,210</td>
+                        <td class='number-cell'>$616,140</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$1,232,280</td>
+                        <td class='number-cell'>$616,140</td>
+                        <td class='number-cell' style='font-weight: bold;'>$3,388,770</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Port Costs</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$193,500</td>
+                        <td class='number-cell'>$129,000</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$258,000</td>
+                        <td class='number-cell'>$129,000</td>
+                        <td class='number-cell' style='font-weight: bold;'>$709,500</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Bunker Costs</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$59,312</td>
+                        <td class='number-cell'>$39,541</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$79,082</td>
+                        <td class='number-cell'>$39,541</td>
+                        <td class='number-cell' style='font-weight: bold;'>$217,476</td>
+                    </tr>
+                    <tr class='vr-row'>
+                        <td class='metric-cell'>Voyage Result</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$671,398</td>
+                        <td class='number-cell'>$447,599</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$895,198</td>
+                        <td class='number-cell'>$447,599</td>
+                        <td class='number-cell' style='font-weight: bold;'>$2,461,794</td>
+                    </tr>
+                    <tr class=''>
+                        <td rowspan='10' class='vertical-text route-MEJILLONES'>ILO - MEJILLONES</td>
+                        <td rowspan='5' class='vertical-text vessel-MOQUEGUA'>MOQUEGUA</td>
+                        <td class='metric-cell'>Viajes (freq)</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>2</td>
+                        <td class='number-cell'>1</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>3</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='font-weight: bold;'>6</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Gross Revenue</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$563,490</td>
+                        <td class='number-cell'>$281,745</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$845,235</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='font-weight: bold;'>$1,690,470</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Port Costs</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$106,000</td>
+                        <td class='number-cell'>$53,000</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$159,000</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='font-weight: bold;'>$318,000</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Bunker Costs</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$58,330</td>
+                        <td class='number-cell'>$29,165</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$87,494</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='font-weight: bold;'>$174,989</td>
+                    </tr>
+                    <tr class='vr-row'>
+                        <td class='metric-cell'>Voyage Result</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$399,160</td>
+                        <td class='number-cell'>$199,580</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$598,741</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='font-weight: bold;'>$1,197,481</td>
+                    </tr>
+                    <tr class=''>
+                        <td rowspan='5' class='vertical-text vessel-TABLONES'>TABLONES</td>
+                        <td class='metric-cell'>Viajes (freq)</td>
+                        <td class='number-cell'>2</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>1</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>2</td>
+                        <td class='number-cell' style='font-weight: bold;'>5</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Gross Revenue</td>
+                        <td class='number-cell'>$563,490</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$281,745</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$563,490</td>
+                        <td class='number-cell' style='font-weight: bold;'>$1,408,725</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Port Costs</td>
+                        <td class='number-cell'>$106,000</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$53,000</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$106,000</td>
+                        <td class='number-cell' style='font-weight: bold;'>$265,000</td>
+                    </tr>
+                    <tr class=''>
+                        <td class='metric-cell'>Bunker Costs</td>
+                        <td class='number-cell'>$44,426</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$22,213</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$44,426</td>
+                        <td class='number-cell' style='font-weight: bold;'>$111,066</td>
+                    </tr>
+                    <tr class='vr-row'>
+                        <td class='metric-cell'>Voyage Result</td>
+                        <td class='number-cell'>$413,064</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$206,532</td>
+                        <td class='number-cell' style='color: #94a3b8;'>-</td>
+                        <td class='number-cell'>$413,064</td>
+                        <td class='number-cell' style='font-weight: bold;'>$1,032,659</td>
+                    </tr>
+                    <tr class="grand-total-row">
+                        <td colspan="4" style="text-align: left; padding-left: 24px;">GRAND TOTAL VOYAGE RESULT</td>
+                        <td class='number-cell'>$1,642,928</td>
+                        <td class='number-cell'>$1,676,960</td>
+                        <td class='number-cell'>$1,859,982</td>
+                        <td class='number-cell'>$1,660,375</td>
+                        <td class='number-cell'>$1,493,938</td>
+                        <td class='number-cell'>$1,859,373</td>
+                        <td class='number-cell'>$10,193,556</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelo 3D - Terreno Natural (Alta Resolución)</title>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <!-- Data Source (Patched via python) -->
+    <script src="terrain_mesh_natural_patched.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f8fafc;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        #plot3d {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            width: 250px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .controls h3 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+            color: #1e293b;
+        }
+
+        .controls p {
+            margin: 0 0 15px 0;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.2s;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        #stats-panel {
+            font-size: 11px;
+            margin-top: 10px;
+            color: #475569;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="controls">
+        <h3>Terreno Natural</h3>
+        <p>Alta Resolución (50m) | Sin Excavación</p>
+        <a href="index.html" class="btn">⬅ Volver al Mapa</a>
+        <div id="stats-panel">
+            Estado: Cargando datos...
+        </div>
+    </div>
+
+    <!-- Debug Console (Minimized by default) -->
+    <div id="debug-console" style="display:none;"></div>
+
+    <div id="plot3d"></div>
+
+    <script>
+        function log(msg) { console.log(msg); }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                if (typeof TERRAIN_MESH_DATA === 'undefined') {
+                    document.getElementById('stats-panel').innerHTML = "ERROR: No se encontraron los datos del terreno.";
+                    return;
+                }
+
+                // Check for elevation data
+                const z_data = TERRAIN_MESH_DATA.z_natural || TERRAIN_MESH_DATA.z;
+                if (!z_data || z_data.length === 0) {
+                    document.getElementById('stats-panel').innerHTML = "ERROR: Los datos de elevación están vacíos.";
+                    return;
+                }
+
+                // --- 1. Coordinate System Setup (Local Meters) ---
+                log("Configurando coordenadas...");
+                let originLon = Infinity, originLat = Infinity;
+                for (let v of TERRAIN_MESH_DATA.x) if (v < originLon) originLon = v;
+                for (let v of TERRAIN_MESH_DATA.y) if (v < originLat) originLat = v;
+
+                const latRad = originLat * (Math.PI / 180);
+                const metersPerDegLat = 111132.954 - 559.822 * Math.cos(2 * latRad);
+                const metersPerDegLon = 111412.84 * Math.cos(latRad);
+
+                const toX = (lon) => (lon - originLon) * metersPerDegLon;
+                const toY = (lat) => (lat - originLat) * metersPerDegLat;
+
+                const x_meters = TERRAIN_MESH_DATA.x.map(toX);
+                const y_meters = TERRAIN_MESH_DATA.y.map(toY);
+
+                // --- 2. Build Terrain Trace ---
+                log("Generando malla 3D...");
+
+                // Indices
+                const combined_i = (TERRAIN_MESH_DATA.terrain_i || []).concat(TERRAIN_MESH_DATA.floor_i || []);
+                const combined_j = (TERRAIN_MESH_DATA.terrain_j || []).concat(TERRAIN_MESH_DATA.floor_j || []);
+                const combined_k = (TERRAIN_MESH_DATA.terrain_k || []).concat(TERRAIN_MESH_DATA.floor_k || []);
+
+                const terrainTrace = {
+                    x: x_meters,
+                    y: y_meters,
+                    z: z_data,
+                    i: combined_i,
+                    j: combined_j,
+                    k: combined_k,
+                    type: 'mesh3d',
+                    intensity: z_data,
+                    colorscale: 'Earth',
+                    opacity: 1.0,
+                    flatshading: false,
+                    lighting: { ambient: 0.6, diffuse: 0.8, roughness: 0.8, specular: 0.05 },
+                    name: 'Terreno Natural'
+                };
+
+                const dataPlot = [terrainTrace];
+
+                // --- 3. Perimeter (Optional Overlay) ---
+                // If PERIMETER_3D_DATA is available, we could drape it
+
+                const layout = {
+                    title: '',
+                    scene: {
+                        xaxis: { title: 'Este (m)', gridcolor: '#e2e8f0' },
+                        yaxis: { title: 'Norte (m)', gridcolor: '#e2e8f0' },
+                        zaxis: { title: 'Altitud (m)', gridcolor: '#e2e8f0' },
+                        camera: {
+                            eye: { x: 1.5, y: -1.5, z: 1.2 }
+                        }
+                    },
+                    margin: { t: 0, b: 0, l: 0, r: 0 },
+                    paper_bgcolor: '#f8fafc',
+                    showlegend: false
+                };
+
+                log("Renderizando...");
+                Plotly.newPlot('plot3d', dataPlot, layout, { responsive: true })
+                    .then(() => {
+                        document.getElementById('stats-panel').innerHTML = `Renderizado OK: ${TERRAIN_MESH_DATA.x.length} puntos.`;
+                    });
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('stats-panel').innerHTML = "EXCEPCIÓN: " + err.message;
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iron Ore Supply Chain | Petral Analysis</title>
+
+    <!-- Mapbox GL JS for 3D Terrain -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Oswald:wght@700&family=Roboto:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Cadena de Suministro: Hierro</h1>
+            <p style="color: var(--text-muted); max-width: 700px; margin: 0 auto 2rem;">
+                Visualización técnica del flujo de exportación de mineral de hierro, integrando la visión macro del
+                proceso.
+            </p>
+        </header>
+
+        <!-- Main Dual-Zone Layout -->
+        <!-- 3D TERRAIN MAP (Background Layer) -->
+        <div id="map-3d" style="position: absolute; top: 0; left: 0; width: 100%; height: 600px; z-index: 0;"></div>
+
+        <!-- TECHNICAL SCHEMATIC LAYOUT (SVG - REAL DATA) - Overlay on top of 3D map -->
+        <div class="schematic-container" style="position: relative; z-index: 1;">
+            <svg id="real-layout-svg" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet" class="layout-svg">
+                <defs>
+                    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3" />
+                    </filter>
+                    <!-- Gradient for ocean -->
+                    <linearGradient id="oceanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#1e3a5f;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#2c5f8d;stop-opacity:1" />
+                    </linearGradient>
+                    <!-- Gradient for clean background -->
+                    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#2c5f8d;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#4a90a4;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#a8b8b0;stop-opacity:1" />
+                    </linearGradient>
+                    <!-- Pattern for land texture -->
+                    <pattern id="landTexture" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <rect width="20" height="20" fill="#8b7355" />
+                        <circle cx="5" cy="5" r="1" fill="#6d5a47" opacity="0.3" />
+                        <circle cx="15" cy="15" r="1" fill="#6d5a47" opacity="0.3" />
+                    </pattern>
+                </defs>
+
+                <!-- BACKGROUND LAYERS - 3D map renders outside SVG -->
+
+                <!-- LAYERS (Order matters) -->
+
+                <!-- 1. COASTLINE -->
+                <path id="path-coast" fill="none" stroke="#00d4ff" stroke-width="3" opacity="0.8"
+                    stroke-dasharray="5,5" />
+
+                <!-- 2. ISLAND (Reception) -->
+                <g class="interactive-zone" id="zone-island">
+                    <path id="path-island" fill="none" stroke="#ff9800" stroke-width="4" filter="url(#shadow)" />
+                    <title>Isla (Recepción)</title> <!-- Native tooltip for simplicity -->
+                </g>
+
+                <!-- 3. PETRAL (Port Land) -->
+                <g class="interactive-zone" id="zone-petral">
+                    <path id="path-petral" fill="none" stroke="#558b2f" stroke-width="4" filter="url(#shadow)" />
+                    <title>Terreno Petral</title>
+                </g>
+
+                <!-- 4. CONVEYOR BELT -->
+                <g class="conveyor-system">
+                    <path id="path-conveyor" fill="none" stroke="#795548" stroke-width="6" stroke-linecap="round" />
+                    <path id="anim-conveyor" fill="none" stroke="#ff7043" stroke-width="3" stroke-dasharray="10,10"
+                        class="flow-anim" />
+                    <!-- Label Text will be placed by JS or Overlay -->
+                </g>
+
+                <!-- 5. PIER & SHIP -->
+                <g class="interactive-zone" id="zone-pier">
+                    <path id="path-pier" stroke="#455a64" stroke-width="10" stroke-linecap="round" />
+
+                    <!-- Ship Graphic (Realistic Cape Size Vessel) -->
+                    <g id="group-ship">
+                        <!-- Hull -->
+                        <path d="M0,20 L10,35 L110,35 L120,20 L115,10 L5,10 Z" fill="#2c3e50" stroke="#1a252f"
+                            stroke-width="1" />
+                        <!-- Deck -->
+                        <rect x="5" y="10" width="110" height="3" fill="#34495e" />
+                        <!-- Superstructure (Bridge) -->
+                        <rect x="15" y="0" width="25" height="10" fill="#455a64" stroke="#263238" stroke-width="0.5" />
+                        <!-- Funnel -->
+                        <rect x="25" y="-5" width="8" height="5" fill="#e74c3c" stroke="#c0392b" stroke-width="0.5" />
+                        <!-- Cargo Holds (5 hatches) -->
+                        <rect x="45" y="6" width="12" height="4" fill="#8b4513" opacity="0.7" />
+                        <rect x="60" y="6" width="12" height="4" fill="#8b4513" opacity="0.7" />
+                        <rect x="75" y="6" width="12" height="4" fill="#8b4513" opacity="0.7" />
+                        <rect x="90" y="6" width="12" height="4" fill="#8b4513" opacity="0.7" />
+                        <rect x="105" y="6" width="10" height="4" fill="#8b4513" opacity="0.7" />
+                        <!-- Bow detail -->
+                        <path d="M115,10 L120,15 L120,20" fill="none" stroke="#1a252f" stroke-width="1" />
+                        <!-- Text -->
+                        <text x="60" y="28" text-anchor="middle" fill="#ecf0f1" font-size="7" font-weight="bold"
+                            letter-spacing="0.5">CAPE SIZE</text>
+                    </g>
+                </g>
+
+                <!-- OVERLAY TEXTS -->
+                <text x="200" y="400" fill="#4a90e2" font-size="32" font-weight="bold" opacity="0.3">OCEANO
+                    PACIFICO</text>
+            </svg>
+
+            <div style="text-align:center; font-family: 'Oswald'; font-size:1.2rem; color: #795548; margin-top:1rem;">
+                <i class="fas fa-ruler-horizontal"></i> <span id="text-conveyor-dist">Calculando distancia...</span>
+            </div>
+
+            <div class="schematic-legend">
+                <div class="legend-item"><span class="dot" style="background:#ffb300"></span> Zona Isla</div>
+                <div class="legend-item"><span class="dot" style="background:#ff7043"></span> Faja Transportadora</div>
+                <div class="legend-item"><span class="dot" style="background:#558b2f"></span> Zona Petral</div>
+                <div class="legend-item"><span class="dot" style="background:#29b6f6"></span> Línea Costera</div>
+            </div>
+        </div>
+
+        <!-- DETAIL VIEW MODAL (Hidden by default) -->
+        <div id="detail-modal" class="modal-overlay" style="display:none;">
+            <div class="modal-content">
+                <button class="close-modal" onclick="closeDetailModal()">&times;</button>
+                <div id="modal-svg-container"
+                    style="width:100%; height:400px; background:#fafafa; border:1px solid #ddd; border-radius:8px; margin-top:1rem;">
+                    <!-- Content injected by JS -->
+                </div>
+            </div>
+        </div>
+
+        <footer
+            style="text-align: center; padding: 2rem 0; color: var(--border-color); font-size: 0.8rem; border-top: 1px solid var(--border-color); margin-top: 2rem;">
+            PETRAL PORTS ANALYSIS MODULE &copy; 2026
+        </footer>
+    </div>
+
+    <!-- DATA SCRIPTS (From Parent) -->
+    <script src="../shougang_polygon.js"></script>
+    <script src="../perimeter_sides.js"></script>
+    <script src="../coastal_route.js"></script>
+
+    <!-- MAPBOX 3D TERRAIN INITIALIZATION -->
+    <script>
+        // Initialize Mapbox 3D Terrain Map
+        mapboxgl.accessToken = 'pk.YOUR_MAPBOX_ACCESS_TOKEN_HERE';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const map = new mapboxgl.Map({
+                container: 'map-3d',
+                style: 'mapbox://styles/mapbox/satellite-streets-v12',
+                center: [-75.253, -15.181], // Marcona area
+                zoom: 14,
+                pitch: 60, // 3D angle
+                bearing: 0,
+                antialias: true
+            });
+
+            map.on('load', () => {
+                // Add 3D terrain
+                map.addSource('mapbox-dem', {
+                    'type': 'raster-dem',
+                    'url': 'mapbox://mapbox.terrain-rgb',
+                    'tileSize': 512,
+                    'maxzoom': 14
+                });
+
+                map.setTerrain({
+                    'source': 'mapbox-dem',
+                    'exaggeration': 1.5
+                });
+
+                // Add sky layer for realism
+                map.addLayer({
+                    'id': 'sky',
+                    'type': 'sky',
+                    'paint': {
+                        'sky-type': 'atmosphere',
+                        'sky-atmosphere-sun': [0.0, 90.0],
+                        'sky-atmosphere-sun-intensity': 15
+                    }
+                });
+
+                console.log('✅ 3D Terrain Map Loaded');
+            });
+
+            // Store map instance globally for potential interaction
+            window.terrainMap = map;
+        });
+    </script>
+
+    <!-- RENDERER -->
+    <script src="schematic_renderer.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,8 @@
+.env
+__pycache__
+*.pyc
+node_modules
+*.log
+gemini_work_log.txt
+scraper_log.txt
+vesselfinder_result.html
