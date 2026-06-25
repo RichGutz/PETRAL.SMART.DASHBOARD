@@ -86,6 +86,41 @@ export const CommercialForecast: React.FC = () => {
         });
     };
 
+    const handleFrequencyChange = (client_id: string, route_key: string, vessel_id: string, month_index: string, newFrequency: number) => {
+        setProjectionLines(prev => {
+            const destination_port_id = route_key.split('-')[1];
+            const existingIndex = prev.findIndex(p => 
+                p.month_index === month_index && 
+                p.vessel_id === vessel_id &&
+                p.destination_port_id === destination_port_id &&
+                p.client_id === client_id
+            );
+
+            if (existingIndex >= 0) {
+                const clone = [...prev];
+                clone[existingIndex] = { ...clone[existingIndex], monthly_frequency: newFrequency };
+                return clone;
+            } else if (newFrequency > 0) {
+                // Si la celda estaba en 0 (no existía el viaje en este mes), buscamos otro mes como plantilla
+                const templateLine = prev.find(p => 
+                    p.vessel_id === vessel_id &&
+                    p.destination_port_id === destination_port_id &&
+                    p.client_id === client_id
+                );
+                
+                if (templateLine) {
+                    const newLine = {
+                        ...templateLine,
+                        month_index: month_index,
+                        monthly_frequency: newFrequency
+                    };
+                    return [...prev, newLine];
+                }
+            }
+            return prev;
+        });
+    };
+
     return (
         <div className="min-h-screen bg-slate-50 p-8 font-sans">
             <header className="mb-6 flex items-center gap-3">
@@ -119,7 +154,7 @@ export const CommercialForecast: React.FC = () => {
                         {loading && <span className="text-xs text-petral-teal font-medium flex items-center gap-2"><div className="animate-spin h-3 w-3 border-2 border-petral-teal border-t-transparent rounded-full"></div> Recalculando...</span>}
                     </div>
                     
-                    <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} />
+                    <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} />
                 </section>
                 
                 {/* 3. ECharts Summary */}

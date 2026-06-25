@@ -163,7 +163,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="ILO-MATARANI">ILO - MATARANI</SelectItem>
-                                <SelectItem value="ILO-SAN_JUAN_DE_MARCONA">ILO - MARCONA</SelectItem>
+                                <SelectItem value="ILO-MARCONA">ILO - MARCONA</SelectItem>
                                 <SelectItem value="ILO-MEJILLONES">ILO - MEJILLONES</SelectItem>
                             </SelectContent>
                         </Select>

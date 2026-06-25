@@ -50,12 +50,17 @@ Durante la integración final entre el Frontend y el Backend, se identificaron y
 - **Solución**: Refactorización del servicio de pronóstico (`forecast_service.py`) usando un decorador/función `safe_fetch`. Ahora, el motor "atrapa" la excepción de tablas inexistentes y asume valores por defecto hardcodeados, garantizando que el flujo de UI siempre pinte la simulación.
 
 ### 5. Lógica Contractual de Tarifas de Flete (Gross Revenue a $0)
-- **Problema**: El backend retornaba $0 en ingresos debido a dos bugs silentes: la tabla `contracts` no existía, y el mapeo del tonelaje de los buques excedía los rangos de la matriz `contract_tariffs`. Además, la ruta frontend enviaba `MARCONA` en lugar del identificador de base de datos `SAN_JUAN_DE_MARCONA`.
+- **Problema**: El backend retornaba $0 en ingresos debido a dos bugs silentes: la tabla `contracts` no existía, y el mapeo del tonelaje de los buques excedía los rangos de la matriz `contract_tariffs`. Además, la base de datos tenía el puerto como `SAN_JUAN_DE_MARCONA` pero era muy largo y rompía convenciones.
 - **Solución**: 
   - Se eliminó la dependencia estricta a `contracts` y se ruteó directamente a `contract_tariffs`. 
   - Se implementó una lógica de "Fallback" donde, si el barco excede el tonelaje máximo del contrato, se asigna el tramo tarifario más alto. 
-  - Se corrigió el selector UI de Marcona.
+  - Se migró definitivamente el ID en la base de datos a `MARCONA` a través de un script SQL en todas las tablas hijas, y se homologó la UI de React y la Bóveda Obsidian para que solo exista `MARCONA`.
 
 ### 6. Variable DWCC (Capacidad de Carga Útil) vs DWT
 - **Problema**: El simulador tomaba el DWT (peso muerto total) del buque como cantidad a transportar, lo cual falseaba el P&L, pues el tonelaje comercial (DWCC) es significativamente menor (ej. Tablones tiene 16533 DWT pero 13500 DWCC).
 - **Solución**: Se inyectó formalmente la variable técnica `dwcc` tanto en la base de datos de producción Supabase (vía script migratorio PostgreSQL) como en la constante de configuración del React Frontend `ForecastBuilder.tsx`, garantizando convergencia. Todo el ecosistema (Modelo E-R, DB, Frontend, y Archivos Maestros) está ahora alineado.
+
+### 7. Re-Arquitectura de la Matriz Interactiva (Ledger Unitario y Edición en Vivo)
+- **Logro 1**: Se enriqueció la tabla `ForecastGrid.tsx` inyectando botones colapsables (`+`) debajo de la métrica "Viajes". Esto despliega el libro mayor (Ledger) estático del viaje, categorizado visualmente en `Operativo`, `Tiempos/Costos` y `Financiero`.
+- **Logro 2**: Los montos mostrados en el Ledger expandible reflejan valores *Unitarios* (sin multiplicar por frecuencia), permitiendo auditar la tarifa, Sea Days, y Consumos IFO de manera quirúrgica.
+- **Logro 3 (Interactividad)**: Se transformó la celda de la métrica "Viajes (freq)" en un `<input>` interactivo. Cambiar el número dispara un evento hacia el orquestador maestro, actualiza las dependencias, clona el ladrillo fundacional y re-dispara la petición HTTP asíncrona hacia el motor en Python. Como resultado, la tabla y los totales parpadean en tiempo real sin recargar la página.

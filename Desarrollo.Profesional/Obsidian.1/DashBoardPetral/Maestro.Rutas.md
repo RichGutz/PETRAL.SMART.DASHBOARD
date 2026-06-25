@@ -9,7 +9,7 @@ El sistema realizará un lookup relacional utilizando la combinación de las lla
 |**Origen (origin_port_id)**|**Destino (destination_port_id)**|**Distancia (route_distance)**|**Factor de Clima (weather_factor)**|**Descripción de la Ruta**|
 |---|---|---|---|---|
 |**ILO**|**MATARANI**|69.0 NM|0.03 (3%)|Tramo corto de cabotaje sur (Perú)|
-|**ILO**|**SAN_JUAN_DE_MARCONA**|283.0 NM|0.03 (3%)|Tramo intermedio de cabotaje (Perú)|
+|**ILO**|**MARCONA**|283.0 NM|0.03 (3%)|Tramo intermedio de cabotaje (Perú)|
 |**ILO**|**MEJILLONES**|335.0 NM|0.03 (3%)|Tramo internacional de exportación (Chile)|
 |**ILO**|**CALLAO**|430.0 NM|0.04 (4%)|Tramo largo cabotaje centro (Subida contra corriente)|
 

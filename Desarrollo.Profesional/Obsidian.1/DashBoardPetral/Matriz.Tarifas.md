@@ -27,7 +27,7 @@ El sistema evaluará los límites inclusivos utilizando una condición lógica d
 |13,001.00 MT|13,500.00 MT|**$19.01 USD**|**Caso de Prueba Base (Tablones)**|
 |13,600.00 MT|14,500.00 MT|**$18.92 USD**|Lote de alta eficiencia económica|
 
-### 📍 Destino: SAN JUAN DE MARCONA (`destination_port_id: "SAN_JUAN_DE_MARCONA"`)
+### 📍 Destino: SAN JUAN DE MARCONA (`destination_port_id: "MARCONA"`)
 
 - **Tipo de Operación:** CABOTAJE (PERÚ)
     
