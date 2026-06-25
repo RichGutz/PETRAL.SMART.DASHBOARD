@@ -12,6 +12,8 @@ interface ForecastBuilderProps {
     currentStartDate: string;
     currentEndDate: string;
     dynamicMonths: string[];
+    centerContent?: React.ReactNode;
+    rightContent?: React.ReactNode;
 }
 
 export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({ 
@@ -19,7 +21,9 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     onAddLine,
     currentStartDate,
     currentEndDate,
-    dynamicMonths
+    dynamicMonths,
+    centerContent,
+    rightContent
 }) => {
     // Form State
     const [monthIndex, setMonthIndex] = useState('');
@@ -92,17 +96,29 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
     return (
         <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="bg-slate-50 border-b border-slate-100 pb-4">
-                <div className="flex items-center justify-between">
-                    <div>
+            <CardHeader className="bg-slate-50 border-b border-slate-100 pb-3 pt-3">
+                <div className="flex items-center justify-between w-full">
+                    {/* Left */}
+                    <div className="flex-[1.2]">
                         <CardTitle className="text-lg text-slate-800 flex items-center gap-2">
                             <CalendarDays className="h-5 w-5 text-petral-teal" />
-                            Constructor de Proyección (Builder)
+                            Commercial Forecast Builder
                         </CardTitle>
-                        <CardDescription className="text-slate-500 mt-1">
-                            Paso 1: Define el horizonte. Luego añade viajes mes a mes.
-                        </CardDescription>
                     </div>
+
+                    {/* Center */}
+                    {centerContent && (
+                        <div className="flex-[1.5] flex justify-center">
+                            {centerContent}
+                        </div>
+                    )}
+
+                    {/* Right */}
+                    {rightContent && (
+                        <div className="flex-1 flex justify-end">
+                            {rightContent}
+                        </div>
+                    )}
                 </div>
             </CardHeader>
             <CardContent className="pt-6">

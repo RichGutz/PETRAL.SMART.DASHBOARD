@@ -11,5 +11,17 @@ export const ForecastService = {
     runSimulation: async (payload: any) => {
         const response = await api.post('/forecast/run', payload);
         return response.data;
+    },
+    saveForecast: async (payload: any) => {
+        const response = await api.post('/forecast/save', payload);
+        return response.data;
+    },
+    listForecasts: async () => {
+        const response = await api.get(`/forecast/list`);
+        return response.data;
+    },
+    loadForecast: async (id: string) => {
+        const response = await api.get(`/forecast/load/${id}`);
+        return response.data;
     }
 };

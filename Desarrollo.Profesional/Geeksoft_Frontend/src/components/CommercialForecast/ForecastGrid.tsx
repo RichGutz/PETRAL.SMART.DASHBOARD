@@ -221,7 +221,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
 
     const formatNumber = (val: number) => {
         if (val === 0) return "-";
-        return val.toString();
+        return new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(val);
     };
 
     if (!data || !data.aggregated_data) {
@@ -237,16 +237,16 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
             <table className="w-full text-sm text-left border-collapse">
                 <thead className="bg-slate-800 text-white uppercase font-semibold text-xs tracking-wider">
                     <tr>
-                        <th className="p-3 text-center border border-slate-700 w-12">Cliente</th>
-                        <th className="p-3 text-center border border-slate-700 w-12">Ruta</th>
-                        <th className="p-3 text-center border border-slate-700 w-12">Buque</th>
-                        <th className="p-3 border border-slate-700 w-48">Métricas</th>
+                        <th className="py-1 px-2 text-center border border-slate-700 w-12">Cliente</th>
+                        <th className="py-1 px-2 text-center border border-slate-700 w-12">Ruta</th>
+                        <th className="py-1 px-2 text-center border border-slate-700 w-12">Buque</th>
+                        <th className="py-1 px-2 border border-slate-700 w-48">Métricas</th>
                         {months.map(m => {
                             const date = new Date(`${m}-02`);
                             const formatted = new Intl.DateTimeFormat('es-ES', { month: 'short', year: '2-digit' }).format(date).replace('.', '');
-                            return <th key={m} className="p-3 text-center border border-slate-700 capitalize">{formatted}</th>;
+                            return <th key={m} className="py-1 px-2 text-center border border-slate-700 capitalize">{formatted}</th>;
                         })}
-                        <th className="p-3 text-right border border-slate-700 bg-slate-900">TOTAL</th>
+                        <th className="py-1 px-2 text-right border border-slate-700 bg-slate-900">TOTAL</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -267,7 +267,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                                     <div className="vertical-text mx-auto px-2">{row.vessel.name}</div>
                                 </td>
                             )}
-                            <td className={`p-3 border border-slate-200 ${row.isSubRow ? (row.metric.isCategoryHeader ? 'pl-6 text-xs text-slate-800 font-bold uppercase tracking-wider bg-slate-100/50' : 'pl-10 text-xs text-slate-500') : 'font-medium text-slate-700'}`}>
+                            <td className={`py-1 px-2 border border-slate-200 ${row.isSubRow ? (row.metric.isCategoryHeader ? 'pl-6 text-xs text-slate-800 font-bold uppercase tracking-wider bg-slate-100/50' : 'pl-10 text-xs text-slate-500') : 'font-medium text-slate-700'}`}>
                                 {row.metric.isExpandable ? (
                                     <button 
                                         onClick={() => toggleRow(row.metric.rowKey)}
@@ -281,7 +281,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                                 )}
                             </td>
                             {row.metric.values.map((v: number | null, colIdx: number) => (
-                                <td key={colIdx} className={`p-3 text-right tabular-nums border border-slate-200 ${row.isSubRow ? 'text-xs text-slate-600' : ''} ${v === 0 ? 'text-slate-400' : 'text-slate-800'} ${row.metric.isTotal && (v ?? 0) < 0 ? 'text-red-600' : ''} ${row.metric.isTotal && (v ?? 0) > 0 ? 'text-teal-700' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
+                                <td key={colIdx} className={`py-1 px-2 text-right tabular-nums border border-slate-200 ${row.isSubRow ? 'text-xs text-slate-600' : ''} ${v === 0 ? 'text-slate-400' : 'text-slate-800'} ${row.metric.isTotal && (v ?? 0) < 0 ? 'text-red-600' : ''} ${row.metric.isTotal && (v ?? 0) > 0 ? 'text-teal-700' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
                                     {v === null ? '' : (
                                         row.metric.name === "Viajes (freq)" ? (
                                             <input 
@@ -292,7 +292,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                                                     const val = parseInt(e.target.value) || 0;
                                                     onFrequencyChange && onFrequencyChange(row.clientName, row.routeName, row.vesselName, months[colIdx], val);
                                                 }}
-                                                className="w-14 p-1 text-right text-xs font-bold border border-slate-200 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white"
+                                                className="w-14 p-1 text-center block mx-auto text-xs font-bold border border-slate-200 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white"
                                             />
                                         ) : row.metric.name === "Flete (USD/MT)" && row.clientName === "SPOT" ? (
                                             <input 
@@ -308,8 +308,8 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                                             />
                                         ) : (
                                             row.metric.isCurrency ? (
-                                                <div className="flex justify-between items-center w-full min-w-[100px]">
-                                                    <span className="text-left font-medium">{formatCurrency(v)}</span>
+                                                <div className={`flex items-center w-full min-w-[100px] ${row.metric.pct && row.metric.pct[colIdx] !== null ? 'justify-between' : 'justify-end'}`}>
+                                                    <span className={`${row.metric.pct && row.metric.pct[colIdx] !== null ? 'text-left' : 'text-right'} font-medium`}>{formatCurrency(v)}</span>
                                                     {row.metric.pct && row.metric.pct[colIdx] !== null ? (
                                                         <span className="text-xs text-slate-500 bg-slate-100 px-1 py-[2px] rounded border border-slate-200 min-w-[3rem] text-center ml-2">
                                                             {row.metric.pct[colIdx].toFixed(1)}%
@@ -321,11 +321,11 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                                     )}
                                 </td>
                             ))}
-                            <td className={`p-3 text-right tabular-nums font-bold border border-slate-200 ${row.metric.isTotal ? 'bg-slate-200' : 'bg-slate-50'} ${row.isSubRow ? 'text-slate-300' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
+                            <td className={`py-1 px-2 text-right tabular-nums font-bold border border-slate-200 ${row.metric.isTotal ? 'bg-slate-200' : 'bg-slate-50'} ${row.isSubRow ? 'text-slate-300' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
                                 {row.metric.isCategoryHeader ? '' : (row.metric.isSubRowMetric ? '-' : (
                                     row.metric.isCurrency ? (
-                                        <div className="flex justify-between items-center w-full min-w-[100px]">
-                                            <span className="text-left font-medium">{formatCurrency(row.metric.total)}</span>
+                                        <div className={`flex items-center w-full min-w-[100px] ${row.metric.totalPct !== null && row.metric.totalPct !== undefined ? 'justify-between' : 'justify-end'}`}>
+                                            <span className={`${row.metric.totalPct !== null && row.metric.totalPct !== undefined ? 'text-left' : 'text-right'} font-medium`}>{formatCurrency(row.metric.total)}</span>
                                             {row.metric.totalPct !== null && row.metric.totalPct !== undefined ? (
                                                 <span className="text-xs text-slate-600 bg-white px-1 py-[2px] rounded border border-slate-300 min-w-[3rem] text-center ml-2">
                                                     {row.metric.totalPct.toFixed(1)}%

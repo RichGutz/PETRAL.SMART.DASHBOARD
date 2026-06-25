@@ -134,7 +134,13 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                         const pct = params.data.pct;
                         // Ocultar la etiqueta si el bloque es muy pequeño para evitar que el texto se salga
                         if (!pct || pct < 4) return ''; 
-                        return `${pct.toFixed(1)}%`;
+                        
+                        if (isPct) {
+                            return `${pct.toFixed(1)}%`;
+                        } else {
+                            const val = params.data.value;
+                            return val >= 1000 ? `$${(val/1000).toFixed(0)}k` : `$${val.toFixed(0)}`;
+                        }
                     },
                     color: '#ffffff',
                     fontWeight: 'bold',
