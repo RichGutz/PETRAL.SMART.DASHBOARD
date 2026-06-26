@@ -78,13 +78,15 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         else:
             matching_tariffs = []
 
-            # PRIORIDAD 1: Buscar por contract_id (estructura nueva con versionado)
+            # PRIORIDAD 1: Buscar por contract_id + ruta (estructura nueva con FK compuesta)
             if contract:
                 contract_id_val = contract.get("contract_id")
                 if contract_id_val:
                     matching_tariffs = [
                         t for t in tariffs_data
                         if str(t.get("contract_id", "")) == str(contract_id_val)
+                        and t.get("origin_port_id") == line.origin_port_id
+                        and t.get("destination_port_id") == line.destination_port_id
                     ]
 
             # PRIORIDAD 2: Fallback legacy — client_id + destination_port_id (antes de la migración)

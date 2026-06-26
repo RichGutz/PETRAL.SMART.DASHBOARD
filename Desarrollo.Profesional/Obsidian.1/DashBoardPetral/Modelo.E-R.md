@@ -84,25 +84,100 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 ---
 
 ### 5. Tabla: `contracts` (Maestro de Contratos y Reglas Comerciales)
-*Cabecera que agrupa las reglas operativas y de recargo por combustible para un par Cliente-Destino.*
-* `contract_id` *(UUID, PK)* → Identificador único automático generado por Supabase (`gen_random_uuid()`).
+*Cabecera que agrupa las reglas operativas y de recargo por combustible para un tramo Origen-Destino de un cliente. Soporta versionado histórico: cuando se renueva un contrato, se inserta una nueva fila con `is_active = TRUE` y se desactiva la anterior.*
+* `contract_id` *(VARCHAR, PK)* → Identificador legible de contrato (ej. `'SPCC_2025'`). Permite historizar múltiples versiones compartiendo el mismo código mediante clave primaria compuesta con la ruta.
 * `client_id` *(VARCHAR)* → ID del cliente comercial (ej. SPCC).
-* `destination_port_id` *(VARCHAR)* → Puerto de destino final de la carga.
-* `bunker_baseline_price` *(NUMERIC)* → Precio base del combustible pactado en la firma del contrato.
+* `origin_port_id` *(VARCHAR, PK, NOT NULL, DEFAULT 'ILO')* → Puerto de origen del viaje. Parte de la clave primaria.
+* `destination_port_id` *(VARCHAR, PK)* → Puerto de destino final de la carga. Parte de la clave primaria.
+* `is_active` *(BOOLEAN, NOT NULL, DEFAULT TRUE)* → Flag de vigencia. Solo el contrato activo se usa en simulaciones. Al renovar: `UPDATE SET is_active = FALSE` al viejo, `INSERT` el nuevo.
+* `valid_from` *(DATE, NOT NULL, DEFAULT '2025-01-01')* → Fecha de inicio de vigencia del contrato.
+* `valid_to` *(DATE)* → Fecha de fin de vigencia.
+* `bunker_baseline_price_ifo` *(NUMERIC)* → Precio base del combustible pactado en la firma del contrato (referencia para cálculo BAF).
 * `baf_rules` *(JSONB)* → Reglas flexibles del Bunker Adjustment Factor (ej. `{"type": "goal_seek_inverse", "trigger_percentage": 0.05}`).
 * `load_rate` / `discharge_rate` *(NUMERIC)* → Tasas operativas contractuales de carga y descarga (MT/hora).
 
+**Clave Primaria Compuesta:** `(contract_id, origin_port_id, destination_port_id)`
+— Permite que un contrato macro legible (ej. `'SPCC_2025'`) tenga múltiples rutas asociadas como filas únicas.
+
+**Índice único activo:** `(client_id, origin_port_id, destination_port_id) WHERE is_active = TRUE`
+— Garantiza que solo exista un contrato activo por ruta en cada momento.
+
+**Flujo de renovación:**
+```sql
+-- 1. Desactivar contrato vigente
+UPDATE contracts SET is_active = FALSE, valid_to = CURRENT_DATE
+WHERE client_id = 'SPCC' AND origin_port_id = 'ILO' AND destination_port_id = 'MATARANI' AND is_active = TRUE;
+
+-- 2. Insertar nueva versión con nuevas tarifas
+INSERT INTO contracts (client_id, origin_port_id, destination_port_id, is_active, valid_from, load_rate, discharge_rate)
+VALUES ('SPCC', 'ILO', 'MATARANI', TRUE, CURRENT_DATE, 500, 450);
+
+-- 3. Insertar brackets de tarifa al nuevo contract_id
+INSERT INTO contract_tariffs (contract_id, min_tonnage, max_tonnage, freight_rate)
+VALUES ('{nuevo_uuid}', 13001, 13500, 21.50);
+```
+
 ### 5.1. Tabla: `contract_tariffs` (Matriz de Brackets de Flete Comercial)
-*Tabla hija subordinada al contrato maestro, define los fletes base según el tonelaje transportado.*
-* `contract_id` *(UUID, PK, FK references contracts.contract_id)* → Relación al contrato cabecera.
+*Tabla hija subordinada al contrato maestro, define los fletes base según el tonelaje transportado. Al usar una FK compuesta, expone explícitamente el origen y destino directamente en la tarifa.*
+* `contract_id` *(VARCHAR, PK, FK → contracts.contract_id)* → ID legible del contrato padre.
+* `origin_port_id` *(VARCHAR, PK, FK → contracts.origin_port_id)* → Puerto de origen, heredado y visible directamente en la tarifa.
+* `destination_port_id` *(VARCHAR, PK, FK → contracts.destination_port_id)* → Puerto de destino, heredado y visible directamente en la tarifa.
 * `min_tonnage` *(NUMERIC, PK)* → Límite inferior del rango de volumen.
 * `max_tonnage` *(NUMERIC, PK)* → Límite superior del rango de volumen.
 * `freight_rate` *(NUMERIC)* → Tarifa de flete asignada por tonelada métrica (USD/MT).
 
+**Clave Primaria Compuesta:** `(contract_id, origin_port_id, destination_port_id, min_tonnage, max_tonnage)`
+
+**Clave Foránea Compuesta:** `(contract_id, origin_port_id, destination_port_id) REFERENCES contracts(contract_id, origin_port_id, destination_port_id) ON DELETE CASCADE`
+
+> ⚠️ **Migración crítica (20260626000011):** Se migró `contract_id` a tipo `VARCHAR` para usar nombres comerciales legibles (ej: `'SPCC_2025'`). Se redefinió la relación como una FK compuesta que incluye `origin_port_id` y `destination_port_id`, haciendo visible el puerto de origen y destino directamente en las tarifas y permitiendo que un mismo ID de contrato abarque múltiples tramos de ruta con integridad referencial garantizada.
+
+#### 💡 Análisis de Diseño E-R y Bitácora de Migración (¿Por qué fallaron los primeros intentos SQL?)
+
+##### A. Lógica y Ventajas de la Relación E-R Compuesta
+1. **Identificadores Legibles de Contratos**: En lugar de UUIDs autogenerados crípticos, el contrato del cliente se identifica como un código comercial comprensible (ej. `'SPCC_2025'`).
+2. **Un Contrato Macro, Múltiples Tramos**: Un solo acuerdo comercial (ej. `'SPCC_2025'`) puede gobernar diferentes rutas (orígenes/destinos). Al conformar la clave primaria de `contracts` como compuesta `(contract_id, origin_port_id, destination_port_id)`, el sistema permite registrar condiciones operativas y recargos distintos por ruta sin colisionar y sin requerir de IDs de contrato duplicados.
+3. **Visibilidad Directa de Ruta en Tarifas**: La tabla `contract_tariffs` hereda la clave compuesta completa. Al tener explícitamente `origin_port_id` y `destination_port_id` en las filas de tarifas, cualquier persona o proceso de auditoría puede ver de forma directa de qué ruta se trata sin necesidad de realizar obligatoriamente un `JOIN` con la tabla padre `contracts`.
+
+##### B. Lección Técnica: ¿Por qué fallaron las ejecuciones de SQL iniciales?
+Las migraciones DDL secuenciales en bases de datos relacionales con datos preexistentes son delicadas. Tuvimos que corregir el script debido a dos errores de colisión de restricciones:
+
+* **Error 1: Violación de Restricción Única en `contracts_pkey`**:
+  * *Qué causó el fallo*: Intentamos actualizar todos los contratos activos a `'SPCC_2025'` antes de haber eliminado la clave primaria antigua (que sólo era `contract_id`).
+  * *Explicación*: Como la base de datos tenía tres filas (MATARANI, MARCONA y MEJILLONES) y la clave primaria exigía unicidad para `contract_id`, actualizar la segunda fila a `'SPCC_2025'` provocó un error de duplicados.
+  * *Solución*: Se eliminó la clave primaria antigua y se creó la clave compuesta `(contract_id, origin_port_id, destination_port_id)` *mientras las filas aún tenían UUIDs únicos*, y recién después se corrió el UPDATE masivo.
+
+* **Error 2: Violación de Restricción Única en `contract_tariffs_pkey`**:
+  * *Qué causó el fallo*: Una vez resuelto el problema de la cabecera, al ejecutar `UPDATE contract_tariffs SET contract_id = 'SPCC_2025'` chocaron los brackets.
+  * *Explicación*: La clave primaria de tarifas era `(contract_id, min_tonnage, max_tonnage)`. Dado que los brackets de tonelaje se repiten en diferentes rutas (ej: de `10000.00` a `11500.00` existe para MATARANI y para MARCONA), al cambiar los diferentes UUIDs al valor común `'SPCC_2025'`, Postgres detectó duplicados.
+  * *Solución*: Aplicar el mismo patrón: eliminar la clave primaria antigua de `contract_tariffs` y redefinirla a compuesta incluyendo los puertos *antes* de sobrescribir el `contract_id` de las tarifas a `'SPCC_2025'`.
+
+* **Conclusión**: El orden lógico correcto en migraciones de datos preexistentes que cambian de clave única simple a clave compuesta común es desconectar las FKs, redefinir las PKs como compuestas mientras la columna clave es única (UUIDs), ejecutar las actualizaciones a la clave común comercial, y finalmente reconstruir las FKs compuestas.
+
+
 ---
 
-### 6. Tabla: `simulations` (Tabla Transaccional de Consultas)
+### 6. Tabla: `audit_benchmarks` (Valores Reales del Excel — Benchmarks de Auditoría)
+*Almacena los valores operativos reales extraídos de los Exceles corporativos de Voyage Calculations para comparación contra el motor Geeksoft.*
+* `scenario_key` *(VARCHAR, PK)* → Identificador del escenario (ej. `'TABLONES-ILO-MATARANI'`).
+* `act_load` *(NUMERIC)* → Tasa de carga real ejecutada (MT/hr).
+* `act_disch` *(NUMERIC)* → Tasa de descarga real ejecutada (MT/hr).
+* `port_days` *(NUMERIC)* → Días de puerto reales.
+* `sea_days` *(NUMERIC)* → Días de mar reales.
+* `bunker_costs` *(NUMERIC)* → Costo total de bunker real (USD).
+* `voyage_result` *(NUMERIC)* → Resultado de viaje real del Excel (USD).
+* `total_duration` *(NUMERIC)* → Duración total real del viaje (días).
+* `tce_real` *(NUMERIC)* → TCE diario real calculado en el Excel (USD/día).
+* `pl_vs_req` *(NUMERIC)* → Utilidad nominal real vs. TCE requerido (USD).
+* `additional_expenses` *(NUMERIC, DEFAULT 0)* → Gastos adicionales imprevistos del Excel (ej. Loading Master, amarras extra). **⚠️ Pendiente de agregar vía ALTER TABLE.**
+
+> 📌 **Estado:** Los valores actuales están hardcodeados en el frontend (`VoyageLedgerTest.tsx`). El plan es poblar esta tabla desde el scraper `scrape_voyages.py` y eliminar el hardcode.
+
+---
+
+### 7. Tabla: `simulations` (Tabla Transaccional de Consultas)
 * `simulation_id` *(UUID, PK)* → Identificador único automático generado por Supabase (`gen_random_uuid()`).
+
 * `vessel_id` *(VARCHAR o UUID, FK references vessels.vessel_id)* → Buque seleccionado para la corrida.
 * `origin_port_id` *(VARCHAR, FK references routes.origin_port_id)* → Puerto base de origen.
 * `destination_port_id` *(VARCHAR, FK references routes.destination_port_id)* → Puerto de destino.
