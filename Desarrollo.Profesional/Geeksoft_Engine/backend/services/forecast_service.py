@@ -43,7 +43,6 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     
     for line in request.projection_lines:
         client = line.client_id
-        route_key = f"{line.origin_port_id}-{line.destination_port_id}"
         vessel = line.vessel_id
         month = line.month_index
         
@@ -51,27 +50,49 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         v_data = vessels_db.get(vessel, {})
         
         # 2. Fetching Route Data
+        route_key = f"{line.origin_port_id}-{line.destination_port_id}"
         r_data = routes_db.get(route_key, {})
-        
+
         # 3. Fetching Contract Data — tasas operativas (c_load / c_disch) desde tabla `contracts`
         contract = contracts_db.get((client, line.destination_port_id))
         
         # 4. Buscar Tarifa en contract_tariffs según quantity (cache pre-cargado)
+        # NOTA: Tras migración 20260624000008, contract_tariffs ya NO tiene client_id/destination_port_id.
+        #       Ahora se filtra por contract_id obtenido del contrato padre.
         freight_rate = 0
         
         if getattr(line, 'custom_tariff', None) is not None:
             freight_rate = line.custom_tariff
         else:
-            matching_tariffs = [
-                t for t in tariffs_data 
-                if t.get("client_id") == client and t.get("destination_port_id") == line.destination_port_id
-            ]
+            matching_tariffs = []
+            if contract:
+                contract_id = contract.get("contract_id")
+                matching_tariffs = [
+                    t for t in tariffs_data
+                    if t.get("contract_id") and str(t.get("contract_id")) == str(contract_id)
+                ]
+            
+            # Fallback legacy: buscar por client_id/destination_port_id si aún existen o si no se encontró por contract_id
+            if not matching_tariffs:
+                matching_tariffs = [
+                    t for t in tariffs_data
+                    if t.get("client_id") == client and t.get("destination_port_id") == line.destination_port_id
+                ]
             
             if matching_tariffs:
+                # Sort matching_tariffs to handle gaps gracefully
+                matching_tariffs = sorted(matching_tariffs, key=lambda x: x.get("min_tonnage", 0))
                 for tariff in matching_tariffs:
                     if tariff.get("min_tonnage", 0) <= line.quantity <= tariff.get("max_tonnage", 999999):
                         freight_rate = tariff.get("freight_rate", 0)
                         break
+                
+                # Si cae en un "gap" (ej. 13550 entre 13500 y 13600), coger el bracket siguiente (o anterior)
+                if freight_rate == 0:
+                    for tariff in matching_tariffs:
+                        if line.quantity <= tariff.get("max_tonnage", 999999):
+                            freight_rate = tariff.get("freight_rate", 0)
+                            break
                 
                 # Fallback: tarifa del bracket más alto si excede tonelaje máximo
                 if freight_rate == 0:
