@@ -282,11 +282,24 @@ export const VoyageLedgerTest: React.FC = () => {
         <>
             <style>{`
                 @media print {
-                    .no-print {
-                        display: none !important;
+                    /* Ocultar absolutamente todos los elementos del cuerpo */
+                    body * {
+                        visibility: hidden;
                     }
+                    /* Excluir de la ocultacion al contenedor de impresion y todos sus descendientes */
+                    .print-only, .print-only * {
+                        visibility: visible !important;
+                    }
+                    /* Forzar al contenedor a posicionarse arriba a la izquierda ocupando todo el ancho */
                     .print-only {
                         display: block !important;
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        margin: 0;
+                        padding: 0;
+                        background: white;
                     }
                     @page {
                         size: A4 landscape;
