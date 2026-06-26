@@ -92,42 +92,50 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
     def fmt_tbd(val):
         return f"{val:,.0f}" if val > 0 else "TBD"
 
+    # Colores por tabla de origen (deben coincidir con COLOR_SCHEME del frontend)
+    def vc(val): return f"<span class='text-blue-600 font-black'>{val}</span>"      # vessels
+    def rc(val): return f"<span class='text-purple-600 font-black'>{val}</span>"    # routes
+    def oc(val): return f"<span class='text-orange-600 font-black'>{val}</span>"    # ports
+    def ec(val): return f"<span class='text-emerald-600 font-black'>{val}</span>"   # contracts
+    def ac(val): return f"<span class='text-amber-600 font-black'>{val}</span>"     # bunker_prices
+    def rsc(val): return f"<span class='text-rose-600 font-black'>{val}</span>"     # agency_matrix
+
     audit_trail = {
         "1. Tasa Carga (act_load)": {
             "formula": "MIN(c_load, v_intake, t_load_rate)",
-            "values": f"MIN({fmt_tbd(c_load)}, {fmt_tbd(v_intake)}, {fmt_tbd(t_load_rate)})"
+            "values": f"MIN({ec(fmt_tbd(c_load))}, {vc(fmt_tbd(v_intake))}, {oc(fmt_tbd(t_load_rate))})"
         },
         "2. Tasa Descarga (act_disch)": {
             "formula": "MIN(c_disch, v_pump, p_disch_limit)",
-            "values": f"MIN({fmt_tbd(c_disch)}, {fmt_tbd(v_pump)}, {fmt_tbd(p_disch_limit)})"
+            "values": f"MIN({ec(fmt_tbd(c_disch))}, {vc(fmt_tbd(v_pump))}, {oc(fmt_tbd(p_disch_limit))})"
         },
         "3. Días de Puerto (port_days)": {
             "formula": "((Q/act_load + over_or) + (Q/act_disch + over_de)) / 24",
-            "values": f"(({Q:,.0f}/{actual_load_rate:,.0f} + {overhead_origin:,.1f}) + ({Q:,.0f}/{actual_discharge_rate:,.0f} + {overhead_dest:,.1f})) / 24"
+            "values": f"(({ec(f'{Q:,.0f}')}/{vc(f'{actual_load_rate:,.0f}')} + {oc(f'{overhead_origin:,.1f}')}) + ({ec(f'{Q:,.0f}')}/{vc(f'{actual_discharge_rate:,.0f}')} + {oc(f'{overhead_dest:,.1f}')})) / 24"
         },
         "4. Días de Mar (sea_days)": {
             "formula": "(dist * (1+w_laden) + dist * (1+w_ballast)) / (speed * 24)" if is_round_trip else "(dist * (1+w_laden)) / (speed * 24)",
-            "values": f"({dist:,.0f} * (1+{w_factor_laden:,.2f}) + {dist:,.0f} * (1+{w_factor_ballast:,.2f})) / ({speed:,.1f} * 24)" if is_round_trip else f"({dist:,.0f} * (1+{w_factor_laden:,.2f})) / ({speed:,.1f} * 24)"
+            "values": f"({rc(f'{dist:,.0f}')} * (1+{rc(f'{w_factor_laden:,.2f}')}) + {rc(f'{dist:,.0f}')} * (1+{rc(f'{w_factor_ballast:,.2f}')})) / ({vc(f'{speed:,.1f}')} * 24)" if is_round_trip else f"({rc(f'{dist:,.0f}')} * (1+{rc(f'{w_factor_laden:,.2f}')})) / ({vc(f'{speed:,.1f}')} * 24)"
         },
         "5. Costo Bunker (bunker)": {
             "formula": "(ifo_tons * p_ifo) + (mdo_tons * p_mdo)",
-            "values": f"({bunker_ifo_tonnage:,.2f} * {p_ifo:,.2f}) + ({bunker_mdo_tonnage:,.2f} * {p_mdo:,.2f})"
+            "values": f"({vc(f'{bunker_ifo_tonnage:,.2f}')} * {ac(f'{p_ifo:,.2f}')}) + ({vc(f'{bunker_mdo_tonnage:,.2f}')} * {ac(f'{p_mdo:,.2f}')})"
         },
         "7. Resultado Viaje (voy_res)": {
             "formula": "(Q * F) - port_costs - bunker",
-            "values": f"({Q:,.0f} * {F:,.2f}) - {total_port_costs:,.2f} - {total_bunker_costs:,.2f}"
+            "values": f"({ec(f'{Q:,.0f}')} * {ec(f'{F:,.2f}')}) - {rsc(f'{total_port_costs:,.2f}')} - {ac(f'{total_bunker_costs:,.2f}')}"
         },
         "8. Duración Total (tot_dur)": {
             "formula": "sea_days + port_days",
-            "values": f"{sea_days:,.4f} + {port_days:,.4f}"
+            "values": f"{vc(f'{sea_days:,.4f}')} + {oc(f'{port_days:,.4f}')}"
         },
         "9. TCE Diario (tce_real)": {
             "formula": "voyage_result / total_duration",
-            "values": f"{voyage_result:,.2f} / {total_duration:,.4f}"
+            "values": f"{ec(f'{voyage_result:,.2f}')} / {vc(f'{total_duration:,.4f}')}"
         },
         "10. Utilidad Nom. (pl_vs_req)": {
             "formula": "voyage_result - (tce_req * total_duration)",
-            "values": f"{voyage_result:,.2f} - ({tce_req:,.2f} * {total_duration:,.4f})"
+            "values": f"{ec(f'{voyage_result:,.2f}')} - ({vc(f'{tce_req:,.2f}')} * {vc(f'{total_duration:,.4f}')})"
         }
     }
 
