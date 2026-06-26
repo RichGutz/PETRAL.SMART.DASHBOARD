@@ -133,13 +133,13 @@ export const VoyageLedgerTest: React.FC = () => {
         ];
 
         return (
-            <div className={`flex flex-col ${isPrint ? 'gap-2' : 'gap-4'}`}>
+            <div className={`flex flex-col gap-4 ${isPrint ? 'p-4 bg-white' : ''}`}>
                 {isPrint && (
-                    <div className="border-b border-slate-800 pb-1 mb-1 flex justify-between items-center">
-                        <h2 className="text-xs font-black text-slate-800 uppercase tracking-wide">
+                    <div className="border-b-2 border-slate-800 pb-2 mb-2 flex justify-between items-center">
+                        <h2 className="text-sm font-black text-slate-800 uppercase tracking-wide">
                             🧪 GEEKSOFT Voyage Ledger Auditoría: <span className="text-blue-600">{vesselName.replace('_', ' ')}</span> &rarr; <span className="text-purple-600">{originPort} - {destPort}</span>
                         </h2>
-                        <span className="text-[9px] text-slate-500 font-bold font-mono uppercase">2026-07</span>
+                        <span className="text-[10px] text-slate-500 font-bold font-mono uppercase">Simulación: 2026-07 (A4 Landscape)</span>
                     </div>
                 )}
 
@@ -281,75 +281,23 @@ export const VoyageLedgerTest: React.FC = () => {
     return (
         <>
             <style>{`
-                @page {
-                    size: A4 landscape;
-                    margin: 0 !important;
-                }
                 @media print {
-                    /* Ocultar elementos de pantalla e interactivos */
                     .no-print {
                         display: none !important;
                     }
-                    /* Mostrar contenedor de impresion */
                     .print-only {
                         display: block !important;
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        width: 297mm;
-                        height: auto;
-                        margin: 0;
-                        padding: 0;
                     }
-                    /* Ajustar body e html */
-                    html, body {
-                        width: 297mm;
-                        height: 210mm;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        background: white;
+                    @page {
+                        size: A4 landscape;
+                        margin: 10mm;
                     }
                     .page-break {
                         page-break-after: always;
                         break-after: page;
-                        width: 297mm;
-                        height: 210mm;
-                        padding: 6mm 8mm; /* Margenes reducidos en impresion */
-                        box-sizing: border-box;
+                        width: 100%;
                         overflow: hidden;
-                        margin: 0 !important; /* Evita paginas en blanco por margenes residuales */
-                    }
-                    /* Compactar espaciado entre cards */
-                    .page-break .flex.gap-4.items-stretch {
-                        gap: 8px !important;
-                    }
-                    /* Compactar tarjetas internas */
-                    .page-break .border.rounded-lg {
-                        border-radius: 6px !important;
-                    }
-                    .page-break .p-3 {
-                        padding: 8px 10px !important;
-                    }
-                    .page-break .gap-1.5 {
-                        gap: 2px !important;
-                    }
-                    .page-break .mt-1.pt-2 {
-                        margin-top: 2px !important;
-                        padding-top: 4px !important;
-                    }
-                    /* Compactar la tabla de auditoria */
-                    .page-break table {
-                        font-size: 10px !important;
-                        line-height: 1.2 !important;
-                    }
-                    .page-break th {
-                        padding: 4px 6px !important;
-                    }
-                    .page-break td {
-                        padding: 3px 5px !important;
-                    }
-                    .page-break .bg-slate-50 {
-                        background-color: #f8fafc !important;
+                        box-sizing: border-box;
                     }
                     tr {
                         page-break-inside: avoid;

@@ -17,7 +17,7 @@ CREATE TABLE contracts (
 INSERT INTO contracts (client_id, destination_port_id, bunker_baseline_price, baf_rules, load_rate, discharge_rate)
 VALUES 
 ('SPCC', 'MATARANI', 430.0, '{"type": "goal_seek_inverse", "trigger_percentage": 0.05}'::jsonb, 500, 450),
-('SPCC', 'SAN_JUAN_DE_MARCONA', 430.0, '{"type": "goal_seek_inverse", "trigger_percentage": 0.05}'::jsonb, 500, 450),
+('SPCC', 'MARCONA', 430.0, '{"type": "goal_seek_inverse", "trigger_percentage": 0.05}'::jsonb, 500, 450),
 ('SPCC', 'MEJILLONES', 430.0, '{"type": "goal_seek_inverse", "trigger_percentage": 0.05}'::jsonb, 500, 450),
 ('SPCC', 'CALLAO', 430.0, '{"type": "goal_seek_inverse", "trigger_percentage": 0.05}'::jsonb, 500, 450);
 

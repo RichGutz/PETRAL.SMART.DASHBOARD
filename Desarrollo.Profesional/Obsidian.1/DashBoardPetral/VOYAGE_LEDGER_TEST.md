@@ -60,6 +60,9 @@ Layout `flex` de 4 columnas; cols 2 y 3 tienen cards apilados con `gap-1` (pegad
 
 - [ ] Valores MDO de los 3 barcos — confirmar consumos reales con operaciones
 - [ ] Migrar benchmarks PETRAL de hardcode a tabla `audit_benchmarks` en Supabase
+- [ ] Crear scraper `scrape_voyages.py` para leer Exceles de Voyage Calculations
+- [ ] Agregar columna `additional_expenses` a `audit_benchmarks` en Supabase
+- [ ] Nueva fila "Gastos Adicionales (Excel)" en tabla de auditoría
 
 ## ✅ 8. Completados en Paso 6
 
@@ -84,3 +87,10 @@ Layout `flex` de 4 columnas; cols 2 y 3 tienen cards apilados con `gap-1` (pegad
 - [x] **Selector de ruta** reubicado a Col 4 (encima del card Límites Portuarios)
 - [x] **Unidad `v_intake`** corregida: `T` → `T/h` en card Maestro Flota
 - [x] **Fecha bunker** corregida: `datetime.date` → `str(date)` en `forecast_service.py`, ahora llega al frontend como `"2026-06-26"`
+
+## ✅ 10. Completados en Paso 8 (Bug Crítico: Flete $0)
+
+- [x] **Bug `freight_rate = 0`:** `forecast_service.py` usaba columnas eliminadas por migración. Corregido a lookup por `contract_id`
+- [x] **`PORT_ALIASES`:** Mapa `"MARCONA" → "SAN_JUAN_DE_MARCONA"` aplicado a rutas, contratos, tarifas, puertos y agencias
+- [x] **Consistencia de IDs:** Todos los lookups a BD usan `resolved_dest` en lugar del ID crudo del frontend
+- [x] **Fallback legacy:** Si `contract` es `None`, se intenta búsqueda directa por `client_id + destination_port_id` para retrocompatibilidad

@@ -289,7 +289,7 @@
     <p class="sub">Cada fase operativa consume de manera diferente</p>
 
     <img
-        src="file:///C:/Users/rguti/.gemini/antigravity-ide/brain/f7f693a3-899b-4645-93cc-ffbc88e91e54/tanker_tablones_1782498428298.png"
+        src="tanker_tablones.png"
         alt="B/T TABLONES — Tanquero de ácido sulfúrico"
         class="ship-img"
         onerror="this.style.display='none';document.getElementById('ship-fallback').style.display='flex';"
@@ -573,7 +573,7 @@
             </div>
             <div class="vr-row cost">
                 <div><div class="vr-lbl">MDO consumido (fases auxiliares)</div><div class="vr-var">Σ(t_fase × c_fase_mdo) × p_mdo</div></div>
-                <div class="vr-val">-$3,625</div>
+                <div class="vr-val">$3,625</div>
             </div>
             <div class="vr-row" style="border-bottom:none;padding-top:6px;">
                 <div style="font-size:12px;font-weight:700;color:var(--red);">= Total Bunker</div>
@@ -585,9 +585,7 @@
         <div class="card vr-result-box anim" id="vr2">
             <div class="vr-formula-title">Fórmula del Voyage Result</div>
             <div class="vr-formula mono">
-                VR = (Q × F)<br>
-                &nbsp;&nbsp;&nbsp;&nbsp; − (ag_carga + ag_descarga)<br>
-                &nbsp;&nbsp;&nbsp;&nbsp; − Σ(t_fase × c_fase × p_bunker)
+                VR = (Q × F) − (ag_carga + ag_descarga) − Σ(t_fase × c_fase × p_bunker)
             </div>
 
             <div class="vr-total" style="margin-top:18px;">
@@ -633,90 +631,18 @@
     </div>
 </section>
 
-<!-- ══════════════════════════════════
-     S8 · LEDGER EN VIVO
-══════════════════════════════════ -->
-<section class="slide" id="s8" style="transform:translateX(70px);">
-    <p class="tag">La Prueba · Motor vs. Excel en tiempo real</p>
-    <h2>El <span class="hi">Ledger</span> de Auditoría</h2>
-    <p class="sub">Aquí verificamos cada número — si hay diferencia, la vemos ahora mismo</p>
 
-    <div class="ledger-wrap">
-        <div class="browser-shell">
-            <div class="browser-bar">
-                <div class="bdot" style="background:#FF5F57;"></div>
-                <div class="bdot" style="background:#FFBD2E;"></div>
-                <div class="bdot" style="background:#28CA41;"></div>
-                <div class="burl">localhost:5173 — 🧪 GEEKSOFT · Voyage Ledger · Auditoría SPCC</div>
-            </div>
-            <div class="mock-grid">
-                <div class="mc">
-                    <div class="mc-h" style="background:rgba(29,111,232,0.1);color:#1D6FE8;">🚢 Maestro Flota</div>
-                    <div class="mc-r"><span>Barco</span><span class="mc-v">TABLONES</span></div>
-                    <div class="mc-r"><span>v_intake</span><span class="mc-v">500 T/h</span></div>
-                    <div class="mc-r"><span>v_pump</span><span class="mc-v">450 T/h</span></div>
-                    <div class="mc-r"><span>speed</span><span class="mc-v">11 kn</span></div>
-                </div>
-                <div class="mc">
-                    <div class="mc-h" style="background:rgba(212,131,10,0.1);color:#D4830A;">⛽ Bunker</div>
-                    <div class="mc-r"><span>p_ifo</span><span class="mc-v">$440/T</span></div>
-                    <div class="mc-r"><span>p_mdo</span><span class="mc-v">$800/T</span></div>
-                    <div class="mc-r"><span>Fecha</span><span class="mc-v">Jun-2026</span></div>
-                    <div class="mc-r"><span>Vigencia</span><span class="mc-v">Último reg.</span></div>
-                </div>
-                <div class="mc">
-                    <div class="mc-h" style="background:rgba(124,58,237,0.1);color:#7C3AED;">🗺️ Ruta</div>
-                    <div class="mc-r"><span>Ruta</span><span class="mc-v">ILO→MTR</span></div>
-                    <div class="mc-r"><span>dist</span><span class="mc-v">69 NM</span></div>
-                    <div class="mc-r"><span>w_factor</span><span class="mc-v">3%</span></div>
-                    <div class="mc-r"><span>overhead</span><span class="mc-v">6h/puerto</span></div>
-                </div>
-                <div class="mc">
-                    <div class="mc-h" style="background:rgba(4,120,87,0.1);color:#047857;">📋 Contrato SPCC</div>
-                    <div class="mc-r"><span>Q</span><span class="mc-v">13,500 MT</span></div>
-                    <div class="mc-r"><span>Flete F</span><span class="mc-v">$19.01/MT</span></div>
-                    <div class="mc-r"><span>c_load</span><span class="mc-v">500 T/h</span></div>
-                    <div class="mc-r"><span>c_disch</span><span class="mc-v">450 T/h</span></div>
-                </div>
-            </div>
-            <div class="mock-table">
-                <div class="mt-h"><span>Métrica</span><span>GEEKSOFT</span><span>PETRAL Excel</span><span>Δ Delta</span></div>
-                <div class="mt-r"><span style="color:var(--text-dim);">3. Días de Mar</span><span class="mono" style="color:var(--blue);">0.97 días</span><span class="mono" style="color:var(--text-dim);">0.97 días</span><span class="delta-ok">$0.00 ✓</span></div>
-                <div class="mt-r"><span style="color:var(--text-dim);">4. Días de Puerto</span><span class="mono" style="color:var(--blue);">2.10 días</span><span class="mono" style="color:var(--text-dim);">2.10 días</span><span class="delta-ok">$0.00 ✓</span></div>
-                <div class="mt-r"><span style="color:var(--text-dim);">5. Costo Bunker</span><span class="mono" style="color:var(--blue);">$14,459</span><span class="mono" style="color:var(--text-dim);">$14,459</span><span class="delta-ok">$0.00 ✓</span></div>
-                <div class="mt-r"><span style="color:var(--text-dim);">7. Voyage Result</span><span class="mono" style="color:var(--blue);">$201,175</span><span class="mono" style="color:var(--text-dim);">$201,175</span><span class="delta-ok">$0.00 ✓</span></div>
-                <div class="mt-r"><span style="color:var(--text-dim);">9. TCE Diario</span><span class="mono" style="color:var(--blue);">$53,362</span><span class="mono" style="color:var(--text-dim);">$53,362</span><span class="delta-ok">$0.00 ✓</span></div>
-            </div>
-        </div>
-
-        <div class="bottom-row">
-            <button class="live-btn" onclick="window.open('http://localhost:5173','_blank')">
-                🚀 ABRIR LEDGER EN VIVO
-            </button>
-            <div style="flex:1;">
-                <div style="font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Hoja de Ruta del Proyecto</div>
-                <div class="milestones">
-                    <div class="mstone"><div class="m-dot done">✓</div><div class="m-lbl">H1<br>Diseño</div></div>
-                    <div class="mstone"><div class="m-dot active">●</div><div class="m-lbl active">H2<br>Desarrollo</div></div>
-                    <div class="mstone"><div class="m-dot">3</div><div class="m-lbl">H3<br>ETL 2026</div></div>
-                    <div class="mstone"><div class="m-dot">4</div><div class="m-lbl">H4<br>Onboarding</div></div>
-                    <div class="mstone"><div class="m-dot">5</div><div class="m-lbl">H5<br>Go-Live</div></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
 </div><!-- #deck -->
 
 <nav>
     <button class="nbtn" id="prevBtn" onclick="go(-1)">←</button>
-    <span id="counter">1 / 8</span>
+    <span id="counter">1 / 7</span>
     <button class="nbtn" id="nextBtn" onclick="go(1)">→</button>
 </nav>
 
 <script>
-const TOTAL = 8;
+const TOTAL = 7;
 let cur = 1, busy = false;
 
 function go(dir) {

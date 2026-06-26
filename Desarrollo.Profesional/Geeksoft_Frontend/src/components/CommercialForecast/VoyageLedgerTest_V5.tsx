@@ -317,7 +317,6 @@ export const VoyageLedgerTest: React.FC = () => {
                         padding: 6mm 8mm; /* Margenes reducidos en impresion */
                         box-sizing: border-box;
                         overflow: hidden;
-                        margin: 0 !important; /* Evita paginas en blanco por margenes residuales */
                     }
                     /* Compactar espaciado entre cards */
                     .page-break .flex.gap-4.items-stretch {
