@@ -281,6 +281,10 @@ export const VoyageLedgerTest: React.FC = () => {
     return (
         <>
             <style>{`
+                @page {
+                    size: A4 landscape;
+                    margin: 0;
+                }
                 @media print {
                     /* Ocultar absolutamente todos los elementos del cuerpo */
                     body * {
@@ -290,27 +294,32 @@ export const VoyageLedgerTest: React.FC = () => {
                     .print-only, .print-only * {
                         visibility: visible !important;
                     }
-                    /* Forzar al contenedor a posicionarse arriba a la izquierda ocupando todo el ancho */
+                    /* Forzar al contenedor e hijos a ajustarse al lienzo fisico de A4 Landscape */
+                    html, body {
+                        width: 297mm;
+                        height: 210mm;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: white;
+                    }
                     .print-only {
                         display: block !important;
                         position: absolute;
                         left: 0;
                         top: 0;
-                        width: 100%;
+                        width: 297mm;
+                        height: auto;
                         margin: 0;
                         padding: 0;
-                        background: white;
-                    }
-                    @page {
-                        size: A4 landscape;
-                        margin: 10mm;
                     }
                     .page-break {
                         page-break-after: always;
                         break-after: page;
-                        width: 100%;
-                        overflow: hidden;
+                        width: 297mm;
+                        height: 210mm;
+                        padding: 10mm;
                         box-sizing: border-box;
+                        overflow: hidden;
                     }
                     tr {
                         page-break-inside: avoid;
