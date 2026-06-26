@@ -9,6 +9,35 @@ interface InteractiveChartProps {
 type GroupBy = 'vessel' | 'route' | 'client';
 type PlotMetric = 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'gross_profit_breakdown';
 
+const getHexColor = (name: string, type: 'client' | 'route' | 'vessel' | 'breakdown') => {
+    if (type === 'breakdown') {
+        if (name === 'Voyage Result') return '#10B981';
+        if (name === 'Bunker Costs') return '#F43F5E';
+        if (name === 'Port Costs') return '#F59E0B';
+        return '#94A3B8';
+    }
+    if (type === 'client') {
+        if (name.includes('SPCC')) return '#0369A1';
+        if (name.includes('SPOT')) return '#F97316';
+        return '#1E3A8A';
+    }
+    if (type === 'route') {
+        if (name.includes('MATARANI')) return '#06B6D4';
+        if (name.includes('MARCONA')) return '#A855F7';
+        if (name.includes('MEJILLONES')) return '#D946EF';
+        if (name.includes('SPOT')) return '#F97316';
+        return '#334155';
+    }
+    if (type === 'vessel') {
+        if (name.includes('TABLONES')) return '#DC2626';
+        if (name.includes('MOQUEGUA')) return '#16A34A';
+        if (name.includes('CONCON')) return '#475569';
+        if (name.includes('HUEMUL')) return '#4F46E5';
+        return '#94A3B8';
+    }
+    return '#94A3B8';
+};
+
 export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months }) => {
     const [groupBy, setGroupBy] = useState<GroupBy>('vessel');
     const [plotMetric, setPlotMetric] = useState<PlotMetric>('voyage_result');
@@ -120,13 +149,16 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                     pct: pct
                 };
             });
+            const cType = isBreakdown ? 'breakdown' : groupBy;
+            const barColor = getHexColor(name, cType);
+
             return {
                 name,
                 type: 'bar',
                 stack: 'total', // Apilar barras
                 barWidth: '40%', // Hacer barras más angostas
                 data: dataArr,
-                itemStyle: { borderRadius: [2, 2, 0, 0] }, // Ligero redondeo
+                itemStyle: { borderRadius: [2, 2, 0, 0], color: barColor }, // Ligero redondeo y color asignado
                 label: {
                     show: true,
                     position: 'inside',

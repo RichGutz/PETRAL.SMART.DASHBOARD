@@ -14,6 +14,7 @@ Este documento define la estructura relacional definitiva del motor de **Geeksof
 * `built` *(INTEGER)* → Año de construcción del astillero.
 * `dwt` *(NUMERIC)* → Deadweight Tonnage (Tonelaje de peso muerto total).
 * `dwcc` *(NUMERIC)* → Deadweight Cargo Capacity (Tonelaje útil real de carga comercial).
+* `color_hex` *(VARCHAR(7))* → Código de color de UI para el Dashboard (ej. "#DC2626").
 
 **Características Navales (Estructurales)**
 * `cbm` *(NUMERIC)* → Cubic Meters (Capacidad volumétrica total de los tanques de carga).
@@ -51,6 +52,7 @@ Este documento define la estructura relacional definitiva del motor de **Geeksof
 * `destination_port_id` *(VARCHAR, PK, FK → ports.port_id)* → Puerto de destino (ej. 'MATARANI', 'MARCONA', 'MEJILLONES').
 * `route_distance` *(NUMERIC)* → Distancia oficial medida en millas náuticas (NM).
 * `weather_factor` *(NUMERIC)* → Porcentaje de fricción operativa ambiental (pierna única; usar `weather_factor_laden` y `weather_factor_ballast` en el motor para viaje redondo).
+* `color_hex` *(VARCHAR(7))* → Código de color de UI para el Dashboard (ej. "#06B6D4").
 
 > ⚠️ Los límites físicos de terminales **NO** se almacenan aquí para evitar duplicación (3NF). Viven en la tabla `ports`.
 
@@ -71,6 +73,14 @@ Este documento define la estructura relacional definitiva del motor de **Geeksof
 act_load  = MIN(c_load [contracts], v_intake [vessels], t_load_rate [ports.max_load_rate])
 act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max_disch_rate])
 ```
+
+---
+
+### 3.2. Tabla: `clients` (Maestro de Clientes Corporativos)
+*Catálogo de clientes comerciales. Permite mantener identidad visual global.*
+* `client_id` *(VARCHAR, PK)* → Identificador único comercial (ej. 'SPCC', 'SPOT').
+* `client_name` *(VARCHAR)* → Razón social del cliente.
+* `color_hex` *(VARCHAR(7))* → Código de color de UI para el Dashboard (ej. "#0369A1").
 
 ---
 

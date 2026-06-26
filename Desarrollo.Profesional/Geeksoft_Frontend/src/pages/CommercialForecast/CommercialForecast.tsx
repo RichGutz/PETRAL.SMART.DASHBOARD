@@ -153,6 +153,15 @@ export const CommercialForecast: React.FC = () => {
         });
     };
 
+    const handleDeleteNode = (type: 'client' | 'route' | 'vessel', client_id: string, route_key?: string, vessel_id?: string) => {
+        setProjectionLines(prev => prev.filter(p => {
+            if (type === 'client') return p.client_id !== client_id;
+            if (type === 'route') return !(p.client_id === client_id && `${p.origin_port_id}-${p.destination_port_id}` === route_key);
+            if (type === 'vessel') return !(p.client_id === client_id && `${p.origin_port_id}-${p.destination_port_id}` === route_key && p.vessel_id === vessel_id);
+            return true;
+        }));
+    };
+
     const handleSaveForecast = async () => {
         if (!forecastName) {
             alert("Ingrese un nombre para el forecast");
@@ -239,7 +248,7 @@ export const CommercialForecast: React.FC = () => {
                             setEndDate(end);
                         }}
                         onAddLine={handleAddLine}
-                        hideInputs={activeTab === 'ledger'}
+                        hideInputs={activeTab === 'ledger' || activeTab === 'chart'}
                         centerContent={
                             <div className="bg-slate-200 p-1 rounded-lg inline-flex gap-1 shadow-inner">
                                 <button 
@@ -281,7 +290,7 @@ export const CommercialForecast: React.FC = () => {
                 {/* 2. Custom Grid (1:1 with Mockup) */}
                 {activeTab === 'grid' && (
                     <section className="flex flex-col gap-2 relative animate-in fade-in slide-in-from-bottom-2 duration-300 mt-2">
-                        <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} onTariffChange={handleTariffChange} />
+                        <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} onTariffChange={handleTariffChange} onDeleteNode={handleDeleteNode} />
                     </section>
                 )}
                 
