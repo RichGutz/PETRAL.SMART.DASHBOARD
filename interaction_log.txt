@@ -92,3 +92,4 @@
 2026-06-26: Script deploy_forecast_kickoff.py actualizado con la contrasena correcta del VPS (Thiagutz061121@). Ejecutado exitosamente, subiendo el archivo de presentacion a /opt/forecast_petral/index.html, configurando el server block de Nginx para forecast.geeksoft.pe y recargando el servicio. Certbot SSL quedo en espera debido a la propagacion del DNS (NXDOMAIN).
 
 2026-06-26: Actualizados contratos activos en Supabase para reflejar vigencia completa en 2025 (valid_from: 2025-01-01, valid_to: 2025-12-31). Explicación de la relación E-R: contract_tariffs referencia a contracts mediante contract_id (FK), heredando automáticamente origin_port_id y evitando redundancias.
+2026-06-26: Actualizado kickoff_petral.html. Se redujo la altura de Slide 7 en un 20% para hacerlo más compacto y se añadió una llamada dinámica a la API de Supabase para obtener y actualizar los precios de IFO y MDO en tiempo real en Slide 4.
