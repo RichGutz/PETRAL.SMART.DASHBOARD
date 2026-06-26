@@ -11,10 +11,14 @@
             "id": "2e8a8ccbdcd27d07",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "DashBoardPetral/Maestro.Aduanas.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "Nueva pestaña"
+              "title": "Maestro.Aduanas"
             }
           }
         ]
@@ -176,8 +180,9 @@
       "bases:Crear nueva base": false
     }
   },
-  "active": "2e8a8ccbdcd27d07",
+  "active": "07d1f96e6ca36e53",
   "lastOpenFiles": [
+    "DashBoardPetral/Maestro.Puertos.md",
     "DashBoardPetral/Bitacora.Desarrollo.Paso2.md",
     "DashBoardPetral/Plan.Implementacion.Paso2.md",
     "DashBoardPetral/Bitacora.Desarrollo.Paso1.md",

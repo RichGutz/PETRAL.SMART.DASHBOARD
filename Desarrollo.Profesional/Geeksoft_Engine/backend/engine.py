@@ -6,10 +6,12 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
     Q = float(inputs.get("quantity", 0))
     F = float(inputs.get("freight_rate", 0))
     dist = float(inputs.get("route_distance", 0))
-    speed = float(inputs.get("vessel_speed", 0))
-    w_factor = float(inputs.get("weather_factor", 0))
-    overhead = float(inputs.get("port_overhead_hours", 0))
+    speed = float(inputs.get("vessel_speed", 11.0))
+    w_factor_laden = float(inputs.get("weather_factor_laden", inputs.get("weather_factor", 0.0)))
+    w_factor_ballast = float(inputs.get("weather_factor_ballast", inputs.get("weather_factor", 0.0)))
     
+    overhead_origin = float(inputs.get("port_overhead_hours_origin", 6))
+    overhead_dest = float(inputs.get("port_overhead_hours_dest", 6))   
     # Parámetros de Carga (Origen)
     c_load = inputs.get("contract_agreed_load_rate")
     v_intake = float(inputs.get("vessel_max_load_intake_limit", 0))
@@ -29,31 +31,31 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
     c_port = float(inputs.get("bunker_consumption_idle_ifo", 0))
 
     # 2. Control de Fallback para Variables de Cliente No Especificadas
-    if c_load is None or c_load == 0 or c_load == "":
-        c_load = 99999.0
-    else:
-        c_load = float(c_load)
+    c_load = float(c_load) if c_load else 0.0
+    c_disch = float(c_disch) if c_disch else 0.0
 
-    if c_disch is None or c_disch == 0 or c_disch == "":
-        c_disch = 99999.0
-    else:
-        c_disch = float(c_disch)
+    # 3. Resolución de Cuellos de Botella Técnicos (Lógica de Mínimos Diferentes a Cero)
+    def min_non_zero(*args):
+        valid_vals = [val for val in args if val > 0]
+        return min(valid_vals) if valid_vals else 0.0
 
-    # 3. Resolución de Cuellos de Botella Técnicos (Lógica de Mínimos)
-    actual_load_rate = min(c_load, v_intake, t_load_rate)
-    actual_discharge_rate = min(c_disch, v_pump, p_disch_limit)
+    actual_load_rate = min_non_zero(c_load, v_intake, t_load_rate)
+    actual_discharge_rate = min_non_zero(c_disch, v_pump, p_disch_limit)
 
     # 4. Cálculos de Tiempos (Itinerario Simulado)
     is_round_trip = inputs.get("is_round_trip", True)
-    trip_multiplier = 2 if is_round_trip else 1
-    sea_days = ((dist * trip_multiplier) * (1 + w_factor)) / (speed * 24)
-    hours_at_origin = (Q / actual_load_rate) + overhead
-    hours_at_dest = (Q / actual_discharge_rate) + overhead
+    if is_round_trip:
+        sea_days = (dist * (1 + w_factor_laden) + dist * (1 + w_factor_ballast)) / (speed * 24)
+    else:
+        sea_days = (dist * (1 + w_factor_laden)) / (speed * 24)
+    
+    hours_at_origin = (Q / actual_load_rate) + overhead_origin
+    hours_at_dest = (Q / actual_discharge_rate) + overhead_dest
     
     # Granularidad Portuaria (Desglose real para el Bunker)
     load_days = (Q / actual_load_rate) / 24
     disch_days = (Q / actual_discharge_rate) / 24
-    idle_days = (overhead * 2) / 24 # overhead en origen + destino
+    idle_days = (overhead_origin + overhead_dest) / 24 # overhead en origen + destino
     
     port_days = load_days + disch_days + idle_days
     
@@ -86,6 +88,49 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
     pcm_projected = tce_real * 30.42
     pl_vs_required = voyage_result - (tce_req * total_duration)
 
+    # --- RASTRO DE AUDITORIA (VOYAGE LEDGER TEST) ---
+    def fmt_tbd(val):
+        return f"{val:,.0f}" if val > 0 else "TBD"
+
+    audit_trail = {
+        "1. Tasa Carga (act_load)": {
+            "formula": "MIN(c_load, v_intake, t_load_rate)",
+            "values": f"MIN({fmt_tbd(c_load)}, {fmt_tbd(v_intake)}, {fmt_tbd(t_load_rate)})"
+        },
+        "2. Tasa Descarga (act_disch)": {
+            "formula": "MIN(c_disch, v_pump, p_disch_limit)",
+            "values": f"MIN({fmt_tbd(c_disch)}, {fmt_tbd(v_pump)}, {fmt_tbd(p_disch_limit)})"
+        },
+        "3. Días de Puerto (port_days)": {
+            "formula": "((Q/act_load + over_or) + (Q/act_disch + over_de)) / 24",
+            "values": f"(({Q:,.0f}/{actual_load_rate:,.0f} + {overhead_origin:,.1f}) + ({Q:,.0f}/{actual_discharge_rate:,.0f} + {overhead_dest:,.1f})) / 24"
+        },
+        "4. Días de Mar (sea_days)": {
+            "formula": "(dist * (1+w_laden) + dist * (1+w_ballast)) / (speed * 24)" if is_round_trip else "(dist * (1+w_laden)) / (speed * 24)",
+            "values": f"({dist:,.0f} * (1+{w_factor_laden:,.2f}) + {dist:,.0f} * (1+{w_factor_ballast:,.2f})) / ({speed:,.1f} * 24)" if is_round_trip else f"({dist:,.0f} * (1+{w_factor_laden:,.2f})) / ({speed:,.1f} * 24)"
+        },
+        "5. Costo Bunker (bunker)": {
+            "formula": "(ifo_tons * p_ifo) + (mdo_tons * p_mdo)",
+            "values": f"({bunker_ifo_tonnage:,.2f} * {p_ifo:,.2f}) + ({bunker_mdo_tonnage:,.2f} * {p_mdo:,.2f})"
+        },
+        "7. Resultado Viaje (voy_res)": {
+            "formula": "(Q * F) - port_costs - bunker",
+            "values": f"({Q:,.0f} * {F:,.2f}) - {total_port_costs:,.2f} - {total_bunker_costs:,.2f}"
+        },
+        "8. Duración Total (tot_dur)": {
+            "formula": "sea_days + port_days",
+            "values": f"{sea_days:,.4f} + {port_days:,.4f}"
+        },
+        "9. TCE Diario (tce_real)": {
+            "formula": "voyage_result / total_duration",
+            "values": f"{voyage_result:,.2f} / {total_duration:,.4f}"
+        },
+        "10. Utilidad Nom. (pl_vs_req)": {
+            "formula": "voyage_result - (tce_req * total_duration)",
+            "values": f"{voyage_result:,.2f} - ({tce_req:,.2f} * {total_duration:,.4f})"
+        }
+    }
+
     return {
         "actual_load_rate": actual_load_rate,
         "actual_discharge_rate": actual_discharge_rate,
@@ -100,7 +145,8 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
         "voyage_result": round(voyage_result, 2),
         "tce_real": round(tce_real, 2),
         "pcm_projected": round(pcm_projected, 2),
-        "pl_vs_required": round(pl_vs_required, 2)
+        "pl_vs_required": round(pl_vs_required, 2),
+        "audit_trail": audit_trail
     }
 
 def calculate_baf_adjusted_rate(trip_inputs: dict, contract: dict, actual_bunker_price: float) -> float:

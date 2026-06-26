@@ -14,6 +14,7 @@ interface ForecastBuilderProps {
     dynamicMonths: string[];
     centerContent?: React.ReactNode;
     rightContent?: React.ReactNode;
+    hideInputs?: boolean;
 }
 
 export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({ 
@@ -23,7 +24,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     currentEndDate,
     dynamicMonths,
     centerContent,
-    rightContent
+    rightContent,
+    hideInputs
 }) => {
     // Form State
     const [monthIndex, setMonthIndex] = useState('');
@@ -33,6 +35,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     const [quantity, setQuantity] = useState('');
     const [frequency, setFrequency] = useState('1');
     const [customTariff, setCustomTariff] = useState('');
+    const [spotSuffix, setSpotSuffix] = useState('');
 
     // Clear month if it falls outside the new horizon, otherwise leave it alone (or empty initially)
     useEffect(() => {
@@ -59,13 +62,21 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         }
     }, [vessel]);
 
+    useEffect(() => {
+        if (client !== 'SPOT') {
+            setSpotSuffix('');
+        }
+    }, [client]);
+
     const handleAdd = () => {
         if (!client || !route || !vessel || !monthIndex || !quantity || !frequency) return;
-        if (client === 'SPOT' && !customTariff) return;
+        if (client === 'SPOT' && (!customTariff || !spotSuffix.trim())) return;
+
+        const finalClient = client === 'SPOT' ? `SPOT-${spotSuffix.trim().toUpperCase()}` : client;
 
         onAddLine({
             month_index: monthIndex,
-            client_id: client,
+            client_id: finalClient,
             origin_port_id: route.split('-')[0],
             destination_port_id: route.split('-')[1], // Reverted hack since DB was updated
             vessel_id: vessel,
@@ -121,6 +132,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     )}
                 </div>
             </CardHeader>
+            {!hideInputs && (
             <CardContent className="pt-6">
                 
                 {/* Contenedor Flex en una sola línea sin wrap, con scroll horizontal si es muy pequeña la pantalla */}
@@ -194,6 +206,19 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             </SelectContent>
                         </Select>
                     </div>
+
+                    {client === 'SPOT' && (
+                        <div className="flex flex-col gap-2 min-w-[100px]">
+                            <Label className="text-xs font-semibold text-red-500 whitespace-nowrap">Sufijo SPOT *</Label>
+                            <Input 
+                                type="text" 
+                                value={spotSuffix} 
+                                onChange={e => setSpotSuffix(e.target.value)}
+                                placeholder="Ej: NEXA"
+                                className="w-full h-8 border-red-300 bg-red-50 uppercase text-xs"
+                            />
+                        </div>
+                    )}
 
                     {/* 5. Ruta */}
                     <div className="flex flex-col gap-2 min-w-[160px] flex-[1.5]">
@@ -276,7 +301,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         <Button 
                             onClick={handleAdd} 
                             className="bg-petral-blue hover:bg-slate-800 text-white w-full h-8"
-                            disabled={!client || !route || !vessel || !monthIndex || !quantity || !frequency || (client === 'SPOT' && !customTariff)}
+                            disabled={!client || !route || !vessel || !monthIndex || !quantity || !frequency || (client === 'SPOT' && (!customTariff || !spotSuffix.trim()))}
                         >
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Añadir
@@ -285,6 +310,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
                 </div>
             </CardContent>
+            )}
         </Card>
     );
 };

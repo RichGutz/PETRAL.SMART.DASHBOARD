@@ -21,9 +21,22 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     routes_db = {f"{r['origin_port_id']}-{r['destination_port_id']}": r for r in routes_data}
     
     bunker_data = safe_fetch(supabase, "bunker_prices")
+    # Asegurar que se tome el precio con la fecha más reciente ordenando ascendentemente
+    bunker_data = sorted(bunker_data, key=lambda x: x.get("date", "2000-01-01"))
     bunker_db = {b["fuel_type"]: b["market_price_usd"] for b in bunker_data}
+    bunker_dates_db = {b["fuel_type"]: str(b["date"]) if b.get("date") else "N/A" for b in bunker_data}
     
+    # Maestro de Puertos (tabla nueva) — límites físicos de terminales
+    ports_data = safe_fetch(supabase, "ports")
+    ports_db = {p["port_id"]: p for p in ports_data}
+    
+    # Maestro de Contratos — tasas operativas que impone el cliente (c_load, c_disch)
     contracts_data = safe_fetch(supabase, "contracts")
+    contracts_db = {(c["client_id"], c["destination_port_id"]): c for c in contracts_data}
+    
+    # Tarifas de flete por bracket de tonelaje
+    tariffs_data = safe_fetch(supabase, "contract_tariffs")
+    
     agency_data = safe_fetch(supabase, "agency_matrix")
     
     agg_data = {}
@@ -40,18 +53,15 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         # 2. Fetching Route Data
         r_data = routes_db.get(route_key, {})
         
-        # 3. Fetching Contract Data
-        # Filtramos contrato por cliente y destino (usado para BAF)
-        contract = next((c for c in contracts_data if c.get("client_id") == client and c.get("destination_port_id") == line.destination_port_id), None)
+        # 3. Fetching Contract Data — tasas operativas (c_load / c_disch) desde tabla `contracts`
+        contract = contracts_db.get((client, line.destination_port_id))
         
-        # Buscar Tarifa en contract_tariffs según quantity
+        # 4. Buscar Tarifa en contract_tariffs según quantity (cache pre-cargado)
         freight_rate = 0
         
         if getattr(line, 'custom_tariff', None) is not None:
             freight_rate = line.custom_tariff
         else:
-            tariffs_data = safe_fetch(supabase, "contract_tariffs")
-            
             matching_tariffs = [
                 t for t in tariffs_data 
                 if t.get("client_id") == client and t.get("destination_port_id") == line.destination_port_id
@@ -63,14 +73,29 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                         freight_rate = tariff.get("freight_rate", 0)
                         break
                 
-                # Fallback: Si el buque excede el tonelaje maximo del contrato, aplicamos la tarifa del mayor bracket
+                # Fallback: tarifa del bracket más alto si excede tonelaje máximo
                 if freight_rate == 0:
                     highest_bracket = max(matching_tariffs, key=lambda x: x.get("max_tonnage", 0))
                     freight_rate = highest_bracket.get("freight_rate", 0)
         
-        # Agencia Costs
-        ag_orig = next((a.get("cost", 15000) for a in agency_data if (a.get("client_id") == client or a.get("client_id") == "DEFAULT") and a.get("port_id") == line.origin_port_id), 15000)
-        ag_dest = next((a.get("cost", 15000) for a in agency_data if (a.get("client_id") == client or a.get("client_id") == "DEFAULT") and a.get("port_id") == line.destination_port_id), 15000)
+        # Agencia Costs logic (with fallback priority: exact -> client_only -> default)
+        def get_agency_cost(target_port, target_op):
+            # 1. client_id + port_id + operation_type + vessel_id
+            for a in agency_data:
+                if a.get("client_id") == client and a.get("port_id") == target_port and a.get("operation_type") == target_op and a.get("vessel_id") == vessel:
+                    return float(a.get("cost", 15000))
+            # 2. client_id + port_id + operation_type + 'DEFAULT'
+            for a in agency_data:
+                if a.get("client_id") == client and a.get("port_id") == target_port and a.get("operation_type") == target_op and a.get("vessel_id", "DEFAULT") == "DEFAULT":
+                    return float(a.get("cost", 15000))
+            # 3. 'DEFAULT' + port_id + operation_type + 'DEFAULT'
+            for a in agency_data:
+                if a.get("client_id") == "DEFAULT" and a.get("port_id") == target_port and a.get("operation_type") == target_op and a.get("vessel_id", "DEFAULT") == "DEFAULT":
+                    return float(a.get("cost", 15000))
+            return 15000.0
+            
+        ag_orig = get_agency_cost(line.origin_port_id, 'CARGA')
+        ag_dest = get_agency_cost(line.destination_port_id, 'DESCARGA')
 
         p_ifo = line.forecast_bunker_price_ifo if line.forecast_bunker_price_ifo else bunker_db.get("IFO", 450)
         p_mdo = line.forecast_bunker_price_mdo if line.forecast_bunker_price_mdo else bunker_db.get("MDO", 800)
@@ -81,16 +106,20 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "freight_rate": freight_rate,
             "route_distance": r_data.get("route_distance", 0),
             "vessel_speed": v_data.get("vessel_speed", 0),
-            "weather_factor": r_data.get("weather_factor", 0),
-            "port_overhead_hours": 12, # Hardcoded por ahora
+            "weather_factor_laden": r_data.get("weather_factor_laden", r_data.get("weather_factor", 0)),
+            "weather_factor_ballast": r_data.get("weather_factor_ballast", r_data.get("weather_factor", 0)),
+            "port_overhead_hours_origin": ports_db.get(line.origin_port_id, {}).get("overhead_carga_hrs", 6.0),
+            "port_overhead_hours_dest": ports_db.get(line.destination_port_id, {}).get("overhead_descarga_hrs", 6.0),
             "vessel_max_load_intake_limit": v_data.get("vessel_max_load_intake_limit", 0),
-            "max_terminal_load_rate": 9999,
+            # Límites físicos de terminales desde tabla `ports`
+            "max_terminal_load_rate": ports_db.get(line.origin_port_id, {}).get("max_load_rate", 0),
             "vessel_pump_discharge_rate": v_data.get("vessel_pump_discharge_rate", 0),
-            "port_max_discharge_limit": 9999,
+            "port_max_discharge_limit": ports_db.get(line.destination_port_id, {}).get("max_disch_rate", 0),
             "agency_costs_origin": ag_orig,
             "agency_costs_destination": ag_dest,
             "bunker_price_ifo": p_ifo,
             "bunker_price_mdo": p_mdo,
+            "bunker_price_date": bunker_dates_db.get("IFO", "N/A"),
             "tce_required": v_data.get("tce_required", 0),
             "bunker_consumption_sea_ifo": v_data.get("consumption_sea_ifo", 0),
             "bunker_consumption_idle_ifo": v_data.get("consumption_idle_ifo", 0),
@@ -136,7 +165,9 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "total_port_costs_unit": unit_result["total_port_costs"],
             "tce_real_unit": unit_result["tce_real"],
             "pcm_projected": unit_result["pcm_projected"],
-            "pl_vs_required_unit": unit_result["pl_vs_required"]
+            "pl_vs_required_unit": unit_result["pl_vs_required"],
+            "audit_trail": unit_result.get("audit_trail", {}),
+            "raw_inputs": inputs
         }
         
         if client not in agg_data:

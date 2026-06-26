@@ -65,3 +65,16 @@ def load_forecast(forecast_id: str):
         return res.data[0]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/benchmarks")
+def get_audit_benchmarks():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        
+        res = sb.table("audit_benchmarks").select("*").execute()
+        # Convert list of dicts to a dictionary keyed by scenario_key for easier lookup in frontend
+        benchmarks_map = {row["scenario_key"]: row for row in res.data}
+        return benchmarks_map
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

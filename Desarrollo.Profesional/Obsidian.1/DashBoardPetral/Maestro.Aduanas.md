@@ -10,7 +10,7 @@ Este archivo maestro indexa las tarifas de agenciamiento marítimo, aduanas e im
 
 ## 📊 1. Estructura de la Matriz Relacional (Datos Maestros)
 
-El sistema evaluará el costo de aduana buscando la coincidencia exacta de tres llaves: `client_id` + `port_id` + `operation_type` (Carga/Descarga).
+El sistema evaluará el costo de aduana buscando la coincidencia exacta de cuatro llaves: `client_id` + `port_id` + `operation_type` (Carga/Descarga) + `vessel_id`.
 
 ### 🏢 Cliente: SPCC (Southern Peru Copper Corporation) — Tarifas Corporativas por Alto Volumen
 
@@ -46,11 +46,11 @@ Plaintext
 // El sistema ahora ejecuta un query relacional:
 
 ag_orig = DB.query(
-    "SELECT cost FROM agency_matrix WHERE client_id = @vessel_trip.client_id AND port_id = @vessel_trip.origin_port_id AND operation_type = 'CARGA'"
+    "SELECT cost FROM agency_matrix WHERE client_id = @vessel_trip.client_id AND port_id = @vessel_trip.origin_port_id AND operation_type = 'CARGA' AND vessel_id = @vessel_trip.vessel_id"
 )
 
 IF ag_orig IS NULL THEN
-    ag_orig = DB.query("SELECT cost FROM agency_matrix WHERE client_id = 'DEFAULT' AND port_id = @vessel_trip.origin_port_id")
+    ag_orig = DB.query("SELECT cost FROM agency_matrix WHERE client_id = 'DEFAULT' AND port_id = @vessel_trip.origin_port_id AND operation_type = 'CARGA' AND vessel_id = 'DEFAULT'")
 ENDIF
 ```
 

@@ -4,6 +4,7 @@ import { ForecastBuilder } from '../../components/CommercialForecast/ForecastBui
 import { InteractiveChart } from '../../components/CommercialForecast/InteractiveChart';
 import { ForecastService } from '../../services/api';
 import { Activity, Save, FolderOpen, X, Table, BarChart2 } from 'lucide-react';
+import { VoyageLedgerTest } from '../../components/CommercialForecast/VoyageLedgerTest';
 
 export const CommercialForecast: React.FC = () => {
     const [data, setData] = useState<any>(null);
@@ -27,7 +28,7 @@ export const CommercialForecast: React.FC = () => {
     const [savedForecasts, setSavedForecasts] = useState<any[]>([]);
 
     // Tab State
-    const [activeTab, setActiveTab] = useState<'grid' | 'chart'>('grid');
+    const [activeTab, setActiveTab] = useState<'grid' | 'chart' | 'ledger'>('ledger');
 
     // Derive months from horizon without JS Date timezone shifts
     const dynamicMonths = useMemo(() => {
@@ -237,6 +238,7 @@ export const CommercialForecast: React.FC = () => {
                         setEndDate(end);
                     }}
                     onAddLine={handleAddLine}
+                    hideInputs={activeTab === 'ledger'}
                     centerContent={
                         <div className="bg-slate-200 p-1 rounded-lg inline-flex gap-1 shadow-inner">
                             <button 
@@ -251,18 +253,26 @@ export const CommercialForecast: React.FC = () => {
                             >
                                 <BarChart2 size={16} /> Análisis Gráfico
                             </button>
+                            <button 
+                                onClick={() => setActiveTab('ledger')}
+                                className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold text-sm transition-all ${activeTab === 'ledger' ? 'bg-white text-petral-teal shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
+                            >
+                                <span className="text-lg">🧪</span> Auditoría Ledger
+                            </button>
                         </div>
                     }
                     rightContent={
-                        <div className="flex items-center gap-3">
-                            {loading && <span className="text-xs text-petral-teal font-medium flex items-center gap-2"><div className="animate-spin h-3 w-3 border-2 border-petral-teal border-t-transparent rounded-full"></div> Recalculando...</span>}
-                            <button onClick={() => setShowSaveModal(true)} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm">
-                                <Save size={16} /> Guardar
-                            </button>
-                            <button onClick={handleLoadClick} className="flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm">
-                                <FolderOpen size={16} /> Cargar
-                            </button>
-                        </div>
+                        activeTab !== 'ledger' && (
+                            <div className="flex items-center gap-3">
+                                {loading && <span className="text-xs text-petral-teal font-medium flex items-center gap-2"><div className="animate-spin h-3 w-3 border-2 border-petral-teal border-t-transparent rounded-full"></div> Recalculando...</span>}
+                                <button onClick={() => setShowSaveModal(true)} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm">
+                                    <Save size={16} /> Guardar
+                                </button>
+                                <button onClick={handleLoadClick} className="flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm">
+                                    <FolderOpen size={16} /> Cargar
+                                </button>
+                            </div>
+                        )
                     }
                 />
 
@@ -277,6 +287,13 @@ export const CommercialForecast: React.FC = () => {
                 {activeTab === 'chart' && (
                     <section className="flex flex-col gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <InteractiveChart data={data} months={dynamicMonths} />
+                    </section>
+                )}
+
+                {/* 4. Voyage Ledger Test */}
+                {activeTab === 'ledger' && (
+                    <section className="flex flex-col gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <VoyageLedgerTest />
                     </section>
                 )}
             </main>

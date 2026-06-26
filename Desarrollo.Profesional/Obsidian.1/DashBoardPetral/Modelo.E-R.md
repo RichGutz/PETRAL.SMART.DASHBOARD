@@ -42,14 +42,35 @@ Este documento define la estructura relacional definitiva del motor de **Geeksof
 ### 2. Tabla: `bunker_prices` (Maestro de Inventario de Precios)
 * `fuel_type` *(VARCHAR, PK)* → Tipo de bunker restringido por dominio (`CHECK (fuel_type IN ('IFO', 'MDO'))`).
 * `market_price_usd` *(NUMERIC)* → Costo de inventario por tonelada métrica en dólares.
+* `date` *(DATE, NOT NULL, DEFAULT CURRENT_DATE)* → Fecha de vigencia de la cotización de mercado. Permite auditar con qué precio histórico se corrió cada simulación.
 
 ---
 
 ### 3. Tabla: `routes` (Maestro de Tramos Marítimos)
-* `origin_port_id` *(VARCHAR, PK)* → Puerto base de carga (ej. 'ILO').
-* `destination_port_id` *(VARCHAR, PK)* → Puerto de destino (ej. 'MATARANI', 'MARCONA', 'MEJILLONES').
+* `origin_port_id` *(VARCHAR, PK, FK → ports.port_id)* → Puerto base de carga (ej. 'ILO').
+* `destination_port_id` *(VARCHAR, PK, FK → ports.port_id)* → Puerto de destino (ej. 'MATARANI', 'MARCONA', 'MEJILLONES').
 * `route_distance` *(NUMERIC)* → Distancia oficial medida en millas náuticas (NM).
-* `weather_factor` *(NUMERIC)* → Porcentaje de fricción operativa ambiental.
+* `weather_factor` *(NUMERIC)* → Porcentaje de fricción operativa ambiental (pierna única; usar `weather_factor_laden` y `weather_factor_ballast` en el motor para viaje redondo).
+
+> ⚠️ Los límites físicos de terminales **NO** se almacenan aquí para evitar duplicación (3NF). Viven en la tabla `ports`.
+
+---
+
+### 3.1. Tabla: `ports` (Maestro de Puertos — Límites Físicos de Terminales)
+*Almacena las capacidades físicas de cada terminal portuario. Al separar estos datos de `routes`, un solo UPDATE en `ports` impacta automáticamente todas las rutas que pasan por ese puerto.*
+* `port_id` *(VARCHAR, PK)* → Identificador único del puerto (ej. 'ILO', 'MATARANI').
+* `port_name` *(VARCHAR)* → Nombre comercial del terminal.
+* `country` *(VARCHAR(2))* → Código de país ISO ('PE', 'CL').
+* `max_load_rate` *(FLOAT, DEFAULT 9999)* → Límite físico máximo del terminal de **carga** en MT/hora (`t_load_rate` en la fórmula MIN). 9999 = sin restricción conocida.
+* `max_disch_rate` *(FLOAT, DEFAULT 9999)* → Límite físico máximo del terminal de **descarga** en MT/hora (`p_disch_limit` en la fórmula MIN). Ej: MATARANI = 300 MT/hr.
+* `overhead_carga_hrs` *(NUMERIC, DEFAULT 6.0)* → Tiempo muerto estándar (conexión de mangueras, papelería aduanera) en puerto de origen.
+* `overhead_descarga_hrs` *(NUMERIC, DEFAULT 6.0)* → Tiempo muerto estándar (desconexión, inspecciones) en puerto de destino.
+
+**Relación con el motor:**
+```
+act_load  = MIN(c_load [contracts], v_intake [vessels], t_load_rate [ports.max_load_rate])
+act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max_disch_rate])
+```
 
 ---
 
@@ -57,6 +78,7 @@ Este documento define la estructura relacional definitiva del motor de **Geeksof
 * `client_id` *(VARCHAR, PK)* → ID del cliente contratante o 'DEFAULT' como fallback global de tarifa aduanera.
 * `port_id` *(VARCHAR, PK)* → Puerto de la operación.
 * `operation_type` *(VARCHAR, PK)* → Naturaleza del evento en muelle (`CHECK (operation_type IN ('CARGA', 'DESCARGA'))`).
+* `vessel_id` *(VARCHAR, PK)* → ID del navío que realiza el viaje (ej. 'TABLONES') o 'DEFAULT' para fallback genérico.
 * `cost` *(NUMERIC)* → Gasto fijo estipulado de agencia aduanera en dólares.
 
 ---

@@ -23,5 +23,9 @@ export const ForecastService = {
     loadForecast: async (id: string) => {
         const response = await api.get(`/forecast/load/${id}`);
         return response.data;
+    },
+    getBenchmarks: async () => {
+        const response = await api.get('/forecast/benchmarks');
+        return response.data;
     }
 };

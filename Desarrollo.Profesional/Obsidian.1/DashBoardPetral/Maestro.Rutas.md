@@ -17,19 +17,21 @@ _Nota: Las distancias están expresadas en Millas Náuticas (NM)._
 
 ## 📐 2. Impacto Matemático en el Motor de Cálculo P&L
 
-El agente de desarrollo debe asegurar que estas variables se inyecten automáticamente en la **Fase I (Simulación de Tiempos)** de la nota `[[CT-01-Motor-Calculo-PL-Simetrico]]`.
+El `weather_factor` actúa como multiplicador sobre la distancia simulando fricción climática. El motor separa el factor en **dos piernas independientes** para viaje redondo:
 
-El `weather_factor` actúa como un multiplicador directo sobre la distancia, simulando que el barco recorre más millas reales debido al efecto del viento, oleaje y corrientes:
+$$\text{sea\_days} = \frac{\text{dist} \times (1 + w_{\text{laden}}) + \text{dist} \times (1 + w_{\text{ballast}})}{\text{vessel\_speed} \times 24}$$
 
-$$\text{sea\_days} = \frac{\text{route\_distance} \times (1 + \text{weather\_factor})}{\text{vessel\_speed} \times 24}$$
+Donde:
+- $w_{\text{laden}}$ = Weather Factor **Ida** (barco cargado) → `routes.weather_factor` (actualmente mismo valor para ambas piernas)
+- $w_{\text{ballast}}$ = Weather Factor **Retorno** (barco en lastre) → futuro: `routes.weather_factor_ballast`
 
-### 🧭 Ejemplo de Impacto Real (Ruta Ilo - Matarani):
+### 🧭 Ejemplo Ruta Ilo - Matarani (Viaje Redondo):
 
-- Distancia base: $69\text{ NM}$
-    
-- Distancia corregida por clima ($+3\%$): $69 \times 1.03 = 71.07\text{ NM}$ real operativa.
-    
-- Esto garantiza que el cálculo de `total_bunker_costs` absorba el bunker extra consumido en condiciones climáticas estándar de la costa.
+- Distancia: $69\text{ NM}$
+- $w_{laden} = w_{ballast} = 0.03$
+- $\text{sea\_days} = \frac{69 \times 1.03 + 69 \times 1.03}{11 \times 24} = \frac{142.14}{264} = 0.5384\text{ d}$
+
+> ⚠️ Los límites físicos de los terminales (tasa máxima de carga/descarga del puerto) NO viven en esta tabla. Viven en `[[Maestro.Puertos]]` (`ports.max_load_rate` y `ports.max_disch_rate`).
     
 
 ## 💻 3. Lógica de Consulta en Base de Datos (SQL/Supabase)
