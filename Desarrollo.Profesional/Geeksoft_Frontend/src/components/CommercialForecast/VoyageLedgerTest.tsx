@@ -283,25 +283,14 @@ export const VoyageLedgerTest: React.FC = () => {
             <style>{`
                 @page {
                     size: A4 landscape;
-                    margin: 0;
+                    margin: 0 !important;
                 }
                 @media print {
-                    /* Ocultar absolutamente todos los elementos del cuerpo */
-                    body * {
-                        visibility: hidden;
+                    /* Ocultar elementos de pantalla e interactivos */
+                    .no-print {
+                        display: none !important;
                     }
-                    /* Excluir de la ocultacion al contenedor de impresion y todos sus descendientes */
-                    .print-only, .print-only * {
-                        visibility: visible !important;
-                    }
-                    /* Forzar al contenedor e hijos a ajustarse al lienzo fisico de A4 Landscape */
-                    html, body {
-                        width: 297mm;
-                        height: 210mm;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        background: white;
-                    }
+                    /* Mostrar contenedor de impresion */
                     .print-only {
                         display: block !important;
                         position: absolute;
@@ -311,6 +300,14 @@ export const VoyageLedgerTest: React.FC = () => {
                         height: auto;
                         margin: 0;
                         padding: 0;
+                    }
+                    /* Ajustar body e html */
+                    html, body {
+                        width: 297mm;
+                        height: 210mm;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: white;
                     }
                     .page-break {
                         page-break-after: always;

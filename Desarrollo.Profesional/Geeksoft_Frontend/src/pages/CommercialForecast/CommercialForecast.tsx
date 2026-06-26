@@ -205,8 +205,8 @@ export const CommercialForecast: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 p-8 font-sans">
-            <header className="mb-6 flex items-center justify-between">
+        <div className="min-h-screen bg-slate-50 p-8 font-sans print:p-0 print:bg-white">
+            <header className="mb-6 flex items-center justify-between print:hidden">
                 {/* Left: Geeksoft Logo */}
                 <div className="flex items-center flex-1">
                     <img src="/Logo.Geeksoft.png" alt="Geeksoft Logo" className="h-24 object-contain" />
@@ -226,55 +226,57 @@ export const CommercialForecast: React.FC = () => {
                 </div>
             </header>
 
-            <main className="flex flex-col gap-6">
+            <main className="flex flex-col gap-6 print:gap-0 print:m-0">
                 
                 {/* 1. Builder Bar */}
-                <ForecastBuilder 
-                    currentStartDate={startDate}
-                    currentEndDate={endDate}
-                    dynamicMonths={dynamicMonths}
-                    onHorizonChange={(start, end) => {
-                        setStartDate(start);
-                        setEndDate(end);
-                    }}
-                    onAddLine={handleAddLine}
-                    hideInputs={activeTab === 'ledger'}
-                    centerContent={
-                        <div className="bg-slate-200 p-1 rounded-lg inline-flex gap-1 shadow-inner">
-                            <button 
-                                onClick={() => setActiveTab('grid')}
-                                className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold text-sm transition-all ${activeTab === 'grid' ? 'bg-white text-petral-blue shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
-                            >
-                                <Table size={16} /> Matriz Financiera
-                            </button>
-                            <button 
-                                onClick={() => setActiveTab('chart')}
-                                className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold text-sm transition-all ${activeTab === 'chart' ? 'bg-white text-petral-blue shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
-                            >
-                                <BarChart2 size={16} /> Análisis Gráfico
-                            </button>
-                            <button 
-                                onClick={() => setActiveTab('ledger')}
-                                className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold text-sm transition-all ${activeTab === 'ledger' ? 'bg-white text-petral-teal shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
-                            >
-                                <span className="text-lg">🧪</span> Auditoría Ledger
-                            </button>
-                        </div>
-                    }
-                    rightContent={
-                        activeTab !== 'ledger' && (
-                            <div className="flex items-center gap-3">
-                                {loading && <span className="text-xs text-petral-teal font-medium flex items-center gap-2"><div className="animate-spin h-3 w-3 border-2 border-petral-teal border-t-transparent rounded-full"></div> Recalculando...</span>}
-                                <button onClick={() => setShowSaveModal(true)} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm">
-                                    <Save size={16} /> Guardar
+                <div className="print:hidden">
+                    <ForecastBuilder 
+                        currentStartDate={startDate}
+                        currentEndDate={endDate}
+                        dynamicMonths={dynamicMonths}
+                        onHorizonChange={(start, end) => {
+                            setStartDate(start);
+                            setEndDate(end);
+                        }}
+                        onAddLine={handleAddLine}
+                        hideInputs={activeTab === 'ledger'}
+                        centerContent={
+                            <div className="bg-slate-200 p-1 rounded-lg inline-flex gap-1 shadow-inner">
+                                <button 
+                                    onClick={() => setActiveTab('grid')}
+                                    className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold text-sm transition-all ${activeTab === 'grid' ? 'bg-white text-petral-blue shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
+                                >
+                                    <Table size={16} /> Matriz Financiera
                                 </button>
-                                <button onClick={handleLoadClick} className="flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm">
-                                    <FolderOpen size={16} /> Cargar
+                                <button 
+                                    onClick={() => setActiveTab('chart')}
+                                    className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold text-sm transition-all ${activeTab === 'chart' ? 'bg-white text-petral-blue shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
+                                >
+                                    <BarChart2 size={16} /> Análisis Gráfico
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('ledger')}
+                                    className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold text-sm transition-all ${activeTab === 'ledger' ? 'bg-white text-petral-teal shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
+                                >
+                                    <span className="text-lg">🧪</span> Auditoría Ledger
                                 </button>
                             </div>
-                        )
-                    }
-                />
+                        }
+                        rightContent={
+                            activeTab !== 'ledger' && (
+                                <div className="flex items-center gap-3">
+                                    {loading && <span className="text-xs text-petral-teal font-medium flex items-center gap-2"><div className="animate-spin h-3 w-3 border-2 border-petral-teal border-t-transparent rounded-full"></div> Recalculando...</span>}
+                                    <button onClick={() => setShowSaveModal(true)} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm">
+                                        <Save size={16} /> Guardar
+                                    </button>
+                                    <button onClick={handleLoadClick} className="flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm">
+                                        <FolderOpen size={16} /> Cargar
+                                    </button>
+                                </div>
+                            )
+                        }
+                    />
+                </div>
 
                 {/* 2. Custom Grid (1:1 with Mockup) */}
                 {activeTab === 'grid' && (
