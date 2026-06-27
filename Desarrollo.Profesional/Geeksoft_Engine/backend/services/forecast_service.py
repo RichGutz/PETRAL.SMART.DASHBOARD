@@ -187,6 +187,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         
         # Apply Frequency for aggregate totals, but keep unit values for the Ledger view
         monthly_result = {
+            "freq": freq,
             "net_income": unit_result["net_income"] * freq,
             "total_port_costs": unit_result["total_port_costs"] * freq,
             "total_bunker_costs": unit_result["total_bunker_costs"] * freq,

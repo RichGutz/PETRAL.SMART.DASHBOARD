@@ -45,7 +45,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
     const [vesselOrder, setVesselOrder] = useState<Record<string, string[]>>({});
 
     // Context Menu
-    const [contextMenu, setContextMenu] = useState<{ x: number, y: number, type: 'client'|'route'|'vessel', client: string, route?: string, vessel?: string } | null>(null);
+    const [contextMenu, setContextMenu] = useState<{ x: number, y: number, type: 'client'|'route'|'vessel', client?: string, route?: string, vessel?: string } | null>(null);
+    const [isGlobalTotalCollapsed, setIsGlobalTotalCollapsed] = useState(true);
+    const [isGlobalAcumCollapsed, setIsGlobalAcumCollapsed] = useState(true);
 
     useEffect(() => {
         const handleClick = () => setContextMenu(null);
@@ -112,6 +114,15 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                 return 0;
             });
         }
+
+        const sum = (arr: number[]) => arr.reduce((a,b) => a+b, 0);
+
+        const globalTrips = new Array(months.length).fill(0);
+        const globalTons = new Array(months.length).fill(0);
+        const globalRevenues = new Array(months.length).fill(0);
+        const globalPortCosts = new Array(months.length).fill(0);
+        const globalBunkerCosts = new Array(months.length).fill(0);
+        const globalVoyageResult = new Array(months.length).fill(0);
 
         clients.forEach((client) => {
             const routesData = data.aggregated_data[client];
@@ -285,12 +296,19 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                         }
                     });
 
+                    months.forEach((_, i) => {
+                        globalTrips[i] += trips[i] || 0;
+                        globalTons[i] += tonsTotal[i] || 0;
+                        globalRevenues[i] += revenues[i] || 0;
+                        globalPortCosts[i] += portCosts[i] || 0;
+                        globalBunkerCosts[i] += bunker[i] || 0;
+                        globalVoyageResult[i] += voyageResult[i] || 0;
+                    });
+
                     isFirstRouteRow = false;
                     isFirstClientRow = false;
                 });
             });
-
-            const sum = (arr: number[]) => arr.reduce((a,b) => a+b, 0);
 
             const clientCalcPct = (arr: number[]) => arr.map((v, i) => clientGrossRevenue[i] ? (v / clientGrossRevenue[i]) * 100 : 0);
             const clientCalcTotalPct = (totalVal: number, totalRev: number) => totalRev ? (totalVal / totalRev) * 100 : 0;
@@ -331,8 +349,91 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
 
         });
         
+        // TOTAL FLOTA
+        const globalCalcPct = (arr: number[]) => arr.map((v, i) => globalRevenues[i] ? (v / globalRevenues[i]) * 100 : 0);
+        const globalCalcTotalPct = (totalVal: number, totalRev: number) => totalRev ? (totalVal / totalRev) * 100 : 0;
+
+        const globalMetrics = [
+            { name: "Viajes (freq)", values: globalTrips, total: sum(globalTrips), pct: null, totalPct: null, isCurrency: false, isTotal: false },
+            { name: "Toneladas", values: globalTons, total: sum(globalTons), pct: null, totalPct: null, isCurrency: false, isTotal: false },
+            { name: "Gross Revenue", values: globalRevenues, total: sum(globalRevenues), pct: globalRevenues.map(r => r ? 100 : 0), totalPct: sum(globalRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
+            { name: "Port Costs", values: globalPortCosts, total: sum(globalPortCosts), pct: globalCalcPct(globalPortCosts), totalPct: globalCalcTotalPct(sum(globalPortCosts), sum(globalRevenues)), isCurrency: true, isTotal: false },
+            { name: "Bunker Costs", values: globalBunkerCosts, total: sum(globalBunkerCosts), pct: globalCalcPct(globalBunkerCosts), totalPct: globalCalcTotalPct(sum(globalBunkerCosts), sum(globalRevenues)), isCurrency: true, isTotal: false },
+            { name: "Voyage Result", values: globalVoyageResult, total: sum(globalVoyageResult), pct: globalCalcPct(globalVoyageResult), totalPct: globalCalcTotalPct(sum(globalVoyageResult), sum(globalRevenues)), isCurrency: true, isTotal: true }
+        ];
+
+        const visibleGlobalMetrics = isGlobalTotalCollapsed ? [globalMetrics[5]] : globalMetrics;
+        const globalRouteRowSpanRef = { value: visibleGlobalMetrics.length };
+
+        visibleGlobalMetrics.forEach((metric, index) => {
+            const isVoyageResultRow = metric.name === "Voyage Result";
+            result.push({
+                client: index === 0 ? { name: "TOTAL FLOTA", rowSpanRef: globalRouteRowSpanRef, isSubtotal: true, color: "bg-slate-800 text-white" } : null,
+                route: null,
+                vessel: null,
+                clientName: "TOTAL FLOTA",
+                routeName: "",
+                vesselName: "",
+                metric: {
+                    ...metric,
+                    isExpandableGlobal: isVoyageResultRow,
+                    globalType: 'total',
+                    isCollapsed: isGlobalTotalCollapsed
+                },
+                isSubRow: false,
+                isGlobalTotal: true
+            });
+        });
+
+        // TOTAL ACUMULADO
+        const accumArray = (arr: number[]) => {
+            let running = 0;
+            return arr.map(v => { running += v; return running; });
+        };
+        const accumTrips = accumArray(globalTrips);
+        const accumTons = accumArray(globalTons);
+        const accumRevenues = accumArray(globalRevenues);
+        const accumPortCosts = accumArray(globalPortCosts);
+        const accumBunkerCosts = accumArray(globalBunkerCosts);
+        const accumVoyageResult = accumArray(globalVoyageResult);
+
+        const accumCalcPct = (arr: number[]) => arr.map((v, i) => accumRevenues[i] ? (v / accumRevenues[i]) * 100 : 0);
+        const lastVal = (arr: number[]) => arr.length > 0 ? arr[arr.length - 1] : 0;
+
+        const accumMetrics = [
+            { name: "Viajes (freq)", values: accumTrips, total: lastVal(accumTrips), pct: null, totalPct: null, isCurrency: false, isTotal: false },
+            { name: "Toneladas", values: accumTons, total: lastVal(accumTons), pct: null, totalPct: null, isCurrency: false, isTotal: false },
+            { name: "Gross Revenue", values: accumRevenues, total: lastVal(accumRevenues), pct: accumRevenues.map(r => r ? 100 : 0), totalPct: sum(accumRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
+            { name: "Port Costs", values: accumPortCosts, total: lastVal(accumPortCosts), pct: accumCalcPct(accumPortCosts), totalPct: globalCalcTotalPct(lastVal(accumPortCosts), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
+            { name: "Bunker Costs", values: accumBunkerCosts, total: lastVal(accumBunkerCosts), pct: accumCalcPct(accumBunkerCosts), totalPct: globalCalcTotalPct(lastVal(accumBunkerCosts), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
+            { name: "Voyage Result", values: accumVoyageResult, total: lastVal(accumVoyageResult), pct: accumCalcPct(accumVoyageResult), totalPct: globalCalcTotalPct(lastVal(accumVoyageResult), lastVal(accumRevenues)), isCurrency: true, isTotal: true }
+        ];
+
+        const visibleAccumMetrics = isGlobalAcumCollapsed ? [accumMetrics[5]] : accumMetrics;
+        const accumRouteRowSpanRef = { value: visibleAccumMetrics.length };
+
+        visibleAccumMetrics.forEach((metric, index) => {
+            const isVoyageResultRow = metric.name === "Voyage Result";
+            result.push({
+                client: index === 0 ? { name: "TOTAL ACUMULADO", rowSpanRef: accumRouteRowSpanRef, isSubtotal: true, color: "bg-petral-teal text-white" } : null,
+                route: null,
+                vessel: null,
+                clientName: "TOTAL ACUMULADO",
+                routeName: "",
+                vesselName: "",
+                metric: {
+                    ...metric,
+                    isExpandableGlobal: isVoyageResultRow,
+                    globalType: 'accum',
+                    isCollapsed: isGlobalAcumCollapsed
+                },
+                isSubRow: false,
+                isGlobalTotal: true
+            });
+        });
+
         return result;
-    }, [data, months, projectionLines, expandedRows, clientOrder, routeOrder, vesselOrder, collapsedSubtotals]);
+    }, [data, months, projectionLines, expandedRows, clientOrder, routeOrder, vesselOrder, collapsedSubtotals, isGlobalTotalCollapsed, isGlobalAcumCollapsed]);
 
     const formatCurrency = (val: number) => {
         if (val === 0) return "-";
@@ -372,16 +473,25 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                 </thead>
                 <tbody>
                     {rows.map((row, i) => (
-                        <tr key={i} className={`border border-slate-200 transition-colors ${row.isSubRow ? 'bg-slate-50/50' : 'hover:bg-slate-50'} ${row.metric.isTotal ? 'bg-slate-100 font-semibold' : ''} ${row.isClientSubtotal ? 'bg-amber-50/30 font-semibold' : ''}`}>
+                        <tr key={i} 
+                            onDoubleClick={() => {
+                                if (row.metric.isExpandableGlobal) {
+                                    if (row.metric.globalType === 'total') setIsGlobalTotalCollapsed(!isGlobalTotalCollapsed);
+                                    if (row.metric.globalType === 'accum') setIsGlobalAcumCollapsed(!isGlobalAcumCollapsed);
+                                }
+                            }}
+                            className={`border border-slate-200 transition-colors ${row.isSubRow ? 'bg-slate-50/50' : 'hover:bg-slate-50'} ${row.metric.isTotal ? 'bg-slate-100 font-semibold' : ''} ${row.isClientSubtotal ? 'bg-amber-50/30 font-semibold' : ''} ${row.isGlobalTotal ? 'bg-indigo-50/20 font-bold' : ''}`}>
                             {row.client && (
-                                <td rowSpan={row.client.rowSpanRef.value} 
+                                <td rowSpan={row.client.rowSpanRef.value} colSpan={row.isGlobalTotal ? 3 : 1}
                                     onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'client', client: row.client.name }); }}
-                                    className={`p-0 border border-slate-200 align-middle ${getClientColor(row.client.name)} relative group cursor-context-menu`}>
+                                    className={`p-0 border border-slate-200 align-middle ${row.client.color || getClientColor(row.client.name)} relative group cursor-context-menu`}>
+                                    {!row.isGlobalTotal && (
                                     <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button onClick={() => handleMove('client', row.client.name, '', '', 'up')} className="text-slate-300 hover:text-white"><ChevronUp size={14} /></button>
                                         <button onClick={() => handleMove('client', row.client.name, '', '', 'down')} className="text-slate-300 hover:text-white"><ChevronDown size={14} /></button>
                                     </div>
-                                    <div className="vertical-text mx-auto px-2">{row.client.name}</div>
+                                    )}
+                                    <div className={`vertical-text mx-auto px-2 ${row.isGlobalTotal ? 'text-lg tracking-wider transform rotate-0 writing-mode-unset flex items-center justify-center h-full' : ''}`} style={row.isGlobalTotal ? { writingMode: 'unset', transform: 'none' } : {}}>{row.client.name}</div>
                                 </td>
                             )}
                             {row.route && (
@@ -427,6 +537,17 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                                         {row.metric.isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                         {row.metric.name}
                                     </button>
+                                ) : row.metric.isExpandableGlobal ? (
+                                    <button 
+                                        onClick={() => {
+                                            if (row.metric.globalType === 'total') setIsGlobalTotalCollapsed(!isGlobalTotalCollapsed);
+                                            if (row.metric.globalType === 'accum') setIsGlobalAcumCollapsed(!isGlobalAcumCollapsed);
+                                        }}
+                                        className="flex items-center gap-1 text-indigo-700 hover:text-indigo-900 focus:outline-none transition-colors font-bold w-full h-full text-left"
+                                    >
+                                        {row.metric.isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                        {row.metric.name}
+                                    </button>
                                 ) : (
                                     row.metric.name
                                 )}
@@ -434,7 +555,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                             {row.metric.values.map((v: number | null, colIdx: number) => (
                                 <td key={colIdx} className={`py-1 px-2 text-right tabular-nums border border-slate-200 ${row.isSubRow ? 'text-xs text-slate-600' : ''} ${v === 0 ? 'text-slate-400' : 'text-slate-800'} ${row.metric.isTotal && (v ?? 0) < 0 ? 'text-red-600' : ''} ${row.metric.isTotal && (v ?? 0) > 0 ? 'text-teal-700' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
                                     {v === null ? '' : (
-                                        row.metric.name === "Viajes (freq)" ? (
+                                        row.metric.name === "Viajes (freq)" && !row.isClientSubtotal && !row.isGlobalTotal ? (
                                             <input 
                                                 type="number"
                                                 min="0"
@@ -445,7 +566,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                                                 }}
                                                 className="w-14 p-1 text-center block mx-auto text-xs font-bold border border-slate-200 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white"
                                             />
-                                        ) : row.metric.name === "Flete (USD/MT)" && row.clientName.startsWith("SPOT") ? (
+                                        ) : row.metric.name === "Flete (USD/MT)" && row.clientName.startsWith("SPOT") && !row.isClientSubtotal && !row.isGlobalTotal ? (
                                             <input 
                                                 type="number"
                                                 min="0"
@@ -468,7 +589,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                                                         <span className="font-medium">{formatCurrency(v)}</span>
                                                     )}
                                                 </div>
-                                            ) : formatNumber(v)
+                                            ) : (
+                                                <span className="font-medium text-slate-700">{formatNumber(v)}</span>
+                                            )
                                         )
                                     )}
                                 </td>
@@ -509,7 +632,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                 <button 
                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
                     onClick={() => {
-                        if (onDeleteNode) {
+                        if (onDeleteNode && contextMenu.client) {
                             onDeleteNode(contextMenu.type, contextMenu.client, contextMenu.route, contextMenu.vessel);
                         }
                         setContextMenu(null);

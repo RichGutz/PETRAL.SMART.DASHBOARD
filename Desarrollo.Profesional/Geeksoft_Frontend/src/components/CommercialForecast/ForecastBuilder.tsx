@@ -20,6 +20,7 @@ interface ForecastBuilderProps {
     displayMode?: 'usd' | 'pct';
     onDisplayModeChange?: (mode: 'usd' | 'pct') => void;
     forecastName?: string;
+    isAdding?: boolean;
 }
 
 export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({ 
@@ -34,7 +35,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     hideInputs,
     displayMode,
     onDisplayModeChange,
-    forecastName
+    forecastName,
+    isAdding = false
 }) => {
     // Form State
     const [monthIndex, setMonthIndex] = useState('');
@@ -97,12 +99,12 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
     return (
         <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="bg-slate-50 border-b border-slate-100 pb-3 pt-3">
+            <CardHeader className="bg-slate-50 border-b border-slate-100 pb-2 pt-2">
                 <div className="flex items-center justify-between w-full">
                     {/* Left */}
                     <div className="flex-[1.2]">
                         <CardTitle className="text-lg text-slate-800 flex items-center gap-2">
-                            <img src="/Logo.Geeksoft.png" alt="Geeksoft" className="h-12 object-contain" />
+                            <img src="/Logo.Geeksoft.png" alt="Geeksoft" className="h-20 object-contain" />
                             Commercial Forecast Builder {forecastName && <span className="text-petral-teal ml-1">[{forecastName}]</span>}
                         </CardTitle>
                     </div>
@@ -175,10 +177,18 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 <SelectValue placeholder="Cliente" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="SPCC">SPCC</SelectItem>
-                                <SelectItem value="MINSUR">MINSUR</SelectItem>
-                                <SelectItem value="CHINALCO">CHINALCO</SelectItem>
-                                <SelectItem value="SPOT">SPOT</SelectItem>
+                                <SelectItem value="SPCC">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#0369A1]"></div>SPCC</div>
+                                </SelectItem>
+                                <SelectItem value="MINSUR">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#1E3A8A]"></div>MINSUR</div>
+                                </SelectItem>
+                                <SelectItem value="CHINALCO">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#1E3A8A]"></div>CHINALCO</div>
+                                </SelectItem>
+                                <SelectItem value="SPOT">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#F97316]"></div>SPOT</div>
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -204,9 +214,15 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 <SelectValue placeholder="Ruta" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="ILO-MATARANI">ILO - MATARANI</SelectItem>
-                                <SelectItem value="ILO-MARCONA">ILO - MARCONA</SelectItem>
-                                <SelectItem value="ILO-MEJILLONES">ILO - MEJILLONES</SelectItem>
+                                <SelectItem value="ILO-MATARANI">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#06B6D4]"></div>ILO - MATARANI</div>
+                                </SelectItem>
+                                <SelectItem value="ILO-MARCONA">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#A855F7]"></div>ILO - MARCONA</div>
+                                </SelectItem>
+                                <SelectItem value="ILO-MEJILLONES">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#D946EF]"></div>ILO - MEJILLONES</div>
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -219,11 +235,21 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 <SelectValue placeholder="Buque" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="MOQUEGUA">MOQUEGUA</SelectItem>
-                                <SelectItem value="TABLONES">TABLONES</SelectItem>
-                                <SelectItem value="CONCON_TRADER">CONCON TRADER</SelectItem>
-                                <SelectItem value="HUEMUL">HUEMUL</SelectItem>
-                                <SelectItem value="AMAZONAS">AMAZONAS</SelectItem>
+                                <SelectItem value="MOQUEGUA">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#16A34A]"></div>MOQUEGUA</div>
+                                </SelectItem>
+                                <SelectItem value="TABLONES">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#DC2626]"></div>TABLONES</div>
+                                </SelectItem>
+                                <SelectItem value="CONCON_TRADER">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#475569]"></div>CONCON TRADER</div>
+                                </SelectItem>
+                                <SelectItem value="HUEMUL">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#4F46E5]"></div>HUEMUL</div>
+                                </SelectItem>
+                                <SelectItem value="AMAZONAS">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#94A3B8]"></div>AMAZONAS</div>
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -278,11 +304,25 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         <Label className="text-xs opacity-0 pointer-events-none">X</Label>
                         <Button 
                             onClick={handleAdd} 
-                            className="bg-petral-blue hover:bg-slate-800 text-white w-full h-8"
-                            disabled={!client || !route || !vessel || !monthIndex || !quantity || !frequency || (client === 'SPOT' && (!customTariff || !spotSuffix.trim()))}
+                            className={`relative w-full h-8 overflow-hidden transition-colors rounded-full ${isAdding ? 'bg-primary text-white pointer-events-none' : 'bg-primary hover:bg-primary/90 text-white'}`}
+                            disabled={isAdding || !client || !route || !vessel || !monthIndex || !quantity || !frequency || (client === 'SPOT' && (!customTariff || !spotSuffix.trim()))}
                         >
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Añadir
+                            {isAdding && (
+                                <div className="absolute inset-0 bg-white/20 animate-pulse" style={{ width: '100%' }}></div>
+                            )}
+                            <span className="relative flex items-center justify-center z-10 w-full">
+                                {isAdding ? (
+                                    <>
+                                        <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                                        <span>Procesando...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        <span>Añadir</span>
+                                    </>
+                                )}
+                            </span>
                         </Button>
                     </div>
                     
@@ -295,13 +335,13 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                     onClick={() => onDisplayModeChange('usd')}
                                     className={`flex-1 text-center py-1 text-[10px] font-bold rounded transition-colors ${displayMode === 'usd' ? 'bg-white shadow-sm text-petral-blue' : 'text-slate-500 hover:bg-slate-300'}`}
                                 >
-                                    $ Original
+                                    UND
                                 </button>
                                 <button
                                     onClick={() => onDisplayModeChange('pct')}
                                     className={`flex-1 text-center py-1 text-[10px] font-bold rounded transition-colors ${displayMode === 'pct' ? 'bg-white shadow-sm text-petral-blue' : 'text-slate-500 hover:bg-slate-300'}`}
                                 >
-                                    % Revenue
+                                    %
                                 </button>
                             </div>
                         </div>

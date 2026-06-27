@@ -40,14 +40,13 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
 
     // Primary Axis
     const [primaryMetric, setPrimaryMetric] = useState<PlotMetric>('voyage_result');
-    const [primaryGraphType, setPrimaryGraphType] = useState<'bar' | 'line'>('bar');
-    const [isPrimaryCumulative, setIsPrimaryCumulative] = useState<boolean>(false);
-    const [isPrimaryPercentage, setIsPrimaryPercentage] = useState<boolean>(false);
+    const [primaryGraphType, setPrimaryGraphType] = useState<'bar_stack' | 'bar_group' | 'line'>('bar_stack');
 
     // Secondary Axis
     const [secondaryMetric, setSecondaryMetric] = useState<PlotMetric>('none');
     const [secondaryGraphType, setSecondaryGraphType] = useState<'bar' | 'line'>('line');
-    const [isSecondaryCumulative, setIsSecondaryCumulative] = useState<boolean>(false);
+    const [isSecondaryCumulativeSeries, setIsSecondaryCumulativeSeries] = useState<boolean>(false);
+    const [isSecondaryCumulativeGlobal, setIsSecondaryCumulativeGlobal] = useState<boolean>(false);
     const [isSecondaryPercentage, setIsSecondaryPercentage] = useState<boolean>(false);
 
     const filterOptions = useMemo(() => {
@@ -95,12 +94,15 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
 
         const getMetricValue = (metrics: any, m: PlotMetric) => {
             if (m === 'none') return 0;
+            
+            const rawFreq = metrics['raw_inputs']?.['monthly_frequency'];
+            const freq = rawFreq !== undefined ? rawFreq : (metrics['freq'] !== undefined ? metrics['freq'] : 0);
+            
             if (m === 'viajes') {
-                return metrics['raw_inputs']?.['monthly_frequency'] || metrics['freq'] || 0;
+                return freq;
             }
             if (m === 'total_cargo') {
                 const carga_unit = metrics['carga_unit'] || 0;
-                const freq = metrics['raw_inputs']?.['monthly_frequency'] || metrics['freq'] || 1;
                 return carga_unit * freq;
             }
             return metrics[m] || 0;
@@ -138,24 +140,30 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
             });
         });
 
-        const xAxisData = [...months];
+        const xAxisData = months.map(m => {
+            const date = new Date(`${m}-02`);
+            const formatted = new Intl.DateTimeFormat('es-ES', { month: 'short', year: '2-digit' }).format(date).replace('.', '');
+            return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+        });
 
         const buildSeries = (
             seriesMap: any, 
             totalMap: any, 
             metric: PlotMetric, 
-            graphType: 'bar' | 'line', 
+            graphType: string, 
             isCumulative: boolean, 
             isPercentage: boolean, 
             yAxisIndex: number
         ) => {
             if (metric === 'none') return [];
             
+            const grandTotal = Object.values(totalMap).reduce((a: any, b: any) => a + b, 0) as number;
+            
             return Object.entries(seriesMap).map(([name, mData]: [string, any]) => {
                 let runningTotal = 0;
                 let runningTotalOfTotals = 0;
 
-                const dataArr = xAxisData.map(m => {
+                const dataArr = months.map(m => {
                     const val = mData[m] || 0;
                     const tot = totalMap[m] || 0;
                     
@@ -165,7 +173,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                     const finalVal = isCumulative ? runningTotal : val;
                     const finalTot = isCumulative ? runningTotalOfTotals : tot;
 
-                    const pct = finalTot ? (finalVal / finalTot) * 100 : 0;
+                    const pct = isCumulative ? (grandTotal ? (finalVal / grandTotal) * 100 : 0) : (finalTot ? (finalVal / finalTot) * 100 : 0);
                     
                     return {
                         value: isPercentage ? pct : finalVal,
@@ -175,26 +183,30 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                 });
                 
                 const cColor = getHexColor(name, groupBy);
+                const isBar = graphType.includes('bar');
+                const isStack = graphType === 'bar_stack' || (yAxisIndex === 1 && graphType === 'bar');
 
                 return {
                     name: `${name} ${yAxisIndex === 0 ? '(Pri)' : '(Sec)'}`,
-                    type: graphType,
-                    stack: graphType === 'bar' ? `total_${yAxisIndex}` : undefined,
+                    type: isBar ? 'bar' : 'line',
+                    stack: isStack ? `total_${yAxisIndex}` : undefined,
                     yAxisIndex: yAxisIndex,
                     smooth: true,
+                    symbol: graphType === 'line' ? 'circle' : undefined,
                     symbolSize: graphType === 'line' ? 8 : undefined,
-                    barWidth: graphType === 'bar' ? '40%' : undefined,
+                    barMaxWidth: isBar ? 40 : undefined,
+                    barGap: isStack ? undefined : '10%',
                     data: dataArr,
                     itemStyle: { 
-                        borderRadius: graphType === 'bar' ? [2, 2, 0, 0] : undefined, 
+                        borderRadius: isBar ? [2, 2, 0, 0] : undefined, 
                         color: cColor 
                     },
                     lineStyle: graphType === 'line' ? { width: 3, type: yAxisIndex === 1 ? 'dashed' : 'solid' } : undefined,
                     label: {
-                        show: graphType === 'bar',
+                        show: isBar,
                         position: 'inside',
                         formatter: (params: any) => {
-                            if (graphType !== 'bar') return '';
+                            if (!isBar) return '';
                             const pct = params.data.pct;
                             if (isPercentage && pct < 4) return ''; 
                             if (!isPercentage && params.data.value === 0) return '';
@@ -216,10 +228,51 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
             });
         };
 
-        const seriesPri = buildSeries(seriesMapPri, totalPriMap, primaryMetric, primaryGraphType, isPrimaryCumulative, isPrimaryPercentage, 0);
-        const seriesSec = buildSeries(seriesMapSec, totalSecMap, secondaryMetric, secondaryGraphType, isSecondaryCumulative, isSecondaryPercentage, 1);
+        const seriesPri = buildSeries(seriesMapPri, totalPriMap, primaryMetric, primaryGraphType, false, false, 0);
+        const showSecIndividual = isSecondaryCumulativeSeries || !isSecondaryCumulativeGlobal;
+        const seriesSec = showSecIndividual ? buildSeries(seriesMapSec, totalSecMap, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryPercentage, 1) : [];
         
-        const series = [...seriesPri, ...seriesSec];
+        let globalSeries: any[] = [];
+        if (isSecondaryCumulativeGlobal && secondaryMetric !== 'none') {
+            const grandTotalSec = Object.values(totalSecMap).reduce((a: any, b: any) => a + b, 0) as number;
+            let runningGlobal = 0;
+            const globalData = xAxisData.map((_, i) => {
+                const month = months[i];
+                let val = 0;
+                Object.values(seriesMapSec).forEach((mData: any) => {
+                    val += (mData[month] || 0);
+                });
+                runningGlobal += val;
+                
+                // Active colors alternating logic
+                const activeNames = Object.keys(seriesMapSec).filter(name => seriesMapSec[name][month] > 0);
+                let colorToUse = '#1E293B';
+                if (activeNames.length > 0) {
+                    const colors = activeNames.map(name => getHexColor(name, groupBy));
+                    colorToUse = colors[i % colors.length];
+                }
+
+                const globalPct = grandTotalSec ? (runningGlobal / grandTotalSec) * 100 : 0;
+                return {
+                    value: isSecondaryPercentage ? globalPct : runningGlobal,
+                    itemStyle: { color: colorToUse }
+                };
+            });
+            
+            globalSeries.push({
+                name: `Total Global (Sec)`,
+                type: 'line',
+                yAxisIndex: 1,
+                smooth: true,
+                symbol: 'circle',
+                symbolSize: 10,
+                data: globalData,
+                lineStyle: { width: 3, type: 'dashed', color: '#94A3B8' },
+                label: { show: false }
+            });
+        }
+        
+        const series = [...seriesPri, ...seriesSec, ...globalSeries];
 
         const getAxisFormatter = (metric: PlotMetric, isPct: boolean) => {
             if (isPct) return '{value}%';
@@ -237,7 +290,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                     params.forEach((p: any) => {
                         const isSec = p.seriesName.includes('(Sec)');
                         const m = isSec ? secondaryMetric : primaryMetric;
-                        const isPct = isSec ? isSecondaryPercentage : isPrimaryPercentage;
+                        const isPct = isSec ? isSecondaryPercentage : false;
                         
                         let valStr = '';
                         if (isPct) {
@@ -274,15 +327,15 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
             yAxis: [
                 {
                     type: 'value',
-                    name: getMetricLabel(primaryMetric) + (isPrimaryCumulative ? ' (Acum)' : ''),
+                    name: getMetricLabel(primaryMetric),
                     nameTextStyle: { color: '#0EA5E9', padding: [0, 0, 0, -40] },
                     axisLine: { show: false },
-                    axisLabel: { color: '#64748B', fontWeight: 'bold', formatter: getAxisFormatter(primaryMetric, isPrimaryPercentage) },
+                    axisLabel: { color: '#64748B', fontWeight: 'bold', formatter: getAxisFormatter(primaryMetric, false) },
                     splitLine: { lineStyle: { type: 'dashed', color: '#E2E8F0' } }
                 },
                 {
                     type: 'value',
-                    name: secondaryMetric === 'none' ? '' : getMetricLabel(secondaryMetric) + (isSecondaryCumulative ? ' (Acum)' : ''),
+                    name: secondaryMetric === 'none' ? '' : getMetricLabel(secondaryMetric) + (isSecondaryCumulativeSeries || isSecondaryCumulativeGlobal ? ' (Acum)' : ''),
                     nameTextStyle: { color: '#F59E0B', padding: [0, -40, 0, 0] },
                     axisLine: { show: false },
                     axisLabel: { color: '#F59E0B', fontWeight: 'bold', formatter: getAxisFormatter(secondaryMetric, isSecondaryPercentage) },
@@ -292,7 +345,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
             series,
             color: ['#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#14B8A6', '#10B981']
         };
-    }, [data, groupBy, months, filterClient, filterRoute, filterVessel, primaryMetric, primaryGraphType, isPrimaryCumulative, isPrimaryPercentage, secondaryMetric, secondaryGraphType, isSecondaryCumulative, isSecondaryPercentage]);
+    }, [data, groupBy, months, filterClient, filterRoute, filterVessel, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryCumulativeGlobal, isSecondaryPercentage]);
 
     if (!data || !data.aggregated_data || months.length === 0) return null;
 
@@ -307,28 +360,34 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
 
     return (
         <div className="w-full bg-white pt-6 pb-2 px-6 shadow-sm rounded-b-lg flex flex-col relative">
-            <div className="absolute left-6 top-10 flex flex-col gap-3 bg-slate-50 p-4 rounded-lg border border-slate-200 w-[270px] shadow-sm z-10">
+            <div className="absolute left-6 top-10 flex flex-col gap-3 bg-slate-50 p-4 rounded-lg border border-slate-200 w-[200px] shadow-sm z-10">
                 
                 <div className="flex flex-col gap-2">
                     <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Filtros:</span>
-                    <div className="flex items-center gap-1">
-                        <button onClick={() => setGroupBy('client')} className={`w-[30%] text-center px-1 py-1.5 text-[11px] font-bold rounded-md transition-colors ${groupBy === 'client' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>Cliente</button>
-                        <select className="w-[70%] text-[11px] bg-white border border-slate-200 rounded px-1 py-1.5" value={filterClient} onChange={(e) => setFilterClient(e.target.value)}>
-                            <option value="ALL">Todos los Clientes</option>
+                    <div className="flex flex-col gap-1">
+                        <button onClick={() => setGroupBy('client')} className={`w-full text-left px-2 py-1.5 text-[11px] font-bold rounded-md transition-colors ${groupBy === 'client' || filterClient !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                            Cliente
+                        </button>
+                        <select className="w-full text-[11px] bg-white border border-slate-200 rounded px-1 py-1.5" value={filterClient} onChange={(e) => setFilterClient(e.target.value)}>
+                            <option value="ALL">Todos</option>
                             {filterOptions.clients.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
                     </div>
-                    <div className="flex items-center gap-1">
-                        <button onClick={() => setGroupBy('route')} className={`w-[30%] text-center px-1 py-1.5 text-[11px] font-bold rounded-md transition-colors ${groupBy === 'route' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>Ruta</button>
-                        <select className="w-[70%] text-[11px] bg-white border border-slate-200 rounded px-1 py-1.5" value={filterRoute} onChange={(e) => setFilterRoute(e.target.value)}>
-                            <option value="ALL">Todas las Rutas</option>
+                    <div className="flex flex-col gap-1 mt-1">
+                        <button onClick={() => setGroupBy('route')} className={`w-full text-left px-2 py-1.5 text-[11px] font-bold rounded-md transition-colors ${groupBy === 'route' || filterRoute !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                            Ruta
+                        </button>
+                        <select className="w-full text-[11px] bg-white border border-slate-200 rounded px-1 py-1.5" value={filterRoute} onChange={(e) => setFilterRoute(e.target.value)}>
+                            <option value="ALL">Todas</option>
                             {filterOptions.routes.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                     </div>
-                    <div className="flex items-center gap-1">
-                        <button onClick={() => setGroupBy('vessel')} className={`w-[30%] text-center px-1 py-1.5 text-[11px] font-bold rounded-md transition-colors ${groupBy === 'vessel' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>Buque</button>
-                        <select className="w-[70%] text-[11px] bg-white border border-slate-200 rounded px-1 py-1.5" value={filterVessel} onChange={(e) => setFilterVessel(e.target.value)}>
-                            <option value="ALL">Todos los Buques</option>
+                    <div className="flex flex-col gap-1 mt-1">
+                        <button onClick={() => setGroupBy('vessel')} className={`w-full text-left px-2 py-1.5 text-[11px] font-bold rounded-md transition-colors ${groupBy === 'vessel' || filterVessel !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                            Buque
+                        </button>
+                        <select className="w-full text-[11px] bg-white border border-slate-200 rounded px-1 py-1.5" value={filterVessel} onChange={(e) => setFilterVessel(e.target.value)}>
+                            <option value="ALL">Todos</option>
                             {filterOptions.vessels.map(v => <option key={v} value={v}>{v}</option>)}
                         </select>
                     </div>
@@ -341,24 +400,18 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                     <select className="w-full text-[11px] bg-white border border-slate-200 rounded px-2 py-1.5 font-bold" value={primaryMetric} onChange={(e) => setPrimaryMetric(e.target.value as PlotMetric)}>
                         {metricOptions.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                     </select>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 mt-1">
                         <label className="flex items-center gap-1 cursor-pointer">
-                            <input type="radio" name="priType" checked={primaryGraphType === 'bar'} onChange={() => setPrimaryGraphType('bar')} className="w-3 h-3" />
-                            <span className="text-[10px]">Barras</span>
+                            <input type="radio" name="priType" checked={primaryGraphType === 'bar_stack'} onChange={() => setPrimaryGraphType('bar_stack')} className="w-3 h-3" />
+                            <span className="text-[10px]">Barras Stack</span>
+                        </label>
+                        <label className="flex items-center gap-1 cursor-pointer">
+                            <input type="radio" name="priType" checked={primaryGraphType === 'bar_group'} onChange={() => setPrimaryGraphType('bar_group')} className="w-3 h-3" />
+                            <span className="text-[10px]">Barras Adjuntas</span>
                         </label>
                         <label className="flex items-center gap-1 cursor-pointer">
                             <input type="radio" name="priType" checked={primaryGraphType === 'line'} onChange={() => setPrimaryGraphType('line')} className="w-3 h-3" />
                             <span className="text-[10px]">Línea</span>
-                        </label>
-                    </div>
-                    <div className="flex flex-col gap-1 mt-1">
-                        <label className="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" className="w-3 h-3" checked={isPrimaryCumulative} onChange={(e) => setIsPrimaryCumulative(e.target.checked)} />
-                            <span className="text-[10px] font-medium">Acumular en el tiempo</span>
-                        </label>
-                        <label className="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" className="w-3 h-3" checked={isPrimaryPercentage} onChange={(e) => setIsPrimaryPercentage(e.target.checked)} />
-                            <span className="text-[10px] font-medium">Mostrar en % (Share)</span>
                         </label>
                     </div>
                 </div>
@@ -381,10 +434,14 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                     </div>
                     <div className="flex flex-col gap-1 mt-1">
                         <label className="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" className="w-3 h-3" checked={isSecondaryCumulative} onChange={(e) => setIsSecondaryCumulative(e.target.checked)} />
-                            <span className="text-[10px] font-medium">Acumular en el tiempo</span>
+                            <input type="checkbox" className="w-3 h-3" checked={isSecondaryCumulativeSeries} onChange={(e) => setIsSecondaryCumulativeSeries(e.target.checked)} />
+                            <span className="text-[10px] font-medium">Acumular por serie</span>
                         </label>
                         <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" className="w-3 h-3" checked={isSecondaryCumulativeGlobal} onChange={(e) => setIsSecondaryCumulativeGlobal(e.target.checked)} />
+                            <span className="text-[10px] font-medium text-slate-700">Acumular Global</span>
+                        </label>
+                        <label className="flex items-center gap-1.5 cursor-pointer mt-1 border-t border-amber-200/50 pt-1">
                             <input type="checkbox" className="w-3 h-3" checked={isSecondaryPercentage} onChange={(e) => setIsSecondaryPercentage(e.target.checked)} />
                             <span className="text-[10px] font-medium">Mostrar en % (Share)</span>
                         </label>
