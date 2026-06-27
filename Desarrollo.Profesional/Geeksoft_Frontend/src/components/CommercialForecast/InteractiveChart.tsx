@@ -565,19 +565,19 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                         <div className="flex flex-col gap-2">
                             <label className="flex items-center gap-1.5 cursor-pointer">
                                 <input type="radio" name="priType" checked={primaryGraphType === 'bar_stack'} onChange={() => setPrimaryGraphType('bar_stack')} className="w-3 h-3" />
-                                <span className="text-xs">Barras Stack</span>
+                                <span className="text-[11px] font-medium text-slate-700">Barras Stack</span>
                             </label>
                             <label className="flex items-center gap-1.5 cursor-pointer">
                                 <input type="radio" name="priType" checked={primaryGraphType === 'bar_group'} onChange={() => setPrimaryGraphType('bar_group')} className="w-3 h-3" />
-                                <span className="text-xs">Barras Adjuntas</span>
+                                <span className="text-[11px] font-medium text-slate-700">Barras Adjuntas</span>
                             </label>
                             <label className="flex items-center gap-1.5 cursor-pointer">
                                 <input type="radio" name="priType" checked={primaryGraphType === 'line'} onChange={() => setPrimaryGraphType('line')} className="w-3 h-3" />
-                                <span className="text-xs">Línea Suavizada</span>
+                                <span className="text-[11px] font-medium text-slate-700">Línea Suavizada</span>
                             </label>
                             <label className="flex items-center gap-1.5 cursor-pointer">
                                 <input type="radio" name="priType" checked={primaryGraphType === 'line_straight'} onChange={() => setPrimaryGraphType('line_straight')} className="w-3 h-3" />
-                                <span className="text-xs">Línea Recta</span>
+                                <span className="text-[11px] font-medium text-slate-700">Línea Recta</span>
                             </label>
                         </div>
                     </div>
@@ -596,21 +596,21 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                         <div className="flex flex-col gap-2">
                             <label className="flex items-center gap-1.5 cursor-pointer">
                                 <input type="radio" name="secType" checked={secondaryGraphType === 'bar'} onChange={() => setSecondaryGraphType('bar')} className="w-3 h-3" />
-                                <span className="text-xs">Barras</span>
+                                <span className="text-[11px] font-medium text-slate-700">Barras</span>
                             </label>
                             <label className="flex items-center gap-1.5 cursor-pointer">
                                 <input type="radio" name="secType" checked={secondaryGraphType === 'line'} onChange={() => setSecondaryGraphType('line')} className="w-3 h-3" />
-                                <span className="text-xs">Línea Suavizada</span>
+                                <span className="text-[11px] font-medium text-slate-700">Línea Suavizada</span>
                             </label>
                             <label className="flex items-center gap-1.5 cursor-pointer">
                                 <input type="radio" name="secType" checked={secondaryGraphType === 'line_straight'} onChange={() => setSecondaryGraphType('line_straight')} className="w-3 h-3" />
-                                <span className="text-xs">Línea Recta</span>
+                                <span className="text-[11px] font-medium text-slate-700">Línea Recta</span>
                             </label>
                         </div>
                         <div className="flex flex-col gap-1.5 mt-2">
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" className="w-3 h-3" checked={isSecondaryCumulativeSeries} onChange={(e) => setIsSecondaryCumulativeSeries(e.target.checked)} />
-                                <span className="text-[11px] font-medium">Acumular por serie</span>
+                                <span className="text-[11px] font-medium text-slate-700">Acumular por serie</span>
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" className="w-3 h-3" checked={isSecondaryCumulativeGlobal} onChange={(e) => setIsSecondaryCumulativeGlobal(e.target.checked)} />
@@ -618,7 +618,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer mt-1">
                                 <input type="checkbox" className="w-3 h-3" checked={isSecondaryPercentage} onChange={(e) => setIsSecondaryPercentage(e.target.checked)} />
-                                <span className="text-[11px] font-medium">Mostrar en % (Share)</span>
+                                <span className="text-[11px] font-medium text-slate-700">Mostrar en % (Share)</span>
                             </label>
                         </div>
                     </div>
