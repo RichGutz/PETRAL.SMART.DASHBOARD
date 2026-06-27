@@ -4,10 +4,14 @@ import ReactECharts from 'echarts-for-react';
 interface InteractiveChartProps {
     data: any;
     months: string[];
+    demurragePct?: string;
+    showDemurrage?: boolean;
+    excludedDemurrages?: Record<string, boolean>;
+    customDemurrages?: Record<string, Record<number, string>>;
 }
 
 type GroupBy = 'vessel' | 'route' | 'client' | 'petral';
-type PlotMetric = 'viajes' | 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'total_cargo' | 'none';
+type PlotMetric = 'viajes' | 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'total_cargo' | 'demurrage' | 'gross_plus_dem' | 'yield' | 'none';
 
 const getHexColor = (name: string, type: GroupBy) => {
     if (type === 'petral') return '#0089CF'; // Petral Blue (RGB 0-137-207)
@@ -33,7 +37,14 @@ const getHexColor = (name: string, type: GroupBy) => {
     return '#94A3B8';
 };
 
-export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months }) => {
+export const InteractiveChart: React.FC<InteractiveChartProps> = ({ 
+    data, 
+    months,
+    demurragePct = '',
+    showDemurrage = false,
+    excludedDemurrages = {},
+    customDemurrages = {}
+}) => {
     const [groupBy, setGroupBy] = useState<GroupBy>('vessel');
     const [filterClient, setFilterClient] = useState<string>('ALL');
     const [filterRoute, setFilterRoute] = useState<string>('ALL');
@@ -79,6 +90,12 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
         const seriesMapSec: { [key: string]: { [month: string]: number } } = {};
         const totalPriMap: { [month: string]: number } = {};
         const totalSecMap: { [month: string]: number } = {};
+        
+        // For Yield Calculation
+        const totalTonsMap: { [key: string]: { [month: string]: number } } = {};
+        const totalGrossDemMap: { [key: string]: { [month: string]: number } } = {};
+        const globalTonsMap: { [month: string]: number } = {};
+        const globalGrossDemMap: { [month: string]: number } = {};
 
         const getMetricLabel = (m: PlotMetric) => {
             switch (m) {
@@ -88,24 +105,49 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                 case 'total_port_costs': return 'Port Costs';
                 case 'total_bunker_costs': return 'Bunker Costs';
                 case 'total_cargo': return 'Toneladas';
+                case 'demurrage': return 'Demurrage';
+                case 'gross_plus_dem': return 'Gross + Demurrage';
+                case 'yield': return 'Yield (USD/MT)';
                 case 'none': return '';
                 default: return m;
             }
         };
 
-        const getMetricValue = (metrics: any, m: PlotMetric) => {
+        const getMetricValue = (metrics: any, m: PlotMetric, client: string, route: string, vessel: string, month: string) => {
             if (m === 'none') return 0;
             
             const rawFreq = metrics['raw_inputs']?.['monthly_frequency'];
             const freq = rawFreq !== undefined ? rawFreq : (metrics['freq'] !== undefined ? metrics['freq'] : 0);
             
-            if (m === 'viajes') {
-                return freq;
+            if (m === 'viajes') return freq;
+            
+            const carga_unit = metrics['carga_unit'] || 0;
+            const tons = carga_unit * freq;
+            if (m === 'total_cargo') return tons;
+
+            const revenue = metrics['net_income'] || 0;
+            
+            if (m === 'demurrage' || m === 'gross_plus_dem' || m === 'yield') {
+                const rowKey = `${client}-${route}-${vessel}`;
+                const isDemurrageExcluded = !!excludedDemurrages[rowKey];
+                const isDemurrageVisible = showDemurrage && demurragePct !== '' && !isDemurrageExcluded;
+                
+                let demurrage = 0;
+                if (isDemurrageVisible) {
+                    const monthIndex = months.indexOf(month);
+                    let customPct = parseFloat(demurragePct) || 0;
+                    if (customDemurrages[rowKey] && customDemurrages[rowKey][monthIndex] !== undefined) {
+                        customPct = parseFloat(customDemurrages[rowKey][monthIndex]) || 0;
+                    }
+                    demurrage = revenue * (customPct / 100);
+                }
+                
+                if (m === 'demurrage') return demurrage;
+                if (m === 'gross_plus_dem') return revenue + demurrage;
+                // Yield is handled separately because it's a ratio, but we return 0 here to avoid NaNs if directly fetched
+                if (m === 'yield') return 0; 
             }
-            if (m === 'total_cargo') {
-                const carga_unit = metrics['carga_unit'] || 0;
-                return carga_unit * freq;
-            }
+
             return metrics[m] || 0;
         };
 
@@ -126,14 +168,24 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                         if (!seriesMapPri[key]) {
                             seriesMapPri[key] = {};
                             seriesMapSec[key] = {};
+                            totalTonsMap[key] = {};
+                            totalGrossDemMap[key] = {};
                         }
                         
-                        const priResult = getMetricValue(metrics, primaryMetric);
+                        // Accumulate base variables for Yield
+                        const tons = getMetricValue(metrics, 'total_cargo', client, route, vessel, month);
+                        const grossDem = getMetricValue(metrics, 'gross_plus_dem', client, route, vessel, month);
+                        totalTonsMap[key][month] = (totalTonsMap[key][month] || 0) + tons;
+                        totalGrossDemMap[key][month] = (totalGrossDemMap[key][month] || 0) + grossDem;
+                        globalTonsMap[month] = (globalTonsMap[month] || 0) + tons;
+                        globalGrossDemMap[month] = (globalGrossDemMap[month] || 0) + grossDem;
+                        
+                        const priResult = getMetricValue(metrics, primaryMetric, client, route, vessel, month);
                         seriesMapPri[key][month] = (seriesMapPri[key][month] || 0) + priResult;
                         totalPriMap[month] = (totalPriMap[month] || 0) + priResult;
 
                         if (secondaryMetric !== 'none') {
-                            const secResult = getMetricValue(metrics, secondaryMetric);
+                            const secResult = getMetricValue(metrics, secondaryMetric, client, route, vessel, month);
                             seriesMapSec[key][month] = (seriesMapSec[key][month] || 0) + secResult;
                             totalSecMap[month] = (totalSecMap[month] || 0) + secResult;
                         }
@@ -161,9 +213,17 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
             
             const grandTotal = Object.values(totalMap).reduce((a: any, b: any) => a + b, 0) as number;
             
-            return Object.entries(seriesMap).map(([name, mData]: [string, any]) => {
+            // For Yield, we use the specific maps instead of seriesMap
+            const baseMap = metric === 'yield' ? totalGrossDemMap : seriesMap;
+            
+            return Object.entries(baseMap).map(([name, mData]: [string, any]) => {
                 let runningTotal = 0;
                 let runningTotalOfTotals = 0;
+                
+                let runningGrossDem = 0;
+                let runningTons = 0;
+                let globalRunningGrossDem = 0;
+                let globalRunningTons = 0;
 
                 const dataArr = months.map(m => {
                     const val = mData[m] || 0;
@@ -172,13 +232,27 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                     runningTotal += val;
                     runningTotalOfTotals += tot;
 
-                    const finalVal = isCumulative ? runningTotal : val;
-                    const finalTot = isCumulative ? runningTotalOfTotals : tot;
+                    let finalVal = isCumulative ? runningTotal : val;
+                    let finalTot = isCumulative ? runningTotalOfTotals : tot;
+
+                    if (metric === 'yield') {
+                        const localTons = totalTonsMap[name]?.[m] || 0;
+                        const localGrossDem = val; // since baseMap is totalGrossDemMap
+                        runningTons += localTons;
+                        runningGrossDem += localGrossDem;
+                        finalVal = isCumulative ? (runningTons ? runningGrossDem / runningTons : 0) : (localTons ? localGrossDem / localTons : 0);
+                        
+                        const globTons = globalTonsMap[m] || 0;
+                        const globGrossDem = globalGrossDemMap[m] || 0;
+                        globalRunningTons += globTons;
+                        globalRunningGrossDem += globGrossDem;
+                        finalTot = isCumulative ? (globalRunningTons ? globalRunningGrossDem / globalRunningTons : 0) : (globTons ? globGrossDem / globTons : 0);
+                    }
 
                     const pct = isCumulative ? (grandTotal ? (finalVal / grandTotal) * 100 : 0) : (finalTot ? (finalVal / finalTot) * 100 : 0);
                     
                     return {
-                        value: isPercentage ? pct : finalVal,
+                        value: isPercentage && metric !== 'yield' ? pct : finalVal,
                         pct: pct,
                         rawVal: finalVal
                     };
@@ -281,6 +355,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
         const getAxisFormatter = (metric: PlotMetric, isPct: boolean) => {
             if (isPct) return '{value}%';
             if (metric === 'viajes') return '{value}';
+            if (metric === 'yield') return (v: number) => `$${v.toFixed(1)}`;
             if (metric === 'total_cargo') return (v: number) => `${(v/1000).toFixed(0)}k`;
             return (v: number) => `$${(v/1000).toFixed(0)}k`;
         };
@@ -297,10 +372,11 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                         const isPct = isSec ? isSecondaryPercentage : false;
                         
                         let valStr = '';
-                        if (isPct) {
+                        if (isPct && m !== 'yield') {
                             valStr = `${p.value.toFixed(1)}% (${p.data.rawVal.toLocaleString()})`;
                         } else {
                             if (m === 'viajes') valStr = p.value.toString();
+                            else if (m === 'yield') valStr = `$${p.value.toFixed(2)}`;
                             else if (m === 'total_cargo') valStr = `${Math.round(p.value).toLocaleString()} MT`;
                             else valStr = `$${Math.round(p.value).toLocaleString()}`;
                         }
@@ -349,13 +425,17 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
             series,
             color: ['#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#14B8A6', '#10B981']
         };
-    }, [data, groupBy, months, filterClient, filterRoute, filterVessel, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryCumulativeGlobal, isSecondaryPercentage]);
+    }, [data, groupBy, months, filterClient, filterRoute, filterVessel, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryCumulativeGlobal, isSecondaryPercentage, demurragePct, showDemurrage, excludedDemurrages, customDemurrages]);
 
     if (!data || !data.aggregated_data || months.length === 0) return null;
 
     const metricOptions = [
+        { value: 'none', label: '--- Ninguno ---' },
         { value: 'voyage_result', label: 'Voyage Result' },
         { value: 'net_income', label: 'Gross Revenue' },
+        { value: 'demurrage', label: 'Demurrage' },
+        { value: 'gross_plus_dem', label: 'Gross + Demurrage' },
+        { value: 'yield', label: 'Yield (USD/MT)' },
         { value: 'total_port_costs', label: 'Port Costs' },
         { value: 'total_bunker_costs', label: 'Bunker Costs' },
         { value: 'total_cargo', label: 'Toneladas' },

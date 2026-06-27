@@ -360,7 +360,14 @@ export const CommercialForecast: React.FC = () => {
                 {/* 3. ECharts Summary */}
                 {activeTab === 'chart' && (
                     <section className="flex flex-col flex-1 gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <InteractiveChart data={data} months={dynamicMonths} />
+                        <InteractiveChart 
+                            data={data} 
+                            months={dynamicMonths}
+                            demurragePct={demurragePct}
+                            showDemurrage={showDemurrage}
+                            excludedDemurrages={excludedDemurrages}
+                            customDemurrages={customDemurrages}
+                        />
                     </section>
                 )}
 
