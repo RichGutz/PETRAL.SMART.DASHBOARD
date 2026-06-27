@@ -7,7 +7,7 @@ interface InteractiveChartProps {
 }
 
 type GroupBy = 'vessel' | 'route' | 'client';
-type PlotMetric = 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'gross_profit_breakdown';
+type PlotMetric = 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'gross_profit_breakdown' | 'total_cargo' | 'none';
 
 const getHexColor = (name: string, type: 'client' | 'route' | 'vessel' | 'breakdown') => {
     if (type === 'breakdown') {
@@ -40,7 +40,9 @@ const getHexColor = (name: string, type: 'client' | 'route' | 'vessel' | 'breakd
 
 export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months }) => {
     const [groupBy, setGroupBy] = useState<GroupBy>('vessel');
-    const [plotMetric, setPlotMetric] = useState<PlotMetric>('voyage_result');
+    const [primaryMetric, setPrimaryMetric] = useState<PlotMetric>('voyage_result');
+    const [secondaryMetric, setSecondaryMetric] = useState<PlotMetric>('none');
+    const [isSecondaryCumulative, setIsSecondaryCumulative] = useState<boolean>(false);
     const [plotMode, setPlotMode] = useState<'usd'|'pct'>('usd');
     const [filterClient, setFilterClient] = useState<string>('ALL');
     const [filterRoute, setFilterRoute] = useState<string>('ALL');
@@ -77,7 +79,31 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
         const revenueMap: { [key: string]: { [month: string]: number } } = {};
         const totalRevenueMap: { [month: string]: number } = {};
 
-        const isBreakdown = plotMetric === 'gross_profit_breakdown';
+        
+const getMetricLabel = (m: PlotMetric) => {
+    switch (m) {
+        case 'voyage_result': return 'Voyage Result';
+        case 'net_income': return 'Gross Revenue';
+        case 'total_port_costs': return 'Port Costs';
+        case 'total_bunker_costs': return 'Bunker Costs';
+        case 'gross_profit_breakdown': return 'Gross Profit';
+        case 'total_cargo': return 'Toneladas';
+        case 'none': return '';
+        default: return m;
+    }
+};
+
+const getMetricValue = (metrics: any, m: PlotMetric) => {
+    if (m === 'none') return 0;
+    if (m === 'total_cargo') {
+        const carga_unit = metrics['carga_unit'] || 0;
+        const freq = metrics['raw_inputs']?.['monthly_frequency'] || metrics['freq'] || 1;
+        return carga_unit * freq;
+    }
+    return metrics[m] || 0;
+};
+
+        const isBreakdown = primaryMetric === 'gross_profit_breakdown';
 
         // Extract and aggregate Voyage Result
         Object.entries(data.aggregated_data).forEach(([client, routes]: any) => {
@@ -121,13 +147,22 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                                 revenueMap[key] = {};
                             }
                             
-                            const result = metrics[plotMetric] || 0;
+                            const result = getMetricValue(metrics, primaryMetric);
+                            const secResult = getMetricValue(metrics, secondaryMetric);
+
+                            if (!seriesMap[key]) {
+                                seriesMap[key] = {};
+                                revenueMap[key] = {};
+                            }
 
                             seriesMap[key][month] = (seriesMap[key][month] || 0) + result;
                             revenueMap[key][month] = (revenueMap[key][month] || 0) + revenue;
-
                             totalMap[month] = (totalMap[month] || 0) + result;
                             totalRevenueMap[month] = (totalRevenueMap[month] || 0) + revenue;
+
+                            // We abuse totalRevenueMap to store secondary values since we need a total for the line graph
+                            if (!revenueMap['__secondary__']) revenueMap['__secondary__'] = {};
+                            revenueMap['__secondary__'][month] = (revenueMap['__secondary__'][month] || 0) + secResult;
                         }
                     });
                 });
@@ -180,30 +215,25 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                 }
             };
         });
-
-        // 2. Build Cumulative Line Series
-        let cumulativeSum = 0;
-        let cumulativeRev = 0;
-        const cumulativeData = xAxisData.map(m => {
-            cumulativeSum += (totalMap[m] || 0);
-            cumulativeRev += (totalRevenueMap[m] || 0);
-            if (isPct) {
-                return cumulativeRev ? (cumulativeSum / cumulativeRev) * 100 : 0;
-            }
-            return cumulativeSum;
-        });
-
-        series.push({
-            name: 'Total Acumulado',
-            type: 'line',
-            yAxisIndex: 1, // Enrutar al segundo eje
-            smooth: true,
-            symbolSize: 10,
-            data: cumulativeData,
-            lineStyle: { width: 3, color: '#F59E0B', type: 'dashed' }, // Amber
-            itemStyle: { color: '#F59E0B' },
-            z: 10 // Dibujar por encima de las barras
-        });
+// 2. Build Secondary Series
+        if (secondaryMetric !== 'none') {
+            let runningTotal = 0;
+            const secData = xAxisData.map(m => {
+                const val = revenueMap['__secondary__']?.[m] || 0;
+                runningTotal += val;
+                return isSecondaryCumulative ? runningTotal : val;
+            });
+            series.push({
+                name: getMetricLabel(secondaryMetric) + (isSecondaryCumulative ? ' (Acum)' : ''),                type: 'line',
+                yAxisIndex: 1, // Enrutar al segundo eje
+                smooth: true,
+                symbolSize: 10,
+                data: secData,
+                lineStyle: { width: 3, color: '#F59E0B', type: 'solid' }, // Amber
+                itemStyle: { color: '#F59E0B' },
+                z: 10
+            });
+        }
 
         return {
             tooltip: {
@@ -213,7 +243,22 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                     let tooltip = `<div style="font-weight:600;margin-bottom:4px">${params[0].axisValue}</div>`;
                     // Separar line (acumulado) y barras
                     params.forEach((p: any) => {
-                        const valStr = isPct ? `${p.value.toFixed(1)}%` : `$${Math.round(p.value).toLocaleString()}`;
+                        let isTons = false;
+                        if (secondaryMetric !== 'none' && p.seriesIndex === series.length - 1) {
+                            isTons = secondaryMetric === 'total_cargo';
+                        } else {
+                            isTons = primaryMetric === 'total_cargo';
+                        }
+                        
+                        let valStr = '';
+                        if (isPct) {
+                            valStr = `${p.value.toFixed(1)}%`;
+                        } else if (isTons) {
+                            valStr = `${Math.round(p.value).toLocaleString()} MT`;
+                        } else {
+                            valStr = `$${Math.round(p.value).toLocaleString()}`;
+                        }
+                        
                         tooltip += `<div>${p.marker} <b>${p.seriesName}</b>: ${valStr}</div>`;
                     });
                     return tooltip;
@@ -245,28 +290,27 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
             yAxis: [
                 {
                     type: 'value',
-                    name: plotMetric === 'net_income' ? 'Gross Revenue' : plotMetric === 'total_port_costs' ? 'Port Costs' : plotMetric === 'total_bunker_costs' ? 'Bunker Costs' : plotMetric === 'gross_profit_breakdown' ? 'Gross Profit' : 'Voyage Result',
+                    name: getMetricLabel(primaryMetric) + (isPct ? ' (%)' : primaryMetric === 'total_cargo' ? ' (MT)' : ' (USD)'),
                     nameTextStyle: { color: '#64748b', padding: [0, 0, 0, -40] },
                     axisLine: { show: false },
-                    axisLabel: { color: '#94a3b8', formatter: (v: number) => isPct ? `${v}%` : `$${(v/1000)}k` },
+                    axisLabel: { color: '#94a3b8', formatter: (v: number) => isPct ? `${v}%` : primaryMetric === 'total_cargo' ? `${(v/1000).toFixed(0)}k` : `$${(v/1000)}k` },
                     splitLine: { lineStyle: { type: 'dashed', color: '#f1f5f9' } },
                     ...(isPct ? { max: 100 } : {})
                 },
                 {
                     type: 'value',
-                    name: 'Acumulado',
+                    name: secondaryMetric === 'none' ? '' : getMetricLabel(secondaryMetric) + (isSecondaryCumulative ? ' Acum' : '') + (secondaryMetric === 'total_cargo' ? ' (MT)' : ' (USD)'),
                     nameTextStyle: { color: '#F59E0B', padding: [0, -40, 0, 0] },
                     axisLine: { show: false },
-                    axisLabel: { color: '#F59E0B', fontWeight: 'bold', formatter: (v: number) => isPct ? `${v}%` : `$${(v/1000)}k` },
-                    splitLine: { show: false },
-                    ...(isPct ? { max: 100 } : {})
+                    axisLabel: { color: '#F59E0B', fontWeight: 'bold', formatter: (v: number) => secondaryMetric === 'none' ? '' : secondaryMetric === 'total_cargo' ? `${(v/1000).toFixed(0)}k` : `$${(v/1000)}k` },
+                    splitLine: { show: false }
                 }
             ],
             series,
             // Paleta de colores profesionales
             color: ['#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#14B8A6', '#10B981']
         };
-    }, [data, groupBy, months, filterClient, filterRoute, filterVessel, plotMetric, plotMode]);
+    }, [data, groupBy, months, filterClient, filterRoute, filterVessel, primaryMetric, secondaryMetric, isSecondaryCumulative, plotMode]);
 
     if (!data || !data.aggregated_data || months.length === 0) return null;
 
@@ -337,20 +381,44 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
 
                 <div className="h-px w-full bg-slate-300 my-1"></div>
 
-                {/* Selección de Métrica */}
-                <div className="flex flex-col gap-2">
-                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Métrica Y:</span>
+                {/* Selección de Métrica Primaria */}
+                <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Eje Izquierdo (Barras):</span>
                     <select 
-                        className="w-full text-xs bg-white border border-slate-200 rounded px-2 py-2 focus:outline-none focus:border-petral-teal text-slate-700 font-bold"
-                        value={plotMetric}
-                        onChange={(e) => setPlotMetric(e.target.value as PlotMetric)}
+                        className="w-full text-[11px] bg-white border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-petral-teal text-slate-700 font-bold"
+                        value={primaryMetric}
+                        onChange={(e) => setPrimaryMetric(e.target.value as PlotMetric)}
                     >
                         <option value="voyage_result">Voyage Result</option>
                         <option value="net_income">Gross Revenue</option>
                         <option value="total_port_costs">Port Costs</option>
                         <option value="total_bunker_costs">Bunker Costs</option>
-                        <option value="gross_profit_breakdown">Gross Profit (100%)</option>
+                        <option value="gross_profit_breakdown">Gross Profit (Breakdown)</option>
+                        <option value="total_cargo">Toneladas (MT)</option>
                     </select>
+                </div>
+
+                {/* Selección de Métrica Secundaria */}
+                <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider">Eje Derecho (Línea):</span>
+                    <select 
+                        className="w-full text-[11px] bg-amber-50 border border-amber-200 rounded px-2 py-1.5 focus:outline-none focus:border-amber-500 text-amber-700 font-bold"
+                        value={secondaryMetric}
+                        onChange={(e) => setSecondaryMetric(e.target.value as PlotMetric)}
+                    >
+                        <option value="none">--- Ninguno ---</option>
+                        <option value="voyage_result">Voyage Result</option>
+                        <option value="net_income">Gross Revenue</option>
+                        <option value="total_cargo">Toneladas (MT)</option></select>
+                    <label className="flex items-center gap-1.5 mt-1 cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            className="w-3 h-3 accent-amber-500" 
+                            checked={isSecondaryCumulative} 
+                            onChange={(e) => setIsSecondaryCumulative(e.target.checked)} 
+                        />
+                        <span className="text-[10px] font-medium text-amber-700">Acumular en el tiempo</span>
+                    </label>
                 </div>
 
                 <div className="h-px w-full bg-slate-300 my-1"></div>
