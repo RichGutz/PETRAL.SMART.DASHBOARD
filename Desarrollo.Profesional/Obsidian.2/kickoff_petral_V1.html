@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Motor de Petral — Kick-off 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:        #F5F7FB;
+            --bg-card:   #FFFFFF;
+            --navy:      #0F2340;
+            --navy-mid:  #1D3A6B;
+            --amber:     #059669; /* Emerald Green */
+            --amber-dim: rgba(5,150,105,0.12);
+            --amber-brd: rgba(5,150,105,0.3);
+            --blue:      #0089CF; /* Petral Blue */
+            --blue-dim:  rgba(0,137,207,0.1);
+            --blue-brd:  rgba(0,137,207,0.25);
+            --text:      #0F2340;
+            --text-dim:  rgba(15,35,64,0.52);
+            --green:     #047857;
+            --red:       #B91C1C;
+            --border:    rgba(15,35,64,0.1);
+            --shadow:    0 2px 16px rgba(15,35,64,0.08);
+            --shadow-lg: 0 8px 32px rgba(15,35,64,0.12);
+        }
+
+        html, body {
+            width: 100%; height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* ─── PROGRESS BAR ─── */
+        #progress {
+            position: fixed; top: 0; left: 0; height: 3px; z-index: 999;
+            background: linear-gradient(90deg, var(--amber), var(--blue));
+            transition: width 0.4s ease;
+        }
+
+        /* ─── DECK ─── */
+        #deck { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+
+        .slide {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 52px 80px 88px;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.36s ease, transform 0.36s ease;
+        }
+        .slide.active   { opacity: 1; pointer-events: all; transform: translateX(0) !important; }
+
+        /* ─── NAV ─── */
+        nav {
+            position: fixed; bottom: 24px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; align-items: center; gap: 16px; z-index: 999;
+        }
+        .nbtn {
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg-card); color: var(--text); font-size: 16px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: var(--shadow); transition: all 0.2s;
+        }
+        .nbtn:hover { background: var(--amber-dim); border-color: var(--amber-brd); transform: scale(1.1); }
+        .nbtn:disabled { opacity: 0.25; cursor: default; transform: none; }
+        #counter {
+            font-size: 11px; color: var(--text-dim);
+            font-family: 'JetBrains Mono', monospace; min-width: 48px; text-align: center;
+        }
+
+        /* ─── SHARED ─── */
+        .tag {
+            font-size: 10px; font-weight: 700; letter-spacing: 3px;
+            text-transform: uppercase; color: var(--amber); margin-bottom: 8px;
+        }
+        h1 { font-size: clamp(2.2rem, 4vw, 3.6rem); font-weight: 900; line-height: 1.08; margin-bottom: 12px; }
+        h2 { font-size: clamp(1.8rem, 3vw, 2.7rem); font-weight: 900; line-height: 1.1; margin-bottom: 10px; }
+        .sub { font-size: clamp(0.9rem, 1.6vw, 1.15rem); color: var(--text-dim); font-weight: 300; margin-bottom: 28px; }
+        .hi   { color: var(--amber); }
+        .hi-b { color: var(--blue); }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; box-shadow: var(--shadow);
+        }
+
+        .anim   { opacity: 0; transform: translateY(16px); transition: opacity 0.4s ease, transform 0.4s ease; }
+        .anim.in { opacity: 1; transform: translateY(0); }
+        .anim-x  { opacity: 0; transform: translateX(-16px); transition: opacity 0.4s ease, transform 0.4s ease; }
+        .anim-x.in { opacity: 1; transform: translateX(0); }
+
+        /* ════════════════════════
+           S1 · PORTADA
+        ════════════════════════ */
+        #s1 {
+            text-align: center;
+            background: radial-gradient(ellipse 65% 50% at 50% 40%, rgba(29,111,232,0.06) 0%, transparent 80%);
+        }
+        .anchor-icon { font-size: 64px; margin-bottom: 20px; display: block; animation: float 4s ease-in-out infinite; }
+        @keyframes float { 0%,100%{transform:translateY(0) rotate(-1deg);} 50%{transform:translateY(-12px) rotate(1deg);} }
+        .badge { display:inline-flex; align-items:center; gap:8px; background:var(--amber-dim); border:1px solid var(--amber-brd); border-radius:100px; padding:8px 22px; font-size:12px; color:var(--amber); font-weight:600; letter-spacing:1px; }
+
+        /* ════════════════════════
+           S2 · EL BARCO
+        ════════════════════════ */
+        .ship-img { width:100%; max-width:700px; height:180px; object-fit:cover; object-position:center; border-radius:12px; border:1px solid var(--border); box-shadow:var(--shadow); margin-bottom:20px; }
+        .specs-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; width:100%; max-width:780px; }
+        .spec { display:flex; align-items:flex-start; gap:12px; padding:14px 16px; }
+        .spec-icon { font-size:22px; flex-shrink:0; margin-top:2px; }
+        .spec-val  { font-size:1.2rem; font-weight:700; color:var(--blue); font-family:'JetBrains Mono',monospace; }
+        .spec-lbl  { font-size:9px; color:var(--amber); font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+        .spec-desc { font-size:11px; color:var(--text-dim); margin-top:2px; }
+        .ifo-mdo-note { width:100%; max-width:780px; margin-top:10px; padding:12px 18px; background:var(--blue-dim); border:1px solid var(--blue-brd); border-radius:10px; font-size:13px; color:var(--navy-mid); display:flex; align-items:center; gap:10px; }
+
+        /* ════════════════════════
+           S3 · LA RUTA
+        ════════════════════════ */
+        .route-wrap { width:100%; max-width:800px; }
+        .route-map { display:flex; align-items:center; padding:24px 36px; background:var(--blue-dim); border:1px solid var(--blue-brd); border-radius:14px; margin-bottom:20px; position:relative; overflow:hidden; }
+        .port-node { display:flex; flex-direction:column; align-items:center; gap:7px; flex-shrink:0; }
+        .pdot { width:14px; height:14px; border-radius:50%; background:var(--amber); border:2px solid rgba(255,255,255,0.8); box-shadow:0 0 0 5px rgba(212,131,10,0.15); animation:pdot 2.4s ease-in-out infinite; }
+        .pdot.dest { background:var(--blue); box-shadow:0 0 0 5px rgba(29,111,232,0.12); }
+        @keyframes pdot { 0%,100%{box-shadow:0 0 0 5px rgba(212,131,10,0.15);} 50%{box-shadow:0 0 0 12px rgba(212,131,10,0);} }
+        .pname { font-size:13px; font-weight:700; color:var(--amber); }
+        .pname.dest { color:var(--blue); }
+        .psub  { font-size:10px; color:var(--text-dim); }
+        .rtrack { flex:1; height:2px; background:linear-gradient(90deg,var(--amber),var(--blue)); position:relative; margin:0 18px; }
+        .rship { position:absolute; top:-17px; font-size:28px; animation:sail 5s ease-in-out infinite alternate; }
+        @keyframes sail { 0%{left:4%;} 100%{left:80%;} }
+        .rstats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+        .rs { text-align:center; padding:18px 14px; }
+        .rs-num  { font-size:1.8rem; font-weight:900; color:var(--blue); font-family:'JetBrains Mono',monospace; }
+        .rs-unit { font-size:11px; color:var(--amber); font-weight:700; }
+        .rs-lbl  { font-size:10px; color:var(--text-dim); margin-top:3px; }
+
+        /* ════════════════════════
+           S4 · PRECIO DEL BUNKER
+        ════════════════════════ */
+        .bprice-wrap { width:100%; max-width:820px; }
+        .bprice-cards { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px; }
+        .bprice-card { padding:24px 28px; }
+        .bp-icon { font-size:36px; margin-bottom:10px; }
+        .bp-type { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim); margin-bottom:6px; }
+        .bp-val  { font-size:2.4rem; font-weight:900; color:var(--navy); font-family:'JetBrains Mono',monospace; }
+        .bp-unit { font-size:13px; color:var(--amber); font-weight:600; }
+        .bp-date { font-size:11px; color:var(--text-dim); margin-top:6px; font-family:'JetBrains Mono',monospace; }
+        .bp-source { font-size:11px; color:var(--text-dim); margin-top:3px; }
+        .baf-box { padding:20px 24px; background:var(--amber-dim); border:1px solid var(--amber-brd); border-radius:12px; }
+        .baf-row { display:flex; align-items:flex-start; gap:16px; }
+        .baf-badge { background:var(--amber); color:#fff; font-size:10px; font-weight:900; padding:3px 10px; border-radius:100px; letter-spacing:1px; white-space:nowrap; flex-shrink:0; margin-top:2px; }
+        .baf-badge.future { background:var(--text-dim); }
+        .baf-text { font-size:13px; color:var(--navy-mid); line-height:1.6; }
+
+        /* ════════════════════════
+           S5 · LEY DEL MÍNIMO
+        ════════════════════════ */
+        .pipes { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; width:100%; max-width:860px; margin-bottom:16px; }
+        .pipe { padding:22px 16px; text-align:center; border-radius:14px; border:2px solid var(--border); background:var(--bg-card); box-shadow:var(--shadow); transition:all 0.7s ease; }
+        .pipe.winner { border-color:var(--red); background:#FEF2F2; box-shadow:0 0 28px rgba(185,28,28,0.12); }
+        .pipe.loser  { opacity:0.28; border-color:rgba(15,35,64,0.06); }
+        .p-ico  { font-size:30px; margin-bottom:8px; }
+        .p-src  { font-size:9px; color:var(--text-dim); font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:5px; }
+        .p-val  { font-size:1.9rem; font-weight:900; color:var(--navy); font-family:'JetBrains Mono',monospace; }
+        .p-unit { font-size:11px; color:var(--text-dim); margin-top:2px; }
+        .p-note { font-size:11px; color:var(--text-dim); margin-top:7px; line-height:1.4; }
+        .bn-result { width:100%; max-width:860px; padding:18px 28px; background:#FEF2F2; border:1px solid rgba(185,28,28,0.25); border-radius:12px; display:grid; grid-template-columns:1fr auto; align-items:center; gap:20px; }
+        .bn-calc { font-family:'JetBrains Mono',monospace; font-size:13px; line-height:2.1; color:var(--text); }
+        .bn-big  { font-size:2.5rem; font-weight:900; color:var(--amber); font-family:'JetBrains Mono',monospace; }
+        .bn-lbl  { font-size:10px; color:var(--text-dim); text-align:right; margin-top:2px; }
+        .overhead-note { width:100%; max-width:860px; margin-top:10px; padding:12px 18px; background:var(--amber-dim); border:1px solid var(--amber-brd); border-radius:10px; font-size:12px; color:var(--navy-mid); display:flex; align-items:center; gap:10px; }
+
+        /* ════════════════════════
+           S6 · BUNKER FASES
+        ════════════════════════ */
+        .bwrap { width:100%; max-width:840px; }
+        .tl-bar { display:flex; height:48px; border-radius:10px; overflow:hidden; margin-bottom:20px; border:1px solid var(--border); box-shadow:var(--shadow); }
+        .tl-seg { display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; gap:3px; line-height:1.3; text-align:center; }
+        .tl-carga  { background:#F59E0B; color:#fff; flex:2.1; }
+        .tl-mar1   { background:#1D6FE8; color:#fff; flex:0.97; }
+        .tl-disch  { background:#7C3AED; color:#fff; flex:1.56; }
+        .tl-mar2   { background:#1D6FE8; color:#fff; flex:0.97; }
+        .brows { display:flex; flex-direction:column; gap:9px; }
+        .brow { display:grid; grid-template-columns:26px 1fr 160px; align-items:center; gap:14px; padding:12px 16px; }
+        .br-ico  { font-size:17px; }
+        .br-name { font-size:12px; font-weight:600; color:var(--text); }
+        .br-form { font-size:10px; color:var(--text-dim); font-family:'JetBrains Mono',monospace; margin-top:2px; }
+        .br-val  { font-size:14px; font-weight:700; color:var(--blue); font-family:'JetBrains Mono',monospace; text-align:right; }
+        .btot { margin-top:12px; padding:14px 16px; background:var(--amber-dim); border:1px solid var(--amber-brd); border-radius:10px; display:flex; justify-content:space-between; align-items:center; }
+        .bt-lbl { font-size:13px; font-weight:700; color:var(--navy); }
+        .bt-val { font-size:1.6rem; font-weight:900; color:var(--amber); font-family:'JetBrains Mono',monospace; }
+
+        /* ════════════════════════
+           S7 · VOYAGE RESULT (expanded)
+        ════════════════════════ */
+        #s7 { padding: 20px 60px 48px; }
+        .vr-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%; max-width:1000px; }
+        .vr-section { padding:12px 20px; }
+        .vr-sec-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+        .vr-row { display:flex; justify-content:space-between; align-items:flex-start; padding:5px 0; border-bottom:1px solid var(--border); gap:8px; }
+        .vr-row:last-of-type { border-bottom:none; }
+        .vr-lbl  { font-size:12px; color:var(--text-dim); }
+        .vr-var  { font-size:10px; color:var(--blue); font-family:'JetBrains Mono',monospace; margin-top:1px; }
+        .vr-val  { font-size:14px; font-weight:700; font-family:'JetBrains Mono',monospace; flex-shrink:0; }
+        .income .vr-val  { color:var(--green); }
+        .cost   .vr-val  { color:var(--red); }
+
+        .vr-port-note { margin-top:6px; padding:6px 12px; background:var(--blue-dim); border:1px solid var(--blue-brd); border-radius:8px; font-size:11px; color:var(--navy-mid); }
+
+        .vr-result-box { padding:12px 20px; }
+        .vr-total { display:flex; justify-content:space-between; align-items:baseline; padding:6px 0; border-bottom:2px solid var(--border); margin-bottom:8px; }
+        .vr-tot-lbl { font-size:15px; font-weight:700; color:var(--navy); }
+        .vr-tot-val { font-size:2.2rem; font-weight:900; color:var(--amber); font-family:'JetBrains Mono',monospace; }
+        .vr-kpi-row { display:flex; justify-content:space-between; align-items:baseline; padding:6px 0; border-bottom:1px solid var(--border); }
+        .vr-kpi-lbl { font-size:11px; color:var(--text-dim); }
+        .vr-kpi-frm { font-size:9px; color:var(--blue); font-family:'JetBrains Mono',monospace; margin-top:1px; }
+        .vr-kpi-val { font-size:14px; font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--navy); }
+        .vr-kpi-val.positive { color:var(--green); }
+        .vr-formula-title { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--text-dim); margin-bottom:6px; }
+        .vr-formula { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--navy-mid); line-height:1.6; }
+
+        /* ════════════════════════
+           S8 · LEDGER
+        ════════════════════════ */
+        .ledger-wrap { width:100%; max-width:900px; display:flex; flex-direction:column; gap:16px; }
+        .browser-shell { border:1px solid var(--border); border-radius:14px; overflow:hidden; background:var(--bg-card); box-shadow:var(--shadow-lg); }
+        .browser-bar { background:var(--bg); border-bottom:1px solid var(--border); padding:9px 14px; display:flex; align-items:center; gap:9px; }
+        .bdot { width:9px; height:9px; border-radius:50%; }
+        .burl { flex:1; text-align:center; font-size:10px; color:var(--text-dim); font-family:'JetBrains Mono',monospace; }
+        .mock-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:12px; }
+        .mc { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px; }
+        .mc-h { font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:1px; padding:3px 6px; border-radius:3px; margin-bottom:6px; }
+        .mc-r { display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px solid var(--border); font-size:9px; color:var(--text-dim); }
+        .mc-v { color:var(--navy); font-family:'JetBrains Mono',monospace; font-weight:600; }
+        .mock-table { padding:0 12px 12px; }
+        .mt-h { display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; padding:5px 8px; background:var(--blue-dim); border-radius:4px; font-size:9px; color:var(--navy-mid); font-weight:700; text-transform:uppercase; margin-bottom:3px; }
+        .mt-r { display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; padding:5px 8px; border-bottom:1px solid var(--border); font-size:9px; }
+        .delta-ok { color:var(--green); font-weight:700; }
+        .bottom-row { display:flex; align-items:center; gap:20px; }
+        .live-btn { background:linear-gradient(135deg,var(--amber),#B8720A); color:#fff; border:none; border-radius:11px; padding:13px 32px; font-size:14px; font-weight:900; cursor:pointer; letter-spacing:0.5px; flex-shrink:0; display:flex; align-items:center; gap:9px; transition:transform 0.2s,box-shadow 0.2s; box-shadow:0 4px 16px rgba(212,131,10,0.35); }
+        .live-btn:hover { transform:scale(1.04); box-shadow:0 8px 24px rgba(212,131,10,0.45); }
+        .milestones { display:flex; align-items:flex-start; flex:1; }
+        .mstone { display:flex; flex-direction:column; align-items:center; gap:5px; flex:1; position:relative; }
+        .mstone::after { content:''; position:absolute; top:12px; left:55%; width:90%; height:2px; background:var(--border); }
+        .mstone:last-child::after { display:none; }
+        .m-dot { width:24px; height:24px; border-radius:50%; z-index:1; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; border:2px solid var(--border); background:var(--bg); color:var(--text-dim); }
+        .m-dot.done   { background:var(--green); border-color:var(--green); color:#fff; }
+        .m-dot.active { background:var(--amber); border-color:var(--amber); color:#fff; animation:pdot-a 2s infinite; }
+        @keyframes pdot-a { 0%,100%{box-shadow:0 0 0 0 rgba(212,131,10,0.35);} 50%{box-shadow:0 0 0 7px rgba(212,131,10,0);} }
+        .m-lbl { font-size:9px; color:var(--text-dim); text-align:center; line-height:1.3; }
+        .m-lbl.active { color:var(--amber); font-weight:700; }
+    </style>
+</head>
+<body>
+
+<div id="progress" style="width:12.5%;"></div>
+
+<div id="deck">
+
+<!-- ══════════════════════════════════
+     S1 · PORTADA
+══════════════════════════════════ -->
+<section class="slide active" id="s1" style="text-align:center;background:radial-gradient(ellipse 60% 50% at 50% 40%,rgba(29,111,232,0.06) 0%,transparent 80%);">
+    <span class="anchor-icon">⚓</span>
+    <p class="tag">Geeksoft &amp; Naviera Petral · Junio 2026</p>
+    <h1>El Motor que Calcula<br><span class="hi">lo que Excel ya sabe</span></h1>
+    <p class="sub" style="max-width:520px;text-align:center;">
+        Cómo funciona la matemática detrás de cada viaje —<br>explicado a través del recorrido físico real de un barco.
+    </p>
+    <div class="badge">← → para navegar &nbsp;·&nbsp; F11 para pantalla completa</div>
+</section>
+
+<!-- ══════════════════════════════════
+     S2 · EL BARCO
+══════════════════════════════════ -->
+<section class="slide" id="s2" style="transform:translateX(70px);">
+    <p class="tag">El Barco · Los datos del fierro</p>
+    <h2>El barco no es un <span class="hi">promedio</span></h2>
+    <p class="sub">Cada fase operativa consume de manera diferente</p>
+
+    <img
+        src="tanker_tablones.png"
+        alt="B/T TABLONES — Tanquero de ácido sulfúrico"
+        class="ship-img"
+        onerror="this.style.display='none';document.getElementById('ship-fallback').style.display='flex';"
+    >
+    <!-- Fallback si la imagen no carga -->
+    <div id="ship-fallback" style="display:none;width:100%;max-width:700px;height:120px;background:var(--blue-dim);border:1px dashed var(--blue-brd);border-radius:12px;align-items:center;justify-content:center;color:var(--text-dim);font-size:13px;margin-bottom:20px;">🚢 B/T TABLONES — Tanquero Quimiquero</div>
+
+    <div class="specs-grid">
+        <div class="card spec anim" id="sc1">
+            <div class="spec-icon">🧭</div>
+            <div><div class="spec-val">11 kn</div><div class="spec-lbl">Velocidad</div><div class="spec-desc">Tiempo en mar abierto</div></div>
+        </div>
+        <div class="card spec anim" id="sc2">
+            <div class="spec-icon">⬇️</div>
+            <div><div class="spec-val">500 T/hr</div><div class="spec-lbl">Intake (v_intake)</div><div class="spec-desc">Recepción física de carga</div></div>
+        </div>
+        <div class="card spec anim" id="sc3">
+            <div class="spec-icon">💪</div>
+            <div><div class="spec-val">450 T/hr</div><div class="spec-lbl">Bombas (v_pump)</div><div class="spec-desc">Potencia de descarga</div></div>
+        </div>
+        <div class="card spec anim" id="sc4">
+            <div class="spec-icon">⛽</div>
+            <div><div class="spec-val">IFO</div><div class="spec-lbl">Combustible Principal</div><div class="spec-desc">Fuel Oil pesado · 4 fases</div></div>
+        </div>
+        <div class="card spec anim" id="sc5">
+            <div class="spec-icon">💧</div>
+            <div><div class="spec-val">MDO</div><div class="spec-lbl">Diésel Marítimo</div><div class="spec-desc">Consumo auxiliar en puerto</div></div>
+        </div>
+        <div class="card spec anim" id="sc6">
+            <div class="spec-icon">💰</div>
+            <div><div class="spec-val">$15K/día</div><div class="spec-lbl">TCE Requerido</div><div class="spec-desc">Umbral mínimo de rentabilidad</div></div>
+        </div>
+    </div>
+
+    <div class="ifo-mdo-note anim" id="sc7">
+        ⚡ <strong>El modelo contempla barcos con consumo híbrido IFO + MDO</strong> — por ejemplo, el B/T Moquegua usa ambos combustibles en distintas fases. El motor calcula cada uno por separado al precio del día.
+    </div>
+</section>
+
+<!-- ══════════════════════════════════
+     S3 · LA RUTA
+══════════════════════════════════ -->
+<section class="slide" id="s3" style="transform:translateX(70px);">
+    <p class="tag">La Ruta · El escenario del viaje</p>
+    <h2>El Viaje: <span class="hi">ILO → MATARANI</span></h2>
+    <p class="sub">El motor no asume condiciones ideales — incorpora el mar real de cada ruta</p>
+
+    <div class="route-wrap">
+        <div class="route-map">
+            <div class="port-node">
+                <div class="pdot"></div>
+                <div class="pname">ILO</div>
+                <div class="psub">Origen · Carga</div>
+            </div>
+            <div class="rtrack">
+                <div class="rship">🚢</div>
+                <svg style="position:absolute;top:-10px;left:0;width:100%;height:24px;" preserveAspectRatio="none">
+                    <line x1="0" y1="12" x2="100%" y2="12" stroke="rgba(15,35,64,0.12)" stroke-width="1" stroke-dasharray="10 7"/>
+                </svg>
+            </div>
+            <div class="port-node">
+                <div class="pdot dest"></div>
+                <div class="pname dest">MATARANI</div>
+                <div class="psub">Destino · Descarga</div>
+            </div>
+        </div>
+
+        <div class="rstats">
+            <div class="card rs anim" id="rs1">
+                <div class="rs-num">69</div><div class="rs-unit">NM</div>
+                <div class="rs-lbl">Distancia oficial por pierna</div>
+            </div>
+            <div class="card rs anim" id="rs2">
+                <div class="rs-num">+3%</div><div class="rs-unit">Factor Climático</div>
+                <div class="rs-lbl">Corrientes y vientos reales</div>
+            </div>
+            <div class="card rs anim" id="rs3">
+                <div class="rs-num">~6 h</div><div class="rs-unit">por pierna</div>
+                <div class="rs-lbl">Navegación real ida o vuelta</div>
+            </div>
+        </div>
+
+        <div class="card anim" id="rs4" style="margin-top:14px;padding:13px 20px;">
+            <p style="font-size:13px;color:var(--text-dim);line-height:1.6;">
+                💡 <strong style="color:var(--text);">El viaje siempre es ida y vuelta.</strong>
+                El barco regresa vacío a ILO para la siguiente carga. El motor calcula el bunker de ambas piernas.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════
+     S4 · PRECIO DEL BUNKER + BAF
+══════════════════════════════════ -->
+<section class="slide" id="s4" style="transform:translateX(70px);">
+    <p class="tag">El Combustible · El insumo que mueve todo</p>
+    <h2>El Precio del <span class="hi">Bunker</span></h2>
+    <p class="sub">El sistema jala automáticamente el precio de la última compra registrada</p>
+
+    <div class="bprice-wrap">
+        <div class="bprice-cards">
+            <div class="card bprice-card anim" id="bp1">
+                <div class="bp-icon">🛢️</div>
+                <div class="bp-type">IFO 380 · Fuel Oil Pesado</div>
+                <div><span class="bp-val" id="ifo-val">$440</span> <span class="bp-unit">/ tonelada</span></div>
+                <div class="bp-date" id="ifo-date">📅 Última actualización: Jun 2026</div>
+                <div class="bp-source">Fuente: Cotización proveedor · Registrada en BD</div>
+            </div>
+            <div class="card bprice-card anim" id="bp2">
+                <div class="bp-icon">💧</div>
+                <div class="bp-type">MDO · Diésel Marítimo Destilado</div>
+                <div><span class="bp-val" id="mdo-val">$800</span> <span class="bp-unit">/ tonelada</span></div>
+                <div class="bp-date" id="mdo-date">📅 Última actualización: Jun 2026</div>
+                <div class="bp-source">Fuente: Cotización proveedor · Registrada en BD</div>
+            </div>
+        </div>
+
+        <div class="baf-box anim" id="baf">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--amber);margin-bottom:12px;">Arquitectura de Ajuste de Bunker (BAF)</div>
+            <div class="baf-row" style="margin-bottom:10px;">
+                <div class="baf-badge">HOY ✓</div>
+                <div class="baf-text">
+                    <strong>Precio fijo pactado en contrato:</strong> el sistema usa el precio de la BD para calcular el costo de bunker de cada viaje. Simple y transparente.
+                </div>
+            </div>
+            <div class="baf-row">
+                <div class="baf-badge future">FUTURO</div>
+                <div class="baf-text">
+                    <strong>BAF — Bunker Adjustment Factor:</strong> el motor ya tiene la arquitectura para calcular el ajuste cuando el precio del mercado supera el precio base del contrato en más de un umbral (ej. 5%). Esto habilitará la liquidación real de cada barco.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════
+     S5 · LA LEY DEL MÍNIMO
+══════════════════════════════════ -->
+<section class="slide" id="s5" style="transform:translateX(70px);">
+    <p class="tag">El Cuello de Botella · La regla más importante</p>
+    <h2>La Ley del <span class="hi">Mínimo</span></h2>
+    <p class="sub">¿A qué velocidad realmente carga o descarga el barco?</p>
+
+    <div class="pipes" id="pipes">
+        <div class="pipe" id="p-contract">
+            <div class="p-ico">📋</div>
+            <div class="p-src">El Contrato</div>
+            <div class="p-val">500</div>
+            <div class="p-unit">T/hora máximo</div>
+            <div class="p-note">Lo que el acuerdo<br>comercial permite</div>
+        </div>
+        <div class="pipe" id="p-terminal">
+            <div class="p-ico">🏭</div>
+            <div class="p-src">El Terminal · Matarani</div>
+            <div class="p-val">300</div>
+            <div class="p-unit">T/hora máximo</div>
+            <div class="p-note">Presión física real de<br>las tuberías de tierra</div>
+        </div>
+        <div class="pipe" id="p-vessel">
+            <div class="p-ico">🚢</div>
+            <div class="p-src">El Barco</div>
+            <div class="p-val">450</div>
+            <div class="p-unit">T/hora máximo</div>
+            <div class="p-note">Potencia máxima<br>de las bombas a bordo</div>
+        </div>
+    </div>
+
+    <div class="bn-result anim" id="bn-result">
+        <div>
+            <div style="font-size:9px;color:var(--red);letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-bottom:8px;">El sistema escoge siempre el menor</div>
+            <div class="bn-calc">
+                <span style="color:var(--red);font-weight:700;">MIN</span>(500, <span style="color:var(--red);font-weight:900;">300</span>, 450) = <strong style="color:var(--amber);">300 T/hr</strong><br>
+                13,500 MT ÷ 300 T/hr = <strong style="color:var(--amber);">45 horas de descarga</strong><br>
+                <span style="color:var(--blue);">= 1.875 días operativos en puerto</span>
+            </div>
+        </div>
+        <div style="text-align:right;">
+            <div class="bn-big">1.9</div>
+            <div class="bn-lbl">días operativos<br>en puerto descarga</div>
+        </div>
+    </div>
+
+    <div class="overhead-note anim" id="overhead">
+        ⏱️ <strong>Overhead de puerto:</strong> A los días operativos se suman <strong>6 horas fijas</strong> por terminal (conexión de mangueras, trámites aduaneros, inspecciones de seguridad). Esto eleva el total a <strong>2.1 días reales</strong> en MATARANI.
+    </div>
+</section>
+
+<!-- ══════════════════════════════════
+     S6 · BUNKER FASES
+══════════════════════════════════ -->
+<section class="slide" id="s6" style="transform:translateX(70px);">
+    <p class="tag">El Combustible · No es un promedio</p>
+    <h2>Bunker: <span class="hi">Fase por Fase</span></h2>
+    <p class="sub">El motor calcula cada etapa del viaje por separado — igual que el Excel</p>
+
+    <div class="bwrap">
+        <div class="tl-bar">
+            <div class="tl-seg tl-carga">⚓ CARGA<br>2.1 d</div>
+            <div class="tl-seg tl-mar1">🌊 MAR<br>0.97 d</div>
+            <div class="tl-seg tl-disch">💉 DESC<br>1.56 d</div>
+            <div class="tl-seg tl-mar2">🌊 VUELTA<br>0.97 d</div>
+        </div>
+        <div class="brows">
+            <div class="card brow anim-x" id="br1">
+                <div class="br-ico">⚓</div>
+                <div><div class="br-name">Puerto de Carga — ILO</div><div class="br-form">2.1 días × 3.5 T/día IFO</div></div>
+                <div class="br-val">7.4 T IFO</div>
+            </div>
+            <div class="card brow anim-x" id="br2">
+                <div class="br-ico">🌊</div>
+                <div><div class="br-name">Navegación Ida — ILO → MATARANI</div><div class="br-form">0.97 días × 14.5 T/día IFO</div></div>
+                <div class="br-val">14.1 T IFO</div>
+            </div>
+            <div class="card brow anim-x" id="br3">
+                <div class="br-ico">💉</div>
+                <div><div class="br-name">Puerto de Descarga — MATARANI</div><div class="br-form">1.56 días × 3.5 T/día IFO</div></div>
+                <div class="br-val">5.5 T IFO</div>
+            </div>
+            <div class="card brow anim-x" id="br4">
+                <div class="br-ico">🌊</div>
+                <div><div class="br-name">Regreso en Lastre — MATARANI → ILO</div><div class="br-form">0.97 días × 14.5 T/día IFO</div></div>
+                <div class="br-val">14.1 T IFO</div>
+            </div>
+        </div>
+        <div class="btot anim" id="bt">
+            <div>
+                <div class="bt-lbl">⛽ Total IFO consumido — Viaje Redondo</div>
+                <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">41.1 T × $440/T de última compra</div>
+            </div>
+            <div class="bt-val">$18,084 USD</div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════
+     S7 · VOYAGE RESULT (expanded)
+══════════════════════════════════ -->
+<section class="slide" id="s7" style="transform:translateX(70px);">
+    <p class="tag" style="margin-bottom:6px;">La Rentabilidad · El corazón del motor</p>
+    <h2 style="margin-bottom:6px;">El <span class="hi">Voyage Result</span></h2>
+    <p class="sub" style="margin-bottom:16px;">B/T TABLONES · ILO → MATARANI · 13,500 MT · Cada variable explicada</p>
+
+    <div class="vr-grid">
+        <!-- LEFT: Inputs & Costs -->
+        <div class="card vr-section anim" id="vr1">
+            <div class="vr-sec-title" style="color:var(--green);">💰 INGRESO BRUTO</div>
+            <div class="vr-row income">
+                <div><div class="vr-lbl">Q · Toneladas transportadas</div><div class="vr-var">quantity = 13,500 MT</div></div>
+                <div class="vr-val">13,500</div>
+            </div>
+            <div class="vr-row income">
+                <div><div class="vr-lbl">F · Flete por tonelada (bracket)</div><div class="vr-var">freight_rate = $19.01/MT</div></div>
+                <div class="vr-val">×$19.01</div>
+            </div>
+            <div class="vr-row" style="border-bottom:none;padding-top:10px;">
+                <div style="font-size:12px;font-weight:700;color:var(--green);">= Ingreso Bruto</div>
+                <div class="vr-val" style="color:var(--green);font-size:1.2rem;">$256,635</div>
+            </div>
+
+            <div class="vr-sec-title" style="color:var(--red);margin-top:16px;">🏭 COSTOS DE PUERTO</div>
+            <div class="vr-row cost">
+                <div><div class="vr-lbl">Agencia · Puerto ILO (carga)</div><div class="vr-var">ag_carga [SPCC + TABLONES]</div></div>
+                <div class="vr-val">$23,000</div>
+            </div>
+            <div class="vr-row cost">
+                <div><div class="vr-lbl">Agencia · Puerto MATARANI (desc.)</div><div class="vr-var">ag_descarga [SPCC + TABLONES]</div></div>
+                <div class="vr-val">$18,000</div>
+            </div>
+            <div class="vr-row" style="border-bottom:none;padding-top:6px;">
+                <div style="font-size:12px;font-weight:700;color:var(--red);">= Total Costos Puerto</div>
+                <div class="vr-val" style="color:var(--red);font-size:1.2rem;">$41,000</div>
+            </div>
+            <div class="vr-port-note">
+                ℹ️ El costo de agencia <strong>puede variar según el barco y el cliente</strong>. El sistema busca primero la tarifa específica (SPCC + TABLONES). Si no existe, aplica la tarifa estándar <strong>DEFAULT</strong>.
+            </div>
+
+            <div class="vr-sec-title" style="color:var(--red);margin-top:14px;">⛽ COSTO DE BUNKER</div>
+            <div class="vr-row cost">
+                <div><div class="vr-lbl">IFO consumido total (4 fases)</div><div class="vr-var">Σ(t_fase × c_sea/load/disch_ifo) × p_ifo</div></div>
+                <div class="vr-val">$18,084</div>
+            </div>
+            <div class="vr-row cost">
+                <div><div class="vr-lbl">MDO consumido (fases auxiliares)</div><div class="vr-var">Σ(t_fase × c_fase_mdo) × p_mdo</div></div>
+                <div class="vr-val">$3,625</div>
+            </div>
+            <div class="vr-row" style="border-bottom:none;padding-top:6px;">
+                <div style="font-size:12px;font-weight:700;color:var(--red);">= Total Bunker</div>
+                <div class="vr-val" style="color:var(--red);font-size:1.2rem;">$14,459</div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Result & KPIs -->
+        <div class="card vr-result-box anim" id="vr2">
+            <div class="vr-formula-title">Fórmula del Voyage Result</div>
+            <div class="vr-formula mono">
+                VR = (Q × F) − (ag_carga + ag_descarga) − Σ(t_fase × c_fase × p_bunker)
+            </div>
+
+            <div class="vr-total" style="margin-top:18px;">
+                <div class="vr-tot-lbl">🏆 VOYAGE RESULT</div>
+                <div class="vr-tot-val">$201,175</div>
+            </div>
+
+            <div class="vr-kpi-row">
+                <div>
+                    <div class="vr-kpi-lbl">TCE Real · Renta diaria del barco</div>
+                    <div class="vr-kpi-frm">VR ÷ total_days = $201,175 ÷ 3.77 d</div>
+                </div>
+                <div class="vr-kpi-val">$53,362<span style="font-size:11px;color:var(--text-dim);">/día</span></div>
+            </div>
+
+            <div class="vr-kpi-row">
+                <div>
+                    <div class="vr-kpi-lbl">TCE Requerido · Umbral del dueño</div>
+                    <div class="vr-kpi-frm">tce_req × total_days = $15K × 3.77 d</div>
+                </div>
+                <div class="vr-kpi-val" style="color:var(--text-dim);">$56,550</div>
+            </div>
+
+            <div class="vr-kpi-row" style="border-bottom:none;">
+                <div>
+                    <div class="vr-kpi-lbl">Utilidad Nominal · P/L del dueño</div>
+                    <div class="vr-kpi-frm">VR − (tce_req × days)</div>
+                </div>
+                <div class="vr-kpi-val positive">$144,625</div>
+            </div>
+
+            <div style="margin-top:20px;padding:14px;background:var(--blue-dim);border:1px solid var(--blue-brd);border-radius:10px;">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--blue);margin-bottom:6px;">¿De dónde sale cada variable?</div>
+                <div style="font-size:11px;color:var(--navy-mid);line-height:2.0;">
+                    <strong>Q</strong> = pedido del cliente &nbsp;·&nbsp; <strong>F</strong> = tabla de contratos SPCC<br>
+                    <strong>ag_*</strong> = matriz de agencias (barco + cliente)<br>
+                    <strong>t_fase</strong> = Ley del Mínimo + Overhead<br>
+                    <strong>c_fase</strong> = especificaciones del barco<br>
+                    <strong>p_bunker</strong> = cotización del día en BD
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+<!-- ══════════════════════════════════
+     S8 · MATRIZ FINANCIERA (ARQUITECTURA)
+══════════════════════════════════ -->
+<section class="slide" id="s8" style="transform:translateX(70px);">
+    <p class="tag">Arquitectura de Datos</p>
+    <h2>La Matriz Financiera</h2>
+    <p class="sub">Cómo el simulador orquesta las 6 fuentes de verdad de la base de datos Supabase</p>
+
+    <div style="display:flex; justify-content:center; align-items:center; gap:30px; margin-top:20px; width:100%;">
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            <div class="card" style="padding:15px; border-left:4px solid var(--blue); text-align:center; font-weight:600;">1. Rutas (Distancias)</div>
+            <div class="card" style="padding:15px; border-left:4px solid var(--blue); text-align:center; font-weight:600;">2. Puertos (Límites y Overhead)</div>
+            <div class="card" style="padding:15px; border-left:4px solid var(--blue); text-align:center; font-weight:600;">3. Buques (Specs Técnicos)</div>
+        </div>
+        <div style="font-size:40px; color:var(--text-dim);">➔</div>
+        <div class="card" style="padding:40px; text-align:center; background:var(--blue); color:white; border-radius:20px; box-shadow:var(--shadow-lg);">
+            <h3 style="font-size:24px; font-weight:900; margin-bottom:10px;">Motor de P&L</h3>
+            <div style="font-size:14px; opacity:0.9;">forecast_service.py</div>
+        </div>
+        <div style="font-size:40px; color:var(--text-dim);">←</div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            <div class="card" style="padding:15px; border-right:4px solid var(--amber); text-align:center; font-weight:600;">4. Contratos (Reglas)</div>
+            <div class="card" style="padding:15px; border-right:4px solid var(--amber); text-align:center; font-weight:600;">5. Tarifas (Brackets)</div>
+            <div class="card" style="padding:15px; border-right:4px solid var(--amber); text-align:center; font-weight:600;">6. Agencia (Matriz Costos)</div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════
+     S9 · MAESTRO: BUQUES (vessels)
+══════════════════════════════════ -->
+<section class="slide" id="s9" style="transform:translateX(70px);">
+    <p class="tag">Maestros de Datos · 1 de 6</p>
+    <h2>Tabla: <span class="hi">vessels</span></h2>
+    <p class="sub">Define las capacidades de carga y consumos energéticos de cada nave de la flota</p>
+
+    <div class="card" style="width:100%; padding:24px;">
+        <h3 style="font-size:16px; margin-bottom:12px; color:var(--blue);">Ejemplo Real de Supabase:</h3>
+        <pre class="mono" style="background:var(--bg); padding:16px; border-radius:8px; font-size:13px; color:var(--text); overflow-x:auto;">
+{
+  "vessel_id": "CONCON_TRADER",
+  "vessel_name": "CONCON TRADER",
+  "dwt": 19823,
+  "vessel_speed": 11.0,
+  "vessel_pump_discharge_rate": 500.0,
+  "consumption_sea_ifo": 14.0,
+  "consumption_port_ifo": 3.5,
+  "tce_required": 20000
+}
+        </pre>
+        <p style="margin-top:16px; font-size:14px; color:var(--text-dim);"><strong>Impacto en simulación:</strong> Dicta cuánto tarda en llegar, cuánto consume en el mar (IFO/MDO) y la velocidad máxima a la que puede bombear carga (limitado por el puerto).</p>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════
+     S10 · MAESTRO: RUTAS (routes)
+══════════════════════════════════ -->
+<section class="slide" id="s10" style="transform:translateX(70px);">
+    <p class="tag">Maestros de Datos · 2 de 6</p>
+    <h2>Tabla: <span class="hi">routes</span></h2>
+    <p class="sub">Mapea la topología marítima y las distancias entre puertos</p>
+
+    <div class="card" style="width:100%; padding:24px;">
+        <h3 style="font-size:16px; margin-bottom:12px; color:var(--blue);">Ejemplo Real de Supabase:</h3>
+        <pre class="mono" style="background:var(--bg); padding:16px; border-radius:8px; font-size:13px; color:var(--text); overflow-x:auto;">
+{
+  "origin_port_id": "ILO",
+  "destination_port_id": "MATARANI",
+  "route_distance": 69.0,
+  "weather_factor": 0.03,
+  "description": "Tramo corto de cabotaje sur (Perú)"
+}
+        </pre>
+        <p style="margin-top:16px; font-size:14px; color:var(--text-dim);"><strong>Impacto en simulación:</strong> Provee las millas náuticas necesarias para calcular el tiempo de mar (Sea Days = Distancia / Velocidad Buque). El weather factor agrega un margen de seguridad histórico.</p>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════
+     S11 · MAESTRO: PUERTOS (ports)
+══════════════════════════════════ -->
+<section class="slide" id="s11" style="transform:translateX(70px);">
+    <p class="tag">Maestros de Datos · 3 de 6</p>
+    <h2>Tabla: <span class="hi">ports</span></h2>
+    <p class="sub">Establece las reglas físicas, los cuellos de botella y límites de operación por muelle</p>
+
+    <div class="card" style="width:100%; padding:24px;">
+        <h3 style="font-size:16px; margin-bottom:12px; color:var(--blue);">Ejemplo Real de Supabase:</h3>
+        <pre class="mono" style="background:var(--bg); padding:16px; border-radius:8px; font-size:13px; color:var(--text); overflow-x:auto;">
+{
+  "port_id": "ILO",
+  "max_load_rate": 500.0,
+  "max_disch_rate": 9999.0,
+  "overhead_carga_hrs": 6.0,
+  "overhead_descarga_hrs": 6.0
+}
+        </pre>
+        <p style="margin-top:16px; font-size:14px; color:var(--text-dim);"><strong>Impacto en simulación:</strong> Aplica la "Ley del Mínimo". Si un barco descarga a 800 T/h pero el puerto solo acepta 500 T/h, el motor usa 500. Los "overheads" suman horas muertas fijas por fondeo, maniobras y papeleo.</p>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════
+     S12 · MAESTRO: CONTRATOS (contracts)
+══════════════════════════════════ -->
+<section class="slide" id="s12" style="transform:translateX(70px);">
+    <p class="tag">Maestros de Datos · 4 de 6</p>
+    <h2>Tabla: <span class="hi">contracts</span></h2>
+    <p class="sub">Define los acuerdos comerciales paraguas entre la Naviera y el Cliente</p>
+
+    <div class="card" style="width:100%; padding:24px;">
+        <h3 style="font-size:16px; margin-bottom:12px; color:var(--blue);">Ejemplo Real de Supabase:</h3>
+        <pre class="mono" style="background:var(--bg); padding:16px; border-radius:8px; font-size:13px; color:var(--text); overflow-x:auto;">
+{
+  "contract_id": "SPCC_2025",
+  "client_id": "SPCC",
+  "origin_port_id": "ILO",
+  "destination_port_id": "MATARANI",
+  "valid_from": "2025-01-01",
+  "valid_to": "2025-12-31"
+}
+        </pre>
+        <p style="margin-top:16px; font-size:14px; color:var(--text-dim);"><strong>Impacto en simulación:</strong> Sirve como validación estructural. Asegura que no se puedan proyectar viajes fuera de vigencia o en rutas no estipuladas. Funciona como llave primaria para buscar las tarifas.</p>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════
+     S13 · MAESTRO: TARIFAS (contract_tariffs)
+══════════════════════════════════ -->
+<section class="slide" id="s13" style="transform:translateX(70px);">
+    <p class="tag">Maestros de Datos · 5 de 6</p>
+    <h2>Tabla: <span class="hi">contract_tariffs</span></h2>
+    <p class="sub">Contiene los "Brackets" o escalones de flete dinámico</p>
+
+    <div class="card" style="width:100%; padding:24px;">
+        <h3 style="font-size:16px; margin-bottom:12px; color:var(--blue);">Ejemplo Real de Supabase:</h3>
+        <pre class="mono" style="background:var(--bg); padding:16px; border-radius:8px; font-size:13px; color:var(--text); overflow-x:auto;">
+{
+  "contract_id": "SPCC_2025",
+  "min_tonnage": 10000.0,
+  "max_tonnage": 11500.0,
+  "freight_rate": 20.12
+}
+        </pre>
+        <p style="margin-top:16px; font-size:14px; color:var(--text-dim);"><strong>Impacto en simulación:</strong> El motor busca en qué "bracket" cae la cantidad a transportar. Si se transportan 11,000 MT, cobrará $20.12 por tonelada. Esto permite modelar descuentos por volumen.</p>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════
+     S14 · MAESTRO: AGENCIAS (agency_matrix)
+══════════════════════════════════ -->
+<section class="slide" id="s14" style="transform:translateX(70px);">
+    <p class="tag">Maestros de Datos · 6 de 6</p>
+    <h2>Tabla: <span class="hi">agency_matrix</span></h2>
+    <p class="sub">Matriz de resolución para los costos fijos portuarios</p>
+
+    <div class="card" style="width:100%; padding:24px;">
+        <h3 style="font-size:16px; margin-bottom:12px; color:var(--blue);">Ejemplo Real de Supabase:</h3>
+        <pre class="mono" style="background:var(--bg); padding:16px; border-radius:8px; font-size:13px; color:var(--text); overflow-x:auto;">
+{
+  "port_id": "ILO",
+  "operation_type": "CARGA",
+  "client_id": "DEFAULT",
+  "vessel_id": "DEFAULT",
+  "cost": 25500.0
+}
+        </pre>
+        <p style="margin-top:16px; font-size:14px; color:var(--text-dim);"><strong>Impacto en simulación:</strong> El sistema busca siempre la tarifa más específica (Ej: Barco X + Cliente Y). Si no existe una tarifa negociada, hace "fallback" al comodín DEFAULT. Deduce automáticamente los costos base de cada puerto tocado.</p>
+    </div>
+</section>
+
+</div><!-- #deck -->
+
+<nav>
+    <button class="nbtn" id="prevBtn" onclick="go(-1)">←</button>
+    <span id="counter">1 / 7</span>
+    <button class="nbtn" id="nextBtn" onclick="go(1)">→</button>
+</nav>
+
+<script>
+const TOTAL = 14;
+let cur = 1, busy = false;
+
+function go(dir) {
+    if (busy) return;
+    const nx = cur + dir;
+    if (nx < 1 || nx > TOTAL) return;
+    busy = true;
+    resetAnim(cur);
+
+    const from = document.getElementById('s' + cur);
+    const to   = document.getElementById('s' + nx);
+
+    from.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    from.style.opacity    = '0';
+    from.style.transform  = dir > 0 ? 'translateX(-55px)' : 'translateX(55px)';
+    from.classList.remove('active');
+
+    to.style.transition = 'none';
+    to.style.opacity    = '0';
+    to.style.transform  = dir > 0 ? 'translateX(55px)' : 'translateX(-55px)';
+    to.classList.add('active');
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        to.style.transition = 'opacity 0.38s ease, transform 0.38s ease';
+        to.style.opacity    = '1';
+        to.style.transform  = 'translateX(0)';
+    }));
+
+    setTimeout(() => {
+        from.style.cssText = '';
+        cur = nx; updateUI(); triggerAnim(cur); busy = false;
+    }, 420);
+}
+
+function updateUI() {
+    document.getElementById('counter').textContent = cur + ' / ' + TOTAL;
+    document.getElementById('progress').style.width = ((cur / TOTAL) * 100) + '%';
+    document.getElementById('prevBtn').disabled = cur === 1;
+    document.getElementById('nextBtn').disabled = cur === TOTAL;
+}
+
+const D = (ms) => new Promise(r => setTimeout(r, ms));
+
+async function triggerAnim(n) {
+    if (n === 2) {
+        for (const id of ['sc1','sc2','sc3','sc4','sc5','sc6']) { await D(140); document.getElementById(id)?.classList.add('in'); }
+        await D(200); document.getElementById('sc7')?.classList.add('in');
+    }
+    if (n === 3) {
+        ['rs1','rs2','rs3'].forEach((id,i) => setTimeout(() => document.getElementById(id)?.classList.add('in'), 150+i*160));
+        await D(650); document.getElementById('rs4')?.classList.add('in');
+    }
+    if (n === 4) {
+        await D(200); document.getElementById('bp1')?.classList.add('in');
+        await D(200); document.getElementById('bp2')?.classList.add('in');
+        await D(300); document.getElementById('baf')?.classList.add('in');
+    }
+    if (n === 5) {
+        await D(900);
+        document.getElementById('p-contract')?.classList.add('loser');
+        document.getElementById('p-vessel')?.classList.add('loser');
+        document.getElementById('p-terminal')?.classList.add('winner');
+        await D(800); document.getElementById('bn-result')?.classList.add('in');
+        await D(400); document.getElementById('overhead')?.classList.add('in');
+    }
+    if (n === 6) {
+        for (const id of ['br1','br2','br3','br4']) { await D(240); document.getElementById(id)?.classList.add('in'); }
+        await D(280); document.getElementById('bt')?.classList.add('in');
+    }
+    if (n === 7) {
+        await D(200); document.getElementById('vr1')?.classList.add('in');
+        await D(400); document.getElementById('vr2')?.classList.add('in');
+    }
+}
+
+function resetAnim(n) {
+    const clear = (...ids) => ids.forEach(id => document.getElementById(id)?.classList.remove('in'));
+    if (n === 2) clear('sc1','sc2','sc3','sc4','sc5','sc6','sc7');
+    if (n === 3) clear('rs1','rs2','rs3','rs4');
+    if (n === 4) clear('bp1','bp2','baf');
+    if (n === 5) {
+        ['p-contract','p-vessel','p-terminal'].forEach(id => { const el = document.getElementById(id); el?.classList.remove('winner','loser'); });
+        clear('bn-result','overhead');
+    }
+    if (n === 6) clear('br1','br2','br3','br4','bt');
+    if (n === 7) clear('vr1','vr2');
+}
+
+document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown',' '].includes(e.key)) { e.preventDefault(); go(1); }
+    if (['ArrowLeft','ArrowUp'].includes(e.key))        { e.preventDefault(); go(-1); }
+});
+
+async function fetchBunkerPrices() {
+    const url = 'https://hjjxooxcpvlvbaxgifbn.supabase.co/rest/v1/bunker_prices?select=*';
+    const apikey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqanhvb3hjcHZsdmJheGdpZmJuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjI1MDk0NCwiZXhwIjoyMDk3ODI2OTQ0fQ.i8KkZtLSDEqaNo15NH3easZV6vhHIbqoYD7ps4pkOMc';
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'apikey': apikey,
+                'Authorization': `Bearer ${apikey}`
+            }
+        });
+        const data = await response.json();
+        
+        const ifo = data.find(d => d.fuel_type === 'IFO');
+        const mdo = data.find(d => d.fuel_type === 'MDO');
+        
+        if (ifo) {
+            document.getElementById('ifo-val').textContent = `$${parseFloat(ifo.market_price_usd).toFixed(2)}`;
+            const dateStr = ifo.date ? new Date(ifo.date + 'T00:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
+            document.getElementById('ifo-date').textContent = `📅 Última actualización: ${dateStr}`;
+        }
+        if (mdo) {
+            document.getElementById('mdo-val').textContent = `$${parseFloat(mdo.market_price_usd).toFixed(2)}`;
+            const dateStr = mdo.date ? new Date(mdo.date + 'T00:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
+            document.getElementById('mdo-date').textContent = `📅 Última actualización: ${dateStr}`;
+        }
+    } catch (e) {
+        console.error('Error fetching bunker prices:', e);
+    }
+}
+
+updateUI();
+fetchBunkerPrices();
+</script>
+</body>
+</html>
