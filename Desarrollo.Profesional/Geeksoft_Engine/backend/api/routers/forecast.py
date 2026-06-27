@@ -78,3 +78,18 @@ def get_audit_benchmarks():
         return benchmarks_map
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/clients")
+def get_clients():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        
+        res = sb.table("contracts").select("client_id").execute()
+        # Extract distinct clients
+        clients = list(set([row["client_id"] for row in res.data]))
+        # Sort alphabetically
+        clients.sort()
+        return clients
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

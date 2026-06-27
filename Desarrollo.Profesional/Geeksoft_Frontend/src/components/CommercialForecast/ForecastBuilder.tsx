@@ -21,6 +21,10 @@ interface ForecastBuilderProps {
     onDisplayModeChange?: (mode: 'usd' | 'pct') => void;
     forecastName?: string;
     isAdding?: boolean;
+    demurragePct?: string;
+    showDemurrage?: boolean;
+    onDemurragePctChange?: (val: string) => void;
+    onShowDemurrageChange?: (val: boolean) => void;
 }
 
 export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({ 
@@ -36,7 +40,11 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     displayMode,
     onDisplayModeChange,
     forecastName,
-    isAdding = false
+    isAdding = false,
+    demurragePct = '',
+    showDemurrage = false,
+    onDemurragePctChange,
+    onShowDemurrageChange
 }) => {
     // Form State
     const [monthIndex, setMonthIndex] = useState('');
@@ -47,6 +55,17 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     const [frequency, setFrequency] = useState('1');
     const [customTariff, setCustomTariff] = useState('');
     const [spotSuffix, setSpotSuffix] = useState('');
+    
+    // Dynamic Clients State
+    const [availableClients, setAvailableClients] = useState<string[]>([]);
+
+    useEffect(() => {
+        import('../../services/api').then(({ ForecastService }) => {
+            ForecastService.getClients().then(clients => {
+                setAvailableClients(clients);
+            }).catch(err => console.error("Failed to fetch clients:", err));
+        });
+    }, []);
 
     // Clear month if it falls outside the new horizon, otherwise leave it alone (or empty initially)
     useEffect(() => {
@@ -177,18 +196,19 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 <SelectValue placeholder="Cliente" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="SPCC">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#0369A1]"></div>SPCC</div>
-                                </SelectItem>
-                                <SelectItem value="MINSUR">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#1E3A8A]"></div>MINSUR</div>
-                                </SelectItem>
-                                <SelectItem value="CHINALCO">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#1E3A8A]"></div>CHINALCO</div>
-                                </SelectItem>
-                                <SelectItem value="SPOT">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#F97316]"></div>SPOT</div>
-                                </SelectItem>
+                                {availableClients.map(c => (
+                                    <SelectItem key={c} value={c}>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-[#1E3A8A]"></div>{c}
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                                {/* Default SPOT fallback */}
+                                {!availableClients.includes('SPOT') && (
+                                    <SelectItem value="SPOT">
+                                        <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#F97316]"></div>SPOT</div>
+                                    </SelectItem>
+                                )}
                             </SelectContent>
                         </Select>
                     </div>
@@ -297,6 +317,28 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             title="Sobrescribir tarifa del contrato. Déjelo vacío para usar la tarifa maestra."
                             className={`w-full h-8 ${client === 'SPOT' ? 'border-red-300 bg-red-50' : ''}`}
                         />
+                    </div>
+
+                    {/* 9. Demurrage (%) */}
+                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">9. Demurrage (%)</Label>
+                        <div className="flex gap-1 h-8">
+                            <Input 
+                                type="number" 
+                                min="0"
+                                value={demurragePct} 
+                                onChange={e => onDemurragePctChange?.(e.target.value)}
+                                placeholder="%"
+                                className="w-16 h-8"
+                            />
+                            <button 
+                                onClick={() => onShowDemurrageChange?.(!showDemurrage)}
+                                className={`flex-1 text-xs font-semibold rounded transition-colors border ${showDemurrage ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                                title="Mostrar Demurrage en la Matriz Financiera"
+                            >
+                                Mostrar
+                            </button>
+                        </div>
                     </div>
 
                     {/* 9. Botón Añadir */}

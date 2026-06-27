@@ -3,7 +3,7 @@ import { ForecastGrid } from '../../components/CommercialForecast/ForecastGrid';
 import { ForecastBuilder } from '../../components/CommercialForecast/ForecastBuilder';
 import { InteractiveChart } from '../../components/CommercialForecast/InteractiveChart';
 import { ForecastService } from '../../services/api';
-import { Save, FolderOpen, X, Table, BarChart2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Save, FolderOpen, X, Table, BarChart2, ChevronUp, ChevronDown, Sun, Moon } from 'lucide-react';
 import { VoyageLedgerTest } from '../../components/CommercialForecast/VoyageLedgerTest';
 
 export const CommercialForecast: React.FC = () => {
@@ -11,6 +11,13 @@ export const CommercialForecast: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState<'none' | 'save' | 'loadList' | 'loadSelected'>('none');
     const [isRibbonCollapsed, setIsRibbonCollapsed] = useState(false);
+    
+    // Theme State
+    const [isDarkMode, setIsDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
+
+    useEffect(() => {
+        document.documentElement.classList.toggle('dark', isDarkMode);
+    }, [isDarkMode]);
     
     // Global Horizon State
     const [startDate, setStartDate] = useState("2026-07-01");
@@ -32,6 +39,12 @@ export const CommercialForecast: React.FC = () => {
     // Tab State
     const [activeTab, setActiveTab] = useState<'grid' | 'chart' | 'ledger'>('grid');
     const [displayMode, setDisplayMode] = useState<'usd'|'pct'>('usd');
+
+    // Demurrage State
+    const [demurragePct, setDemurragePct] = useState<string>('');
+    const [showDemurrage, setShowDemurrage] = useState<boolean>(false);
+    const [excludedDemurrages, setExcludedDemurrages] = useState<string[]>([]);
+    const [customDemurrages, setCustomDemurrages] = useState<Record<string, Record<number, string>>>({});
 
     // Derive months from horizon without JS Date timezone shifts
     const dynamicMonths = useMemo(() => {
@@ -244,6 +257,10 @@ export const CommercialForecast: React.FC = () => {
                         displayMode={displayMode}
                         onDisplayModeChange={setDisplayMode}
                         isAdding={loading}
+                        demurragePct={demurragePct}
+                        showDemurrage={showDemurrage}
+                        onDemurragePctChange={setDemurragePct}
+                        onShowDemurrageChange={setShowDemurrage}
                         centerContent={
                             <div className="bg-slate-200 p-1 rounded-lg inline-flex gap-1 shadow-inner">
                                 <button 
@@ -267,15 +284,33 @@ export const CommercialForecast: React.FC = () => {
                             </div>
                         }
                         rightContent={
-                            <div className="flex flex-col items-center gap-1">
-                                <button 
-                                    onClick={() => setIsRibbonCollapsed(!isRibbonCollapsed)}
-                                    className="text-slate-400 hover:text-slate-600 transition-colors bg-white hover:bg-slate-100 rounded-full p-1"
-                                    title={isRibbonCollapsed ? "Expandir Controles" : "Minimizar Controles"}
-                                >
-                                    {isRibbonCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-                                </button>
-                                <img src="/Logo.Petral.png" alt="Naviera Petral" className="h-8 object-contain" />
+                            <div className="flex flex-col items-center gap-2">
+                                <div className="flex items-center gap-2 bg-slate-100 rounded-full p-1 shadow-inner">
+                                    <button
+                                        onClick={() => setIsDarkMode(false)}
+                                        className={`p-1.5 rounded-full transition-all ${!isDarkMode ? 'bg-white shadow text-amber-500' : 'text-slate-400 hover:text-slate-600'}`}
+                                        title="Light Mode"
+                                    >
+                                        <Sun size={14} />
+                                    </button>
+                                    <button
+                                        onClick={() => setIsDarkMode(true)}
+                                        className={`p-1.5 rounded-full transition-all ${isDarkMode ? 'bg-slate-800 shadow text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
+                                        title="Dark Mode"
+                                    >
+                                        <Moon size={14} />
+                                    </button>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button 
+                                        onClick={() => setIsRibbonCollapsed(!isRibbonCollapsed)}
+                                        className="text-slate-400 hover:text-slate-600 transition-colors bg-white hover:bg-slate-100 rounded-full p-1"
+                                        title={isRibbonCollapsed ? "Expandir Controles" : "Minimizar Controles"}
+                                    >
+                                        {isRibbonCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                                    </button>
+                                    <img src="/Logo.Petral.png" alt="Naviera Petral" className="h-8 object-contain" />
+                                </div>
                             </div>
                         }
                         bottomRightContent={
@@ -318,7 +353,7 @@ export const CommercialForecast: React.FC = () => {
                 {/* 2. Custom Grid (1:1 with Mockup) */}
                 {activeTab === 'grid' && (
                     <section className="flex flex-col gap-2 relative animate-in fade-in slide-in-from-bottom-2 duration-300 mt-2">
-                        <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} onTariffChange={handleTariffChange} onDeleteNode={handleDeleteNode} displayMode={displayMode} />
+                        <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} onTariffChange={handleTariffChange} onDeleteNode={handleDeleteNode} displayMode={displayMode} demurragePct={demurragePct} showDemurrage={showDemurrage} excludedDemurrages={excludedDemurrages} customDemurrages={customDemurrages} onExcludeDemurrage={setExcludedDemurrages} onCustomDemurrageChange={setCustomDemurrages} />
                     </section>
                 )}
                 
