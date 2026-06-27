@@ -6,10 +6,11 @@ interface InteractiveChartProps {
     months: string[];
 }
 
-type GroupBy = 'vessel' | 'route' | 'client';
+type GroupBy = 'vessel' | 'route' | 'client' | 'petral';
 type PlotMetric = 'viajes' | 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'total_cargo' | 'none';
 
-const getHexColor = (name: string, type: 'client' | 'route' | 'vessel') => {
+const getHexColor = (name: string, type: GroupBy) => {
+    if (type === 'petral') return '#0089CF'; // Petral Blue (RGB 0-137-207)
     if (type === 'client') {
         if (name.includes('SPCC')) return '#0369A1';
         if (name.includes('SPOT')) return '#F97316';
@@ -120,6 +121,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                         let key = vessel;
                         if (groupBy === 'client') key = client;
                         if (groupBy === 'route') key = route;
+                        if (groupBy === 'petral') key = 'PETRAL';
 
                         if (!seriesMapPri[key]) {
                             seriesMapPri[key] = {};
@@ -255,6 +257,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
                 const globalPct = grandTotalSec ? (runningGlobal / grandTotalSec) * 100 : 0;
                 return {
                     value: isSecondaryPercentage ? globalPct : runningGlobal,
+                    pct: globalPct,
+                    rawVal: runningGlobal,
                     itemStyle: { color: colorToUse }
                 };
             });
@@ -359,97 +363,116 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({ data, months
     ];
 
     return (
-        <div className="w-full bg-white pt-6 pb-2 px-6 shadow-sm rounded-b-lg flex flex-col relative">
-            <div className="absolute left-6 top-10 flex flex-col gap-3 bg-slate-50 p-4 rounded-lg border border-slate-200 w-[200px] shadow-sm z-10">
+        <div className="w-full bg-white pt-6 pb-2 px-6 shadow-sm rounded-b-lg flex flex-col flex-1 relative min-h-[calc(100vh-220px)]">
+            <div className="absolute left-6 top-10 flex flex-col gap-2 z-10 w-[240px]">
                 
-                <div className="flex flex-col gap-2">
-                    <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Filtros:</span>
-                    <div className="flex flex-col gap-1">
-                        <button onClick={() => setGroupBy('client')} className={`w-full text-left px-2 py-1.5 text-[11px] font-bold rounded-md transition-colors ${groupBy === 'client' || filterClient !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
-                            Cliente
-                        </button>
-                        <select className="w-full text-[11px] bg-white border border-slate-200 rounded px-1 py-1.5" value={filterClient} onChange={(e) => setFilterClient(e.target.value)}>
-                            <option value="ALL">Todos</option>
-                            {filterOptions.clients.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
+                {/* FILTROS TABS */}
+                <div className="flex bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="bg-slate-700 w-7 flex items-center justify-center shrink-0">
+                        <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Filtros</span>
                     </div>
-                    <div className="flex flex-col gap-1 mt-1">
-                        <button onClick={() => setGroupBy('route')} className={`w-full text-left px-2 py-1.5 text-[11px] font-bold rounded-md transition-colors ${groupBy === 'route' || filterRoute !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
-                            Ruta
+                    <div className="flex-1 p-2 flex flex-col gap-2 bg-slate-50/50">
+                        <button onClick={() => setGroupBy('petral')} className={`w-full h-[70px] flex items-center justify-center text-center px-2 text-[13px] font-extrabold rounded-md transition-colors ${groupBy === 'petral' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-petral-blue border border-slate-300 hover:bg-slate-100'}`}>
+                            PETRAL
                         </button>
-                        <select className="w-full text-[11px] bg-white border border-slate-200 rounded px-1 py-1.5" value={filterRoute} onChange={(e) => setFilterRoute(e.target.value)}>
-                            <option value="ALL">Todas</option>
-                            {filterOptions.routes.map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
-                    </div>
-                    <div className="flex flex-col gap-1 mt-1">
-                        <button onClick={() => setGroupBy('vessel')} className={`w-full text-left px-2 py-1.5 text-[11px] font-bold rounded-md transition-colors ${groupBy === 'vessel' || filterVessel !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
-                            Buque
-                        </button>
-                        <select className="w-full text-[11px] bg-white border border-slate-200 rounded px-1 py-1.5" value={filterVessel} onChange={(e) => setFilterVessel(e.target.value)}>
-                            <option value="ALL">Todos</option>
-                            {filterOptions.vessels.map(v => <option key={v} value={v}>{v}</option>)}
-                        </select>
+                        <div className="h-px w-full bg-slate-200 my-0.5"></div>
+                        
+                        <div className="flex flex-col gap-1.5">
+                            <button onClick={() => setGroupBy('client')} className={`w-full h-8 flex items-center px-2 text-[13px] font-bold rounded-md transition-colors ${groupBy === 'client' || filterClient !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                                Cliente
+                            </button>
+                            <select className="w-full h-8 text-xs bg-white border border-slate-200 rounded px-1" value={filterClient} onChange={(e) => setFilterClient(e.target.value)}>
+                                <option value="ALL">Todos</option>
+                                {filterOptions.clients.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                        </div>
+                        <div className="flex flex-col gap-1.5 mt-1">
+                            <button onClick={() => setGroupBy('route')} className={`w-full h-8 flex items-center px-2 text-[13px] font-bold rounded-md transition-colors ${groupBy === 'route' || filterRoute !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                                Ruta
+                            </button>
+                            <select className="w-full h-8 text-xs bg-white border border-slate-200 rounded px-1" value={filterRoute} onChange={(e) => setFilterRoute(e.target.value)}>
+                                <option value="ALL">Todas</option>
+                                {filterOptions.routes.map(r => <option key={r} value={r}>{r}</option>)}
+                            </select>
+                        </div>
+                        <div className="flex flex-col gap-1.5 mt-1">
+                            <button onClick={() => setGroupBy('vessel')} className={`w-full h-8 flex items-center px-2 text-[13px] font-bold rounded-md transition-colors ${groupBy === 'vessel' || filterVessel !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                                Buque
+                            </button>
+                            <select className="w-full h-8 text-xs bg-white border border-slate-200 rounded px-1" value={filterVessel} onChange={(e) => setFilterVessel(e.target.value)}>
+                                <option value="ALL">Todos</option>
+                                {filterOptions.vessels.map(v => <option key={v} value={v}>{v}</option>)}
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <div className="h-px w-full bg-slate-300 my-1"></div>
-
-                <div className="flex flex-col gap-2 bg-blue-50/50 p-2 rounded border border-blue-100">
-                    <span className="text-[10px] font-semibold text-blue-700 uppercase tracking-wider">Eje Primario (Y - Izq):</span>
-                    <select className="w-full text-[11px] bg-white border border-slate-200 rounded px-2 py-1.5 font-bold" value={primaryMetric} onChange={(e) => setPrimaryMetric(e.target.value as PlotMetric)}>
-                        {metricOptions.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                    </select>
-                    <div className="flex flex-col gap-2 mt-1">
-                        <label className="flex items-center gap-1 cursor-pointer">
-                            <input type="radio" name="priType" checked={primaryGraphType === 'bar_stack'} onChange={() => setPrimaryGraphType('bar_stack')} className="w-3 h-3" />
-                            <span className="text-[10px]">Barras Stack</span>
-                        </label>
-                        <label className="flex items-center gap-1 cursor-pointer">
-                            <input type="radio" name="priType" checked={primaryGraphType === 'bar_group'} onChange={() => setPrimaryGraphType('bar_group')} className="w-3 h-3" />
-                            <span className="text-[10px]">Barras Adjuntas</span>
-                        </label>
-                        <label className="flex items-center gap-1 cursor-pointer">
-                            <input type="radio" name="priType" checked={primaryGraphType === 'line'} onChange={() => setPrimaryGraphType('line')} className="w-3 h-3" />
-                            <span className="text-[10px]">Línea</span>
-                        </label>
+                {/* EJE PRIMARIO TABS */}
+                <div className="flex bg-white rounded-lg border border-blue-200 shadow-sm overflow-hidden">
+                    <div className="bg-blue-600 w-7 flex items-center justify-center shrink-0">
+                        <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Eje Primario</span>
+                    </div>
+                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-blue-50/30">
+                        <select className="w-full text-xs bg-white border border-slate-200 rounded px-2 py-1.5 font-bold" value={primaryMetric} onChange={(e) => setPrimaryMetric(e.target.value as PlotMetric)}>
+                            {metricOptions.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                        </select>
+                        <div className="flex flex-col gap-2">
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input type="radio" name="priType" checked={primaryGraphType === 'bar_stack'} onChange={() => setPrimaryGraphType('bar_stack')} className="w-3 h-3" />
+                                <span className="text-xs">Barras Stack</span>
+                            </label>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input type="radio" name="priType" checked={primaryGraphType === 'bar_group'} onChange={() => setPrimaryGraphType('bar_group')} className="w-3 h-3" />
+                                <span className="text-xs">Barras Adjuntas</span>
+                            </label>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input type="radio" name="priType" checked={primaryGraphType === 'line'} onChange={() => setPrimaryGraphType('line')} className="w-3 h-3" />
+                                <span className="text-xs">Línea</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-2 bg-amber-50/50 p-2 rounded border border-amber-100 mt-1">
-                    <span className="text-[10px] font-semibold text-amber-700 uppercase tracking-wider">Eje Secundario (Y - Der):</span>
-                    <select className="w-full text-[11px] bg-white border border-slate-200 rounded px-2 py-1.5 font-bold" value={secondaryMetric} onChange={(e) => setSecondaryMetric(e.target.value as PlotMetric)}>
-                        <option value="none">--- Ninguno ---</option>
-                        {metricOptions.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                    </select>
-                    <div className="flex gap-2">
-                        <label className="flex items-center gap-1 cursor-pointer">
-                            <input type="radio" name="secType" checked={secondaryGraphType === 'bar'} onChange={() => setSecondaryGraphType('bar')} className="w-3 h-3" />
-                            <span className="text-[10px]">Barras</span>
-                        </label>
-                        <label className="flex items-center gap-1 cursor-pointer">
-                            <input type="radio" name="secType" checked={secondaryGraphType === 'line'} onChange={() => setSecondaryGraphType('line')} className="w-3 h-3" />
-                            <span className="text-[10px]">Línea</span>
-                        </label>
+                {/* EJE SECUNDARIO TABS */}
+                <div className="flex bg-white rounded-lg border border-amber-200 shadow-sm overflow-hidden">
+                    <div className="bg-amber-500 w-7 flex items-center justify-center shrink-0">
+                        <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Eje Secundario</span>
                     </div>
-                    <div className="flex flex-col gap-1 mt-1">
-                        <label className="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" className="w-3 h-3" checked={isSecondaryCumulativeSeries} onChange={(e) => setIsSecondaryCumulativeSeries(e.target.checked)} />
-                            <span className="text-[10px] font-medium">Acumular por serie</span>
-                        </label>
-                        <label className="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" className="w-3 h-3" checked={isSecondaryCumulativeGlobal} onChange={(e) => setIsSecondaryCumulativeGlobal(e.target.checked)} />
-                            <span className="text-[10px] font-medium text-slate-700">Acumular Global</span>
-                        </label>
-                        <label className="flex items-center gap-1.5 cursor-pointer mt-1 border-t border-amber-200/50 pt-1">
-                            <input type="checkbox" className="w-3 h-3" checked={isSecondaryPercentage} onChange={(e) => setIsSecondaryPercentage(e.target.checked)} />
-                            <span className="text-[10px] font-medium">Mostrar en % (Share)</span>
-                        </label>
+                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-amber-50/30">
+                        <select className="w-full text-xs bg-white border border-slate-200 rounded px-2 py-1.5 font-bold" value={secondaryMetric} onChange={(e) => setSecondaryMetric(e.target.value as PlotMetric)}>
+                            <option value="none">--- Ninguno ---</option>
+                            {metricOptions.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                        </select>
+                        <div className="flex gap-2">
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input type="radio" name="secType" checked={secondaryGraphType === 'bar'} onChange={() => setSecondaryGraphType('bar')} className="w-3 h-3" />
+                                <span className="text-xs">Barras</span>
+                            </label>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input type="radio" name="secType" checked={secondaryGraphType === 'line'} onChange={() => setSecondaryGraphType('line')} className="w-3 h-3" />
+                                <span className="text-xs">Línea</span>
+                            </label>
+                        </div>
+                        <div className="flex flex-col gap-1.5 mt-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" className="w-3 h-3" checked={isSecondaryCumulativeSeries} onChange={(e) => setIsSecondaryCumulativeSeries(e.target.checked)} />
+                                <span className="text-[11px] font-medium">Acumular por serie</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" className="w-3 h-3" checked={isSecondaryCumulativeGlobal} onChange={(e) => setIsSecondaryCumulativeGlobal(e.target.checked)} />
+                                <span className="text-[11px] font-medium text-slate-700">Acumular Global</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer mt-1">
+                                <input type="checkbox" className="w-3 h-3" checked={isSecondaryPercentage} onChange={(e) => setIsSecondaryPercentage(e.target.checked)} />
+                                <span className="text-[11px] font-medium">Mostrar en % (Share)</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
+
             </div>
 
-            <ReactECharts option={options} style={{ height: '650px', width: '100%' }} notMerge={true} />
+            <ReactECharts option={options} style={{ flex: 1, minHeight: '600px', width: '100%' }} notMerge={true} />
         </div>
     );
 };

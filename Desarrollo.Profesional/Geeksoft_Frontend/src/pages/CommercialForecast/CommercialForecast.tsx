@@ -226,10 +226,9 @@ export const CommercialForecast: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 p-8 font-sans print:p-0 print:bg-white">
+        <div className="min-h-screen bg-slate-50 p-8 font-sans print:p-0 print:bg-white flex flex-col">
 
-
-            <main className="flex flex-col gap-6 print:gap-0 print:m-0">
+            <main className="flex-1 flex flex-col gap-6 print:gap-0 print:m-0">
                 
                 {/* 1. Builder Bar */}
                 <div className="print:hidden">
@@ -327,7 +326,7 @@ export const CommercialForecast: React.FC = () => {
                 
                 {/* 3. ECharts Summary */}
                 {activeTab === 'chart' && (
-                    <section className="flex flex-col gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <section className="flex flex-col flex-1 gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <InteractiveChart data={data} months={dynamicMonths} />
                     </section>
                 )}

@@ -8,7 +8,7 @@ export default {
     extend: {
       colors: {
         petral: {
-          blue: '#1E40AF', // Azul corporativo
+          blue: '#0089CF', // Azul corporativo (RGB 0-137-207)
           teal: '#0D9488', // Teal corporativo
           lightBlue: '#DBEAFE', // Row headers 
           lightGreen: '#D1FAE5' // Row headers
