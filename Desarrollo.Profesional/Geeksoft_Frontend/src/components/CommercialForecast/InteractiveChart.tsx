@@ -481,9 +481,9 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 {
                     type: 'value',
                     name: secondaryMetric === 'none' ? '' : getMetricLabel(secondaryMetric) + (isSecondaryCumulativeSeries || isSecondaryCumulativeGlobal ? ' (Acum)' : ''),
-                    nameTextStyle: { color: '#F59E0B', padding: [0, -40, 0, 0] },
+                    nameTextStyle: { color: '#059669', padding: [0, -40, 0, 0] },
                     axisLine: { show: false },
-                    axisLabel: { color: '#F59E0B', fontWeight: 'bold', formatter: getAxisFormatter(secondaryMetric, isSecondaryPercentage) },
+                    axisLabel: { color: '#059669', fontWeight: 'bold', formatter: getAxisFormatter(secondaryMetric, isSecondaryPercentage) },
                     splitLine: { show: false }
                 }
             ],
@@ -584,11 +584,11 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 </div>
 
                 {/* EJE SECUNDARIO TABS */}
-                <div className="flex bg-white rounded-lg border border-amber-200 shadow-sm overflow-hidden">
-                    <div className="bg-amber-500 w-7 flex items-center justify-center shrink-0">
+                <div className="flex bg-white rounded-lg border border-emerald-200 shadow-sm overflow-hidden">
+                    <div className="bg-emerald-600 w-7 flex items-center justify-center shrink-0">
                         <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Eje Secundario</span>
                     </div>
-                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-amber-50/30">
+                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-emerald-50/30">
                         <select className="w-full text-xs bg-white border border-slate-200 rounded px-2 py-1.5 font-bold" value={secondaryMetric} onChange={(e) => setSecondaryMetric(e.target.value as PlotMetric)}>
                             <option value="none">--- Ninguno ---</option>
                             {metricOptions.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
