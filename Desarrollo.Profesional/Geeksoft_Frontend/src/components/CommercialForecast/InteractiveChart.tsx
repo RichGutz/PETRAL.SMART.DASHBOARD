@@ -51,8 +51,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     const [filterVessel, setFilterVessel] = useState<string>('ALL');
 
     // Primary Axis
-    const [primaryMetric, setPrimaryMetric] = useState<PlotMetric>('voyage_result');
-    const [primaryGraphType, setPrimaryGraphType] = useState<'bar_stack' | 'bar_group' | 'line'>('bar_stack');
+    const [primaryMetric, setPrimaryMetric] = useState<PlotMetric | 'gross_and_gross_plus_dem'>('voyage_result');
+    const [primaryGraphType, setPrimaryGraphType] = useState<'bar_stack' | 'bar_group' | 'line' | 'line_straight'>('bar_stack');
 
     // Secondary Axis
     const [secondaryMetric, setSecondaryMetric] = useState<PlotMetric | 'gross_and_gross_plus_dem'>('none');
@@ -87,9 +87,11 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         if (!data || !data.aggregated_data || !months) return {};
 
         const seriesMapPri: { [key: string]: { [month: string]: number } } = {};
+        const seriesMapPri2: { [key: string]: { [month: string]: number } } = {};
         const seriesMapSec: { [key: string]: { [month: string]: number } } = {};
         const seriesMapSec2: { [key: string]: { [month: string]: number } } = {};
         const totalPriMap: { [month: string]: number } = {};
+        const totalPriMap2: { [month: string]: number } = {};
         const totalSecMap: { [month: string]: number } = {};
         const totalSecMap2: { [month: string]: number } = {};
         
@@ -170,6 +172,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
                         if (!seriesMapPri[key]) {
                             seriesMapPri[key] = {};
+                            seriesMapPri2[key] = {};
                             seriesMapSec[key] = {};
                             seriesMapSec2[key] = {};
                             totalTonsMap[key] = {};
@@ -184,9 +187,18 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                         globalTonsMap[month] = (globalTonsMap[month] || 0) + tons;
                         globalGrossDemMap[month] = (globalGrossDemMap[month] || 0) + grossDem;
                         
-                        const priResult = getMetricValue(metrics, primaryMetric, client, route, vessel, month);
-                        seriesMapPri[key][month] = (seriesMapPri[key][month] || 0) + priResult;
-                        totalPriMap[month] = (totalPriMap[month] || 0) + priResult;
+                        if (primaryMetric === 'gross_and_gross_plus_dem') {
+                            const priResult1 = getMetricValue(metrics, 'net_income', client, route, vessel, month);
+                            const priResult2 = getMetricValue(metrics, 'gross_plus_dem', client, route, vessel, month);
+                            seriesMapPri[key][month] = (seriesMapPri[key][month] || 0) + priResult1;
+                            seriesMapPri2[key][month] = (seriesMapPri2[key][month] || 0) + priResult2;
+                            totalPriMap[month] = (totalPriMap[month] || 0) + priResult1;
+                            totalPriMap2[month] = (totalPriMap2[month] || 0) + priResult2;
+                        } else {
+                            const priResult = getMetricValue(metrics, primaryMetric as PlotMetric, client, route, vessel, month);
+                            seriesMapPri[key][month] = (seriesMapPri[key][month] || 0) + priResult;
+                            totalPriMap[month] = (totalPriMap[month] || 0) + priResult;
+                        }
 
                         if (secondaryMetric !== 'none') {
                             if (secondaryMetric === 'gross_and_gross_plus_dem') {
@@ -317,7 +329,22 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             });
         };
 
-        const seriesPri = buildSeries(seriesMapPri, totalPriMap, primaryMetric, primaryGraphType, false, false, 0);
+        let seriesPri: any[] = [];
+        if (primaryMetric === 'gross_and_gross_plus_dem') {
+            const pri1 = buildSeries(seriesMapPri, totalPriMap, 'net_income', primaryGraphType, false, false, 0);
+            pri1.forEach(s => { s.name = `${s.name.replace('(Pri)', '').trim()} Gross`; });
+            
+            const pri2 = buildSeries(seriesMapPri2, totalPriMap2, 'gross_plus_dem', primaryGraphType, false, false, 0);
+            pri2.forEach(s => { 
+                s.name = `${s.name.replace('(Pri)', '').trim()} Gross+Dem`; 
+                s.itemStyle.color = '#F59E0B'; // Distinct color
+            });
+            
+            seriesPri = [...pri1, ...pri2];
+        } else {
+            seriesPri = buildSeries(seriesMapPri, totalPriMap, primaryMetric as PlotMetric, primaryGraphType, false, false, 0);
+        }
+
         const showSecIndividual = isSecondaryCumulativeSeries || !isSecondaryCumulativeGlobal;
         
         let seriesSec: any[] = [];
@@ -473,6 +500,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         { value: 'net_income', label: 'Gross Revenue' },
         { value: 'demurrage', label: 'Demurrage' },
         { value: 'gross_plus_dem', label: 'Gross + Demurrage' },
+        { value: 'gross_and_gross_plus_dem', label: 'Gross & Gross+Dem' },
         { value: 'yield', label: 'Yield (USD/MT)' },
         { value: 'total_port_costs', label: 'Port Costs' },
         { value: 'total_bunker_costs', label: 'Bunker Costs' },
@@ -545,7 +573,11 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             </label>
                             <label className="flex items-center gap-1.5 cursor-pointer">
                                 <input type="radio" name="priType" checked={primaryGraphType === 'line'} onChange={() => setPrimaryGraphType('line')} className="w-3 h-3" />
-                                <span className="text-xs">Línea</span>
+                                <span className="text-xs">Línea Suavizada</span>
+                            </label>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input type="radio" name="priType" checked={primaryGraphType === 'line_straight'} onChange={() => setPrimaryGraphType('line_straight')} className="w-3 h-3" />
+                                <span className="text-xs">Línea Recta</span>
                             </label>
                         </div>
                     </div>
@@ -561,7 +593,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             <option value="none">--- Ninguno ---</option>
                             {metricOptions.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                         </select>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2">
                             <label className="flex items-center gap-1.5 cursor-pointer">
                                 <input type="radio" name="secType" checked={secondaryGraphType === 'bar'} onChange={() => setSecondaryGraphType('bar')} className="w-3 h-3" />
                                 <span className="text-xs">Barras</span>
