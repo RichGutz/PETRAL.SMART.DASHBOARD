@@ -279,7 +279,7 @@ export const CommercialForecast: React.FC = () => {
                 {/* 2. Custom Grid (1:1 with Mockup) */}
                 {activeTab === 'grid' && (
                     <section className="flex flex-col gap-2 relative animate-in fade-in slide-in-from-bottom-2 duration-300 mt-2">
-                        <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} onTariffChange={handleTariffChange} />
+                        <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} displayMode="usd" onFrequencyChange={handleFrequencyChange} onTariffChange={handleTariffChange} />
                     </section>
                 )}
                 

@@ -4,7 +4,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import { PlusCircle, CalendarDays } from 'lucide-react';
+import { MonthPicker } from '../ui/month-picker';
+import { PlusCircle } from 'lucide-react';
 
 interface ForecastBuilderProps {
     onHorizonChange: (start: string, end: string) => void;
@@ -14,7 +15,11 @@ interface ForecastBuilderProps {
     dynamicMonths: string[];
     centerContent?: React.ReactNode;
     rightContent?: React.ReactNode;
+    bottomRightContent?: React.ReactNode;
     hideInputs?: boolean;
+    displayMode?: 'usd' | 'pct';
+    onDisplayModeChange?: (mode: 'usd' | 'pct') => void;
+    forecastName?: string;
 }
 
 export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({ 
@@ -25,7 +30,11 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     dynamicMonths,
     centerContent,
     rightContent,
-    hideInputs
+    bottomRightContent,
+    hideInputs,
+    displayMode,
+    onDisplayModeChange,
+    forecastName
 }) => {
     // Form State
     const [monthIndex, setMonthIndex] = useState('');
@@ -86,25 +95,6 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         });
     };
 
-    const formatMonth = (m: string) => {
-        if (!m) return '';
-        const date = new Date(`${m}-02`); // Avoid timezone issues
-        const formatted = new Intl.DateTimeFormat('es-ES', { month: 'long', year: '2-digit' }).format(date);
-        return formatted.charAt(0).toUpperCase() + formatted.slice(1).replace(' de ', ' ');
-    };
-
-    const generateHorizonOptions = () => {
-        const options = [];
-        const d = new Date();
-        for (let i = -6; i < 24; i++) {
-            const date = new Date(d.getFullYear(), d.getMonth() + i, 1);
-            const mStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-            options.push(mStr);
-        }
-        return options;
-    };
-    const horizonOptions = generateHorizonOptions();
-
     return (
         <Card className="border-slate-200 shadow-sm">
             <CardHeader className="bg-slate-50 border-b border-slate-100 pb-3 pt-3">
@@ -112,8 +102,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     {/* Left */}
                     <div className="flex-[1.2]">
                         <CardTitle className="text-lg text-slate-800 flex items-center gap-2">
-                            <CalendarDays className="h-5 w-5 text-petral-teal" />
-                            Commercial Forecast Builder
+                            <img src="/Logo.Geeksoft.png" alt="Geeksoft" className="h-12 object-contain" />
+                            Commercial Forecast Builder {forecastName && <span className="text-petral-teal ml-1">[{forecastName}]</span>}
                         </CardTitle>
                     </div>
 
@@ -125,11 +115,9 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     )}
 
                     {/* Right */}
-                    {rightContent && (
-                        <div className="flex-1 flex justify-end">
-                            {rightContent}
-                        </div>
-                    )}
+                    <div className="flex-[1.2] flex justify-end">
+                        {rightContent}
+                    </div>
                 </div>
             </CardHeader>
             {!hideInputs && (
@@ -141,54 +129,42 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     {/* 1. Inicio */}
                     <div className="flex flex-col gap-2 min-w-[120px] flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">1. Inicio Forecast</Label>
-                        <Select value={currentStartDate.slice(0, 7)} onValueChange={(val) => onHorizonChange(`${val || ''}-01`, currentEndDate)}>
-                            <SelectTrigger className="w-full h-8 bg-white">
-                                <SelectValue placeholder="Mes" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {horizonOptions.map(m => (
-                                    <SelectItem key={m} value={m}>{formatMonth(m)}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <MonthPicker 
+                            value={currentStartDate.slice(0, 7)}
+                            onChange={(val) => onHorizonChange(`${val || ''}-01`, currentEndDate)}
+                            placeholder="Inicio"
+                            className="border-slate-200 shadow-sm"
+                        />
                     </div>
 
                     {/* 2. Fin */}
                     <div className="flex flex-col gap-2 min-w-[120px] flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">Fin Forecast</Label>
-                        <Select value={currentEndDate.slice(0, 7)} onValueChange={(val) => {
+                        <MonthPicker 
+                            value={currentEndDate.slice(0, 7)}
+                            onChange={(val) => {
                                 if (!val) return;
                                 const year = parseInt(val.split('-')[0]);
                                 const month = parseInt(val.split('-')[1]);
                                 const lastDay = new Date(year, month, 0).getDate();
                                 onHorizonChange(currentStartDate, `${val}-${lastDay}`);
-                            }}>
-                            <SelectTrigger className="w-full h-8 bg-white">
-                                <SelectValue placeholder="Mes" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {horizonOptions.map(m => (
-                                    <SelectItem key={m} value={m}>{formatMonth(m)}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                            }}
+                            placeholder="Fin"
+                            className="border-slate-200 shadow-sm"
+                        />
                     </div>
 
                     {/* 3. Mes */}
                     <div className="flex flex-col gap-2 min-w-[120px] flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">2. Mes a Modelar</Label>
-                        <Select value={monthIndex} onValueChange={(val) => setMonthIndex(val || '')}>
-                            <SelectTrigger className="w-full h-8 bg-white border-petral-teal border-2">
-                                <SelectValue placeholder="Mes" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {dynamicMonths.map(m => (
-                                    <SelectItem key={m} value={m}>
-                                        {formatMonth(m)}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <MonthPicker 
+                            value={monthIndex}
+                            onChange={(val) => setMonthIndex(val || '')}
+                            minDate={currentStartDate.slice(0, 7)}
+                            maxDate={currentEndDate.slice(0, 7)}
+                            placeholder="Mes"
+                            className="border-petral-teal border-2 shadow-sm"
+                        />
                     </div>
 
                     {/* 4. Cliente */}
@@ -208,7 +184,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {client === 'SPOT' && (
-                        <div className="flex flex-col gap-2 min-w-[100px]">
+                        <div className="flex flex-col gap-2 min-w-[120px] flex-1">
                             <Label className="text-xs font-semibold text-red-500 whitespace-nowrap">Sufijo SPOT *</Label>
                             <Input 
                                 type="text" 
@@ -220,8 +196,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </div>
                     )}
 
-                    {/* 5. Ruta */}
-                    <div className="flex flex-col gap-2 min-w-[160px] flex-[1.5]">
+                    {/* 4. Ruta */}
+                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">4. Ruta</Label>
                         <Select value={route} onValueChange={(val) => setRoute(val || '')} disabled={!client}>
                             <SelectTrigger className="w-full h-8">
@@ -235,8 +211,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Select>
                     </div>
 
-                    {/* 6. Buque */}
-                    <div className="flex flex-col gap-2 min-w-[140px] flex-1">
+                    {/* 5. Buque */}
+                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">5. Buque</Label>
                         <Select value={vessel} onValueChange={(val) => setVessel(val || '')} disabled={!route}>
                             <SelectTrigger className="w-full h-8">
@@ -252,35 +228,38 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Select>
                     </div>
 
-                    {/* 7. Viajes */}
-                    <div className="flex flex-col gap-2 min-w-[160px] flex-[1.5]">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">6. Viajes (MT)</Label>
-                        <div className="flex gap-2 h-8">
-                            <Input 
-                                type="number" 
-                                min="0"
-                                value={frequency} 
-                                onChange={e => setFrequency(e.target.value)}
-                                placeholder="Freq"
-                                title="Frecuencia Mensual"
-                                className="w-16 h-8"
-                            />
-                            <Input 
-                                type="number" 
-                                min="0"
-                                value={quantity} 
-                                onChange={e => setQuantity(e.target.value)}
-                                placeholder="TM"
-                                title="Toneladas (Full Carga)"
-                                className="w-full h-8"
-                            />
-                        </div>
+                    {/* 6. Viajes */}
+                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">6. N° Viajes</Label>
+                        <Input 
+                            type="number" 
+                            min="0"
+                            value={frequency} 
+                            onChange={e => setFrequency(e.target.value)}
+                            placeholder="Freq"
+                            title="Frecuencia Mensual"
+                            className="w-full h-8"
+                        />
                     </div>
 
-                    {/* 7.5 Flete Override */}
-                    <div className="flex flex-col gap-2 min-w-[100px] flex-1">
+                    {/* 7. Toneladas por Viaje */}
+                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">7. Toneladas por Viaje</Label>
+                        <Input 
+                            type="number" 
+                            min="0"
+                            value={quantity} 
+                            onChange={e => setQuantity(e.target.value)}
+                            placeholder="TM"
+                            title="Toneladas (Full Carga)"
+                            className="w-full h-8"
+                        />
+                    </div>
+
+                    {/* 8. Flete Override */}
+                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
                         <Label className={`text-xs font-semibold whitespace-nowrap ${client === 'SPOT' ? 'text-red-500' : 'text-slate-600'}`}>
-                            7. Flete (USD/MT) {client === 'SPOT' && '*'}
+                            8. Flete {client === 'SPOT' && '*'}
                         </Label>
                         <Input 
                             type="number" 
@@ -294,9 +273,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         />
                     </div>
 
-                    {/* 8. Botón */}
-                    <div className="flex flex-col gap-2 min-w-[100px] flex-1">
-                        {/* Empty label to force exact same height alignment */}
+                    {/* 9. Botón Añadir */}
+                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
                         <Label className="text-xs opacity-0 pointer-events-none">X</Label>
                         <Button 
                             onClick={handleAdd} 
@@ -307,6 +285,30 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             Añadir
                         </Button>
                     </div>
+                    
+                    {/* 10. Vista ($ / %) */}
+                    {displayMode && onDisplayModeChange && (
+                        <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                            <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">Vista de Tabla</Label>
+                            <div className="flex bg-slate-200 rounded p-0.5 h-8 w-full shadow-inner">
+                                <button
+                                    onClick={() => onDisplayModeChange('usd')}
+                                    className={`flex-1 text-center py-1 text-[10px] font-bold rounded transition-colors ${displayMode === 'usd' ? 'bg-white shadow-sm text-petral-blue' : 'text-slate-500 hover:bg-slate-300'}`}
+                                >
+                                    $ Original
+                                </button>
+                                <button
+                                    onClick={() => onDisplayModeChange('pct')}
+                                    className={`flex-1 text-center py-1 text-[10px] font-bold rounded transition-colors ${displayMode === 'pct' ? 'bg-white shadow-sm text-petral-blue' : 'text-slate-500 hover:bg-slate-300'}`}
+                                >
+                                    % Revenue
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 11. Guardar / Cargar (bottomRightContent) */}
+                    {bottomRightContent}
 
                 </div>
             </CardContent>

@@ -31,9 +31,10 @@ interface ForecastGridProps {
     onFrequencyChange?: (client_id: string, route_key: string, vessel_id: string, month_index: string, newFrequency: number) => void;
     onTariffChange?: (client_id: string, route_key: string, vessel_id: string, month_index: string, newTariff: number) => void;
     onDeleteNode?: (type: 'client'|'route'|'vessel', client_id: string, route_key?: string, vessel_id?: string) => void;
+    displayMode: 'usd' | 'pct';
 }
 
-export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projectionLines, onFrequencyChange, onTariffChange, onDeleteNode }) => {
+export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projectionLines, onFrequencyChange, onTariffChange, onDeleteNode, displayMode }) => {
     
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
     const [collapsedSubtotals, setCollapsedSubtotals] = useState<Record<string, boolean>>({});
@@ -154,7 +155,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                     const rowKey = `${client}-${route}-${vessel}`;
                     const isExpanded = !!expandedRows[rowKey];
                     const numSubRows = isExpanded ? 17 : 0;
-                    const vesselRowSpan = 5 + numSubRows;
+                    const vesselRowSpan = 6 + numSubRows;
                     
                     clientRowSpanRef.value += vesselRowSpan;
                     routeRowSpanRef.value += vesselRowSpan;
@@ -186,12 +187,16 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                     bunker.forEach((v, i) => clientBunkerCosts[i] += v);
                     voyageResult.forEach((v, i) => clientVoyageResult[i] += v);
 
+                    const unitCargos = getMonthlyValues("carga_unit");
+                    const tonsTotal = months.map((_, i) => unitCargos[i] * trips[i]);
+
                     const sum = (arr: number[]) => arr.reduce((a,b) => a+b, 0);
                     const calcPct = (arr: number[]) => arr.map((v, i) => revenues[i] ? (v / revenues[i]) * 100 : 0);
                     const calcTotalPct = (totalVal: number, totalRev: number) => totalRev ? (totalVal / totalRev) * 100 : 0;
 
                     const metrics = [
                         { name: "Viajes (freq)", values: trips, total: sum(trips), pct: null, totalPct: null, isCurrency: false, isTotal: false, isExpandable: true, rowKey, isExpanded },
+                        { name: "Toneladas", values: tonsTotal, total: sum(tonsTotal), pct: null, totalPct: null, isCurrency: false, isTotal: false },
                         { name: "Gross Revenue", values: revenues, total: sum(revenues), pct: revenues.map(r => r ? 100 : 0), totalPct: sum(revenues) ? 100 : 0, isCurrency: true, isTotal: false },
                         { name: "Port Costs", values: portCosts, total: sum(portCosts), pct: calcPct(portCosts), totalPct: calcTotalPct(sum(portCosts), sum(revenues)), isCurrency: true, isTotal: false },
                         { name: "Bunker Costs", values: bunker, total: sum(bunker), pct: calcPct(bunker), totalPct: calcTotalPct(sum(bunker), sum(revenues)), isCurrency: true, isTotal: false },
@@ -348,8 +353,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
     }
 
     return (
-        <div className="table-container shadow-sm border border-slate-200 rounded-lg overflow-x-auto bg-white relative">
-            <table className="w-full text-sm text-left border-collapse">
+        <div className="flex flex-col gap-2 relative">
+            <div className="table-container shadow-sm border border-slate-200 rounded-lg overflow-x-auto bg-white relative">
+                <table className="w-full text-sm text-left border-collapse">
                 <thead className="bg-slate-800 text-white uppercase font-semibold text-xs tracking-wider">
                     <tr>
                         <th className="py-1 px-2 text-center border border-slate-700 w-12">Cliente</th>
@@ -453,13 +459,14 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                                             />
                                         ) : (
                                             row.metric.isCurrency ? (
-                                                <div className={`flex items-center w-full min-w-[100px] ${row.metric.pct && row.metric.pct[colIdx] !== null ? 'justify-between' : 'justify-end'}`}>
-                                                    <span className={`${row.metric.pct && row.metric.pct[colIdx] !== null ? 'text-left' : 'text-right'} font-medium`}>{formatCurrency(v)}</span>
-                                                    {row.metric.pct && row.metric.pct[colIdx] !== null ? (
-                                                        <span className="text-xs text-slate-500 bg-slate-100 px-1 py-[2px] rounded border border-slate-200 min-w-[3rem] text-center ml-2">
+                                                <div className="flex items-center justify-end w-full min-w-[60px]">
+                                                    {displayMode === 'pct' && row.metric.pct && row.metric.pct[colIdx] !== null ? (
+                                                        <span className="font-medium text-slate-700">
                                                             {row.metric.pct[colIdx].toFixed(1)}%
                                                         </span>
-                                                    ) : null}
+                                                    ) : (
+                                                        <span className="font-medium">{formatCurrency(v)}</span>
+                                                    )}
                                                 </div>
                                             ) : formatNumber(v)
                                         )
@@ -469,13 +476,14 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                             <td className={`py-1 px-2 text-right tabular-nums font-bold border border-slate-200 ${row.metric.isTotal ? 'bg-slate-200' : 'bg-slate-50'} ${row.isSubRow ? 'text-slate-300' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
                                 {row.metric.isCategoryHeader ? '' : (row.metric.isSubRowMetric ? '-' : (
                                     row.metric.isCurrency ? (
-                                        <div className={`flex items-center w-full min-w-[100px] ${row.metric.totalPct !== null && row.metric.totalPct !== undefined ? 'justify-between' : 'justify-end'}`}>
-                                            <span className={`${row.metric.totalPct !== null && row.metric.totalPct !== undefined ? 'text-left' : 'text-right'} font-medium`}>{formatCurrency(row.metric.total)}</span>
-                                            {row.metric.totalPct !== null && row.metric.totalPct !== undefined ? (
-                                                <span className="text-xs text-slate-600 bg-white px-1 py-[2px] rounded border border-slate-300 min-w-[3rem] text-center ml-2">
+                                        <div className="flex items-center justify-end w-full min-w-[60px]">
+                                            {displayMode === 'pct' && row.metric.totalPct !== null && row.metric.totalPct !== undefined ? (
+                                                <span className="font-bold">
                                                     {row.metric.totalPct.toFixed(1)}%
                                                 </span>
-                                            ) : null}
+                                            ) : (
+                                                <span className="font-bold">{formatCurrency(row.metric.total)}</span>
+                                            )}
                                         </div>
                                     ) : formatNumber(row.metric.total)
                                 ))}
@@ -484,33 +492,34 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({ data, months, projec
                     ))}
                 </tbody>
             </table>
-            
-            {/* Custom Context Menu */}
-            {contextMenu && (
-                <div 
-                    className="fixed z-50 bg-white border border-slate-200 rounded-md shadow-lg py-1 min-w-[150px] animate-in fade-in zoom-in-95 duration-100"
-                    style={{ top: contextMenu.y, left: contextMenu.x }}
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <div className="px-3 py-2 border-b border-slate-100 text-xs font-bold text-slate-500 bg-slate-50/50">
-                        {contextMenu.type === 'client' && 'Cliente: ' + contextMenu.client}
-                        {contextMenu.type === 'route' && 'Ruta: ' + contextMenu.route}
-                        {contextMenu.type === 'vessel' && 'Buque: ' + contextMenu.vessel}
-                    </div>
-                    <button 
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
-                        onClick={() => {
-                            if (onDeleteNode) {
-                                onDeleteNode(contextMenu.type, contextMenu.client, contextMenu.route, contextMenu.vessel);
-                            }
-                            setContextMenu(null);
-                        }}
-                    >
-                        <Trash2 size={16} /> 
-                        Borrar {contextMenu.type === 'client' ? 'Cliente' : contextMenu.type === 'route' ? 'Ruta' : 'Buque'}
-                    </button>
+        </div>
+        
+        {/* Custom Context Menu */}
+        {contextMenu && (
+            <div 
+                className="fixed z-50 bg-white border border-slate-200 rounded-md shadow-lg py-1 min-w-[150px] animate-in fade-in zoom-in-95 duration-100"
+                style={{ top: contextMenu.y, left: contextMenu.x }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="px-3 py-2 border-b border-slate-100 text-xs font-bold text-slate-500 bg-slate-50/50">
+                    {contextMenu.type === 'client' && 'Cliente: ' + contextMenu.client}
+                    {contextMenu.type === 'route' && 'Ruta: ' + contextMenu.route}
+                    {contextMenu.type === 'vessel' && 'Buque: ' + contextMenu.vessel}
                 </div>
-            )}
+                <button 
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                    onClick={() => {
+                        if (onDeleteNode) {
+                            onDeleteNode(contextMenu.type, contextMenu.client, contextMenu.route, contextMenu.vessel);
+                        }
+                        setContextMenu(null);
+                    }}
+                >
+                    <Trash2 size={16} /> 
+                    Borrar {contextMenu.type === 'client' ? 'Cliente' : contextMenu.type === 'route' ? 'Ruta' : 'Buque'}
+                </button>
+            </div>
+        )}
         </div>
     );
 };

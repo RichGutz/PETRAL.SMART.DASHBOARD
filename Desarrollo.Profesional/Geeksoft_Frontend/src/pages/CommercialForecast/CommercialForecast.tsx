@@ -3,7 +3,7 @@ import { ForecastGrid } from '../../components/CommercialForecast/ForecastGrid';
 import { ForecastBuilder } from '../../components/CommercialForecast/ForecastBuilder';
 import { InteractiveChart } from '../../components/CommercialForecast/InteractiveChart';
 import { ForecastService } from '../../services/api';
-import { Activity, Save, FolderOpen, X, Table, BarChart2 } from 'lucide-react';
+import { Save, FolderOpen, X, Table, BarChart2 } from 'lucide-react';
 import { VoyageLedgerTest } from '../../components/CommercialForecast/VoyageLedgerTest';
 
 export const CommercialForecast: React.FC = () => {
@@ -28,7 +28,8 @@ export const CommercialForecast: React.FC = () => {
     const [savedForecasts, setSavedForecasts] = useState<any[]>([]);
 
     // Tab State
-    const [activeTab, setActiveTab] = useState<'grid' | 'chart' | 'ledger'>('ledger');
+    const [activeTab, setActiveTab] = useState<'grid' | 'chart' | 'ledger'>('grid');
+    const [displayMode, setDisplayMode] = useState<'usd'|'pct'>('usd');
 
     // Derive months from horizon without JS Date timezone shifts
     const dynamicMonths = useMemo(() => {
@@ -215,25 +216,7 @@ export const CommercialForecast: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 p-8 font-sans print:p-0 print:bg-white">
-            <header className="mb-6 flex items-center justify-between print:hidden">
-                {/* Left: Geeksoft Logo */}
-                <div className="flex items-center flex-1">
-                    <img src="/Logo.Geeksoft.png" alt="Geeksoft Logo" className="h-24 object-contain" />
-                </div>
-                
-                {/* Center: Title & Subtitle */}
-                <div className="flex flex-col items-center justify-center flex-[2]">
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                        <Activity size={24} className="text-petral-blue" />
-                        Commercial Forecast {forecastName && <span className="text-petral-teal ml-1">[{forecastName}]</span>}
-                    </h1>
-                </div>
 
-                {/* Right: Petral Logo */}
-                <div className="flex items-center justify-end flex-1">
-                    <img src="/Logo.Petral.png" alt="Petral Logo" className="h-8 object-contain" />
-                </div>
-            </header>
 
             <main className="flex flex-col gap-6 print:gap-0 print:m-0">
                 
@@ -248,7 +231,10 @@ export const CommercialForecast: React.FC = () => {
                             setEndDate(end);
                         }}
                         onAddLine={handleAddLine}
+                        forecastName={forecastName}
                         hideInputs={activeTab === 'ledger' || activeTab === 'chart'}
+                        displayMode={displayMode}
+                        onDisplayModeChange={setDisplayMode}
                         centerContent={
                             <div className="bg-slate-200 p-1 rounded-lg inline-flex gap-1 shadow-inner">
                                 <button 
@@ -272,16 +258,35 @@ export const CommercialForecast: React.FC = () => {
                             </div>
                         }
                         rightContent={
+                            <img src="/Logo.Petral.png" alt="Naviera Petral" className="h-8 object-contain" />
+                        }
+                        bottomRightContent={
                             activeTab !== 'ledger' && (
-                                <div className="flex items-center gap-3">
-                                    {loading && <span className="text-xs text-petral-teal font-medium flex items-center gap-2"><div className="animate-spin h-3 w-3 border-2 border-petral-teal border-t-transparent rounded-full"></div> Recalculando...</span>}
-                                    <button onClick={() => setShowSaveModal(true)} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm">
-                                        <Save size={16} /> Guardar
-                                    </button>
-                                    <button onClick={handleLoadClick} className="flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-4 py-2 rounded-md font-medium text-sm transition-colors shadow-sm">
-                                        <FolderOpen size={16} /> Cargar
-                                    </button>
-                                </div>
+                                <>
+                                    {loading && (
+                                        <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                                            <label className="text-xs opacity-0 pointer-events-none">X</label>
+                                            <div className="flex items-center h-8 justify-center w-full">
+                                                <span className="text-xs text-petral-teal font-medium flex items-center gap-2">
+                                                    <div className="animate-spin h-3 w-3 border-2 border-petral-teal border-t-transparent rounded-full"></div> 
+                                                    Recalculando...
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                                        <label className="text-xs opacity-0 pointer-events-none">X</label>
+                                        <button onClick={() => setShowSaveModal(true)} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 h-8 w-full rounded-md font-medium text-sm transition-colors shadow-sm">
+                                            <Save size={16} /> Guardar
+                                        </button>
+                                    </div>
+                                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                                        <label className="text-xs opacity-0 pointer-events-none">X</label>
+                                        <button onClick={handleLoadClick} className="flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-4 h-8 w-full rounded-md font-medium text-sm transition-colors shadow-sm">
+                                            <FolderOpen size={16} /> Cargar
+                                        </button>
+                                    </div>
+                                </>
                             )
                         }
                     />
@@ -290,7 +295,7 @@ export const CommercialForecast: React.FC = () => {
                 {/* 2. Custom Grid (1:1 with Mockup) */}
                 {activeTab === 'grid' && (
                     <section className="flex flex-col gap-2 relative animate-in fade-in slide-in-from-bottom-2 duration-300 mt-2">
-                        <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} onTariffChange={handleTariffChange} onDeleteNode={handleDeleteNode} />
+                        <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} onTariffChange={handleTariffChange} onDeleteNode={handleDeleteNode} displayMode={displayMode} />
                     </section>
                 )}
                 
