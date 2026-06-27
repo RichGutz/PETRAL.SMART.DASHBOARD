@@ -55,8 +55,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     const [primaryGraphType, setPrimaryGraphType] = useState<'bar_stack' | 'bar_group' | 'line'>('bar_stack');
 
     // Secondary Axis
-    const [secondaryMetric, setSecondaryMetric] = useState<PlotMetric>('none');
-    const [secondaryGraphType, setSecondaryGraphType] = useState<'bar' | 'line'>('line');
+    const [secondaryMetric, setSecondaryMetric] = useState<PlotMetric | 'gross_and_gross_plus_dem'>('none');
+    const [secondaryGraphType, setSecondaryGraphType] = useState<'bar' | 'line' | 'line_straight'>('line');
     const [isSecondaryCumulativeSeries, setIsSecondaryCumulativeSeries] = useState<boolean>(false);
     const [isSecondaryCumulativeGlobal, setIsSecondaryCumulativeGlobal] = useState<boolean>(false);
     const [isSecondaryPercentage, setIsSecondaryPercentage] = useState<boolean>(false);
@@ -88,8 +88,10 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
         const seriesMapPri: { [key: string]: { [month: string]: number } } = {};
         const seriesMapSec: { [key: string]: { [month: string]: number } } = {};
+        const seriesMapSec2: { [key: string]: { [month: string]: number } } = {};
         const totalPriMap: { [month: string]: number } = {};
         const totalSecMap: { [month: string]: number } = {};
+        const totalSecMap2: { [month: string]: number } = {};
         
         // For Yield Calculation
         const totalTonsMap: { [key: string]: { [month: string]: number } } = {};
@@ -97,7 +99,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         const globalTonsMap: { [month: string]: number } = {};
         const globalGrossDemMap: { [month: string]: number } = {};
 
-        const getMetricLabel = (m: PlotMetric) => {
+        const getMetricLabel = (m: PlotMetric | 'gross_and_gross_plus_dem') => {
             switch (m) {
                 case 'viajes': return 'Viajes';
                 case 'voyage_result': return 'Voyage Result';
@@ -107,6 +109,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 case 'total_cargo': return 'Toneladas';
                 case 'demurrage': return 'Demurrage';
                 case 'gross_plus_dem': return 'Gross + Demurrage';
+                case 'gross_and_gross_plus_dem': return 'Gross & Gross+Dem';
                 case 'yield': return 'Yield (USD/MT)';
                 case 'none': return '';
                 default: return m;
@@ -168,6 +171,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                         if (!seriesMapPri[key]) {
                             seriesMapPri[key] = {};
                             seriesMapSec[key] = {};
+                            seriesMapSec2[key] = {};
                             totalTonsMap[key] = {};
                             totalGrossDemMap[key] = {};
                         }
@@ -185,9 +189,18 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                         totalPriMap[month] = (totalPriMap[month] || 0) + priResult;
 
                         if (secondaryMetric !== 'none') {
-                            const secResult = getMetricValue(metrics, secondaryMetric, client, route, vessel, month);
-                            seriesMapSec[key][month] = (seriesMapSec[key][month] || 0) + secResult;
-                            totalSecMap[month] = (totalSecMap[month] || 0) + secResult;
+                            if (secondaryMetric === 'gross_and_gross_plus_dem') {
+                                const secResult1 = getMetricValue(metrics, 'net_income', client, route, vessel, month);
+                                const secResult2 = getMetricValue(metrics, 'gross_plus_dem', client, route, vessel, month);
+                                seriesMapSec[key][month] = (seriesMapSec[key][month] || 0) + secResult1;
+                                seriesMapSec2[key][month] = (seriesMapSec2[key][month] || 0) + secResult2;
+                                totalSecMap[month] = (totalSecMap[month] || 0) + secResult1;
+                                totalSecMap2[month] = (totalSecMap2[month] || 0) + secResult2;
+                            } else {
+                                const secResult = getMetricValue(metrics, secondaryMetric as PlotMetric, client, route, vessel, month);
+                                seriesMapSec[key][month] = (seriesMapSec[key][month] || 0) + secResult;
+                                totalSecMap[month] = (totalSecMap[month] || 0) + secResult;
+                            }
                         }
                     });
                 });
@@ -267,9 +280,9 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                     type: isBar ? 'bar' : 'line',
                     stack: isStack ? `total_${yAxisIndex}` : undefined,
                     yAxisIndex: yAxisIndex,
-                    smooth: true,
-                    symbol: graphType === 'line' ? 'circle' : undefined,
-                    symbolSize: graphType === 'line' ? 8 : undefined,
+                    smooth: graphType === 'line',
+                    symbol: graphType.includes('line') ? 'circle' : undefined,
+                    symbolSize: graphType.includes('line') ? 8 : undefined,
                     barMaxWidth: isBar ? 40 : undefined,
                     barGap: isStack ? undefined : '10%',
                     data: dataArr,
@@ -306,48 +319,73 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
         const seriesPri = buildSeries(seriesMapPri, totalPriMap, primaryMetric, primaryGraphType, false, false, 0);
         const showSecIndividual = isSecondaryCumulativeSeries || !isSecondaryCumulativeGlobal;
-        const seriesSec = showSecIndividual ? buildSeries(seriesMapSec, totalSecMap, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryPercentage, 1) : [];
+        
+        let seriesSec: any[] = [];
+        if (showSecIndividual) {
+            if (secondaryMetric === 'gross_and_gross_plus_dem') {
+                const sec1 = buildSeries(seriesMapSec, totalSecMap, 'net_income', secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryPercentage, 1);
+                sec1.forEach(s => { s.name = `${s.name.replace('(Sec)', '').trim()} Gross`; });
+                
+                const sec2 = buildSeries(seriesMapSec2, totalSecMap2, 'gross_plus_dem', secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryPercentage, 1);
+                sec2.forEach(s => { 
+                    s.name = `${s.name.replace('(Sec)', '').trim()} Gross+Dem`; 
+                    s.itemStyle.color = '#F59E0B'; // Distinct color
+                });
+                
+                seriesSec = [...sec1, ...sec2];
+            } else {
+                seriesSec = buildSeries(seriesMapSec, totalSecMap, secondaryMetric as PlotMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryPercentage, 1);
+            }
+        }
         
         let globalSeries: any[] = [];
         if (isSecondaryCumulativeGlobal && secondaryMetric !== 'none') {
-            const grandTotalSec = Object.values(totalSecMap).reduce((a: any, b: any) => a + b, 0) as number;
-            let runningGlobal = 0;
-            const globalData = xAxisData.map((_, i) => {
-                const month = months[i];
-                let val = 0;
-                Object.values(seriesMapSec).forEach((mData: any) => {
-                    val += (mData[month] || 0);
-                });
-                runningGlobal += val;
-                
-                // Active colors alternating logic
-                const activeNames = Object.keys(seriesMapSec).filter(name => seriesMapSec[name][month] > 0);
-                let colorToUse = '#1E293B';
-                if (activeNames.length > 0) {
-                    const colors = activeNames.map(name => getHexColor(name, groupBy));
-                    colorToUse = colors[i % colors.length];
-                }
+            const buildGlobalSeries = (mapSec: any, totSecMap: any, nameSuffix: string, forceColor?: string) => {
+                const grandTotalSec = Object.values(totSecMap).reduce((a: any, b: any) => a + b, 0) as number;
+                let runningGlobal = 0;
+                const globalData = xAxisData.map((_, i) => {
+                    const month = months[i];
+                    let val = 0;
+                    Object.values(mapSec).forEach((mData: any) => {
+                        val += (mData[month] || 0);
+                    });
+                    runningGlobal += val;
+                    
+                    const activeNames = Object.keys(mapSec).filter(name => mapSec[name][month] > 0);
+                    let colorToUse = forceColor || '#1E293B';
+                    if (!forceColor && activeNames.length > 0) {
+                        const colors = activeNames.map(name => getHexColor(name, groupBy));
+                        colorToUse = colors[i % colors.length];
+                    }
 
-                const globalPct = grandTotalSec ? (runningGlobal / grandTotalSec) * 100 : 0;
+                    const globalPct = grandTotalSec ? (runningGlobal / grandTotalSec) * 100 : 0;
+                    return {
+                        value: isSecondaryPercentage ? globalPct : runningGlobal,
+                        pct: globalPct,
+                        rawVal: runningGlobal,
+                        itemStyle: { color: colorToUse }
+                    };
+                });
+                
                 return {
-                    value: isSecondaryPercentage ? globalPct : runningGlobal,
-                    pct: globalPct,
-                    rawVal: runningGlobal,
-                    itemStyle: { color: colorToUse }
+                    name: `Total Global ${nameSuffix}`,
+                    type: 'line',
+                    yAxisIndex: 1,
+                    smooth: secondaryGraphType === 'line',
+                    symbol: 'circle',
+                    symbolSize: 8,
+                    lineStyle: { width: 3, type: 'dashed' },
+                    data: globalData,
+                    label: { show: false }
                 };
-            });
+            };
             
-            globalSeries.push({
-                name: `Total Global (Sec)`,
-                type: 'line',
-                yAxisIndex: 1,
-                smooth: true,
-                symbol: 'circle',
-                symbolSize: 10,
-                data: globalData,
-                lineStyle: { width: 3, type: 'dashed', color: '#94A3B8' },
-                label: { show: false }
-            });
+            if (secondaryMetric === 'gross_and_gross_plus_dem') {
+                globalSeries.push(buildGlobalSeries(seriesMapSec, totalSecMap, 'Gross'));
+                globalSeries.push(buildGlobalSeries(seriesMapSec2, totalSecMap2, 'Gross+Dem', '#F59E0B'));
+            } else {
+                globalSeries.push(buildGlobalSeries(seriesMapSec, totalSecMap, '(Sec)'));
+            }
         }
         
         const series = [...seriesPri, ...seriesSec, ...globalSeries];
@@ -530,7 +568,11 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             </label>
                             <label className="flex items-center gap-1.5 cursor-pointer">
                                 <input type="radio" name="secType" checked={secondaryGraphType === 'line'} onChange={() => setSecondaryGraphType('line')} className="w-3 h-3" />
-                                <span className="text-xs">Línea</span>
+                                <span className="text-xs">Línea Suavizada</span>
+                            </label>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input type="radio" name="secType" checked={secondaryGraphType === 'line_straight'} onChange={() => setSecondaryGraphType('line_straight')} className="w-3 h-3" />
+                                <span className="text-xs">Línea Recta</span>
                             </label>
                         </div>
                         <div className="flex flex-col gap-1.5 mt-2">
