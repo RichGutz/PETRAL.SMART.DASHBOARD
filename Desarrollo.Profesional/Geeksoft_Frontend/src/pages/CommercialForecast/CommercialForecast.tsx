@@ -165,18 +165,16 @@ export const CommercialForecast: React.FC = () => {
         }));
     };
 
-    const handleSaveForecast = async () => {
+    const handleSaveForecast = async (isNew: boolean = false) => {
         if (!forecastName) {
             alert("Ingrese un nombre para el forecast");
             return;
         }
         try {
             setActionLoading('save');
-            // Si el autor original del escenario es diferente al usuario actual, forzamos un clon (INSERT) quitando el ID
-            const isOwner = !loadedAuthor || loadedAuthor === userId;
             
             const payload = {
-                id: isOwner ? currentForecastId : null,
+                id: isNew ? null : currentForecastId,
                 name: forecastName,
                 user_id: userId,
                 start_date: startDate,
@@ -355,23 +353,28 @@ export const CommercialForecast: React.FC = () => {
                                 <label className="text-sm font-semibold text-slate-600 mb-1 block">Usuario / Autor</label>
                                 <input type="text" value={userId} onChange={(e) => setUserId(e.target.value)} className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-slate-50 focus:outline-none" />
                             </div>
-                            <button 
-                                onClick={handleSaveForecast} 
-                                disabled={actionLoading === 'save'}
-                                className={`relative overflow-hidden mt-2 w-full font-bold py-2 rounded-full transition-colors ${actionLoading === 'save' ? 'bg-accent pointer-events-none' : 'bg-accent hover:bg-accent/90 text-accent-foreground'}`}
-                            >
-                                {actionLoading === 'save' && <div className="absolute inset-0 bg-white/20 animate-pulse" style={{ width: '100%' }}></div>}
-                                <span className="relative flex items-center justify-center z-10 w-full gap-2 text-white">
-                                    {actionLoading === 'save' ? (
-                                        <>
-                                            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                                            <span>Guardando...</span>
-                                        </>
-                                    ) : (
-                                        currentForecastId && (loadedAuthor === userId || !loadedAuthor) ? 'Sobrescribir Mi Escenario' : 'Guardar Nuevo (Clonar)'
-                                    )}
-                                </span>
-                            </button>
+                            <div className="flex flex-col gap-2 mt-2">
+                                <button 
+                                    onClick={() => handleSaveForecast(true)} 
+                                    disabled={actionLoading === 'save'}
+                                    className={`relative overflow-hidden w-full font-bold py-2 rounded-full transition-colors ${actionLoading === 'save' ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-petral-teal hover:bg-teal-600 text-white shadow-md'}`}
+                                >
+                                    {actionLoading === 'save' && <div className="absolute inset-0 bg-white/20 animate-pulse" style={{ width: '100%' }}></div>}
+                                    <span className="relative z-10 flex items-center justify-center gap-2">
+                                        {actionLoading === 'save' ? 'Procesando...' : 'Guardar Nuevo (Clonar)'}
+                                    </span>
+                                </button>
+                                
+                                {currentForecastId && (loadedAuthor === userId || !loadedAuthor) && (
+                                    <button 
+                                        onClick={() => handleSaveForecast(false)} 
+                                        disabled={actionLoading === 'save'}
+                                        className={`w-full font-bold py-2 rounded-full transition-colors text-sm border-2 ${actionLoading === 'save' ? 'border-slate-200 text-slate-400 cursor-not-allowed' : 'border-slate-300 text-slate-600 hover:border-petral-teal hover:text-petral-teal'}`}
+                                    >
+                                        Sobrescribir Mi Escenario
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -389,10 +392,15 @@ export const CommercialForecast: React.FC = () => {
                                 <p className="text-sm text-slate-500 italic">No hay escenarios guardados en la BD.</p>
                             ) : (
                                 savedForecasts.map(f => (
-                                    <div key={f.id} className="flex items-center justify-between p-3 border border-slate-200 rounded hover:bg-slate-50 cursor-pointer transition-colors" onClick={() => handleLoadSelected(f.id)}>
+                                    <div key={f.id} className={`flex items-center justify-between p-3 border rounded cursor-pointer transition-colors ${f.user_id === userId ? 'border-petral-teal/30 bg-blue-50/50 hover:bg-blue-50' : 'border-slate-200 hover:bg-slate-50'}`} onClick={() => handleLoadSelected(f.id)}>
                                         <div>
-                                            <div className="font-bold text-slate-800 text-sm">
-                                                {f.name} <span className="font-normal text-petral-teal ml-2">@{f.user_id}</span>
+                                            <div className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                                {f.name} 
+                                                {f.user_id === userId ? (
+                                                    <span className="text-[10px] bg-petral-teal text-white px-2 py-0.5 rounded-full font-semibold">Tuyo</span>
+                                                ) : (
+                                                    <span className="font-normal text-slate-400 text-xs">@{f.user_id}</span>
+                                                )}
                                             </div>
                                             <div className="text-xs text-slate-500">{f.start_date} a {f.end_date}</div>
                                         </div>

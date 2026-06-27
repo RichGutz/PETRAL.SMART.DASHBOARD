@@ -85,6 +85,7 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 ---
 
 ### 4. Tabla: `agency_matrix` (Matriz Cruzada de Costos Portuarios)
+> 📎 **Ver Documento Vinculado:** [[Matriz.Costos.Portuarios]]
 * `client_id` *(VARCHAR, PK)* → ID del cliente contratante o 'DEFAULT' como fallback global de tarifa aduanera.
 * `port_id` *(VARCHAR, PK)* → Puerto de la operación.
 * `operation_type` *(VARCHAR, PK)* → Naturaleza del evento en muelle (`CHECK (operation_type IN ('CARGA', 'DESCARGA'))`).
