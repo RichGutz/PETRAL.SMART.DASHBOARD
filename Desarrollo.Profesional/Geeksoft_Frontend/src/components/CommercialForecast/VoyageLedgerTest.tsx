@@ -300,9 +300,9 @@ export const VoyageLedgerTest: React.FC = () => {
                                                 <table className="w-full text-[9px] border-collapse table-fixed">
                                                     <thead>
                                                         <tr className="bg-emerald-50 border-b border-emerald-100 text-emerald-800">
-                                                            <th className="p-0.5 font-bold text-left" style={{ width: '33.33%' }}>Min (MT)</th>
-                                                            <th className="p-0.5 font-bold text-left" style={{ width: '33.33%' }}>Max (MT)</th>
-                                                            <th className="p-0.5 font-bold text-right" style={{ width: '33.33%' }}>Flete ($)</th>
+                                                            <th className="p-0.5 font-bold text-center" style={{ width: '33.33%' }}>Min (MT)</th>
+                                                            <th className="p-0.5 font-bold text-center" style={{ width: '33.33%' }}>Max (MT)</th>
+                                                            <th className="p-0.5 font-bold text-center" style={{ width: '33.33%' }}>Flete ($)</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-100 font-mono">
@@ -310,9 +310,9 @@ export const VoyageLedgerTest: React.FC = () => {
                                                             const isActive = currentQty >= t.min && currentQty <= t.max;
                                                             return (
                                                                 <tr key={idx} className={`${isActive ? 'bg-emerald-100 font-bold text-emerald-950' : 'text-slate-600'}`}>
-                                                                    <td className="p-0.5">{formatNumber(t.min)}</td>
-                                                                    <td className="p-0.5">{formatNumber(t.max)}</td>
-                                                                    <td className="p-0.5 text-right">{formatCurrency(t.rate)}</td>
+                                                                    <td className="p-0.5 text-center" style={{ width: '33.33%' }}>{formatNumber(t.min)}</td>
+                                                                    <td className="p-0.5 text-center" style={{ width: '33.33%' }}>{formatNumber(t.max)}</td>
+                                                                    <td className="p-0.5 text-center" style={{ width: '33.33%' }}>{formatCurrency(t.rate)}</td>
                                                                 </tr>
                                                             );
                                                         })}
