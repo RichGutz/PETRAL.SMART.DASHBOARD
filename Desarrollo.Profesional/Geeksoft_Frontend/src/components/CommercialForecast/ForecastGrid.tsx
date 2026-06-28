@@ -541,6 +541,11 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(val);
     };
 
+    const formatYield = (val: number) => {
+        if (val === 0) return "-";
+        return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
+    };
+
     const formatNumber = (val: number) => {
         if (val === 0) return "-";
         return new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(val);
@@ -722,7 +727,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                             {row.metric.pct[colIdx].toFixed(1)}%
                                                         </span>
                                                     ) : (
-                                                        <span className="font-medium">{formatCurrency(v)}</span>
+                                                        <span className="font-medium">
+                                                            {row.metric.name === "Yield (USD/MT)" ? formatYield(v) : formatCurrency(v)}
+                                                        </span>
                                                     )}
                                                 </div>
                                             ) : (
@@ -741,7 +748,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                     {row.metric.totalPct.toFixed(1)}%
                                                 </span>
                                             ) : (
-                                                <span className="font-bold">{formatCurrency(row.metric.total)}</span>
+                                                <span className="font-bold">
+                                                    {row.metric.name === "Yield (USD/MT)" ? formatYield(row.metric.total) : formatCurrency(row.metric.total)}
+                                                </span>
                                             )}
                                         </div>
                                     ) : formatNumber(row.metric.total)
