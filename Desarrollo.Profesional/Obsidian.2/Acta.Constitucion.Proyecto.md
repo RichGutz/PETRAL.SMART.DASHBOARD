@@ -6,9 +6,9 @@
 El propósito de este proyecto es transformar y modernizar el proceso de inteligencia comercial de **Naviera Petral**, migrando la gestión de estimaciones desde herramientas tradicionales basadas íntegramente en hojas de cálculo (Legacy Excel) hacia un ecosistema web centralizado, seguro y escalable desarrollado por **Geeksoft**.
 
 ### Objetivos Principales:
-* **Automatización del Pricing SPOT:** Desplegar una herramienta de cotización (Proformador SPOT) que capture las tarifas contractuales y calcule el Gross Margin de forma inmediata.
-* **Planificación Comercial:** Implementar una herramienta de Forecast multipaso indexada temporalmente para proyectar ventas y Gross Margin a lo largo de un horizonte dinámico.
-* **Confianza Absoluta:** Garantizar convergencia matemática al centavo frente a las plantillas de cálculo tradicionales para eliminar la resistencia al cambio operativa.
+* **Planificación Comercial:** Implementar una herramienta de Forecast multipaso indexada temporalmente para proyectar ventas y Gross Margin a lo largo de un horizonte dinámico. Incluye la proyección de demurrage y el cálculo del flete promedio (incluyendo demurrage).
+* **Automatización del Pricing SPOT:** Desplegar una herramienta de cotización (Proformador SPOT) que capture las tarifas contractuales y calcule el Gross Margin de forma inmediata para maximizar la rentabilidad.
+* **Control de Gestión (Medir y Mejorar):** Comparar las proyecciones comerciales con la ejecución operativa real a lo largo del tiempo, midiendo la precisión mediante KPIs y proponiendo estrategias para elevar las ventas y la rentabilidad.
 
 ---
 
@@ -34,12 +34,12 @@ El propósito de este proyecto es transformar y modernizar el proceso de intelig
 
 Para las coordinaciones operativas, revisiones de negocio y entrenamientos interactivos, se identifican las siguientes contrapartes oficiales de Naviera Petral:
 
-* **Aprobador Principal (Sponsor):** Dueño de Naviera Petral (Emite conformidades de hitos).
+* **Aprobador Principal (Sponsor):** Fernando Harten
+* **Project Manager:** Iosef Zavala
 * **Usuarios Clave de la Plataforma (Comercial / Operaciones):**
-  * Fernando Harten
   * Jorge Neyra
   * Maria Elena Castro
-  * Iosef Zavala
+  * Sandra Galvez
 
 ---
 
@@ -47,14 +47,14 @@ Para las coordinaciones operativas, revisiones de negocio y entrenamientos inter
 
 El proyecto se ejecutará bajo un esquema modular y secuencial, distribuyéndose el esfuerzo técnico de la siguiente manera:
 
-| Fase / Hito | Descripción del Entregable | Esfuerzo Estimado | Estado Inicial |
-| :--- | :--- | :---: | :--- |
-| **H1: Diseño** | Interfaces y lógica de Forecast y Proformador SPOT | 10 hrs | 🟢 Terminado |
-| **H2: Desarrollo**| Programación de APIs en FastAPI, Supabase y Frontend React | 110 hrs | 🟡 En Ejecución |
-| **H3: ETL** | Migración de data transcurrida del año 2026 | 10 hrs | 🔲 Pendiente |
-| **H4: Onboarding**| Capacitación presencial a los 4 usuarios clave | 10 hrs | 🔲 Pendiente |
-| **H5: In Situ** | Go-Live y conciliación de "Dos Mundos" en vivo | 10 hrs | 🔲 Pendiente |
-| **TOTAL** | **Esfuerzo Consolidado de Implantación** | **150 hrs** | |
+| Fase / Hito | Descripción del Entregable | Acción Requerida (Petral) | Responsables | Estado Inicial |
+| :--- | :--- | :--- | :--- | :--- |
+| **H1: Diseño** | Interfaces y lógica de Forecast y Proformador SPOT | Verificar el método de cálculo a profundidad y brindar datos maestros faltantes. | Todos los usuarios clave | 🌗 En Ejecución |
+| **H2: Desarrollo**| Programación de APIs en FastAPI, Supabase y Frontend React | Usar lo desarrollado y dar feedback continuo. | Fernando, Iosef | 🌗 En Ejecución |
+| **H3: ETL** | Migración de data transcurrida del año 2026 | Alcanzar liquidaciones de viajes 2026 indicando Voyage Number. | Maria Elena, Jorge | 🔲 Pendiente |
+| **H4: Onboarding**| Capacitación presencial a los 4 usuarios clave | Asistir a sesiones presenciales. | Todos los usuarios clave | 🔲 Pendiente |
+| **H5: In Situ** | Go-Live y conciliación de "Dos Mundos" en vivo | Validación final en paralelo. | Todos los usuarios clave | 🔲 Pendiente |
+| **TOTAL** | **Esfuerzo Consolidado de Implantación** | **150 hrs** | | |
 
 ### ⛽ 5. Condiciones del Servicio Continuo (Mantenimiento y Alojamiento)
 * **Gatillo de Activación:** Vigente de forma mensual posterior al cierre exitoso del Hito 5 (In Situ).

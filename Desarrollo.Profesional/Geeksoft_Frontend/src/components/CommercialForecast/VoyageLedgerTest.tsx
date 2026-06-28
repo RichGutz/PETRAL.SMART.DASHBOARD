@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ForecastService } from '../../services/api';
 
+
 const COLOR_SCHEME = {
     vessels: { cardBg: 'bg-blue-50', border: 'border-blue-200', headerBg: 'bg-blue-100', text: 'text-blue-900', badge: 'bg-blue-200 text-blue-900' },
     routes: { cardBg: 'bg-purple-50', border: 'border-purple-200', headerBg: 'bg-purple-100', text: 'text-purple-900', badge: 'bg-purple-200 text-purple-900' },
@@ -263,8 +264,12 @@ export const VoyageLedgerTest: React.FC = () => {
                                     <tr key={idx} className="hover:bg-slate-50 transition-colors">
                                         <td className="p-2 font-bold text-slate-800">{row.metric}</td>
                                         <td className="p-2 font-mono text-petral-blue font-semibold">{row.isCurr ? formatCurrency(row.gk) : formatNumber(row.gk)}</td>
-                                        <td className="p-2 font-mono text-slate-500">{row.isCurr ? formatCurrency(row.ptr) : formatNumber(row.ptr)}</td>
-                                        <td className="p-2">{formatDelta(delta, row.isCurr)}</td>
+                                        <td className="p-2 font-mono text-slate-500">
+                                            <div className="border-b border-slate-300 border-dashed h-5 w-24 mx-auto"></div>
+                                        </td>
+                                        <td className="p-2">
+                                            <div className="border-b border-slate-300 border-dashed h-5 w-20 mx-auto"></div>
+                                        </td>
                                         <td className="p-2 font-mono text-xs text-slate-500 bg-slate-50">{colorizeFormula(auditObj.formula)}</td>
                                         <td className="p-2 font-mono text-xs text-slate-700 bg-slate-50 font-semibold">{colorizeFormula(auditObj.values)}</td>
                                         <td className="p-2 text-xs flex flex-wrap gap-1">{renderBadges(row.db)}</td>
@@ -398,7 +403,7 @@ export const VoyageLedgerTest: React.FC = () => {
                             <option value="CONCON_TRADER-ILO-MEJILLONES">ILO - MEJILLONES (Concon Trader)</option>
                         </optgroup>
                     </select>,
-                    // col4Footer (El botón de impresión):
+                    // col4Footer:
                     <button
                         onClick={() => window.print()}
                         className="flex-grow flex flex-col items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-4 rounded-lg shadow-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.01]"
@@ -417,15 +422,42 @@ export const VoyageLedgerTest: React.FC = () => {
                     const scRunResult = data[scRouteKey]?.[sc.vessel]?.['2026-07'];
                     const scPetral = benchmarks[scKey] || { act_load: 0, act_disch: 0, port_days: 0, sea_days: 0, bunker_costs: 0, voyage_result: 0, total_duration: 0, tce_real: 0, pl_vs_req: 0 };
                     return (
-                        <div key={idx} className="page-break mb-8">
-                            {renderScenarioContent(
-                                sc.vessel,
-                                sc.origin,
-                                sc.dest,
-                                scRunResult,
-                                scPetral,
-                                true // isPrint
-                            )}
+                        <div key={idx} className="page-break flex flex-col justify-between" style={{ height: '95vh', padding: '20px' }}>
+                            <div className="flex-grow">
+                                {renderScenarioContent(
+                                    sc.vessel,
+                                    sc.origin,
+                                    sc.dest,
+                                    scRunResult,
+                                    scPetral,
+                                    true // isPrint
+                                )}
+                            </div>
+                            
+                            {/* Bloque de validación y firmas (Footer para impresión) */}
+                            <div className="mt-4 pt-4 border-t-2 border-slate-800 shrink-0">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="flex-1">
+                                        <div className="font-bold text-slate-800 mb-4 text-sm">
+                                            Responsable: <span className="border-b border-slate-400 inline-block w-64 ml-2"></span>
+                                        </div>
+                                        <div className="font-bold text-slate-800 text-sm">
+                                            Estado: 
+                                            <span className="ml-4 border border-slate-800 w-4 h-4 inline-block align-middle mr-1"></span> Aprobado
+                                            <span className="ml-4 border border-slate-800 w-4 h-4 inline-block align-middle mr-1"></span> Con Errores
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 flex justify-end">
+                                        <div className="font-bold text-slate-800 text-sm">
+                                            Firma y Fecha: <span className="border-b border-slate-400 inline-block w-56 ml-2"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="font-bold text-slate-800 mb-2 text-sm">Comentarios (Razón de la divergencia / Observaciones):</div>
+                                    <div className="border border-slate-400 h-12 w-full rounded"></div>
+                                </div>
+                            </div>
                         </div>
                     );
                 })}

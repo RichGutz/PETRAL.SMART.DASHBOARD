@@ -1,0 +1,545 @@
+{
+    "Concon_Trader": {
+        "sheet_name": "RESUMEN",
+        "data": [
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "B/T TABLONES - CONTRATO SPCC ",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "VOYAGE CALCULATION",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "CABOTAJE - Ilo - Matarani ",
+                "Unnamed: 2": "Flete actual",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "T.C.E",
+                "Unnamed: 5": "P/L"
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "13,500 TM ",
+                "Unnamed: 2": 19.01,
+                "Unnamed: 3": "",
+                "Unnamed: 4": 47492.76798336336,
+                "Unnamed: 5": 112172.57615757578
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "CABOTAJE - Ilo - San Juan de Marcona",
+                "Unnamed: 2": "Flete actual",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "T.C.E",
+                "Unnamed: 5": "P/L"
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "13,500 TM ",
+                "Unnamed: 2": 22.82,
+                "Unnamed: 3": "",
+                "Unnamed: 4": 31701.742354444723,
+                "Unnamed: 5": 67284.13204242424
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "EXPORTACI\u00d3N - Ilo - Mejillones",
+                "Unnamed: 2": "Flete actual",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "T.C.E",
+                "Unnamed: 5": "P/L"
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "13,500 TM ",
+                "Unnamed: 2": 20.87,
+                "Unnamed: 3": "",
+                "Unnamed: 4": 22316.40348532398,
+                "Unnamed: 5": 14259.042818181813
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "COSTOS PORTUARIOS B/T TABLONES",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "ILO",
+                "Unnamed: 2": 23500,
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "MATARANI",
+                "Unnamed: 2": 19000,
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "SAN JUAN DE MARCONA",
+                "Unnamed: 2": 61000,
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "MEJILLONES",
+                "Unnamed: 2": 60000,
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "Nota:",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "El valor del combustible que se ha considerado es en base a la ultima compra de IFO.",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            }
+        ]
+    },
+    "Moquegua": {
+        "sheet_name": "RESUMEN Y COSTOS PORTUARIOS",
+        "data": [
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "B/T MOQUEGUA - CONTRATO SPCC ",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "VOYAGE CALCULATION",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "CABOTAJE - ILO - MATARANI ",
+                "Unnamed: 2": "Flete actual",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "T.C.E",
+                "Unnamed: 5": "P/L"
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "13,500 TM ",
+                "Unnamed: 2": 19.01,
+                "Unnamed: 3": "",
+                "Unnamed: 4": 48791.857219674326,
+                "Unnamed: 5": 146033.4889606061
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "CABOTAJE - Ilo - San Juan de Marcona",
+                "Unnamed: 2": "Flete actual",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "T.C.E",
+                "Unnamed: 5": "P/L"
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "13,500 TM ",
+                "Unnamed: 2": 22.82,
+                "Unnamed: 3": "",
+                "Unnamed: 4": 35927.951513985696,
+                "Unnamed: 5": 131833.98423939396
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "EXPORTACI\u00d3N - ILO - MEJILLONES",
+                "Unnamed: 2": "Flete actual",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "T.C.E",
+                "Unnamed: 5": "P/L"
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "13,500 TM ",
+                "Unnamed: 2": 20.87,
+                "Unnamed: 3": "",
+                "Unnamed: 4": 29837.971991877417,
+                "Unnamed: 5": 103649.19804545451
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "COSTOS PORTUARIOS B/T MOQUEGUA ",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "ILO",
+                "Unnamed: 2": 22000,
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "MATARANI",
+                "Unnamed: 2": 17000,
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "SAN JUAN DE MARCONA",
+                "Unnamed: 2": 40000,
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "MEJILLONES",
+                "Unnamed: 2": 29000,
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "Nota:",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "El valor del combustible que se ha considerado es en base al contrato con SPCC (no el precio actual).",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            }
+        ]
+    },
+    "Tablones": {
+        "sheet_name": "RESUMEN",
+        "data": [
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "B/T TABLONES - CONTRATO SPCC ",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "VOYAGE CALCULATION",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "CABOTAJE - Ilo - Matarani ",
+                "Unnamed: 2": "Flete actual",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "T.C.E",
+                "Unnamed: 5": "P/L"
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "13,500 TM ",
+                "Unnamed: 2": 19.01,
+                "Unnamed: 3": "",
+                "Unnamed: 4": 47801.34662699371,
+                "Unnamed: 5": 133831.9791886364
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "CABOTAJE - Ilo - San Juan de Marcona",
+                "Unnamed: 2": "Flete actual",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "T.C.E",
+                "Unnamed: 5": "P/L"
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "13,500 TM ",
+                "Unnamed: 2": 22.82,
+                "Unnamed: 3": "",
+                "Unnamed: 4": 34573.37152044164,
+                "Unnamed: 5": 112545.40341136364
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "EXPORTACI\u00d3N - Ilo - Mejillones",
+                "Unnamed: 2": "Flete actual",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "T.C.E",
+                "Unnamed: 5": "P/L"
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "13,500 TM ",
+                "Unnamed: 2": 20.87,
+                "Unnamed: 3": "",
+                "Unnamed: 4": 28705.629959387108,
+                "Unnamed: 5": 84367.49714772725
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "COSTOS PORTUARIOS B/T TABLONES",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "ILO",
+                "Unnamed: 2": 23000,
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "MATARANI",
+                "Unnamed: 2": 18000,
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "SAN JUAN DE MARCONA",
+                "Unnamed: 2": 44000,
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "MEJILLONES",
+                "Unnamed: 2": 32000,
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "Nota:",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            },
+            {
+                "Unnamed: 0": "",
+                "Unnamed: 1": "El valor del combustible que se ha considerado es en base al contrato con SPCC (no el precio actual).",
+                "Unnamed: 2": "",
+                "Unnamed: 3": "",
+                "Unnamed: 4": "",
+                "Unnamed: 5": ""
+            }
+        ]
+    }
+}
