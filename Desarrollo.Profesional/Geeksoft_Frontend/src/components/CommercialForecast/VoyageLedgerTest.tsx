@@ -171,13 +171,6 @@ export const VoyageLedgerTest: React.FC = () => {
         const formatCurrency = (val: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
         const formatNumber = (val: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(val);
 
-        const formatDelta = (val: number, isCurrency: boolean = false) => {
-            const color = val > 0 ? 'text-green-600' : val < 0 ? 'text-red-600' : 'text-slate-500';
-            const formatted = isCurrency ? formatCurrency(Math.abs(val)) : formatNumber(Math.abs(val));
-            const sign = val > 0 ? '+' : val < 0 ? '-' : '';
-            return <span className={`font-bold ${color}`}>{sign}{formatted}</span>;
-        };
-
         const auditRows = [
             { metric: "1. Tasa Carga (MT/hr)",  key: "1. Tasa Carga (act_load)",       gk: scenarioResult.audit_trail["1. Tasa Carga (act_load)"]?.values?.includes('MIN') ? 500 : 0,  ptr: scenarioPetral.act_load,  isCurr: false, db: "contracts · vessels · ports", ui: "Contratos / Flota / Puertos" },
             { metric: "2. Tasa Descarga (MT/hr)", key: "2. Tasa Descarga (act_disch)",  gk: scenarioResult.audit_trail["2. Tasa Descarga (act_disch)"]?.values?.includes('MIN') ? 300 : 0, ptr: scenarioPetral.act_disch, isCurr: false, db: "contracts · vessels · ports", ui: "Contratos / Flota / Puertos" },
@@ -272,63 +265,68 @@ export const VoyageLedgerTest: React.FC = () => {
                                 <h3 className={`text-xs font-bold uppercase tracking-wider ${COLOR_SCHEME.contracts.text}`}>Reglas Comerciales</h3>
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.contracts.badge}`}>contracts</span>
                             </div>
-                            <div className="p-3 flex flex-col gap-1.5 flex-1 justify-between">
-                                <div className="flex justify-between items-center">
-                                    <span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>
-                                        Cantidad (Q) <span className="text-emerald-600 font-black normal-case">({formatNumber(minIntake)}–{formatNumber(maxIntake)} MT)</span>
-                                    </span>
-                                    {!isPrint ? (
-                                        <div className="flex items-center gap-1">
-                                            <input
-                                                type="number"
-                                                min={minIntake}
-                                                max={maxIntake}
-                                                step={100}
-                                                value={currentQty}
-                                                onChange={e => setQuantityOverride(prev => ({ ...prev, [vessel]: Number(e.target.value) }))}
-                                                onBlur={e => {
-                                                    const val = Math.max(minIntake, Math.min(maxIntake, Number(e.target.value)));
-                                                    setQuantityOverride(prev => ({ ...prev, [vessel]: val }));
-                                                }}
-                                                className="w-24 text-xs font-mono font-bold text-center bg-white border-2 border-emerald-400 rounded px-1 py-0.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                            />
-                                            <span className={`text-xs font-bold ${simulating ? 'text-amber-500 animate-pulse' : 'text-slate-500'}`}>MT{simulating ? ' ⟳' : ''}</span>
+                            <div className="p-3 flex-1 flex flex-col justify-between">
+                                {!isPrint ? (
+                                    <div className="grid grid-cols-2 gap-4 h-full items-stretch">
+                                        {/* Izquierda: Inputs y campos */}
+                                        <div className="flex flex-col gap-1.5 justify-between">
+                                            <div className="flex justify-between items-center">
+                                                <span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Cantidad (Q)</span>
+                                                <div className="flex items-center gap-1">
+                                                    <input
+                                                        type="number"
+                                                        min={minIntake}
+                                                        max={maxIntake}
+                                                        step={100}
+                                                        value={currentQty}
+                                                        onChange={e => setQuantityOverride(prev => ({ ...prev, [vessel]: Number(e.target.value) }))}
+                                                        onBlur={e => {
+                                                            const val = Math.max(minIntake, Math.min(maxIntake, Number(e.target.value)));
+                                                            setQuantityOverride(prev => ({ ...prev, [vessel]: val }));
+                                                        }}
+                                                        className="w-20 text-xs font-mono font-bold text-center bg-white border-2 border-emerald-400 rounded px-1 py-0.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                                    />
+                                                    <span className={`text-[10px] font-bold ${simulating ? 'text-amber-500 animate-pulse' : 'text-slate-500'}`}>MT{simulating ? ' ⟳' : ''}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Flete Base (F)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.freight_rate || 0)}/MT</span></div>
+                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Tasa Carg Ctto (c_load)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_load_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_load_rate) + " T/h" : "TBD"}</span></div>
+                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Tasa Desc Ctto (c_disch)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_discharge_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_discharge_rate) + " T/h" : "TBD"}</span></div>
                                         </div>
-                                    ) : (
-                                        <span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(currentQty)} MT</span>
-                                    )}
-                                </div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Flete Base (F)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.freight_rate || 0)}/MT</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Tasa Carg Ctto (c_load)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_load_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_load_rate) + " T/h" : "TBD"}</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Tasa Desc Ctto (c_disch)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_discharge_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_discharge_rate) + " T/h" : "TBD"}</span></div>
-
-                                {/* Tabla miniatura del tarifario de la ruta activa */}
-                                {!isPrint && (
-                                    <div className="mt-3 pt-2 border-t border-emerald-200">
-                                        <div className={`text-[9px] font-bold uppercase mb-1 ${COLOR_SCHEME.contracts.text}`}>Tarifario SPCC por Bracket</div>
-                                        <div className="overflow-x-auto rounded border border-emerald-100 bg-white">
-                                            <table className="w-full text-[9px] border-collapse">
-                                                <thead>
-                                                    <tr className="bg-emerald-50 border-b border-emerald-100 text-emerald-800">
-                                                        <th className="p-1 font-bold text-left">Min (MT)</th>
-                                                        <th className="p-1 font-bold text-left">Max (MT)</th>
-                                                        <th className="p-1 font-bold text-right">Flete ($)</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-slate-100 font-mono">
-                                                    {(TARIFFS_MAP[destPort] || []).map((t, idx) => {
-                                                        const isActive = currentQty >= t.min && currentQty <= t.max;
-                                                        return (
-                                                            <tr key={idx} className={`${isActive ? 'bg-emerald-100 font-bold text-emerald-950' : 'text-slate-600'}`}>
-                                                                <td className="p-1">{formatNumber(t.min)}</td>
-                                                                <td className="p-1">{formatNumber(t.max)}</td>
-                                                                <td className="p-1 text-right">{formatCurrency(t.rate)}</td>
-                                                            </tr>
-                                                        );
-                                                    })}
-                                                </tbody>
-                                            </table>
+                                        {/* Derecha: Tabla miniatura */}
+                                        <div className="border-l border-emerald-100 pl-3 flex flex-col justify-between">
+                                            <div className={`text-[8px] font-bold uppercase mb-1 ${COLOR_SCHEME.contracts.text}`}>Tarifario SPCC por Bracket</div>
+                                            <div className="overflow-x-auto rounded border border-emerald-100 bg-white">
+                                                <table className="w-full text-[9px] border-collapse">
+                                                    <thead>
+                                                        <tr className="bg-emerald-50 border-b border-emerald-100 text-emerald-800">
+                                                            <th className="p-0.5 font-bold text-left">Min (MT)</th>
+                                                            <th className="p-0.5 font-bold text-left">Max (MT)</th>
+                                                            <th className="p-0.5 font-bold text-right">Flete ($)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-slate-100 font-mono">
+                                                        {(TARIFFS_MAP[destPort] || []).map((t, idx) => {
+                                                            const isActive = currentQty >= t.min && currentQty <= t.max;
+                                                            return (
+                                                                <tr key={idx} className={`${isActive ? 'bg-emerald-100 font-bold text-emerald-950' : 'text-slate-600'}`}>
+                                                                    <td className="p-0.5">{formatNumber(t.min)}</td>
+                                                                    <td className="p-0.5">{formatNumber(t.max)}</td>
+                                                                    <td className="p-0.5 text-right">{formatCurrency(t.rate)}</td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-1.5">
+                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Cantidad (Q)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(currentQty)} MT</span></div>
+                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Flete Base (F)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.freight_rate || 0)}/MT</span></div>
+                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Tasa Carg Ctto (c_load)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_load_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_load_rate) + " T/h" : "TBD"}</span></div>
+                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Tasa Desc Ctto (c_disch)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_discharge_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_discharge_rate) + " T/h" : "TBD"}</span></div>
                                     </div>
                                 )}
                             </div>
@@ -369,7 +367,6 @@ export const VoyageLedgerTest: React.FC = () => {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {auditRows.map((row, idx) => {
-                                const delta = (row.gk || 0) - row.ptr;
                                 const auditObj = audit[row.key] || { formula: "N/A", values: "N/A" };
                                 return (
                                     <tr key={idx} className="hover:bg-slate-50 transition-colors">
