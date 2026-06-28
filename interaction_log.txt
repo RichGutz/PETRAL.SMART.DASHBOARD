@@ -93,3 +93,5 @@
 
 2026-06-26: Actualizados contratos activos en Supabase para reflejar vigencia completa en 2025 (valid_from: 2025-01-01, valid_to: 2025-12-31). Explicación de la relación E-R: contract_tariffs referencia a contracts mediante contract_id (FK), heredando automáticamente origin_port_id y evitando redundancias.
 2026-06-26: Actualizado kickoff_petral.html. Se redujo la altura de Slide 7 en un 20% para hacerlo más compacto y se añadió una llamada dinámica a la API de Supabase para obtener y actualizar los precios de IFO y MDO en tiempo real en Slide 4.
+
+2026-06-28: Persistencia completa de estadías mediante metadatos inyectados en la columna JSON de projection_lines al guardar en Supabase. Integración de la métrica y graficación de Yield Flete con precisión de 2 decimales. Rediseño horizontal inline de los selectores de Cliente, Ruta y Buque con desplegables flotantes (Flyout Popover) que ahorran 3 filas de alto vertical. Implementación de controles de posición (Ocultar, Encima, Centro) y color (Blanco, Negro) para etiquetas de series de ECharts en el panel de control lateral. Cambios subidos exitosamente a GitHub (git push origin main).
