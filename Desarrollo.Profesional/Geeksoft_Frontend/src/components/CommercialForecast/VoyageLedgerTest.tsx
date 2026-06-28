@@ -459,10 +459,12 @@ export const VoyageLedgerTest: React.FC = () => {
                         break-after: page;
                         width: 297mm;
                         height: 210mm;
-                        padding: 4mm 6mm; /* Reducido de 6mm 8mm */
+                        padding: 4mm 6mm;
                         box-sizing: border-box;
                         overflow: hidden;
                         margin: 0 !important;
+                        transform: scale(0.93);
+                        transform-origin: top left;
                     }
                     /* Compactar espaciado entre cards */
                     .page-break .flex.gap-4.items-stretch {
