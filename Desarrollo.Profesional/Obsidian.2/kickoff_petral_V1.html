@@ -669,21 +669,36 @@
     <h2>Tabla: <span class="hi">vessels</span></h2>
     <p class="sub">Define las capacidades de carga y consumos energéticos de cada nave de la flota</p>
 
-    <div class="card" style="width:100%; padding:24px;">
-        <h3 style="font-size:16px; margin-bottom:12px; color:var(--blue);">Ejemplo Real de Supabase:</h3>
-        <pre class="mono" style="background:var(--bg); padding:16px; border-radius:8px; font-size:13px; color:var(--text); overflow-x:auto;">
-{
-  "vessel_id": "CONCON_TRADER",
-  "vessel_name": "CONCON TRADER",
-  "dwt": 19823,
-  "vessel_speed": 11.0,
-  "vessel_pump_discharge_rate": 500.0,
-  "consumption_sea_ifo": 14.0,
-  "consumption_port_ifo": 3.5,
-  "tce_required": 20000
-}
-        </pre>
-        <p style="margin-top:16px; font-size:14px; color:var(--text-dim);"><strong>Impacto en simulación:</strong> Dicta cuánto tarda en llegar, cuánto consume en el mar (IFO/MDO) y la velocidad máxima a la que puede bombear carga (limitado por el puerto).</p>
+    <div class="card" style="width:100%; padding:30px; border-top:6px solid var(--blue);">
+        <h3 style="font-size:22px; margin-bottom:20px; color:var(--text); display:flex; align-items:center; gap:10px;">
+            <span style="font-size:28px;">🚢</span> Perfil Técnico: B/T CONCON TRADER
+        </h3>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div style="background:var(--bg); padding:12px 16px; border-radius:8px; border-left:4px solid var(--amber);">
+                <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Capacidad de Carga (DWT)</div>
+                <div style="font-size:16px; font-weight:600; color:var(--navy);">19,823 MT</div>
+            </div>
+            <div style="background:var(--bg); padding:12px 16px; border-radius:8px; border-left:4px solid var(--amber);">
+                <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Velocidad de Navegación</div>
+                <div style="font-size:16px; font-weight:600; color:var(--navy);">11.0 nudos <span style="font-size:11px; font-weight:400; color:var(--text-dim);">(Laden & Ballast)</span></div>
+            </div>
+            <div style="background:var(--bg); padding:12px 16px; border-radius:8px; border-left:4px solid var(--amber);">
+                <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Poder de Bombeo (Máx)</div>
+                <div style="font-size:16px; font-weight:600; color:var(--navy);">500 T / hora</div>
+            </div>
+            <div style="background:var(--bg); padding:12px 16px; border-radius:8px; border-left:4px solid var(--blue);">
+                <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Consumo IFO (Sea)</div>
+                <div style="font-size:16px; font-weight:600; color:var(--navy);">14.0 T / día</div>
+            </div>
+            <div style="background:var(--bg); padding:12px 16px; border-radius:8px; border-left:4px solid var(--blue);">
+                <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Consumo IFO (Port)</div>
+                <div style="font-size:16px; font-weight:600; color:var(--navy);">3.5 T / día</div>
+            </div>
+            <div style="background:var(--green); padding:12px 16px; border-radius:8px; color:white;">
+                <div style="font-size:12px; text-transform:uppercase; font-weight:700; opacity:0.9;">Meta de Renta (TCE Requerido)</div>
+                <div style="font-size:16px; font-weight:600;">$20,000 / día</div>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -695,18 +710,28 @@
     <h2>Tabla: <span class="hi">routes</span></h2>
     <p class="sub">Mapea la topología marítima y las distancias entre puertos</p>
 
-    <div class="card" style="width:100%; padding:24px;">
-        <h3 style="font-size:16px; margin-bottom:12px; color:var(--blue);">Ejemplo Real de Supabase:</h3>
-        <pre class="mono" style="background:var(--bg); padding:16px; border-radius:8px; font-size:13px; color:var(--text); overflow-x:auto;">
-{
-  "origin_port_id": "ILO",
-  "destination_port_id": "MATARANI",
-  "route_distance": 69.0,
-  "weather_factor": 0.03,
-  "description": "Tramo corto de cabotaje sur (Perú)"
-}
-        </pre>
-        <p style="margin-top:16px; font-size:14px; color:var(--text-dim);"><strong>Impacto en simulación:</strong> Provee las millas náuticas necesarias para calcular el tiempo de mar (Sea Days = Distancia / Velocidad Buque). El weather factor agrega un margen de seguridad histórico.</p>
+    <div class="card" style="width:100%; padding:30px; border-top:6px solid var(--blue);">
+        <h3 style="font-size:22px; margin-bottom:20px; color:var(--text); display:flex; align-items:center; gap:10px;">
+            <span style="font-size:28px;">🗺️</span> Ruta Comercial: ILO ➔ MATARANI
+        </h3>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="display:flex; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid var(--border);">
+                <span style="font-weight:600; color:var(--navy);">Distancia Base</span>
+                <span style="font-weight:700; color:var(--blue);">69.0 Millas Náuticas</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid var(--border);">
+                <span style="font-weight:600; color:var(--navy);">Weather Factor (Pierna Laden - Ida)</span>
+                <span style="font-weight:700; color:var(--amber);">+3% Margen Seguridad</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid var(--border);">
+                <span style="font-weight:600; color:var(--navy);">Weather Factor (Pierna Ballast - Retorno)</span>
+                <span style="font-weight:700; color:var(--amber);">+3% Margen Seguridad</span>
+            </div>
+        </div>
+        <div style="margin-top:20px; padding:12px; background:var(--blue-dim); border-radius:8px; font-size:13px; color:var(--navy-mid); display:flex; gap:10px;">
+            <span>ℹ️</span>
+            <span>El simulador asume viajes redondos (Round Trip) y procesa el tiempo y combustible sumando la pierna Laden y la pierna Ballast de forma independiente.</span>
+        </div>
     </div>
 </section>
 
@@ -718,18 +743,33 @@
     <h2>Tabla: <span class="hi">ports</span></h2>
     <p class="sub">Establece las reglas físicas, los cuellos de botella y límites de operación por muelle</p>
 
-    <div class="card" style="width:100%; padding:24px;">
-        <h3 style="font-size:16px; margin-bottom:12px; color:var(--blue);">Ejemplo Real de Supabase:</h3>
-        <pre class="mono" style="background:var(--bg); padding:16px; border-radius:8px; font-size:13px; color:var(--text); overflow-x:auto;">
-{
-  "port_id": "ILO",
-  "max_load_rate": 500.0,
-  "max_disch_rate": 9999.0,
-  "overhead_carga_hrs": 6.0,
-  "overhead_descarga_hrs": 6.0
-}
-        </pre>
-        <p style="margin-top:16px; font-size:14px; color:var(--text-dim);"><strong>Impacto en simulación:</strong> Aplica la "Ley del Mínimo". Si un barco descarga a 800 T/h pero el puerto solo acepta 500 T/h, el motor usa 500. Los "overheads" suman horas muertas fijas por fondeo, maniobras y papeleo.</p>
+    <div class="card" style="width:100%; padding:30px; border-top:6px solid var(--blue);">
+        <h3 style="font-size:22px; margin-bottom:20px; color:var(--text); display:flex; align-items:center; gap:10px;">
+            <span style="font-size:28px;">⚓</span> Restricciones Terminal: PUERTO DE ILO
+        </h3>
+        <div style="display:grid; grid-template-columns: 1fr; gap:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:16px; border-radius:8px;">
+                <div>
+                    <div style="font-weight:700; color:var(--navy);">Límite Operativo (Carga)</div>
+                    <div style="font-size:12px; color:var(--text-dim);">Tope máximo que permite el muelle</div>
+                </div>
+                <div style="font-weight:900; font-size:18px; color:var(--red);">Hasta 500 T / hora</div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:16px; border-radius:8px;">
+                <div>
+                    <div style="font-weight:700; color:var(--navy);">Límite Operativo (Descarga)</div>
+                    <div style="font-size:12px; color:var(--text-dim);">Tope máximo que permite el muelle</div>
+                </div>
+                <div style="font-weight:900; font-size:18px; color:var(--green);">Sin restricción (9999 T/h)</div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; background:var(--amber-dim); padding:16px; border-radius:8px;">
+                <div>
+                    <div style="font-weight:700; color:var(--amber);">Tiempos Muertos (Overhead)</div>
+                    <div style="font-size:12px; color:var(--amber);">Cubre maniobras, amarre, fondeo y trámites</div>
+                </div>
+                <div style="font-weight:900; font-size:18px; color:var(--amber);">6 Horas Fijas / recalada</div>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -741,19 +781,28 @@
     <h2>Tabla: <span class="hi">contracts</span></h2>
     <p class="sub">Define los acuerdos comerciales paraguas entre la Naviera y el Cliente</p>
 
-    <div class="card" style="width:100%; padding:24px;">
-        <h3 style="font-size:16px; margin-bottom:12px; color:var(--blue);">Ejemplo Real de Supabase:</h3>
-        <pre class="mono" style="background:var(--bg); padding:16px; border-radius:8px; font-size:13px; color:var(--text); overflow-x:auto;">
-{
-  "contract_id": "SPCC_2025",
-  "client_id": "SPCC",
-  "origin_port_id": "ILO",
-  "destination_port_id": "MATARANI",
-  "valid_from": "2025-01-01",
-  "valid_to": "2025-12-31"
-}
-        </pre>
-        <p style="margin-top:16px; font-size:14px; color:var(--text-dim);"><strong>Impacto en simulación:</strong> Sirve como validación estructural. Asegura que no se puedan proyectar viajes fuera de vigencia o en rutas no estipuladas. Funciona como llave primaria para buscar las tarifas.</p>
+    <div class="card" style="width:100%; padding:30px; border-top:6px solid var(--blue);">
+        <h3 style="font-size:22px; margin-bottom:20px; color:var(--text); display:flex; align-items:center; gap:10px;">
+            <span style="font-size:28px;">🤝</span> Acuerdo Comercial: SPCC_2025
+        </h3>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="display:flex; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid var(--border);">
+                <span style="font-weight:600; color:var(--navy);">Cliente</span>
+                <span style="font-weight:700; color:var(--blue);">SPCC</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid var(--border);">
+                <span style="font-weight:600; color:var(--navy);">Ruta Pactada</span>
+                <span style="font-weight:700; color:var(--text);">ILO ➔ MATARANI</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid var(--border);">
+                <span style="font-weight:600; color:var(--navy);">Vigencia del Contrato</span>
+                <span style="font-weight:700; color:var(--text);">01 Ene 2025 – 31 Dic 2025</span>
+            </div>
+        </div>
+        <div style="margin-top:20px; padding:12px; background:var(--blue-dim); border-radius:8px; font-size:13px; color:var(--navy-mid); display:flex; gap:10px;">
+            <span>ℹ️</span>
+            <span>Define las reglas paraguas. El simulador cruzará que los embarques proyectados no viajen fuera de estas fechas o rutas estipuladas.</span>
+        </div>
     </div>
 </section>
 
@@ -765,17 +814,30 @@
     <h2>Tabla: <span class="hi">contract_tariffs</span></h2>
     <p class="sub">Contiene los "Brackets" o escalones de flete dinámico</p>
 
-    <div class="card" style="width:100%; padding:24px;">
-        <h3 style="font-size:16px; margin-bottom:12px; color:var(--blue);">Ejemplo Real de Supabase:</h3>
-        <pre class="mono" style="background:var(--bg); padding:16px; border-radius:8px; font-size:13px; color:var(--text); overflow-x:auto;">
-{
-  "contract_id": "SPCC_2025",
-  "min_tonnage": 10000.0,
-  "max_tonnage": 11500.0,
-  "freight_rate": 20.12
-}
-        </pre>
-        <p style="margin-top:16px; font-size:14px; color:var(--text-dim);"><strong>Impacto en simulación:</strong> El motor busca en qué "bracket" cae la cantidad a transportar. Si se transportan 11,000 MT, cobrará $20.12 por tonelada. Esto permite modelar descuentos por volumen.</p>
+    <div class="card" style="width:100%; padding:30px; border-top:6px solid var(--blue);">
+        <h3 style="font-size:22px; margin-bottom:20px; color:var(--text); display:flex; align-items:center; gap:10px;">
+            <span style="font-size:28px;">💲</span> Tramos de Flete: Contrato SPCC_2025
+        </h3>
+        
+        <div style="background:var(--bg); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
+            <div style="display:flex; background:var(--navy); color:white; padding:12px 16px; font-weight:600; font-size:14px;">
+                <div style="flex:1;">Si el cliente nomina entre...</div>
+                <div style="width:150px; text-align:right;">Flete Cobrado</div>
+            </div>
+            <div style="display:flex; padding:16px; align-items:center; border-bottom:1px solid var(--border);">
+                <div style="flex:1; font-weight:600; font-size:16px; color:var(--navy);">10,000 MT — 11,500 MT</div>
+                <div style="width:150px; text-align:right; font-weight:900; font-size:20px; color:var(--green);">$20.12 <span style="font-size:12px; font-weight:400; color:var(--text-dim);">/ MT</span></div>
+            </div>
+            <div style="display:flex; padding:16px; align-items:center; opacity:0.5;">
+                <div style="flex:1; font-weight:600; font-size:16px; color:var(--navy);">11,501 MT — 15,000 MT</div>
+                <div style="width:150px; text-align:right; font-weight:900; font-size:20px; color:var(--green);">$19.01 <span style="font-size:12px; font-weight:400; color:var(--text-dim);">/ MT</span></div>
+            </div>
+        </div>
+
+        <div style="margin-top:20px; padding:12px; background:var(--blue-dim); border-radius:8px; font-size:13px; color:var(--navy-mid); display:flex; gap:10px;">
+            <span>ℹ️</span>
+            <span>Permite modelar descuentos por volumen de manera automática para cada contrato.</span>
+        </div>
     </div>
 </section>
 
@@ -787,18 +849,31 @@
     <h2>Tabla: <span class="hi">agency_matrix</span></h2>
     <p class="sub">Matriz de resolución para los costos fijos portuarios</p>
 
-    <div class="card" style="width:100%; padding:24px;">
-        <h3 style="font-size:16px; margin-bottom:12px; color:var(--blue);">Ejemplo Real de Supabase:</h3>
-        <pre class="mono" style="background:var(--bg); padding:16px; border-radius:8px; font-size:13px; color:var(--text); overflow-x:auto;">
-{
-  "port_id": "ILO",
-  "operation_type": "CARGA",
-  "client_id": "DEFAULT",
-  "vessel_id": "DEFAULT",
-  "cost": 25500.0
-}
-        </pre>
-        <p style="margin-top:16px; font-size:14px; color:var(--text-dim);"><strong>Impacto en simulación:</strong> El sistema busca siempre la tarifa más específica (Ej: Barco X + Cliente Y). Si no existe una tarifa negociada, hace "fallback" al comodín DEFAULT. Deduce automáticamente los costos base de cada puerto tocado.</p>
+    <div class="card" style="width:100%; padding:30px; border-top:6px solid var(--blue);">
+        <h3 style="font-size:22px; margin-bottom:20px; color:var(--text); display:flex; align-items:center; gap:10px;">
+            <span style="font-size:28px;">🏢</span> Costos Fijos Portuarios
+        </h3>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px;">
+            <div style="background:var(--bg); padding:16px; border-radius:8px;">
+                <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Puerto y Operación</div>
+                <div style="font-size:16px; font-weight:700; color:var(--navy); margin-top:4px;">ILO (CARGA)</div>
+            </div>
+            <div style="background:var(--bg); padding:16px; border-radius:8px;">
+                <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Condición</div>
+                <div style="font-size:16px; font-weight:700; color:var(--navy); margin-top:4px;">DEFAULT (Estándar)</div>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--amber-dim); padding:20px; border-radius:8px; border:1px solid var(--amber-brd);">
+            <div style="font-weight:700; color:var(--amber); font-size:18px;">Costo por Recalada</div>
+            <div style="font-weight:900; font-size:28px; color:var(--amber);">$25,500 USD</div>
+        </div>
+
+        <div style="margin-top:20px; padding:12px; background:var(--blue-dim); border-radius:8px; font-size:13px; color:var(--navy-mid); display:flex; gap:10px;">
+            <span>ℹ️</span>
+            <span>Aplica esta tarifa base al viaje a menos que exista una tarifa especial negociada para un barco o cliente específico.</span>
+        </div>
     </div>
 </section>
 
