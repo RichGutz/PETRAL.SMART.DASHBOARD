@@ -109,11 +109,12 @@ export const VoyageLedgerTest: React.FC = () => {
     const routeKey = `${origin}-${dest}`;
     const baseResult = data[routeKey]?.[vessel]?.['2026-07'];
     const runResult = liveResult || baseResult;
-    // Max = tonelaje real del viaje (NOT la tasa de carga que es T/h)
-    const maxIntake = baseResult?.raw_inputs?.quantity || (vessel === 'CONCON_TRADER' ? 19000 : 13500);
-    const minIntake = 5000; // piso razonable de brackets
-    // Por defecto el input muestra el máximo real del barco
-    const currentQty = quantityOverride[vessel] ?? maxIntake;
+    // Límites reales del tarifario (brackets de contrato SPCC_2025)
+    const minIntake = 10000;
+    const maxIntake = 14500;
+    // Por defecto el input muestra el valor del viaje, topado al máximo del tarifario
+    const defaultQty = Math.min(baseResult?.raw_inputs?.quantity || 13500, maxIntake);
+    const currentQty = quantityOverride[vessel] ?? defaultQty;
 
     if (!runResult || !runResult.audit_trail) {
         return <div className="p-8 text-center text-red-500">Datos no encontrados para {selectedCase}</div>;
