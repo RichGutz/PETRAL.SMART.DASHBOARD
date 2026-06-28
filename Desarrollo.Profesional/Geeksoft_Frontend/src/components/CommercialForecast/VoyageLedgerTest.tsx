@@ -297,12 +297,12 @@ export const VoyageLedgerTest: React.FC = () => {
                                         <div className="border-l border-emerald-100 pl-3 flex flex-col justify-between">
                                             <div className={`text-[8px] font-bold uppercase mb-1 ${COLOR_SCHEME.contracts.text}`}>Tarifario SPCC por Bracket</div>
                                             <div className="overflow-x-auto rounded border border-emerald-100 bg-white">
-                                                <table className="w-full text-[9px] border-collapse">
+                                                <table className="w-full text-[9px] border-collapse table-fixed">
                                                     <thead>
                                                         <tr className="bg-emerald-50 border-b border-emerald-100 text-emerald-800">
-                                                            <th className="p-0.5 font-bold text-left">Min (MT)</th>
-                                                            <th className="p-0.5 font-bold text-left">Max (MT)</th>
-                                                            <th className="p-0.5 font-bold text-right">Flete ($)</th>
+                                                            <th className="p-0.5 font-bold text-left" style={{ width: '33.33%' }}>Min (MT)</th>
+                                                            <th className="p-0.5 font-bold text-left" style={{ width: '33.33%' }}>Max (MT)</th>
+                                                            <th className="p-0.5 font-bold text-right" style={{ width: '33.33%' }}>Flete ($)</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-100 font-mono">
