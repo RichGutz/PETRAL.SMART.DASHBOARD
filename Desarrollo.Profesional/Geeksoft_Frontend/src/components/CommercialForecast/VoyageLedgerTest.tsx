@@ -36,6 +36,27 @@ const colorizeFormula = (formula: string) => {
     });
     return <span dangerouslySetInnerHTML={{__html: res}} />;
 };
+const TARIFFS_MAP: Record<string, Array<{min: number, max: number, rate: number}>> = {
+    'MATARANI': [
+        { min: 10000, max: 11500, rate: 20.12 },
+        { min: 11501, max: 13000, rate: 19.52 },
+        { min: 13001, max: 13500, rate: 19.01 },
+        { min: 13600, max: 14500, rate: 18.92 }
+    ],
+    'MARCONA': [
+        { min: 10000, max: 11500, rate: 25.87 },
+        { min: 11501, max: 13000, rate: 23.12 },
+        { min: 13001, max: 13500, rate: 22.82 },
+        { min: 13600, max: 14500, rate: 21.77 }
+    ],
+    'MEJILLONES': [
+        { min: 10000, max: 11500, rate: 23.23 },
+        { min: 11501, max: 13000, rate: 21.87 },
+        { min: 13001, max: 13500, rate: 20.87 },
+        { min: 13600, max: 14500, rate: 20.67 }
+    ]
+};
+
 export const VoyageLedgerTest: React.FC = () => {
     const [data, setData] = useState<any>(null);
     const [benchmarks, setBenchmarks] = useState<Record<string, any>>({});
@@ -234,7 +255,7 @@ export const VoyageLedgerTest: React.FC = () => {
                     </div>
 
                     {/* Col 3: Maestro Rutas + Reglas Comerciales */}
-                    <div className="flex-1 flex flex-col gap-1">
+                    <div className="flex-[1.3] flex flex-col gap-1">
                         <div className={`border rounded-lg shadow-sm overflow-hidden ${COLOR_SCHEME.routes.cardBg} ${COLOR_SCHEME.routes.border}`}>
                             <div className={`border-b px-3 py-2 flex items-center justify-between ${COLOR_SCHEME.routes.headerBg} ${COLOR_SCHEME.routes.border}`}>
                                 <h3 className={`text-xs font-bold uppercase tracking-wider ${COLOR_SCHEME.routes.text}`}>Maestro Rutas</h3>
@@ -280,12 +301,42 @@ export const VoyageLedgerTest: React.FC = () => {
                                 <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Flete Base (F)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.freight_rate || 0)}/MT</span></div>
                                 <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Tasa Carg Ctto (c_load)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_load_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_load_rate) + " T/h" : "TBD"}</span></div>
                                 <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Tasa Desc Ctto (c_disch)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_discharge_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_discharge_rate) + " T/h" : "TBD"}</span></div>
+
+                                {/* Tabla miniatura del tarifario de la ruta activa */}
+                                {!isPrint && (
+                                    <div className="mt-3 pt-2 border-t border-emerald-200">
+                                        <div className={`text-[9px] font-bold uppercase mb-1 ${COLOR_SCHEME.contracts.text}`}>Tarifario SPCC por Bracket</div>
+                                        <div className="overflow-x-auto rounded border border-emerald-100 bg-white">
+                                            <table className="w-full text-[9px] border-collapse">
+                                                <thead>
+                                                    <tr className="bg-emerald-50 border-b border-emerald-100 text-emerald-800">
+                                                        <th className="p-1 font-bold text-left">Min (MT)</th>
+                                                        <th className="p-1 font-bold text-left">Max (MT)</th>
+                                                        <th className="p-1 font-bold text-right">Flete ($)</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100 font-mono">
+                                                    {(TARIFFS_MAP[destPort] || []).map((t, idx) => {
+                                                        const isActive = currentQty >= t.min && currentQty <= t.max;
+                                                        return (
+                                                            <tr key={idx} className={`${isActive ? 'bg-emerald-100 font-bold text-emerald-950' : 'text-slate-600'}`}>
+                                                                <td className="p-1">{formatNumber(t.min)}</td>
+                                                                <td className="p-1">{formatNumber(t.max)}</td>
+                                                                <td className="p-1 text-right">{formatCurrency(t.rate)}</td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
 
                     {/* Col 4: Límites Portuarios + Acciones */}
-                    <div className="flex-1 flex flex-col gap-4">
+                    <div className="flex-[0.7] flex flex-col gap-4">
                         {col4Header}
                         <div className={`border rounded-lg shadow-sm overflow-hidden ${COLOR_SCHEME.ports.cardBg} ${COLOR_SCHEME.ports.border} ${isPrint ? 'flex-1' : ''}`}>
                             <div className={`border-b px-3 py-2 flex items-center justify-between ${COLOR_SCHEME.ports.headerBg} ${COLOR_SCHEME.ports.border}`}>
