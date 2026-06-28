@@ -126,11 +126,10 @@ export const VoyageLedgerTest: React.FC = () => {
             { metric: "3. Días de Puerto",       key: "3. Días de Puerto (port_days)",  gk: scenarioResult.port_days_unit,          ptr: scenarioPetral.port_days, isCurr: false, db: "ports · Calculado",  ui: "Motor" },
             { metric: "4. Días de Mar",          key: "4. Días de Mar (sea_days)",      gk: scenarioResult.sea_days_unit,           ptr: scenarioPetral.sea_days,  isCurr: false, db: "routes · vessels",              ui: "Maestro Rutas / Flota" },
             { metric: "5. Costo Bunker",         key: "5. Costo Bunker (bunker)",       gk: scenarioResult.total_bunker_costs_unit, ptr: scenarioPetral.bunker_costs,    isCurr: true,  db: "vessels · bunker_prices",       ui: "Maestro Flota / Bunker" },
-            { metric: "6. Gastos Adicionales",   key: "Gastos Adicionales (excel)",     gk: 0,                                 ptr: scenarioPetral.additional_expenses || 0, isCurr: true, db: "N/A",                         ui: "Excel (Loading Master)" },
-            { metric: "7. Resultado Viaje",      key: "7. Resultado Viaje (voy_res)",   gk: scenarioResult.voyage_result,           ptr: scenarioPetral.voyage_result,   isCurr: true,  db: "contract_tariffs · agency_matrix", ui: "Tarifas / Costos Portuarios" },
-            { metric: "8. Duración Total",       key: "8. Duración Total (tot_dur)",    gk: scenarioResult.total_duration_unit,     ptr: scenarioPetral.total_duration,   isCurr: false, db: "Calculado",                     ui: "Motor" },
-            { metric: "9. TCE Diario",           key: "9. TCE Diario (tce_real)",       gk: scenarioResult.tce_real_unit,           ptr: scenarioPetral.tce_real,  isCurr: true,  db: "Calculado",                     ui: "Motor" },
-            { metric: "10. Utilidad Nom.",       key: "10. Utilidad Nom. (pl_vs_req)",  gk: scenarioResult.pl_vs_required_unit,     ptr: scenarioPetral.pl_vs_req, isCurr: true,  db: "vessels",                       ui: "Maestro Flota" },
+            { metric: "6. Resultado Viaje",      key: "7. Resultado Viaje (voy_res)",   gk: scenarioResult.voyage_result,           ptr: scenarioPetral.voyage_result,   isCurr: true,  db: "contract_tariffs · agency_matrix", ui: "Tarifas / Costos Portuarios" },
+            { metric: "7. Duración Total",       key: "8. Duración Total (tot_dur)",    gk: scenarioResult.total_duration_unit,     ptr: scenarioPetral.total_duration,   isCurr: false, db: "Calculado",                     ui: "Motor" },
+            { metric: "8. TCE Diario",           key: "9. TCE Diario (tce_real)",       gk: scenarioResult.tce_real_unit,           ptr: scenarioPetral.tce_real,  isCurr: true,  db: "Calculado",                     ui: "Motor" },
+            { metric: "9. Utilidad Nom.",       key: "10. Utilidad Nom. (pl_vs_req)",  gk: scenarioResult.pl_vs_required_unit,     ptr: scenarioPetral.pl_vs_req, isCurr: true,  db: "vessels",                       ui: "Maestro Flota" },
         ];
 
         return (
@@ -243,16 +242,16 @@ export const VoyageLedgerTest: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
+                <div className={`overflow-x-auto relative border-b border-slate-200 ${isPrint ? '' : 'overflow-y-auto max-h-[55vh]'}`}>
                     <table className="w-full text-left text-sm border-collapse table-fixed">
-                        <thead>
-                            <tr className="bg-slate-100 border-b border-slate-200 text-slate-700">
+                        <thead className="sticky top-0 z-10 shadow-sm">
+                            <tr className="bg-slate-100 border-b border-slate-300 text-slate-700">
                                 <th className="p-2 font-bold" style={{width:'13%'}}>Métrica</th>
+                                <th className="p-2 font-bold" style={{width:'25%'}}>Fórmula Algorítmica</th>
+                                <th className="p-2 font-bold" style={{width:'20%'}}>Reemplazo Numérico</th>
                                 <th className="p-2 font-bold text-center" style={{width:'9%'}}>GEEKSOFT (Motor)</th>
                                 <th className="p-2 font-bold text-center" style={{width:'9%'}}>PETRAL (Excel)</th>
                                 <th className="p-2 font-bold text-center" style={{width:'9%'}}>Delta (Δ)</th>
-                                <th className="p-2 font-bold" style={{width:'25%'}}>Fórmula Algorítmica</th>
-                                <th className="p-2 font-bold" style={{width:'20%'}}>Reemplazo Numérico</th>
                                 <th className="p-2 font-bold" style={{width:'15%'}}>Tabla Origen</th>
                             </tr>
                         </thead>
@@ -263,6 +262,8 @@ export const VoyageLedgerTest: React.FC = () => {
                                 return (
                                     <tr key={idx} className="hover:bg-slate-50 transition-colors">
                                         <td className="p-2 font-bold text-slate-800">{row.metric}</td>
+                                        <td className="p-2 font-mono text-xs text-slate-500 bg-slate-50">{colorizeFormula(auditObj.formula)}</td>
+                                        <td className="p-2 font-mono text-xs text-slate-700 bg-slate-50 font-semibold">{colorizeFormula(auditObj.values)}</td>
                                         <td className="p-2 font-mono text-petral-blue font-semibold">{row.isCurr ? formatCurrency(row.gk) : formatNumber(row.gk)}</td>
                                         <td className="p-2 font-mono text-slate-500">
                                             <div className="border-b border-slate-300 border-dashed h-5 w-24 mx-auto"></div>
@@ -270,14 +271,44 @@ export const VoyageLedgerTest: React.FC = () => {
                                         <td className="p-2">
                                             <div className="border-b border-slate-300 border-dashed h-5 w-20 mx-auto"></div>
                                         </td>
-                                        <td className="p-2 font-mono text-xs text-slate-500 bg-slate-50">{colorizeFormula(auditObj.formula)}</td>
-                                        <td className="p-2 font-mono text-xs text-slate-700 bg-slate-50 font-semibold">{colorizeFormula(auditObj.values)}</td>
                                         <td className="p-2 text-xs flex flex-wrap gap-1">{renderBadges(row.db)}</td>
                                     </tr>
                                 );
                             })}
                         </tbody>
                     </table>
+
+                    {/* Pie de firma / Acta Ultra Compacta (Visible siempre y dentro del scroll) */}
+                    <div className="flex mt-6 mb-2 px-2 flex-col text-sm page-break-inside-avoid">
+                        <div className="grid grid-cols-2 gap-12">
+                            {/* Panel Izquierdo: Responsable + Estado + Firma + Fecha */}
+                            <div className="flex flex-col gap-4">
+                                <div className="flex items-center gap-2">
+                                    <p className="font-bold whitespace-nowrap text-slate-700">Responsable:</p>
+                                    <div className="border-b border-slate-400 w-full h-4"></div>
+                                </div>
+                                <div className="flex items-center gap-6">
+                                    <p className="font-bold text-slate-700">Estado:</p>
+                                    <label className="flex items-center gap-2 text-slate-600"><div className="w-3 h-3 border border-slate-400"></div> Aprobado</label>
+                                    <label className="flex items-center gap-2 text-slate-600"><div className="w-3 h-3 border border-slate-400"></div> Con Errores</label>
+                                </div>
+                                <div className="flex gap-4 items-end">
+                                    <p className="font-bold text-slate-700 w-16">Firma:</p>
+                                    <div className="border-b border-slate-400 w-full h-6"></div>
+                                </div>
+                                <div className="flex gap-4 items-end">
+                                    <p className="font-bold text-slate-700 w-16">Fecha:</p>
+                                    <div className="border-b border-slate-400 w-full h-6"></div>
+                                </div>
+                            </div>
+
+                            {/* Panel Derecho: Comentarios ocupando toda la mitad */}
+                            <div className="flex flex-col">
+                                <p className="font-bold text-slate-700 mb-1">Comentarios / Justificación:</p>
+                                <div className="border border-slate-300 flex-1 min-h-[80px] bg-slate-50 rounded"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -405,11 +436,178 @@ export const VoyageLedgerTest: React.FC = () => {
                     </select>,
                     // col4Footer:
                     <button
-                        onClick={() => window.print()}
+                        onClick={() => {
+                            if (!runResult || !runResult.audit_trail) { alert('No hay datos cargados aún.'); return; }
+                            const audit_t = runResult.audit_trail;
+                            const fmtCur = (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v);
+                            const fmtNum = (v: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(v);
+                            const auditRowsPrint = [
+                                { metric: '1. Tasa Carga (MT/hr)',   key: '1. Tasa Carga (act_load)',      gk: runResult.audit_trail['1. Tasa Carga (act_load)']?.values?.includes('MIN') ? 500 : 0,  isCurr: false },
+                                { metric: '2. Tasa Descarga (MT/hr)',key: '2. Tasa Descarga (act_disch)', gk: runResult.audit_trail['2. Tasa Descarga (act_disch)']?.values?.includes('MIN') ? 300 : 0, isCurr: false },
+                                { metric: '3. Días de Puerto',       key: '3. Días de Puerto (port_days)',gk: runResult.port_days_unit,          isCurr: false },
+                                { metric: '4. Días de Mar',          key: '4. Días de Mar (sea_days)',    gk: runResult.sea_days_unit,           isCurr: false },
+                                { metric: '5. Costo Bunker',         key: '5. Costo Bunker (bunker)',     gk: runResult.total_bunker_costs_unit, isCurr: true  },
+                                { metric: '6. Resultado Viaje',      key: '7. Resultado Viaje (voy_res)', gk: runResult.voyage_result,           isCurr: true  },
+                                { metric: '7. Duración Total',       key: '8. Duración Total (tot_dur)',  gk: runResult.total_duration_unit,     isCurr: false },
+                                { metric: '8. TCE Diario',           key: '9. TCE Diario (tce_real)',     gk: runResult.tce_real_unit,           isCurr: true  },
+                                { metric: '9. Utilidad Nom.',        key: '10. Utilidad Nom. (pl_vs_req)',gk: runResult.pl_vs_required_unit,     isCurr: true  },
+                            ];
+                            const tableRows = auditRowsPrint.map(row => {
+                                const ao = audit_t[row.key] || { formula: 'N/A', values: 'N/A' };
+                                return `<tr>
+                                    <td style="padding:6px 8px;font-weight:bold;border-bottom:1px solid #e2e8f0">${row.metric}</td>
+                                    <td style="padding:6px 8px;font-family:monospace;font-size:11px;color:#64748b;background:#f8fafc;border-bottom:1px solid #e2e8f0">${ao.formula || 'N/A'}</td>
+                                    <td style="padding:6px 8px;font-family:monospace;font-size:11px;font-weight:600;background:#f8fafc;border-bottom:1px solid #e2e8f0">${ao.values || 'N/A'}</td>
+                                    <td style="padding:6px 8px;font-family:monospace;font-weight:600;color:#0ea5e9;text-align:center;border-bottom:1px solid #e2e8f0">${row.isCurr ? fmtCur(row.gk||0) : fmtNum(row.gk||0)}</td>
+                                    <td style="padding:6px 8px;text-align:center;border-bottom:1px solid #e2e8f0"><span style="display:inline-block;width:80px;border-bottom:1px dashed #94a3b8">&nbsp;</span></td>
+                                    <td style="padding:6px 8px;text-align:center;border-bottom:1px solid #e2e8f0"><span style="display:inline-block;width:60px;border-bottom:1px dashed #94a3b8">&nbsp;</span></td>
+                                </tr>`;
+                            }).join('');
+                            const [v, o, d] = selectedCase.split('-');
+                            const now = new Date();
+                            const fechaStr = now.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
+                            const ri = runResult.raw_inputs || {};
+                            const cardsHTML = `
+                            <div class="cards-grid">
+                                <div class="card card-blue">
+                                    <div class="card-header">🚢 Maestro Flota <span class="card-badge">vessels</span></div>
+                                    <div class="card-row"><span>Barco</span><strong>${v.replace('_',' ')}</strong></div>
+                                    <div class="card-row"><span>Intake Máx. (v_intake)</span><strong>${fmtNum(ri.vessel_max_load_intake_limit||0)} T</strong></div>
+                                    <div class="card-row"><span>Cap. Bombeo (v_pump)</span><strong>${fmtNum(ri.vessel_pump_discharge_rate||0)} T/h</strong></div>
+                                    <div class="card-row"><span>Velocidad (speed)</span><strong>${fmtNum(ri.vessel_speed||0)} kn</strong></div>
+                                    <div class="card-row"><span>TCE Requerido (tce_req)</span><strong>${fmtCur(ri.tce_required||0)}/d</strong></div>
+                                </div>
+                                <div class="card card-green">
+                                    <div class="card-header">📋 Reglas Comerciales <span class="card-badge">contracts</span></div>
+                                    <div class="card-row"><span>Cantidad (Q)</span><strong>${fmtNum(ri.quantity||0)} MT</strong></div>
+                                    <div class="card-row"><span>Flete Base (F)</span><strong>${fmtCur(ri.freight_rate||0)}/MT</strong></div>
+                                    <div class="card-row"><span>Tasa Carga Ctto (c_load)</span><strong>${ri.contract_agreed_load_rate ? fmtNum(ri.contract_agreed_load_rate)+' T/h' : 'TBD'}</strong></div>
+                                    <div class="card-row"><span>Tasa Desc. Ctto (c_disch)</span><strong>${ri.contract_agreed_discharge_rate ? fmtNum(ri.contract_agreed_discharge_rate)+' T/h' : 'TBD'}</strong></div>
+                                </div>
+                                <div class="card card-purple">
+                                    <div class="card-header">🗺️ Maestro Rutas <span class="card-badge">routes</span></div>
+                                    <div class="card-row"><span>Origen → Destino</span><strong>${o} → ${d}</strong></div>
+                                    <div class="card-row"><span>Distancia (dist)</span><strong>${fmtNum(ri.route_distance||0)} NM</strong></div>
+                                    <div class="card-row"><span>W Fct Laden</span><strong>${((ri.weather_factor_laden||0)*100)}%</strong></div>
+                                    <div class="card-row"><span>W Fct Ballast</span><strong>${((ri.weather_factor_ballast||0)*100)}%</strong></div>
+                                </div>
+                                <div class="card card-orange">
+                                    <div class="card-header">⚓ Límites Portuarios <span class="card-badge">ports</span></div>
+                                    <div class="card-row"><span>Lím. Carga Term. (t_load_rate)</span><strong>${fmtNum(ri.max_terminal_load_rate||0)} T/h</strong></div>
+                                    <div class="card-row"><span>Lím. Desc. Term. (p_disch_limit)</span><strong>${fmtNum(ri.port_max_discharge_limit||0)} T/h</strong></div>
+                                    <div class="card-row"><span>Overhead Origen (over_or)</span><strong>${fmtNum(ri.port_overhead_hours_origin||0)} H</strong></div>
+                                    <div class="card-row"><span>Overhead Destino (over_de)</span><strong>${fmtNum(ri.port_overhead_hours_dest||0)} H</strong></div>
+                                </div>
+                                <div class="card card-rose">
+                                    <div class="card-header">🏦 Costos Agencia <span class="card-badge">agency_matrix</span></div>
+                                    <div class="card-row"><span>Puerto Origen</span><strong>${o}</strong></div>
+                                    <div class="card-row"><span>Puerto Destino</span><strong>${d}</strong></div>
+                                    <div class="card-row"><span>Costo Port. (port_costs)</span><strong>${fmtCur(runResult.port_costs_unit||0)}</strong></div>
+                                    <div class="card-row"><span>Incluye: DA + Estiba</span><strong>✓</strong></div>
+                                </div>
+                                <div class="card card-amber">
+                                    <div class="card-header">⛽ Bunker <span class="card-badge">bunker_prices</span></div>
+                                    <div class="card-row"><span>IFO Consumo (ifo_tons)</span><strong>${fmtNum(ri.ifo_tons_per_day||0)} T/d</strong></div>
+                                    <div class="card-row"><span>MDO Consumo (mdo_tons)</span><strong>${fmtNum(ri.mdo_tons_per_day||0)} T/d</strong></div>
+                                    <div class="card-row"><span>Precio IFO (p_ifo)</span><strong>${fmtCur(ri.ifo_price||0)}/T</strong></div>
+                                    <div class="card-row"><span>Precio MDO (p_mdo)</span><strong>${fmtCur(ri.mdo_price||0)}/T</strong></div>
+                                </div>
+                            </div>`;
+                            const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+                            <title>Acta - ${v} ${o}-${d}</title>
+                            <style>
+                                @page { size: A4 landscape; margin: 10mm 12mm; }
+                                body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; color: #1e293b; margin: 0; }
+                                h1 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 3px 0; }
+                                h2 { font-size: 11px; color: #475569; margin: 0; font-weight: 500; }
+                                table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+                                thead th { background: #f1f5f9; padding: 5px 7px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 2px solid #334155; text-align: left; }
+                                .header-bar { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1e293b; padding-bottom: 7px; margin-bottom: 10px; }
+                                .badge { font-size: 9px; background: #1e293b; color: white; padding: 2px 7px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+                                .cards-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+                                .card { border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; }
+                                .card-header { padding: 5px 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; display: flex; justify-content: space-between; align-items: center; }
+                                .card-badge { font-size: 8px; font-weight: 700; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; }
+                                .card-row { display: flex; justify-content: space-between; padding: 3px 8px; font-size: 10px; border-top: 1px solid rgba(0,0,0,0.05); }
+                                .card-row span { color: #64748b; }
+                                .card-row strong { font-family: monospace; }
+                                .card-blue .card-header  { background: #dbeafe; color: #1e3a8a; }
+                                .card-blue .card-badge   { background: #bfdbfe; color: #1e3a8a; }
+                                .card-blue               { background: #eff6ff; }
+                                .card-green .card-header { background: #d1fae5; color: #064e3b; }
+                                .card-green .card-badge  { background: #a7f3d0; color: #064e3b; }
+                                .card-green              { background: #f0fdf4; }
+                                .card-purple .card-header{ background: #ede9fe; color: #4c1d95; }
+                                .card-purple .card-badge { background: #ddd6fe; color: #4c1d95; }
+                                .card-purple             { background: #f5f3ff; }
+                                .card-orange .card-header{ background: #ffedd5; color: #7c2d12; }
+                                .card-orange .card-badge { background: #fed7aa; color: #7c2d12; }
+                                .card-orange             { background: #fff7ed; }
+                                .card-rose .card-header  { background: #ffe4e6; color: #881337; }
+                                .card-rose .card-badge   { background: #fecdd3; color: #881337; }
+                                .card-rose               { background: #fff1f2; }
+                                .card-amber .card-header { background: #fef3c7; color: #78350f; }
+                                .card-amber .card-badge  { background: #fde68a; color: #78350f; }
+                                .card-amber              { background: #fffbeb; }
+                                .acta { border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; margin-top: 10px; background: #fafafa; }
+                                .acta-title { font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #475569; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
+                                .acta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+                                .field-row { margin-bottom: 8px; }
+                                .field-label { font-weight: 700; color: #334155; margin-bottom: 3px; font-size: 10px; }
+                                .field-line { border-bottom: 1px solid #94a3b8; height: 18px; width: 100%; }
+                                .check-row { display: flex; gap: 14px; align-items: center; margin-bottom: 8px; font-size: 10px; }
+                                .check-box { display: inline-block; width: 11px; height: 11px; border: 1px solid #64748b; vertical-align: middle; margin-right: 3px; }
+                                .comment-box { border: 1px solid #cbd5e1; height: 40px; background: white; border-radius: 4px; width: 100%; }
+                                -webkit-print-color-adjust: exact; print-color-adjust: exact;
+                            </style></head><body>
+                            <div class="header-bar">
+                                <div>
+                                    <h1>🧪 GEEKSOFT Voyage Ledger — Auditoría Matemática</h1>
+                                    <h2>Barco: <strong>${v.replace('_',' ')}</strong> &nbsp;|&nbsp; Ruta: <strong>${o} → ${d}</strong> &nbsp;|&nbsp; Período: 2026-07 &nbsp;|&nbsp; Generado: ${fechaStr}</h2>
+                                </div>
+                                <span class="badge">PETRAL · ACTA DE CONFORMIDAD</span>
+                            </div>
+                            ${cardsHTML}
+                            <table>
+                                <thead><tr>
+                                    <th style="width:13%">Métrica</th>
+                                    <th style="width:27%">Fórmula Algorítmica</th>
+                                    <th style="width:22%">Reemplazo Numérico</th>
+                                    <th style="width:12%;text-align:center">GEEKSOFT (Motor)</th>
+                                    <th style="width:13%;text-align:center">PETRAL (Excel)</th>
+                                    <th style="width:13%;text-align:center">Delta (Δ)</th>
+                                </tr></thead>
+                                <tbody>${tableRows}</tbody>
+                            </table>
+                            <div class="acta">
+                                <div class="acta-title">✍️ Acta de Conformidad Matemática — Firmas y Validación</div>
+                                <div class="acta-grid">
+                                    <div style="display:flex;flex-direction:column;gap:8px">
+                                        <div class="field-row"><div class="field-label">Responsable:</div><div class="field-line"></div></div>
+                                        <div class="check-row">
+                                            <span class="field-label">Estado:</span>
+                                            <span><span class="check-box"></span> Aprobado</span>
+                                            <span><span class="check-box"></span> Con Errores</span>
+                                        </div>
+                                        <div class="field-row"><div class="field-label">Firma:</div><div class="field-line"></div></div>
+                                        <div class="field-row"><div class="field-label">Fecha:</div><div class="field-line"></div></div>
+                                    </div>
+                                    <div style="display:flex;flex-direction:column;">
+                                        <div class="field-label">Comentarios / Justificación de divergencias:</div>
+                                        <div style="border:1px solid #cbd5e1;flex:1;min-height:70px;background:white;border-radius:4px;margin-top:4px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <script>window.onload = function(){ window.print(); }</script>
+                            </body></html>`;
+                            const pw = window.open('', '_blank', 'width=1100,height=750');
+                            if (pw) { pw.document.write(html); pw.document.close(); }
+                            else { alert('El navegador bloqueó la ventana emergente. Habilítala para este sitio.'); }
+                        }}
                         className="flex-grow flex flex-col items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-4 rounded-lg shadow-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.01]"
                     >
                         <span className="text-xl">🖨️</span>
-                        <span className="text-xs uppercase tracking-wider">Imprimir PDF (9 Escenarios)</span>
+                        <span className="text-xs uppercase tracking-wider">Imprimir Acta PDF</span>
                     </button>
                 )}
             </div>
