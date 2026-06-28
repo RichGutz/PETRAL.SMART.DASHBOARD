@@ -554,7 +554,7 @@ export const VoyageLedgerTest: React.FC = () => {
                             const fmtNum = (v: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(v);
                             const auditRowsPrint = [
                                 { metric: '1. Tasa Carga (MT/hr)',   key: '1. Tasa Carga (act_load)',      gk: runResult.audit_trail['1. Tasa Carga (act_load)']?.values?.includes('MIN') ? 500 : 0,  isCurr: false },
-                                { metric: '2. Tasa Descarga (MT/hr)',key: '2. Tasa Descarga (act_disch)', gk: runResult.audit_trail['2. Tasa Descarga (act_disch)']?.values?.includes('MIN') ? 300 : 0, isCurr: false },
+                                { metric: '2. Tasa Desc. (MT/hr)',   key: '2. Tasa Descarga (act_disch)', gk: runResult.audit_trail['2. Tasa Descarga (act_disch)']?.values?.includes('MIN') ? 300 : 0, isCurr: false },
                                 { metric: '3. Días de Puerto',       key: '3. Días de Puerto (port_days)',gk: runResult.port_days_unit,          isCurr: false },
                                 { metric: '4. Días de Mar',          key: '4. Días de Mar (sea_days)',    gk: runResult.sea_days_unit,           isCurr: false },
                                 { metric: '5. Costo Bunker',         key: '5. Costo Bunker (bunker)',     gk: runResult.total_bunker_costs_unit, isCurr: true  },
@@ -661,20 +661,19 @@ export const VoyageLedgerTest: React.FC = () => {
                                 .card-amber .card-badge  { background: #fde68a; color: #78350f; }
                                 .card-amber              { background: #fffbeb; }
                                 .acta { border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; margin-top: 10px; background: #fafafa; }
-                                .acta-title { font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #475569; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
+                                .acta-title { font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #475569; margin-bottom: 6px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
                                 .acta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-                                .field-row { margin-bottom: 8px; }
-                                .field-label { font-weight: 700; color: #334155; margin-bottom: 3px; font-size: 10px; }
-                                .field-line { border-bottom: 1px solid #94a3b8; height: 18px; width: 100%; }
-                                .check-row { display: flex; gap: 14px; align-items: center; margin-bottom: 8px; font-size: 10px; }
+                                .field-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+                                .field-label { font-weight: 700; color: #334155; font-size: 10px; white-space: nowrap; min-width: 60px; }
+                                .field-line { border-bottom: 1px solid #94a3b8; height: 16px; flex: 1; }
+                                .check-row { display: flex; gap: 14px; align-items: center; margin-bottom: 6px; font-size: 10px; }
                                 .check-box { display: inline-block; width: 11px; height: 11px; border: 1px solid #64748b; vertical-align: middle; margin-right: 3px; }
                                 .comment-box { border: 1px solid #cbd5e1; height: 40px; background: white; border-radius: 4px; width: 100%; }
                                 -webkit-print-color-adjust: exact; print-color-adjust: exact;
                             </style></head><body>
                             <div class="header-bar">
-                                <div>
-                                    <h1>🧪 GEEKSOFT Voyage Ledger — Auditoría Matemática</h1>
-                                    <h2>Barco: <strong>${v.replace('_',' ')}</strong> &nbsp;|&nbsp; Ruta: <strong>${o} → ${d}</strong> &nbsp;|&nbsp; Período: 2026-07 &nbsp;|&nbsp; Generado: ${fechaStr}</h2>
+                                <div style="flex:1">
+                                    <h1>GEEKSOFT Voyage Ledger — Auditoría Matemática &nbsp;|&nbsp; Barco: ${v.replace('_',' ')} &nbsp;|&nbsp; Ruta: ${o} → ${d} &nbsp;|&nbsp; Período: 2026-07 &nbsp;|&nbsp; Generado: ${fechaStr}</h1>
                                 </div>
                                 <span class="badge">PETRAL · ACTA DE CONFORMIDAD</span>
                             </div>
