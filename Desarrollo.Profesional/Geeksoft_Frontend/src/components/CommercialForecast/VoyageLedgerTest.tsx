@@ -41,6 +41,9 @@ export const VoyageLedgerTest: React.FC = () => {
     const [benchmarks, setBenchmarks] = useState<Record<string, any>>({});
     const [loading, setLoading] = useState(true);
     const [selectedCase, setSelectedCase] = useState("TABLONES-ILO-MATARANI");
+    const [quantityOverride, setQuantityOverride] = useState<Record<string, number>>({});
+    const [liveResult, setLiveResult] = useState<any>(null);
+    const [simulating, setSimulating] = useState(false);
 
     useEffect(() => {
         const testLines = [
@@ -72,12 +75,45 @@ export const VoyageLedgerTest: React.FC = () => {
         });
     }, []);
 
+    // Re-simular el escenario activo cuando cambia la cantidad o la ruta
+    useEffect(() => {
+        if (!data) return;
+        const [v, o, d] = selectedCase.split('-');
+        const qty = quantityOverride[v] || 13500;
+        setLiveResult(null); // reset mientras llega el nuevo resultado
+        setSimulating(true);
+        ForecastService.runSimulation({
+            start_date: '2026-07-01',
+            end_date: '2026-07-31',
+            projection_lines: [{
+                client_id: 'SPCC',
+                origin_port_id: o,
+                destination_port_id: d,
+                vessel_id: v,
+                month_index: '2026-07',
+                quantity: qty,
+                monthly_frequency: 1
+            }]
+        }).then((simRes: any) => {
+            const routeK = `${o}-${d}`;
+            setLiveResult(simRes.aggregated_data?.['SPCC']?.[routeK]?.[v]?.['2026-07'] || null);
+        }).catch((err: any) => {
+            console.error('re-sim error', err);
+        }).finally(() => setSimulating(false));
+    }, [selectedCase, quantityOverride]);
+
     if (loading) return <div className="p-8 text-center text-slate-500 font-semibold animate-pulse">Iniciando Motor de Auditoría...</div>;
     if (!data) return <div className="p-8 text-center text-red-500 font-semibold">Error al obtener datos.</div>;
 
     const [vessel, origin, dest] = selectedCase.split('-');
     const routeKey = `${origin}-${dest}`;
-    const runResult = data[routeKey]?.[vessel]?.['2026-07'];
+    const baseResult = data[routeKey]?.[vessel]?.['2026-07'];
+    const runResult = liveResult || baseResult;
+    // Max = tonelaje real del viaje (NOT la tasa de carga que es T/h)
+    const maxIntake = baseResult?.raw_inputs?.quantity || (vessel === 'CONCON_TRADER' ? 19000 : 13500);
+    const minIntake = 5000; // piso razonable de brackets
+    // Por defecto el input muestra el máximo real del barco
+    const currentQty = quantityOverride[vessel] ?? maxIntake;
 
     if (!runResult || !runResult.audit_trail) {
         return <div className="p-8 text-center text-red-500">Datos no encontrados para {selectedCase}</div>;
@@ -215,7 +251,31 @@ export const VoyageLedgerTest: React.FC = () => {
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.contracts.badge}`}>contracts</span>
                             </div>
                             <div className="p-3 flex flex-col gap-1.5 flex-1 justify-between">
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Cantidad (Q)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(scenarioResult.raw_inputs?.quantity || 0)} MT</span></div>
+                                <div className="flex justify-between items-center">
+                                    <span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>
+                                        Cantidad (Q) <span className="text-emerald-600 font-black normal-case">({formatNumber(minIntake)}–{formatNumber(maxIntake)} MT)</span>
+                                    </span>
+                                    {!isPrint ? (
+                                        <div className="flex items-center gap-1">
+                                            <input
+                                                type="number"
+                                                min={minIntake}
+                                                max={maxIntake}
+                                                step={100}
+                                                value={currentQty}
+                                                onChange={e => setQuantityOverride(prev => ({ ...prev, [vessel]: Number(e.target.value) }))}
+                                                onBlur={e => {
+                                                    const val = Math.max(minIntake, Math.min(maxIntake, Number(e.target.value)));
+                                                    setQuantityOverride(prev => ({ ...prev, [vessel]: val }));
+                                                }}
+                                                className="w-24 text-xs font-mono font-bold text-center bg-white border-2 border-emerald-400 rounded px-1 py-0.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                            />
+                                            <span className={`text-xs font-bold ${simulating ? 'text-amber-500 animate-pulse' : 'text-slate-500'}`}>MT{simulating ? ' ⟳' : ''}</span>
+                                        </div>
+                                    ) : (
+                                        <span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(currentQty)} MT</span>
+                                    )}
+                                </div>
                                 <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Flete Base (F)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.freight_rate || 0)}/MT</span></div>
                                 <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Tasa Carg Ctto (c_load)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_load_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_load_rate) + " T/h" : "TBD"}</span></div>
                                 <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Tasa Desc Ctto (c_disch)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_discharge_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_discharge_rate) + " T/h" : "TBD"}</span></div>
