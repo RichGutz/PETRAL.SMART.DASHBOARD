@@ -247,7 +247,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     const calcPct = (arr: number[]) => arr.map((v, i) => revenues[i] ? (v / revenues[i]) * 100 : 0);
                     const calcTotalPct = (totalVal: number, totalRev: number) => totalRev ? (totalVal / totalRev) * 100 : 0;
 
-                    const metrics = [
+                    const metrics: any[] = [
                         { name: "Viajes (freq)", values: trips, total: sum(trips), pct: null, totalPct: null, isCurrency: false, isTotal: false, isExpandable: true, rowKey, isExpanded },
                         { name: "Toneladas", values: tonsTotal, total: sum(tonsTotal), pct: null, totalPct: null, isCurrency: false, isTotal: false },
                         { name: "Gross Revenue", values: revenues, total: sum(revenues), pct: revenues.map(r => r ? 100 : 0), totalPct: sum(revenues) ? 100 : 0, isCurrency: true, isTotal: false },
@@ -493,11 +493,8 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             let running = 0;
             return arr.map(v => { running += v; return running; });
         };
-        const accumTrips = accumArray(globalTrips);
         const accumTons = accumArray(globalTons);
         const accumRevenues = accumArray(globalRevenues);
-        const accumPortCosts = accumArray(globalPortCosts);
-        const accumBunkerCosts = accumArray(globalBunkerCosts);
         const accumVoyageResult = accumArray(globalVoyageResult);
         const accumDemurrage = accumArray(globalDemurrage);
 

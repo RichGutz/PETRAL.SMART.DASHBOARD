@@ -14,9 +14,23 @@ VPS_PASS  = "Thiagutz061121@"
 
 DOMAIN    = "forecast.geeksoft.tech"
 APP_DIR   = "/opt/forecast_petral"
-IMG_FILE = r"C:\Users\rguti\.gemini\antigravity-ide\brain\f7f693a3-899b-4645-93cc-ffbc88e91e54\tanker_tablones_1782498428298.png"
-HTML_FILE = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.2\kickoff_petral.html"
+DIST_DIR  = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend\dist"
 CERTBOT_MAIL = "contacto@geeksoft.pe"
+
+import os
+
+def put_dir(sftp, localpath, remotepath):
+    try:
+        sftp.mkdir(remotepath)
+    except IOError:
+        pass
+    for item in os.listdir(localpath):
+        localitem = os.path.join(localpath, item)
+        remoteitem = remotepath + '/' + item
+        if os.path.isdir(localitem):
+            put_dir(sftp, localitem, remoteitem)
+        else:
+            sftp.put(localitem, remoteitem)
 
 def run(client, cmd, desc=""):
     print(f"\n[{desc}]")
@@ -41,19 +55,17 @@ def deploy():
         print("  >> Conexión SSH establecida ✓")
 
         # 1. Crear directorio en VPS
-        run(client, f"mkdir -p {APP_DIR}", "1. Crear directorio")
+        run(client, f"mkdir -p {APP_DIR} && rm -rf {APP_DIR}/*", "1. Preparar directorio")
 
-        # 2. Subir HTML via SFTP
-        print(f"\n[2. Subiendo kickoff_petral.html via SFTP]")
+        # 2. Subir carpeta dist via SFTP
+        print(f"\n[2. Subiendo carpeta dist via SFTP]")
         sftp = client.open_sftp()
-        remote_path = f"{APP_DIR}/index.html"
-        sftp.put(HTML_FILE, remote_path)
-        sftp.put(IMG_FILE, f"{APP_DIR}/tanker_tablones.png")
+        put_dir(sftp, DIST_DIR, APP_DIR)
         sftp.close()
-        print(f"  >> Archivo subido → {remote_path} ✓")
+        print(f"  >> Carpeta dist subida con éxito ✓")
 
         # 3. Permisos correctos
-        run(client, f"chmod 644 {APP_DIR}/index.html && chown -R www-data:www-data {APP_DIR} 2>/dev/null || true", "3. Permisos")
+        run(client, f"find {APP_DIR} -type f -exec chmod 644 {{}} \\; && find {APP_DIR} -type d -exec chmod 755 {{}} \\; && chown -R www-data:www-data {APP_DIR} 2>/dev/null || true", "3. Permisos")
 
         # 4. Configurar Nginx
         nginx_cfg = f"""server {{

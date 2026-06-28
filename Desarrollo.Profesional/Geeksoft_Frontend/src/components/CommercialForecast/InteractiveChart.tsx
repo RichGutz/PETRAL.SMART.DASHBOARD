@@ -473,7 +473,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         
         const series = [...seriesPri, ...seriesSec, ...globalSeries];
 
-        const getAxisFormatter = (metric: PlotMetric, isPct: boolean) => {
+        const getAxisFormatter = (metric: PlotMetric | 'gross_and_gross_plus_dem', isPct: boolean) => {
             if (isPct) return '{value}%';
             if (metric === 'viajes') return '{value}';
             if (metric === 'yield' || metric === 'yield_flete') return (v: number) => `$${v.toFixed(2)}`;
