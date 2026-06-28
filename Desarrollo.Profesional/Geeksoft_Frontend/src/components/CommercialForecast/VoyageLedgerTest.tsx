@@ -629,11 +629,11 @@ export const VoyageLedgerTest: React.FC = () => {
                             <style>
                                 @page { size: A4 landscape; margin: 10mm 12mm; }
                                 body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; color: #1e293b; margin: 0; }
-                                h1 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 3px 0; }
+                                h1 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; font-weight: 700; }
                                 h2 { font-size: 11px; color: #475569; margin: 0; font-weight: 500; }
-                                table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-                                thead th { background: #f1f5f9; padding: 5px 7px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 2px solid #334155; text-align: left; }
-                                .header-bar { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1e293b; padding-bottom: 7px; margin-bottom: 10px; }
+                                table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+                                thead th { background: #f1f5f9; padding: 4px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 2px solid #334155; text-align: left; }
+                                .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 5px; margin-bottom: 8px; }
                                 .badge { font-size: 9px; background: #1e293b; color: white; padding: 2px 7px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
                                 .cards-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
                                 .card { border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; }
@@ -660,14 +660,14 @@ export const VoyageLedgerTest: React.FC = () => {
                                 .card-amber .card-header { background: #fef3c7; color: #78350f; }
                                 .card-amber .card-badge  { background: #fde68a; color: #78350f; }
                                 .card-amber              { background: #fffbeb; }
-                                .acta { border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; margin-top: 10px; background: #fafafa; }
-                                .acta-title { font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #475569; margin-bottom: 6px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
-                                .acta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-                                .field-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-                                .field-label { font-weight: 700; color: #334155; font-size: 10px; white-space: nowrap; min-width: 60px; }
-                                .field-line { border-bottom: 1px solid #94a3b8; height: 16px; flex: 1; }
-                                .check-row { display: flex; gap: 14px; align-items: center; margin-bottom: 6px; font-size: 10px; }
-                                .check-box { display: inline-block; width: 11px; height: 11px; border: 1px solid #64748b; vertical-align: middle; margin-right: 3px; }
+                                .acta { border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 12px; margin-top: 6px; background: #fafafa; }
+                                .acta-title { font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #475569; margin-bottom: 4px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; }
+                                .acta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+                                .field-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+                                .field-label { font-weight: 700; color: #334155; font-size: 10px; white-space: nowrap; min-width: 70px; }
+                                .field-line { border-bottom: 1px solid #94a3b8; height: 14px; flex: 1; }
+                                .check-row { display: flex; gap: 14px; align-items: center; margin-bottom: 4px; font-size: 10px; }
+                                .check-box { display: inline-block; width: 10px; height: 10px; border: 1px solid #64748b; vertical-align: middle; margin-right: 3px; }
                                 .comment-box { border: 1px solid #cbd5e1; height: 40px; background: white; border-radius: 4px; width: 100%; }
                                 -webkit-print-color-adjust: exact; print-color-adjust: exact;
                             </style></head><body>
@@ -692,7 +692,7 @@ export const VoyageLedgerTest: React.FC = () => {
                             <div class="acta">
                                 <div class="acta-title">✍️ Acta de Conformidad Matemática — Firmas y Validación</div>
                                 <div class="acta-grid">
-                                    <div style="display:flex;flex-direction:column;gap:8px">
+                                    <div style="display:flex;flex-direction:column;gap:4px">
                                         <div class="field-row"><div class="field-label">Responsable:</div><div class="field-line"></div></div>
                                         <div class="check-row">
                                             <span class="field-label">Estado:</span>
