@@ -173,7 +173,7 @@ export const VoyageLedgerTest: React.FC = () => {
 
         const auditRows = [
             { metric: "1. Tasa Carga (MT/hr)",  key: "1. Tasa Carga (act_load)",       gk: scenarioResult.audit_trail["1. Tasa Carga (act_load)"]?.values?.includes('MIN') ? 500 : 0,  ptr: scenarioPetral.act_load,  isCurr: false, db: "contracts · vessels · ports", ui: "Contratos / Flota / Puertos" },
-            { metric: "2. Tasa Descarga (MT/hr)", key: "2. Tasa Descarga (act_disch)",  gk: scenarioResult.audit_trail["2. Tasa Descarga (act_disch)"]?.values?.includes('MIN') ? 300 : 0, ptr: scenarioPetral.act_disch, isCurr: false, db: "contracts · vessels · ports", ui: "Contratos / Flota / Puertos" },
+            { metric: "2. Tasa Desc. (MT/hr)", key: "2. Tasa Descarga (act_disch)",  gk: scenarioResult.audit_trail["2. Tasa Descarga (act_disch)"]?.values?.includes('MIN') ? 300 : 0, ptr: scenarioPetral.act_disch, isCurr: false, db: "contracts · vessels · ports", ui: "Contratos / Flota / Puertos" },
             { metric: "3. Días de Puerto",       key: "3. Días de Puerto (port_days)",  gk: scenarioResult.port_days_unit,          ptr: scenarioPetral.port_days, isCurr: false, db: "ports · Calculado",  ui: "Motor" },
             { metric: "4. Días de Mar",          key: "4. Días de Mar (sea_days)",      gk: scenarioResult.sea_days_unit,           ptr: scenarioPetral.sea_days,  isCurr: false, db: "routes · vessels",              ui: "Maestro Rutas / Flota" },
             { metric: "5. Costo Bunker",         key: "5. Costo Bunker (bunker)",       gk: scenarioResult.total_bunker_costs_unit, ptr: scenarioPetral.bunker_costs,    isCurr: true,  db: "vessels · bunker_prices",       ui: "Maestro Flota / Bunker" },
