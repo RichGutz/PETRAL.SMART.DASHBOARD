@@ -401,6 +401,8 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             const totalClientTons = sum(clientTonsTotal);
             const clientYield = clientTonsTotal.map((tons, i) => tons ? clientGrossPlusDem[i] / tons : 0);
             const totalClientYield = totalClientTons ? totalGrossPlusDem / totalClientTons : 0;
+            const clientYieldFlete = clientTonsTotal.map((tons, i) => tons ? clientGrossRevenue[i] / tons : 0);
+            const totalClientYieldFlete = totalClientTons ? sum(clientGrossRevenue) / totalClientTons : 0;
 
             const subMetrics = [
                 { name: "Gross Revenue", values: clientGrossRevenue, total: sum(clientGrossRevenue), pct: clientGrossRevenue.map(r => r ? 100 : 0), totalPct: sum(clientGrossRevenue) ? 100 : 0, isCurrency: true, isTotal: false },
@@ -408,6 +410,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                 { name: "Demurrage", values: clientDemurrage, total: sum(clientDemurrage), pct: clientCalcPct(clientDemurrage), totalPct: clientCalcTotalPct(sum(clientDemurrage), sum(clientGrossRevenue)), isCurrency: true, isTotal: false },
                 { name: "Toneladas", values: clientTonsTotal, total: totalClientTons, pct: null, totalPct: null, isCurrency: false, isTotal: false },
                 { name: "Gross + Demurrage", values: clientGrossPlusDem, total: totalGrossPlusDem, pct: clientCalcPct(clientGrossPlusDem), totalPct: clientCalcTotalPct(totalGrossPlusDem, sum(clientGrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "Yield Flete (USD/MT)", values: clientYieldFlete, total: totalClientYieldFlete, pct: null, totalPct: null, isCurrency: true, isTotal: true },
                 { name: "Yield (USD/MT)", values: clientYield, total: totalClientYield, pct: null, totalPct: null, isCurrency: true, isTotal: true }
             ];
 
@@ -449,6 +452,8 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const totalGlobalTons = sum(globalTons);
         const globalYield = globalTons.map((tons, i) => tons ? globalGrossPlusDem[i] / tons : 0);
         const totalGlobalYield = totalGlobalTons ? totalGlobalGrossPlusDem / totalGlobalTons : 0;
+        const globalYieldFlete = globalTons.map((tons, i) => tons ? globalRevenues[i] / tons : 0);
+        const totalGlobalYieldFlete = totalGlobalTons ? sum(globalRevenues) / totalGlobalTons : 0;
 
         const globalMetrics = [
             { name: "Gross Revenue", values: globalRevenues, total: sum(globalRevenues), pct: globalRevenues.map(r => r ? 100 : 0), totalPct: sum(globalRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
@@ -456,6 +461,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             { name: "Demurrage", values: globalDemurrage, total: sum(globalDemurrage), pct: globalCalcPct(globalDemurrage), totalPct: globalCalcTotalPct(sum(globalDemurrage), sum(globalRevenues)), isCurrency: true, isTotal: false },
             { name: "Toneladas", values: globalTons, total: totalGlobalTons, pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Gross + Demurrage", values: globalGrossPlusDem, total: totalGlobalGrossPlusDem, pct: globalCalcPct(globalGrossPlusDem), totalPct: globalCalcTotalPct(totalGlobalGrossPlusDem, sum(globalRevenues)), isCurrency: true, isTotal: false },
+            { name: "Yield Flete (USD/MT)", values: globalYieldFlete, total: totalGlobalYieldFlete, pct: null, totalPct: null, isCurrency: true, isTotal: true },
             { name: "Yield (USD/MT)", values: globalYield, total: totalGlobalYield, pct: null, totalPct: null, isCurrency: true, isTotal: true }
         ];
 
@@ -500,6 +506,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
         const accumGrossPlusDem = accumRevenues.map((rev, i) => rev + (accumDemurrage[i] || 0));
         const accumYield = accumTons.map((tons, i) => tons ? accumGrossPlusDem[i] / tons : 0);
+        const accumYieldFlete = accumTons.map((tons, i) => tons ? accumRevenues[i] / tons : 0);
 
         const accumMetrics = [
             { name: "Gross Revenue", values: accumRevenues, total: lastVal(accumRevenues), pct: accumRevenues.map(r => r ? 100 : 0), totalPct: sum(accumRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
@@ -507,6 +514,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             { name: "Demurrage", values: accumDemurrage, total: lastVal(accumDemurrage), pct: accumCalcPct(accumDemurrage), totalPct: globalCalcTotalPct(lastVal(accumDemurrage), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
             { name: "Toneladas", values: accumTons, total: lastVal(accumTons), pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Gross + Demurrage", values: accumGrossPlusDem, total: lastVal(accumGrossPlusDem), pct: accumCalcPct(accumGrossPlusDem), totalPct: globalCalcTotalPct(lastVal(accumGrossPlusDem), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
+            { name: "Yield Flete (USD/MT)", values: accumYieldFlete, total: lastVal(accumYieldFlete), pct: null, totalPct: null, isCurrency: true, isTotal: true },
             { name: "Yield (USD/MT)", values: accumYield, total: lastVal(accumYield), pct: null, totalPct: null, isCurrency: true, isTotal: true }
         ];
 
@@ -728,7 +736,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                         </span>
                                                     ) : (
                                                         <span className="font-medium">
-                                                            {row.metric.name === "Yield (USD/MT)" ? formatYield(v) : formatCurrency(v)}
+                                                            {row.metric.name === "Yield (USD/MT)" || row.metric.name === "Yield Flete (USD/MT)" ? formatYield(v) : formatCurrency(v)}
                                                         </span>
                                                     )}
                                                 </div>
@@ -749,7 +757,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                 </span>
                                             ) : (
                                                 <span className="font-bold">
-                                                    {row.metric.name === "Yield (USD/MT)" ? formatYield(row.metric.total) : formatCurrency(row.metric.total)}
+                                                    {row.metric.name === "Yield (USD/MT)" || row.metric.name === "Yield Flete (USD/MT)" ? formatYield(row.metric.total) : formatCurrency(row.metric.total)}
                                                 </span>
                                             )}
                                         </div>

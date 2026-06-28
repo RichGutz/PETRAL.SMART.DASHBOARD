@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
 
 interface InteractiveChartProps {
@@ -6,12 +6,12 @@ interface InteractiveChartProps {
     months: string[];
     demurragePct?: string;
     showDemurrage?: boolean;
-    excludedDemurrages?: Record<string, boolean>;
+    excludedDemurrages?: string[];
     customDemurrages?: Record<string, Record<number, string>>;
 }
 
 type GroupBy = 'vessel' | 'route' | 'client' | 'petral';
-type PlotMetric = 'viajes' | 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'total_cargo' | 'demurrage' | 'gross_plus_dem' | 'yield' | 'none';
+type PlotMetric = 'viajes' | 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'total_cargo' | 'demurrage' | 'gross_plus_dem' | 'yield' | 'yield_flete' | 'none';
 
 const getHexColor = (name: string, type: GroupBy) => {
     if (type === 'petral') return '#0089CF'; // Petral Blue (RGB 0-137-207)
@@ -42,7 +42,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     months,
     demurragePct = '',
     showDemurrage = false,
-    excludedDemurrages = {},
+    excludedDemurrages = [],
     customDemurrages = {}
 }) => {
     const [groupBy, setGroupBy] = useState<GroupBy>('vessel');
@@ -60,6 +60,32 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     const [isSecondaryCumulativeSeries, setIsSecondaryCumulativeSeries] = useState<boolean>(false);
     const [isSecondaryCumulativeGlobal, setIsSecondaryCumulativeGlobal] = useState<boolean>(false);
     const [isSecondaryPercentage, setIsSecondaryPercentage] = useState<boolean>(false);
+
+    const [isPriOpen, setIsPriOpen] = useState<boolean>(false);
+    const [isSecOpen, setIsSecOpen] = useState<boolean>(false);
+
+    // Label settings
+    const [primaryLabelPos, setPrimaryLabelPos] = useState<'inside' | 'top' | 'none'>('inside');
+    const [primaryLabelColor, setPrimaryLabelColor] = useState<'#ffffff' | '#000000'>('#ffffff');
+    const [secondaryLabelPos, setSecondaryLabelPos] = useState<'inside' | 'top' | 'none'>('none');
+    const [secondaryLabelColor, setSecondaryLabelColor] = useState<'#ffffff' | '#000000'>('#000000');
+
+    // Filter popovers
+    const [isClientFilterOpen, setIsClientFilterOpen] = useState(false);
+    const [isRouteFilterOpen, setIsRouteFilterOpen] = useState(false);
+    const [isVesselFilterOpen, setIsVesselFilterOpen] = useState(false);
+
+    useEffect(() => {
+        const handleOutsideClick = () => {
+            setIsPriOpen(false);
+            setIsSecOpen(false);
+            setIsClientFilterOpen(false);
+            setIsRouteFilterOpen(false);
+            setIsVesselFilterOpen(false);
+        };
+        document.addEventListener('click', handleOutsideClick);
+        return () => document.removeEventListener('click', handleOutsideClick);
+    }, []);
 
     const filterOptions = useMemo(() => {
         const clients = new Set<string>();
@@ -98,8 +124,10 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         // For Yield Calculation
         const totalTonsMap: { [key: string]: { [month: string]: number } } = {};
         const totalGrossDemMap: { [key: string]: { [month: string]: number } } = {};
+        const totalGrossRevenueMap: { [key: string]: { [month: string]: number } } = {};
         const globalTonsMap: { [month: string]: number } = {};
         const globalGrossDemMap: { [month: string]: number } = {};
+        const globalGrossRevenueMap: { [month: string]: number } = {};
 
         const getMetricLabel = (m: PlotMetric | 'gross_and_gross_plus_dem') => {
             switch (m) {
@@ -113,6 +141,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 case 'gross_plus_dem': return 'Gross + Demurrage';
                 case 'gross_and_gross_plus_dem': return 'Gross & Gross+Dem';
                 case 'yield': return 'Yield (USD/MT)';
+                case 'yield_flete': return 'Yield Flete (USD/MT)';
                 case 'none': return '';
                 default: return m;
             }
@@ -132,9 +161,9 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
             const revenue = metrics['net_income'] || 0;
             
-            if (m === 'demurrage' || m === 'gross_plus_dem' || m === 'yield') {
+            if (m === 'demurrage' || m === 'gross_plus_dem' || m === 'yield' || m === 'yield_flete') {
                 const rowKey = `${client}-${route}-${vessel}`;
-                const isDemurrageExcluded = !!excludedDemurrages[rowKey];
+                const isDemurrageExcluded = excludedDemurrages.includes(rowKey);
                 const isDemurrageVisible = showDemurrage && demurragePct !== '' && !isDemurrageExcluded;
                 
                 let demurrage = 0;
@@ -150,7 +179,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 if (m === 'demurrage') return demurrage;
                 if (m === 'gross_plus_dem') return revenue + demurrage;
                 // Yield is handled separately because it's a ratio, but we return 0 here to avoid NaNs if directly fetched
-                if (m === 'yield') return 0; 
+                if (m === 'yield' || m === 'yield_flete') return 0; 
             }
 
             return metrics[m] || 0;
@@ -177,15 +206,21 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             seriesMapSec2[key] = {};
                             totalTonsMap[key] = {};
                             totalGrossDemMap[key] = {};
+                            totalGrossRevenueMap[key] = {};
                         }
                         
                         // Accumulate base variables for Yield
                         const tons = getMetricValue(metrics, 'total_cargo', client, route, vessel, month);
                         const grossDem = getMetricValue(metrics, 'gross_plus_dem', client, route, vessel, month);
+                        const grossRev = getMetricValue(metrics, 'net_income', client, route, vessel, month);
+                        
                         totalTonsMap[key][month] = (totalTonsMap[key][month] || 0) + tons;
                         totalGrossDemMap[key][month] = (totalGrossDemMap[key][month] || 0) + grossDem;
+                        totalGrossRevenueMap[key][month] = (totalGrossRevenueMap[key][month] || 0) + grossRev;
+                        
                         globalTonsMap[month] = (globalTonsMap[month] || 0) + tons;
                         globalGrossDemMap[month] = (globalGrossDemMap[month] || 0) + grossDem;
+                        globalGrossRevenueMap[month] = (globalGrossRevenueMap[month] || 0) + grossRev;
                         
                         if (primaryMetric === 'gross_and_gross_plus_dem') {
                             const priResult1 = getMetricValue(metrics, 'net_income', client, route, vessel, month);
@@ -236,10 +271,14 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         ) => {
             if (metric === 'none') return [];
             
+            const labelPos = yAxisIndex === 0 ? primaryLabelPos : secondaryLabelPos;
+            const labelColor = yAxisIndex === 0 ? primaryLabelColor : secondaryLabelColor;
+            
             const grandTotal = Object.values(totalMap).reduce((a: any, b: any) => a + b, 0) as number;
             
             // For Yield, we use the specific maps instead of seriesMap
-            const baseMap = metric === 'yield' ? totalGrossDemMap : seriesMap;
+            const isYield = metric === 'yield' || metric === 'yield_flete';
+            const baseMap = metric === 'yield' ? totalGrossDemMap : (metric === 'yield_flete' ? totalGrossRevenueMap : seriesMap);
             
             return Object.entries(baseMap).map(([name, mData]: [string, any]) => {
                 let runningTotal = 0;
@@ -260,24 +299,24 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                     let finalVal = isCumulative ? runningTotal : val;
                     let finalTot = isCumulative ? runningTotalOfTotals : tot;
 
-                    if (metric === 'yield') {
+                    if (isYield) {
                         const localTons = totalTonsMap[name]?.[m] || 0;
-                        const localGrossDem = val; // since baseMap is totalGrossDemMap
+                        const localValue = val;
                         runningTons += localTons;
-                        runningGrossDem += localGrossDem;
-                        finalVal = isCumulative ? (runningTons ? runningGrossDem / runningTons : 0) : (localTons ? localGrossDem / localTons : 0);
+                        runningGrossDem += localValue;
+                        finalVal = isCumulative ? (runningTons ? runningGrossDem / runningTons : 0) : (localTons ? localValue / localTons : 0);
                         
                         const globTons = globalTonsMap[m] || 0;
-                        const globGrossDem = globalGrossDemMap[m] || 0;
+                        const globValue = metric === 'yield' ? globalGrossDemMap[m] : globalGrossRevenueMap[m];
                         globalRunningTons += globTons;
-                        globalRunningGrossDem += globGrossDem;
-                        finalTot = isCumulative ? (globalRunningTons ? globalRunningGrossDem / globalRunningTons : 0) : (globTons ? globGrossDem / globTons : 0);
+                        globalRunningGrossDem += globValue;
+                        finalTot = isCumulative ? (globalRunningTons ? globalRunningGrossDem / globalRunningTons : 0) : (globTons ? globValue / globTons : 0);
                     }
 
                     const pct = isCumulative ? (grandTotal ? (finalVal / grandTotal) * 100 : 0) : (finalTot ? (finalVal / finalTot) * 100 : 0);
                     
                     return {
-                        value: isPercentage && metric !== 'yield' ? pct : finalVal,
+                        value: isPercentage && !isYield ? pct : finalVal,
                         pct: pct,
                         rawVal: finalVal
                     };
@@ -304,10 +343,9 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                     },
                     lineStyle: graphType === 'line' ? { width: 3, type: yAxisIndex === 1 ? 'dashed' : 'solid' } : undefined,
                     label: {
-                        show: isBar,
-                        position: 'inside',
+                        show: labelPos !== 'none',
+                        position: labelPos === 'none' ? undefined : labelPos,
                         formatter: (params: any) => {
-                            if (!isBar) return '';
                             const pct = params.data.pct;
                             if (isPercentage && pct < 4) return ''; 
                             if (!isPercentage && params.data.value === 0) return '';
@@ -317,11 +355,12 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             } else {
                                 const val = params.data.value;
                                 if (metric === 'viajes') return val.toString();
+                                if (metric === 'yield' || metric === 'yield_flete') return `$${val.toFixed(2)}`;
                                 if (metric === 'total_cargo') return `${(val/1000).toFixed(0)}k`;
                                 return val >= 1000 ? `$${(val/1000).toFixed(0)}k` : `$${val.toFixed(0)}`;
                             }
                         },
-                        color: '#ffffff',
+                        color: labelColor,
                         fontWeight: 'bold',
                         fontSize: 10
                     }
@@ -403,7 +442,24 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                     symbolSize: 8,
                     lineStyle: { width: 3, type: 'dashed' },
                     data: globalData,
-                    label: { show: false }
+                    label: {
+                        show: secondaryLabelPos !== 'none',
+                        position: secondaryLabelPos === 'none' ? undefined : secondaryLabelPos,
+                        formatter: (params: any) => {
+                            if (isSecondaryPercentage) {
+                                return `${params.data.pct.toFixed(1)}%`;
+                            } else {
+                                const val = params.data.value;
+                                if (secondaryMetric === 'viajes') return val.toString();
+                                if (secondaryMetric === 'yield' || secondaryMetric === 'yield_flete') return `$${val.toFixed(2)}`;
+                                if (secondaryMetric === 'total_cargo') return `${(val/1000).toFixed(0)}k`;
+                                return val >= 1000 ? `$${(val/1000).toFixed(0)}k` : `$${val.toFixed(0)}`;
+                            }
+                        },
+                        color: secondaryLabelColor,
+                        fontWeight: 'bold',
+                        fontSize: 10
+                    }
                 };
             };
             
@@ -420,7 +476,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         const getAxisFormatter = (metric: PlotMetric, isPct: boolean) => {
             if (isPct) return '{value}%';
             if (metric === 'viajes') return '{value}';
-            if (metric === 'yield') return (v: number) => `$${v.toFixed(1)}`;
+            if (metric === 'yield' || metric === 'yield_flete') return (v: number) => `$${v.toFixed(2)}`;
             if (metric === 'total_cargo') return (v: number) => `${(v/1000).toFixed(0)}k`;
             return (v: number) => `$${(v/1000).toFixed(0)}k`;
         };
@@ -437,11 +493,11 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                         const isPct = isSec ? isSecondaryPercentage : false;
                         
                         let valStr = '';
-                        if (isPct && m !== 'yield') {
+                        if (isPct && m !== 'yield' && m !== 'yield_flete') {
                             valStr = `${p.value.toFixed(1)}% (${p.data.rawVal.toLocaleString()})`;
                         } else {
                             if (m === 'viajes') valStr = p.value.toString();
-                            else if (m === 'yield') valStr = `$${p.value.toFixed(2)}`;
+                            else if (m === 'yield' || m === 'yield_flete') valStr = `$${p.value.toFixed(2)}`;
                             else if (m === 'total_cargo') valStr = `${Math.round(p.value).toLocaleString()} MT`;
                             else valStr = `$${Math.round(p.value).toLocaleString()}`;
                         }
@@ -490,78 +546,221 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             series,
             color: ['#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#14B8A6', '#10B981']
         };
-    }, [data, groupBy, months, filterClient, filterRoute, filterVessel, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryCumulativeGlobal, isSecondaryPercentage, demurragePct, showDemurrage, excludedDemurrages, customDemurrages]);
+    }, [data, groupBy, months, filterClient, filterRoute, filterVessel, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryCumulativeGlobal, isSecondaryPercentage, demurragePct, showDemurrage, excludedDemurrages, customDemurrages, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
 
     if (!data || !data.aggregated_data || months.length === 0) return null;
 
     const metricOptions = [
-        { value: 'none', label: '--- Ninguno ---' },
-        { value: 'voyage_result', label: 'Voyage Result' },
-        { value: 'net_income', label: 'Gross Revenue' },
-        { value: 'demurrage', label: 'Demurrage' },
-        { value: 'gross_plus_dem', label: 'Gross + Demurrage' },
-        { value: 'gross_and_gross_plus_dem', label: 'Gross & Gross+Dem' },
-        { value: 'yield', label: 'Yield (USD/MT)' },
-        { value: 'total_port_costs', label: 'Port Costs' },
-        { value: 'total_bunker_costs', label: 'Bunker Costs' },
-        { value: 'total_cargo', label: 'Toneladas' },
-        { value: 'viajes', label: 'Viajes' }
+        { value: 'none', label: 'Ninguno', icon: '🚫', desc: 'No graficar' },
+        { value: 'voyage_result', label: 'Voyage Result', icon: '💰', desc: 'USD / Resultado Viaje' },
+        { value: 'net_income', label: 'Gross Revenue', icon: '💸', desc: 'USD / Flete Bruto' },
+        { value: 'demurrage', label: 'Demurrage', icon: '⏳', desc: 'USD / Estadía' },
+        { value: 'gross_plus_dem', label: 'Gross + Demurrage', icon: '📊', desc: 'USD / Total Bruto' },
+        { value: 'gross_and_gross_plus_dem', label: 'Gross & Gross+Dem', icon: '📈', desc: 'USD / Comparativa' },
+        { value: 'yield', label: 'Yield (USD/MT)', icon: '🏆', desc: 'USD/MT / Rendimiento Total' },
+        { value: 'yield_flete', label: 'Yield Flete (USD/MT)', icon: '🏅', desc: 'USD/MT / Rendimiento Flete' },
+        { value: 'total_port_costs', label: 'Port Costs', icon: '⚓', desc: 'USD / Gastos Puerto' },
+        { value: 'total_bunker_costs', label: 'Bunker Costs', icon: '⛽', desc: 'USD / Combustible' },
+        { value: 'total_cargo', label: 'Toneladas', icon: '🚢', desc: 'MT / Carga Total' },
+        { value: 'viajes', label: 'Viajes', icon: '📅', desc: 'freq / Cantidad Viajes' }
     ];
+
+    const renderCustomDropdown = (
+        selectedVal: string, 
+        onSelect: (val: string) => void, 
+        isOpen: boolean, 
+        setIsOpen: (open: boolean) => void,
+        colorClass: string,
+        isSecondary: boolean
+    ) => {
+        const selectedOption = metricOptions.find(o => o.value === selectedVal) || metricOptions[0];
+        
+        return (
+            <div className="relative w-full" onClick={(e) => e.stopPropagation()}>
+                <button 
+                    onClick={() => {
+                        if (isSecondary) {
+                            setIsPriOpen(false);
+                            setIsOpen(!isOpen);
+                        } else {
+                            setIsSecOpen(false);
+                            setIsOpen(!isOpen);
+                        }
+                    }}
+                    className="w-full flex items-center justify-between gap-1 px-2 py-1.5 text-xs font-bold bg-white border border-slate-200 rounded hover:border-slate-350 focus:outline-none transition-all cursor-pointer text-slate-700"
+                >
+                    <div className="flex items-center gap-1.5 truncate">
+                        <span className="text-sm shrink-0">{selectedOption.icon}</span>
+                        <span className="truncate">{selectedOption.label}</span>
+                    </div>
+                    <span className="text-[9px] text-slate-400 shrink-0">{isOpen ? '▲' : '▼'}</span>
+                </button>
+
+                {isOpen && (
+                    <div className="absolute left-[208px] top-1/2 -translate-y-1/2 bg-white border border-slate-200 rounded-lg shadow-xl z-50 w-[420px] p-2 grid grid-cols-2 gap-1.5 animate-in fade-in slide-in-from-left-2 duration-150">
+                        <div className="col-span-2 px-1 py-0.5 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
+                            <span>Métricas ({isSecondary ? 'Eje Secundario' : 'Eje Primario'})</span>
+                            <button onClick={() => setIsOpen(false)} className="text-[11px] text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer">✕</button>
+                        </div>
+                        {metricOptions.map((opt) => {
+                            const isSel = opt.value === selectedVal;
+                            if (!isSecondary && opt.value === 'none') return null;
+                            
+                            return (
+                                <button
+                                    key={opt.value}
+                                    onClick={() => {
+                                        onSelect(opt.value);
+                                        setIsOpen(false);
+                                    }}
+                                    className={`text-left p-1.5 flex flex-col gap-0.5 rounded hover:bg-slate-50 transition-all cursor-pointer border ${
+                                        isSel 
+                                            ? (colorClass === 'blue' ? 'bg-blue-50/70 border-blue-200 hover:bg-blue-50' : 'bg-emerald-50/70 border-emerald-200 hover:bg-emerald-50') 
+                                            : 'border-slate-100/50 bg-slate-50/20'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-sm shrink-0">{opt.icon}</span>
+                                        <span className={`text-[11px] ${isSel ? 'font-bold' : 'font-semibold'} ${isSel ? (colorClass === 'blue' ? 'text-blue-900' : 'text-emerald-900') : 'text-slate-700'} truncate`}>
+                                            {opt.label}
+                                        </span>
+                                    </div>
+                                    <span className="text-[9px] text-slate-400 font-medium pl-5 truncate block">
+                                        {opt.desc}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const renderFilterDropdown = (
+        selectedVal: string, 
+        onSelect: (val: string) => void, 
+        optionsList: string[],
+        isOpen: boolean, 
+        setIsOpen: (open: boolean) => void,
+        title: string
+    ) => {
+        return (
+            <div className="relative flex-1" onClick={(e) => e.stopPropagation()}>
+                <button 
+                    onClick={() => {
+                        setIsClientFilterOpen(false);
+                        setIsRouteFilterOpen(false);
+                        setIsVesselFilterOpen(false);
+                        setIsPriOpen(false);
+                        setIsSecOpen(false);
+                        setIsOpen(!isOpen);
+                    }}
+                    className="w-full flex items-center justify-between gap-1 px-2 py-1.5 text-xs bg-white border border-slate-200 rounded hover:border-slate-350 focus:outline-none transition-all cursor-pointer text-slate-700 font-bold"
+                >
+                    <span className="truncate">{selectedVal === 'ALL' ? 'Todos' : selectedVal}</span>
+                    <span className="text-[8px] text-slate-400 shrink-0">{isOpen ? '▲' : '▼'}</span>
+                </button>
+
+                {isOpen && (
+                    <div className="absolute left-[130px] top-1/2 -translate-y-1/2 bg-white border border-slate-200 rounded-lg shadow-xl z-50 w-[240px] max-h-[220px] overflow-y-auto p-1.5 flex flex-col gap-0.5 animate-in fade-in slide-in-from-left-2 duration-150">
+                        <div className="px-2 py-1 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
+                            <span>Filtrar {title}</span>
+                            <button onClick={() => setIsOpen(false)} className="text-[10px] text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer">✕</button>
+                        </div>
+                        <button
+                            onClick={() => {
+                                onSelect('ALL');
+                                setIsOpen(false);
+                            }}
+                            className={`text-left text-[11px] p-1.5 rounded transition-all cursor-pointer border ${
+                                selectedVal === 'ALL' 
+                                    ? 'bg-blue-50 border-blue-200 font-bold text-blue-900' 
+                                    : 'border-transparent hover:bg-slate-50 font-medium text-slate-600'
+                            }`}
+                        >
+                            Todos
+                        </button>
+                        {optionsList.map((opt) => {
+                            const isSel = opt === selectedVal;
+                            return (
+                                <button
+                                    key={opt}
+                                    onClick={() => {
+                                        onSelect(opt);
+                                        setIsOpen(false);
+                                    }}
+                                    className={`text-left text-[11px] p-1.5 rounded transition-all cursor-pointer border truncate ${
+                                        isSel 
+                                            ? 'bg-blue-50 border-blue-200 font-bold text-blue-900' 
+                                            : 'border-transparent hover:bg-slate-50 font-medium text-slate-600'
+                                    }`}
+                                >
+                                    {opt}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     return (
         <div className="w-full bg-white pt-6 pb-2 px-6 shadow-sm rounded-b-lg flex flex-col flex-1 relative min-h-[calc(100vh-220px)]">
             <div className="absolute left-6 top-10 flex flex-col gap-2 z-10 w-[240px]">
                 
                 {/* FILTROS TABS */}
-                <div className="flex bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="bg-slate-700 w-7 flex items-center justify-center shrink-0">
+                <div className="flex bg-white rounded-lg border border-slate-200 shadow-sm">
+                    <div className="bg-slate-700 w-7 flex items-center justify-center shrink-0 rounded-l-lg">
                         <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Filtros</span>
                     </div>
-                    <div className="flex-1 p-2 flex flex-col gap-2 bg-slate-50/50">
-                        <button onClick={() => setGroupBy('petral')} className={`w-full h-[70px] flex items-center justify-center text-center px-2 text-[13px] font-extrabold rounded-md transition-colors ${groupBy === 'petral' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-petral-blue border border-slate-300 hover:bg-slate-100'}`}>
-                            PETRAL
+                    <div className="flex-1 p-2 flex flex-col gap-2 bg-slate-50/50 rounded-r-lg relative">
+                        <button onClick={() => setGroupBy('petral')} className={`w-full h-8 flex items-center justify-center text-center px-2 text-[12px] font-extrabold rounded-md transition-colors ${groupBy === 'petral' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-petral-blue border border-slate-300 hover:bg-slate-100'}`}>
+                            PETRAL (Todo)
                         </button>
                         <div className="h-px w-full bg-slate-200 my-0.5"></div>
                         
-                        <div className="flex flex-col gap-1.5">
-                            <button onClick={() => setGroupBy('client')} className={`w-full h-8 flex items-center px-2 text-[13px] font-bold rounded-md transition-colors ${groupBy === 'client' || filterClient !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                        {/* Cliente filter row */}
+                        <div className="flex items-center gap-1">
+                            <button onClick={() => setGroupBy('client')} className={`w-[75px] shrink-0 h-8 flex items-center justify-center text-[11px] font-bold rounded-md transition-colors ${groupBy === 'client' || filterClient !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
                                 Cliente
                             </button>
-                            <select className="w-full h-8 text-xs bg-white border border-slate-200 rounded px-1" value={filterClient} onChange={(e) => setFilterClient(e.target.value)}>
-                                <option value="ALL">Todos</option>
-                                {filterOptions.clients.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
+                            {renderFilterDropdown(filterClient, setFilterClient, filterOptions.clients, isClientFilterOpen, setIsClientFilterOpen, 'Cliente')}
                         </div>
-                        <div className="flex flex-col gap-1.5 mt-1">
-                            <button onClick={() => setGroupBy('route')} className={`w-full h-8 flex items-center px-2 text-[13px] font-bold rounded-md transition-colors ${groupBy === 'route' || filterRoute !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+
+                        {/* Ruta filter row */}
+                        <div className="flex items-center gap-1">
+                            <button onClick={() => setGroupBy('route')} className={`w-[75px] shrink-0 h-8 flex items-center justify-center text-[11px] font-bold rounded-md transition-colors ${groupBy === 'route' || filterRoute !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
                                 Ruta
                             </button>
-                            <select className="w-full h-8 text-xs bg-white border border-slate-200 rounded px-1" value={filterRoute} onChange={(e) => setFilterRoute(e.target.value)}>
-                                <option value="ALL">Todas</option>
-                                {filterOptions.routes.map(r => <option key={r} value={r}>{r}</option>)}
-                            </select>
+                            {renderFilterDropdown(filterRoute, setFilterRoute, filterOptions.routes, isRouteFilterOpen, setIsRouteFilterOpen, 'Ruta')}
                         </div>
-                        <div className="flex flex-col gap-1.5 mt-1">
-                            <button onClick={() => setGroupBy('vessel')} className={`w-full h-8 flex items-center px-2 text-[13px] font-bold rounded-md transition-colors ${groupBy === 'vessel' || filterVessel !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+
+                        {/* Buque filter row */}
+                        <div className="flex items-center gap-1">
+                            <button onClick={() => setGroupBy('vessel')} className={`w-[75px] shrink-0 h-8 flex items-center justify-center text-[11px] font-bold rounded-md transition-colors ${groupBy === 'vessel' || filterVessel !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
                                 Buque
                             </button>
-                            <select className="w-full h-8 text-xs bg-white border border-slate-200 rounded px-1" value={filterVessel} onChange={(e) => setFilterVessel(e.target.value)}>
-                                <option value="ALL">Todos</option>
-                                {filterOptions.vessels.map(v => <option key={v} value={v}>{v}</option>)}
-                            </select>
+                            {renderFilterDropdown(filterVessel, setFilterVessel, filterOptions.vessels, isVesselFilterOpen, setIsVesselFilterOpen, 'Buque')}
                         </div>
                     </div>
                 </div>
 
                 {/* EJE PRIMARIO TABS */}
-                <div className="flex bg-white rounded-lg border border-blue-200 shadow-sm overflow-hidden">
-                    <div className="bg-blue-600 w-7 flex items-center justify-center shrink-0">
+                <div className="flex bg-white rounded-lg border border-blue-200 shadow-sm">
+                    <div className="bg-blue-600 w-7 flex items-center justify-center shrink-0 rounded-l-lg">
                         <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Eje Primario</span>
                     </div>
-                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-blue-50/30">
-                        <select className="w-full text-xs bg-white border border-slate-200 rounded px-2 py-1.5 font-bold" value={primaryMetric} onChange={(e) => setPrimaryMetric(e.target.value as PlotMetric)}>
-                            {metricOptions.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                        </select>
+                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-blue-50/30 rounded-r-lg relative">
+                        {renderCustomDropdown(
+                            primaryMetric, 
+                            (val) => setPrimaryMetric(val as PlotMetric), 
+                            isPriOpen, 
+                            setIsPriOpen, 
+                            'blue',
+                            false
+                        )}
                         <div className="flex flex-col gap-2">
                             <label className="flex items-center gap-1.5 cursor-pointer">
                                 <input type="radio" name="priType" checked={primaryGraphType === 'bar_stack'} onChange={() => setPrimaryGraphType('bar_stack')} className="w-3 h-3" />
@@ -580,19 +779,64 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                                 <span className="text-[11px] font-medium text-slate-700">Línea Recta</span>
                             </label>
                         </div>
+                        {/* Control de Etiquetas */}
+                        <div className="flex flex-col gap-1 border-t border-blue-200/50 pt-2 mt-1">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wide">Etiquetas</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <span className="text-[9px] text-slate-500 w-8 shrink-0 font-medium">Posic:</span>
+                                <div className="flex rounded border border-slate-200 overflow-hidden bg-white w-full">
+                                    {(['none', 'top', 'inside'] as const).map(pos => (
+                                        <button
+                                            key={pos}
+                                            onClick={() => setPrimaryLabelPos(pos)}
+                                            className={`flex-1 text-[9px] font-bold py-0.5 px-0.5 capitalize transition-all cursor-pointer ${primaryLabelPos === pos ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                                        >
+                                            {pos === 'none' ? 'Ocultar' : (pos === 'top' ? 'Encima' : 'Centro')}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            {primaryLabelPos !== 'none' && (
+                                <div className="flex items-center gap-1 mt-0.5">
+                                    <span className="text-[9px] text-slate-500 w-8 shrink-0 font-medium">Color:</span>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setPrimaryLabelColor('#ffffff')}
+                                            className={`w-3.5 h-3.5 rounded-full border bg-white flex items-center justify-center transition-all cursor-pointer ${primaryLabelColor === '#ffffff' ? 'border-blue-600 ring-2 ring-blue-100 scale-110' : 'border-slate-300'}`}
+                                            title="Texto Blanco"
+                                        >
+                                            <span className="text-[7px] font-extrabold text-slate-800">W</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setPrimaryLabelColor('#000000')}
+                                            className={`w-3.5 h-3.5 rounded-full border bg-black flex items-center justify-center transition-all cursor-pointer ${primaryLabelColor === '#000000' ? 'border-blue-600 ring-2 ring-blue-100 scale-110' : 'border-slate-350'}`}
+                                            title="Texto Negro"
+                                        >
+                                            <span className="text-[7px] font-extrabold text-white">B</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 {/* EJE SECUNDARIO TABS */}
-                <div className="flex bg-white rounded-lg border border-emerald-200 shadow-sm overflow-hidden">
-                    <div className="bg-emerald-600 w-7 flex items-center justify-center shrink-0">
+                <div className="flex bg-white rounded-lg border border-emerald-200 shadow-sm">
+                    <div className="bg-emerald-600 w-7 flex items-center justify-center shrink-0 rounded-l-lg">
                         <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Eje Secundario</span>
                     </div>
-                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-emerald-50/30">
-                        <select className="w-full text-xs bg-white border border-slate-200 rounded px-2 py-1.5 font-bold" value={secondaryMetric} onChange={(e) => setSecondaryMetric(e.target.value as PlotMetric)}>
-                            <option value="none">--- Ninguno ---</option>
-                            {metricOptions.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                        </select>
+                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-emerald-50/30 rounded-r-lg relative">
+                        {renderCustomDropdown(
+                            secondaryMetric, 
+                            (val) => setSecondaryMetric(val as PlotMetric), 
+                            isSecOpen, 
+                            setIsSecOpen, 
+                            'emerald',
+                            true
+                        )}
                         <div className="flex flex-col gap-2">
                             <label className="flex items-center gap-1.5 cursor-pointer">
                                 <input type="radio" name="secType" checked={secondaryGraphType === 'bar'} onChange={() => setSecondaryGraphType('bar')} className="w-3 h-3" />
@@ -620,6 +864,47 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                                 <input type="checkbox" className="w-3 h-3" checked={isSecondaryPercentage} onChange={(e) => setIsSecondaryPercentage(e.target.checked)} />
                                 <span className="text-[11px] font-medium text-slate-700">Mostrar en % (Share)</span>
                             </label>
+                        </div>
+                        {/* Control de Etiquetas */}
+                        <div className="flex flex-col gap-1 border-t border-emerald-200/50 pt-2 mt-1">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wide">Etiquetas</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <span className="text-[9px] text-slate-500 w-8 shrink-0 font-medium">Posic:</span>
+                                <div className="flex rounded border border-slate-200 overflow-hidden bg-white w-full">
+                                    {(['none', 'top', 'inside'] as const).map(pos => (
+                                        <button
+                                            key={pos}
+                                            onClick={() => setSecondaryLabelPos(pos)}
+                                            className={`flex-1 text-[9px] font-bold py-0.5 px-0.5 capitalize transition-all cursor-pointer ${secondaryLabelPos === pos ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                                        >
+                                            {pos === 'none' ? 'Ocultar' : (pos === 'top' ? 'Encima' : 'Centro')}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            {secondaryLabelPos !== 'none' && (
+                                <div className="flex items-center gap-1 mt-0.5">
+                                    <span className="text-[9px] text-slate-500 w-8 shrink-0 font-medium">Color:</span>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setSecondaryLabelColor('#ffffff')}
+                                            className={`w-3.5 h-3.5 rounded-full border bg-white flex items-center justify-center transition-all cursor-pointer ${secondaryLabelColor === '#ffffff' ? 'border-emerald-600 ring-2 ring-emerald-100 scale-110' : 'border-slate-300'}`}
+                                            title="Texto Blanco"
+                                        >
+                                            <span className="text-[7px] font-extrabold text-slate-800">W</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setSecondaryLabelColor('#000000')}
+                                            className={`w-3.5 h-3.5 rounded-full border bg-black flex items-center justify-center transition-all cursor-pointer ${secondaryLabelColor === '#000000' ? 'border-emerald-600 ring-2 ring-emerald-100 scale-110' : 'border-slate-350'}`}
+                                            title="Texto Negro"
+                                        >
+                                            <span className="text-[7px] font-extrabold text-white">B</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

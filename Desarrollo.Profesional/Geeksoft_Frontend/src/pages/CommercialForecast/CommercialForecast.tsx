@@ -186,13 +186,22 @@ export const CommercialForecast: React.FC = () => {
         try {
             setActionLoading('save');
             
+            // Enriquecer cada línea con las variables globales de demurrage para persistencia
+            const enrichedLines = projectionLines.map(line => ({
+                ...line,
+                metadata_demurrage_pct: demurragePct,
+                metadata_show_demurrage: showDemurrage,
+                metadata_excluded_demurrages: excludedDemurrages,
+                metadata_custom_demurrages: customDemurrages
+            }));
+
             const payload = {
                 id: isNew ? null : currentForecastId,
                 name: forecastName,
                 user_id: userId,
                 start_date: startDate,
                 end_date: endDate,
-                projection_lines: projectionLines
+                projection_lines: enrichedLines
             };
             const result = await ForecastService.saveForecast(payload);
             setCurrentForecastId(result.id);
@@ -224,7 +233,37 @@ export const CommercialForecast: React.FC = () => {
             const data = await ForecastService.loadForecast(id);
             setStartDate(data.start_date);
             setEndDate(data.end_date);
-            setProjectionLines(data.projection_lines);
+            
+            const loadedLines = data.projection_lines || [];
+            if (loadedLines.length > 0) {
+                const firstLine = loadedLines[0];
+                if (firstLine.metadata_demurrage_pct !== undefined) {
+                    setDemurragePct(firstLine.metadata_demurrage_pct);
+                }
+                if (firstLine.metadata_show_demurrage !== undefined) {
+                    setShowDemurrage(firstLine.metadata_show_demurrage);
+                }
+                if (firstLine.metadata_excluded_demurrages !== undefined) {
+                    setExcludedDemurrages(firstLine.metadata_excluded_demurrages);
+                }
+                if (firstLine.metadata_custom_demurrages !== undefined) {
+                    setCustomDemurrages(firstLine.metadata_custom_demurrages);
+                }
+            }
+
+            // Limpiar las líneas de metadatos antes de cargarlas en el estado local
+            const cleanedLines = loadedLines.map((line: any) => {
+                const {
+                    metadata_demurrage_pct,
+                    metadata_show_demurrage,
+                    metadata_excluded_demurrages,
+                    metadata_custom_demurrages,
+                    ...rest
+                } = line;
+                return rest;
+            });
+
+            setProjectionLines(cleanedLines);
             setCurrentForecastId(data.id);
             setForecastName(data.name);
             setLoadedAuthor(data.user_id);
