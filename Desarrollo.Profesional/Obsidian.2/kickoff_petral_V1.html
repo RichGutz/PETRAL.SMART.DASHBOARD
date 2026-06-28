@@ -667,36 +667,55 @@
 <section class="slide" id="s9" style="transform:translateX(70px);">
     <p class="tag">Maestros de Datos · 1 de 6</p>
     <h2>Tabla: <span class="hi">vessels</span></h2>
-    <p class="sub">Define las capacidades de carga y consumos energéticos de cada nave de la flota</p>
+    <p class="sub">Los campos en rojo indican parámetros operativos faltantes que Comercial/Operaciones debe proveer.</p>
 
-    <div class="card" style="width:100%; padding:30px; border-top:6px solid var(--blue);">
-        <h3 style="font-size:22px; margin-bottom:20px; color:var(--text); display:flex; align-items:center; gap:10px;">
-            <span style="font-size:28px;">🚢</span> Perfil Técnico: B/T CONCON TRADER
-        </h3>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
-            <div style="background:var(--bg); padding:12px 16px; border-radius:8px; border-left:4px solid var(--amber);">
-                <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Capacidad de Carga (DWT)</div>
-                <div style="font-size:16px; font-weight:600; color:var(--navy);">19,823 MT</div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:16px; width:100%;">
+        <!-- CONCON TRADER -->
+        <div class="card" style="padding:16px; border-top:4px solid var(--blue);">
+            <div style="font-weight:900; font-size:15px; color:var(--navy); margin-bottom:12px; text-align:center;">🚢 CONCON TRADER</div>
+            <div style="font-size:12px; color:var(--text); line-height:1.6;">
+                <div><span style="font-weight:700; color:var(--text-dim);">DWT:</span> 19,823 MT</div>
+                <div><span style="font-weight:700; color:var(--text-dim);">Built:</span> 2018</div>
+                <div><span style="font-weight:700; color:var(--text-dim);">Velocidad:</span> 11.0 nudos</div>
+                <div><span style="font-weight:700; color:var(--text-dim);">IFO (S/P):</span> 14.0 / 3.5 T</div>
+                <div><span style="font-weight:700; color:var(--text-dim);">Bombas:</span> 500 T/h</div>
+                <div style="margin-top:8px; font-weight:700; color:var(--green);">TCE: $20,000</div>
             </div>
-            <div style="background:var(--bg); padding:12px 16px; border-radius:8px; border-left:4px solid var(--amber);">
-                <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Velocidad de Navegación</div>
-                <div style="font-size:16px; font-weight:600; color:var(--navy);">11.0 nudos <span style="font-size:11px; font-weight:400; color:var(--text-dim);">(Laden & Ballast)</span></div>
+        </div>
+        <!-- TABLONES -->
+        <div class="card" style="padding:16px; border-top:4px solid var(--blue);">
+            <div style="font-weight:900; font-size:15px; color:var(--navy); margin-bottom:12px; text-align:center;">🚢 TABLONES</div>
+            <div style="font-size:12px; color:var(--text); line-height:1.6;">
+                <div><span style="font-weight:700; color:var(--text-dim);">DWT:</span> 16,533 MT</div>
+                <div><span style="font-weight:700; color:var(--text-dim);">Built:</span> 2003</div>
+                <div><span style="font-weight:700; color:var(--text-dim);">Velocidad:</span> <span style="color:var(--red); font-weight:600;">[Vacío]</span></div>
+                <div><span style="font-weight:700; color:var(--text-dim);">IFO (S/P):</span> <span style="color:var(--red); font-weight:600;">[Vacío]</span></div>
+                <div><span style="font-weight:700; color:var(--text-dim);">Bombas:</span> <span style="color:var(--red); font-weight:600;">[Vacío]</span></div>
+                <div style="margin-top:8px; font-weight:700; color:var(--red);">TCE: [Vacío]</div>
             </div>
-            <div style="background:var(--bg); padding:12px 16px; border-radius:8px; border-left:4px solid var(--amber);">
-                <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Poder de Bombeo (Máx)</div>
-                <div style="font-size:16px; font-weight:600; color:var(--navy);">500 T / hora</div>
+        </div>
+        <!-- MOQUEGUA -->
+        <div class="card" style="padding:16px; border-top:4px solid var(--blue);">
+            <div style="font-weight:900; font-size:15px; color:var(--navy); margin-bottom:12px; text-align:center;">🚢 MOQUEGUA</div>
+            <div style="font-size:12px; color:var(--text); line-height:1.6;">
+                <div><span style="font-weight:700; color:var(--text-dim);">DWT:</span> 14,298 MT</div>
+                <div><span style="font-weight:700; color:var(--text-dim);">Built:</span> 2002</div>
+                <div><span style="font-weight:700; color:var(--text-dim);">Velocidad:</span> <span style="color:var(--red); font-weight:600;">[Vacío]</span></div>
+                <div><span style="font-weight:700; color:var(--text-dim);">IFO (S/P):</span> <span style="color:var(--red); font-weight:600;">[Vacío]</span></div>
+                <div><span style="font-weight:700; color:var(--text-dim);">Bombas:</span> <span style="color:var(--red); font-weight:600;">[Vacío]</span></div>
+                <div style="margin-top:8px; font-weight:700; color:var(--red);">TCE: [Vacío]</div>
             </div>
-            <div style="background:var(--bg); padding:12px 16px; border-radius:8px; border-left:4px solid var(--blue);">
-                <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Consumo IFO (Sea)</div>
-                <div style="font-size:16px; font-weight:600; color:var(--navy);">14.0 T / día</div>
-            </div>
-            <div style="background:var(--bg); padding:12px 16px; border-radius:8px; border-left:4px solid var(--blue);">
-                <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Consumo IFO (Port)</div>
-                <div style="font-size:16px; font-weight:600; color:var(--navy);">3.5 T / día</div>
-            </div>
-            <div style="background:var(--green); padding:12px 16px; border-radius:8px; color:white;">
-                <div style="font-size:12px; text-transform:uppercase; font-weight:700; opacity:0.9;">Meta de Renta (TCE Requerido)</div>
-                <div style="font-size:16px; font-weight:600;">$20,000 / día</div>
+        </div>
+        <!-- HUEMUL -->
+        <div class="card" style="padding:16px; border-top:4px solid var(--blue);">
+            <div style="font-weight:900; font-size:15px; color:var(--navy); margin-bottom:12px; text-align:center;">🚢 HUEMUL</div>
+            <div style="font-size:12px; color:var(--text); line-height:1.6;">
+                <div><span style="font-weight:700; color:var(--text-dim);">DWT:</span> 22,062 MT</div>
+                <div><span style="font-weight:700; color:var(--text-dim);">Built:</span> 2008</div>
+                <div><span style="font-weight:700; color:var(--text-dim);">Velocidad:</span> <span style="color:var(--red); font-weight:600;">[Vacío]</span></div>
+                <div><span style="font-weight:700; color:var(--text-dim);">IFO (S/P):</span> <span style="color:var(--red); font-weight:600;">[Vacío]</span></div>
+                <div><span style="font-weight:700; color:var(--text-dim);">Bombas:</span> <span style="color:var(--red); font-weight:600;">[Vacío]</span></div>
+                <div style="margin-top:8px; font-weight:700; color:var(--red);">TCE: [Vacío]</div>
             </div>
         </div>
     </div>
@@ -708,27 +727,42 @@
 <section class="slide" id="s10" style="transform:translateX(70px);">
     <p class="tag">Maestros de Datos · 2 de 6</p>
     <h2>Tabla: <span class="hi">routes</span></h2>
-    <p class="sub">Mapea la topología marítima y las distancias entre puertos</p>
+    <p class="sub">Mapea la topología marítima y las distancias entre puertos (Distancias y Factores de Clima por Pierna)</p>
 
-    <div class="card" style="width:100%; padding:30px; border-top:6px solid var(--blue);">
-        <h3 style="font-size:22px; margin-bottom:20px; color:var(--text); display:flex; align-items:center; gap:10px;">
-            <span style="font-size:28px;">🗺️</span> Ruta Comercial: ILO ➔ MATARANI
-        </h3>
-        <div style="display:flex; flex-direction:column; gap:12px;">
-            <div style="display:flex; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid var(--border);">
-                <span style="font-weight:600; color:var(--navy);">Distancia Base</span>
-                <span style="font-weight:700; color:var(--blue);">69.0 Millas Náuticas</span>
+    <div class="card" style="width:100%; padding:20px; border-top:6px solid var(--blue);">
+        <div style="background:var(--bg); border:1px solid var(--border); border-radius:10px; overflow:hidden;">
+            <div style="display:flex; background:var(--navy); color:white; padding:12px 16px; font-weight:600; font-size:14px;">
+                <div style="flex:2;">Ruta (Origen ➔ Destino)</div>
+                <div style="flex:1; text-align:center;">Distancia (mn)</div>
+                <div style="flex:1; text-align:center;">W. Factor (Laden)</div>
+                <div style="flex:1; text-align:center;">W. Factor (Ballast)</div>
             </div>
-            <div style="display:flex; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid var(--border);">
-                <span style="font-weight:600; color:var(--navy);">Weather Factor (Pierna Laden - Ida)</span>
-                <span style="font-weight:700; color:var(--amber);">+3% Margen Seguridad</span>
+            <div style="display:flex; padding:12px 16px; align-items:center; border-bottom:1px solid var(--border);">
+                <div style="flex:2; font-weight:700; color:var(--navy);">ILO ➔ MATARANI</div>
+                <div style="flex:1; text-align:center; font-weight:600;">69.0</div>
+                <div style="flex:1; text-align:center; color:var(--amber); font-weight:700;">+3%</div>
+                <div style="flex:1; text-align:center; color:var(--amber); font-weight:700;">+3%</div>
             </div>
-            <div style="display:flex; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid var(--border);">
-                <span style="font-weight:600; color:var(--navy);">Weather Factor (Pierna Ballast - Retorno)</span>
-                <span style="font-weight:700; color:var(--amber);">+3% Margen Seguridad</span>
+            <div style="display:flex; padding:12px 16px; align-items:center; border-bottom:1px solid var(--border);">
+                <div style="flex:2; font-weight:700; color:var(--navy);">ILO ➔ MARCONA</div>
+                <div style="flex:1; text-align:center; font-weight:600;">283.0</div>
+                <div style="flex:1; text-align:center; color:var(--amber); font-weight:700;">+3%</div>
+                <div style="flex:1; text-align:center; color:var(--amber); font-weight:700;">+3%</div>
+            </div>
+            <div style="display:flex; padding:12px 16px; align-items:center; border-bottom:1px solid var(--border);">
+                <div style="flex:2; font-weight:700; color:var(--navy);">ILO ➔ MEJILLONES</div>
+                <div style="flex:1; text-align:center; font-weight:600;">335.0</div>
+                <div style="flex:1; text-align:center; color:var(--amber); font-weight:700;">+3%</div>
+                <div style="flex:1; text-align:center; color:var(--amber); font-weight:700;">+3%</div>
+            </div>
+            <div style="display:flex; padding:12px 16px; align-items:center;">
+                <div style="flex:2; font-weight:700; color:var(--navy);">ILO ➔ CALLAO</div>
+                <div style="flex:1; text-align:center; font-weight:600;">430.0</div>
+                <div style="flex:1; text-align:center; color:var(--amber); font-weight:700;">+4%</div>
+                <div style="flex:1; text-align:center; color:var(--amber); font-weight:700;">+4%</div>
             </div>
         </div>
-        <div style="margin-top:20px; padding:12px; background:var(--blue-dim); border-radius:8px; font-size:13px; color:var(--navy-mid); display:flex; gap:10px;">
+        <div style="margin-top:12px; padding:10px; background:var(--blue-dim); border-radius:8px; font-size:13px; color:var(--navy-mid); display:flex; gap:10px;">
             <span>ℹ️</span>
             <span>El simulador asume viajes redondos (Round Trip) y procesa el tiempo y combustible sumando la pierna Laden y la pierna Ballast de forma independiente.</span>
         </div>
@@ -741,33 +775,45 @@
 <section class="slide" id="s11" style="transform:translateX(70px);">
     <p class="tag">Maestros de Datos · 3 de 6</p>
     <h2>Tabla: <span class="hi">ports</span></h2>
-    <p class="sub">Establece las reglas físicas, los cuellos de botella y límites de operación por muelle</p>
+    <p class="sub">Cuellos de botella, límites de operación por muelle y tiempos muertos (Overhead)</p>
 
-    <div class="card" style="width:100%; padding:30px; border-top:6px solid var(--blue);">
-        <h3 style="font-size:22px; margin-bottom:20px; color:var(--text); display:flex; align-items:center; gap:10px;">
-            <span style="font-size:28px;">⚓</span> Restricciones Terminal: PUERTO DE ILO
-        </h3>
-        <div style="display:grid; grid-template-columns: 1fr; gap:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:16px; border-radius:8px;">
-                <div>
-                    <div style="font-weight:700; color:var(--navy);">Límite Operativo (Carga)</div>
-                    <div style="font-size:12px; color:var(--text-dim);">Tope máximo que permite el muelle</div>
-                </div>
-                <div style="font-weight:900; font-size:18px; color:var(--red);">Hasta 500 T / hora</div>
+    <div class="card" style="width:100%; padding:20px; border-top:6px solid var(--blue);">
+        <div style="background:var(--bg); border:1px solid var(--border); border-radius:10px; overflow:hidden;">
+            <div style="display:flex; background:var(--navy); color:white; padding:12px 16px; font-weight:600; font-size:14px;">
+                <div style="flex:2;">Puerto (País)</div>
+                <div style="flex:1; text-align:center;">Vel. Máx Carga</div>
+                <div style="flex:1; text-align:center;">Vel. Máx Descarga</div>
+                <div style="flex:1; text-align:center;">Overhead / Recalada</div>
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:16px; border-radius:8px;">
-                <div>
-                    <div style="font-weight:700; color:var(--navy);">Límite Operativo (Descarga)</div>
-                    <div style="font-size:12px; color:var(--text-dim);">Tope máximo que permite el muelle</div>
-                </div>
-                <div style="font-weight:900; font-size:18px; color:var(--green);">Sin restricción (9999 T/h)</div>
+            <div style="display:flex; padding:12px 16px; align-items:center; border-bottom:1px solid var(--border);">
+                <div style="flex:2; font-weight:700; color:var(--navy);">ILO (PE)</div>
+                <div style="flex:1; text-align:center; font-weight:600; color:var(--blue);">500 T/h</div>
+                <div style="flex:1; text-align:center; font-weight:600; color:var(--green);">Sin Límite</div>
+                <div style="flex:1; text-align:center; color:var(--amber); font-weight:700;">6 horas fijas</div>
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; background:var(--amber-dim); padding:16px; border-radius:8px;">
-                <div>
-                    <div style="font-weight:700; color:var(--amber);">Tiempos Muertos (Overhead)</div>
-                    <div style="font-size:12px; color:var(--amber);">Cubre maniobras, amarre, fondeo y trámites</div>
-                </div>
-                <div style="font-weight:900; font-size:18px; color:var(--amber);">6 Horas Fijas / recalada</div>
+            <div style="display:flex; padding:12px 16px; align-items:center; border-bottom:1px solid var(--border);">
+                <div style="flex:2; font-weight:700; color:var(--navy);">MATARANI (PE)</div>
+                <div style="flex:1; text-align:center; font-weight:600; color:var(--green);">Sin Límite</div>
+                <div style="flex:1; text-align:center; font-weight:600; color:var(--blue);">300 T/h</div>
+                <div style="flex:1; text-align:center; color:var(--amber); font-weight:700;">6 horas fijas</div>
+            </div>
+            <div style="display:flex; padding:12px 16px; align-items:center; border-bottom:1px solid var(--border);">
+                <div style="flex:2; font-weight:700; color:var(--navy);">MARCONA (PE)</div>
+                <div style="flex:1; text-align:center; font-weight:600; color:var(--green);">Sin Límite</div>
+                <div style="flex:1; text-align:center; font-weight:600; color:var(--blue);">300 T/h</div>
+                <div style="flex:1; text-align:center; color:var(--amber); font-weight:700;">6 horas fijas</div>
+            </div>
+            <div style="display:flex; padding:12px 16px; align-items:center; border-bottom:1px solid var(--border);">
+                <div style="flex:2; font-weight:700; color:var(--navy);">CALLAO (PE)</div>
+                <div style="flex:1; text-align:center; font-weight:600; color:var(--green);">Sin Límite</div>
+                <div style="flex:1; text-align:center; font-weight:600; color:var(--green);">Sin Límite</div>
+                <div style="flex:1; text-align:center; color:var(--amber); font-weight:700;">6 horas fijas</div>
+            </div>
+            <div style="display:flex; padding:12px 16px; align-items:center;">
+                <div style="flex:2; font-weight:700; color:var(--navy);">MEJILLONES (CL)</div>
+                <div style="flex:1; text-align:center; font-weight:600; color:var(--green);">Sin Límite</div>
+                <div style="flex:1; text-align:center; font-weight:600; color:var(--blue);">300 T/h</div>
+                <div style="flex:1; text-align:center; color:var(--amber); font-weight:700;">6 horas fijas</div>
             </div>
         </div>
     </div>
@@ -812,31 +858,34 @@
 <section class="slide" id="s13" style="transform:translateX(70px);">
     <p class="tag">Maestros de Datos · 5 de 6</p>
     <h2>Tabla: <span class="hi">contract_tariffs</span></h2>
-    <p class="sub">Contiene los "Brackets" o escalones de flete dinámico</p>
+    <p class="sub">Tramos de flete (brackets) pactados en el contrato comercial SPCC</p>
 
-    <div class="card" style="width:100%; padding:30px; border-top:6px solid var(--blue);">
-        <h3 style="font-size:22px; margin-bottom:20px; color:var(--text); display:flex; align-items:center; gap:10px;">
-            <span style="font-size:28px;">💲</span> Tramos de Flete: Contrato SPCC_2025
+    <div class="card" style="width:100%; padding:20px; border-top:6px solid var(--blue);">
+        <h3 style="font-size:20px; margin-bottom:16px; color:var(--navy); display:flex; align-items:center; gap:10px;">
+            <span style="font-size:24px;">💲</span> Escalones de Flete para Ruta ILO ➔ MATARANI
         </h3>
         
-        <div style="background:var(--bg); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
+        <div style="background:var(--bg); border:1px solid var(--border); border-radius:10px; overflow:hidden;">
             <div style="display:flex; background:var(--navy); color:white; padding:12px 16px; font-weight:600; font-size:14px;">
-                <div style="flex:1;">Si el cliente nomina entre...</div>
-                <div style="width:150px; text-align:right;">Flete Cobrado</div>
+                <div style="flex:1;">Tramos (Volumen de Carga Nominado)</div>
+                <div style="width:150px; text-align:right;">Tarifa Acordada</div>
             </div>
-            <div style="display:flex; padding:16px; align-items:center; border-bottom:1px solid var(--border);">
-                <div style="flex:1; font-weight:600; font-size:16px; color:var(--navy);">10,000 MT — 11,500 MT</div>
-                <div style="width:150px; text-align:right; font-weight:900; font-size:20px; color:var(--green);">$20.12 <span style="font-size:12px; font-weight:400; color:var(--text-dim);">/ MT</span></div>
+            <div style="display:flex; padding:14px 16px; align-items:center; border-bottom:1px solid var(--border);">
+                <div style="flex:1; font-weight:600; font-size:15px; color:var(--navy);">De 10,000 MT — a 11,500 MT</div>
+                <div style="width:150px; text-align:right; font-weight:900; font-size:18px; color:var(--green);">$20.12 <span style="font-size:11px; font-weight:400; color:var(--text-dim);">/ MT</span></div>
             </div>
-            <div style="display:flex; padding:16px; align-items:center; opacity:0.5;">
-                <div style="flex:1; font-weight:600; font-size:16px; color:var(--navy);">11,501 MT — 15,000 MT</div>
-                <div style="width:150px; text-align:right; font-weight:900; font-size:20px; color:var(--green);">$19.01 <span style="font-size:12px; font-weight:400; color:var(--text-dim);">/ MT</span></div>
+            <div style="display:flex; padding:14px 16px; align-items:center; border-bottom:1px solid var(--border);">
+                <div style="flex:1; font-weight:600; font-size:15px; color:var(--navy);">De 11,501 MT — a 13,000 MT</div>
+                <div style="width:150px; text-align:right; font-weight:900; font-size:18px; color:var(--green);">$19.52 <span style="font-size:11px; font-weight:400; color:var(--text-dim);">/ MT</span></div>
             </div>
-        </div>
-
-        <div style="margin-top:20px; padding:12px; background:var(--blue-dim); border-radius:8px; font-size:13px; color:var(--navy-mid); display:flex; gap:10px;">
-            <span>ℹ️</span>
-            <span>Permite modelar descuentos por volumen de manera automática para cada contrato.</span>
+            <div style="display:flex; padding:14px 16px; align-items:center; border-bottom:1px solid var(--border);">
+                <div style="flex:1; font-weight:600; font-size:15px; color:var(--navy);">De 13,001 MT — a 13,500 MT</div>
+                <div style="width:150px; text-align:right; font-weight:900; font-size:18px; color:var(--green);">$19.01 <span style="font-size:11px; font-weight:400; color:var(--text-dim);">/ MT</span></div>
+            </div>
+            <div style="display:flex; padding:14px 16px; align-items:center;">
+                <div style="flex:1; font-weight:600; font-size:15px; color:var(--navy);">De 13,600 MT — a 14,500 MT</div>
+                <div style="width:150px; text-align:right; font-weight:900; font-size:18px; color:var(--green);">$18.92 <span style="font-size:11px; font-weight:400; color:var(--text-dim);">/ MT</span></div>
+            </div>
         </div>
     </div>
 </section>
@@ -847,32 +896,43 @@
 <section class="slide" id="s14" style="transform:translateX(70px);">
     <p class="tag">Maestros de Datos · 6 de 6</p>
     <h2>Tabla: <span class="hi">agency_matrix</span></h2>
-    <p class="sub">Matriz de resolución para los costos fijos portuarios</p>
+    <p class="sub">Matriz de resolución para los costos fijos portuarios (Carga y Descarga)</p>
 
-    <div class="card" style="width:100%; padding:30px; border-top:6px solid var(--blue);">
-        <h3 style="font-size:22px; margin-bottom:20px; color:var(--text); display:flex; align-items:center; gap:10px;">
-            <span style="font-size:28px;">🏢</span> Costos Fijos Portuarios
+    <div class="card" style="width:100%; padding:20px; border-top:6px solid var(--blue);">
+        <h3 style="font-size:20px; margin-bottom:16px; color:var(--text); display:flex; align-items:center; gap:10px;">
+            <span style="font-size:24px;">🏢</span> Tarifas Específicas para B/T CONCON TRADER
         </h3>
         
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px;">
-            <div style="background:var(--bg); padding:16px; border-radius:8px;">
-                <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Puerto y Operación</div>
-                <div style="font-size:16px; font-weight:700; color:var(--navy); margin-top:4px;">ILO (CARGA)</div>
+        <div style="background:var(--bg); border:1px solid var(--border); border-radius:10px; overflow:hidden;">
+            <div style="display:flex; background:var(--navy); color:white; padding:12px 16px; font-weight:600; font-size:14px;">
+                <div style="flex:2;">Puerto (Operación)</div>
+                <div style="flex:1; text-align:center;">Cliente</div>
+                <div style="flex:1; text-align:right;">Costo Base Recalada</div>
             </div>
-            <div style="background:var(--bg); padding:16px; border-radius:8px;">
-                <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Condición</div>
-                <div style="font-size:16px; font-weight:700; color:var(--navy); margin-top:4px;">DEFAULT (Estándar)</div>
+            <div style="display:flex; padding:12px 16px; align-items:center; border-bottom:1px solid var(--border);">
+                <div style="flex:2; font-weight:700; color:var(--navy);">ILO <span style="color:var(--amber);">(CARGA)</span></div>
+                <div style="flex:1; text-align:center; font-weight:600; color:var(--text-dim);">SPCC</div>
+                <div style="flex:1; text-align:right; font-weight:900; font-size:18px; color:var(--navy);">$23,500 USD</div>
+            </div>
+            <div style="display:flex; padding:12px 16px; align-items:center; border-bottom:1px solid var(--border);">
+                <div style="flex:2; font-weight:700; color:var(--navy);">MATARANI <span style="color:var(--blue);">(DESCARGA)</span></div>
+                <div style="flex:1; text-align:center; font-weight:600; color:var(--text-dim);">SPCC</div>
+                <div style="flex:1; text-align:right; font-weight:900; font-size:18px; color:var(--navy);">$19,000 USD</div>
+            </div>
+            <div style="display:flex; padding:12px 16px; align-items:center; border-bottom:1px solid var(--border);">
+                <div style="flex:2; font-weight:700; color:var(--navy);">MARCONA <span style="color:var(--blue);">(DESCARGA)</span></div>
+                <div style="flex:1; text-align:center; font-weight:600; color:var(--text-dim);">SPCC</div>
+                <div style="flex:1; text-align:right; font-weight:900; font-size:18px; color:var(--navy);">$61,000 USD</div>
+            </div>
+            <div style="display:flex; padding:12px 16px; align-items:center;">
+                <div style="flex:2; font-weight:700; color:var(--navy);">MEJILLONES <span style="color:var(--blue);">(DESCARGA)</span></div>
+                <div style="flex:1; text-align:center; font-weight:600; color:var(--text-dim);">SPCC</div>
+                <div style="flex:1; text-align:right; font-weight:900; font-size:18px; color:var(--navy);">$60,000 USD</div>
             </div>
         </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--amber-dim); padding:20px; border-radius:8px; border:1px solid var(--amber-brd);">
-            <div style="font-weight:700; color:var(--amber); font-size:18px;">Costo por Recalada</div>
-            <div style="font-weight:900; font-size:28px; color:var(--amber);">$25,500 USD</div>
-        </div>
-
-        <div style="margin-top:20px; padding:12px; background:var(--blue-dim); border-radius:8px; font-size:13px; color:var(--navy-mid); display:flex; gap:10px;">
+        <div style="margin-top:12px; padding:10px; background:var(--blue-dim); border-radius:8px; font-size:13px; color:var(--navy-mid); display:flex; gap:10px;">
             <span>ℹ️</span>
-            <span>Aplica esta tarifa base al viaje a menos que exista una tarifa especial negociada para un barco o cliente específico.</span>
+            <span>El simulador encuentra la tarifa exacta para el cruce: Barco + Puerto + Operación + Cliente.</span>
         </div>
     </div>
 </section>
