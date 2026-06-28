@@ -459,24 +459,24 @@ export const VoyageLedgerTest: React.FC = () => {
                         break-after: page;
                         width: 297mm;
                         height: 210mm;
-                        padding: 6mm 8mm; /* Margenes reducidos en impresion */
+                        padding: 4mm 6mm; /* Reducido de 6mm 8mm */
                         box-sizing: border-box;
                         overflow: hidden;
-                        margin: 0 !important; /* Evita paginas en blanco por margenes residuales */
+                        margin: 0 !important;
                     }
                     /* Compactar espaciado entre cards */
                     .page-break .flex.gap-4.items-stretch {
-                        gap: 8px !important;
+                        gap: 4px !important; /* Reducido de 8px */
                     }
                     /* Compactar tarjetas internas */
                     .page-break .border.rounded-lg {
-                        border-radius: 6px !important;
+                        border-radius: 4px !important;
                     }
                     .page-break .p-3 {
-                        padding: 8px 10px !important;
+                        padding: 5px 7px !important; /* Reducido de 8px 10px */
                     }
                     .page-break .gap-1.5 {
-                        gap: 2px !important;
+                        gap: 1px !important; /* Reducido de 2px */
                     }
                     .page-break .mt-1.pt-2 {
                         margin-top: 2px !important;
