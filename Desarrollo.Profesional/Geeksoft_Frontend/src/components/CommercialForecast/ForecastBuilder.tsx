@@ -145,10 +145,10 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
             <CardContent className="pt-6">
                 
                 {/* Contenedor Flex en una sola línea sin wrap, con scroll horizontal si es muy pequeña la pantalla */}
-                <div className="flex flex-row items-end gap-3 w-full overflow-x-auto pb-2">
+                <div className="flex flex-row flex-wrap items-end gap-3 w-full pb-2">
                     
                     {/* 1. Inicio */}
-                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                    <div className="flex flex-col gap-2 min-w-[120px] max-w-[180px] flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">1. Inicio Forecast</Label>
                         <MonthPicker 
                             value={currentStartDate.slice(0, 7)}
@@ -159,7 +159,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* 2. Fin */}
-                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                    <div className="flex flex-col gap-2 min-w-[120px] max-w-[180px] flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">Fin Forecast</Label>
                         <MonthPicker 
                             value={currentEndDate.slice(0, 7)}
@@ -176,7 +176,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* 3. Mes */}
-                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                    <div className="flex flex-col gap-2 min-w-[120px] max-w-[180px] flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">2. Mes a Modelar</Label>
                         <MonthPicker 
                             value={monthIndex}
@@ -189,7 +189,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* 4. Cliente */}
-                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                    <div className="flex flex-col gap-2 min-w-[120px] max-w-[180px] flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">3. Cliente</Label>
                         <Select value={client} onValueChange={(val) => setClient(val || '')}>
                             <SelectTrigger className="w-full h-8 bg-white">
@@ -214,7 +214,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {client === 'SPOT' && (
-                        <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                        <div className="flex flex-col gap-2 min-w-[120px] max-w-[180px] flex-1">
                             <Label className="text-xs font-semibold text-red-500 whitespace-nowrap">Sufijo SPOT *</Label>
                             <Input 
                                 type="text" 
@@ -227,7 +227,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     )}
 
                     {/* 4. Ruta */}
-                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                    <div className="flex flex-col gap-2 min-w-[120px] max-w-[180px] flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">4. Ruta</Label>
                         <Select value={route} onValueChange={(val) => setRoute(val || '')} disabled={!client}>
                             <SelectTrigger className="w-full h-8">
@@ -248,7 +248,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* 5. Buque */}
-                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                    <div className="flex flex-col gap-2 min-w-[120px] max-w-[180px] flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">5. Buque</Label>
                         <Select value={vessel} onValueChange={(val) => setVessel(val || '')} disabled={!route}>
                             <SelectTrigger className="w-full h-8">
@@ -275,7 +275,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* 6. Viajes */}
-                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                    <div className="flex flex-col gap-2 min-w-[120px] max-w-[180px] flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">6. N° Viajes</Label>
                         <Input 
                             type="number" 
@@ -289,7 +289,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* 7. Toneladas por Viaje */}
-                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                    <div className="flex flex-col gap-2 min-w-[120px] max-w-[180px] flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">7. Toneladas por Viaje</Label>
                         <Input 
                             type="number" 
@@ -303,7 +303,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* 8. Flete Override */}
-                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                    <div className="flex flex-col gap-2 min-w-[120px] max-w-[180px] flex-1">
                         <Label className={`text-xs font-semibold whitespace-nowrap ${client === 'SPOT' ? 'text-red-500' : 'text-slate-600'}`}>
                             8. Flete {client === 'SPOT' && '*'}
                         </Label>
@@ -320,7 +320,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* 9. Demurrage (%) */}
-                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                    <div className="flex flex-col gap-2 min-w-[120px] max-w-[180px] flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">9. Demurrage (%)</Label>
                         <div className="flex gap-1 h-8">
                             <Input 
@@ -342,7 +342,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* 9. Botón Añadir */}
-                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                    <div className="flex flex-col gap-2 min-w-[120px] max-w-[180px] flex-1">
                         <Label className="text-xs opacity-0 pointer-events-none">X</Label>
                         <Button 
                             onClick={handleAdd} 
@@ -370,7 +370,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     
                     {/* 10. Vista ($ / %) */}
                     {displayMode && onDisplayModeChange && (
-                        <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                        <div className="flex flex-col gap-2 min-w-[120px] max-w-[180px] flex-1">
                             <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">Vista de Tabla</Label>
                             <div className="flex bg-slate-200 rounded p-0.5 h-8 w-full shadow-inner">
                                 <button
