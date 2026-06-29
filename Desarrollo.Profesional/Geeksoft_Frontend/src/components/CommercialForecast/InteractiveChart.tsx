@@ -513,11 +513,11 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 textStyle: { color: '#475569' }
             },
             grid: {
-                left: 360, 
-                right: 80,
+                left: 70, 
+                right: 70,
                 bottom: 30,
                 top: 40,
-                containLabel: false
+                containLabel: true
             },
             xAxis: {
                 type: 'category',

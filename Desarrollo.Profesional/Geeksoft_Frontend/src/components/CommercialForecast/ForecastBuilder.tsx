@@ -118,7 +118,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
     return (
         <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="bg-slate-50 border-b border-slate-100 pb-2 pt-2">
+            <CardHeader className="bg-slate-50 border-b border-slate-100 pb-2 pt-2 relative">
                 <div className="flex items-center justify-between w-full">
                     {/* Left */}
                     <div className="flex-[1.2]">
@@ -130,13 +130,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
                     {/* Center */}
                     {centerContent && (
-                        <div className="flex-[1.5] flex flex-col items-center gap-1">
+                        <div className="flex-[1.5] flex justify-center">
                             {centerContent}
-                            {forecastName && (
-                                <div className="text-xs font-bold text-sky-800 bg-sky-50 border border-sky-200 px-3 py-0.5 rounded-full shadow-sm animate-fade-in">
-                                    📁 Escenario: {forecastName}
-                                </div>
-                            )}
                         </div>
                     )}
 
@@ -145,6 +140,11 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         {rightContent}
                     </div>
                 </div>
+                {forecastName && (
+                    <div className="absolute bottom-[4px] left-1/2 transform -translate-x-1/2 text-xs font-bold text-sky-800 bg-sky-50 border border-sky-200 px-3 py-0.5 rounded-full shadow-sm animate-fade-in z-20">
+                        📁 Escenario: {forecastName}
+                    </div>
+                )}
             </CardHeader>
             {!hideInputs && (
             <CardContent className="pt-6">
@@ -295,7 +295,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
                     {/* 7. Toneladas por Viaje */}
                     <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">8. Toneladas por Viaje</Label>
+                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">8. TM/viaje</Label>
                         <Input 
                             type="number" 
                             min="0"
