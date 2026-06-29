@@ -109,3 +109,5 @@
 2026-06-28: Reducción de espacio libre y 2 decimales en flete de tabla. Se redujo el padding de CardContent de ForecastBuilder.tsx a py-3 y se centraron los elementos verticalmente. Se ajustó el botón 'Mostrar' a text-[11px]. Se formateó Flete (USD/MT) en ForecastGrid.tsx para mostrar 2 decimales. Todo compilado, probado y subido a GitHub y al VPS.
 
 2026-06-28: Reducción adicional de un 50% de espacio vertical en ForecastBuilder.tsx a py-1 de padding y pb-0.5 en fila de controles. Desplegado y subido a GitHub.
+
+2026-06-28: Modificacion de slides en presentacion. Se eliminaron los dos ultimos slides (19 y 20), se anadio el Slide 2 "Filosofia Personal Kodawari" explicando el enfoque de calidad y se re-indexo la navegacion de los slides al total de 19. Compilado y desplegado al VPS.
