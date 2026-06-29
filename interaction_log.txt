@@ -107,3 +107,5 @@
 2026-06-28: Centrado vertical absoluto del título de escenario y corrección de anchos en gráfico. Se modificó ForecastBuilder.tsx para posicionar el escenario en bottom-1 de CardHeader y se renombró 'Toneladas por Viaje' a 'TM/viaje'. Se ajustó InteractiveChart.tsx cambiando grid.left de 360 a 70 y containLabel: true para que el gráfico de ECharts se dibuje a ancho completo. Desplegado y subido a GitHub.
 
 2026-06-28: Reducción de espacio libre y 2 decimales en flete de tabla. Se redujo el padding de CardContent de ForecastBuilder.tsx a py-3 y se centraron los elementos verticalmente. Se ajustó el botón 'Mostrar' a text-[11px]. Se formateó Flete (USD/MT) en ForecastGrid.tsx para mostrar 2 decimales. Todo compilado, probado y subido a GitHub y al VPS.
+
+2026-06-28: Reducción adicional de un 50% de espacio vertical en ForecastBuilder.tsx a py-1 de padding y pb-0.5 en fila de controles. Desplegado y subido a GitHub.
