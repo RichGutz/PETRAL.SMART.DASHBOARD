@@ -11,6 +11,7 @@ El módulo ha sido concebido no como un simple reporte, sino como un **"Área de
 - **Guardar como Nuevo (Clonar):** El motor permite "congelar" el estado actual del simulador y guardarlo en la Base de Datos como un registro nuevo (clon).
 - **Sobrescribir Mi Escenario:** Sólo habilitado lógicamente si el `user_id` del escenario activo coincide con el autor original.
 - **Catálogo de Escenarios (Load Modal):** El Frontend inyecta un *Badge* inteligente (Ej: `Tuyo`) para destacar los escenarios propios del usuario actual.
+- **Ahorro de Espacio (Botones Apilados):** Los botones **Guardar** y **Cargar** se apilan verticalmente en una sola columna compacta a la derecha del constructor (`h-6` cada botón con `text-[10px]`), alineándose perfectamente con la fila de los títulos de las cajas para ganar espacio horizontal.
 
 ### 1.2 Auditoría de Inputs (100% Data-Driven)
 Tras una auditoría profunda del motor backend (`forecast_service.py` y `engine.py`), se certifica que **todos los inputs primarios son dinámicos e inyectados desde Supabase**, sin hardcodes. Dimensiones gobernadas por base de datos:
@@ -41,6 +42,8 @@ La tabla presenta un layout de **6 KPIs** principales fijos a la vista:
 - **Sticky Headers:** Los encabezados de la tabla (Cliente, Ruta, etc.) se mantienen fijos al hacer scroll vertical hacia abajo, ideal para "sábanas" de datos muy largas.
 - **Acumulación y Yield Ponderado:** Cálculos en tiempo real (`useMemo`) que suman métricas. El cálculo de Yield (USD/MT) **no suma promedios**, sino que aplica la división matemática global `Sum(Gross+Demurrage) / Sum(Toneladas)`.
 - **Despliegues Financieros (Sub-rows):** Al abrir la fila de Gross Revenue, se detallan: Voyage Result, Demurrage, Gross + Demurrage (Total Facturado), Toneladas y el Yield ponderado.
+- **Formato Flete (Dos Decimales):** La fila de `"Flete (USD/MT)"` tanto en las celdas mensuales individuales como en los totales de fila se formatea con exactamente dos decimales (`formatYield`) para máxima precisión contable (ej. `$20.67`).
+- **Compresión Vertical Extrema (Constructor):** El panel superior de inputs tiene un padding vertical reducido en un 75% (`py-1` en `CardContent` y `pb-0.5` en fila) y alineación `items-center` para optimizar el espacio libre y maximizar la visibilidad de la matriz financiera.
 
 ---
 
@@ -52,6 +55,10 @@ Capa de visualización ejecutiva, diseñada para ser proyectada en salas de junt
   - *Eje Primario*: Tonos corporativos **Petral Blue (`#0089CF`)**.
   - *Eje Secundario*: Temática en **Verde Esmeralda (`emerald-600`)** para alto contraste ejecutivo.
   - **Fuentes Estandarizadas**: Todos los radio buttons y checkboxes utilizan clases uniformes (`text-[11px] font-medium text-slate-700`) para simetría perfecta.
+- **Ancho Completo de Gráfico (Ancho Real):** El margen izquierdo de la cuadrícula de ECharts (`grid.left`) se ajustó a `70` con `containLabel: true` para eliminar el espacio muerto lateral y permitir que el gráfico tome el 100% de la anchura disponible.
+- **Layout de Ejes en Columnas Paralelas:** Los controles inferiores de cada eje se dividen en dos columnas:
+  - *Columna Izquierda*: 4 iconos SVG de tipo de gráfico apilados verticalmente (Barras Stack, Barras Adjuntas, Línea Suave y Línea Recta).
+  - *Columna Derecha*: El propio título `"Etiquetas"` actúa como un botón toggle reactivo (cambia entre texto blanco en fondo negro y texto negro en fondo blanco al hacer clic) para controlar la visibilidad del color de fuente, y debajo se apilan verticalmente los tres botones de posición (Ocultar, Encima, Centro).
 - **Expansión Líquida (Flex):** Absorbe el 100% del espacio vertical disponible.
 
 ### 3.2 Lógica de Graficación Dual y Formas
