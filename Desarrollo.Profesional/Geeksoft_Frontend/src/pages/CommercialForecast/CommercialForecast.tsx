@@ -355,13 +355,13 @@ export const CommercialForecast: React.FC = () => {
                         bottomRightContent={
                             activeTab !== 'ledger' && (
                                 <>
-                                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                                    <div className="flex flex-col gap-2 min-w-[90px] max-w-[120px] flex-1">
                                         <label className="text-xs opacity-0 pointer-events-none">X</label>
                                         <button onClick={() => setShowSaveModal(true)} className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 h-8 w-full rounded-full font-medium text-sm transition-colors shadow-sm">
                                             <Save size={16} /> Guardar
                                         </button>
                                     </div>
-                                    <div className="flex flex-col gap-2 min-w-[120px] flex-1">
+                                    <div className="flex flex-col gap-2 min-w-[90px] max-w-[120px] flex-1">
                                         <label className="text-xs opacity-0 pointer-events-none">X</label>
                                         <button 
                                             onClick={handleLoadClick} 

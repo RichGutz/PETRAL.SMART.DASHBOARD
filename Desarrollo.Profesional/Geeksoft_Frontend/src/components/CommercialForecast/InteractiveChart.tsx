@@ -707,8 +707,9 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     };
 
     return (
-        <div className="w-full bg-white pt-6 pb-2 px-6 shadow-sm rounded-b-lg flex flex-col flex-1 relative min-h-[calc(100vh-220px)]">
-            <div className="absolute left-6 top-10 flex flex-col gap-2 z-10 w-[240px]">
+        <div className="w-full bg-white pt-6 pb-6 px-6 shadow-sm rounded-b-lg flex flex-row gap-6 items-stretch min-h-[calc(100vh-220px)]">
+            {/* Sidebar de Controles (Left) */}
+            <div className="flex flex-col gap-3 shrink-0 w-[240px]">
                 
                 {/* FILTROS TABS */}
                 <div className="flex bg-white rounded-lg border border-slate-200 shadow-sm">
@@ -783,25 +784,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                         <div className="flex flex-col gap-1 border-t border-blue-200/50 pt-2 mt-1">
                             <div className="flex items-center justify-between">
                                 <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wide">Etiquetas</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <span className="text-[9px] text-slate-500 w-8 shrink-0 font-medium">Posic:</span>
-                                <div className="flex rounded border border-slate-200 overflow-hidden bg-white w-full">
-                                    {(['none', 'top', 'inside'] as const).map(pos => (
-                                        <button
-                                            key={pos}
-                                            onClick={() => setPrimaryLabelPos(pos)}
-                                            className={`flex-1 text-[9px] font-bold py-0.5 px-0.5 capitalize transition-all cursor-pointer ${primaryLabelPos === pos ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-                                        >
-                                            {pos === 'none' ? 'Ocultar' : (pos === 'top' ? 'Encima' : 'Centro')}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            {primaryLabelPos !== 'none' && (
-                                <div className="flex items-center gap-1 mt-0.5">
-                                    <span className="text-[9px] text-slate-500 w-8 shrink-0 font-medium">Color:</span>
-                                    <div className="flex items-center gap-2">
+                                {primaryLabelPos !== 'none' && (
+                                    <div className="flex items-center gap-1.5">
                                         <button
                                             onClick={() => setPrimaryLabelColor('#ffffff')}
                                             className={`w-3.5 h-3.5 rounded-full border bg-white flex items-center justify-center transition-all cursor-pointer ${primaryLabelColor === '#ffffff' ? 'border-blue-600 ring-2 ring-blue-100 scale-110' : 'border-slate-300'}`}
@@ -817,8 +801,22 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                                             <span className="text-[7px] font-extrabold text-white">B</span>
                                         </button>
                                     </div>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <span className="text-[9px] text-slate-500 w-8 shrink-0 font-medium">Posic:</span>
+                                <div className="flex rounded border border-slate-200 overflow-hidden bg-white w-full">
+                                    {(['none', 'top', 'inside'] as const).map(pos => (
+                                        <button
+                                            key={pos}
+                                            onClick={() => setPrimaryLabelPos(pos)}
+                                            className={`flex-1 text-[9px] font-bold py-0.5 px-0.5 capitalize transition-all cursor-pointer ${primaryLabelPos === pos ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                                        >
+                                            {pos === 'none' ? 'Ocultar' : (pos === 'top' ? 'Encima' : 'Centro')}
+                                        </button>
+                                    ))}
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -869,25 +867,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                         <div className="flex flex-col gap-1 border-t border-emerald-200/50 pt-2 mt-1">
                             <div className="flex items-center justify-between">
                                 <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wide">Etiquetas</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <span className="text-[9px] text-slate-500 w-8 shrink-0 font-medium">Posic:</span>
-                                <div className="flex rounded border border-slate-200 overflow-hidden bg-white w-full">
-                                    {(['none', 'top', 'inside'] as const).map(pos => (
-                                        <button
-                                            key={pos}
-                                            onClick={() => setSecondaryLabelPos(pos)}
-                                            className={`flex-1 text-[9px] font-bold py-0.5 px-0.5 capitalize transition-all cursor-pointer ${secondaryLabelPos === pos ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-                                        >
-                                            {pos === 'none' ? 'Ocultar' : (pos === 'top' ? 'Encima' : 'Centro')}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            {secondaryLabelPos !== 'none' && (
-                                <div className="flex items-center gap-1 mt-0.5">
-                                    <span className="text-[9px] text-slate-500 w-8 shrink-0 font-medium">Color:</span>
-                                    <div className="flex items-center gap-2">
+                                {secondaryLabelPos !== 'none' && (
+                                    <div className="flex items-center gap-1.5">
                                         <button
                                             onClick={() => setSecondaryLabelColor('#ffffff')}
                                             className={`w-3.5 h-3.5 rounded-full border bg-white flex items-center justify-center transition-all cursor-pointer ${secondaryLabelColor === '#ffffff' ? 'border-emerald-600 ring-2 ring-emerald-100 scale-110' : 'border-slate-300'}`}
@@ -903,15 +884,32 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                                             <span className="text-[7px] font-extrabold text-white">B</span>
                                         </button>
                                     </div>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <span className="text-[9px] text-slate-500 w-8 shrink-0 font-medium">Posic:</span>
+                                <div className="flex rounded border border-slate-200 overflow-hidden bg-white w-full">
+                                    {(['none', 'top', 'inside'] as const).map(pos => (
+                                        <button
+                                            key={pos}
+                                            onClick={() => setSecondaryLabelPos(pos)}
+                                            className={`flex-1 text-[9px] font-bold py-0.5 px-0.5 capitalize transition-all cursor-pointer ${secondaryLabelPos === pos ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                                        >
+                                            {pos === 'none' ? 'Ocultar' : (pos === 'top' ? 'Encima' : 'Centro')}
+                                        </button>
+                                    ))}
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </div>
                 </div>
 
             </div>
 
-            <ReactECharts option={options} style={{ flex: 1, minHeight: '600px', width: '100%' }} notMerge={true} />
+            {/* Contenedor del Gráfico (Right) */}
+            <div className="flex-1 flex flex-col min-h-[650px]">
+                <ReactECharts option={options} style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} notMerge={true} />
+            </div>
         </div>
     );
 };
