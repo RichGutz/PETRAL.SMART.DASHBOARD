@@ -733,7 +733,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                         </span>
                                                     ) : (
                                                         <span className="font-medium">
-                                                            {row.metric.name === "Yield (USD/MT)" || row.metric.name === "Yield Flete (USD/MT)" ? formatYield(v) : formatCurrency(v)}
+                                                            {row.metric.name === "Yield (USD/MT)" || row.metric.name === "Yield Flete (USD/MT)" || row.metric.name === "Flete (USD/MT)" ? formatYield(v) : formatCurrency(v)}
                                                         </span>
                                                     )}
                                                 </div>
@@ -754,7 +754,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                 </span>
                                             ) : (
                                                 <span className="font-bold">
-                                                    {row.metric.name === "Yield (USD/MT)" || row.metric.name === "Yield Flete (USD/MT)" ? formatYield(row.metric.total) : formatCurrency(row.metric.total)}
+                                                    {row.metric.name === "Yield (USD/MT)" || row.metric.name === "Yield Flete (USD/MT)" || row.metric.name === "Flete (USD/MT)" ? formatYield(row.metric.total) : formatCurrency(row.metric.total)}
                                                 </span>
                                             )}
                                         </div>

@@ -147,10 +147,10 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 )}
             </CardHeader>
             {!hideInputs && (
-            <CardContent className="pt-6">
+            <CardContent className="py-3 px-6">
                 
                 {/* Contenedor Flex en una sola línea sin wrap, con scroll horizontal si es muy pequeña la pantalla */}
-                <div className="flex flex-row items-end gap-2 w-full pb-2">
+                <div className="flex flex-row items-center gap-2 w-full pb-2">
                     
                     {/* 1. Inicio */}
                     <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
@@ -338,7 +338,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             />
                             <button 
                                 onClick={() => onShowDemurrageChange?.(!showDemurrage)}
-                                className={`flex-1 text-xs font-semibold rounded transition-colors border ${showDemurrage ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                                className={`flex-1 text-[11px] font-semibold rounded transition-colors border ${showDemurrage ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
                                 title="Mostrar Demurrage en la Matriz Financiera"
                             >
                                 Mostrar
