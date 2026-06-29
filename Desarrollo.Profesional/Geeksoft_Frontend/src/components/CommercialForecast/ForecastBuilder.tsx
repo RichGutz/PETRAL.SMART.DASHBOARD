@@ -147,10 +147,10 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 )}
             </CardHeader>
             {!hideInputs && (
-            <CardContent className="py-3 px-6">
+            <CardContent className="py-1 px-6">
                 
                 {/* Contenedor Flex en una sola línea sin wrap, con scroll horizontal si es muy pequeña la pantalla */}
-                <div className="flex flex-row items-center gap-2 w-full pb-2">
+                <div className="flex flex-row items-center gap-2 w-full pb-0.5">
                     
                     {/* 1. Inicio */}
                     <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
