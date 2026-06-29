@@ -762,55 +762,54 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             'blue',
                             false
                         )}
-                        <div className="flex flex-col gap-2">
-                            <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="radio" name="priType" checked={primaryGraphType === 'bar_stack'} onChange={() => setPrimaryGraphType('bar_stack')} className="w-3 h-3" />
-                                <span className="text-[11px] font-medium text-slate-700">Barras Stack</span>
-                            </label>
-                            <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="radio" name="priType" checked={primaryGraphType === 'bar_group'} onChange={() => setPrimaryGraphType('bar_group')} className="w-3 h-3" />
-                                <span className="text-[11px] font-medium text-slate-700">Barras Adjuntas</span>
-                            </label>
-                            <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="radio" name="priType" checked={primaryGraphType === 'line'} onChange={() => setPrimaryGraphType('line')} className="w-3 h-3" />
-                                <span className="text-[11px] font-medium text-slate-700">Línea Suavizada</span>
-                            </label>
-                            <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="radio" name="priType" checked={primaryGraphType === 'line_straight'} onChange={() => setPrimaryGraphType('line_straight')} className="w-3 h-3" />
-                                <span className="text-[11px] font-medium text-slate-700">Línea Recta</span>
-                            </label>
-                        </div>
-                        {/* Control de Etiquetas */}
-                        <div className="flex flex-col gap-1 border-t border-blue-200/50 pt-2 mt-1">
-                            <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wide">Etiquetas</span>
-                                {primaryLabelPos !== 'none' && (
-                                    <div className="flex items-center gap-1.5">
-                                        <button
-                                            onClick={() => setPrimaryLabelColor('#ffffff')}
-                                            className={`w-3.5 h-3.5 rounded-full border bg-white flex items-center justify-center transition-all cursor-pointer ${primaryLabelColor === '#ffffff' ? 'border-blue-600 ring-2 ring-blue-100 scale-110' : 'border-slate-300'}`}
-                                            title="Texto Blanco"
-                                        >
-                                            <span className="text-[7px] font-extrabold text-slate-800">W</span>
-                                        </button>
-                                        <button
-                                            onClick={() => setPrimaryLabelColor('#000000')}
-                                            className={`w-3.5 h-3.5 rounded-full border bg-black flex items-center justify-center transition-all cursor-pointer ${primaryLabelColor === '#000000' ? 'border-blue-600 ring-2 ring-blue-100 scale-110' : 'border-slate-350'}`}
-                                            title="Texto Negro"
-                                        >
-                                            <span className="text-[7px] font-extrabold text-white">B</span>
-                                        </button>
-                                    </div>
-                                )}
+<div className="flex flex-row gap-4 pt-2 border-t border-blue-200/40 mt-1">
+                            {/* Columna Izquierda: Tipo de Gráfico (Iconos apilados) */}
+                            <div className="flex flex-col gap-1 w-9 shrink-0">
+                                <button 
+                                    onClick={() => setPrimaryGraphType('bar_stack')}
+                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'bar_stack' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
+                                    title="Barras Stack"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="13" width="10" height="4" rx="1"/><rect x="7" y="7" width="10" height="4" rx="1"/></svg>
+                                </button>
+                                <button 
+                                    onClick={() => setPrimaryGraphType('bar_group')}
+                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'bar_group' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
+                                    title="Barras Adjuntas"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 17v-6"/><path d="M11 17V9"/><path d="M15 17v-4"/><path d="M19 17V5"/></svg>
+                                </button>
+                                <button 
+                                    onClick={() => setPrimaryGraphType('line')}
+                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'line' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
+                                    title="Línea Suavizada"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 17c2-5 4-10 8-10s6 5 8 5"/></svg>
+                                </button>
+                                <button 
+                                    onClick={() => setPrimaryGraphType('line_straight')}
+                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'line_straight' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
+                                    title="Línea Recta"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l5-8 5 6 4-6"/></svg>
+                                </button>
                             </div>
-                            <div className="flex items-center gap-1">
-                                <span className="text-[9px] text-slate-500 w-8 shrink-0 font-medium">Posic:</span>
-                                <div className="flex rounded border border-slate-200 overflow-hidden bg-white w-full">
+
+                            {/* Columna Derecha: Control de Etiquetas */}
+                            <div className="flex-1 flex flex-col gap-1">
+                                <button
+                                    onClick={() => setPrimaryLabelColor(primaryLabelColor === '#ffffff' ? '#000000' : '#ffffff')}
+                                    className={`w-full text-center py-1 text-[10px] font-extrabold rounded border transition-colors shadow-sm cursor-pointer ${primaryLabelColor === '#ffffff' ? 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800' : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'}`}
+                                    title="Alternar Color (Blanco/Negro)"
+                                >
+                                    Etiquetas
+                                </button>
+                                <div className="flex flex-col rounded border border-slate-200 overflow-hidden bg-white mt-1 w-full">
                                     {(['none', 'top', 'inside'] as const).map(pos => (
                                         <button
                                             key={pos}
                                             onClick={() => setPrimaryLabelPos(pos)}
-                                            className={`flex-1 text-[9px] font-bold py-0.5 px-0.5 capitalize transition-all cursor-pointer ${primaryLabelPos === pos ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                                            className={`text-[9px] font-bold py-1 px-1 transition-all cursor-pointer border-b last:border-0 border-slate-100 ${primaryLabelPos === pos ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
                                         >
                                             {pos === 'none' ? 'Ocultar' : (pos === 'top' ? 'Encima' : 'Centro')}
                                         </button>
@@ -835,21 +834,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             'emerald',
                             true
                         )}
-                        <div className="flex flex-col gap-2">
-                            <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="radio" name="secType" checked={secondaryGraphType === 'bar'} onChange={() => setSecondaryGraphType('bar')} className="w-3 h-3" />
-                                <span className="text-[11px] font-medium text-slate-700">Barras</span>
-                            </label>
-                            <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="radio" name="secType" checked={secondaryGraphType === 'line'} onChange={() => setSecondaryGraphType('line')} className="w-3 h-3" />
-                                <span className="text-[11px] font-medium text-slate-700">Línea Suavizada</span>
-                            </label>
-                            <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="radio" name="secType" checked={secondaryGraphType === 'line_straight'} onChange={() => setSecondaryGraphType('line_straight')} className="w-3 h-3" />
-                                <span className="text-[11px] font-medium text-slate-700">Línea Recta</span>
-                            </label>
-                        </div>
-                        <div className="flex flex-col gap-1.5 mt-2">
+<div className="flex flex-col gap-1.5 mt-1 border-t border-slate-200/50 pt-2">
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" className="w-3 h-3" checked={isSecondaryCumulativeSeries} onChange={(e) => setIsSecondaryCumulativeSeries(e.target.checked)} />
                                 <span className="text-[11px] font-medium text-slate-700">Acumular por serie</span>
@@ -858,42 +843,53 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                                 <input type="checkbox" className="w-3 h-3" checked={isSecondaryCumulativeGlobal} onChange={(e) => setIsSecondaryCumulativeGlobal(e.target.checked)} />
                                 <span className="text-[11px] font-medium text-slate-700">Acumular Global</span>
                             </label>
-                            <label className="flex items-center gap-2 cursor-pointer mt-1">
+                            <label className="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" className="w-3 h-3" checked={isSecondaryPercentage} onChange={(e) => setIsSecondaryPercentage(e.target.checked)} />
                                 <span className="text-[11px] font-medium text-slate-700">Mostrar en % (Share)</span>
                             </label>
                         </div>
-                        {/* Control de Etiquetas */}
-                        <div className="flex flex-col gap-1 border-t border-emerald-200/50 pt-2 mt-1">
-                            <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wide">Etiquetas</span>
-                                {secondaryLabelPos !== 'none' && (
-                                    <div className="flex items-center gap-1.5">
-                                        <button
-                                            onClick={() => setSecondaryLabelColor('#ffffff')}
-                                            className={`w-3.5 h-3.5 rounded-full border bg-white flex items-center justify-center transition-all cursor-pointer ${secondaryLabelColor === '#ffffff' ? 'border-emerald-600 ring-2 ring-emerald-100 scale-110' : 'border-slate-300'}`}
-                                            title="Texto Blanco"
-                                        >
-                                            <span className="text-[7px] font-extrabold text-slate-800">W</span>
-                                        </button>
-                                        <button
-                                            onClick={() => setSecondaryLabelColor('#000000')}
-                                            className={`w-3.5 h-3.5 rounded-full border bg-black flex items-center justify-center transition-all cursor-pointer ${secondaryLabelColor === '#000000' ? 'border-emerald-600 ring-2 ring-emerald-100 scale-110' : 'border-slate-350'}`}
-                                            title="Texto Negro"
-                                        >
-                                            <span className="text-[7px] font-extrabold text-white">B</span>
-                                        </button>
-                                    </div>
-                                )}
+                        
+                        <div className="flex flex-row gap-4 pt-2 border-t border-emerald-200/40 mt-1">
+                            {/* Columna Izquierda: Tipo de Gráfico (Iconos apilados) */}
+                            <div className="flex flex-col gap-1 w-9 shrink-0">
+                                <button 
+                                    onClick={() => setSecondaryGraphType('bar')}
+                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${secondaryGraphType === 'bar' ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
+                                    title="Barras"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 17v-6"/><path d="M11 17V9"/><path d="M15 17v-4"/><path d="M19 17V5"/></svg>
+                                </button>
+                                <button 
+                                    onClick={() => setSecondaryGraphType('line')}
+                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${secondaryGraphType === 'line' ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
+                                    title="Línea Suavizada"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 17c2-5 4-10 8-10s6 5 8 5"/></svg>
+                                </button>
+                                <button 
+                                    onClick={() => setSecondaryGraphType('line_straight')}
+                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${secondaryGraphType === 'line_straight' ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
+                                    title="Línea Recta"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l5-8 5 6 4-6"/></svg>
+                                </button>
                             </div>
-                            <div className="flex items-center gap-1">
-                                <span className="text-[9px] text-slate-500 w-8 shrink-0 font-medium">Posic:</span>
-                                <div className="flex rounded border border-slate-200 overflow-hidden bg-white w-full">
+
+                            {/* Columna Derecha: Control de Etiquetas */}
+                            <div className="flex-1 flex flex-col gap-1">
+                                <button
+                                    onClick={() => setSecondaryLabelColor(secondaryLabelColor === '#ffffff' ? '#000000' : '#ffffff')}
+                                    className={`w-full text-center py-1 text-[10px] font-extrabold rounded border transition-colors shadow-sm cursor-pointer ${secondaryLabelColor === '#ffffff' ? 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800' : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'}`}
+                                    title="Alternar Color (Blanco/Negro)"
+                                >
+                                    Etiquetas
+                                </button>
+                                <div className="flex flex-col rounded border border-slate-200 overflow-hidden bg-white mt-1 w-full">
                                     {(['none', 'top', 'inside'] as const).map(pos => (
                                         <button
                                             key={pos}
                                             onClick={() => setSecondaryLabelPos(pos)}
-                                            className={`flex-1 text-[9px] font-bold py-0.5 px-0.5 capitalize transition-all cursor-pointer ${secondaryLabelPos === pos ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                                            className={`text-[9px] font-bold py-1 px-1 transition-all cursor-pointer border-b last:border-0 border-slate-100 ${secondaryLabelPos === pos ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
                                         >
                                             {pos === 'none' ? 'Ocultar' : (pos === 'top' ? 'Encima' : 'Centro')}
                                         </button>
