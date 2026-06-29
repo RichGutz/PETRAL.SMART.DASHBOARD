@@ -111,3 +111,5 @@
 2026-06-28: Reducción adicional de un 50% de espacio vertical en ForecastBuilder.tsx a py-1 de padding y pb-0.5 en fila de controles. Desplegado y subido a GitHub.
 
 2026-06-28: Modificacion de slides en presentacion. Se eliminaron los dos ultimos slides (19 y 20), se anadio el Slide 2 "Filosofia Personal Kodawari" explicando el enfoque de calidad y se re-indexo la navegacion de los slides al total de 19. Compilado y desplegado al VPS.
+
+2026-06-28: Reversión completa de la presentación interactiva a su estado original. Desplegado y sincronizado con GitHub.
