@@ -1,11 +1,17 @@
 
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { CommercialForecast } from './pages/CommercialForecast/CommercialForecast';
 
 function App() {
   return (
-    <div className="App">
-      <CommercialForecast />
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/dashboard" element={<CommercialForecast />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

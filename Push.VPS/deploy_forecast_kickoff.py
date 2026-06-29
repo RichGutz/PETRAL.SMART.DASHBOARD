@@ -74,13 +74,19 @@ def deploy():
     root {APP_DIR};
     index index.html;
 
+    location /api/ {{
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }}
+
     location / {{
         try_files $uri $uri/ /index.html;
     }}
 
     # Compresión
     gzip on;
-    gzip_types text/html text/css application/javascript;
+    gzip_types text/html text/css application/javascript application/json;
 }}"""
         run(client,
             f"echo '{nginx_cfg}' > /etc/nginx/sites-available/{DOMAIN} && "
