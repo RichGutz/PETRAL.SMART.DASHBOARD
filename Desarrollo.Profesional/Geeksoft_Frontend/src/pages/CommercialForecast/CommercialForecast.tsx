@@ -355,29 +355,25 @@ export const CommercialForecast: React.FC = () => {
                         bottomRightContent={
                             activeTab !== 'ledger' && (
                                 <>
-                                    <div className="flex flex-col gap-2 min-w-[90px] max-w-[120px] flex-1">
-                                        <label className="text-xs opacity-0 pointer-events-none">X</label>
-                                        <button onClick={() => setShowSaveModal(true)} className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 h-8 w-full rounded-full font-medium text-sm transition-colors shadow-sm">
-                                            <Save size={16} /> Guardar
+                                    <div className="flex flex-col gap-1 min-w-[90px] max-w-[110px] flex-1 justify-end h-full">
+                                        <button onClick={() => setShowSaveModal(true)} className="flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground h-6 w-full rounded font-medium text-[10px] transition-colors shadow-sm cursor-pointer">
+                                            <Save size={12} /> Guardar
                                         </button>
-                                    </div>
-                                    <div className="flex flex-col gap-2 min-w-[90px] max-w-[120px] flex-1">
-                                        <label className="text-xs opacity-0 pointer-events-none">X</label>
                                         <button 
                                             onClick={handleLoadClick} 
                                             disabled={actionLoading === 'loadList'}
-                                            className={`relative overflow-hidden flex items-center justify-center gap-2 h-8 w-full rounded-full font-medium text-sm transition-colors shadow-sm ${actionLoading === 'loadList' ? 'bg-slate-200 pointer-events-none' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'}`}
+                                            className={`relative overflow-hidden flex items-center justify-center gap-1 h-6 w-full rounded font-medium text-[10px] transition-colors shadow-sm cursor-pointer ${actionLoading === 'loadList' ? 'bg-slate-200 pointer-events-none' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'}`}
                                         >
                                             {actionLoading === 'loadList' && <div className="absolute inset-0 bg-slate-300/50 animate-pulse" style={{ width: '100%' }}></div>}
-                                            <span className="relative flex items-center justify-center z-10 w-full gap-2">
+                                            <span className="relative flex items-center justify-center z-10 w-full gap-1">
                                                 {actionLoading === 'loadList' ? (
                                                     <>
-                                                        <div className="animate-spin h-3 w-3 border-2 border-slate-500 border-t-transparent rounded-full"></div>
-                                                        <span>Abriendo...</span>
+                                                        <div className="animate-spin h-2.5 w-2.5 border-2 border-slate-500 border-t-transparent rounded-full"></div>
+                                                        <span>Abrir...</span>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <FolderOpen size={16} /> Cargar
+                                                        <FolderOpen size={12} /> Cargar
                                                     </>
                                                 )}
                                             </span>
