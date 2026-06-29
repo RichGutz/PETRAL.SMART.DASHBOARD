@@ -5,6 +5,7 @@ import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { MonthPicker } from '../ui/month-picker';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { PlusCircle } from 'lucide-react';
 
 interface ForecastBuilderProps {
@@ -47,7 +48,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     onShowDemurrageChange
 }) => {
     // Form State
-    const [monthIndex, setMonthIndex] = useState('');
+    const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
     const [client, setClient] = useState('');
     const [route, setRoute] = useState('');
     const [vessel, setVessel] = useState('');
@@ -59,6 +60,13 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     // Dynamic Clients State
     const [availableClients, setAvailableClients] = useState<string[]>([]);
 
+    const formatMonthPill = (yyyymm: string) => {
+        const [y, m] = yyyymm.split('-');
+        const date = new Date(parseInt(y), parseInt(m) - 1);
+        const month = date.toLocaleString('es-ES', { month: 'short' }).replace('.', '');
+        return `${month.charAt(0).toUpperCase() + month.slice(1)} ${y.slice(2)}`;
+    };
+
     useEffect(() => {
         import('../../services/api').then(({ ForecastService }) => {
             ForecastService.getClients().then(clients => {
@@ -69,9 +77,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
     // Clear month if it falls outside the new horizon, otherwise leave it alone (or empty initially)
     useEffect(() => {
-        if (monthIndex && !dynamicMonths.includes(monthIndex)) {
-            setMonthIndex('');
-        }
+        setSelectedMonths(prev => prev.filter(m => dynamicMonths.includes(m)));
     }, [dynamicMonths]);
 
     // Maestro de Flota (Capacidad de Carga Normal/Comercial, no DWT nominal)
@@ -99,20 +105,22 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     }, [client]);
 
     const handleAdd = () => {
-        if (!client || !route || !vessel || !monthIndex || !quantity || !frequency) return;
+        if (!client || !route || !vessel || selectedMonths.length === 0 || !quantity || !frequency) return;
         if (client === 'SPOT' && (!customTariff || !spotSuffix.trim())) return;
 
         const finalClient = client === 'SPOT' ? `SPOT-${spotSuffix.trim().toUpperCase()}` : client;
 
-        onAddLine({
-            month_index: monthIndex,
-            client_id: finalClient,
-            origin_port_id: route.split('-')[0],
-            destination_port_id: route.split('-')[1], // Reverted hack since DB was updated
-            vessel_id: vessel,
-            quantity: parseInt(quantity),
-            monthly_frequency: parseInt(frequency),
-            custom_tariff: customTariff ? parseFloat(customTariff) : undefined
+        selectedMonths.forEach(mIdx => {
+            onAddLine({
+                month_index: mIdx,
+                client_id: finalClient,
+                origin_port_id: route.split('-')[0],
+                destination_port_id: route.split('-')[1], // Reverted hack since DB was updated
+                vessel_id: vessel,
+                quantity: parseInt(quantity),
+                monthly_frequency: parseInt(frequency),
+                custom_tariff: customTariff ? parseFloat(customTariff) : undefined
+            });
         });
     };
 
@@ -154,10 +162,22 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     
                     {/* 1. Inicio */}
                     <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">1. Inicio Forecast</Label>
+                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">1. Inicio forecast</Label>
                         <MonthPicker 
                             value={currentStartDate.slice(0, 7)}
-                            onChange={(val) => onHorizonChange(`${val || ''}-01`, currentEndDate)}
+                            onChange={(val) => {
+                                const newStartVal = val || '';
+                                const currentEndVal = currentEndDate.slice(0, 7);
+                                // Si elige un inicio MAYOR al fin actual, empujamos el fin
+                                if (newStartVal > currentEndVal) {
+                                    const y = parseInt(newStartVal.split('-')[0]);
+                                    const m = parseInt(newStartVal.split('-')[1]);
+                                    const lastDay = new Date(y, m, 0).getDate();
+                                    onHorizonChange(`${newStartVal}-01`, `${newStartVal}-${lastDay}`);
+                                } else {
+                                    onHorizonChange(`${newStartVal}-01`, currentEndDate);
+                                }
+                            }}
                             placeholder="Inicio"
                             className="border-slate-200 shadow-sm"
                         />
@@ -165,32 +185,89 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
                     {/* 2. Fin */}
                     <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">2. Fin Forecast</Label>
+                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">2. Fin forecast</Label>
                         <MonthPicker 
                             value={currentEndDate.slice(0, 7)}
                             onChange={(val) => {
                                 if (!val) return;
+                                const currentStartVal = currentStartDate.slice(0, 7);
+                                let finalStart = currentStartDate;
+                                // Si elige un fin MENOR al inicio actual, retrocedemos el inicio
+                                if (val < currentStartVal) {
+                                    finalStart = `${val}-01`;
+                                }
                                 const year = parseInt(val.split('-')[0]);
                                 const month = parseInt(val.split('-')[1]);
                                 const lastDay = new Date(year, month, 0).getDate();
-                                onHorizonChange(currentStartDate, `${val}-${lastDay}`);
+                                onHorizonChange(finalStart, `${val}-${lastDay}`);
                             }}
+                            minDate={currentStartDate.slice(0, 7)}
                             placeholder="Fin"
                             className="border-slate-200 shadow-sm"
                         />
                     </div>
 
-                    {/* 3. Mes */}
-                    <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">3. Mes a Modelar</Label>
-                        <MonthPicker 
-                            value={monthIndex}
-                            onChange={(val) => setMonthIndex(val || '')}
-                            minDate={currentStartDate.slice(0, 7)}
-                            maxDate={currentEndDate.slice(0, 7)}
-                            placeholder="Mes"
-                            className="border-petral-teal border-2 shadow-sm"
-                        />
+                    {/* 3. Meses a Modelar */}
+                    <div className="flex flex-col gap-2 flex-1 w-0 flex-1 relative">
+                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">3. Meses a modelar</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <button
+                                    type="button"
+                                    className="w-full flex items-center justify-between px-3 h-8 text-xs bg-white border-2 border-petral-teal shadow-sm rounded hover:border-[#0F2340] focus:outline-none transition-all text-slate-700"
+                                >
+                                    <span className="truncate text-left w-full font-medium">
+                                        {selectedMonths.length === 0 ? "Seleccionar..." : 
+                                         selectedMonths.length === 1 ? selectedMonths[0] : 
+                                         `${selectedMonths.length} meses`}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 shrink-0 ml-1">▼</span>
+                                </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[320px] p-4" side="bottom" align="start">
+                                <div className="text-[11px] uppercase font-bold tracking-wider text-slate-400 mb-3 border-b pb-1.5">Selección Múltiple</div>
+                                <div className="flex gap-3">
+                                    <div className="flex-1 max-h-[220px] overflow-y-auto pr-1 grid grid-cols-3 gap-2 custom-scrollbar">
+                                        {dynamicMonths.length === 0 ? (
+                                            <div className="col-span-3 text-xs text-slate-500 italic py-2 text-center">Falta definir horizonte</div>
+                                        ) : (
+                                            dynamicMonths.map(m => (
+                                                <button
+                                                    key={m}
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        if (selectedMonths.includes(m)) setSelectedMonths(prev => prev.filter(x => x !== m));
+                                                        else setSelectedMonths(prev => [...prev, m].sort());
+                                                    }}
+                                                    className={`px-1.5 py-1.5 rounded-full text-[10px] font-bold transition-all border outline-none truncate ${
+                                                        selectedMonths.includes(m) 
+                                                        ? 'bg-petral-teal text-white border-petral-teal shadow-md transform scale-[1.02]' 
+                                                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-700'
+                                                    }`}
+                                                >
+                                                    {formatMonthPill(m)}
+                                                </button>
+                                            ))
+                                        )}
+                                    </div>
+                                    {dynamicMonths.length > 0 && (
+                                        <div className="flex flex-col gap-2 border-l pl-3 justify-start pt-1">
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setSelectedMonths([...dynamicMonths])}
+                                                className="text-[10px] w-[64px] py-1.5 bg-slate-100 rounded text-slate-600 font-bold hover:bg-slate-200 shadow-sm border border-slate-200"
+                                            >Todos</button>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setSelectedMonths([])}
+                                                className="text-[10px] w-[64px] py-1.5 bg-slate-50 rounded text-slate-500 hover:bg-slate-200 shadow-sm border border-slate-200"
+                                            >Ninguno</button>
+                                        </div>
+                                    )}
+                                </div>
+                            </PopoverContent>
+                        </Popover>
                     </div>
 
                     {/* 4. Cliente */}
@@ -352,7 +429,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         <Button 
                             onClick={handleAdd} 
                             className={`relative w-full h-8 overflow-hidden transition-colors rounded-full ${isAdding ? 'bg-primary text-white pointer-events-none' : 'bg-primary hover:bg-primary/90 text-white'}`}
-                            disabled={isAdding || !client || !route || !vessel || !monthIndex || !quantity || !frequency || (client === 'SPOT' && (!customTariff || !spotSuffix.trim()))}
+                            disabled={isAdding || !client || !route || !vessel || selectedMonths.length === 0 || !quantity || !frequency || (client === 'SPOT' && (!customTariff || !spotSuffix.trim()))}
                         >
                             {isAdding && (
                                 <div className="absolute inset-0 bg-white/20 animate-pulse" style={{ width: '100%' }}></div>
@@ -376,7 +453,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     {/* 10. Vista ($ / %) */}
                     {displayMode && onDisplayModeChange && (
                         <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                            <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">Vista de Tabla</Label>
+                            <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">Vista de tabla</Label>
                             <div className="flex bg-slate-200 rounded p-0.5 h-8 w-full shadow-inner">
                                 <button
                                     onClick={() => onDisplayModeChange('usd')}
