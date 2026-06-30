@@ -211,18 +211,15 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     <div className="flex flex-col gap-2 flex-1 w-0 flex-1 relative">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">3. Meses a modelar</Label>
                         <Popover>
-                            <PopoverTrigger asChild>
-                                <button
-                                    type="button"
-                                    className="w-full flex items-center justify-between px-3 h-8 text-xs bg-white border-2 border-petral-teal shadow-sm rounded hover:border-[#0F2340] focus:outline-none transition-all text-slate-700"
-                                >
-                                    <span className="truncate text-left w-full font-medium">
-                                        {selectedMonths.length === 0 ? "Seleccionar..." : 
-                                         selectedMonths.length === 1 ? selectedMonths[0] : 
-                                         `${selectedMonths.length} meses`}
-                                    </span>
-                                    <span className="text-[10px] text-slate-500 shrink-0 ml-1">▼</span>
-                                </button>
+                            <PopoverTrigger
+                                className="w-full flex items-center justify-between px-3 h-8 text-xs bg-white border-2 border-petral-teal shadow-sm rounded hover:border-[#0F2340] focus:outline-none transition-all text-slate-700"
+                            >
+                                <span className="truncate text-left w-full font-medium">
+                                    {selectedMonths.length === 0 ? "Seleccionar..." : 
+                                     selectedMonths.length === 1 ? selectedMonths[0] : 
+                                     `${selectedMonths.length} meses`}
+                                </span>
+                                <span className="text-[10px] text-slate-500 shrink-0 ml-1">▼</span>
                             </PopoverTrigger>
                             <PopoverContent className="w-[320px] p-4" side="bottom" align="start">
                                 <div className="text-[11px] uppercase font-bold tracking-wider text-slate-400 mb-3 border-b pb-1.5">Selección Múltiple</div>

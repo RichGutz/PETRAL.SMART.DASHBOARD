@@ -21,6 +21,12 @@ Tras una auditoría profunda del motor backend (`forecast_service.py` y `engine.
 - *Tarifas*: freights por bracket y matriz de agenciamiento.
 - *Precios*: Mercado de Bunker.
 
+### 1.3 Multi-Selección Dinámica (Meses a modelar)
+- **Despliegue Nativo (Popover):** El paso 3 del constructor abandona el clásico selector individual por un `Popover` de Shadcn que se inyecta nativamente en el root, escapando de bloqueos de diseño (overflow).
+- **Botones Píldora (UX/UI Trimestral):** Los meses del horizonte se renderizan en una cuadrícula (`grid-cols-3` para agrupar naturalmente en trimestres) usando botones interactivos estilo píldora que se iluminan al activarse.
+- **Inyección por Lotes (Batch Injection):** Al añadir un escenario, el motor itera internamente e inyecta en la matriz financiera todos los meses seleccionados de forma instantánea.
+- **Candado de Horizonte Bidireccional:** El selector de Inicio y Fin de Forecast incorpora inteligencia lógica. Si el usuario intenta cruzar fechas (Inicio > Fin), el sistema auto-corrige y empuja silenciosamente el rango, blindando la integridad matemática de la matriz.
+
 ---
 
 ## 2. 📊 Matriz Financiera (ForecastGrid.tsx)
