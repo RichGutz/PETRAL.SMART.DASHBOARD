@@ -131,3 +131,24 @@ El cliente **NEXA** opera bajo un modelo de rutas complejas (múltiples puertos 
 
 ---
 *Documento vivo mantenido por el equipo Geeksoft - Naviera Petral.*
+
+---
+
+## 6. 🎛️ Módulos del Ribbon — Mapa del Dashboard
+
+El módulo **Commercial Forecast** comparte el Ribbon del dashboard con otros reportes especializados. La navegación lateral agrupa todas las vistas del sistema bajo un menú único:
+
+| # | Módulo | Estado | Descripción |
+|---|---|---|---|
+| 1 | **Voyage Ledger** | ✅ Productivo | Auditoría detallada de cálculo por viaje (P&L unitario) |
+| 2 | **Ruteador Spot** | ✅ Productivo | Cotizador multileg para operaciones spot complejas |
+| 3 | **Commercial Forecast** | ✅ Productivo | Matriz Financiera + Análisis Gráfico (este documento) |
+| 4 | **Mapa Espaguetis** | 🚧 En especificación | Visualización geoespacial de rutas, fuentes y sumideros |
+
+### Módulo 4: Mapa Espaguetis — Fuentes y Sumideros
+El cuarto módulo del Ribbon es una vista geoespacial del Perú que superpone las rutas activas (espaguetis), los pie charts de carga/descarga por puerto y el market share de Petral como fuente o sumidero en cada terminal.
+
+👉 Ver especificación completa: [[Especificacion.Mapa.Espaguetis]]
+
+---
+*Documento vivo mantenido por el equipo Geeksoft - Naviera Petral.*
