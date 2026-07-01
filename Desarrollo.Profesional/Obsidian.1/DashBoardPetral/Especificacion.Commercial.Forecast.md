@@ -27,6 +27,14 @@ Tras una auditoría profunda del motor backend (`forecast_service.py` y `engine.
 - **Inyección por Lotes (Batch Injection):** Al añadir un escenario, el motor itera internamente e inyecta en la matriz financiera todos los meses seleccionados de forma instantánea.
 - **Candado de Horizonte Bidireccional:** El selector de Inicio y Fin de Forecast incorpora inteligencia lógica. Si el usuario intenta cruzar fechas (Inicio > Fin), el sistema auto-corrige y empuja silenciosamente el rango, blindando la integridad matemática de la matriz.
 
+### 1.4 Resolución del Bug NaN en Auditoría de Tasas del Ledger
+- **Problema:** En el módulo Voyage Ledger, la columna **GEEKSOFT (Motor)** mostraba `NaN` en las filas de *Tasa de Carga* y *Tasa de Descarga*, a pesar de que la fórmula matemática se calculaba correctamente en el motor backend.
+- **Causa raíz:** El endpoint `/api/v1/forecast/run` (en `forecast_service.py`) no mapeaba ni retornaba los campos `actual_load_rate` ni `actual_discharge_rate` dentro del objeto consolidado `monthly_result` que consume el frontend. Adicionalmente, el frontend tenía valores hardcodeados `500` y `300` en vez de usar los retornos del backend, y los formateadores no tenían validación contra valores nulos.
+- **Soluciones:** 
+  1. Se modificó `forecast_service.py` para inyectar `actual_load_rate` y `actual_discharge_rate` dentro del payload de `monthly_result`.
+  2. Se actualizó `VoyageLedgerTest.tsx` (tanto en la vista web como en el layout de impresión de PDF) reemplazando los hardcodes por `scenarioResult.actual_load_rate` y `scenarioResult.actual_discharge_rate`.
+  3. Se robustecieron los formateadores de números (`formatNumber` / `fmtNum`) y monedas (`formatCurrency` / `fmtCur`) agregando una evaluación `isNaN(parseFloat(val))` que sustituye cualquier dato fallido o ausente por un guion (`—`), asegurando estabilidad visual absoluta.
+
 ---
 
 ## 2. 📊 Matriz Financiera (ForecastGrid.tsx)
@@ -82,6 +90,11 @@ El motor de renderizado (`ECharts`) detecta qué métrica se está graficando e 
 - **Duración Total (Días Ocupados):** Multiplica dinámicamente la duración unitaria del viaje por la frecuencia mensual. Escapa del formateo monetario estándar (`$`) e inyecta el sufijo `d` (ej. "15 d") tanto en el Eje Y como en los tooltips y etiquetas flotantes.
 - **Viajes (Frecuencia):** Implementa bloqueo de enteros (`minInterval: 1`) en los ejes para prevenir que ECharts dibuje fracciones irreales (ej. 1.5 viajes).
 
+### 3.5 Filtro de Tipo de Operación (Cabotaje vs. Exportación Chile)
+- **Concepto:** Se integró una nueva dimensión de filtro lateral en el panel del gráfico llamada **"Tipo Op."**. 
+- **Lógica de Inferencia:** Para simplificar el flujo y no requerir consultas de BD pesadas en tiempo real, el gráfico infiere el tipo de operación basándose en el nombre de la ruta. Si la ruta contiene los destinos `MEJILLONES` o `BARQUITO` se clasifica como `Chile`, de lo contrario, se clasifica como `Cabotaje` (puertos peruanos).
+- **Controlador UI:** Permite filtrar toda la gráfica dinámicamente para aislar los ingresos y volúmenes de cabotaje local frente a exportación marítima internacional. Al hacer clic sobre el botón de cabecera "Tipo Op." se reinicia el filtro (vuelve a `ALL`).
+
 ---
 
 ## 4. 🗺️ Módulo Adicional: Ruteador Spot [En Desarrollo]
@@ -128,6 +141,12 @@ El cliente **NEXA** opera bajo un modelo de rutas complejas (múltiples puertos 
 ### 5.6 Aislamiento de Escenarios por Módulo
 - **Problema reportado:** Al cargar un escenario en Matriz Financiera y navegar a Ruteador Spot, el nombre del escenario de Matriz seguía visible en el Ribbon, impidiendo cargar el escenario propio de Spot.
 - **Corrección:** Se aisló el estado del escenario activo por módulo (Matriz Financiera vs. Ruteador Spot), de modo que cada módulo gestiona su propio contexto de escenario de forma independiente.
+
+### 5.7 Campo `pais` en `routes` y `routes_spot`
+- **Concepto:** Se integró el campo `pais` en el esquema de base de datos para clasificar las rutas por origen/destino geográfico en Perú y Chile.
+- **Regla de Negocio:** Todos los puertos y trayectos se asumen de `Peru` por defecto, con excepción de aquellos que involucren a `Mejillones` o `Barquito` como puertos finales, los cuales se marcan como `Chile`.
+- **Inferencia Automática:** Al guardar una cotización en el Ruteador Spot, el frontend infiere automáticamente el país en base al puerto de descarga (destino de la pierna *laden*) y lo envía al endpoint `/spot/save` del backend.
+- **UI:** El catálogo de rutas spot del modal del Ruteador Spot muestra un *badge* distintivo con bandera (🇵🇪 Peru / 🇨🇱 Chile) al lado del nombre de cada ruta guardada.
 
 ---
 *Documento vivo mantenido por el equipo Geeksoft - Naviera Petral.*
