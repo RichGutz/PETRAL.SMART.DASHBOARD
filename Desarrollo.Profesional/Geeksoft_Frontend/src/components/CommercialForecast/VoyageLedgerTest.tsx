@@ -168,8 +168,14 @@ export const VoyageLedgerTest: React.FC = () => {
         if (!scenarioResult || !scenarioResult.audit_trail) return null;
         const audit = scenarioResult.audit_trail;
 
-        const formatCurrency = (val: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
-        const formatNumber = (val: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(val);
+        const formatCurrency = (val: any) => {
+            const num = parseFloat(val);
+            return isNaN(num) ? '—' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+        };
+        const formatNumber = (val: any) => {
+            const num = parseFloat(val);
+            return isNaN(num) ? '—' : new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(num);
+        };
 
         const auditRows = [
             { metric: "1. Tasa Carga (MT/hr)",  key: "1. Tasa Carga (act_load)",       gk: scenarioResult.actual_load_rate,      ptr: scenarioPetral.act_load,  isCurr: false, db: "contracts · vessels · ports", ui: "Contratos / Flota / Puertos" },
@@ -550,8 +556,14 @@ export const VoyageLedgerTest: React.FC = () => {
                         onClick={() => {
                             if (!runResult || !runResult.audit_trail) { alert('No hay datos cargados aún.'); return; }
                             const audit_t = runResult.audit_trail;
-                            const fmtCur = (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v);
-                            const fmtNum = (v: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(v);
+                            const fmtCur = (v: any) => {
+                                const num = parseFloat(v);
+                                return isNaN(num) ? '—' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+                            };
+                            const fmtNum = (v: any) => {
+                                const num = parseFloat(v);
+                                return isNaN(num) ? '—' : new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(num);
+                            };
                             const auditRowsPrint = [
                                 { metric: '1. Tasa Carga (MT/hr)',   key: '1. Tasa Carga (act_load)',      gk: runResult.actual_load_rate,      isCurr: false },
                                 { metric: '2. Tasa Desc. (MT/hr)',   key: '2. Tasa Descarga (act_disch)', gk: runResult.actual_discharge_rate, isCurr: false },

@@ -289,6 +289,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "tce_real_unit": unit_result["tce_real"],
             "pcm_projected": unit_result["pcm_projected"],
             "pl_vs_required_unit": unit_result["pl_vs_required"],
+            "actual_load_rate": unit_result["actual_load_rate"],
+            "actual_discharge_rate": unit_result["actual_discharge_rate"],
             "audit_trail": unit_result.get("audit_trail", {}),
             "raw_inputs": inputs,
             "route_name": spot_route.get("name") if is_spot_route else None
