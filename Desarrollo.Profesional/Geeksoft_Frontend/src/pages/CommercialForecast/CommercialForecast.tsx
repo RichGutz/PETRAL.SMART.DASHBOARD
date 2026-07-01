@@ -5,6 +5,7 @@ import { InteractiveChart } from '../../components/CommercialForecast/Interactiv
 import { ForecastService } from '../../services/api';
 import { Save, FolderOpen, X, Table, BarChart2, ChevronUp, ChevronDown, Sun, Moon } from 'lucide-react';
 import { VoyageLedgerTest } from '../../components/CommercialForecast/VoyageLedgerTest';
+import { SpotRouter } from '../../components/CommercialForecast/SpotRouter';
 
 export const CommercialForecast: React.FC = () => {
     const [data, setData] = useState<any>(null);
@@ -37,7 +38,7 @@ export const CommercialForecast: React.FC = () => {
     const [savedForecasts, setSavedForecasts] = useState<any[]>([]);
 
     // Tab State
-    const [activeTab, setActiveTab] = useState<'grid' | 'chart' | 'ledger'>('grid');
+    const [activeTab, setActiveTab] = useState<'grid' | 'chart' | 'ledger' | 'spot'>('grid');
     const [displayMode, setDisplayMode] = useState<'usd'|'pct'>('usd');
 
     // Demurrage State
@@ -292,7 +293,7 @@ export const CommercialForecast: React.FC = () => {
                         }}
                         onAddLine={handleAddLine}
                         forecastName={forecastName}
-                        hideInputs={isRibbonCollapsed || activeTab === 'ledger' || activeTab === 'chart'}
+                        hideInputs={isRibbonCollapsed || activeTab === 'ledger' || activeTab === 'chart' || activeTab === 'spot'}
                         displayMode={displayMode}
                         onDisplayModeChange={setDisplayMode}
                         isAdding={loading}
@@ -319,6 +320,12 @@ export const CommercialForecast: React.FC = () => {
                                     className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold text-sm transition-all ${activeTab === 'ledger' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
                                 >
                                     <span className="text-lg">🧪</span> Auditoría Ledger
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('spot')}
+                                    className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold text-sm transition-all ${activeTab === 'spot' ? 'bg-petral-teal text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
+                                >
+                                    <span className="text-lg">⚓</span> Ruteador Spot
                                 </button>
                             </div>
                         }
@@ -353,7 +360,7 @@ export const CommercialForecast: React.FC = () => {
                             </div>
                         }
                         bottomRightContent={
-                            activeTab !== 'ledger' && (
+                            activeTab !== 'ledger' && activeTab !== 'spot' && (
                                 <>
                                     <div className="flex flex-col gap-1 min-w-[90px] max-w-[110px] flex-1 justify-end h-full">
                                         <button onClick={() => setShowSaveModal(true)} className="flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground h-6 w-full rounded font-medium text-[10px] transition-colors shadow-sm cursor-pointer">
@@ -410,6 +417,13 @@ export const CommercialForecast: React.FC = () => {
                 {activeTab === 'ledger' && (
                     <section className="flex flex-col gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <VoyageLedgerTest />
+                    </section>
+                )}
+
+                {/* 5. Ruteador Spot */}
+                {activeTab === 'spot' && (
+                    <section className="flex flex-col gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <SpotRouter />
                     </section>
                 )}
             </main>

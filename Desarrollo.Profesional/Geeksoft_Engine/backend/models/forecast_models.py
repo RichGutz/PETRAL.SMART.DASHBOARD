@@ -39,3 +39,12 @@ class ForecastListResponse(BaseModel):
     end_date: str
     created_at: str
     updated_at: str
+
+class SpotSaveRequest(BaseModel):
+    name: str
+    description: Optional[str] = None
+    legs_data: Dict[str, Any]
+
+class SpotCalculationRequest(BaseModel):
+    vessel_id: str
+    legs: Dict[str, Any]

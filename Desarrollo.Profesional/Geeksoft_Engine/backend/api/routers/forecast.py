@@ -93,3 +93,99 @@ def get_clients():
         return clients
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+from backend.models.forecast_models import SpotCalculationRequest, SpotSaveRequest
+
+@router.post("/spot/calculate")
+def calculate_spot_voyage(request: SpotCalculationRequest):
+    try:
+        from backend.database import get_supabase
+        from backend.spot_engine import calculate_spot_multileg
+        sb = get_supabase()
+        
+        # 1. Fetch Vessel
+        v_res = sb.table("vessels").select("*").eq("vessel_id", request.vessel_id).execute()
+        if not v_res.data:
+            raise Exception(f"Vessel {request.vessel_id} not found")
+        vessel_params = v_res.data[0]
+        # 2. Fetch Agency Matrix to inject Port Costs
+        agency_res = sb.table("agency_matrix").select("*").execute()
+        agency_data = agency_res.data
+        
+        def get_agency_cost(target_port, target_op, vessel):
+            # 1. 'DEFAULT' + port_id + operation_type + 'DEFAULT'
+            for a in agency_data:
+                if a.get("client_id") == "DEFAULT" and a.get("port_id") == target_port and a.get("operation_type") == target_op and a.get("vessel_id", "DEFAULT") == "DEFAULT":
+                    return float(a.get("cost", 15000))
+            return 15000.0
+
+        if request.legs.get("laden"):
+            laden_leg = request.legs["laden"]
+            orig_port = laden_leg.get("origin_port_id")
+            dest_port = laden_leg.get("destination_port_id")
+            
+            if orig_port:
+                laden_leg["agency_costs_origin"] = get_agency_cost(orig_port, 'CARGA', request.vessel_id)
+            if dest_port:
+                laden_leg["agency_costs_destination"] = get_agency_cost(dest_port, 'DESCARGA', request.vessel_id)
+
+        # 3. Build Payload
+        payload = {
+            "vessel_params": vessel_params,
+            "legs": request.legs
+        }
+        
+        # 3. Calculate
+        result = calculate_spot_multileg(payload)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/spot/save")
+def save_spot_voyage(request: SpotSaveRequest):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        
+        payload = {
+            "name": request.name,
+            "description": request.description,
+            "legs_data": request.legs_data
+        }
+        
+        res = sb.table("routes_spot").insert(payload).execute()
+        if not res.data:
+            raise Exception("Failed to save spot route")
+        return {"status": "success", "spot_id": res.data[0]["spot_id"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/vessels")
+def get_vessels():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table("vessels").select("*").execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/ports")
+def get_ports():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table("ports").select("*").execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/routes")
+def get_routes():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table("routes").select("*").execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
