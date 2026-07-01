@@ -712,7 +712,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                 }}
                                                 className="w-14 p-1 text-center block mx-auto text-xs font-bold border border-slate-200 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white"
                                             />
-                                        ) : row.metric.name === "Flete (USD/MT)" && row.clientName.startsWith("SPOT") && !row.isClientSubtotal && !row.isGlobalTotal ? (
+                                        ) : row.metric.name === "Flete (USD/MT)" && (row.clientName.startsWith("SPOT") || row.clientName.startsWith("NEXA")) && !row.isClientSubtotal && !row.isGlobalTotal ? (
                                             <input 
                                                 type="number"
                                                 min="0"

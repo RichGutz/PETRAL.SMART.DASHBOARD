@@ -19,7 +19,7 @@ C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\
 La primera fase consistirá en la generación de mockups de alta fidelidad. Empezaremos por el núcleo administrativo, diseñando las siguientes pantallas:
 
 1. **Pantalla Maestro Flota:** Una vista (tabla + formulario lateral) para registrar buques, sus especificaciones de ingeniería y curvas granulares de consumo de bunker.
-2. **Pantalla Maestro Rutas & Precios:** Una interfaz de configuración para gestionar distancias náuticas, factores climáticos (`weather_factor`) y los precios de mercado del Bunker IFO/MDO.
+2. **Pantalla Maestro Rutas & Precios:** Una interfaz de configuración para gestionar distancias náuticas, factores climáticos (`weather_factor_laden`) y los precios de mercado del Bunker IFO/MDO.
 
 ## 3. Aprobación Estética (User Feedback)
 

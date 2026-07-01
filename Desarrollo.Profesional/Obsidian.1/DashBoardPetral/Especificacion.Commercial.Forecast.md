@@ -77,5 +77,57 @@ El usuario tiene máximo control sobre cómo presentar la información:
 - Esta línea suma la contribución de todas las barras mes a mes, forzando matemáticamente que el último mes del horizonte alcance siempre el **100%**.
 - Se soporta también la proyección de métricas duales en modo acumulado.
 
+### 3.4 Métricas Operativas de Flota (Formateo Condicional)
+El motor de renderizado (`ECharts`) detecta qué métrica se está graficando e inyecta formateadores lógicos específicos:
+- **Duración Total (Días Ocupados):** Multiplica dinámicamente la duración unitaria del viaje por la frecuencia mensual. Escapa del formateo monetario estándar (`$`) e inyecta el sufijo `d` (ej. "15 d") tanto en el Eje Y como en los tooltips y etiquetas flotantes.
+- **Viajes (Frecuencia):** Implementa bloqueo de enteros (`minInterval: 1`) en los ejes para prevenir que ECharts dibuje fracciones irreales (ej. 1.5 viajes).
+
+---
+
+## 4. 🗺️ Módulo Adicional: Ruteador Spot [En Desarrollo]
+Este módulo es un *fork complejo* diseñado para cotizaciones Multileg y se documenta por separado temporalmente hasta su finalización.
+👉 Ver documento anclado: [[Especificacion.Ruteador.Spot]]
+
+---
+
+## 5. 🔀 Motor Paralelo NEXA (Spot Multileg en Matriz Financiera)
+
+### 5.1 Concepto
+El cliente **NEXA** opera bajo un modelo de rutas complejas (múltiples puertos de carga/descarga), incompatibles con el motor tradicional de `calculate_voyage_pnl`. Se implementó un **motor de cálculo paralelo** que reutiliza íntegramente la lógica del Ruteador Spot (`spot_engine.py → calculate_spot_multileg`) dentro del contexto de la Matriz Financiera, sin alterar el flujo estándar de los demás clientes.
+
+### 5.2 Bifurcación en Backend (`forecast_service.py`)
+- Se detecta si una línea de proyección tiene `origin_port_id == "SPOT"` (indicador de que pertenece al motor Nexa).
+- En ese caso, se clonan las piernas operativas de la ruta spot y se llama a `calculate_spot_multileg` con un payload estructurado:
+  ```python
+  payload = {
+      "vessel_params": { ... },  # Datos del buque desde tabla vessels
+      "legs": { ... }            # Piernas operativas (laden, positioning, etc.)
+  }
+  ```
+- Se inyectan dinámicamente los costos de agencia del tramo `laden` desde `agency_matrix` para origen y destino, resolviendo las fórmulas de Port Costs sin hardcodes.
+- Los demás clientes (ILO-MATARANI, ILO-MARCONA, etc.) siguen usando el motor clásico sin cambios.
+
+### 5.3 Fix de Firma — `TypeError` Resuelto
+- Se detectó un `TypeError: calculate_spot_multileg() takes 1 positional argument but 2 were given` al ejecutar en producción.
+- Se re-estructuró la llamada para pasar un único objeto payload (en lugar de dos argumentos posicionales separados).
+- La simulación ejecuta exitosamente retornando `voyage_result`, `gross_revenue`, `port_costs`, `bunker_costs` con matemática completa.
+
+### 5.4 Corrección de Identificador de Ruta (UUID → Nombre Amigable)
+- **Problema:** El `SelectItem` de rutas spot en `ForecastBuilder.tsx` usaba `value={`SPOT-${s.spot_id}`}` (UUID técnico de BD). Esto causaba que la clave de agrupación en el backend (`destination_port_id`) no coincidiera con la clave de la grilla frontend, dejando todas las celdas financieras vacías (solo se mostraban toneladas por un fallback).
+- **Solución aplicada:** Se cambió el `value` a `SPOT-${s.name}` para que el identificador sea el nombre amigable definido por el usuario al grabar la ruta (ej. `NEXA.ILO.CALLAO.MEJILLONES.ILO`).
+- **Archivo modificado:** `ForecastBuilder.tsx` → línea 331.
+- **Resultado:** La columna "Ruta" de la tabla muestra el nombre real, y todas las filas (Viajes, Toneladas, Gross Revenue, Port Costs, Bunker Costs, Voyage Result) se poblan correctamente.
+
+### 5.5 Auditoría de Bunker — Cards de Idle por Demoras
+- **Problema reportado:** La auditoría de Bunker Costs no contabilizaba el consumo idle durante la demora de entrada (*waiting inbound*) y la demora de salida (*waiting outbound*).
+- **Solución:** Se añadieron **2 cards intermedias** en la vista de auditoría de bunker entre las 3 cards originales:
+  1. `Idle - Demora Entrada` → consumo MDO en modo espera antes de entrar a puerto.
+  2. `Idle - Demora Salida` → consumo MDO en modo espera tras finalizar operaciones.
+- Esto garantiza trazabilidad completa del costo de bunker: navegación cargada + demoras + maniobras + navegación en lastre.
+
+### 5.6 Aislamiento de Escenarios por Módulo
+- **Problema reportado:** Al cargar un escenario en Matriz Financiera y navegar a Ruteador Spot, el nombre del escenario de Matriz seguía visible en el Ribbon, impidiendo cargar el escenario propio de Spot.
+- **Corrección:** Se aisló el estado del escenario activo por módulo (Matriz Financiera vs. Ruteador Spot), de modo que cada módulo gestiona su propio contexto de escenario de forma independiente.
+
 ---
 *Documento vivo mantenido por el equipo Geeksoft - Naviera Petral.*

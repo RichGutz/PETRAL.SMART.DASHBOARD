@@ -11,7 +11,7 @@ interface InteractiveChartProps {
 }
 
 type GroupBy = 'vessel' | 'route' | 'client' | 'petral';
-type PlotMetric = 'viajes' | 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'total_cargo' | 'demurrage' | 'gross_plus_dem' | 'yield' | 'yield_flete' | 'none';
+type PlotMetric = 'viajes' | 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'total_cargo' | 'demurrage' | 'gross_plus_dem' | 'yield' | 'yield_flete' | 'total_duration' | 'none';
 
 const getHexColor = (name: string, type: GroupBy) => {
     if (type === 'petral') return '#0089CF'; // Petral Blue (RGB 0-137-207)
@@ -49,6 +49,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     const [filterClient, setFilterClient] = useState<string>('ALL');
     const [filterRoute, setFilterRoute] = useState<string>('ALL');
     const [filterVessel, setFilterVessel] = useState<string>('ALL');
+    const [filterTradeType, setFilterTradeType] = useState<string>('ALL');
+    const [isTradeTypeFilterOpen, setIsTradeTypeFilterOpen] = useState(false);
 
     // Primary Axis
     const [primaryMetric, setPrimaryMetric] = useState<PlotMetric | 'gross_and_gross_plus_dem'>('voyage_result');
@@ -75,6 +77,13 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     const [isRouteFilterOpen, setIsRouteFilterOpen] = useState(false);
     const [isVesselFilterOpen, setIsVesselFilterOpen] = useState(false);
 
+    // Helper: infiere el tradeType de una ruta por su nombre
+    const getTradeType = (route: string): string => {
+        const r = route.toUpperCase();
+        if (r.includes('MEJILLONES') || r.includes('BARQUITO')) return 'Chile';
+        return 'Cabotaje';
+    };
+
     useEffect(() => {
         const handleOutsideClick = () => {
             setIsPriOpen(false);
@@ -82,6 +91,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             setIsClientFilterOpen(false);
             setIsRouteFilterOpen(false);
             setIsVesselFilterOpen(false);
+            setIsTradeTypeFilterOpen(false);
         };
         document.addEventListener('click', handleOutsideClick);
         return () => document.removeEventListener('click', handleOutsideClick);
@@ -142,6 +152,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 case 'gross_and_gross_plus_dem': return 'Gross & Gross+Dem';
                 case 'yield': return 'Yield (USD/MT)';
                 case 'yield_flete': return 'Yield Flete (USD/MT)';
+                case 'total_duration': return 'Duración Total (Días)';
                 case 'none': return '';
                 default: return m;
             }
@@ -154,6 +165,11 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             const freq = rawFreq !== undefined ? rawFreq : (metrics['freq'] !== undefined ? metrics['freq'] : 0);
             
             if (m === 'viajes') return freq;
+            
+            if (m === 'total_duration') {
+                const duration_unit = metrics['total_duration_unit'] || 0;
+                return duration_unit * freq;
+            }
             
             const carga_unit = metrics['carga_unit'] || 0;
             const tons = carga_unit * freq;
@@ -190,6 +206,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             if (filterClient !== 'ALL' && client !== filterClient) return;
             Object.entries(routes).forEach(([route, vessels]: any) => {
                 if (filterRoute !== 'ALL' && route !== filterRoute) return;
+                if (filterTradeType !== 'ALL' && getTradeType(route) !== filterTradeType) return;
                 Object.entries(vessels).forEach(([vessel, mData]: any) => {
                     if (filterVessel !== 'ALL' && vessel !== filterVessel) return;
 
@@ -355,6 +372,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             } else {
                                 const val = params.data.value;
                                 if (metric === 'viajes') return val.toString();
+                                if (metric === 'total_duration') return `${val.toFixed(0)} d`;
                                 if (metric === 'yield' || metric === 'yield_flete') return `$${val.toFixed(2)}`;
                                 if (metric === 'total_cargo') return `${(val/1000).toFixed(0)}k`;
                                 return val >= 1000 ? `$${(val/1000).toFixed(0)}k` : `$${val.toFixed(0)}`;
@@ -451,6 +469,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             } else {
                                 const val = params.data.value;
                                 if (secondaryMetric === 'viajes') return val.toString();
+                                if (secondaryMetric === 'total_duration') return `${val.toFixed(0)} d`;
                                 if (secondaryMetric === 'yield' || secondaryMetric === 'yield_flete') return `$${val.toFixed(2)}`;
                                 if (secondaryMetric === 'total_cargo') return `${(val/1000).toFixed(0)}k`;
                                 return val >= 1000 ? `$${(val/1000).toFixed(0)}k` : `$${val.toFixed(0)}`;
@@ -476,6 +495,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         const getAxisFormatter = (metric: PlotMetric | 'gross_and_gross_plus_dem', isPct: boolean) => {
             if (isPct) return '{value}%';
             if (metric === 'viajes') return '{value}';
+            if (metric === 'total_duration') return '{value}';
             if (metric === 'yield' || metric === 'yield_flete') return (v: number) => `$${v.toFixed(2)}`;
             if (metric === 'total_cargo') return (v: number) => `${(v/1000).toFixed(0)}k`;
             return (v: number) => `$${(v/1000).toFixed(0)}k`;
@@ -497,6 +517,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             valStr = `${p.value.toFixed(1)}% (${p.data.rawVal.toLocaleString()})`;
                         } else {
                             if (m === 'viajes') valStr = p.value.toString();
+                            else if (m === 'total_duration') valStr = `${Math.round(p.value).toLocaleString()} d`;
                             else if (m === 'yield' || m === 'yield_flete') valStr = `$${p.value.toFixed(2)}`;
                             else if (m === 'total_cargo') valStr = `${Math.round(p.value).toLocaleString()} MT`;
                             else valStr = `$${Math.round(p.value).toLocaleString()}`;
@@ -532,7 +553,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                     nameTextStyle: { color: '#0EA5E9', padding: [0, 0, 0, -40] },
                     axisLine: { show: false },
                     axisLabel: { color: '#64748B', fontWeight: 'bold', formatter: getAxisFormatter(primaryMetric, false) },
-                    splitLine: { lineStyle: { type: 'dashed', color: '#E2E8F0' } }
+                    splitLine: { lineStyle: { type: 'dashed', color: '#E2E8F0' } },
+                    minInterval: primaryMetric === 'viajes' ? 1 : 0
                 },
                 {
                     type: 'value',
@@ -540,13 +562,14 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                     nameTextStyle: { color: '#059669', padding: [0, -40, 0, 0] },
                     axisLine: { show: false },
                     axisLabel: { color: '#059669', fontWeight: 'bold', formatter: getAxisFormatter(secondaryMetric, isSecondaryPercentage) },
-                    splitLine: { show: false }
+                    splitLine: { show: false },
+                    minInterval: secondaryMetric === 'viajes' ? 1 : 0
                 }
             ],
             series,
             color: ['#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#14B8A6', '#10B981']
         };
-    }, [data, groupBy, months, filterClient, filterRoute, filterVessel, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryCumulativeGlobal, isSecondaryPercentage, demurragePct, showDemurrage, excludedDemurrages, customDemurrages, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
+    }, [data, groupBy, months, filterClient, filterRoute, filterVessel, filterTradeType, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryCumulativeGlobal, isSecondaryPercentage, demurragePct, showDemurrage, excludedDemurrages, customDemurrages, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
 
     if (!data || !data.aggregated_data || months.length === 0) return null;
 
@@ -562,7 +585,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         { value: 'total_port_costs', label: 'Port Costs', icon: '⚓', desc: 'USD / Gastos Puerto' },
         { value: 'total_bunker_costs', label: 'Bunker Costs', icon: '⛽', desc: 'USD / Combustible' },
         { value: 'total_cargo', label: 'Toneladas', icon: '🚢', desc: 'MT / Carga Total' },
-        { value: 'viajes', label: 'Viajes', icon: '📅', desc: 'freq / Cantidad Viajes' }
+        { value: 'viajes', label: 'Viajes', icon: '📅', desc: 'freq / Cantidad Viajes' },
+        { value: 'total_duration', label: 'Duración Total', icon: '⏱️', desc: 'días / Días Ocupados' }
     ];
 
     const renderCustomDropdown = (
@@ -744,6 +768,28 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                                 Buque
                             </button>
                             {renderFilterDropdown(filterVessel, setFilterVessel, filterOptions.vessels, isVesselFilterOpen, setIsVesselFilterOpen, 'Buque')}
+                        </div>
+
+                        {/* Tipo Operación filter row */}
+                        <div className="h-px w-full bg-slate-200 my-0.5"></div>
+                        <div className="flex items-center gap-1">
+                            <button
+                                className={`w-[75px] shrink-0 h-8 flex items-center justify-center text-[10px] font-bold rounded-md transition-colors text-center leading-tight ${
+                                    filterTradeType !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'
+                                }`}
+                                onClick={() => setFilterTradeType('ALL')}
+                                title="Limpiar filtro Tipo Operación"
+                            >
+                                Tipo Op.
+                            </button>
+                            {renderFilterDropdown(
+                                filterTradeType,
+                                setFilterTradeType,
+                                ['Cabotaje', 'Chile'],
+                                isTradeTypeFilterOpen,
+                                setIsTradeTypeFilterOpen,
+                                'Tipo Operación'
+                            )}
                         </div>
                     </div>
                 </div>

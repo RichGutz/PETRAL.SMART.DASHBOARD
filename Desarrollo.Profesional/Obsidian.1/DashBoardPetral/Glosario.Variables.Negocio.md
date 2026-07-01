@@ -58,9 +58,9 @@ Este documento define la semántica comercial, operativa y naval de las variable
 
 ### `sea_days` (Días de Mar / Tiempo en Navegación)
 * **Definición de Negocio:** El tiempo total expresado en días que el buque pasa en navegación marítima abierta. Depende directamente del flag `is_round_trip`. Si es verdadero, aplica un multiplicador de distancia factor = 2 (ida y vuelta); si es falso, factor = 1 (solo ida).
-* **Fórmula Matemática Dinámica:** `sea_days = ((route_distance * (is_round_trip ? 2 : 1)) * (1 + weather_factor)) / (vessel_speed * 24)`
+* **Fórmula Matemática Dinámica:** `sea_days = ((route_distance * (is_round_trip ? 2 : 1)) * (1 + weather_factor_laden)) / (vessel_speed * 24)`
 
-### `weather_factor` (Factor Climático / Tolerancia Ambiental)
+### `weather_factor_laden` (Factor Climático / Tolerancia Ambiental)
 * **Definición de Negocio:** Un porcentaje de fricción operativa (ej. 3% o 4%) que simula el impacto de las corrientes en contra, vientos o marejadas de la costa peruana. Actúa estirando virtualmente la distancia recorrida para no subestimar el consumo de bunker real.
 
 ### `port_overhead_hours` (Horas Muertas de Maniobra)

@@ -11,7 +11,7 @@ El motor opera de forma determinista recibiendo un objeto JSON de viaje y resolv
 1. **`quantity`**: Volumen total de Ácido Sulfúrico a transportar (MT).
 2. **`vessel_speed`**: Velocidad operativa real de navegación del buque (Nudos).
 3. **`route_distance`**: Distancia náutica pura entre puertos de origen y destino (NM).
-4. **`weather_factor`**: Factor de fricción y tolerancia ambiental por oleaje/corrientes (%).
+4. **`weather_factor_laden`**: Factor de fricción y tolerancia ambiental por oleaje/corrientes (%).
 5. **`port_overhead_hours`**: Horas muertas burocráticas fijas por cada evento de puerto (Horas). Actúa como la base temporal de la fase pasiva o muerta (`idle`).
 6. **`is_round_trip`**: Flag condicional para alternar el costeo del itinerario entre **Viaje Redondo (Round Trip - Default: true)** o **Solo Ida (One Way - false)**.
 
@@ -92,7 +92,7 @@ def calculate_voyage_pl_granular(inputs):
     actual_discharge_rate = min(inputs.contract_agreed_discharge_rate, inputs.vessel_pump_discharge_rate, inputs.port_max_discharge_limit)
     
     # 2. Segmentación granular de tiempos (Lógica Física de Itinerario)
-    sea_days = ((inputs.route_distance * route_factor) * (1.0 + inputs.weather_factor)) / (inputs.vessel_speed * 24.0)
+    sea_days = ((inputs.route_distance * route_factor) * (1.0 + inputs.weather_factor_laden)) / (inputs.vessel_speed * 24.0)
     
     load_days = (inputs.quantity / actual_load_rate) / 24.0
     disch_days = (inputs.quantity / actual_discharge_rate) / 24.0

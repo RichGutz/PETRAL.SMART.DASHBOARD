@@ -20,6 +20,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     routes_data = safe_fetch(supabase, "routes")
     routes_db = {f"{r['origin_port_id']}-{r['destination_port_id']}": r for r in routes_data}
     
+    routes_spot_data = safe_fetch(supabase, "routes_spot")
+    
     bunker_data = safe_fetch(supabase, "bunker_prices")
     # Asegurar que se tome el precio con la fecha más reciente ordenando ascendentemente
     bunker_data = sorted(bunker_data, key=lambda x: x.get("date", "2000-01-01"))
@@ -121,67 +123,144 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     highest_bracket = max(matching_tariffs, key=lambda x: x.get("max_tonnage", 0))
                     freight_rate = highest_bracket.get("freight_rate", 0)
         
-        # Agencia Costs logic (with fallback priority: exact -> client_only -> default)
-        def get_agency_cost(target_port, target_op):
-            # 1. client_id + port_id + operation_type + vessel_id
-            for a in agency_data:
-                if a.get("client_id") == client and a.get("port_id") == target_port and a.get("operation_type") == target_op and a.get("vessel_id") == vessel:
-                    return float(a.get("cost", 15000))
-            # 2. client_id + port_id + operation_type + 'DEFAULT'
-            for a in agency_data:
-                if a.get("client_id") == client and a.get("port_id") == target_port and a.get("operation_type") == target_op and a.get("vessel_id", "DEFAULT") == "DEFAULT":
-                    return float(a.get("cost", 15000))
-            # 3. 'DEFAULT' + port_id + operation_type + 'DEFAULT'
-            for a in agency_data:
-                if a.get("client_id") == "DEFAULT" and a.get("port_id") == target_port and a.get("operation_type") == target_op and a.get("vessel_id", "DEFAULT") == "DEFAULT":
-                    return float(a.get("cost", 15000))
-            return 15000.0
-            
-        ag_orig = get_agency_cost(line.origin_port_id, 'CARGA')
-        ag_dest = get_agency_cost(line.destination_port_id, 'DESCARGA')
-
         p_ifo = line.forecast_bunker_price_ifo if line.forecast_bunker_price_ifo else bunker_db.get("IFO", 450)
         p_mdo = line.forecast_bunker_price_mdo if line.forecast_bunker_price_mdo else bunker_db.get("MDO", 800)
-
-        # Construir Inputs para engine
-        inputs = {
-            "quantity": line.quantity,
-            "freight_rate": freight_rate,
-            "route_distance": r_data.get("route_distance", 0),
-            "vessel_speed": v_data.get("vessel_speed", 0),
-            "weather_factor_laden": r_data.get("weather_factor_laden", r_data.get("weather_factor", 0)),
-            "weather_factor_ballast": r_data.get("weather_factor_ballast", r_data.get("weather_factor", 0)),
-            "port_overhead_hours_origin": ports_db.get(line.origin_port_id, {}).get("overhead_carga_hrs", 6.0),
-            "port_overhead_hours_dest": ports_db.get(line.destination_port_id, {}).get("overhead_descarga_hrs", 6.0),
-            "vessel_max_load_intake_limit": v_data.get("vessel_max_load_intake_limit", 0),
-            # Límites físicos de terminales desde tabla `ports`
-            "max_terminal_load_rate": ports_db.get(line.origin_port_id, {}).get("max_load_rate", 0),
-            "vessel_pump_discharge_rate": v_data.get("vessel_pump_discharge_rate", 0),
-            "port_max_discharge_limit": ports_db.get(line.destination_port_id, {}).get("max_disch_rate", 0),
-            "agency_costs_origin": ag_orig,
-            "agency_costs_destination": ag_dest,
-            "bunker_price_ifo": p_ifo,
-            "bunker_price_mdo": p_mdo,
-            "bunker_price_date": bunker_dates_db.get("IFO", "N/A"),
-            "tce_required": v_data.get("tce_required", 0),
-            "bunker_consumption_sea_ifo": v_data.get("consumption_sea_ifo", 0),
-            "bunker_consumption_idle_ifo": v_data.get("consumption_idle_ifo", 0),
-            "bunker_consumption_load_ifo": v_data.get("consumption_load_ifo", 0),
-            "bunker_consumption_disch_ifo": v_data.get("consumption_disch_ifo", 0),
-            "bunker_consumption_sea_mdo": v_data.get("consumption_sea_mdo", 0),
-            "bunker_consumption_idle_mdo": v_data.get("consumption_idle_mdo", 0),
-            "bunker_consumption_load_mdo": v_data.get("consumption_load_mdo", 0),
-            "bunker_consumption_disch_mdo": v_data.get("consumption_disch_mdo", 0),
-            "contract_agreed_load_rate": contract.get("load_rate") if contract else None,
-            "contract_agreed_discharge_rate": contract.get("discharge_rate") if contract else None,
-            "is_round_trip": True
-        }
         
-        # BAF Logic si es necesario
-        if contract and contract.get("bunker_baseline_price_ifo") and line.forecast_bunker_price_ifo:
-             inputs["freight_rate"] = calculate_baf_adjusted_rate(inputs, contract, line.forecast_bunker_price_ifo)
+        is_spot_route = (line.origin_port_id == "SPOT")
 
-        unit_result = calculate_voyage_pnl(inputs)
+        if is_spot_route:
+            spot_id = line.destination_port_id
+            spot_route = next((s for s in routes_spot_data if s.get("spot_id") == spot_id or s.get("name") == spot_id), {})
+            legs_data = spot_route.get("legs_data", {})
+            legs = legs_data.get("legs", {})
+            
+            import copy
+            legs_copy = copy.deepcopy(legs)
+            
+            laden_leg = legs_copy.get("laden", {})
+            if laden_leg:
+                laden_leg["quantity"] = line.quantity
+                laden_leg["freight_rate"] = freight_rate
+                
+                # Inyectar costos de puerto/agencia de forma dinámica
+                def get_local_agency(target_port, target_op):
+                    for a in agency_data:
+                        if a.get("client_id") == "DEFAULT" and a.get("port_id") == target_port and a.get("operation_type") == target_op and a.get("vessel_id", "DEFAULT") == "DEFAULT":
+                            return float(a.get("cost", 15000))
+                    return 15000.0
+                
+                orig_port = laden_leg.get("origin_port_id")
+                dest_port = laden_leg.get("destination_port_id")
+                if orig_port:
+                    laden_leg["agency_costs_origin"] = get_local_agency(orig_port, 'CARGA')
+                if dest_port:
+                    laden_leg["agency_costs_destination"] = get_local_agency(dest_port, 'DESCARGA')
+                
+            legs_copy["bunker_price_ifo"] = p_ifo
+            legs_copy["bunker_price_mdo"] = p_mdo
+            
+            payload = {
+                "vessel_params": v_data,
+                "legs": legs_copy
+            }
+            from backend.spot_engine import calculate_spot_multileg
+            spot_res = calculate_spot_multileg(payload)
+            consolidated = spot_res.get("consolidated", {})
+            
+            tce_req = v_data.get("tce_required", 0)
+            tce_real = consolidated.get("tce_real", 0)
+            
+            unit_result = {
+                "net_income": consolidated.get("total_freight_revenue", 0),
+                "total_port_costs": consolidated.get("total_port_costs", 0),
+                "total_bunker_costs": consolidated.get("total_bunker_costs", 0),
+                "voyage_result": consolidated.get("pnl_net_utility", 0),
+                "pl_vs_required": consolidated.get("pnl_net_utility", 0) - (consolidated.get("total_days", 0) * tce_req),
+                "tce_real": tce_real,
+                "total_duration": consolidated.get("total_days", 0),
+                "sea_days": consolidated.get("total_sea_days", 0),
+                "port_days": consolidated.get("total_port_days", 0),
+                "bunker_ifo_tonnage": consolidated.get("bunker_ifo_tonnage", 0),
+                "bunker_mdo_tonnage": consolidated.get("bunker_mdo_tonnage", 0),
+                "pcm_projected": tce_real - tce_req,
+                "audit_trail": {
+                    "bunker_costs": {
+                        "formula": "Tons IFO = (sea_d * cons_sea) + (idle_d_norm * cons_idle) + (load_d * cons_load) + (disch_d * cons_disch)<br/>"
+                                   "Tons MDO = (sea_d * cons_sea) + (idle_d_norm * cons_idle) + (load_d * cons_load) + (disch_d * cons_disch)<br/>"
+                                   "Costo Tránsito = (Tons IFO * price_IFO) + (Tons MDO * price_MDO)",
+                        "values": f"IFO Consolidado: {consolidated.get('bunker_ifo_tonnage', 0)} t<br/>MDO Consolidado: {consolidated.get('bunker_mdo_tonnage', 0)} t<br/>Costo: {consolidated.get('total_bunker_costs', 0)}"
+                    }
+                }
+            }
+            
+            inputs = {
+                "route_distance": consolidated.get("total_distance", 0),
+                "quantity": line.quantity,
+                "freight_rate": freight_rate
+            }
+            
+            route_key = f"SPOT-{spot_id}"
+            
+        else:
+            # Agencia Costs logic (with fallback priority: exact -> client_only -> default)
+            def get_agency_cost(target_port, target_op):
+                # 1. client_id + port_id + operation_type + vessel_id
+                for a in agency_data:
+                    if a.get("client_id") == client and a.get("port_id") == target_port and a.get("operation_type") == target_op and a.get("vessel_id") == vessel:
+                        return float(a.get("cost", 15000))
+                # 2. client_id + port_id + operation_type + 'DEFAULT'
+                for a in agency_data:
+                    if a.get("client_id") == client and a.get("port_id") == target_port and a.get("operation_type") == target_op and a.get("vessel_id", "DEFAULT") == "DEFAULT":
+                        return float(a.get("cost", 15000))
+                # 3. 'DEFAULT' + port_id + operation_type + 'DEFAULT'
+                for a in agency_data:
+                    if a.get("client_id") == "DEFAULT" and a.get("port_id") == target_port and a.get("operation_type") == target_op and a.get("vessel_id", "DEFAULT") == "DEFAULT":
+                        return float(a.get("cost", 15000))
+                return 15000.0
+                
+            ag_orig = get_agency_cost(line.origin_port_id, 'CARGA')
+            ag_dest = get_agency_cost(line.destination_port_id, 'DESCARGA')
+
+            # Construir Inputs para engine
+            inputs = {
+                "quantity": line.quantity,
+                "freight_rate": freight_rate,
+                "route_distance": r_data.get("route_distance", 0),
+                "vessel_speed": v_data.get("vessel_speed", 0),
+                "weather_factor_laden": r_data.get("weather_factor_laden", r_data.get("weather_factor", 0)),
+                "weather_factor_ballast": r_data.get("weather_factor_ballast", r_data.get("weather_factor", 0)),
+                "port_overhead_hours_origin": ports_db.get(line.origin_port_id, {}).get("overhead_carga_hrs", 6.0),
+                "port_overhead_hours_dest": ports_db.get(line.destination_port_id, {}).get("overhead_descarga_hrs", 6.0),
+                "vessel_max_load_intake_limit": v_data.get("vessel_max_load_intake_limit", 0),
+                # Límites físicos de terminales desde tabla `ports`
+                "max_terminal_load_rate": ports_db.get(line.origin_port_id, {}).get("max_load_rate", 0),
+                "vessel_pump_discharge_rate": v_data.get("vessel_pump_discharge_rate", 0),
+                "port_max_discharge_limit": ports_db.get(line.destination_port_id, {}).get("max_disch_rate", 0),
+                "agency_costs_origin": ag_orig,
+                "agency_costs_destination": ag_dest,
+                "bunker_price_ifo": p_ifo,
+                "bunker_price_mdo": p_mdo,
+                "bunker_price_date": bunker_dates_db.get("IFO", "N/A"),
+                "tce_required": v_data.get("tce_required", 0),
+                "bunker_consumption_sea_ifo": v_data.get("consumption_sea_ifo", 0),
+                "bunker_consumption_idle_ifo": v_data.get("consumption_idle_ifo", 0),
+                "bunker_consumption_load_ifo": v_data.get("consumption_load_ifo", 0),
+                "bunker_consumption_disch_ifo": v_data.get("consumption_disch_ifo", 0),
+                "bunker_consumption_sea_mdo": v_data.get("consumption_sea_mdo", 0),
+                "bunker_consumption_idle_mdo": v_data.get("consumption_idle_mdo", 0),
+                "bunker_consumption_load_mdo": v_data.get("consumption_load_mdo", 0),
+                "bunker_consumption_disch_mdo": v_data.get("consumption_disch_mdo", 0),
+                "contract_agreed_load_rate": contract.get("load_rate") if contract else None,
+                "contract_agreed_discharge_rate": contract.get("discharge_rate") if contract else None,
+                "is_round_trip": True
+            }
+            
+            # BAF Logic si es necesario
+            if contract and contract.get("bunker_baseline_price_ifo") and line.forecast_bunker_price_ifo:
+                 inputs["freight_rate"] = calculate_baf_adjusted_rate(inputs, contract, line.forecast_bunker_price_ifo)
+
+            unit_result = calculate_voyage_pnl(inputs)
+            route_key = f"{line.origin_port_id}-{line.destination_port_id}"
         
         freq = line.monthly_frequency
         
@@ -211,7 +290,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "pcm_projected": unit_result["pcm_projected"],
             "pl_vs_required_unit": unit_result["pl_vs_required"],
             "audit_trail": unit_result.get("audit_trail", {}),
-            "raw_inputs": inputs
+            "raw_inputs": inputs,
+            "route_name": spot_route.get("name") if is_spot_route else None
         }
         
         if client not in agg_data:

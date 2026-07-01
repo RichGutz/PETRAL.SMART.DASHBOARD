@@ -17,8 +17,10 @@ INSERT INTO agency_matrix (client_id, port_id, operation_type, cost) VALUES
 ('SPCC', 'MATARANI', 'DESCARGA', 18000.00),
 ('SPCC', 'MARCONA', 'DESCARGA', 44000.00),
 ('SPCC', 'MEJILLONES', 'DESCARGA', 32000.00),
+('SPCC', 'CALLAO', 'DESCARGA', 18000.00),
 ('DEFAULT', 'ILO', 'CARGA', 25500.00),
-('DEFAULT', 'MATARANI', 'DESCARGA', 21000.00);
+('DEFAULT', 'MATARANI', 'DESCARGA', 21000.00),
+('DEFAULT', 'CALLAO', 'DESCARGA', 21000.00);
 
 -- Seed Data para contract_tariffs (SPCC)
 INSERT INTO contract_tariffs (client_id, destination_port_id, min_tonnage, max_tonnage, freight_rate) VALUES

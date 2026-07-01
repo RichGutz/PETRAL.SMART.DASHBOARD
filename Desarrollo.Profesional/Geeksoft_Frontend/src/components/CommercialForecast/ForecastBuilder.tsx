@@ -59,6 +59,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     
     // Dynamic Clients State
     const [availableClients, setAvailableClients] = useState<string[]>([]);
+    const [spotRoutes, setSpotRoutes] = useState<any[]>([]);
 
     const formatMonthPill = (yyyymm: string) => {
         const [y, m] = yyyymm.split('-');
@@ -70,10 +71,19 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     useEffect(() => {
         import('../../services/api').then(({ ForecastService }) => {
             ForecastService.getClients().then(clients => {
-                setAvailableClients(clients);
+                const list = clients.includes('NEXA') ? clients : [...clients, 'NEXA'];
+                setAvailableClients(list);
             }).catch(err => console.error("Failed to fetch clients:", err));
+
+            ForecastService.listSpots().then(setSpotRoutes)
+                .catch(err => console.error("Failed to fetch spot routes:", err));
         });
     }, []);
+
+    // Limpiar la ruta seleccionada si cambia el cliente
+    useEffect(() => {
+        setRoute('');
+    }, [client]);
 
     // Clear month if it falls outside the new horizon, otherwise leave it alone (or empty initially)
     useEffect(() => {
@@ -85,8 +95,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         'TABLONES': '13500',
         'MOQUEGUA': '13500',
         'CONCON_TRADER': '19000',
-        'HUEMUL': '22062', // DWT por defecto hasta que se especifique su carga normal
-        'AMAZONAS': '20000' // Legacy/Mock fallback
+        'HUEMUL': '22062' // DWT por defecto hasta que se especifique su carga normal
     };
 
     // Autocompletar la capacidad del buque (MT) cuando se selecciona uno
@@ -107,6 +116,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     const handleAdd = () => {
         if (!client || !route || !vessel || selectedMonths.length === 0 || !quantity || !frequency) return;
         if (client === 'SPOT' && (!customTariff || !spotSuffix.trim())) return;
+        if (client === 'NEXA' && !customTariff) return;
 
         const finalClient = client === 'SPOT' ? `SPOT-${spotSuffix.trim().toUpperCase()}` : client;
 
@@ -115,7 +125,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 month_index: mIdx,
                 client_id: finalClient,
                 origin_port_id: route.split('-')[0],
-                destination_port_id: route.split('-')[1], // Reverted hack since DB was updated
+                destination_port_id: route.split('-')[1],
                 vessel_id: vessel,
                 quantity: parseInt(quantity),
                 monthly_frequency: parseInt(frequency),
@@ -313,15 +323,35 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 <SelectValue placeholder="Ruta" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="ILO-MATARANI">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#06B6D4]"></div>ILO - MATARANI</div>
-                                </SelectItem>
-                                <SelectItem value="ILO-MARCONA">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#A855F7]"></div>ILO - MARCONA</div>
-                                </SelectItem>
-                                <SelectItem value="ILO-MEJILLONES">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#D946EF]"></div>ILO - MEJILLONES</div>
-                                </SelectItem>
+                                {client === 'NEXA' ? (
+                                    spotRoutes.length === 0 ? (
+                                        <SelectItem value="" disabled>No hay rutas spot guardadas</SelectItem>
+                                    ) : (
+                                        spotRoutes.map(s => (
+                                            <SelectItem key={s.spot_id} value={`SPOT-${s.name}`}>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2.5 h-2.5 rounded-full bg-[#14B8A6]"></div>
+                                                    {s.name || s.spot_id}
+                                                    <span className="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{background: s.pais === 'Chile' ? '#d1fae5' : '#dbeafe', color: s.pais === 'Chile' ? '#065f46' : '#1e40af'}}>
+                                                        {s.pais === 'Chile' ? '🇨🇱 Chile' : '🇵🇪 Peru'}
+                                                    </span>
+                                                </div>
+                                            </SelectItem>
+                                        ))
+                                    )
+                                ) : (
+                                    <>
+                                        <SelectItem value="ILO-MATARANI">
+                                            <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#06B6D4]"></div>ILO - MATARANI</div>
+                                        </SelectItem>
+                                        <SelectItem value="ILO-MARCONA">
+                                            <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#A855F7]"></div>ILO - MARCONA</div>
+                                        </SelectItem>
+                                        <SelectItem value="ILO-MEJILLONES">
+                                            <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#D946EF]"></div>ILO - MEJILLONES</div>
+                                        </SelectItem>
+                                    </>
+                                )}
                             </SelectContent>
                         </Select>
                     </div>
@@ -345,9 +375,6 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 </SelectItem>
                                 <SelectItem value="HUEMUL">
                                     <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#4F46E5]"></div>HUEMUL</div>
-                                </SelectItem>
-                                <SelectItem value="AMAZONAS">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#94A3B8]"></div>AMAZONAS</div>
                                 </SelectItem>
                             </SelectContent>
                         </Select>
@@ -383,8 +410,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
                     {/* 8. Flete Override */}
                     <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                        <Label className={`text-xs font-semibold whitespace-nowrap ${client === 'SPOT' ? 'text-red-500' : 'text-slate-600'}`}>
-                            9. Flete {client === 'SPOT' && '*'}
+                        <Label className={`text-xs font-semibold whitespace-nowrap ${(client === 'SPOT' || client === 'NEXA') ? 'text-red-500' : 'text-slate-600'}`}>
+                            9. Flete {(client === 'SPOT' || client === 'NEXA') && '*'}
                         </Label>
                         <Input 
                             type="number" 
@@ -392,9 +419,9 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             step="0.01"
                             value={customTariff} 
                             onChange={e => setCustomTariff(e.target.value)}
-                            placeholder={client === 'SPOT' ? "Obligatorio" : "Auto"}
+                            placeholder={(client === 'SPOT' || client === 'NEXA') ? "Obligatorio" : "Auto"}
                             title="Sobrescribir tarifa del contrato. Déjelo vacío para usar la tarifa maestra."
-                            className={`w-full h-8 ${client === 'SPOT' ? 'border-red-300 bg-red-50' : ''}`}
+                            className={`w-full h-8 ${(client === 'SPOT' || client === 'NEXA') ? 'border-red-300 bg-red-50' : ''}`}
                         />
                     </div>
 
@@ -426,7 +453,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         <Button 
                             onClick={handleAdd} 
                             className={`relative w-full h-8 overflow-hidden transition-colors rounded-full ${isAdding ? 'bg-primary text-white pointer-events-none' : 'bg-primary hover:bg-primary/90 text-white'}`}
-                            disabled={isAdding || !client || !route || !vessel || selectedMonths.length === 0 || !quantity || !frequency || (client === 'SPOT' && (!customTariff || !spotSuffix.trim()))}
+                            disabled={isAdding || !client || !route || !vessel || selectedMonths.length === 0 || !quantity || !frequency || (client === 'SPOT' && (!customTariff || !spotSuffix.trim())) || (client === 'NEXA' && !customTariff)}
                         >
                             {isAdding && (
                                 <div className="absolute inset-0 bg-white/20 animate-pulse" style={{ width: '100%' }}></div>

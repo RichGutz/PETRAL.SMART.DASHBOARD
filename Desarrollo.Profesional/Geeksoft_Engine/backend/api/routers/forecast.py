@@ -150,7 +150,8 @@ def save_spot_voyage(request: SpotSaveRequest):
         payload = {
             "name": request.name,
             "description": request.description,
-            "legs_data": request.legs_data
+            "legs_data": request.legs_data,
+            "pais": request.pais
         }
         
         res = sb.table("routes_spot").insert(payload).execute()
@@ -186,6 +187,16 @@ def get_routes():
         from backend.database import get_supabase
         sb = get_supabase()
         res = sb.table("routes").select("*").execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/spot/list")
+def list_spot_voyages():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table("routes_spot").select("*").order("created_at", desc=True).execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -25,7 +25,7 @@ Estas notas contienen los datos estáticos de infraestructura e ingeniería. Deb
 
 1. **[[Maestro.Flota]]**: Define los barcos activos, sus consumos de IFO y MDO granulares (`consumption_sea`, `_idle`, `_load`, `_disch`), parámetros físicos (`loa`, `beam`) y sus capacidades hidráulicas reales (`vessel_max_load_intake_limit`, `vessel_pump_discharge_rate`).
     
-2. **[[Maestro.Rutas]]**: Cartografía los tramos marítimos oficiales, registrando las distancias en millas náuticas (`route_distance`) y los factores de fricción climática (`weather_factor`).
+2. **[[Maestro.Rutas]]**: Cartografía los tramos marítimos oficiales, registrando las distancias en millas náuticas (`route_distance`) y los factores de fricción climática (`weather_factor_laden`).
     
 3. **[[Maestro.Aduanas]]**: Configura la matriz relacional de costos aduaneros cruzada por `client_id` + `port_id` + `operation_type` para garantizar descuentos por volumen.
     

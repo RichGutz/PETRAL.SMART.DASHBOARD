@@ -9,7 +9,7 @@ Para levantar el entorno de desarrollo y probar las funcionalidades (como la aud
 El backend debe ejecutarse desde la carpeta raíz del motor (`Geeksoft_Engine`), de lo contrario tendrás problemas de importación (ej. `ModuleNotFoundError: No module named 'backend'`).
 
 ```powershell
-# 1. Ir a la carpeta raíz del motor
+# 1. Ir a la carpeta raíz del motor (¡NO a la carpeta backend!)
 cd C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine
 
 # 2. Levantar el servidor indicando la ruta del módulo principal

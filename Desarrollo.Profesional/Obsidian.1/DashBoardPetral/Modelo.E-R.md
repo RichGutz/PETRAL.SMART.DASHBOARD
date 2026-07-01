@@ -51,14 +51,38 @@ Este documento define la estructura relacional definitiva del motor de **Geeksof
 * `origin_port_id` *(VARCHAR, PK, FK → ports.port_id)* → Puerto base de carga (ej. 'ILO').
 * `destination_port_id` *(VARCHAR, PK, FK → ports.port_id)* → Puerto de destino (ej. 'MATARANI', 'MARCONA', 'MEJILLONES').
 * `route_distance` *(NUMERIC)* → Distancia oficial medida en millas náuticas (NM).
-* `weather_factor` *(NUMERIC)* → Porcentaje de fricción operativa ambiental (pierna única; usar `weather_factor_laden` y `weather_factor_ballast` en el motor para viaje redondo).
+* `weather_factor_laden` *(NUMERIC)* → Porcentaje de fricción operativa ambiental (pierna única; usar `weather_factor_laden` y `weather_factor_ballast` en el motor para viaje redondo).
 * `color_hex` *(VARCHAR(7))* → Código de color de UI para el Dashboard (ej. "#06B6D4").
+* `pais` *(TEXT, DEFAULT 'Peru')* → País del puerto de destino. **Regla de negocio:** `Mejillones` y `Barquito` = `'Chile'`; todos los demás puertos = `'Peru'`. Usado para clasificar operaciones como **Cabotaje** (Perú) vs. **exportación** (Chile) en el Análisis Gráfico.
 
 > ⚠️ Los límites físicos de terminales **NO** se almacenan aquí para evitar duplicación (3NF). Viven en la tabla `ports`.
 
 ---
 
-### 3.1. Tabla: `ports` (Maestro de Puertos — Límites Físicos de Terminales)
+### 3.1. Tabla: `routes_spot` (Rutas Spot Multileg — Catálogo de Cotizaciones Complejas)
+*Almacena rutas de múltiples piernas (posicionamiento + laden + retorno) diseñadas para clientes como NEXA con operaciones de exportación multiescala. Cada registro representa una ruta guardada desde el Ruteador Spot.*
+* `spot_id` *(UUID, PK, DEFAULT gen_random_uuid())* → Identificador técnico único autogenerado.
+* `name` *(VARCHAR, NOT NULL)* → Nombre amigable asignado por el usuario al grabar la ruta (ej. `'NEXA.ILO.CALLAO.MEJILLONES.ILO'`). **Es la clave funcional usada en la Matriz Financiera** — se prefija con `SPOT-` para identificar el motor paralelo.
+* `description` *(VARCHAR)* → Autor o descripción libre de la ruta.
+* `legs_data` *(JSONB, NOT NULL)* → Estructura completa de la ruta:
+  ```json
+  {
+    "vessel_id": "TABLONES",
+    "legs": {
+      "positioning": { "origin_port_id": "...", "destination_port_id": "...", ... },
+      "laden":       { "origin_port_id": "ILO", "destination_port_id": "MEJILLONES", "quantity": 12000, ... },
+      "return":      { "origin_port_id": "MEJILLONES", "destination_port_id": "ILO", ... }
+    }
+  }
+  ```
+* `pais` *(TEXT, DEFAULT 'Peru')* → País de destino de la operación de exportación. **Regla de negocio:** se infiere automáticamente del `destination_port_id` de la **pierna laden** al guardar la ruta. Si el puerto destino laden es `MEJILLONES` o `BARQUITO` → `'Chile'`; caso contrario → `'Peru'`. Permite clasificar operaciones en el filtro **Tipo Op.** del Análisis Gráfico (Cabotaje = Perú / Chile).
+* `created_at` *(TIMESTAMPTZ, DEFAULT now())* → Timestamp de creación del registro.
+
+> 🔀 **Motor Paralelo:** Las líneas de proyección en `commercial_forecasts` que usan `origin_port_id = 'SPOT'` hacen join lógico contra esta tabla por el campo `name` (prefijado como `SPOT-{name}`) para ejecutar `calculate_spot_multileg` en lugar del motor estándar `calculate_voyage_pnl`.
+
+---
+
+### 3.2. Tabla: `ports` (Maestro de Puertos — Límites Físicos de Terminales)
 *Almacena las capacidades físicas de cada terminal portuario. Al separar estos datos de `routes`, un solo UPDATE en `ports` impacta automáticamente todas las rutas que pasan por ese puerto.*
 * `port_id` *(VARCHAR, PK)* → Identificador único del puerto (ej. 'ILO', 'MATARANI').
 * `port_name` *(VARCHAR)* → Nombre comercial del terminal.

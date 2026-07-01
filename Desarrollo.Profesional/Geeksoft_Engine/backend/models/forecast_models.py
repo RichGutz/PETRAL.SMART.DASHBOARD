@@ -44,6 +44,7 @@ class SpotSaveRequest(BaseModel):
     name: str
     description: Optional[str] = None
     legs_data: Dict[str, Any]
+    pais: Optional[str] = "Peru"
 
 class SpotCalculationRequest(BaseModel):
     vessel_id: str

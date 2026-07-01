@@ -292,7 +292,7 @@ export const CommercialForecast: React.FC = () => {
                             setEndDate(end);
                         }}
                         onAddLine={handleAddLine}
-                        forecastName={forecastName}
+                        forecastName={activeTab === 'spot' ? undefined : forecastName}
                         hideInputs={isRibbonCollapsed || activeTab === 'ledger' || activeTab === 'chart' || activeTab === 'spot'}
                         displayMode={displayMode}
                         onDisplayModeChange={setDisplayMode}
@@ -429,7 +429,7 @@ export const CommercialForecast: React.FC = () => {
             </main>
 
             {/* Save Modal */}
-            {showSaveModal && (
+            {showSaveModal && activeTab !== 'spot' && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg w-96 shadow-xl relative">
                         <button onClick={() => setShowSaveModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={20}/></button>
@@ -472,7 +472,7 @@ export const CommercialForecast: React.FC = () => {
             )}
 
             {/* Load Modal */}
-            {showLoadModal && (
+            {showLoadModal && activeTab !== 'spot' && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg w-[500px] shadow-xl relative">
                         <button onClick={() => setShowLoadModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={20}/></button>

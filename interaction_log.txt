@@ -116,3 +116,5 @@
 
 2026-06-28: Actualización de especificación técnica en el Obsidian de Petral. Se documentaron los últimos cambios de tabla (decimales de flete), gráfico (ancho completo y ejes paralelos) y del flujo de guardado de escenarios (botones apilados verticalmente). Sincronizado en GitHub.
 - [2026-06-30] Movido public/presentation_V5.html a public/presentacion/index.html para cambiar la URL a /presentacion.
+
+2026-07-01: Actualizada la especificacion del Ruteador Spot (Matriz de Rutas) definiendo el orden de norte a sur para el origen (filas) y el destino (columnas) coincidiendo con: Talara, Callao, Marcona, Matarani, Ilo, Mejillones y Barquito.
