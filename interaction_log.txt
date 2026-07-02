@@ -124,3 +124,4 @@
 2026-07-01 21:05:00 - Se agrego el campo terminal a la PK de port_costs_matrix en port_costs.md tras definir el soporte para multiples terminales por puerto.
 2026-07-01 21:11:00 - Se actualizo el plan de implementacion de costos portuarios, precisando la regla de negocio de promedio mandatorio para Mejillones en el Forecast.
 2026-07-01 21:13:00 - Se refino el plan de implementacion de costos portuarios para introducir un submodulo desacoplado (motorcito) que calcula el desglose detallado y retorna el total consolidado mas un JSONB de auditoria.
+2026-07-01 21:30:00 - Migracion fisica y seeding del buque MOQUEGUA completados en Supabase. Se implemento calculate_detailed_port_costs en forecast_service.py y se valido el forecast al dolar exacto.

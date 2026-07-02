@@ -10,6 +10,93 @@ def safe_fetch(supabase, table_name):
         print(f"Warning: Could not fetch table {table_name}: {e}")
         return []
 
+def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: str, vessel_id: str, port_costs_data: list) -> dict:
+    """
+    Calcula los costos de puerto basándose en números duros (campo 'cost') configurados en port_costs_matrix.
+    Para MEJILLONES, promedia aritméticamente las terminales TERMINAL_A, INTERACID y TERQUIM.
+    """
+    is_mejillones = (port_id == "MEJILLONES")
+    
+    def get_terminal_costs(term_id):
+        # 1. client_id + port_id + terminal + operation_type + vessel_id
+        costs = [
+            c for c in port_costs_data
+            if c.get("client_id") == client_id 
+            and c.get("port_id") == port_id 
+            and c.get("terminal") == term_id
+            and c.get("operation_type") == operation_type 
+            and c.get("vessel_id") == vessel_id
+        ]
+        # 2. client_id + port_id + terminal + operation_type + 'DEFAULT'
+        if not costs:
+            costs = [
+                c for c in port_costs_data
+                if c.get("client_id") == client_id 
+                and c.get("port_id") == port_id 
+                and c.get("terminal") == term_id
+                and c.get("operation_type") == operation_type 
+                and c.get("vessel_id", "DEFAULT") == "DEFAULT"
+            ]
+        # 3. 'DEFAULT' + port_id + terminal + operation_type + 'DEFAULT'
+        if not costs:
+            costs = [
+                c for c in port_costs_data
+                if c.get("client_id") == "DEFAULT" 
+                and c.get("port_id") == port_id 
+                and c.get("terminal") == term_id
+                and c.get("operation_type") == operation_type 
+                and c.get("vessel_id", "DEFAULT") == "DEFAULT"
+            ]
+        return costs
+
+    if is_mejillones:
+        terminals = ["TERMINAL_A", "INTERACID", "TERQUIM"]
+        terminal_breakdowns = []
+        
+        for term in terminals:
+            term_costs = get_terminal_costs(term)
+            breakdown = {}
+            for item in term_costs:
+                concept = item["concept_id"]
+                breakdown[concept] = float(item.get("cost", 0.0))
+            if breakdown:
+                terminal_breakdowns.append(breakdown)
+                
+        avg_breakdown = {}
+        if terminal_breakdowns:
+            all_concepts = set()
+            for b in terminal_breakdowns:
+                all_concepts.update(b.keys())
+                
+            for concept in all_concepts:
+                total_val = sum(b.get(concept, 0.0) for b in terminal_breakdowns)
+                avg_breakdown[concept] = round(total_val / len(terminal_breakdowns), 2)
+                
+        total_cost = sum(avg_breakdown.values())
+        return {
+            "total_cost": round(total_cost, 2),
+            "breakdown": avg_breakdown
+        }
+    else:
+        costs = get_terminal_costs("GENERAL")
+        if not costs:
+            # Fallback a cualquier terminal configurada para ese puerto
+            active_terminals = set(c.get("terminal") for c in port_costs_data if c.get("port_id") == port_id)
+            if active_terminals:
+                first_term = list(active_terminals)[0]
+                costs = get_terminal_costs(first_term)
+                
+        breakdown = {}
+        for item in costs:
+            concept = item["concept_id"]
+            breakdown[concept] = float(item.get("cost", 0.0))
+            
+        total_cost = sum(breakdown.values())
+        return {
+            "total_cost": round(total_cost, 2),
+            "breakdown": breakdown
+        }
+
 def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     supabase = get_supabase()
     
@@ -44,7 +131,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     # Tarifas de flete por bracket de tonelaje
     tariffs_data = safe_fetch(supabase, "contract_tariffs")
     
-    agency_data = safe_fetch(supabase, "agency_matrix")
+    port_costs_data = safe_fetch(supabase, "port_costs_matrix")
     
     agg_data = {}
     
@@ -143,18 +230,16 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 laden_leg["freight_rate"] = freight_rate
                 
                 # Inyectar costos de puerto/agencia de forma dinámica
-                def get_local_agency(target_port, target_op):
-                    for a in agency_data:
-                        if a.get("client_id") == "DEFAULT" and a.get("port_id") == target_port and a.get("operation_type") == target_op and a.get("vessel_id", "DEFAULT") == "DEFAULT":
-                            return float(a.get("cost", 15000))
-                    return 15000.0
-                
                 orig_port = laden_leg.get("origin_port_id")
                 dest_port = laden_leg.get("destination_port_id")
                 if orig_port:
-                    laden_leg["agency_costs_origin"] = get_local_agency(orig_port, 'CARGA')
+                    laden_leg["agency_costs_origin"] = calculate_detailed_port_costs(
+                        "DEFAULT", orig_port, 'CARGA', "DEFAULT", port_costs_data
+                    )["total_cost"]
                 if dest_port:
-                    laden_leg["agency_costs_destination"] = get_local_agency(dest_port, 'DESCARGA')
+                    laden_leg["agency_costs_destination"] = calculate_detailed_port_costs(
+                        "DEFAULT", dest_port, 'DESCARGA', "DEFAULT", port_costs_data
+                    )["total_cost"]
                 
             legs_copy["bunker_price_ifo"] = p_ifo
             legs_copy["bunker_price_mdo"] = p_mdo
@@ -202,24 +287,12 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             route_key = f"SPOT-{spot_id}"
             
         else:
-            # Agencia Costs logic (with fallback priority: exact -> client_only -> default)
-            def get_agency_cost(target_port, target_op):
-                # 1. client_id + port_id + operation_type + vessel_id
-                for a in agency_data:
-                    if a.get("client_id") == client and a.get("port_id") == target_port and a.get("operation_type") == target_op and a.get("vessel_id") == vessel:
-                        return float(a.get("cost", 15000))
-                # 2. client_id + port_id + operation_type + 'DEFAULT'
-                for a in agency_data:
-                    if a.get("client_id") == client and a.get("port_id") == target_port and a.get("operation_type") == target_op and a.get("vessel_id", "DEFAULT") == "DEFAULT":
-                        return float(a.get("cost", 15000))
-                # 3. 'DEFAULT' + port_id + operation_type + 'DEFAULT'
-                for a in agency_data:
-                    if a.get("client_id") == "DEFAULT" and a.get("port_id") == target_port and a.get("operation_type") == target_op and a.get("vessel_id", "DEFAULT") == "DEFAULT":
-                        return float(a.get("cost", 15000))
-                return 15000.0
-                
-            ag_orig = get_agency_cost(line.origin_port_id, 'CARGA')
-            ag_dest = get_agency_cost(line.destination_port_id, 'DESCARGA')
+            # Calcular costos detallados usando el nuevo helper
+            orig_result = calculate_detailed_port_costs(client, line.origin_port_id, 'CARGA', vessel, port_costs_data)
+            dest_result = calculate_detailed_port_costs(client, line.destination_port_id, 'DESCARGA', vessel, port_costs_data)
+            
+            ag_orig = orig_result["total_cost"]
+            ag_dest = dest_result["total_cost"]
 
             # Construir Inputs para engine
             inputs = {
@@ -295,7 +368,11 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "actual_discharge_rate": unit_result["actual_discharge_rate"],
             "audit_trail": unit_result.get("audit_trail", {}),
             "raw_inputs": inputs,
-            "route_name": spot_route.get("name") if is_spot_route else None
+            "route_name": spot_route.get("name") if is_spot_route else None,
+            "port_costs_breakdown": {
+                "origin": {} if is_spot_route else orig_result["breakdown"],
+                "destination": {} if is_spot_route else dest_result["breakdown"]
+            }
         }
         
         if client not in agg_data:
