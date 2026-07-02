@@ -100,6 +100,10 @@ def test_voyage_ledger_all_combinations():
                 "route_distance": r["distance"], 
                 "vessel_speed": v["speed"],
                 "weather_factor": 0.03, "port_overhead_hours": 6, 
+                "port_overhead_hours_origin": 6.0,
+                "port_overhead_hours_dest": 6.0,
+                "positioning_carga_hrs": 1.0,
+                "positioning_descarga_hrs": 1.0,
                 "vessel_max_load_intake_limit": v["intake"],
                 "max_terminal_load_rate": 500, 
                 "vessel_pump_discharge_rate": v["pump"], 
@@ -141,13 +145,13 @@ def test_voyage_ledger_all_combinations():
             
             y = height - 65
             c.drawString(50, y, "1. Tasa Real de Carga (Origen):")
-            c.drawString(50, y - 12, "actual_load = MIN(c_load, v_intake, t_load_rate)")
+            c.drawString(50, y - 12, "actual_load = c_load")
             
             c.drawString(50, y - 32, "2. Tasa Real de Descarga (Destino):")
-            c.drawString(50, y - 44, "actual_discharge = MIN(c_disch, v_pump, p_disch_limit)")
+            c.drawString(50, y - 44, "actual_discharge = c_disch")
             
             c.drawString(50, y - 64, "3. Días de Puerto (port_days):")
-            c.drawString(50, y - 76, "port_days = ((Q / act_load) + over) + ((Q / act_disch) + over) / 24")
+            c.drawString(50, y - 76, "port_days = ((Q / act_load + over_or + pos_or) + (Q / act_disch + over_de + pos_de)) / 24")
             
             c.drawString(50, y - 96, "4. Días de Mar (sea_days) [Dinámico]:")
             c.drawString(50, y - 108, "sea_days = ((dist * (is_round_trip ? 2 : 1)) * (1 + w_factor)) / (speed * 24)")
@@ -174,13 +178,13 @@ def test_voyage_ledger_all_combinations():
             c.setFont("Helvetica", 10)
             
             c.drawString(width/2 + 45, y, "1. Reemplazo de Carga:")
-            c.drawString(width/2 + 45, y - 12, f"MIN(99,999.00, {inputs['vessel_max_load_intake_limit']:,.2f}, {inputs['max_terminal_load_rate']:,.2f}) = {result['actual_load_rate']:,.2f}")
+            c.drawString(width/2 + 45, y - 12, f"c_load = {result['actual_load_rate']:,.2f}")
             
             c.drawString(width/2 + 45, y - 32, "2. Reemplazo de Descarga:")
-            c.drawString(width/2 + 45, y - 44, f"MIN(99,999.00, {inputs['vessel_pump_discharge_rate']:,.2f}, {inputs['port_max_discharge_limit']:,.2f}) = {result['actual_discharge_rate']:,.2f}")
+            c.drawString(width/2 + 45, y - 44, f"c_disch = {result['actual_discharge_rate']:,.2f}")
             
             c.drawString(width/2 + 45, y - 64, "3. Reemplazo de Tiempos en Puerto:")
-            c.drawString(width/2 + 45, y - 76, f"(({inputs['quantity']:,.0f}/{result['actual_load_rate']:,.0f})+{inputs['port_overhead_hours']:,.0f} + ({inputs['quantity']:,.0f}/{result['actual_discharge_rate']:,.0f})+{inputs['port_overhead_hours']:,.0f}) / 24 = {result['port_days']:,.6f} d")
+            c.drawString(width/2 + 45, y - 76, f"(({inputs['quantity']:,.0f}/{result['actual_load_rate']:,.0f})+{inputs['port_overhead_hours_origin']:,.0f}+{inputs['positioning_carga_hrs']:,.0f} + ({inputs['quantity']:,.0f}/{result['actual_discharge_rate']:,.0f})+{inputs['port_overhead_hours_dest']:,.0f}+{inputs['positioning_descarga_hrs']:,.0f}) / 24 = {result['port_days']:,.6f} d")
             
             c.drawString(width/2 + 45, y - 96, "4. Reemplazo de Tiempos en Mar (Ida y Vuelta):")
             c.drawString(width/2 + 45, y - 108, f"(({inputs['route_distance']:,.2f} * 2) * 1.03) / ({inputs['vessel_speed']:,.2f} * 24) = {result['sea_days']:,.6f} días")

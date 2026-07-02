@@ -26,7 +26,7 @@ const colorizeFormula = (formula: string) => {
     const mappings = [
         { regex: /\b(v_intake|v_pump|speed|ifo_tons|mdo_tons|tce_req)\b/g, color: 'text-blue-600 font-black' },
         { regex: /\b(dist|w_laden|w_ballast)\b/g, color: 'text-purple-600 font-black' },
-        { regex: /\b(t_load_rate|p_disch_limit|over_or|over_de)\b/g, color: 'text-orange-600 font-black' },
+        { regex: /\b(t_load_rate|p_disch_limit|over_or|over_de|pos_or|pos_de)\b/g, color: 'text-orange-600 font-black' },
         { regex: /\b(port_costs)\b/g, color: 'text-rose-600 font-black' },
         { regex: /\b(c_load|c_disch|F|Q)\b/g, color: 'text-emerald-600 font-black' },
         { regex: /\b(p_ifo|p_mdo)\b/g, color: 'text-amber-600 font-black' },
@@ -209,8 +209,6 @@ export const VoyageLedgerTest: React.FC = () => {
                         </div>
                         <div className="p-3 flex flex-col gap-1.5 flex-1 justify-between">
                             <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.vessels.text}`}>Barco</span><span className="font-mono text-slate-800 font-bold text-xs">{vesselName.replace('_', ' ')}</span></div>
-                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.vessels.text}`}>Intake Máx. (v_intake)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(scenarioResult.raw_inputs?.vessel_max_load_intake_limit || 0)} T/h</span></div>
-                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.vessels.text}`}>Cap. Bombeo (v_pump)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(scenarioResult.raw_inputs?.vessel_pump_discharge_rate || 0)} T/h</span></div>
                             <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.vessels.text}`}>Velocidad (speed)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(scenarioResult.raw_inputs?.vessel_speed || 0)} kn</span></div>
                             <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.vessels.text}`}>TCE Requerido (tce_req)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.tce_required || 0)}/d</span></div>
                             <div className={`mt-1 pt-2 border-t ${COLOR_SCHEME.vessels.border} grid grid-cols-2 gap-x-4 gap-y-1`}>
@@ -247,8 +245,8 @@ export const VoyageLedgerTest: React.FC = () => {
                             <div className="p-3 flex flex-col gap-1.5 flex-1 justify-between">
                                 <div className={`text-[10px] italic leading-tight mb-1 ${COLOR_SCHEME.agency_matrix.text}`}>Llaves: Cliente + Puerto + Op + Barco</div>
                                 <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Cliente</span><span className="font-mono text-slate-800 font-bold text-xs">SPCC</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Agencia Origen (port_costs)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.agency_costs_origin || 0)}</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Agencia Destino (port_costs)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.agency_costs_destination || 0)}</span></div>
+                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Port Cost Origen (port_costs)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.agency_costs_origin || 0)}</span></div>
+                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Port Cost Destino (port_costs)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.agency_costs_destination || 0)}</span></div>
                             </div>
                         </div>
                     </div>
@@ -348,10 +346,10 @@ export const VoyageLedgerTest: React.FC = () => {
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.ports.badge}`}>ports</span>
                             </div>
                             <div className="p-3 flex flex-col gap-1.5 flex-1 justify-between">
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.ports.text}`}>Lím. Carga Term. (t_load_rate)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(scenarioResult.raw_inputs?.max_terminal_load_rate || 0)} T/h</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.ports.text}`}>Lím. Desc. Term. (p_disch_limit)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(scenarioResult.raw_inputs?.port_max_discharge_limit || 0)} T/h</span></div>
                                 <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.ports.text}`}>Overhead Or. (over_or)</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.port_overhead_hours_origin || 0)} H</span></div>
                                 <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.ports.text}`}>Overhead De. (over_de)</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.port_overhead_hours_dest || 0)} H</span></div>
+                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.ports.text}`}>Posic. Carga (pos_carga)</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.positioning_carga_hrs || 0)} H</span></div>
+                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.ports.text}`}>Posic. Descarga (pos_descarga)</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.positioning_descarga_hrs || 0)} H</span></div>
                             </div>
                         </div>
                         {col4Footer}
@@ -593,47 +591,43 @@ export const VoyageLedgerTest: React.FC = () => {
                             const cardsHTML = `
                             <div class="cards-grid">
                                 <div class="card card-blue">
-                                    <div class="card-header">🚢 Maestro Flota <span class="card-badge">vessels</span></div>
+                                    <div class="card-header">Maestro Flota <span class="card-badge">vessels</span></div>
                                     <div class="card-row"><span>Barco</span><strong>${v.replace('_',' ')}</strong></div>
-                                    <div class="card-row"><span>Intake Máx. (v_intake)</span><strong>${fmtNum(ri.vessel_max_load_intake_limit||0)} T</strong></div>
-                                    <div class="card-row"><span>Cap. Bombeo (v_pump)</span><strong>${fmtNum(ri.vessel_pump_discharge_rate||0)} T/h</strong></div>
                                     <div class="card-row"><span>Velocidad (speed)</span><strong>${fmtNum(ri.vessel_speed||0)} kn</strong></div>
                                     <div class="card-row"><span>TCE Requerido (tce_req)</span><strong>${fmtCur(ri.tce_required||0)}/d</strong></div>
                                 </div>
                                 <div class="card card-green">
-                                    <div class="card-header">📋 Reglas Comerciales <span class="card-badge">contracts</span></div>
+                                    <div class="card-header">Reglas Comerciales <span class="card-badge">contracts</span></div>
                                     <div class="card-row"><span>Cantidad (Q)</span><strong>${fmtNum(ri.quantity||0)} MT</strong></div>
                                     <div class="card-row"><span>Flete Base (F)</span><strong>${fmtCur(ri.freight_rate||0)}/MT</strong></div>
                                     <div class="card-row"><span>Tasa Carga Ctto (c_load)</span><strong>${ri.contract_agreed_load_rate ? fmtNum(ri.contract_agreed_load_rate)+' T/h' : 'TBD'}</strong></div>
                                     <div class="card-row"><span>Tasa Desc. Ctto (c_disch)</span><strong>${ri.contract_agreed_discharge_rate ? fmtNum(ri.contract_agreed_discharge_rate)+' T/h' : 'TBD'}</strong></div>
                                 </div>
                                 <div class="card card-purple">
-                                    <div class="card-header">🗺️ Maestro Rutas <span class="card-badge">routes</span></div>
+                                    <div class="card-header">Maestro Rutas <span class="card-badge">routes</span></div>
                                     <div class="card-row"><span>Origen → Destino</span><strong>${o} → ${d}</strong></div>
                                     <div class="card-row"><span>Distancia (dist)</span><strong>${fmtNum(ri.route_distance||0)} NM</strong></div>
-                                    <div class="card-row"><span>W Fct Laden</span><strong>${((ri.weather_factor_laden||0)*100)}%</strong></div>
-                                    <div class="card-row"><span>W Fct Ballast</span><strong>${((ri.weather_factor_ballast||0)*100)}%</strong></div>
+                                    <div class="card-row"><span>W Fct (w_laden / w_ballast)</span><strong>${((ri.weather_factor_laden||0)*100)}% / ${((ri.weather_factor_ballast||0)*100)}%</strong></div>
                                 </div>
                                 <div class="card card-orange">
-                                    <div class="card-header">⚓ Límites Portuarios <span class="card-badge">ports</span></div>
-                                    <div class="card-row"><span>Lím. Carga Term. (t_load_rate)</span><strong>${fmtNum(ri.max_terminal_load_rate||0)} T/h</strong></div>
-                                    <div class="card-row"><span>Lím. Desc. Term. (p_disch_limit)</span><strong>${fmtNum(ri.port_max_discharge_limit||0)} T/h</strong></div>
+                                    <div class="card-header">Límites Portuarios <span class="card-badge">ports</span></div>
                                     <div class="card-row"><span>Overhead Origen (over_or)</span><strong>${fmtNum(ri.port_overhead_hours_origin||0)} H</strong></div>
                                     <div class="card-row"><span>Overhead Destino (over_de)</span><strong>${fmtNum(ri.port_overhead_hours_dest||0)} H</strong></div>
+                                    <div class="card-row"><span>Posic. Carga (pos_carga)</span><strong>${fmtNum(ri.positioning_carga_hrs||0)} H</strong></div>
+                                    <div class="card-row"><span>Posic. Descarga (pos_descarga)</span><strong>${fmtNum(ri.positioning_descarga_hrs||0)} H</strong></div>
                                 </div>
                                 <div class="card card-rose">
-                                    <div class="card-header">🏦 Costos Agencia <span class="card-badge">agency_matrix</span></div>
-                                    <div class="card-row"><span>Puerto Origen</span><strong>${o}</strong></div>
-                                    <div class="card-row"><span>Puerto Destino</span><strong>${d}</strong></div>
-                                    <div class="card-row"><span>Costo Port. (port_costs)</span><strong>${fmtCur(runResult.port_costs_unit||0)}</strong></div>
-                                    <div class="card-row"><span>Incluye: DA + Estiba</span><strong>✓</strong></div>
+                                    <div class="card-header">Costos Agencia <span class="card-badge">agency_matrix</span></div>
+                                    <div class="card-row"><span>Port Cost Origen</span><strong>${fmtCur(ri.agency_costs_origin||0)}</strong></div>
+                                    <div class="card-row"><span>Port Cost Destino</span><strong>${fmtCur(ri.agency_costs_destination||0)}</strong></div>
                                 </div>
                                 <div class="card card-amber">
-                                    <div class="card-header">⛽ Bunker <span class="card-badge">bunker_prices</span></div>
-                                    <div class="card-row"><span>IFO Consumo (ifo_tons)</span><strong>${fmtNum(ri.ifo_tons_per_day||0)} T/d</strong></div>
-                                    <div class="card-row"><span>MDO Consumo (mdo_tons)</span><strong>${fmtNum(ri.mdo_tons_per_day||0)} T/d</strong></div>
-                                    <div class="card-row"><span>Precio IFO (p_ifo)</span><strong>${fmtCur(ri.ifo_price||0)}/T</strong></div>
-                                    <div class="card-row"><span>Precio MDO (p_mdo)</span><strong>${fmtCur(ri.mdo_price||0)}/T</strong></div>
+                                    <div class="card-header">Bunker <span class="card-badge">bunker_prices</span></div>
+                                    <div class="card-row"><span>Fecha Cotización</span><strong>${ri.bunker_price_date||'N/A'}</strong></div>
+                                    <div class="card-row"><span>IFO Consumo</span><strong>${fmtNum(runResult.bunker_ifo_tonnage||0)} T</strong></div>
+                                    <div class="card-row"><span>MDO Consumo</span><strong>${fmtNum(runResult.bunker_mdo_tonnage||0)} T</strong></div>
+                                    <div class="card-row"><span>Precio IFO (p_ifo)</span><strong>${fmtCur(ri.bunker_price_ifo||0)}/T</strong></div>
+                                    <div class="card-row"><span>Precio MDO (p_mdo)</span><strong>${fmtCur(ri.bunker_price_mdo||0)}/T</strong></div>
                                 </div>
                             </div>`;
                             const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">

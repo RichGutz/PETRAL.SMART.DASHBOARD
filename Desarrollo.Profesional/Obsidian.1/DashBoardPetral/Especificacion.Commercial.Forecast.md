@@ -35,6 +35,12 @@ Tras una auditoría profunda del motor backend (`forecast_service.py` y `engine.
   2. Se actualizó `VoyageLedgerTest.tsx` (tanto en la vista web como en el layout de impresión de PDF) reemplazando los hardcodes por `scenarioResult.actual_load_rate` y `scenarioResult.actual_discharge_rate`.
   3. Se robustecieron los formateadores de números (`formatNumber` / `fmtNum`) y monedas (`formatCurrency` / `fmtCur`) agregando una evaluación `isNaN(parseFloat(val))` que sustituye cualquier dato fallido o ausente por un guion (`—`), asegurando estabilidad visual absoluta.
 
+### 1.5 Simplificación Comercial del Motor de Liquidación y Adición de Horas de Posicionamiento (Julio 2026)
+- **Desvinculación Física Comercial:** Se modificó el motor (`engine.py`) para que la tasa de carga y descarga dependa exclusivamente del contrato comercial pactado (`c_load` y `c_disch`), aislando los cuellos de botella de infraestructura (`v_intake`, `v_pump`, `t_load_rate`, `p_disch_limit`).
+- **Limpieza de UI en Auditoría Ledger:** Se removieron de los cards visuales (Maestro Flota y Límites Portuarios) las variables físicas desvinculadas en la interfaz de React e impresión HTML de `VoyageLedgerTest.tsx`.
+- **Integración de Posicionamiento:** Se añadieron los campos `positioning_carga_hrs` y `positioning_descarga_hrs` a la tabla `ports` de Supabase (inicializados en `1` para todos los puertos). Estos se inyectan en los inputs de simulación y se sumaron a la métrica **3. Días de Puerto**, cuya fórmula conceptual se actualizó a:
+  `port_days = ((Q / act_load + over_or + pos_or) + (Q / act_disch + over_de + pos_de)) / 24`
+
 ---
 
 ## 2. 📊 Matriz Financiera (ForecastGrid.tsx)
@@ -162,7 +168,7 @@ El módulo **Commercial Forecast** comparte el Ribbon del dashboard con otros re
 | 1 | **Voyage Ledger** | ✅ Productivo | Auditoría detallada de cálculo por viaje (P&L unitario) |
 | 2 | **Ruteador Spot** | ✅ Productivo | Cotizador multileg para operaciones spot complejas |
 | 3 | **Commercial Forecast** | ✅ Productivo | Matriz Financiera + Análisis Gráfico (este documento) |
-| 4 | **Mapa Espaguetis** | 🚧 En especificación | Visualización geoespacial de rutas, fuentes y sumideros |
+| 4 | **Mapa Espaguetis** | ✅ Productivo | Visualización geoespacial de rutas, fuentes y sumideros |
 
 ### Módulo 4: Mapa Espaguetis — Fuentes y Sumideros
 El cuarto módulo del Ribbon es una vista geoespacial del Perú que superpone las rutas activas (espaguetis), los pie charts de carga/descarga por puerto y el market share de Petral como fuente o sumidero en cada terminal.

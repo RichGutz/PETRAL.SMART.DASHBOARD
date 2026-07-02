@@ -118,3 +118,9 @@
 - [2026-06-30] Movido public/presentation_V5.html a public/presentacion/index.html para cambiar la URL a /presentacion.
 
 2026-07-01: Actualizada la especificacion del Ruteador Spot (Matriz de Rutas) definiendo el orden de norte a sur para el origen (filas) y el destino (columnas) coincidiendo con: Talara, Callao, Marcona, Matarani, Ilo, Mejillones y Barquito.
+
+2026-07-01: Desarrollo e integración del Mapa de Espaguetis. Se creó la tabla sources_sinks en la BD Supabase (capacidades por año) y se actualizó el endpoint get_ports del backend FastAPI. En el frontend se desarrolló el hook useSpaghettiData.ts y el componente SpaghettiMap.tsx para visualizar viajes con los colores de los barcos y dobles pie charts (capacidad de mercado externa y carga/descarga de Petral interna). Todo verificado y compilado sin errores TypeScript.
+2026-07-01 20:50:00 - Se actualizo port_costs.md con la arquitectura detallada del desglose de costos portuarios.
+2026-07-01 21:05:00 - Se agrego el campo terminal a la PK de port_costs_matrix en port_costs.md tras definir el soporte para multiples terminales por puerto.
+2026-07-01 21:11:00 - Se actualizo el plan de implementacion de costos portuarios, precisando la regla de negocio de promedio mandatorio para Mejillones en el Forecast.
+2026-07-01 21:13:00 - Se refino el plan de implementacion de costos portuarios para introducir un submodulo desacoplado (motorcito) que calcula el desglose detallado y retorna el total consolidado mas un JSONB de auditoria.

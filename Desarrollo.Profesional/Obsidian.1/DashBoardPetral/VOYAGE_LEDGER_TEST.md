@@ -27,9 +27,9 @@ Cada tabla de origen tiene un color fijo que se aplica en los cards superiores Y
 
 | Métrica | Fórmula Algorítmica | Tablas |
 |---|---|---|
-| **1. Tasa Carga** | `MIN(c_load, v_intake, t_load_rate)` | `contracts · vessels · ports` |
-| **2. Tasa Descarga** | `MIN(c_disch, v_pump, p_disch_limit)` | `contracts · vessels · ports` |
-| **3. Días de Puerto** | `((Q/act_load + over_or) + (Q/act_disch + over_de)) / 24` | Calculado |
+| **1. Tasa Carga** | `c_load` | `contracts` |
+| **2. Tasa Descarga** | `c_disch` | `contracts` |
+| **3. Días de Puerto** | `((Q/act_load + over_or + pos_or) + (Q/act_disch + over_de + pos_de)) / 24` | Calculado |
 | **4. Días de Mar** | `(dist*(1+w_laden) + dist*(1+w_ballast)) / (speed*24)` | `routes · vessels` |
 | **5. Costo Bunker** | `(ifo_tons * p_ifo) + (mdo_tons * p_mdo)` | `vessels · bunker_prices` |
 | **6. Resultado Viaje** | `(Q * F) - port_costs - bunker` | `contract_tariffs · agency_matrix` |
@@ -43,12 +43,12 @@ Layout `flex` de 4 columnas; cols 2 y 3 tienen cards apilados con `gap-1` (pegad
 
 | Col | Card | Variables clave |
 |---|---|---|
-| **1** | 🔵 Maestro Flota | Barco · v_intake · v_pump · speed · tce_req · IFO/MDO × {Mar, Idle, Carga, Desc} en **MT/d** |
+| **1** | 🔵 Maestro Flota | Barco · speed · tce_req · IFO/MDO × {Mar, Idle, Carga, Desc} en **MT/d** |
 | **2 (top)** | 🟡 Combustible | Fecha Cotización · p_ifo · p_mdo |
-| **2 (bot)** | 🔴 Costos Portuarios | Llaves: Cliente+Puerto+Op+Barco · Agencia Origen · Agencia Destino |
+| **2 (bot)** | 🔴 Costos Portuarios | Llaves: Cliente+Puerto+Op+Barco · Port Cost Origen · Port Cost Destino |
 | **3 (top)** | 🟣 Maestro Rutas | Origen→Destino · dist · w_laden / w_ballast |
 | **3 (bot)** | 🟢 Reglas Comerciales | Q · F · c_load · c_disch |
-| **4** | 🟠 Límites Portuarios | t_load_rate · p_disch_limit · over_or · over_de |
+| **4** | 🟠 Límites Portuarios | over_or · over_de · pos_carga · pos_descarga |
 
 ## 🔧 6. Arquitectura Backend
 
@@ -94,3 +94,12 @@ Layout `flex` de 4 columnas; cols 2 y 3 tienen cards apilados con `gap-1` (pegad
 - [x] **`PORT_ALIASES`:** Mapa `"MARCONA" → "SAN_JUAN_DE_MARCONA"` aplicado a rutas, contratos, tarifas, puertos y agencias
 - [x] **Consistencia de IDs:** Todos los lookups a BD usan `resolved_dest` en lugar del ID crudo del frontend
 - [x] **Fallback legacy:** Si `contract` es `None`, se intenta búsqueda directa por `client_id + destination_port_id` para retrocompatibilidad
+
+## ✅ 11. Completados en Paso 9 (Simplificación Comercial y Posicionamiento)
+
+- [x] **Simplificación de Tasas:** Modificada la lógica para calcular las tasas a partir de la tasa del contrato (`c_load`/`c_disch`), aislando los límites de buque y terminal.
+- [x] **Limpieza Visual de UI:** Eliminadas las variables de capacidad física `v_intake`, `v_pump`, `t_load_rate` y `p_disch_limit` del frontend.
+- [x] **Renombramiento de Costos:** Se cambiaron las etiquetas "Agencia Origen / Destino" por "Port Cost Origen / Destino".
+- [x] **Inyección de Posicionamiento:** Creadas las columnas `positioning_carga_hrs` y `positioning_descarga_hrs` en la tabla `ports` (inicializadas a `1` en Supabase).
+- [x] **Nueva Fórmula de Días de Puerto:** Tiempos de posicionamiento integrados en la métrica 3 (`port_days`), rastro de auditoría de backend, y ReportLab tests del PDF Ledger.
+- [x] **Fix de Contenido en Impresión:** Sincronizados los 6 cards del HTML de impresión con las variables reales y corregidos los caracteres corruptos de codificación.

@@ -6,6 +6,7 @@ import { ForecastService } from '../../services/api';
 import { Save, FolderOpen, X, Table, BarChart2, ChevronUp, ChevronDown, Sun, Moon } from 'lucide-react';
 import { VoyageLedgerTest } from '../../components/CommercialForecast/VoyageLedgerTest';
 import { SpotRouter } from '../../components/CommercialForecast/SpotRouter';
+import { SpaghettiMap } from '../../components/CommercialForecast/SpaghettiMap';
 
 export const CommercialForecast: React.FC = () => {
     const [data, setData] = useState<any>(null);
@@ -38,8 +39,23 @@ export const CommercialForecast: React.FC = () => {
     const [savedForecasts, setSavedForecasts] = useState<any[]>([]);
 
     // Tab State
-    const [activeTab, setActiveTab] = useState<'grid' | 'chart' | 'ledger' | 'spot'>('grid');
+    const [activeTab, setActiveTab] = useState<'grid' | 'chart' | 'ledger' | 'spot' | 'map'>('grid');
     const [displayMode, setDisplayMode] = useState<'usd'|'pct'>('usd');
+
+    // Ports State
+    const [ports, setPorts] = useState<any[]>([]);
+
+    useEffect(() => {
+        const loadPorts = async () => {
+            try {
+                const data = await ForecastService.getPorts();
+                setPorts(data);
+            } catch (e) {
+                console.error("Error loading ports:", e);
+            }
+        };
+        loadPorts();
+    }, []);
 
     // Demurrage State
     const [demurragePct, setDemurragePct] = useState<string>('');
@@ -327,6 +343,12 @@ export const CommercialForecast: React.FC = () => {
                                 >
                                     <span className="text-lg">⚓</span> Ruteador Spot
                                 </button>
+                                <button 
+                                    onClick={() => setActiveTab('map')}
+                                    className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold text-sm transition-all ${activeTab === 'map' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
+                                >
+                                    <span className="text-lg">🗺️</span> Mapa Espaguetis
+                                </button>
                             </div>
                         }
                         rightContent={
@@ -424,6 +446,18 @@ export const CommercialForecast: React.FC = () => {
                 {activeTab === 'spot' && (
                     <section className="flex flex-col gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <SpotRouter />
+                    </section>
+                )}
+
+                {/* 6. Mapa Espaguetis */}
+                {activeTab === 'map' && (
+                    <section className="flex-1 flex flex-col gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <SpaghettiMap 
+                            data={data} 
+                            months={dynamicMonths} 
+                            ports={ports} 
+                            isDarkMode={isDarkMode} 
+                        />
                     </section>
                 )}
             </main>

@@ -66,6 +66,9 @@ Este documento define la semántica comercial, operativa y naval de las variable
 ### `port_overhead_hours` (Horas Muertas de Maniobra)
 * **Definición de Negocio:** El tiempo fijo burocrático e irreversible en cada puerto (muestreo de laboratorios, trámites aduaneros, conexión de mangueras, práctico y remolcadores). Son horas que el buque pasa detenido obligatoriamente, independientes del volumen de la carga.
 
+### `positioning_carga_hrs` / `positioning_descarga_hrs` (Horas de Posicionamiento)
+* **Definición de Negocio:** El tiempo adicional necesario para posicionar y alinear el buque en el muelle de carga (origen) y descarga (destino) antes de comenzar la operación hidráulica activa. Es una variable física configurable por puerto que se suma a la duración total en puerto.
+
 ### `max_terminal_load_rate` / `port_max_discharge_limit` (Capacidad de Tierra - MT/Hora)
 * **Definición de Negocio:** Los límites físicos de la infraestructura del puerto. En origen, es qué tan rápido bombea la planta de tierra; en destino, es qué tanta presión aguanta la tubería de recepción del cliente en su terminal.
 

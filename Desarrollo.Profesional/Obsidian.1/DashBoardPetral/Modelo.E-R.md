@@ -91,6 +91,10 @@ Este documento define la estructura relacional definitiva del motor de **Geeksof
 * `max_disch_rate` *(FLOAT, DEFAULT 9999)* → Límite físico máximo del terminal de **descarga** en MT/hora (`p_disch_limit` en la fórmula MIN). Ej: MATARANI = 300 MT/hr.
 * `overhead_carga_hrs` *(NUMERIC, DEFAULT 6.0)* → Tiempo muerto estándar (conexión de mangueras, papelería aduanera) en puerto de origen.
 * `overhead_descarga_hrs` *(NUMERIC, DEFAULT 6.0)* → Tiempo muerto estándar (desconexión, inspecciones) en puerto de destino.
+* `lat` *(NUMERIC)* → Latitud geográfica para la representación geoespacial en el **Mapa Espaguetis** (ej: `-17.6394`).
+* `lon` *(NUMERIC)* → Longitud geográfica para la representación geoespacial en el **Mapa Espaguetis** (ej: `-71.3375`).
+* `positioning_carga_hrs` *(NUMERIC, DEFAULT 0)* → Horas adicionales requeridas para el posicionamiento antes de la carga.
+* `positioning_descarga_hrs` *(NUMERIC, DEFAULT 0)* → Horas adicionales requeridas para el posicionamiento antes de la descarga.
 
 **Relación con el motor:**
 ```
@@ -109,7 +113,7 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 ---
 
 ### 4. Tabla: `agency_matrix` (Matriz Cruzada de Costos Portuarios)
-> 📎 **Ver Documento Vinculado:** [[Matriz.Costos.Portuarios]]
+> 📎 **Ver Documento Vinculado:** [[port_costs]]
 * `client_id` *(VARCHAR, PK)* → ID del cliente contratante o 'DEFAULT' como fallback global de tarifa aduanera.
 * `port_id` *(VARCHAR, PK)* → Puerto de la operación.
 * `operation_type` *(VARCHAR, PK)* → Naturaleza del evento en muelle (`CHECK (operation_type IN ('CARGA', 'DESCARGA'))`).

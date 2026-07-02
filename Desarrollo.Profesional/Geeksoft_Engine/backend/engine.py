@@ -12,6 +12,8 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
     
     overhead_origin = float(inputs.get("port_overhead_hours_origin", 6))
     overhead_dest = float(inputs.get("port_overhead_hours_dest", 6))   
+    pos_carga = float(inputs.get("positioning_carga_hrs", 0.0))
+    pos_descarga = float(inputs.get("positioning_descarga_hrs", 0.0))
     # Parámetros de Carga (Origen)
     c_load = inputs.get("contract_agreed_load_rate")
     v_intake = float(inputs.get("vessel_max_load_intake_limit", 0))
@@ -39,8 +41,9 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
         valid_vals = [val for val in args if val > 0]
         return min(valid_vals) if valid_vals else 0.0
 
-    actual_load_rate = min_non_zero(c_load, v_intake, t_load_rate)
-    actual_discharge_rate = min_non_zero(c_disch, v_pump, p_disch_limit)
+    # 3. Resolución de Cuellos de Botella Técnicos (Lógica Simplificada por Contrato)
+    actual_load_rate = c_load if c_load > 0 else 9999.0
+    actual_discharge_rate = c_disch if c_disch > 0 else 9999.0
 
     # 4. Cálculos de Tiempos (Itinerario Simulado)
     is_round_trip = inputs.get("is_round_trip", True)
@@ -49,13 +52,13 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
     else:
         sea_days = (dist * (1 + w_factor_laden)) / (speed * 24)
     
-    hours_at_origin = (Q / actual_load_rate) + overhead_origin
-    hours_at_dest = (Q / actual_discharge_rate) + overhead_dest
+    hours_at_origin = (Q / actual_load_rate) + overhead_origin + pos_carga
+    hours_at_dest = (Q / actual_discharge_rate) + overhead_dest + pos_descarga
     
     # Granularidad Portuaria (Desglose real para el Bunker)
     load_days = (Q / actual_load_rate) / 24
     disch_days = (Q / actual_discharge_rate) / 24
-    idle_days = (overhead_origin + overhead_dest) / 24 # overhead en origen + destino
+    idle_days = (overhead_origin + overhead_dest + pos_carga + pos_descarga) / 24 # overhead + pos_carga + pos_descarga
     
     port_days = load_days + disch_days + idle_days
     
@@ -102,16 +105,16 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
 
     audit_trail = {
         "1. Tasa Carga (act_load)": {
-            "formula": "MIN(c_load, v_intake, t_load_rate)",
-            "values": f"MIN({ec(fmt_tbd(c_load))}, {vc(fmt_tbd(v_intake))}, {oc(fmt_tbd(t_load_rate))})"
+            "formula": "c_load",
+            "values": f"{ec(fmt_tbd(c_load))}"
         },
         "2. Tasa Descarga (act_disch)": {
-            "formula": "MIN(c_disch, v_pump, p_disch_limit)",
-            "values": f"MIN({ec(fmt_tbd(c_disch))}, {vc(fmt_tbd(v_pump))}, {oc(fmt_tbd(p_disch_limit))})"
+            "formula": "c_disch",
+            "values": f"{ec(fmt_tbd(c_disch))}"
         },
         "3. Días de Puerto (port_days)": {
-            "formula": "((Q/act_load + over_or) + (Q/act_disch + over_de)) / 24",
-            "values": f"(({ec(f'{Q:,.0f}')}/{vc(f'{actual_load_rate:,.0f}')} + {oc(f'{overhead_origin:,.1f}')}) + ({ec(f'{Q:,.0f}')}/{vc(f'{actual_discharge_rate:,.0f}')} + {oc(f'{overhead_dest:,.1f}')})) / 24"
+            "formula": "((Q/act_load + over_or + pos_or) + (Q/act_disch + over_de + pos_de)) / 24",
+            "values": f"(({ec(f'{Q:,.0f}')}/{vc(f'{actual_load_rate:,.0f}')} + {oc(f'{overhead_origin:,.1f}')} + {oc(f'{pos_carga:,.1f}')}) + ({ec(f'{Q:,.0f}')}/{vc(f'{actual_discharge_rate:,.0f}')} + {oc(f'{overhead_dest:,.1f}')} + {oc(f'{pos_descarga:,.1f}')})) / 24"
         },
         "4. Días de Mar (sea_days)": {
             "formula": "(dist * (1+w_laden) + dist * (1+w_ballast)) / (speed * 24)" if is_round_trip else "(dist * (1+w_laden)) / (speed * 24)",

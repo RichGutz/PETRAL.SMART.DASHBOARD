@@ -1,4 +1,4 @@
-﻿# Mapa Espaguetis con Pies — Fuentes y Sumideros (Cuarto Modulo Ribbon)
+# Mapa Espaguetis con Pies — Fuentes y Sumideros (Cuarto Modulo Ribbon)
 
 > **Origen:** Transcripcion de audio de reunion de producto Petral
 > **Archivo fuente:** `SPAGHETTI.MAPS.CON.PIES.ogg`
@@ -26,7 +26,7 @@ El **Mapa Espaguetis** es el cuarto modulo del ribbon del Dashboard Petral. Es u
 | 1 | Voyage Ledger | Productivo |
 | 2 | Ruteador Spot | Productivo |
 | 3 | Commercial Forecast | Productivo |
-| **4** | **Mapa Espaguetis** | **En especificacion** |
+| **4** | **Mapa Espaguetis** | **Productivo** |
 
 Ver vinculacion: [[Especificacion.Commercial.Forecast]]
 
@@ -415,54 +415,79 @@ Colores de rutas ya definidos en la base de datos (`routes.color_hex`) y en el f
 
 ---
 
-## 9. Plan de Implementacion por Fases
+## 9. Estado de Implementación por Fases (Julio 2026)
 
-### Fase 1 — MVP: Mapa base con puertos (1-2 dias)
-- [ ] Descargar `peru.json` (GeoJSON Natural Earth) y colocarlo en `/public/`
-- [ ] Agregar columnas `lat` y `lon` a la tabla `ports` en Supabase (SQL en seccion 4)
-- [ ] Crear `SpaghettiMap.tsx` con mapa base oscuro + puertos como puntos `scatter`
-- [ ] Agregar pestaña "Mapa" al Ribbon del dashboard (`CommercialForecast.tsx`)
-- [ ] Endpoint GET /api/v1/forecast/ports debe retornar lat/lon
+### Fase 1 — MVP: Mapa base con puertos (Completado ✓)
+- [x] Descargar `peru.json` (GeoJSON) y colocarlo en `/public/`
+- [x] Agregar columnas `lat` y `lon` a la tabla `ports` en Supabase y poblar coordenadas
+- [x] Crear `SpaghettiMap.tsx` con mapa base oscuro y puertos geoposicionados
+- [x] Agregar pestaña "Mapa Espaguetis" al Ribbon del dashboard (`CommercialForecast.tsx`)
+- [x] Modificar endpoint `GET /api/v1/forecast/ports` para retornar `lat` y `lon`
 
-### Fase 2 — Espaguetis (1 dia)
-- [ ] Cambiar `scatter` por `graph` con nodos y edges
-- [ ] Grosor de edge proporcional a toneladas (useSpaghettiData.ts)
-- [ ] Color de edge = routes.color_hex de la ruta
-- [ ] Curvatura diferenciada por par origen-destino
-- [ ] `hideOverlap: true` para labels anti-solapamiento
-- [ ] `emphasis.focus: adjacency` para interactividad hover
+### Fase 2 — Espaguetis (Completado ✓)
+- [x] Renderizar viajes marítimos usando `series.type: graph` con posicionamiento geográfico
+- [x] Grosor de arista proporcional a las toneladas acumuladas
+- [x] Color de arista mapeado al **color del buque** según el `Manual.Estilos.md`
+- [x] Curvatura diferenciada por par origen-destino para evitar solapamientos
+- [x] Ocultar etiquetas de aristas por defecto y centrarse en tooltips interactivos
 
-### Fase 3 — Pie Charts (1 dia)
-- [ ] Agregar pieSeries al option (un pie por puerto activo)
-- [ ] Radio proporcional al volumen total del puerto
-- [ ] Tooltip rico por nodo (carga, descarga, rol fuente/sumidero)
+### Fase 3 — Pie Charts Concéntricos (Completado ✓)
+- [x] Superponer series `pie` usando `coordinateSystem: 'geo'` en cada puerto activo
+- [x] **Pie Interno (Petral):** Carga (azul `#0EA5E9`) vs Descarga (naranja `#F97316`) acumulada
+- [x] **Donut Externo (Mercado):** Capacidad fija acumulada del puerto, coloreada por rol (morado para Fuente, gris para Sumidero)
+- [x] Escalar el radio del nodo total proporcionalmente a la capacidad de mercado del puerto
 
-### Fase 4 — Timeline mensual (1 dia)
-- [ ] Integrar componente `timeline` de ECharts
-- [ ] Generar array `options[]` con un juego de series por mes
-- [ ] Animacion de transicion entre meses
+### Fase 4 — Timeline Acumulativo (Completado ✓)
+- [x] Integrar componente `timeline` de ECharts
+- [x] Lógica de acumulación mensual: al avanzar en la animación se van sumando los viajes y toneladas del año
+- [x] Animación fluida de transiciones entre meses
 
-### Fase 5 — Market Share (V2, 2-3 dias)
-- [ ] Donut exterior: Petral vs. Mercado total
-- [ ] Nueva tabla o campo en `ports`: `total_market_capacity_mt` (ingreso manual anual)
-- [ ] Formula: `(carga + descarga) / total_market_capacity_mt * 100`
-
----
-
-## 10. Pendientes de Base de Datos
-
-| Tarea | Tabla | Columnas a agregar |
-|---|---|---|
-| Coordenadas geograficas | `ports` | `lat NUMERIC`, `lon NUMERIC` |
-| Capacidad de mercado (V2) | `ports` | `total_market_capacity_mt NUMERIC` |
+### Fase 5 — Market Share e Histórico (Completado ✓)
+- [x] Donut exterior: Capacidad de mercado histórica anualizada
+- [x] Tabla de soporte `sources_sinks` en Supabase con clave compuesta `(port_id, year)` para variaciones anuales
+- [x] Cálculo dinámico de Market Share de Petral (%) en el tooltip interactivo
 
 ---
 
-## 11. Transcripcion Original (Bruta)
+## 10. Estructura de Base de Datos Realizada
 
-> "el tercer reporte que quiere petral, aqui tienes que poner muy inteligente para utilizar Apache y charts, lo que tenemos que lograr como tercer reporte es lo siguiente, un mapa del peru, en ese mapa del peru, va a existir diversos puertos, yo te voy a pasar en el boilerplate, el mapa del peru o lo podemos tomar de Apache y charts, lo siguiente que va a ocurrir es de acuerdo a como se haya hecho la tabla famosa de la tabla financiera van a ver rutas, es decir, uniones entre puertos a traves de la ruta del color que estamos utilizando, pero no solo eso, la idea es cada ruta va a tener un punto de carga y de descarga, es decir, vamos a ir sumando la carga y la descarga, entonces cada puerto va a tener un pie chart que quiere decir cuanto ha sumado a la carga y cuanto ha descargado, pero no solo eso va a tener otro pie chart, digamos, absoluto, que quiere decir si ese punto es fuente o su midero [...] lo que quiero es ese reporte permita que sea una linea de tiempo donde cada puerto tenga su caracteristica en toneladas, los mideros, cuantas toneladas consume, los fuentes, cuantas toneladas producen y luego los espaguetis, las rutas van a sumar ya sea que petral carga o descarga en toneladas, entonces la comparacion entre el volumen del sumidero o el volumen de la fuente contra lo que carga o que descarga petral es un market share en ese punto y ojo, esto va a ir cambiando a lo largo del tiempo [...] llamenosle el mapa espaguetis, fuentes y sumideos."
+### 10.1. Coordenadas en Tabla `ports`
+Se agregaron los campos a `ports` y se poblaron los puertos activos:
+- **ILO:** lat: `-17.6394`, lon: `-71.3375`
+- **MATARANI:** lat: `-16.9994`, lon: `-72.1072`
+- **MARCONA:** lat: `-15.3439`, lon: `-75.1295`
+- **CALLAO:** lat: `-12.0464`, lon: `-77.1428`
+- **MEJILLONES:** lat: `-23.1016`, lon: `-70.4553`
+- **BARQUITO:** lat: `-26.3667`, lon: `-70.5833`
+
+### 10.2. Tabla `sources_sinks` (Fuentes y Sumideros por Año)
+Permite almacenar las capacidades fijas del mercado:
+- `port_id` *(VARCHAR, PK, FK references ports)*
+- `year` *(INTEGER, PK)*
+- `capacity_mt` *(NUMERIC)*
+- `type` *(VARCHAR - 'SOURCE' | 'SINK' | 'MIXED')*
 
 ---
 
-*Especificacion generada a partir de audio de reunion + sesion de diseno tecnico*
+## 11. Arquitectura Técnica Implementada
+
+### 11.1. Reglas de Curvatura Geográfica para Evitar Solapamientos
+Para impedir que las rutas se crucen de forma caótica, se configuraron curvaturas fijas y específicas por par de puertos:
+- **Rutas cortas de cabotaje:** `ILO-MATARANI` usa curvatura mínima (`0.10`).
+- **Rutas intermedias:** `ILO-MARCONA` usa curvatura (`0.22`) para esquivar a Matarani.
+- **Rutas largas:** `ILO-CALLAO` usa curvatura (`0.35`).
+- **Rutas de Chile (hacia el sur):** `ILO-MEJILLONES` tiene curvatura hacia abajo (`-0.15`) e `ILO-BARQUITO` tiene curvatura hacia arriba (`-0.32`) para pasar rodeándola.
+- **Varios barcos en el mismo tramo:** Se aplica un offset dinámico (`baseCurveness + index * 0.06`) para renderizar líneas curvas paralelas separadas y limpias.
+
+### 11.2. Mapeo de Colores por Buque
+En lugar de pintar por rutas, las líneas curvas (espaguetis) toman el color asignado a su buque en el manual de estilos:
+- `TABLONES` &rarr; `#DC2626` (Rojo)
+- `MOQUEGUA` &rarr; `#16A34A` (Verde)
+- `CONCON TRADER` &rarr; `#475569` (Gris)
+- `HUEMUL` &rarr; `#4F46E5` (Índigo)
+- Buque genérico/otros &rarr; `#94A3B8` (Slate)
+
+---
+
+*Especificacion técnica y detalles de implementación del módulo de visualización geoespacial.*
 *Petral Dashboard Team — Geeksoft*

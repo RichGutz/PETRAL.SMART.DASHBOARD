@@ -231,6 +231,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 "weather_factor_ballast": r_data.get("weather_factor_ballast", r_data.get("weather_factor", 0)),
                 "port_overhead_hours_origin": ports_db.get(line.origin_port_id, {}).get("overhead_carga_hrs", 6.0),
                 "port_overhead_hours_dest": ports_db.get(line.destination_port_id, {}).get("overhead_descarga_hrs", 6.0),
+                "positioning_carga_hrs": float(ports_db.get(line.origin_port_id, {}).get("positioning_carga_hrs", 0.0)),
+                "positioning_descarga_hrs": float(ports_db.get(line.destination_port_id, {}).get("positioning_descarga_hrs", 0.0)),
                 "vessel_max_load_intake_limit": v_data.get("vessel_max_load_intake_limit", 0),
                 # Límites físicos de terminales desde tabla `ports`
                 "max_terminal_load_rate": ports_db.get(line.origin_port_id, {}).get("max_load_rate", 0),

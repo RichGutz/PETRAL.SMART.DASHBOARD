@@ -172,12 +172,22 @@ def get_vessels():
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/ports")
-def get_ports():
+def get_ports(year: int = 2026):
     try:
         from backend.database import get_supabase
         sb = get_supabase()
-        res = sb.table("ports").select("*").execute()
-        return res.data
+        res = sb.table("ports").select("*, sources_sinks(capacity_mt, type)").eq("sources_sinks.year", year).execute()
+        
+        flat_data = []
+        for p in res.data:
+            ss_list = p.get("sources_sinks", [])
+            ss = ss_list[0] if isinstance(ss_list, list) and len(ss_list) > 0 else None
+            p["capacity_mt"] = ss["capacity_mt"] if ss else None
+            p["type"] = ss["type"] if ss else None
+            p.pop("sources_sinks", None)
+            flat_data.append(p)
+            
+        return flat_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
