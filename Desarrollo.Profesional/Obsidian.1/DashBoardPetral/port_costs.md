@@ -106,3 +106,35 @@ Almacena los conceptos individuales que componen el costo de puerto.
 ### 💻 Fase 3: Interfaz de Usuario y Liquidación (Futuro)
 1.  Modificar la UI en `VoyageLedgerTest.tsx` y el API service para visualizar los desgloses en el Card de Costos en pantalla y en la impresión.
 2.  Crear la interfaz de liquidación real donde el usuario ingresará el costo real y se desplegará el análisis de diferencias contra el costo contractual calculado.
+
+---
+
+## 🛠️ Implementación Física y Resultados (Julio 2026)
+
+Se ha completado con éxito la migración de base de datos y la lógica de negocio en el backend para dar soporte a la estructura de costos detallada.
+
+### 1. Cambios en Base de Datos (Supabase)
+Se ejecutó la migración SQL `20260702000001_port_costs_migration.sql` que:
+*   Creó la tabla `port_cost_concepts` para el catálogo de conceptos estándar (shifting, port expenses y agency fee).
+*   Creó la tabla `port_costs_matrix` con la clave primaria compuesta por `(client_id, port_id, terminal, operation_type, vessel_id, concept_id)`.
+*   Migró de forma segura la matriz obsoleta `agency_matrix` hacia `port_costs_matrix` bajo la clave `'agency_fee'` con valor `'FIXED'` para compatibilidad hacia atrás.
+*   Eliminó la tabla redundante `agency_matrix`.
+*   Realizó el seeding completo de tarifas detalladas para el buque **MOQUEGUA** (SPCC).
+
+### 2. Implementación Lógica y Desacoplamiento (FastAPI)
+*   **Motorcito Desacoplado:** Se implementó la función helper `calculate_detailed_port_costs` en `forecast_service.py` que calcula el total de costos portuarios a partir del desglose de la matriz y retorna el total consolidado (`total_cost`) junto con su desglose en un JSON (`breakdown`).
+*   **Aislamiento del Núcleo Matemático:** La función matemática central en `engine.py` se mantiene intacta recibiendo costos planos (`agency_costs_origin` y `agency_costs_destination`), protegiendo la estabilidad del cálculo de PnL y TCE de viaje.
+*   **Regla de Negocio para Mejillones (Forecast):** Para las proyecciones de simulación, el puerto de `MEJILLONES` promedia aritméticamente las tarifas de sus tres terminales activas (`TERMINAL_A`, `INTERACID` y `TERQUIM`).
+*   **Auditoría y Ledger (API Payload):** El payload de retorno del API de forecast incluye ahora la clave `"port_costs_breakdown"` con el detalle fino de rubros de origen y destino para visualización interactiva en el frontend.
+
+### 3. Conciliación y Validación Matemática (MOQUEGUA)
+Simulando las rutas reales de SPCC para el buque **MOQUEGUA**, los costos de puerto consolidan de forma exacta con las proformas de Sandra:
+
+| Puerto | Tipo de Operación | Costo Sembrado / Calculado | Comentarios |
+| :--- | :--- | :--- | :--- |
+| **ILO** | CARGA (Origen) | **$20,571.00 USD** | Incluye `$2,730` de `launch_hire` (lancha operativa + autoridades) y rubros desglosados. |
+| **MATARANI** | DESCARGA (Destino) | **$15,541.00 USD** | Detalle de 12 conceptos (remolcadores, pilotaje, dockage, etc.). |
+| **MARCONA** | DESCARGA (Destino) | **$39,048.00 USD** | Incluye `$36,000` de remolcador fijo y gastos de despacho. |
+| **CALLAO** | DESCARGA (Destino) | **$15,144.00 USD** | Rubros contractuales y agencia fijos. |
+| **MEJILLONES** | DESCARGA (Destino) | **$48,715.12 USD** | Promedio aritmético exacto de: Terminal A (`$50,333.50`), Interacid (`$45,855.00`) y Terquim (`$49,956.85`). |
+| **BARQUITO** | DESCARGA (Destino) | **$84,444.00 USD** | Sumatoria exacta de los rubros fijos. |
