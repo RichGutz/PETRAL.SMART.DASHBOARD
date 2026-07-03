@@ -264,10 +264,10 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
             orig_port_info = ports_db.get(tr.origin_port_id, {})
             dest_port_info = ports_db.get(tr.destination_port_id, {})
             
-            tr_dict["port_overhead_hours_origin"] = tr.port_overhead_hours_origin if tr.port_overhead_hours_origin is not None else float(orig_port_info.get("overhead_carga_hrs", 6.0))
-            tr_dict["port_overhead_hours_dest"] = tr.port_overhead_hours_dest if tr.port_overhead_hours_dest is not None else float(dest_port_info.get("overhead_descarga_hrs", 6.0))
-            tr_dict["positioning_carga_hrs"] = tr.positioning_carga_hrs if tr.positioning_carga_hrs is not None else float(orig_port_info.get("positioning_carga_hrs", 0.0))
-            tr_dict["positioning_descarga_hrs"] = tr.positioning_descarga_hrs if tr.positioning_descarga_hrs is not None else float(dest_port_info.get("positioning_descarga_hrs", 0.0))
+            tr_dict["port_overhead_hours_origin"] = tr.port_overhead_hours_origin if tr.port_overhead_hours_origin is not None else float(orig_port_info.get("time_to_count_carga_hrs", 6.0))
+            tr_dict["port_overhead_hours_dest"] = tr.port_overhead_hours_dest if tr.port_overhead_hours_dest is not None else float(dest_port_info.get("time_to_count_descarga_hrs", 6.0))
+            tr_dict["positioning_carga_hrs"] = tr.positioning_carga_hrs if tr.positioning_carga_hrs is not None else float(orig_port_info.get("maneuver_carga_hrs", 0.0))
+            tr_dict["positioning_descarga_hrs"] = tr.positioning_descarga_hrs if tr.positioning_descarga_hrs is not None else float(dest_port_info.get("maneuver_descarga_hrs", 0.0))
             
             # Autocompletar limites físicos para Laden
             if tr.type.upper() == "LADEN":
