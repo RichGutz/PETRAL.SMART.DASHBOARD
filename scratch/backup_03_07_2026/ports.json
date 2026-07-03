@@ -1,0 +1,93 @@
+[
+  {
+    "port_id": "TALARA",
+    "port_name": "Talara",
+    "country": "PE",
+    "max_load_rate": 9999.0,
+    "max_disch_rate": 9999.0,
+    "overhead_carga_hrs": 6.0,
+    "overhead_descarga_hrs": 6.0,
+    "lat": null,
+    "lon": null,
+    "positioning_carga_hrs": 1.0,
+    "positioning_descarga_hrs": 0.0
+  },
+  {
+    "port_id": "ILO",
+    "port_name": "Puerto de Ilo",
+    "country": "PE",
+    "max_load_rate": 9999.0,
+    "max_disch_rate": 9999.0,
+    "overhead_carga_hrs": 6.0,
+    "overhead_descarga_hrs": 6.0,
+    "lat": -17.6394,
+    "lon": -71.3375,
+    "positioning_carga_hrs": 1.0,
+    "positioning_descarga_hrs": 0.0
+  },
+  {
+    "port_id": "MATARANI",
+    "port_name": "Puerto de Matarani",
+    "country": "PE",
+    "max_load_rate": 9999.0,
+    "max_disch_rate": 300.0,
+    "overhead_carga_hrs": 6.0,
+    "overhead_descarga_hrs": 6.0,
+    "lat": -16.9994,
+    "lon": -72.1072,
+    "positioning_carga_hrs": 1.0,
+    "positioning_descarga_hrs": 0.0
+  },
+  {
+    "port_id": "MARCONA",
+    "port_name": "Puerto de San Juan",
+    "country": "PE",
+    "max_load_rate": 9999.0,
+    "max_disch_rate": 345.0,
+    "overhead_carga_hrs": 6.0,
+    "overhead_descarga_hrs": 6.0,
+    "lat": -15.3439,
+    "lon": -75.1295,
+    "positioning_carga_hrs": 1.0,
+    "positioning_descarga_hrs": 0.0
+  },
+  {
+    "port_id": "CALLAO",
+    "port_name": "Puerto del Callao",
+    "country": "PE",
+    "max_load_rate": 9999.0,
+    "max_disch_rate": 9999.0,
+    "overhead_carga_hrs": 6.0,
+    "overhead_descarga_hrs": 6.0,
+    "lat": -12.0464,
+    "lon": -77.1428,
+    "positioning_carga_hrs": 1.0,
+    "positioning_descarga_hrs": 0.0
+  },
+  {
+    "port_id": "MEJILLONES",
+    "port_name": "Puerto Mejillones",
+    "country": "CL",
+    "max_load_rate": 9999.0,
+    "max_disch_rate": 350.0,
+    "overhead_carga_hrs": 6.0,
+    "overhead_descarga_hrs": 6.0,
+    "lat": -23.1016,
+    "lon": -70.4553,
+    "positioning_carga_hrs": 1.0,
+    "positioning_descarga_hrs": 0.0
+  },
+  {
+    "port_id": "BARQUITO",
+    "port_name": "Barquito",
+    "country": "CL",
+    "max_load_rate": 9999.0,
+    "max_disch_rate": 9999.0,
+    "overhead_carga_hrs": 6.0,
+    "overhead_descarga_hrs": 6.0,
+    "lat": -26.3667,
+    "lon": -70.5833,
+    "positioning_carga_hrs": 1.0,
+    "positioning_descarga_hrs": 0.0
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "client_id": "SPCC",
+    "destination_port_id": "MATARANI",
+    "load_rate": 500.0,
+    "discharge_rate": 300.0,
+    "bunker_baseline_price_ifo": null,
+    "baf_rules": null,
+    "contract_id": "SPCC_2025",
+    "origin_port_id": "ILO",
+    "is_active": true,
+    "valid_from": "2025-01-01",
+    "valid_to": "2025-12-31"
+  },
+  {
+    "client_id": "SPCC",
+    "destination_port_id": "MARCONA",
+    "load_rate": 500.0,
+    "discharge_rate": 345.0,
+    "bunker_baseline_price_ifo": null,
+    "baf_rules": null,
+    "contract_id": "SPCC_2025",
+    "origin_port_id": "ILO",
+    "is_active": true,
+    "valid_from": "2025-01-01",
+    "valid_to": "2025-12-31"
+  },
+  {
+    "client_id": "SPCC",
+    "destination_port_id": "MEJILLONES",
+    "load_rate": 500.0,
+    "discharge_rate": 350.0,
+    "bunker_baseline_price_ifo": null,
+    "baf_rules": null,
+    "contract_id": "SPCC_2025",
+    "origin_port_id": "ILO",
+    "is_active": true,
+    "valid_from": "2025-01-01",
+    "valid_to": "2025-12-31"
+  }
+]

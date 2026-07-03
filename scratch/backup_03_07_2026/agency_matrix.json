@@ -1,0 +1,306 @@
+[
+  {
+    "client_id": "SPCC",
+    "port_id": "ILO",
+    "operation_type": "CARGA",
+    "vessel_id": "TABLONES",
+    "cost": 23000.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "MATARANI",
+    "operation_type": "DESCARGA",
+    "vessel_id": "TABLONES",
+    "cost": 18000.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "MARCONA",
+    "operation_type": "DESCARGA",
+    "vessel_id": "TABLONES",
+    "cost": 44000.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "ILO",
+    "operation_type": "CARGA",
+    "vessel_id": "MOQUEGUA",
+    "cost": 22000.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "MATARANI",
+    "operation_type": "DESCARGA",
+    "vessel_id": "MOQUEGUA",
+    "cost": 17000.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "MARCONA",
+    "operation_type": "DESCARGA",
+    "vessel_id": "MOQUEGUA",
+    "cost": 40000.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "ILO",
+    "operation_type": "CARGA",
+    "vessel_id": "CONCON_TRADER",
+    "cost": 23500.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "MATARANI",
+    "operation_type": "DESCARGA",
+    "vessel_id": "CONCON_TRADER",
+    "cost": 19000.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "MARCONA",
+    "operation_type": "DESCARGA",
+    "vessel_id": "CONCON_TRADER",
+    "cost": 61000.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "DEFAULT",
+    "port_id": "ILO",
+    "operation_type": "CARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 25500.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "DEFAULT",
+    "port_id": "MATARANI",
+    "operation_type": "DESCARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 21000.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "DEFAULT",
+    "port_id": "BARQUITO",
+    "operation_type": "CARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "BARQUITO",
+    "operation_type": "CARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "DEFAULT",
+    "port_id": "BARQUITO",
+    "operation_type": "DESCARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "BARQUITO",
+    "operation_type": "DESCARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "DEFAULT",
+    "port_id": "CALLAO",
+    "operation_type": "CARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "CALLAO",
+    "operation_type": "CARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "DEFAULT",
+    "port_id": "CALLAO",
+    "operation_type": "DESCARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "CALLAO",
+    "operation_type": "DESCARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "DEFAULT",
+    "port_id": "TALARA",
+    "operation_type": "CARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "TALARA",
+    "operation_type": "CARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "DEFAULT",
+    "port_id": "TALARA",
+    "operation_type": "DESCARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "TALARA",
+    "operation_type": "DESCARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "DEFAULT",
+    "port_id": "MARCONA",
+    "operation_type": "CARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "MARCONA",
+    "operation_type": "CARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "DEFAULT",
+    "port_id": "MARCONA",
+    "operation_type": "DESCARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "MARCONA",
+    "operation_type": "DESCARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "DEFAULT",
+    "port_id": "MEJILLONES",
+    "operation_type": "CARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "MEJILLONES",
+    "operation_type": "CARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "DEFAULT",
+    "port_id": "ILO",
+    "operation_type": "DESCARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "ILO",
+    "operation_type": "DESCARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "DEFAULT",
+    "port_id": "MATARANI",
+    "operation_type": "CARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "MATARANI",
+    "operation_type": "CARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 0.0
+  },
+  {
+    "client_id": "DEFAULT",
+    "port_id": "MEJILLONES",
+    "operation_type": "DESCARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 2500.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "MEJILLONES",
+    "operation_type": "DESCARGA",
+    "vessel_id": "CONCON_TRADER",
+    "cost": 60000.0,
+    "loading_master_cost": 2500.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "MEJILLONES",
+    "operation_type": "DESCARGA",
+    "vessel_id": "DEFAULT",
+    "cost": 9999.0,
+    "loading_master_cost": 2500.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "MEJILLONES",
+    "operation_type": "DESCARGA",
+    "vessel_id": "MOQUEGUA",
+    "cost": 29000.0,
+    "loading_master_cost": 2500.0
+  },
+  {
+    "client_id": "SPCC",
+    "port_id": "MEJILLONES",
+    "operation_type": "DESCARGA",
+    "vessel_id": "TABLONES",
+    "cost": 32000.0,
+    "loading_master_cost": 2500.0
+  }
+]

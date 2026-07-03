@@ -32,6 +32,8 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
     tce_req = float(inputs.get("tce_required", 0))
     c_sea = float(inputs.get("bunker_consumption_sea_ifo", 0))
     c_port = float(inputs.get("bunker_consumption_idle_ifo", 0))
+    addr_comm_pct = float(inputs.get("address_commission", 0.0))
+    broker_comm_pct = float(inputs.get("broker_commission", 0.0))
 
     # 2. Control de Fallback para Variables de Cliente No Especificadas
     c_load = float(c_load) if c_load else 0.0
@@ -66,7 +68,9 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
     total_duration = sea_days + port_days
 
     # 5. Cálculos Financieros (Unit Economics)
-    net_income = Q * F
+    gross_income = Q * F
+    total_commissions = gross_income * (addr_comm_pct + broker_comm_pct) / 100.0
+    net_income = gross_income - total_commissions
     total_port_costs = ag_orig + ag_dest
     
     c_sea_ifo = float(inputs.get("bunker_consumption_sea_ifo", 0))
@@ -104,6 +108,8 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
     def ac(val): return f"<span class='text-amber-600 font-black'>{val}</span>"     # bunker_prices
     def rsc(val): return f"<span class='text-rose-600 font-black'>{val}</span>"     # agency_matrix
 
+    comm_sign = "-" if total_commissions > 0.01 else ""
+
     audit_trail = {
         "1. Ritmo Carga (act_load)": {
             "formula": "c_load",
@@ -127,25 +133,29 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
         },
         "6. Income (income)": {
             "formula": "Q * F",
-            "values": f"{ec(f'{Q:,.0f}')} * {ec(f'{F:,.2f}')} = {ec(f'{net_income:,.2f}')} USD"
+            "values": f"{ec(f'{Q:,.0f}')} * {ec(f'{F:,.2f}')} = {ec(f'{gross_income:,.2f}')} USD"
         },
-        "7. Costo Bunker (bunker)": {
+        "7. Comisiones (commissions)": {
+            "formula": "gross_income * (addr_comm% + broker_comm%) / 100",
+            "values": f"{ec(f'{gross_income:,.2f}')} * ({addr_comm_pct:.1f}% + {broker_comm_pct:.1f}%) = {comm_sign}{rsc(f'{total_commissions:,.2f}')} USD"
+        },
+        "8. Costo Bunker (bunker)": {
             "formula": "(ifo_tons * p_ifo) + (mdo_tons * p_mdo)",
             "values": f"({vc(f'{bunker_ifo_tonnage:,.2f}')} * {ac(f'{p_ifo:,.2f}')}) + ({vc(f'{bunker_mdo_tonnage:,.2f}')} * {ac(f'{p_mdo:,.2f}')}) = {ac(f'{total_bunker_costs:,.2f}')} USD"
         },
-        "8. Port Costs (port_costs)": {
+        "9. Port Costs (port_costs)": {
             "formula": "agency_costs_origin + agency_costs_destination + loading_master",
             "values": f"{rsc(f'{ag_orig:,.2f}')} + {rsc(f'{ag_dest - lm_dest:,.2f}')} + {rsc(f'{lm_dest:,.2f}')} = {rsc(f'{total_port_costs:,.2f}')} USD"
         },
-        "9. Voyage Result (voy_res)": {
-            "formula": "Income - port_costs - bunker",
-            "values": f"{ec(f'{net_income:,.2f}')} - {rsc(f'{total_port_costs:,.2f}')} - {ac(f'{total_bunker_costs:,.2f}')} = {ec(f'{voyage_result:,.2f}')} USD"
+        "10. Voyage Result (voy_res)": {
+            "formula": "Income - commissions - port_costs - bunker",
+            "values": f"{ec(f'{gross_income:,.2f}')} - {rsc(f'{total_commissions:,.2f}')} - {rsc(f'{total_port_costs:,.2f}')} - {ac(f'{total_bunker_costs:,.2f}')} = {ec(f'{voyage_result:,.2f}')} USD"
         },
-        "10. TCE Diario (tce_real)": {
+        "11. TCE Diario (tce_real)": {
             "formula": "voyage_result / total_duration",
             "values": f"{ec(f'{voyage_result:,.2f}')} / {vc(f'{total_duration:,.4f}')} = {vc(f'{tce_real:,.2f}')} USD/día"
         },
-        "11. P/L (pl_vs_req)": {
+        "12. P/L (pl_vs_req)": {
             "formula": "voyage_result - (tce_req * total_duration)",
             "values": f"{ec(f'{voyage_result:,.2f}')} - ({vc(f'{tce_req:,.2f}')} * {vc(f'{total_duration:,.4f}')}) = {ec(f'{pl_vs_required:,.2f}')} USD"
         }
@@ -157,6 +167,8 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
         "sea_days": round(sea_days, 6),
         "port_days": round(port_days, 6),
         "total_duration": round(total_duration, 6),
+        "gross_income": round(gross_income, 2),
+        "total_commissions": round(total_commissions, 2),
         "net_income": round(net_income, 2),
         "total_port_costs": round(total_port_costs, 2),
         "bunker_ifo_tonnage": round(bunker_ifo_tonnage, 4),

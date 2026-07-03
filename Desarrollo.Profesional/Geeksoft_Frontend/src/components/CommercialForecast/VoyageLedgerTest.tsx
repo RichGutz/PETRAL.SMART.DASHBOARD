@@ -183,12 +183,13 @@ export const VoyageLedgerTest: React.FC = () => {
             { metric: "3. Días de Puerto",       key: "3. Días de Puerto (port_days)",  gk: scenarioResult.port_days_unit,          ptr: scenarioPetral.port_days, isCurr: false, db: "ports · Calculado",  ui: "Motor" },
             { metric: "4. Días de Mar",          key: "4. Días de Mar (sea_days)",      gk: scenarioResult.sea_days_unit,           ptr: scenarioPetral.sea_days,  isCurr: false, db: "routes · vessels",              ui: "Maestro Rutas / Flota" },
             { metric: "5. Días de Viaje",        key: "5. Días de Viaje (tot_dur)",     gk: scenarioResult.total_duration_unit,     ptr: scenarioPetral.total_duration,   isCurr: false, db: "Calculado",                     ui: "Motor" },
-            { metric: "6. Income",               key: "6. Income (income)",             gk: scenarioResult.net_income,              ptr: scenarioPetral.net_income,isCurr: true,  db: "contracts · contract_tariffs",  ui: "Contratos / Tarifario" },
-            { metric: "7. Costo Bunker",         key: "7. Costo Bunker (bunker)",       gk: scenarioResult.total_bunker_costs_unit, ptr: scenarioPetral.bunker_costs,    isCurr: true,  db: "vessels · bunker_prices",       ui: "Maestro Flota / Bunker" },
-            { metric: "8. Port Costs",           key: "8. Port Costs (port_costs)",     gk: scenarioResult.total_port_costs,        ptr: scenarioPetral.total_port_costs, isCurr: true,  db: "agency_matrix",                 ui: "Costos Portuarios" },
-            { metric: "9. Voyage Result",        key: "9. Voyage Result (voy_res)",     gk: scenarioResult.voyage_result,           ptr: scenarioPetral.voyage_result,   isCurr: true,  db: "contract_tariffs · agency_matrix", ui: "Tarifas / Costos Portuarios" },
-            { metric: "10. TCE Diario",          key: "10. TCE Diario (tce_real)",      gk: scenarioResult.tce_real_unit,           ptr: scenarioPetral.tce_real,  isCurr: true,  db: "Calculado",                     ui: "Motor" },
-            { metric: "11. P/L",                 key: "11. P/L (pl_vs_req)",            gk: scenarioResult.pl_vs_required_unit,     ptr: scenarioPetral.pl_vs_req, isCurr: true,  db: "vessels",                       ui: "Maestro Flota" },
+            { metric: "6. Income",               key: "6. Income (income)",              gk: scenarioResult.net_income,              ptr: scenarioPetral.net_income,isCurr: true,  db: "contracts · contract_tariffs",     ui: "Contratos / Tarifario" },
+            { metric: "7. Comisiones",            key: "7. Comisiones (commissions)",     gk: scenarioResult.total_commissions,       ptr: 0,                        isCurr: true,  db: "contracts",                         ui: "Addr+Broker Comm" },
+            { metric: "8. Costo Bunker",          key: "8. Costo Bunker (bunker)",        gk: scenarioResult.total_bunker_costs_unit, ptr: scenarioPetral.bunker_costs,    isCurr: true,  db: "vessels · bunker_prices",           ui: "Maestro Flota / Bunker" },
+            { metric: "9. Port Costs",            key: "9. Port Costs (port_costs)",      gk: scenarioResult.total_port_costs,        ptr: scenarioPetral.total_port_costs, isCurr: true,  db: "agency_matrix",                     ui: "Costos Portuarios" },
+            { metric: "10. Voyage Result",        key: "10. Voyage Result (voy_res)",     gk: scenarioResult.voyage_result,           ptr: scenarioPetral.voyage_result,   isCurr: true,  db: "contract_tariffs · agency_matrix",  ui: "Tarifas / Costos Portuarios" },
+            { metric: "11. TCE Diario",           key: "11. TCE Diario (tce_real)",       gk: scenarioResult.tce_real_unit,           ptr: scenarioPetral.tce_real,  isCurr: true,  db: "Calculado",                         ui: "Motor" },
+            { metric: "12. P/L",                  key: "12. P/L (pl_vs_req)",             gk: scenarioResult.pl_vs_required_unit,     ptr: scenarioPetral.pl_vs_req, isCurr: true,  db: "vessels",                           ui: "Maestro Flota" },
         ];
 
         return (
@@ -580,12 +581,13 @@ export const VoyageLedgerTest: React.FC = () => {
                                 { metric: '3. Días de Puerto',       key: '3. Días de Puerto (port_days)', gk: runResult.port_days_unit,          isCurr: false },
                                 { metric: '4. Días de Mar',          key: '4. Días de Mar (sea_days)',     gk: runResult.sea_days_unit,           isCurr: false },
                                 { metric: '5. Días de Viaje',        key: '5. Días de Viaje (tot_dur)',     gk: runResult.total_duration_unit,     isCurr: false },
-                                { metric: '6. Income',               key: '6. Income (income)',             gk: runResult.net_income,              isCurr: true  },
-                                { metric: '7. Costo Bunker',         key: '7. Costo Bunker (bunker)',       gk: runResult.total_bunker_costs_unit, isCurr: true  },
-                                { metric: '8. Port Costs',           key: '8. Port Costs (port_costs)',     gk: runResult.total_port_costs,        isCurr: true  },
-                                { metric: '9. Voyage Result',        key: '9. Voyage Result (voy_res)',     gk: runResult.voyage_result,           isCurr: true  },
-                                { metric: '10. TCE Diario',          key: '10. TCE Diario (tce_real)',      gk: runResult.tce_real_unit,           isCurr: true  },
-                                { metric: '11. P/L',                 key: '11. P/L (pl_vs_req)',            gk: runResult.pl_vs_required_unit,     isCurr: true  },
+                                { metric: '6. Income',               key: '6. Income (income)',              gk: runResult.net_income,              isCurr: true  },
+                                { metric: '7. Comisiones',            key: '7. Comisiones (commissions)',     gk: runResult.total_commissions,       isCurr: true  },
+                                { metric: '8. Costo Bunker',          key: '8. Costo Bunker (bunker)',        gk: runResult.total_bunker_costs_unit, isCurr: true  },
+                                { metric: '9. Port Costs',            key: '9. Port Costs (port_costs)',      gk: runResult.total_port_costs,        isCurr: true  },
+                                { metric: '10. Voyage Result',        key: '10. Voyage Result (voy_res)',     gk: runResult.voyage_result,           isCurr: true  },
+                                { metric: '11. TCE Diario',           key: '11. TCE Diario (tce_real)',       gk: runResult.tce_real_unit,           isCurr: true  },
+                                { metric: '12. P/L',                  key: '12. P/L (pl_vs_req)',             gk: runResult.pl_vs_required_unit,     isCurr: true  },
                             ];
                             const tableRows = auditRowsPrint.map(row => {
                                 const ao = audit_t[row.key] || { formula: 'N/A', values: 'N/A' };

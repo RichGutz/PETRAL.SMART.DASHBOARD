@@ -1,0 +1,98 @@
+[
+  {
+    "min_tonnage": 10000.0,
+    "max_tonnage": 11500.0,
+    "freight_rate": 20.12,
+    "contract_id": "SPCC_2025",
+    "origin_port_id": "ILO",
+    "destination_port_id": "MATARANI"
+  },
+  {
+    "min_tonnage": 11501.0,
+    "max_tonnage": 13000.0,
+    "freight_rate": 19.52,
+    "contract_id": "SPCC_2025",
+    "origin_port_id": "ILO",
+    "destination_port_id": "MATARANI"
+  },
+  {
+    "min_tonnage": 13001.0,
+    "max_tonnage": 13500.0,
+    "freight_rate": 19.01,
+    "contract_id": "SPCC_2025",
+    "origin_port_id": "ILO",
+    "destination_port_id": "MATARANI"
+  },
+  {
+    "min_tonnage": 13600.0,
+    "max_tonnage": 14500.0,
+    "freight_rate": 18.92,
+    "contract_id": "SPCC_2025",
+    "origin_port_id": "ILO",
+    "destination_port_id": "MATARANI"
+  },
+  {
+    "min_tonnage": 10000.0,
+    "max_tonnage": 11500.0,
+    "freight_rate": 25.87,
+    "contract_id": "SPCC_2025",
+    "origin_port_id": "ILO",
+    "destination_port_id": "MARCONA"
+  },
+  {
+    "min_tonnage": 11501.0,
+    "max_tonnage": 13000.0,
+    "freight_rate": 23.12,
+    "contract_id": "SPCC_2025",
+    "origin_port_id": "ILO",
+    "destination_port_id": "MARCONA"
+  },
+  {
+    "min_tonnage": 13001.0,
+    "max_tonnage": 13500.0,
+    "freight_rate": 22.82,
+    "contract_id": "SPCC_2025",
+    "origin_port_id": "ILO",
+    "destination_port_id": "MARCONA"
+  },
+  {
+    "min_tonnage": 13600.0,
+    "max_tonnage": 14500.0,
+    "freight_rate": 21.77,
+    "contract_id": "SPCC_2025",
+    "origin_port_id": "ILO",
+    "destination_port_id": "MARCONA"
+  },
+  {
+    "min_tonnage": 10000.0,
+    "max_tonnage": 11500.0,
+    "freight_rate": 23.23,
+    "contract_id": "SPCC_2025",
+    "origin_port_id": "ILO",
+    "destination_port_id": "MEJILLONES"
+  },
+  {
+    "min_tonnage": 11501.0,
+    "max_tonnage": 13000.0,
+    "freight_rate": 21.87,
+    "contract_id": "SPCC_2025",
+    "origin_port_id": "ILO",
+    "destination_port_id": "MEJILLONES"
+  },
+  {
+    "min_tonnage": 13001.0,
+    "max_tonnage": 13500.0,
+    "freight_rate": 20.87,
+    "contract_id": "SPCC_2025",
+    "origin_port_id": "ILO",
+    "destination_port_id": "MEJILLONES"
+  },
+  {
+    "min_tonnage": 13600.0,
+    "max_tonnage": 14500.0,
+    "freight_rate": 20.67,
+    "contract_id": "SPCC_2025",
+    "origin_port_id": "ILO",
+    "destination_port_id": "MEJILLONES"
+  }
+]

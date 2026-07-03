@@ -1,0 +1,12 @@
+[
+  {
+    "fuel_type": "IFO",
+    "market_price_usd": 895.14,
+    "date": "2026-06-26"
+  },
+  {
+    "fuel_type": "MDO",
+    "market_price_usd": 1460.3,
+    "date": "2026-06-26"
+  }
+]

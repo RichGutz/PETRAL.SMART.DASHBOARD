@@ -340,3 +340,21 @@ En la interfaz del ForecastBuilder, cuando se despliega el menu para elegir una 
   * En la funcion SelectContent, cambiar o sobreescribir la clase w-(--anchor-width) por w-auto min-w-[max-content] max-h-[300px] overflow-y-auto cuando sea necesario, o usar una clase personalizada pasada por prop className en el select de rutas en ForecastBuilder.tsx.
   * Como alternativa segura para no afectar a otros Selects globales del sistema: pasar la clase w-auto min-w-[max-content] max-h-[250px] overflow-y-auto a traves de la propiedad className del <SelectContent> especifico del selector de rutas en ForecastBuilder.tsx.
 - [ ] Comprobar visualmente que el selector se despliega de forma completa y flexible.
+
+---
+
+## 🔁 CICLO DE TRABAJO ESTABLECIDO (Paso a Paso por cada Mejora)
+
+Para garantizar la estabilidad y no romper nada en produccion:
+
+1. **Desarrollo Local:** Gemini realiza la modificacion de la mejora correspondiente en el codigo local.
+2. **Deploy al VPS:** Gemini sube los cambios de inmediato al VPS (https://forecast.geeksoft.tech).
+3. **Pausa para Feedback Humano:** Gemini se detiene y avisa al usuario para que audite visualmente los cambios en el navegador.
+4. **Evaluacion del Resultado:**
+   * **Caso 1: ✅ Todo salio bien:**
+     * El usuario aprueba los numeros y comportamiento.
+     * Gemini realiza un git add ., un git commit -m "Mejora N completada - [Descripcion]" y un git push origin main.
+     * Se avanza a la siguiente mejora.
+   * **Caso 2: ❌ Salio mal / No convence:**
+     * Gemini ejecuta git reset --hard HEAD (o retorna al commit del tag anterior) y hace redeploy inmediato al VPS para restaurar la estabilidad.
+     * Se analiza el fallo antes de volver a intentar.

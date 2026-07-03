@@ -1,0 +1,422 @@
+[
+  {
+    "origin_port_id": "TALARA",
+    "destination_port_id": "MEJILLONES",
+    "route_distance": 1340.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Chile"
+  },
+  {
+    "origin_port_id": "TALARA",
+    "destination_port_id": "BARQUITO",
+    "route_distance": 1515.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Chile"
+  },
+  {
+    "origin_port_id": "CALLAO",
+    "destination_port_id": "TALARA",
+    "route_distance": 512.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "CALLAO",
+    "destination_port_id": "MARCONA",
+    "route_distance": 254.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "CALLAO",
+    "destination_port_id": "MATARANI",
+    "route_distance": 457.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "CALLAO",
+    "destination_port_id": "ILO",
+    "route_distance": 514.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "CALLAO",
+    "destination_port_id": "MEJILLONES",
+    "route_distance": 783.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Chile"
+  },
+  {
+    "origin_port_id": "CALLAO",
+    "destination_port_id": "BARQUITO",
+    "route_distance": 980.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Chile"
+  },
+  {
+    "origin_port_id": "MARCONA",
+    "destination_port_id": "TALARA",
+    "route_distance": 777.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "MARCONA",
+    "destination_port_id": "CALLAO",
+    "route_distance": 254.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "MARCONA",
+    "destination_port_id": "MATARANI",
+    "route_distance": 213.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "MARCONA",
+    "destination_port_id": "ILO",
+    "route_distance": 283.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "TALARA",
+    "destination_port_id": "CALLAO",
+    "route_distance": 512.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "TALARA",
+    "destination_port_id": "MARCONA",
+    "route_distance": 777.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "TALARA",
+    "destination_port_id": "MATARANI",
+    "route_distance": 967.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "TALARA",
+    "destination_port_id": "ILO",
+    "route_distance": 1026.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "MARCONA",
+    "destination_port_id": "MEJILLONES",
+    "route_distance": 563.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Chile"
+  },
+  {
+    "origin_port_id": "MARCONA",
+    "destination_port_id": "BARQUITO",
+    "route_distance": 743.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Chile"
+  },
+  {
+    "origin_port_id": "MATARANI",
+    "destination_port_id": "TALARA",
+    "route_distance": 967.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "MATARANI",
+    "destination_port_id": "CALLAO",
+    "route_distance": 457.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "MATARANI",
+    "destination_port_id": "MARCONA",
+    "route_distance": 213.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "MATARANI",
+    "destination_port_id": "ILO",
+    "route_distance": 69.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "MATARANI",
+    "destination_port_id": "MEJILLONES",
+    "route_distance": 396.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Chile"
+  },
+  {
+    "origin_port_id": "MATARANI",
+    "destination_port_id": "BARQUITO",
+    "route_distance": 595.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Chile"
+  },
+  {
+    "origin_port_id": "ILO",
+    "destination_port_id": "TALARA",
+    "route_distance": 1026.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "ILO",
+    "destination_port_id": "CALLAO",
+    "route_distance": 514.0,
+    "weather_factor_laden": 0.03,
+    "description": "Tramo largo cabotaje centro",
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "ILO",
+    "destination_port_id": "MARCONA",
+    "route_distance": 283.0,
+    "weather_factor_laden": 0.03,
+    "description": "Tramo intermedio de cabotaje (Perú)",
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "ILO",
+    "destination_port_id": "MATARANI",
+    "route_distance": 69.0,
+    "weather_factor_laden": 0.03,
+    "description": "Tramo corto de cabotaje sur (Perú)",
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "ILO",
+    "destination_port_id": "MEJILLONES",
+    "route_distance": 335.0,
+    "weather_factor_laden": 0.03,
+    "description": "Tramo internacional de exportación (Chile)",
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Chile"
+  },
+  {
+    "origin_port_id": "ILO",
+    "destination_port_id": "BARQUITO",
+    "route_distance": 551.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Chile"
+  },
+  {
+    "origin_port_id": "MEJILLONES",
+    "destination_port_id": "TALARA",
+    "route_distance": 1340.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "MEJILLONES",
+    "destination_port_id": "CALLAO",
+    "route_distance": 773.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "MEJILLONES",
+    "destination_port_id": "MARCONA",
+    "route_distance": 563.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "MEJILLONES",
+    "destination_port_id": "MATARANI",
+    "route_distance": 396.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "MEJILLONES",
+    "destination_port_id": "ILO",
+    "route_distance": 335.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "MEJILLONES",
+    "destination_port_id": "BARQUITO",
+    "route_distance": 205.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Chile"
+  },
+  {
+    "origin_port_id": "BARQUITO",
+    "destination_port_id": "TALARA",
+    "route_distance": 1515.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "BARQUITO",
+    "destination_port_id": "CALLAO",
+    "route_distance": 980.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "BARQUITO",
+    "destination_port_id": "MARCONA",
+    "route_distance": 743.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "BARQUITO",
+    "destination_port_id": "MATARANI",
+    "route_distance": 595.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "BARQUITO",
+    "destination_port_id": "ILO",
+    "route_distance": 551.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Peru"
+  },
+  {
+    "origin_port_id": "BARQUITO",
+    "destination_port_id": "MEJILLONES",
+    "route_distance": 205.0,
+    "weather_factor_laden": 0.03,
+    "description": null,
+    "color_hex": null,
+    "weather_factor_ballast": 0.03,
+    "pais": "Chile"
+  }
+]

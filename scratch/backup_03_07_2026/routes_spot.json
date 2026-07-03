@@ -1,0 +1,348 @@
+[
+  {
+    "spot_id": "905c8a2d-0faa-4212-849f-53050dc1d96a",
+    "name": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+    "description": "RG",
+    "legs_data": {
+      "legs": {
+        "laden": {
+          "label": "CALLAO -> MEJILLONES",
+          "quantity": 13500,
+          "freight_rate": 30,
+          "origin_port_id": "CALLAO",
+          "route_distance": 783,
+          "weather_factor": 0.03,
+          "destination_port_id": "MEJILLONES",
+          "port_delay_hours_loading": 20,
+          "port_delay_hours_discharging": 20
+        },
+        "return": {
+          "label": "MEJILLONES -> ILO",
+          "quantity": 0,
+          "freight_rate": 0,
+          "origin_port_id": "MEJILLONES",
+          "route_distance": 335,
+          "weather_factor": 0.03,
+          "destination_port_id": "ILO"
+        },
+        "positioning": {
+          "label": "ILO -> CALLAO",
+          "quantity": 0,
+          "freight_rate": 0,
+          "origin_port_id": "ILO",
+          "route_distance": 514,
+          "weather_factor": 0.03,
+          "destination_port_id": "CALLAO"
+        }
+      },
+      "vessel_id": "TABLONES"
+    },
+    "created_at": "2026-07-01T15:32:31.879479+00:00",
+    "pais": "Chile"
+  },
+  {
+    "spot_id": "e3213d23-fa9a-48b3-a171-4b076ebe780c",
+    "name": "Redondo.ILO.MATARANI.MOQUEGUA",
+    "description": "Ruta de Multicotizador",
+    "legs_data": {
+      "tramos": [
+        {
+          "type": "BALLAST",
+          "quantity": 0,
+          "freight_rate": 0,
+          "origin_port_id": "ILO",
+          "destination_port_id": "MATARANI",
+          "port_delay_hours_loading": 0,
+          "port_delay_hours_discharging": 0
+        },
+        {
+          "type": "LADEN",
+          "quantity": 13500,
+          "freight_rate": 22.5,
+          "origin_port_id": "MATARANI",
+          "destination_port_id": "ILO",
+          "port_delay_hours_loading": 0,
+          "port_delay_hours_discharging": 0
+        }
+      ],
+      "vessel_id": "MOQUEGUA",
+      "puertosConfig": [
+        {
+          "action": "CARGAR",
+          "quantity": 13500,
+          "freight_rate": 0
+        },
+        {
+          "action": "DESCARGAR",
+          "quantity": "13500",
+          "freight_rate": "19.01"
+        },
+        {
+          "action": "NONE",
+          "quantity": "",
+          "freight_rate": ""
+        }
+      ],
+      "bunker_price_ifo": 895.14,
+      "bunker_price_mdo": 1460.3,
+      "is_multicotizador": true
+    },
+    "created_at": "2026-07-02T21:21:55.585399+00:00",
+    "pais": "Peru"
+  },
+  {
+    "spot_id": "7678f7d3-ee64-411a-8f68-6e2a5ad499b0",
+    "name": "NEXA ILO.- MATARANI",
+    "description": "Ruta de Multicotizador",
+    "legs_data": {
+      "tramos": [
+        {
+          "type": "BALLAST",
+          "speed": 11,
+          "quantity": 0,
+          "freight_rate": 0,
+          "origin_port_id": "ILO",
+          "route_distance": 69,
+          "weather_factor": 3,
+          "destination_port_id": "MATARANI",
+          "port_delay_hours_loading": 0,
+          "port_delay_hours_discharging": 0
+        },
+        {
+          "type": "LADEN",
+          "speed": 11,
+          "quantity": 13500,
+          "freight_rate": 22.5,
+          "origin_port_id": "MATARANI",
+          "route_distance": 69,
+          "weather_factor": 3,
+          "destination_port_id": "ILO",
+          "port_delay_hours_loading": 0,
+          "port_delay_hours_discharging": 0
+        }
+      ],
+      "vessel_id": "MOQUEGUA",
+      "vesselParams": {
+        "dwt": 14298,
+        "grt": 8259,
+        "beam": 20,
+        "dwcc": 13500,
+        "length": 134,
+        "vessel_id": "MOQUEGUA",
+        "vessel_name": "MOQUEGUA",
+        "tce_required": 13000,
+        "vessel_speed": 11,
+        "consumption_sea_ifo": 14,
+        "consumption_sea_mdo": 0,
+        "consumption_idle_ifo": 2.4,
+        "consumption_idle_mdo": 0,
+        "consumption_load_ifo": 2.4,
+        "consumption_load_mdo": 0.5,
+        "consumption_disch_ifo": 3.6,
+        "consumption_disch_mdo": 0.5
+      },
+      "puertosConfig": [
+        {
+          "action": "CARGAR",
+          "op_rate": "",
+          "quantity": 13500,
+          "rate_unit": "TD",
+          "freight_rate": 0
+        },
+        {
+          "action": "NONE",
+          "op_rate": "",
+          "quantity": 0,
+          "rate_unit": "TD",
+          "freight_rate": 0
+        },
+        {
+          "action": "DESCARGAR",
+          "op_rate": "",
+          "quantity": 13500,
+          "rate_unit": "TD",
+          "freight_rate": 22.5
+        }
+      ],
+      "bunker_price_ifo": 895.14,
+      "bunker_price_mdo": 1460.3,
+      "is_multicotizador": true
+    },
+    "created_at": "2026-07-03T16:00:32.260321+00:00",
+    "pais": "Peru"
+  },
+  {
+    "spot_id": "7d7a69dd-1c13-4c7e-a131-6340d8adb9ad",
+    "name": "ilo.mat.moq.cotizador",
+    "description": "Ruta de Multicotizador",
+    "legs_data": {
+      "tramos": [
+        {
+          "type": "BALLAST",
+          "speed": 11,
+          "quantity": 0,
+          "freight_rate": 0,
+          "origin_port_id": "ILO",
+          "route_distance": 69,
+          "weather_factor": 3,
+          "destination_port_id": "MATARANI",
+          "port_delay_hours_loading": 0,
+          "port_delay_hours_discharging": 0
+        },
+        {
+          "type": "LADEN",
+          "speed": 11,
+          "quantity": 13500,
+          "freight_rate": 22.5,
+          "origin_port_id": "MATARANI",
+          "route_distance": 69,
+          "weather_factor": 3,
+          "destination_port_id": "ILO",
+          "port_delay_hours_loading": 0,
+          "port_delay_hours_discharging": 0
+        }
+      ],
+      "vessel_id": "MOQUEGUA",
+      "vesselParams": {
+        "dwt": 14298,
+        "grt": 8259,
+        "beam": 20,
+        "dwcc": 13500,
+        "length": 134,
+        "vessel_id": "MOQUEGUA",
+        "vessel_name": "MOQUEGUA",
+        "tce_required": 13000,
+        "vessel_speed": 11,
+        "consumption_sea_ifo": 14,
+        "consumption_sea_mdo": 0,
+        "consumption_idle_ifo": 2.4,
+        "consumption_idle_mdo": 0,
+        "consumption_load_ifo": 2.4,
+        "consumption_load_mdo": 0.5,
+        "consumption_disch_ifo": 3.6,
+        "consumption_disch_mdo": 0.5
+      },
+      "puertosConfig": [
+        {
+          "action": "CARGAR",
+          "op_rate": "",
+          "overhead": "",
+          "quantity": 13500,
+          "rate_unit": "TH",
+          "positioning": "",
+          "freight_rate": 0
+        },
+        {
+          "action": "DESCARGAR",
+          "op_rate": 300,
+          "overhead": 6,
+          "quantity": "13500",
+          "rate_unit": "TH",
+          "positioning": 0,
+          "freight_rate": "19.01"
+        },
+        {
+          "action": "NONE",
+          "op_rate": "",
+          "overhead": "",
+          "quantity": "",
+          "rate_unit": "TH",
+          "positioning": "",
+          "freight_rate": ""
+        }
+      ],
+      "bunker_price_ifo": 895.14,
+      "bunker_price_mdo": 1460.3,
+      "is_multicotizador": true
+    },
+    "created_at": "2026-07-03T19:09:06.757489+00:00",
+    "pais": "Peru"
+  },
+  {
+    "spot_id": "45568279-1b96-4f04-bfc4-7dc6cbe79c87",
+    "name": "redonda.ilo.matarani",
+    "description": "Ruta de Multicotizador",
+    "legs_data": {
+      "tramos": [
+        {
+          "type": "BALLAST",
+          "speed": 11,
+          "quantity": 0,
+          "freight_rate": 0,
+          "origin_port_id": "ILO",
+          "route_distance": 69,
+          "weather_factor": 3,
+          "destination_port_id": "MATARANI",
+          "port_delay_hours_loading": 0,
+          "port_delay_hours_discharging": 0
+        },
+        {
+          "type": "LADEN",
+          "speed": 11,
+          "quantity": 13500,
+          "freight_rate": 22.5,
+          "origin_port_id": "MATARANI",
+          "route_distance": 69,
+          "weather_factor": 3,
+          "destination_port_id": "ILO",
+          "port_delay_hours_loading": 0,
+          "port_delay_hours_discharging": 0
+        }
+      ],
+      "vessel_id": "MOQUEGUA",
+      "vesselParams": {
+        "dwt": 14298,
+        "grt": 8259,
+        "beam": 20,
+        "dwcc": 13500,
+        "length": 134,
+        "vessel_id": "MOQUEGUA",
+        "vessel_name": "MOQUEGUA",
+        "tce_required": 13000,
+        "vessel_speed": 11,
+        "consumption_sea_ifo": 14,
+        "consumption_sea_mdo": 0,
+        "consumption_idle_ifo": 2.4,
+        "consumption_idle_mdo": 0,
+        "consumption_load_ifo": 2.4,
+        "consumption_load_mdo": 0.5,
+        "consumption_disch_ifo": 3.6,
+        "consumption_disch_mdo": 0.5
+      },
+      "puertosConfig": [
+        {
+          "action": "CARGAR",
+          "op_rate": "",
+          "overhead": "",
+          "quantity": 13500,
+          "rate_unit": "TH",
+          "positioning": "",
+          "freight_rate": 0
+        },
+        {
+          "action": "DESCARGAR",
+          "op_rate": 300,
+          "overhead": 6,
+          "quantity": "13500",
+          "rate_unit": "TH",
+          "positioning": 0,
+          "freight_rate": "19.01"
+        },
+        {
+          "action": "NONE",
+          "op_rate": "",
+          "overhead": "",
+          "quantity": "",
+          "rate_unit": "TH",
+          "positioning": "",
+          "freight_rate": ""
+        }
+      ],
+      "bunker_price_ifo": 895.14,
+      "bunker_price_mdo": 1460.3,
+      "is_multicotizador": true
+    },
+    "created_at": "2026-07-03T21:17:59.622938+00:00",
+    "pais": "Peru"
+  }
+]

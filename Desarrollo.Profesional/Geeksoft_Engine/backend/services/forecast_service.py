@@ -462,6 +462,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 "bunker_consumption_disch_mdo": v_data.get("consumption_disch_mdo", 0),
                 "contract_agreed_load_rate": contract.get("load_rate") if contract else None,
                 "contract_agreed_discharge_rate": contract.get("discharge_rate") if contract else None,
+                "address_commission": float(contract.get("address_commission", 0.0)) if contract else 0.0,
+                "broker_commission": float(contract.get("broker_commission", 0.0)) if contract else 0.0,
                 "is_round_trip": True
             }
             
