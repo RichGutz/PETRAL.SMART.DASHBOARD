@@ -487,7 +487,7 @@ export const CommercialForecast: React.FC = () => {
                 {/* 5.6. Multicotizador Excel */}
                 {activeTab === 'multicotizador_excel' && (
                     <section className="flex-1 flex flex-col gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300 min-h-0">
-                        <MultiCotizadorExcel />
+                        <MultiCotizadorExcel portCostMode={portCostMode} />
                     </section>
                 )}
 

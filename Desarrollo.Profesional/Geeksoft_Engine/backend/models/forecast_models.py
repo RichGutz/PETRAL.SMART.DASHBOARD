@@ -94,4 +94,5 @@ class MultiCotizadorRequest(BaseModel):
     consumption_idle_mdo: Optional[float] = None
     consumption_load_mdo: Optional[float] = None
     consumption_disch_mdo: Optional[float] = None
+    port_cost_mode: Optional[str] = Field("static", description="Modo de costo puerto: 'static' o 'matrix'")
 

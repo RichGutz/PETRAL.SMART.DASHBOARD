@@ -284,7 +284,7 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
             else:
                 o_type = 'CARGA' if tr.origin_action == 'CARGAR' else 'DESCARGA'
                 orig_cost_res = calculate_detailed_port_costs(
-                    client_id, tr.origin_port_id, o_type, request.vessel_id, port_costs_data, agency_matrix_data
+                    client_id, tr.origin_port_id, o_type, request.vessel_id, port_costs_data, agency_matrix_data, request.port_cost_mode
                 )
                 tr_dict["agency_costs_origin"] = orig_cost_res["total_cost"]
                 tr_dict["agency_costs_origin_details"] = orig_cost_res
@@ -296,7 +296,7 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
             else:
                 d_type = 'CARGA' if tr.destination_action == 'CARGAR' else 'DESCARGA'
                 dest_cost_res = calculate_detailed_port_costs(
-                    client_id, tr.destination_port_id, d_type, request.vessel_id, port_costs_data, agency_matrix_data
+                    client_id, tr.destination_port_id, d_type, request.vessel_id, port_costs_data, agency_matrix_data, request.port_cost_mode
                 )
                 tr_dict["agency_costs_destination"] = dest_cost_res["total_cost"]
                 tr_dict["agency_costs_destination_details"] = dest_cost_res
