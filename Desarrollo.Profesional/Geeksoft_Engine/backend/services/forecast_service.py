@@ -10,15 +10,16 @@ def safe_fetch(supabase, table_name):
         print(f"Warning: Could not fetch table {table_name}: {e}")
         return []
 
-def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: str, vessel_id: str, port_costs_data: list) -> dict:
+def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: str, vessel_id: str, port_costs_data: list, agency_matrix_data: list) -> dict:
     """
     Calcula los costos de puerto basándose en números duros (campo 'cost') configurados en port_costs_matrix.
+    Si no encuentra datos desglosados en port_costs_matrix, busca el costo plano consolidado en agency_matrix como fallback.
     Para MEJILLONES, promedia aritméticamente las terminales TERMINAL_A, INTERACID y TERQUIM.
     """
     is_mejillones = (port_id == "MEJILLONES")
     
-    def get_terminal_costs(term_id):
-        # 1. client_id + port_id + terminal + operation_type + vessel_id
+    # 1. Intentar buscar desglose detallado en port_costs_matrix
+    def get_terminal_costs_from_matrix(term_id):
         costs = [
             c for c in port_costs_data
             if c.get("client_id") == client_id 
@@ -27,41 +28,65 @@ def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: 
             and c.get("operation_type") == operation_type 
             and c.get("vessel_id") == vessel_id
         ]
-        # 2. client_id + port_id + terminal + operation_type + 'DEFAULT'
-        if not costs:
-            costs = [
-                c for c in port_costs_data
-                if c.get("client_id") == client_id 
-                and c.get("port_id") == port_id 
-                and c.get("terminal") == term_id
-                and c.get("operation_type") == operation_type 
-                and c.get("vessel_id", "DEFAULT") == "DEFAULT"
-            ]
-        # 3. 'DEFAULT' + port_id + terminal + operation_type + 'DEFAULT'
-        if not costs:
-            costs = [
-                c for c in port_costs_data
-                if c.get("client_id") == "DEFAULT" 
-                and c.get("port_id") == port_id 
-                and c.get("terminal") == term_id
-                and c.get("operation_type") == operation_type 
-                and c.get("vessel_id", "DEFAULT") == "DEFAULT"
-            ]
         return costs
 
+    # 2. Fallback: Buscar costo plano consolidado en agency_matrix
+    def get_flat_cost_from_agency_matrix():
+        # A. client_id + port_id + operation_type + vessel_id
+        flat = [
+            a for a in agency_matrix_data
+            if a.get("client_id") == client_id 
+            and a.get("port_id") == port_id 
+            and a.get("operation_type") == operation_type 
+            and a.get("vessel_id") == vessel_id
+        ]
+        # B. client_id + port_id + operation_type + 'DEFAULT'
+        if not flat:
+            flat = [
+                a for a in agency_matrix_data
+                if a.get("client_id") == client_id 
+                and a.get("port_id") == port_id 
+                and a.get("operation_type") == operation_type 
+                and a.get("vessel_id", "DEFAULT") == "DEFAULT"
+            ]
+        # C. 'DEFAULT' + port_id + operation_type + 'DEFAULT'
+        if not flat:
+            flat = [
+                a for a in agency_matrix_data
+                if a.get("client_id") == "DEFAULT" 
+                and a.get("port_id") == port_id 
+                and a.get("operation_type") == operation_type 
+                and a.get("vessel_id", "DEFAULT") == "DEFAULT"
+            ]
+        if flat:
+            return float(flat[0].get("cost", 0.0)), float(flat[0].get("loading_master_cost") or 0.0)
+        return None
+
+    # 3. Si es Mejillones, resolver las tres terminales
     if is_mejillones:
         terminals = ["TERMINAL_A", "INTERACID", "TERQUIM"]
         terminal_breakdowns = []
         
         for term in terminals:
-            term_costs = get_terminal_costs(term)
+            term_costs = get_terminal_costs_from_matrix(term)
             breakdown = {}
             for item in term_costs:
                 concept = item["concept_id"]
                 breakdown[concept] = float(item.get("cost", 0.0))
+                
+            # Si no hay desglose para esta terminal en port_costs_matrix, intentar fallback plano en agency_matrix
+            if not breakdown:
+                flat_res = get_flat_cost_from_agency_matrix()
+                if flat_res is not None:
+                    flat_val, lm_val = flat_res
+                    breakdown = {"agency_fee": flat_val}
+                    if lm_val > 0:
+                        breakdown["loading_master"] = lm_val
+            
             if breakdown:
                 terminal_breakdowns.append(breakdown)
                 
+        # Promediar
         avg_breakdown = {}
         if terminal_breakdowns:
             all_concepts = set()
@@ -73,23 +98,66 @@ def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: 
                 avg_breakdown[concept] = round(total_val / len(terminal_breakdowns), 2)
                 
         total_cost = sum(avg_breakdown.values())
+        # Si todo falló, retornar default
+        if total_cost == 0:
+            total_cost = 9999.0
+            avg_breakdown = {"agency_fee": 9999.0}
+            
         return {
             "total_cost": round(total_cost, 2),
             "breakdown": avg_breakdown
         }
     else:
-        costs = get_terminal_costs("GENERAL")
+        # Para otros puertos
+        # Intentar obtener desglose de port_costs_matrix
+        costs = get_terminal_costs_from_matrix("GENERAL")
         if not costs:
-            # Fallback a cualquier terminal configurada para ese puerto
+            # Intentar cualquier terminal en port_costs_matrix
             active_terminals = set(c.get("terminal") for c in port_costs_data if c.get("port_id") == port_id)
             if active_terminals:
                 first_term = list(active_terminals)[0]
-                costs = get_terminal_costs(first_term)
+                costs = get_terminal_costs_from_matrix(first_term)
                 
         breakdown = {}
         for item in costs:
             concept = item["concept_id"]
             breakdown[concept] = float(item.get("cost", 0.0))
+            
+        # Si no hay desglose detallado en port_costs_matrix, buscar fallback consolidado en agency_matrix
+        if not breakdown:
+            flat_res = get_flat_cost_from_agency_matrix()
+            if flat_res is not None:
+                flat_val, lm_val = flat_res
+                breakdown = {"agency_fee": flat_val}
+                if lm_val > 0:
+                    breakdown["loading_master"] = lm_val
+                
+        # Si sigue sin haber datos, usar los defaults de port_costs_matrix
+        if not breakdown:
+            def_costs = [
+                c for c in port_costs_data
+                if c.get("client_id") == client_id 
+                and c.get("port_id") == port_id 
+                and c.get("terminal") == "GENERAL"
+                and c.get("operation_type") == operation_type 
+                and c.get("vessel_id", "DEFAULT") == "DEFAULT"
+            ]
+            if not def_costs:
+                def_costs = [
+                    c for c in port_costs_data
+                    if c.get("client_id") == "DEFAULT" 
+                    and c.get("port_id") == port_id 
+                    and c.get("terminal") == "GENERAL"
+                    and c.get("operation_type") == operation_type 
+                    and c.get("vessel_id", "DEFAULT") == "DEFAULT"
+                ]
+            for item in def_costs:
+                concept = item["concept_id"]
+                breakdown[concept] = float(item.get("cost", 0.0))
+                
+        # Si todo falló por completo, usar placeholder absoluto de 9999
+        if not breakdown:
+            breakdown = {"agency_fee": 9999.0}
             
         total_cost = sum(breakdown.values())
         return {
@@ -132,6 +200,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     tariffs_data = safe_fetch(supabase, "contract_tariffs")
     
     port_costs_data = safe_fetch(supabase, "port_costs_matrix")
+    agency_matrix_data = safe_fetch(supabase, "agency_matrix")
     
     agg_data = {}
     
@@ -234,11 +303,11 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 dest_port = laden_leg.get("destination_port_id")
                 if orig_port:
                     laden_leg["agency_costs_origin"] = calculate_detailed_port_costs(
-                        "DEFAULT", orig_port, 'CARGA', "DEFAULT", port_costs_data
+                        "DEFAULT", orig_port, 'CARGA', "DEFAULT", port_costs_data, agency_matrix_data
                     )["total_cost"]
                 if dest_port:
                     laden_leg["agency_costs_destination"] = calculate_detailed_port_costs(
-                        "DEFAULT", dest_port, 'DESCARGA', "DEFAULT", port_costs_data
+                        "DEFAULT", dest_port, 'DESCARGA', "DEFAULT", port_costs_data, agency_matrix_data
                     )["total_cost"]
                 
             legs_copy["bunker_price_ifo"] = p_ifo
@@ -288,8 +357,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             
         else:
             # Calcular costos detallados usando el nuevo helper
-            orig_result = calculate_detailed_port_costs(client, line.origin_port_id, 'CARGA', vessel, port_costs_data)
-            dest_result = calculate_detailed_port_costs(client, line.destination_port_id, 'DESCARGA', vessel, port_costs_data)
+            orig_result = calculate_detailed_port_costs(client, line.origin_port_id, 'CARGA', vessel, port_costs_data, agency_matrix_data)
+            dest_result = calculate_detailed_port_costs(client, line.destination_port_id, 'DESCARGA', vessel, port_costs_data, agency_matrix_data)
             
             ag_orig = orig_result["total_cost"]
             ag_dest = dest_result["total_cost"]
@@ -307,12 +376,13 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 "positioning_carga_hrs": float(ports_db.get(line.origin_port_id, {}).get("positioning_carga_hrs", 0.0)),
                 "positioning_descarga_hrs": float(ports_db.get(line.destination_port_id, {}).get("positioning_descarga_hrs", 0.0)),
                 "vessel_max_load_intake_limit": v_data.get("vessel_max_load_intake_limit", 0),
-                # Límites físicos de terminales desde tabla `ports`
+                # Limites fisicos de terminales desde tabla `ports`
                 "max_terminal_load_rate": ports_db.get(line.origin_port_id, {}).get("max_load_rate", 0),
                 "vessel_pump_discharge_rate": v_data.get("vessel_pump_discharge_rate", 0),
                 "port_max_discharge_limit": ports_db.get(line.destination_port_id, {}).get("max_disch_rate", 0),
                 "agency_costs_origin": ag_orig,
                 "agency_costs_destination": ag_dest,
+                "loading_master_dest": dest_result["breakdown"].get("loading_master", 0.0),
                 "bunker_price_ifo": p_ifo,
                 "bunker_price_mdo": p_mdo,
                 "bunker_price_date": bunker_dates_db.get("IFO", "N/A"),
@@ -320,6 +390,11 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 "bunker_consumption_sea_ifo": v_data.get("consumption_sea_ifo", 0),
                 "bunker_consumption_idle_ifo": v_data.get("consumption_idle_ifo", 0),
                 "bunker_consumption_load_ifo": v_data.get("consumption_load_ifo", 0),
+                "grt": v_data.get("grt", 0),
+                "dwt": v_data.get("dwt", 0),
+                "dwcc": v_data.get("dwcc", 0),
+                "length": v_data.get("length", 0),
+                "beam": v_data.get("beam", 0),
                 "bunker_consumption_disch_ifo": v_data.get("consumption_disch_ifo", 0),
                 "bunker_consumption_sea_mdo": v_data.get("consumption_sea_mdo", 0),
                 "bunker_consumption_idle_mdo": v_data.get("consumption_idle_mdo", 0),

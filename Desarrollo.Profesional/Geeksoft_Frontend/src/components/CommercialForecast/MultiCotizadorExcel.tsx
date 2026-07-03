@@ -1,0 +1,1734 @@
+import React, { useState, useEffect } from 'react';
+import { ForecastService } from '../../services/api';
+import { Plus, Trash2, Save, FolderOpen, X } from 'lucide-react';
+
+interface TramoState {
+    type: 'BALLAST' | 'LADEN';
+    origin_port_id: string;
+    destination_port_id: string;
+    quantity: string | number;
+    freight_rate: string | number;
+    port_delay_hours_loading: string | number;
+    port_delay_hours_discharging: string | number;
+    route_distance?: string | number;
+    weather_factor?: string | number; // Almacenado como porcentaje legible, ej. 3.0 para 3%
+    speed?: string | number;
+}
+
+interface PuertoConfig {
+    action: 'NONE' | 'CARGAR' | 'DESCARGAR';
+    quantity: string | number;
+    freight_rate: string | number;
+    op_rate: string | number; // Ritmo de operación
+    rate_unit?: 'TD' | 'TH'; // Unidad de ritmo: TD (Ton/Día), TH (Ton/Hora)
+    overhead?: string | number;
+    positioning?: string | number;
+}
+
+export const MultiCotizadorExcel: React.FC = () => {
+    const [vessels, setVessels] = useState<any[]>([]);
+    const [selectedVessel, setSelectedVessel] = useState('');
+    const [ports, setPorts] = useState<any[]>([]);
+    const [routes, setRoutes] = useState<any[]>([]);
+    
+    // Precios de bunker configurables
+    const [bunkerPriceIfo, setBunkerPriceIfo] = useState<number>(600);
+    const [bunkerPriceMdo, setBunkerPriceMdo] = useState<number>(900);
+    const [bunkerDate, setBunkerDate] = useState<string>('Cargando...');
+
+    // Particularidades y consumos del buque editable
+    const [vesselParams, setVesselParams] = useState<any>({
+        vessel_id: '',
+        vessel_name: '',
+        grt: '',
+        dwt: '',
+        dwcc: '',
+        vessel_speed: '',
+        tce_required: '',
+        length: '',
+        beam: '',
+        consumption_sea_ifo: '',
+        consumption_idle_ifo: '',
+        consumption_load_ifo: '',
+        consumption_disch_ifo: '',
+        consumption_sea_mdo: '',
+        consumption_idle_mdo: '',
+        consumption_load_mdo: '',
+        consumption_disch_mdo: ''
+    });
+
+    // Lista de tramos (inicialmente 2 tramos)
+    const [tramos, setTramos] = useState<TramoState[]>([
+        {
+            type: 'BALLAST',
+            origin_port_id: 'ILO',
+            destination_port_id: 'MATARANI',
+            quantity: 0,
+            freight_rate: 0,
+            port_delay_hours_loading: 0,
+            port_delay_hours_discharging: 0,
+            route_distance: '',
+            weather_factor: '',
+            speed: ''
+        },
+        {
+            type: 'LADEN',
+            origin_port_id: 'MATARANI',
+            destination_port_id: 'ILO',
+            quantity: 13500,
+            freight_rate: 22.50,
+            port_delay_hours_loading: 0,
+            port_delay_hours_discharging: 0,
+            route_distance: '',
+            weather_factor: '',
+            speed: ''
+        }
+    ]);
+
+    // Configuración de puertos a eje de las letras (tramos.length + 1)
+    const [puertosConfig, setPuertosConfig] = useState<PuertoConfig[]>([
+        { action: 'CARGAR', quantity: 13500, freight_rate: 0, op_rate: '', rate_unit: 'TH', overhead: '', positioning: '' },       // Puerto 0 (A)
+        { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', overhead: '', positioning: '' },            // Puerto 1 (B)
+        { action: 'DESCARGAR', quantity: 13500, freight_rate: 22.50, op_rate: '', rate_unit: 'TH', overhead: '', positioning: '' } // Puerto 2 (C)
+    ]);
+
+    const [result, setResult] = useState<any>(null);
+
+
+    // Persistencia de Rutas
+    const [showSaveModal, setShowSaveModal] = useState(false);
+    const [showLoadModal, setShowLoadModal] = useState(false);
+    const [routeName, setRouteName] = useState('');
+    const [savedRoutes, setSavedRoutes] = useState<any[]>([]);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isLoadingRoutes, setIsLoadingRoutes] = useState(false);
+    const [loadedRouteName, setLoadedRouteName] = useState<string | null>(null);
+
+    // Resolver info de ruta
+    const getAutoRouteInfo = (origin: string, destination: string, type: 'LADEN' | 'BALLAST') => {
+        const matched = routes.find(r => r.origin_port_id === origin && r.destination_port_id === destination);
+        if (matched) {
+            const dist = Number(matched.route_distance) || 0;
+            const wf = type === 'LADEN' 
+                ? Number(matched.weather_factor_laden || matched.weather_factor || 0.05) 
+                : Number(matched.weather_factor_ballast || matched.weather_factor || 0.05);
+            return { route_distance: dist, weather_factor: wf * 100 }; // Devuelve porcentaje entero legible, ej. 5 para 5%
+        }
+        return { route_distance: 100, weather_factor: 5 };
+    };
+
+    // Resolver ritmo de operación por defecto del puerto
+    const getAutoPortRate = (portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR') => {
+        const p = ports.find(x => x.port_id === portId);
+        if (p) {
+            if (action === 'CARGAR') return p.max_load_rate || '';
+            if (action === 'DESCARGAR') return p.max_disch_rate || '';
+        }
+        return '';
+    };
+
+    // Resolver overhead por defecto del puerto
+    const getAutoPortOverhead = (portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR') => {
+        const p = ports.find(x => x.port_id === portId);
+        if (p) {
+            if (action === 'CARGAR') return p.overhead_carga_hrs ?? 6;
+            if (action === 'DESCARGAR') return p.overhead_descarga_hrs ?? 6;
+        }
+        return '';
+    };
+
+    // Resolver posicionamiento por defecto del puerto
+    const getAutoPortPositioning = (portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR') => {
+        const p = ports.find(x => x.port_id === portId);
+        if (p) {
+            if (action === 'CARGAR') return p.positioning_carga_hrs ?? 0;
+            if (action === 'DESCARGAR') return p.positioning_descarga_hrs ?? 0;
+        }
+        return '';
+    };
+
+    // Cargar Catálogos
+    useEffect(() => {
+        ForecastService.getVessels().then(data => {
+            const customVessel = {
+                vessel_id: 'SIN_NOMBRE',
+                vessel_name: '⚓ [BUQUE SIN NOMBRE]',
+                grt: 0,
+                dwt: 0,
+                dwcc: 0,
+                vessel_speed: 11.0,
+                tce_required: 0,
+                length: 0,
+                beam: 0,
+                consumption_sea_ifo: 0,
+                consumption_idle_ifo: 0,
+                consumption_load_ifo: 0,
+                consumption_disch_ifo: 0,
+                consumption_sea_mdo: 0,
+                consumption_idle_mdo: 0,
+                consumption_load_mdo: 0,
+                consumption_disch_mdo: 0
+            };
+            const extended = [...data, customVessel];
+            setVessels(extended);
+            if (extended.length > 0) {
+                const firstId = extended[0].vessel_id;
+                setSelectedVessel(firstId);
+                updateVesselState(firstId, extended);
+            }
+        });
+        
+        ForecastService.getPorts().then(data => {
+            const uniquePorts = data.filter((p: any, idx: number, self: any[]) => 
+                self.findIndex((x: any) => x.port_id === p.port_id) === idx
+            );
+            setPorts(uniquePorts);
+        });
+
+        ForecastService.getRoutes().then(data => {
+            setRoutes(data || []);
+        });
+
+        ForecastService.getLatestBunker().then(prices => {
+            if (prices) {
+                setBunkerPriceIfo(prices.ifo || 600);
+                setBunkerPriceMdo(prices.mdo || 900);
+                setBunkerDate(prices.date || 'N/A');
+            }
+        }).catch(err => {
+            console.error("Error al cargar precios de bunker:", err);
+        });
+    }, []);
+
+    // Actualizar estado local del buque seleccionado
+    const updateVesselState = (vId: string, list: any[]) => {
+        const v = list.find(x => x.vessel_id === vId);
+        if (v) {
+            setVesselParams({
+                vessel_id: v.vessel_id,
+                vessel_name: v.vessel_name,
+                grt: v.grt ?? 0,
+                dwt: v.dwt ?? 0,
+                dwcc: v.dwcc ?? 0,
+                vessel_speed: v.vessel_speed ?? 11.0,
+                tce_required: v.tce_required ?? 0,
+                length: v.length ?? 0,
+                beam: v.beam ?? 0,
+                consumption_sea_ifo: v.consumption_sea_ifo ?? 0,
+                consumption_idle_ifo: v.consumption_idle_ifo ?? 0,
+                consumption_load_ifo: v.consumption_load_ifo ?? 0,
+                consumption_disch_ifo: v.consumption_disch_ifo ?? 0,
+                consumption_sea_mdo: v.consumption_sea_mdo ?? 0,
+                consumption_idle_mdo: v.consumption_idle_mdo ?? 0,
+                consumption_load_mdo: v.consumption_load_mdo ?? 0,
+                consumption_disch_mdo: v.consumption_disch_mdo ?? 0
+            });
+        }
+    };
+
+    // Autocompletar reactivamente al cargar rutas, barcos o cambiar el buque
+    useEffect(() => {
+        if (routes.length > 0 && vessels.length > 0 && selectedVessel) {
+            const defaultSpeed = Number(vesselParams.vessel_speed) || 11.0;
+            
+            setTramos(prev => prev.map(tr => {
+                const auto = getAutoRouteInfo(tr.origin_port_id, tr.destination_port_id, tr.type);
+                return {
+                    ...tr,
+                    route_distance: tr.route_distance !== undefined && tr.route_distance !== '' ? tr.route_distance : auto.route_distance,
+                    weather_factor: tr.weather_factor !== undefined && tr.weather_factor !== '' ? tr.weather_factor : auto.weather_factor,
+                    speed: tr.speed !== undefined && tr.speed !== '' ? tr.speed : defaultSpeed
+                };
+            }));
+        }
+    }, [routes, vessels, selectedVessel, vesselParams.vessel_speed]);
+
+    // Actualizar precios de bunker al cambiar de barco
+    const handleVesselChange = (vId: string) => {
+        setSelectedVessel(vId);
+        updateVesselState(vId, vessels);
+        const v = vessels.find(x => x.vessel_id === vId);
+        if (v && v.max_capacity_mdo <= 0) {
+            setBunkerPriceMdo(0);
+        } else {
+            ForecastService.getLatestBunker().then(prices => {
+                if (prices) setBunkerPriceMdo(prices.mdo || 900);
+            });
+        }
+    };
+
+    // Propagar cambios en el Fact Sheet del buque
+    const handleVesselParamChange = (field: string, val: any) => {
+        setVesselParams((prev: any) => ({
+            ...prev,
+            [field]: val
+        }));
+    };
+
+    // Propagar cambios de origen/destino reactivos en cadena
+    const updateTramoField = (index: number, field: keyof TramoState, value: any) => {
+        setTramos(prev => {
+            const list = [...prev];
+            list[index] = { ...list[index], [field]: value };
+            
+            // Si cambia origen o destino, autocompletar la distancia y clima del tramo modificado
+            if (field === 'origin_port_id' || field === 'destination_port_id' || field === 'type') {
+                const auto = getAutoRouteInfo(list[index].origin_port_id, list[index].destination_port_id, list[index].type);
+                list[index].route_distance = auto.route_distance;
+                list[index].weather_factor = auto.weather_factor;
+            }
+
+            // Heredar origen del tramo siguiente y autocompletarlo
+            if (field === 'destination_port_id' && index < list.length - 1) {
+                list[index + 1].origin_port_id = value;
+                const autoNext = getAutoRouteInfo(list[index + 1].origin_port_id, list[index + 1].destination_port_id, list[index + 1].type);
+                list[index + 1].route_distance = autoNext.route_distance;
+                list[index + 1].weather_factor = autoNext.weather_factor;
+            }
+            return list;
+        });
+
+        // Actualizar ritmos, overhead y posicionamiento en puertosConfig si corresponden
+        if (field === 'origin_port_id' && index === 0) {
+            setPuertosConfig(prevPorts => {
+                const newList = [...prevPorts];
+                if (newList[0] && newList[0].action !== 'NONE') {
+                    newList[0].op_rate = getAutoPortRate(value, newList[0].action);
+                    newList[0].overhead = getAutoPortOverhead(value, newList[0].action);
+                    newList[0].positioning = getAutoPortPositioning(value, newList[0].action);
+                }
+                return newList;
+            });
+        }
+        if (field === 'destination_port_id') {
+            setPuertosConfig(prevPorts => {
+                const newList = [...prevPorts];
+                const pIdx = index + 1;
+                if (newList[pIdx] && newList[pIdx].action !== 'NONE') {
+                    newList[pIdx].op_rate = getAutoPortRate(value, newList[pIdx].action);
+                    newList[pIdx].overhead = getAutoPortOverhead(value, newList[pIdx].action);
+                    newList[pIdx].positioning = getAutoPortPositioning(value, newList[pIdx].action);
+                }
+                return newList;
+            });
+        }
+    };
+
+    // Propagar cambios en configuración de puerto y auto-propagar flete
+    const updatePuertoConfigField = (idx: number, field: keyof PuertoConfig, val: any) => {
+        setPuertosConfig(prev => {
+            const list = [...prev];
+            list[idx] = { ...list[idx], [field]: val };
+            
+            // Si cambia la acción, limpiar inputs inválidos y autocompletar ritmo, overhead y posicionamiento
+            if (field === 'action') {
+                if (val === 'NONE') {
+                    list[idx].quantity = '';
+                    list[idx].freight_rate = '';
+                    list[idx].op_rate = '';
+                    list[idx].overhead = '';
+                    list[idx].positioning = '';
+                } else {
+                    const portId = idx === 0 ? tramos[0].origin_port_id : tramos[idx - 1].destination_port_id;
+                    list[idx].op_rate = getAutoPortRate(portId, val);
+                    list[idx].overhead = getAutoPortOverhead(portId, val);
+                    list[idx].positioning = getAutoPortPositioning(portId, val);
+                }
+            }
+
+            // Propagación de Flete: al ingresar el flete de la primera descarga, duplicarlo a las siguientes descargas vacías
+            if (field === 'freight_rate') {
+                const firstDescargaIdx = list.findIndex(p => p.action === 'DESCARGAR');
+                if (idx === firstDescargaIdx) {
+                    for (let i = idx + 1; i < list.length; i++) {
+                        if (list[i].action === 'DESCARGAR' && (list[i].freight_rate === 0 || !list[i].freight_rate || list[i].freight_rate === '0' || list[i].freight_rate === '')) {
+                            list[i].freight_rate = val;
+                        }
+                    }
+                }
+            }
+            return list;
+        });
+    };
+
+    // Calcular la cantidad de toneladas y naturaleza de cada tramo basado en el acumulador de bodega
+    const getCalculatedTramos = () => {
+        let carga_a_bordo = 0;
+        return tramos.map((tr, idx) => {
+            const pOrig = puertosConfig[idx] || { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '' };
+            let qOrig = Number(pOrig.quantity) || 0;
+            
+
+
+            if (pOrig.action === 'CARGAR') {
+                carga_a_bordo += qOrig;
+            } else if (pOrig.action === 'DESCARGAR') {
+                carga_a_bordo -= qOrig;
+                if (carga_a_bordo < 0) carga_a_bordo = 0;
+            }
+
+            const qtyTramo = carga_a_bordo;
+            const typeTramo = qtyTramo > 0 ? 'LADEN' : 'BALLAST';
+
+            // El flete de este tramo se define por lo que se descarga en el puerto destino (idx + 1)
+            const pDest = puertosConfig[idx + 1] || { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '' };
+            const fleteTramo = pDest.action === 'DESCARGAR' ? (Number(pDest.freight_rate) || 0) : 0;
+            const descTons = pDest.action === 'DESCARGAR' ? (Number(pDest.quantity) || 0) : 0;
+
+            return {
+                ...tr,
+                type: typeTramo,
+                quantity: qtyTramo,
+                freight_rate: fleteTramo,
+                desc_tons: descTons
+            };
+        });
+    };
+
+    // Agregar un nuevo tramo y su puerto asociado
+    const handleAddTramo = () => {
+        setTramos(prev => {
+            const last = prev[prev.length - 1];
+            const defaultDest = ports.find(p => p.port_id !== last.destination_port_id)?.port_id || 'ILO';
+            const defaultSpeed = Number(vesselParams.vessel_speed) || 11.0;
+            const auto = getAutoRouteInfo(last.destination_port_id, defaultDest, 'LADEN');
+            return [
+                ...prev,
+                {
+                    type: 'LADEN',
+                    origin_port_id: last.destination_port_id,
+                    destination_port_id: defaultDest,
+                    quantity: 13500,
+                    freight_rate: 20.00,
+                    port_delay_hours_loading: 0,
+                    port_delay_hours_discharging: 0,
+                    route_distance: auto.route_distance,
+                    weather_factor: auto.weather_factor,
+                    speed: defaultSpeed
+                }
+            ];
+        });
+        setPuertosConfig(prev => [
+            ...prev,
+            { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH' }
+        ]);
+    };
+
+    // Eliminar el último tramo y su puerto asociado
+    const handleRemoveLastTramo = () => {
+        if (tramos.length <= 1) return;
+        setTramos(prev => prev.slice(0, prev.length - 1));
+        setPuertosConfig(prev => prev.slice(0, prev.length - 1));
+    };
+
+    // Ejecutar simulación
+    const handleCalculate = async () => {
+        if (!selectedVessel) return;
+        
+        // Obtener tramos calculados dinámicamente según bodega
+        const trs = getCalculatedTramos();
+
+        for (let i = 0; i < trs.length; i++) {
+            const tr = trs[i];
+            if (tr.origin_port_id === tr.destination_port_id) {
+                return alert(`Error en Tramo ${i+1}: El puerto de origen y destino no pueden ser iguales (${tr.origin_port_id}).`);
+            }
+        }
+
+        try {
+            const totalCargas = puertosConfig
+                .filter(p => p.action === 'CARGAR')
+                .reduce((sum, p) => sum + (Number(p.quantity) || 0), 0);
+
+            const totalDescargas = puertosConfig
+                .filter(p => p.action === 'DESCARGAR')
+                .reduce((sum, p) => sum + (Number(p.quantity) || 0), 0);
+
+            if (totalCargas !== totalDescargas) {
+                return; // Silencioso en el useEffect o con alerta si lo inicia el usuario
+            }
+
+            const payloadTramos = trs.map((tr, idx) => {
+                // Mapear ratios de carga/descarga personalizados
+                let customLoad: number | undefined = undefined;
+                let customDisch: number | undefined = undefined;
+
+                const pOrig = puertosConfig[idx];
+                const pDest = puertosConfig[idx + 1];
+
+                if (pOrig && pOrig.action === 'CARGAR' && pOrig.op_rate !== '') {
+                    const val = Number(pOrig.op_rate);
+                    // Backend espera T/h. TH -> as-is; TD -> dividir por 24 para convertir a T/h
+                    customLoad = pOrig.rate_unit === 'TH' ? val : val / 24;
+                }
+                if (pDest && pDest.action === 'DESCARGAR' && pDest.op_rate !== '') {
+                    const val = Number(pDest.op_rate);
+                    customDisch = pDest.rate_unit === 'TH' ? val : val / 24;
+                }
+
+                let overheadOrig = pOrig && pOrig.action !== 'NONE' && pOrig.overhead !== '' ? Number(pOrig.overhead) : 6.0;
+                let overheadDest = pDest && pDest.action !== 'NONE' && pDest.overhead !== '' ? Number(pDest.overhead) : 6.0;
+
+                let posCarga = 0;
+                if (pOrig && pOrig.action === 'CARGAR' && pOrig.positioning !== '') {
+                    posCarga = Number(pOrig.positioning) || 0;
+                } else if (pDest && pDest.action === 'CARGAR' && pDest.positioning !== '') {
+                    posCarga = Number(pDest.positioning) || 0;
+                }
+
+                let posDescarga = 0;
+                if (pOrig && pOrig.action === 'DESCARGAR' && pOrig.positioning !== '') {
+                    posDescarga = Number(pOrig.positioning) || 0;
+                } else if (pDest && pDest.action === 'DESCARGAR' && pDest.positioning !== '') {
+                    posDescarga = Number(pDest.positioning) || 0;
+                }
+
+                return {
+                    origin_port_id: tr.origin_port_id,
+                    destination_port_id: tr.destination_port_id,
+                    type: tr.type,
+                    quantity: Number(tr.quantity) || 0,
+                    freight_rate: Number(tr.freight_rate),
+                    port_delay_hours_loading: Number(tr.port_delay_hours_loading),
+                    port_delay_hours_discharging: Number(tr.port_delay_hours_discharging),
+                    route_distance: Number(tr.route_distance) || 0,
+                    weather_factor: (Number(tr.weather_factor) || 0) / 100, // Dividir entre 100 para decimal del backend
+                    origin_action: puertosConfig[idx]?.action || 'NONE',
+                    destination_action: puertosConfig[idx + 1]?.action || 'NONE',
+                    custom_load_rate: customLoad,
+                    custom_discharge_rate: customDisch,
+                    port_overhead_hours_origin: overheadOrig,
+                    port_overhead_hours_dest: overheadDest,
+                    positioning_carga_hrs: posCarga,
+                    positioning_descarga_hrs: posDescarga
+                };
+            });
+
+            // Enviar payload con todos los particularidades y consumos del buque editados
+            const res = await ForecastService.calculateMultiCotizador({
+                vessel_id: selectedVessel,
+                bunker_price_ifo: bunkerPriceIfo,
+                bunker_price_mdo: bunkerPriceMdo,
+                vessel_speed: Number(vesselParams.vessel_speed) || undefined,
+                grt: Number(vesselParams.grt) || undefined,
+                dwt: Number(vesselParams.dwt) || undefined,
+                dwcc: Number(vesselParams.dwcc) || undefined,
+                length: Number(vesselParams.length) || undefined,
+                beam: Number(vesselParams.beam) || undefined,
+                tce_required: Number(vesselParams.tce_required) || undefined,
+                consumption_sea_ifo: Number(vesselParams.consumption_sea_ifo),
+                consumption_idle_ifo: Number(vesselParams.consumption_idle_ifo),
+                consumption_load_ifo: Number(vesselParams.consumption_load_ifo),
+                consumption_disch_ifo: Number(vesselParams.consumption_disch_ifo),
+                consumption_sea_mdo: Number(vesselParams.consumption_sea_mdo),
+                consumption_idle_mdo: Number(vesselParams.consumption_idle_mdo),
+                consumption_load_mdo: Number(vesselParams.consumption_load_mdo),
+                consumption_disch_mdo: Number(vesselParams.consumption_disch_mdo),
+                tramos: payloadTramos
+            });
+
+            // Recalcular ingresos del tramo en el frontend según flete de descarga
+            let totalFreightRevenue = 0;
+            res.tramos = res.tramos.map((trRes: any, idx: number) => {
+                const pDest = puertosConfig[idx + 1];
+                let fleteIngreso = 0;
+                if (pDest && pDest.action === 'DESCARGAR') {
+                    fleteIngreso = Number(pDest.quantity || 0) * Number(pDest.freight_rate || 0);
+                }
+                totalFreightRevenue += fleteIngreso;
+                return {
+                    ...trRes,
+                    net_income: fleteIngreso,
+                    pnl_tramo: fleteIngreso - trRes.bunker_costs - trRes.port_costs
+                };
+            });
+
+            // Ajustar consolidados generales
+            res.consolidated.total_freight_revenue = totalFreightRevenue;
+            res.consolidated.pnl_net_utility = totalFreightRevenue - res.consolidated.total_port_costs - res.consolidated.total_bunker_costs;
+            res.consolidated.tce_real = res.consolidated.total_days > 0 ? (res.consolidated.pnl_net_utility / res.consolidated.total_days) : 0;
+
+            setResult(res);
+        } catch (e) {
+            console.error("Error al simular:", e);
+        }
+    };
+
+    // Recalculo Automatico Reactivo (Estilo Excel)
+    useEffect(() => {
+        if (!selectedVessel || tramos.length === 0 || routes.length === 0) return;
+
+        const hasEmptyPorts = tramos.some(tr => !tr.origin_port_id || !tr.destination_port_id);
+        if (hasEmptyPorts) return;
+
+        const timer = setTimeout(() => {
+            handleCalculate();
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [selectedVessel, bunkerPriceIfo, bunkerPriceMdo, tramos, puertosConfig, routes, vesselParams]);
+
+    // Guardar ruta multicotizador
+    const handleSaveRoute = async () => {
+        if (!routeName) return alert('Ingrese un nombre para la ruta');
+        try {
+            setIsSaving(true);
+            const pais = tramos.some(tr => (tr.destination_port_id || "").toLowerCase().includes("meji") || (tr.destination_port_id || "").toLowerCase().includes("barq")) ? "Chile" : "Peru";
+            const payload = {
+                name: routeName,
+                description: "Ruta de Multicotizador",
+                pais,
+                legs_data: {
+                    is_multicotizador: true,
+                    vessel_id: selectedVessel,
+                    bunker_price_ifo: bunkerPriceIfo,
+                    bunker_price_mdo: bunkerPriceMdo,
+                    tramos,
+                    puertosConfig,
+                    vesselParams
+                }
+            };
+            await ForecastService.saveSpot(payload);
+            alert("Ruta multicotizador guardada con éxito");
+            setLoadedRouteName(routeName);
+            setShowSaveModal(false);
+            setRouteName('');
+        } catch (e) {
+            console.error(e);
+            alert("Error al guardar la ruta multicotizador");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    // Cargar rutas multicotizador
+    const handleLoadClick = async () => {
+        try {
+            setIsLoadingRoutes(true);
+            setShowLoadModal(true);
+            const list = await ForecastService.listSpots();
+            const filtered = list.filter((s: any) => s.legs_data?.is_multicotizador === true);
+            setSavedRoutes(filtered);
+        } catch (e) {
+            console.error(e);
+            alert("Error al listar las rutas guardadas");
+        } finally {
+            setIsLoadingRoutes(false);
+        }
+    };
+
+    // Aplicar ruta cargada
+    const handleLoadRoute = (route: any) => {
+        const data = route.legs_data;
+        if (data) {
+            if (data.vessel_id) setSelectedVessel(data.vessel_id);
+            if (data.bunker_price_ifo) setBunkerPriceIfo(data.bunker_price_ifo);
+            if (data.bunker_price_mdo) setBunkerPriceMdo(data.bunker_price_mdo);
+            if (data.tramos) setTramos(data.tramos);
+            if (data.puertosConfig) setPuertosConfig(data.puertosConfig);
+            if (data.vesselParams) setVesselParams(data.vesselParams);
+            setLoadedRouteName(route.name);
+            setResult(null); // Limpiar cálculo anterior
+            setShowLoadModal(false);
+        }
+    };
+
+    const fmtCur = (val: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+    const fmtNum = (val: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(val);
+    const fmtDays = (val: number) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
+
+    const calculatedTramosList = getCalculatedTramos();
+
+    const totalCargas = puertosConfig
+        .filter(p => p.action === 'CARGAR')
+        .reduce((sum, p) => sum + (Number(p.quantity) || 0), 0);
+
+    const totalDescargas = puertosConfig
+        .filter(p => p.action === 'DESCARGAR')
+        .reduce((sum, p) => sum + (Number(p.quantity) || 0), 0);
+
+    const isBalanced = totalCargas === totalDescargas;
+
+    const getPortDaysAndBunker = (idx: number) => {
+        const p = puertosConfig[idx];
+        if (!p || p.action === 'NONE') {
+            return { portDays: 0, bunkerCost: 0 };
+        }
+
+        const qty = Number(p.quantity) || 0;
+        const rate = Number(p.op_rate) || 0;
+        const overheadHrs = Number(p.overhead) || 0;
+        const posHrs = Number(p.positioning) || 0;
+        
+        let delayHrs = 0;
+        if (idx === 0) {
+            if (p.action === 'CARGAR') {
+                delayHrs = Number(tramos[0]?.port_delay_hours_loading) || 0;
+            } else if (p.action === 'DESCARGAR') {
+                delayHrs = Number(tramos[0]?.port_delay_hours_discharging) || 0;
+            }
+        } else {
+            if (p.action === 'CARGAR') {
+                delayHrs = Number(tramos[idx - 1]?.port_delay_hours_loading) || 0;
+            } else if (p.action === 'DESCARGAR') {
+                delayHrs = Number(tramos[idx - 1]?.port_delay_hours_discharging) || 0;
+            }
+        }
+
+        // Fórmula del Voyage Ledger:
+        // port_days = (Q_hrs_op + overhead_hrs + positioning_hrs + delay_hrs) / 24
+        // donde Q_hrs_op = Q / rate_en_T_por_hora
+        const ratePerHour = p.rate_unit === 'TH' ? rate : rate / 24;  // T/h siempre
+        const opHrs = ratePerHour > 0 ? qty / ratePerHour : 0;        // horas de operación
+        const portDays = (opHrs + overheadHrs + posHrs + delayHrs) / 24; // todo a días
+
+        let consIfo = 0;
+        let consMdo = 0;
+        if (p.action === 'CARGAR') {
+            consIfo = Number(vesselParams.consumption_idle_ifo) || 0;
+            consMdo = Number(vesselParams.consumption_idle_mdo) || 0;
+        } else if (p.action === 'DESCARGAR') {
+            consIfo = Number(vesselParams.consumption_disch_ifo) || 0;
+            consMdo = Number(vesselParams.consumption_disch_mdo) || 0;
+        }
+
+        const bunkerCost = portDays * (consIfo * bunkerPriceIfo + consMdo * bunkerPriceMdo);
+        return { portDays, bunkerCost };
+    };
+
+    const getBodegaSaliente = (idx: number) => {
+        let qty = 0;
+        for (let i = 0; i <= idx; i++) {
+            const p = puertosConfig[i];
+            if (!p) continue;
+            if (p.action === 'CARGAR') {
+                qty += Number(p.quantity) || 0;
+            } else if (p.action === 'DESCARGAR') {
+                qty -= Number(p.quantity) || 0;
+            }
+        }
+        return qty >= 0 ? qty : 0;
+    };
+
+    return (
+        <div className="bg-[#f3f4f6] text-[11px] text-slate-800 flex-1 flex flex-col min-h-0 w-full p-2 font-sans">
+            
+            {/* 1. RIBBON SUPERIOR DE DOS FILAS: ACCIONES Y FACT SHEET */}
+            <div className="bg-white border border-slate-300 rounded shadow-sm p-2 mb-2 flex flex-col gap-2 select-none flex-shrink-0">
+                
+                {/* FILA 1: CABECERA Y ACCIONES DE PERSISTENCIA */}
+                <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm">📊</span>
+                        <div>
+                            <h2 className="text-xs font-bold text-slate-900 leading-none">
+                                Estimador de Voyage y Fletamentos (Excel Mode)
+                                {loadedRouteName && <span className="text-[9px] bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-mono ml-2">[{loadedRouteName}]</span>}
+                            </h2>
+                            <span className="text-[8.5px] text-slate-400 font-medium">Rejilla contable de alta densidad para estimación de tramos paralelos (Multi-Leg)</span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        {/* Botones de Control de Tramos */}
+                        <div className="flex gap-1">
+                            <button
+                                onClick={handleAddTramo}
+                                className="h-5 text-[9px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
+                            >
+                                <Plus size={10} /> Add Leg
+                            </button>
+                            <button
+                                onClick={handleRemoveLastTramo}
+                                disabled={tramos.length <= 1}
+                                className="h-5 text-[9px] font-bold rounded px-2 bg-slate-150 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-40 shadow-sm"
+                            >
+                                <Trash2 size={10} /> Delete Leg
+                            </button>
+                        </div>
+
+
+                        {/* Botones de Persistencia */}
+                        <div className="flex gap-1 border-l border-slate-200 pl-3">
+                            <button
+                                onClick={() => setShowSaveModal(true)}
+                                className="h-5 text-[9px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
+                            >
+                                <Save size={10} /> Save Route
+                            </button>
+                            <button
+                                onClick={handleLoadClick}
+                                className="h-5 text-[9px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
+                            >
+                                <FolderOpen size={10} /> Load Route
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* FILA 2: FACT SHEET DEL BARCO Y BUNKER EN TABLA UNIFICADA */}
+                <div className="bg-slate-50/50 border border-slate-200 rounded p-1 flex-shrink-0">
+                    <table className="w-full border-collapse border border-slate-250 bg-white font-mono text-[9px] table-fixed">
+                        <thead>
+                            <tr className="bg-slate-100 border-b border-slate-250 font-sans text-[7.5px] text-slate-500 font-bold uppercase tracking-wider h-5">
+                                <th className="border-r border-slate-200 text-left pl-2" style={{ width: '11%' }}>Vessel</th>
+                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '5%' }}>GRT (t)</th>
+                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '6.5%' }}>DWT (t)</th>
+                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '6.5%' }}>DWCC (t)</th>
+                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '5%' }}>Speed (kn)</th>
+                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '7%' }}>TCE Req ($/d)</th>
+                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '5%' }}>LOA (m)</th>
+                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '5%' }}>Beam (m)</th>
+                                <th className="border-r border-slate-200 text-center bg-slate-50 text-[7px]" style={{ width: '4%' }}>Fuel</th>
+                                <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Sea (t/d)</th>
+                                <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Idle (t/d)</th>
+                                <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Load (t/d)</th>
+                                <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Disch (t/d)</th>
+                                <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>IFO ($/T)</th>
+                                <th className="text-center" style={{ width: '7.5%' }}>MDO ($/T)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr className="border-b border-slate-200 h-6">
+                                {/* Buque Selector */}
+                                <td className="border-r border-slate-200 p-0 text-left align-middle" rowSpan={2}>
+                                    <select
+                                        value={selectedVessel}
+                                        onChange={(e) => handleVesselChange(e.target.value)}
+                                        className="w-[96%] mx-[2%] h-[18px] bg-white border border-slate-300 rounded px-1 text-[9.5px] font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans"
+                                    >
+                                        {vessels.map(v => (
+                                            <option key={v.vessel_id} value={v.vessel_id}>{v.vessel_name}</option>
+                                        ))}
+                                    </select>
+                                </td>
+                                
+                                {/* Particularidades */}
+                                <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
+                                    <input
+                                        type="number"
+                                        value={vesselParams.grt ?? ''}
+                                        onChange={(e) => handleVesselParamChange('grt', e.target.value)}
+                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
+                                    <input
+                                        type="number"
+                                        value={vesselParams.dwt ?? ''}
+                                        onChange={(e) => handleVesselParamChange('dwt', e.target.value)}
+                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
+                                    <input
+                                        type="number"
+                                        value={vesselParams.dwcc ?? ''}
+                                        onChange={(e) => handleVesselParamChange('dwcc', e.target.value)}
+                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={vesselParams.vessel_speed ?? ''}
+                                        onChange={(e) => handleVesselParamChange('vessel_speed', e.target.value)}
+                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
+                                    <input
+                                        type="number"
+                                        value={vesselParams.tce_required ?? ''}
+                                        onChange={(e) => handleVesselParamChange('tce_required', e.target.value)}
+                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={vesselParams.length ?? ''}
+                                        onChange={(e) => handleVesselParamChange('length', e.target.value)}
+                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        placeholder="LOA"
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={vesselParams.beam ?? ''}
+                                        onChange={(e) => handleVesselParamChange('beam', e.target.value)}
+                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        placeholder="Beam"
+                                    />
+                                </td>
+
+                                {/* Consumos IFO */}
+                                <td className="border-r border-slate-200 text-center bg-slate-100 font-sans font-bold text-[7px] text-slate-500 uppercase select-none align-middle">IFO</td>
+                                <td className="border-r border-slate-200 p-0 text-center align-middle">
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={vesselParams.consumption_sea_ifo ?? ''}
+                                        onChange={(e) => handleVesselParamChange('consumption_sea_ifo', e.target.value)}
+                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-center align-middle">
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={vesselParams.consumption_idle_ifo ?? ''}
+                                        onChange={(e) => handleVesselParamChange('consumption_idle_ifo', e.target.value)}
+                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-center align-middle">
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={vesselParams.consumption_load_ifo ?? ''}
+                                        onChange={(e) => handleVesselParamChange('consumption_load_ifo', e.target.value)}
+                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-center align-middle">
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={vesselParams.consumption_disch_ifo ?? ''}
+                                        onChange={(e) => handleVesselParamChange('consumption_disch_ifo', e.target.value)}
+                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                    />
+                                </td>
+
+                                {/* Precios Bunker */}
+                                <td className="border-r border-slate-200 p-0 text-center align-middle bg-slate-50/20" rowSpan={2}>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={bunkerPriceIfo}
+                                        onChange={(e) => setBunkerPriceIfo(Number(e.target.value))}
+                                        className="w-full h-5 bg-white border-0 p-0 text-center text-[10px] font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    />
+                                    <div className="text-[6.5px] text-slate-400 font-mono text-center border-t border-slate-100 py-0.5 leading-none select-none">
+                                        Lec: {bunkerDate}
+                                    </div>
+                                </td>
+                                <td className="p-0 text-center align-middle bg-slate-50/20" rowSpan={2}>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={bunkerPriceMdo}
+                                        onChange={(e) => setBunkerPriceMdo(Number(e.target.value))}
+                                        className="w-full h-5 bg-white border-0 p-0 text-center text-[10px] font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    />
+                                    <div className="text-[6.5px] text-slate-400 font-mono text-center border-t border-slate-100 py-0.5 leading-none select-none">
+                                        Lec: {bunkerDate}
+                                    </div>
+                                </td>
+                            </tr>
+                            
+                            {/* Fila MDO de Consumos */}
+                            <tr className="border-b border-slate-200 h-6">
+                                <td className="border-r border-slate-200 text-center bg-slate-100 font-sans font-bold text-[7px] text-slate-500 uppercase select-none align-middle">MDO</td>
+                                <td className="border-r border-slate-200 p-0 text-center align-middle">
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={vesselParams.consumption_sea_mdo ?? ''}
+                                        onChange={(e) => handleVesselParamChange('consumption_sea_mdo', e.target.value)}
+                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-center align-middle">
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={vesselParams.consumption_idle_mdo ?? ''}
+                                        onChange={(e) => handleVesselParamChange('consumption_idle_mdo', e.target.value)}
+                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-center align-middle">
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={vesselParams.consumption_load_mdo ?? ''}
+                                        onChange={(e) => handleVesselParamChange('consumption_load_mdo', e.target.value)}
+                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-center align-middle">
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={vesselParams.consumption_disch_mdo ?? ''}
+                                        onChange={(e) => handleVesselParamChange('consumption_disch_mdo', e.target.value)}
+                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                    />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* 2. PORT ROTATION TABLE (MAIN ESTIMATION REJILLA) */}
+            <div className="flex-1 overflow-auto border border-slate-300 rounded bg-white shadow-sm min-h-0 flex flex-col mb-2">
+                <table className="w-full border-collapse text-[10.5px] font-mono table-fixed select-text">
+                    
+                    {/* Ancho de columnas - Suma 100% de forma perfecta y balanceada */}
+                    <colgroup>
+                        <col style={{ width: '2.5%' }} /> {/* Leg */}
+                        <col style={{ width: '4%' }} />   {/* Tipo */}
+                        <col style={{ width: '11%' }} />  {/* Puerto */}
+                        <col style={{ width: '4.5%' }} /> {/* Distancia (NM) */}
+                        <col style={{ width: '3.5%' }} /> {/* W.F (%) */}
+                        <col style={{ width: '4%' }} />   {/* Vel (kn) */}
+                        <col style={{ width: '4.5%' }} /> {/* Días Mar */}
+                        <col style={{ width: '4.5%' }} /> {/* Días Puerto */}
+                        <col style={{ width: '5.5%' }} /> {/* Overhead (h) */}
+                        <col style={{ width: '5%' }} />   {/* Posic (h) */}
+                        <col style={{ width: '6.5%' }} /> {/* Op. Dest */}
+                        <col style={{ width: '8%' }} />   {/* Ritmo Op (C/D) */}
+                        <col style={{ width: '7%' }} />   {/* Q (MT) */}
+                        <col style={{ width: '7%' }} />   {/* F ($/t) */}
+                        <col style={{ width: '7%' }} />   {/* Costo Puerto */}
+                        <col style={{ width: '6.5%' }} /> {/* Flete Calculado */}
+                        <col style={{ width: '7%' }} />   {/* Costo Bunker */}
+                        <col style={{ width: '7%' }} />   {/* Bodega (T) */}
+                    </colgroup>
+ 
+                    <thead>
+                        <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-300 h-6 select-none font-sans text-[8.5px] uppercase tracking-wider">
+                            <th className="border-r border-slate-300 text-center">Leg</th>
+                            <th className="border-r border-slate-300 text-center">Tipo</th>
+                            <th className="border-r border-slate-300 text-left pl-2">Puerto</th>
+                            <th className="border-r border-slate-300 text-right pr-2">Dist (NM)</th>
+                            <th className="border-r border-slate-300 text-right pr-2">W.F (%)</th>
+                            <th className="border-r border-slate-300 text-right pr-2">Vel (kn)</th>
+                            <th className="border-r border-slate-300 text-right pr-2">Días Mar</th>
+                            <th className="border-r border-slate-300 text-right pr-2">Días Pto</th>
+                            <th className="border-r border-slate-300 text-right pr-2">Overhead (h)</th>
+                            <th className="border-r border-slate-300 text-right pr-2">Posic (h)</th>
+                            <th className="border-r border-slate-300 text-center">Op. Dest</th>
+                            <th className="border-r border-slate-300 text-right pr-2">Ritmo (C/D)</th>
+                            <th className="border-r border-slate-300 text-right pr-2">Q (MT)</th>
+                            <th className="border-r border-slate-300 text-right pr-2">F ($/t)</th>
+                            <th className="border-r border-slate-300 text-right pr-2">Costo Pto</th>
+                            <th className="border-r border-slate-300 text-right pr-2">Flete ($)</th>
+                            <th className="border-r border-slate-300 text-right pr-2">Bunker ($)</th>
+                            <th className="text-right pr-2">Bodega (T)</th>
+                        </tr>
+                    </thead>
+ 
+                    <tbody>
+                        
+                        {/* Fila 0: Origen del Viaje */}
+                        <tr className="border-b border-slate-200 h-6 hover:bg-slate-50/50 bg-slate-50/20">
+                            <td className="border-r border-slate-200 text-center text-slate-400 select-none">-</td>
+                            <td className="border-r border-slate-200 text-center text-slate-400 select-none">-</td>
+                            <td className="border-r border-slate-200 p-0 text-left">
+                                <select
+                                    value={tramos[0].origin_port_id}
+                                    onChange={(e) => updateTramoField(0, 'origin_port_id', e.target.value)}
+                                    className="w-[96%] bg-white border border-transparent hover:border-slate-300 rounded text-[10px] font-bold text-indigo-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-sans pl-1.5 h-[18px]"
+                                >
+                                    {ports.map(p => (
+                                        <option key={p.port_id} value={p.port_id}>{p.port_id} — {p.port_name}</option>
+                                    ))}
+                                </select>
+                            </td>
+                            <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
+                            <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
+                            <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
+                            <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
+                            <td className="border-r border-slate-200 text-right pr-2 font-mono font-bold text-slate-700 bg-slate-50/50 select-none">
+                                {puertosConfig[0].action !== 'NONE' ? fmtDays(getPortDaysAndBunker(0).portDays) : '0.00'}
+                            </td>
+                            
+                            {/* Overhead */}
+                            <td className="border-r border-slate-200 p-0 text-right">
+                                {puertosConfig[0].action !== 'NONE' ? (
+                                    <input
+                                        type="number"
+                                        value={puertosConfig[0].overhead ?? ''}
+                                        onChange={(e) => updatePuertoConfigField(0, 'overhead', e.target.value)}
+                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                        placeholder="6.0"
+                                    />
+                                ) : (
+                                    <span className="text-slate-350 select-none pr-2">—</span>
+                                )}
+                            </td>
+                            
+                            {/* Posic */}
+                            <td className="border-r border-slate-200 p-0 text-right">
+                                {puertosConfig[0].action !== 'NONE' ? (
+                                    <input
+                                        type="number"
+                                        value={puertosConfig[0].positioning ?? ''}
+                                        onChange={(e) => updatePuertoConfigField(0, 'positioning', e.target.value)}
+                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                        placeholder="0.0"
+                                    />
+                                ) : (
+                                    <span className="text-slate-350 select-none pr-2">—</span>
+                                )}
+                            </td>
+
+                            <td className="border-r border-slate-200 p-0 text-center">
+                                <select
+                                    value={puertosConfig[0].action}
+                                    onChange={(e) => updatePuertoConfigField(0, 'action', e.target.value)}
+                                    className="w-[96%] bg-white border border-indigo-200 hover:border-indigo-400 rounded text-[9.5px] font-bold text-indigo-900 focus:outline-none font-sans text-center h-[18px]"
+                                >
+                                    <option value="NONE">NONE</option>
+                                    <option value="CARGAR">CARGAR</option>
+                                    <option value="DESCARGAR">DESCARGAR</option>
+                                </select>
+                            </td>
+                            {/* Fila 0 Ritmo Op */}
+                            <td className="border-r border-slate-200 p-0">
+                                {puertosConfig[0].action !== 'NONE' ? (
+                                    <div className="flex items-center h-full w-full">
+                                        <input
+                                            type="number"
+                                            value={puertosConfig[0].op_rate ?? ''}
+                                            onChange={(e) => updatePuertoConfigField(0, 'op_rate', e.target.value)}
+                                            className="w-[60%] h-full bg-white border-0 px-1 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                            placeholder="Auto"
+                                        />
+                                        <select
+                                            value={puertosConfig[0].rate_unit || 'TH'}
+                                            onChange={(e) => updatePuertoConfigField(0, 'rate_unit', e.target.value)}
+                                            className="w-[40%] h-[16px] text-[7.5px] bg-slate-50 border border-slate-250 rounded font-sans cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400 pl-0.5 text-slate-500 font-bold mr-1"
+                                        >
+                                            <option value="TD">T/d</option>
+                                            <option value="TH">T/h</option>
+                                         </select>
+                                    </div>
+                                ) : (
+                                    <div className="text-right pr-2">
+                                         <span className="text-slate-350 select-none">—</span>
+                                    </div>
+                                )}
+                            </td>
+                            <td className="border-r border-slate-200 p-0 text-right">
+                                {puertosConfig[0].action === 'CARGAR' ? (
+                                    <input
+                                        type="number"
+                                        placeholder="Q"
+                                        value={puertosConfig[0].quantity ?? ''}
+                                        onChange={(e) => updatePuertoConfigField(0, 'quantity', e.target.value)}
+                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                    />
+                                ) : (
+                                    <span className="text-slate-350 select-none pr-2">—</span>
+                                )}
+                            </td>
+                            <td className="border-r border-slate-200 p-0 text-right">
+                                {puertosConfig[0].action === 'DESCARGAR' ? (
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        placeholder="F"
+                                        value={puertosConfig[0].freight_rate ?? ''}
+                                        onChange={(e) => updatePuertoConfigField(0, 'freight_rate', e.target.value)}
+                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                    />
+                                ) : (
+                                    <span className="text-slate-350 select-none pr-2">—</span>
+                                )}
+                            </td>
+                            <td className="border-r border-slate-200 text-right pr-2 text-slate-500 font-bold bg-slate-50/70">
+                                {result ? fmtCur(result.tramos?.[0]?.agency_costs_origin || 0) : '$0'}
+                            </td>
+                            <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
+                            <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
+                            <td className="text-right pr-2 font-mono font-bold text-slate-500 bg-slate-50/70 select-none">
+                                {fmtNum(getBodegaSaliente(0))}
+                            </td>
+                        </tr>
+
+                        {/* Los Tramos de Navegación */}
+                        {tramos.map((tr, idx) => {
+                            const trCalculado = calculatedTramosList[idx];
+                            const trResult = result?.tramos?.[idx];
+                            
+                            return (
+                                <tr key={idx} className="border-b border-slate-200 h-6 hover:bg-slate-50">
+                                    
+                                    {/* Leg */}
+                                    <td className="border-r border-slate-200 text-center font-bold text-slate-500 select-none">
+                                        {idx + 1}
+                                    </td>
+                                    
+                                    {/* Tipo de Viaje */}
+                                    <td className="border-r border-slate-200 text-center font-bold">
+                                        <span className={`text-[9px] px-1 py-0.25 rounded ${trCalculado.type === 'LADEN' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'}`}>
+                                            {trCalculado.type}
+                                        </span>
+                                    </td>
+                                    
+                                    {/* Puerto Destino */}
+                                    <td className="border-r border-slate-200 p-0 text-left">
+                                        <select
+                                            value={tr.destination_port_id}
+                                            onChange={(e) => updateTramoField(idx, 'destination_port_id', e.target.value)}
+                                            className="w-[96%] bg-white border border-transparent hover:border-slate-300 rounded text-[10px] font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans pl-1.5 h-[18px]"
+                                        >
+                                            {ports.map(p => (
+                                                <option key={p.port_id} value={p.port_id}>{p.port_id} — {p.port_name}</option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                    
+                                    {/* Distancia (NM) - Input Fluido */}
+                                    <td className="border-r border-slate-200 p-0 text-right">
+                                        <input
+                                            type="number"
+                                            value={tr.route_distance ?? ''}
+                                            onChange={(e) => updateTramoField(idx, 'route_distance', e.target.value)}
+                                            className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-[10px]"
+                                            placeholder="Auto"
+                                        />
+                                    </td>
+                                    
+                                    {/* Weather Factor (%) - Input Fluido */}
+                                    <td className="border-r border-slate-200 p-0 text-right">
+                                        <input
+                                            type="number"
+                                            value={tr.weather_factor ?? ''}
+                                            onChange={(e) => updateTramoField(idx, 'weather_factor', e.target.value)}
+                                            className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-[10px]"
+                                            placeholder="Auto"
+                                        />
+                                    </td>
+                                    
+                                    {/* Velocidad (kn) - Input Fluido */}
+                                    <td className="border-r border-slate-200 p-0 text-right">
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            value={tr.speed ?? ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                updateTramoField(idx, 'speed', val);
+                                                // Propagar a todos los tramos
+                                                tramos.forEach((_, tIdx) => {
+                                                    updateTramoField(tIdx, 'speed', val);
+                                                });
+                                            }}
+                                            className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-[10px]"
+                                            placeholder="Auto"
+                                        />
+                                    </td>
+                                    
+                                    {/* Días Mar (Solo Lectura) */}
+                                    <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
+                                        {trResult ? fmtDays(trResult.sea_days || 0) : '0.00'}
+                                    </td>
+                                    
+                                    {/* Días Puerto (Solo Lectura) */}
+                                    <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
+                                        {puertosConfig[idx + 1].action !== 'NONE' ? fmtDays(getPortDaysAndBunker(idx + 1).portDays) : '0.00'}
+                                    </td>
+                                    
+                                    {/* Overhead */}
+                                    <td className="border-r border-slate-200 p-0 text-right">
+                                        {puertosConfig[idx + 1].action !== 'NONE' ? (
+                                            <input
+                                                type="number"
+                                                value={puertosConfig[idx + 1].overhead ?? ''}
+                                                onChange={(e) => updatePuertoConfigField(idx + 1, 'overhead', e.target.value)}
+                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                                placeholder="6.0"
+                                            />
+                                        ) : (
+                                            <span className="text-slate-350 select-none pr-2">—</span>
+                                        )}
+                                    </td>
+                                    
+                                    {/* Posic */}
+                                    <td className="border-r border-slate-200 p-0 text-right">
+                                        {puertosConfig[idx + 1].action !== 'NONE' ? (
+                                            <input
+                                                type="number"
+                                                value={puertosConfig[idx + 1].positioning ?? ''}
+                                                onChange={(e) => updatePuertoConfigField(idx + 1, 'positioning', e.target.value)}
+                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                                placeholder="0.0"
+                                            />
+                                        ) : (
+                                            <span className="text-slate-350 select-none pr-2">—</span>
+                                        )}
+                                    </td>
+
+                                    {/* Operación Destino */}
+                                    <td className="border-r border-slate-200 p-0 text-center">
+                                        <select
+                                            value={puertosConfig[idx + 1].action}
+                                            onChange={(e) => updatePuertoConfigField(idx + 1, 'action', e.target.value)}
+                                            className="w-[96%] bg-white border border-indigo-200 hover:border-indigo-400 rounded text-[9.5px] font-bold text-indigo-900 focus:outline-none font-sans text-center h-[18px]"
+                                        >
+                                            <option value="NONE">NONE</option>
+                                            <option value="CARGAR">CARGAR</option>
+                                            <option value="DESCARGAR">DESCARGAR</option>
+                                        </select>
+                                    </td>
+
+                                    {/* Ritmo Op en Destino - Input Fluido */}
+                                    <td className="border-r border-slate-200 p-0">
+                                        {puertosConfig[idx + 1].action !== 'NONE' ? (
+                                            <div className="flex items-center h-full w-full">
+                                                <input
+                                                    type="number"
+                                                    value={puertosConfig[idx + 1].op_rate ?? ''}
+                                                    onChange={(e) => updatePuertoConfigField(idx + 1, 'op_rate', e.target.value)}
+                                                    className="w-[60%] h-full bg-white border-0 px-1 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                                    placeholder="Auto"
+                                                />
+                                                <select
+                                                    value={puertosConfig[idx + 1].rate_unit || 'TD'}
+                                                    onChange={(e) => updatePuertoConfigField(idx + 1, 'rate_unit', e.target.value)}
+                                                    className="w-[40%] h-[16px] text-[7.5px] bg-slate-50 border border-slate-250 rounded font-sans cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400 pl-0.5 text-slate-500 font-bold mr-1"
+                                                >
+                                                    <option value="TD">T/d</option>
+                                                    <option value="TH">T/h</option>
+                                                </select>
+                                            </div>
+                                        ) : (
+                                            <div className="text-right pr-2">
+                                                <span className="text-slate-350 select-none">—</span>
+                                            </div>
+                                        )}
+                                    </td>
+                                    
+                                    {/* Cantidad Q en Destino - Input Fluido */}
+                                    <td className="border-r border-slate-200 p-0 text-right">
+                                        {puertosConfig[idx + 1].action !== 'NONE' ? (
+                                            <input
+                                                type="number"
+                                                placeholder="Q"
+                                                value={puertosConfig[idx + 1].quantity ?? ''}
+                                                onChange={(e) => updatePuertoConfigField(idx + 1, 'quantity', e.target.value)}
+                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-[10px]"
+                                            />
+                                        ) : (
+                                            <span className="text-slate-350 select-none pr-2">—</span>
+                                        )}
+                                    </td>
+                                    
+                                    {/* Flete F en Destino - Input Fluido */}
+                                    <td className="border-r border-slate-200 p-0 text-right">
+                                        {puertosConfig[idx + 1].action === 'DESCARGAR' ? (
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                placeholder="F"
+                                                value={puertosConfig[idx + 1].freight_rate ?? ''}
+                                                onChange={(e) => updatePuertoConfigField(idx + 1, 'freight_rate', e.target.value)}
+                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-[10px]"
+                                            />
+                                        ) : (
+                                            <span className="text-slate-350 select-none pr-2">—</span>
+                                        )}
+                                    </td>
+                                    
+                                    {/* Costo Puerto del Tramo */}
+                                    <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
+                                        {trResult ? fmtCur(trResult.agency_costs_destination || 0) : '$0'}
+                                    </td>
+                                    
+                                    {/* Ingreso de Flete del Tramo */}
+                                    <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
+                                        {trResult ? fmtCur(trResult.net_income || 0) : '$0'}
+                                    </td>
+                                    
+                                    {/* Costo Bunker del Tramo (incluye puerto de carga origen en Leg 1, mar, y puerto destino) */}
+                                    <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
+                                        {trResult ? fmtCur(trResult.bunker_costs || 0) : '$0'}
+                                    </td>
+
+                                    {/* Bodega (T) que arrastra el Tramo */}
+                                    <td className="text-right pr-2 font-mono font-bold text-slate-600 bg-slate-50/50 select-none">
+                                        {fmtNum(getBodegaSaliente(idx + 1))}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+
+                        {/* Fila de Totales Generales (Estilo Excel) */}
+                        <tr className="bg-slate-100 border-t-2 border-double border-slate-400 h-6 select-none font-bold text-slate-700 text-[10px]">
+                            <td colSpan={3} className="border-r border-slate-200 text-left pl-3 font-sans text-[8.5px] uppercase tracking-wide">Total Estimado</td>
+                            <td className="border-r border-slate-200 text-right pr-2">
+                                {result ? fmtNum(result.tramos.reduce((s: any, t: any) => s + (t.distance || 0), 0)) : '0'}
+                            </td>
+                            <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
+                            <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
+                            <td className="border-r border-slate-200 text-right pr-2">
+                                {result ? fmtDays(result.consolidated.total_sea_days || 0) : '0.00'}
+                            </td>
+                            <td className="border-r border-slate-200 text-right pr-2">
+                                {result ? fmtDays(result.consolidated.total_port_days || 0) : '0.00'}
+                            </td>
+                            <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
+                            <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
+                            <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
+                            <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
+                            <td className={`border-r border-slate-200 text-right pr-2 font-mono font-bold text-[9px] ${isBalanced ? 'text-emerald-700 bg-emerald-50/20' : 'text-rose-600 bg-rose-50/60'}`} title={isBalanced ? "Carga y descarga balanceadas" : `Desbalance: Carga ${totalCargas.toLocaleString()} MT vs Descarga ${totalDescargas.toLocaleString()} MT`}>
+                                {isBalanced ? (
+                                    <span>{totalDescargas > 0 ? fmtNum(totalDescargas) : '—'}</span>
+                                ) : (
+                                    <span>⚠️ {fmtNum(totalDescargas)} / {fmtNum(totalCargas)}</span>
+                                )}
+                            </td>
+                            <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
+                            <td className="border-r border-slate-200 text-right pr-2">
+                                {result ? fmtCur(result.consolidated.total_port_costs || 0) : '$0'}
+                            </td>
+                            <td className="border-r border-slate-200 text-right pr-2">
+                                {result ? fmtCur(result.consolidated.total_freight_revenue || 0) : '$0'}
+                            </td>
+                            <td className="border-r border-slate-200 text-right pr-2">
+                                {result ? fmtCur(result.consolidated.total_bunker_costs || 0) : '$0'}
+                            </td>
+                            <td className="text-right pr-2 text-slate-400">—</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+
+            {/* 3. RESUMEN FINANCIERO Y OPERATIVO INFERIOR (3 COLUMNAS PARALELAS) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-shrink-0">
+                
+                {/* Bunker Expenses */}
+                <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 className="text-[9px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 flex items-center gap-1 font-sans">
+                            <span>⛽</span> Bunker Expenses (Combustible)
+                        </h3>
+                        <table className="w-full border-collapse text-[10px] font-mono">
+                            <thead>
+                                <tr className="bg-slate-50 border-b border-slate-200 font-sans text-[8.5px] text-slate-500 font-bold">
+                                    <th className="text-left py-0.5 pl-1.5">Fuel</th>
+                                    <th className="text-right py-0.5 pr-1.5">Tonnage (T)</th>
+                                    <th className="text-right py-0.5 pr-1.5">Expense (USD)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr className="border-b border-slate-100">
+                                    <td className="py-1 pl-1.5 text-slate-650 font-bold">IFO (Heavy Fuel)</td>
+                                    <td className="text-right py-1 pr-1.5 font-bold">
+                                        {result ? fmtNum(result.consolidated.bunker_ifo_tonnage || 0) : '0.0'}
+                                    </td>
+                                    <td className="text-right py-1 pr-1.5 font-bold">
+                                        {result ? fmtCur((result.consolidated.bunker_ifo_tonnage || 0) * bunkerPriceIfo) : '$0'}
+                                    </td>
+                                </tr>
+                                <tr className="border-b border-slate-100">
+                                    <td className="py-1 pl-1.5 text-slate-650 font-bold">MDO (Diesel)</td>
+                                    <td className="text-right py-1 pr-1.5 font-bold">
+                                        {result ? fmtNum(result.consolidated.bunker_mdo_tonnage || 0) : '0.0'}
+                                    </td>
+                                    <td className="text-right py-1 pr-1.5 font-bold">
+                                        {result ? fmtCur((result.consolidated.bunker_mdo_tonnage || 0) * bunkerPriceMdo) : '$0'}
+                                    </td>
+                                </tr>
+                                <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
+                                    <td className="py-1 pl-1.5 font-sans text-[8.5px] uppercase">Total Fuel</td>
+                                    <td className="text-right py-1 pr-1.5">
+                                        {result ? fmtNum((result.consolidated.bunker_ifo_tonnage || 0) + (result.consolidated.bunker_mdo_tonnage || 0)) : '0.0'}
+                                    </td>
+                                    <td className="text-right py-1 pr-1.5">
+                                        {result ? fmtCur(result.consolidated.bunker_costs || 0) : '$0'}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        {/* Desplegable interactivo para Auditoría de Bunker */}
+                        {result?.tramos && (
+                            <details className="mt-2 border border-slate-250 rounded bg-slate-50 p-1.5 cursor-pointer">
+                                <summary className="text-[8.5px] font-bold text-slate-500 hover:text-slate-800 outline-none select-none">
+                                    🔍 Rastro de Auditoría Bunker (Fórmula & Toneladas)
+                                </summary>
+                                <div className="mt-1.5 space-y-1.5 text-[8.5px] font-mono text-slate-700 bg-white border border-slate-100 rounded p-1.5 max-h-36 overflow-y-auto">
+                                    {result.tramos.map((tr: any, i: number) => (
+                                        <div key={i} className="border-b border-slate-100 pb-1.5 last:border-0 last:pb-0">
+                                            <div className="font-sans font-bold text-slate-800 text-[9px] mb-0.5">
+                                                Leg {i + 1} ({tr.origin_port_id} → {tr.destination_port_id}) — {tr.type}
+                                            </div>
+                                            {tr.type === 'LADEN' ? (
+                                                <div className="space-y-0.5 pl-1.5 border-l-2 border-orange-300">
+                                                    <div>• Días: Mar {fmtNum(tr.sea_days)} | Pto {fmtNum(tr.port_days)}</div>
+                                                    <div>• IFO: {fmtNum(tr.bunker_ifo)} t</div>
+                                                    <div className="text-[7.5px] text-slate-450 leading-none">
+                                                        Fórm: ({fmtNum(tr.sea_days)}d * {vesselParams.consumption_sea_ifo}t) + (d_puerto_norm * {vesselParams.consumption_idle_ifo}t) + (d_carga * {vesselParams.consumption_load_ifo}t) + (d_desc * {vesselParams.consumption_disch_ifo}t)
+                                                    </div>
+                                                    <div className="mt-0.5">• MDO: {fmtNum(tr.bunker_mdo)} t</div>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-0.5 pl-1.5 border-l-2 border-blue-300">
+                                                    <div>• Días: Mar {fmtNum(tr.sea_days)} | Pto 0.0</div>
+                                                    <div>• IFO: {fmtNum(tr.bunker_ifo)} t (Sea: {fmtNum(tr.sea_days)}d * {vesselParams.consumption_sea_ifo}t)</div>
+                                                    <div>• MDO: {fmtNum(tr.bunker_mdo)} t (Sea: {fmtNum(tr.sea_days)}d * {vesselParams.consumption_sea_mdo}t)</div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </details>
+                        )}
+                    </div>
+                </div>
+
+                {/* Port Costs */}
+                <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 className="text-[9px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 flex items-center gap-1 font-sans">
+                            <span>⚓</span> Port Costs (Gastos de Puerto)
+                        </h3>
+                        <table className="w-full border-collapse text-[10px] font-mono">
+                            <thead>
+                                <tr className="bg-slate-50 border-b border-slate-200 font-sans text-[8.5px] text-slate-500 font-bold">
+                                    <th className="text-left py-0.5 pl-1.5">Expense Concept</th>
+                                    <th className="text-right py-0.5 pr-1.5">Costo (USD)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(() => {
+                                    let totalLoadingMaster = 0;
+                                    let totalPortCosts = result?.consolidated?.total_port_costs || 0;
+                                    
+                                    if (result?.tramos) {
+                                        result.tramos.forEach((tr: any) => {
+                                            const oLM = tr.agency_costs_origin_details?.breakdown?.loading_master || 0;
+                                            const dLM = tr.agency_costs_destination_details?.breakdown?.loading_master || 0;
+                                            totalLoadingMaster += (oLM + dLM);
+                                        });
+                                    }
+                                    
+                                    const netPortCosts = Math.max(0, totalPortCosts - totalLoadingMaster);
+                                    
+                                    return (
+                                        <>
+                                            <tr className="border-b border-slate-100">
+                                                <td className="py-1.5 pl-1.5 text-slate-650 font-bold">Port Costs Matrix & Agencias</td>
+                                                <td className="text-right py-1.5 pr-1.5 font-bold">
+                                                    {result ? fmtCur(netPortCosts) : '$0'}
+                                                </td>
+                                            </tr>
+                                            {totalLoadingMaster > 0 && (
+                                                <tr className="border-b border-slate-100 bg-amber-50/30 text-amber-900">
+                                                    <td className="py-1.5 pl-1.5 font-bold">Loading Master (Mejillones)</td>
+                                                    <td className="text-right py-1.5 pr-1.5 font-bold">
+                                                        {fmtCur(totalLoadingMaster)}
+                                                    </td>
+                                                </tr>
+                                            )}
+                                            <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
+                                                <td className="py-1.5 pl-1.5 font-sans text-[8.5px] uppercase">Total Port Costs</td>
+                                                <td className="text-right py-1.5 pr-1.5">
+                                                    {result ? fmtCur(totalPortCosts) : '$0'}
+                                                </td>
+                                            </tr>
+                                        </>
+                                    );
+                                })()}
+                            </tbody>
+                        </table>
+
+                        {/* Desplegable interactivo para Auditoría de Port Costs */}
+                        {result?.tramos && (
+                            <details className="mt-2 border border-slate-250 rounded bg-slate-50 p-1.5 cursor-pointer">
+                                <summary className="text-[8.5px] font-bold text-slate-500 hover:text-slate-800 outline-none select-none">
+                                    🔍 Rastro de Auditoría Port Costs (Matriz / Fallback)
+                                </summary>
+                                <div className="mt-1.5 space-y-1.5 text-[8.5px] font-mono text-slate-700 bg-white border border-slate-100 rounded p-1.5 max-h-36 overflow-y-auto">
+                                    {result.tramos.map((tr: any, i: number) => {
+                                        const origDet = tr.agency_costs_origin_details;
+                                        const destDet = tr.agency_costs_destination_details;
+                                        return (
+                                            <div key={i} className="border-b border-slate-100 pb-1.5 last:border-0 last:pb-0">
+                                                <div className="font-sans font-bold text-slate-800 text-[9px] mb-0.5">
+                                                    Leg {i + 1} ({tr.origin_port_id} → {tr.destination_port_id})
+                                                </div>
+                                                <div className="space-y-1.5 pl-1.5">
+                                                    {/* Origen */}
+                                                    {origDet && origDet.total_cost > 0 && (
+                                                        <div className="border-l-2 border-indigo-300 pl-1">
+                                                            <span className="font-bold text-slate-650">Origen {tr.origin_port_id}:</span> {fmtCur(origDet.total_cost)}
+                                                            {origDet.breakdown && Object.keys(origDet.breakdown).length > 0 ? (
+                                                                <div className="grid grid-cols-2 gap-x-2 pl-1.5 text-[7.5px] text-slate-450">
+                                                                    {Object.entries(origDet.breakdown).map(([concept, cost]: any) => (
+                                                                        <div key={concept}>{concept}: {fmtCur(cost)}</div>
+                                                                    ))}
+                                                                </div>
+                                                            ) : (
+                                                                <div className="pl-1.5 text-[7.5px] text-slate-400 italic">• Fallback Plano (Agency Matrix)</div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    {/* Destino */}
+                                                    {destDet && destDet.total_cost > 0 && (
+                                                        <div className="border-l-2 border-teal-300 pl-1">
+                                                            <span className="font-bold text-slate-650">Destino {tr.destination_port_id}:</span> {fmtCur(destDet.total_cost)}
+                                                            {destDet.breakdown && Object.keys(destDet.breakdown).length > 0 ? (
+                                                                <div className="grid grid-cols-2 gap-x-2 pl-1.5 text-[7.5px] text-slate-450">
+                                                                    {Object.entries(destDet.breakdown).map(([concept, cost]: any) => (
+                                                                        <div key={concept}>{concept}: {fmtCur(cost)}</div>
+                                                                    ))}
+                                                                </div>
+                                                            ) : (
+                                                                <div className="pl-1.5 text-[7.5px] text-slate-400 italic">• Fallback Plano (Agency Matrix)</div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    {(!origDet || origDet.total_cost === 0) && (!destDet || destDet.total_cost === 0) && (
+                                                        <div className="text-slate-400 italic text-[7.5px] pl-1">• Sin cargos (NONE o visitado)</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </details>
+                        )}
+                    </div>
+                </div>
+
+                {/* Financial Result (Voyage Result) */}
+                <div className="bg-emerald-50 border-2 border-emerald-500/30 rounded p-2 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 className="text-[9.5px] font-black text-emerald-800 uppercase tracking-wide border-b border-emerald-200 pb-1 mb-1.5 flex items-center gap-1 font-sans">
+                            <span>💹</span> Financial Voyage Result (P/L)
+                        </h3>
+                        <table className="w-full border-collapse text-[10px] font-mono">
+                            <tbody>
+                                {/* P/L — MÉTRICA PRINCIPAL */}
+                                <tr className="border-b-2 border-emerald-300">
+                                    <td className="py-1 pl-1.5 text-emerald-900 font-sans text-[9px] font-black uppercase tracking-wide">P/L (vs TCE Req)</td>
+                                    <td className={`text-right py-1 pr-1.5 font-black text-xl ${result ? ((result.consolidated.pnl_net_utility - (result.consolidated.tce_required * result.consolidated.total_days)) >= 0 ? 'text-emerald-700' : 'text-rose-600') : 'text-slate-400'}`}>
+                                        {result ? fmtCur(result.consolidated.pnl_net_utility - (result.consolidated.tce_required * result.consolidated.total_days)) : '$0'}
+                                    </td>
+                                </tr>
+                                <tr className="border-b border-emerald-100/40">
+                                    <td className="py-0.5 pl-1.5 text-slate-600">Revenue (Fletes)</td>
+                                    <td className="text-right py-0.5 pr-1.5 font-bold text-slate-800">
+                                        {result ? fmtCur(result.consolidated.total_freight_revenue || 0) : '$0'}
+                                    </td>
+                                </tr>
+                                <tr className="border-b border-emerald-100/40">
+                                    <td className="py-0.5 pl-1.5 text-slate-600">Expenses (Bunker + Puertos)</td>
+                                    <td className="text-right py-0.5 pr-1.5 font-bold text-slate-800">
+                                        {result ? fmtCur((result.consolidated.total_bunker_costs || 0) + (result.consolidated.total_port_costs || 0)) : '$0'}
+                                    </td>
+                                </tr>
+                                <tr className="border-b border-emerald-100/40">
+                                    <td className="py-0.5 pl-1.5 text-slate-500">Voyage Result (Net Profit)</td>
+                                    <td className={`text-right py-0.5 pr-1.5 font-bold text-sm ${result?.consolidated.pnl_net_utility >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                                        {result ? fmtCur(result.consolidated.pnl_net_utility || 0) : '$0'}
+                                    </td>
+                                </tr>
+                                <tr className="border-b border-emerald-100/40">
+                                    <td className="py-0.5 pl-1.5 text-slate-600">Días Totales del Viaje</td>
+                                    <td className="text-right py-0.5 pr-1.5 font-bold text-slate-800">
+                                        {result ? fmtDays(result.consolidated.total_days || 0) : '0.00'} d
+                                    </td>
+                                </tr>
+                                <tr className="font-bold border-t border-emerald-250">
+                                    <td className="py-0.5 pl-1.5 text-slate-600 font-sans text-[8.5px] uppercase">TCE Realizado</td>
+                                    <td className={`text-right py-0.5 pr-1.5 font-black text-sm ${result?.consolidated.tce_real >= result?.consolidated.tce_required ? 'text-emerald-750' : 'text-yellow-600'}`}>
+                                        {result ? `${fmtCur(result.consolidated.tce_real || 0)}/d` : '$0/d'}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            {/* MODALES DE PERSISTENCIA */}
+            {showSaveModal && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white p-5 rounded-xl w-80 shadow-2xl border border-slate-200">
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-2 mb-3">
+                            <h3 className="text-sm font-bold text-slate-900">Grabar Ruta Multicotizador</h3>
+                            <button onClick={() => setShowSaveModal(false)} className="text-slate-400 hover:text-slate-650"><X size={16} /></button>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Nombre de la ruta (Ej: Callao-Valparaiso)"
+                            value={routeName}
+                            onChange={(e) => setRouteName(e.target.value)}
+                            className="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs text-slate-700 mb-4 focus:outline-none focus:border-indigo-500 shadow-sm"
+                        />
+                        <div className="flex justify-end gap-2 text-xs">
+                            <button
+                                onClick={() => setShowSaveModal(false)}
+                                className="h-7 font-semibold rounded px-3 bg-white text-slate-700 border border-slate-300 shadow-sm hover:bg-slate-50 cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleSaveRoute}
+                                disabled={isSaving}
+                                className="h-7 font-semibold rounded px-3 bg-primary text-primary-foreground shadow-sm hover:bg-primary/95 cursor-pointer disabled:opacity-50"
+                            >
+                                {isSaving ? "Grabando..." : "Confirmar"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showLoadModal && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white p-5 rounded-xl w-96 shadow-2xl border border-slate-200">
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-2 mb-3">
+                            <h3 className="text-sm font-bold text-slate-900">Cargar Ruta Multicotizador</h3>
+                            <button onClick={() => setShowLoadModal(false)} className="text-slate-400 hover:text-slate-650"><X size={16} /></button>
+                        </div>
+                        <div className="max-h-60 overflow-y-auto flex flex-col gap-1.5 mb-4">
+                            {isLoadingRoutes ? (
+                                <div className="text-xs text-slate-500 py-4 text-center">Listando rutas grabadas...</div>
+                            ) : savedRoutes.length === 0 ? (
+                                <div className="text-xs text-slate-400 py-4 text-center">No hay rutas grabadas para el Multicotizador</div>
+                            ) : (
+                                savedRoutes.map(route => (
+                                    <button
+                                        key={route.spot_id}
+                                        onClick={() => handleLoadRoute(route)}
+                                        className="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 hover:border-indigo-500 transition-all flex justify-between items-center group cursor-pointer"
+                                    >
+                                        <div>
+                                            <span className="text-xs font-bold text-slate-700 block group-hover:text-indigo-650">{route.name}</span>
+                                            <span className="text-[9px] text-slate-400">{route.description || 'Sin descripción'}</span>
+                                        </div>
+                                        <span className="text-[9px] font-mono text-slate-400">{route.created_at ? new Date(route.created_at).toLocaleDateString() : ''}</span>
+                                    </button>
+                                ))
+                            )}
+                        </div>
+                        <div className="flex justify-end text-xs">
+                            <button
+                                onClick={() => setShowLoadModal(false)}
+                                className="h-7 font-semibold rounded px-3 bg-white text-slate-700 border border-slate-300 shadow-sm hover:bg-slate-50 cursor-pointer"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};

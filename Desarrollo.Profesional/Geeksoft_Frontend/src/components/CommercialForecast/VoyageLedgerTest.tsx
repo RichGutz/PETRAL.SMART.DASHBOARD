@@ -178,15 +178,17 @@ export const VoyageLedgerTest: React.FC = () => {
         };
 
         const auditRows = [
-            { metric: "1. Tasa Carga (MT/hr)",  key: "1. Tasa Carga (act_load)",       gk: scenarioResult.actual_load_rate,      ptr: scenarioPetral.act_load,  isCurr: false, db: "contracts · vessels · ports", ui: "Contratos / Flota / Puertos" },
-            { metric: "2. Tasa Desc. (MT/hr)", key: "2. Tasa Descarga (act_disch)",  gk: scenarioResult.actual_discharge_rate, ptr: scenarioPetral.act_disch, isCurr: false, db: "contracts · vessels · ports", ui: "Contratos / Flota / Puertos" },
+            { metric: "1. Ritmo Carga (MT/hr)",  key: "1. Ritmo Carga (act_load)",       gk: scenarioResult.actual_load_rate,      ptr: scenarioPetral.act_load,  isCurr: false, db: "contracts · vessels · ports", ui: "Contratos / Flota / Puertos" },
+            { metric: "2. Ritmo Desc. (MT/hr)", key: "2. Ritmo Descarga (act_disch)",  gk: scenarioResult.actual_discharge_rate, ptr: scenarioPetral.act_disch, isCurr: false, db: "contracts · vessels · ports", ui: "Contratos / Flota / Puertos" },
             { metric: "3. Días de Puerto",       key: "3. Días de Puerto (port_days)",  gk: scenarioResult.port_days_unit,          ptr: scenarioPetral.port_days, isCurr: false, db: "ports · Calculado",  ui: "Motor" },
             { metric: "4. Días de Mar",          key: "4. Días de Mar (sea_days)",      gk: scenarioResult.sea_days_unit,           ptr: scenarioPetral.sea_days,  isCurr: false, db: "routes · vessels",              ui: "Maestro Rutas / Flota" },
-            { metric: "5. Costo Bunker",         key: "5. Costo Bunker (bunker)",       gk: scenarioResult.total_bunker_costs_unit, ptr: scenarioPetral.bunker_costs,    isCurr: true,  db: "vessels · bunker_prices",       ui: "Maestro Flota / Bunker" },
-            { metric: "6. Resultado Viaje",      key: "7. Resultado Viaje (voy_res)",   gk: scenarioResult.voyage_result,           ptr: scenarioPetral.voyage_result,   isCurr: true,  db: "contract_tariffs · agency_matrix", ui: "Tarifas / Costos Portuarios" },
-            { metric: "7. Duración Total",       key: "8. Duración Total (tot_dur)",    gk: scenarioResult.total_duration_unit,     ptr: scenarioPetral.total_duration,   isCurr: false, db: "Calculado",                     ui: "Motor" },
-            { metric: "8. TCE Diario",           key: "9. TCE Diario (tce_real)",       gk: scenarioResult.tce_real_unit,           ptr: scenarioPetral.tce_real,  isCurr: true,  db: "Calculado",                     ui: "Motor" },
-            { metric: "9. Utilidad Nom.",       key: "10. Utilidad Nom. (pl_vs_req)",  gk: scenarioResult.pl_vs_required_unit,     ptr: scenarioPetral.pl_vs_req, isCurr: true,  db: "vessels",                       ui: "Maestro Flota" },
+            { metric: "5. Días de Viaje",        key: "5. Días de Viaje (tot_dur)",     gk: scenarioResult.total_duration_unit,     ptr: scenarioPetral.total_duration,   isCurr: false, db: "Calculado",                     ui: "Motor" },
+            { metric: "6. Income",               key: "6. Income (income)",             gk: scenarioResult.net_income,              ptr: scenarioPetral.net_income,isCurr: true,  db: "contracts · contract_tariffs",  ui: "Contratos / Tarifario" },
+            { metric: "7. Costo Bunker",         key: "7. Costo Bunker (bunker)",       gk: scenarioResult.total_bunker_costs_unit, ptr: scenarioPetral.bunker_costs,    isCurr: true,  db: "vessels · bunker_prices",       ui: "Maestro Flota / Bunker" },
+            { metric: "8. Port Costs",           key: "8. Port Costs (port_costs)",     gk: scenarioResult.total_port_costs,        ptr: scenarioPetral.total_port_costs, isCurr: true,  db: "agency_matrix",                 ui: "Costos Portuarios" },
+            { metric: "9. Voyage Result",        key: "9. Voyage Result (voy_res)",     gk: scenarioResult.voyage_result,           ptr: scenarioPetral.voyage_result,   isCurr: true,  db: "contract_tariffs · agency_matrix", ui: "Tarifas / Costos Portuarios" },
+            { metric: "10. TCE Diario",          key: "10. TCE Diario (tce_real)",      gk: scenarioResult.tce_real_unit,           ptr: scenarioPetral.tce_real,  isCurr: true,  db: "Calculado",                     ui: "Motor" },
+            { metric: "11. P/L",                 key: "11. P/L (pl_vs_req)",            gk: scenarioResult.pl_vs_required_unit,     ptr: scenarioPetral.pl_vs_req, isCurr: true,  db: "vessels",                       ui: "Maestro Flota" },
         ];
 
         return (
@@ -211,6 +213,12 @@ export const VoyageLedgerTest: React.FC = () => {
                             <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.vessels.text}`}>Barco</span><span className="font-mono text-slate-800 font-bold text-xs">{vesselName.replace('_', ' ')}</span></div>
                             <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.vessels.text}`}>Velocidad (speed)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(scenarioResult.raw_inputs?.vessel_speed || 0)} kn</span></div>
                             <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.vessels.text}`}>TCE Requerido (tce_req)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.tce_required || 0)}/d</span></div>
+                            <div className={`mt-0.5 pt-1.5 border-t border-dashed ${COLOR_SCHEME.vessels.border} grid grid-cols-2 gap-x-4 gap-y-1`}>
+                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>DWT</span><span className="font-mono text-slate-700 font-bold text-[10px]">{formatNumber(scenarioResult.raw_inputs?.dwt || 0)} t</span></div>
+                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>DWCC</span><span className="font-mono text-slate-700 font-bold text-[10px]">{formatNumber(scenarioResult.raw_inputs?.dwcc || 0)} t</span></div>
+                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>Length (L)</span><span className="font-mono text-slate-700 font-bold text-[10px]">{scenarioResult.raw_inputs?.length || 0} m</span></div>
+                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>Beam (B)</span><span className="font-mono text-slate-700 font-bold text-[10px]">{scenarioResult.raw_inputs?.beam || 0} m</span></div>
+                            </div>
                             <div className={`mt-1 pt-2 border-t ${COLOR_SCHEME.vessels.border} grid grid-cols-2 gap-x-4 gap-y-1`}>
                                 <div className="flex justify-between items-baseline"><span className={`font-bold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>IFO Mar</span><span className="font-mono text-slate-700 font-semibold text-[11px]">{formatNumber(scenarioResult.raw_inputs?.bunker_consumption_sea_ifo || 0)}</span></div>
                                 <div className="flex justify-between items-baseline"><span className={`font-bold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>MDO Mar</span><span className="font-mono text-slate-700 font-semibold text-[11px]">{formatNumber(scenarioResult.raw_inputs?.bunker_consumption_sea_mdo || 0)}</span></div>
@@ -245,8 +253,12 @@ export const VoyageLedgerTest: React.FC = () => {
                             <div className="p-3 flex flex-col gap-1.5 flex-1 justify-between">
                                 <div className={`text-[10px] italic leading-tight mb-1 ${COLOR_SCHEME.agency_matrix.text}`}>Llaves: Cliente + Puerto + Op + Barco</div>
                                 <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Cliente</span><span className="font-mono text-slate-800 font-bold text-xs">SPCC</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Port Cost Origen (port_costs)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.agency_costs_origin || 0)}</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Port Cost Destino (port_costs)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.agency_costs_destination || 0)}</span></div>
+                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Port Cost Origen (port_costs)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(Object.values(scenarioResult.port_costs_breakdown?.origin || {}).reduce((s: any, v: any) => s + (v || 0), 0))}</span></div>
+                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Port Cost Destino (port_costs)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(Object.values(scenarioResult.port_costs_breakdown?.destination || {}).reduce((s: any, v: any) => s + (v || 0), 0))}</span></div>
+                                <div className="flex justify-between items-baseline border-t border-dashed border-rose-200 pt-1 mt-0.5">
+                                    <span className="font-semibold text-[10px] uppercase text-rose-600">↳ Loading Master</span>
+                                    <span className="font-mono text-rose-700 font-bold text-xs">{formatCurrency(scenarioResult.port_costs_breakdown?.destination?.loading_master || 0)}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -294,8 +306,8 @@ export const VoyageLedgerTest: React.FC = () => {
                                                 </div>
                                             </div>
                                             <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Flete Base (F)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.freight_rate || 0)}/MT</span></div>
-                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Tasa Carg Ctto (c_load)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_load_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_load_rate) + " T/h" : "TBD"}</span></div>
-                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Tasa Desc Ctto (c_disch)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_discharge_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_discharge_rate) + " T/h" : "TBD"}</span></div>
+                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Carg Ctto (c_load)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_load_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_load_rate) + " T/h" : "TBD"}</span></div>
+                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Desc Ctto (c_disch)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_discharge_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_discharge_rate) + " T/h" : "TBD"}</span></div>
                                         </div>
                                         {/* Derecha: Tabla miniatura */}
                                         <div className="border-l border-emerald-100 pl-3 flex flex-col justify-between">
@@ -329,8 +341,8 @@ export const VoyageLedgerTest: React.FC = () => {
                                     <div className="flex flex-col gap-1.5">
                                         <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Cantidad (Q)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(currentQty)} MT</span></div>
                                         <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Flete Base (F)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.freight_rate || 0)}/MT</span></div>
-                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Tasa Carg Ctto (c_load)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_load_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_load_rate) + " T/h" : "TBD"}</span></div>
-                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Tasa Desc Ctto (c_disch)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_discharge_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_discharge_rate) + " T/h" : "TBD"}</span></div>
+                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Carg Ctto (c_load)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_load_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_load_rate) + " T/h" : "TBD"}</span></div>
+                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Desc Ctto (c_disch)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_discharge_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_discharge_rate) + " T/h" : "TBD"}</span></div>
                                     </div>
                                 )}
                             </div>
@@ -563,25 +575,27 @@ export const VoyageLedgerTest: React.FC = () => {
                                 return isNaN(num) ? '—' : new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(num);
                             };
                             const auditRowsPrint = [
-                                { metric: '1. Tasa Carga (MT/hr)',   key: '1. Tasa Carga (act_load)',      gk: runResult.actual_load_rate,      isCurr: false },
-                                { metric: '2. Tasa Desc. (MT/hr)',   key: '2. Tasa Descarga (act_disch)', gk: runResult.actual_discharge_rate, isCurr: false },
-                                { metric: '3. Días de Puerto',       key: '3. Días de Puerto (port_days)',gk: runResult.port_days_unit,          isCurr: false },
-                                { metric: '4. Días de Mar',          key: '4. Días de Mar (sea_days)',    gk: runResult.sea_days_unit,           isCurr: false },
-                                { metric: '5. Costo Bunker',         key: '5. Costo Bunker (bunker)',     gk: runResult.total_bunker_costs_unit, isCurr: true  },
-                                { metric: '6. Resultado Viaje',      key: '7. Resultado Viaje (voy_res)', gk: runResult.voyage_result,           isCurr: true  },
-                                { metric: '7. Duración Total',       key: '8. Duración Total (tot_dur)',  gk: runResult.total_duration_unit,     isCurr: false },
-                                { metric: '8. TCE Diario',           key: '9. TCE Diario (tce_real)',     gk: runResult.tce_real_unit,           isCurr: true  },
-                                { metric: '9. Utilidad Nom.',        key: '10. Utilidad Nom. (pl_vs_req)',gk: runResult.pl_vs_required_unit,     isCurr: true  },
+                                { metric: '1. Ritmo Carga (MT/hr)',  key: '1. Ritmo Carga (act_load)',      gk: runResult.actual_load_rate,      isCurr: false },
+                                { metric: '2. Ritmo Desc. (MT/hr)',  key: '2. Ritmo Descarga (act_disch)', gk: runResult.actual_discharge_rate, isCurr: false },
+                                { metric: '3. Días de Puerto',       key: '3. Días de Puerto (port_days)', gk: runResult.port_days_unit,          isCurr: false },
+                                { metric: '4. Días de Mar',          key: '4. Días de Mar (sea_days)',     gk: runResult.sea_days_unit,           isCurr: false },
+                                { metric: '5. Días de Viaje',        key: '5. Días de Viaje (tot_dur)',     gk: runResult.total_duration_unit,     isCurr: false },
+                                { metric: '6. Income',               key: '6. Income (income)',             gk: runResult.net_income,              isCurr: true  },
+                                { metric: '7. Costo Bunker',         key: '7. Costo Bunker (bunker)',       gk: runResult.total_bunker_costs_unit, isCurr: true  },
+                                { metric: '8. Port Costs',           key: '8. Port Costs (port_costs)',     gk: runResult.total_port_costs,        isCurr: true  },
+                                { metric: '9. Voyage Result',        key: '9. Voyage Result (voy_res)',     gk: runResult.voyage_result,           isCurr: true  },
+                                { metric: '10. TCE Diario',          key: '10. TCE Diario (tce_real)',      gk: runResult.tce_real_unit,           isCurr: true  },
+                                { metric: '11. P/L',                 key: '11. P/L (pl_vs_req)',            gk: runResult.pl_vs_required_unit,     isCurr: true  },
                             ];
                             const tableRows = auditRowsPrint.map(row => {
                                 const ao = audit_t[row.key] || { formula: 'N/A', values: 'N/A' };
                                 return `<tr>
-                                    <td style="padding:6px 8px;font-weight:bold;border-bottom:1px solid #e2e8f0">${row.metric}</td>
-                                    <td style="padding:6px 8px;font-family:monospace;font-size:11px;color:#64748b;background:#f8fafc;border-bottom:1px solid #e2e8f0">${ao.formula || 'N/A'}</td>
-                                    <td style="padding:6px 8px;font-family:monospace;font-size:11px;font-weight:600;background:#f8fafc;border-bottom:1px solid #e2e8f0">${ao.values || 'N/A'}</td>
-                                    <td style="padding:6px 8px;font-family:monospace;font-weight:600;color:#0ea5e9;text-align:center;border-bottom:1px solid #e2e8f0">${row.isCurr ? fmtCur(row.gk||0) : fmtNum(row.gk||0)}</td>
-                                    <td style="padding:6px 8px;text-align:center;border-bottom:1px solid #e2e8f0"><span style="display:inline-block;width:80px;border-bottom:1px dashed #94a3b8">&nbsp;</span></td>
-                                    <td style="padding:6px 8px;text-align:center;border-bottom:1px solid #e2e8f0"><span style="display:inline-block;width:60px;border-bottom:1px dashed #94a3b8">&nbsp;</span></td>
+                                    <td style="padding:3.5px 5px;font-weight:bold;border-bottom:1px solid #e2e8f0">${row.metric}</td>
+                                    <td style="padding:3.5px 5px;font-family:monospace;font-size:11px;color:#64748b;background:#f8fafc;border-bottom:1px solid #e2e8f0">${ao.formula || 'N/A'}</td>
+                                    <td style="padding:3.5px 5px;font-family:monospace;font-size:11px;font-weight:600;background:#f8fafc;border-bottom:1px solid #e2e8f0">${ao.values || 'N/A'}</td>
+                                    <td style="padding:3.5px 5px;font-family:monospace;font-weight:600;color:#0ea5e9;text-align:center;border-bottom:1px solid #e2e8f0">${row.isCurr ? fmtCur(row.gk||0) : fmtNum(row.gk||0)}</td>
+                                    <td style="padding:3.5px 5px;text-align:center;border-bottom:1px solid #e2e8f0"><span style="display:inline-block;width:80px;border-bottom:1px dashed #94a3b8">&nbsp;</span></td>
+                                    <td style="padding:3.5px 5px;text-align:center;border-bottom:1px solid #e2e8f0"><span style="display:inline-block;width:60px;border-bottom:1px dashed #94a3b8">&nbsp;</span></td>
                                 </tr>`;
                             }).join('');
                             const [v, o, d] = selectedCase.split('-');
@@ -595,17 +609,19 @@ export const VoyageLedgerTest: React.FC = () => {
                                     <div class="card-row"><span>Barco</span><strong>${v.replace('_',' ')}</strong></div>
                                     <div class="card-row"><span>Velocidad (speed)</span><strong>${fmtNum(ri.vessel_speed||0)} kn</strong></div>
                                     <div class="card-row"><span>TCE Requerido (tce_req)</span><strong>${fmtCur(ri.tce_required||0)}/d</strong></div>
+                                    <div class="card-row"><span>DWT / DWCC</span><strong>${fmtNum(ri.dwt||0)} / ${fmtNum(ri.dwcc||0)} t</strong></div>
+                                    <div class="card-row"><span>Length / Beam</span><strong>${ri.length||0} / ${ri.beam||0} m</strong></div>
                                 </div>
                                 <div class="card card-green">
                                     <div class="card-header">Reglas Comerciales <span class="card-badge">contracts</span></div>
-                                    <div class="card-row"><span>Cantidad (Q)</span><strong>${fmtNum(ri.quantity||0)} MT</strong></div>
+                                    <div class="card-row"><span>Cantidad (Q)</span><strong>${fmtNum(currentQty)} MT</strong></div>
                                     <div class="card-row"><span>Flete Base (F)</span><strong>${fmtCur(ri.freight_rate||0)}/MT</strong></div>
-                                    <div class="card-row"><span>Tasa Carga Ctto (c_load)</span><strong>${ri.contract_agreed_load_rate ? fmtNum(ri.contract_agreed_load_rate)+' T/h' : 'TBD'}</strong></div>
-                                    <div class="card-row"><span>Tasa Desc. Ctto (c_disch)</span><strong>${ri.contract_agreed_discharge_rate ? fmtNum(ri.contract_agreed_discharge_rate)+' T/h' : 'TBD'}</strong></div>
+                                    <div class="card-row"><span>Ritmo Carga Ctto (c_load)</span><strong>${ri.contract_agreed_load_rate ? fmtNum(ri.contract_agreed_load_rate)+' T/h' : 'TBD'}</strong></div>
+                                    <div class="card-row"><span>Ritmo Desc. Ctto (c_disch)</span><strong>${ri.contract_agreed_discharge_rate ? fmtNum(ri.contract_agreed_discharge_rate)+' T/h' : 'TBD'}</strong></div>
                                 </div>
                                 <div class="card card-purple">
                                     <div class="card-header">Maestro Rutas <span class="card-badge">routes</span></div>
-                                    <div class="card-row"><span>Origen → Destino</span><strong>${o} → ${d}</strong></div>
+                                    <div class="card-row"><span>Origen &rarr; Destino</span><strong>${o} &rarr; ${d}</strong></div>
                                     <div class="card-row"><span>Distancia (dist)</span><strong>${fmtNum(ri.route_distance||0)} NM</strong></div>
                                     <div class="card-row"><span>W Fct (w_laden / w_ballast)</span><strong>${((ri.weather_factor_laden||0)*100)}% / ${((ri.weather_factor_ballast||0)*100)}%</strong></div>
                                 </div>
@@ -617,35 +633,35 @@ export const VoyageLedgerTest: React.FC = () => {
                                     <div class="card-row"><span>Posic. Descarga (pos_descarga)</span><strong>${fmtNum(ri.positioning_descarga_hrs||0)} H</strong></div>
                                 </div>
                                 <div class="card card-rose">
-                                    <div class="card-header">Costos Agencia <span class="card-badge">agency_matrix</span></div>
-                                    <div class="card-row"><span>Port Cost Origen</span><strong>${fmtCur(ri.agency_costs_origin||0)}</strong></div>
-                                    <div class="card-row"><span>Port Cost Destino</span><strong>${fmtCur(ri.agency_costs_destination||0)}</strong></div>
+                                    <div class="card-header">Costos de Puerto <span class="card-badge">port_costs</span></div>
+                                    <div class="card-row"><span>Port Cost Origen</span><strong>${fmtCur(Object.values(runResult.port_costs_breakdown?.origin || {}).reduce((s: any, v: any) => s + (v || 0), 0))}</strong></div>
+                                    <div class="card-row"><span>Port Cost Destino</span><strong>${fmtCur(Object.values(runResult.port_costs_breakdown?.destination || {}).reduce((s: any, v: any) => s + (v || 0), 0))}</strong></div>
+                                    ${(runResult.port_costs_breakdown?.destination?.loading_master || 0) > 0 ? `<div class="card-row" style="color:#e11d48;border-top:1px dashed #fecdd3"><span>&#8627; Loading Master</span><strong>${fmtCur(runResult.port_costs_breakdown.destination.loading_master)}</strong></div>` : `<div class="card-row" style="color:#9f1239;border-top:1px dashed #fecdd3"><span>&#8627; Loading Master</span><strong>${fmtCur(0)}</strong></div>`}
                                 </div>
                                 <div class="card card-amber">
                                     <div class="card-header">Bunker <span class="card-badge">bunker_prices</span></div>
                                     <div class="card-row"><span>Fecha Cotización</span><strong>${ri.bunker_price_date||'N/A'}</strong></div>
-                                    <div class="card-row"><span>IFO Consumo</span><strong>${fmtNum(runResult.bunker_ifo_tonnage||0)} T</strong></div>
-                                    <div class="card-row"><span>MDO Consumo</span><strong>${fmtNum(runResult.bunker_mdo_tonnage||0)} T</strong></div>
                                     <div class="card-row"><span>Precio IFO (p_ifo)</span><strong>${fmtCur(ri.bunker_price_ifo||0)}/T</strong></div>
                                     <div class="card-row"><span>Precio MDO (p_mdo)</span><strong>${fmtCur(ri.bunker_price_mdo||0)}/T</strong></div>
+                                </div>/strong></div>
                                 </div>
                             </div>`;
                             const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
                             <title>Acta - ${v} ${o}-${d}</title>
                             <style>
-                                @page { size: A4 landscape; margin: 10mm 12mm; }
-                                body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; color: #1e293b; margin: 0; }
-                                h1 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; font-weight: 700; }
-                                h2 { font-size: 11px; color: #475569; margin: 0; font-weight: 500; }
-                                table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-                                thead th { background: #f1f5f9; padding: 4px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 2px solid #334155; text-align: left; }
-                                .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 5px; margin-bottom: 8px; }
-                                .badge { font-size: 9px; background: #1e293b; color: white; padding: 2px 7px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
-                                .cards-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
-                                .card { border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; }
-                                .card-header { padding: 5px 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; display: flex; justify-content: space-between; align-items: center; }
-                                .card-badge { font-size: 8px; font-weight: 700; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; }
-                                .card-row { display: flex; justify-content: space-between; padding: 3px 8px; font-size: 10px; border-top: 1px solid rgba(0,0,0,0.05); }
+                                @page { size: A4 landscape; margin: 4mm 6mm; }
+                                body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10.5px; color: #1e293b; margin: 0; }
+                                h1 { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.4px; margin: 0; font-weight: 700; }
+                                h2 { font-size: 10.5px; color: #475569; margin: 0; font-weight: 500; }
+                                table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+                                thead th { background: #f1f5f9; padding: 3px 5px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #334155; text-align: left; }
+                                .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 3px; margin-bottom: 4px; }
+                                .badge { font-size: 8.5px; background: #1e293b; color: white; padding: 1.5px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+                                .cards-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr; gap: 4px; margin-bottom: 4px; }
+                                .card { border-radius: 4px; overflow: hidden; border: 1px solid #e2e8f0; }
+                                .card-header { padding: 3.5px 6px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; display: flex; justify-content: space-between; align-items: center; }
+                                .card-badge { font-size: 7.5px; font-weight: 700; padding: 0.5px 4px; border-radius: 2px; text-transform: uppercase; }
+                                .card-row { display: flex; justify-content: space-between; padding: 1.5px 6px; font-size: 9.5px; border-top: 1px solid rgba(0,0,0,0.05); }
                                 .card-row span { color: #64748b; }
                                 .card-row strong { font-family: monospace; }
                                 .card-blue .card-header  { background: #dbeafe; color: #1e3a8a; }
@@ -666,15 +682,15 @@ export const VoyageLedgerTest: React.FC = () => {
                                 .card-amber .card-header { background: #fef3c7; color: #78350f; }
                                 .card-amber .card-badge  { background: #fde68a; color: #78350f; }
                                 .card-amber              { background: #fffbeb; }
-                                .acta { border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 12px; margin-top: 6px; background: #fafafa; }
-                                .acta-title { font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #475569; margin-bottom: 4px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; }
-                                .acta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-                                .field-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-                                .field-label { font-weight: 700; color: #334155; font-size: 10px; white-space: nowrap; min-width: 70px; }
-                                .field-line { border-bottom: 1px solid #94a3b8; height: 14px; flex: 1; }
-                                .check-row { display: flex; gap: 14px; align-items: center; margin-bottom: 4px; font-size: 10px; }
-                                .check-box { display: inline-block; width: 10px; height: 10px; border: 1px solid #64748b; vertical-align: middle; margin-right: 3px; }
-                                .comment-box { border: 1px solid #cbd5e1; height: 40px; background: white; border-radius: 4px; width: 100%; }
+                                .acta { border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; margin-top: 3px; background: #fafafa; }
+                                .acta-title { font-weight: 700; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.4px; color: #475569; margin-bottom: 2px; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; }
+                                .acta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+                                .field-row { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+                                .field-label { font-weight: 700; color: #334155; font-size: 9.5px; white-space: nowrap; min-width: 65px; }
+                                .field-line { border-bottom: 1px solid #94a3b8; height: 12px; flex: 1; }
+                                .check-row { display: flex; gap: 10px; align-items: center; margin-bottom: 2px; font-size: 9.5px; }
+                                .check-box { display: inline-block; width: 9px; height: 9px; border: 1px solid #64748b; vertical-align: middle; margin-right: 2px; }
+                                .comment-box { border: 1px solid #cbd5e1; height: 26px; background: white; border-radius: 4px; width: 100%; }
                                 -webkit-print-color-adjust: exact; print-color-adjust: exact;
                             </style></head><body>
                             <div class="header-bar">
