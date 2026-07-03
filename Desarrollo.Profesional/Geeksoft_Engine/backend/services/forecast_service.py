@@ -10,7 +10,7 @@ def safe_fetch(supabase, table_name):
         print(f"Warning: Could not fetch table {table_name}: {e}")
         return []
 
-def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: str, vessel_id: str, port_costs_data: list, agency_matrix_data: list) -> dict:
+def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: str, vessel_id: str, port_costs_data: list, agency_matrix_data: list, port_cost_mode: str = "static") -> dict:
     """
     Calcula los costos de puerto basándose en números duros (campo 'cost') configurados en port_costs_matrix.
     Si no encuentra datos desglosados en port_costs_matrix, busca el costo plano consolidado en agency_matrix como fallback.
@@ -61,6 +61,23 @@ def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: 
         if flat:
             return float(flat[0].get("cost", 0.0)), float(flat[0].get("loading_master_cost") or 0.0)
         return None
+
+    # 0. Si el modo es static, ir directo al costo plano consolidado
+    if port_cost_mode == "static":
+        flat_res = get_flat_cost_from_agency_matrix()
+        if flat_res is not None:
+            flat_val, lm_val = flat_res
+            breakdown = {"agency_fee": flat_val}
+            if lm_val > 0:
+                breakdown["loading_master"] = lm_val
+            return {
+                "total_cost": round(flat_val + lm_val, 2),
+                "breakdown": breakdown
+            }
+        return {
+            "total_cost": 9999.0,
+            "breakdown": {"agency_fee": 9999.0}
+        }
 
     # 3. Si es Mejillones, resolver las tres terminales
     if is_mejillones:
@@ -306,11 +323,11 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                         dest_port = tr.get("destination_port_id")
                         if orig_port and tr.get("origin_action") != 'NONE':
                             tr["agency_costs_origin"] = calculate_detailed_port_costs(
-                                client, orig_port, 'CARGA', vessel, port_costs_data, agency_matrix_data
+                                client, orig_port, 'CARGA', vessel, port_costs_data, agency_matrix_data, request.port_cost_mode
                             )["total_cost"]
                         if dest_port and tr.get("destination_action") != 'NONE':
                             dest_res = calculate_detailed_port_costs(
-                                client, dest_port, 'DESCARGA', vessel, port_costs_data, agency_matrix_data
+                                client, dest_port, 'DESCARGA', vessel, port_costs_data, agency_matrix_data, request.port_cost_mode
                             )
                             tr["agency_costs_destination"] = dest_res["total_cost"]
                             
@@ -364,11 +381,11 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     dest_port = laden_leg.get("destination_port_id")
                     if orig_port:
                         laden_leg["agency_costs_origin"] = calculate_detailed_port_costs(
-                            "DEFAULT", orig_port, 'CARGA', "DEFAULT", port_costs_data, agency_matrix_data
+                            "DEFAULT", orig_port, 'CARGA', "DEFAULT", port_costs_data, agency_matrix_data, request.port_cost_mode
                         )["total_cost"]
                     if dest_port:
                         laden_leg["agency_costs_destination"] = calculate_detailed_port_costs(
-                            "DEFAULT", dest_port, 'DESCARGA', "DEFAULT", port_costs_data, agency_matrix_data
+                            "DEFAULT", dest_port, 'DESCARGA', "DEFAULT", port_costs_data, agency_matrix_data, request.port_cost_mode
                         )["total_cost"]
                     
                 legs_copy["bunker_price_ifo"] = p_ifo
@@ -417,8 +434,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             
         else:
             # Calcular costos detallados usando el nuevo helper
-            orig_result = calculate_detailed_port_costs(client, line.origin_port_id, 'CARGA', vessel, port_costs_data, agency_matrix_data)
-            dest_result = calculate_detailed_port_costs(client, line.destination_port_id, 'DESCARGA', vessel, port_costs_data, agency_matrix_data)
+            orig_result = calculate_detailed_port_costs(client, line.origin_port_id, 'CARGA', vessel, port_costs_data, agency_matrix_data, request.port_cost_mode)
+            dest_result = calculate_detailed_port_costs(client, line.destination_port_id, 'DESCARGA', vessel, port_costs_data, agency_matrix_data, request.port_cost_mode)
             
             ag_orig = orig_result["total_cost"]
             ag_dest = dest_result["total_cost"]

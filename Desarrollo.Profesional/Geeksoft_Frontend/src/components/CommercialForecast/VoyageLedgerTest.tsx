@@ -57,7 +57,7 @@ const TARIFFS_MAP: Record<string, Array<{min: number, max: number, rate: number}
     ]
 };
 
-export const VoyageLedgerTest: React.FC = () => {
+export const VoyageLedgerTest: React.FC<{ portCostMode?: 'static' | 'matrix' }> = ({ portCostMode = 'static' }) => {
     const [data, setData] = useState<any>(null);
     const [benchmarks, setBenchmarks] = useState<Record<string, any>>({});
     const [loading, setLoading] = useState(true);
@@ -84,7 +84,8 @@ export const VoyageLedgerTest: React.FC = () => {
             ForecastService.runSimulation({
                 start_date: '2026-07-01',
                 end_date: '2026-07-31',
-                projection_lines: testLines
+                projection_lines: testLines,
+                port_cost_mode: portCostMode
             })
         ]).then(([benchmarksRes, simRes]) => {
             setBenchmarks(benchmarksRes);
@@ -94,9 +95,9 @@ export const VoyageLedgerTest: React.FC = () => {
             console.error(err);
             setLoading(false);
         });
-    }, []);
+    }, [portCostMode]);
 
-    // Re-simular el escenario activo cuando cambia la cantidad o la ruta
+    // Re-simular el escenario activo cuando cambia la cantidad, la ruta o el modo de costo
     useEffect(() => {
         if (!data) return;
         const [v, o, d] = selectedCase.split('-');
@@ -114,14 +115,15 @@ export const VoyageLedgerTest: React.FC = () => {
                 month_index: '2026-07',
                 quantity: qty,
                 monthly_frequency: 1
-            }]
+            }],
+            port_cost_mode: portCostMode
         }).then((simRes: any) => {
             const routeK = `${o}-${d}`;
             setLiveResult(simRes.aggregated_data?.['SPCC']?.[routeK]?.[v]?.['2026-07'] || null);
         }).catch((err: any) => {
             console.error('re-sim error', err);
         }).finally(() => setSimulating(false));
-    }, [selectedCase, quantityOverride]);
+    }, [selectedCase, quantityOverride, portCostMode]);
 
     if (loading) return <div className="p-8 text-center text-slate-500 font-semibold animate-pulse">Iniciando Motor de Auditoría...</div>;
     if (!data) return <div className="p-8 text-center text-red-500 font-semibold">Error al obtener datos.</div>;
@@ -186,8 +188,8 @@ export const VoyageLedgerTest: React.FC = () => {
             { metric: "6. Income",               key: "6. Income (income)",              gk: scenarioResult.net_income,              ptr: scenarioPetral.net_income,isCurr: true,  db: "contracts · contract_tariffs",     ui: "Contratos / Tarifario" },
             { metric: "7. Comisiones",            key: "7. Comisiones (commissions)",     gk: scenarioResult.total_commissions,       ptr: 0,                        isCurr: true,  db: "contracts",                         ui: "Addr+Broker Comm" },
             { metric: "8. Costo Bunker",          key: "8. Costo Bunker (bunker)",        gk: scenarioResult.total_bunker_costs_unit, ptr: scenarioPetral.bunker_costs,    isCurr: true,  db: "vessels · bunker_prices",           ui: "Maestro Flota / Bunker" },
-            { metric: "9. Port Costs",            key: "9. Port Costs (port_costs)",      gk: scenarioResult.total_port_costs,        ptr: scenarioPetral.total_port_costs, isCurr: true,  db: "agency_matrix",                     ui: "Costos Portuarios" },
-            { metric: "10. Voyage Result",        key: "10. Voyage Result (voy_res)",     gk: scenarioResult.voyage_result,           ptr: scenarioPetral.voyage_result,   isCurr: true,  db: "contract_tariffs · agency_matrix",  ui: "Tarifas / Costos Portuarios" },
+            { metric: "9. Port Costs",            key: "9. Port Costs (port_costs)",      gk: scenarioResult.total_port_costs,        ptr: scenarioPetral.total_port_costs, isCurr: true,  db: portCostMode === 'static' ? "port_cost_static" : "port_costs_matrix",                  ui: "Costos Portuarios" },
+            { metric: "10. Voyage Result",        key: "10. Voyage Result (voy_res)",     gk: scenarioResult.voyage_result,           ptr: scenarioPetral.voyage_result,   isCurr: true,  db: portCostMode === 'static' ? "contract_tariffs · port_cost_static" : "contract_tariffs · port_costs_matrix", ui: "Tarifas / Costos Portuarios" },
             { metric: "11. TCE Diario",           key: "11. TCE Diario (tce_real)",       gk: scenarioResult.tce_real_unit,           ptr: scenarioPetral.tce_real,  isCurr: true,  db: "Calculado",                         ui: "Motor" },
             { metric: "12. P/L",                  key: "12. P/L (pl_vs_req)",             gk: scenarioResult.pl_vs_required_unit,     ptr: scenarioPetral.pl_vs_req, isCurr: true,  db: "vessels",                           ui: "Maestro Flota" },
         ];
@@ -249,7 +251,7 @@ export const VoyageLedgerTest: React.FC = () => {
                         <div className={`flex-1 flex flex-col border rounded-lg shadow-sm overflow-hidden ${COLOR_SCHEME.agency_matrix.cardBg} ${COLOR_SCHEME.agency_matrix.border}`}>
                             <div className={`border-b px-3 py-2 flex items-center justify-between ${COLOR_SCHEME.agency_matrix.headerBg} ${COLOR_SCHEME.agency_matrix.border}`}>
                                 <h3 className={`text-xs font-bold uppercase tracking-wider ${COLOR_SCHEME.agency_matrix.text}`}>Costos Portuarios</h3>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.agency_matrix.badge}`}>agency_matrix</span>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.agency_matrix.badge}`}>{portCostMode === 'static' ? 'port_cost_static' : 'port_costs_matrix'}</span>
                             </div>
                             <div className="p-3 flex flex-col gap-1.5 flex-1 justify-between">
                                 <div className={`text-[10px] italic leading-tight mb-1 ${COLOR_SCHEME.agency_matrix.text}`}>Llaves: Cliente + Puerto + Op + Barco</div>
@@ -264,29 +266,18 @@ export const VoyageLedgerTest: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Col 3: Maestro Rutas + Reglas Comerciales */}
+                    {/* Col 3: Reglas Comerciales */}
                     <div className="flex-[1.3] flex flex-col gap-1">
-                        <div className={`border rounded-lg shadow-sm overflow-hidden ${COLOR_SCHEME.routes.cardBg} ${COLOR_SCHEME.routes.border}`}>
-                            <div className={`border-b px-3 py-2 flex items-center justify-between ${COLOR_SCHEME.routes.headerBg} ${COLOR_SCHEME.routes.border}`}>
-                                <h3 className={`text-xs font-bold uppercase tracking-wider ${COLOR_SCHEME.routes.text}`}>Maestro Rutas</h3>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.routes.badge}`}>routes</span>
-                            </div>
-                            <div className="p-3 flex flex-col gap-1.5">
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.routes.text}`}>Origen &rarr; Destino</span><span className="font-mono text-slate-800 font-bold text-xs">{originPort} &rarr; {destPort}</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.routes.text}`}>Distancia (dist)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(scenarioResult.raw_inputs?.route_distance || 0)} NM</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.routes.text}`}>W Fct (w_laden / w_ballast)</span><span className="font-mono text-slate-800 font-bold text-xs">{(scenarioResult.raw_inputs?.weather_factor_laden || 0)*100}% / {(scenarioResult.raw_inputs?.weather_factor_ballast || 0)*100}%</span></div>
-                            </div>
-                        </div>
                         <div className={`flex-1 flex flex-col border rounded-lg shadow-sm overflow-hidden ${COLOR_SCHEME.contracts.cardBg} ${COLOR_SCHEME.contracts.border}`}>
                             <div className={`border-b px-3 py-2 flex items-center justify-between ${COLOR_SCHEME.contracts.headerBg} ${COLOR_SCHEME.contracts.border}`}>
                                 <h3 className={`text-xs font-bold uppercase tracking-wider ${COLOR_SCHEME.contracts.text}`}>Reglas Comerciales</h3>
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.contracts.badge}`}>contracts</span>
                             </div>
-                            <div className="p-3 flex-1 flex flex-col justify-between">
+                            <div className="p-3 flex-1 flex flex-col justify-start gap-2">
                                 {!isPrint ? (
                                     <div className="grid grid-cols-2 gap-4 h-full items-stretch">
                                         {/* Izquierda: Inputs y campos */}
-                                        <div className="flex flex-col gap-1.5 justify-between">
+                                        <div className="flex flex-col gap-1 justify-start">
                                             <div className="flex justify-between items-center">
                                                 <span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Cantidad (Q)</span>
                                                 <div className="flex items-center gap-1">
@@ -307,11 +298,19 @@ export const VoyageLedgerTest: React.FC = () => {
                                                 </div>
                                             </div>
                                             <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Flete Base (F)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.freight_rate || 0)}/MT</span></div>
-                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Carg Ctto (c_load)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_load_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_load_rate) + " T/h" : "TBD"}</span></div>
-                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Desc Ctto (c_disch)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_discharge_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_discharge_rate) + " T/h" : "TBD"}</span></div>
+                                            <div className="flex justify-between items-baseline border-t border-dashed border-emerald-100 pt-1 mt-0.5"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Carga (c_load)</span><span className="font-mono text-slate-850 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_load_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_load_rate) + " T/h" : "TBD"}</span></div>
+                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Desc (c_disch)</span><span className="font-mono text-slate-850 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_discharge_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_discharge_rate) + " T/h" : "TBD"}</span></div>
+                                            
+                                            {/* Nuevas 6 Variables */}
+                                            <div className="flex justify-between items-baseline border-t border-dashed border-emerald-100 pt-1 mt-0.5"><span className={`font-semibold text-[9px] uppercase text-emerald-700`}>Time to Count Cg.</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.port_overhead_hours_origin || 0)} H</span></div>
+                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-700`}>Time to Count Dg.</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.port_overhead_hours_dest || 0)} H</span></div>
+                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-700`}>Maneuver Carga</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.positioning_carga_hrs || 0)} H</span></div>
+                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-700`}>Maneuver Descarga</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.positioning_descarga_hrs || 0)} H</span></div>
+                                            <div className="flex justify-between items-baseline border-t border-dashed border-emerald-100 pt-1 mt-0.5"><span className={`font-semibold text-[9px] uppercase text-emerald-700`}>Address Comm.</span><span className="font-mono text-slate-800 font-bold text-xs">{(scenarioResult.raw_inputs?.address_commission || 0).toFixed(2)}%</span></div>
+                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-700`}>Broker Comm.</span><span className="font-mono text-slate-800 font-bold text-xs">{(scenarioResult.raw_inputs?.broker_commission || 0).toFixed(2)}%</span></div>
                                         </div>
                                         {/* Derecha: Tabla miniatura */}
-                                        <div className="border-l border-emerald-100 pl-3 flex flex-col justify-between">
+                                        <div className="border-l border-emerald-100 pl-3 flex flex-col justify-start gap-2">
                                             <div className={`text-[8px] font-bold uppercase mb-1 ${COLOR_SCHEME.contracts.text}`}>Tarifario SPCC por Bracket</div>
                                             <div className="overflow-x-auto rounded border border-emerald-100 bg-white">
                                                 <table className="w-full text-[9px] border-collapse table-fixed">
@@ -339,30 +338,37 @@ export const VoyageLedgerTest: React.FC = () => {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col gap-1.5">
+                                    <div className="flex flex-col gap-1">
                                         <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Cantidad (Q)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(currentQty)} MT</span></div>
                                         <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Flete Base (F)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.freight_rate || 0)}/MT</span></div>
-                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Carg Ctto (c_load)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_load_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_load_rate) + " T/h" : "TBD"}</span></div>
-                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Desc Ctto (c_disch)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_discharge_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_discharge_rate) + " T/h" : "TBD"}</span></div>
+                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Carga (c_load)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_load_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_load_rate) + " T/h" : "TBD"}</span></div>
+                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Desc (c_disch)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_discharge_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_discharge_rate) + " T/h" : "TBD"}</span></div>
+                                        
+                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-800`}>Time to Count Cg.</span><span className="font-mono text-slate-700 text-xs">{formatNumber(scenarioResult.raw_inputs?.port_overhead_hours_origin || 0)} H</span></div>
+                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-800`}>Time to Count Dg.</span><span className="font-mono text-slate-700 text-xs">{formatNumber(scenarioResult.raw_inputs?.port_overhead_hours_dest || 0)} H</span></div>
+                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-800`}>Maneuver Carga</span><span className="font-mono text-slate-700 text-xs">{formatNumber(scenarioResult.raw_inputs?.positioning_carga_hrs || 0)} H</span></div>
+                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-800`}>Maneuver Descarga</span><span className="font-mono text-slate-700 text-xs">{formatNumber(scenarioResult.raw_inputs?.positioning_descarga_hrs || 0)} H</span></div>
+                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-800`}>Address Comm.</span><span className="font-mono text-slate-800 text-xs">{(scenarioResult.raw_inputs?.address_commission || 0).toFixed(2)}%</span></div>
+                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-800`}>Broker Comm.</span><span className="font-mono text-slate-800 text-xs">{(scenarioResult.raw_inputs?.broker_commission || 0).toFixed(2)}%</span></div>
                                     </div>
                                 )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Col 4: Límites Portuarios + Acciones */}
+                    {/* Col 4: Maestro Rutas */}
                     <div className="flex-[0.7] flex flex-col gap-4">
                         {col4Header}
-                        <div className={`border rounded-lg shadow-sm overflow-hidden ${COLOR_SCHEME.ports.cardBg} ${COLOR_SCHEME.ports.border} ${isPrint ? 'flex-1' : ''}`}>
-                            <div className={`border-b px-3 py-2 flex items-center justify-between ${COLOR_SCHEME.ports.headerBg} ${COLOR_SCHEME.ports.border}`}>
-                                <h3 className={`text-xs font-bold uppercase tracking-wider ${COLOR_SCHEME.ports.text}`}>Límites Portuarios</h3>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.ports.badge}`}>ports</span>
+                        <div className={`border rounded-lg shadow-sm overflow-hidden ${COLOR_SCHEME.routes.cardBg} ${COLOR_SCHEME.routes.border} ${isPrint ? 'flex-1' : ''}`}>
+                            <div className={`border-b px-3 py-2 flex items-center justify-between ${COLOR_SCHEME.routes.headerBg} ${COLOR_SCHEME.routes.border}`}>
+                                <h3 className={`text-xs font-bold uppercase tracking-wider ${COLOR_SCHEME.routes.text}`}>Maestro Rutas</h3>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.routes.badge}`}>routes</span>
                             </div>
                             <div className="p-3 flex flex-col gap-1.5 flex-1 justify-between">
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.ports.text}`}>Overhead Or. (over_or)</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.port_overhead_hours_origin || 0)} H</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.ports.text}`}>Overhead De. (over_de)</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.port_overhead_hours_dest || 0)} H</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.ports.text}`}>Posic. Carga (pos_carga)</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.positioning_carga_hrs || 0)} H</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.ports.text}`}>Posic. Descarga (pos_descarga)</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.positioning_descarga_hrs || 0)} H</span></div>
+                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.routes.text}`}>Origen &rarr; Destino</span><span className="font-mono text-slate-800 font-bold text-xs">{originPort} &rarr; {destPort}</span></div>
+                                <div className="flex justify-between items-baseline border-t border-dashed border-cyan-200 pt-1 mt-0.5"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.routes.text}`}>Distancia (dist)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(scenarioResult.raw_inputs?.route_distance || 0)} NM</span></div>
+                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.routes.text}`}>W Fct (Laden)</span><span className="font-mono text-slate-800 font-bold text-xs">{((scenarioResult.raw_inputs?.weather_factor_laden || 0)*100).toFixed(1)}%</span></div>
+                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.routes.text}`}>W Fct (Ballast)</span><span className="font-mono text-slate-800 font-bold text-xs">{((scenarioResult.raw_inputs?.weather_factor_ballast || 0)*100).toFixed(1)}%</span></div>
                             </div>
                         </div>
                         {col4Footer}

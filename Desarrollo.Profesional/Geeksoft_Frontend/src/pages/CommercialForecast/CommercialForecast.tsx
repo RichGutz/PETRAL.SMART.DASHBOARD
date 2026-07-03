@@ -86,6 +86,9 @@ export const CommercialForecast: React.FC = () => {
         return months;
     }, [startDate, endDate]);
 
+    // Port Cost Mode State (static vs matrix)
+    const [portCostMode, setPortCostMode] = useState<'static' | 'matrix'>('static');
+
     // Helper reutilizable para correr la simulación con valores explícitos
     const runSimulationWith = async (lines: any[], sDate: string, eDate: string) => {
         if (lines.length === 0) {
@@ -97,7 +100,8 @@ export const CommercialForecast: React.FC = () => {
             const requestPayload = {
                 start_date: sDate,
                 end_date: eDate,
-                projection_lines: lines
+                projection_lines: lines,
+                port_cost_mode: portCostMode
             };
             const result = await ForecastService.runSimulation(requestPayload);
             setData(result);
@@ -114,7 +118,7 @@ export const CommercialForecast: React.FC = () => {
     useEffect(() => {
         const timeout = setTimeout(() => runSimulationWith(projectionLines, startDate, endDate), 300);
         return () => clearTimeout(timeout);
-    }, [projectionLines, startDate, endDate]);
+    }, [projectionLines, startDate, endDate, portCostMode]);
 
     const handleAddLine = (newLine: any) => {
         // Simple logic to add or replace if same route/vessel/month exists
@@ -336,7 +340,7 @@ export const CommercialForecast: React.FC = () => {
                         onDemurragePctChange={setDemurragePct}
                         onShowDemurrageChange={setShowDemurrage}
                         centerContent={
-                            <div className="bg-slate-200 p-1 rounded-lg inline-flex gap-1 shadow-inner">
+                            <div className="bg-slate-200 p-1 rounded-lg inline-flex items-center gap-1 shadow-inner">
                                 <button 
                                     onClick={() => setActiveTab('grid')}
                                     className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold text-sm transition-all ${activeTab === 'grid' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
@@ -350,10 +354,10 @@ export const CommercialForecast: React.FC = () => {
                                     <BarChart2 size={16} /> Análisis Gráfico
                                 </button>
                                 <button 
-                                    onClick={() => setActiveTab('ledger')}
-                                    className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold text-sm transition-all ${activeTab === 'ledger' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
+                                    onClick={() => setActiveTab('map')}
+                                    className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold text-sm transition-all ${activeTab === 'map' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
                                 >
-                                    <span className="text-lg">🧪</span> Auditoría Ledger
+                                    <span className="text-lg">🗺️</span> Mapa Espaguetis
                                 </button>
                                 <button 
                                     onClick={() => setActiveTab('multicotizador_excel')}
@@ -362,11 +366,30 @@ export const CommercialForecast: React.FC = () => {
                                     <span className="text-lg">📊</span> Estimador Excel
                                 </button>
                                 <button 
-                                    onClick={() => setActiveTab('map')}
-                                    className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold text-sm transition-all ${activeTab === 'map' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
+                                    onClick={() => setActiveTab('ledger')}
+                                    className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold text-sm transition-all ${activeTab === 'ledger' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
                                 >
-                                    <span className="text-lg">🗺️</span> Mapa Espaguetis
+                                    <span className="text-lg">🧪</span> Auditoría Ledger
                                 </button>
+                                
+                                {/* Selector Port Cost Mode */}
+                                <div className="ml-2 pl-2 border-l border-slate-350 flex items-center gap-1 bg-slate-300 rounded-full p-0.5">
+                                    <span className="text-[10px] uppercase font-bold text-slate-600 px-2">Costo Puerto:</span>
+                                    <button 
+                                        onClick={() => setPortCostMode('static')}
+                                        className={`px-3 py-1 rounded-full font-black text-[10px] transition-all uppercase ${portCostMode === 'static' ? 'bg-emerald-600 text-white shadow' : 'text-slate-500 hover:text-slate-700'}`}
+                                        title="Usa costo plano de port_cost_static"
+                                    >
+                                        Static
+                                    </button>
+                                    <button 
+                                        onClick={() => setPortCostMode('matrix')}
+                                        className={`px-3 py-1 rounded-full font-black text-[10px] transition-all uppercase ${portCostMode === 'matrix' ? 'bg-amber-600 text-white shadow' : 'text-slate-500 hover:text-slate-700'}`}
+                                        title="Usa desglose detallado de port_costs_matrix"
+                                    >
+                                        Matrix
+                                    </button>
+                                </div>
                             </div>
                         }
                         rightContent={
@@ -456,7 +479,7 @@ export const CommercialForecast: React.FC = () => {
                 {/* 4. Voyage Ledger Test */}
                 {activeTab === 'ledger' && (
                     <section className="flex flex-col gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <VoyageLedgerTest />
+                        <VoyageLedgerTest portCostMode={portCostMode} />
                     </section>
                 )}
 

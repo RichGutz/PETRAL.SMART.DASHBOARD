@@ -17,6 +17,7 @@ class ForecastRequest(BaseModel):
     start_date: str = Field(..., description="Fecha de inicio, ej. '2026-07-01'")
     end_date: str = Field(..., description="Fecha de fin, ej. '2026-12-31'")
     projection_lines: List[ProjectionLine]
+    port_cost_mode: Optional[str] = Field("static", description="Modo de costos de puerto: 'static' o 'matrix'")
 
 class ForecastResponse(BaseModel):
     status: str
