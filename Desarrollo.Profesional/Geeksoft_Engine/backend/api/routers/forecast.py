@@ -109,7 +109,7 @@ def calculate_spot_voyage(request: SpotCalculationRequest):
             raise Exception(f"Vessel {request.vessel_id} not found")
         vessel_params = v_res.data[0]
         # 2. Fetch Agency Matrix to inject Port Costs
-        agency_res = sb.table("agency_matrix").select("*").execute()
+        agency_res = sb.table("port_cost_static").select("*").execute()
         agency_data = agency_res.data
         
         def get_agency_cost(target_port, target_op, vessel):
@@ -224,7 +224,7 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
         # 2. Obtener datos para costos portuarios (para los fallbacks)
         pc_res = sb.table("port_costs_matrix").select("*").execute()
         port_costs_data = pc_res.data
-        ag_res = sb.table("agency_matrix").select("*").execute()
+        ag_res = sb.table("port_cost_static").select("*").execute()
         agency_matrix_data = ag_res.data
         
         # 3. Obtener rutas para autocompletar distancia y weather factor

@@ -106,7 +106,7 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
     def oc(val): return f"<span class='text-orange-600 font-black'>{val}</span>"    # ports
     def ec(val): return f"<span class='text-emerald-600 font-black'>{val}</span>"   # contracts
     def ac(val): return f"<span class='text-amber-600 font-black'>{val}</span>"     # bunker_prices
-    def rsc(val): return f"<span class='text-rose-600 font-black'>{val}</span>"     # agency_matrix
+    def rsc(val): return f"<span class='text-rose-600 font-black'>{val}</span>"     # port_cost_static
 
     comm_sign = "-" if total_commissions > 0.01 else ""
 

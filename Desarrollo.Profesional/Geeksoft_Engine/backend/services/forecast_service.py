@@ -200,7 +200,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     tariffs_data = safe_fetch(supabase, "contract_tariffs")
     
     port_costs_data = safe_fetch(supabase, "port_costs_matrix")
-    agency_matrix_data = safe_fetch(supabase, "agency_matrix")
+    agency_matrix_data = safe_fetch(supabase, "port_cost_static")
     
     agg_data = {}
     
