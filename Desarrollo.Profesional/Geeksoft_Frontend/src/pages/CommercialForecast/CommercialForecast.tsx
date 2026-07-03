@@ -5,8 +5,8 @@ import { InteractiveChart } from '../../components/CommercialForecast/Interactiv
 import { ForecastService } from '../../services/api';
 import { Save, FolderOpen, X, Table, BarChart2, ChevronUp, ChevronDown, Sun, Moon } from 'lucide-react';
 import { VoyageLedgerTest } from '../../components/CommercialForecast/VoyageLedgerTest';
-import { SpotRouter } from '../../components/CommercialForecast/SpotRouter';
 import { SpaghettiMap } from '../../components/CommercialForecast/SpaghettiMap';
+import { MultiCotizadorExcel } from '../../components/CommercialForecast/MultiCotizadorExcel';
 
 export const CommercialForecast: React.FC = () => {
     const [data, setData] = useState<any>(null);
@@ -39,7 +39,7 @@ export const CommercialForecast: React.FC = () => {
     const [savedForecasts, setSavedForecasts] = useState<any[]>([]);
 
     // Tab State
-    const [activeTab, setActiveTab] = useState<'grid' | 'chart' | 'ledger' | 'spot' | 'map'>('grid');
+    const [activeTab, setActiveTab] = useState<'grid' | 'chart' | 'ledger' | 'spot' | 'multicotizador' | 'multicotizador_excel' | 'map'>('grid');
     const [displayMode, setDisplayMode] = useState<'usd'|'pct'>('usd');
 
     // Ports State
@@ -86,34 +86,34 @@ export const CommercialForecast: React.FC = () => {
         return months;
     }, [startDate, endDate]);
 
+    // Helper reutilizable para correr la simulación con valores explícitos
+    const runSimulationWith = async (lines: any[], sDate: string, eDate: string) => {
+        if (lines.length === 0) {
+            setData(null);
+            return;
+        }
+        setLoading(true);
+        try {
+            const requestPayload = {
+                start_date: sDate,
+                end_date: eDate,
+                projection_lines: lines
+            };
+            const result = await ForecastService.runSimulation(requestPayload);
+            setData(result);
+        } catch (error: any) {
+            console.error("Error fetching simulation:", error);
+            const msg = error?.response?.data?.detail || error?.message || "Error desconocido";
+            alert(`Error al correr simulación: ${msg}`);
+            setData(null);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchSimulation = async () => {
-            if (projectionLines.length === 0) {
-                setData(null);
-                return;
-            }
-            
-            setLoading(true);
-            try {
-                const requestPayload = {
-                    start_date: startDate,
-                    end_date: endDate,
-                    projection_lines: projectionLines
-                };
-
-                const result = await ForecastService.runSimulation(requestPayload);
-                setData(result);
-            } catch (error) {
-                console.error("Error fetching simulation:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        // Debounce slightly to prevent spamming the engine
-        const timeout = setTimeout(fetchSimulation, 300);
+        const timeout = setTimeout(() => runSimulationWith(projectionLines, startDate, endDate), 300);
         return () => clearTimeout(timeout);
-        
     }, [projectionLines, startDate, endDate]);
 
     const handleAddLine = (newLine: any) => {
@@ -247,11 +247,14 @@ export const CommercialForecast: React.FC = () => {
     const handleLoadSelected = async (id: string) => {
         try {
             setActionLoading('loadSelected');
-            const data = await ForecastService.loadForecast(id);
-            setStartDate(data.start_date);
-            setEndDate(data.end_date);
+            const loadedData = await ForecastService.loadForecast(id);
+
+            const newStartDate = loadedData.start_date || startDate;
+            const newEndDate = loadedData.end_date || endDate;
+            setStartDate(newStartDate);
+            setEndDate(newEndDate);
             
-            const loadedLines = data.projection_lines || [];
+            const loadedLines = loadedData.projection_lines || [];
             if (loadedLines.length > 0) {
                 const firstLine = loadedLines[0];
                 if (firstLine.metadata_demurrage_pct !== undefined) {
@@ -268,7 +271,7 @@ export const CommercialForecast: React.FC = () => {
                 }
             }
 
-            // Limpiar las líneas de metadatos antes de cargarlas en el estado local
+            // Limpiar las líneas de metadatos y normalizar tipos numéricos
             const cleanedLines = loadedLines.map((line: any) => {
                 const {
                     metadata_demurrage_pct,
@@ -277,16 +280,31 @@ export const CommercialForecast: React.FC = () => {
                     metadata_custom_demurrages,
                     ...rest
                 } = line;
-                return rest;
+                // Normalizar campos numéricos que podrían venir como strings desde la BD
+                return {
+                    ...rest,
+                    quantity: parseFloat(rest.quantity) || 0,
+                    monthly_frequency: parseFloat(rest.monthly_frequency) || 1,
+                    custom_tariff: rest.custom_tariff != null ? parseFloat(rest.custom_tariff) : undefined,
+                    forecast_bunker_price_ifo: rest.forecast_bunker_price_ifo != null ? parseFloat(rest.forecast_bunker_price_ifo) : undefined,
+                    forecast_bunker_price_mdo: rest.forecast_bunker_price_mdo != null ? parseFloat(rest.forecast_bunker_price_mdo) : undefined,
+                };
             });
 
+            // Correr la simulación directamente con los datos cargados
+            // (no solo depender del useEffect que puede tener cierre sobre estados viejos)
             setProjectionLines(cleanedLines);
-            setCurrentForecastId(data.id);
-            setForecastName(data.name);
-            setLoadedAuthor(data.user_id);
+            setCurrentForecastId(loadedData.id);
+            setForecastName(loadedData.name);
+            setLoadedAuthor(loadedData.user_id);
             setShowLoadModal(false);
-        } catch(e) {
-            alert("Error al cargar el forecast");
+
+            // Forzar la simulación de forma inmediata con los valores exactos del escenario
+            await runSimulationWith(cleanedLines, newStartDate, newEndDate);
+
+        } catch(e: any) {
+            const msg = e?.response?.data?.detail || e?.message || "Error desconocido";
+            alert(`Error al cargar el forecast: ${msg}`);
         } finally {
             setActionLoading('none');
         }
@@ -308,8 +326,8 @@ export const CommercialForecast: React.FC = () => {
                             setEndDate(end);
                         }}
                         onAddLine={handleAddLine}
-                        forecastName={activeTab === 'spot' ? undefined : forecastName}
-                        hideInputs={isRibbonCollapsed || activeTab === 'ledger' || activeTab === 'chart' || activeTab === 'spot'}
+                        forecastName={(activeTab === 'multicotizador_excel') ? undefined : forecastName}
+                        hideInputs={isRibbonCollapsed || activeTab === 'ledger' || activeTab === 'chart' || activeTab === 'multicotizador_excel'}
                         displayMode={displayMode}
                         onDisplayModeChange={setDisplayMode}
                         isAdding={loading}
@@ -338,10 +356,10 @@ export const CommercialForecast: React.FC = () => {
                                     <span className="text-lg">🧪</span> Auditoría Ledger
                                 </button>
                                 <button 
-                                    onClick={() => setActiveTab('spot')}
-                                    className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold text-sm transition-all ${activeTab === 'spot' ? 'bg-petral-teal text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
+                                    onClick={() => setActiveTab('multicotizador_excel')}
+                                    className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold text-sm transition-all ${activeTab === 'multicotizador_excel' ? 'bg-green-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
                                 >
-                                    <span className="text-lg">⚓</span> Ruteador Spot
+                                    <span className="text-lg">📊</span> Estimador Excel
                                 </button>
                                 <button 
                                     onClick={() => setActiveTab('map')}
@@ -382,7 +400,7 @@ export const CommercialForecast: React.FC = () => {
                             </div>
                         }
                         bottomRightContent={
-                            activeTab !== 'ledger' && activeTab !== 'spot' && (
+                            activeTab !== 'ledger' && activeTab !== 'multicotizador_excel' && (
                                 <>
                                     <div className="flex flex-col gap-1 min-w-[90px] max-w-[110px] flex-1 justify-end h-full">
                                         <button onClick={() => setShowSaveModal(true)} className="flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground h-6 w-full rounded font-medium text-[10px] transition-colors shadow-sm cursor-pointer">
@@ -442,10 +460,11 @@ export const CommercialForecast: React.FC = () => {
                     </section>
                 )}
 
-                {/* 5. Ruteador Spot */}
-                {activeTab === 'spot' && (
-                    <section className="flex flex-col gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <SpotRouter />
+
+                {/* 5.6. Multicotizador Excel */}
+                {activeTab === 'multicotizador_excel' && (
+                    <section className="flex-1 flex flex-col gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300 min-h-0">
+                        <MultiCotizadorExcel />
                     </section>
                 )}
 
@@ -463,7 +482,7 @@ export const CommercialForecast: React.FC = () => {
             </main>
 
             {/* Save Modal */}
-            {showSaveModal && activeTab !== 'spot' && (
+            {showSaveModal && activeTab !== 'multicotizador_excel' && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg w-96 shadow-xl relative">
                         <button onClick={() => setShowSaveModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={20}/></button>
@@ -506,7 +525,7 @@ export const CommercialForecast: React.FC = () => {
             )}
 
             {/* Load Modal */}
-            {showLoadModal && activeTab !== 'spot' && (
+            {showLoadModal && activeTab !== 'multicotizador_excel' && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg w-[500px] shadow-xl relative">
                         <button onClick={() => setShowLoadModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={20}/></button>

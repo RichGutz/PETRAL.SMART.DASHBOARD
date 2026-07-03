@@ -283,69 +283,129 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         p_mdo = line.forecast_bunker_price_mdo if line.forecast_bunker_price_mdo else bunker_db.get("MDO", 800)
         
         is_spot_route = (line.origin_port_id == "SPOT")
-
+        
         if is_spot_route:
             spot_id = line.destination_port_id
             spot_route = next((s for s in routes_spot_data if s.get("spot_id") == spot_id or s.get("name") == spot_id), {})
             legs_data = spot_route.get("legs_data", {})
-            legs = legs_data.get("legs", {})
             
             import copy
-            legs_copy = copy.deepcopy(legs)
-            
-            laden_leg = legs_copy.get("laden", {})
-            if laden_leg:
-                laden_leg["quantity"] = line.quantity
-                laden_leg["freight_rate"] = freight_rate
-                
-                # Inyectar costos de puerto/agencia de forma dinámica
-                orig_port = laden_leg.get("origin_port_id")
-                dest_port = laden_leg.get("destination_port_id")
-                if orig_port:
-                    laden_leg["agency_costs_origin"] = calculate_detailed_port_costs(
-                        "DEFAULT", orig_port, 'CARGA', "DEFAULT", port_costs_data, agency_matrix_data
-                    )["total_cost"]
-                if dest_port:
-                    laden_leg["agency_costs_destination"] = calculate_detailed_port_costs(
-                        "DEFAULT", dest_port, 'DESCARGA', "DEFAULT", port_costs_data, agency_matrix_data
-                    )["total_cost"]
-                
-            legs_copy["bunker_price_ifo"] = p_ifo
-            legs_copy["bunker_price_mdo"] = p_mdo
-            
-            payload = {
-                "vessel_params": v_data,
-                "legs": legs_copy
-            }
-            from backend.spot_engine import calculate_spot_multileg
-            spot_res = calculate_spot_multileg(payload)
-            consolidated = spot_res.get("consolidated", {})
-            
             tce_req = v_data.get("tce_required", 0)
-            tce_real = consolidated.get("tce_real", 0)
             
-            unit_result = {
-                "net_income": consolidated.get("total_freight_revenue", 0),
-                "total_port_costs": consolidated.get("total_port_costs", 0),
-                "total_bunker_costs": consolidated.get("total_bunker_costs", 0),
-                "voyage_result": consolidated.get("pnl_net_utility", 0),
-                "pl_vs_required": consolidated.get("pnl_net_utility", 0) - (consolidated.get("total_days", 0) * tce_req),
-                "tce_real": tce_real,
-                "total_duration": consolidated.get("total_days", 0),
-                "sea_days": consolidated.get("total_sea_days", 0),
-                "port_days": consolidated.get("total_port_days", 0),
-                "bunker_ifo_tonnage": consolidated.get("bunker_ifo_tonnage", 0),
-                "bunker_mdo_tonnage": consolidated.get("bunker_mdo_tonnage", 0),
-                "pcm_projected": tce_real - tce_req,
-                "audit_trail": {
-                    "bunker_costs": {
-                        "formula": "Tons IFO = (sea_d * cons_sea) + (idle_d_norm * cons_idle) + (load_d * cons_load) + (disch_d * cons_disch)<br/>"
-                                   "Tons MDO = (sea_d * cons_sea) + (idle_d_norm * cons_idle) + (load_d * cons_load) + (disch_d * cons_disch)<br/>"
-                                   "Costo Tránsito = (Tons IFO * price_IFO) + (Tons MDO * price_MDO)",
-                        "values": f"IFO Consolidado: {consolidated.get('bunker_ifo_tonnage', 0)} t<br/>MDO Consolidado: {consolidated.get('bunker_mdo_tonnage', 0)} t<br/>Costo: {consolidated.get('total_bunker_costs', 0)}"
+            if "tramos" in legs_data:
+                # -- ESCENARIO MULTICOTIZADOR / ESTIMADOR EXCEL --
+                tramos_copy = copy.deepcopy(legs_data.get("tramos", []))
+                
+                # Buscar tramos de tipo LADEN para re-calcular costos de puerto dinámicos y cantidades
+                for tr in tramos_copy:
+                    if tr.get("type", "").upper() == "LADEN":
+                        tr["quantity"] = line.quantity
+                        tr["freight_rate"] = freight_rate
+                        
+                        orig_port = tr.get("origin_port_id")
+                        dest_port = tr.get("destination_port_id")
+                        if orig_port and tr.get("origin_action") != 'NONE':
+                            tr["agency_costs_origin"] = calculate_detailed_port_costs(
+                                client, orig_port, 'CARGA', vessel, port_costs_data, agency_matrix_data
+                            )["total_cost"]
+                        if dest_port and tr.get("destination_action") != 'NONE':
+                            dest_res = calculate_detailed_port_costs(
+                                client, dest_port, 'DESCARGA', vessel, port_costs_data, agency_matrix_data
+                            )
+                            tr["agency_costs_destination"] = dest_res["total_cost"]
+                            
+                vparams = copy.deepcopy(v_data)
+                vparams["bunker_price_ifo"] = p_ifo
+                vparams["bunker_price_mdo"] = p_mdo
+                vparams["vessel_speed"] = v_data.get("vessel_speed", 11.0)
+                vparams["tce_required"] = tce_req
+                
+                payload = {
+                    "vessel_params": vparams,
+                    "tramos": tramos_copy
+                }
+                
+                from backend.spot_engine import calculate_multicotizador_simulation
+                spot_res = calculate_multicotizador_simulation(payload)
+                consolidated = spot_res.get("consolidated", {})
+                
+                tce_real = consolidated.get("tce_real", 0)
+                unit_result = {
+                    "net_income": consolidated.get("total_freight_revenue", 0),
+                    "total_port_costs": consolidated.get("total_port_costs", 0),
+                    "total_bunker_costs": consolidated.get("total_bunker_costs", 0),
+                    "voyage_result": consolidated.get("pnl_net_utility", 0),
+                    "pl_vs_required": consolidated.get("pnl_net_utility", 0) - (consolidated.get("total_days", 0) * tce_req),
+                    "tce_real": tce_real,
+                    "total_duration": consolidated.get("total_days", 0),
+                    "sea_days": consolidated.get("total_sea_days", 0),
+                    "port_days": consolidated.get("total_port_days", 0),
+                    "bunker_ifo_tonnage": consolidated.get("bunker_ifo_tonnage", 0),
+                    "bunker_mdo_tonnage": consolidated.get("bunker_mdo_tonnage", 0),
+                    "pcm_projected": tce_real - tce_req,
+                    "audit_trail": {
+                        "bunker_costs": {
+                            "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                            "values": f"IFO: {consolidated.get('bunker_ifo_tonnage', 0)} t, MDO: {consolidated.get('bunker_mdo_tonnage', 0)} t"
+                        }
                     }
                 }
-            }
+            else:
+                # -- ESCENARIO SPOT ROUTER TRADICIONAL --
+                legs = legs_data.get("legs", {})
+                legs_copy = copy.deepcopy(legs)
+                
+                laden_leg = legs_copy.get("laden", {})
+                if laden_leg:
+                    laden_leg["quantity"] = line.quantity
+                    laden_leg["freight_rate"] = freight_rate
+                    
+                    orig_port = laden_leg.get("origin_port_id")
+                    dest_port = laden_leg.get("destination_port_id")
+                    if orig_port:
+                        laden_leg["agency_costs_origin"] = calculate_detailed_port_costs(
+                            "DEFAULT", orig_port, 'CARGA', "DEFAULT", port_costs_data, agency_matrix_data
+                        )["total_cost"]
+                    if dest_port:
+                        laden_leg["agency_costs_destination"] = calculate_detailed_port_costs(
+                            "DEFAULT", dest_port, 'DESCARGA', "DEFAULT", port_costs_data, agency_matrix_data
+                        )["total_cost"]
+                    
+                legs_copy["bunker_price_ifo"] = p_ifo
+                legs_copy["bunker_price_mdo"] = p_mdo
+                
+                payload = {
+                    "vessel_params": v_data,
+                    "legs": legs_copy
+                }
+                from backend.spot_engine import calculate_spot_multileg
+                spot_res = calculate_spot_multileg(payload)
+                consolidated = spot_res.get("consolidated", {})
+                
+                tce_real = consolidated.get("tce_real", 0)
+                
+                unit_result = {
+                    "net_income": consolidated.get("total_freight_revenue", 0),
+                    "total_port_costs": consolidated.get("total_port_costs", 0),
+                    "total_bunker_costs": consolidated.get("total_bunker_costs", 0),
+                    "voyage_result": consolidated.get("pnl_net_utility", 0),
+                    "pl_vs_required": consolidated.get("pnl_net_utility", 0) - (consolidated.get("total_days", 0) * tce_req),
+                    "tce_real": tce_real,
+                    "total_duration": consolidated.get("total_days", 0),
+                    "sea_days": consolidated.get("total_sea_days", 0),
+                    "port_days": consolidated.get("total_port_days", 0),
+                    "bunker_ifo_tonnage": consolidated.get("bunker_ifo_tonnage", 0),
+                    "bunker_mdo_tonnage": consolidated.get("bunker_mdo_tonnage", 0),
+                    "pcm_projected": tce_real - tce_req,
+                    "audit_trail": {
+                        "bunker_costs": {
+                            "formula": "Tons IFO = (sea_d * cons_sea) + (idle_d_norm * cons_idle) + (load_d * cons_load) + (disch_d * cons_disch)<br/>"
+                                       "Tons MDO = (sea_d * cons_sea) + (idle_d_norm * cons_idle) + (load_d * cons_load) + (disch_d * cons_disch)<br/>"
+                                       "Costo Tránsito = (Tons IFO * price_IFO) + (Tons MDO * price_MDO)",
+                            "values": f"IFO Consolidado: {consolidated.get('bunker_ifo_tonnage', 0)} t<br/>MDO Consolidado: {consolidated.get('bunker_mdo_tonnage', 0)} t<br/>Costo: {consolidated.get('total_bunker_costs', 0)}"
+                        }
+                    }
+                }
             
             inputs = {
                 "route_distance": consolidated.get("total_distance", 0),
@@ -439,8 +499,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "tce_real_unit": unit_result["tce_real"],
             "pcm_projected": unit_result["pcm_projected"],
             "pl_vs_required_unit": unit_result["pl_vs_required"],
-            "actual_load_rate": unit_result["actual_load_rate"],
-            "actual_discharge_rate": unit_result["actual_discharge_rate"],
+            "actual_load_rate": unit_result.get("actual_load_rate", 0.0),
+            "actual_discharge_rate": unit_result.get("actual_discharge_rate", 0.0),
             "audit_trail": unit_result.get("audit_trail", {}),
             "raw_inputs": inputs,
             "route_name": spot_route.get("name") if is_spot_route else None,

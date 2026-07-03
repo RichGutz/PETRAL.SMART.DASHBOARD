@@ -125,3 +125,42 @@
 2026-07-01 21:11:00 - Se actualizo el plan de implementacion de costos portuarios, precisando la regla de negocio de promedio mandatorio para Mejillones en el Forecast.
 2026-07-01 21:13:00 - Se refino el plan de implementacion de costos portuarios para introducir un submodulo desacoplado (motorcito) que calcula el desglose detallado y retorna el total consolidado mas un JSONB de auditoria.
 2026-07-01 21:30:00 - Migracion fisica y seeding del buque MOQUEGUA completados en Supabase. Se implemento calculate_detailed_port_costs en forecast_service.py y se valido el forecast al dolar exacto.
+2026-07-02 09:37:24 - Inicio de sesion. En espera de instrucciones del usuario.
+2026-07-02 10:45:00 - Lectura y siembra del Excel de Costos de Tablones. Se insertaron 85 registros detallados en port_costs_matrix para el buque TABLONES. Validacion matematica en el backend confirmando que los costos acumulados y promedios de Mejillones coinciden al dolar exacto con las proformas.
+2026-07-02 11:05:00 - Modificaci髇 de port_costs.md y Modelo.E-R.md documentando port_costs_matrix y la arquitectura fallback. Desactivaci髇 de la compilaci髇 de PDFs a petici髇 del usuario.
+2026-07-02 11:15:00 - Correcci髇 del bug del card de Costos Portuarios en VoyageLedgerTest.tsx. Los valores se obtienen ahora directamente de la sumatoria de port_costs_breakdown en el frontend, garantizando la exactitud matem醫ica y eliminando el desfase con la f髍mula del ledger.
+2026-07-02 11:20:00 - Publicaci髇 exitosa de los 鷏timos cambios de backend (tarifas detalladas de Tablones y fallback) y de frontend (correcci髇 del card de Costos Portuarios) en https://forecast.geeksoft.tech. Todo en l韓ea y verificado.
+2026-07-02 11:40:00 - Re-creaci髇 f韘ica y seeding de agency_matrix con 38 registros. Actualizaci髇 de forecast_service.py para soportar fallback a agency_matrix. Despliegue y verificaci髇 en el VPS completados.
+2026-07-02 11:55:00 - Modificaci髇 de esquema en vessels de Supabase agregando columnas length y beam, y actualizaci髇 de las dimensiones para Moquegua, Tablones, Concon y Huemul. Inyecci髇 de las variables en raw_inputs y actualizaci髇 del card de Maestro Flota en el frontend para visualizaci髇 interactiva e impresi髇. Despliegue exitoso al VPS.
+2026-07-02 12:10:00 - Actualizaci髇 de las especificaciones en Obsidian sobre la permanencia de agency_matrix y el despliegue del grid de 2 columnas en Maestro Flota. Todo documentado.
+2026-07-02 12:20:00 - Transcripci髇 de audio completada. Creaci髇 de la nota de Obsidian multicotizador.md con el dise駉 preliminar del Multicotizador Spot Multileg.
+2026-07-02 12:28:00 - Modificaci髇 en la especificaci髇 del Multicotizador para documentar la reutilizaci髇 directa del motor matem醫ico de spot_engine.py.
+2026-07-02 12:32:00 - Ajuste en el dise駉 del Multicotizador para reflejar alineaci髇 horizontal de tramos con consolidaci髇 al final de la recta en Obsidian.
+2026-07-02 12:51:00 - Desarrollo e implementaci髇 completa del Multicotizador Spot Multileg en frontend y backend. Reciclaje del motor de spot_engine.py. Despliegue en vivo en el VPS finalizado.
+2026-07-02 13:00:00 - Correcci髇 de estilo de fondo, l韒ites de ancho horizontal del 20% por tramo, e integraci髇 de precios de bunker reales de Supabase en el Multicotizador. Despliegue en el VPS exitoso.
+2026-07-02 13:05:00 - Refinamiento de alineaci髇 y centrado de tarjetas de tramos en el Multicotizador del frontend. Despliegue en el VPS exitoso.
+2026-07-02 13:15:00 - Correcci髇 de lectura de precios de bunker en el backend adaptada al esquema de Supabase, resolviendo la carga de bunker_costs en el Multicotizador del frontend. Despliegue en el VPS completado.
+2026-07-02 14:36:00 - Ajustes visuales de alineaci髇 vertical en tarjetas, botones consistentes y fila superior 鷑ica de selectores en el Multicotizador del frontend. Despliegue en el VPS exitoso.
+2026-07-02 14:40:00 - Correcci髇 final del espacio vertical 100% flex y soluci髇 al truncamiento de etiquetas superiores mediante paddings de overflow. Despliegue en el VPS finalizado.
+
+2026-07-03 08:55:00 - Implementaci髇 y optimizaci髇 de MultiCotizadorExcel.tsx y backend de FastAPI (forecast.py, spot_engine.py, forecast_models.py). Sincronizaci髇 a PDF en Obsidian.
+
+2026-07-03 09:08:00 - Redise駉 del Fact Sheet superior a tabla unificada horizontal en MultiCotizadorExcel.tsx. Sincronizado a PDF en Obsidian.
+
+2026-07-03 09:20:00 - Ajustes de columnas y reubicaci髇 de precios a la derecha en el Fact Sheet superior. Sincronizado a PDF en Obsidian.
+
+2026-07-03 10:20:00 - Renombrado de columna Ritmo (C/D) y etiquetas T/d y T/h. Sincronizado a PDF en Obsidian.
+
+2026-07-03 10:35:00 - Alineaci髇 vertical de consumos y formateo de d韆s a dos decimales. Sincronizado a PDF en Obsidian.
+
+2026-07-03 10:55:00 - Habilitada edici髇 de carga inicial y candado de balance de cargas y descargas con aviso visual.
+
+2026-07-03 11:05:00 - A馻dida columna Bodega (T) para auditar inventario acumulado en tiempo real.
+
+2026-07-03 13:10:00 - Integraci髇 de Loading Master (.00 / ,500.00) en el Voyage Ledger y el rastro de auditor韆. Promoci髇 de P/L como KPI principal en la Matriz Financiera. Despliegue exitoso al VPS.
+
+2026-07-03 13:25:00 - Reemplazo de 'Voyage Result' por 'P/L' en todas las tablas del ForecastGrid.tsx (tramos, subtotales, totales y acumulados). Despliegue al VPS completado con 閤ito.
+
+2026-07-03 13:50:00 - Soluci贸n de error al cargar escenarios en Matriz Financiera. Se elimin贸 la race condition en el frontend y se corrigi贸 KeyError de actual_load_rate en el backend para rutas SPOT.
+
+2026-07-03 14:00:00 - Eliminadas pesta帽as obsoletas de Ruteador Spot y Multicotizador. Estimador Excel unificado como la 煤nica herramienta y compatible al 100% con simulaci贸n de tramos complejos en Matriz Financiera. Despliegue completado.

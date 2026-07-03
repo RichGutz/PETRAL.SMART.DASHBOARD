@@ -41,6 +41,14 @@ Tras una auditoría profunda del motor backend (`forecast_service.py` y `engine.
 - **Integración de Posicionamiento:** Se añadieron los campos `positioning_carga_hrs` y `positioning_descarga_hrs` a la tabla `ports` de Supabase (inicializados en `1` para todos los puertos). Estos se inyectan en los inputs de simulación y se sumaron a la métrica **3. Días de Puerto**, cuya fórmula conceptual se actualizó a:
   `port_days = ((Q / act_load + over_or + pos_or) + (Q / act_disch + over_de + pos_de)) / 24`
 
+### 1.6 Arquitectura de Fallback para Costos Portuarios y Dimensiones del Maestro Flota (Julio 2026)
+- **Preservación Física de `agency_matrix`:** Se establece explícitamente la **permanencia de la tabla física `agency_matrix`** en la base de datos de Supabase. Funciona como fallback intermedio fundamental:
+  - Cuando se ejecuta una simulación, el motor de forecast (`forecast_service.py`) consulta prioritariamente la tabla de desgloses `port_costs_matrix`.
+  - Si no existen tarifas detalladas registradas en `port_costs_matrix` para el buque/puerto/operación, el motor realiza un fallback directo a la tabla `agency_matrix` para obtener el costo consolidado de puerto (como concepto único de `agency_fee`).
+  - **REGLA DE CONSERVACIÓN:** Ningún agente AI o desarrollador futuro debe eliminar, alterar o dar de baja la tabla `agency_matrix`, la cual debe convivir indefinidamente con `port_costs_matrix` como safety net.
+- **Nuevas Variables en Maestro Flota (`vessels`):** Se añadieron las columnas físicas `length` (Eslora) y `beam` (Manga) a la tabla `vessels` en Supabase para todos los buques de la flota (Moquegua, Tablones, Concon Trader, Huemul).
+- **Visualización en dos columnas en el Ledger:** El card de **Maestro Flota** en el componente `VoyageLedgerTest.tsx` (tanto en la visualización interactiva de React como en la vista de impresión/PDF) se actualizó para renderizar en dos columnas paralelas las variables clave: `DWT` y `dwcc` en una fila, y `Length (L)` y `Beam (B)` en la siguiente, consolidando la visualización de los datos físicos básicos del buque.
+
 ---
 
 ## 2. 📊 Matriz Financiera (ForecastGrid.tsx)
@@ -154,6 +162,20 @@ El cliente **NEXA** opera bajo un modelo de rutas complejas (múltiples puertos 
 - **Inferencia Automática:** Al guardar una cotización en el Ruteador Spot, el frontend infiere automáticamente el país en base al puerto de descarga (destino de la pierna *laden*) y lo envía al endpoint `/spot/save` del backend.
 - **UI:** El catálogo de rutas spot del modal del Ruteador Spot muestra un *badge* distintivo con bandera (🇵🇪 Peru / 🇨🇱 Chile) al lado del nombre de cada ruta guardada.
 
+### 5.8 Resolución de Carga de Escenarios, Depuración de SPOT y Simplificación de Ribbon (Julio 2026)
+- **Problemas reportados:**
+  1. El botón de cargar escenario no lograba renderizar los escenarios en la matriz financiera a pesar de recuperarlos de la BD.
+  2. Al forzar la simulación al cargar un escenario que contenía rutas SPOT, se producía un error de servidor: `Error al correr simulación: 'actual_load_rate'`.
+  3. Existían múltiples prototipos redundantes ("Ruteador Spot" y "Multicotizador") compitiendo con el nuevo "Estimador Excel" en el Ribbon de navegación.
+- **Causas Raíz:**
+  1. *Race Condition en React (Frontend):* Al seleccionar un escenario en el modal, se disparaban en lote las actualizaciones de estado de React (`setProjectionLines`, `setShowLoadModal`, etc.). La actualización y cierre del modal provocaban una nueva renderización inmediata que cancelaba el `setTimeout` (debounce de 300ms) del `useEffect` de simulación antes de ejecutarse, dejando la matriz en su estado inicial vacío.
+  2. *KeyError en Backend (`forecast_service.py`):* La función `calculate_spot_multileg` para rutas SPOT devuelve un diccionario `unit_result` que no calcula ni contiene los campos físicos de tasas de carga/descarga (`actual_load_rate` y `actual_discharge_rate`). Sin embargo, el formateador del payload consolidado intentaba consumirlos mediante accesos directos por llave `unit_result["actual_load_rate"]`, gatillando un crash de tipo `KeyError`.
+- **Solución Aplicada:**
+  1. *Frontend (`CommercialForecast.tsx`):* Se extrajo el método de simulación a un helper reutilizable `runSimulationWith` y se configuró para ejecutarse de forma explícita e inmediata al final de `handleLoadSelected` con los datos recién leídos del escenario, eludiendo la race condition del `useEffect`. Además, se normalizaron todos los tipos numéricos recuperados de la BD (evitando que vengan como string) y se habilitó un alert visible para mostrar cualquier error del motor backend.
+  2. *Backend (`forecast_service.py`):* Se modificaron los accesos a `actual_load_rate` y `actual_discharge_rate` usando `.get()` con fallback seguro en `0.0` para que el cálculo de rutas SPOT no crasheara por variables físicas no aplicables.
+  3. *Unificación y Simplificación de Ribbon:* Se removieron las pestañas y componentes visuales de "Ruteador Spot" y "Multicotizador" del menú Ribbon de navegación en `CommercialForecast.tsx`. El **Estimador Excel** (`MultiCotizadorExcel.tsx`) hereda toda la capacidad funcional y actúa como el UI/UX consolidado del sistema para cotizar viajes multileg.
+  4. *Compatibilidad de Cálculo en Matriz:* Se modificó `forecast_service.py` para detectar si una ruta guardada por el Estimador Excel (identificable por la presencia de la estructura `"tramos"` en `legs_data`) es cargada en la Matriz Financiera. En tal caso, el motor backend ejecuta dinámicamente la simulación multileg mediante `calculate_multicotizador_simulation` en lugar de `calculate_spot_multileg`, garantizando consistencia absoluta de datos entre el estimador individual y la matriz del forecast.
+
 ---
 *Documento vivo mantenido por el equipo Geeksoft - Naviera Petral.*
 
@@ -161,14 +183,13 @@ El cliente **NEXA** opera bajo un modelo de rutas complejas (múltiples puertos 
 
 ## 6. 🎛️ Módulos del Ribbon — Mapa del Dashboard
 
-El módulo **Commercial Forecast** comparte el Ribbon del dashboard con otros reportes especializados. La navegación lateral agrupa todas las vistas del sistema bajo un menú único:
+El módulo **Commercial Forecast** comparte el Ribbon del dashboard con otros reportes especializados. La navegación lateral agrupa todas las vistas del sistema bajo un menú único simplificado:
 
 | # | Módulo | Estado | Descripción |
 |---|---|---|---|
 | 1 | **Voyage Ledger** | ✅ Productivo | Auditoría detallada de cálculo por viaje (P&L unitario) |
-| 2 | **Ruteador Spot** | ✅ Productivo | Cotizador multileg para operaciones spot complejas |
-| 3 | **Commercial Forecast** | ✅ Productivo | Matriz Financiera + Análisis Gráfico (este documento) |
-| 4 | **Mapa Espaguetis** | ✅ Productivo | Visualización geoespacial de rutas, fuentes y sumideros |
+| 2 | **Commercial Forecast** | ✅ Productivo | Matriz Financiera + Análisis Gráfico + Estimador Excel |
+| 3 | **Mapa Espaguetis** | ✅ Productivo | Visualización geoespacial de rutas, fuentes y sumideros |
 
 ### Módulo 4: Mapa Espaguetis — Fuentes y Sumideros
 El cuarto módulo del Ribbon es una vista geoespacial del Perú que superpone las rutas activas (espaguetis), los pie charts de carga/descarga por puerto y el market share de Petral como fuente o sumidero en cada terminal.
