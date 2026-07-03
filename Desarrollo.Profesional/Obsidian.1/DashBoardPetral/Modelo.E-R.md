@@ -12,6 +12,7 @@ Este documento define la estructura relacional definitiva del motor de **Geeksof
 * `vessel_name` *(VARCHAR)* → Nombre comercial de la nave (ej. "B/T TABLONES").
 * `flag` *(VARCHAR)* → Bandera / Nacionalidad de registro (ej. "PERUANA").
 * `built` *(INTEGER)* → Año de construcción del astillero.
+* `grt` *(NUMERIC)* → Gross Register Tonnage (Tonelaje de registro bruto del buque).
 * `dwt` *(NUMERIC)* → Deadweight Tonnage (Tonelaje de peso muerto total).
 * `dwcc` *(NUMERIC)* → Deadweight Cargo Capacity (Tonelaje útil real de carga comercial).
 * `color_hex` *(VARCHAR(7))* → Código de color de UI para el Dashboard (ej. "#DC2626").
@@ -112,13 +113,33 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 
 ---
 
-### 4. Tabla: `agency_matrix` (Matriz Cruzada de Costos Portuarios)
-> 📎 **Ver Documento Vinculado:** [[port_costs]]
-* `client_id` *(VARCHAR, PK)* → ID del cliente contratante o 'DEFAULT' como fallback global de tarifa aduanera.
-* `port_id` *(VARCHAR, PK)* → Puerto de la operación.
-* `operation_type` *(VARCHAR, PK)* → Naturaleza del evento en muelle (`CHECK (operation_type IN ('CARGA', 'DESCARGA'))`).
-* `vessel_id` *(VARCHAR, PK)* → ID del navío que realiza el viaje (ej. 'TABLONES') o 'DEFAULT' para fallback genérico.
-* `cost` *(NUMERIC)* → Gasto fijo estipulado de agencia aduanera en dólares.
+### 4. Tabla: `port_costs_matrix` (Matriz Desglosada de Costos Portuarios — Reemplazo de agency_matrix)
+> 💡 **Ver Documento Vinculado:** [[port_costs]]
+*Almacena la matriz de costos detallados y desglosados (remolcadores, pilotaje, lanchas, honorarios, etc.) por cliente, puerto, terminal y tipo de operación para cada buque específico.*
+* `client_id` *(VARCHAR, PK)* ── ID del cliente comercial (ej. `'SPCC'`) o `'DEFAULT'` como fallback global.
+* `port_id` *(VARCHAR, PK)* ── ID del puerto de la operación (ej. `'ILO'`, `'MATARANI'`).
+* `terminal` *(VARCHAR, PK, DEFAULT 'GENERAL')* ── Terminal específico dentro del puerto (ej. `'TERMINAL_A'`, `'INTERACID'`, `'TERQUIM'`).
+* `operation_type` *(VARCHAR, PK)* ── Tipo de operación: `CARGA` (Origen) o `DESCARGA` (Destino) (`CHECK (operation_type IN ('CARGA', 'DESCARGA'))`).
+* `vessel_id` *(VARCHAR, PK)* ── ID del buque (ej. `'TABLONES'`, `'MOQUEGUA'`) o `'DEFAULT'` para fallback general.
+* `concept_id` *(VARCHAR, PK, FK ── port_cost_concepts.concept_id)* ── Concepto de costo específico (ej. `'towage_1st'`, `'pilotage'`, `'lighthouse_dues'`, `'agency_fee'`, etc.).
+* `cost` *(NUMERIC, DEFAULT 0)* ── Costo total calculado o tarifa base fija (USD).
+* `rate_usd` *(NUMERIC)* ── Tarifa unitaria base en dólares.
+* `multiplier_source` *(VARCHAR, DEFAULT 'FIXED')* ── Variable multiplicadora para cálculo de tarifa variable: `FIXED`, `LOA`, `TRB`, `DWT`, `PORT_HOURS`, `CARGO_TONS` (`CHECK (multiplier_source IN ('FIXED', 'LOA', 'TRB', 'DWT', 'PORT_HOURS', 'CARGO_TONS'))`).
+* `min_limit` / `max_limit` *(NUMERIC)* ── Límites mínimos y máximos de cobro de tarifa.
+* `calculation_formula_template` *(TEXT)* ── Plantilla o fórmula de cálculo dinámico para el motor.
+
+**Clave Primaria Compuesta:** `(client_id, port_id, terminal, operation_type, vessel_id, concept_id)`
+
+#### 4.1. Tabla: `port_cost_concepts` (Catálogo de Conceptos de Costos Portuarios)
+*Catálogo maestro que clasifica y define el tipo de cálculo de cada rubro portuario.*
+* `concept_id` *(VARCHAR, PK)* ── Código único de concepto (ej. `'towage_1st'`, `'agency_fee'`).
+* `concept_name` *(VARCHAR)* ── Nombre descriptivo comercial del concepto.
+* `category` *(VARCHAR)* ── Categoría del costo: `shifting`, `general_port` o `agency` (`CHECK (category IN ('shifting', 'general_port', 'agency'))`).
+* `default_calculation_type` *(VARCHAR, DEFAULT 'FIXED')* ── Tipo de cálculo base: `FIXED`, `VARIABLE_TIME`, `VARIABLE_TONS` (`CHECK (default_calculation_type IN ('FIXED', 'VARIABLE_TIME', 'VARIABLE_TONS'))`).
+
+> ⚠️ **Arquitectura Fallback (Transición Gradual):**
+> Para garantizar la compatibilidad del forecast de toda la flota, la tabla `agency_matrix` fue dada de baja (DROP) y sus costos planos históricos se migraron a `port_costs_matrix` bajo el concepto único de `'agency_fee'` con terminal `'GENERAL'`. 
+> Al realizar una simulación, el motor de forecast busca de forma prioritaria el desglose completo del buque. Si el buque no tiene datos específicos sembrados, el motor realiza un **fallback automático** al registro consolidado bajo el concepto `'agency_fee'` del buque, o en su defecto al `'DEFAULT'` del puerto (costo plano heredado de `agency_matrix`).
 
 ---
 

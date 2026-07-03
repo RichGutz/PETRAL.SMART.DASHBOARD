@@ -20,7 +20,7 @@ Cada tabla de origen tiene un color fijo que se aplica en los cards superiores Y
 | 🟡 Amarillo | `bunker_prices` | Precios de combustible con fecha cotización |
 | 🟣 Púrpura | `routes` | Distancias y weather factors |
 | 🟠 Naranja | `ports` | Límites físicos de terminales |
-| 🔴 Rojo | `agency_matrix` | Costos portuarios (llave: Cliente+Puerto+Op+Barco) |
+| 🔴 Rojo | `agency_matrix` | Costos portuarios planos (Mantenida viva físicamente como fallback secundario obligatorio) |
 | 🟢 Verde | `contracts` | Reglas comerciales y fletes |
 
 ## 🧮 4. Estructura de la Matriz
@@ -43,7 +43,7 @@ Layout `flex` de 4 columnas; cols 2 y 3 tienen cards apilados con `gap-1` (pegad
 
 | Col | Card | Variables clave |
 |---|---|---|
-| **1** | 🔵 Maestro Flota | Barco · speed · tce_req · IFO/MDO × {Mar, Idle, Carga, Desc} en **MT/d** |
+| **1** | 👤 Maestro Flota | Barco • speed • tce_req • DWT • dwcc • length • beam • IFO/MDO •- {Mar, Idle, Carga, Desc} en **MT/d** |
 | **2 (top)** | 🟡 Combustible | Fecha Cotización · p_ifo · p_mdo |
 | **2 (bot)** | 🔴 Costos Portuarios | Llaves: Cliente+Puerto+Op+Barco · Port Cost Origen · Port Cost Destino |
 | **3 (top)** | 🟣 Maestro Rutas | Origen→Destino · dist · w_laden / w_ballast |
@@ -103,3 +103,10 @@ Layout `flex` de 4 columnas; cols 2 y 3 tienen cards apilados con `gap-1` (pegad
 - [x] **Inyección de Posicionamiento:** Creadas las columnas `positioning_carga_hrs` y `positioning_descarga_hrs` en la tabla `ports` (inicializadas a `1` en Supabase).
 - [x] **Nueva Fórmula de Días de Puerto:** Tiempos de posicionamiento integrados en la métrica 3 (`port_days`), rastro de auditoría de backend, y ReportLab tests del PDF Ledger.
 - [x] **Fix de Contenido en Impresión:** Sincronizados los 6 cards del HTML de impresión con las variables reales y corregidos los caracteres corruptos de codificación.
+
+## ✅ 12. Completados en Paso 10 (Restauración de agency_matrix y Dimensiones de Flota)
+
+- [x] **Restauración y Conservación de `agency_matrix`:** Re-creada la tabla física `agency_matrix` en Supabase y poblada con sus 38 registros históricos consolidados. El motor (`forecast_service.py`) se configuró para consultarla como fallback secundario si no existen tarifas detalladas en `port_costs_matrix`. **Se prohíbe eliminar esta tabla en el futuro.**
+- [x] **Dimensiones Físicas del Buque:** Agregadas las columnas `length` y `beam` a la tabla `vessels` en Supabase y actualizados los valores para toda la flota.
+- [x] **Card Maestro Flota de 2 Columnas:** Actualizado el card en React e impresión HTML de `VoyageLedgerTest.tsx` para renderizar `DWT`, `dwcc`, `length` y `beam` en un grid compacto de 2 columnas paralelas.
+- [x] **Despliegue a Producción:** Compilados y desplegados los cambios a producción de forma exitosa en el VPS (`forecast.geeksoft.tech`).

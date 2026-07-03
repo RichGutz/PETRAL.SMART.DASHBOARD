@@ -49,3 +49,48 @@ class SpotSaveRequest(BaseModel):
 class SpotCalculationRequest(BaseModel):
     vessel_id: str
     legs: Dict[str, Any]
+
+
+class MultiCotizadorTramo(BaseModel):
+    origin_port_id: str
+    destination_port_id: str
+    type: str  # 'BALLAST' o 'LADEN'
+    quantity: float = 0.0
+    freight_rate: float = 0.0
+    origin_action: Optional[str] = "NONE"
+    destination_action: Optional[str] = "NONE"
+    port_overhead_hours_origin: float = 6.0
+    port_overhead_hours_dest: float = 6.0
+    port_delay_hours_loading: float = 0.0
+    port_delay_hours_discharging: float = 0.0
+    positioning_carga_hrs: float = 0.0
+    positioning_descarga_hrs: float = 0.0
+    weather_factor: float = 0.0
+    route_distance: float = 0.0
+    agency_costs_origin: float = 0.0
+    agency_costs_destination: float = 0.0
+    custom_load_rate: Optional[float] = None
+    custom_discharge_rate: Optional[float] = None
+
+
+class MultiCotizadorRequest(BaseModel):
+    vessel_id: str
+    tramos: List[MultiCotizadorTramo]
+    bunker_price_ifo: Optional[float] = None
+    bunker_price_mdo: Optional[float] = None
+    vessel_speed: Optional[float] = None
+    grt: Optional[float] = None
+    dwt: Optional[float] = None
+    dwcc: Optional[float] = None
+    length: Optional[float] = None
+    beam: Optional[float] = None
+    tce_required: Optional[float] = None
+    consumption_sea_ifo: Optional[float] = None
+    consumption_idle_ifo: Optional[float] = None
+    consumption_load_ifo: Optional[float] = None
+    consumption_disch_ifo: Optional[float] = None
+    consumption_sea_mdo: Optional[float] = None
+    consumption_idle_mdo: Optional[float] = None
+    consumption_load_mdo: Optional[float] = None
+    consumption_disch_mdo: Optional[float] = None
+

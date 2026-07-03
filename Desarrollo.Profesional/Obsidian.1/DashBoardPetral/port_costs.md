@@ -125,10 +125,16 @@ Se ejecutó la migración SQL `20260702000001_port_costs_migration.sql` que:
 *   **Motorcito Desacoplado:** Se implementó la función helper `calculate_detailed_port_costs` en `forecast_service.py` que calcula el total de costos portuarios a partir del desglose de la matriz y retorna el total consolidado (`total_cost`) junto con su desglose en un JSON (`breakdown`).
 *   **Aislamiento del Núcleo Matemático:** La función matemática central en `engine.py` se mantiene intacta recibiendo costos planos (`agency_costs_origin` y `agency_costs_destination`), protegiendo la estabilidad del cálculo de PnL y TCE de viaje.
 *   **Regla de Negocio para Mejillones (Forecast):** Para las proyecciones de simulación, el puerto de `MEJILLONES` promedia aritméticamente las tarifas de sus tres terminales activas (`TERMINAL_A`, `INTERACID` y `TERQUIM`).
+*   **Arquitectura Fallback (Transición Gradual):** Para posibilitar una transición fluida y la simulación de toda la flota, la función helper `calculate_detailed_port_costs` opera bajo una estrategia de fallback secuencial cuando busca tarifas en la base de datos:
+    1.  *Prioridad 1 (Detalle de Buque):* Busca el desglose específico del buque evaluado en `port_costs_matrix`. Si existen registros desglosados, los consolida y calcula.
+    2.  *Prioridad 2 (Costo Consolidado del Buque):* Si el buque tiene registros pero únicamente bajo el concepto de costo de agencia plano (`agency_fee`), se recupera este único valor como la tarifa consolidada (caso de buques migrados de `agency_matrix` como `CONCON_TRADER`).
+    3.  *Prioridad 3 (Costo General por Defecto):* Si el buque no tiene datos específicos registrados, la consulta retrocede (fallback) para buscar la tarifa bajo el `vessel_id = 'DEFAULT'` configurada para el puerto, operando como fallback general para la flota.
 *   **Auditoría y Ledger (API Payload):** El payload de retorno del API de forecast incluye ahora la clave `"port_costs_breakdown"` con el detalle fino de rubros de origen y destino para visualización interactiva en el frontend.
 
-### 3. Conciliación y Validación Matemática (MOQUEGUA)
-Simulando las rutas reales de SPCC para el buque **MOQUEGUA**, los costos de puerto consolidan de forma exacta con las proformas de Sandra:
+### 3. Conciliación y Validación Matemática
+Simulando las rutas reales de SPCC para los buques **MOQUEGUA** y **TABLONES**, los costos de puerto calculados consolidan de forma exacta con las proformas de Sandra:
+
+#### A. Buque MOQUEGUA
 
 | Puerto | Tipo de Operación | Costo Sembrado / Calculado | Comentarios |
 | :--- | :--- | :--- | :--- |
@@ -138,3 +144,15 @@ Simulando las rutas reales de SPCC para el buque **MOQUEGUA**, los costos de pue
 | **CALLAO** | DESCARGA (Destino) | **$15,144.00 USD** | Rubros contractuales y agencia fijos. |
 | **MEJILLONES** | DESCARGA (Destino) | **$48,715.12 USD** | Promedio aritmético exacto de: Terminal A (`$50,333.50`), Interacid (`$45,855.00`) y Terquim (`$49,956.85`). |
 | **BARQUITO** | DESCARGA (Destino) | **$84,444.00 USD** | Sumatoria exacta de los rubros fijos. |
+
+#### B. Buque TABLONES
+
+| Puerto | Tipo de Operación | Costo Sembrado / Calculado | Comentarios |
+| :--- | :--- | :--- | :--- |
+| **ILO** | CARGA (Origen) | **$23,503.50 USD** | Incluye `$2,760` de `launch_hire` (lancha de amarre/desamarre + lancha autoridades + posicionamiento/horas mínimas) y rubros desglosados. |
+| **MATARANI** | DESCARGA (Destino) | **$18,244.00 USD** | Incluye `$7,400` de remolcadores PSA (2 remolcadores) y rubros fijos. |
+| **MARCONA** | DESCARGA (Destino) | **$41,134.00 USD** | Incluye `$36,000` de remolcadores PSA y gastos de autoridades/inspección. |
+| **CALLAO** | DESCARGA (Destino) | **$15,206.83 USD** | Incluye muellaje exacto de APM (`$7,088.83`) y remolcaje Petranso (`$2,800`). |
+| **MEJILLONES** | DESCARGA (Destino) | **$53,014.27 USD** | Promedio aritmético exacto de: Terminal A (`$52,104.10`), Interacid (`$48,786.00`) y Terquim (`$58,152.70`). |
+| **BARQUITO** | DESCARGA (Destino) | **$86,737.60 USD** | Incluye `$38,460` de remolcadores Ultratug y `$18,000` de remolcador stand by. |
+ |

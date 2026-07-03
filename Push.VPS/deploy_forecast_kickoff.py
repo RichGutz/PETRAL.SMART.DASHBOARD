@@ -67,12 +67,21 @@ def deploy():
         # 3. Permisos correctos
         run(client, f"find {APP_DIR} -type f -exec chmod 644 {{}} \\; && find {APP_DIR} -type d -exec chmod 755 {{}} \\; && chown -R www-data:www-data {APP_DIR} 2>/dev/null || true", "3. Permisos")
 
-        # 4. Configurar Nginx
+        # 4. Configurar Nginx con SSL Manual robusto
         nginx_cfg = f"""server {{
     listen 80;
     server_name {DOMAIN};
+    return 301 https://$host$request_uri;
+}}
+
+server {{
+    listen 443 ssl;
+    server_name {DOMAIN};
     root {APP_DIR};
     index index.html;
+
+    ssl_certificate /etc/letsencrypt/live/{DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{DOMAIN}/privkey.pem;
 
     location /api/ {{
         proxy_pass http://127.0.0.1:8000;

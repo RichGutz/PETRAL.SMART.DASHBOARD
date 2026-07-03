@@ -36,6 +36,14 @@ export const ForecastService = {
         const response = await api.post('/forecast/spot/calculate', payload);
         return response.data;
     },
+    calculateMultiCotizador: async (payload: any) => {
+        const response = await api.post('/forecast/multicotizador/calculate', payload);
+        return response.data;
+    },
+    getLatestBunker: async () => {
+        const response = await api.get('/forecast/bunker/latest');
+        return response.data;
+    },
     saveSpot: async (payload: any) => {
         const response = await api.post('/forecast/spot/save', payload);
         return response.data;

@@ -1,14 +1,11 @@
 import os
 import markdown
 import weasyprint
-import sys
 
-def convert_obsidian_md_to_pdf():
+def convert_er_to_pdf():
     obsidian_dir = r"c:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.1\DashBoardPetral"
-    file_name = sys.argv[1] if len(sys.argv) > 1 else "multicotizador"
-    
-    md_path = os.path.join(obsidian_dir, f"{file_name}.md")
-    pdf_path = os.path.join(obsidian_dir, f"{file_name}.pdf")
+    md_path = os.path.join(obsidian_dir, "Modelo.E-R.md")
+    pdf_path = os.path.join(obsidian_dir, "Modelo.E-R.pdf")
     
     if not os.path.exists(md_path):
         print(f"Error: {md_path} no existe.")
@@ -16,7 +13,7 @@ def convert_obsidian_md_to_pdf():
         
     md_content = open(md_path, encoding='utf-8').read()
     
-    # Configurar extensiones para que formatee correctamente bloques de código, tablas y diagramas
+    # Configurar extensiones
     html_body = markdown.markdown(md_content, extensions=['extra', 'codehilite'])
     
     html_content = f"""<!DOCTYPE html>
@@ -30,33 +27,33 @@ def convert_obsidian_md_to_pdf():
     }}
     body {{
         font-family: 'Arial', sans-serif;
-        font-size: 11pt;
-        line-height: 1.6;
+        font-size: 10pt;
+        line-height: 1.5;
         color: #1e293b;
     }}
     h1 {{
-        font-size: 20pt;
+        font-size: 18pt;
         color: #0f2c59;
         border-bottom: 2px solid #e2e8f0;
         padding-bottom: 8px;
         margin-top: 0;
     }}
     h2 {{
-        font-size: 14pt;
+        font-size: 13pt;
         color: #0f2c59;
-        margin-top: 24px;
-        margin-bottom: 12px;
+        margin-top: 20px;
+        margin-bottom: 10px;
         border-bottom: 1px solid #e2e8f0;
         padding-bottom: 4px;
     }}
     h3 {{
-        font-size: 12pt;
+        font-size: 11pt;
         color: #334155;
-        margin-top: 18px;
-        margin-bottom: 8px;
+        margin-top: 15px;
+        margin-bottom: 6px;
     }}
     p, li {{
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }}
     ul, ol {{
         margin-top: 4px;
@@ -67,24 +64,24 @@ def convert_obsidian_md_to_pdf():
         background-color: #f1f5f9;
         padding: 2px 4px;
         border-radius: 4px;
-        font-size: 9.5pt;
+        font-size: 9pt;
     }}
     pre {{
         background-color: #f8fafc;
         border: 1px solid #e2e8f0;
-        padding: 12px;
-        border-radius: 8px;
+        padding: 10px;
+        border-radius: 6px;
         overflow-x: auto;
     }}
     pre code {{
         background-color: transparent;
         padding: 0;
         border-radius: 0;
-        font-size: 9pt;
+        font-size: 8.5pt;
     }}
     blockquote {{
-        margin: 16px 0;
-        padding: 8px 16px;
+        margin: 12px 0;
+        padding: 6px 12px;
         background-color: #f8fafc;
         border-left: 4px solid #3b82f6;
         color: #475569;
@@ -96,11 +93,11 @@ def convert_obsidian_md_to_pdf():
     table {{
         width: 100%;
         border-collapse: collapse;
-        margin: 16px 0;
+        margin: 12px 0;
     }}
     th, td {{
         border: 1px solid #e2e8f0;
-        padding: 8px 12px;
+        padding: 6px 10px;
         text-align: left;
     }}
     th {{
@@ -119,7 +116,7 @@ def convert_obsidian_md_to_pdf():
 </html>
 """
     
-    temp_html_path = os.path.join(obsidian_dir, f"temp_{file_name}.html")
+    temp_html_path = os.path.join(obsidian_dir, "temp_er.html")
     with open(temp_html_path, "w", encoding="utf-8") as f:
         f.write(html_content)
         
@@ -131,4 +128,4 @@ def convert_obsidian_md_to_pdf():
     print(f"Conversión exitosa de MD a PDF en: {pdf_path}")
 
 if __name__ == "__main__":
-    convert_obsidian_md_to_pdf()
+    convert_er_to_pdf()
