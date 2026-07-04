@@ -308,65 +308,115 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             
             import copy
             tce_req = v_data.get("tce_required", 0)
+            total_laden_qty = 0.0      # Se calcula en bloque multicotizador; 0 en SpotRouter tradicional
+            total_laden_revenue = 0.0  # Ídem
             
             if "tramos" in legs_data:
-                # -- ESCENARIO MULTICOTIZADOR / ESTIMADOR EXCEL --
+                # -- ESCENARIO MULTICOTIZADOR / ESTIMADOR EXCEL (Fase 2) --
+                # Los tramos ya vienen enriquecidos desde handleSaveRoute (Fase 1).
+                # Política: respetar los datos grabados y solo recalcular lo que falte.
                 tramos_copy = copy.deepcopy(legs_data.get("tramos", []))
-                
-                # Buscar tramos de tipo LADEN para re-calcular costos de puerto dinámicos y cantidades
+
+                # --- VESSEL PARAMS: usar los del legs_data si existen (buque personalizado) ---
+                saved_vparams = legs_data.get("vesselParams", {})
+                if saved_vparams and saved_vparams.get("vessel_id"):
+                    vparams = copy.deepcopy(saved_vparams)
+                else:
+                    vparams = copy.deepcopy(v_data)
+
+                # --- BUNKER: usar el precio del legs_data si no hay override en la línea del forecast ---
+                bunker_ifo_saved = legs_data.get("bunker_price_ifo")
+                bunker_mdo_saved = legs_data.get("bunker_price_mdo")
+                final_p_ifo = p_ifo if line.forecast_bunker_price_ifo else (bunker_ifo_saved or p_ifo)
+                final_p_mdo = p_mdo if line.forecast_bunker_price_mdo else (bunker_mdo_saved or p_mdo)
+                vparams["bunker_price_ifo"] = final_p_ifo
+                vparams["bunker_price_mdo"] = final_p_mdo
+                vparams["tce_required"] = tce_req
+
+                # --- TRAMOS: enriquecer solo lo necesario ---
+                total_laden_qty = 0.0
+                total_laden_revenue = 0.0
                 for tr in tramos_copy:
-                    if tr.get("type", "").upper() == "LADEN":
-                        tr["quantity"] = line.quantity
-                        tr["freight_rate"] = freight_rate
-                        
+                    tipo = tr.get("type", "").upper()
+                    if tipo == "LADEN":
+                        # Respetar freight_rate grabado por tramo (cotización multi-descarga)
+                        # Solo sobreescribir si el usuario pasó custom_tariff en la línea del forecast
+                        if line.custom_tariff is not None:
+                            tr["freight_rate"] = float(line.custom_tariff)
+                        # Acumular para yield ponderado
+                        total_laden_qty += float(tr.get("quantity", 0))
+                        total_laden_revenue += float(tr.get("quantity", 0)) * float(tr.get("freight_rate", 0))
+
                         orig_port = tr.get("origin_port_id")
                         dest_port = tr.get("destination_port_id")
-                        if orig_port and tr.get("origin_action") != 'NONE':
-                            tr["agency_costs_origin"] = calculate_detailed_port_costs(
-                                client, orig_port, 'CARGA', vessel, port_costs_data, agency_matrix_data, request.port_cost_mode
-                            )["total_cost"]
-                        if dest_port and tr.get("destination_action") != 'NONE':
-                            dest_res = calculate_detailed_port_costs(
-                                client, dest_port, 'DESCARGA', vessel, port_costs_data, agency_matrix_data, request.port_cost_mode
-                            )
-                            tr["agency_costs_destination"] = dest_res["total_cost"]
-                            
-                vparams = copy.deepcopy(v_data)
-                vparams["bunker_price_ifo"] = p_ifo
-                vparams["bunker_price_mdo"] = p_mdo
-                vparams["vessel_speed"] = v_data.get("vessel_speed", 11.0)
-                vparams["tce_required"] = tce_req
-                
+
+                        # Costo de puerto origen: respetar override grabado; recalcular solo si es 0
+                        if float(tr.get("agency_costs_origin", 0)) == 0.0:
+                            if orig_port and tr.get("origin_action", "NONE") != "NONE":
+                                tr["agency_costs_origin"] = calculate_detailed_port_costs(
+                                    client, orig_port, "CARGA", vessel,
+                                    port_costs_data, agency_matrix_data, request.port_cost_mode
+                                )["total_cost"]
+
+                        # Costo de puerto destino: respetar override grabado; recalcular solo si es 0
+                        if float(tr.get("agency_costs_destination", 0)) == 0.0:
+                            if dest_port and tr.get("destination_action", "NONE") != "NONE":
+                                tr["agency_costs_destination"] = calculate_detailed_port_costs(
+                                    client, dest_port, "DESCARGA", vessel,
+                                    port_costs_data, agency_matrix_data, request.port_cost_mode
+                                )["total_cost"]
+
+                # --- YIELD PONDERADO: tarifa representativa para la Matriz ---
+                yield_flete = (total_laden_revenue / total_laden_qty) if total_laden_qty > 0 else 0.0
+
                 payload = {
                     "vessel_params": vparams,
                     "tramos": tramos_copy
                 }
-                
+
                 from backend.spot_engine import calculate_multicotizador_simulation
                 spot_res = calculate_multicotizador_simulation(payload)
                 consolidated = spot_res.get("consolidated", {})
-                
-                tce_real = consolidated.get("tce_real", 0)
+
+                # --- COMISIONES: aplicar addressCommPct y brokerCommPct del legs_data ---
+                addr_comm_pct = float(legs_data.get("addressCommPct", 0))
+                broker_comm_pct = float(legs_data.get("brokerCommPct", 0))
+                total_comm_pct = addr_comm_pct + broker_comm_pct
+                gross_revenue = consolidated.get("total_freight_revenue", 0)
+                total_commissions = gross_revenue * (total_comm_pct / 100)
+                net_revenue = gross_revenue - total_commissions
+                pnl_after_comm = net_revenue - consolidated.get("total_port_costs", 0) - consolidated.get("total_bunker_costs", 0)
+                total_days = consolidated.get("total_days", 0)
+                tce_real = (pnl_after_comm / total_days) if total_days > 0 else 0
+
                 unit_result = {
-                    "net_income": consolidated.get("total_freight_revenue", 0),
+                    "net_income": gross_revenue,
+                    "total_commissions": round(total_commissions, 2),
+                    "net_revenue_after_comm": round(net_revenue, 2),
                     "total_port_costs": consolidated.get("total_port_costs", 0),
                     "total_bunker_costs": consolidated.get("total_bunker_costs", 0),
-                    "voyage_result": consolidated.get("pnl_net_utility", 0),
-                    "pl_vs_required": consolidated.get("pnl_net_utility", 0) - (consolidated.get("total_days", 0) * tce_req),
-                    "tce_real": tce_real,
-                    "total_duration": consolidated.get("total_days", 0),
+                    "voyage_result": round(pnl_after_comm, 2),
+                    "pl_vs_required": round(pnl_after_comm - (total_days * tce_req), 2),
+                    "tce_real": round(tce_real, 2),
+                    "total_duration": total_days,
                     "sea_days": consolidated.get("total_sea_days", 0),
                     "port_days": consolidated.get("total_port_days", 0),
                     "bunker_ifo_tonnage": consolidated.get("bunker_ifo_tonnage", 0),
                     "bunker_mdo_tonnage": consolidated.get("bunker_mdo_tonnage", 0),
-                    "pcm_projected": tce_real - tce_req,
+                    "pcm_projected": round(tce_real - tce_req, 2),
                     "audit_trail": {
                         "bunker_costs": {
                             "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
                             "values": f"IFO: {consolidated.get('bunker_ifo_tonnage', 0)} t, MDO: {consolidated.get('bunker_mdo_tonnage', 0)} t"
+                        },
+                        "commissions": {
+                            "formula": f"Gross Revenue × ({addr_comm_pct}% addr + {broker_comm_pct}% broker)",
+                            "values": f"Gross: {round(gross_revenue,2)} | Comm: {round(total_commissions,2)} | Net: {round(net_revenue,2)}"
                         }
                     }
                 }
+                # Guardar yield ponderado para usar en inputs de salida
+                freight_rate = yield_flete
             else:
                 # -- ESCENARIO SPOT ROUTER TRADICIONAL --
                 legs = legs_data.get("legs", {})
@@ -426,8 +476,10 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             
             inputs = {
                 "route_distance": consolidated.get("total_distance", 0),
-                "quantity": line.quantity,
-                "freight_rate": freight_rate
+                # Para rutas multicotizador: cantidad total cargada y yield ponderado
+                # Para SpotRouter tradicional: quantity y freight_rate de la línea del forecast
+                "quantity": total_laden_qty if ("tramos" in legs_data and total_laden_qty > 0) else line.quantity,
+                "freight_rate": freight_rate  # yield ponderado (multi) o custom_tariff (tradicional)
             }
             
             route_key = f"SPOT-{spot_id}"

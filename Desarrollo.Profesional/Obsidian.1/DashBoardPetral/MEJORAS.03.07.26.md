@@ -353,3 +353,141 @@ Para garantizar la estabilidad y no romper nada en produccion:
    * **Caso 2: ❌ Salio mal / No convence:**
      * Gemini ejecuta git reset --hard HEAD (o retorna al commit del tag anterior) y hace redeploy inmediato al VPS para restaurar la estabilidad.
      * Se analiza el fallo antes de volver a intentar.
+
+---
+
+### 🔄 Mejora 7 — Certificación del Circuito Grabar → Jalar Rutas Spot (Estimador Excel ↔ Matriz Financiera)
+
+**Origen:** Audio de sesión transcrito con Whisper desde `CIRCUITO.GRABAR.RUTAS.JALAR.RUTAS.ogg`.
+
+**Contexto y Problema Identificado:**
+La Matriz Financiera se alimenta de dos fuentes de rutas:
+1. **Rutas Fijas** → auditadas en el Voyage Ledger con todos sus costos certificados.
+2. **Rutas Spot** → generadas en el Estimador Excel (`MultiCotizadorExcel`), grabadas en la BD, y jaladas en la Matriz Financiera al seleccionar un cliente SPOT.
+
+El problema reportado: al jalar una ruta Spot en la Matriz, **no se transfiere el paquete completo de datos**, lo cual se manifiesta en costos incorrectos en el P/L.
+
+---
+
+**Análisis del Flujo Completo (Data Flow):**
+
+```
+GRABAR (Estimador Excel → Supabase)
+  MultiCotizadorExcel.tsx
+    └── handleSaveRoute()
+          └── ForecastService.saveSpot()
+                └── POST /api/forecast/spot/save
+                      └── INSERT en tabla `routes_spot` (campo JSONB `legs_data`)
+
+JALAR (ForecastBuilder → ForecastGrid → Backend)
+  ForecastBuilder.tsx
+    └── ForecastService.listSpots() → lista rutas disponibles
+    └── handleAdd() → genera línea con:
+          origin_port_id: "SPOT"
+          destination_port_id: nombre de la ruta
+          custom_tariff: flete manual (único, plano)
+
+  forecast_service.py
+    └── Para líneas con origin_port_id == "SPOT":
+          └── Extrae legs_data de routes_spot
+          └── Si legs_data tiene "tramos" → motor multicotizador
+          └── Si no → motor SpotRouter tradicional
+```
+
+---
+
+**Tabla `routes_spot` — Estructura Real (inspeccionada en Supabase):**
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| `spot_id` | UUID (PK) | Auto-generado |
+| `name` | VARCHAR | Nombre de la ruta |
+| `description` | TEXT | |
+| `legs_data` | **JSONB** | Cajón flexible — contiene todo el paquete |
+| `created_at` | TIMESTAMP | Auto |
+| `pais` | TEXT | "Peru" o "Chile" |
+
+**Conclusión sobre la tabla:** La tabla NO es el problema. El campo `legs_data` JSONB es infinitamente flexible. El problema estaba en QUÉ datos se metían en ese cajón al grabar, y QUÉ datos leía el backend al jalar.
+
+---
+
+**5 Gaps Identificados (antes del fix):**
+
+| # | Campo que se perdía | Causa |
+|---|---|---|
+| 1 | `manual_port_cost` | El `forecast_service.py` recalculaba costos desde `port_cost_static`, ignorando el override manual grabado |
+| 2 | `addressCommPct` / `brokerCommPct` | Las comisiones se grababan en el código pero no llegaban al payload del engine al recalcular |
+| 3 | `vesselParams` personalizados | Se usaba el buque maestro de la BD, no los parámetros editados en el Estimador |
+| 4 | `puertosConfig` (op_rate, overhead, positioning) | Nunca se mapeaban al payload del engine |
+| 5 | `origin_action` / `destination_action` de cada tramo | Los tramos grabados no incluían qué acción realizaba cada puerto (CARGAR/DESCARGAR) |
+
+**Causa raíz:** La función `handleSaveRoute` guardaba los `tramos` en su estado crudo de React (sin enrichment), mientras que `handleCalculate` sí construía un payload completo y enriquecido al llamar al engine. Existían dos versiones del dato: la rica (en memoria, para calcular) y la pobre (en BD, para persistir).
+
+---
+
+**Discusión: ¿Qué "Flete" debe mostrar la Matriz Financiera para rutas multi-descarga?**
+
+Si una ruta tiene 1 carga → 3 descargas con tarifas distintas:
+
+| Tramo | Toneladas | Flete | Ingreso |
+|---|---|---|---|
+| ILO → MATARANI (descarga) | 4,000 MT | $18/MT | $72,000 |
+| ILO → MARCONA (descarga) | 3,000 MT | $22/MT | $66,000 |
+| ILO → MEJILLONES (descarga) | 3,000 MT | $15/MT | $45,000 |
+| **TOTAL** | **10,000 MT** | | **$183,000** |
+
+**Decisión:** La tarifa que se muestra en la Matriz es el **Yield Ponderado por toneladas**:
+```
+yield_flete = Σ(Q_i × F_i) / Σ(Q_i) = $183,000 / 10,000 = $18.30/MT
+```
+Esto es matemáticamente correcto: `total_quantity × yield_flete = total_freight_revenue`.
+
+**Consecuencia directa:** El campo **"9. Flete"** del `ForecastBuilder` pierde sentido para rutas Spot del Estimador Excel. El yield puede calcularse automáticamente desde el `legs_data`. Para rutas fijas y SpotRouter tradicional, el campo sigue siendo necesario.
+
+---
+
+**Fix Aplicado — Fase 1 (Completada):**
+
+**Archivo:** `MultiCotizadorExcel.tsx` — función `handleSaveRoute`
+**Commit:** `bd7b90a` — *"fix: handleSaveRoute graba paquete completo de datos enriquecidos del estimador excel"*
+
+La función ahora construye `tramosEnriquecidos` usando exactamente la misma lógica de `handleCalculate`, incluyendo todos los campos que el engine necesita:
+
+**Campos nuevos grabados en cada tramo:**
+- `origin_action` / `destination_action` → qué hace el buque en cada puerto
+- `custom_load_rate` / `custom_discharge_rate` → ritmo de operación en T/h
+- `rate_unit_origin` / `rate_unit_destination` → unidad del ritmo (TH o TD)
+- `port_overhead_hours_origin` / `port_overhead_hours_dest` → time to count
+- `positioning_carga_hrs` / `positioning_descarga_hrs` → horas de maniobra
+- `agency_costs_origin` / `agency_costs_destination` → override de costo portuario manual
+- `weather_factor` → normalizado a decimal (0.05) en lugar de porcentaje (5)
+
+**Campos ya correctos, mantenidos:**
+- `addressCommPct` / `brokerCommPct` → comisiones (%) explícitas en legs_data
+- `puertosConfig` → configuración visual de cada puerto (para reload en UI)
+- `vesselParams` → particularidades del buque editadas en el Estimador
+- `bunker_price_ifo` / `bunker_price_mdo` → precios fijados en la cotización
+
+---
+
+**Pendiente — Fase 2 (No ejecutada):**
+
+Corregir `forecast_service.py` para que al jalar la ruta en la Matriz Financiera:
+1. Use los `tramosEnriquecidos` ya grabados directamente, sin recalcular costos de puerto (salvo que `agency_costs_origin == 0`, en cuyo caso recalcula desde `port_cost_static`).
+2. Aplique `addressCommPct` / `brokerCommPct` del `legs_data` al `pnl_net_utility`.
+3. Use el `vesselParams` del `legs_data` (buque personalizado) en lugar del maestro de BD.
+4. Calcule el `yield_flete` como promedio ponderado en lugar de requerir un `custom_tariff` plano.
+5. Evaluar eliminar el campo "9. Flete" (hacerlo opcional) en `ForecastBuilder` para clientes que usan rutas del Estimador Excel.
+
+**Alcance del Cambio:**
+- `[x]` Analizar el flujo completo de datos: Estimador Excel → `routes_spot` (JSONB) → `forecast_service.py` → engine.
+- `[x]` Identificar los 5 gaps de datos perdidos al grabar/jalar.
+- `[x]` Inspeccionar tabla `routes_spot` en Supabase para confirmar estructura real y datos existentes.
+- `[x]` Corregir `handleSaveRoute` en `MultiCotizadorExcel.tsx` para grabar el paquete enriquecido completo.
+- `[ ]` Corregir `forecast_service.py` para consumir correctamente el `legs_data` completo al jalar (Fase 2).
+- `[ ]` Decidir e implementar la lógica de yield ponderado como tarifa representativa en la Matriz.
+- `[ ]` Evaluar hacer opcional el campo "9. Flete" en `ForecastBuilder` para rutas Spot del Estimador.
+
+**Git snapshots:**
+- `896a1f1` → pre-mejora snapshot (antes del fix)
+- `bd7b90a` → fix handleSaveRoute: paquete completo de datos enriquecidos
