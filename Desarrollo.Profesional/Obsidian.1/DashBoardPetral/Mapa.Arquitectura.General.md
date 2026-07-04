@@ -56,7 +56,7 @@ Estas notas contienen los datos estáticos de infraestructura e ingeniería. Deb
 
 ## 🏁 Criterio de Verificación de la Arquitectura
 
-> **Injunción para el Agente:** "Antes de dar por cerrado el módulo, el backend debe ejecutar de forma obligatoria el test de convergencia del Ledger. Si al enviar 13,500 MT a Matarani (Laden) con buque MOQUEGUA el sistema no converge exactamente en un `total_duration` de **4.0801 días** (Mar: 0.5384 d, Puerto: 3.5417 d), un `port_costs` de **$39,000.00 USD**, un `bunker_costs` de **$18,560.53 USD** y un `voyage_result` neto (después de restar 0% comisiones) de **$199,074.47 USD**, el motor se considerará descalzado y el despliegue será rechazado."
+> **Injunción para el Agente:** "Antes de dar por cerrado el módulo, el backend debe ejecutar de forma obligatoria el test de convergencia del Ledger. Si al enviar 13,500 MT a Matarani (Laden) con buque MOQUEGUA el sistema no converge exactamente en un `total_duration` de **4.0801 días** (Mar: 0.5384 d, Puerto: 3.5417 d), un `port_costs` de **$39,000.00 USD**, un `bunker_costs` de **$18,560.53 USD** y un `voyage_result` neto (después de deducir comisiones si aplican) cercano a **$195,033 USD** y un TCE de **$47,801.35 USD**, el motor se considerará descalzado y el despliegue será rechazado."
 
 Al dejar este archivo indexador, cuando abras **Antigravity IDE** y le digas al agente: _"Lee el mapa de arquitectura general"_, la IA va a entender perfectamente la jerarquía de las tablas, no te va a mezclar las variables en Supabase, y sabrá exactamente contra qué números testear el código para que no falle nada.
 
@@ -70,7 +70,7 @@ Para que los programadores visualicen cómo se conectan las tablas en **Supabase
     
 3. Digita una Cantidad (ej. `13,500 MT`).
     
-4. El sistema hace un _Lookup_ automático en la tabla relacional de **`[[Matriz.Tarifas]]`** cruzando esas tres llaves (`client_id` + `destination_port_id` + `quantity`) para inyectar el `freight_rate` base (ej. **`$19.01 USD`**).
+4. El sistema hace un _Lookup_ automático en la tabla relacional de **`[[Matriz.Tarifas]]`** (`contract_tariffs`) cruzando esas cuatro llaves (`contract_id` + `origin_port_id` + `destination_port_id` + `quantity`) para inyectar el `freight_rate` base (ej. **`$19.01 USD`**).
     
 5. Si el switch de bunker está encendido, el motor aplica las reglas de **`[[Maestro.Contratos]]`**, evaluando si se dispara el umbral del BAF para recalcular la tarifa.
     
