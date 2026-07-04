@@ -1,5 +1,6 @@
 import React from 'react';
 import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 
 interface MasterTemplateProps {
@@ -17,6 +18,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
     activeTab = '',
     onBackToDashboard
 }) => {
+    const navigate = useNavigate();
     
     const handleNewWindow = () => {
         window.open(window.location.href, '_blank', 'width=1200,height=800,menubar=no,status=no');
@@ -118,23 +120,38 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-1">Menú de Navegación</div>
                         
                         <nav className="flex flex-col gap-1">
-                            <button className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'vessels' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}>
+                            <button 
+                                onClick={() => navigate('/vessels')}
+                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'vessels' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                            >
                                 <span className="text-sm">🚢</span> Maestro de Buques
                             </button>
                             
-                            <button className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'routes' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}>
+                            <button 
+                                onClick={() => navigate('/routes')}
+                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'routes' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                            >
                                 <span className="text-sm">🗺️</span> Maestro de Rutas
                             </button>
                             
-                            <button className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'clients' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}>
+                            <button 
+                                onClick={() => navigate('/clients')}
+                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'clients' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                            >
                                 <span className="text-sm">💼</span> Maestro de Clientes
                             </button>
                             
-                            <button className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'ports' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}>
+                            <button 
+                                onClick={() => navigate('/ports')}
+                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'ports' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                            >
                                 <span className="text-sm">⚓</span> Maestro de Puertos
                             </button>
 
-                            <button className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'contracts' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}>
+                            <button 
+                                onClick={() => navigate('/contracts')}
+                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'contracts' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                            >
                                 <span className="text-sm">📝</span> Maestro de Contratos
                             </button>
                         </nav>

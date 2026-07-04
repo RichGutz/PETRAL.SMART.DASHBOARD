@@ -3,7 +3,8 @@ import { ForecastGrid } from '../../components/CommercialForecast/ForecastGrid';
 import { ForecastBuilder } from '../../components/CommercialForecast/ForecastBuilder';
 import { InteractiveChart } from '../../components/CommercialForecast/InteractiveChart';
 import { ForecastService } from '../../services/api';
-import { Save, FolderOpen, X, Table, BarChart2, ChevronUp, ChevronDown, Sun, Moon } from 'lucide-react';
+import { Save, FolderOpen, X, Table, BarChart2, ChevronUp, ChevronDown, Sun, Moon, Database } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { VoyageLedgerTest } from '../../components/CommercialForecast/VoyageLedgerTest';
 import { VoyageLedgerUniversal } from '../../components/CommercialForecast/VoyageLedgerUniversal';
 import { SpaghettiMap } from '../../components/CommercialForecast/SpaghettiMap';
@@ -14,6 +15,7 @@ export const CommercialForecast: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState<'none' | 'save' | 'loadList' | 'loadSelected'>('none');
     const [isRibbonCollapsed, setIsRibbonCollapsed] = useState(false);
+    const navigate = useNavigate();
     
     // Theme State
     const [isDarkMode, setIsDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
@@ -377,6 +379,12 @@ export const CommercialForecast: React.FC = () => {
                                     className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold text-sm transition-all ${activeTab === 'ledger_universal' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
                                 >
                                     <span className="text-lg">🧪</span> Ledger Universal
+                                </button>
+                                <button 
+                                    onClick={() => navigate('/clients')}
+                                    className="flex items-center gap-2 px-6 py-2 rounded-full font-semibold text-sm transition-all text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+                                >
+                                    <Database size={16} /> Data Maestros
                                 </button>
                                 
                                 {/* Selector Port Cost Mode */}

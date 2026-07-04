@@ -554,3 +554,16 @@ Se implementó el comportamiento en el componente:
 - Creación de `RoutesMaster.tsx`.
 - Interfaz gráfica basada en una matriz bidimensional estilo Excel (como el antiguo `RouteMatrix.tsx`), permitiendo al usuario editar fácilmente un cruce.
 - Al guardar la matriz, la UI asegura que solo enviará al backend los pares únicos (donde `port_a < port_b`).
+
+---
+
+## 🛠️ Rediseño del Maestro de Contratos y Corrección de Tarifas (Julio 2026)
+
+**Problema 1 (UI/UX):** El layout original del Maestro de Contratos usaba un panel lateral izquierdo (Master-Detail) que no era intuitivo para agrupar múltiples rutas bajo un mismo cliente (COA).
+**Problema 2 (Lógica Backend):** Al cargar las rutas, el backend multiplicaba los brackets de tarifas para todas las rutas del mismo contrato de forma accidental, porque filtraba las tarifas únicamente por `contract_id` y omitía el puerto de origen y destino de la clave compuesta.
+**Problema 3 (Renderizado React):** El estado `selectedContractId` no era suficiente para identificar una ruta única en la interfaz, ya que múltiples rutas compartían el mismo `contract_id` (ej. "SPCC_2025").
+
+**Decisión y Ejecución:**
+- `[x]` **Rediseño UI:** Se eliminó la barra lateral vertical. Ahora la interfaz es 100% horizontal utilizando el ancho completo de la pantalla. El Nivel 1 tiene Pestañas de Clientes (Tabs) en la cabecera, y el Nivel 2 contiene Sub-pestañas para cada Ruta.
+- `[x]` **Fix Backend:** Se corrigió el método `get_contracts_master` en FastAPI para que asigne las tarifas a la ruta correcta usando la validación de clave compuesta `(contract_id, origin_port_id, destination_port_id)`.
+- `[x]` **Fix React State:** Se reemplazó el uso de `contract_id` como clave única en el renderizado y estado (`selectedContractId`) por una función `getRouteKey(route)` que genera un identificador compuesto seguro (`contract_id|origin|destination`), resolviendo el bloqueo de navegación entre pestañas.

@@ -101,3 +101,32 @@ class ClientMaster(BaseModel):
     client_id: str
     client_name: str
     color_hex: Optional[str] = None
+
+class ContractTariffMaster(BaseModel):
+    min_tonnage: float
+    max_tonnage: float
+    freight_rate: float
+    # These fields are implicit/inherited from the parent contract in the UI, but required in DB
+    contract_id: Optional[str] = None
+    origin_port_id: Optional[str] = None
+    destination_port_id: Optional[str] = None
+
+class ContractMaster(BaseModel):
+    contract_id: str
+    client_id: str
+    origin_port_id: str
+    destination_port_id: str
+    is_active: bool = True
+    valid_from: Optional[str] = None
+    valid_to: Optional[str] = None
+    load_rate: float = 0.0
+    discharge_rate: float = 0.0
+    address_commission: float = 0.0
+    broker_commission: float = 0.0
+    bunker_baseline_price_ifo: float = 0.0
+    baf_rules: Optional[str] = None
+    time_to_count_carga_hrs: float = 6.0
+    maneuver_carga_hrs: float = 0.0
+    time_to_count_descarga_hrs: float = 6.0
+    maneuver_descarga_hrs: float = 0.0
+    tariffs: List[ContractTariffMaster] = []

@@ -91,4 +91,13 @@ export const ForecastService = {
         const response = await api.post('/forecast/routes', payload);
         return response.data;
     },
+
+    getContractsMaster: async () => {
+        const response = await api.get('/forecast/masters/contracts');
+        return response.data;
+    },
+    saveContractsMaster: async (payload: any) => {
+        const response = await api.post('/forecast/masters/contracts', payload);
+        return response.data;
+    }
 };

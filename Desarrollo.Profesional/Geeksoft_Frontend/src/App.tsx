@@ -3,6 +3,7 @@ import { CommercialForecast } from './pages/CommercialForecast/CommercialForecas
 import { VesselsMaster } from './pages/Masters/VesselsMaster';
 import { RoutesMaster } from './pages/Masters/RoutesMaster';
 import { ClientsMaster } from './pages/Masters/ClientsMaster';
+import { ContractsMaster } from './pages/Masters/ContractsMaster';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Route path="/vessels" element={<VesselsMaster />} />
           <Route path="/routes" element={<RoutesMaster />} />
           <Route path="/clients" element={<ClientsMaster />} />
+          <Route path="/contracts" element={<ContractsMaster />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </div>

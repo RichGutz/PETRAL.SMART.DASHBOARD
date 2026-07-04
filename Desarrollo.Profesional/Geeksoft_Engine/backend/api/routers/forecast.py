@@ -553,3 +553,78 @@ def save_clients_master(payload: List[ClientMaster]):
         return {"status": "success"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+from backend.models.forecast_models import ContractMaster, ContractTariffMaster
+
+@router.get("/masters/contracts")
+def get_contracts_master():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        
+        c_res = sb.table("contracts").select("*").execute()
+        t_res = sb.table("contract_tariffs").select("*").execute()
+        
+        contracts = c_res.data
+        tariffs = t_res.data
+        
+        # Combine tariffs into contracts
+        for c in contracts:
+            c["tariffs"] = [
+                t for t in tariffs 
+                if t["contract_id"] == c["contract_id"] 
+                and t["origin_port_id"] == c["origin_port_id"] 
+                and t["destination_port_id"] == c["destination_port_id"]
+            ]
+            
+        return contracts
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/masters/contracts")
+def save_contracts_master(payload: List[ContractMaster]):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        
+        # Separate contracts and tariffs
+        contracts_data = []
+        tariffs_data = []
+        
+        new_ids = []
+        for c in payload:
+            c_dict = c.dict(exclude={"tariffs"})
+            contracts_data.append(c_dict)
+            new_ids.append(c.contract_id)
+            for t in c.tariffs:
+                t_dict = t.dict()
+                t_dict["contract_id"] = c.contract_id
+                t_dict["origin_port_id"] = c.origin_port_id
+                t_dict["destination_port_id"] = c.destination_port_id
+                tariffs_data.append(t_dict)
+                
+        # Get existing contracts
+        existing = sb.table("contracts").select("contract_id").execute()
+        existing_ids = [r["contract_id"] for r in existing.data]
+        
+        # Delete contracts that are no longer in payload
+        for eid in existing_ids:
+            if eid not in new_ids:
+                # Due to foreign keys or cascade, tariffs might be deleted. To be safe:
+                sb.table("contract_tariffs").delete().eq("contract_id", eid).execute()
+                sb.table("contracts").delete().eq("contract_id", eid).execute()
+                
+        # Upsert contracts
+        if contracts_data:
+            sb.table("contracts").upsert(contracts_data).execute()
+            
+        # For active contracts, replace all tariffs (delete all then insert)
+        for cid in new_ids:
+            sb.table("contract_tariffs").delete().eq("contract_id", cid).execute()
+            
+        if tariffs_data:
+            sb.table("contract_tariffs").insert(tariffs_data).execute()
+            
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

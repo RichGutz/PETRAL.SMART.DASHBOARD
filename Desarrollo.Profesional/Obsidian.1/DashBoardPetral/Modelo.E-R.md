@@ -90,12 +90,8 @@ Este documento define la estructura relacional definitiva del motor de **Geeksof
 * `country` *(VARCHAR(2))* → Código de país ISO ('PE', 'CL').
 * `max_load_rate` *(FLOAT, DEFAULT 9999)* → Límite físico máximo del terminal de **carga** en MT/hora (`t_load_rate` en la fórmula MIN). 9999 = sin restricción conocida.
 * `max_disch_rate` *(FLOAT, DEFAULT 9999)* → Límite físico máximo del terminal de **descarga** en MT/hora (`p_disch_limit` en la fórmula MIN). Ej: MATARANI = 300 MT/hr.
-* `time_to_count_carga_hrs` *(NUMERIC, DEFAULT 6.0)* → Tiempo muerto estándar pactado (conexión de mangueras, papelería aduanera) en puerto de origen (Time to Count) antes de iniciar carga.
-* `time_to_count_descarga_hrs` *(NUMERIC, DEFAULT 6.0)* → Tiempo muerto estándar pactado en puerto de destino antes de iniciar descarga.
 * `lat` *(NUMERIC)* → Latitud geográfica para la representación geoespacial en el **Mapa Espaguetis** (ej: `-17.6394`).
 * `lon` *(NUMERIC)* → Longitud geográfica para la representación geoespacial en el **Mapa Espaguetis** (ej: `-71.3375`).
-* `maneuver_carga_hrs` *(NUMERIC, DEFAULT 0)* → Horas adicionales requeridas para la maniobra de posicionamiento del buque antes de la carga.
-* `maneuver_descarga_hrs` *(NUMERIC, DEFAULT 0)* → Horas adicionales requeridas para la maniobra de posicionamiento del buque antes de la descarga.
 
 **Relación con el motor:**
 ```
@@ -163,6 +159,10 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 * `bunker_baseline_price_ifo` *(NUMERIC)* → Precio base del combustible pactado en la firma del contrato (referencia para cálculo BAF).
 * `baf_rules` *(JSONB)* → Reglas flexibles del Bunker Adjustment Factor.
 * `load_rate` / `discharge_rate` *(NUMERIC)* → Tasas operativas contractuales de carga y descarga (MT/hora).
+* `time_to_count_carga_hrs` *(NUMERIC, DEFAULT 6.0)* → Tiempo muerto estándar pactado (conexión de mangueras, papelería aduanera) en puerto de origen (Time to Count) antes de iniciar carga.
+* `time_to_count_descarga_hrs` *(NUMERIC, DEFAULT 6.0)* → Tiempo muerto estándar pactado en puerto de destino antes de iniciar descarga.
+* `maneuver_carga_hrs` *(NUMERIC, DEFAULT 0)* → Horas adicionales requeridas para la maniobra de posicionamiento del buque antes de la carga.
+* `maneuver_descarga_hrs` *(NUMERIC, DEFAULT 0)* → Horas adicionales requeridas para la maniobra de posicionamiento del buque antes de la descarga.
 * `address_commission` *(NUMERIC, DEFAULT 0.00)* → Comisión de dirección comercial deducible directa del flete bruto (%).
 * `broker_commission` *(NUMERIC, DEFAULT 0.00)* → Comisión de corretaje pagada a brokers intermediarios deducible del flete (%).
 
