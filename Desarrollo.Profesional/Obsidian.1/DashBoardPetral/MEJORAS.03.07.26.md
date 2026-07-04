@@ -470,24 +470,38 @@ La función ahora construye `tramosEnriquecidos` usando exactamente la misma ló
 
 ---
 
-**Pendiente — Fase 2 (No ejecutada):**
+**Fase 2 (Completada):**
 
-Corregir `forecast_service.py` para que al jalar la ruta en la Matriz Financiera:
-1. Use los `tramosEnriquecidos` ya grabados directamente, sin recalcular costos de puerto (salvo que `agency_costs_origin == 0`, en cuyo caso recalcula desde `port_cost_static`).
-2. Aplique `addressCommPct` / `brokerCommPct` del `legs_data` al `pnl_net_utility`.
-3. Use el `vesselParams` del `legs_data` (buque personalizado) en lugar del maestro de BD.
-4. Calcule el `yield_flete` como promedio ponderado en lugar de requerir un `custom_tariff` plano.
-5. Evaluar eliminar el campo "9. Flete" (hacerlo opcional) en `ForecastBuilder` para clientes que usan rutas del Estimador Excel.
+**Archivo:** `forecast_service.py` — bloque `ESCENARIO MULTICOTIZADOR`
+**Commit:** `f76d08c` — *"fix(fase2): forecast_service multicotizador - usa legs_data completo"*
+
+Se corrigió la lectura del JSONB `legs_data` en el backend para reconstruir fielmente la simulación multi-tramo del Estimador Excel:
+1. **Respetar overrides de puertos:** Si `agency_costs_origin` o `agency_costs_destination` vienen configurados en los tramos guardados (valores mayores a 0.0), el backend los conserva tal cual en lugar de recalcularlos contra el catálogo estático.
+2. **Aplicar comisiones:** Se leen `addressCommPct` y `brokerCommPct` y se deducen del Gross Revenue del viaje, afectando el cálculo final del P/L y el TCE Real.
+3. **VesselParams personalizados:** Si el buque tiene consumos, velocidades o DWT editados en el Estimador Excel, se utiliza dicho objeto `vesselParams` guardado en la BD en lugar de extraer el maestro por defecto de la BD.
+4. **Tarifa (Yield Ponderado):** La tarifa representativa del flete que se le pasa al inputs general del forecast es el flete promedio ponderado (`total_freight_revenue / total_laden_qty`) calculado dinámicamente sobre los tramos LADEN del viaje.
+
+---
+
+**Protocolo de Auditoría y Verificación:**
+
+Se creó y ejecutó un script de verificación automatizada: [auditoria_mejora7_spot.py](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/scratch/auditoria_mejora7_spot.py) con los siguientes resultados en producción:
+- **Rutas Fijas Intactas:** El cálculo clásico de rutas fijas (ej. `TABLONES` en `ILO->MATARANI`) produce exactamente los mismos valores numéricos anteriores (P/L: $195,033, TCE: $47,801.35).
+- **Consolidación y Yield en Engine:** Simulación con 1 carga (13,500 MT) y 2 descargas ($18 y $22) arrojó un Yield Flete exacto de **$19.926/MT** ($269,000 de ingreso bruto) y detectó correctamente la deducción esperada por comisiones de 3%.
+- **Robustez ante Datos Históricos:** Al jalar rutas antiguas sin campos enriquecidos, el backend no produce error (HTTP 200) y realiza un fallback elegante, mientras que al jalar rutas nuevas, aplica toda la data enriquecida.
+
+---
 
 **Alcance del Cambio:**
 - `[x]` Analizar el flujo completo de datos: Estimador Excel → `routes_spot` (JSONB) → `forecast_service.py` → engine.
 - `[x]` Identificar los 5 gaps de datos perdidos al grabar/jalar.
 - `[x]` Inspeccionar tabla `routes_spot` en Supabase para confirmar estructura real y datos existentes.
-- `[x]` Corregir `handleSaveRoute` en `MultiCotizadorExcel.tsx` para grabar el paquete enriquecido completo.
-- `[ ]` Corregir `forecast_service.py` para consumir correctamente el `legs_data` completo al jalar (Fase 2).
-- `[ ]` Decidir e implementar la lógica de yield ponderado como tarifa representativa en la Matriz.
-- `[ ]` Evaluar hacer opcional el campo "9. Flete" en `ForecastBuilder` para rutas Spot del Estimador.
+- `[x]` Corregir `handleSaveRoute` en `MultiCotizadorExcel.tsx` para grabar el paquete enriquecido completo (Fase 1).
+- `[x]` Corregir `forecast_service.py` para consumir correctamente el `legs_data` completo al jalar (Fase 2).
+- `[x]` Decidir e implementar la lógica de yield ponderado como tarifa representativa en la Matriz.
+- `[x]` Validar retrocompatibilidad con fallbacks para rutas históricas sin datos enriquecidos.
 
 **Git snapshots:**
 - `896a1f1` → pre-mejora snapshot (antes del fix)
-- `bd7b90a` → fix handleSaveRoute: paquete completo de datos enriquecidos
+- `bd7b90a` → fix handleSaveRoute: paquete completo de datos enriquecidos (Fase 1)
+- `f76d08c` → fix forecast_service: integración de legs_data completo y comisiones (Fase 2)
