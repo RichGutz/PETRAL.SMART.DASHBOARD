@@ -508,3 +508,41 @@ def reorder_vessels(items: List[VesselReorderItem]):
         return {"status": "success"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+from backend.models.forecast_models import ClientMaster
+
+@router.get("/masters/clients")
+def get_clients_master():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table("clients").select("*").execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/masters/clients")
+def save_clients_master(payload: List[ClientMaster]):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        
+        data = [c.dict() for c in payload]
+        
+        # Obtener existentes
+        existing = sb.table("clients").select("client_id").execute()
+        existing_ids = [r["client_id"] for r in existing.data]
+        
+        new_ids = [c.client_id for c in payload]
+        
+        # Eliminar los que ya no estan
+        for eid in existing_ids:
+            if eid not in new_ids:
+                sb.table("clients").delete().eq("client_id", eid).execute()
+        
+        if data:
+            sb.table("clients").upsert(data).execute()
+            
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

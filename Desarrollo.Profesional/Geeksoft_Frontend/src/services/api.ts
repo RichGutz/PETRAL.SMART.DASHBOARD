@@ -33,6 +33,15 @@ export const ForecastService = {
         const response = await api.get('/forecast/benchmarks');
         return response.data;
     },
+    
+    getClientsMaster: async () => {
+        const response = await api.get('/forecast/masters/clients');
+        return response.data;
+    },
+    saveClientsMaster: async (payload: any) => {
+        const response = await api.post('/forecast/masters/clients', payload);
+        return response.data;
+    },
     getClients: async () => {
         const response = await api.get('/forecast/clients');
         return response.data;
