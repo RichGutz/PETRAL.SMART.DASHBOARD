@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate';
 import { ForecastService } from '../../services/api';
 import { Save, AlertCircle, Plus } from 'lucide-react';
@@ -29,10 +28,7 @@ const getTwinColor = (p1: string, p2: string) => {
 };
 
 export const RoutesMaster: React.FC = () => {
-    const navigate = navigateHook();
-    const [allDbPorts, setAllDbPorts] = useState<any[]>([]);
     const [ports, setPorts] = useState<string[]>([]);
-    const [routes, setRoutes] = useState<any[]>([]);
     const [matrix, setMatrix] = useState<Record<string, Record<string, RouteCell>>>({});
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -45,14 +41,6 @@ export const RoutesMaster: React.FC = () => {
     const [contextMenu, setContextMenu] = useState<{port: string, x: number, y: number} | null>(null);
 
     const initialOrder = ['TALARA', 'CALLAO', 'MARCONA', 'MATARANI', 'ILO', 'MEJILLONES', 'BARQUITO'];
-
-    function navigateHook() {
-        try {
-            return useNavigate();
-        } catch {
-            return () => {};
-        }
-    }
 
     useEffect(() => {
         const handleClickOutside = () => setContextMenu(null);
@@ -69,11 +57,8 @@ export const RoutesMaster: React.FC = () => {
                     ForecastService.getRoutes()
                 ]);
 
-                setAllDbPorts(portsData);
-                
                 const validPorts = initialOrder.filter(po => portsData.some((p: any) => p.port_id === po));
                 setPorts(validPorts);
-                setRoutes(routesData);
 
                 const mat: Record<string, Record<string, RouteCell>> = {};
                 
@@ -243,8 +228,6 @@ export const RoutesMaster: React.FC = () => {
             </MasterTemplate>
         );
     }
-
-    const availablePortsToAdd = allDbPorts.filter(p => !ports.includes(p.port_id));
 
     return (
         <MasterTemplate title="Maestro de Rutas" subtitle="Gestión de distancias y fricción climática (Matriz No Dirigida)" activeTab="routes">

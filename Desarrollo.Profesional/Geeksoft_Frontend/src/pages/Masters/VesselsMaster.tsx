@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate';
 import { ForecastService } from '../../services/api';
-import { Ship, Shield, Settings, Navigation, Fuel, Waves, Save, Edit3, Plus, Activity } from 'lucide-react';
+import { Ship, Shield, Settings, Fuel, Save, Edit3, Plus, Activity } from 'lucide-react';
 
 export const VesselsMaster: React.FC = () => {
     const navigate = navigateHook();
