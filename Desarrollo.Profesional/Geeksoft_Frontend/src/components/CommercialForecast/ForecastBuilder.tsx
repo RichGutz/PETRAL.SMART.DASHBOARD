@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Label } from '../ui/label';
@@ -37,12 +37,12 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     centerContent,
     rightContent,
     bottomRightContent,
-    hideInputs,
-    displayMode,
+    hideInputs = false,
+    displayMode = 'usd',
     onDisplayModeChange,
     forecastName,
     isAdding = false,
-    demurragePct = '',
+    demurragePct = '0',
     showDemurrage = false,
     onDemurragePctChange,
     onShowDemurrageChange
@@ -60,6 +60,55 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     // Dynamic Clients State
     const [availableClients, setAvailableClients] = useState<string[]>([]);
     const [spotRoutes, setSpotRoutes] = useState<any[]>([]);
+
+    // Identificar si la ruta seleccionada es una ruta multicotizador compleja
+    const matchedSpot = useMemo(() => {
+        if (client !== 'NEXA' || !route.startsWith('SPOT-')) return null;
+        const routeName = route.replace('SPOT-', '');
+        return spotRoutes.find(s => s.name === routeName);
+    }, [client, route, spotRoutes]);
+
+    const isComplexRoute = useMemo(() => {
+        return matchedSpot?.legs_data?.is_multicotizador === true;
+    }, [matchedSpot]);
+
+    // Lógica reactiva para autocompletar buque, cantidad y flete (yield) si es ruta compleja
+    useEffect(() => {
+        if (isComplexRoute && matchedSpot) {
+            const legs = matchedSpot.legs_data;
+            
+            // 1. Resolver buque guardado
+            const savedVessel = legs.vessel_id || legs.vesselParams?.vessel_id || '';
+            if (savedVessel) {
+                setVessel(savedVessel);
+            }
+
+            // 2. Calcular cantidad total de la ruta compleja (suma de tramos LADEN)
+            const tramos = legs.tramos || [];
+            const totalQty = tramos.reduce((acc: number, tr: any) => 
+                acc + (tr.type?.toUpperCase() === 'LADEN' ? (Number(tr.quantity) || 0) : 0), 0
+            );
+            if (totalQty > 0) {
+                setQuantity(String(totalQty));
+            }
+
+            // 3. Calcular flete ponderado (Yield Flete)
+            const totalRevenue = tramos.reduce((acc: number, tr: any) => 
+                acc + (tr.type?.toUpperCase() === 'LADEN' ? (Number(tr.quantity) || 0) * (Number(tr.freight_rate) || 0) : 0), 0
+            );
+            const yieldFlete = totalQty > 0 ? (totalRevenue / totalQty) : 0;
+            if (yieldFlete > 0) {
+                setCustomTariff(yieldFlete.toFixed(2));
+            } else {
+                setCustomTariff('');
+            }
+        } else if (client === 'NEXA' && route && !isComplexRoute) {
+            // Si es ruta Spot tradicional, limpiar para que el usuario defina manualmente
+            setVessel('');
+            setQuantity('');
+            setCustomTariff('');
+        }
+    }, [isComplexRoute, matchedSpot, client, route]);
 
     const formatMonthPill = (yyyymm: string) => {
         const [y, m] = yyyymm.split('-');
@@ -116,7 +165,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     const handleAdd = () => {
         if (!client || !route || !vessel || selectedMonths.length === 0 || !quantity || !frequency) return;
         if (client === 'SPOT' && (!customTariff || !spotSuffix.trim())) return;
-        if (client === 'NEXA' && !customTariff) return;
+        if (client === 'NEXA' && !isComplexRoute && !customTariff) return;
 
         const finalClient = client === 'SPOT' ? `SPOT-${spotSuffix.trim().toUpperCase()}` : client;
 
@@ -359,8 +408,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     {/* 5. Buque */}
                     <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">6. Buque</Label>
-                        <Select value={vessel} onValueChange={(val) => setVessel(val || '')} disabled={!route}>
-                            <SelectTrigger className="w-full h-8">
+                        <Select value={vessel} onValueChange={(val) => setVessel(val || '')} disabled={!route || isComplexRoute}>
+                            <SelectTrigger className="w-full h-8 bg-white disabled:opacity-80">
                                 <SelectValue placeholder="Buque" />
                             </SelectTrigger>
                             <SelectContent>
@@ -404,14 +453,15 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             onChange={e => setQuantity(e.target.value)}
                             placeholder="TM"
                             title="Toneladas (Full Carga)"
-                            className="w-full h-8"
+                            className="w-full h-8 disabled:bg-slate-50 disabled:text-slate-600 disabled:opacity-80"
+                            disabled={isComplexRoute}
                         />
                     </div>
 
                     {/* 8. Flete Override */}
                     <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                        <Label className={`text-xs font-semibold whitespace-nowrap ${(client === 'SPOT' || client === 'NEXA') ? 'text-red-500' : 'text-slate-600'}`}>
-                            9. Flete {(client === 'SPOT' || client === 'NEXA') && '*'}
+                        <Label className={`text-xs font-semibold whitespace-nowrap ${(client === 'SPOT' || (client === 'NEXA' && !isComplexRoute)) ? 'text-red-500' : 'text-slate-600'}`}>
+                            9. Flete {(client === 'SPOT' || (client === 'NEXA' && !isComplexRoute)) && '*'}
                         </Label>
                         <Input 
                             type="number" 
@@ -419,9 +469,10 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             step="0.01"
                             value={customTariff} 
                             onChange={e => setCustomTariff(e.target.value)}
-                            placeholder={(client === 'SPOT' || client === 'NEXA') ? "Obligatorio" : "Auto"}
-                            title="Sobrescribir tarifa del contrato. Déjelo vacío para usar la tarifa maestra."
-                            className={`w-full h-8 ${(client === 'SPOT' || client === 'NEXA') ? 'border-red-300 bg-red-50' : ''}`}
+                            placeholder={isComplexRoute ? "Yield Auto" : ((client === 'SPOT' || client === 'NEXA') ? "Obligatorio" : "Auto")}
+                            title={isComplexRoute ? "El flete ponderado se calcula de forma automática desde la simulación de la ruta" : "Sobrescribir tarifa del contrato. Déjelo vacío para usar la tarifa maestra."}
+                            className={`w-full h-8 ${(client === 'SPOT' || (client === 'NEXA' && !isComplexRoute)) ? 'border-red-300 bg-red-50' : ''} disabled:bg-slate-50 disabled:text-slate-600 disabled:opacity-80`}
+                            disabled={isComplexRoute}
                         />
                     </div>
 

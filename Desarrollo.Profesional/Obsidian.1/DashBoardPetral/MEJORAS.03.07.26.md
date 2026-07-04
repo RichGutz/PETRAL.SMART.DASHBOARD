@@ -492,6 +492,24 @@ Se creó y ejecutó un script de verificación automatizada: [auditoria_mejora7_
 
 ---
 
+**Fase 3 - Bloqueo de Campos en UI (Completada):**
+
+**Archivo:** `ForecastBuilder.tsx`
+**Propósito:** Evitar contradicciones lógicas. Dado que las rutas complejas (multicotizador) están atadas al buque, cantidades y yield ponderado con los que fueron calculadas originalmente (Opción B de diseño), el builder debe impedir que el usuario altere estos campos en el selector del forecast.
+
+Se implementó el comportamiento en el componente:
+1. **Detección Automática:** Se evalúa reactivamente si la ruta seleccionada de Nexa (`client === 'NEXA'`) es de tipo multicotizador (`legs_data.is_multicotizador === true`).
+2. **Autocompletado de Campos:**
+   - **Buque:** Se autoselecciona el `vessel_id` original de la cotización.
+   - **TM/viaje (Cantidad):** Se calcula e introduce la suma de las cantidades de todos los tramos de tipo `LADEN` (cargados).
+   - **Flete (Yield Ponderado):** Se calcula el yield promedio ponderado de los tramos (`revenue / qty`) y se refleja en el campo.
+3. **Bloqueo Visual:**
+   - Se deshabilitan los controles de **Buque**, **TM/viaje** y **Flete** (`disabled={isComplexRoute}`) cuando la ruta cargada es compleja.
+   - El placeholder de flete cambia a "Yield Auto".
+4. **Validación en handleAdd:** Se exceptúa la obligatoriedad del flete manual si es una ruta compleja, permitiendo añadirla con el yield calculado de forma transparente.
+
+---
+
 **Alcance del Cambio:**
 - `[x]` Analizar el flujo completo de datos: Estimador Excel → `routes_spot` (JSONB) → `forecast_service.py` → engine.
 - `[x]` Identificar los 5 gaps de datos perdidos al grabar/jalar.
@@ -500,8 +518,11 @@ Se creó y ejecutó un script de verificación automatizada: [auditoria_mejora7_
 - `[x]` Corregir `forecast_service.py` para consumir correctamente el `legs_data` completo al jalar (Fase 2).
 - `[x]` Decidir e implementar la lógica de yield ponderado como tarifa representativa en la Matriz.
 - `[x]` Validar retrocompatibilidad con fallbacks para rutas históricas sin datos enriquecidos.
+- `[x]` Implementar Opción B en backend e inhabilitar selectores de buque/flete/cantidad en la UI de ForecastBuilder para rutas complejas (Fase 3).
 
 **Git snapshots:**
 - `896a1f1` → pre-mejora snapshot (antes del fix)
 - `bd7b90a` → fix handleSaveRoute: paquete completo de datos enriquecidos (Fase 1)
 - `f76d08c` → fix forecast_service: integración de legs_data completo y comisiones (Fase 2)
+- `99789dd` → docs: actualizar MEJORAS y agregar script de auditoria
+- `92eef85` → feat(fase3): forecast_builder - bloquear y autocompletar buque/TM/flete si es ruta compleja (Nexa)
