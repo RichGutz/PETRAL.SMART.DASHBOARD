@@ -243,7 +243,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
     // Autocompletar reactivamente al cargar rutas, barcos o cambiar el buque
     useEffect(() => {
-        if (routes.length > 0 && vessels.length > 0 && selectedVessel) {
+        if (routes.length > 0 && vessels.length > 0 && selectedVessel && ports.length > 0) {
             const defaultSpeed = Number(vesselParams.vessel_speed) || 11.0;
             
             setTramos(prev => prev.map(tr => {
@@ -255,8 +255,22 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     speed: tr.speed !== undefined && tr.speed !== '' ? tr.speed : defaultSpeed
                 };
             }));
+
+            // Autocompletar y actualizar explícitamente los ritmos de puertosConfig basándonos en el buque actual
+            setPuertosConfig(prev => prev.map((p, idx) => {
+                if (p.action === 'NONE') return p;
+                const portId = idx === 0 ? (tramos[0]?.origin_port_id || 'MATARANI') : (tramos[idx - 1]?.destination_port_id || '');
+                if (!portId) return p;
+                
+                // Si el ritmo está vacío o nulo, o es el valor Auto por defecto, poblarlo explícitamente
+                const rate = p.op_rate === '' || p.op_rate === undefined ? getAutoPortRate(portId, p.action) : p.op_rate;
+                return {
+                    ...p,
+                    op_rate: rate
+                };
+            }));
         }
-    }, [routes, vessels, selectedVessel, vesselParams.vessel_speed]);
+    }, [routes, vessels, selectedVessel, vesselParams.vessel_speed, vesselParams.act_load, vesselParams.act_disch, ports]);
 
     // Actualizar precios de bunker al cambiar de barco
     const handleVesselChange = (vId: string) => {
