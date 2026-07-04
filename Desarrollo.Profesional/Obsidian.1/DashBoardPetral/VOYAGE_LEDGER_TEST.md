@@ -110,3 +110,19 @@ Layout `flex` de 4 columnas; cols 2 y 3 tienen cards apilados con `gap-1` (pegad
 - [x] **Dimensiones Físicas del Buque:** Agregadas las columnas `length` y `beam` a la tabla `vessels` en Supabase y actualizados los valores para toda la flota.
 - [x] **Card Maestro Flota de 2 Columnas:** Actualizado el card en React e impresión HTML de `VoyageLedgerTest.tsx` para renderizar `DWT`, `dwcc`, `length` y `beam` en un grid compacto de 2 columnas paralelas.
 - [x] **Despliegue a Producción:** Compilados y desplegados los cambios a producción de forma exitosa en el VPS (`forecast.geeksoft.tech`).
+
+## ✅ 13. Completados en Paso 11 (Mejoras 1 & 2 — Sostenibilidad y Renombramiento)
+
+- [x] **Migración Física:** Duplicamos la tabla `agency_matrix` a la nueva tabla física `port_cost_static` para independizar los costos del forecast. El backend (`forecast_service.py`) y endpoints de carga se cambiaron para leer de esta nueva fuente primaria.
+- [x] **Disolución de Límites Portuarios:** Desapareció el concepto de "Límites Portuarios". Las variables de horas administrativas y de maniobra se mudaron conceptualmente a "Reglas Comerciales".
+- [x] **Nuevas Columnas de Puertos:** Se agregaron y poblaron las nuevas columnas en `ports`:
+  * `time_to_count_carga_hrs` / `time_to_count_descarga_hrs` (antiguos overheads)
+  * `maneuver_carga_hrs` / `maneuver_descarga_hrs` (antiguos posicionamientos)
+- [x] **Actualización Multimódulo:** Se renombraron y probaron estas propiedades en `engine.py`, `forecast_service.py`, `spot_engine.py` (backend), así como en `VoyageLedgerTest.tsx` y `MultiCotizadorExcel.tsx` (frontend).
+
+## ✅ 14. Completados en Paso 12 (Mejora 3 & 3.1 — Comisiones y Convergencia Exceliana)
+
+- [x] **Comisiones de Viaje:** Añadimos `address_commission` (%) y `broker_commission` (%) en la base de datos de Reglas Comerciales, backend (`engine.py`, `spot_engine.py`), y visualizaciones en la grilla y el estimador Excel.
+- [x] **Botón Export PDF en Excel:** Se creó un generador de reportes landscape en `MultiCotizadorExcel.tsx` para realizar auditorías visuales cruzadas de forma inmediata.
+- [x] **Convergencia del Estimador:** Corregimos el descalce de 0.04 días. Las celdas de posicionamiento, overhead y ritmos de operación en el frontend ahora resuelven dinámicamente sus valores por defecto de la base de datos si quedan vacíos en la grilla (p. ej., `1.0` hora para ILO), logrando concordar con el Ledger tramo por tramo.
+

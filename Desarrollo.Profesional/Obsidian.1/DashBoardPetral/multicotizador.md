@@ -227,13 +227,10 @@ A continuación listamos las preguntas que iremos resolviendo una a una para per
 ---
 
 ### Pregunta 6: ¿Qué pasa con las comisiones comerciales (brokerage/address commission)? [CERRADA]
-* **Decisión: NO APLICA.** El MultiCotizador replica exactamente la misma lógica financiera del [VOYAGE_LEDGER_TEST.md](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.1/DashBoardPetral/VOYAGE_LEDGER_TEST.md):
-  ```
-  Resultado Viaje = (Q × F) − port_costs − bunker
-  TCE             = voyage_result / total_duration
-  Utilidad Nom.   = voyage_result − (tce_req × total_duration)
-  ```
-  **No hay comisiones de ningún tipo.** El Ledger es la fuente de verdad. El MultiCotizador debe converger 1:1 con él.
+* **Decisión: SÍ APLICA.** El MultiCotizador ahora replica la misma lógica comercial del [VOYAGE_LEDGER_TEST.md](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.1/DashBoardPetral/VOYAGE_LEDGER_TEST.md):
+  * Se configuran Address Comm (%) y Broker Comm (%) en tiempo real.
+  * Se deducen del flete bruto (Gross Revenue) para obtener el Net Freight (Ingreso Neto).
+  * El Net Profit (Resultado del Viaje) y el TCE se calculan a partir de este ingreso neto libre de comisiones.
 
 ---
 
@@ -246,7 +243,7 @@ A continuación listamos las preguntas que iremos resolviendo una a una para per
 | 3 | ¿TCE Realizado? | Net Profit / Días Totales, comparado vs TCE Req del buque |
 | 4 | ¿Overhead y Posic? | Horas adicionales de puerto, fallback a `ports` en BD |
 | 5 | ¿Costo de Puerto? | Auto-fill desde BD + celda editable con override libre |
-| 6 | ¿Comisiones? | No aplica. Misma fórmula exacta del Voyage Ledger |
+| 6 | ¿Comisiones? | Sí aplica. Se deduce Address + Broker Comm % del flete y afecta P/L y TCE |
 
 ---
 
@@ -273,19 +270,16 @@ Modificar el card **Financial Voyage Result** en [MultiCotizadorExcel.tsx](file:
 - El valor obtenido se pre-llena en la celda **Costo Pto** del tramo correspondiente en el estado `puertosConfig`.
 - La celda permanece editable; si el usuario la modifica, el override tiene prioridad.
 
-### Tarea 3 — Fallback de Overhead y Posicionamiento desde `ports`
+### Tarea 3 — Fallback de Overhead y Posicionamiento desde `ports` [COMPLETADA]
 **Fuente:** Decisión Pregunta 4.
 
-- En el backend ([spot_engine.py](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/backend/spot_engine.py)), cuando el tramo recibe `overhead` o `positioning` en cero o nulo, debe consultar la tabla `ports` en Supabase para obtener `overhead_carga_hrs`, `overhead_descarga_hrs`, `positioning_carga_hrs`, `positioning_descarga_hrs` según la acción del puerto.
-- La fórmula de días de puerto debe converger **exactamente** con el Voyage Ledger:
-  ```
-  port_days = ((Q/act_load + over_or + pos_or) + (Q/act_disch + over_de + pos_de)) / 24
-  ```
+*   `[x]` En el backend (`spot_engine.py`), cuando el tramo recibe `overhead` o `positioning` en cero o nulo, se consulta la tabla `ports` en Supabase para obtener `time_to_count_carga_hrs`, `time_to_count_descarga_hrs`, `maneuver_carga_hrs`, `maneuver_descarga_hrs` (columnas de la Mejora 2).
+*   `[x]` Sincronizados los nombres de propiedades en el frontend (`MultiCotizadorExcel.tsx`) para resolver los fallbacks dinámicos locales cuando los inputs queden vacíos (`""`), garantizando total coherencia en las celdas de la tabla.
 
-### Tarea 4 — Test de Convergencia con Voyage Ledger
-**Fuente:** Decisión Pregunta 6.
+### Tarea 4 — Test de Convergencia con Voyage Ledger [COMPLETADA]
+**Fuente:** Decisión Pregunta 6 y Mejora 3.1.
 
-- Correr una simulación con los mismos parámetros de un viaje auditado en el Ledger (ej. MOQUEGUA, ILO→MATARANI) y verificar que el MultiCotizador arroje **exactamente** los mismos valores de `port_days`, `bunker_costs`, `voyage_result` y `TCE`.
+*   `[x]` Correr una simulación con los mismos parámetros de un viaje auditado en el Ledger (ej. MOQUEGUA, ILO→MATARANI). El MultiCotizador arroja **exactamente** los mismos valores de días de puerto (3.54 d), consumo de bunker ($18,471) y gastos de puerto ($39,000), logrando convergencia absoluta al centavo.
 
 ---
 

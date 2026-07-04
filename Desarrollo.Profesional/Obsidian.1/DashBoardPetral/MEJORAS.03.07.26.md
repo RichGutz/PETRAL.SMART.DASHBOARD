@@ -2,11 +2,7 @@
 
 Este documento registrará el listado de cambios acordados tras la reunión con el cliente, los cuales iremos ejecutando de manera secuencial y controlada.
 
-## 🚀 Lista de Mejoras
-
----
-
-### ✅ Mejora 1 — `agency_matrix` → `port_cost_static` (Herramienta de Forecast)
+## 🚀 Lista de Mejoras### ✅ Mejora 1 — `agency_matrix` → `port_cost_static` (Herramienta de Forecast)
 
 **Contexto y Decisión:**
 - Deseamos tener una **nueva tabla física real** en Supabase llamada `port_cost_static` para que el forecast tenga su propia entidad editable y limpia.
@@ -21,13 +17,13 @@ Este documento registrará el listado de cambios acordados tras la reunión con 
 3. Actualizar el código del backend para consumir de `port_cost_static`.
 
 **Alcance del Cambio:**
-- `[ ]` Crear la tabla física `port_cost_static` en Supabase y copiar toda la data de `agency_matrix`.
-- `[ ]` Actualizar referencias en el backend para leer de `port_cost_static`:
+- `[x]` Crear la tabla física `port_cost_static` en Supabase y copiar toda la data de `agency_matrix`.
+- `[x]` Actualizar referencias en el backend para leer de `port_cost_static`:
   - `forecast_service.py` — cambiar `agency_matrix` → `port_cost_static`
   - `forecast.py` (router) — endpoint de carga de datos
   - `spot_engine.py` — si aplica para el motor multileg
-- `[ ]` Protocolo de validación: usuario audita Ledger → números deben ser IDÉNTICOS (misma data, distinto nombre)
-- `[ ]` Deploy VPS + verificación
+- `[x]` Protocolo de validación: usuario audita Ledger → números deben ser IDÉNTICOS (misma data, distinto nombre)
+- `[x]` Deploy VPS + verificación
 
 **Regla de Conservación:**
 > ⚠️ La tabla física `agency_matrix` **NO se elimina ni se altera**. Servirá de respaldo histórico. Las tablas `port_cost_concepts` y `port_costs_matrix` tampoco se tocan.
@@ -56,19 +52,19 @@ Actualmente la tabla `ports` en Supabase almacena variables que se agrupan visua
 **Alcance del Cambio:**
 
 *Base de Datos (Supabase):*
-- `[ ]` Añadir las 4 nuevas columnas (`time_to_count_carga_hrs`, `time_to_count_descarga_hrs`, `maneuver_carga_hrs`, `maneuver_descarga_hrs`) a la tabla `ports` (o a la tabla de reglas comerciales que se defina), migrando los valores actuales.
-- `[ ]` Las columnas antiguas (`overhead_carga_hrs`, `overhead_descarga_hrs`, `positioning_carga_hrs`, `positioning_descarga_hrs`) quedan en estado **🛑 DORMIDAS** (no se eliminan hasta certificar que nada las consume).
+- `[x]` Añadir las 4 nuevas columnas (`time_to_count_carga_hrs`, `time_to_count_descarga_hrs`, `maneuver_carga_hrs`, `maneuver_descarga_hrs`) a la tabla `ports` (o a la tabla de reglas comerciales que se defina), migrando los valores actuales.
+- `[x]` Las columnas antiguas (`overhead_carga_hrs`, `overhead_descarga_hrs`, `positioning_carga_hrs`, `positioning_descarga_hrs`) quedan en estado **🛑 DORMIDAS** (no se eliminan hasta certificar que nada las consume).
 
 *Backend:*
-- `[ ]` Actualizar `engine.py` — reemplazar todas las referencias a `overhead` y `positioning` por los nuevos nombres.
-- `[ ]` Actualizar `forecast_service.py` — idem.
-- `[ ]` Actualizar `forecast.py` (router) — idem en los endpoints de carga de puertos.
-- `[ ]` Actualizar `spot_engine.py` — idem para el motor multileg.
+- `[x]` Actualizar `engine.py` — reemplazar todas las referencias a `overhead` y `positioning` por los nuevos nombres.
+- `[x]` Actualizar `forecast_service.py` — idem.
+- `[x]` Actualizar `forecast.py` (router) — idem en los endpoints de carga de puertos.
+- `[x]` Actualizar `spot_engine.py` — idem para el motor multileg.
 
 *Frontend:*
-- `[ ]` Actualizar `VoyageLedgerTest.tsx` — renombrar los labels del card "Límites Portuarios" para mostrar los nuevos términos `Time to Count` y `Maneuver`.
-- `[ ]` Actualizar `MultiCotizadorExcel.tsx` — si las celdas de overhead/posicionamiento usan los nombres antiguos, actualizarlos.
-- `[ ]` Actualizar `ForecastBuilder.tsx` — verificar si los campos de overhead se inyectan al builder y corregir.
+- `[x]` Actualizar `VoyageLedgerTest.tsx` — renombrar los labels del card "Límites Portuarios" para mostrar los nuevos términos `Time to Count` y `Maneuver`.
+- `[x]` Actualizar `MultiCotizadorExcel.tsx` — si las celdas de overhead/posicionamiento usan los nombres antiguos, actualizarlos.
+- `[x]` Actualizar `ForecastBuilder.tsx` — verificar si los campos de overhead se inyectan al builder y corregir.
 
 **Fórmula de Días de Puerto (no cambia, solo cambian los nombres de variables):**
 ```
@@ -81,7 +77,7 @@ port_days = ((Q / act_load + time_to_count_or + maneuver_or) + (Q / act_disch + 
 
 ---
 
-### Mejora 3 - Agregar address_commission y broker_commission a Reglas Comerciales
+### ✅ Mejora 3 - Agregar address_commission y broker_commission a Reglas Comerciales
 
 **Contexto y Decisión:**
 Las comisiones comerciales son costos que se deducen del ingreso bruto del flete y que actualmente NO estan modeladas en el sistema. Deben incorporarse como parte de las Reglas Comerciales del contrato, junto con las variables de time_to_count y maneuver definidas en la Mejora 2.
@@ -104,21 +100,21 @@ La metrica Gross Revenue pasa a ser el ingreso bruto antes de comisiones. El Net
 **Alcance del Cambio:**
 
 Base de Datos (Supabase):
-- [ ] Agregar address_commission (%) y broker_commission (%) a la tabla de Reglas Comerciales (a definir junto con la Mejora 2).
-- [ ] Valores por defecto: 0.00 (sin comisiones si no se especifican).
+- `[x]` Agregar address_commission (%) y broker_commission (%) a la tabla de Reglas Comerciales (a definir junto con la Mejora 2).
+- `[x]` Valores por defecto: 0.00 (sin comisiones si no se especifican).
 
 Backend:
-- [ ] Actualizar engine.py - incorporar el descuento de comisiones al calculo del net_income.
-- [ ] Actualizar forecast_service.py - inyectar las comisiones en la linea de simulacion y reflejarlas en el unit_result.
-- [ ] Actualizar spot_engine.py - idem para el motor multileg del Estimador Excel.
+- `[x]` Actualizar engine.py - incorporar el descuento de comisiones al calculo del net_income.
+- `[x]` Actualizar forecast_service.py - inyectar las comisiones en la linea de simulacion y reflejarlas en el unit_result.
+- `[x]` Actualizar spot_engine.py - idem para el motor multileg del Estimador Excel.
 
 Frontend:
-- [ ] Actualizar VoyageLedgerTest.tsx - agregar fila de Comisiones (desglosada en Address + Broker) en la auditoria del ledger.
-- [ ] Actualizar ForecastGrid.tsx - mostrar comisiones como linea deductible en la Matriz Financiera.
-- [ ] Actualizar MultiCotizadorExcel.tsx - mostrar el impacto de las comisiones en el card de resultado del viaje.
+- `[x]` Actualizar VoyageLedgerTest.tsx - agregar fila de Comisiones (desglosada en Address + Broker) en la auditoria del ledger.
+- `[x]` Actualizar ForecastGrid.tsx - mostrar comisiones como linea deductible en la Matriz Financiera.
+- `[x]` Actualizar MultiCotizadorExcel.tsx - mostrar el impacto de las comisiones en el card de resultado del viaje.
 
 **Regla de Negocio:**
-Las comisiones se aplican sobre el flete bruto (Q x freight_rate), no sobre el resultado neto. Son un costo directo del negocio de transporte maritimo y deben mostrarse de forma transparente en la auditoria del ledger.
+Las comisiones se aplican sobre el flete bruto (Q x freight_rate), no sobre el resultado neto. Son un costo directo del negocio de transporte maritimo y deben mostrarse de forma transparente en la auditoria del ledger.to del negocio de transporte maritimo y deben mostrarse de forma transparente en la auditoria del ledger.
 
 ---
 
@@ -260,14 +256,15 @@ En la funcion handleCalculate:
 - 	ce_real = total_days > 0 ? (pnl_net_utility / total_days) : 0
 
 **Persistencia de Rutas (Save/Load):**
-- Guardar ddressCommission y rokerCommission dentro de legs_data al serializar la ruta.
+- Guardar  ddressCommission y  rokerCommission dentro de legs_data al serializar la ruta.
 - Cargar y asignar los estados al recuperar la ruta.
 
 **Alcance del Cambio:**
-- [ ] Declarar ddressCommission y rokerCommission en MultiCotizadorExcel.tsx.
-- [ ] Actualizar formula de consolidado en handleCalculate para descontar comisiones locales.
-- [ ] Modificar layout de 3 a 4 columnas e insertar el nuevo card de comisiones.
-- [ ] Integrar campos en la serializacion / deserializacion de legs_data al guardar y cargar rutas.
+- `[x]` Declarar `addressCommPct` y `brokerCommPct` en `MultiCotizadorExcel.tsx`.
+- `[x]` Actualizar formula de consolidado en `handleCalculate` para descontar comisiones locales.
+- `[x]` Modificar layout de 3 a 4 columnas e insertar el nuevo card de comisiones.
+- `[x]` Integrar campos en la serializacion / deserializacion de `legs_data` al guardar y cargar rutas.
+- `[x]` Implementar botón y ventana `Export PDF` para auditorías cruzadas.
 
 ---
 
