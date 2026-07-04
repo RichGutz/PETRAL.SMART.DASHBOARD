@@ -23,6 +23,7 @@ interface PuertoConfig {
     rate_unit?: 'TD' | 'TH'; // Unidad de ritmo: TD (Ton/Día), TH (Ton/Hora)
     overhead?: string | number;
     positioning?: string | number;
+    manual_port_cost?: string | number;
 }
 
 export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' }> = ({ portCostMode = 'static' }) => {
@@ -91,9 +92,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
     // Configuración de puertos a eje de las letras (tramos.length + 1)
     const [puertosConfig, setPuertosConfig] = useState<PuertoConfig[]>([
-        { action: 'CARGAR', quantity: 13500, freight_rate: 0, op_rate: '', rate_unit: 'TH', overhead: '', positioning: '' },       // Puerto 0 (A)
-        { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', overhead: '', positioning: '' },            // Puerto 1 (B)
-        { action: 'DESCARGAR', quantity: 13500, freight_rate: 22.50, op_rate: '', rate_unit: 'TH', overhead: '', positioning: '' } // Puerto 2 (C)
+        { action: 'CARGAR', quantity: 13500, freight_rate: 0, op_rate: '', rate_unit: 'TH', overhead: '', positioning: '', manual_port_cost: '' },       // Puerto 0 (A)
+        { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', overhead: '', positioning: '', manual_port_cost: '' },            // Puerto 1 (B)
+        { action: 'DESCARGAR', quantity: 13500, freight_rate: 22.50, op_rate: '', rate_unit: 'TH', overhead: '', positioning: '', manual_port_cost: '' } // Puerto 2 (C)
     ]);
 
     const [result, setResult] = useState<any>(null);
@@ -124,9 +125,15 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     // Resolver ritmo de operación por defecto del puerto
     const getAutoPortRate = (portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR') => {
         const p = ports.find(x => x.port_id === portId);
-        if (p) {
-            if (action === 'CARGAR') return p.max_load_rate || '';
-            if (action === 'DESCARGAR') return p.max_disch_rate || '';
+        if (action === 'CARGAR') {
+            const limit = p?.max_load_rate || 9999;
+            const vesselRate = Number(vesselParams.act_load) || 500;
+            return limit > 0 && limit < 9999 ? Math.min(limit, vesselRate) : vesselRate;
+        }
+        if (action === 'DESCARGAR') {
+            const limit = p?.max_disch_rate || 9999;
+            const vesselRate = Number(vesselParams.act_disch) || 300;
+            return limit > 0 && limit < 9999 ? Math.min(limit, vesselRate) : vesselRate;
         }
         return '';
     };
@@ -418,7 +425,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         });
         setPuertosConfig(prev => [
             ...prev,
-            { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH' }
+            { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', manual_port_cost: '' }
         ]);
     };
 
@@ -496,6 +503,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     posDescarga = pDest.positioning !== '' ? Number(pDest.positioning) : (Number(getAutoPortPositioning(tr.destination_port_id, 'DESCARGAR')) || 0);
                 }
 
+                let overridePortCostOrig = pOrig && pOrig.manual_port_cost !== '' && pOrig.manual_port_cost !== undefined ? Number(pOrig.manual_port_cost) : 0.0;
+                let overridePortCostDest = pDest && pDest.manual_port_cost !== '' && pDest.manual_port_cost !== undefined ? Number(pDest.manual_port_cost) : 0.0;
+
                 return {
                     origin_port_id: tr.origin_port_id,
                     destination_port_id: tr.destination_port_id,
@@ -513,7 +523,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     port_overhead_hours_origin: overheadOrig,
                     port_overhead_hours_dest: overheadDest,
                     positioning_carga_hrs: posCarga,
-                    positioning_descarga_hrs: posDescarga
+                    positioning_descarga_hrs: posDescarga,
+                    agency_costs_origin: overridePortCostOrig,
+                    agency_costs_destination: overridePortCostDest
                 };
             });
 
@@ -670,6 +682,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
             const distVal = tr.distance ? fmtNum(tr.distance) : '—';
             const wfVal = tr.weather_factor ? `${(tr.weather_factor * 100).toFixed(0)}%` : '—';
             const speedVal = vesselParams.vessel_speed || '—';
+            const trPortCost = pDest?.manual_port_cost !== '' && pDest?.manual_port_cost !== undefined ? Number(pDest.manual_port_cost) : (tr.port_costs || 0);
             
             tramosRowsHTML += `
                 <tr>
@@ -687,7 +700,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     <td style="text-align:right">${pDest?.op_rate || 'auto'}</td>
                     <td style="text-align:right">${pDest?.quantity ? fmtNum(Number(pDest.quantity)) : '—'}</td>
                     <td style="text-align:right">${pDest?.freight_rate ? '$' + Number(pDest.freight_rate).toFixed(2) : '—'}</td>
-                    <td style="text-align:right">${pDest?.action === 'NONE' ? '$0' : fmtCur(tr.port_costs)}</td>
+                    <td style="text-align:right">${pDest?.action === 'NONE' ? '$0' : fmtCur(trPortCost)}</td>
                     <td style="text-align:right">${tr.net_income > 0 ? fmtCur(tr.net_income) : '$0'}</td>
                     <td style="text-align:right">${fmtCur(tr.bunker_costs)}</td>
                     <td style="text-align:right">${fmtNum(getBodegaSaliente(idx + 1))}</td>
@@ -697,6 +710,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
         // Puerto inicial
         const pInit = puertosConfig[0];
+        const initialPortCost = pInit?.manual_port_cost !== '' && pInit?.manual_port_cost !== undefined ? Number(pInit.manual_port_cost) : (result?.tramos?.[0]?.agency_costs_origin || 0);
+        
         const initialPortRowHTML = `
             <tr class="initial-port-row">
                 <td style="text-align:center;font-weight:bold">—</td>
@@ -713,7 +728,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 <td style="text-align:right">${pInit?.op_rate || 'auto'}</td>
                 <td style="text-align:right">${pInit?.quantity ? fmtNum(Number(pInit.quantity)) : '—'}</td>
                 <td style="text-align:right">—</td>
-                <td style="text-align:right">${pInit?.action === 'NONE' ? '$0' : fmtCur(getPortDaysAndBunker(0).bunkerCost)}</td>
+                <td style="text-align:right">${pInit?.action === 'NONE' ? '$0' : fmtCur(initialPortCost)}</td>
                 <td style="text-align:right">—</td>
                 <td style="text-align:right">${pInit?.action === 'NONE' ? '$0' : fmtCur(getPortDaysAndBunker(0).bunkerCost)}</td>
                 <td style="text-align:right">${fmtNum(getBodegaSaliente(0))}</td>
@@ -1484,8 +1499,22 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     <span className="text-slate-350 select-none pr-2">—</span>
                                 )}
                             </td>
-                            <td className="border-r border-slate-200 text-right pr-2 text-slate-500 font-bold bg-slate-50/70">
-                                {result ? fmtCur(result.tramos?.[0]?.agency_costs_origin || 0) : '$0'}
+                             <td className="border-r border-slate-200 p-0 text-right">
+                                {puertosConfig[0].action !== 'NONE' ? (
+                                    <input
+                                        type="number"
+                                        value={puertosConfig[0].manual_port_cost ?? ''}
+                                        onChange={(e) => updatePuertoConfigField(0, 'manual_port_cost', e.target.value)}
+                                        className={`w-full h-full bg-white border-0 px-1.5 text-right font-mono text-[10px] focus:outline-none ${
+                                            puertosConfig[0].manual_port_cost !== '' && puertosConfig[0].manual_port_cost !== undefined
+                                                ? 'text-blue-800 font-extrabold bg-blue-50/20'
+                                                : 'text-slate-500 font-medium'
+                                        }`}
+                                        placeholder={result?.tramos?.[0]?.agency_costs_origin ? String(result.tramos[0].agency_costs_origin) : 'Auto'}
+                                    />
+                                ) : (
+                                    <span className="text-slate-350 select-none pr-2">—</span>
+                                )}
                             </td>
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
@@ -1680,8 +1709,22 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     </td>
                                     
                                     {/* Costo Puerto del Tramo */}
-                                    <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
-                                        {trResult ? fmtCur(trResult.agency_costs_destination || 0) : '$0'}
+                                    <td className="border-r border-slate-200 p-0 text-right">
+                                        {puertosConfig[idx + 1].action !== 'NONE' ? (
+                                            <input
+                                                type="number"
+                                                value={puertosConfig[idx + 1].manual_port_cost ?? ''}
+                                                onChange={(e) => updatePuertoConfigField(idx + 1, 'manual_port_cost', e.target.value)}
+                                                className={`w-full h-full bg-white border-0 px-1.5 text-right font-mono text-[10px] focus:outline-none ${
+                                                    puertosConfig[idx + 1].manual_port_cost !== '' && puertosConfig[idx + 1].manual_port_cost !== undefined
+                                                        ? 'text-blue-800 font-extrabold bg-blue-50/20'
+                                                        : 'text-slate-500 font-medium'
+                                                }`}
+                                                placeholder={trResult?.agency_costs_destination ? String(trResult.agency_costs_destination) : 'Auto'}
+                                            />
+                                        ) : (
+                                            <span className="text-slate-350 select-none pr-2">—</span>
+                                        )}
                                     </td>
                                     
                                     {/* Ingreso de Flete del Tramo */}

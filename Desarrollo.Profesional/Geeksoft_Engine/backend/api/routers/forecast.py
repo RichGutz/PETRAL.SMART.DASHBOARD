@@ -281,6 +281,14 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
             if tr.origin_action == 'NONE':
                 tr_dict["agency_costs_origin"] = 0.0
                 tr_dict["agency_costs_origin_details"] = {"total_cost": 0.0, "breakdown": {}, "method": "NONE"}
+            elif tr.agency_costs_origin > 0.0:
+                # Si el frontend envía un override de costo manual mayor a 0
+                tr_dict["agency_costs_origin"] = tr.agency_costs_origin
+                tr_dict["agency_costs_origin_details"] = {
+                    "total_cost": tr.agency_costs_origin,
+                    "breakdown": {"manual_override": tr.agency_costs_origin},
+                    "method": "MANUAL"
+                }
             else:
                 o_type = 'CARGA' if tr.origin_action == 'CARGAR' else 'DESCARGA'
                 orig_cost_res = calculate_detailed_port_costs(
@@ -293,6 +301,14 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
             if tr.destination_action == 'NONE':
                 tr_dict["agency_costs_destination"] = 0.0
                 tr_dict["agency_costs_destination_details"] = {"total_cost": 0.0, "breakdown": {}, "method": "NONE"}
+            elif tr.agency_costs_destination > 0.0:
+                # Si el frontend envía un override de costo manual mayor a 0
+                tr_dict["agency_costs_destination"] = tr.agency_costs_destination
+                tr_dict["agency_costs_destination_details"] = {
+                    "total_cost": tr.agency_costs_destination,
+                    "breakdown": {"manual_override": tr.agency_costs_destination},
+                    "method": "MANUAL"
+                }
             else:
                 d_type = 'CARGA' if tr.destination_action == 'CARGAR' else 'DESCARGA'
                 dest_cost_res = calculate_detailed_port_costs(

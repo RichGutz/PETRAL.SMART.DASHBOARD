@@ -21,6 +21,10 @@ FILES_TO_UPLOAD = [
         r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine\backend\services\forecast_service.py",
         "/opt/geeksoft_engine/backend/services/forecast_service.py"
     ),
+    (
+        r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine\backend\api\routers\forecast.py",
+        "/opt/geeksoft_engine/backend/api/routers/forecast.py"
+    ),
 ]
 
 def run(client, cmd, desc=""):
