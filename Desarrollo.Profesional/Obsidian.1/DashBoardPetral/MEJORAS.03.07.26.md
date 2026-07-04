@@ -290,11 +290,11 @@ Para dar una experiencia 100% de hoja de calculo (Excel) al Multicotizador:
 - El input en la rejilla ya no tendra placeholder Auto, sino que tendra el numero cargado real en su propiedad alue.
 
 **Alcance del Cambio:**
-- [ ] Modificar el estado PuertoConfig para soportar manual_port_cost.
-- [ ] En la rejilla principal de MultiCotizadorExcel.tsx, convertir la columna "Costo Pto" en un <input> editable con logica de override (mostrar sugerencia si no hay valor manual).
-- [ ] Actualizar la funcion handleCalculate para inyectar y respetar los costos de puerto manuales en el payload del calculo y en las sumatorias de consolidacion.
-- [ ] Modificar la inicializacion de op_rate para inyectar directamente el numero en el estado del componente en lugar de usar placeholders.
-- [ ] Asegurar que manual_port_cost se guarde y cargue correctamente en legs_data de las rutas guardadas.
+- `[x]` Modificar el estado PuertoConfig para soportar manual_port_cost.
+- `[x]` En la rejilla principal de MultiCotizadorExcel.tsx, convertir la columna "Costo Pto" en un <input> editable con logica de override (mostrar sugerencia si no hay valor manual).
+- `[x]` Actualizar la funcion handleCalculate para inyectar y respetar los costos de puerto manuales en el payload del calculo y en las sumatorias de consolidacion.
+- `[x]` Modificar la inicializacion de op_rate para inyectar directamente el numero en el estado del componente en lugar de usar placeholders.
+- `[x]` Asegurar que manual_port_cost se guarde y cargue correctamente en legs_data de las rutas guardadas.
 
 ---
 
