@@ -597,11 +597,92 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     }, [selectedVessel, bunkerPriceIfo, bunkerPriceMdo, tramos, puertosConfig, routes, vesselParams, addressCommPct, brokerCommPct, portCostMode]);
 
     // Guardar ruta multicotizador
+    // Serializa el paquete COMPLETO tal como lo procesa handleCalculate,
+    // para que al jalar la ruta en la Matriz Financiera no se pierda ningún dato.
     const handleSaveRoute = async () => {
         if (!routeName) return alert('Ingrese un nombre para la ruta');
         try {
             setIsSaving(true);
             const pais = tramos.some(tr => (tr.destination_port_id || "").toLowerCase().includes("meji") || (tr.destination_port_id || "").toLowerCase().includes("barq")) ? "Chile" : "Peru";
+            const trs = getCalculatedTramos();
+
+            // Construir tramos enriquecidos: mismo formato que envía handleCalculate al engine
+            const tramosEnriquecidos = trs.map((tr, idx) => {
+                const pOrig = puertosConfig[idx];
+                const pDest = puertosConfig[idx + 1];
+
+                // Ritmos de operación — convertidos a T/h (formato del backend)
+                let customLoad: number | undefined = undefined;
+                let customDisch: number | undefined = undefined;
+                if (pOrig && pOrig.action === 'CARGAR' && pOrig.op_rate !== '') {
+                    const val = Number(pOrig.op_rate);
+                    customLoad = pOrig.rate_unit === 'TH' ? val : val / 24;
+                }
+                if (pDest && pDest.action === 'DESCARGAR' && pDest.op_rate !== '') {
+                    const val = Number(pDest.op_rate);
+                    customDisch = pDest.rate_unit === 'TH' ? val : val / 24;
+                }
+
+                // Overheads (time to count)
+                const overheadOrig = pOrig && pOrig.action !== 'NONE' && pOrig.overhead !== ''
+                    ? Number(pOrig.overhead)
+                    : Number(getAutoPortOverhead(tr.origin_port_id, pOrig?.action || 'NONE')) || 6.0;
+                const overheadDest = pDest && pDest.action !== 'NONE' && pDest.overhead !== ''
+                    ? Number(pDest.overhead)
+                    : Number(getAutoPortOverhead(tr.destination_port_id, pDest?.action || 'NONE')) || 6.0;
+
+                // Posicionamiento (maniobra)
+                let posCarga = 0;
+                if (pOrig && pOrig.action === 'CARGAR') {
+                    posCarga = pOrig.positioning !== '' ? Number(pOrig.positioning) : (Number(getAutoPortPositioning(tr.origin_port_id, 'CARGAR')) || 0);
+                } else if (pDest && pDest.action === 'CARGAR') {
+                    posCarga = pDest.positioning !== '' ? Number(pDest.positioning) : (Number(getAutoPortPositioning(tr.destination_port_id, 'CARGAR')) || 0);
+                }
+                let posDescarga = 0;
+                if (pOrig && pOrig.action === 'DESCARGAR') {
+                    posDescarga = pOrig.positioning !== '' ? Number(pOrig.positioning) : (Number(getAutoPortPositioning(tr.origin_port_id, 'DESCARGAR')) || 0);
+                } else if (pDest && pDest.action === 'DESCARGAR') {
+                    posDescarga = pDest.positioning !== '' ? Number(pDest.positioning) : (Number(getAutoPortPositioning(tr.destination_port_id, 'DESCARGAR')) || 0);
+                }
+
+                // Costos de puerto manuales (override)
+                const overridePortCostOrig = pOrig && pOrig.manual_port_cost !== '' && pOrig.manual_port_cost !== undefined ? Number(pOrig.manual_port_cost) : 0.0;
+                const overridePortCostDest = pDest && pDest.manual_port_cost !== '' && pDest.manual_port_cost !== undefined ? Number(pDest.manual_port_cost) : 0.0;
+
+                return {
+                    // Identificadores del tramo
+                    origin_port_id: tr.origin_port_id,
+                    destination_port_id: tr.destination_port_id,
+                    type: tr.type,
+                    // Carga y flete
+                    quantity: Number(tr.quantity) || 0,
+                    freight_rate: Number(tr.freight_rate) || 0,
+                    // Distancia y condiciones de mar
+                    route_distance: Number(tr.route_distance) || 0,
+                    weather_factor: (Number(tr.weather_factor) || 0) / 100, // decimal para el backend (ej. 0.05)
+                    speed: Number(tr.speed) || Number(vesselParams.vessel_speed) || 11.0,
+                    // Acción y ritmos por puerto
+                    origin_action: pOrig?.action || 'NONE',
+                    destination_action: pDest?.action || 'NONE',
+                    custom_load_rate: customLoad,
+                    custom_discharge_rate: customDisch,
+                    rate_unit_origin: pOrig?.rate_unit || 'TH',
+                    rate_unit_destination: pDest?.rate_unit || 'TH',
+                    // Overheads (time to count) en horas
+                    port_overhead_hours_origin: overheadOrig,
+                    port_overhead_hours_dest: overheadDest,
+                    // Posicionamiento (maniobra) en horas
+                    positioning_carga_hrs: posCarga,
+                    positioning_descarga_hrs: posDescarga,
+                    // Demoras en puerto
+                    port_delay_hours_loading: Number(tr.port_delay_hours_loading) || 0,
+                    port_delay_hours_discharging: Number(tr.port_delay_hours_discharging) || 0,
+                    // Costos de puerto (0 = usar port_cost_static del backend)
+                    agency_costs_origin: overridePortCostOrig,
+                    agency_costs_destination: overridePortCostDest,
+                };
+            });
+
             const payload = {
                 name: routeName,
                 description: "Ruta de Multicotizador",
@@ -611,11 +692,11 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     vessel_id: selectedVessel,
                     bunker_price_ifo: bunkerPriceIfo,
                     bunker_price_mdo: bunkerPriceMdo,
-                    tramos,
-                    puertosConfig,
-                    vesselParams,
-                    addressCommPct,
-                    brokerCommPct
+                    tramos: tramosEnriquecidos,    // ← paquete completo para el engine
+                    puertosConfig,                 // ← configuración visual de cada puerto
+                    vesselParams,                  // ← particularidades del buque
+                    addressCommPct,                // ← comisión de dirección (%)
+                    brokerCommPct                  // ← comisión de corretaje (%)
                 }
             };
             await ForecastService.saveSpot(payload);
