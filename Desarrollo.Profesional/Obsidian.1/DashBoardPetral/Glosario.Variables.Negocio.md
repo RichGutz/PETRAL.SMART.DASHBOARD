@@ -18,6 +18,12 @@ Este documento define la semántica comercial, operativa y naval de las variable
 ### `is_round_trip` (Flag de Tipo de Itinerario - Booleano)
 * **Definición de Negocio:** Parámetro de control ingresado en el frontend que permite al usuario alternar la simulación comercial entre dos escenarios operativos: **Viaje Redondo (Round Trip)** o **Solo Ida (One Way)**. Por defecto para la operación con ácido sulfúrico, el sistema debe inicializarse en `TRUE` (Viaje Redondo) para blindar el costo de retorno en lastre. Si se selecciona `FALSE` (Solo Ida), el motor asume que existe un contrato de retorno garantizado que absorbe el tramo de vuelta.
 
+### `address_commission` (Comisión de Dirección - %)
+* **Definición de Negocio:** Porcentaje de descuento directo del flete bruto (frecuentemente entre 1.25% y 5%) que el armador (Petral) otorga al fletador (cliente) como descuento comercial. Se deduce antes de computar el ingreso neto real del viaje.
+
+### `broker_commission` (Comisión de Corretaje - %)
+* **Definición de Negocio:** Porcentaje cobrado por el bróker o intermediario marítimo que estructuró el negocio (frecuentemente entre 1.25% y 2.5%). Se calcula sobre el flete bruto y se resta de los ingresos del viaje.
+
 ---
 
 ## 🚢 2. Capa Naval y "Fierro" del Buque (Perfil Técnico de Bunker Dual)
@@ -63,11 +69,15 @@ Este documento define la semántica comercial, operativa y naval de las variable
 ### `weather_factor_laden` (Factor Climático / Tolerancia Ambiental)
 * **Definición de Negocio:** Un porcentaje de fricción operativa (ej. 3% o 4%) que simula el impacto de las corrientes en contra, vientos o marejadas de la costa peruana. Actúa estirando virtualmente la distancia recorrida para no subestimar el consumo de bunker real.
 
-### `port_overhead_hours` (Horas Muertas de Maniobra)
-* **Definición de Negocio:** El tiempo fijo burocrático e irreversible en cada puerto (muestreo de laboratorios, trámites aduaneros, conexión de mangueras, práctico y remolcadores). Son horas que el buque pasa detenido obligatoriamente, independientes del volumen de la carga.
+### `time_to_count_carga_hrs` / `time_to_count_descarga_hrs` (Tiempo Muerto Pactado / Time to Count)
+* **Definición de Negocio:** El tiempo fijo burocrático e irreversible pactado en el contrato de transporte en cada puerto (muestreo de laboratorios, trámites aduaneros, conexión de mangueras, práctico y remolcadores) para la carga y descarga. Son horas fijas que el buque pasa detenido obligatoriamente, independientes del volumen de la carga.
 
-### `positioning_carga_hrs` / `positioning_descarga_hrs` (Horas de Posicionamiento)
-* **Definición de Negocio:** El tiempo adicional necesario para posicionar y alinear el buque en el muelle de carga (origen) y descarga (destino) antes de comenzar la operación hidráulica activa. Es una variable física configurable por puerto que se suma a la duración total en puerto.
+### `maneuver_carga_hrs` / `maneuver_descarga_hrs` (Horas de Maniobra / Posicionamiento)
+* **Definición de Negocio:** El tiempo adicional de puerto necesario para maniobrar, fondear y alinear el buque en el muelle de carga (origen) y descarga (destino) antes de comenzar la operación hidráulica activa. Es una variable física configurable por puerto que se suma a la duración total del viaje en puerto.
+
+### `time_to_count` y `maneuver` (Fórmula de Días de Puerto)
+* **Definición de Negocio:** La sumatoria total de días que el buque pasa en puerto operando o esperando:
+  `port_days = ((Q / act_load + time_to_count_carga + maneuver_carga) + (Q / act_disch + time_to_count_descarga + maneuver_descarga)) / 24`
 
 ### `max_terminal_load_rate` / `port_max_discharge_limit` (Capacidad de Tierra - MT/Hora)
 * **Definición de Negocio:** Los límites físicos de la infraestructura del puerto. En origen, es qué tan rápido bombea la planta de tierra; en destino, es qué tanta presión aguanta la tubería de recepción del cliente en su terminal.
@@ -82,22 +92,23 @@ Este documento define la semántica comercial, operativa y naval de las variable
 ### `total_port_costs` / `agency_costs` (Costos de Agencia - USD)
 * **Definición de Negocio:** El desembolso total de dinero fijo que se le paga a las autoridades marítimas y aduanas por operar en los puertos. Se calcula mediante una matriz cruzada porque depende del volumen histórico que ese cliente específico maneje en ese puerto.
 
-### `voyage_result` (Margen Bruto del Viaje - USD)
-* **Definición de Negocio:** La utilidad neta líquida que le queda a la oficina de Naviera Petral después de restarle al ingreso por flete todos los costos portuarios, los costos de bunker (Suma de Bunker IFO + Bunker MDO) y gastos adicionales del itinerario. Es el indicador final de rentabilidad.
+### `voyage_result` (Margen Bruto/Neto del Viaje - USD)
+* **Definición de Negocio:** La utilidad operativa neta que le queda a la oficina de Naviera Petral. Se calcula restando del flete neto (`net_freight = gross_freight - total_commissions`) los costos de puerto, el costo de bunker e imprevistos del viaje. Es el indicador final de rentabilidad antes de restar el costo fijo diario.
+* **Fórmula Matemática:** `voyage_result = (Q * F * (1 - (address_commission + broker_commission)/100)) - port_costs - bunker_costs`
 
 ### `tce_real` (Time Charter Equivalent Real - USD/Día)
-* **Definición de Negocio:** El indicador financiero supremo de la industria naviera. Divide la utilidad operativa total (`voyage_result`) entre la duración total del viaje en días (`total_duration`). Representa cuánto dinero rinde el buque por cada día que pasa operando.
+* **Definición de Negocio:** El indicador financiero supremo de la industria naviera. Divide la utilidad operativa neta (`voyage_result`) entre la duración total del viaje en días (`total_duration`). Representa cuánto dinero rinde el buque por cada día que pasa operando.
 * **Fórmula Matemática:** `tce_real = voyage_result / total_duration`
 
 ### `tce_required` (TCE Requerido / Costo Fijo Diario - USD/Día)
 * **Definición de Negocio:** El piso financiero o costo de oportunidad por día fijado por la gerencia (OPEX + Costo de Capital). Es lo mínimo que el barco debe rendir por día para no perder dinero a nivel corporativo. [Valor base corporativo: $15,000.00 USD/día para Tablones | $13,000.00 USD/día para Moquegua].
 
 ### `pcm_projected` (Proyección Comercial Mensualizada - USD)
-* **Definición de Negocio:** Una proyección estandarizada que simula los ingresos operativos mensuales brutos que generaría el contrato si el barco operara de forma continua durante un mes promedio bajo el mismo rendimiento de TCE. Usa el multiplicador global naviero de 30.42 días.
+* **Definición de Negocio:** Una proyección estandarizada que simula los ingresos operativos mensuales netos que generaría el contrato si el barco operara de forma continua durante un mes promedio bajo el mismo rendimiento de TCE. Usa el multiplicador global naviero de 30.42 días.
 * **Fórmula Matemática:** `pcm_projected = tce_real * 30.42`
 
 ### `pl_vs_required` (P/L Neto Corporativo - USD)
-* **Definición de Negocio:** El resultado final neto del viaje ("Cierre de Caja Corporativo"). Resta de la utilidad del viaje el costo operativo diario consolidado por los días reales que duró la operación. Si es positivo, el viaje superó las expectativas de la oficina.
+* **Definición de Negocio:** El resultado final neto del viaje ("Cierre de Caja Corporativo"). Resta del voyage_result el costo operativo diario consolidado (`tce_required`) por los días reales que duró la operación. Si es positivo, el viaje superó las expectativas del armador.
 * **Fórmula Matemática:** `pl_vs_required = voyage_result - (tce_required * total_duration)`
 
 ---

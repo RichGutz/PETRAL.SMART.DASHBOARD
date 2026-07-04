@@ -83,19 +83,19 @@ Este documento define la estructura relacional definitiva del motor de **Geeksof
 
 ---
 
-### 3.2. Tabla: `ports` (Maestro de Puertos — Límites Físicos de Terminales)
-*Almacena las capacidades físicas de cada terminal portuario. Al separar estos datos de `routes`, un solo UPDATE en `ports` impacta automáticamente todas las rutas que pasan por ese puerto.*
+### 3.2. Tabla: `ports` (Maestro de Puertos — Reglas y Límites Operativos del Terminal)
+*Almacena las capacidades físicas y las demoras operativas estándar asociadas a cada puerto terminal.*
 * `port_id` *(VARCHAR, PK)* → Identificador único del puerto (ej. 'ILO', 'MATARANI').
 * `port_name` *(VARCHAR)* → Nombre comercial del terminal.
 * `country` *(VARCHAR(2))* → Código de país ISO ('PE', 'CL').
 * `max_load_rate` *(FLOAT, DEFAULT 9999)* → Límite físico máximo del terminal de **carga** en MT/hora (`t_load_rate` en la fórmula MIN). 9999 = sin restricción conocida.
 * `max_disch_rate` *(FLOAT, DEFAULT 9999)* → Límite físico máximo del terminal de **descarga** en MT/hora (`p_disch_limit` en la fórmula MIN). Ej: MATARANI = 300 MT/hr.
-* `overhead_carga_hrs` *(NUMERIC, DEFAULT 6.0)* → Tiempo muerto estándar (conexión de mangueras, papelería aduanera) en puerto de origen.
-* `overhead_descarga_hrs` *(NUMERIC, DEFAULT 6.0)* → Tiempo muerto estándar (desconexión, inspecciones) en puerto de destino.
+* `time_to_count_carga_hrs` *(NUMERIC, DEFAULT 6.0)* → Tiempo muerto estándar pactado (conexión de mangueras, papelería aduanera) en puerto de origen (Time to Count) antes de iniciar carga.
+* `time_to_count_descarga_hrs` *(NUMERIC, DEFAULT 6.0)* → Tiempo muerto estándar pactado en puerto de destino antes de iniciar descarga.
 * `lat` *(NUMERIC)* → Latitud geográfica para la representación geoespacial en el **Mapa Espaguetis** (ej: `-17.6394`).
 * `lon` *(NUMERIC)* → Longitud geográfica para la representación geoespacial en el **Mapa Espaguetis** (ej: `-71.3375`).
-* `positioning_carga_hrs` *(NUMERIC, DEFAULT 0)* → Horas adicionales requeridas para el posicionamiento antes de la carga.
-* `positioning_descarga_hrs` *(NUMERIC, DEFAULT 0)* → Horas adicionales requeridas para el posicionamiento antes de la descarga.
+* `maneuver_carga_hrs` *(NUMERIC, DEFAULT 0)* → Horas adicionales requeridas para la maniobra de posicionamiento del buque antes de la carga.
+* `maneuver_descarga_hrs` *(NUMERIC, DEFAULT 0)* → Horas adicionales requeridas para la maniobra de posicionamiento del buque antes de la descarga.
 
 **Relación con el motor:**
 ```
@@ -105,7 +105,7 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 
 ---
 
-### 3.2. Tabla: `clients` (Maestro de Clientes Corporativos)
+### 3.3. Tabla: `clients` (Maestro de Clientes Corporativos)
 *Catálogo de clientes comerciales. Permite mantener identidad visual global.*
 * `client_id` *(VARCHAR, PK)* → Identificador único comercial (ej. 'SPCC', 'SPOT').
 * `client_name` *(VARCHAR)* → Razón social del cliente.
@@ -113,7 +113,7 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 
 ---
 
-### 4. Tabla: `port_costs_matrix` (Matriz Desglosada de Costos Portuarios — Reemplazo de agency_matrix)
+### 4. Tabla: `port_costs_matrix` (Matriz Desglosada de Costos Portuarios)
 > 💡 **Ver Documento Vinculado:** [[port_costs]]
 *Almacena la matriz de costos detallados y desglosados (remolcadores, pilotaje, lanchas, honorarios, etc.) por cliente, puerto, terminal y tipo de operación para cada buque específico.*
 * `client_id` *(VARCHAR, PK)* ── ID del cliente comercial (ej. `'SPCC'`) o `'DEFAULT'` como fallback global.
@@ -137,24 +137,34 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 * `category` *(VARCHAR)* ── Categoría del costo: `shifting`, `general_port` o `agency` (`CHECK (category IN ('shifting', 'general_port', 'agency'))`).
 * `default_calculation_type` *(VARCHAR, DEFAULT 'FIXED')* ── Tipo de cálculo base: `FIXED`, `VARIABLE_TIME`, `VARIABLE_TONS` (`CHECK (default_calculation_type IN ('FIXED', 'VARIABLE_TIME', 'VARIABLE_TONS'))`).
 
+#### 4.2. Tabla: `port_cost_static` (Tarifas Planas de Costos Portuarios por Defecto — Duplicación Física)
+*Almacena tarifas históricas consolidadas por puerto, cliente, operación y buque. Es la fuente de verdad primaria para las simulaciones de Forecast clásico y el Estimador Excel.*
+* `client_id` *(VARCHAR, PK)* ── ID del cliente (ej. `'SPCC'`, `'NEXA'`) o `'DEFAULT'`.
+* `port_id` *(VARCHAR, PK)* ── ID del puerto de la operación (ej. `'ILO'`).
+* `operation_type` *(VARCHAR, PK)* ── Tipo de operación: `CARGA` (Origen) o `DESCARGA` (Destino).
+* `vessel_id` *(VARCHAR, PK)* ── ID del buque (ej. `'MOQUEGUA'`, `'TABLONES'`) o `'DEFAULT'`.
+* `cost` *(NUMERIC, DEFAULT 0)* ── Costo portuario consolidado aplicable (USD).
+
 > ⚠️ **Arquitectura Fallback (Transición Gradual):**
-> Para garantizar la compatibilidad del forecast de toda la flota, la tabla `agency_matrix` fue dada de baja (DROP) y sus costos planos históricos se migraron a `port_costs_matrix` bajo el concepto único de `'agency_fee'` con terminal `'GENERAL'`. 
-> Al realizar una simulación, el motor de forecast busca de forma prioritaria el desglose completo del buque. Si el buque no tiene datos específicos sembrados, el motor realiza un **fallback automático** al registro consolidado bajo el concepto `'agency_fee'` del buque, o en su defecto al `'DEFAULT'` del puerto (costo plano heredado de `agency_matrix`).
+> La tabla `agency_matrix` fue duplicada físicamente en la nueva tabla `port_cost_static` para el uso exclusivo de Forecast. La tabla `agency_matrix` se mantiene viva únicamente como respaldo histórico. 
+> Al realizar una simulación, el motor de forecast busca de forma prioritaria en `port_costs_matrix` (costos desglosados); si no existen registros, realiza un **fallback automático** a la tabla plana `port_cost_static`.
 
 ---
 
 ### 5. Tabla: `contracts` (Maestro de Contratos y Reglas Comerciales)
-*Cabecera que agrupa las reglas operativas y de recargo por combustible para un tramo Origen-Destino de un cliente. Soporta versionado histórico: cuando se renueva un contrato, se inserta una nueva fila con `is_active = TRUE` y se desactiva la anterior.*
+*Cabecera que agrupa las reglas operativas, comisiones y recargo por combustible para un tramo Origen-Destino de un cliente. Soporta versionado histórico.*
 * `contract_id` *(VARCHAR, PK)* → Identificador legible de contrato (ej. `'SPCC_2025'`). Permite historizar múltiples versiones compartiendo el mismo código mediante clave primaria compuesta con la ruta.
 * `client_id` *(VARCHAR)* → ID del cliente comercial (ej. SPCC).
 * `origin_port_id` *(VARCHAR, PK, NOT NULL, DEFAULT 'ILO')* → Puerto de origen del viaje. Parte de la clave primaria.
 * `destination_port_id` *(VARCHAR, PK)* → Puerto de destino final de la carga. Parte de la clave primaria.
-* `is_active` *(BOOLEAN, NOT NULL, DEFAULT TRUE)* → Flag de vigencia. Solo el contrato activo se usa en simulaciones. Al renovar: `UPDATE SET is_active = FALSE` al viejo, `INSERT` el nuevo.
+* `is_active` *(BOOLEAN, NOT NULL, DEFAULT TRUE)* → Flag de vigencia. Solo el contrato activo se usa en simulaciones.
 * `valid_from` *(DATE, NOT NULL, DEFAULT '2025-01-01')* → Fecha de inicio de vigencia del contrato.
 * `valid_to` *(DATE)* → Fecha de fin de vigencia.
 * `bunker_baseline_price_ifo` *(NUMERIC)* → Precio base del combustible pactado en la firma del contrato (referencia para cálculo BAF).
-* `baf_rules` *(JSONB)* → Reglas flexibles del Bunker Adjustment Factor (ej. `{"type": "goal_seek_inverse", "trigger_percentage": 0.05}`).
+* `baf_rules` *(JSONB)* → Reglas flexibles del Bunker Adjustment Factor.
 * `load_rate` / `discharge_rate` *(NUMERIC)* → Tasas operativas contractuales de carga y descarga (MT/hora).
+* `address_commission` *(NUMERIC, DEFAULT 0.00)* → Comisión de dirección comercial deducible directa del flete bruto (%).
+* `broker_commission` *(NUMERIC, DEFAULT 0.00)* → Comisión de corretaje pagada a brokers intermediarios deducible del flete (%).
 
 **Clave Primaria Compuesta:** `(contract_id, origin_port_id, destination_port_id)`
 — Permite que un contrato macro legible (ej. `'SPCC_2025'`) tenga múltiples rutas asociadas como filas únicas.

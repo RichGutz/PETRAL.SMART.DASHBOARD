@@ -17,7 +17,7 @@ El módulo ha sido concebido no como un simple reporte, sino como un **"Área de
 Tras una auditoría profunda del motor backend (`forecast_service.py` y `engine.py`), se certifica que **todos los inputs primarios son dinámicos e inyectados desde Supabase**, sin hardcodes. Dimensiones gobernadas por base de datos:
 - *Rutas*: distancias, factores de clima.
 - *Buques*: velocidad, consumos IFO/MDO, intake, TCE.
-- *Puertos*: límites de bombeo, cuellos de botella (overhead_hrs).
+- *Puertos*: límites de bombeo, demoras administrativas (time_to_count_hrs) y maniobras de posicionamiento (maneuver_hrs).
 - *Tarifas*: freights por bracket y matriz de agenciamiento.
 - *Precios*: Mercado de Bunker.
 
@@ -35,11 +35,11 @@ Tras una auditoría profunda del motor backend (`forecast_service.py` y `engine.
   2. Se actualizó `VoyageLedgerTest.tsx` (tanto en la vista web como en el layout de impresión de PDF) reemplazando los hardcodes por `scenarioResult.actual_load_rate` y `scenarioResult.actual_discharge_rate`.
   3. Se robustecieron los formateadores de números (`formatNumber` / `fmtNum`) y monedas (`formatCurrency` / `fmtCur`) agregando una evaluación `isNaN(parseFloat(val))` que sustituye cualquier dato fallido o ausente por un guion (`—`), asegurando estabilidad visual absoluta.
 
-### 1.5 Simplificación Comercial del Motor de Liquidación y Adición de Horas de Posicionamiento (Julio 2026)
+### 1.5 Simplificación Comercial del Motor de Liquidación y Adición de Horas de Posicionamiento y Esperas (Julio 2026)
 - **Desvinculación Física Comercial:** Se modificó el motor (`engine.py`) para que la tasa de carga y descarga dependa exclusivamente del contrato comercial pactado (`c_load` y `c_disch`), aislando los cuellos de botella de infraestructura (`v_intake`, `v_pump`, `t_load_rate`, `p_disch_limit`).
 - **Limpieza de UI en Auditoría Ledger:** Se removieron de los cards visuales (Maestro Flota y Límites Portuarios) las variables físicas desvinculadas en la interfaz de React e impresión HTML de `VoyageLedgerTest.tsx`.
-- **Integración de Posicionamiento:** Se añadieron los campos `positioning_carga_hrs` y `positioning_descarga_hrs` a la tabla `ports` de Supabase (inicializados en `1` para todos los puertos). Estos se inyectan en los inputs de simulación y se sumaron a la métrica **3. Días de Puerto**, cuya fórmula conceptual se actualizó a:
-  `port_days = ((Q / act_load + over_or + pos_or) + (Q / act_disch + over_de + pos_de)) / 24`
+- **Integración de Posicionamiento y Esperas Contractuales:** Se añadieron los campos `time_to_count_carga_hrs`, `time_to_count_descarga_hrs`, `maneuver_carga_hrs` y `maneuver_descarga_hrs` a la tabla `ports` de Supabase (inicializados con los valores reales del catálogo). Estos se inyectan en los inputs de simulación y se sumaron a la métrica **3. Días de Puerto**, cuya fórmula de laytime real se calcula como:
+  `port_days = ((Q / act_load + time_to_count_carga + maneuver_carga) + (Q / act_disch + time_to_count_descarga + maneuver_descarga)) / 24`
 
 ### 1.6 Arquitectura de Fallback para Costos Portuarios y Dimensiones del Maestro Flota (Julio 2026)
 - **Preservación Física de `agency_matrix`:** Se establece explícitamente la **permanencia de la tabla física `agency_matrix`** en la base de datos de Supabase. Funciona como fallback intermedio fundamental:
@@ -52,17 +52,17 @@ Tras una auditoría profunda del motor backend (`forecast_service.py` y `engine.
 ---
 
 ## 2. 📊 Matriz Financiera (ForecastGrid.tsx)
-Es el "cerebro numérico" interactivo. Transforma una lista plana de viajes simulados en un P&L anidado.
-
-### 2.1 Jerarquía y Layout 6-KPI
+Es el "cerebro### 2.1 Jerarquía y Layout KPIs
 Los datos se agrupan en un árbol dinámico: Cliente ↳ Ruta ↳ Buque. 
-La tabla presenta un layout de **6 KPIs** principales fijos a la vista:
+La tabla presenta un layout financiero estructurado para contemplar deducciones de comisiones comerciales:
 1. **Viajes**
 2. **Toneladas**
-3. **Gross Revenue** (Ingreso bruto por flete)
-4. **Port Costs** (Costos de agencia en origen/destino)
-5. **Bunker Costs** (Costo total IFO + MDO del viaje)
-6. **Voyage Result** (Gross Revenue - Port Costs - Bunker Costs)
+3. **Gross Revenue** (Ingreso bruto por flete, `Q * F`)
+4. **Comisiones** (Deducción por Address + Broker Commission)
+5. **Net Freight** (Ingreso Neto de Flete, `Gross - Comisiones`)
+6. **Port Costs** (Costos portuarios de origen/destino)
+7. **Bunker Costs** (Costo total IFO + MDO del viaje)
+8. **Voyage Result** (Utilidad Operativa Neta: `Net Freight - Port Costs - Bunker Costs`)
 
 *Nota Contable:* El **Demurrage** corre por cuerda separada. No se suma dentro de Voyage Result para mantener pura la contabilidad operativa. Se presenta expandiendo la fila de Gross Revenue.
 

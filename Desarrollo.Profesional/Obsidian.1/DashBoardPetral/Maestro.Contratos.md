@@ -4,11 +4,13 @@ Este archivo maestro extiende la configuración contractual para incluir la **Cl
 
 ## ⛽ 1. Tabla Cabecera de Contratos (`contracts`)
 
-La tabla cabecera agrupa las reglas y aloja un campo `JSONB` flexible para el mecanismo BAF.
+La tabla cabecera agrupa las reglas y aloja los campos de ajuste comercial e imprevistos del contrato.
 
-- **bunker_baseline_price:** 430.00 // Precio base del IFO pactado en el contrato (USD/MT).
-- **baf_rules:** `{"type": "goal_seek_inverse", "trigger_percentage": 0.05}` // JSONB para escalabilidad de lógica de ajustes.
-- **load_rate** y **discharge_rate:** Tasas operativas (MT/hora) que determinan el laytime.
+*   **bunker_baseline_price_ifo:** 430.00 // Precio base del IFO pactado en el contrato (USD/MT).
+*   **baf_rules:** `{"type": "goal_seek_inverse", "trigger_percentage": 0.05}` // JSONB para escalabilidad de lógica de ajustes.
+*   **load_rate** y **discharge_rate:** Tasas operativas (MT/hora) que determinan el laytime.
+*   **address_commission:** Comisión de dirección deducible directa del flete bruto (%).
+*   **broker_commission:** Comisión de corretaje del intermediario marítimo deducible (%).
     
 
 ## 📐 2. Modelo Matemático: El Algoritmo Inverso (Goal Seek)
