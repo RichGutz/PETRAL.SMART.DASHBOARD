@@ -41,6 +41,9 @@ export const RoutesMaster: React.FC = () => {
     const [newPortId, setNewPortId] = useState("");
     const [draggedItem, setDraggedItem] = useState<string | null>(null);
     const [dragOverItem, setDragOverItem] = useState<string | null>(null);
+
+    const [contextMenu, setContextMenu] = useState<{port: string, x: number, y: number} | null>(null);
+
     const initialOrder = ['TALARA', 'CALLAO', 'MARCONA', 'MATARANI', 'ILO', 'MEJILLONES', 'BARQUITO'];
 
     function navigateHook() {
@@ -50,6 +53,12 @@ export const RoutesMaster: React.FC = () => {
             return () => {};
         }
     }
+
+    useEffect(() => {
+        const handleClickOutside = () => setContextMenu(null);
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
 
     useEffect(() => {
         const loadData = async () => {
@@ -214,6 +223,19 @@ export const RoutesMaster: React.FC = () => {
         setDragOverItem(null);
     };
 
+    const handleContextMenu = (e: React.MouseEvent, port: string) => {
+        e.preventDefault();
+        setContextMenu({ port, x: e.pageX, y: e.pageY });
+    };
+
+    const handleDeletePort = () => {
+        if (contextMenu) {
+            setPorts(prev => prev.filter(p => p !== contextMenu.port));
+            setHasChanges(true);
+            setContextMenu(null);
+        }
+    };
+
     if (loading) {
         return (
             <MasterTemplate title="Maestro de Rutas" activeTab="routes">
@@ -280,6 +302,7 @@ export const RoutesMaster: React.FC = () => {
                                         onDragLeave={() => onDragLeave(p)}
                                         onDrop={(e) => onDrop(e, p)}
                                         onDragEnd={onDragEnd}
+                                        onContextMenu={(e) => handleContextMenu(e, p)}
                                         className={`bg-slate-50 p-2 border-b border-r border-slate-200 font-black text-slate-700 text-center min-w-[140px] cursor-grab active:cursor-grabbing transition-colors
                                             ${draggedItem === p ? 'opacity-30 border-dashed' : ''} 
                                             ${dragOverItem === p && draggedItem !== p ? 'bg-blue-50 border-x-2 border-x-blue-600 scale-105 shadow-sm' : ''}
@@ -301,6 +324,7 @@ export const RoutesMaster: React.FC = () => {
                                         onDragLeave={() => onDragLeave(rowPort)}
                                         onDrop={(e) => onDrop(e, rowPort)}
                                         onDragEnd={onDragEnd}
+                                        onContextMenu={(e) => handleContextMenu(e, rowPort)}
                                         className={`bg-slate-50 p-2 border-b border-r border-slate-200 font-black text-slate-700 text-center sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0] cursor-grab active:cursor-grabbing transition-colors
                                             ${draggedItem === rowPort ? 'opacity-30 border-dashed' : ''} 
                                             ${dragOverItem === rowPort && draggedItem !== rowPort ? 'bg-blue-50 border-y-2 border-y-blue-600 scale-105 shadow-sm' : ''}
@@ -370,6 +394,20 @@ export const RoutesMaster: React.FC = () => {
                     </table>
                 </div>
 
+                {/* Custom Context Menu */}
+                {contextMenu && (
+                    <div 
+                        className="fixed bg-white border border-slate-200 shadow-xl rounded-md py-1 z-50 min-w-[150px]"
+                        style={{ top: contextMenu.y, left: contextMenu.x }}
+                    >
+                        <button 
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 font-medium transition-colors"
+                            onClick={handleDeletePort}
+                        >
+                            Borrar "{contextMenu.port}"
+                        </button>
+                    </div>
+                )}
             </div>
         </MasterTemplate>
     );
