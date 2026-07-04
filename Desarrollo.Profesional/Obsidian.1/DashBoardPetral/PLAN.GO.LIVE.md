@@ -53,11 +53,11 @@ Referencias obligatorias para el template:
 > *A definir una vez aprobado el template de la Fase 1.*
 
 Módulos pendientes a desarrollar:
-- [ ] Maestro de Clientes (`dim_clients`)
-- [ ] Maestro de Rutas (`dim_routes`)
-- [ ] Maestro de Buques / Flota (`dim_vessels`)
+- [x] Maestro de Clientes (`dim_clients`)
+- [x] Maestro de Rutas (`dim_routes`)
+- [x] Maestro de Buques / Flota (`dim_vessels`)
 - [ ] Maestro de Puertos (`dim_ports`)
-- [ ] Maestro de Contratos (`contracts`)
+- [x] Maestro de Contratos (`contracts`)
 - [ ] Maestro de Precios Bunker (`bunker_prices`)
 
 ---
