@@ -39,13 +39,20 @@ export const RoutesMaster: React.FC = () => {
     const [dragOverItem, setDragOverItem] = useState<string | null>(null);
 
     const [contextMenu, setContextMenu] = useState<{port: string, x: number, y: number} | null>(null);
+    const [cellContextMenu, setCellContextMenu] = useState<{rowPort: string, colPort: string, x: number, y: number} | null>(null);
 
     const initialOrder = ['TALARA', 'CALLAO', 'MARCONA', 'MATARANI', 'ILO', 'MEJILLONES', 'BARQUITO'];
 
     useEffect(() => {
-        const handleClickOutside = () => setContextMenu(null);
-        document.addEventListener('click', handleClickOutside);
-        return () => document.removeEventListener('click', handleClickOutside);
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (!target.closest('.context-menu-container')) {
+                setContextMenu(null);
+                setCellContextMenu(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     useEffect(() => {
@@ -71,7 +78,8 @@ export const RoutesMaster: React.FC = () => {
                                 port_b: p1 < p2 ? p2 : p1,
                                 route_distance: 0,
                                 weather_factor_laden: 0.03,
-                                weather_factor_ballast: 0.03
+                                weather_factor_ballast: 0.03,
+                                color_hex: getTwinColor(p1, p2)
                             };
                         }
                     });
@@ -126,7 +134,8 @@ export const RoutesMaster: React.FC = () => {
                     port_b: p < portName ? portName : p,
                     route_distance: 0,
                     weather_factor_laden: 0.03,
-                    weather_factor_ballast: 0.03
+                    weather_factor_ballast: 0.03,
+                    color_hex: getTwinColor(p, portName)
                 };
                 if (!next[p]) next[p] = {};
                 next[p][portName] = cell;
@@ -210,7 +219,14 @@ export const RoutesMaster: React.FC = () => {
 
     const handleContextMenu = (e: React.MouseEvent, port: string) => {
         e.preventDefault();
+        setCellContextMenu(null);
         setContextMenu({ port, x: e.pageX, y: e.pageY });
+    };
+
+    const handleCellContextMenu = (e: React.MouseEvent, rowPort: string, colPort: string) => {
+        e.preventDefault();
+        setContextMenu(null);
+        setCellContextMenu({ rowPort, colPort, x: e.pageX, y: e.pageY });
     };
 
     const handleDeletePort = () => {
@@ -327,10 +343,15 @@ export const RoutesMaster: React.FC = () => {
                                         }
 
                                         const cell = matrix[rowPort]?.[colPort];
-                                        const bgColor = getTwinColor(rowPort, colPort);
+                                        const bgColor = cell?.color_hex || getTwinColor(rowPort, colPort);
                                         
                                         return (
-                                            <td key={colPort} className="p-2 border-b border-r border-slate-200" style={{ backgroundColor: bgColor }}>
+                                            <td 
+                                                key={colPort} 
+                                                className="p-2 border-b border-r border-slate-200 cursor-context-menu" 
+                                                style={{ backgroundColor: bgColor }}
+                                                onContextMenu={(e) => handleCellContextMenu(e, rowPort, colPort)}
+                                            >
                                                 <div className="flex flex-col gap-1.5">
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-[9px] text-slate-500 font-bold">Dist (NM):</span>
@@ -377,10 +398,10 @@ export const RoutesMaster: React.FC = () => {
                     </table>
                 </div>
 
-                {/* Custom Context Menu */}
+                {/* Custom Context Menu for Ports */}
                 {contextMenu && (
                     <div 
-                        className="fixed bg-white border border-slate-200 shadow-xl rounded-md py-1 z-50 min-w-[150px]"
+                        className="fixed bg-white border border-slate-200 shadow-xl rounded-md py-1 z-50 min-w-[150px] context-menu-container"
                         style={{ top: contextMenu.y, left: contextMenu.x }}
                     >
                         <button 
@@ -389,6 +410,29 @@ export const RoutesMaster: React.FC = () => {
                         >
                             Borrar "{contextMenu.port}"
                         </button>
+                    </div>
+                )}
+
+                {/* Custom Context Menu for Matrix Cells (Color Hex) */}
+                {cellContextMenu && (
+                    <div 
+                        className="fixed bg-white border border-slate-200 shadow-xl rounded-md p-3 z-50 min-w-[200px] context-menu-container flex flex-col gap-3"
+                        style={{ top: cellContextMenu.y, left: cellContextMenu.x }}
+                    >
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Modificar Color de Ruta</span>
+                            <span className="text-xs font-black text-slate-800">{cellContextMenu.rowPort} - {cellContextMenu.colPort}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <input 
+                                type="color" 
+                                className="h-8 w-12 cursor-pointer rounded border border-slate-300 p-0.5" 
+                                value={matrix[cellContextMenu.rowPort]?.[cellContextMenu.colPort]?.color_hex || '#cccccc'} 
+                                onChange={(e) => handleCellChange(cellContextMenu.rowPort, cellContextMenu.colPort, 'color_hex', e.target.value)} 
+                            />
+                            <span className="text-xs font-mono text-slate-600 font-bold uppercase">{matrix[cellContextMenu.rowPort]?.[cellContextMenu.colPort]?.color_hex || '#CCCCCC'}</span>
+                        </div>
+                        <span className="text-[9px] text-slate-400 leading-tight">Usa el botón "Guardar Cambios" arriba para grabar el color en la base de datos.</span>
                     </div>
                 )}
             </div>
