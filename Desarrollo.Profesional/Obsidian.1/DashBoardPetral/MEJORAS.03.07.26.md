@@ -526,3 +526,31 @@ Se implementó el comportamiento en el componente:
 - `f76d08c` → fix forecast_service: integración de legs_data completo y comisiones (Fase 2)
 - `99789dd` → docs: actualizar MEJORAS y agregar script de auditoria
 - `92eef85` → feat(fase3): forecast_builder - bloquear y autocompletar buque/TM/flete si es ruta compleja (Nexa)
+
+---
+
+## 🛠️ Simplificación de Rutas y Maestro de Rutas (Julio 2026)
+
+**Problema:** La tabla `routes` es "dirigida", lo que significa que el viaje de `ILO` a `MATARANI` es una fila distinta al viaje de `MATARANI` a `ILO`. Esto generaba que la ruta A -> B pudiera tener diferente distancia que B -> A.
+
+**Decisión Arquitectónica:** Simplificar la tabla `routes` convirtiéndola en un modelo **No Dirigido** (Undirected Graph) donde solo existe una fila por par de puertos. 
+
+### Estructura de la nueva tabla `routes`:
+- `port_a` (VARCHAR, PK, FK a ports.port_id)
+- `port_b` (VARCHAR, PK, FK a ports.port_id)
+- *Constraint*: `port_a < port_b` (orden alfabético forzado).
+- `route_distance` (NUMERIC)
+- `weather_factor_laden` (NUMERIC)
+- `weather_factor_ballast` (NUMERIC)
+
+### Actualización de Claves Foráneas:
+- En las tablas `vessel_trips` y `contracts`, los campos `origin_port_id` y `destination_port_id` ya **NO** tendrán una FK compuesta apuntando a `routes(origin, destination)`. Simplemente cada campo tendrá una FK individual apuntando a `ports(port_id)`.
+
+### Backend & Servicios:
+- Modificación en `forecast_service.py` y `forecast.py` para ordenar los puertos alfabéticamente antes de buscar en la base de datos (`port_a = MIN(origin, dest)`, `port_b = MAX(origin, dest)`). Así evitamos que cualquier consulta deje de funcionar (cero rutas huérfanas).
+- Nuevo endpoint POST `/routes` en FastAPI para hacer upsert a las rutas.
+
+### Frontend:
+- Creación de `RoutesMaster.tsx`.
+- Interfaz gráfica basada en una matriz bidimensional estilo Excel (como el antiguo `RouteMatrix.tsx`), permitiendo al usuario editar fácilmente un cruce.
+- Al guardar la matriz, la UI asegura que solo enviará al backend los pares únicos (donde `port_a < port_b`).

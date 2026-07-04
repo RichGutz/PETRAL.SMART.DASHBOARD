@@ -76,5 +76,10 @@ export const ForecastService = {
     getRoutes: async () => {
         const response = await api.get('/forecast/routes');
         return response.data;
-    }
+    },
+
+    saveRoutes: async (payload: any[]) => {
+        const response = await api.post('/forecast/routes', payload);
+        return response.data;
+    },
 };

@@ -226,7 +226,9 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     vessels_db = {v["vessel_id"]: v for v in vessels_data}
     
     routes_data = safe_fetch(supabase, "routes")
-    routes_db = {f"{r['origin_port_id']}-{r['destination_port_id']}": r for r in routes_data}
+    routes_db = {}
+    for r in routes_data:
+        routes_db[f"{r['port_a']}-{r['port_b']}"] = r
     
     routes_spot_data = safe_fetch(supabase, "routes_spot")
     
@@ -266,7 +268,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         v_data = vessels_db.get(vessel, {})
         
         # 2. Fetching Route Data
-        route_key = f"{line.origin_port_id}-{line.destination_port_id}"
+        p1, p2 = sorted([line.origin_port_id, line.destination_port_id])
+        route_key = f"{p1}-{p2}"
         r_data = routes_db.get(route_key, {})
 
         # 3. Fetching Contract Data — tasas operativas (c_load / c_disch) desde tabla `contracts`
@@ -639,7 +642,9 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
     vessels_db = {v["vessel_id"]: v for v in vessels_data}
     
     routes_data = safe_fetch(supabase, "routes")
-    routes_db = {f"{r['origin_port_id']}-{r['destination_port_id']}": r for r in routes_data}
+    routes_db = {}
+    for r in routes_data:
+        routes_db[f"{r['port_a']}-{r['port_b']}"] = r
     
     routes_spot_data = safe_fetch(supabase, "routes_spot")
     
@@ -672,7 +677,8 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
         
         v_data = vessels_db.get(vessel, {})
         
-        route_key = f"{line.origin_port_id}-{line.destination_port_id}"
+        p1, p2 = sorted([line.origin_port_id, line.destination_port_id])
+        route_key = f"{p1}-{p2}"
         r_data = routes_db.get(route_key, {})
 
         contract = contracts_db.get((client, line.origin_port_id, line.destination_port_id))

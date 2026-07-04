@@ -18,7 +18,9 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     vessels_db = {v["vessel_id"]: v for v in vessels_data}
     
     routes_data = safe_fetch(supabase, "routes")
-    routes_db = {f"{r['origin_port_id']}-{r['destination_port_id']}": r for r in routes_data}
+    routes_db = {}
+    for r in routes_data:
+        routes_db[f"{r['port_a']}-{r['port_b']}"] = r
     
     bunker_data = safe_fetch(supabase, "bunker_prices")
     bunker_db = {b["fuel_type"]: b["market_price_usd"] for b in bunker_data}
@@ -30,7 +32,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     
     for line in request.projection_lines:
         client = line.client_id
-        route_key = f"{line.origin_port_id}-{line.destination_port_id}"
+        p1, p2 = sorted([line.origin_port_id, line.destination_port_id])
+        route_key = f"{p1}-{p2}"
         vessel = line.vessel_id
         month = line.month_index
         

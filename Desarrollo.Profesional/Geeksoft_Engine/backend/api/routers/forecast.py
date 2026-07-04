@@ -250,10 +250,10 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
             
             # Autocompletar distancia y weather_factor si no vienen o son 0
             if tr_dict.get("route_distance", 0) <= 0 or tr_dict.get("weather_factor", 0) <= 0:
-                # Buscar ruta directa
                 matched_route = None
+                port1, port2 = sorted([tr.origin_port_id, tr.destination_port_id])
                 for r in routes_db:
-                    if r.get("origin_port_id") == tr.origin_port_id and r.get("destination_port_id") == tr.destination_port_id:
+                    if r.get("port_a") == port1 and r.get("port_b") == port2:
                         matched_route = r
                         break
                 if matched_route:
@@ -395,6 +395,57 @@ def get_routes():
         sb = get_supabase()
         res = sb.table("routes").select("*").execute()
         return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+from pydantic import BaseModel
+from typing import Optional, List
+
+class RouteUpdate(BaseModel):
+    port_a: str
+    port_b: str
+    route_distance: float
+    weather_factor_laden: float
+    weather_factor_ballast: float
+    color_hex: Optional[str] = "#06B6D4"
+    pais: Optional[str] = "Peru"
+
+@router.post("/routes")
+def save_routes(payload: List[RouteUpdate]):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        
+        data_to_upsert = []
+        for r in payload:
+            p1, p2 = sorted([r.port_a, r.port_b])
+            data_to_upsert.append({
+                "port_a": p1,
+                "port_b": p2,
+                "route_distance": r.route_distance,
+                "weather_factor_laden": r.weather_factor_laden,
+                "weather_factor_ballast": r.weather_factor_ballast,
+                "color_hex": r.color_hex,
+                "pais": r.pais
+            })
+            
+        # Extract unique ports
+        unique_ports = set()
+        for d in data_to_upsert:
+            unique_ports.add(d["port_a"])
+            unique_ports.add(d["port_b"])
+            
+        # Ensure all ports exist
+        existing_ports_res = sb.table("ports").select("port_id").in_("port_id", list(unique_ports)).execute()
+        existing_port_ids = {p["port_id"] for p in existing_ports_res.data}
+        missing_ports = unique_ports - existing_port_ids
+        
+        if missing_ports:
+            ports_to_insert = [{"port_id": p, "name": p} for p in missing_ports]
+            sb.table("ports").insert(ports_to_insert).execute()
+            
+        res = sb.table("routes").upsert(data_to_upsert).execute()
+        return {"status": "success", "data": res.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
