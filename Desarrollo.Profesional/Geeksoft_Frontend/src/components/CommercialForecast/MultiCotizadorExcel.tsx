@@ -62,26 +62,14 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         consumption_disch_mdo: ''
     });
 
-    // Lista de tramos (inicialmente 2 tramos)
+    // Lista de tramos (inicialmente 1 tramo vacío)
     const [tramos, setTramos] = useState<TramoState[]>([
         {
-            type: 'BALLAST',
-            origin_port_id: 'ILO',
-            destination_port_id: 'MATARANI',
-            quantity: 0,
-            freight_rate: 0,
-            port_delay_hours_loading: 0,
-            port_delay_hours_discharging: 0,
-            route_distance: '',
-            weather_factor: '',
-            speed: ''
-        },
-        {
             type: 'LADEN',
-            origin_port_id: 'MATARANI',
-            destination_port_id: 'ILO',
-            quantity: 13500,
-            freight_rate: 22.50,
+            origin_port_id: '',
+            destination_port_id: '',
+            quantity: '',
+            freight_rate: '',
             port_delay_hours_loading: 0,
             port_delay_hours_discharging: 0,
             route_distance: '',
@@ -92,9 +80,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
     // Configuración de puertos a eje de las letras (tramos.length + 1)
     const [puertosConfig, setPuertosConfig] = useState<PuertoConfig[]>([
-        { action: 'CARGAR', quantity: 13500, freight_rate: 0, op_rate: '', rate_unit: 'TH', overhead: '', positioning: '', manual_port_cost: '' },       // Puerto 0 (A)
-        { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', overhead: '', positioning: '', manual_port_cost: '' },            // Puerto 1 (B)
-        { action: 'DESCARGAR', quantity: 13500, freight_rate: 22.50, op_rate: '', rate_unit: 'TH', overhead: '', positioning: '', manual_port_cost: '' } // Puerto 2 (C)
+        { action: 'NONE', quantity: '', freight_rate: '', op_rate: '', rate_unit: 'TH', overhead: '', positioning: '', manual_port_cost: '' },       // Puerto 0 (A)
+        { action: 'NONE', quantity: '', freight_rate: '', op_rate: '', rate_unit: 'TH', overhead: '', positioning: '', manual_port_cost: '' }        // Puerto 1 (B)
     ]);
 
     const [result, setResult] = useState<any>(null);
@@ -184,11 +171,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
             };
             const extended = [...data, customVessel];
             setVessels(extended);
-            if (extended.length > 0) {
-                const firstId = extended[0].vessel_id;
-                setSelectedVessel(firstId);
-                updateVesselState(firstId, extended);
-            }
+            // No auto-seleccionar buque para obligar al usuario a elegir
+            setSelectedVessel('');
         });
         
         ForecastService.getPorts().then(data => {
@@ -1165,6 +1149,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         onChange={(e) => handleVesselChange(e.target.value)}
                                         className="w-[96%] mx-[2%] h-[18px] bg-white border border-slate-300 rounded px-1 text-[9.5px] font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans"
                                     >
+                                        <option value="">⚓ [SELECCIONE BUQUE]</option>
                                         {vessels.map(v => (
                                             <option key={v.vessel_id} value={v.vessel_id}>{v.vessel_name}</option>
                                         ))}
