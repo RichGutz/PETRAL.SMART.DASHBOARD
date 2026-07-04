@@ -322,7 +322,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             <SelectTrigger className="w-full h-8">
                                 <SelectValue placeholder="Ruta" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="w-auto min-w-[max-content] max-h-[300px] overflow-y-auto">
                                 {client === 'NEXA' ? (
                                     spotRoutes.length === 0 ? (
                                         <SelectItem value="" disabled>No hay rutas spot guardadas</SelectItem>

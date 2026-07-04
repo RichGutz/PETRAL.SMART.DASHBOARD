@@ -410,10 +410,10 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             const totalClientYieldFlete = totalClientTons ? sum(clientGrossRevenue) / totalClientTons : 0;
 
             const subMetrics = [
-                { name: "Gross Revenue", values: clientGrossRevenue, total: sum(clientGrossRevenue), pct: clientGrossRevenue.map(r => r ? 100 : 0), totalPct: sum(clientGrossRevenue) ? 100 : 0, isCurrency: true, isTotal: false },
                 { name: "P/L", values: clientPlVsRequired, total: sum(clientPlVsRequired), pct: clientCalcPct(clientPlVsRequired), totalPct: clientCalcTotalPct(sum(clientPlVsRequired), sum(clientGrossRevenue)), isCurrency: true, isTotal: false },
-                { name: "Demurrage", values: clientDemurrage, total: sum(clientDemurrage), pct: clientCalcPct(clientDemurrage), totalPct: clientCalcTotalPct(sum(clientDemurrage), sum(clientGrossRevenue)), isCurrency: true, isTotal: false },
                 { name: "Toneladas", values: clientTonsTotal, total: totalClientTons, pct: null, totalPct: null, isCurrency: false, isTotal: false },
+                { name: "Gross Revenue", values: clientGrossRevenue, total: sum(clientGrossRevenue), pct: clientGrossRevenue.map(r => r ? 100 : 0), totalPct: sum(clientGrossRevenue) ? 100 : 0, isCurrency: true, isTotal: false },
+                { name: "Demurrage", values: clientDemurrage, total: sum(clientDemurrage), pct: clientCalcPct(clientDemurrage), totalPct: clientCalcTotalPct(sum(clientDemurrage), sum(clientGrossRevenue)), isCurrency: true, isTotal: false },
                 { name: "Gross + Demurrage", values: clientGrossPlusDem, total: totalGrossPlusDem, pct: clientCalcPct(clientGrossPlusDem), totalPct: clientCalcTotalPct(totalGrossPlusDem, sum(clientGrossRevenue)), isCurrency: true, isTotal: false },
                 { name: "Yield Flete (USD/MT)", values: clientYieldFlete, total: totalClientYieldFlete, pct: null, totalPct: null, isCurrency: true, isTotal: true },
                 { name: "Yield (USD/MT)", values: clientYield, total: totalClientYield, pct: null, totalPct: null, isCurrency: true, isTotal: true }
@@ -426,7 +426,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             const subtotalRouteRowSpanRef = { value: visibleSubMetrics.length };
 
             visibleSubMetrics.forEach((metric, index) => {
-                const isExpandableRow = metric.name === "Gross Revenue";
+                const isExpandableRow = metric.name === "P/L";
                 
                 result.push({
                     client: null,
@@ -461,10 +461,10 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const totalGlobalYieldFlete = totalGlobalTons ? sum(globalRevenues) / totalGlobalTons : 0;
 
         const globalMetrics = [
-            { name: "Gross Revenue", values: globalRevenues, total: sum(globalRevenues), pct: globalRevenues.map(r => r ? 100 : 0), totalPct: sum(globalRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
             { name: "P/L", values: globalPlVsRequired, total: sum(globalPlVsRequired), pct: globalCalcPct(globalPlVsRequired), totalPct: globalCalcTotalPct(sum(globalPlVsRequired), sum(globalRevenues)), isCurrency: true, isTotal: false },
-            { name: "Demurrage", values: globalDemurrage, total: sum(globalDemurrage), pct: globalCalcPct(globalDemurrage), totalPct: globalCalcTotalPct(sum(globalDemurrage), sum(globalRevenues)), isCurrency: true, isTotal: false },
             { name: "Toneladas", values: globalTons, total: totalGlobalTons, pct: null, totalPct: null, isCurrency: false, isTotal: false },
+            { name: "Gross Revenue", values: globalRevenues, total: sum(globalRevenues), pct: globalRevenues.map(r => r ? 100 : 0), totalPct: sum(globalRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
+            { name: "Demurrage", values: globalDemurrage, total: sum(globalDemurrage), pct: globalCalcPct(globalDemurrage), totalPct: globalCalcTotalPct(sum(globalDemurrage), sum(globalRevenues)), isCurrency: true, isTotal: false },
             { name: "Gross + Demurrage", values: globalGrossPlusDem, total: totalGlobalGrossPlusDem, pct: globalCalcPct(globalGrossPlusDem), totalPct: globalCalcTotalPct(totalGlobalGrossPlusDem, sum(globalRevenues)), isCurrency: true, isTotal: false },
             { name: "Yield Flete (USD/MT)", values: globalYieldFlete, total: totalGlobalYieldFlete, pct: null, totalPct: null, isCurrency: true, isTotal: true },
             { name: "Yield (USD/MT)", values: globalYield, total: totalGlobalYield, pct: null, totalPct: null, isCurrency: true, isTotal: true }
@@ -474,7 +474,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const globalRouteRowSpanRef = { value: visibleGlobalMetrics.length };
 
         visibleGlobalMetrics.forEach((metric, index) => {
-            const isExpandableRow = metric.name === "Gross Revenue";
+            const isExpandableRow = metric.name === "P/L";
             result.push({
                 client: index === 0 ? { name: "TOTAL FLOTA", rowSpanRef: globalRouteRowSpanRef, isSubtotal: true, color: "bg-slate-800 text-white" } : null,
                 route: null,
@@ -511,10 +511,10 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const accumYieldFlete = accumTons.map((tons, i) => tons ? accumRevenues[i] / tons : 0);
 
         const accumMetrics = [
-            { name: "Gross Revenue", values: accumRevenues, total: lastVal(accumRevenues), pct: accumRevenues.map(r => r ? 100 : 0), totalPct: sum(accumRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
             { name: "P/L", values: accumPlVsRequired, total: lastVal(accumPlVsRequired), pct: accumCalcPct(accumPlVsRequired), totalPct: globalCalcTotalPct(lastVal(accumPlVsRequired), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
-            { name: "Demurrage", values: accumDemurrage, total: lastVal(accumDemurrage), pct: accumCalcPct(accumDemurrage), totalPct: globalCalcTotalPct(lastVal(accumDemurrage), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
             { name: "Toneladas", values: accumTons, total: lastVal(accumTons), pct: null, totalPct: null, isCurrency: false, isTotal: false },
+            { name: "Gross Revenue", values: accumRevenues, total: lastVal(accumRevenues), pct: accumRevenues.map(r => r ? 100 : 0), totalPct: sum(accumRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
+            { name: "Demurrage", values: accumDemurrage, total: lastVal(accumDemurrage), pct: accumCalcPct(accumDemurrage), totalPct: globalCalcTotalPct(lastVal(accumDemurrage), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
             { name: "Gross + Demurrage", values: accumGrossPlusDem, total: lastVal(accumGrossPlusDem), pct: accumCalcPct(accumGrossPlusDem), totalPct: globalCalcTotalPct(lastVal(accumGrossPlusDem), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
             { name: "Yield Flete (USD/MT)", values: accumYieldFlete, total: lastVal(accumYieldFlete), pct: null, totalPct: null, isCurrency: true, isTotal: true },
             { name: "Yield (USD/MT)", values: accumYield, total: lastVal(accumYield), pct: null, totalPct: null, isCurrency: true, isTotal: true }
@@ -524,7 +524,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const accumRouteRowSpanRef = { value: visibleAccumMetrics.length };
 
         visibleAccumMetrics.forEach((metric, index) => {
-            const isExpandableRow = metric.name === "Gross Revenue";
+            const isExpandableRow = metric.name === "P/L";
             result.push({
                 client: index === 0 ? { name: "TOTAL ACUMULADO", rowSpanRef: accumRouteRowSpanRef, isSubtotal: true, color: "bg-petral-teal text-white" } : null,
                 route: null,

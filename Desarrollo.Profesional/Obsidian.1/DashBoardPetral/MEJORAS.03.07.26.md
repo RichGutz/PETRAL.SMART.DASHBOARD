@@ -298,7 +298,7 @@ Para dar una experiencia 100% de hoja de calculo (Excel) al Multicotizador:
 
 ---
 
-### Mejora 5 — Reordenamiento de Métricas y Desplegable en Matriz Financiera (ForecastGrid)
+### ✅ Mejora 5 — Reordenamiento de Métricas y Desplegable en Matriz Financiera (ForecastGrid)
 
 **Contexto y Decisión:**
 Para mejorar la legibilidad y control del analista en la Matriz Financiera:
@@ -315,14 +315,14 @@ Para mejorar la legibilidad y control del analista en la Matriz Financiera:
 7. **Yield (USD/MT)**
 
 **Alcance del Cambio:**
-- [ ] En ForecastGrid.tsx, reordenar el array subMetrics de subtotales, el array globalMetrics de TOTAL FLOTA y el array ccumMetrics de TOTAL ACUMULADO.
-- [ ] Cambiar la lógica de asignación del Chevron (isExpandableSubtotal, isExpandableGlobal) para que apunte a P/L en lugar de Gross Revenue.
-- [ ] Ajustar el renderizado condicional de filas visibles al colapsar: en lugar de mostrar subMetrics[0] (Gross Revenue), mostrar el nuevo subMetrics[0] (que será P/L).
-- [ ] Comprobar visualmente que al colapsar el subtotal o total general, solo quede a la vista la fila de P/L.
+- `[x]` En ForecastGrid.tsx, reordenar el array subMetrics de subtotales, el array globalMetrics de TOTAL FLOTA y el array accumMetrics de TOTAL ACUMULADO.
+- `[x]` Cambiar la lógica de asignación del Chevron (isExpandableSubtotal, isExpandableGlobal) para que apunte a P/L en lugar de Gross Revenue.
+- `[x]` Ajustar el renderizado condicional de filas visibles al colapsar: en lugar de mostrar subMetrics[0] (Gross Revenue), mostrar el nuevo subMetrics[0] (que será P/L).
+- `[x]` Comprobar visualmente que al colapsar el subtotal o total general, solo quede a la vista la fila de P/L.
 
 ---
 
-### Mejora 6 — Selector de Rutas de Ancho Flexible (SelectContent) en el Constructor
+### ✅ Mejora 6 — Selector de Rutas de Ancho Flexible (SelectContent) en el Constructor
 
 **Contexto y Decision:**
 En la interfaz del ForecastBuilder, cuando se despliega el menu para elegir una ruta, la lista desplegable tiene un ancho fijo restringido al tamaño del trigger (w-(--anchor-width)). Esto provoca que las rutas con nombres largos se corten y no se puedan leer de forma comoda.
@@ -333,10 +333,8 @@ En la interfaz del ForecastBuilder, cuando se despliega el menu para elegir una 
   * Debe limitar su altura maxima para no salirse de la pantalla (max-h-[300px] o max-h-60) y permitir scroll vertical (overflow-y-auto).
 
 **Alcance del Cambio:**
-- [ ] Modificar src/components/ui/select.tsx:
-  * En la funcion SelectContent, cambiar o sobreescribir la clase w-(--anchor-width) por w-auto min-w-[max-content] max-h-[300px] overflow-y-auto cuando sea necesario, o usar una clase personalizada pasada por prop className en el select de rutas en ForecastBuilder.tsx.
-  * Como alternativa segura para no afectar a otros Selects globales del sistema: pasar la clase w-auto min-w-[max-content] max-h-[250px] overflow-y-auto a traves de la propiedad className del <SelectContent> especifico del selector de rutas en ForecastBuilder.tsx.
-- [ ] Comprobar visualmente que el selector se despliega de forma completa y flexible.
+- `[x]` Solución localizada en ForecastBuilder.tsx: se pasó `className="w-auto min-w-[max-content] max-h-[300px] overflow-y-auto"` directamente al `<SelectContent>` del selector de rutas, sin modificar el componente global `select.tsx`.
+- `[x]` Comprobar visualmente que el selector se despliega de forma completa y flexible.
 
 ---
 
