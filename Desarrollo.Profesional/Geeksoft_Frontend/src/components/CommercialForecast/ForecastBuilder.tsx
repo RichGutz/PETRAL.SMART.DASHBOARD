@@ -189,9 +189,9 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 <div className="flex items-center justify-between w-full">
                     {/* Left */}
                     <div className="flex-[1.2]">
-                        <CardTitle className="text-lg text-slate-800 flex items-center gap-2">
-                            <img src="/Logo.Geeksoft.png" alt="Geeksoft" className="h-20 object-contain" />
-                            Commercial Forecast Builder
+                        <CardTitle className="text-base text-slate-800 flex items-center gap-2">
+                            <img src="/Logo.Petral.png" alt="Naviera Petral" className="h-6 object-contain" />
+                            <span className="font-black tracking-tight uppercase">SHIPPING.SOFT</span>
                         </CardTitle>
                     </div>
 

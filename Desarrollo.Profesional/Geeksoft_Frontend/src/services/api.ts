@@ -12,6 +12,11 @@ export const ForecastService = {
         const response = await api.post('/forecast/run', payload);
         return response.data;
     },
+    runSimulationUniversal: async (payload: any) => {
+        const response = await api.post('/forecast/run_universal', payload);
+        return response.data;
+    },
+
     saveForecast: async (payload: any) => {
         const response = await api.post('/forecast/save', payload);
         return response.data;
@@ -54,6 +59,10 @@ export const ForecastService = {
     },
     getVessels: async () => {
         const response = await api.get('/forecast/vessels');
+        return response.data;
+    },
+    saveVessel: async (payload: any) => {
+        const response = await api.post('/forecast/vessels', payload);
         return response.data;
     },
     getPorts: async () => {

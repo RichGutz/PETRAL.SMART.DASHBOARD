@@ -245,18 +245,53 @@ Las migraciones DDL secuenciales en bases de datos relacionales con datos preexi
 
 ---
 
-### 7. Tabla: `simulations` (Tabla Transaccional de Consultas)
-* `simulation_id` *(UUID, PK)* → Identificador único automático generado por Supabase (`gen_random_uuid()`).
+### 7. Tabla: `commercial_forecasts` (Tabla Transaccional de Escenarios Guardados)
+*Almacena los escenarios y corridas completas de forecast guardadas por los usuarios desde la interfaz.*
+* `id` *(UUID, PK)* ── Identificador técnico único autogenerado (`uuid_generate_v4()`).
+* `name` *(TEXT)* ── Nombre amigable del forecast asignado por el usuario.
+* `user_id` *(TEXT)* ── Identificador de usuario propietario.
+* `start_date` *(TEXT)* ── Fecha de inicio de la simulación ('YYYY-MM-DD').
+* `end_date` *(TEXT)* ── Fecha de fin de la simulación ('YYYY-MM-DD').
+* `projection_lines` *(JSONB)* ── Listado de líneas simuladas con sus volúmenes y frecuencias.
+* `created_at` / `updated_at` *(TIMESTAMPTZ)* ── Fechas de registro de auditoría (`now()`).
 
-* `vessel_id` *(VARCHAR o UUID, FK references vessels.vessel_id)* → Buque seleccionado para la corrida.
-* `origin_port_id` *(VARCHAR, FK references routes.origin_port_id)* → Puerto base de origen.
-* `destination_port_id` *(VARCHAR, FK references routes.destination_port_id)* → Puerto de destino.
-* `client_id` *(VARCHAR)* → Cliente corporativo evaluado.
-* `quantity` *(NUMERIC)* → Volumen de Ácido Sulfúrico inyectado en la simulación (MT).
-* `is_round_trip` *(BOOLEAN)* → Flag comercial para el cálculo dinámico de la distancia (Round Trip vs One Way).
-* `contract_agreed_load_rate` *(NUMERIC)* → Tasa pactada comercial de carga (MT/Hora).
-* `contract_agreed_discharge_rate` *(NUMERIC)* → Tasa pactada comercial de descarga (MT/Hora).
-* `created_at` *(TIMESTAMPTZ)* → Registro de auditoría temporal del cálculo (`now()`).
+---
+
+### 8. Tabla: `vessel_trips` (Tabla Transaccional de Viajes Ejecutados/Planificados)
+*Registro físico de los viajes concretos realizados o proyectados por la flota para lookups operativos directos.*
+* `trip_id` *(UUID, PK)* ── Identificador único autogenerado (`gen_random_uuid()`).
+* `vessel_id` *(VARCHAR, FK → vessels.vessel_id)* ── Buque asignado al viaje.
+* `origin_port_id` *(VARCHAR, FK → routes.origin_port_id)* ── Puerto de carga.
+* `destination_port_id` *(VARCHAR, FK → routes.destination_port_id)* ── Puerto de descarga.
+* `client_id` *(VARCHAR)* ── Cliente corporativo que contrata el viaje.
+* `quantity` *(NUMERIC)* ── Volumen neto de carga transportada (MT).
+* `contract_agreed_load_rate` *(NUMERIC)* ── Ritmo de carga contractual aplicado.
+* `contract_agreed_discharge_rate` *(NUMERIC)* ── Ritmo de descarga contractual aplicado.
+* `bunker_price_ifo_actual` *(NUMERIC)* ── Tarifa de bunker pactada o tomada para la corrida.
+* `created_at` *(TIMESTAMPTZ)* ── Fecha de registro del viaje (`now()`).
+
+**Claves Foráneas Compuestas:**
+- `(origin_port_id, destination_port_id)` referencias a `routes(origin_port_id, destination_port_id)`.
+
+---
+
+### 9. Tabla: `sources_sinks` (Maestro de Capacidades Anuales por Puerto)
+*Almacena la capacidad de volumen anual de carga/descarga de cada terminal para modelos de optimización y balances.*
+* `port_id` *(VARCHAR, PK, FK → ports.port_id)* ── Puerto evaluado.
+* `year` *(INTEGER, PK)* ── Año fiscal de vigencia.
+* `capacity_mt` *(NUMERIC)* ── Capacidad anual de volumen de ácido (MT).
+* `type` *(VARCHAR)* ── Clasificación del terminal: `'SOURCE'` (Origen/Producción) o `'SINK'` (Destino/Consumo).
+
+---
+
+### 10. Tabla: `agency_matrix` (Histórico de Costos de Agencia)
+*Matriz histórica de costos base de agencia y servicios portuarios para lookups de respaldo.*
+* `client_id` *(VARCHAR, PK)* ── Cliente comercial.
+* `port_id` *(VARCHAR, PK)* ── Puerto de escala.
+* `operation_type` *(VARCHAR, PK)* ── Tipo de maniobra (`CARGA` / `DESCARGA`).
+* `vessel_id` *(VARCHAR, PK, DEFAULT 'DEFAULT')* ── Buque asignado o fallback general.
+* `cost` *(NUMERIC)* ── Costo total consolidado de agencia (USD).
+* `loading_master_cost` *(NUMERIC, DEFAULT 0.0)* ── Costo específico de servicio de Loading Master (USD).
 
 ---
 

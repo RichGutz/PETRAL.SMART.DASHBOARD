@@ -5,6 +5,7 @@ import { InteractiveChart } from '../../components/CommercialForecast/Interactiv
 import { ForecastService } from '../../services/api';
 import { Save, FolderOpen, X, Table, BarChart2, ChevronUp, ChevronDown, Sun, Moon } from 'lucide-react';
 import { VoyageLedgerTest } from '../../components/CommercialForecast/VoyageLedgerTest';
+import { VoyageLedgerUniversal } from '../../components/CommercialForecast/VoyageLedgerUniversal';
 import { SpaghettiMap } from '../../components/CommercialForecast/SpaghettiMap';
 import { MultiCotizadorExcel } from '../../components/CommercialForecast/MultiCotizadorExcel';
 
@@ -39,7 +40,7 @@ export const CommercialForecast: React.FC = () => {
     const [savedForecasts, setSavedForecasts] = useState<any[]>([]);
 
     // Tab State
-    const [activeTab, setActiveTab] = useState<'grid' | 'chart' | 'ledger' | 'spot' | 'multicotizador' | 'multicotizador_excel' | 'map'>('grid');
+    const [activeTab, setActiveTab] = useState<'grid' | 'chart' | 'ledger' | 'ledger_universal' | 'spot' | 'multicotizador' | 'multicotizador_excel' | 'map'>('grid');
     const [displayMode, setDisplayMode] = useState<'usd'|'pct'>('usd');
 
     // Ports State
@@ -331,7 +332,7 @@ export const CommercialForecast: React.FC = () => {
                         }}
                         onAddLine={handleAddLine}
                         forecastName={(activeTab === 'multicotizador_excel') ? undefined : forecastName}
-                        hideInputs={isRibbonCollapsed || activeTab === 'ledger' || activeTab === 'chart' || activeTab === 'multicotizador_excel'}
+                        hideInputs={isRibbonCollapsed || activeTab === 'ledger' || activeTab === 'ledger_universal' || activeTab === 'chart' || activeTab === 'multicotizador_excel'}
                         displayMode={displayMode}
                         onDisplayModeChange={setDisplayMode}
                         isAdding={loading}
@@ -370,6 +371,12 @@ export const CommercialForecast: React.FC = () => {
                                     className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold text-sm transition-all ${activeTab === 'ledger' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
                                 >
                                     <span className="text-lg">🧪</span> Auditoría Ledger
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('ledger_universal')}
+                                    className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold text-sm transition-all ${activeTab === 'ledger_universal' ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}
+                                >
+                                    <span className="text-lg">🧪</span> Ledger Universal
                                 </button>
                                 
                                 {/* Selector Port Cost Mode */}
@@ -418,12 +425,12 @@ export const CommercialForecast: React.FC = () => {
                                     >
                                         {isRibbonCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
                                     </button>
-                                    <img src="/Logo.Petral.png" alt="Naviera Petral" className="h-8 object-contain" />
+                                    <img src="/Logo.Geeksoft.png" alt="Geeksoft" className="h-9 object-contain" />
                                 </div>
                             </div>
                         }
                         bottomRightContent={
-                            activeTab !== 'ledger' && activeTab !== 'multicotizador_excel' && (
+                            activeTab !== 'ledger' && activeTab !== 'ledger_universal' && activeTab !== 'multicotizador_excel' && (
                                 <>
                                     <div className="flex flex-col gap-1 min-w-[90px] max-w-[110px] flex-1 justify-end h-full">
                                         <button onClick={() => setShowSaveModal(true)} className="flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground h-6 w-full rounded font-medium text-[10px] transition-colors shadow-sm cursor-pointer">
@@ -480,6 +487,13 @@ export const CommercialForecast: React.FC = () => {
                 {activeTab === 'ledger' && (
                     <section className="flex flex-col gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <VoyageLedgerTest portCostMode={portCostMode} />
+                    </section>
+                )}
+
+                {/* 4.5. Voyage Ledger Universal */}
+                {activeTab === 'ledger_universal' && (
+                    <section className="flex flex-col gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <VoyageLedgerUniversal portCostMode={portCostMode} />
                     </section>
                 )}
 

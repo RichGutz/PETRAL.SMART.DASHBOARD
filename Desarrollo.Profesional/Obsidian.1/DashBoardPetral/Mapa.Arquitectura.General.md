@@ -10,9 +10,8 @@ Plaintext
 Capas Maestras (BBDD / Supabase)       Estrategia Backend (No-GUI)      Interfaz Producción (Cables)
   [[Maestro.Flota]]     -----\
   [[Maestro.Rutas]]     ------\
-  [[Maestro.Aduanas]]   -------> [[Estrategia.Desarrollo.Etapa.1]] ---> [[Estrategia.Desarrollo.Etapa.2]]
-  [[Maestro.Contratos]] ------/       (Engine + PDF Ledger)              (React + Contabo)
-  [[Matriz.Tarifas]]    -----/
+  [[Maestro.Contratos]] -------> [[Estrategia.Desarrollo.Etapa.1]] ---> [[Estrategia.Desarrollo.Etapa.2]]
+  [[Matriz.Tarifas]]    -----/       (Engine + PDF Ledger)              (React + Contabo)
 ```
 
 ## 📌 Secuencia de Construcción Estricta
@@ -23,18 +22,26 @@ El agente de programación debe leer e implementar el sistema siguiendo estos 3 
 
 Estas notas contienen los datos estáticos de infraestructura e ingeniería. Deben crearse primero en Supabase:
 
-1. **[[Maestro.Flota]]**: Define los barcos activos, sus consumos de IFO y MDO granulares (`consumption_sea`, `_idle`, `_load`, `_disch`), parámetros físicos (`loa`, `beam`) y sus capacidades hidráulicas reales (`vessel_max_load_intake_limit`, `vessel_pump_discharge_rate`).
-    
-2. **[[Maestro.Rutas]]**: Cartografía los tramos marítimos oficiales, registrando las distancias en millas náuticas (`route_distance`) y los factores de fricción climática (`weather_factor_laden`).
-    
-3. **[[Matriz.Costos.Portuarios]]**: Configura la matriz relacional de costos portuarios cruzada por `client_id` + `port_id` + `vessel_id` + `operation_type` (`port_costs_matrix` y `port_cost_static`) para garantizar el cálculo dinámico desglosado o fallback plano.
-    
-4. **[[Maestro.Contratos]]**: Define los parámetros, comisiones comerciales (Address & Broker) y la cláusula de ajuste por bunker (**BAF**), integrando el algoritmo analítico de optimización inversa (**Goal Seek**).
-    
-5. **[[Matriz.Tarifas]]**: Almacena los brackets o rangos comerciales de tonelaje por destino para jalar el flete base automático de los clientes.
-    
-6. **[[Modelo.E-R]]**: Contiene la especificación de llaves primarias (PK), foráneas (FK) y constraints de la base de datos PostgreSQL.
-7. **[[Glosario.Variables.Negocio]]**: Diccionario conceptual que define la semántica comercial, operativa y naval de cada variable para blindar el entendimiento del negocio.
+**Tablas vigentes según [[Modelo.E-R]] (actualizado 2026-07-04):**
+
+1. **`vessels`** — [[Maestro.Flota]]: Barcos activos, consumos granulares IFO/MDO, parámetros físicos y capacidades hidráulicas.
+2. **`bunker_prices`**: Precios de mercado de combustible (IFO / MDO) con fecha de cotización vigente.
+3. **`routes`** — [[Maestro.Rutas]]: Tramos marítimos, distancias en millas náuticas y factores de fricción climática.
+4. **`routes_spot`**: Catálogo de rutas spot multileg (posicionamiento + laden + retorno) para clientes como NEXA.
+5. **`ports`**: Límites operativos de terminales — tasa máxima de carga/descarga, maniobras portuarias.
+6. **`clients`** — Maestro de Clientes Corporativos.
+7. **`port_costs_matrix`** — [[Matriz.Costos.Portuarios]]: Costos portuarios desglosados por cliente, puerto, terminal y tipo de operación.
+8. **`port_cost_concepts`**: Catálogo maestro de conceptos de costos portuarios.
+9. **`port_cost_static`**: Fallback estático consolidado de costos de puerto (duplicación de respaldo de `agency_matrix`).
+10. **`agency_matrix`**: Historial consolidado de costos de agencia (respaldo).
+11. **`contracts`** — [[Maestro.Contratos]]: Parámetros comerciales, comisiones (Address & Broker) y cláusula BAF.
+12. **`contract_tariffs`** — [[Matriz.Tarifas]]: Brackets de flete por tonelaje y destino para extracción automática.
+13. **`audit_benchmarks`**: Valores reales del Excel de Petral usados como benchmark en el Voyage Ledger.
+14. **`commercial_forecasts`**: Tabla transaccional que almacena los escenarios y corridas completas de forecast grabados.
+15. **`vessel_trips`**: Tabla transaccional que contiene los viajes concretos realizados o proyectados por la flota.
+16. **`sources_sinks`**: Capacidad anual de volumen de ácido por puerto y año para balances.
+17. **[[Modelo.E-R]]**: Contiene la especificación completa de PKs, FKs y constraints de PostgreSQL/Supabase.
+18. **[[Glosario.Variables.Negocio]]**: Diccionario conceptual de variables comerciales, operativas y navales.
     
 
 ### 🖥️ PASO 2: La Fase Transaccional (Frontend UI)
@@ -78,3 +85,4 @@ Para que los programadores visualicen cómo se conectan las tablas en **Supabase
 1. El motor algorítmico apunta a tu archivo real: **`[[Voyage.Calculation.Tablones]]`** (eliminamos el `_3` fantasma que estaba escrito en tu nota anterior).
 2. Se añadieron los enlaces directos a **`[[Modelo.E-R]]`** y a **`[[Matriz.Tarifas]]`** que no estaban vinculados en tu nota previa.
 3. Al final de la nota, la línea del cohete se ancla directamente a **`[[Secuencia.Desarrollo]]`**, lo que automatiza la secuencia.
+

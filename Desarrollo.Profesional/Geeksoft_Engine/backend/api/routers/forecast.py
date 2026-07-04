@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from backend.models.forecast_models import ForecastRequest, ForecastResponse, ForecastSaveRequest, ForecastListResponse
-from backend.services.forecast_service import run_forecast_simulation
+from backend.services.forecast_service import run_forecast_simulation, run_forecast_simulation_universal
 
 router = APIRouter(tags=["Commercial Forecast"])
 
@@ -8,6 +8,14 @@ router = APIRouter(tags=["Commercial Forecast"])
 def simulate_forecast(request: ForecastRequest):
     try:
         result = run_forecast_simulation(request)
+        return ForecastResponse(**result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/run_universal", response_model=ForecastResponse)
+def simulate_forecast_universal(request: ForecastRequest):
+    try:
+        result = run_forecast_simulation_universal(request)
         return ForecastResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -399,3 +407,36 @@ def list_spot_voyages():
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/vessels")
+def save_vessel(request: dict):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        # Supabase upsert requires the primary key (vessel_id)
+        if "vessel_id" not in request:
+            raise HTTPException(status_code=400, detail="vessel_id is required")
+        
+        # Ensure correct types for numeric fields to avoid DB errors
+        numeric_fields = ["grt", "dwt", "dwcc", "vessel_speed", "tce_required", 
+                         "length", "beam", "vessel_max_load_intake_limit", "vessel_pump_discharge_rate",
+                         "max_capacity_ifo", "consumption_sea_ifo", "consumption_port_ifo", "consumption_idle_ifo", "consumption_load_ifo", "consumption_disch_ifo",
+                         "max_capacity_mdo", "consumption_sea_mdo", "consumption_port_mdo", "consumption_idle_mdo", "consumption_load_mdo", "consumption_disch_mdo"]
+        
+        for field in numeric_fields:
+            if field in request and request[field] is not None:
+                try:
+                    request[field] = float(request[field])
+                except ValueError:
+                    request[field] = 0.0
+
+        res = sb.table("vessels").upsert(request).execute()
+        
+        if not res.data:
+            # Upsert in supabase returns data if successful by default for python client, but sometimes we just check it doesn't throw.
+            pass
+            
+        return {"status": "success", "vessel_id": request["vessel_id"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+

@@ -164,3 +164,12 @@
 2026-07-03 13:50:00 - SoluciÃ³n de error al cargar escenarios en Matriz Financiera. Se eliminÃ³ la race condition en el frontend y se corrigiÃ³ KeyError de actual_load_rate en el backend para rutas SPOT.
 
 2026-07-03 14:00:00 - Eliminadas pestaÃ±as obsoletas de Ruteador Spot y Multicotizador. Estimador Excel unificado como la Ãºnica herramienta y compatible al 100% con simulaciÃ³n de tramos complejos en Matriz Financiera. Despliegue completado.
+
+2026-07-04 16:00:00 - Creación de entorno de auditoría en paralelo (Ledger Universal) y despliegue del motor universal en backend y frontend para validación del usuario.
+2026-07-04 16:30:00 - Saneamiento de acentos y caracteres de escape en JSX. Conexión completa de las columnas PETRAL y Delta del Ledger en pantalla e impresión individual en ambos módulos. Despliegue exitoso al VPS.
+2026-07-04 16:32:00 - Corrección de visualización de acentos escapados en pantalla para Cotización y Justificación. Despliegue al VPS completado.
+2026-07-04 16:36:00 - Reversión de VoyageLedgerTest.tsx al commit a043144. Despliegue de restauración al VPS completado con éxito.
+2026-07-04 16:43:00 - Sincronización del carácter de cero contable ('ÔÇö') en formatCurrency y formatNumber en el clon universal. Despliegue al VPS completado.
+2026-07-04 16:47:00 - Solucionado problema del Loading Master con destino Mejillones en modo matriz. Desplegado y reiniciado el motor en el VPS.
+2026-07-04 16:55:00 - Corregido fallback de DEFAULT en desgloses de puerto, permitiendo jalar los  de Loading Master en Mejillones. Despliegue completado.
+2026-07-04 16:59:00 - Corregido el Loading Master de Mejillones en modo static para resolver la falta de la columna en port_cost_static. Testeado y desplegado al VPS.
