@@ -243,6 +243,10 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
         ports_res = sb.table("ports").select("*").execute()
         ports_db = {p["port_id"]: p for p in ports_res.data}
         
+        # 5. Obtener contratos para overheads y maneuvers
+        contracts_res = sb.table("contracts").select("*").execute()
+        contracts_db = contracts_res.data
+        
         # Procesar tramos
         tramos_payload = []
         for tr in request.tramos:
@@ -268,14 +272,17 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
                     if tr_dict.get("weather_factor", 0) <= 0:
                         tr_dict["weather_factor"] = 0.05
                         
-            # Autocompletar overheads y posicionamientos
+            # Autocompletar limites y otros usando ports
             orig_port_info = ports_db.get(tr.origin_port_id, {})
             dest_port_info = ports_db.get(tr.destination_port_id, {})
             
-            tr_dict["port_overhead_hours_origin"] = tr.port_overhead_hours_origin if tr.port_overhead_hours_origin is not None else float(orig_port_info.get("time_to_count_carga_hrs", 6.0))
-            tr_dict["port_overhead_hours_dest"] = tr.port_overhead_hours_dest if tr.port_overhead_hours_dest is not None else float(dest_port_info.get("time_to_count_descarga_hrs", 6.0))
-            tr_dict["positioning_carga_hrs"] = tr.positioning_carga_hrs if tr.positioning_carga_hrs is not None else float(orig_port_info.get("maneuver_carga_hrs", 0.0))
-            tr_dict["positioning_descarga_hrs"] = tr.positioning_descarga_hrs if tr.positioning_descarga_hrs is not None else float(dest_port_info.get("maneuver_descarga_hrs", 0.0))
+            # Buscar contrato para overheads y posicionamientos
+            contract = next((c for c in contracts_db if c.get("origin_port_id") == tr.origin_port_id and c.get("destination_port_id") == tr.destination_port_id and c.get("is_active") is True), None)
+            
+            tr_dict["port_overhead_hours_origin"] = tr.port_overhead_hours_origin if tr.port_overhead_hours_origin is not None else float(contract.get("time_to_count_carga_hrs") if contract and contract.get("time_to_count_carga_hrs") is not None else 6.0)
+            tr_dict["port_overhead_hours_dest"] = tr.port_overhead_hours_dest if tr.port_overhead_hours_dest is not None else float(contract.get("time_to_count_descarga_hrs") if contract and contract.get("time_to_count_descarga_hrs") is not None else 6.0)
+            tr_dict["positioning_carga_hrs"] = tr.positioning_carga_hrs if tr.positioning_carga_hrs is not None else float(contract.get("maneuver_carga_hrs") if contract and contract.get("maneuver_carga_hrs") is not None else 0.0)
+            tr_dict["positioning_descarga_hrs"] = tr.positioning_descarga_hrs if tr.positioning_descarga_hrs is not None else float(contract.get("maneuver_descarga_hrs") if contract and contract.get("maneuver_descarga_hrs") is not None else 0.0)
             
             # Autocompletar limites físicos para Laden
             if tr.type.upper() == "LADEN":
