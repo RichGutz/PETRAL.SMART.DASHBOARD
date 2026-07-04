@@ -363,7 +363,7 @@ def get_vessels():
     try:
         from backend.database import get_supabase
         sb = get_supabase()
-        res = sb.table("vessels").select("*").execute()
+        res = sb.table("vessels").select("*").order("display_order").execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -440,3 +440,20 @@ def save_vessel(request: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+from pydantic import BaseModel
+from typing import List
+
+class VesselReorderItem(BaseModel):
+    vessel_id: str
+    display_order: int
+
+@router.post("/vessels/reorder")
+def reorder_vessels(items: List[VesselReorderItem]):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        payload = [{"vessel_id": item.vessel_id, "display_order": item.display_order} for item in items]
+        sb.table("vessels").upsert(payload).execute()
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

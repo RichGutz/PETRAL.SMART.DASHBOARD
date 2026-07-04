@@ -65,6 +65,10 @@ export const ForecastService = {
         const response = await api.post('/forecast/vessels', payload);
         return response.data;
     },
+    reorderVessels: async (payload: any) => {
+        const response = await api.post('/forecast/vessels/reorder', payload);
+        return response.data;
+    },
     getPorts: async () => {
         const response = await api.get('/forecast/ports');
         return response.data;

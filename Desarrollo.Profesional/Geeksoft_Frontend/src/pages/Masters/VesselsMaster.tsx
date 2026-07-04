@@ -12,6 +12,8 @@ export const VesselsMaster: React.FC = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editFormData, setEditFormData] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [draggedItem, setDraggedItem] = useState<string | null>(null);
+    const [dragOverItem, setDragOverItem] = useState<string | null>(null);
 
     function navigateHook() {
         try {
@@ -69,6 +71,48 @@ export const VesselsMaster: React.FC = () => {
                             return (
                                 <button
                                     key={v.vessel_id}
+                                    draggable={!isEditing}
+                                    onDragStart={(e) => {
+                                        setDraggedItem(v.vessel_id);
+                                        e.dataTransfer.effectAllowed = 'move';
+                                    }}
+                                    onDragOver={(e) => {
+                                        e.preventDefault();
+                                        if (dragOverItem !== v.vessel_id) setDragOverItem(v.vessel_id);
+                                    }}
+                                    onDragLeave={() => {
+                                        if (dragOverItem === v.vessel_id) setDragOverItem(null);
+                                    }}
+                                    onDrop={async (e) => {
+                                        e.preventDefault();
+                                        if (draggedItem && draggedItem !== v.vessel_id) {
+                                            const draggedIdx = vessels.findIndex(x => x.vessel_id === draggedItem);
+                                            const dropIdx = vessels.findIndex(x => x.vessel_id === v.vessel_id);
+                                            
+                                            const newVessels = [...vessels];
+                                            const [removed] = newVessels.splice(draggedIdx, 1);
+                                            newVessels.splice(dropIdx, 0, removed);
+                                            
+                                            const payload = newVessels.map((vsl, idx) => ({
+                                                vessel_id: vsl.vessel_id,
+                                                display_order: idx + 1
+                                            }));
+                                            
+                                            setVessels(newVessels);
+                                            setDraggedItem(null);
+                                            setDragOverItem(null);
+                                            
+                                            try {
+                                                await ForecastService.reorderVessels(payload);
+                                            } catch (err) {
+                                                console.error("Error reordering", err);
+                                            }
+                                        }
+                                    }}
+                                    onDragEnd={() => {
+                                        setDraggedItem(null);
+                                        setDragOverItem(null);
+                                    }}
                                     onClick={() => {
                                         if (isEditing) {
                                             if (!confirm("Hay cambios sin guardar. ¿Desea descartarlos?")) return;
@@ -76,11 +120,11 @@ export const VesselsMaster: React.FC = () => {
                                         }
                                         setActiveVesselId(v.vessel_id);
                                     }}
-                                    className={`px-6 py-2.5 font-bold text-xs uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 shrink-0 cursor-pointer ${
+                                    className={`px-6 py-2.5 font-bold text-xs uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 shrink-0 ${!isEditing ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} ${
                                         isActive 
                                             ? 'border-blue-600 text-blue-600' 
                                             : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                                    }`}
+                                    } ${draggedItem === v.vessel_id ? 'opacity-30 border-dashed' : ''} ${dragOverItem === v.vessel_id && draggedItem !== v.vessel_id ? 'bg-blue-50 border-blue-300 rounded-t-md border-b-2 border-b-blue-600 scale-105 shadow-sm' : ''}`}
                                 >
                                     <span className="text-sm">🚢</span> {v.vessel_name || v.vessel_id}
                                 </button>
