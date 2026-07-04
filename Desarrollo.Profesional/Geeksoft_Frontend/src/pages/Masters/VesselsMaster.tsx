@@ -272,6 +272,20 @@ export const VesselsMaster: React.FC = () => {
                                                     <div className="flex gap-1 items-center"><input type="number" className="border border-slate-300 rounded px-1 w-20 text-right font-mono text-blue-600 font-bold" value={editFormData?.dwcc || ''} onChange={e => setEditFormData({...editFormData, dwcc: Number(e.target.value)})} /><span className="text-[10px]">t</span></div>
                                                 ) : <span className="font-mono font-bold text-slate-800 text-blue-600">{new Intl.NumberFormat().format(selectedVessel.dwcc || 0)} t</span>}
                                             </div>
+                                            <div className="flex justify-between items-center text-xs border-b border-slate-50 pb-1">
+                                                <span className="text-slate-500 font-bold uppercase text-[10px]">Color Interfaz</span>
+                                                {isEditing ? (
+                                                    <div className="flex gap-2 items-center">
+                                                        <input type="color" className="h-6 w-8 cursor-pointer rounded border border-slate-300 p-0.5" value={editFormData?.color_hex || '#cccccc'} onChange={e => setEditFormData({...editFormData, color_hex: e.target.value})} />
+                                                        <span className="text-[10px] font-mono text-slate-500 uppercase">{editFormData?.color_hex || '#CCCCCC'}</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex gap-2 items-center">
+                                                        <div className="h-4 w-4 rounded-sm border border-slate-300" style={{ backgroundColor: selectedVessel.color_hex || '#ccc' }}></div>
+                                                        <span className="font-mono font-bold text-slate-800 text-[10px]">{selectedVessel.color_hex || 'N/A'}</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 
