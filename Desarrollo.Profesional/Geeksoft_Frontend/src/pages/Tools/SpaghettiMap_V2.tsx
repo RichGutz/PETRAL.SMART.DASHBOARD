@@ -1,18 +1,164 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SpaghettiMap } from '../../components/CommercialForecast/SpaghettiMap';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 
 export const SpaghettiMap_V2: React.FC = () => {
     const context = useForecastContext_V2();
+    const months = context.dynamicMonths;
+    const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
+
+    // Default to the first month when months change
+    useEffect(() => {
+        if (months && months.length > 0 && selectedMonths.length === 0) {
+            setSelectedMonths([months[0]]);
+        }
+    }, [months, selectedMonths]);
+
+    const formatMonthPill = (yyyymm: string) => {
+        if (!yyyymm) return '';
+        const [y, m] = yyyymm.split('-');
+        const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        return `${monthNames[parseInt(m) - 1]} ${y}`;
+    };
+
+    const toggleMonth = (m: string) => {
+        if (selectedMonths.includes(m)) {
+            if (selectedMonths.length > 1) {
+                setSelectedMonths(selectedMonths.filter(x => x !== m));
+            }
+        } else {
+            setSelectedMonths([...selectedMonths, m]);
+        }
+    };
+
+    const toggleAllMonths = () => {
+        if (selectedMonths.length === months.length) {
+            // Si todos están marcados, desmarcar todos y dejar solo el primero
+            setSelectedMonths([months[0]]);
+        } else {
+            // Marcar todos
+            setSelectedMonths([...months]);
+        }
+    };
+
+    const getTripsForMonth = (m: string) => {
+        let count = 0;
+        const ag = context.data?.aggregated_data;
+        if (!ag) return 0;
+        
+        Object.values(ag).forEach((rMap: any) => {
+            Object.values(rMap).forEach((vMap: any) => {
+                Object.values(vMap).forEach((mMap: any) => {
+                    const metrics = mMap[m];
+                    if (metrics) {
+                        const rawFreq = metrics['raw_inputs']?.['monthly_frequency'];
+                        const freq = rawFreq !== undefined ? rawFreq : (metrics['freq'] !== undefined ? metrics['freq'] : 0);
+                        count += freq;
+                    }
+                });
+            });
+        });
+        return Math.round(count);
+    };
+
+    const totalSelectedTrips = selectedMonths.reduce((acc, m) => acc + getTripsForMonth(m), 0);
 
     return (
-        <section className="flex-1 flex flex-col gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <SpaghettiMap 
-                data={context.data} 
-                months={context.dynamicMonths} 
-                ports={context.ports} 
-                isDarkMode={context.isDarkMode} 
-            />
+        <section className="flex-1 flex flex-col mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300 w-full h-full min-h-[600px] -mx-4 md:-mx-6 -mb-4 md:-mb-6 overflow-hidden bg-white border border-slate-200 rounded-tl-xl shadow-lg" style={{ width: 'calc(100% + 2rem)' }}>
+            
+            {/* GRID LAYOUT: 1 Row with 2 Columns */}
+            <div className="flex-1 flex flex-row w-full h-full">
+                
+                {/* COLUMN 1: Custom HTML Timeline */}
+                <div className="w-[280px] md:w-[320px] bg-slate-50 border-r border-slate-200 flex flex-col py-6 px-4 shadow-[4px_0_15px_rgba(0,0,0,0.05)] z-10 overflow-y-auto">
+                    <h3 className="text-petral-teal text-xs font-bold uppercase tracking-widest mb-4 text-center">Línea de Tiempo</h3>
+                    
+                    {/* List of Months Header */}
+                    {months.length > 0 && (
+                        <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-200 px-1">
+                            <button
+                                onClick={toggleAllMonths}
+                                className="text-[10px] font-bold text-petral-teal hover:text-petral-blue uppercase flex items-center gap-1 transition-colors"
+                            >
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                {selectedMonths.length === months.length ? 'Desmarcar Todos' : 'Marcar Todos'}
+                            </button>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Viajes/Mes</span>
+                        </div>
+                    )}
+                    
+                    <div className="flex flex-col gap-2 relative mt-1 flex-1">
+                        {months.length === 0 && (
+                            <p className="text-slate-500 text-[10px] text-center italic mt-10">Sin horizonte</p>
+                        )}
+                        
+                        {months.map((m) => {
+                            const isSelected = selectedMonths.includes(m);
+                            const monthTrips = getTripsForMonth(m);
+                            return (
+                                <button
+                                    key={m}
+                                    onClick={() => toggleMonth(m)}
+                                    className={`w-full flex items-center justify-between p-2 rounded-md transition-all border ${isSelected ? 'bg-white border-petral-teal/30 shadow-[0_2px_8px_rgba(14,165,233,0.1)]' : 'bg-transparent border-transparent hover:bg-slate-100 hover:border-slate-200'} focus:outline-none group`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-[20px] h-[20px] flex items-center justify-center shrink-0 transition-colors border-2 ${isSelected ? 'bg-petral-teal border-petral-teal' : 'bg-white border-slate-300 group-hover:border-petral-teal'} rounded-[4px]`}>
+                                            {isSelected && (
+                                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <span className={`text-sm font-semibold transition-colors ${isSelected ? 'text-petral-teal' : 'text-slate-500 group-hover:text-slate-700'}`}>
+                                            {formatMonthPill(m)}
+                                        </span>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className={`text-sm font-bold ${isSelected ? 'text-petral-blue' : 'text-slate-400'}`}>
+                                            {monthTrips}
+                                        </span>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                    
+                    {/* Footer Row: Accumulated Total moved to bottom */}
+                    <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg p-3 mt-4 shadow-sm">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] text-slate-500 uppercase tracking-wider">Acumulado</span>
+                            <span className="text-xs text-slate-400">({selectedMonths.length} meses)</span>
+                        </div>
+                        <div className="text-right">
+                            <span className="text-xl font-bold text-petral-blue">{totalSelectedTrips}</span>
+                            <span className="text-xs text-slate-500 ml-1">viajes</span>
+                        </div>
+                    </div>
+
+                    {/* Scenario Ribbon */}
+                    {context.forecastName && (
+                        <div className="bg-sky-50 border border-sky-200 rounded-lg p-2 mt-3 flex flex-col justify-center items-center shadow-sm text-center">
+                            <span className="text-[10px] text-sky-600 uppercase tracking-wider font-bold mb-0.5">Escenario Activo</span>
+                            <span className="text-xs font-semibold text-sky-800 flex items-center gap-1">
+                                📁 {context.forecastName}
+                            </span>
+                        </div>
+                    )}
+                </div>
+
+                {/* COLUMN 2: ECharts Map */}
+                <div className="flex-1 relative">
+                    <SpaghettiMap 
+                        data={context.data} 
+                        months={months} 
+                        selectedMonths={selectedMonths}
+                        ports={context.ports} 
+                        isDarkMode={false} 
+                    />
+                </div>
+            </div>
         </section>
     );
 };

@@ -380,15 +380,21 @@ def get_ports(year: int = 2026):
     try:
         from backend.database import get_supabase
         sb = get_supabase()
-        res = sb.table("ports").select("*, sources_sinks(capacity_mt, type)").eq("sources_sinks.year", year).execute()
+        res = sb.table("ports").select("*, sources_sinks(capacity_mt, type, empresa, color_hex)").eq("sources_sinks.year", year).execute()
         
         flat_data = []
         for p in res.data:
             ss_list = p.get("sources_sinks", [])
-            ss = ss_list[0] if isinstance(ss_list, list) and len(ss_list) > 0 else None
-            p["capacity_mt"] = ss["capacity_mt"] if ss else None
-            p["type"] = ss["type"] if ss else None
-            p.pop("sources_sinks", None)
+            
+            total_capacity = sum(ss["capacity_mt"] for ss in ss_list if ss and ss.get("capacity_mt") is not None) if ss_list else None
+            
+            types = set(ss["type"] for ss in ss_list if ss and ss.get("type"))
+            primary_type = "MIXED" if len(types) > 1 else (types.pop() if len(types) == 1 else None)
+            
+            p["capacity_mt"] = total_capacity
+            p["type"] = primary_type
+            
+            # Do NOT pop sources_sinks, keep the list of companies
             flat_data.append(p)
             
         return flat_data

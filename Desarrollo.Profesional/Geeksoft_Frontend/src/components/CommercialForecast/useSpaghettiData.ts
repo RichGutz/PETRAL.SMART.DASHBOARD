@@ -8,6 +8,7 @@ export interface Port {
     lon: number | null;
     capacity_mt: number | null;
     type: string | null;
+    sources_sinks?: any[];
 }
 
 export interface SpaghettiEdge {
@@ -35,6 +36,7 @@ export interface SpaghettiNode {
     capacity_mt: number;
     type: string;
     symbolSize: number;
+    sources_sinks: any[];
 }
 
 // Colores de barcos según Manual.Estilos.md
@@ -205,51 +207,74 @@ export function useSpaghettiData(
                 descarga: Math.round(petralDescarga),
                 capacity_mt: capacity,
                 type: p.type || 'SINK',
-                symbolSize: symbolSize
+                symbolSize: symbolSize,
+                sources_sinks: p.sources_sinks || []
             };
         });
 
-        // 6. Generar las series de Pie Charts Concéntricos (uno por puerto)
+        // 6. Generar las series de Pie Charts (Tierra y Mar)
         const pieSeries: any[] = [];
         nodesForGraph.forEach(n => {
             const petralTotal = n.carga + n.descarga;
 
-            let marketColor = '#64748B';
-            if (n.type === 'SOURCE') marketColor = '#A78BFA';
-            if (n.type === 'MIXED') marketColor = '#3B82F6';
+            // Offset centers for the pies (degrees longitude)
+            const landOffset = 0.35;
+            const seaOffset = -0.35;
+            const landCenter = [n.value[0] + landOffset, n.value[1]];
+            const seaCenter = [n.value[0] + seaOffset, n.value[1]];
 
-            // A. Donut Exterior (Capacidad del Puerto de Mercado - Fija)
+            // A. Pie de Tierra (Mercado)
+            const marketData = n.sources_sinks.map(ss => ({
+                value: ss.capacity_mt,
+                name: `${ss.empresa} (${ss.type})`,
+                itemStyle: { color: ss.color_hex || '#64748B' },
+                portInfo: n
+            }));
+            
+            if (marketData.length === 0) {
+                let fallbackColor = '#64748B';
+                if (n.type === 'SOURCE') fallbackColor = '#A78BFA';
+                if (n.type === 'MIXED') fallbackColor = '#3B82F6';
+                marketData.push({
+                    value: n.capacity_mt,
+                    name: `Capacidad Mercado (${n.type})`,
+                    itemStyle: { color: fallbackColor },
+                    portInfo: n
+                });
+            }
+
             pieSeries.push({
                 type: 'pie',
                 coordinateSystem: 'geo',
-                center: n.value,
-                radius: [n.symbolSize * 0.70, n.symbolSize],
+                center: landCenter,
+                radius: [0, n.symbolSize],
                 silent: false,
                 label: { show: false },
-                emphasis: { label: { show: false } },
-                data: [
-                    { 
-                        value: n.capacity_mt, 
-                        name: `Capacidad Mercado (${n.type})`, 
-                        itemStyle: { color: marketColor },
-                        portInfo: n
-                    }
-                ],
+                emphasis: { 
+                    label: { 
+                        show: true, 
+                        formatter: '{b}',
+                        position: 'inside',
+                        fontSize: 9,
+                        color: '#ffffff'
+                    } 
+                },
+                data: marketData,
                 zlevel: 3
             });
 
-            // B. Pie Interno (Operación de PETRAL - Carga vs Descarga Acumulado)
+            // B. Pie de Mar (Operación de PETRAL)
             if (petralTotal > 0) {
                 pieSeries.push({
                     type: 'pie',
                     coordinateSystem: 'geo',
-                    center: n.value,
-                    radius: [0, n.symbolSize * 0.55],
+                    center: seaCenter,
+                    radius: [0, n.symbolSize * 0.8],
                     label: { show: false },
                     emphasis: { 
                         label: { 
                             show: true, 
-                            formatter: '{b}: {c} MT ({d}%)',
+                            formatter: '{b}',
                             position: 'inside',
                             fontSize: 9,
                             color: '#ffffff'
@@ -275,12 +300,12 @@ export function useSpaghettiData(
                 pieSeries.push({
                     type: 'pie',
                     coordinateSystem: 'geo',
-                    center: n.value,
-                    radius: [0, n.symbolSize * 0.55],
+                    center: seaCenter,
+                    radius: [0, n.symbolSize * 0.8],
                     label: { show: false },
                     silent: true,
                     data: [
-                        { value: 1, name: 'Sin Operación Petral', itemStyle: { color: '#334155' } }
+                        { value: 1, name: 'Sin Operación Petral', itemStyle: { color: '#334155' }, portInfo: n }
                     ],
                     zlevel: 4
                 });

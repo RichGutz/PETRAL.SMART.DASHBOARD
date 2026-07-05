@@ -184,14 +184,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     };
 
     if (hideInputs) {
-        if (!forecastName) return null;
-        return (
-            <div className="bg-sky-50 border border-sky-200 py-2 px-4 flex justify-center w-full rounded-lg shadow-sm">
-                <span className="text-xs font-bold text-sky-800">
-                    📁 Escenario Activo: {forecastName}
-                </span>
-            </div>
-        );
+        return null;
     }
 
     return (

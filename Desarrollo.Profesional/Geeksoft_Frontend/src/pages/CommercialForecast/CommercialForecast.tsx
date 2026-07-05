@@ -518,7 +518,8 @@ export const CommercialForecast: React.FC = () => {
                     <section className="flex-1 flex flex-col gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <SpaghettiMap 
                             data={data} 
-                            months={dynamicMonths} 
+                            months={dynamicMonths}
+                            selectedMonths={dynamicMonths.length > 0 ? [dynamicMonths[0]] : []}
                             ports={ports} 
                             isDarkMode={isDarkMode} 
                         />

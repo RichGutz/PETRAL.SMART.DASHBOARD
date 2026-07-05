@@ -15,6 +15,13 @@ export const GraphicAnalysis_V2: React.FC = () => {
                 excludedDemurrages={context.excludedDemurrages}
                 customDemurrages={context.customDemurrages}
             />
+            {context.forecastName && (
+                <div className="absolute bottom-6 right-6 z-[9999] bg-sky-50/95 backdrop-blur border border-sky-300 py-2 px-5 rounded-lg shadow-xl shadow-slate-200/50 w-auto pointer-events-none">
+                    <span className="text-sm font-bold text-sky-900 tracking-tight flex items-center gap-2 pointer-events-auto">
+                        <span className="text-lg">📁</span> Escenario Activo: {context.forecastName}
+                    </span>
+                </div>
+            )}
         </section>
     );
 };

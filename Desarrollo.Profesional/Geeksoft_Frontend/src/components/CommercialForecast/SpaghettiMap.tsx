@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts';
-import type { Port } from './useSpaghettiData';
+import { useSpaghettiData } from './useSpaghettiData';
 
 // Colores de barcos según Manual.Estilos.md
 const getVesselColor = (vesselName: string): string => {
@@ -20,13 +20,14 @@ const getBaseCurveness = (origin: string, dest: string): number => {
 
     if (pair === 'ILO-MATARANI' || reverse === 'ILO-MATARANI') return 0.10;
     if (pair === 'ILO-MARCONA' || reverse === 'ILO-MARCONA') return 0.22;
-    if (pair === 'ILO-CALLAO' || reverse === 'ILO-CALLAO') return 0.35;
+    if (pair === 'ILO-CALLAO' || reverse === 'ILO-CALLAO') return 0.55;
 
     if (pair === 'CALLAO-MARCONA' || reverse === 'CALLAO-MARCONA') return 0.15;
     if (pair === 'CALLAO-MATARANI' || reverse === 'CALLAO-MATARANI') return 0.28;
 
     if (pair === 'ILO-MEJILLONES' || reverse === 'ILO-MEJILLONES') return -0.15;
     if (pair === 'ILO-BARQUITO' || reverse === 'ILO-BARQUITO') return -0.32;
+    if (pair === 'CALLAO-MEJILLONES' || reverse === 'CALLAO-MEJILLONES') return -0.45;
 
     return 0.20;
 };
@@ -34,23 +35,23 @@ const getBaseCurveness = (origin: string, dest: string): number => {
 // Función pura para calcular datos de espaguetis acumulados para un mes dado
 function computeSpaghettiDataForMonth(
     aggregatedData: any,
-    targetMonth: string,
+    selectedMonths: string[],
     months: string[],
-    ports: Port[]
+    ports: any[]
 ) {
-    if (!aggregatedData || !targetMonth || !months || months.length === 0 || !ports) {
+    if (!aggregatedData || !selectedMonths || selectedMonths.length === 0 || !months || months.length === 0 || !ports) {
         return { nodes: [], edges: [], pieSeries: [] };
     }
 
-    const activeIndex = months.indexOf(targetMonth);
-    const targetMonths = activeIndex >= 0 ? months.slice(0, activeIndex + 1) : [targetMonth];
+    // Since we now receive an array of months directly from the multi-select UI
+    const targetMonths = selectedMonths;
 
     const portMap: Record<string, { carga: number; descarga: number }> = {};
     ports.forEach(p => {
         portMap[p.port_id] = { carga: 0, descarga: 0 };
     });
 
-    const edgeAccumulator: Record<string, { source: string; target: string; vessel: string; tons: number }> = {};
+    const edgeAccumulator: Record<string, { source: string; target: string; vessel: string; tons: number, freq: number }> = {};
 
     const getRouteLegs = (routeKey: string): Array<{ origin: string; dest: string }> => {
         if (routeKey.includes('SPOT-NEXA')) {
@@ -99,10 +100,12 @@ function computeSpaghettiDataForMonth(
                                         source: leg.origin,
                                         target: leg.dest,
                                         vessel: vessel,
-                                        tons: 0
+                                        tons: 0,
+                                        freq: 0
                                     };
                                 }
                                 edgeAccumulator[edgeKey].tons += tons;
+                                edgeAccumulator[edgeKey].freq += freq;
                             });
                         }
                     }
@@ -111,14 +114,30 @@ function computeSpaghettiDataForMonth(
         });
     });
 
-    const edgesGroupedByPair: Record<string, typeof edgeAccumulator[string][]> = {};
-    Object.values(edgeAccumulator).forEach(edge => {
+    const edgesGroupedByPair: Record<string, any[]> = {};
+    Object.values(edgeAccumulator).forEach((edge: any) => {
         if (edge.tons > 0) {
             const pairKey = `${edge.source}-${edge.target}`;
             if (!edgesGroupedByPair[pairKey]) {
                 edgesGroupedByPair[pairKey] = [];
             }
-            edgesGroupedByPair[pairKey].push(edge);
+            if (targetMonths.length === 1) {
+                // Modo 1 mes: Línea individual por cada viaje
+                const trips = Math.max(1, Math.round(edge.freq));
+                for (let i = 0; i < trips; i++) {
+                    edgesGroupedByPair[pairKey].push({
+                        ...edge,
+                        tons: edge.tons / trips, // Toneladas promediadas por viaje
+                        isAggregated: false
+                    });
+                }
+            } else {
+                // Modo acumulado: Una sola línea gruesa
+                edgesGroupedByPair[pairKey].push({
+                    ...edge,
+                    isAggregated: true
+                });
+            }
         }
     });
 
@@ -129,7 +148,8 @@ function computeSpaghettiDataForMonth(
 
         edgesInPair.forEach((edge, index) => {
             const curveness = baseCurveness + index * 0.06;
-            finalEdges.push({
+            
+            const edgeConfig: any = {
                 source: edge.source,
                 target: edge.target,
                 value: Math.round(edge.tons),
@@ -139,7 +159,24 @@ function computeSpaghettiDataForMonth(
                     color: getVesselColor(edge.vessel),
                     curveness: curveness
                 }
-            });
+            };
+
+            if (edge.isAggregated && edge.freq > 0) {
+                // Bolita con el número de viajes
+                edgeConfig.label = {
+                    show: true,
+                    formatter: `${Math.round(edge.freq)}`,
+                    backgroundColor: getVesselColor(edge.vessel),
+                    color: '#fff',
+                    padding: [3, 5],
+                    borderRadius: 10,
+                    fontSize: 10,
+                    fontWeight: 'bold',
+                    position: 'middle'
+                };
+            }
+
+            finalEdges.push(edgeConfig);
         });
     });
 
@@ -160,53 +197,82 @@ function computeSpaghettiDataForMonth(
             descarga: Math.round(petralDescarga),
             capacity_mt: capacity,
             type: p.type || 'SINK',
-            symbolSize: symbolSize
+            symbolSize: symbolSize,
+            sources_sinks: p.sources_sinks || []
         };
     });
 
+    // 6. Generar las series de Pie Charts (Tierra y Mar)
     const pieSeries: any[] = [];
     nodesForGraph.forEach(n => {
         const petralTotal = n.carga + n.descarga;
-        let marketColor = '#64748B';
-        if (n.type === 'SOURCE') marketColor = '#A78BFA';
-        if (n.type === 'MIXED') marketColor = '#3B82F6';
 
-        const monthsCount = targetMonths.length;
-        const totalMonthsInHorizon = months.length;
-        const scaledCapacity = Math.round(n.capacity_mt * (monthsCount / totalMonthsInHorizon));
+        // Offset centers for the pies (degrees longitude)
+        const landOffset = 0.55;
+        const seaOffset = -0.55;
+        
+        let latOffset = 0;
+        if (n.name.includes('ILO') || n.id.includes('ILO')) {
+            latOffset = -0.3; // Mover al sur
+        }
+        
+        const landCenter = [n.value[0] + landOffset, n.value[1] + latOffset];
+        const seaCenter = [n.value[0] + seaOffset, n.value[1] + latOffset];
+
+        // A. Pie de Tierra (Mercado)
+        const marketData = n.sources_sinks?.map((ss: any) => ({
+            value: ss.capacity_mt,
+            name: `${ss.empresa} (${ss.type})`,
+            itemStyle: { color: ss.color_hex || '#64748B' },
+            portInfo: n
+        })) || [];
+        
+        if (marketData.length === 0) {
+            let fallbackColor = '#64748B';
+            if (n.type === 'SOURCE') fallbackColor = '#A78BFA';
+            if (n.type === 'MIXED') fallbackColor = '#3B82F6';
+            marketData.push({
+                value: n.capacity_mt,
+                name: `Capacidad Mercado (${n.type})`,
+                itemStyle: { color: fallbackColor },
+                portInfo: n
+            });
+        }
 
         pieSeries.push({
             type: 'pie',
             coordinateSystem: 'geo',
-            center: n.value,
-            radius: [n.symbolSize * 0.70, n.symbolSize],
+            center: landCenter,
+            radius: [0, n.symbolSize],
             silent: false,
             label: { show: false },
-            emphasis: { label: { show: false } },
-            data: [
-                { 
-                    value: scaledCapacity, 
-                    name: `Capacidad Mercado Acum. (${n.type})`, 
-                    itemStyle: { color: marketColor },
-                    portInfo: n
-                }
-            ],
+            emphasis: { 
+                label: { 
+                    show: true, 
+                    formatter: '{b}',
+                    position: 'inside',
+                    fontSize: 9,
+                    color: '#ffffff'
+                } 
+            },
+            data: marketData,
             zlevel: 3
         });
 
+        // B. Pie de Mar (Operación de PETRAL)
         if (petralTotal > 0) {
             pieSeries.push({
                 type: 'pie',
                 coordinateSystem: 'geo',
-                center: n.value,
-                radius: [0, n.symbolSize * 0.55],
+                center: seaCenter,
+                radius: [0, n.symbolSize * 0.8],
                 label: { show: false },
                 emphasis: { 
                     label: { 
                         show: true, 
-                        formatter: '{b}: {c} MT ({d}%)',
+                        formatter: '{b}',
                         position: 'inside',
-                        fontSize: 8,
+                        fontSize: 9,
                         color: '#ffffff'
                     } 
                 },
@@ -230,12 +296,12 @@ function computeSpaghettiDataForMonth(
             pieSeries.push({
                 type: 'pie',
                 coordinateSystem: 'geo',
-                center: n.value,
-                radius: [0, n.symbolSize * 0.55],
+                center: seaCenter,
+                radius: [0, n.symbolSize * 0.8],
                 label: { show: false },
                 silent: true,
                 data: [
-                    { value: 1, name: 'Sin Operación Petral', itemStyle: { color: '#334155' } }
+                    { value: 1, name: 'Sin Operación Petral', itemStyle: { color: '#334155' }, portInfo: n }
                 ],
                 zlevel: 4
             });
@@ -248,13 +314,15 @@ function computeSpaghettiDataForMonth(
 interface SpaghettiMapProps {
     data: any;
     months: string[];
-    ports: Port[];
+    selectedMonths: string[];
+    ports: any[];
     isDarkMode?: boolean;
 }
 
 export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
     data,
     months,
+    selectedMonths,
     ports,
     isDarkMode = true
 }) => {
@@ -263,203 +331,159 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
     useEffect(() => {
         const loadMap = async () => {
             try {
-                const response = await fetch('/peru.json');
+                const response = await fetch('/peru_chile.json');
                 const geoJson = await response.json();
-                echarts.registerMap('peru', geoJson);
+                echarts.registerMap('peru_chile', geoJson);
                 setMapLoaded(true);
             } catch (error) {
-                console.error("Error loading Peru GeoJSON map:", error);
+                console.error("Error loading Peru/Chile GeoJSON map:", error);
             }
         };
         loadMap();
     }, []);
 
-    const timelineOptions = useMemo(() => {
-        if (!data || !data.aggregated_data || months.length === 0 || ports.length === 0) {
-            return [];
-        }
-
-        return months.map(m => {
-            const { nodes, edges, pieSeries } = computeSpaghettiDataForMonth(data.aggregated_data, m, months, ports);
-            
-            return {
-                title: {
-                    text: `Flujos y Viajes Acumulados a ${m}`,
-                    subtext: 'Donut Externo: Capacidad Mercado Acumulada | Pie Interno: Carga vs Descarga Petral',
-                    left: 'center',
-                    textStyle: {
-                        color: isDarkMode ? '#f1f5f9' : '#1e293b',
-                        fontSize: 16,
-                        fontWeight: 'bold'
-                    },
-                    subtextStyle: {
-                        color: isDarkMode ? '#94a3b8' : '#64748b',
-                        fontSize: 12
-                    }
-                },
-                series: [
-                    {
-                        name: 'Rutas y Puertos',
-                        type: 'graph',
-                        coordinateSystem: 'geo',
-                        layout: 'none',
-                        data: nodes,
-                        links: edges,
-                        roam: true,
-                        zlevel: 2,
-                        label: {
-                            show: true,
-                            position: 'top',
-                            formatter: '{b}',
-                            fontSize: 10,
-                            fontWeight: 'bold',
-                            color: isDarkMode ? '#f1f5f9' : '#1e293b',
-                            backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.85)',
-                            padding: [3, 5],
-                            borderRadius: 4,
-                            borderWidth: 1,
-                            borderColor: isDarkMode ? '#334155' : '#e2e8f0',
-                            distance: 10
-                        },
-                        emphasis: {
-                            focus: 'adjacency',
-                            lineStyle: {
-                                width: 8,
-                                opacity: 1
-                            }
-                        },
-                        lineStyle: {
-                            curveness: 0.2,
-                            opacity: 0.8
-                        }
-                    },
-                    ...pieSeries
-                ]
-            };
-        });
-    }, [data, months, ports, isDarkMode]);
-
     const option = useMemo(() => {
-        if (!mapLoaded || timelineOptions.length === 0) return null;
+        if (!mapLoaded || !data || !data.aggregated_data || selectedMonths.length === 0 || !ports) return;
+
+        const { nodes, edges, pieSeries } = computeSpaghettiDataForMonth(data.aggregated_data, selectedMonths, months, ports);
 
         return {
-            baseOption: {
-                backgroundColor: isDarkMode ? '#0f172a' : '#f8fafc',
-                timeline: {
-                    axisType: 'category',
-                    data: months,
-                    autoPlay: false,
-                    playInterval: 2000,
-                    loop: false,
-                    bottom: 15,
-                    left: '10%',
-                    right: '10%',
-                    label: {
-                        color: isDarkMode ? '#94a3b8' : '#64748b',
-                        formatter: (value: string) => {
-                            const [y, m] = value.split('-');
-                            const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-                            return `${monthNames[parseInt(m) - 1]} ${y}`;
-                        }
-                    },
-                    controlStyle: {
-                        color: '#0EA5E9',
-                        borderColor: '#0EA5E9',
-                        prevIcon: 'M0 0 L10 5 L0 10 Z',
-                        nextIcon: 'M10 0 L0 5 L10 10 Z'
-                    },
-                    lineStyle: { color: isDarkMode ? '#334155' : '#cbd5e1' },
-                    checkpointStyle: {
-                        color: '#0EA5E9',
-                        borderColor: '#ffffff',
-                        borderWidth: 2
-                    }
+            backgroundColor: 'transparent',
+            title: {
+                text: `Flujos y Viajes Acumulados a ${selectedMonths[selectedMonths.length - 1]}`,
+                subtext: 'Donut Externo: Capacidad Mercado Acumulada | Pie Interno: Carga vs Descarga Petral',
+                left: '20px',
+                top: '20px',
+                textStyle: {
+                    color: isDarkMode ? '#f1f5f9' : '#1e293b',
+                    fontSize: 16,
+                    fontWeight: 'bold'
                 },
-                geo: {
-                    map: 'peru',
-                    roam: true,
-                    zoom: 5.2,
-                    center: [-75.5, -14.0],
-                    aspectScale: 0.85,
+                subtextStyle: {
+                    color: isDarkMode ? '#94a3b8' : '#64748b',
+                    fontSize: 12
+                }
+            },
+            geo: {
+                map: 'peru_chile',
+                roam: true,
+                zoom: 2.8,
+                center: [-73.0, -20.0],
+                aspectScale: 0.85,
+                itemStyle: {
+                    areaColor: isDarkMode ? '#1e293b' : '#e2e8f0',
+                    borderColor: isDarkMode ? '#334155' : '#cbd5e1',
+                    borderWidth: 0.8
+                },
+                emphasis: {
                     itemStyle: {
-                        areaColor: isDarkMode ? '#1e293b' : '#e2e8f0',
-                        borderColor: isDarkMode ? '#334155' : '#cbd5e1',
-                        borderWidth: 0.8
+                        areaColor: isDarkMode ? '#273549' : '#d1d5db'
                     },
-                    emphasis: {
-                        itemStyle: {
-                            areaColor: isDarkMode ? '#273549' : '#d1d5db'
-                        },
-                        label: { show: false }
+                    label: { show: false }
+                }
+            },
+            tooltip: {
+                trigger: 'item',
+                backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+                borderColor: isDarkMode ? '#334155' : '#e2e8f0',
+                textStyle: { color: isDarkMode ? '#f1f5f9' : '#1e293b' },
+                formatter: (params: any) => {
+                    if (params.dataType === 'node') {
+                        const d = params.data;
+                        const totalPetral = d.carga + d.descarga;
+                        const pct = d.capacity_mt > 0 ? ((totalPetral / d.capacity_mt) * 100).toFixed(1) : '0';
+                        
+                        return `
+                            <div style="font-family: Inter, sans-serif; padding: 4px;">
+                                <b style="font-size: 13px; color: #0EA5E9;">${d.name}</b> (${d.type})<br/>
+                                <hr style="margin: 6px 0; border-color: #334155;"/>
+                                <b>Operación Petral (Acumulada):</b><br/>
+                                • Carga: <span style="color: #0EA5E9; font-family: monospace;">${d.carga.toLocaleString()} MT</span><br/>
+                                • Descarga: <span style="color: #F97316; font-family: monospace;">${d.descarga.toLocaleString()} MT</span><br/>
+                                • Total: <span style="font-weight: bold; font-family: monospace;">${totalPetral.toLocaleString()} MT</span><br/>
+                                <hr style="margin: 6px 0; border-color: #334155;"/>
+                                <b>Capacidad Mercado (Anual):</b> <span style="font-family: monospace;">${d.capacity_mt.toLocaleString()} MT</span><br/>
+                                <b>Market Share Petral:</b> <span style="font-weight: bold; color: #16A34A; font-family: monospace;">${pct}%</span>
+                            </div>
+                        `;
                     }
-                },
-                tooltip: {
-                    trigger: 'item',
-                    backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
-                    borderColor: isDarkMode ? '#334155' : '#e2e8f0',
-                    textStyle: { color: isDarkMode ? '#f1f5f9' : '#1e293b' },
-                    formatter: (params: any) => {
-                        if (params.dataType === 'node') {
-                            const d = params.data;
-                            const totalPetral = d.carga + d.descarga;
-                            const pct = d.capacity_mt > 0 ? ((totalPetral / d.capacity_mt) * 100).toFixed(1) : '0';
-                            
-                            return `
-                                <div style="font-family: Inter, sans-serif; padding: 4px;">
-                                    <b style="font-size: 13px; color: #0EA5E9;">${d.name}</b> (${d.type})<br/>
-                                    <hr style="margin: 6px 0; border-color: #334155;"/>
-                                    <b>Operación Petral (Acumulada):</b><br/>
-                                    • Carga: <span style="color: #0EA5E9; font-family: monospace;">${d.carga.toLocaleString()} MT</span><br/>
-                                    • Descarga: <span style="color: #F97316; font-family: monospace;">${d.descarga.toLocaleString()} MT</span><br/>
-                                    • Total: <span style="font-weight: bold; font-family: monospace;">${totalPetral.toLocaleString()} MT</span><br/>
-                                    <hr style="margin: 6px 0; border-color: #334155;"/>
-                                    <b>Capacidad Mercado (Anual):</b> <span style="font-family: monospace;">${d.capacity_mt.toLocaleString()} MT</span><br/>
-                                    <b>Market Share Petral:</b> <span style="font-weight: bold; color: #16A34A; font-family: monospace;">${pct}%</span>
-                                </div>
-                            `;
-                        }
-                        if (params.dataType === 'edge') {
-                            const d = params.data;
-                            return `
-                                <div style="font-family: Inter, sans-serif; padding: 4px;">
-                                    <b>${d.source} &rarr; ${d.target}</b><br/>
-                                    <hr style="margin: 6px 0; border-color: #334155;"/>
-                                    <b>Buque:</b> ${d.vessel}<br/>
-                                    <b>Volumen Transportado:</b> <span style="font-weight: bold; color: #10B981; font-family: monospace;">${d.value.toLocaleString()} MT</span>
-                                </div>
-                            `;
-                        }
-                        if (params.componentType === 'series' && params.seriesType === 'pie') {
-                            const d = params.data;
-                            if (d.portInfo) {
-                                const pi = d.portInfo;
-                                if (params.name.includes('Capacidad')) {
-                                    return `
-                                        <div style="font-family: Inter, sans-serif;">
-                                            <b>${pi.name}</b><br/>
-                                            Capacidad Mercado Acumulada: <span style="font-weight: bold; font-family: monospace;">${params.value.toLocaleString()} MT</span>
-                                        </div>
-                                    `;
-                                }
+                    if (params.dataType === 'edge') {
+                        const d = params.data;
+                        return `
+                            <div style="font-family: Inter, sans-serif; padding: 4px;">
+                                <b>${d.source} &rarr; ${d.target}</b><br/>
+                                <hr style="margin: 6px 0; border-color: #334155;"/>
+                                <b>Buque:</b> ${d.vessel}<br/>
+                                <b>Volumen Transportado:</b> <span style="font-weight: bold; color: #10B981; font-family: monospace;">${d.value.toLocaleString()} MT</span>
+                            </div>
+                        `;
+                    }
+                    if (params.componentType === 'series' && params.seriesType === 'pie') {
+                        const d = params.data;
+                        if (d.portInfo) {
+                            const pi = d.portInfo;
+                            if (params.name.includes('Capacidad')) {
                                 return `
                                     <div style="font-family: Inter, sans-serif;">
-                                        <b>${pi.name}</b> - Petral<br/>
-                                        ${params.name}: <span style="font-weight: bold; font-family: monospace;">${params.value.toLocaleString()} MT (${params.percent}%)</span>
+                                        <b>${pi.name}</b><br/>
+                                        Capacidad Mercado Acumulada: <span style="font-weight: bold; font-family: monospace;">${params.value.toLocaleString()} MT</span>
                                     </div>
                                 `;
                             }
+                            return `
+                                <div style="font-family: Inter, sans-serif;">
+                                    <b>${pi.name}</b> - Petral<br/>
+                                    ${params.name}: <span style="font-weight: bold; font-family: monospace;">${params.value.toLocaleString()} MT (${params.percent}%)</span>
+                                </div>
+                            `;
                         }
-                        return '';
                     }
+                    return '';
                 }
             },
-            options: timelineOptions
+            series: [
+                {
+                    name: 'Rutas y Puertos',
+                    type: 'graph',
+                    coordinateSystem: 'geo',
+                    layout: 'none',
+                    data: nodes,
+                    links: edges,
+                    zlevel: 2,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{b}',
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                        color: isDarkMode ? '#f1f5f9' : '#1e293b',
+                        backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+                        padding: [3, 5],
+                        borderRadius: 4,
+                        borderWidth: 1,
+                        borderColor: isDarkMode ? '#334155' : '#e2e8f0',
+                        distance: 10
+                    },
+                    emphasis: {
+                        focus: 'adjacency',
+                        lineStyle: {
+                            width: 8,
+                            opacity: 1
+                        }
+                    },
+                    lineStyle: {
+                        curveness: 0.2,
+                        opacity: 0.8
+                    }
+                },
+                ...pieSeries
+            ]
         };
-    }, [mapLoaded, timelineOptions, months, isDarkMode]);
+    }, [mapLoaded, data, months, selectedMonths, ports, isDarkMode]);
 
     if (!mapLoaded || !option) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center bg-slate-900 border border-slate-800 rounded-xl p-8 min-h-[500px]">
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full">
                 <div className="animate-spin h-8 w-8 border-4 border-petral-teal border-t-transparent rounded-full mb-4"></div>
                 <p className="text-slate-400 font-medium">Cargando Mapa de Espaguetis...</p>
             </div>
@@ -467,15 +491,13 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
     }
 
     return (
-        <div className="flex-1 bg-slate-900 border border-slate-800 rounded-xl shadow-xl p-4 min-h-[550px] flex flex-col">
-            <div className="flex-1 relative w-full h-full min-h-[500px]">
-                <ReactECharts 
-                    option={option} 
-                    style={{ height: '100%', width: '100%', minHeight: '500px' }}
-                    notMerge={true}
-                    lazyUpdate={true}
-                />
-            </div>
+        <div className="flex-1 relative w-full h-full">
+            <ReactECharts 
+                option={option} 
+                style={{ height: '100%', width: '100%', minHeight: '600px' }}
+                notMerge={true}
+                lazyUpdate={true}
+            />
         </div>
     );
 };
