@@ -41,10 +41,11 @@ export const SpaghettiMap_V2: React.FC = () => {
         }
     };
 
-    const getTripsForMonth = (m: string) => {
-        let count = 0;
+    const getMonthData = (m: string) => {
+        let trips = 0;
+        let tons = 0;
         const ag = context.data?.aggregated_data;
-        if (!ag) return 0;
+        if (!ag) return { trips: 0, tons: 0 };
         
         Object.values(ag).forEach((rMap: any) => {
             Object.values(rMap).forEach((vMap: any) => {
@@ -53,15 +54,18 @@ export const SpaghettiMap_V2: React.FC = () => {
                     if (metrics) {
                         const rawFreq = metrics['raw_inputs']?.['monthly_frequency'];
                         const freq = rawFreq !== undefined ? rawFreq : (metrics['freq'] !== undefined ? metrics['freq'] : 0);
-                        count += freq;
+                        const carga = metrics['carga_unit'] || 0;
+                        trips += freq;
+                        tons += (freq * carga);
                     }
                 });
             });
         });
-        return Math.round(count);
+        return { trips: Math.round(trips), tons: Math.round(tons) };
     };
 
-    const totalSelectedTrips = selectedMonths.reduce((acc, m) => acc + getTripsForMonth(m), 0);
+    const totalSelectedTrips = selectedMonths.reduce((acc, m) => acc + getMonthData(m).trips, 0);
+    const totalSelectedTons = selectedMonths.reduce((acc, m) => acc + getMonthData(m).tons, 0);
 
     return (
         <section className="flex-1 flex flex-col mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300 w-full h-full min-h-[600px] -mx-4 md:-mx-6 -mb-4 md:-mb-6 overflow-hidden bg-white border border-slate-200 rounded-tl-xl shadow-lg" style={{ width: 'calc(100% + 2rem)' }}>
@@ -70,22 +74,29 @@ export const SpaghettiMap_V2: React.FC = () => {
             <div className="flex-1 flex flex-row w-full h-full">
                 
                 {/* COLUMN 1: Custom HTML Timeline */}
-                <div className="w-[280px] md:w-[320px] bg-slate-50 border-r border-slate-200 flex flex-col py-6 px-4 shadow-[4px_0_15px_rgba(0,0,0,0.05)] z-10 overflow-y-auto">
+                <div className="w-[340px] md:w-[380px] bg-slate-50 border-r border-slate-200 flex flex-col py-6 px-4 shadow-[4px_0_15px_rgba(0,0,0,0.05)] z-10 overflow-y-auto">
                     <h3 className="text-petral-teal text-xs font-bold uppercase tracking-widest mb-4 text-center">Línea de Tiempo</h3>
                     
                     {/* List of Months Header */}
                     {months.length > 0 && (
-                        <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-200 px-1">
-                            <button
-                                onClick={toggleAllMonths}
-                                className="text-[10px] font-bold text-petral-teal hover:text-petral-blue uppercase flex items-center gap-1 transition-colors"
-                            >
-                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                {selectedMonths.length === months.length ? 'Desmarcar Todos' : 'Marcar Todos'}
-                            </button>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">Viajes/Mes</span>
+                        <div className="flex items-center pb-2 mb-2 border-b border-slate-200 px-1">
+                            <div className="w-[45%]">
+                                <button
+                                    onClick={toggleAllMonths}
+                                    className="text-[10px] font-bold text-petral-teal hover:text-petral-blue uppercase flex items-center gap-1 transition-colors"
+                                >
+                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    {selectedMonths.length === months.length ? 'Desmarcar Todos' : 'Marcar Todos'}
+                                </button>
+                            </div>
+                            <div className="w-[20%] text-center">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase">Viajes</span>
+                            </div>
+                            <div className="w-[35%] text-right">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase">Toneladas</span>
+                            </div>
                         </div>
                     )}
                     
@@ -96,14 +107,14 @@ export const SpaghettiMap_V2: React.FC = () => {
                         
                         {months.map((m) => {
                             const isSelected = selectedMonths.includes(m);
-                            const monthTrips = getTripsForMonth(m);
+                            const { trips, tons } = getMonthData(m);
                             return (
                                 <button
                                     key={m}
                                     onClick={() => toggleMonth(m)}
-                                    className={`w-full flex items-center justify-between p-2 rounded-md transition-all border ${isSelected ? 'bg-white border-petral-teal/30 shadow-[0_2px_8px_rgba(14,165,233,0.1)]' : 'bg-transparent border-transparent hover:bg-slate-100 hover:border-slate-200'} focus:outline-none group`}
+                                    className={`w-full flex items-center p-2 rounded-md transition-all border ${isSelected ? 'bg-white border-petral-teal/30 shadow-[0_2px_8px_rgba(14,165,233,0.1)]' : 'bg-transparent border-transparent hover:bg-slate-100 hover:border-slate-200'} focus:outline-none group`}
                                 >
-                                    <div className="flex items-center gap-3">
+                                    <div className="w-[45%] flex items-center gap-3">
                                         <div className={`w-[20px] h-[20px] flex items-center justify-center shrink-0 transition-colors border-2 ${isSelected ? 'bg-petral-teal border-petral-teal' : 'bg-white border-slate-300 group-hover:border-petral-teal'} rounded-[4px]`}>
                                             {isSelected && (
                                                 <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -115,9 +126,14 @@ export const SpaghettiMap_V2: React.FC = () => {
                                             {formatMonthPill(m)}
                                         </span>
                                     </div>
-                                    <div className="text-right">
+                                    <div className="w-[20%] text-center">
                                         <span className={`text-sm font-bold ${isSelected ? 'text-petral-blue' : 'text-slate-400'}`}>
-                                            {monthTrips}
+                                            {trips}
+                                        </span>
+                                    </div>
+                                    <div className="w-[35%] text-right">
+                                        <span className={`text-sm font-bold ${isSelected ? 'text-sky-600' : 'text-slate-400'}`}>
+                                            {tons.toLocaleString('en-US')} <span className="text-[10px] font-normal">MT</span>
                                         </span>
                                     </div>
                                 </button>
@@ -126,14 +142,17 @@ export const SpaghettiMap_V2: React.FC = () => {
                     </div>
                     
                     {/* Footer Row: Accumulated Total moved to bottom */}
-                    <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg p-3 mt-4 shadow-sm">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] text-slate-500 uppercase tracking-wider">Acumulado</span>
-                            <span className="text-xs text-slate-400">({selectedMonths.length} meses)</span>
-                        </div>
-                        <div className="text-right">
-                            <span className="text-xl font-bold text-petral-blue">{totalSelectedTrips}</span>
-                            <span className="text-xs text-slate-500 ml-1">viajes</span>
+                    <div className="flex flex-col bg-white border border-slate-200 rounded-lg p-3 mt-4 shadow-sm">
+                        <span className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">Acumulado ({selectedMonths.length} meses)</span>
+                        <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
+                                <span className="text-xl font-bold text-petral-blue">{totalSelectedTrips}</span>
+                                <span className="text-[10px] text-slate-400 uppercase">Viajes</span>
+                            </div>
+                            <div className="flex flex-col text-right">
+                                <span className="text-xl font-bold text-sky-600">{totalSelectedTons.toLocaleString('en-US')}</span>
+                                <span className="text-[10px] text-slate-400 uppercase">Toneladas (MT)</span>
+                            </div>
                         </div>
                     </div>
 

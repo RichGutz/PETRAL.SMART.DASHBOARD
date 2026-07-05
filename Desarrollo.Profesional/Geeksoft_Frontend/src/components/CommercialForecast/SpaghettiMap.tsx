@@ -162,17 +162,23 @@ function computeSpaghettiDataForMonth(
             };
 
             if (edge.isAggregated && edge.freq > 0) {
-                // Bolita con el número de viajes
+                // Bolita con el número de viajes (horizontal, estilo bola de billar)
                 edgeConfig.label = {
                     show: true,
                     formatter: `${Math.round(edge.freq)}`,
                     backgroundColor: getVesselColor(edge.vessel),
                     color: '#fff',
-                    padding: [3, 5],
-                    borderRadius: 10,
+                    width: 16,
+                    height: 16,
+                    lineHeight: 16,
+                    align: 'center',
+                    verticalAlign: 'middle',
+                    padding: 0,
+                    borderRadius: 8,
                     fontSize: 10,
                     fontWeight: 'bold',
-                    position: 'middle'
+                    position: 'middle',
+                    rotate: 0
                 };
             }
 
