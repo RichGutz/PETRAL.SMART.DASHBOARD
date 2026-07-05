@@ -1,7 +1,8 @@
 import React from 'react';
-import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database } from 'lucide-react';
+import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database, Sun, Moon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
+import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 
 interface MasterTemplateProps {
     title: string;
@@ -19,6 +20,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
     onBackToDashboard
 }) => {
     const navigate = useNavigate();
+    const context = useForecastContext_V2();
     
     const handleNewWindow = () => {
         window.open(window.location.href, '_blank', 'width=1200,height=800,menubar=no,status=no');
@@ -104,6 +106,25 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                             </button>
 
                             <span className="text-slate-200 text-lg">|</span>
+                            
+                            {/* Theme Toggle */}
+                            <div className="flex items-center gap-1 bg-slate-100 rounded-full p-1 shadow-inner ml-1">
+                                <button
+                                    onClick={() => context.setIsDarkMode(false)}
+                                    className={`p-1.5 rounded-full transition-all ${!context.isDarkMode ? 'bg-white shadow text-amber-500' : 'text-slate-400 hover:text-slate-600'}`}
+                                    title="Light Mode"
+                                >
+                                    <Sun size={14} />
+                                </button>
+                                <button
+                                    onClick={() => context.setIsDarkMode(true)}
+                                    className={`p-1.5 rounded-full transition-all ${context.isDarkMode ? 'bg-slate-800 shadow text-indigo-400' : 'text-slate-400 hover:text-slate-600'}`}
+                                    title="Dark Mode"
+                                >
+                                    <Moon size={14} />
+                                </button>
+                            </div>
+
                             <img src="/Logo.Geeksoft.png" alt="Geeksoft" className="h-9 object-contain pl-1" />
                         </div>
                     </div>
@@ -112,7 +133,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
             </header>
 
             {/* Layout Principal con Sidebar Lateral de Maestros */}
-            <div className="flex-1 flex max-w-[1600px] w-full mx-auto p-6 gap-6">
+            <div className="flex-1 flex max-w-full w-full mx-auto p-4 gap-4">
                 
                 {/* Sidebar Izquierdo */}
                 <aside className="w-64 shrink-0 flex flex-col gap-4 hidden md:flex">

@@ -1,5 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { CommercialForecast } from './pages/CommercialForecast/CommercialForecast';
+import { ForecastProvider_V2 } from './context/ForecastContext_V2';
+import { ToolsLayout_V2 } from './layouts/ToolsLayout_V2';
+
+import { FinancialMatrix_V2 } from './pages/Tools/FinancialMatrix_V2';
+import { GraphicAnalysis_V2 } from './pages/Tools/GraphicAnalysis_V2';
+import { SpaghettiMap_V2 } from './pages/Tools/SpaghettiMap_V2';
+import { AuditLedger_V2 } from './pages/Tools/AuditLedger_V2';
+import { AuditEngine_V2 } from './pages/Tools/AuditEngine_V2';
+
 import { VesselsMaster } from './pages/Masters/VesselsMaster_V2';
 import { RoutesMaster } from './pages/Masters/RoutesMaster_V2';
 import { ClientsMaster } from './pages/Masters/ClientsMaster_V2';
@@ -20,29 +28,31 @@ function App_V2() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
-        <Routes>
-          {/* Dashboard / Matriz Financiera */}
-          <Route path="/dashboard" element={<CommercialForecast />} />
-          
-          {/* Maestros */}
-          <Route path="/vessels" element={<VesselsMaster />} />
-          <Route path="/routes" element={<RoutesMaster />} />
-          <Route path="/clients" element={<ClientsMaster />} />
-          <Route path="/contracts" element={<ContractsMaster />} />
-          <Route path="/ports" element={<PlaceholderPage title="Maestro de Puertos" activeTab="ports" />} />
-          
-          {/* Herramientas */}
-          <Route path="/graphic-analysis" element={<PlaceholderPage title="Análisis Gráfico" activeTab="graphic-analysis" />} />
-          <Route path="/spaghetti-map" element={<PlaceholderPage title="Spaghetti Map" activeTab="spaghetti-map" />} />
-          <Route path="/audit-ledger" element={<PlaceholderPage title="Auditoría Ledger" activeTab="audit-ledger" />} />
-          <Route path="/audit-engine" element={<PlaceholderPage title="Auditoría Motor" activeTab="audit-engine" />} />
-          
-          {/* Usuarios */}
-          <Route path="/users" element={<PlaceholderPage title="Gestión de Usuarios" activeTab="users" />} />
+        <ForecastProvider_V2>
+          <Routes>
+            {/* Maestros */}
+            <Route path="/vessels" element={<VesselsMaster />} />
+            <Route path="/routes" element={<RoutesMaster />} />
+            <Route path="/clients" element={<ClientsMaster />} />
+            <Route path="/contracts" element={<ContractsMaster />} />
+            <Route path="/ports" element={<PlaceholderPage title="Maestro de Puertos" activeTab="ports" />} />
+            
+            {/* Herramientas (Comparten el estado y el Ribbon via ToolsLayout) */}
+            <Route element={<ToolsLayout_V2 />}>
+                <Route path="/dashboard" element={<FinancialMatrix_V2 />} />
+                <Route path="/graphic-analysis" element={<GraphicAnalysis_V2 />} />
+                <Route path="/spaghetti-map" element={<SpaghettiMap_V2 />} />
+                <Route path="/audit-ledger" element={<AuditLedger_V2 />} />
+                <Route path="/audit-engine" element={<AuditEngine_V2 />} />
+            </Route>
+            
+            {/* Usuarios */}
+            <Route path="/users" element={<PlaceholderPage title="Gestión de Usuarios" activeTab="users" />} />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </ForecastProvider_V2>
       </div>
     </Router>
   );

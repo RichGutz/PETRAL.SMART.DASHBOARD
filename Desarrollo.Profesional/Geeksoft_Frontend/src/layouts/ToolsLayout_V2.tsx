@@ -1,0 +1,160 @@
+import React from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import { MasterTemplate } from '../components/Masters/MasterTemplate_V2';
+import { ForecastBuilder } from '../components/CommercialForecast/ForecastBuilder_V2';
+import { useForecastContext_V2 } from '../context/ForecastContext_V2';
+import { Save, FolderOpen, X } from 'lucide-react';
+
+export const ToolsLayout_V2: React.FC = () => {
+    const context = useForecastContext_V2();
+    const location = useLocation();
+
+    // Map URL to activeTab for MasterTemplate and Builder
+    let activeTab = 'financial-matrix';
+    if (location.pathname.includes('/dashboard')) activeTab = 'financial-matrix';
+    else if (location.pathname.includes('/graphic-analysis')) activeTab = 'graphic-analysis';
+    else if (location.pathname.includes('/spaghetti-map')) activeTab = 'spaghetti-map';
+    else if (location.pathname.includes('/audit-ledger')) activeTab = 'audit-ledger';
+    else if (location.pathname.includes('/audit-engine')) activeTab = 'audit-engine';
+
+    return (
+        <MasterTemplate title="Herramientas" subtitle="Análisis y Proyección" activeTab={activeTab}>
+            
+            <div className="flex-1 flex flex-col gap-6 print:gap-0 print:m-0 h-full">
+                {/* 1. Builder Bar (Shared across all tools) */}
+                <div className="print:hidden">
+                    <ForecastBuilder 
+                        currentStartDate={context.startDate}
+                        currentEndDate={context.endDate}
+                        dynamicMonths={context.dynamicMonths}
+                        onHorizonChange={(start: string, end: string) => {
+                            context.setStartDate(start);
+                            context.setEndDate(end);
+                        }}
+                        onAddLine={context.handleAddLine}
+                        forecastName={context.forecastName}
+                        hideInputs={activeTab !== 'financial-matrix' || context.isRibbonCollapsed}
+                        displayMode={context.displayMode}
+                        onDisplayModeChange={context.setDisplayMode}
+                        isAdding={context.loading}
+                        demurragePct={context.demurragePct}
+                        showDemurrage={context.showDemurrage}
+                        onDemurragePctChange={context.setDemurragePct}
+                        onShowDemurrageChange={context.setShowDemurrage}
+                        onPortCostModeChange={context.setPortCostMode}
+                        bottomRightContent={
+                            <>
+                                <div className="flex flex-col gap-1 min-w-[90px] max-w-[110px] flex-1 justify-end h-full">
+                                    <button onClick={() => context.setShowSaveModal(true)} className="flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground h-6 w-full rounded font-medium text-[10px] transition-colors shadow-sm cursor-pointer">
+                                        <Save size={12} /> Guardar
+                                    </button>
+                                    <button 
+                                        onClick={context.handleLoadClick} 
+                                        disabled={context.actionLoading === 'loadList'}
+                                        className={`relative overflow-hidden flex items-center justify-center gap-1 h-6 w-full rounded font-medium text-[10px] transition-colors shadow-sm cursor-pointer ${context.actionLoading === 'loadList' ? 'bg-slate-200 pointer-events-none' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'}`}
+                                    >
+                                        {context.actionLoading === 'loadList' && <div className="absolute inset-0 bg-slate-300/50 animate-pulse" style={{ width: '100%' }}></div>}
+                                        <span className="relative flex items-center justify-center z-10 w-full gap-1">
+                                            {context.actionLoading === 'loadList' ? (
+                                                <>
+                                                    <div className="animate-spin h-2.5 w-2.5 border-2 border-slate-500 border-t-transparent rounded-full"></div>
+                                                    <span>Abrir...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FolderOpen size={12} /> Cargar
+                                                </>
+                                            )}
+                                        </span>
+                                    </button>
+                                </div>
+                            </>
+                        }
+                    />
+                </div>
+
+                {/* 2. Outlet renders the specific tool (Grid, Chart, Map) */}
+                <Outlet />
+
+            </div>
+
+            {/* Save Modal */}
+            {context.showSaveModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg w-96 shadow-xl relative">
+                        <button onClick={() => context.setShowSaveModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={20}/></button>
+                        <h3 className="text-lg font-bold text-slate-800 mb-4">Guardar Escenario</h3>
+                        
+                        <div className="flex flex-col gap-4">
+                            <div>
+                                <label className="text-sm font-semibold text-slate-600 mb-1 block">Nombre del Forecast</label>
+                                <input type="text" value={context.forecastName} onChange={(e) => context.setForecastName(e.target.value)} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-petral-teal focus:outline-none" placeholder="Ej. Escenario Conservador H2" />
+                            </div>
+                            <div>
+                                <label className="text-sm font-semibold text-slate-600 mb-1 block">Usuario / Autor</label>
+                                <input type="text" value={context.userId} onChange={(e) => context.setUserId(e.target.value)} className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-slate-50 focus:outline-none" />
+                            </div>
+                            <div className="flex flex-col gap-2 mt-2">
+                                <button 
+                                    onClick={() => context.handleSaveForecast(true)} 
+                                    disabled={context.actionLoading === 'save'}
+                                    className={`relative overflow-hidden w-full font-bold py-2 rounded-full transition-colors ${context.actionLoading === 'save' ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-petral-teal hover:bg-teal-600 text-white shadow-md'}`}
+                                >
+                                    {context.actionLoading === 'save' && <div className="absolute inset-0 bg-white/20 animate-pulse" style={{ width: '100%' }}></div>}
+                                    <span className="relative z-10 flex items-center justify-center gap-2">
+                                        {context.actionLoading === 'save' ? 'Procesando...' : 'Guardar Nuevo (Clonar)'}
+                                    </span>
+                                </button>
+                                
+                                {context.currentForecastId && (context.loadedAuthor === context.userId || !context.loadedAuthor) && (
+                                    <button 
+                                        onClick={() => context.handleSaveForecast(false)} 
+                                        disabled={context.actionLoading === 'save'}
+                                        className={`w-full font-bold py-2 rounded-full transition-colors text-sm border-2 ${context.actionLoading === 'save' ? 'border-slate-200 text-slate-400 cursor-not-allowed' : 'border-slate-300 text-slate-600 hover:border-petral-teal hover:text-petral-teal'}`}
+                                    >
+                                        Sobrescribir Mi Escenario
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Load Modal */}
+            {context.showLoadModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg w-[500px] shadow-xl relative">
+                        <button onClick={() => context.setShowLoadModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={20}/></button>
+                        <h3 className="text-lg font-bold text-slate-800 mb-4">Catálogo de Escenarios</h3>
+                        
+                        <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto pr-2">
+                            {context.savedForecasts.length === 0 ? (
+                                <p className="text-sm text-slate-500 italic">No hay escenarios guardados en la BD.</p>
+                            ) : (
+                                context.savedForecasts.map(f => (
+                                    <div key={f.id} className={`flex items-center justify-between p-3 border rounded cursor-pointer transition-colors ${f.user_id === context.userId ? 'border-petral-teal/30 bg-blue-50/50 hover:bg-blue-50' : 'border-slate-200 hover:bg-slate-50'}`} onClick={() => context.handleLoadSelected(f.id)}>
+                                        <div>
+                                            <div className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                                {f.name} 
+                                                {f.user_id === context.userId ? (
+                                                    <span className="text-[10px] bg-petral-teal text-white px-2 py-0.5 rounded-full font-semibold">Tuyo</span>
+                                                ) : (
+                                                    <span className="font-normal text-slate-400 text-xs">@{f.user_id}</span>
+                                                )}
+                                            </div>
+                                            <div className="text-xs text-slate-500">{f.start_date} a {f.end_date}</div>
+                                        </div>
+                                        <div className="text-xs text-slate-400">
+                                            {new Date(f.updated_at).toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </MasterTemplate>
+    );
+};
