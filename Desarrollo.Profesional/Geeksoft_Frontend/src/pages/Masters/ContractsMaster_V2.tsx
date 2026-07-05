@@ -341,9 +341,9 @@ export const ContractsMaster: React.FC = () => {
                                 </div>
 
                                 {/* Contenido de la Ruta Seleccionada (Formulario) */}
-                                <div className="flex-1 overflow-auto bg-white p-8">
+                                <div className="flex-1 overflow-auto bg-white p-6 xl:p-8">
                                     {selectedRoute ? (
-                                        <div className="max-w-4xl mx-auto space-y-8">
+                                        <div className="w-full max-w-none mx-auto space-y-6">
                                             
                                             <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-4">
                                                 <h3 className="text-base font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
@@ -357,254 +357,269 @@ export const ContractsMaster: React.FC = () => {
                                                 </button>
                                             </div>
 
-                                            {/* 1. Definición */}
-                                            <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm">
-                                                <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2">1. Definición Operativa & Vigencia</h4>
-                                                
-                                                <div className="grid grid-cols-2 gap-5">
-                                                    <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Cliente Asignado</label>
-                                                        <select 
-                                                            value={selectedRoute.client_id}
-                                                            onChange={(e) => handleChange(selectedRouteKey!, 'client_id', e.target.value)}
-                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white font-semibold text-slate-700"
-                                                        >
-                                                            <option value="">Seleccione Cliente...</option>
-                                                            {clients.map(c => (
-                                                                <option key={c.client_id} value={c.client_id}>{c.client_name} ({c.client_id})</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    <div className="flex items-end">
-                                                        <label className="flex items-center gap-3 cursor-pointer bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm w-full transition-colors hover:border-blue-300">
-                                                            <input 
-                                                                type="checkbox" 
-                                                                checked={selectedRoute.is_active}
-                                                                onChange={(e) => handleChange(selectedRouteKey!, 'is_active', e.target.checked)}
-                                                                className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
-                                                            />
-                                                            <span className="text-sm font-bold text-slate-700">Ruta Activa en el Contrato</span>
-                                                        </label>
-                                                    </div>
-                                                    
-                                                    <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Puerto Origen</label>
-                                                        <select 
-                                                            value={selectedRoute.origin_port_id}
-                                                            onChange={(e) => handleChange(selectedRouteKey!, 'origin_port_id', e.target.value)}
-                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
-                                                        >
-                                                            <option value="">Seleccione Puerto...</option>
-                                                            {ports.map(p => (
-                                                                <option key={p.port_id} value={p.port_id}>{p.port_name} ({p.country})</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Puerto Destino</label>
-                                                        <select 
-                                                            value={selectedRoute.destination_port_id}
-                                                            onChange={(e) => handleChange(selectedRouteKey!, 'destination_port_id', e.target.value)}
-                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
-                                                        >
-                                                            <option value="">Seleccione Puerto...</option>
-                                                            {ports.map(p => (
-                                                                <option key={p.port_id} value={p.port_id}>{p.port_name} ({p.country})</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
+                                            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+                                                {/* ================= COLUMNA 1 ================= */}
+                                                <div className="space-y-6">
+                                                    {/* 1. Definición */}
+                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm">
+                                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-200 pb-2">1. Definición Operativa & Vigencia</h4>
+                                                        
+                                                        <div className="flex flex-col gap-4">
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Cliente Asignado</label>
+                                                                <select 
+                                                                    value={selectedRoute.client_id}
+                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'client_id', e.target.value)}
+                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white font-semibold text-slate-700"
+                                                                >
+                                                                    <option value="">Seleccione Cliente...</option>
+                                                                    {clients.map(c => (
+                                                                        <option key={c.client_id} value={c.client_id}>{c.client_name} ({c.client_id})</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                            <div className="flex items-center">
+                                                                <label className="flex items-center gap-3 cursor-pointer bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm w-full transition-colors hover:border-blue-300">
+                                                                    <input 
+                                                                        type="checkbox" 
+                                                                        checked={selectedRoute.is_active}
+                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'is_active', e.target.checked)}
+                                                                        className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                                                                    />
+                                                                    <span className="text-sm font-bold text-slate-700">Ruta Activa en el Contrato</span>
+                                                                </label>
+                                                            </div>
+                                                            
+                                                            <div className="grid grid-cols-2 gap-3">
+                                                                <div>
+                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Puerto Origen</label>
+                                                                    <select 
+                                                                        value={selectedRoute.origin_port_id}
+                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'origin_port_id', e.target.value)}
+                                                                        className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
+                                                                    >
+                                                                        <option value="">Seleccione Puerto...</option>
+                                                                        {ports.map(p => (
+                                                                            <option key={p.port_id} value={p.port_id}>{p.port_name} ({p.country})</option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Puerto Destino</label>
+                                                                    <select 
+                                                                        value={selectedRoute.destination_port_id}
+                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'destination_port_id', e.target.value)}
+                                                                        className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
+                                                                    >
+                                                                        <option value="">Seleccione Puerto...</option>
+                                                                        {ports.map(p => (
+                                                                            <option key={p.port_id} value={p.port_id}>{p.port_name} ({p.country})</option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+                                                            </div>
 
-                                                    <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Válido Desde</label>
-                                                        <input 
-                                                            type="date" 
-                                                            value={selectedRoute.valid_from || ''}
-                                                            onChange={(e) => handleChange(selectedRouteKey!, 'valid_from', e.target.value)}
-                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Válido Hasta</label>
-                                                        <input 
-                                                            type="date" 
-                                                            value={selectedRoute.valid_to || ''}
-                                                            onChange={(e) => handleChange(selectedRouteKey!, 'valid_to', e.target.value)}
-                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </section>
-
-                                            {/* 2. Operativo & Tiempos */}
-                                            <div className="grid grid-cols-2 gap-8">
-                                                <section className="space-y-4">
-                                                    <h4 className="text-xs font-black text-blue-800 uppercase tracking-wider border-b border-blue-200 pb-2">Operaciones Origen</h4>
-                                                    <div className="space-y-4">
-                                                        <div>
-                                                            <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Load Rate (mt/día)</label>
-                                                            <input 
-                                                                type="number" 
-                                                                value={selectedRoute.load_rate}
-                                                                onChange={(e) => handleChange(selectedRouteKey!, 'load_rate', parseFloat(e.target.value))}
-                                                                className="w-full text-sm border border-blue-200 rounded-lg p-2.5 font-mono bg-blue-50/50 focus:border-blue-400 focus:outline-none"
-                                                            />
+                                                            <div className="grid grid-cols-2 gap-3">
+                                                                <div>
+                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Válido Desde</label>
+                                                                    <input 
+                                                                        type="date" 
+                                                                        value={selectedRoute.valid_from || ''}
+                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'valid_from', e.target.value)}
+                                                                        className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Válido Hasta</label>
+                                                                    <input 
+                                                                        type="date" 
+                                                                        value={selectedRoute.valid_to || ''}
+                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'valid_to', e.target.value)}
+                                                                        className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
+                                                                    />
+                                                                </div>
+                                                            </div>
                                                         </div>
+                                                    </section>
+                                                </div>
+
+                                                {/* ================= COLUMNA 2 ================= */}
+                                                <div className="space-y-6">
+                                                    {/* 2. Operativo & Tiempos */}
+                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-6 shadow-sm">
+                                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-200 pb-2">2. Operaciones & Tiempos</h4>
+                                                        
+                                                        <div className="space-y-4">
+                                                            <h5 className="text-xs font-black text-blue-800 uppercase tracking-wider bg-blue-100/50 p-2 rounded">Origen</h5>
+                                                            <div className="grid grid-cols-2 gap-3 px-1">
+                                                                <div className="col-span-2">
+                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Load Rate (mt/día)</label>
+                                                                    <input 
+                                                                        type="number" 
+                                                                        value={selectedRoute.load_rate}
+                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'load_rate', parseFloat(e.target.value))}
+                                                                        className="w-full text-sm border border-blue-200 rounded-lg p-2 font-mono bg-blue-50/50 focus:border-blue-400 focus:outline-none"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Time to Count</label>
+                                                                    <input 
+                                                                        type="number" 
+                                                                        value={selectedRoute.time_to_count_carga_hrs}
+                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'time_to_count_carga_hrs', parseFloat(e.target.value))}
+                                                                        className="w-full text-sm border border-blue-200 rounded-lg p-2 font-mono bg-blue-50/50 focus:border-blue-400 focus:outline-none"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Maneuver (hrs)</label>
+                                                                    <input 
+                                                                        type="number" 
+                                                                        value={selectedRoute.maneuver_carga_hrs}
+                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'maneuver_carga_hrs', parseFloat(e.target.value))}
+                                                                        className="w-full text-sm border border-blue-200 rounded-lg p-2 font-mono bg-blue-50/50 focus:border-blue-400 focus:outline-none"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-4 mt-6">
+                                                            <h5 className="text-xs font-black text-amber-800 uppercase tracking-wider bg-amber-100/50 p-2 rounded">Destino</h5>
+                                                            <div className="grid grid-cols-2 gap-3 px-1">
+                                                                <div className="col-span-2">
+                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Discharge Rate (mt/día)</label>
+                                                                    <input 
+                                                                        type="number" 
+                                                                        value={selectedRoute.discharge_rate}
+                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'discharge_rate', parseFloat(e.target.value))}
+                                                                        className="w-full text-sm border border-amber-200 rounded-lg p-2 font-mono bg-amber-50/50 focus:border-amber-400 focus:outline-none"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Time to Count</label>
+                                                                    <input 
+                                                                        type="number" 
+                                                                        value={selectedRoute.time_to_count_descarga_hrs}
+                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'time_to_count_descarga_hrs', parseFloat(e.target.value))}
+                                                                        className="w-full text-sm border border-amber-200 rounded-lg p-2 font-mono bg-amber-50/50 focus:border-amber-400 focus:outline-none"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Maneuver (hrs)</label>
+                                                                    <input 
+                                                                        type="number" 
+                                                                        value={selectedRoute.maneuver_descarga_hrs}
+                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'maneuver_descarga_hrs', parseFloat(e.target.value))}
+                                                                        className="w-full text-sm border border-amber-200 rounded-lg p-2 font-mono bg-amber-50/50 focus:border-amber-400 focus:outline-none"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </section>
+
+                                                    {/* 4. Financiero */}
+                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm">
+                                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2">4. Acuerdos Financieros</h4>
                                                         <div className="grid grid-cols-2 gap-3">
                                                             <div>
-                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Time to Count (hrs)</label>
-                                                                <input 
-                                                                    type="number" 
-                                                                    value={selectedRoute.time_to_count_carga_hrs}
-                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'time_to_count_carga_hrs', parseFloat(e.target.value))}
-                                                                    className="w-full text-sm border border-blue-200 rounded-lg p-2.5 font-mono bg-blue-50/50 focus:border-blue-400 focus:outline-none"
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Maneuver (hrs)</label>
-                                                                <input 
-                                                                    type="number" 
-                                                                    value={selectedRoute.maneuver_carga_hrs}
-                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'maneuver_carga_hrs', parseFloat(e.target.value))}
-                                                                    className="w-full text-sm border border-blue-200 rounded-lg p-2.5 font-mono bg-blue-50/50 focus:border-blue-400 focus:outline-none"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </section>
-
-                                                <section className="space-y-4">
-                                                    <h4 className="text-xs font-black text-amber-800 uppercase tracking-wider border-b border-amber-200 pb-2">Operaciones Destino</h4>
-                                                    <div className="space-y-4">
-                                                        <div>
-                                                            <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Discharge Rate (mt/día)</label>
-                                                            <input 
-                                                                type="number" 
-                                                                value={selectedRoute.discharge_rate}
-                                                                onChange={(e) => handleChange(selectedRouteKey!, 'discharge_rate', parseFloat(e.target.value))}
-                                                                className="w-full text-sm border border-amber-200 rounded-lg p-2.5 font-mono bg-amber-50/50 focus:border-amber-400 focus:outline-none"
-                                                            />
-                                                        </div>
-                                                        <div className="grid grid-cols-2 gap-3">
-                                                            <div>
-                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Time to Count (hrs)</label>
-                                                                <input 
-                                                                    type="number" 
-                                                                    value={selectedRoute.time_to_count_descarga_hrs}
-                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'time_to_count_descarga_hrs', parseFloat(e.target.value))}
-                                                                    className="w-full text-sm border border-amber-200 rounded-lg p-2.5 font-mono bg-amber-50/50 focus:border-amber-400 focus:outline-none"
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Maneuver (hrs)</label>
-                                                                <input 
-                                                                    type="number" 
-                                                                    value={selectedRoute.maneuver_descarga_hrs}
-                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'maneuver_descarga_hrs', parseFloat(e.target.value))}
-                                                                    className="w-full text-sm border border-amber-200 rounded-lg p-2.5 font-mono bg-amber-50/50 focus:border-amber-400 focus:outline-none"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </section>
-                                            </div>
-
-                                            {/* 4. Financiero */}
-                                            <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm">
-                                                <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">Acuerdos Financieros & Comisiones</h4>
-                                                <div className="grid grid-cols-3 gap-5">
-                                                    <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Address Comm. (%)</label>
-                                                        <input 
-                                                            type="number" step="0.01"
-                                                            value={selectedRoute.address_commission}
-                                                            onChange={(e) => handleChange(selectedRouteKey!, 'address_commission', parseFloat(e.target.value))}
-                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Broker Comm. (%)</label>
-                                                        <input 
-                                                            type="number" step="0.01"
-                                                            value={selectedRoute.broker_commission}
-                                                            onChange={(e) => handleChange(selectedRouteKey!, 'broker_commission', parseFloat(e.target.value))}
-                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Baseline IFO Price ($)</label>
-                                                        <input 
-                                                            type="number" step="0.01"
-                                                            value={selectedRoute.bunker_baseline_price_ifo}
-                                                            onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_ifo', parseFloat(e.target.value))}
-                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </section>
-
-                                            {/* 5. Tarifas (Tiers) */}
-                                            <section className="space-y-4 pt-2">
-                                                <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-                                                    <h4 className="text-sm font-black text-teal-800 uppercase tracking-wider">Bandas de Tarifas (Tiers) para esta Ruta</h4>
-                                                    <button 
-                                                        onClick={() => handleAddTariff(selectedRouteKey!)}
-                                                        className="text-[11px] bg-teal-50 border border-teal-200 hover:bg-teal-100 font-bold px-4 py-2 rounded-lg text-teal-700 flex items-center gap-1 transition-colors"
-                                                    >
-                                                        <Plus size={14} /> Agregar Tarifa
-                                                    </button>
-                                                </div>
-                                                
-                                                <div className="space-y-2">
-                                                    <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 px-2 text-[10px] font-bold text-slate-500 uppercase">
-                                                        <div>Min Tonnage (MT)</div>
-                                                        <div>Max Tonnage (MT)</div>
-                                                        <div>Flete ($/mt)</div>
-                                                        <div className="w-8"></div>
-                                                    </div>
-                                                    
-                                                    {selectedRoute.tariffs.map((t, idx) => (
-                                                        <div key={idx} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 items-center bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                                                            <input 
-                                                                type="number" 
-                                                                value={t.min_tonnage}
-                                                                onChange={(e) => handleTariffChange(selectedRouteKey!, idx, 'min_tonnage', parseFloat(e.target.value))}
-                                                                className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                                placeholder="Ej: 0"
-                                                            />
-                                                            <input 
-                                                                type="number" 
-                                                                value={t.max_tonnage}
-                                                                onChange={(e) => handleTariffChange(selectedRouteKey!, idx, 'max_tonnage', parseFloat(e.target.value))}
-                                                                className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                                placeholder="Ej: 5000"
-                                                            />
-                                                            <div className="relative">
-                                                                <span className="absolute left-3 top-2.5 text-slate-400 font-bold">$</span>
+                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Address Comm. (%)</label>
                                                                 <input 
                                                                     type="number" step="0.01"
-                                                                    value={t.freight_rate}
-                                                                    onChange={(e) => handleTariffChange(selectedRouteKey!, idx, 'freight_rate', parseFloat(e.target.value))}
-                                                                    className="w-full pl-7 pr-2 py-2 text-sm border border-teal-300 bg-white focus:border-teal-500 focus:outline-none rounded-lg font-mono text-teal-900 font-bold shadow-sm"
-                                                                    placeholder="Ej: 25.50"
+                                                                    value={selectedRoute.address_commission}
+                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'address_commission', parseFloat(e.target.value))}
+                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
                                                                 />
                                                             </div>
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Broker Comm. (%)</label>
+                                                                <input 
+                                                                    type="number" step="0.01"
+                                                                    value={selectedRoute.broker_commission}
+                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'broker_commission', parseFloat(e.target.value))}
+                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
+                                                                />
+                                                            </div>
+                                                            <div className="col-span-2">
+                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Baseline IFO Price ($)</label>
+                                                                <input 
+                                                                    type="number" step="0.01"
+                                                                    value={selectedRoute.bunker_baseline_price_ifo}
+                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_ifo', parseFloat(e.target.value))}
+                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </section>
+                                                </div>
+
+                                                {/* ================= COLUMNA 3 ================= */}
+                                                <div className="space-y-6">
+                                                    {/* 3. Tarifas (Tiers) */}
+                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full" style={{ maxHeight: '780px' }}>
+                                                        <div className="flex justify-between items-center border-b border-slate-200 pb-2 mb-4">
+                                                            <h4 className="text-xs font-black text-teal-800 uppercase tracking-wider">3. Tarifas (Tiers)</h4>
                                                             <button 
-                                                                onClick={() => handleRemoveTariff(selectedRouteKey!, idx)}
-                                                                className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200"
-                                                                title="Eliminar tarifa"
+                                                                onClick={() => handleAddTariff(selectedRouteKey!)}
+                                                                className="text-[10px] bg-teal-50 border border-teal-200 hover:bg-teal-100 font-bold px-3 py-1.5 rounded text-teal-700 flex items-center gap-1 transition-colors shadow-sm"
                                                             >
-                                                                <Trash2 size={16} />
+                                                                <Plus size={12} /> Añadir
                                                             </button>
                                                         </div>
-                                                    ))}
-                                                    
-                                                    {selectedRoute.tariffs.length === 0 && (
-                                                        <div className="text-center text-sm text-slate-500 py-8 bg-slate-50 rounded-xl border border-dashed border-slate-300 font-medium">
-                                                            No hay bandas de precios configuradas. El simulador usará $0.
+                                                        
+                                                        <div className="space-y-3 overflow-y-auto pr-1">
+                                                            {selectedRoute.tariffs.map((t, idx) => (
+                                                                <div key={idx} className="flex flex-col gap-2 bg-white p-3 pr-8 rounded-lg border border-slate-200 shadow-sm relative">
+                                                                    <button 
+                                                                        onClick={() => handleRemoveTariff(selectedRouteKey!, idx)}
+                                                                        className="absolute right-1 top-[50%] -translate-y-[50%] p-1.5 text-slate-300 hover:text-red-500 transition-colors bg-white rounded"
+                                                                        title="Eliminar tarifa"
+                                                                    >
+                                                                        <Trash2 size={14} />
+                                                                    </button>
+                                                                    
+                                                                    <div className="grid grid-cols-3 gap-2">
+                                                                        <div>
+                                                                            <label className="block text-[9px] font-bold text-slate-400 uppercase">Min (MT)</label>
+                                                                            <input 
+                                                                                type="number" 
+                                                                                value={t.min_tonnage}
+                                                                                onChange={(e) => handleTariffChange(selectedRouteKey!, idx, 'min_tonnage', parseFloat(e.target.value))}
+                                                                                className="w-full text-[11px] border border-slate-300 rounded p-1 font-mono"
+                                                                            />
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="block text-[9px] font-bold text-slate-400 uppercase">Max (MT)</label>
+                                                                            <input 
+                                                                                type="number" 
+                                                                                value={t.max_tonnage}
+                                                                                onChange={(e) => handleTariffChange(selectedRouteKey!, idx, 'max_tonnage', parseFloat(e.target.value))}
+                                                                                className="w-full text-[11px] border border-slate-300 rounded p-1 font-mono"
+                                                                            />
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="block text-[9px] font-bold text-teal-600 uppercase">Flete ($/mt)</label>
+                                                                            <div className="relative">
+                                                                                <span className="absolute left-1.5 top-1 text-teal-500 font-bold text-[10px]">$</span>
+                                                                                <input 
+                                                                                    type="number" step="0.01"
+                                                                                    value={t.freight_rate}
+                                                                                    onChange={(e) => handleTariffChange(selectedRouteKey!, idx, 'freight_rate', parseFloat(e.target.value))}
+                                                                                    className="w-full pl-4 pr-1 py-1 text-[11px] border border-teal-300 bg-teal-50/30 focus:border-teal-500 focus:outline-none rounded font-mono text-teal-900 font-bold"
+                                                                                />
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                            
+                                                            {selectedRoute.tariffs.length === 0 && (
+                                                                <div className="text-center text-xs text-slate-400 py-6 bg-white rounded-lg border border-dashed border-slate-300 font-medium flex items-center justify-center">
+                                                                    Sin bandas configuradas ($0)
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    )}
+                                                    </section>
                                                 </div>
-                                            </section>
+                                            </div>
 
                                             {/* Espaciado final */}
                                             <div className="h-10"></div>

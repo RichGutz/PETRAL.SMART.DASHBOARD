@@ -36,7 +36,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
         <div className="min-h-screen bg-slate-50 font-sans flex flex-col antialiased">
             {/* Header Superior Principal */}
             <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm px-6 py-3">
-                <div className="flex items-center justify-between max-w-[1600px] mx-auto w-full">
+                <div className="flex items-center justify-between max-w-full mx-auto w-full">
                     
                     {/* Logos y Título de App */}
                     <div className="flex items-center gap-3">
