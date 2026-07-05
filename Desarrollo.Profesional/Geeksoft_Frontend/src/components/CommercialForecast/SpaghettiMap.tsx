@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts';
-import { useSpaghettiData } from './useSpaghettiData';
+
 
 // Colores de barcos según Manual.Estilos.md
 const getVesselColor = (vesselName: string): string => {
@@ -33,12 +33,13 @@ const getBaseCurveness = (origin: string, dest: string): number => {
 };
 
 // Función pura para calcular datos de espaguetis acumulados para un mes dado
-function computeSpaghettiDataForMonth(
+const computeSpaghettiDataForMonth = (
     aggregatedData: any,
     selectedMonths: string[],
     months: string[],
-    ports: any[]
-) {
+    ports: any[],
+    isDarkMode: boolean = true
+) => {
     if (!aggregatedData || !selectedMonths || selectedMonths.length === 0 || !months || months.length === 0 || !ports) {
         return { nodes: [], edges: [], pieSeries: [] };
     }
@@ -193,7 +194,7 @@ function computeSpaghettiDataForMonth(
         const petralCarga = portMap[p.port_id]?.carga || 0;
         const petralDescarga = portMap[p.port_id]?.descarga || 0;
         const capacity = p.capacity_mt || 50000;
-        const symbolSize = 12 + (capacity / maxCapacity) * 16;
+        const pieRadius = 14 + (capacity / maxCapacity) * 20;
 
         return {
             id: p.port_id,
@@ -203,7 +204,8 @@ function computeSpaghettiDataForMonth(
             descarga: Math.round(petralDescarga),
             capacity_mt: capacity,
             type: p.type || 'SINK',
-            symbolSize: symbolSize,
+            symbolSize: 6, // Bolita fija sin escala de datos
+            pieRadius: pieRadius,
             sources_sinks: p.sources_sinks || []
         };
     });
@@ -213,17 +215,18 @@ function computeSpaghettiDataForMonth(
     nodesForGraph.forEach(n => {
         const petralTotal = n.carga + n.descarga;
 
-        // Offset centers for the pies (degrees longitude)
-        const landOffset = 0.55;
-        const seaOffset = -0.55;
-        
-        let latOffset = 0;
+        // Mover los pasteles al Océano Pacífico (Oeste) en la misma latitud, separándolos más para evitar superposición
+        let marketOffset = -4.0;
+        let petralOffset = -8.0;
+
         if (n.name.includes('ILO') || n.id.includes('ILO')) {
-            latOffset = -0.3; // Mover al sur
+            // Desplazar ILO bien al OESTE para evitar superposición con Matarani
+            marketOffset = -12.0;
+            petralOffset = -18.0;
         }
         
-        const landCenter = [n.value[0] + landOffset, n.value[1] + latOffset];
-        const seaCenter = [n.value[0] + seaOffset, n.value[1] + latOffset];
+        const landCenter = [n.value[0] + marketOffset, n.value[1]];
+        const seaCenter = [n.value[0] + petralOffset, n.value[1]];
 
         // A. Pie de Tierra (Mercado)
         const marketData = n.sources_sinks?.map((ss: any) => ({
@@ -249,16 +252,25 @@ function computeSpaghettiDataForMonth(
             type: 'pie',
             coordinateSystem: 'geo',
             center: landCenter,
-            radius: [0, n.symbolSize],
+            radius: [0, n.pieRadius],
             silent: false,
-            label: { show: false },
+            label: { 
+                show: true, 
+                position: 'outside', 
+                formatter: '{b}',
+                fontSize: 10,
+                color: isDarkMode ? '#e2e8f0' : '#475569'
+            },
+            labelLine: {
+                show: true,
+                length: 5,
+                length2: 5
+            },
             emphasis: { 
                 label: { 
                     show: true, 
-                    formatter: '{b}',
-                    position: 'inside',
-                    fontSize: 9,
-                    color: '#ffffff'
+                    fontSize: 11,
+                    fontWeight: 'bold'
                 } 
             },
             data: marketData,
@@ -271,7 +283,7 @@ function computeSpaghettiDataForMonth(
                 type: 'pie',
                 coordinateSystem: 'geo',
                 center: seaCenter,
-                radius: [0, n.symbolSize * 0.8],
+                radius: [0, n.pieRadius],
                 label: { show: false },
                 emphasis: { 
                     label: { 
@@ -303,7 +315,7 @@ function computeSpaghettiDataForMonth(
                 type: 'pie',
                 coordinateSystem: 'geo',
                 center: seaCenter,
-                radius: [0, n.symbolSize * 0.8],
+                radius: [0, n.pieRadius],
                 label: { show: false },
                 silent: true,
                 data: [
@@ -323,6 +335,7 @@ interface SpaghettiMapProps {
     selectedMonths: string[];
     ports: any[];
     isDarkMode?: boolean;
+    onPortClick?: (portId: string) => void;
 }
 
 export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
@@ -330,7 +343,8 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
     months,
     selectedMonths,
     ports,
-    isDarkMode = true
+    isDarkMode = true,
+    onPortClick
 }) => {
     const [mapLoaded, setMapLoaded] = useState(false);
 
@@ -351,23 +365,18 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
     const option = useMemo(() => {
         if (!mapLoaded || !data || !data.aggregated_data || selectedMonths.length === 0 || !ports) return;
 
-        const { nodes, edges, pieSeries } = computeSpaghettiDataForMonth(data.aggregated_data, selectedMonths, months, ports);
+        const { nodes, edges, pieSeries } = computeSpaghettiDataForMonth(data.aggregated_data, selectedMonths, months, ports, isDarkMode);
 
         return {
-            backgroundColor: 'transparent',
+            backgroundColor: isDarkMode ? 'transparent' : '#ebf8ff',
             title: {
                 text: `Flujos y Viajes Acumulados a ${selectedMonths[selectedMonths.length - 1]}`,
-                subtext: 'Donut Externo: Capacidad Mercado Acumulada | Pie Interno: Carga vs Descarga Petral',
                 left: '20px',
                 top: '20px',
                 textStyle: {
                     color: isDarkMode ? '#f1f5f9' : '#1e293b',
                     fontSize: 16,
                     fontWeight: 'bold'
-                },
-                subtextStyle: {
-                    color: isDarkMode ? '#94a3b8' : '#64748b',
-                    fontSize: 12
                 }
             },
             geo: {
@@ -377,13 +386,26 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
                 center: [-73.0, -20.0],
                 aspectScale: 0.85,
                 itemStyle: {
-                    areaColor: isDarkMode ? '#1e293b' : '#e2e8f0',
                     borderColor: isDarkMode ? '#334155' : '#cbd5e1',
                     borderWidth: 0.8
                 },
+                regions: [
+                    {
+                        name: 'Peru',
+                        itemStyle: {
+                            areaColor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : 'rgba(241, 245, 249, 0.75)'
+                        }
+                    },
+                    {
+                        name: 'Chile',
+                        itemStyle: {
+                            areaColor: isDarkMode ? 'rgba(15, 23, 42, 0.8)' : 'rgba(226, 232, 240, 0.75)'
+                        }
+                    }
+                ],
                 emphasis: {
                     itemStyle: {
-                        areaColor: isDarkMode ? '#273549' : '#d1d5db'
+                        areaColor: isDarkMode ? '#273549' : '#e2e8f0'
                     },
                     label: { show: false }
                 }
@@ -487,6 +509,19 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
         };
     }, [mapLoaded, data, months, selectedMonths, ports, isDarkMode]);
 
+    const onEvents = useMemo(() => {
+        return {
+            click: (params: any) => {
+                if (params.componentSubType === 'pie' && params.seriesName && params.seriesName.includes('-Market')) {
+                    const portId = params.seriesName.replace('-Market', '');
+                    if (onPortClick) {
+                        onPortClick(portId);
+                    }
+                }
+            }
+        };
+    }, [onPortClick]);
+
     if (!mapLoaded || !option) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full">
@@ -503,6 +538,7 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
                 style={{ height: '100%', width: '100%', minHeight: '600px' }}
                 notMerge={true}
                 lazyUpdate={true}
+                onEvents={onEvents}
             />
         </div>
     );

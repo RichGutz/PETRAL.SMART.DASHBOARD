@@ -380,7 +380,7 @@ def get_ports(year: int = 2026):
     try:
         from backend.database import get_supabase
         sb = get_supabase()
-        res = sb.table("ports").select("*, sources_sinks(capacity_mt, type, empresa, color_hex)").eq("sources_sinks.year", year).execute()
+        res = sb.table("ports").select("*, sources_sinks(capacity_mt, type, empresa, color_hex, producto)").eq("sources_sinks.year", year).execute()
         
         flat_data = []
         for p in res.data:

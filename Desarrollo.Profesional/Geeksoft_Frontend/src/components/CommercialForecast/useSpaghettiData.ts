@@ -27,6 +27,14 @@ export interface SpaghettiEdge {
     };
 }
 
+export interface SourceSink {
+    empresa?: string;
+    color_hex?: string;
+    producto?: string;
+    capacity_mt?: number;
+    type?: string;
+}
+
 export interface SpaghettiNode {
     id: string;
     name: string;
@@ -36,7 +44,7 @@ export interface SpaghettiNode {
     capacity_mt: number;
     type: string;
     symbolSize: number;
-    sources_sinks: any[];
+    sources_sinks: SourceSink[];
 }
 
 // Colores de barcos según Manual.Estilos.md

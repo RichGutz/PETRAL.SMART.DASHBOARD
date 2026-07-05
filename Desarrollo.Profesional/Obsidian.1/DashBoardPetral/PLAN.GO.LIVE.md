@@ -62,6 +62,17 @@ Módulos pendientes a desarrollar:
 
 ---
 
+## Módulos Analíticos y Visualizadores (En Progreso)
+
+### 📊 Commercial Forecast (Spaghetti Map)
+- [x] **Backend & DB:** Migración a estructura multi-cliente (`sources_sinks`) con empresa y colores.
+- [x] **Dual Pies (ECharts):** Gráficos circulares duales (Mercado vs. Flota Petral) con offsets geográficos (Tierra/Mar).
+- [x] **Línea de Tiempo:** Componente de selección múltiple de meses estilo tabla (Mes, Viajes, Toneladas) y totalizadores.
+- [x] **Agrupación de Curvas:** renderizado inteligente de líneas gruesas para múltiples meses vs. líneas por viaje para 1 mes (con `curveness` ajustada).
+- [ ] **Sources & Sinks Editor (Pendiente):** Desarrollo del panel lateral/modal para edición en caliente de volúmenes al hacer clic en un "Pie de Tierra". *(Próximo paso a iniciar).*
+
+---
+
 ## FASE 3 — QA y Validación Final
 
 - [ ] Validar Ledger de Auditoría (Geeksoft vs Petral Excel)

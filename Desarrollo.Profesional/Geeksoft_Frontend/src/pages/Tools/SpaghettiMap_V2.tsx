@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { SpaghettiMap } from '../../components/CommercialForecast/SpaghettiMap';
+import { SourcesSinksEditor } from '../../components/CommercialForecast/SourcesSinksEditor';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
+import type { SourceSink } from '../../components/CommercialForecast/useSpaghettiData';
 
 export const SpaghettiMap_V2: React.FC = () => {
     const context = useForecastContext_V2();
     const months = context.dynamicMonths;
     const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
+    const [selectedPortId, setSelectedPortId] = useState<string | null>(null);
+    const [, setForceRender] = useState(0);
 
     // Default to the first month when months change
     useEffect(() => {
@@ -18,7 +22,7 @@ export const SpaghettiMap_V2: React.FC = () => {
         if (!yyyymm) return '';
         const [y, m] = yyyymm.split('-');
         const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        return `${monthNames[parseInt(m) - 1]} ${y}`;
+        return `${monthNames[parseInt(m) - 1]} '${y.slice(2)}`;
     };
 
     const toggleMonth = (m: string) => {
@@ -168,14 +172,35 @@ export const SpaghettiMap_V2: React.FC = () => {
                 </div>
 
                 {/* COLUMN 2: ECharts Map */}
-                <div className="flex-1 relative">
+                <div className="flex-1 relative overflow-hidden">
                     <SpaghettiMap 
                         data={context.data} 
                         months={months} 
                         selectedMonths={selectedMonths}
                         ports={context.ports} 
                         isDarkMode={false} 
+                        onPortClick={(portId) => setSelectedPortId(portId)}
                     />
+                    
+                    {/* SourcesSinksEditor Slide-over */}
+                    {selectedPortId && (
+                        <SourcesSinksEditor
+                            portId={selectedPortId}
+                            portName={context.ports.find((p: any) => p.port_id === selectedPortId)?.port_name || selectedPortId}
+                            sourcesSinks={context.ports.find((p: any) => p.port_id === selectedPortId)?.sources_sinks || []}
+                            onClose={() => setSelectedPortId(null)}
+                            onSave={(updatedData) => {
+                                // Muta los datos en memoria para simular el cambio visual instantáneo
+                                const port = context.ports.find((p: any) => p.port_id === selectedPortId);
+                                if (port) {
+                                    port.sources_sinks = updatedData;
+                                    port.capacity_mt = updatedData.reduce((acc: number, curr: SourceSink) => acc + (curr.capacity_mt || 0), 0);
+                                    setForceRender(prev => prev + 1);
+                                }
+                                setSelectedPortId(null);
+                            }}
+                        />
+                    )}
                 </div>
             </div>
         </section>
