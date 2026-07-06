@@ -265,25 +265,35 @@ const computeSpaghettiDataForMonth = (
             petralOffset = -10.0;
             // Bajar un piquitito al SUR (latitudes de Sudamérica son negativas -> restar)
             latOffset = -1.2;
+        } else if (n.name.toUpperCase().includes('SAN JUAN') || n.id.toUpperCase().includes('SAN JUAN')) {
+            // Incremento del 100% sobre la base de 4.0 (es decir, el doble de separación)
+            marketOffset = 4.0 * 2.0; // 8.0
+            petralOffset = -4.0 * 2.0; // -8.0
         }
         
         const landCenter = [n.value[0] + marketOffset, n.value[1] + latOffset];
         const seaCenter = [n.value[0] + petralOffset, n.value[1] + latOffset];
 
+        const monthsCount = targetMonths.length;
+
         // A. Pie de Tierra (Mercado)
-        const marketData = n.sources_sinks?.map((ss: any) => ({
-            value: ss.capacity_mt,
-            name: `${ss.empresa} (${ss.type})`,
-            itemStyle: { color: ss.color_hex || '#64748B' },
-            portInfo: n
-        })) || [];
+        const marketData = n.sources_sinks?.map((ss: any) => {
+            const proratedCapacity = (ss.capacity_mt / 12) * monthsCount;
+            return {
+                value: Math.round(proratedCapacity),
+                name: `${ss.empresa} (${ss.type})`,
+                itemStyle: { color: ss.color_hex || '#64748B' },
+                portInfo: n
+            };
+        }) || [];
         
         if (marketData.length === 0) {
             let fallbackColor = '#64748B';
             if (n.type === 'SOURCE') fallbackColor = '#A78BFA';
             if (n.type === 'MIXED') fallbackColor = '#3B82F6';
+            const proratedFallback = (n.capacity_mt / 12) * monthsCount;
             marketData.push({
-                value: n.capacity_mt,
+                value: Math.round(proratedFallback),
                 name: `Capacidad Mercado (${n.type})`,
                 itemStyle: { color: fallbackColor },
                 portInfo: n
@@ -316,7 +326,6 @@ const computeSpaghettiDataForMonth = (
             zlevel: 4
         });
 
-        // B. Pie de Mar (Operación de PETRAL)
         if (petralTotal > 0) {
             pieSeries.push({
                 type: 'pie',
@@ -346,19 +355,6 @@ const computeSpaghettiDataForMonth = (
                         itemStyle: { color: '#F97316' }, 
                         portInfo: n
                     }
-                ],
-                zlevel: 4
-            });
-        } else {
-            pieSeries.push({
-                type: 'pie',
-                coordinateSystem: 'geo',
-                center: seaCenter,
-                radius: [0, n.pieRadius],
-                label: { show: false },
-                silent: true,
-                data: [
-                    { value: 1, name: 'Sin Operación Petral', itemStyle: { color: '#334155' }, portInfo: n }
                 ],
                 zlevel: 4
             });
@@ -484,19 +480,21 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
                 formatter: (params: any) => {
                     if (params.dataType === 'node') {
                         const d = params.data;
+                        const monthsCount = selectedMonths.length;
+                        const proratedCapacity = (d.capacity_mt / 12) * monthsCount;
                         const totalPetral = d.carga + d.descarga;
-                        const pct = d.capacity_mt > 0 ? ((totalPetral / d.capacity_mt) * 100).toFixed(1) : '0';
+                        const pct = proratedCapacity > 0 ? ((totalPetral / proratedCapacity) * 100).toFixed(1) : '0';
                         
                         return `
                             <div style="font-family: Inter, sans-serif; padding: 4px;">
                                 <b style="font-size: 13px; color: #0EA5E9;">${d.name}</b> (${d.type})<br/>
                                 <hr style="margin: 6px 0; border-color: #334155;"/>
                                 <b>Operación Petral (Acumulada):</b><br/>
-                                • Carga: <span style="color: #0EA5E9; font-family: monospace;">${d.carga.toLocaleString()} MT</span><br/>
-                                • Descarga: <span style="color: #F97316; font-family: monospace;">${d.descarga.toLocaleString()} MT</span><br/>
-                                • Total: <span style="font-weight: bold; font-family: monospace;">${totalPetral.toLocaleString()} MT</span><br/>
+                                • Carga: <span style="color: #0EA5E9; font-family: monospace;">${Math.round(d.carga).toLocaleString()} MT</span><br/>
+                                • Descarga: <span style="color: #F97316; font-family: monospace;">${Math.round(d.descarga).toLocaleString()} MT</span><br/>
+                                • Total: <span style="font-weight: bold; font-family: monospace;">${Math.round(totalPetral).toLocaleString()} MT</span><br/>
                                 <hr style="margin: 6px 0; border-color: #334155;"/>
-                                <b>Capacidad Mercado (Anual):</b> <span style="font-family: monospace;">${d.capacity_mt.toLocaleString()} MT</span><br/>
+                                <b>Cap. Mercado (${monthsCount} mes${monthsCount > 1 ? 'es' : ''}):</b> <span style="font-family: monospace;">${Math.round(proratedCapacity).toLocaleString()} MT</span><br/>
                                 <b>Market Share Petral:</b> <span style="font-weight: bold; color: #16A34A; font-family: monospace;">${pct}%</span>
                             </div>
                         `;

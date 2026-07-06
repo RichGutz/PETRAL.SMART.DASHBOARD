@@ -487,6 +487,30 @@ En lugar de pintar por rutas, las líneas curvas (espaguetis) toman el color asi
 - `HUEMUL` &rarr; `#4F46E5` (Índigo)
 - Buque genérico/otros &rarr; `#94A3B8` (Slate)
 
+### 11.3. Separación y Offset de Nodos (Pasteles) por Puerto
+Para evitar el solapamiento visual entre la geografía costera y los gráficos de pastel (pies) de Petral y del Mercado (Sinks/Sources), se implementó un sistema de "offset" (separación lateral) dinámico en el Eje X e Y.
+La configuración por defecto aleja el mercado hacia el Este (`+4.0`) y las operaciones de Petral hacia el Oeste (`-4.0`).
+Sin embargo, se aplican sobreescrituras específicas para puertos con alta congestión visual:
+- **ILO:** Se aleja agresivamente multiplicando por 2.5 (Mercado a `+10.0`, Petral a `-10.0`), e incluye un descenso al Sur (`-1.2`) para alinear visualmente la congestión de empresas.
+- **SAN JUAN:** Se aplica un **incremento del 100%** sobre la separación base (doble de distancia) para despejar el área, resultando en `+8.0` al Este y `-8.0` al Oeste.
+
+### 11.4. Solución al Efecto "Halo Fantasma" (Z-Level)
+Se identificó un bug visual al arrastrar el mapa: los pasteles del mercado dejaban una estela o "halo" con su color, mientras que los de Petral no. 
+- **Causa:** El gráfico de Mercado compartía el `zlevel: 3` de renderizado con la serie de "Misiles" (animaciones de barcos). La capa de misiles está configurada a nivel de ECharts para **no limpiar completamente el canvas** en cada *frame* a fin de generar la estela (trail). Esto provocaba que cualquier elemento gráfico en ese mismo *layer* dejara rastro al moverse.
+- **Solución:** Se trasladó la serie de pasteles del Mercado al `zlevel: 4` (la misma capa limpia de Petral), separándolos del motor de estelas de los misiles y devolviendo fluidez total al paneo del mapa.
+
+### 11.5. Limpieza Visual y UI Compacta (UX)
+Se realizaron mejoras sustanciales en la ergonomía del visualizador:
+1. **Nodos Apagados por Defecto:** Al iniciar el dashboard, los gráficos de pastel no se renderizan, dejando la vista exclusiva de la red de espaguetis.
+2. **Homologación de Comportamiento de Nodos:** Por instrucción expresa, los pasteles del mercado adoptaron el diseño minimalista de Petral: sin etiquetas externas ni líneas conectoras (`labelLine: false`).
+3. **Distribución del Timeline:** Se eliminó la pesada tarjeta inferior que mostraba el "Escenario Activo", reubicándose como un *badge* a la derecha del título de la Línea de Tiempo.
+4. **Remoción de Estados Vacíos (Placeholders):** Se eliminó el pastel gris de "Sin Operación Petral" en el mar. Siguiendo el principio de negocio de "Se muestra solo lo que tiene volumen", si un puerto no tiene rutas activas en los meses seleccionados, el mar queda totalmente limpio.
+
+### 11.6. Prorrateo Dinámico de Capacidades (Market Share)
+Las capacidades del mercado (Sinks/Sources) están declaradas en la base de datos de manera **Anual**. Para permitir una comparación lógica ("manzanas con manzanas") contra el volumen operado por Petral (que es estrictamente mensual/acumulado según el timeline), se implementó una función matemática de prorrateo:
+- Capacidad Mostrada = `(Capacidad Anual / 12) * Cantidad de Meses Seleccionados`
+- El Tooltip se actualizó para indicar `"Cap. Mercado (X meses)"` y calcular el porcentaje exacto de **Market Share** en base a este prorrateo dinámico, eliminando distorsiones estadísticas.
+
 ---
 
 *Especificacion técnica y detalles de implementación del módulo de visualización geoespacial.*
