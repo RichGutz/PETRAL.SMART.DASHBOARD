@@ -212,21 +212,28 @@ const computeSpaghettiDataForMonth = (
 
     // 6. Generar las series de Pie Charts (Tierra y Mar)
     const pieSeries: any[] = [];
+    const calloutLinesData: any[] = [];
+
     nodesForGraph.forEach(n => {
         const petralTotal = n.carga + n.descarga;
 
-        // Mover los pasteles al Océano Pacífico (Oeste) en la misma latitud, separándolos más para evitar superposición
-        let marketOffset = -4.0;
-        let petralOffset = -8.0;
+        // El pastel de mercado (Sink/Source) en tierra (Este -> offset positivo)
+        // El pastel de Petral en el mar (Oeste -> offset negativo)
+        let marketOffset = 4.0;
+        let petralOffset = -4.0;
+        let latOffset = 0.0;
 
         if (n.name.includes('ILO') || n.id.includes('ILO')) {
-            // Desplazar ILO bien al OESTE para evitar superposición con Matarani
-            marketOffset = -12.0;
-            petralOffset = -18.0;
+            // Alejar en espejo los pasteles de ILO aún más lejos del centro (eje ILO)
+            // para evitar cualquier solapamiento
+            marketOffset = 10.0;
+            petralOffset = -10.0;
+            // Bajar un piquitito al SUR (latitudes de Sudamérica son negativas -> restar)
+            latOffset = -1.2;
         }
         
-        const landCenter = [n.value[0] + marketOffset, n.value[1]];
-        const seaCenter = [n.value[0] + petralOffset, n.value[1]];
+        const landCenter = [n.value[0] + marketOffset, n.value[1] + latOffset];
+        const seaCenter = [n.value[0] + petralOffset, n.value[1] + latOffset];
 
         // A. Pie de Tierra (Mercado)
         const marketData = n.sources_sinks?.map((ss: any) => ({
@@ -324,7 +331,29 @@ const computeSpaghettiDataForMonth = (
                 zlevel: 4
             });
         }
+
+        // C. Líneas Callout (del puerto al pastel)
+        calloutLinesData.push({
+            coords: [n.value, landCenter],
+            lineStyle: { color: '#94A3B8', type: 'dashed', width: 1.2, opacity: 0.7 }
+        });
+        
+        // La línea hacia el pastel de mar solo si se renderiza (sea visible o gris silencioso)
+        calloutLinesData.push({
+            coords: [n.value, seaCenter],
+            lineStyle: { color: '#94A3B8', type: 'dashed', width: 1.2, opacity: 0.7 }
+        });
     });
+
+    if (calloutLinesData.length > 0) {
+        pieSeries.push({
+            type: 'lines',
+            coordinateSystem: 'geo',
+            zlevel: 1,
+            silent: true,
+            data: calloutLinesData
+        });
+    }
 
     return { nodes: nodesForGraph, edges: finalEdges, pieSeries };
 }
@@ -521,6 +550,14 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
             }
         };
     }, [onPortClick]);
+
+    if (!data || !data.aggregated_data) {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full bg-white rounded-lg border border-slate-200">
+                <p className="text-slate-500 font-medium text-lg">Ingresar o cargar escenario para mostrar herramienta.</p>
+            </div>
+        );
+    }
 
     if (!mapLoaded || !option) {
         return (

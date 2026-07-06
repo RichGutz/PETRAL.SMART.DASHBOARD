@@ -10,7 +10,6 @@ interface SourcesSinksEditorProps {
 }
 
 export const SourcesSinksEditor: React.FC<SourcesSinksEditorProps> = ({
-    portId,
     portName,
     sourcesSinks,
     onClose,

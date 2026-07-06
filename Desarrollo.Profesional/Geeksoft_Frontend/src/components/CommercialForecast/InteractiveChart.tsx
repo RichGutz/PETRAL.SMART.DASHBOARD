@@ -571,7 +571,13 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         };
     }, [data, groupBy, months, filterClient, filterRoute, filterVessel, filterTradeType, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryCumulativeGlobal, isSecondaryPercentage, demurragePct, showDemurrage, excludedDemurrages, customDemurrages, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
 
-    if (!data || !data.aggregated_data || months.length === 0) return null;
+    if (!data || !data.aggregated_data || months.length === 0) {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full bg-white rounded-lg border border-slate-200">
+                <p className="text-slate-500 font-medium text-lg">Ingresar o cargar escenario para mostrar herramienta.</p>
+            </div>
+        );
+    }
 
     const metricOptions = [
         { value: 'none', label: 'Ninguno', icon: '🚫', desc: 'No graficar' },

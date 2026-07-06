@@ -71,6 +71,14 @@ export const SpaghettiMap_V2: React.FC = () => {
     const totalSelectedTrips = selectedMonths.reduce((acc, m) => acc + getMonthData(m).trips, 0);
     const totalSelectedTons = selectedMonths.reduce((acc, m) => acc + getMonthData(m).tons, 0);
 
+    if (!context.data || !context.data.aggregated_data) {
+        return (
+            <section className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full mt-2 bg-white border border-slate-200 rounded-tl-xl shadow-lg -mx-4 md:-mx-6 -mb-4 md:-mb-6" style={{ width: 'calc(100% + 2rem)' }}>
+                <p className="text-slate-500 font-medium text-lg">Ingresar o cargar escenario para mostrar herramienta.</p>
+            </section>
+        );
+    }
+
     return (
         <section className="flex-1 flex flex-col mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300 w-full h-full min-h-[600px] -mx-4 md:-mx-6 -mb-4 md:-mb-6 overflow-hidden bg-white border border-slate-200 rounded-tl-xl shadow-lg" style={{ width: 'calc(100% + 2rem)' }}>
             
