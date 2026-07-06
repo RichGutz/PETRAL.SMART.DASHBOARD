@@ -11,12 +11,57 @@ export const SpaghettiMap_V2: React.FC = () => {
     const [selectedPortId, setSelectedPortId] = useState<string | null>(null);
     const [, setForceRender] = useState(0);
 
+    // Controles de animación y nodos
+    const [showPies, setShowPies] = useState(true);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [playSpeed, setPlaySpeed] = useState(2);
+    const [, setAnimationIndex] = useState(0);
+
     // Default to the first month when months change
     useEffect(() => {
-        if (months && months.length > 0 && selectedMonths.length === 0) {
+        if (months && months.length > 0 && selectedMonths.length === 0 && !isPlaying) {
             setSelectedMonths([months[0]]);
         }
-    }, [months, selectedMonths]);
+    }, [months, selectedMonths, isPlaying]);
+
+    // Animación automática de la línea de tiempo
+    useEffect(() => {
+        let interval: any;
+        if (isPlaying && months.length > 0) {
+            interval = setInterval(() => {
+                setAnimationIndex(prev => {
+                    const next = prev + 1;
+                    if (next < months.length) {
+                        setSelectedMonths([months[next]]);
+                        return next;
+                    } else if (next === months.length) {
+                        // Último paso: Todo el año (todos los meses activos)
+                        setSelectedMonths([...months]);
+                        return next;
+                    } else {
+                        // Fin de la animación
+                        setIsPlaying(false);
+                        return 0; // Reiniciar
+                    }
+                });
+            }, playSpeed * 1000);
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [isPlaying, playSpeed, months]);
+
+    const handlePlayAnimation = () => {
+        if (!isPlaying) {
+            setAnimationIndex(0);
+            if (months.length > 0) {
+                setSelectedMonths([months[0]]);
+            }
+            setIsPlaying(true);
+        } else {
+            setIsPlaying(false);
+        }
+    };
 
     const formatMonthPill = (yyyymm: string) => {
         if (!yyyymm) return '';
@@ -112,7 +157,7 @@ export const SpaghettiMap_V2: React.FC = () => {
                         </div>
                     )}
                     
-                    <div className="flex flex-col gap-2 relative mt-1 flex-1">
+                    <div className="flex flex-col gap-1 relative mt-1 flex-1">
                         {months.length === 0 && (
                             <p className="text-slate-500 text-[10px] text-center italic mt-10">Sin horizonte</p>
                         )}
@@ -124,7 +169,7 @@ export const SpaghettiMap_V2: React.FC = () => {
                                 <button
                                     key={m}
                                     onClick={() => toggleMonth(m)}
-                                    className={`w-full flex items-center p-2 rounded-md transition-all border ${isSelected ? 'bg-white border-petral-teal/30 shadow-[0_2px_8px_rgba(14,165,233,0.1)]' : 'bg-transparent border-transparent hover:bg-slate-100 hover:border-slate-200'} focus:outline-none group`}
+                                    className={`w-full flex items-center p-1.5 px-2 rounded-md transition-all border ${isSelected ? 'bg-white border-petral-teal/30 shadow-[0_2px_8px_rgba(14,165,233,0.1)]' : 'bg-transparent border-transparent hover:bg-slate-100 hover:border-slate-200'} focus:outline-none group`}
                                 >
                                     <div className="w-[45%] flex items-center gap-3">
                                         <div className={`w-[20px] h-[20px] flex items-center justify-center shrink-0 transition-colors border-2 ${isSelected ? 'bg-petral-teal border-petral-teal' : 'bg-white border-slate-300 group-hover:border-petral-teal'} rounded-[4px]`}>
@@ -177,6 +222,57 @@ export const SpaghettiMap_V2: React.FC = () => {
                             </span>
                         </div>
                     )}
+
+                    {/* Controls Panel */}
+                    <div className="bg-white border border-slate-200 rounded-lg p-3 mt-3 shadow-sm flex flex-col gap-3 shrink-0">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-600">Nodos (Pies y Líneas)</span>
+                            <button
+                                onClick={() => setShowPies(!showPies)}
+                                className={`w-10 h-5 rounded-full relative transition-colors focus:outline-none ${showPies ? 'bg-petral-teal' : 'bg-slate-300'}`}
+                            >
+                                <span className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full transition-transform ${showPies ? 'translate-x-5' : 'translate-x-0'}`}></span>
+                            </button>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-slate-600">Animación</span>
+                                <div className="flex items-center gap-1">
+                                    <input 
+                                        type="number" 
+                                        min="1" 
+                                        max="10" 
+                                        value={playSpeed} 
+                                        onChange={(e) => setPlaySpeed(Number(e.target.value) || 2)}
+                                        className="w-10 h-6 text-center text-xs font-bold border border-slate-300 rounded text-slate-700 bg-slate-50 focus:outline-none focus:border-petral-teal"
+                                    />
+                                    <span className="text-[10px] text-slate-500 font-bold">seg/mes</span>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handlePlayAnimation}
+                                className={`w-full py-1.5 rounded-md text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-sm ${isPlaying ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-petral-blue text-white hover:bg-blue-800'}`}
+                            >
+                                {isPlaying ? (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                                        </svg>
+                                        Detener
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Reproducir Mes a Mes
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* COLUMN 2: ECharts Map */}
@@ -187,6 +283,8 @@ export const SpaghettiMap_V2: React.FC = () => {
                         selectedMonths={selectedMonths}
                         ports={context.ports} 
                         isDarkMode={false} 
+                        showPies={showPies}
+                        playSpeed={playSpeed}
                         onPortClick={(portId) => setSelectedPortId(portId)}
                     />
                     

@@ -38,10 +38,12 @@ const computeSpaghettiDataForMonth = (
     selectedMonths: string[],
     months: string[],
     ports: any[],
-    isDarkMode: boolean = true
+    isDarkMode: boolean = true,
+    showPies: boolean = true,
+    playSpeed: number = 2
 ) => {
     if (!aggregatedData || !selectedMonths || selectedMonths.length === 0 || !months || months.length === 0 || !ports) {
-        return { nodes: [], edges: [], pieSeries: [] };
+        return { nodes: [], edges: [], pieSeries: [], missileSeries: [] };
     }
 
     // Since we now receive an array of months directly from the multi-select UI
@@ -122,30 +124,25 @@ const computeSpaghettiDataForMonth = (
             if (!edgesGroupedByPair[pairKey]) {
                 edgesGroupedByPair[pairKey] = [];
             }
-            if (targetMonths.length === 1) {
-                // Modo 1 mes: Línea individual por cada viaje
-                const trips = Math.max(1, Math.round(edge.freq));
-                for (let i = 0; i < trips; i++) {
-                    edgesGroupedByPair[pairKey].push({
-                        ...edge,
-                        tons: edge.tons / trips, // Toneladas promediadas por viaje
-                        isAggregated: false
-                    });
-                }
-            } else {
-                // Modo acumulado: Una sola línea gruesa
-                edgesGroupedByPair[pairKey].push({
-                    ...edge,
-                    isAggregated: true
-                });
-            }
+            // Agrupar siempre, ya sea 1 mes o acumulado, para que el misil dispare secuencialmente sobre la misma ruta
+            edgesGroupedByPair[pairKey].push({
+                ...edge,
+                isAggregated: true
+            });
         }
     });
 
+    const activePorts = ports.filter(p => p.lat !== null && p.lon !== null);
+
     const finalEdges: any[] = [];
+    const missileSeries: any[] = [];
+
     Object.entries(edgesGroupedByPair).forEach(([pairKey, edgesInPair]) => {
         const [source, target] = pairKey.split('-');
         const baseCurveness = getBaseCurveness(source, target);
+        
+        const sourcePort = activePorts.find(p => p.port_id === source);
+        const targetPort = activePorts.find(p => p.port_id === target);
 
         edgesInPair.forEach((edge, index) => {
             const curveness = baseCurveness + index * 0.06;
@@ -156,13 +153,15 @@ const computeSpaghettiDataForMonth = (
                 value: Math.round(edge.tons),
                 vessel: edge.vessel,
                 lineStyle: {
-                    width: Math.max(1.5, Math.min(8, edge.tons / 12000)),
-                    color: getVesselColor(edge.vessel),
+                    // Ocultar la línea estática si es un solo mes (para ver solo el misil)
+                    width: targetMonths.length === 1 ? 0 : Math.max(0.5, Math.min(2, edge.tons / 50000)),
+                    color: targetMonths.length === 1 ? 'transparent' : getVesselColor(edge.vessel),
                     curveness: curveness
                 }
             };
 
-            if (edge.isAggregated && edge.freq > 0) {
+            // Bolita de viajes (solo en acumulado o si decides mostrarla)
+            if (edge.isAggregated && edge.freq > 0 && targetMonths.length > 1) {
                 // Bolita con el número de viajes (horizontal, estilo bola de billar)
                 edgeConfig.label = {
                     show: true,
@@ -184,11 +183,47 @@ const computeSpaghettiDataForMonth = (
             }
 
             finalEdges.push(edgeConfig);
+
+            // Misil Effect (Animación de viaje desde origen a destino)
+            // Solo lo mostramos en vista de 1 mes (durante la animación o al hacer clic en un mes)
+            if (sourcePort && targetPort && targetMonths.length === 1) {
+                const trips = Math.max(1, edge.freq || 1);
+                // Si hay más viajes, el periodo es menor (va más rápido)
+                // Ej: 2 viajes = mitad de tiempo = recorre el doble de rápido, permitiendo que repita.
+                const period = Math.max(0.2, playSpeed / trips); 
+
+                missileSeries.push({
+                    type: 'lines',
+                    coordinateSystem: 'geo',
+                    zlevel: 3, // Por encima de las líneas normales del grafo
+                    effect: {
+                        show: true,
+                        period: period,
+                        trailLength: 0.6, // Deja la ruta pintada detrás del misil
+                        color: getVesselColor(edge.vessel), // Color del barco para el misil
+                        symbol: 'arrow',
+                        symbolSize: 4 // Reducido a la mitad para que la estela (ruta) sea mucho más delgada
+                    },
+                    lineStyle: {
+                        color: 'transparent', // La línea base no se ve
+                        width: 0, 
+                        curveness: curveness
+                    },
+                    data: [
+                        {
+                            coords: [
+                                [sourcePort.lon, sourcePort.lat],
+                                [targetPort.lon, targetPort.lat]
+                            ]
+                        }
+                    ],
+                    silent: true
+                });
+            }
         });
     });
 
     const maxCapacity = Math.max(...ports.map(p => p.capacity_mt || 0), 1);
-    const activePorts = ports.filter(p => p.lat !== null && p.lon !== null);
 
     const nodesForGraph = activePorts.map(p => {
         const petralCarga = portMap[p.port_id]?.carga || 0;
@@ -214,7 +249,8 @@ const computeSpaghettiDataForMonth = (
     const pieSeries: any[] = [];
     const calloutLinesData: any[] = [];
 
-    nodesForGraph.forEach(n => {
+    if (showPies) {
+        nodesForGraph.forEach(n => {
         const petralTotal = n.carga + n.descarga;
 
         // El pastel de mercado (Sink/Source) en tierra (Este -> offset positivo)
@@ -345,17 +381,18 @@ const computeSpaghettiDataForMonth = (
         });
     });
 
-    if (calloutLinesData.length > 0) {
-        pieSeries.push({
-            type: 'lines',
-            coordinateSystem: 'geo',
-            zlevel: 1,
-            silent: true,
-            data: calloutLinesData
-        });
+        if (calloutLinesData.length > 0) {
+            pieSeries.push({
+                type: 'lines',
+                coordinateSystem: 'geo',
+                zlevel: 1,
+                silent: true,
+                data: calloutLinesData
+            });
+        }
     }
 
-    return { nodes: nodesForGraph, edges: finalEdges, pieSeries };
+    return { nodes: nodesForGraph, edges: finalEdges, pieSeries, missileSeries };
 }
 
 interface SpaghettiMapProps {
@@ -364,6 +401,8 @@ interface SpaghettiMapProps {
     selectedMonths: string[];
     ports: any[];
     isDarkMode?: boolean;
+    showPies?: boolean;
+    playSpeed?: number;
     onPortClick?: (portId: string) => void;
 }
 
@@ -373,6 +412,8 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
     selectedMonths,
     ports,
     isDarkMode = true,
+    showPies = true,
+    playSpeed = 2,
     onPortClick
 }) => {
     const [mapLoaded, setMapLoaded] = useState(false);
@@ -394,7 +435,7 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
     const option = useMemo(() => {
         if (!mapLoaded || !data || !data.aggregated_data || selectedMonths.length === 0 || !ports) return;
 
-        const { nodes, edges, pieSeries } = computeSpaghettiDataForMonth(data.aggregated_data, selectedMonths, months, ports, isDarkMode);
+        const { nodes, edges, pieSeries, missileSeries } = computeSpaghettiDataForMonth(data.aggregated_data, selectedMonths, months, ports, isDarkMode, showPies, playSpeed);
 
         return {
             backgroundColor: isDarkMode ? 'transparent' : '#ebf8ff',
@@ -533,10 +574,11 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
                         opacity: 0.8
                     }
                 },
-                ...pieSeries
+                ...pieSeries,
+                ...missileSeries
             ]
         };
-    }, [mapLoaded, data, months, selectedMonths, ports, isDarkMode]);
+    }, [mapLoaded, data, months, selectedMonths, ports, isDarkMode, showPies, playSpeed]);
 
     const onEvents = useMemo(() => {
         return {
