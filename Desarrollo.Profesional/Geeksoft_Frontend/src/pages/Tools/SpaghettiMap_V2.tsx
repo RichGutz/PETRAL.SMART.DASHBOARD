@@ -12,7 +12,7 @@ export const SpaghettiMap_V2: React.FC = () => {
     const [, setForceRender] = useState(0);
 
     // Controles de animación y nodos
-    const [showPies, setShowPies] = useState(true);
+    const [showPies, setShowPies] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [playSpeed, setPlaySpeed] = useState(2);
     const [, setAnimationIndex] = useState(0);
@@ -132,7 +132,66 @@ export const SpaghettiMap_V2: React.FC = () => {
                 
                 {/* COLUMN 1: Custom HTML Timeline */}
                 <div className="w-[340px] md:w-[380px] bg-slate-50 border-r border-slate-200 flex flex-col py-6 px-4 shadow-[4px_0_15px_rgba(0,0,0,0.05)] z-10 overflow-y-auto">
-                    <h3 className="text-petral-teal text-xs font-bold uppercase tracking-widest mb-4 text-center">Línea de Tiempo</h3>
+                    {/* Controls Panel */}
+                    <div className="bg-white border border-slate-200 rounded-lg p-3 mb-4 shadow-sm flex flex-col gap-3 shrink-0">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <span className="text-xs font-bold text-slate-600">Nodos (Pies y Líneas)</span>
+                            <button
+                                onClick={() => setShowPies(!showPies)}
+                                className={`w-10 h-5 rounded-full relative transition-colors focus:outline-none ${showPies ? 'bg-petral-teal' : 'bg-slate-300'}`}
+                            >
+                                <span className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full transition-transform ${showPies ? 'translate-x-5' : 'translate-x-0'}`}></span>
+                            </button>
+                        </div>
+                        <div className="flex flex-col gap-2 pt-1">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-slate-600">Animación</span>
+                                <div className="flex items-center gap-1">
+                                    <input 
+                                        type="number" 
+                                        min="1" 
+                                        max="10" 
+                                        value={playSpeed} 
+                                        onChange={(e) => setPlaySpeed(Number(e.target.value) || 2)}
+                                        className="w-10 h-6 text-center text-xs font-bold border border-slate-300 rounded text-slate-700 bg-slate-50 focus:outline-none focus:border-petral-teal"
+                                    />
+                                    <span className="text-[10px] text-slate-500 font-bold">seg/mes</span>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handlePlayAnimation}
+                                className={`w-full py-1.5 rounded-md text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-sm ${isPlaying ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-petral-blue text-white hover:bg-blue-800'}`}
+                            >
+                                {isPlaying ? (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                                        </svg>
+                                        Detener
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Reproducir Mes a Mes
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mb-4 px-1">
+                        <h3 className="text-petral-teal text-xs font-bold uppercase tracking-widest text-left">Línea de Tiempo</h3>
+                        {context.forecastName && (
+                            <div className="flex items-center gap-1.5 bg-sky-50 px-2 py-1 rounded-md border border-sky-200 shadow-sm">
+                                <span className="text-[10px] font-bold text-sky-600 uppercase">Escenario:</span>
+                                <span className="text-[10px] font-semibold text-sky-800">📁 {context.forecastName}</span>
+                            </div>
+                        )}
+                    </div>
                     
                     {/* List of Months Header */}
                     {months.length > 0 && (
@@ -210,67 +269,6 @@ export const SpaghettiMap_V2: React.FC = () => {
                                 <span className="text-xl font-bold text-sky-600">{totalSelectedTons.toLocaleString('en-US')}</span>
                                 <span className="text-[10px] text-slate-400 uppercase">Toneladas (MT)</span>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Scenario Ribbon */}
-                    {context.forecastName && (
-                        <div className="bg-sky-50 border border-sky-200 rounded-lg p-2 mt-3 flex flex-col justify-center items-center shadow-sm text-center">
-                            <span className="text-[10px] text-sky-600 uppercase tracking-wider font-bold mb-0.5">Escenario Activo</span>
-                            <span className="text-xs font-semibold text-sky-800 flex items-center gap-1">
-                                📁 {context.forecastName}
-                            </span>
-                        </div>
-                    )}
-
-                    {/* Controls Panel */}
-                    <div className="bg-white border border-slate-200 rounded-lg p-3 mt-3 shadow-sm flex flex-col gap-3 shrink-0">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-600">Nodos (Pies y Líneas)</span>
-                            <button
-                                onClick={() => setShowPies(!showPies)}
-                                className={`w-10 h-5 rounded-full relative transition-colors focus:outline-none ${showPies ? 'bg-petral-teal' : 'bg-slate-300'}`}
-                            >
-                                <span className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full transition-transform ${showPies ? 'translate-x-5' : 'translate-x-0'}`}></span>
-                            </button>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-slate-600">Animación</span>
-                                <div className="flex items-center gap-1">
-                                    <input 
-                                        type="number" 
-                                        min="1" 
-                                        max="10" 
-                                        value={playSpeed} 
-                                        onChange={(e) => setPlaySpeed(Number(e.target.value) || 2)}
-                                        className="w-10 h-6 text-center text-xs font-bold border border-slate-300 rounded text-slate-700 bg-slate-50 focus:outline-none focus:border-petral-teal"
-                                    />
-                                    <span className="text-[10px] text-slate-500 font-bold">seg/mes</span>
-                                </div>
-                            </div>
-                            <button
-                                onClick={handlePlayAnimation}
-                                className={`w-full py-1.5 rounded-md text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-sm ${isPlaying ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-petral-blue text-white hover:bg-blue-800'}`}
-                            >
-                                {isPlaying ? (
-                                    <>
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
-                                        </svg>
-                                        Detener
-                                    </>
-                                ) : (
-                                    <>
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        Reproducir Mes a Mes
-                                    </>
-                                )}
-                            </button>
                         </div>
                     </div>
                 </div>

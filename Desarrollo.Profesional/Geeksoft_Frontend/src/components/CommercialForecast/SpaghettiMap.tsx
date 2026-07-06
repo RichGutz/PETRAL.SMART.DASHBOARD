@@ -38,7 +38,6 @@ const computeSpaghettiDataForMonth = (
     selectedMonths: string[],
     months: string[],
     ports: any[],
-    isDarkMode: boolean = true,
     showPies: boolean = true,
     playSpeed: number = 2
 ) => {
@@ -296,28 +295,25 @@ const computeSpaghettiDataForMonth = (
             coordinateSystem: 'geo',
             center: landCenter,
             radius: [0, n.pieRadius],
-            silent: false,
-            label: { 
-                show: true, 
-                position: 'outside', 
-                formatter: '{b}',
-                fontSize: 10,
-                color: isDarkMode ? '#e2e8f0' : '#475569'
-            },
-            labelLine: {
-                show: true,
-                length: 5,
-                length2: 5
-            },
+            // IMPORTANTE: Por instrucción directa del usuario, el pie de TIERRA (Sinks/Sources) 
+            // debe comportarse EXACTAMENTE igual al de PETRAL: 
+            // - Etiquetas ocultas por defecto
+            // - Sin líneas de conexión (labelLine)
+            // - Etiqueta se muestra ADENTRO (inside) solo al hacer hover (emphasis).
+            // NINGUN AGENTE ESTA AUTORIZADO A INVENTAR NADA NI CAMBIAR ESTO A ETIQUETAS EXTERNAS.
+            label: { show: false },
             emphasis: { 
                 label: { 
                     show: true, 
-                    fontSize: 11,
+                    position: 'inside', 
+                    formatter: '{b}\n{c} MT',
+                    fontSize: 9,
+                    color: '#ffffff',
                     fontWeight: 'bold'
                 } 
             },
             data: marketData,
-            zlevel: 3
+            zlevel: 4
         });
 
         // B. Pie de Mar (Operación de PETRAL)
@@ -435,7 +431,7 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
     const option = useMemo(() => {
         if (!mapLoaded || !data || !data.aggregated_data || selectedMonths.length === 0 || !ports) return;
 
-        const { nodes, edges, pieSeries, missileSeries } = computeSpaghettiDataForMonth(data.aggregated_data, selectedMonths, months, ports, isDarkMode, showPies, playSpeed);
+        const { nodes, edges, pieSeries, missileSeries } = computeSpaghettiDataForMonth(data.aggregated_data, selectedMonths, months, ports, showPies, playSpeed);
 
         return {
             backgroundColor: isDarkMode ? 'transparent' : '#ebf8ff',
@@ -520,17 +516,11 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
                         const d = params.data;
                         if (d.portInfo) {
                             const pi = d.portInfo;
-                            if (params.name.includes('Capacidad')) {
-                                return `
-                                    <div style="font-family: Inter, sans-serif;">
-                                        <b>${pi.name}</b><br/>
-                                        Capacidad Mercado Acumulada: <span style="font-weight: bold; font-family: monospace;">${params.value.toLocaleString()} MT</span>
-                                    </div>
-                                `;
-                            }
+                            const isPetralSlice = params.name.includes('Petral');
+                            
                             return `
                                 <div style="font-family: Inter, sans-serif;">
-                                    <b>${pi.name}</b> - Petral<br/>
+                                    <b>${pi.name}</b> - ${isPetralSlice ? 'Operación Petral' : 'Mercado (Sinks/Sources)'}<br/>
                                     ${params.name}: <span style="font-weight: bold; font-family: monospace;">${params.value.toLocaleString()} MT (${params.percent}%)</span>
                                 </div>
                             `;

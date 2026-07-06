@@ -11,7 +11,8 @@ export const ToolsLayout_V2: React.FC = () => {
 
     // Map URL to activeTab for MasterTemplate and Builder
     let activeTab = 'financial-matrix';
-    if (location.pathname.includes('/dashboard')) activeTab = 'financial-matrix';
+    if (location.pathname.includes('/multicotizador')) activeTab = 'multicotizador';
+    else if (location.pathname.includes('/dashboard')) activeTab = 'financial-matrix';
     else if (location.pathname.includes('/graphic-analysis')) activeTab = 'graphic-analysis';
     else if (location.pathname.includes('/spaghetti-map')) activeTab = 'spaghetti-map';
     else if (location.pathname.includes('/audit-ledger')) activeTab = 'audit-ledger';

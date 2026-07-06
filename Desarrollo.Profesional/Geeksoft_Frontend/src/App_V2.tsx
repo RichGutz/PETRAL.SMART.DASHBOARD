@@ -7,6 +7,7 @@ import { GraphicAnalysis_V2 } from './pages/Tools/GraphicAnalysis_V2';
 import { SpaghettiMap_V2 } from './pages/Tools/SpaghettiMap_V2';
 import { AuditLedger_V2 } from './pages/Tools/AuditLedger_V2';
 import { AuditEngine_V2 } from './pages/Tools/AuditEngine_V2';
+import { MultiCotizador_V2 } from './pages/Tools/MultiCotizador_V2';
 
 import { VesselsMaster } from './pages/Masters/VesselsMaster_V2';
 import { RoutesMaster } from './pages/Masters/RoutesMaster_V2';
@@ -39,6 +40,7 @@ function App_V2() {
             
             {/* Herramientas (Comparten el estado y el Ribbon via ToolsLayout) */}
             <Route element={<ToolsLayout_V2 />}>
+                <Route path="/multicotizador" element={<MultiCotizador_V2 />} />
                 <Route path="/dashboard" element={<FinancialMatrix_V2 />} />
                 <Route path="/graphic-analysis" element={<GraphicAnalysis_V2 />} />
                 <Route path="/spaghetti-map" element={<SpaghettiMap_V2 />} />
