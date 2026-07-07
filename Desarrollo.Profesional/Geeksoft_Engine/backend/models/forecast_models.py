@@ -148,6 +148,7 @@ class PortCostStaticUpdateItem(BaseModel):
     operation_type: str
     vessel_id: str
     cost: float
+    sub_operation_type: Optional[str] = 'MAIN'
     updated_by: str = 'ADMIN'
 
 

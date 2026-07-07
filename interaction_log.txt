@@ -193,3 +193,4 @@
 2026-07-07 11:08:00 - Añadida la imagen de B/T Tablones en los Maestros de Buques (VesselsMaster & VesselsMaster_V2).
 2026-07-07 11:18:00 - Renombrado el Maestro de Rutas a Maestro de Navegación, implementando la inicialización con todos los puertos de la base de datos y la adición a través de desplegable selectivo.
 2026-07-07 12:43:00 - Renombrada la tarjeta 4 a 'Comisiones' y colocada debajo de la tarjeta 1 en el Maestro de Contratos.
+2026-07-07 13:02:00 - Añadido soporte de suboperaciones (MAIN, loading_master, other) en el Maestro de Costos Portuarios Estáticos en frontend y backend.

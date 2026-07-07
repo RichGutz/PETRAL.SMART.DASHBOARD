@@ -687,6 +687,7 @@ def save_port_costs_static(items: List[PortCostStaticUpdateItem]):
                 'operation_type': item.operation_type,
                 'vessel_id': item.vessel_id,
                 'cost': item.cost,
+                'sub_operation_type': item.sub_operation_type or 'MAIN',
                 'updated_at': now_str,
                 'updated_by': item.updated_by
             })

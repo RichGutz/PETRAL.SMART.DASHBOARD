@@ -53,16 +53,18 @@ export const PortCostsMaster_V2: React.FC = () => {
                 if (!newState[row.port_id][row.client_id]) newState[row.port_id][row.client_id] = {};
                 if (!newState[row.port_id][row.client_id][row.vessel_id]) {
                     newState[row.port_id][row.client_id][row.vessel_id] = {
-                        CARGA: 0,
-                        DESCARGA: 0,
+                        CARGA: { MAIN: 0, loading_master: 0, other: 0 },
+                        DESCARGA: { MAIN: 0, loading_master: 0, other: 0 },
                         updated_at: row.updated_at,
                         updated_by: row.updated_by
                     };
                 }
-                if (row.operation_type === 'CARGA') {
-                    newState[row.port_id][row.client_id][row.vessel_id].CARGA = row.cost;
-                } else if (row.operation_type === 'DESCARGA') {
-                    newState[row.port_id][row.client_id][row.vessel_id].DESCARGA = row.cost;
+                
+                const op = row.operation_type;
+                const subOp = row.sub_operation_type || 'MAIN';
+                
+                if (newState[row.port_id][row.client_id][row.vessel_id][op]) {
+                    newState[row.port_id][row.client_id][row.vessel_id][op][subOp] = row.cost;
                 }
                 
                 // Keep the most recent updated_at and updated_by
@@ -88,16 +90,24 @@ export const PortCostsMaster_V2: React.FC = () => {
         fetchData();
     }, []);
 
-    const handleCostChange = (portId: string, clientId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA', value: string) => {
+    const handleCostChange = (portId: string, clientId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA', subOp: string, value: string) => {
         const numValue = parseFloat(value) || 0;
         setCostsState((prev: any) => {
             const next = { ...prev };
             if (!next[portId]) next[portId] = {};
             if (!next[portId][clientId]) next[portId][clientId] = {};
             if (!next[portId][clientId][vesselId]) {
-                next[portId][clientId][vesselId] = { CARGA: 0, DESCARGA: 0, updated_at: null, updated_by: null };
+                next[portId][clientId][vesselId] = {
+                    CARGA: { MAIN: 0, loading_master: 0, other: 0 },
+                    DESCARGA: { MAIN: 0, loading_master: 0, other: 0 },
+                    updated_at: null,
+                    updated_by: null
+                };
             }
-            next[portId][clientId][vesselId][operation] = numValue;
+            if (!next[portId][clientId][vesselId][operation]) {
+                next[portId][clientId][vesselId][operation] = { MAIN: 0, loading_master: 0, other: 0 };
+            }
+            next[portId][clientId][vesselId][operation][subOp] = numValue;
             return next;
         });
     };
@@ -113,23 +123,30 @@ export const PortCostsMaster_V2: React.FC = () => {
                     Object.keys(costsState[portId][clientId]).forEach(vesselId => {
                         const costData = costsState[portId][clientId][vesselId];
                         
-                        // Si existe algún costo mayor a cero o si queremos guardar ceros, lo añadimos
-                        payload.push({
-                            client_id: clientId,
-                            port_id: portId,
-                            operation_type: 'CARGA',
-                            vessel_id: vesselId,
-                            cost: costData.CARGA || 0,
-                            updated_by: 'USUARIO'
-                        });
-                        
-                        payload.push({
-                            client_id: clientId,
-                            port_id: portId,
-                            operation_type: 'DESCARGA',
-                            vessel_id: vesselId,
-                            cost: costData.DESCARGA || 0,
-                            updated_by: 'USUARIO'
+                        const subOps = ['MAIN', 'loading_master', 'other'];
+                        subOps.forEach(subOp => {
+                            const cargaVal = costData.CARGA?.[subOp] ?? 0;
+                            const descargaVal = costData.DESCARGA?.[subOp] ?? 0;
+                            
+                            payload.push({
+                                client_id: clientId,
+                                port_id: portId,
+                                operation_type: 'CARGA',
+                                vessel_id: vesselId,
+                                sub_operation_type: subOp,
+                                cost: cargaVal,
+                                updated_by: 'USUARIO'
+                            });
+                            
+                            payload.push({
+                                client_id: clientId,
+                                port_id: portId,
+                                operation_type: 'DESCARGA',
+                                vessel_id: vesselId,
+                                sub_operation_type: subOp,
+                                cost: descargaVal,
+                                updated_by: 'USUARIO'
+                            });
                         });
                     });
                 });
@@ -270,29 +287,83 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                     </div>
 
                                                     {/* Inputs de Operación */}
-                                                    <div className="flex flex-col gap-3">
-                                                        <div className="flex items-center justify-between gap-2">
-                                                            <label className="text-xs font-bold text-slate-600 uppercase">Carga ($)</label>
-                                                            <input 
-                                                                type="number"
-                                                                step="0.01"
-                                                                value={vData.CARGA || ''}
-                                                                onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'CARGA', e.target.value)}
-                                                                className="w-24 text-right text-sm font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                                                                placeholder="0.00"
-                                                            />
+                                                    <div className="flex flex-col gap-4 text-[11px]">
+                                                        {/* Sección Carga */}
+                                                        <div className="flex flex-col gap-2">
+                                                            <span className="text-xs font-black text-blue-700 uppercase border-b border-blue-100 pb-0.5">Carga</span>
+                                                            
+                                                            <div className="flex items-center justify-between gap-2 pl-1">
+                                                                <label className="font-bold text-slate-500 uppercase">Principal (MAIN)</label>
+                                                                <input 
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    value={vData.CARGA?.MAIN != null ? vData.CARGA.MAIN : ''}
+                                                                    onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'CARGA', 'MAIN', e.target.value)}
+                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs"
+                                                                    placeholder="0.00"
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-center justify-between gap-2 pl-1">
+                                                                <label className="font-bold text-slate-500 uppercase">Loading Master</label>
+                                                                <input 
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    value={vData.CARGA?.loading_master != null ? vData.CARGA.loading_master : ''}
+                                                                    onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'CARGA', 'loading_master', e.target.value)}
+                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs"
+                                                                    placeholder="0.00"
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-center justify-between gap-2 pl-1">
+                                                                <label className="font-bold text-slate-500 uppercase">Otros Costos</label>
+                                                                <input 
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    value={vData.CARGA?.other != null ? vData.CARGA.other : ''}
+                                                                    onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'CARGA', 'other', e.target.value)}
+                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs"
+                                                                    placeholder="0.00"
+                                                                />
+                                                            </div>
                                                         </div>
                                                         
-                                                        <div className="flex items-center justify-between gap-2">
-                                                            <label className="text-xs font-bold text-slate-600 uppercase">Descarga ($)</label>
-                                                            <input 
-                                                                type="number"
-                                                                step="0.01"
-                                                                value={vData.DESCARGA || ''}
-                                                                onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'DESCARGA', e.target.value)}
-                                                                className="w-24 text-right text-sm font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                                                                placeholder="0.00"
-                                                            />
+                                                        {/* Sección Descarga */}
+                                                        <div className="flex flex-col gap-2">
+                                                            <span className="text-xs font-black text-amber-700 uppercase border-b border-amber-100 pb-0.5">Descarga</span>
+                                                            
+                                                            <div className="flex items-center justify-between gap-2 pl-1">
+                                                                <label className="font-bold text-slate-500 uppercase">Principal (MAIN)</label>
+                                                                <input 
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    value={vData.DESCARGA?.MAIN != null ? vData.DESCARGA.MAIN : ''}
+                                                                    onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'DESCARGA', 'MAIN', e.target.value)}
+                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs"
+                                                                    placeholder="0.00"
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-center justify-between gap-2 pl-1">
+                                                                <label className="font-bold text-slate-500 uppercase">Loading Master</label>
+                                                                <input 
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    value={vData.DESCARGA?.loading_master != null ? vData.DESCARGA.loading_master : ''}
+                                                                    onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'DESCARGA', 'loading_master', e.target.value)}
+                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs"
+                                                                    placeholder="0.00"
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-center justify-between gap-2 pl-1">
+                                                                <label className="font-bold text-slate-500 uppercase">Otros Costos</label>
+                                                                <input 
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    value={vData.DESCARGA?.other != null ? vData.DESCARGA.other : ''}
+                                                                    onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'DESCARGA', 'other', e.target.value)}
+                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs"
+                                                                    placeholder="0.00"
+                                                                />
+                                                            </div>
                                                         </div>
                                                     </div>
 
