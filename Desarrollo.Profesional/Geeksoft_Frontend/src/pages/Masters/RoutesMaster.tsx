@@ -276,7 +276,7 @@ export const RoutesMaster: React.FC = () => {
                             <select 
                                 value={newPortId} 
                                 onChange={(e) => setNewPortId(e.target.value)}
-                                className="h-8 w-44 text-xs border border-slate-300 rounded px-2 outline-none focus:border-blue-500 font-bold bg-white text-slate-700"
+                                className="h-8 w-56 text-xs border border-slate-300 rounded px-2 outline-none focus:border-blue-500 font-bold bg-white text-slate-700"
                             >
                                 <option value="">-- SELECCIONAR PUERTO --</option>
                                 {dbPorts

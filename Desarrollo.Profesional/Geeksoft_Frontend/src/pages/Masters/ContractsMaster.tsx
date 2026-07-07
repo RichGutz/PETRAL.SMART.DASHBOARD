@@ -414,22 +414,58 @@ export const ContractsMaster: React.FC = () => {
                                                         </select>
                                                     </div>
 
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div>
+                                                            <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Válido Desde</label>
+                                                            <input 
+                                                                type="date" 
+                                                                value={selectedRoute.valid_from || ''}
+                                                                onChange={(e) => handleChange(selectedRouteKey!, 'valid_from', e.target.value)}
+                                                                className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Válido Hasta</label>
+                                                            <input 
+                                                                type="date" 
+                                                                value={selectedRoute.valid_to || ''}
+                                                                onChange={(e) => handleChange(selectedRouteKey!, 'valid_to', e.target.value)}
+                                                                className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </section>
+
+                                            {/* 4. Comisiones */}
+                                            <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm">
+                                                <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">4. Comisiones</h4>
+                                                <div className="grid grid-cols-3 gap-5">
                                                     <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Válido Desde</label>
+                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Address Comm. (%)</label>
                                                         <input 
-                                                            type="date" 
-                                                            value={selectedRoute.valid_from || ''}
-                                                            onChange={(e) => handleChange(selectedRouteKey!, 'valid_from', e.target.value)}
-                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
+                                                            type="number" step="0.01"
+                                                            value={selectedRoute.address_commission}
+                                                            onChange={(e) => handleChange(selectedRouteKey!, 'address_commission', parseFloat(e.target.value))}
+                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Válido Hasta</label>
+                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Broker Comm. (%)</label>
                                                         <input 
-                                                            type="date" 
-                                                            value={selectedRoute.valid_to || ''}
-                                                            onChange={(e) => handleChange(selectedRouteKey!, 'valid_to', e.target.value)}
-                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
+                                                            type="number" step="0.01"
+                                                            value={selectedRoute.broker_commission}
+                                                            onChange={(e) => handleChange(selectedRouteKey!, 'broker_commission', parseFloat(e.target.value))}
+                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Baseline IFO Price ($)</label>
+                                                        <input 
+                                                            type="number" step="0.01"
+                                                            value={selectedRoute.bunker_baseline_price_ifo}
+                                                            onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_ifo', parseFloat(e.target.value))}
+                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
                                                         />
                                                     </div>
                                                 </div>
@@ -507,40 +543,6 @@ export const ContractsMaster: React.FC = () => {
                                                     </div>
                                                 </section>
                                             </div>
-
-                                            {/* 4. Financiero */}
-                                            <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm">
-                                                <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">Acuerdos Financieros & Comisiones</h4>
-                                                <div className="grid grid-cols-3 gap-5">
-                                                    <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Address Comm. (%)</label>
-                                                        <input 
-                                                            type="number" step="0.01"
-                                                            value={selectedRoute.address_commission}
-                                                            onChange={(e) => handleChange(selectedRouteKey!, 'address_commission', parseFloat(e.target.value))}
-                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Broker Comm. (%)</label>
-                                                        <input 
-                                                            type="number" step="0.01"
-                                                            value={selectedRoute.broker_commission}
-                                                            onChange={(e) => handleChange(selectedRouteKey!, 'broker_commission', parseFloat(e.target.value))}
-                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Baseline IFO Price ($)</label>
-                                                        <input 
-                                                            type="number" step="0.01"
-                                                            value={selectedRoute.bunker_baseline_price_ifo}
-                                                            onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_ifo', parseFloat(e.target.value))}
-                                                            className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </section>
 
                                             {/* 5. Tarifas (Tiers) */}
                                             <section className="space-y-4 pt-2">

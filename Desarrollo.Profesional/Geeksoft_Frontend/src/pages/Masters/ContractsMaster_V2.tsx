@@ -441,6 +441,40 @@ export const ContractsMaster: React.FC = () => {
                                                             </div>
                                                         </div>
                                                     </section>
+
+                                                    {/* 4. Comisiones */}
+                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm">
+                                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2">4. Comisiones</h4>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Address Comm. (%)</label>
+                                                                <input 
+                                                                    type="number" step="0.01"
+                                                                    value={selectedRoute.address_commission}
+                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'address_commission', parseFloat(e.target.value))}
+                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Broker Comm. (%)</label>
+                                                                <input 
+                                                                    type="number" step="0.01"
+                                                                    value={selectedRoute.broker_commission}
+                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'broker_commission', parseFloat(e.target.value))}
+                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
+                                                                />
+                                                            </div>
+                                                            <div className="col-span-2">
+                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Baseline IFO Price ($)</label>
+                                                                <input 
+                                                                    type="number" step="0.01"
+                                                                    value={selectedRoute.bunker_baseline_price_ifo}
+                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_ifo', parseFloat(e.target.value))}
+                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </section>
                                                 </div>
 
                                                 {/* ================= COLUMNA 2 ================= */}
@@ -512,40 +546,6 @@ export const ContractsMaster: React.FC = () => {
                                                                         className="w-full text-sm border border-amber-200 rounded-lg p-2 font-mono bg-amber-50/50 focus:border-amber-400 focus:outline-none"
                                                                     />
                                                                 </div>
-                                                            </div>
-                                                        </div>
-                                                    </section>
-
-                                                    {/* 4. Financiero */}
-                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm">
-                                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2">4. Acuerdos Financieros</h4>
-                                                        <div className="grid grid-cols-2 gap-3">
-                                                            <div>
-                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Address Comm. (%)</label>
-                                                                <input 
-                                                                    type="number" step="0.01"
-                                                                    value={selectedRoute.address_commission}
-                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'address_commission', parseFloat(e.target.value))}
-                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Broker Comm. (%)</label>
-                                                                <input 
-                                                                    type="number" step="0.01"
-                                                                    value={selectedRoute.broker_commission}
-                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'broker_commission', parseFloat(e.target.value))}
-                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                                />
-                                                            </div>
-                                                            <div className="col-span-2">
-                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Baseline IFO Price ($)</label>
-                                                                <input 
-                                                                    type="number" step="0.01"
-                                                                    value={selectedRoute.bunker_baseline_price_ifo}
-                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_ifo', parseFloat(e.target.value))}
-                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                                />
                                                             </div>
                                                         </div>
                                                     </section>
