@@ -12,6 +12,7 @@ export const SpaghettiMap_V2: React.FC = () => {
     const [selectedPortId, setSelectedPortId] = useState<string | null>(null);
     const [, setForceRender] = useState(0);
     const [ports, setPorts] = useState<any[]>([]);
+    const [clients, setClients] = useState<any[]>([]);
 
     // Controles de animación y nodos
     const [showPies, setShowPies] = useState(false);
@@ -19,17 +20,21 @@ export const SpaghettiMap_V2: React.FC = () => {
     const [playSpeed, setPlaySpeed] = useState(2);
     const [, setAnimationIndex] = useState(0);
 
-    // Cargar puertos al montar
+    // Cargar puertos y clientes al montar
     useEffect(() => {
-        const loadPorts = async () => {
+        const loadData = async () => {
             try {
-                const data = await ForecastService.getPorts();
-                setPorts(data);
+                const [portsData, clientsData] = await Promise.all([
+                    ForecastService.getPorts(),
+                    ForecastService.getClientsMaster()
+                ]);
+                setPorts(portsData || []);
+                setClients(clientsData || []);
             } catch (e) {
-                console.error("Error al cargar puertos en SpaghettiMap:", e);
+                console.error("Error al cargar datos maestros en SpaghettiMap:", e);
             }
         };
-        loadPorts();
+        loadData();
     }, []);
 
     // Default to the first month when months change
@@ -295,6 +300,7 @@ export const SpaghettiMap_V2: React.FC = () => {
                         months={months} 
                         selectedMonths={selectedMonths}
                         ports={ports} 
+                        clients={clients}
                         isDarkMode={false} 
                         showPies={showPies}
                         playSpeed={playSpeed}

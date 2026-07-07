@@ -2,15 +2,6 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts';
 
-// Colores de barcos según Manual.Estilos.md
-const getVesselColor = (vesselName: string): string => {
-    const name = vesselName.toUpperCase();
-    if (name.includes('TABLONES')) return '#DC2626'; // Rojo
-    if (name.includes('MOQUEGUA')) return '#16A34A'; // Verde
-    if (name.includes('CONCON') || name.includes('TRADER')) return '#475569'; // Gris
-    if (name.includes('HUEMUL')) return '#4F46E5'; // Índigo / Azul
-    return '#94A3B8'; // Fallback Slate
-};
 
 // Reglas de curvatura del usuario para evitar solapamientos
 const getBaseCurveness = (origin: string, dest: string): number => {
@@ -81,7 +72,8 @@ const computeSpaghettiDataForMonth = (
     months: string[],
     ports: any[],
     showPies: boolean = true,
-    playSpeed: number = 2
+    playSpeed: number = 2,
+    clients: any[] = []
 ) => {
     if (!aggregatedData || !selectedMonths || selectedMonths.length === 0 || !months || months.length === 0 || !ports) {
         return { nodes: [], edges: [], pieSeries: [], missileSeries: [], haloSeries: [] };
@@ -90,6 +82,18 @@ const computeSpaghettiDataForMonth = (
     const targetMonths = selectedMonths;
     const activePorts = ports.filter(p => p.lat !== null && p.lon !== null);
 
+    const getClientColor = (clientName: string): string => {
+        const clientUpper = clientName.toUpperCase();
+        const found = clients?.find(c => c.client_name.toUpperCase() === clientUpper || c.client_id.toUpperCase() === clientUpper);
+        if (found && found.color_hex) {
+            return found.color_hex;
+        }
+        if (clientUpper.includes('NEXA')) return '#9333EA'; // Violeta/Púrpura
+        if (clientUpper.includes('SPCC') || clientUpper.includes('SOUTHERN')) return '#E11D48'; // Rosado/Rojo
+        if (clientUpper.includes('SPOT')) return '#F59E0B'; // Ámbar/Amarillo
+        return '#3B82F6'; // Azul por defecto
+    };
+
     const missileSeries: any[] = [];
 
     const portMap: Record<string, { carga: number; descarga: number }> = {};
@@ -97,7 +101,7 @@ const computeSpaghettiDataForMonth = (
         portMap[p.port_id] = { carga: 0, descarga: 0 };
     });
 
-    const edgeAccumulator: Record<string, { source: string; target: string; vessel: string; tons: number; freq: number; isBallast: boolean }> = {};
+    const edgeAccumulator: Record<string, { source: string; target: string; vessel: string; client: string; tons: number; freq: number; isBallast: boolean }> = {};
 
     // Helper V2 que soporta piernas físicas de posicionamiento para la ruta compleja de Nexa
     const getRouteLegs = (client: string, routeKey: string): Array<{ origin: string; dest: string; isBallast?: boolean }> => {
@@ -164,6 +168,7 @@ const computeSpaghettiDataForMonth = (
                                             source: leg.origin,
                                             target: leg.dest,
                                             vessel: vessel,
+                                            client: client,
                                             tons: 0,
                                             freq: 0,
                                             isBallast: leg.isBallast || false
@@ -212,7 +217,7 @@ const computeSpaghettiDataForMonth = (
                                                 show: true,
                                                 period: period,
                                                 trailLength: 0.65,
-                                                color: getVesselColor(vessel),
+                                                color: getClientColor(client),
                                                 symbol: 'arrow',
                                                 symbolSize: 4
                                             },
@@ -268,21 +273,21 @@ const computeSpaghettiDataForMonth = (
                 isBallast: edge.isBallast,
                 lineStyle: {
                     // Estilo de línea de ECharts: discontinua (dashed) para lastres, sólida para cargados
-                    width: targetMonths.length === 1 ? 0 : (edge.isBallast ? 1.5 : Math.max(0.5, Math.min(2, edge.tons / 50000))),
-                    color: targetMonths.length === 1 ? 'transparent' : getVesselColor(edge.vessel),
-                    type: edge.isBallast ? 'dashed' : 'solid',
-                    curveness: curveness,
-                    opacity: edge.isBallast ? 0.6 : 0.8
-                }
-            };
-
-            if (edge.isAggregated && edge.freq > 0 && targetMonths.length > 1) {
-                edgeConfig.label = {
-                    show: true,
-                    formatter: `${Math.round(edge.freq)}`,
-                    backgroundColor: edge.isBallast ? '#64748B' : getVesselColor(edge.vessel),
-                    color: '#fff',
-                    width: 16,
+                                                    width: targetMonths.length === 1 ? 0 : (edge.isBallast ? 1.5 : Math.max(0.5, Math.min(2, edge.tons / 50000))),
+                                                    color: targetMonths.length === 1 ? 'transparent' : getClientColor(edge.client),
+                                                    type: edge.isBallast ? 'dashed' : 'solid',
+                                                    curveness: curveness,
+                                                    opacity: edge.isBallast ? 0.6 : 0.8
+                                                }
+                                            };
+                                
+                                            if (edge.isAggregated && edge.freq > 0 && targetMonths.length > 1) {
+                                                edgeConfig.label = {
+                                                    show: true,
+                                                    formatter: `${Math.round(edge.freq)}`,
+                                                    backgroundColor: edge.isBallast ? '#64748B' : getClientColor(edge.client),
+                                                    color: '#fff',
+                                                    width: 16,
                     height: 16,
                     lineHeight: 16,
                     align: 'center',
@@ -487,6 +492,7 @@ interface SpaghettiMapProps {
     months: string[];
     selectedMonths: string[];
     ports: any[];
+    clients?: any[];
     isDarkMode?: boolean;
     showPies?: boolean;
     playSpeed?: number;
@@ -498,6 +504,7 @@ export const SpaghettiMap_V2: React.FC<SpaghettiMapProps> = ({
     months,
     selectedMonths,
     ports,
+    clients = [],
     isDarkMode = false,
     showPies = true,
     playSpeed = 2,
@@ -531,7 +538,8 @@ export const SpaghettiMap_V2: React.FC<SpaghettiMapProps> = ({
             months, 
             ports, 
             showPies, 
-            playSpeed
+            playSpeed,
+            clients
         );
 
         return {
@@ -681,7 +689,7 @@ export const SpaghettiMap_V2: React.FC<SpaghettiMapProps> = ({
                 ...missileSeries
             ]
         };
-    }, [mapLoaded, data, months, selectedMonths, ports, isDarkMode, showPies, playSpeed]);
+    }, [mapLoaded, data, months, selectedMonths, ports, isDarkMode, showPies, playSpeed, clients]);
 
     const onEvents = useMemo(() => {
         return {

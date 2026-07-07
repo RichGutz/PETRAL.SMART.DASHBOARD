@@ -189,3 +189,4 @@
 2026-07-07 10:42:00 - Eliminados los halos estáticos gruesos de color rojo y verde (haloSeries) en SpaghettiMap_V2.
 2026-07-07 10:52:00 - Aumentada la curvatura de la ruta compleja de Nexa a 0.65, -0.80 y 0.55 en SpaghettiMap_V2.
 2026-07-07 10:57:00 - Aumentada la curvatura de la pierna compleja MEJILLONES-ILO a 0.75 y reducida la simple ILO-MEJILLONES a -0.40 para evitar traslapes.
+2026-07-07 11:02:00 - Implementada la automatización de colores en SpaghettiMap_V2 utilizando el color_hex dinámico de los clientes cargados desde Supabase.
