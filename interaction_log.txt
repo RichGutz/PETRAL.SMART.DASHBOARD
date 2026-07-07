@@ -198,3 +198,4 @@
 2026-07-07 17:55:00 - Corregido bug del Multicotizador donde la distancia por defecto al formular un tramo era siempre 100 NM.
 2026-07-07 18:19:00 - Solucionado bug en la UI de Auditoría Ledger limpiando las rutas de prueba de SPCC en la tabla routes_master.
 2026-07-07 18:26:00 - Añadido selector de Costo Puerto (STATIC / MATRIX) arriba del botón de impresión en las pantallas de auditoría.
+2026-07-07 18:43:00 - Corregida discrepancia de P/L entre Auditoría Ledger y Multicotizador alineando autocompletado de posicionamiento y tasas de contratos.

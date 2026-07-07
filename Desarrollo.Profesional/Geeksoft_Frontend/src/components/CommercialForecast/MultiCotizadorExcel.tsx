@@ -517,24 +517,24 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
                 let overheadOrig = pOrig && pOrig.action !== 'NONE' && pOrig.overhead !== '' 
                     ? Number(pOrig.overhead) 
-                    : Number(getAutoPortOverhead(tr.origin_port_id, pOrig.action)) || 6.0;
+                    : undefined;
                 
                 let overheadDest = pDest && pDest.action !== 'NONE' && pDest.overhead !== '' 
                     ? Number(pDest.overhead) 
-                    : Number(getAutoPortOverhead(tr.destination_port_id, pDest.action)) || 6.0;
+                    : undefined;
 
-                let posCarga = 0;
+                let posCarga: number | undefined = undefined;
                 if (pOrig && pOrig.action === 'CARGAR') {
-                    posCarga = pOrig.positioning !== '' ? Number(pOrig.positioning) : (Number(getAutoPortPositioning(tr.origin_port_id, 'CARGAR')) || 0);
+                    posCarga = pOrig.positioning !== '' ? Number(pOrig.positioning) : undefined;
                 } else if (pDest && pDest.action === 'CARGAR') {
-                    posCarga = pDest.positioning !== '' ? Number(pDest.positioning) : (Number(getAutoPortPositioning(tr.destination_port_id, 'CARGAR')) || 0);
+                    posCarga = pDest.positioning !== '' ? Number(pDest.positioning) : undefined;
                 }
 
-                let posDescarga = 0;
+                let posDescarga: number | undefined = undefined;
                 if (pOrig && pOrig.action === 'DESCARGAR') {
-                    posDescarga = pOrig.positioning !== '' ? Number(pOrig.positioning) : (Number(getAutoPortPositioning(tr.origin_port_id, 'DESCARGAR')) || 0);
+                    posDescarga = pOrig.positioning !== '' ? Number(pOrig.positioning) : undefined;
                 } else if (pDest && pDest.action === 'DESCARGAR') {
-                    posDescarga = pDest.positioning !== '' ? Number(pDest.positioning) : (Number(getAutoPortPositioning(tr.destination_port_id, 'DESCARGAR')) || 0);
+                    posDescarga = pDest.positioning !== '' ? Number(pDest.positioning) : undefined;
                 }
 
                 let overridePortCostOrig = pOrig && pOrig.manual_port_cost !== '' && pOrig.manual_port_cost !== undefined ? Number(pOrig.manual_port_cost) : 0.0;

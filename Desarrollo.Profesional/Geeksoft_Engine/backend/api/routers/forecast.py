@@ -284,6 +284,10 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
             tr_dict["positioning_carga_hrs"] = tr.positioning_carga_hrs if tr.positioning_carga_hrs is not None else float(contract.get("maneuver_carga_hrs") if contract and contract.get("maneuver_carga_hrs") is not None else 0.0)
             tr_dict["positioning_descarga_hrs"] = tr.positioning_descarga_hrs if tr.positioning_descarga_hrs is not None else float(contract.get("maneuver_descarga_hrs") if contract and contract.get("maneuver_descarga_hrs") is not None else 0.0)
             
+            # Inyectar tasas acordadas del contrato (si existen)
+            tr_dict["contract_agreed_load_rate"] = float(contract.get("load_rate") if contract and contract.get("load_rate") is not None else 0.0)
+            tr_dict["contract_agreed_discharge_rate"] = float(contract.get("discharge_rate") if contract and contract.get("discharge_rate") is not None else 0.0)
+
             # Autocompletar limites físicos para Laden
             if tr.type.upper() == "LADEN":
                 tr_dict["max_terminal_load_rate"] = float(orig_port_info.get("max_load_rate", 0))

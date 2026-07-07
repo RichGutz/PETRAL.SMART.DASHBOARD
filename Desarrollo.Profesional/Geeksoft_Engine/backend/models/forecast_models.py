@@ -60,12 +60,12 @@ class MultiCotizadorTramo(BaseModel):
     freight_rate: float = 0.0
     origin_action: Optional[str] = "NONE"
     destination_action: Optional[str] = "NONE"
-    port_overhead_hours_origin: float = 6.0
-    port_overhead_hours_dest: float = 6.0
+    port_overhead_hours_origin: Optional[float] = None
+    port_overhead_hours_dest: Optional[float] = None
     port_delay_hours_loading: float = 0.0
     port_delay_hours_discharging: float = 0.0
-    positioning_carga_hrs: float = 0.0
-    positioning_descarga_hrs: float = 0.0
+    positioning_carga_hrs: Optional[float] = None
+    positioning_descarga_hrs: Optional[float] = None
     weather_factor: float = 0.0
     route_distance: float = 0.0
     agency_costs_origin: float = 0.0
