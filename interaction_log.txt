@@ -183,3 +183,4 @@
 2026-07-07 10:02:00 - Reubicado el badge del escenario activo a la esquina superior derecha dentro del contenedor del gráfico (fuente text-[11px]).
 2026-07-07 10:10:00 - Reubicación definitiva del escenario activo en el Análisis Gráfico a posición top-[-40px], centrando el badge de forma flotante sobre la brecha vertical de la página.
 2026-07-07 10:14:00 - Simplificada la etiqueta de la métrica en los ejes verticales del Análisis Gráfico a solo 'P/L'.
+2026-07-07 10:24:00 - Creado SpaghettiMap_V2 con soporte de piernas de posicionamiento (lastre/dashed) y halos de trayectoria para rutas complejas de Nexa.

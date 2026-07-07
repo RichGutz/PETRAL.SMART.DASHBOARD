@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SpaghettiMap } from '../../components/CommercialForecast/SpaghettiMap';
+import { SpaghettiMap_V2 as SpaghettiMapComponent } from '../../components/CommercialForecast/SpaghettiMap_V2';
 import { SourcesSinksEditor } from '../../components/CommercialForecast/SourcesSinksEditor';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 import type { SourceSink } from '../../components/CommercialForecast/useSpaghettiData';
@@ -290,7 +290,7 @@ export const SpaghettiMap_V2: React.FC = () => {
 
                 {/* COLUMN 2: ECharts Map */}
                 <div className="flex-1 relative overflow-hidden">
-                    <SpaghettiMap 
+                    <SpaghettiMapComponent 
                         data={context.data} 
                         months={months} 
                         selectedMonths={selectedMonths}
@@ -298,7 +298,7 @@ export const SpaghettiMap_V2: React.FC = () => {
                         isDarkMode={false} 
                         showPies={showPies}
                         playSpeed={playSpeed}
-                        onPortClick={(portId) => setSelectedPortId(portId)}
+                        onPortClick={setSelectedPortId}
                     />
                     
                     {/* SourcesSinksEditor Slide-over */}
