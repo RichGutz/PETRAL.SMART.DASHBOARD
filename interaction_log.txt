@@ -195,3 +195,4 @@
 2026-07-07 12:43:00 - Renombrada la tarjeta 4 a 'Comisiones' y colocada debajo de la tarjeta 1 en el Maestro de Contratos.
 2026-07-07 13:02:00 - Añadido soporte de suboperaciones (MAIN, loading_master, other) en el Maestro de Costos Portuarios Estáticos en frontend y backend.
 2026-07-07 15:24:00 - Renombrado el Maestro de Sinks & Sources a Originación / Destino y sus pestañas internas en el frontend.
+2026-07-07 17:55:00 - Corregido bug del Multicotizador donde la distancia por defecto al formular un tramo era siempre 100 NM.

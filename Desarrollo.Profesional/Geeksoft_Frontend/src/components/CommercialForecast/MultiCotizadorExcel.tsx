@@ -113,7 +113,12 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
     // Resolver info de ruta
     const getAutoRouteInfo = (origin: string, destination: string, type: 'LADEN' | 'BALLAST') => {
-        const matched = routes.find(r => r.origin_port_id === origin && r.destination_port_id === destination);
+        if (!origin || !destination) {
+            return { route_distance: '', weather_factor: '' };
+        }
+        const p1 = origin < destination ? origin : destination;
+        const p2 = origin < destination ? destination : origin;
+        const matched = routes.find(r => r.port_a === p1 && r.port_b === p2);
         if (matched) {
             const dist = Number(matched.route_distance) || 0;
             const wf = type === 'LADEN' 
