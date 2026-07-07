@@ -8,12 +8,12 @@ const api = axios.create({
 });
 
 export const ForecastService = {
-    runSimulation: async (payload: any) => {
-        const response = await api.post('/forecast/run', payload);
+    runSimulation: async (payload: any, signal?: AbortSignal) => {
+        const response = await api.post('/forecast/run', payload, { signal });
         return response.data;
     },
-    runSimulationUniversal: async (payload: any) => {
-        const response = await api.post('/forecast/run_universal', payload);
+    runSimulationUniversal: async (payload: any, signal?: AbortSignal) => {
+        const response = await api.post('/forecast/run_universal', payload, { signal });
         return response.data;
     },
 

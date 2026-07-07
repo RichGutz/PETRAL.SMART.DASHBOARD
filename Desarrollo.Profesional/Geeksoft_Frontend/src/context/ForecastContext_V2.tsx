@@ -117,6 +117,8 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     const [excludedDemurrages, setExcludedDemurrages] = useState<string[]>([]);
     const [customDemurrages, setCustomDemurrages] = useState<Record<string, Record<number, string>>>({});
     const [portCostMode, setPortCostMode] = useState<'static' | 'matrix'>('static');
+    // Ref para leer portCostMode en runSimulationWith sin añadirlo como dependencia del useEffect
+    const portCostModeRef = useRef<'static' | 'matrix'>('static');
 
     const dynamicMonths = useMemo(() => {
         if (!startDate || !endDate) return [];
@@ -140,6 +142,11 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
         return months;
     }, [startDate, endDate]);
 
+    // Mantener portCostModeRef sincronizado con el estado sin disparar el useEffect
+    useEffect(() => {
+        portCostModeRef.current = portCostMode;
+    }, [portCostMode]);
+
     // Ref para evitar simulaciones concurrentes (mutex simple)
     const simulatingRef = useRef(false);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -148,6 +155,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
         if (lines.length === 0) {
             setData(null);
             setIsDirty(false);
+            setLoading(false);
             return;
         }
 
@@ -165,24 +173,28 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
                 start_date: sDate,
                 end_date: eDate,
                 projection_lines: lines,
-                port_cost_mode: portCostMode
+                port_cost_mode: portCostModeRef.current
             };
-            const result = await ForecastService.runSimulation(requestPayload);
-            // Solo actualizar si este request no fue cancelado
+            const result = await ForecastService.runSimulation(requestPayload, controller.signal);
+            // Solo actualizar datos si este request no fue cancelado
             if (!controller.signal.aborted) {
                 setData(result);
                 setIsDirty(false);
             }
         } catch (error: any) {
-            if (controller.signal.aborted) return; // Ignorar errores de requests cancelados
-            console.error("Error fetching simulation:", error);
-            const msg = error?.response?.data?.detail || error?.message || "Error desconocido";
-            alert(`Error al correr simulación: ${msg}`);
-            setData(null);
-        } finally {
-            if (!controller.signal.aborted) {
-                setLoading(false);
+            // Si fue abortado intencionalmente, no hacer nada (otro request está corriendo)
+            if (controller.signal.aborted) {
+                // NO retornar aquí — dejar que finally limpie el estado
+            } else {
+                console.error("Error fetching simulation:", error);
+                const msg = error?.response?.data?.detail || error?.message || "Error desconocido";
+                alert(`Error al correr simulación: ${msg}`);
+                setData(null);
             }
+        } finally {
+            // SIEMPRE limpiar el loading — sin condición.
+            // Si otro request está corriendo, él mismo llamará setLoading(true) y luego setLoading(false).
+            setLoading(false);
             simulatingRef.current = false;
         }
     };
@@ -191,11 +203,14 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
         await runSimulationWith(projectionLines, startDate, endDate);
     };
 
+    // NOTA: portCostMode fue eliminado de las dependencias para evitar disparos dobles.
+    // El valor siempre se lee fresco desde portCostModeRef.current dentro de runSimulationWith.
+    // Para forzar recálculo al cambiar portCostMode, usar el botón Recalcular manual.
     useEffect(() => {
         if (projectionLines.length > 0) {
             runSimulationWith(projectionLines, startDate, endDate);
         }
-    }, [projectionLines.length, startDate, endDate, portCostMode]);
+    }, [projectionLines.length, startDate, endDate]);
 
     const handleAddLine = (newLine: any) => {
         setIsDirty(true);
@@ -203,7 +218,9 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             const existingIndex = prev.findIndex(p => 
                 p.month_index === newLine.month_index && 
                 p.vessel_id === newLine.vessel_id &&
-                p.destination_port_id === newLine.destination_port_id
+                p.destination_port_id === newLine.destination_port_id &&
+                p.client_id === newLine.client_id &&
+                p.origin_port_id === newLine.origin_port_id
             );
             if (existingIndex >= 0) {
                 const clone = [...prev];

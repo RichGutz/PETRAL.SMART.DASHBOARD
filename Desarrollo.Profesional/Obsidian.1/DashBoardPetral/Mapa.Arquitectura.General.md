@@ -220,3 +220,66 @@ if (selectedClient === 'SPCC') {
 
 5. **`handleTariffChange` en ForecastContext_V2** aplica `custom_tariff` a **todos los meses** de la misma combinación cliente+ruta+buque con un `.map()`. Esto es correcto y por diseño (el flete es un parámetro de contrato, no mensual).
 
+---
+
+## 🔬 Diagnóstico Profundo — Sesión 2026-07-07 (Ronda 2)
+
+> **Autor del análisis:** Antigravity (Claude Sonnet 4.6 Thinking)
+> **Problema:** Recálculo tardaba "para siempre" a pesar de los fixes de la sesión anterior.
+
+### 🧪 Benchmark HTTP Directo al Backend (Pre-fix)
+
+Test con payload de 1 línea (SPCC / MOQUEGUA / ILO-MATARANI / 13,500 MT):
+
+| Corrida | Worker | Tipo | Tiempo |
+|---|---|---|---|
+| 1ª | Worker 1 | Cache MISS (frío) | **3.931s** |
+| 2ª | Worker 2 | Cache MISS (frío) | **3.014s** |
+| 3ª | Worker 1 | Cache HIT | **1.120s** |
+| 4ª | Worker 2 | Cache HIT | **0.793s** |
+
+### 🧠 Causa Raíz Real — Dos Capas
+
+**Capa 1: AbortController era un fantasma**
+El `AbortController` creado en `ForecastContext_V2.tsx` creaba una `signal` correctamente, pero esta señal **NUNCA se pasaba a axios**. El `ForecastService.runSimulation(payload)` llamaba a axios sin la `{ signal }` en el config. Resultado: cuando el usuario hacía click en Recalcular dos veces rápido, ambas requests HTTP corrían en paralelo en el backend de forma irrecuperable.
+
+```ts
+// ANTES (roto) — signal creada pero ignorada:
+const result = await ForecastService.runSimulation(requestPayload);
+
+// DESPUÉS (correcto) — signal conectada al HTTP:
+const result = await ForecastService.runSimulation(requestPayload, controller.signal);
+```
+
+**Capa 2: 2 workers = 2 cachés fríos independientes**
+Al usar `--workers 2`, cada proceso Uvicorn mantiene su propio diccionario `_masters_cache` en memoria RAM. Las primeras 2 requests (una por worker) siempre pagaban el cold start de ~3-4s cada una. El warm-up del lifespan hook solo calienta el worker que lo ejecuta.
+
+```
+Worker 1: lifespan warm-up → caché ✅
+Worker 2: primer request → cold start de 3s 🐌
+```
+
+### ✅ Fixes Aplicados — Sesión Ronda 2
+
+| Archivo | Cambio |
+|---|---|
+| `src/services/api.ts` | `runSimulation` y `runSimulationUniversal` aceptan `signal?: AbortSignal` y lo pasan a `axios.post(..., { signal })` |
+| `src/context/ForecastContext_V2.tsx` | Se pasa `controller.signal` a `ForecastService.runSimulation(payload, controller.signal)` — el AbortController ahora cancela el HTTP real |
+| `src/context/ForecastContext_V2.tsx` | Se eliminó `portCostMode` de las dependencias del `useEffect` — se reemplazó con `portCostModeRef` (ref pattern) para evitar disparos dobles |
+| `Push.VPS/deploy_engine_vps.py` | Volver a `--workers 1` — 1 caché único, siempre caliente tras el primer request post-reinicio |
+
+### 🧪 Benchmark HTTP Directo al Backend (Post-fix)
+
+| Corrida | Tipo | Tiempo |
+|---|---|---|
+| 1ª | Cache HIT (worker único, ya caliente) | **0.736s** |
+| 2ª | Cache HIT | **0.713s** |
+| 3ª | Cache HIT | **0.730s** |
+| 4ª | Cache HIT | **0.732s** |
+
+### 🔑 Regla Arquitectónica Crítica (nueva)
+
+> **El AbortController de React SOLO cancela la espera del lado del cliente (la promesa JS). Para que cancele la request HTTP real, la `signal` DEBE pasarse como `{ signal }` en el config de axios/fetch. Sin esto, el backend sigue procesando y las requests se apilan.**
+
+6. **Uvicorn con `--workers 1` + caché en memoria** es la configuración correcta para este sistema. Con múltiples workers, el caché en RAM se fragmenta y cada worker paga su propio cold start. Para escalar horizontalmente en el futuro, se debe migrar el caché a **Redis** (`redis-py` + TTL 30s) en lugar de variables Python en memoria.
+

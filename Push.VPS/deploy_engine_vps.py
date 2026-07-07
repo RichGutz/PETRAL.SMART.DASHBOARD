@@ -77,7 +77,7 @@ After=network.target
 [Service]
 User=root
 WorkingDirectory={APP_DIR}
-ExecStart={APP_DIR}/venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8000
+ExecStart={APP_DIR}/venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8000 --workers 1
 Restart=always
 
 [Install]

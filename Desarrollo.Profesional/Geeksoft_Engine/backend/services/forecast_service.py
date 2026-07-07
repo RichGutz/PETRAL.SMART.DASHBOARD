@@ -83,57 +83,56 @@ def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: 
                 
         return costs
 
-    # 2. Fallback: Buscar costo plano consolidado en agency_matrix
+    # 2. Fallback: Buscar costo plano consolidado en agency_matrix (port_cost_static)
+    #    Suma TODOS los sub_operation_types (MAIN, loading_master, etc.)
     def get_flat_cost_from_agency_matrix():
-        # A. client_id + port_id + operation_type + vessel_id
-        flat = [
-            a for a in agency_matrix_data
-            if a.get("client_id") == client_id 
-            and a.get("port_id") == port_id 
-            and a.get("operation_type") == operation_type 
-            and a.get("vessel_id") == vessel_id
-        ]
-        # B. client_id + port_id + operation_type + 'DEFAULT'
-        if not flat:
-            flat = [
+        def find_rows(c_id, v_id):
+            return [
                 a for a in agency_matrix_data
-                if a.get("client_id") == client_id 
-                and a.get("port_id") == port_id 
-                and a.get("operation_type") == operation_type 
-                and a.get("vessel_id", "DEFAULT") == "DEFAULT"
+                if a.get("client_id") == c_id
+                and a.get("port_id") == port_id
+                and a.get("operation_type") == operation_type
+                and a.get("vessel_id") == v_id
             ]
-        # C. 'DEFAULT' + port_id + operation_type + 'DEFAULT'
-        if not flat:
-            flat = [
-                a for a in agency_matrix_data
-                if a.get("client_id") == "DEFAULT" 
-                and a.get("port_id") == port_id 
-                and a.get("operation_type") == operation_type 
-                and a.get("vessel_id", "DEFAULT") == "DEFAULT"
-            ]
-        if flat:
-            cost_val = float(flat[0].get("cost", 0.0))
-            lm_val = float(flat[0].get("loading_master_cost") or 0.0)
-            if lm_val == 0.0 and port_id == "MEJILLONES" and operation_type == "DESCARGA":
-                lm_val = 2500.0
-            return cost_val, lm_val
-        return None
+
+        # Prioridad A: client_id + vessel_id especifico
+        rows = find_rows(client_id, vessel_id)
+        # Prioridad B: client_id + DEFAULT
+        if not rows:
+            rows = find_rows(client_id, "DEFAULT")
+        # Prioridad C: DEFAULT + DEFAULT
+        if not rows:
+            rows = find_rows("DEFAULT", "DEFAULT")
+
+        if not rows:
+            return None
+
+        # Sumar TODOS los sub_operation_types encontrados
+        breakdown = {}
+        for row in rows:
+            sub_type = row.get("sub_operation_type") or "MAIN"
+            cost_val = float(row.get("cost", 0.0))
+            if sub_type in breakdown:
+                breakdown[sub_type] += cost_val
+            else:
+                breakdown[sub_type] = cost_val
+
+        total = sum(breakdown.values())
+        return total, breakdown
+
 
     # 0. Si el modo es static, ir directo al costo plano consolidado
     if port_cost_mode == "static":
         flat_res = get_flat_cost_from_agency_matrix()
         if flat_res is not None:
-            flat_val, lm_val = flat_res
-            breakdown = {"agency_fee": flat_val}
-            if lm_val > 0:
-                breakdown["loading_master"] = lm_val
+            total_val, breakdown = flat_res
             return {
-                "total_cost": round(flat_val + lm_val, 2),
+                "total_cost": round(total_val, 2),
                 "breakdown": breakdown
             }
         return {
-            "total_cost": 9999.0,
-            "breakdown": {"agency_fee": 9999.0}
+            "total_cost": 0.0,
+            "breakdown": {"agency_fee": 0.0}
         }
 
     # 3. Si es Mejillones, resolver las tres terminales
@@ -152,16 +151,14 @@ def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: 
             if not breakdown:
                 flat_res = get_flat_cost_from_agency_matrix()
                 if flat_res is not None:
-                    flat_val, lm_val = flat_res
-                    breakdown = {"agency_fee": flat_val}
-                    if lm_val > 0:
-                        breakdown["loading_master"] = lm_val
+                    _, breakdown = flat_res
             
             # Asegurar que Mejillones conserve el costo de Loading Master si no está desglosado en la matriz
             if breakdown and "loading_master" not in breakdown:
                 flat_res = get_flat_cost_from_agency_matrix()
                 if flat_res is not None:
-                    _, lm_val = flat_res
+                    _, flat_breakdown = flat_res
+                    lm_val = flat_breakdown.get("loading_master", 0.0)
                     if lm_val > 0:
                         breakdown["loading_master"] = lm_val
             
@@ -182,8 +179,8 @@ def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: 
         total_cost = sum(avg_breakdown.values())
         # Si todo falló, retornar default
         if total_cost == 0:
-            total_cost = 9999.0
-            avg_breakdown = {"agency_fee": 9999.0}
+            # Sin datos en matriz: retornar 0 como señal de dato faltante
+            avg_breakdown = {}
             
         return {
             "total_cost": round(total_cost, 2),
@@ -209,10 +206,7 @@ def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: 
         if not breakdown:
             flat_res = get_flat_cost_from_agency_matrix()
             if flat_res is not None:
-                flat_val, lm_val = flat_res
-                breakdown = {"agency_fee": flat_val}
-                if lm_val > 0:
-                    breakdown["loading_master"] = lm_val
+                _, breakdown = flat_res
                 
         # Si sigue sin haber datos, usar los defaults de port_costs_matrix
         if not breakdown:
@@ -237,9 +231,9 @@ def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: 
                 concept = item["concept_id"]
                 breakdown[concept] = float(item.get("cost", 0.0))
                 
-        # Si todo falló por completo, usar placeholder absoluto de 9999
+        # Si todo falló por completo, retornar 0 como señal de dato faltante en maestros
         if not breakdown:
-            breakdown = {"agency_fee": 9999.0}
+            breakdown = {"agency_fee": 0.0}
             
         total_cost = sum(breakdown.values())
         return {
