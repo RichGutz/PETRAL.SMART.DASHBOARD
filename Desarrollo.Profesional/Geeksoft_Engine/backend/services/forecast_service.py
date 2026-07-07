@@ -339,10 +339,20 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         p_mdo = line.forecast_bunker_price_mdo if line.forecast_bunker_price_mdo else bunker_db.get("MDO", 800)
         
         is_spot_route = (line.origin_port_id == "SPOT")
+        spot_route = None
+        spot_id = None
         
         if is_spot_route:
             spot_id = line.destination_port_id
             spot_route = next((s for s in routes_master_data if s.get("route_id") == spot_id or s.get("name") == spot_id), {})
+        else:
+            lookup_key = f"{client.upper()}.{line.origin_port_id.upper()}.{line.destination_port_id.upper()}.{line.origin_port_id.upper()}.{vessel.upper()}"
+            spot_route = next((s for s in routes_master_data if s.get("name", "").upper() == lookup_key), None)
+            if spot_route:
+                is_spot_route = True
+                spot_id = spot_route.get("route_id") or spot_route.get("name")
+        
+        if is_spot_route and spot_route:
             legs_data = spot_route.get("legs_data", {})
             
             import copy
@@ -519,7 +529,10 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 "freight_rate": freight_rate  # yield ponderado (multi) o custom_tariff (tradicional)
             }
             
-            route_key = f"SPOT-{spot_id}"
+            if line.origin_port_id == "SPOT":
+                route_key = f"SPOT-{spot_id}"
+            else:
+                route_key = f"{line.origin_port_id}-{line.destination_port_id}"
             
         else:
             # Calcular costos detallados usando el nuevo helper
@@ -729,10 +742,20 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
         p_mdo = line.forecast_bunker_price_mdo if line.forecast_bunker_price_mdo else bunker_db.get("MDO", 800)
         
         is_spot_route = (line.origin_port_id == "SPOT")
+        spot_route = None
+        spot_id = None
         
         if is_spot_route:
             spot_id = line.destination_port_id
             spot_route = next((s for s in routes_master_data if s.get("route_id") == spot_id or s.get("name") == spot_id), {})
+        else:
+            lookup_key = f"{client.upper()}.{line.origin_port_id.upper()}.{line.destination_port_id.upper()}.{line.origin_port_id.upper()}.{vessel.upper()}"
+            spot_route = next((s for s in routes_master_data if s.get("name", "").upper() == lookup_key), None)
+            if spot_route:
+                is_spot_route = True
+                spot_id = spot_route.get("route_id") or spot_route.get("name")
+        
+        if is_spot_route and spot_route:
             legs_data = spot_route.get("legs_data", {})
             
             import copy
@@ -890,7 +913,10 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                 "quantity": total_laden_qty if ("tramos" in legs_data and total_laden_qty > 0) else line.quantity,
                 "freight_rate": freight_rate
             }
-            route_key = f"SPOT-{spot_id}"
+            if line.origin_port_id == "SPOT":
+                route_key = f"SPOT-{spot_id}"
+            else:
+                route_key = f"{line.origin_port_id}-{line.destination_port_id}"
             
         else:
             orig_result = calculate_detailed_port_costs(client, line.origin_port_id, 'CARGA', vessel, port_costs_data, agency_matrix_data, request.port_cost_mode)

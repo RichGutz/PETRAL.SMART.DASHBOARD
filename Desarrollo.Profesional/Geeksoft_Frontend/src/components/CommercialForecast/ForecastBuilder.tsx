@@ -63,10 +63,13 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
     // Identificar si la ruta seleccionada es una ruta multicotizador compleja
     const matchedSpot = useMemo(() => {
-        if (client !== 'NEXA' || !route.startsWith('SPOT-')) return null;
-        const routeName = route.replace('SPOT-', '');
-        return spotRoutes.find(s => s.name === routeName);
-    }, [client, route, spotRoutes]);
+        if (!client || !route || !vessel) return null;
+        const ports = route.split('-');
+        if (ports.length < 2) return null;
+        const routeWithPoints = `${ports[0]}.${ports[1]}.${ports[0]}`; // Siempre es ida y vuelta
+        const longNameKey = `${client.toUpperCase()}.${routeWithPoints.toUpperCase()}.${vessel.toUpperCase()}`;
+        return spotRoutes.find(s => (s.name || "").toUpperCase() === longNameKey);
+    }, [client, route, vessel, spotRoutes]);
 
     const isComplexRoute = useMemo(() => {
         return matchedSpot?.legs_data?.is_multicotizador === true;
@@ -108,7 +111,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
             setQuantity('');
             setCustomTariff('');
         }
-    }, [isComplexRoute, matchedSpot, client, route]);
+    }, [isComplexRoute, matchedSpot, client, route, vessel]);
 
     const formatMonthPill = (yyyymm: string) => {
         const [y, m] = yyyymm.split('-');
@@ -344,13 +347,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                         </div>
                                     </SelectItem>
                                 ))}
-                                {/* Default SPOT fallback */}
-                                {!availableClients.includes('SPOT') && (
-                                    <SelectItem value="SPOT">
-                                        <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#F97316]"></div>SPOT</div>
-                                    </SelectItem>
-                                )}
-                            </SelectContent>
+                             </SelectContent>
                         </Select>
                     </div>
 
@@ -375,35 +372,15 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 <SelectValue placeholder="Ruta" />
                             </SelectTrigger>
                             <SelectContent className="w-auto min-w-[max-content] max-h-[300px] overflow-y-auto">
-                                {client === 'NEXA' ? (
-                                    spotRoutes.length === 0 ? (
-                                        <SelectItem value="" disabled>No hay rutas spot guardadas</SelectItem>
-                                    ) : (
-                                        spotRoutes.map(s => (
-                                            <SelectItem key={s.spot_id} value={`SPOT-${s.name}`}>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-2.5 h-2.5 rounded-full bg-[#14B8A6]"></div>
-                                                    {s.name || s.spot_id}
-                                                    <span className="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{background: s.pais === 'Chile' ? '#d1fae5' : '#dbeafe', color: s.pais === 'Chile' ? '#065f46' : '#1e40af'}}>
-                                                        {s.pais === 'Chile' ? '🇨🇱 Chile' : '🇵🇪 Peru'}
-                                                    </span>
-                                                </div>
-                                            </SelectItem>
-                                        ))
-                                    )
-                                ) : (
-                                    <>
-                                        <SelectItem value="ILO-MATARANI">
-                                            <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#06B6D4]"></div>ILO - MATARANI</div>
-                                        </SelectItem>
-                                        <SelectItem value="ILO-MARCONA">
-                                            <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#A855F7]"></div>ILO - MARCONA</div>
-                                        </SelectItem>
-                                        <SelectItem value="ILO-MEJILLONES">
-                                            <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#D946EF]"></div>ILO - MEJILLONES</div>
-                                        </SelectItem>
-                                    </>
-                                )}
+                                <SelectItem value="ILO-MATARANI">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#06B6D4]"></div>ILO - MATARANI</div>
+                                </SelectItem>
+                                <SelectItem value="ILO-MARCONA">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#A855F7]"></div>ILO - MARCONA</div>
+                                </SelectItem>
+                                <SelectItem value="ILO-MEJILLONES">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#D946EF]"></div>ILO - MEJILLONES</div>
+                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -411,7 +388,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     {/* 5. Buque */}
                     <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">6. Buque</Label>
-                        <Select value={vessel} onValueChange={(val) => setVessel(val || '')} disabled={!route || isComplexRoute}>
+                        <Select value={vessel} onValueChange={(val) => setVessel(val || '')} disabled={!route}>
                             <SelectTrigger className="w-full h-8 bg-white disabled:opacity-80">
                                 <SelectValue placeholder="Buque" />
                             </SelectTrigger>

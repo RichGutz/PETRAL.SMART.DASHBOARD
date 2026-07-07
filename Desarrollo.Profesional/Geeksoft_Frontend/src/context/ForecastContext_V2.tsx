@@ -37,6 +37,7 @@ interface ForecastContextType {
     setDisplayMode: (v: 'usd' | 'pct') => void;
 
     ports: any[];
+    spotRoutes: any[];
     portCostMode: 'static' | 'matrix';
     setPortCostMode: (v: 'static' | 'matrix') => void;
 
@@ -88,17 +89,22 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
 
     const [displayMode, setDisplayMode] = useState<'usd'|'pct'>('usd');
     const [ports, setPorts] = useState<any[]>([]);
+    const [spotRoutes, setSpotRoutes] = useState<any[]>([]);
 
     useEffect(() => {
-        const loadPorts = async () => {
+        const loadInitialData = async () => {
             try {
-                const data = await ForecastService.getPorts();
-                setPorts(data);
+                const [portsData, routesData] = await Promise.all([
+                    ForecastService.getPorts(),
+                    ForecastService.listSpots()
+                ]);
+                setPorts(portsData || []);
+                setSpotRoutes(routesData || []);
             } catch (e) {
-                console.error("Error loading ports:", e);
+                console.error("Error loading initial context data:", e);
             }
         };
-        loadPorts();
+        loadInitialData();
     }, []);
 
     const [demurragePct, setDemurragePct] = useState<string>('');
@@ -338,7 +344,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             dynamicMonths, projectionLines, setProjectionLines, currentForecastId,
             forecastName, setForecastName, userId, setUserId, loadedAuthor,
             showSaveModal, setShowSaveModal, showLoadModal, setShowLoadModal, savedForecasts,
-            displayMode, setDisplayMode, ports, portCostMode, setPortCostMode,
+            displayMode, setDisplayMode, ports, spotRoutes, portCostMode, setPortCostMode,
             demurragePct, setDemurragePct, showDemurrage, setShowDemurrage,
             excludedDemurrages, setExcludedDemurrages, customDemurrages, setCustomDemurrages,
             handleAddLine, handleFrequencyChange, handleTariffChange, handleDeleteNode,

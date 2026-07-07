@@ -38,12 +38,14 @@ interface ForecastGridProps {
     customDemurrages?: Record<string, Record<number, string>>;
     onExcludeDemurrage?: React.Dispatch<React.SetStateAction<string[]>>;
     onCustomDemurrageChange?: React.Dispatch<React.SetStateAction<Record<string, Record<number, string>>>>;
+    spotRoutes?: any[];
 }
 
 export const ForecastGrid: React.FC<ForecastGridProps> = ({ 
     data, months, projectionLines, onFrequencyChange, onTariffChange, onDeleteNode, displayMode, 
     demurragePct = '', showDemurrage = false,
-    excludedDemurrages = [], customDemurrages = {}, onExcludeDemurrage, onCustomDemurrageChange
+    excludedDemurrages = [], customDemurrages = {}, onExcludeDemurrage, onCustomDemurrageChange,
+    spotRoutes = []
 }) => {
     
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
@@ -717,7 +719,14 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                 }}
                                                 className="w-14 p-1 text-center block mx-auto text-xs font-bold border border-slate-200 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white"
                                             />
-                                        ) : row.metric.name === "Flete (USD/MT)" && (row.clientName.startsWith("SPOT") || row.clientName.startsWith("NEXA")) && !row.isClientSubtotal && !row.isGlobalTotal ? (
+                                        ) : row.metric.name === "Flete (USD/MT)" && (() => {
+                                            const ports = row.routeName.split('-');
+                                            if (ports.length < 2) return false;
+                                            const routeWithPoints = `${ports[0]}.${ports[1]}.${ports[0]}`;
+                                            const key = `${row.clientName.toUpperCase()}.${routeWithPoints.toUpperCase()}.${row.vesselName.toUpperCase()}`;
+                                            const isComplexRoute = spotRoutes.some(s => (s.name || "").toUpperCase() === key);
+                                            return row.clientName.startsWith("SPOT") || row.clientName.startsWith("NEXA") || isComplexRoute;
+                                        })() && !row.isClientSubtotal && !row.isGlobalTotal ? (
                                             <input 
                                                 type="number"
                                                 min="0"

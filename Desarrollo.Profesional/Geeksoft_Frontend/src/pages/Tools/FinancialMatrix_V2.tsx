@@ -21,6 +21,7 @@ export const FinancialMatrix_V2: React.FC = () => {
                 customDemurrages={context.customDemurrages} 
                 onExcludeDemurrage={context.setExcludedDemurrages} 
                 onCustomDemurrageChange={context.setCustomDemurrages} 
+                spotRoutes={context.spotRoutes}
             />
         </section>
     );
