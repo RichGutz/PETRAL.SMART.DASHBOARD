@@ -82,3 +82,141 @@ Con la arquitectura de base de datos consolidada, toda ruta en el sistema se gen
 3. Se detalló el flujo de inyección dinámica para barcos nominados, búnker dinámico y modo de costos portuarios (`static` vs `matrix`).
 
 
+---
+
+## 🔬 Diagnóstico e Investigación Profunda — Sesión 2026-07-07
+
+> **Autor del análisis:** Antigravity (Gemini 3.5 Flash / Claude Sonnet 4.6)
+> **Commits generados:** `94de99a`
+
+Esta sección documenta los hallazgos de la investigación técnica profunda realizada durante la sesión de debugging del sistema de recálculo de la Matriz Financiera.
+
+---
+
+### ⚡ Problema 1: Edición del Flete bloqueada (rebote inmediato)
+
+**Síntoma:** Al escribir un nuevo valor en la celda "Flete (USD/MT)" dentro del desplegable de Viajes, el valor rebotaba de inmediato al valor anterior sin poder editarse.
+
+**Causa raíz:** Las celdas de la sub-fila "Flete (USD/MT)" leían su valor directamente del objeto `data` retornado por la última simulación del backend (`flete_unit`). Como el recálculo automático fue desactivado (para evitar loops), el backend no se llamaba al tipear. En el siguiente render de React, el componente sobreescribía lo escrito con el valor viejo de la simulación.
+
+**Archivos afectados:**
+- `Geeksoft_Frontend/src/components/CommercialForecast/ForecastGrid.tsx`
+
+**Fix aplicado:** La celda "Flete (USD/MT)" ahora lee prioritariamente `line.custom_tariff` desde el estado React `projectionLines` (en caliente) en lugar del objeto `data` del servidor. Si `custom_tariff` está definido, se usa; si no, cae al valor del servidor.
+
+---
+
+### 🏎️ Problema 2: Recálculo tardaba 2+ minutos
+
+**Síntoma:** Al presionar "Recalcular", el spinner se quedaba activo durante 1-2 minutos antes de responder.
+
+**Investigación realizada:**
+- Test de velocidad HTTP directo al backend: `3.49s` primera llamada
+- Conteo de filas en Supabase: 9 tablas, **191 filas** en `port_costs_matrix`
+- Cada llamada a `run_forecast_simulation` y `run_forecast_simulation_universal` hacía **9 round-trips sincrónicos a Supabase** antes de hacer cualquier cálculo
+
+**Arquitectura del cuello de botella:**
+
+```
+Usuario → Recalcular → POST /forecast/run
+  → safe_fetch(supabase, "vessels")           ← round-trip 1
+  → safe_fetch(supabase, "routes")            ← round-trip 2
+  → safe_fetch(supabase, "routes_master")     ← round-trip 3
+  → safe_fetch(supabase, "bunker_prices")     ← round-trip 4
+  → safe_fetch(supabase, "ports")             ← round-trip 5
+  → safe_fetch(supabase, "contracts")         ← round-trip 6
+  → safe_fetch(supabase, "contract_tariffs")  ← round-trip 7
+  → safe_fetch(supabase, "port_costs_matrix") ← round-trip 8 (191 filas)
+  → safe_fetch(supabase, "port_cost_static")  ← round-trip 9
+  → [calcula P&L] → responde
+```
+
+**Fix aplicado — Cache en Memoria con TTL 30s:**
+Se creó `get_cached_masters()` en `forecast_service.py` que almacena las 9 tablas en un diccionario Python en memoria del proceso Uvicorn. Las tablas se re-fetchen automáticamente solo si han pasado más de 30 segundos desde la última carga.
+
+**Resultado de velocidad medido:**
+
+| Corrida | Tipo | Tiempo |
+|---|---|---|
+| 1ª | Cache MISS (primera vez) | 2.6s |
+| 2ª | Cache HIT | 0.0001s |
+| 3ª | Tras limpiar caché | 1.18s |
+
+**Warm-up al arrancar:** Se agregó un `lifespan` hook en `backend/main.py` que precalienta el caché cuando Uvicorn arranca, eliminando el cold start.
+
+---
+
+### 🔁 Problema 3: "Cuelgue" al Recalcular tras editar Flete
+
+**Síntoma:** Después de editar el flete, al hacer clic en "Recalcular" el spinner se quedaba activo por mucho tiempo.
+
+**Causa — dos capas encadenadas:**
+
+**Capa 1: React StrictMode (modo desarrollo)** ejecuta cada `useEffect` dos veces intencionalmente. Al montar el componente se lanzaban **2 requests simultáneas** al backend.
+
+**Capa 2: Uvicorn single-worker en `--reload`** atiende las requests en cola secuencialmente:
+- Request 1: se procesa (3.5s)
+- Request 2: espera en cola → se procesa (3.5s más)
+- Total percibido por el usuario: **7 segundos de "cuelgue"**
+
+**Fix aplicado:** `AbortController` en `ForecastContext_V2.tsx`. Si se lanza una nueva simulación antes de que termine la anterior, la primera se cancela inmediatamente:
+
+```tsx
+// Cancelar cualquier request anterior en vuelo
+if (abortControllerRef.current) {
+    abortControllerRef.current.abort();
+}
+const controller = new AbortController();
+abortControllerRef.current = controller;
+
+// Solo actualizar estado si este request no fue cancelado
+if (!controller.signal.aborted) {
+    setData(result);
+    setIsDirty(false);
+}
+```
+
+---
+
+### 🗺️ Rutas Fantasma de SPCC — Fix confirmado
+
+**Síntoma:** Al seleccionar SPCC aparecían rutas cruzadas e invertidas (ILO-MATARANI y MATARANI-ILO mezcladas).
+
+**Causa:** El `useMemo` de `clientRoutes` en `ForecastBuilder_V2.tsx` recorría `spotRoutes` de la base de datos y `routes_master` contenía combinaciones bidireccionales que duplicaban las rutas.
+
+**Fix:** Early return con las 3 rutas fijas oficiales de SPCC:
+```tsx
+if (selectedClient === 'SPCC') {
+    return ['ILO-MATARANI', 'ILO-MARCONA', 'ILO-MEJILLONES'];
+}
+```
+
+---
+
+### 📐 Tabla de Archivos Modificados — Sesión 2026-07-07
+
+| Archivo | Cambio | Impacto |
+|---|---|---|
+| `backend/main.py` | Warm-up de caché al startup (lifespan hook) | Primera request instantánea tras reiniciar |
+| `backend/services/forecast_service.py` | Cache TTL 30s para las 9 tablas maestras | Recálculo ~3.5s → <0.5s en cache hit |
+| `src/context/ForecastContext_V2.tsx` | AbortController + useRef mutex | Elimina "cuelgue" por requests en cola |
+| `src/components/CommercialForecast/ForecastGrid.tsx` | Flete lee desde `projectionLines.custom_tariff` | Edición de flete sin rebote |
+| `src/components/CommercialForecast/ForecastBuilder_V2.tsx` | Early return rutas SPCC | Elimina rutas fantasma |
+| `src/components/CommercialForecast/ForecastBuilder.tsx` | Early return rutas SPCC | Consistencia V1/V2 |
+
+---
+
+### 🧠 Patrones Arquitectónicos Críticos Descubiertos
+
+1. **Dos versiones del motor de UI corren en paralelo:**
+   - `CommercialForecast.tsx` (legacy, `/dashboard`) → `useEffect` depende de `projectionLines` **completo** → reactivo a cualquier cambio de celda → **NO usar en producción**
+   - `ForecastContext_V2.tsx` (App V2 activa) → `useEffect` depende de `projectionLines.length` → solo reactivo a agregar/eliminar filas
+
+2. **La App activa en producción es `App_V2.tsx`** — montada desde `main.tsx`. El archivo `App.tsx` es legacy y **NO se usa** en producción.
+
+3. **El endpoint `/forecast/run`** usa `run_forecast_simulation` (rutas tradicionales + multicotizador vía `routes_master`). El endpoint `/forecast/run_universal` usa `run_forecast_simulation_universal`. Ambos comparten el mismo caché.
+
+4. **La tabla `port_costs_matrix` con 191 filas** es el principal cuello de botella de `calculate_detailed_port_costs`. Cada lookup es O(n) sobre 191 filas. El caché elimina el round-trip a Supabase. Si el volumen crece, se debería pre-indexar con un diccionario `{(client_id, port_id, operation_type): [rows]}` construido en memoria al cargar el caché.
+
+5. **`handleTariffChange` en ForecastContext_V2** aplica `custom_tariff` a **todos los meses** de la misma combinación cliente+ruta+buque con un `.map()`. Esto es correcto y por diseño (el flete es un parámetro de contrato, no mensual).
+
