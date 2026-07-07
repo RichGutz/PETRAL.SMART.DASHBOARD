@@ -124,13 +124,16 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
     useEffect(() => {
         import('../../services/api').then(({ ForecastService }) => {
-            ForecastService.getClients().then(clients => {
-                const list = clients.includes('NEXA') ? clients : [...clients, 'NEXA'];
-                setAvailableClients(list);
-            }).catch(err => console.error("Failed to fetch clients:", err));
-
-            ForecastService.listSpots().then(setSpotRoutes)
-                .catch(err => console.error("Failed to fetch spot routes:", err));
+            ForecastService.listSpots().then(spotRoutes => {
+                setSpotRoutes(spotRoutes || []);
+                const filtered = (spotRoutes || []).filter((s: any) => s.legs_data?.is_multicotizador === true);
+                const clientIds = filtered.map((s: any) => {
+                    const parts = (s.name || "").split('.');
+                    return parts.length > 1 ? parts[0].toUpperCase() : "";
+                }).filter(Boolean);
+                const uniqueClients = Array.from(new Set(clientIds));
+                setAvailableClients(uniqueClients);
+            }).catch(err => console.error("Failed to fetch spot routes and clients:", err));
         });
     }, []);
 

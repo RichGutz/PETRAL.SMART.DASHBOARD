@@ -801,11 +801,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         
         setIsExporting(false);
         try {
-            const clients = await ForecastService.getClients();
-            const list = clients.includes('NEXA') ? clients : [...clients, 'NEXA'];
-            setExportClientsList(list);
+            setExportClientsList(clients);
             
-            const initialClient = selectedClient || list[0] || '';
+            const initialClient = selectedClient || clients[0] || '';
             setExportClient(initialClient);
             
             const initialMonth = context.dynamicMonths[0] || '';
