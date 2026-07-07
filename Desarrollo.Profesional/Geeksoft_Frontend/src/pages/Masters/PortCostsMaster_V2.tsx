@@ -261,7 +261,12 @@ export const PortCostsMaster_V2: React.FC = () => {
                                 {activePortId && activeClientId ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                         {vessels.map(v => {
-                                            const vData = costsState[activePortId]?.[activeClientId]?.[v.vessel_id] || { CARGA: 0, DESCARGA: 0, updated_at: null, updated_by: null };
+                                            const vData = costsState[activePortId]?.[activeClientId]?.[v.vessel_id] || {
+                                                CARGA: { MAIN: 0, loading_master: 0, other: 0 },
+                                                DESCARGA: { MAIN: 0, loading_master: 0, other: 0 },
+                                                updated_at: null,
+                                                updated_by: null
+                                            };
                                             
                                             // Formatear fecha
                                             let formattedDate = "Sin modificaciones";
