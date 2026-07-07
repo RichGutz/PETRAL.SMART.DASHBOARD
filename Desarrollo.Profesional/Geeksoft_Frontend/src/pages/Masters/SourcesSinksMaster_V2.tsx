@@ -295,7 +295,7 @@ export const SourcesSinksMaster_V2: React.FC = () => {
 
     return (
         <MasterTemplate 
-            title="Maestro de Sinks & Sources" 
+            title="Maestro de Originación / Destino" 
             subtitle="Planificación del horizonte de capacidad por Puerto, Empresa y Año"
             activeTab="sources-sinks"
             onBackToDashboard={() => navigate('/dashboard')}
@@ -303,7 +303,7 @@ export const SourcesSinksMaster_V2: React.FC = () => {
             {loading ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-12 text-slate-400 font-semibold animate-pulse gap-2">
                     <div className="animate-spin h-6 w-6 border-2 border-slate-300 border-t-blue-600 rounded-full"></div>
-                    <span>Cargando matriz multianual de Sinks & Sources...</span>
+                    <span>Cargando matriz multianual de Originación / Destino...</span>
                 </div>
             ) : (
                 <div className="flex flex-col gap-6 w-full pb-8">
@@ -313,7 +313,7 @@ export const SourcesSinksMaster_V2: React.FC = () => {
                         <div className="flex flex-col">
                             <h3 className="font-black text-slate-800 text-base">Planilla de Capacidades</h3>
                             <span className="text-xs text-slate-500 font-medium">
-                                Puerto: <b className="text-slate-700">{activePortId}</b> | Tipo: <b className="text-slate-700">{activeType}</b>
+                                Puerto: <b className="text-slate-700">{activePortId}</b> | Tipo: <b className="text-slate-700">{activeType === 'SOURCE' ? 'Originación' : 'Destino'}</b>
                             </span>
                         </div>
                         
@@ -360,7 +360,7 @@ export const SourcesSinksMaster_V2: React.FC = () => {
                             ))}
                         </div>
 
-                        {/* NIVEL 2: SOURCE / SINK */}
+                        {/* NIVEL 2: ORIGINACIÓN / DESTINO */}
                         <div className="flex border-b border-slate-100 bg-white px-4 scrollbar-none gap-2 py-2">
                             <button
                                 onClick={() => setActiveType('SOURCE')}
@@ -371,7 +371,7 @@ export const SourcesSinksMaster_V2: React.FC = () => {
                                 }`}
                             >
                                 <Compass size={14} />
-                                Fuente (Source)
+                                Originación
                             </button>
                             <button
                                 onClick={() => setActiveType('SINK')}
@@ -382,7 +382,7 @@ export const SourcesSinksMaster_V2: React.FC = () => {
                                 }`}
                             >
                                 <Layers size={14} />
-                                Sumidero (Sink)
+                                Destino
                             </button>
                         </div>
 
@@ -417,7 +417,7 @@ export const SourcesSinksMaster_V2: React.FC = () => {
                                     {tableRows.length === 0 ? (
                                         <tr>
                                             <td colSpan={3 + years.length + 1} className="px-4 py-12 text-center text-slate-400 font-semibold">
-                                                No hay registros de {activeType === 'SOURCE' ? 'fuentes' : 'sumideros'} para {activePortId}. Haz clic en "Añadir Empresa" para comenzar.
+                                                No hay registros de {activeType === 'SOURCE' ? 'originación' : 'destino'} para {activePortId}. Haz clic en "Añadir Empresa" para comenzar.
                                             </td>
                                         </tr>
                                     ) : (
