@@ -587,7 +587,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
     const metricOptions = [
         { value: 'none', label: 'Ninguno', icon: '🚫', desc: 'No graficar' },
-        { value: 'pl_vs_required', label: 'P/L (Net Profit vs TCE Req)', icon: '⚖️', desc: 'USD / Resultado neto real vs requerido' },
+        { value: 'pl_vs_required', label: 'P/L', icon: '⚖️', desc: 'USD / Resultado neto real vs requerido' },
         { value: 'voyage_result', label: 'Voyage Result', icon: '💰', desc: 'USD / Resultado Viaje' },
         { value: 'net_income', label: 'Gross Revenue', icon: '💸', desc: 'USD / Flete Bruto' },
         { value: 'demurrage', label: 'Demurrage', icon: '⏳', desc: 'USD / Estadía' },
