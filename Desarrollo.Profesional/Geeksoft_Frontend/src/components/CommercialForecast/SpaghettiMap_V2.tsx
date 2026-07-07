@@ -28,8 +28,8 @@ const getBaseCurveness = (origin: string, dest: string): number => {
     if (pair === 'CALLAO-MEJILLONES') return -0.80; // Norte a Sur (negativo curva al Oeste/océano)
     if (pair === 'MEJILLONES-CALLAO') return 0.80;  // Sur a Norte (positivo curva al Oeste/océano)
 
-    if (pair === 'MEJILLONES-ILO') return 0.55;  // Sur a Norte (positivo curva al Oeste/océano)
-    if (pair === 'ILO-MEJILLONES') return -0.55; // Norte a Sur (negativo curva al Oeste/océano)
+    if (pair === 'MEJILLONES-ILO') return 0.75;  // Mayor curvatura para el retorno complejo
+    if (pair === 'ILO-MEJILLONES') return -0.40; // Menor curvatura para la ruta simple
 
     // Otras rutas
     if (pair === 'CALLAO-MATARANI') return -0.28;
