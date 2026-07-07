@@ -178,3 +178,4 @@
 2026-07-07 08:58:00 - Limpieza en base de datos port_cost_static: copiado SPCC a NEXA, removido DEFAULT, configurado CALLAO CARGA en $31,327.99 y reemplazado fallbacks 9999 a 0.
 2026-07-07 09:05:00 - Alteración de tabla port_cost_static para incorporar sub_operation_type en la clave primaria, agregando costo de Loading Master ($2,500) para Mejillones Descarga. Modificación del motor del backend para consolidar la suma acumulada de las suboperaciones.
 2026-07-07 09:28:00 - Corregida colisión de carga de clientes NEXA y SPCC concurrentes en Matriz Financiera.
+2026-07-07 09:40:00 - Modificado Análisis Gráfico: Habilitada la agrupación por Tipo OP (Cabotaje/Chile) y selección múltiple con checkboxes en filtros.

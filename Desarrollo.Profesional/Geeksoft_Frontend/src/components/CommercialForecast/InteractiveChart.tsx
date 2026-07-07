@@ -10,11 +10,15 @@ interface InteractiveChartProps {
     customDemurrages?: Record<string, Record<number, string>>;
 }
 
-type GroupBy = 'vessel' | 'route' | 'client' | 'petral';
+type GroupBy = 'vessel' | 'route' | 'client' | 'petral' | 'tradeType';
 type PlotMetric = 'viajes' | 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'total_cargo' | 'demurrage' | 'gross_plus_dem' | 'yield' | 'yield_flete' | 'total_duration' | 'none';
 
 const getHexColor = (name: string, type: GroupBy) => {
     if (type === 'petral') return '#0089CF'; // Petral Blue (RGB 0-137-207)
+    if (type === 'tradeType') {
+        if (name === 'Chile') return '#D946EF'; // Magenta
+        return '#06B6D4'; // Cabotaje / Perú
+    }
     if (type === 'client') {
         if (name.includes('SPCC')) return '#0369A1';
         if (name.includes('SPOT')) return '#F97316';
@@ -49,7 +53,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     const [filterClient, setFilterClient] = useState<string>('ALL');
     const [filterRoute, setFilterRoute] = useState<string>('ALL');
     const [filterVessel, setFilterVessel] = useState<string>('ALL');
-    const [filterTradeType, setFilterTradeType] = useState<string>('ALL');
+    const [filterTradeType, setFilterTradeType] = useState<string[]>(['Cabotaje', 'Chile']);
     const [isTradeTypeFilterOpen, setIsTradeTypeFilterOpen] = useState(false);
 
     // Primary Axis
@@ -206,7 +210,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             if (filterClient !== 'ALL' && client !== filterClient) return;
             Object.entries(routes).forEach(([route, vessels]: any) => {
                 if (filterRoute !== 'ALL' && route !== filterRoute) return;
-                if (filterTradeType !== 'ALL' && getTradeType(route) !== filterTradeType) return;
+                if (!filterTradeType.includes(getTradeType(route))) return;
                 Object.entries(vessels).forEach(([vessel, mData]: any) => {
                     if (filterVessel !== 'ALL' && vessel !== filterVessel) return;
 
@@ -215,6 +219,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                         if (groupBy === 'client') key = client;
                         if (groupBy === 'route') key = route;
                         if (groupBy === 'petral') key = 'PETRAL';
+                        if (groupBy === 'tradeType') key = getTradeType(route);
 
                         if (!seriesMapPri[key]) {
                             seriesMapPri[key] = {};
@@ -736,6 +741,99 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         );
     };
 
+    const renderMultiSelectFilterDropdown = (
+        selectedVals: string[], 
+        onChange: (vals: string[]) => void, 
+        optionsList: string[],
+        isOpen: boolean, 
+        setIsOpen: (open: boolean) => void,
+        title: string
+    ) => {
+        const handleToggle = (opt: string) => {
+            if (selectedVals.includes(opt)) {
+                onChange(selectedVals.filter(v => v !== opt));
+            } else {
+                onChange([...selectedVals, opt]);
+            }
+        };
+
+        const isAllSelected = selectedVals.length === optionsList.length;
+
+        return (
+            <div className="relative flex-1" onClick={(e) => e.stopPropagation()}>
+                <button 
+                    onClick={() => {
+                        setIsClientFilterOpen(false);
+                        setIsRouteFilterOpen(false);
+                        setIsVesselFilterOpen(false);
+                        setIsPriOpen(false);
+                        setIsSecOpen(false);
+                        setIsOpen(!isOpen);
+                    }}
+                    className="w-full flex items-center justify-between gap-1 px-2 py-1.5 text-xs bg-white border border-slate-200 rounded hover:border-slate-350 focus:outline-none transition-all cursor-pointer text-slate-700 font-bold"
+                >
+                    <span className="truncate">
+                        {isAllSelected ? 'Todos' : (selectedVals.length === 0 ? 'Ninguno' : selectedVals.join(', '))}
+                    </span>
+                    <span className="text-[8px] text-slate-400 shrink-0">{isOpen ? '▲' : '▼'}</span>
+                </button>
+
+                {isOpen && (
+                    <div className="absolute left-[130px] top-1/2 -translate-y-1/2 bg-white border border-slate-200 rounded-lg shadow-xl z-50 w-[240px] max-h-[220px] overflow-y-auto p-1.5 flex flex-col gap-0.5 animate-in fade-in slide-in-from-left-2 duration-150">
+                        <div className="px-2 py-1 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
+                            <span>Filtrar {title}</span>
+                            <button onClick={() => setIsOpen(false)} className="text-[10px] text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer">✕</button>
+                        </div>
+                        <button
+                            onClick={() => {
+                                if (isAllSelected) {
+                                    onChange([]);
+                                } else {
+                                    onChange([...optionsList]);
+                                }
+                            }}
+                            className={`text-left text-[11px] p-1.5 rounded transition-all cursor-pointer border flex items-center gap-2 ${
+                                isAllSelected 
+                                    ? 'bg-blue-50 border-blue-200 font-bold text-blue-900' 
+                                    : 'border-transparent hover:bg-slate-50 font-medium text-slate-600'
+                            }`}
+                        >
+                            <input 
+                                type="checkbox" 
+                                checked={isAllSelected} 
+                                readOnly 
+                                className="w-3.5 h-3.5 rounded cursor-pointer"
+                            />
+                            <span>Todos</span>
+                        </button>
+                        {optionsList.map((opt) => {
+                            const isSel = selectedVals.includes(opt);
+                            return (
+                                <button
+                                    key={opt}
+                                    onClick={() => handleToggle(opt)}
+                                    className={`text-left text-[11px] p-1.5 rounded transition-all cursor-pointer border flex items-center gap-2 truncate ${
+                                        isSel 
+                                            ? 'bg-blue-50 border-blue-200 font-bold text-blue-900' 
+                                            : 'border-transparent hover:bg-slate-50 font-medium text-slate-600'
+                                    }`}
+                                >
+                                    <input 
+                                        type="checkbox" 
+                                        checked={isSel} 
+                                        readOnly 
+                                        className="w-3.5 h-3.5 rounded cursor-pointer"
+                                    />
+                                    <span className="truncate">{opt}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     return (
         <div className="w-full bg-white pt-6 pb-6 px-6 shadow-sm rounded-b-lg flex flex-row gap-6 items-stretch min-h-[calc(100vh-220px)]">
             {/* Sidebar de Controles (Left) */}
@@ -780,15 +878,15 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                         <div className="h-px w-full bg-slate-200 my-0.5"></div>
                         <div className="flex items-center gap-1">
                             <button
+                                onClick={() => setGroupBy('tradeType')}
                                 className={`w-[75px] shrink-0 h-8 flex items-center justify-center text-[10px] font-bold rounded-md transition-colors text-center leading-tight ${
-                                    filterTradeType !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'
+                                    groupBy === 'tradeType' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'
                                 }`}
-                                onClick={() => setFilterTradeType('ALL')}
-                                title="Limpiar filtro Tipo Operación"
+                                title="Agrupar por Tipo de Operación"
                             >
                                 Tipo Op.
                             </button>
-                            {renderFilterDropdown(
+                            {renderMultiSelectFilterDropdown(
                                 filterTradeType,
                                 setFilterTradeType,
                                 ['Cabotaje', 'Chile'],
