@@ -197,3 +197,4 @@
 2026-07-07 15:24:00 - Renombrado el Maestro de Sinks & Sources a Originación / Destino y sus pestañas internas en el frontend.
 2026-07-07 17:55:00 - Corregido bug del Multicotizador donde la distancia por defecto al formular un tramo era siempre 100 NM.
 2026-07-07 18:19:00 - Solucionado bug en la UI de Auditoría Ledger limpiando las rutas de prueba de SPCC en la tabla routes_master.
+2026-07-07 18:26:00 - Añadido selector de Costo Puerto (STATIC / MATRIX) arriba del botón de impresión en las pantallas de auditoría.

@@ -58,6 +58,12 @@ const TARIFFS_MAP: Record<string, Array<{min: number, max: number, rate: number}
 };
 
 export const VoyageLedgerUniversal: React.FC<{ portCostMode?: 'static' | 'matrix' }> = ({ portCostMode = 'static' }) => {
+    const [localPortCostMode, setLocalPortCostMode] = useState<'static' | 'matrix'>(portCostMode);
+
+    useEffect(() => {
+        setLocalPortCostMode(portCostMode);
+    }, [portCostMode]);
+
     const [data, setData] = useState<any>(null);
     const [benchmarks, setBenchmarks] = useState<Record<string, any>>({});
     const [loading, setLoading] = useState(true);
@@ -85,7 +91,7 @@ export const VoyageLedgerUniversal: React.FC<{ portCostMode?: 'static' | 'matrix
                 start_date: '2026-07-01',
                 end_date: '2026-07-31',
                 projection_lines: testLines,
-                port_cost_mode: portCostMode
+                port_cost_mode: localPortCostMode
             })
         ]).then(([benchmarksRes, simRes]) => {
             setBenchmarks(benchmarksRes);
@@ -95,7 +101,7 @@ export const VoyageLedgerUniversal: React.FC<{ portCostMode?: 'static' | 'matrix
             console.error(err);
             setLoading(false);
         });
-    }, [portCostMode]);
+    }, [localPortCostMode]);
 
     // Re-simular el escenario activo cuando cambia la cantidad, la ruta o el modo de costo
     useEffect(() => {
@@ -116,14 +122,14 @@ export const VoyageLedgerUniversal: React.FC<{ portCostMode?: 'static' | 'matrix
                 quantity: qty,
                 monthly_frequency: 1
             }],
-            port_cost_mode: portCostMode
+            port_cost_mode: localPortCostMode
         }).then((simRes: any) => {
             const routeK = `${o}-${d}`;
             setLiveResult(simRes.aggregated_data?.['SPCC']?.[routeK]?.[v]?.['2026-07'] || null);
         }).catch((err: any) => {
             console.error('re-sim error', err);
         }).finally(() => setSimulating(false));
-    }, [selectedCase, quantityOverride, portCostMode]);
+    }, [selectedCase, quantityOverride, localPortCostMode]);
 
     if (loading) return <div className="p-8 text-center text-slate-500 font-semibold animate-pulse">Iniciando Motor de Auditoría...</div>;
     if (!data) return <div className="p-8 text-center text-red-500 font-semibold">Error al obtener datos.</div>;
@@ -188,8 +194,8 @@ export const VoyageLedgerUniversal: React.FC<{ portCostMode?: 'static' | 'matrix
             { metric: "6. Income",               key: "6. Income (income)",              gk: scenarioResult.net_income,              ptr: scenarioPetral.net_income,isCurr: true,  db: "contracts · contract_tariffs",     ui: "Contratos / Tarifario" },
             { metric: "7. Comisiones",            key: "7. Comisiones (commissions)",     gk: scenarioResult.total_commissions,       ptr: 0,                        isCurr: true,  db: "contracts",                         ui: "Addr+Broker Comm" },
             { metric: "8. Costo Bunker",          key: "8. Costo Bunker (bunker)",        gk: scenarioResult.total_bunker_costs_unit, ptr: scenarioPetral.bunker_costs,    isCurr: true,  db: "vessels · bunker_prices",           ui: "Maestro Flota / Bunker" },
-            { metric: "9. Port Costs",            key: "9. Port Costs (port_costs)",      gk: scenarioResult.total_port_costs,        ptr: scenarioPetral.total_port_costs, isCurr: true,  db: portCostMode === 'static' ? "port_cost_static" : "port_costs_matrix",                  ui: "Costos Portuarios" },
-            { metric: "10. Voyage Result",        key: "10. Voyage Result (voy_res)",     gk: scenarioResult.voyage_result,           ptr: scenarioPetral.voyage_result,   isCurr: true,  db: portCostMode === 'static' ? "contract_tariffs · port_cost_static" : "contract_tariffs · port_costs_matrix", ui: "Tarifas / Costos Portuarios" },
+            { metric: "9. Port Costs",            key: "9. Port Costs (port_costs)",      gk: scenarioResult.total_port_costs,        ptr: scenarioPetral.total_port_costs, isCurr: true,  db: localPortCostMode === 'static' ? "port_cost_static" : "port_costs_matrix",                  ui: "Costos Portuarios" },
+            { metric: "10. Voyage Result",        key: "10. Voyage Result (voy_res)",     gk: scenarioResult.voyage_result,           ptr: scenarioPetral.voyage_result,   isCurr: true,  db: localPortCostMode === 'static' ? "contract_tariffs · port_cost_static" : "contract_tariffs · port_costs_matrix", ui: "Tarifas / Costos Portuarios" },
             { metric: "11. TCE Diario",           key: "11. TCE Diario (tce_real)",       gk: scenarioResult.tce_real_unit,           ptr: scenarioPetral.tce_real,  isCurr: true,  db: "Calculado",                         ui: "Motor" },
             { metric: "12. P/L",                  key: "12. P/L (pl_vs_req)",             gk: scenarioResult.pl_vs_required_unit,     ptr: scenarioPetral.pl_vs_req, isCurr: true,  db: "vessels",                           ui: "Maestro Flota" },
         ];
@@ -251,7 +257,7 @@ export const VoyageLedgerUniversal: React.FC<{ portCostMode?: 'static' | 'matrix
                         <div className={`flex-1 flex flex-col border rounded-lg shadow-sm overflow-hidden ${COLOR_SCHEME.agency_matrix.cardBg} ${COLOR_SCHEME.agency_matrix.border}`}>
                             <div className={`border-b px-3 py-2 flex items-center justify-between ${COLOR_SCHEME.agency_matrix.headerBg} ${COLOR_SCHEME.agency_matrix.border}`}>
                                 <h3 className={`text-xs font-bold uppercase tracking-wider ${COLOR_SCHEME.agency_matrix.text}`}>Costos Portuarios</h3>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.agency_matrix.badge}`}>{portCostMode === 'static' ? 'port_cost_static' : 'port_costs_matrix'}</span>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.agency_matrix.badge}`}>{localPortCostMode === 'static' ? 'port_cost_static' : 'port_costs_matrix'}</span>
                             </div>
                             <div className="p-3 flex flex-col gap-1.5 flex-1 justify-between">
                                 <div className={`text-[10px] italic leading-tight mb-1 ${COLOR_SCHEME.agency_matrix.text}`}>Llaves: Cliente + Puerto + Op + Barco</div>
@@ -569,185 +575,215 @@ export const VoyageLedgerUniversal: React.FC<{ portCostMode?: 'static' | 'matrix
                         </optgroup>
                     </select>,
                     // col4Footer:
-                    <button
-                        onClick={() => {
-                            if (!runResult || !runResult.audit_trail) { alert('No hay datos cargados aún.'); return; }
-                            const audit_t = runResult.audit_trail;
-                            const fmtCur = (v: any) => {
-                                const num = parseFloat(v);
-                                return isNaN(num) ? '—' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
-                            };
-                            const fmtNum = (v: any) => {
-                                const num = parseFloat(v);
-                                return isNaN(num) ? '—' : new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(num);
-                            };
-                            const auditRowsPrint = [
-                                { metric: '1. Ritmo Carga (MT/hr)',  key: '1. Ritmo Carga (act_load)',      gk: runResult.actual_load_rate,      isCurr: false },
-                                { metric: '2. Ritmo Desc. (MT/hr)',  key: '2. Ritmo Descarga (act_disch)', gk: runResult.actual_discharge_rate, isCurr: false },
-                                { metric: '3. Días de Puerto',       key: '3. Días de Puerto (port_days)', gk: runResult.port_days_unit,          isCurr: false },
-                                { metric: '4. Días de Mar',          key: '4. Días de Mar (sea_days)',     gk: runResult.sea_days_unit,           isCurr: false },
-                                { metric: '5. Días de Viaje',        key: '5. Días de Viaje (tot_dur)',     gk: runResult.total_duration_unit,     isCurr: false },
-                                { metric: '6. Income',               key: '6. Income (income)',              gk: runResult.net_income,              isCurr: true  },
-                                { metric: '7. Comisiones',            key: '7. Comisiones (commissions)',     gk: runResult.total_commissions,       isCurr: true  },
-                                { metric: '8. Costo Bunker',          key: '8. Costo Bunker (bunker)',        gk: runResult.total_bunker_costs_unit, isCurr: true  },
-                                { metric: '9. Port Costs',            key: '9. Port Costs (port_costs)',      gk: runResult.total_port_costs,        isCurr: true  },
-                                { metric: '10. Voyage Result',        key: '10. Voyage Result (voy_res)',     gk: runResult.voyage_result,           isCurr: true  },
-                                { metric: '11. TCE Diario',           key: '11. TCE Diario (tce_real)',       gk: runResult.tce_real_unit,           isCurr: true  },
-                                { metric: '12. P/L',                  key: '12. P/L (pl_vs_req)',             gk: runResult.pl_vs_required_unit,     isCurr: true  },
-                            ];
-                            const tableRows = auditRowsPrint.map(row => {
-                                const ao = audit_t[row.key] || { formula: 'N/A', values: 'N/A' };
-                                return `<tr>
-                                    <td style="padding:3.5px 5px;font-weight:bold;border-bottom:1px solid #e2e8f0">${row.metric}</td>
-                                    <td style="padding:3.5px 5px;font-family:monospace;font-size:11px;color:#64748b;background:#f8fafc;border-bottom:1px solid #e2e8f0">${ao.formula || 'N/A'}</td>
-                                    <td style="padding:3.5px 5px;font-family:monospace;font-size:11px;font-weight:600;background:#f8fafc;border-bottom:1px solid #e2e8f0">${ao.values || 'N/A'}</td>
-                                    <td style="padding:3.5px 5px;font-family:monospace;font-weight:600;color:#0ea5e9;text-align:center;border-bottom:1px solid #e2e8f0">${row.isCurr ? fmtCur(row.gk||0) : fmtNum(row.gk||0)}</td>
-                                    <td style="padding:3.5px 5px;text-align:center;border-bottom:1px solid #e2e8f0"><span style="display:inline-block;width:80px;border-bottom:1px dashed #94a3b8">&nbsp;</span></td>
-                                    <td style="padding:3.5px 5px;text-align:center;border-bottom:1px solid #e2e8f0"><span style="display:inline-block;width:60px;border-bottom:1px dashed #94a3b8">&nbsp;</span></td>
-                                </tr>`;
-                            }).join('');
-                            const [v, o, d] = selectedCase.split('-');
-                            const now = new Date();
-                            const fechaStr = now.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
-                            const ri = runResult.raw_inputs || {};
-                            const cardsHTML = `
-                            <div class="cards-grid">
-                                <div class="card card-blue">
-                                    <div class="card-header">Maestro Flota <span class="card-badge">vessels</span></div>
-                                    <div class="card-row"><span>Barco</span><strong>${v.replace('_',' ')}</strong></div>
-                                    <div class="card-row"><span>Velocidad (speed)</span><strong>${fmtNum(ri.vessel_speed||0)} kn</strong></div>
-                                    <div class="card-row"><span>TCE Requerido (tce_req)</span><strong>${fmtCur(ri.tce_required||0)}/d</strong></div>
-                                    <div class="card-row"><span>DWT / DWCC</span><strong>${fmtNum(ri.dwt||0)} / ${fmtNum(ri.dwcc||0)} t</strong></div>
-                                    <div class="card-row"><span>Length / Beam</span><strong>${ri.length||0} / ${ri.beam||0} m</strong></div>
-                                </div>
-                                <div class="card card-green">
-                                    <div class="card-header">Reglas Comerciales <span class="card-badge">contracts</span></div>
-                                    <div class="card-row"><span>Cantidad (Q)</span><strong>${fmtNum(currentQty)} MT</strong></div>
-                                    <div class="card-row"><span>Flete Base (F)</span><strong>${fmtCur(ri.freight_rate||0)}/MT</strong></div>
-                                    <div class="card-row"><span>Ritmo Carga Ctto (c_load)</span><strong>${ri.contract_agreed_load_rate ? fmtNum(ri.contract_agreed_load_rate)+' T/h' : 'TBD'}</strong></div>
-                                    <div class="card-row"><span>Ritmo Desc. Ctto (c_disch)</span><strong>${ri.contract_agreed_discharge_rate ? fmtNum(ri.contract_agreed_discharge_rate)+' T/h' : 'TBD'}</strong></div>
-                                </div>
-                                <div class="card card-purple">
-                                    <div class="card-header">Maestro Rutas <span class="card-badge">routes</span></div>
-                                    <div class="card-row"><span>Origen &rarr; Destino</span><strong>${o} &rarr; ${d}</strong></div>
-                                    <div class="card-row"><span>Distancia (dist)</span><strong>${fmtNum(ri.route_distance||0)} NM</strong></div>
-                                    <div class="card-row"><span>W Fct (w_laden / w_ballast)</span><strong>${((ri.weather_factor_laden||0)*100)}% / ${((ri.weather_factor_ballast||0)*100)}%</strong></div>
-                                </div>
-                                <div class="card card-orange">
-                                    <div class="card-header">Límites Portuarios <span class="card-badge">ports</span></div>
-                                    <div class="card-row"><span>Overhead Origen (over_or)</span><strong>${fmtNum(ri.port_overhead_hours_origin||0)} H</strong></div>
-                                    <div class="card-row"><span>Overhead Destino (over_de)</span><strong>${fmtNum(ri.port_overhead_hours_dest||0)} H</strong></div>
-                                    <div class="card-row"><span>Posic. Carga (pos_carga)</span><strong>${fmtNum(ri.positioning_carga_hrs||0)} H</strong></div>
-                                    <div class="card-row"><span>Posic. Descarga (pos_descarga)</span><strong>${fmtNum(ri.positioning_descarga_hrs||0)} H</strong></div>
-                                </div>
-                                <div class="card card-rose">
-                                    <div class="card-header">Costos de Puerto <span class="card-badge">port_costs</span></div>
-                                    <div class="card-row"><span>Port Cost Origen</span><strong>${fmtCur(Object.values(runResult.port_costs_breakdown?.origin || {}).reduce((s: any, v: any) => s + (v || 0), 0))}</strong></div>
-                                    <div class="card-row"><span>Port Cost Destino</span><strong>${fmtCur(Object.values(runResult.port_costs_breakdown?.destination || {}).reduce((s: any, v: any) => s + (v || 0), 0))}</strong></div>
-                                    ${(runResult.port_costs_breakdown?.destination?.loading_master || 0) > 0 ? `<div class="card-row" style="color:#e11d48;border-top:1px dashed #fecdd3"><span>&#8627; Loading Master</span><strong>${fmtCur(runResult.port_costs_breakdown.destination.loading_master)}</strong></div>` : `<div class="card-row" style="color:#9f1239;border-top:1px dashed #fecdd3"><span>&#8627; Loading Master</span><strong>${fmtCur(0)}</strong></div>`}
-                                </div>
-                                <div class="card card-amber">
-                                    <div class="card-header">Bunker <span class="card-badge">bunker_prices</span></div>
-                                    <div class="card-row"><span>Fecha Cotización</span><strong>${ri.bunker_price_date||'N/A'}</strong></div>
-                                    <div class="card-row"><span>Precio IFO (p_ifo)</span><strong>${fmtCur(ri.bunker_price_ifo||0)}/T</strong></div>
-                                    <div class="card-row"><span>Precio MDO (p_mdo)</span><strong>${fmtCur(ri.bunker_price_mdo||0)}/T</strong></div>
-                                </div>
-                            </div>`;
-                            const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
-                            <title>Acta - ${v} ${o}-${d}</title>
-                            <style>
-                                @page { size: A4 landscape; margin: 4mm 6mm; }
-                                body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10.5px; color: #1e293b; margin: 0; }
-                                h1 { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.4px; margin: 0; font-weight: 700; }
-                                h2 { font-size: 10.5px; color: #475569; margin: 0; font-weight: 500; }
-                                table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
-                                thead th { background: #f1f5f9; padding: 3px 5px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #334155; text-align: left; }
-                                .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 3px; margin-bottom: 4px; }
-                                .badge { font-size: 8.5px; background: #1e293b; color: white; padding: 1.5px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
-                                .cards-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr; gap: 4px; margin-bottom: 4px; }
-                                .card { border-radius: 4px; overflow: hidden; border: 1px solid #e2e8f0; }
-                                .card-header { padding: 3.5px 6px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; display: flex; justify-content: space-between; align-items: center; }
-                                .card-badge { font-size: 7.5px; font-weight: 700; padding: 0.5px 4px; border-radius: 2px; text-transform: uppercase; }
-                                .card-row { display: flex; justify-content: space-between; padding: 1.5px 6px; font-size: 9.5px; border-top: 1px solid rgba(0,0,0,0.05); }
-                                .card-row span { color: #64748b; }
-                                .card-row strong { font-family: monospace; }
-                                .card-blue .card-header  { background: #dbeafe; color: #1e3a8a; }
-                                .card-blue .card-badge   { background: #bfdbfe; color: #1e3a8a; }
-                                .card-blue               { background: #eff6ff; }
-                                .card-green .card-header { background: #d1fae5; color: #064e3b; }
-                                .card-green .card-badge  { background: #a7f3d0; color: #064e3b; }
-                                .card-green              { background: #f0fdf4; }
-                                .card-purple .card-header{ background: #ede9fe; color: #4c1d95; }
-                                .card-purple .card-badge { background: #ddd6fe; color: #4c1d95; }
-                                .card-purple             { background: #f5f3ff; }
-                                .card-orange .card-header{ background: #ffedd5; color: #7c2d12; }
-                                .card-orange .card-badge { background: #fed7aa; color: #7c2d12; }
-                                .card-orange             { background: #fff7ed; }
-                                .card-rose .card-header  { background: #ffe4e6; color: #881337; }
-                                .card-rose .card-badge   { background: #fecdd3; color: #881337; }
-                                .card-rose               { background: #fff1f2; }
-                                .card-amber .card-header { background: #fef3c7; color: #78350f; }
-                                .card-amber .card-badge  { background: #fde68a; color: #78350f; }
-                                .card-amber              { background: #fffbeb; }
-                                .acta { border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; margin-top: 3px; background: #fafafa; }
-                                .acta-title { font-weight: 700; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.4px; color: #475569; margin-bottom: 2px; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; }
-                                .acta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-                                .field-row { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
-                                .field-label { font-weight: 700; color: #334155; font-size: 9.5px; white-space: nowrap; min-width: 65px; }
-                                .field-line { border-bottom: 1px solid #94a3b8; height: 12px; flex: 1; }
-                                .check-row { display: flex; gap: 10px; align-items: center; margin-bottom: 2px; font-size: 9.5px; }
-                                .check-box { display: inline-block; width: 9px; height: 9px; border: 1px solid #64748b; vertical-align: middle; margin-right: 2px; }
-                                .comment-box { border: 1px solid #cbd5e1; height: 26px; background: white; border-radius: 4px; width: 100%; }
-                                -webkit-print-color-adjust: exact; print-color-adjust: exact;
-                            </style></head><body>
-                            <div class="header-bar">
-                                <div style="flex:1">
-                                    <h1>GEEKSOFT Voyage Ledger — Auditoría Matemática &nbsp;|&nbsp; Barco: ${v.replace('_',' ')} &nbsp;|&nbsp; Ruta: ${o} → ${d} &nbsp;|&nbsp; Período: 2026-07 &nbsp;|&nbsp; Generado: ${fechaStr}</h1>
-                                </div>
-                                <span class="badge">PETRAL · ACTA DE CONFORMIDAD</span>
+                    <div className="flex flex-col gap-2.5 w-full">
+                        {/* Selector de Costo Puerto LOCAL */}
+                        <div className="flex flex-col gap-1.5 w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 shadow-sm">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">Costo Puerto</span>
+                            <div className="flex bg-slate-200 rounded p-0.5 h-8 w-full shadow-inner border border-slate-350">
+                                <button
+                                    onClick={() => setLocalPortCostMode('static')}
+                                    className={`flex-1 text-center py-1 text-[10px] uppercase font-black rounded transition-all cursor-pointer ${
+                                        localPortCostMode === 'static' 
+                                            ? 'bg-emerald-600 shadow-sm text-white' 
+                                            : 'text-slate-500 hover:text-slate-800'
+                                    }`}
+                                >
+                                    STATIC
+                                </button>
+                                <button
+                                    onClick={() => setLocalPortCostMode('matrix')}
+                                    className={`flex-1 text-center py-1 text-[10px] uppercase font-black rounded transition-all cursor-pointer ${
+                                        localPortCostMode === 'matrix' 
+                                            ? 'bg-amber-600 shadow-sm text-white' 
+                                            : 'text-slate-500 hover:text-slate-800'
+                                    }`}
+                                >
+                                    MATRIX
+                                </button>
                             </div>
-                            ${cardsHTML}
-                            <table>
-                                <thead><tr>
-                                    <th style="width:13%">Métrica</th>
-                                    <th style="width:27%">Fórmula Algorítmica</th>
-                                    <th style="width:22%">Reemplazo Numérico</th>
-                                    <th style="width:12%;text-align:center">GEEKSOFT (Motor)</th>
-                                    <th style="width:13%;text-align:center">PETRAL (Excel)</th>
-                                    <th style="width:13%;text-align:center">Delta (Δ)</th>
-                                </tr></thead>
-                                <tbody>${tableRows}</tbody>
-                            </table>
-                            <div class="acta">
-                                <div class="acta-title">✍️ Acta de Conformidad Matemática — Firmas y Validación</div>
-                                <div class="acta-grid">
-                                    <div style="display:flex;flex-direction:column;gap:4px">
-                                        <div class="field-row"><div class="field-label">Responsable:</div><div class="field-line"></div></div>
-                                        <div class="check-row">
-                                            <span class="field-label">Estado:</span>
-                                            <span><span class="check-box"></span> Aprobado</span>
-                                            <span><span class="check-box"></span> Con Errores</span>
+                        </div>
+
+                        <button
+                            onClick={() => {
+                                if (!runResult || !runResult.audit_trail) { alert('No hay datos cargados aún.'); return; }
+                                const audit_t = runResult.audit_trail;
+                                const fmtCur = (v: any) => {
+                                    const num = parseFloat(v);
+                                    return isNaN(num) ? '—' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+                                };
+                                const fmtNum = (v: any) => {
+                                    const num = parseFloat(v);
+                                    return isNaN(num) ? '—' : new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(num);
+                                };
+                                const auditRowsPrint = [
+                                    { metric: '1. Ritmo Carga (MT/hr)',  key: '1. Ritmo Carga (act_load)',      gk: runResult.actual_load_rate,      isCurr: false },
+                                    { metric: '2. Ritmo Desc. (MT/hr)',  key: '2. Ritmo Descarga (act_disch)', gk: runResult.actual_discharge_rate, isCurr: false },
+                                    { metric: '3. Días de Puerto',       key: '3. Días de Puerto (port_days)', gk: runResult.port_days_unit,          isCurr: false },
+                                    { metric: '4. Días de Mar',          key: '4. Días de Mar (sea_days)',     gk: runResult.sea_days_unit,           isCurr: false },
+                                    { metric: '5. Días de Viaje',        key: '5. Días de Viaje (tot_dur)',     gk: runResult.total_duration_unit,     isCurr: false },
+                                    { metric: '6. Income',               key: '6. Income (income)',              gk: runResult.net_income,              isCurr: true  },
+                                    { metric: '7. Comisiones',            key: '7. Comisiones (commissions)',     gk: runResult.total_commissions,       isCurr: true  },
+                                    { metric: '8. Costo Bunker',          key: '8. Costo Bunker (bunker)',        gk: runResult.total_bunker_costs_unit, isCurr: true  },
+                                    { metric: '9. Port Costs',            key: '9. Port Costs (port_costs)',      gk: runResult.total_port_costs,        isCurr: true  },
+                                    { metric: '10. Voyage Result',        key: '10. Voyage Result (voy_res)',     gk: runResult.voyage_result,           isCurr: true  },
+                                    { metric: '11. TCE Diario',           key: '11. TCE Diario (tce_real)',       gk: runResult.tce_real_unit,           isCurr: true  },
+                                    { metric: '12. P/L',                  key: '12. P/L (pl_vs_req)',             gk: runResult.pl_vs_required_unit,     isCurr: true  },
+                                ];
+                                const tableRows = auditRowsPrint.map(row => {
+                                    const ao = audit_t[row.key] || { formula: 'N/A', values: 'N/A' };
+                                    return `<tr>
+                                        <td style="padding:3.5px 5px;font-weight:bold;border-bottom:1px solid #e2e8f0">${row.metric}</td>
+                                        <td style="padding:3.5px 5px;font-family:monospace;font-size:11px;color:#64748b;background:#f8fafc;border-bottom:1px solid #e2e8f0">${ao.formula || 'N/A'}</td>
+                                        <td style="padding:3.5px 5px;font-family:monospace;font-size:11px;font-weight:600;background:#f8fafc;border-bottom:1px solid #e2e8f0">${ao.values || 'N/A'}</td>
+                                        <td style="padding:3.5px 5px;font-family:monospace;font-weight:600;color:#0ea5e9;text-align:center;border-bottom:1px solid #e2e8f0">${row.isCurr ? fmtCur(row.gk||0) : fmtNum(row.gk||0)}</td>
+                                        <td style="padding:3.5px 5px;text-align:center;border-bottom:1px solid #e2e8f0"><span style="display:inline-block;width:80px;border-bottom:1px dashed #94a3b8">&nbsp;</span></td>
+                                        <td style="padding:3.5px 5px;text-align:center;border-bottom:1px solid #e2e8f0"><span style="display:inline-block;width:60px;border-bottom:1px dashed #94a3b8">&nbsp;</span></td>
+                                    </tr>`;
+                                }).join('');
+                                const [v, o, d] = selectedCase.split('-');
+                                const now = new Date();
+                                const fechaStr = now.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
+                                const ri = runResult.raw_inputs || {};
+                                const cardsHTML = `
+                                <div class="cards-grid">
+                                    <div class="card card-blue">
+                                        <div class="card-header">Maestro Flota <span class="card-badge">vessels</span></div>
+                                        <div class="card-row"><span>Barco</span><strong>${v.replace('_',' ')}</strong></div>
+                                        <div class="card-row"><span>Velocidad (speed)</span><strong>${fmtNum(ri.vessel_speed||0)} kn</strong></div>
+                                        <div class="card-row"><span>TCE Requerido (tce_req)</span><strong>${fmtCur(ri.tce_required||0)}/d</strong></div>
+                                        <div class="card-row"><span>DWT / DWCC</span><strong>${fmtNum(ri.dwt||0)} / ${fmtNum(ri.dwcc||0)} t</strong></div>
+                                        <div class="card-row"><span>Length / Beam</span><strong>${ri.length||0} / ${ri.beam||0} m</strong></div>
+                                    </div>
+                                    <div class="card card-green">
+                                        <div class="card-header">Reglas Comerciales <span class="card-badge">contracts</span></div>
+                                        <div class="card-row"><span>Cantidad (Q)</span><strong>${fmtNum(currentQty)} MT</strong></div>
+                                        <div class="card-row"><span>Flete Base (F)</span><strong>${fmtCur(ri.freight_rate||0)}/MT</strong></div>
+                                        <div class="card-row"><span>Ritmo Carga Ctto (c_load)</span><strong>${ri.contract_agreed_load_rate ? fmtNum(ri.contract_agreed_load_rate)+' T/h' : 'TBD'}</strong></div>
+                                        <div class="card-row"><span>Ritmo Desc. Ctto (c_disch)</span><strong>${ri.contract_agreed_discharge_rate ? fmtNum(ri.contract_agreed_discharge_rate)+' T/h' : 'TBD'}</strong></div>
+                                    </div>
+                                    <div class="card card-purple">
+                                        <div class="card-header">Maestro Rutas <span class="card-badge">routes</span></div>
+                                        <div class="card-row"><span>Origen &rarr; Destino</span><strong>${o} &rarr; ${d}</strong></div>
+                                        <div class="card-row"><span>Distancia (dist)</span><strong>${fmtNum(ri.route_distance||0)} NM</strong></div>
+                                        <div class="card-row"><span>W Fct (w_laden / w_ballast)</span><strong>${((ri.weather_factor_laden||0)*100)}% / ${((ri.weather_factor_ballast||0)*100)}%</strong></div>
+                                    </div>
+                                    <div class="card card-orange">
+                                        <div class="card-header">Límites Portuarios <span class="card-badge">ports</span></div>
+                                        <div class="card-row"><span>Overhead Origen (over_or)</span><strong>${fmtNum(ri.port_overhead_hours_origin||0)} H</strong></div>
+                                        <div class="card-row"><span>Overhead Destino (over_de)</span><strong>${fmtNum(ri.port_overhead_hours_dest||0)} H</strong></div>
+                                        <div class="card-row"><span>Posic. Carga (pos_carga)</span><strong>${fmtNum(ri.positioning_carga_hrs||0)} H</strong></div>
+                                        <div class="card-row"><span>Posic. Descarga (pos_descarga)</span><strong>${fmtNum(ri.positioning_descarga_hrs||0)} H</strong></div>
+                                    </div>
+                                    <div class="card card-rose">
+                                        <div class="card-header">Costos de Puerto <span class="card-badge">port_costs</span></div>
+                                        <div class="card-row"><span>Port Cost Origen</span><strong>${fmtCur(Object.values(runResult.port_costs_breakdown?.origin || {}).reduce((s: any, v: any) => s + (v || 0), 0))}</strong></div>
+                                        <div class="card-row"><span>Port Cost Destino</span><strong>${fmtCur(Object.values(runResult.port_costs_breakdown?.destination || {}).reduce((s: any, v: any) => s + (v || 0), 0))}</strong></div>
+                                        ${(runResult.port_costs_breakdown?.destination?.loading_master || 0) > 0 ? `<div class="card-row" style="color:#e11d48;border-top:1px dashed #fecdd3"><span>&#8627; Loading Master</span><strong>${fmtCur(runResult.port_costs_breakdown.destination.loading_master)}</strong></div>` : `<div class="card-row" style="color:#9f1239;border-top:1px dashed #fecdd3"><span>&#8627; Loading Master</span><strong>${fmtCur(0)}</strong></div>`}
+                                    </div>
+                                    <div class="card card-amber">
+                                        <div class="card-header">Bunker <span class="card-badge">bunker_prices</span></div>
+                                        <div class="card-row"><span>Fecha Cotización</span><strong>${ri.bunker_price_date||'N/A'}</strong></div>
+                                        <div class="card-row"><span>Precio IFO (p_ifo)</span><strong>${fmtCur(ri.bunker_price_ifo||0)}/T</strong></div>
+                                        <div class="card-row"><span>Precio MDO (p_mdo)</span><strong>${fmtCur(ri.bunker_price_mdo||0)}/T</strong></div>
+                                    </div>
+                                </div>`;
+                                const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+                                <title>Acta - ${v} ${o}-${d}</title>
+                                <style>
+                                    @page { size: A4 landscape; margin: 4mm 6mm; }
+                                    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10.5px; color: #1e293b; margin: 0; }
+                                    h1 { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.4px; margin: 0; font-weight: 700; }
+                                    h2 { font-size: 10.5px; color: #475569; margin: 0; font-weight: 500; }
+                                    table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+                                    thead th { background: #f1f5f9; padding: 3px 5px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #334155; text-align: left; }
+                                    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 3px; margin-bottom: 4px; }
+                                    .badge { font-size: 8.5px; background: #1e293b; color: white; padding: 1.5px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+                                    .cards-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr; gap: 4px; margin-bottom: 4px; }
+                                    .card { border-radius: 4px; overflow: hidden; border: 1px solid #e2e8f0; }
+                                    .card-header { padding: 3.5px 6px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; display: flex; justify-content: space-between; align-items: center; }
+                                    .card-badge { font-size: 7.5px; font-weight: 700; padding: 0.5px 4px; border-radius: 2px; text-transform: uppercase; }
+                                    .card-row { display: flex; justify-content: space-between; padding: 1.5px 6px; font-size: 9.5px; border-top: 1px solid rgba(0,0,0,0.05); }
+                                    .card-row span { color: #64748b; }
+                                    .card-row strong { font-family: monospace; }
+                                    .card-blue .card-header  { background: #dbeafe; color: #1e3a8a; }
+                                    .card-blue .card-badge   { background: #bfdbfe; color: #1e3a8a; }
+                                    .card-blue               { background: #eff6ff; }
+                                    .card-green .card-header { background: #d1fae5; color: #064e3b; }
+                                    .card-green .card-badge  { background: #a7f3d0; color: #064e3b; }
+                                    .card-green              { background: #f0fdf4; }
+                                    .card-purple .card-header{ background: #ede9fe; color: #4c1d95; }
+                                    .card-purple .card-badge { background: #ddd6fe; color: #4c1d95; }
+                                    .card-purple             { background: #f5f3ff; }
+                                    .card-orange .card-header{ background: #ffedd5; color: #7c2d12; }
+                                    .card-orange .card-badge { background: #fed7aa; color: #7c2d12; }
+                                    .card-orange             { background: #fff7ed; }
+                                    .card-rose .card-header  { background: #ffe4e6; color: #881337; }
+                                    .card-rose .card-badge   { background: #fecdd3; color: #881337; }
+                                    .card-rose               { background: #fff1f2; }
+                                    .card-amber .card-header { background: #fef3c7; color: #78350f; }
+                                    .card-amber .card-badge  { background: #fde68a; color: #78350f; }
+                                    .card-amber              { background: #fffbeb; }
+                                    .acta { border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; margin-top: 3px; background: #fafafa; }
+                                    .acta-title { font-weight: 700; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.4px; color: #475569; margin-bottom: 2px; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; }
+                                    .acta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+                                    .field-row { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+                                    .field-label { font-weight: 700; color: #334155; font-size: 9.5px; white-space: nowrap; min-width: 65px; }
+                                    .field-line { border-bottom: 1px solid #94a3b8; height: 12px; flex: 1; }
+                                    .check-row { display: flex; gap: 10px; align-items: center; margin-bottom: 2px; font-size: 9.5px; }
+                                    .check-box { display: inline-block; width: 9px; height: 9px; border: 1px solid #64748b; vertical-align: middle; margin-right: 2px; }
+                                    .comment-box { border: 1px solid #cbd5e1; height: 26px; background: white; border-radius: 4px; width: 100%; }
+                                    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+                                </style></head><body>
+                                <div class="header-bar">
+                                    <div style="flex:1">
+                                        <h1>GEEKSOFT Voyage Ledger — Auditoría Matemática &nbsp;|&nbsp; Barco: ${v.replace('_',' ')} &nbsp;|&nbsp; Ruta: ${o} → ${d} &nbsp;|&nbsp; Período: 2026-07 &nbsp;|&nbsp; Generado: ${fechaStr}</h1>
+                                    </div>
+                                    <span class="badge">PETRAL · ACTA DE CONFORMIDAD</span>
+                                </div>
+                                ${cardsHTML}
+                                <table>
+                                    <thead><tr>
+                                        <th style="width:13%">Métrica</th>
+                                        <th style="width:27%">Fórmula Algorítmica</th>
+                                        <th style="width:22%">Reemplazo Numérico</th>
+                                        <th style="width:12%;text-align:center">GEEKSOFT (Motor)</th>
+                                        <th style="width:13%;text-align:center">PETRAL (Excel)</th>
+                                        <th style="width:13%;text-align:center">Delta (Δ)</th>
+                                    </tr></thead>
+                                    <tbody>${tableRows}</tbody>
+                                </table>
+                                <div class="acta">
+                                    <div class="acta-title">✍️ Acta de Conformidad Matemática — Firmas y Validación</div>
+                                    <div class="acta-grid">
+                                        <div style="display:flex;flex-direction:column;gap:4px">
+                                            <div class="field-row"><div class="field-label">Responsable:</div><div class="field-line"></div></div>
+                                            <div class="check-row">
+                                                <span class="field-label">Estado:</span>
+                                                <span><span class="check-box"></span> Aprobado</span>
+                                                <span><span class="check-box"></span> Con Errores</span>
+                                            </div>
+                                            <div class="field-row"><div class="field-label">Firma:</div><div class="field-line"></div></div>
+                                            <div class="field-row"><div class="field-label">Fecha:</div><div class="field-line"></div></div>
                                         </div>
-                                        <div class="field-row"><div class="field-label">Firma:</div><div class="field-line"></div></div>
-                                        <div class="field-row"><div class="field-label">Fecha:</div><div class="field-line"></div></div>
-                                    </div>
-                                    <div style="display:flex;flex-direction:column;">
-                                        <div class="field-label">Comentarios / Justificación de divergencias:</div>
-                                        <div style="border:1px solid #cbd5e1;flex:1;min-height:70px;background:white;border-radius:4px;margin-top:4px;"></div>
+                                        <div style="display:flex;flex-direction:column;">
+                                            <div class="field-label">Comentarios / Justificación de divergencias:</div>
+                                            <div style="border:1px solid #cbd5e1;flex:1;min-height:70px;background:white;border-radius:4px;margin-top:4px;"></div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <script>window.onload = function(){ window.print(); }</script>
-                            </body></html>`;
-                            const pw = window.open('', '_blank', 'width=1100,height=750');
-                            if (pw) { pw.document.write(html); pw.document.close(); }
-                            else { alert('El navegador bloqueó la ventana emergente. Habilítala para este sitio.'); }
-                        }}
-                        className="flex-grow flex flex-col items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-4 rounded-lg shadow-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.01]"
-                    >
-                        <span className="text-xl">🖨️</span>
-                        <span className="text-xs uppercase tracking-wider">Imprimir Acta PDF</span>
-                    </button>
+                                </div>
+                                <script>window.onload = function(){ window.print(); }</script>
+                                </body></html>`;
+                                const pw = window.open('', '_blank', 'width=1100,height=750');
+                                if (pw) { pw.document.write(html); pw.document.close(); }
+                                else { alert('El navegador bloqueó la ventana emergente. Habilítala para este sitio.'); }
+                            }}
+                            className="flex-grow w-full flex flex-col items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-3 rounded-lg shadow-sm transition-all duration-200 cursor-pointer hover:shadow-md hover:scale-[1.01]"
+                        >
+                            <span className="text-lg">🖨️</span>
+                            <span className="text-[10px] uppercase tracking-wider">Imprimir Acta PDF</span>
+                        </button>
+                    </div>
                 )}
             </div>
 
