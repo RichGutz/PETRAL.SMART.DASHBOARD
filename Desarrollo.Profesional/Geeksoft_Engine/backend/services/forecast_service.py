@@ -1,8 +1,37 @@
 from typing import Dict, Any
+import time
 from backend.models.forecast_models import ForecastRequest
 from backend.database import get_supabase
 from backend.engine import calculate_voyage_pnl, calculate_baf_adjusted_rate
 from backend.engine_universal import calculate_voyage_pnl_universal, calculate_baf_adjusted_rate_universal
+
+# --- MEMORY CACHE FOR MASTER DATA ---
+_masters_cache = {}
+_cache_time = 0.0
+CACHE_TTL = 30.0  # 30 seconds TTL
+
+def clear_forecast_cache():
+    global _masters_cache, _cache_time
+    _masters_cache = {}
+    _cache_time = 0.0
+
+def get_cached_masters(supabase) -> Dict[str, Any]:
+    global _masters_cache, _cache_time
+    now = time.time()
+    if not _masters_cache or (now - _cache_time) > CACHE_TTL:
+        _masters_cache = {
+            "vessels": safe_fetch(supabase, "vessels"),
+            "routes": safe_fetch(supabase, "routes"),
+            "routes_master": safe_fetch(supabase, "routes_master"),
+            "bunker_prices": safe_fetch(supabase, "bunker_prices"),
+            "ports": safe_fetch(supabase, "ports"),
+            "contracts": safe_fetch(supabase, "contracts"),
+            "contract_tariffs": safe_fetch(supabase, "contract_tariffs"),
+            "port_costs_matrix": safe_fetch(supabase, "port_costs_matrix"),
+            "port_cost_static": safe_fetch(supabase, "port_cost_static")
+        }
+        _cache_time = now
+    return _masters_cache
 
 
 def safe_fetch(supabase, table_name):
@@ -221,30 +250,32 @@ def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: 
 def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     supabase = get_supabase()
     
-    # Pre-cargar maestros para cachear
-    vessels_data = safe_fetch(supabase, "vessels")
+    # Pre-cargar maestros usando el cache global
+    masters = get_cached_masters(supabase)
+    
+    vessels_data = masters["vessels"]
     vessels_db = {v["vessel_id"]: v for v in vessels_data}
     
-    routes_data = safe_fetch(supabase, "routes")
+    routes_data = masters["routes"]
     routes_db = {}
     for r in routes_data:
         routes_db[f"{r['port_a']}-{r['port_b']}"] = r
     
-    routes_master_data = safe_fetch(supabase, "routes_master")
+    routes_master_data = masters["routes_master"]
     
-    bunker_data = safe_fetch(supabase, "bunker_prices")
+    bunker_data = masters["bunker_prices"]
     # Asegurar que se tome el precio con la fecha más reciente ordenando ascendentemente
     bunker_data = sorted(bunker_data, key=lambda x: x.get("date", "2000-01-01"))
     bunker_db = {b["fuel_type"]: b["market_price_usd"] for b in bunker_data}
     bunker_dates_db = {b["fuel_type"]: str(b["date"]) if b.get("date") else "N/A" for b in bunker_data}
     
     # Maestro de Puertos (tabla nueva) — límites físicos de terminales
-    ports_data = safe_fetch(supabase, "ports")
+    ports_data = masters["ports"]
     ports_db = {p["port_id"]: p for p in ports_data}
     
     # Maestro de Contratos — tasas operativas que impone el cliente (c_load, c_disch)
     # Llave: (client_id, origin_port_id, destination_port_id) — solo contratos activos
-    contracts_data = safe_fetch(supabase, "contracts")
+    contracts_data = masters["contracts"]
     contracts_db = {
         (c["client_id"], c.get("origin_port_id", "ILO"), c["destination_port_id"]): c
         for c in contracts_data
@@ -252,10 +283,10 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     }
     
     # Tarifas de flete por bracket de tonelaje
-    tariffs_data = safe_fetch(supabase, "contract_tariffs")
+    tariffs_data = masters["contract_tariffs"]
     
-    port_costs_data = safe_fetch(supabase, "port_costs_matrix")
-    agency_matrix_data = safe_fetch(supabase, "port_cost_static")
+    port_costs_data = masters["port_costs_matrix"]
+    agency_matrix_data = masters["port_cost_static"]
     
     agg_data = {}
     
@@ -648,36 +679,38 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
 def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any]:
     supabase = get_supabase()
     
-    # Pre-cargar maestros para cachear
-    vessels_data = safe_fetch(supabase, "vessels")
+    # Pre-cargar maestros usando el cache global
+    masters = get_cached_masters(supabase)
+    
+    vessels_data = masters["vessels"]
     vessels_db = {v["vessel_id"]: v for v in vessels_data}
     
-    routes_data = safe_fetch(supabase, "routes")
+    routes_data = masters["routes"]
     routes_db = {}
     for r in routes_data:
         routes_db[f"{r['port_a']}-{r['port_b']}"] = r
     
-    routes_master_data = safe_fetch(supabase, "routes_master")
+    routes_master_data = masters["routes_master"]
     
-    bunker_data = safe_fetch(supabase, "bunker_prices")
+    bunker_data = masters["bunker_prices"]
     bunker_data = sorted(bunker_data, key=lambda x: x.get("date", "2000-01-01"))
     bunker_db = {b["fuel_type"]: b["market_price_usd"] for b in bunker_data}
     bunker_dates_db = {b["fuel_type"]: str(b["date"]) if b.get("date") else "N/A" for b in bunker_data}
     
-    ports_data = safe_fetch(supabase, "ports")
+    ports_data = masters["ports"]
     ports_db = {p["port_id"]: p for p in ports_data}
     
-    contracts_data = safe_fetch(supabase, "contracts")
+    contracts_data = masters["contracts"]
     contracts_db = {
         (c["client_id"], c.get("origin_port_id", "ILO"), c["destination_port_id"]): c
         for c in contracts_data
         if c.get("is_active", True)
     }
     
-    tariffs_data = safe_fetch(supabase, "contract_tariffs")
+    tariffs_data = masters["contract_tariffs"]
     
-    port_costs_data = safe_fetch(supabase, "port_costs_matrix")
-    agency_matrix_data = safe_fetch(supabase, "port_cost_static")
+    port_costs_data = masters["port_costs_matrix"]
+    agency_matrix_data = masters["port_cost_static"]
     
     agg_data = {}
     

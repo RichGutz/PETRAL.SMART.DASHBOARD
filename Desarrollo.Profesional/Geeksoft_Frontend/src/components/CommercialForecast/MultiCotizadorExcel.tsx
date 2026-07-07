@@ -203,7 +203,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
         ForecastService.listSpots().then(spotRoutes => {
             const filtered = (spotRoutes || []).filter((s: any) => s.legs_data?.is_multicotizador === true);
-            const clientIds = filtered.map((s: any) => {
+            const clientIds: string[] = filtered.map((s: any) => {
                 const parts = (s.name || "").split('.');
                 return parts.length > 1 ? parts[0].toUpperCase() : "";
             }).filter(Boolean);

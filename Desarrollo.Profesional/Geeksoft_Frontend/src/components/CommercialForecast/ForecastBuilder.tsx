@@ -66,14 +66,53 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         if (!client || !route || !vessel) return null;
         const ports = route.split('-');
         if (ports.length < 2) return null;
-        const routeWithPoints = `${ports[0]}.${ports[1]}.${ports[0]}`; // Siempre es ida y vuelta
-        const longNameKey = `${client.toUpperCase()}.${routeWithPoints.toUpperCase()}.${vessel.toUpperCase()}`;
-        return spotRoutes.find(s => (s.name || "").toUpperCase() === longNameKey);
+        const orig = ports[0].toUpperCase();
+        const dest = ports[1].toUpperCase();
+
+        return spotRoutes.find(s => {
+            const name = (s.name || "").toUpperCase();
+            if (!name.startsWith(`${client.toUpperCase()}.`) || !name.endsWith(`.${vessel.toUpperCase()}`)) return false;
+
+            const tramos = s.legs_data?.tramos || [];
+            const laden = tramos.filter((t: any) => t.type?.toUpperCase() === 'LADEN');
+            if (laden.length === 0) return false;
+
+            return laden[0].origin_port_id?.toUpperCase() === orig && laden[laden.length - 1].destination_port_id?.toUpperCase() === dest;
+        });
     }, [client, route, vessel, spotRoutes]);
 
     const isComplexRoute = useMemo(() => {
         return matchedSpot?.legs_data?.is_multicotizador === true;
     }, [matchedSpot]);
+
+    // Filtrar las rutas disponibles comercialmente para el cliente activo
+    const clientRoutes = useMemo(() => {
+        if (!client) return [];
+        const routesMap = new Map<string, string>();
+
+        if (client === 'SPCC') {
+            routesMap.set('ILO-MATARANI', 'ILO-MATARANI');
+            routesMap.set('ILO-MARCONA', 'ILO-MARCONA');
+            routesMap.set('ILO-MEJILLONES', 'ILO-MEJILLONES');
+            return Array.from(routesMap.values());
+        }
+
+        spotRoutes.forEach(s => {
+            const name = s.name || "";
+            if (name.toUpperCase().startsWith(`${client.toUpperCase()}.`)) {
+                const tramos = s.legs_data?.tramos || [];
+                const laden = tramos.filter((t: any) => t.type?.toUpperCase() === 'LADEN');
+                if (laden.length > 0) {
+                    const orig = laden[0].origin_port_id;
+                    const dest = laden[laden.length - 1].destination_port_id;
+                    const key = `${orig}-${dest}`;
+                    routesMap.set(key, key);
+                }
+            }
+        });
+
+        return Array.from(routesMap.values());
+    }, [client, spotRoutes]);
 
     // Lógica reactiva para autocompletar buque, cantidad y flete (yield) si es ruta compleja
     useEffect(() => {
@@ -125,7 +164,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
             ForecastService.listSpots().then(spotRoutes => {
                 setSpotRoutes(spotRoutes || []);
                 const filtered = (spotRoutes || []).filter((s: any) => s.legs_data?.is_multicotizador === true);
-                const clientIds = filtered.map((s: any) => {
+                const clientIds: string[] = filtered.map((s: any) => {
                     const parts = (s.name || "").split('.');
                     return parts.length > 1 ? parts[0].toUpperCase() : "";
                 }).filter(Boolean);
@@ -365,6 +404,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     )}
 
                     {/* 4. Ruta */}
+                    {/* 5. Ruta */}
                     <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">5. Ruta</Label>
                         <Select value={route} onValueChange={(val) => setRoute(val || '')} disabled={!client}>
@@ -372,15 +412,24 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 <SelectValue placeholder="Ruta" />
                             </SelectTrigger>
                             <SelectContent className="w-auto min-w-[max-content] max-h-[300px] overflow-y-auto">
-                                <SelectItem value="ILO-MATARANI">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#06B6D4]"></div>ILO - MATARANI</div>
-                                </SelectItem>
-                                <SelectItem value="ILO-MARCONA">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#A855F7]"></div>ILO - MARCONA</div>
-                                </SelectItem>
-                                <SelectItem value="ILO-MEJILLONES">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#D946EF]"></div>ILO - MEJILLONES</div>
-                                </SelectItem>
+                                {clientRoutes.length === 0 ? (
+                                    <SelectItem value="" disabled>No hay rutas para {client}</SelectItem>
+                                ) : (
+                                    clientRoutes.map(rVal => {
+                                        const color = rVal.includes('MATARANI') ? '#06B6D4' :
+                                                      rVal.includes('MARCONA') ? '#A855F7' :
+                                                      rVal.includes('MEJILLONES') ? '#D946EF' :
+                                                      rVal.includes('CALLAO') ? '#F59E0B' : '#64748B';
+                                        return (
+                                            <SelectItem key={rVal} value={rVal}>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }}></div>
+                                                    {rVal.replace('-', ' - ')}
+                                                </div>
+                                            </SelectItem>
+                                        );
+                                    })
+                                )}
                             </SelectContent>
                         </Select>
                     </div>

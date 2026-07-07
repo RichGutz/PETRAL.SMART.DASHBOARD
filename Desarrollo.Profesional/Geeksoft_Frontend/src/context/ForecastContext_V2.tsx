@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { ForecastService } from '../services/api';
 
 interface ForecastContextType {
@@ -32,6 +32,9 @@ interface ForecastContextType {
     showLoadModal: boolean;
     setShowLoadModal: (v: boolean) => void;
     savedForecasts: any[];
+
+    isDirty: boolean;
+    handleManualRecalculate: () => Promise<void>;
 
     displayMode: 'usd' | 'pct';
     setDisplayMode: (v: 'usd' | 'pct') => void;
@@ -73,6 +76,8 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         document.documentElement.classList.toggle('dark', isDarkMode);
     }, [isDarkMode]);
+    
+    const [isDirty, setIsDirty] = useState(false);
     
     const [startDate, setStartDate] = useState("2026-07-01");
     const [endDate, setEndDate] = useState("2026-12-31");
@@ -135,11 +140,25 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
         return months;
     }, [startDate, endDate]);
 
+    // Ref para evitar simulaciones concurrentes (mutex simple)
+    const simulatingRef = useRef(false);
+    const abortControllerRef = useRef<AbortController | null>(null);
+
     const runSimulationWith = async (lines: any[], sDate: string, eDate: string) => {
         if (lines.length === 0) {
             setData(null);
+            setIsDirty(false);
             return;
         }
+
+        // Cancelar cualquier request anterior en vuelo
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+        simulatingRef.current = true;
+
         setLoading(true);
         try {
             const requestPayload = {
@@ -149,23 +168,37 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
                 port_cost_mode: portCostMode
             };
             const result = await ForecastService.runSimulation(requestPayload);
-            setData(result);
+            // Solo actualizar si este request no fue cancelado
+            if (!controller.signal.aborted) {
+                setData(result);
+                setIsDirty(false);
+            }
         } catch (error: any) {
+            if (controller.signal.aborted) return; // Ignorar errores de requests cancelados
             console.error("Error fetching simulation:", error);
             const msg = error?.response?.data?.detail || error?.message || "Error desconocido";
             alert(`Error al correr simulación: ${msg}`);
             setData(null);
         } finally {
-            setLoading(false);
+            if (!controller.signal.aborted) {
+                setLoading(false);
+            }
+            simulatingRef.current = false;
         }
     };
 
+    const handleManualRecalculate = async () => {
+        await runSimulationWith(projectionLines, startDate, endDate);
+    };
+
     useEffect(() => {
-        const timeout = setTimeout(() => runSimulationWith(projectionLines, startDate, endDate), 300);
-        return () => clearTimeout(timeout);
-    }, [projectionLines, startDate, endDate, portCostMode]);
+        if (projectionLines.length > 0) {
+            runSimulationWith(projectionLines, startDate, endDate);
+        }
+    }, [projectionLines.length, startDate, endDate, portCostMode]);
 
     const handleAddLine = (newLine: any) => {
+        setIsDirty(true);
         setProjectionLines(prev => {
             const existingIndex = prev.findIndex(p => 
                 p.month_index === newLine.month_index && 
@@ -182,6 +215,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     };
 
     const handleFrequencyChange = (client_id: string, route_key: string, vessel_id: string, month_index: string, newFrequency: number) => {
+        setIsDirty(true);
         setProjectionLines(prev => {
             const destination_port_id = route_key.split('-')[1];
             const existingIndex = prev.findIndex(p => 
@@ -215,26 +249,21 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
         });
     };
 
-    const handleTariffChange = (client_id: string, route_key: string, vessel_id: string, month_index: string, newTariff: number) => {
+    const handleTariffChange = (client_id: string, route_key: string, vessel_id: string, _month_index: string, newTariff: number) => {
+        setIsDirty(true);
         setProjectionLines(prev => {
             const destination_port_id = route_key.split('-')[1];
-            const existingIndex = prev.findIndex(p => 
-                p.month_index === month_index && 
-                p.vessel_id === vessel_id &&
-                p.destination_port_id === destination_port_id &&
-                p.client_id === client_id
-            );
-
-            if (existingIndex >= 0) {
-                const clone = [...prev];
-                clone[existingIndex] = { ...clone[existingIndex], custom_tariff: newTariff };
-                return clone;
-            }
-            return prev;
+            return prev.map(p => {
+                if (p.client_id === client_id && p.vessel_id === vessel_id && p.destination_port_id === destination_port_id) {
+                    return { ...p, custom_tariff: newTariff };
+                }
+                return p;
+            });
         });
     };
 
     const handleDeleteNode = (type: 'client' | 'route' | 'vessel', client_id: string, route_key?: string, vessel_id?: string) => {
+        setIsDirty(true);
         setProjectionLines(prev => prev.filter(p => {
             if (type === 'client') return p.client_id !== client_id;
             if (type === 'route') return !(p.client_id === client_id && `${p.origin_port_id}-${p.destination_port_id}` === route_key);
@@ -344,6 +373,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             dynamicMonths, projectionLines, setProjectionLines, currentForecastId,
             forecastName, setForecastName, userId, setUserId, loadedAuthor,
             showSaveModal, setShowSaveModal, showLoadModal, setShowLoadModal, savedForecasts,
+            isDirty, handleManualRecalculate,
             displayMode, setDisplayMode, ports, spotRoutes, portCostMode, setPortCostMode,
             demurragePct, setDemurragePct, showDemurrage, setShowDemurrage,
             excludedDemurrages, setExcludedDemurrages, customDemurrages, setCustomDemurrages,

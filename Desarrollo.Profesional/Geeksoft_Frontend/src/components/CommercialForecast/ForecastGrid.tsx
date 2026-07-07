@@ -357,7 +357,22 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                         isSubRow: true
                                     });
                                 } else {
-                                    const vals = getMonthlyValues(sub.key as string);
+                                    let vals = getMonthlyValues(sub.key as string);
+                                    if (sub.name === "Flete (USD/MT)") {
+                                        vals = months.map((m, mIdx) => {
+                                            const line = projectionLines.find(p => 
+                                                p.client_id === client && 
+                                                `${p.origin_port_id}-${p.destination_port_id}` === route && 
+                                                p.vessel_id === vessel && 
+                                                p.month_index === m
+                                            );
+                                            if (line && line.custom_tariff !== undefined) {
+                                                return line.custom_tariff;
+                                            }
+                                            return vals[mIdx];
+                                        });
+                                    }
+
                                     result.push({
                                         client: null,
                                         route: null,
