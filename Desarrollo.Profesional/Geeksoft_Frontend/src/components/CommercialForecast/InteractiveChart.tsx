@@ -11,7 +11,7 @@ interface InteractiveChartProps {
 }
 
 type GroupBy = 'vessel' | 'route' | 'client' | 'petral' | 'tradeType';
-type PlotMetric = 'viajes' | 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'total_cargo' | 'demurrage' | 'gross_plus_dem' | 'yield' | 'yield_flete' | 'total_duration' | 'none';
+type PlotMetric = 'viajes' | 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'pl_vs_required' | 'total_cargo' | 'demurrage' | 'gross_plus_dem' | 'yield' | 'yield_flete' | 'total_duration' | 'none';
 
 const getHexColor = (name: string, type: GroupBy) => {
     if (type === 'petral') return '#0089CF'; // Petral Blue (RGB 0-137-207)
@@ -147,6 +147,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             switch (m) {
                 case 'viajes': return 'Viajes';
                 case 'voyage_result': return 'Voyage Result';
+                case 'pl_vs_required': return 'P/L';
                 case 'net_income': return 'Gross Revenue';
                 case 'total_port_costs': return 'Port Costs';
                 case 'total_bunker_costs': return 'Bunker Costs';
@@ -586,6 +587,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
     const metricOptions = [
         { value: 'none', label: 'Ninguno', icon: '🚫', desc: 'No graficar' },
+        { value: 'pl_vs_required', label: 'P/L (Net Profit vs TCE Req)', icon: '⚖️', desc: 'USD / Resultado neto real vs requerido' },
         { value: 'voyage_result', label: 'Voyage Result', icon: '💰', desc: 'USD / Resultado Viaje' },
         { value: 'net_income', label: 'Gross Revenue', icon: '💸', desc: 'USD / Flete Bruto' },
         { value: 'demurrage', label: 'Demurrage', icon: '⏳', desc: 'USD / Estadía' },

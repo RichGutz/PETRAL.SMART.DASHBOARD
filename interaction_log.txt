@@ -179,3 +179,4 @@
 2026-07-07 09:05:00 - Alteración de tabla port_cost_static para incorporar sub_operation_type en la clave primaria, agregando costo de Loading Master ($2,500) para Mejillones Descarga. Modificación del motor del backend para consolidar la suma acumulada de las suboperaciones.
 2026-07-07 09:28:00 - Corregida colisión de carga de clientes NEXA y SPCC concurrentes en Matriz Financiera.
 2026-07-07 09:40:00 - Modificado Análisis Gráfico: Habilitada la agrupación por Tipo OP (Cabotaje/Chile) y selección múltiple con checkboxes en filtros.
+2026-07-07 09:47:00 - Añadida métrica P/L en Eje Primario y Secundario del Análisis Gráfico.
