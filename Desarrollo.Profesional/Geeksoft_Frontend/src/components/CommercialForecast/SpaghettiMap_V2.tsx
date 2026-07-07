@@ -31,6 +31,39 @@ const getBaseCurveness = (origin: string, dest: string): number => {
     return 0.20;
 };
 
+// Helper para calcular puntos a lo largo de una curva de Bezier cuadrática para simular arcos con polilíneas
+const getBezierPoints = (
+    p0: [number, number],
+    p2: [number, number],
+    curveness: number,
+    numPoints: number = 20
+): Array<[number, number]> => {
+    if (curveness === 0) {
+        return [p0, p2];
+    }
+    const mx = (p0[0] + p2[0]) / 2;
+    const my = (p0[1] + p2[1]) / 2;
+    const dx = p2[0] - p0[0];
+    const dy = p2[1] - p0[1];
+    
+    // Vector perpendicular (rotación de 90 grados)
+    const px = -dy;
+    const py = dx;
+    
+    // Punto de control P1
+    const p1x = mx + px * curveness * 0.5;
+    const p1y = my + py * curveness * 0.5;
+
+    const points: Array<[number, number]> = [];
+    for (let i = 0; i <= numPoints; i++) {
+        const t = i / numPoints;
+        const x = (1 - t) * (1 - t) * p0[0] + 2 * (1 - t) * t * p1x + t * t * p2[0];
+        const y = (1 - t) * (1 - t) * p0[1] + 2 * (1 - t) * t * p1y + t * t * p2[1];
+        points.push([x, y]);
+    }
+    return points;
+};
+
 // Función pura para calcular datos de espaguetis acumulados para un mes dado (Versión V2)
 const computeSpaghettiDataForMonth = (
     aggregatedData: any,
@@ -135,20 +168,22 @@ const computeSpaghettiDataForMonth = (
 
                                 // Generar misiles (Efecto secuencial / En Serie - Solo en vista de 1 mes y si hay frecuencia activa)
                                 if (targetMonths.length === 1 && freq > 0) {
-                                    const coordsList: Array<[number, number]> = [];
+                                    let coordsList: Array<[number, number]> = [];
                                     let valid = true;
-                                    
-                                    const firstPort = activePorts.find(p => p.port_id === legs[0].origin);
-                                    if (firstPort && firstPort.lon !== null && firstPort.lat !== null) {
-                                        coordsList.push([firstPort.lon, firstPort.lat]);
-                                    } else {
-                                        valid = false;
-                                    }
 
                                     for (let i = 0; i < legs.length; i++) {
-                                        const port = activePorts.find(p => p.port_id === legs[i].dest);
-                                        if (port && port.lon !== null && port.lat !== null) {
-                                            coordsList.push([port.lon, port.lat]);
+                                        const leg = legs[i];
+                                        const sPort = activePorts.find(p => p.port_id === leg.origin);
+                                        const tPort = activePorts.find(p => p.port_id === leg.dest);
+                                        if (sPort && tPort && sPort.lon !== null && sPort.lat !== null && tPort.lon !== null && tPort.lat !== null) {
+                                            const c = getBaseCurveness(leg.origin, leg.dest);
+                                            const bezier = getBezierPoints([sPort.lon, sPort.lat], [tPort.lon, tPort.lat], c, 20);
+                                            if (i === 0) {
+                                                coordsList = coordsList.concat(bezier);
+                                            } else {
+                                                // Evitar duplicar el punto de conexión (destino de pierna anterior = origen de pierna actual)
+                                                coordsList = coordsList.concat(bezier.slice(1));
+                                            }
                                         } else {
                                             valid = false;
                                             break;
@@ -158,13 +193,11 @@ const computeSpaghettiDataForMonth = (
                                     if (valid && coordsList.length >= 2) {
                                         const trips = Math.max(1, freq);
                                         const period = Math.max(0.2, playSpeed / trips);
-                                        const isMultiLeg = legs.length > 1;
-                                        const curveness = isMultiLeg ? 0 : getBaseCurveness(legs[0].origin, legs[0].dest);
 
                                         missileSeries.push({
                                             type: 'lines',
                                             coordinateSystem: 'geo',
-                                            polyline: isMultiLeg,
+                                            polyline: true, // Polyline es true porque usamos los puntos calculados de la curva Bezier
                                             zlevel: 3,
                                             effect: {
                                                 show: true,
@@ -176,8 +209,7 @@ const computeSpaghettiDataForMonth = (
                                             },
                                             lineStyle: {
                                                 color: 'transparent',
-                                                width: 0,
-                                                curveness: curveness
+                                                width: 0
                                             },
                                             data: [
                                                 {
