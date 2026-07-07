@@ -186,3 +186,4 @@
 2026-07-07 10:24:00 - Creado SpaghettiMap_V2 con soporte de piernas de posicionamiento (lastre/dashed) y halos de trayectoria para rutas complejas de Nexa.
 2026-07-07 10:30:00 - Refactorizada la animación de rutas complejas en SpaghettiMap_V2 para que los tramos se recorran en serie (secuencialmente) usando polyline en ECharts.
 2026-07-07 10:36:00 - Corregido SpaghettiMap_V2 para que los misiles recorran secuencialmente las trayectorias curvas (arcos Bezier) de las rutas, eliminando las líneas rectas.
+2026-07-07 10:42:00 - Eliminados los halos estáticos gruesos de color rojo y verde (haloSeries) en SpaghettiMap_V2.

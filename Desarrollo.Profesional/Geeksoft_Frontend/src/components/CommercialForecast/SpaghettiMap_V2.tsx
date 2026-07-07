@@ -81,7 +81,6 @@ const computeSpaghettiDataForMonth = (
     const activePorts = ports.filter(p => p.lat !== null && p.lon !== null);
 
     const missileSeries: any[] = [];
-    const haloSeries: any[] = [];
 
     const portMap: Record<string, { carga: number; descarga: number }> = {};
     ports.forEach(p => {
@@ -248,9 +247,6 @@ const computeSpaghettiDataForMonth = (
         const [source, target] = pairKey.split('-');
         const baseCurveness = getBaseCurveness(source, target);
         
-        const sourcePort = activePorts.find(p => p.port_id === source);
-        const targetPort = activePorts.find(p => p.port_id === target);
-
         edgesInPair.forEach((edge, index) => {
             const curveness = baseCurveness + index * 0.06;
             
@@ -291,30 +287,6 @@ const computeSpaghettiDataForMonth = (
             }
 
             finalEdges.push(edgeConfig);
-
-            // Halo del camino completo (Línea de fondo ancha semi-transparente)
-            if (sourcePort && targetPort) {
-                haloSeries.push({
-                    type: 'lines',
-                    coordinateSystem: 'geo',
-                    zlevel: 1.5,
-                    silent: true,
-                    lineStyle: {
-                        color: getVesselColor(edge.vessel),
-                        width: edge.isBallast ? 5 : 8,
-                        opacity: edge.isBallast ? 0.05 : 0.12,
-                        curveness: curveness
-                    },
-                    data: [
-                        {
-                            coords: [
-                                [sourcePort.lon, sourcePort.lat],
-                                [targetPort.lon, targetPort.lat]
-                            ]
-                        }
-                    ]
-                });
-            }
         });
     });
 
@@ -497,7 +469,7 @@ const computeSpaghettiDataForMonth = (
         }
     }
 
-    return { nodes: nodesForGraph, edges: finalEdges, pieSeries, missileSeries, haloSeries };
+    return { nodes: nodesForGraph, edges: finalEdges, pieSeries, missileSeries };
 };
 
 interface SpaghettiMapProps {
@@ -543,7 +515,7 @@ export const SpaghettiMap_V2: React.FC<SpaghettiMapProps> = ({
     const option = useMemo(() => {
         if (!mapLoaded || !data || !data.aggregated_data || selectedMonths.length === 0 || !ports) return;
 
-        const { nodes, edges, pieSeries, missileSeries, haloSeries } = computeSpaghettiDataForMonth(
+        const { nodes, edges, pieSeries, missileSeries } = computeSpaghettiDataForMonth(
             data.aggregated_data, 
             selectedMonths, 
             months, 
@@ -661,7 +633,6 @@ export const SpaghettiMap_V2: React.FC<SpaghettiMapProps> = ({
                 }
             },
             series: [
-                ...haloSeries, // Agrega los halos de brillo de fondo detrás de todo
                 {
                     name: 'Rutas y Puertos',
                     type: 'graph',
