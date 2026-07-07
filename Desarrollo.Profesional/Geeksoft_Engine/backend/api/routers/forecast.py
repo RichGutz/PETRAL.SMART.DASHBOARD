@@ -358,10 +358,10 @@ def save_spot_voyage(request: SpotSaveRequest):
             "pais": request.pais
         }
         
-        res = sb.table("routes_spot").insert(payload).execute()
+        res = sb.table("routes_master").insert(payload).execute()
         if not res.data:
             raise Exception("Failed to save spot route")
-        return {"status": "success", "spot_id": res.data[0]["spot_id"]}
+        return {"status": "success", "spot_id": res.data[0]["route_id"]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -467,7 +467,7 @@ def list_spot_voyages():
     try:
         from backend.database import get_supabase
         sb = get_supabase()
-        res = sb.table("routes_spot").select("*").order("created_at", desc=True).execute()
+        res = sb.table("routes_master").select("*, spot_id:route_id").order("created_at", desc=True).execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

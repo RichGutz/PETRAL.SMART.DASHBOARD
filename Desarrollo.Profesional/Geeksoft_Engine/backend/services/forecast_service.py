@@ -230,7 +230,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     for r in routes_data:
         routes_db[f"{r['port_a']}-{r['port_b']}"] = r
     
-    routes_spot_data = safe_fetch(supabase, "routes_spot")
+    routes_master_data = safe_fetch(supabase, "routes_master")
     
     bunker_data = safe_fetch(supabase, "bunker_prices")
     # Asegurar que se tome el precio con la fecha más reciente ordenando ascendentemente
@@ -342,7 +342,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         
         if is_spot_route:
             spot_id = line.destination_port_id
-            spot_route = next((s for s in routes_spot_data if s.get("spot_id") == spot_id or s.get("name") == spot_id), {})
+            spot_route = next((s for s in routes_master_data if s.get("route_id") == spot_id or s.get("name") == spot_id), {})
             legs_data = spot_route.get("legs_data", {})
             
             import copy
@@ -644,7 +644,7 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
     for r in routes_data:
         routes_db[f"{r['port_a']}-{r['port_b']}"] = r
     
-    routes_spot_data = safe_fetch(supabase, "routes_spot")
+    routes_master_data = safe_fetch(supabase, "routes_master")
     
     bunker_data = safe_fetch(supabase, "bunker_prices")
     bunker_data = sorted(bunker_data, key=lambda x: x.get("date", "2000-01-01"))
@@ -732,7 +732,7 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
         
         if is_spot_route:
             spot_id = line.destination_port_id
-            spot_route = next((s for s in routes_spot_data if s.get("spot_id") == spot_id or s.get("name") == spot_id), {})
+            spot_route = next((s for s in routes_master_data if s.get("route_id") == spot_id or s.get("name") == spot_id), {})
             legs_data = spot_route.get("legs_data", {})
             
             import copy

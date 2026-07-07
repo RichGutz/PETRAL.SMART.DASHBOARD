@@ -201,14 +201,20 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
             setRoutes(data || []);
         });
 
-        ForecastService.getClients().then(clients => {
-            const list = clients.includes('NEXA') ? clients : [...clients, 'NEXA'];
-            setClients(list);
-            if (list.length > 0) {
-                setSelectedClient(list[0]);
+        ForecastService.listSpots().then(spotRoutes => {
+            const filtered = (spotRoutes || []).filter((s: any) => s.legs_data?.is_multicotizador === true);
+            const clientIds = filtered.map((s: any) => {
+                const parts = (s.name || "").split('.');
+                return parts.length > 1 ? parts[0].toUpperCase() : "";
+            }).filter(Boolean);
+            
+            const uniqueClients = Array.from(new Set(clientIds));
+            setClients(uniqueClients);
+            if (uniqueClients.length > 0) {
+                setSelectedClient(uniqueClients[0]);
             }
         }).catch(err => {
-            console.error("Error al cargar clientes:", err);
+            console.error("Error al cargar clientes desde las rutas de routes_master:", err);
         });
 
         ForecastService.getLatestBunker().then(prices => {
