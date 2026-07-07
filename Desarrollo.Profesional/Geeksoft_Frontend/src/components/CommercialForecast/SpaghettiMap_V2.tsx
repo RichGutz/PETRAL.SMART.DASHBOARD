@@ -45,6 +45,10 @@ const computeSpaghettiDataForMonth = (
     }
 
     const targetMonths = selectedMonths;
+    const activePorts = ports.filter(p => p.lat !== null && p.lon !== null);
+
+    const missileSeries: any[] = [];
+    const haloSeries: any[] = [];
 
     const portMap: Record<string, { carga: number; descarga: number }> = {};
     ports.forEach(p => {
@@ -101,39 +105,95 @@ const computeSpaghettiDataForMonth = (
                         if (tons > 0) {
                             const ladenLegsCount = legs.filter(l => !l.isBallast).length || legs.length;
                             
-                            legs.forEach((leg) => {
-                                // Las piernas de lastre (ballast) no cargan ni descargan tonelaje real en los puertos
-                                if (!leg.isBallast) {
-                                    if (portMap[leg.origin]) {
-                                        portMap[leg.origin].carga += tons / ladenLegsCount;
+                                legs.forEach((leg) => {
+                                    // Las piernas de lastre (ballast) no cargan ni descargan tonelaje real en los puertos
+                                    if (!leg.isBallast) {
+                                        if (portMap[leg.origin]) {
+                                            portMap[leg.origin].carga += tons / ladenLegsCount;
+                                        }
+                                        if (portMap[leg.dest]) {
+                                            portMap[leg.dest].descarga += tons / ladenLegsCount;
+                                        }
                                     }
-                                    if (portMap[leg.dest]) {
-                                        portMap[leg.dest].descarga += tons / ladenLegsCount;
-                                    }
-                                }
 
-                                const edgeKey = `${leg.origin}-${leg.dest}|${vessel}`;
-                                if (!edgeAccumulator[edgeKey]) {
-                                    edgeAccumulator[edgeKey] = {
-                                        source: leg.origin,
-                                        target: leg.dest,
-                                        vessel: vessel,
-                                        tons: 0,
-                                        freq: 0,
-                                        isBallast: leg.isBallast || false
-                                    };
+                                    const edgeKey = `${leg.origin}-${leg.dest}|${vessel}`;
+                                    if (!edgeAccumulator[edgeKey]) {
+                                        edgeAccumulator[edgeKey] = {
+                                            source: leg.origin,
+                                            target: leg.dest,
+                                            vessel: vessel,
+                                            tons: 0,
+                                            freq: 0,
+                                            isBallast: leg.isBallast || false
+                                        };
+                                    }
+                                    if (!leg.isBallast) {
+                                        edgeAccumulator[edgeKey].tons += tons;
+                                    }
+                                    edgeAccumulator[edgeKey].freq += freq;
+                                });
+
+                                // Generar misiles (Efecto secuencial / En Serie - Solo en vista de 1 mes y si hay frecuencia activa)
+                                if (targetMonths.length === 1 && freq > 0) {
+                                    const coordsList: Array<[number, number]> = [];
+                                    let valid = true;
+                                    
+                                    const firstPort = activePorts.find(p => p.port_id === legs[0].origin);
+                                    if (firstPort && firstPort.lon !== null && firstPort.lat !== null) {
+                                        coordsList.push([firstPort.lon, firstPort.lat]);
+                                    } else {
+                                        valid = false;
+                                    }
+
+                                    for (let i = 0; i < legs.length; i++) {
+                                        const port = activePorts.find(p => p.port_id === legs[i].dest);
+                                        if (port && port.lon !== null && port.lat !== null) {
+                                            coordsList.push([port.lon, port.lat]);
+                                        } else {
+                                            valid = false;
+                                            break;
+                                        }
+                                    }
+
+                                    if (valid && coordsList.length >= 2) {
+                                        const trips = Math.max(1, freq);
+                                        const period = Math.max(0.2, playSpeed / trips);
+                                        const isMultiLeg = legs.length > 1;
+                                        const curveness = isMultiLeg ? 0 : getBaseCurveness(legs[0].origin, legs[0].dest);
+
+                                        missileSeries.push({
+                                            type: 'lines',
+                                            coordinateSystem: 'geo',
+                                            polyline: isMultiLeg,
+                                            zlevel: 3,
+                                            effect: {
+                                                show: true,
+                                                period: period,
+                                                trailLength: 0.65,
+                                                color: getVesselColor(vessel),
+                                                symbol: 'arrow',
+                                                symbolSize: 4
+                                            },
+                                            lineStyle: {
+                                                color: 'transparent',
+                                                width: 0,
+                                                curveness: curveness
+                                            },
+                                            data: [
+                                                {
+                                                    coords: coordsList
+                                                }
+                                            ],
+                                            silent: true
+                                        });
+                                    }
                                 }
-                                if (!leg.isBallast) {
-                                    edgeAccumulator[edgeKey].tons += tons;
-                                }
-                                edgeAccumulator[edgeKey].freq += freq;
-                            });
+                            }
                         }
-                    }
+                    });
                 });
             });
         });
-    });
 
     const edgesGroupedByPair: Record<string, any[]> = {};
     Object.values(edgeAccumulator).forEach((edge: any) => {
@@ -150,11 +210,7 @@ const computeSpaghettiDataForMonth = (
         }
     });
 
-    const activePorts = ports.filter(p => p.lat !== null && p.lon !== null);
-
     const finalEdges: any[] = [];
-    const missileSeries: any[] = [];
-    const haloSeries: any[] = [];
 
     Object.entries(edgesGroupedByPair).forEach(([pairKey, edgesInPair]) => {
         const [source, target] = pairKey.split('-');
@@ -225,40 +281,6 @@ const computeSpaghettiDataForMonth = (
                             ]
                         }
                     ]
-                });
-            }
-
-            // Misil Effect (Animación del barco)
-            if (sourcePort && targetPort && targetMonths.length === 1) {
-                const trips = Math.max(1, edge.freq || 1);
-                const period = Math.max(0.2, playSpeed / trips); 
-
-                missileSeries.push({
-                    type: 'lines',
-                    coordinateSystem: 'geo',
-                    zlevel: 3,
-                    effect: {
-                        show: true,
-                        period: period,
-                        trailLength: 0.65, // Genera el efecto de estela/halo durante la animación
-                        color: getVesselColor(edge.vessel),
-                        symbol: 'arrow',
-                        symbolSize: 4
-                    },
-                    lineStyle: {
-                        color: 'transparent',
-                        width: 0, 
-                        curveness: curveness
-                    },
-                    data: [
-                        {
-                            coords: [
-                                [sourcePort.lon, sourcePort.lat],
-                                [targetPort.lon, targetPort.lat]
-                            ]
-                        }
-                    ],
-                    silent: true
                 });
             }
         });
