@@ -10,10 +10,17 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
     w_factor_laden = float(inputs.get("weather_factor_laden", inputs.get("weather_factor", 0.0)))
     w_factor_ballast = float(inputs.get("weather_factor_ballast", inputs.get("weather_factor", 0.0)))
     
-    overhead_origin = float(inputs.get("port_overhead_hours_origin", 6))
-    overhead_dest = float(inputs.get("port_overhead_hours_dest", 6))   
-    pos_carga = float(inputs.get("positioning_carga_hrs", 0.0))
-    pos_descarga = float(inputs.get("positioning_descarga_hrs", 0.0))
+    overhead_origin = inputs.get("port_overhead_hours_origin")
+    overhead_origin = float(overhead_origin) if overhead_origin is not None else 6.0
+    
+    overhead_dest = inputs.get("port_overhead_hours_dest")
+    overhead_dest = float(overhead_dest) if overhead_dest is not None else 6.0
+    
+    pos_carga = inputs.get("positioning_carga_hrs")
+    pos_carga = float(pos_carga) if pos_carga is not None else 0.0
+    
+    pos_descarga = inputs.get("positioning_descarga_hrs")
+    pos_descarga = float(pos_descarga) if pos_descarga is not None else 0.0
     # Parámetros de Carga (Origen)
     c_load = inputs.get("contract_agreed_load_rate")
     v_intake = float(inputs.get("vessel_max_load_intake_limit", 0))

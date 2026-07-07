@@ -333,10 +333,17 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         Q = float(leg_inputs.get("quantity", 0))
         F = float(leg_inputs.get("freight_rate", 0))
         
-        overhead_orig = float(leg_inputs.get("port_overhead_hours_origin", 6))
-        overhead_dest = float(leg_inputs.get("port_overhead_hours_dest", 6))
-        pos_carga = float(leg_inputs.get("positioning_carga_hrs", 0.0))
-        pos_descarga = float(leg_inputs.get("positioning_descarga_hrs", 0.0))
+        overhead_orig = leg_inputs.get("port_overhead_hours_origin")
+        overhead_orig = float(overhead_orig) if overhead_orig is not None else 6.0
+        
+        overhead_dest = leg_inputs.get("port_overhead_hours_dest")
+        overhead_dest = float(overhead_dest) if overhead_dest is not None else 6.0
+        
+        pos_carga = leg_inputs.get("positioning_carga_hrs")
+        pos_carga = float(pos_carga) if pos_carga is not None else 0.0
+        
+        pos_descarga = leg_inputs.get("positioning_descarga_hrs")
+        pos_descarga = float(pos_descarga) if pos_descarga is not None else 0.0
         
         delay_loading = float(leg_inputs.get("port_delay_hours_loading") or 0)
         delay_discharging = float(leg_inputs.get("port_delay_hours_discharging") or 0)
