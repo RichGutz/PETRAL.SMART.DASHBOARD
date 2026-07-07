@@ -8,7 +8,6 @@ interface InteractiveChartProps {
     showDemurrage?: boolean;
     excludedDemurrages?: string[];
     customDemurrages?: Record<string, Record<number, string>>;
-    forecastName?: string;
 }
 
 type GroupBy = 'vessel' | 'route' | 'client' | 'petral' | 'tradeType';
@@ -48,8 +47,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     demurragePct = '',
     showDemurrage = false,
     excludedDemurrages = [],
-    customDemurrages = {},
-    forecastName
+    customDemurrages = {}
 }) => {
     const [groupBy, setGroupBy] = useState<GroupBy>('vessel');
     const [filterClient, setFilterClient] = useState<string>('ALL');
@@ -1056,17 +1054,10 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
             </div>
 
-            {/* Contenedor del Gráfico (Right) */}
-            <div className="flex-1 flex flex-col min-h-[650px] relative">
-                {forecastName && (
-                    <div className="absolute top-1.5 right-6 z-10 bg-sky-50/90 backdrop-blur border border-sky-200 py-1.5 px-3.5 rounded-md shadow-md pointer-events-none select-none">
-                        <span className="text-[11px] font-bold text-sky-900 flex items-center gap-1.5 leading-none">
-                            <span>📁</span> Escenario Activo: {forecastName}
-                        </span>
-                    </div>
-                )}
-                <ReactECharts option={options} style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} notMerge={true} />
+                {/* Contenedor del Gráfico (Right) */}
+                <div className="flex-1 flex flex-col min-h-[650px]">
+                    <ReactECharts option={options} style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} notMerge={true} />
+                </div>
             </div>
-        </div>
     );
 };

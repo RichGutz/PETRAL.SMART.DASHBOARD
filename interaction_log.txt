@@ -181,3 +181,4 @@
 2026-07-07 09:40:00 - Modificado Análisis Gráfico: Habilitada la agrupación por Tipo OP (Cabotaje/Chile) y selección múltiple con checkboxes en filtros.
 2026-07-07 09:47:00 - Añadida métrica P/L en Eje Primario y Secundario del Análisis Gráfico.
 2026-07-07 10:02:00 - Reubicado el badge del escenario activo a la esquina superior derecha dentro del contenedor del gráfico (fuente text-[11px]).
+2026-07-07 10:10:00 - Reubicación definitiva del escenario activo en el Análisis Gráfico a posición top-[-40px], centrando el badge de forma flotante sobre la brecha vertical de la página.
