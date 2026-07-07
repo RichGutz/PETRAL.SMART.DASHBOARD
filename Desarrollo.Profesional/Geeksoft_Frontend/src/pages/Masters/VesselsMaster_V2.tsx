@@ -168,6 +168,12 @@ export const VesselsMaster: React.FC = () => {
                                             alt="B/T MOQUEGUA" 
                                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                                         />
+                                    ) : selectedVessel.vessel_id === 'TABLONES' ? (
+                                        <img 
+                                            src="/tablones.jpeg" 
+                                            alt="B/T TABLONES" 
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                                        />
                                     ) : (
                                         <div className="w-full h-full bg-gradient-to-br from-slate-800 to-blue-900 flex flex-col items-center justify-center text-white p-6 gap-3">
                                             <Ship size={48} className="text-blue-300 animate-pulse" />
