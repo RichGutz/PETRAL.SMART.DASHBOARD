@@ -1730,6 +1730,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     onChange={(e) => updateTramoField(0, 'origin_port_id', e.target.value)}
                                     className="w-[96%] bg-white border border-transparent hover:border-slate-300 rounded text-xs font-bold text-indigo-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-sans pl-1.5 h-[26px]"
                                 >
+                                    <option value="">Seleccione puerto...</option>
                                     {ports.map(p => (
                                         <option key={p.port_id} value={p.port_id}>{p.port_id} — {p.port_name}</option>
                                     ))}
@@ -1888,6 +1889,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                             onChange={(e) => updateTramoField(idx, 'destination_port_id', e.target.value)}
                                             className="w-[96%] bg-white border border-transparent hover:border-slate-300 rounded text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans pl-1.5 h-[26px]"
                                         >
+                                            <option value="">Seleccione puerto...</option>
                                             {ports.map(p => (
                                                 <option key={p.port_id} value={p.port_id}>{p.port_id} — {p.port_name}</option>
                                             ))}

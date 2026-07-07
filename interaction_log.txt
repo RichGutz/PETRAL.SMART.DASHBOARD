@@ -196,3 +196,4 @@
 2026-07-07 13:02:00 - Añadido soporte de suboperaciones (MAIN, loading_master, other) en el Maestro de Costos Portuarios Estáticos en frontend y backend.
 2026-07-07 15:24:00 - Renombrado el Maestro de Sinks & Sources a Originación / Destino y sus pestañas internas en el frontend.
 2026-07-07 17:55:00 - Corregido bug del Multicotizador donde la distancia por defecto al formular un tramo era siempre 100 NM.
+2026-07-07 18:19:00 - Solucionado bug en la UI de Auditoría Ledger limpiando las rutas de prueba de SPCC en la tabla routes_master.
