@@ -19,14 +19,24 @@ const getBaseCurveness = (origin: string, dest: string): number => {
 
     if (pair === 'ILO-MATARANI' || reverse === 'ILO-MATARANI') return 0.10;
     if (pair === 'ILO-MARCONA' || reverse === 'ILO-MARCONA') return 0.22;
-    if (pair === 'ILO-CALLAO' || reverse === 'ILO-CALLAO') return 0.55;
-
     if (pair === 'CALLAO-MARCONA' || reverse === 'CALLAO-MARCONA') return 0.15;
-    if (pair === 'CALLAO-MATARANI' || reverse === 'CALLAO-MATARANI') return 0.28;
 
-    if (pair === 'ILO-MEJILLONES' || reverse === 'ILO-MEJILLONES') return -0.15;
-    if (pair === 'ILO-BARQUITO' || reverse === 'ILO-BARQUITO') return -0.32;
-    if (pair === 'CALLAO-MEJILLONES' || reverse === 'CALLAO-MEJILLONES') return -0.45;
+    // Ruta compleja de Nexa: dales más curvatura para alejarlos de la costa y diferenciarlos
+    if (pair === 'ILO-CALLAO') return 0.65;      // Sur a Norte (positivo curva al Oeste/océano)
+    if (pair === 'CALLAO-ILO') return -0.65;     // Norte a Sur (negativo curva al Oeste/océano)
+
+    if (pair === 'CALLAO-MEJILLONES') return -0.80; // Norte a Sur (negativo curva al Oeste/océano)
+    if (pair === 'MEJILLONES-CALLAO') return 0.80;  // Sur a Norte (positivo curva al Oeste/océano)
+
+    if (pair === 'MEJILLONES-ILO') return 0.55;  // Sur a Norte (positivo curva al Oeste/océano)
+    if (pair === 'ILO-MEJILLONES') return -0.55; // Norte a Sur (negativo curva al Oeste/océano)
+
+    // Otras rutas
+    if (pair === 'CALLAO-MATARANI') return -0.28;
+    if (pair === 'MATARANI-CALLAO') return 0.28;
+
+    if (pair === 'ILO-BARQUITO') return -0.32;
+    if (pair === 'BARQUITO-ILO') return 0.32;
 
     return 0.20;
 };

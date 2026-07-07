@@ -187,3 +187,4 @@
 2026-07-07 10:30:00 - Refactorizada la animación de rutas complejas en SpaghettiMap_V2 para que los tramos se recorran en serie (secuencialmente) usando polyline en ECharts.
 2026-07-07 10:36:00 - Corregido SpaghettiMap_V2 para que los misiles recorran secuencialmente las trayectorias curvas (arcos Bezier) de las rutas, eliminando las líneas rectas.
 2026-07-07 10:42:00 - Eliminados los halos estáticos gruesos de color rojo y verde (haloSeries) en SpaghettiMap_V2.
+2026-07-07 10:52:00 - Aumentada la curvatura de la ruta compleja de Nexa a 0.65, -0.80 y 0.55 en SpaghettiMap_V2.
