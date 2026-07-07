@@ -4,6 +4,7 @@ import { VesselsMaster } from './pages/Masters/VesselsMaster';
 import { RoutesMaster } from './pages/Masters/RoutesMaster';
 import { ClientsMaster } from './pages/Masters/ClientsMaster';
 import { ContractsMaster } from './pages/Masters/ContractsMaster';
+import { PortsMaster_V2 } from './pages/Masters/PortsMaster_V2';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/routes" element={<RoutesMaster />} />
           <Route path="/clients" element={<ClientsMaster />} />
           <Route path="/contracts" element={<ContractsMaster />} />
+          <Route path="/ports" element={<PortsMaster_V2 />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </div>

@@ -1,0 +1,333 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
+import { ForecastService } from '../../services/api';
+import { Anchor, Save, Ship, User, Clock } from 'lucide-react';
+
+export const PortCostsMaster_V2: React.FC = () => {
+    const navigate = navigateHook();
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    
+    // Configuración Inicial
+    const [mode, setMode] = useState<'static' | 'matrix'>('static');
+    
+    // Maestros
+    const [ports, setPorts] = useState<any[]>([]);
+    const [clients, setClients] = useState<any[]>([]);
+    const [vessels, setVessels] = useState<any[]>([]);
+    
+    // Estado de costos: costs[port_id][client_id][vessel_id] = { CARGA, DESCARGA, updated_at, updated_by }
+    const [costsState, setCostsState] = useState<any>({});
+    
+    // Selección Activa
+    const [activePortId, setActivePortId] = useState('');
+    const [activeClientId, setActiveClientId] = useState('');
+
+    function navigateHook() {
+        try {
+            return useNavigate();
+        } catch {
+            return () => {};
+        }
+    }
+
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const [portsData, clientsData, vesselsData, staticCostsData] = await Promise.all([
+                ForecastService.getPorts(),
+                ForecastService.getClients(),
+                ForecastService.getVessels(),
+                ForecastService.getPortCostsStatic()
+            ]);
+            
+            setPorts(portsData);
+            setClients(clientsData);
+            setVessels(vesselsData);
+            
+            // Build the state matrix
+            const newState: any = {};
+            staticCostsData.forEach((row: any) => {
+                if (!newState[row.port_id]) newState[row.port_id] = {};
+                if (!newState[row.port_id][row.client_id]) newState[row.port_id][row.client_id] = {};
+                if (!newState[row.port_id][row.client_id][row.vessel_id]) {
+                    newState[row.port_id][row.client_id][row.vessel_id] = {
+                        CARGA: 0,
+                        DESCARGA: 0,
+                        updated_at: row.updated_at,
+                        updated_by: row.updated_by
+                    };
+                }
+                if (row.operation_type === 'CARGA') {
+                    newState[row.port_id][row.client_id][row.vessel_id].CARGA = row.cost;
+                } else if (row.operation_type === 'DESCARGA') {
+                    newState[row.port_id][row.client_id][row.vessel_id].DESCARGA = row.cost;
+                }
+                
+                // Keep the most recent updated_at and updated_by
+                if (row.updated_at && (!newState[row.port_id][row.client_id][row.vessel_id].updated_at || row.updated_at > newState[row.port_id][row.client_id][row.vessel_id].updated_at)) {
+                    newState[row.port_id][row.client_id][row.vessel_id].updated_at = row.updated_at;
+                    newState[row.port_id][row.client_id][row.vessel_id].updated_by = row.updated_by;
+                }
+            });
+            
+            setCostsState(newState);
+            
+            if (portsData.length > 0) setActivePortId(portsData[0].port_id);
+            if (clientsData.length > 0) setActiveClientId(clientsData[0]);
+            
+        } catch (error) {
+            console.error("Error al obtener los datos de costos portuarios:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const handleCostChange = (portId: string, clientId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA', value: string) => {
+        const numValue = parseFloat(value) || 0;
+        setCostsState((prev: any) => {
+            const next = { ...prev };
+            if (!next[portId]) next[portId] = {};
+            if (!next[portId][clientId]) next[portId][clientId] = {};
+            if (!next[portId][clientId][vesselId]) {
+                next[portId][clientId][vesselId] = { CARGA: 0, DESCARGA: 0, updated_at: null, updated_by: null };
+            }
+            next[portId][clientId][vesselId][operation] = numValue;
+            return next;
+        });
+    };
+
+    const handleSaveGlobal = async () => {
+        try {
+            setSaving(true);
+            const payload: any[] = [];
+            
+            // Recorremos el estado completo para armar el payload de upsert masivo
+            Object.keys(costsState).forEach(portId => {
+                Object.keys(costsState[portId]).forEach(clientId => {
+                    Object.keys(costsState[portId][clientId]).forEach(vesselId => {
+                        const costData = costsState[portId][clientId][vesselId];
+                        
+                        // Si existe algún costo mayor a cero o si queremos guardar ceros, lo añadimos
+                        payload.push({
+                            client_id: clientId,
+                            port_id: portId,
+                            operation_type: 'CARGA',
+                            vessel_id: vesselId,
+                            cost: costData.CARGA || 0,
+                            updated_by: 'USUARIO'
+                        });
+                        
+                        payload.push({
+                            client_id: clientId,
+                            port_id: portId,
+                            operation_type: 'DESCARGA',
+                            vessel_id: vesselId,
+                            cost: costData.DESCARGA || 0,
+                            updated_by: 'USUARIO'
+                        });
+                    });
+                });
+            });
+            
+            await ForecastService.savePortCostsStatic(payload);
+            await fetchData(); // Refresh para traer los nuevos updated_at
+            alert("Costos portuarios guardados exitosamente.");
+        } catch (error) {
+            console.error("Error al guardar costos:", error);
+            alert("Ocurrió un error al guardar los costos.");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <MasterTemplate 
+            title="Maestro de Costos Portuarios" 
+            subtitle="Configuración de tarifas operativas por Puerto, Cliente y Buque"
+            activeTab="port-costs"
+            onBackToDashboard={() => navigate('/dashboard')}
+        >
+            {loading ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-12 text-slate-400 font-semibold animate-pulse gap-2">
+                    <div className="animate-spin h-6 w-6 border-2 border-slate-300 border-t-blue-600 rounded-full"></div>
+                    <span>Cargando matriz de costos portuarios...</span>
+                </div>
+            ) : (
+                <div className="flex flex-col gap-6 w-full pb-8">
+                    
+                    {/* Header y Selector de Modo */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-4">
+                        <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
+                            <button 
+                                onClick={() => setMode('static')}
+                                className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${mode === 'static' ? 'bg-white text-blue-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Modelo Estático
+                            </button>
+                            <button 
+                                onClick={() => setMode('matrix')}
+                                className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${mode === 'matrix' ? 'bg-white text-blue-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Modelo Matriz Compleja
+                            </button>
+                        </div>
+                        
+                        {mode === 'static' && (
+                            <button 
+                                onClick={handleSaveGlobal}
+                                disabled={saving}
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 transition-colors font-bold text-sm flex items-center gap-2 disabled:opacity-50"
+                            >
+                                {saving ? (
+                                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                ) : (
+                                    <Save size={16} />
+                                )}
+                                Guardar Todos los Costos
+                            </button>
+                        )}
+                    </div>
+
+                    {mode === 'matrix' ? (
+                        <div className="flex-1 flex flex-col items-center justify-center p-12 text-slate-400 font-semibold gap-2 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50">
+                            <span className="text-4xl">🚧</span>
+                            <span>El Modelo Matriz Compleja está en desarrollo.</span>
+                            <span className="text-xs font-normal">Por favor, utilice el modelo estático mientras tanto.</span>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            
+                            {/* Nivel 1: TABS DE PUERTOS */}
+                            <div className="flex overflow-x-auto border-b border-slate-200 bg-slate-50 scrollbar-none">
+                                {ports.map((p) => (
+                                    <button
+                                        key={p.port_id}
+                                        onClick={() => setActivePortId(p.port_id)}
+                                        className={`px-6 py-3 font-black text-xs uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap flex items-center gap-2 ${
+                                            activePortId === p.port_id
+                                                ? 'border-blue-600 text-blue-600 bg-white'
+                                                : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                                        }`}
+                                    >
+                                        <Anchor size={14} />
+                                        {p.port_name || p.port_id}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Nivel 2: TABS DE CLIENTES */}
+                            <div className="flex overflow-x-auto border-b border-slate-100 bg-white px-4 scrollbar-none">
+                                {clients.map((c) => (
+                                    <button
+                                        key={c}
+                                        onClick={() => setActiveClientId(c)}
+                                        className={`px-4 py-3 font-bold text-[11px] uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap flex items-center gap-1.5 ${
+                                            activeClientId === c
+                                                ? 'border-teal-500 text-teal-700'
+                                                : 'border-transparent text-slate-400 hover:text-slate-600'
+                                        }`}
+                                    >
+                                        <User size={12} />
+                                        Cliente: {c}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Contenido (Cards de Buques) */}
+                            <div className="p-6 bg-slate-50/50 min-h-[400px]">
+                                {activePortId && activeClientId ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                        {vessels.map(v => {
+                                            const vData = costsState[activePortId]?.[activeClientId]?.[v.vessel_id] || { CARGA: 0, DESCARGA: 0, updated_at: null, updated_by: null };
+                                            
+                                            // Formatear fecha
+                                            let formattedDate = "Sin modificaciones";
+                                            if (vData.updated_at) {
+                                                const d = new Date(vData.updated_at);
+                                                formattedDate = d.toLocaleString();
+                                            }
+
+                                            return (
+                                                <div key={v.vessel_id} className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow p-4 flex flex-col group">
+                                                    
+                                                    {/* Header Card Buque */}
+                                                    <div className="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4">
+                                                        <div className="h-10 w-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center border border-slate-200 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-200 transition-colors">
+                                                            <Ship size={20} />
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <h3 className="font-black text-slate-800 text-sm leading-tight uppercase">
+                                                                {v.vessel_name || v.vessel_id}
+                                                            </h3>
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ID: {v.vessel_id}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Inputs de Operación */}
+                                                    <div className="flex flex-col gap-3">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <label className="text-xs font-bold text-slate-600 uppercase">Carga ($)</label>
+                                                            <input 
+                                                                type="number"
+                                                                step="0.01"
+                                                                value={vData.CARGA || ''}
+                                                                onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'CARGA', e.target.value)}
+                                                                className="w-24 text-right text-sm font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                                                                placeholder="0.00"
+                                                            />
+                                                        </div>
+                                                        
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <label className="text-xs font-bold text-slate-600 uppercase">Descarga ($)</label>
+                                                            <input 
+                                                                type="number"
+                                                                step="0.01"
+                                                                value={vData.DESCARGA || ''}
+                                                                onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'DESCARGA', e.target.value)}
+                                                                className="w-24 text-right text-sm font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                                                                placeholder="0.00"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Panel de Auditoría / Modificación */}
+                                                    <div className="mt-4 pt-3 border-t border-slate-100">
+                                                        <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex flex-col gap-1.5">
+                                                            <div className="flex justify-between items-center text-[10px]">
+                                                                <span className="font-bold text-slate-500 uppercase">Actualizado por:</span>
+                                                                <span className="font-black text-slate-700 bg-white px-2 py-0.5 rounded shadow-sm border border-slate-200">
+                                                                    {vData.updated_by || 'SISTEMA'}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex justify-between items-center text-[10px]">
+                                                                <span className="font-bold text-slate-500 uppercase">Fecha Act.:</span>
+                                                                <span className="font-black text-slate-700 bg-white px-2 py-0.5 rounded shadow-sm border border-slate-200 flex items-center gap-1">
+                                                                    <Clock size={10} className={vData.updated_at ? "text-amber-500" : "text-slate-300"} />
+                                                                    {formattedDate}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="flex-1 flex items-center justify-center text-slate-400 font-semibold p-12">
+                                        Seleccione un Puerto y un Cliente para ver la configuración de buques.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+        </MasterTemplate>
+    );
+};

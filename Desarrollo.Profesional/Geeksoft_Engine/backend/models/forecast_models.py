@@ -130,3 +130,33 @@ class ContractMaster(BaseModel):
     time_to_count_descarga_hrs: float = 6.0
     maneuver_descarga_hrs: float = 0.0
     tariffs: List[ContractTariffMaster] = []
+
+class PortUpdate(BaseModel):
+    port_id: str
+    port_name: str
+    country: str
+    lat: float
+    lon: float
+
+class PortReorderItem(BaseModel):
+    port_id: str
+    display_order: int
+
+class PortCostStaticUpdateItem(BaseModel):
+    client_id: str
+    port_id: str
+    operation_type: str
+    vessel_id: str
+    cost: float
+    updated_by: str = 'ADMIN'
+
+
+class SourceSinkUpdateItem(BaseModel):
+    port_id: str
+    year: int
+    capacity_mt: float
+    type: str
+    empresa: str
+    color_hex: str
+    producto: str
+

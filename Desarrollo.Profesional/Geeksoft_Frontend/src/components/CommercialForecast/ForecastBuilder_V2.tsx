@@ -63,10 +63,15 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
     // Identificar si la ruta seleccionada es una ruta multicotizador compleja
     const matchedSpot = useMemo(() => {
-        if (client !== 'NEXA' || !route.startsWith('SPOT-')) return null;
+        if (!route.startsWith('SPOT-')) return null;
         const routeName = route.replace('SPOT-', '');
         return spotRoutes.find(s => s.name === routeName);
-    }, [client, route, spotRoutes]);
+    }, [route, spotRoutes]);
+
+    const filteredSpotRoutes = useMemo(() => {
+        if (!client) return [];
+        return spotRoutes.filter(s => s.name && s.name.toUpperCase().startsWith(client.toUpperCase()));
+    }, [client, spotRoutes]);
 
     const isComplexRoute = useMemo(() => {
         return matchedSpot?.legs_data?.is_multicotizador === true;
@@ -355,10 +360,10 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             </SelectTrigger>
                             <SelectContent className="w-auto min-w-[max-content] max-h-[300px] overflow-y-auto">
                                 {client === 'NEXA' ? (
-                                    spotRoutes.length === 0 ? (
-                                        <SelectItem value="" disabled>No hay rutas spot guardadas</SelectItem>
+                                    filteredSpotRoutes.length === 0 ? (
+                                        <SelectItem value="" disabled>No hay rutas spot para NEXA</SelectItem>
                                     ) : (
-                                        spotRoutes.map(s => (
+                                        filteredSpotRoutes.map(s => (
                                             <SelectItem key={s.spot_id} value={`SPOT-${s.name}`}>
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-2.5 h-2.5 rounded-full bg-[#14B8A6]"></div>
@@ -381,6 +386,25 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                         <SelectItem value="ILO-MEJILLONES">
                                             <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#D946EF]"></div>ILO - MEJILLONES</div>
                                         </SelectItem>
+                                        
+                                        {filteredSpotRoutes.length > 0 && (
+                                            <>
+                                                <div className="px-2 py-1 bg-slate-100 text-[9px] font-bold text-slate-400 uppercase tracking-wider select-none border-t border-b border-slate-200 mt-1 mb-1">
+                                                    Rutas Multicotizador ({client})
+                                                </div>
+                                                {filteredSpotRoutes.map(s => (
+                                                    <SelectItem key={s.spot_id} value={`SPOT-${s.name}`}>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-2.5 h-2.5 rounded-full bg-[#14B8A6]"></div>
+                                                            {s.name || s.spot_id}
+                                                            <span className="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{background: s.pais === 'Chile' ? '#d1fae5' : '#dbeafe', color: s.pais === 'Chile' ? '#065f46' : '#1e40af'}}>
+                                                                {s.pais === 'Chile' ? '🇨🇱 Chile' : '🇵🇪 Peru'}
+                                                            </span>
+                                                        </div>
+                                                    </SelectItem>
+                                                ))}
+                                            </>
+                                        )}
                                     </>
                                 )}
                             </SelectContent>

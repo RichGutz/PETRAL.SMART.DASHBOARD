@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ForecastService } from '../../services/api';
 import { Plus, Trash2, Save, FolderOpen, X } from 'lucide-react';
+import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 
 interface TramoState {
     type: 'BALLAST' | 'LADEN';
@@ -27,10 +28,13 @@ interface PuertoConfig {
 }
 
 export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' }> = ({ portCostMode = 'static' }) => {
+    const context = useForecastContext_V2();
     const [vessels, setVessels] = useState<any[]>([]);
     const [selectedVessel, setSelectedVessel] = useState('');
     const [ports, setPorts] = useState<any[]>([]);
     const [routes, setRoutes] = useState<any[]>([]);
+    const [clients, setClients] = useState<string[]>([]);
+    const [selectedClient, setSelectedClient] = useState('');
 
     // Comisiones
     const [addressCommPct, setAddressCommPct] = useState<number>(0);
@@ -95,6 +99,17 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     const [isSaving, setIsSaving] = useState(false);
     const [isLoadingRoutes, setIsLoadingRoutes] = useState(false);
     const [loadedRouteName, setLoadedRouteName] = useState<string | null>(null);
+
+    // Exportación a la Matriz Financiera (Forecast)
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [exportClient, setExportClient] = useState('');
+    const [exportMonth, setExportMonth] = useState('');
+    const [exportMode, setExportMode] = useState<'active' | 'new'>('active');
+    const [exportNewScenarioName, setExportNewScenarioName] = useState('');
+    const [exportCloneActive, setExportCloneActive] = useState(true);
+    const [exportCustomRouteName, setExportCustomRouteName] = useState('');
+    const [exportClientsList, setExportClientsList] = useState<string[]>([]);
+    const [isExporting, setIsExporting] = useState(false);
 
     // Resolver info de ruta
     const getAutoRouteInfo = (origin: string, destination: string, type: 'LADEN' | 'BALLAST') => {
@@ -184,6 +199,16 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
         ForecastService.getRoutes().then(data => {
             setRoutes(data || []);
+        });
+
+        ForecastService.getClients().then(clients => {
+            const list = clients.includes('NEXA') ? clients : [...clients, 'NEXA'];
+            setClients(list);
+            if (list.length > 0) {
+                setSelectedClient(list[0]);
+            }
+        }).catch(err => {
+            console.error("Error al cargar clientes:", err);
         });
 
         ForecastService.getLatestBunker().then(prices => {
@@ -746,6 +771,205 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         }
     };
 
+    const getSuggestedRouteName = (clientId: string) => {
+        if (!selectedVessel || tramos.length === 0) return '';
+        const portList = [tramos[0]?.origin_port_id || ''];
+        tramos.forEach(tr => {
+            if (tr.destination_port_id && tr.destination_port_id !== portList[portList.length - 1]) {
+                portList.push(tr.destination_port_id);
+            }
+        });
+        const cleanPorts = portList.filter(Boolean).map(p => p.toUpperCase());
+        const vesselName = selectedVessel.toUpperCase();
+        const clientPrefix = clientId ? `${clientId.toUpperCase()}.` : '';
+        return `${clientPrefix}${cleanPorts.join('.')}.${vesselName}`;
+    };
+
+    const handleOpenExportModal = async () => {
+        if (!result) {
+            return alert('Por favor, ejecute la simulación en el estimador antes de exportar.');
+        }
+        if (!selectedVessel) {
+            return alert('Por favor, seleccione un buque en el estimador antes de exportar.');
+        }
+        
+        setIsExporting(false);
+        try {
+            const clients = await ForecastService.getClients();
+            const list = clients.includes('NEXA') ? clients : [...clients, 'NEXA'];
+            setExportClientsList(list);
+            
+            const initialClient = selectedClient || list[0] || '';
+            setExportClient(initialClient);
+            
+            const initialMonth = context.dynamicMonths[0] || '';
+            setExportMonth(initialMonth);
+            
+            if (context.currentForecastId) {
+                setExportMode('active');
+            } else {
+                setExportMode('new');
+            }
+            
+            const suggested = getSuggestedRouteName(initialClient);
+            setExportCustomRouteName(suggested);
+            
+            setExportNewScenarioName('');
+            setExportCloneActive(true);
+            setShowExportModal(true);
+        } catch (e) {
+            console.error(e);
+            alert("Error al inicializar los datos de exportación");
+        }
+    };
+
+    useEffect(() => {
+        if (showExportModal) {
+            const suggested = getSuggestedRouteName(exportClient);
+            setExportCustomRouteName(suggested);
+        }
+    }, [exportClient, selectedVessel, tramos, showExportModal]);
+
+    const handleConfirmExport = async () => {
+        if (!exportCustomRouteName) {
+            return alert("Ingrese un nombre para la ruta");
+        }
+        if (exportMode === 'new' && !exportNewScenarioName) {
+            return alert("Ingrese un nombre para el nuevo escenario");
+        }
+        
+        setIsExporting(true);
+        try {
+            const tramosLaden = tramos.filter(t => t.type === 'LADEN');
+            const lastLadenDest = tramosLaden[tramosLaden.length - 1]?.destination_port_id || '';
+            const isChile = ['MEJILLONES', 'BARQUITO'].includes(lastLadenDest);
+            const pais = isChile ? 'Chile' : 'Peru';
+
+            const tramosEnriquecidos = tramos.map((tr, idx) => {
+                const pOrig = puertosConfig[idx];
+                const pDest = puertosConfig[idx + 1];
+                
+                const customLoad = pDest?.action === 'CARGAR' && pDest?.op_rate ? Number(pDest.op_rate) : 0.0;
+                const customDisch = pDest?.action === 'DESCARGAR' && pDest?.op_rate ? Number(pDest.op_rate) : 0.0;
+                
+                const overheadOrig = pOrig?.overhead !== '' && pOrig?.overhead !== undefined ? Number(pOrig.overhead) : 6.0;
+                const overheadDest = pDest?.overhead !== '' && pDest?.overhead !== undefined ? Number(pDest.overhead) : 6.0;
+                const posCarga = pOrig?.positioning !== '' && pOrig?.positioning !== undefined ? Number(pOrig.positioning) : 0.0;
+                const posDescarga = pDest?.positioning !== '' && pDest?.positioning !== undefined ? Number(pDest.positioning) : 0.0;
+                
+                const overridePortCostOrig = pOrig?.manual_port_cost !== '' && pOrig?.manual_port_cost !== undefined ? Number(pOrig.manual_port_cost) : 0.0;
+                const overridePortCostDest = pDest?.manual_port_cost !== '' && pDest?.manual_port_cost !== undefined ? Number(pDest.manual_port_cost) : 0.0;
+
+                return {
+                    origin_port_id: tr.origin_port_id,
+                    destination_port_id: tr.destination_port_id,
+                    type: tr.type,
+                    quantity: Number(tr.quantity) || 0,
+                    freight_rate: Number(tr.freight_rate) || 0,
+                    route_distance: Number(tr.route_distance) || 0,
+                    weather_factor: (Number(tr.weather_factor) || 0) / 100,
+                    speed: Number(tr.speed) || Number(vesselParams.vessel_speed) || 11.0,
+                    origin_action: pOrig?.action || 'NONE',
+                    destination_action: pDest?.action || 'NONE',
+                    custom_load_rate: customLoad,
+                    custom_discharge_rate: customDisch,
+                    rate_unit_origin: pOrig?.rate_unit || 'TH',
+                    rate_unit_destination: pDest?.rate_unit || 'TH',
+                    port_overhead_hours_origin: overheadOrig,
+                    port_overhead_hours_dest: overheadDest,
+                    positioning_carga_hrs: posCarga,
+                    positioning_descarga_hrs: posDescarga,
+                    port_delay_hours_loading: Number(tr.port_delay_hours_loading) || 0,
+                    port_delay_hours_discharging: Number(tr.port_delay_hours_discharging) || 0,
+                    agency_costs_origin: overridePortCostOrig,
+                    agency_costs_destination: overridePortCostDest,
+                };
+            });
+
+            const spotPayload = {
+                name: exportCustomRouteName,
+                description: "Ruta de Multicotizador",
+                pais,
+                legs_data: {
+                    is_multicotizador: true,
+                    vessel_id: selectedVessel,
+                    bunker_price_ifo: bunkerPriceIfo,
+                    bunker_price_mdo: bunkerPriceMdo,
+                    tramos: tramosEnriquecidos,
+                    puertosConfig,
+                    vesselParams,
+                    addressCommPct,
+                    brokerCommPct
+                }
+            };
+            
+            await ForecastService.saveSpot(spotPayload);
+
+            const totalQuantity = tramosLaden.reduce((acc, tr) => acc + (Number(tr.quantity) || 0), 0);
+            const totalRevenue = tramosLaden.reduce((acc, tr) => acc + (Number(tr.quantity) || 0) * (Number(tr.freight_rate) || 0), 0);
+            const yieldFlete = totalQuantity > 0 ? (totalRevenue / totalQuantity) : 0;
+
+            const newLine = {
+                month_index: exportMonth,
+                client_id: exportClient,
+                origin_port_id: 'SPOT',
+                destination_port_id: exportCustomRouteName,
+                vessel_id: selectedVessel,
+                quantity: totalQuantity,
+                monthly_frequency: 1,
+                forecast_bunker_price_ifo: null,
+                forecast_bunker_price_mdo: null,
+                custom_tariff: yieldFlete > 0 ? Number(yieldFlete.toFixed(2)) : null
+            };
+
+            let targetForecastId = context.currentForecastId;
+            let targetForecastName = context.forecastName;
+            let targetLines: any[] = [];
+
+            if (exportMode === 'new') {
+                targetLines = exportCloneActive ? [...context.projectionLines, newLine] : [newLine];
+                targetForecastName = exportNewScenarioName;
+                targetForecastId = null;
+            } else {
+                const existingIndex = context.projectionLines.findIndex(p => 
+                    p.month_index === exportMonth && 
+                    p.vessel_id === selectedVessel &&
+                    p.destination_port_id === exportCustomRouteName &&
+                    p.client_id === exportClient
+                );
+
+                if (existingIndex >= 0) {
+                    const clone = [...context.projectionLines];
+                    clone[existingIndex] = newLine;
+                    targetLines = clone;
+                } else {
+                    targetLines = [...context.projectionLines, newLine];
+                }
+            }
+
+            const forecastPayload = {
+                id: targetForecastId,
+                name: targetForecastName,
+                user_id: context.userId,
+                start_date: context.startDate,
+                end_date: context.endDate,
+                projection_lines: targetLines
+            };
+
+            const resultForecast = await ForecastService.saveForecast(forecastPayload);
+            await context.handleLoadSelected(resultForecast.id);
+
+            alert("Viaje exportado exitosamente a la Matriz Financiera");
+            setShowExportModal(false);
+        } catch (e: any) {
+            console.error(e);
+            const msg = e?.response?.data?.detail || e?.message || "Error desconocido";
+            alert(`Error al exportar: ${msg}`);
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     const handlePrintPDF = () => {
         if (!result) return alert('Por favor, ejecute o espere a que calcule la simulación antes de exportar.');
         
@@ -1138,7 +1362,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     };
 
     return (
-        <div className="bg-[#f3f4f6] text-[11px] text-slate-800 flex-1 flex flex-col min-h-0 w-full p-2 font-sans">
+        <div className="bg-[#f3f4f6] text-[13px] text-slate-800 flex-1 flex flex-col min-h-0 w-full p-2 font-sans">
             
             {/* 1. RIBBON SUPERIOR DE DOS FILAS: ACCIONES Y FACT SHEET */}
             <div className="bg-white border border-slate-300 rounded shadow-sm p-2 mb-2 flex flex-col gap-2 select-none flex-shrink-0">
@@ -1146,29 +1370,44 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 {/* FILA 1: CABECERA Y ACCIONES DE PERSISTENCIA */}
                 <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
                     <div className="flex items-center gap-2">
-                        <span className="text-sm">📊</span>
+                        <span className="text-base">📊</span>
                         <div>
-                            <h2 className="text-xs font-bold text-slate-900 leading-none">
+                            <h2 className="text-sm font-bold text-slate-900 leading-none">
                                 Estimador de Voyage y Fletamentos (Excel Mode)
-                                {loadedRouteName && <span className="text-[9px] bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-mono ml-2">[{loadedRouteName}]</span>}
+                                {loadedRouteName && <span className="text-[11px] bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-mono ml-2">[{loadedRouteName}]</span>}
                             </h2>
-                            <span className="text-[8.5px] text-slate-400 font-medium">Rejilla contable de alta densidad para estimación de tramos paralelos (Multi-Leg)</span>
+                            <span className="text-[10.5px] text-slate-400 font-medium">Rejilla contable de alta densidad para estimación de tramos paralelos (Multi-Leg)</span>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3">
+                        {/* Selector de Cliente */}
+                        <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-300 rounded px-2 h-7 shadow-sm">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-sans whitespace-nowrap">Client:</label>
+                            <select
+                                value={selectedClient}
+                                onChange={(e) => setSelectedClient(e.target.value)}
+                                className="h-5 bg-white border border-slate-300 rounded px-1.5 text-[10.5px] font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans"
+                            >
+                                <option value="">[SELECCIONAR]</option>
+                                {clients.map(c => (
+                                    <option key={c} value={c}>{c}</option>
+                                ))}
+                            </select>
+                        </div>
+
                         {/* Botones de Control de Tramos */}
                         <div className="flex gap-1">
                             <button
                                 onClick={handleAddTramo}
-                                className="h-5 text-[9px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
+                                className="h-7 text-[11px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
                             >
                                 <Plus size={10} /> Add Leg
                             </button>
                             <button
                                 onClick={handleRemoveLastTramo}
                                 disabled={tramos.length <= 1}
-                                className="h-5 text-[9px] font-bold rounded px-2 bg-slate-150 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-40 shadow-sm"
+                                className="h-7 text-[11px] font-bold rounded px-2 bg-slate-150 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-40 shadow-sm"
                             >
                                 <Trash2 size={10} /> Delete Leg
                             </button>
@@ -1178,22 +1417,32 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                         {/* Botones de Persistencia */}
                         <div className="flex gap-1 border-l border-slate-200 pl-3">
                             <button
-                                onClick={() => setShowSaveModal(true)}
-                                className="h-5 text-[9px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
+                                onClick={() => {
+                                    const suggested = getSuggestedRouteName(selectedClient);
+                                    setRouteName(suggested);
+                                    setShowSaveModal(true);
+                                }}
+                                className="h-7 text-[11px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
                             >
                                 <Save size={10} /> Save Route
                             </button>
                             <button
                                 onClick={handleLoadClick}
-                                className="h-5 text-[9px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
+                                className="h-7 text-[11px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
                             >
                                 <FolderOpen size={10} /> Load Route
                             </button>
                             <button
                                 onClick={handlePrintPDF}
-                                className="h-5 text-[9px] font-bold rounded px-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-900 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
+                                className="h-7 text-[11px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
                             >
                                 🖨️ Export PDF
+                            </button>
+                            <button
+                                onClick={handleOpenExportModal}
+                                className="h-7 text-[11px] font-bold rounded px-2 bg-emerald-600 hover:bg-emerald-750 text-white border border-emerald-700 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
+                            >
+                                📦 Export to Matrix
                             </button>
                         </div>
                     </div>
@@ -1201,9 +1450,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
                 {/* FILA 2: FACT SHEET DEL BARCO Y BUNKER EN TABLA UNIFICADA */}
                 <div className="bg-slate-50/50 border border-slate-200 rounded p-1 flex-shrink-0">
-                    <table className="w-full border-collapse border border-slate-250 bg-white font-mono text-[9px] table-fixed">
+                    <table className="w-full border-collapse border border-slate-250 bg-white font-mono text-[11px] table-fixed">
                         <thead>
-                            <tr className="bg-slate-100 border-b border-slate-250 font-sans text-[7.5px] text-slate-500 font-bold uppercase tracking-wider h-5">
+                            <tr className="bg-slate-100 border-b border-slate-250 font-sans text-[9.5px] text-slate-500 font-bold uppercase tracking-wider h-7">
                                 <th className="border-r border-slate-200 text-left pl-2" style={{ width: '11%' }}>Vessel</th>
                                 <th className="border-r border-slate-200 text-right pr-2" style={{ width: '5%' }}>GRT (t)</th>
                                 <th className="border-r border-slate-200 text-right pr-2" style={{ width: '6.5%' }}>DWT (t)</th>
@@ -1212,7 +1461,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 <th className="border-r border-slate-200 text-right pr-2" style={{ width: '7%' }}>TCE Req ($/d)</th>
                                 <th className="border-r border-slate-200 text-right pr-2" style={{ width: '5%' }}>LOA (m)</th>
                                 <th className="border-r border-slate-200 text-right pr-2" style={{ width: '5%' }}>Beam (m)</th>
-                                <th className="border-r border-slate-200 text-center bg-slate-50 text-[7px]" style={{ width: '4%' }}>Fuel</th>
+                                <th className="border-r border-slate-200 text-center bg-slate-50 text-[9px]" style={{ width: '4%' }}>Fuel</th>
                                 <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Sea (t/d)</th>
                                 <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Idle (t/d)</th>
                                 <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Load (t/d)</th>
@@ -1222,13 +1471,13 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             </tr>
                         </thead>
                         <tbody>
-                            <tr className="border-b border-slate-200 h-6">
+                            <tr className="border-b border-slate-200 h-8">
                                 {/* Buque Selector */}
                                 <td className="border-r border-slate-200 p-0 text-left align-middle" rowSpan={2}>
                                     <select
                                         value={selectedVessel}
                                         onChange={(e) => handleVesselChange(e.target.value)}
-                                        className="w-[96%] mx-[2%] h-[18px] bg-white border border-slate-300 rounded px-1 text-[9.5px] font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans"
+                                        className="w-[96%] mx-[2%] h-[26px] bg-white border border-slate-300 rounded px-1 text-[11.5px] font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans"
                                     >
                                         <option value="">⚓ [SELECCIONE BUQUE]</option>
                                         {vessels.map(v => (
@@ -1243,7 +1492,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         type="number"
                                         value={vesselParams.grt ?? ''}
                                         onChange={(e) => handleVesselParamChange('grt', e.target.value)}
-                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
@@ -1251,7 +1500,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         type="number"
                                         value={vesselParams.dwt ?? ''}
                                         onChange={(e) => handleVesselParamChange('dwt', e.target.value)}
-                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
@@ -1259,7 +1508,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         type="number"
                                         value={vesselParams.dwcc ?? ''}
                                         onChange={(e) => handleVesselParamChange('dwcc', e.target.value)}
-                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
@@ -1268,7 +1517,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         step="0.1"
                                         value={vesselParams.vessel_speed ?? ''}
                                         onChange={(e) => handleVesselParamChange('vessel_speed', e.target.value)}
-                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
@@ -1276,7 +1525,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         type="number"
                                         value={vesselParams.tce_required ?? ''}
                                         onChange={(e) => handleVesselParamChange('tce_required', e.target.value)}
-                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
@@ -1285,7 +1534,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         step="0.1"
                                         value={vesselParams.length ?? ''}
                                         onChange={(e) => handleVesselParamChange('length', e.target.value)}
-                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                                         placeholder="LOA"
                                     />
                                 </td>
@@ -1295,20 +1544,20 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         step="0.1"
                                         value={vesselParams.beam ?? ''}
                                         onChange={(e) => handleVesselParamChange('beam', e.target.value)}
-                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                                         placeholder="Beam"
                                     />
                                 </td>
 
                                 {/* Consumos IFO */}
-                                <td className="border-r border-slate-200 text-center bg-slate-100 font-sans font-bold text-[7px] text-slate-500 uppercase select-none align-middle">IFO</td>
+                                <td className="border-r border-slate-200 text-center bg-slate-100 font-sans font-bold text-[9px] text-slate-500 uppercase select-none align-middle">IFO</td>
                                 <td className="border-r border-slate-200 p-0 text-center align-middle">
                                     <input
                                         type="number"
                                         step="0.1"
                                         value={vesselParams.consumption_sea_ifo ?? ''}
                                         onChange={(e) => handleVesselParamChange('consumption_sea_ifo', e.target.value)}
-                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                        className="w-full h-full min-h-[26px] bg-white border-0 p-0 text-center text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-center align-middle">
@@ -1317,7 +1566,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         step="0.1"
                                         value={vesselParams.consumption_idle_ifo ?? ''}
                                         onChange={(e) => handleVesselParamChange('consumption_idle_ifo', e.target.value)}
-                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                        className="w-full h-full min-h-[26px] bg-white border-0 p-0 text-center text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-center align-middle">
@@ -1326,7 +1575,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         step="0.1"
                                         value={vesselParams.consumption_load_ifo ?? ''}
                                         onChange={(e) => handleVesselParamChange('consumption_load_ifo', e.target.value)}
-                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                        className="w-full h-full min-h-[26px] bg-white border-0 p-0 text-center text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-center align-middle">
@@ -1335,7 +1584,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         step="0.1"
                                         value={vesselParams.consumption_disch_ifo ?? ''}
                                         onChange={(e) => handleVesselParamChange('consumption_disch_ifo', e.target.value)}
-                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                        className="w-full h-full min-h-[26px] bg-white border-0 p-0 text-center text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
                                     />
                                 </td>
 
@@ -1346,7 +1595,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         step="0.01"
                                         value={bunkerPriceIfo}
                                         onChange={(e) => setBunkerPriceIfo(Number(e.target.value))}
-                                        className="w-full h-5 bg-white border-0 p-0 text-center text-[10px] font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        className="w-full h-7 bg-white border-0 p-0 text-center text-xs font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     />
                                     <div className="text-[6.5px] text-slate-400 font-mono text-center border-t border-slate-100 py-0.5 leading-none select-none">
                                         Lec: {bunkerDate}
@@ -1358,7 +1607,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         step="0.01"
                                         value={bunkerPriceMdo}
                                         onChange={(e) => setBunkerPriceMdo(Number(e.target.value))}
-                                        className="w-full h-5 bg-white border-0 p-0 text-center text-[10px] font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        className="w-full h-7 bg-white border-0 p-0 text-center text-xs font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     />
                                     <div className="text-[6.5px] text-slate-400 font-mono text-center border-t border-slate-100 py-0.5 leading-none select-none">
                                         Lec: {bunkerDate}
@@ -1367,15 +1616,15 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             </tr>
                             
                             {/* Fila MDO de Consumos */}
-                            <tr className="border-b border-slate-200 h-6">
-                                <td className="border-r border-slate-200 text-center bg-slate-100 font-sans font-bold text-[7px] text-slate-500 uppercase select-none align-middle">MDO</td>
+                            <tr className="border-b border-slate-200 h-8">
+                                <td className="border-r border-slate-200 text-center bg-slate-100 font-sans font-bold text-[9px] text-slate-500 uppercase select-none align-middle">MDO</td>
                                 <td className="border-r border-slate-200 p-0 text-center align-middle">
                                     <input
                                         type="number"
                                         step="0.1"
                                         value={vesselParams.consumption_sea_mdo ?? ''}
                                         onChange={(e) => handleVesselParamChange('consumption_sea_mdo', e.target.value)}
-                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                        className="w-full h-full min-h-[26px] bg-white border-0 p-0 text-center text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-center align-middle">
@@ -1384,7 +1633,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         step="0.1"
                                         value={vesselParams.consumption_idle_mdo ?? ''}
                                         onChange={(e) => handleVesselParamChange('consumption_idle_mdo', e.target.value)}
-                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                        className="w-full h-full min-h-[26px] bg-white border-0 p-0 text-center text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-center align-middle">
@@ -1393,7 +1642,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         step="0.1"
                                         value={vesselParams.consumption_load_mdo ?? ''}
                                         onChange={(e) => handleVesselParamChange('consumption_load_mdo', e.target.value)}
-                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                        className="w-full h-full min-h-[26px] bg-white border-0 p-0 text-center text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-center align-middle">
@@ -1402,7 +1651,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         step="0.1"
                                         value={vesselParams.consumption_disch_mdo ?? ''}
                                         onChange={(e) => handleVesselParamChange('consumption_disch_mdo', e.target.value)}
-                                        className="w-full h-full min-h-[18px] bg-white border-0 p-0 text-center text-[9px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
+                                        className="w-full h-full min-h-[26px] bg-white border-0 p-0 text-center text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
                                     />
                                 </td>
                             </tr>
@@ -1413,7 +1662,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
             {/* 2. PORT ROTATION TABLE (MAIN ESTIMATION REJILLA) */}
             <div className="flex-1 overflow-auto border border-slate-300 rounded bg-white shadow-sm min-h-0 flex flex-col mb-2">
-                <table className="w-full border-collapse text-[10.5px] font-mono table-fixed select-text">
+                <table className="w-full border-collapse text-[12px] font-mono table-fixed select-text">
                     
                     {/* Ancho de columnas - Suma 100% de forma perfecta y balanceada */}
                     <colgroup>
@@ -1438,7 +1687,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     </colgroup>
  
                     <thead>
-                        <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-300 h-6 select-none font-sans text-[8.5px] uppercase tracking-wider">
+                        <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-300 h-8 select-none font-sans text-[10.5px] uppercase tracking-wider">
                             <th className="border-r border-slate-300 text-center">Leg</th>
                             <th className="border-r border-slate-300 text-center">Tipo</th>
                             <th className="border-r border-slate-300 text-left pl-2">Puerto</th>
@@ -1463,14 +1712,14 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     <tbody>
                         
                         {/* Fila 0: Origen del Viaje */}
-                        <tr className="border-b border-slate-200 h-6 hover:bg-slate-50/50 bg-slate-50/20">
+                        <tr className="border-b border-slate-200 h-8 hover:bg-slate-50/50 bg-slate-50/20">
                             <td className="border-r border-slate-200 text-center text-slate-400 select-none">-</td>
                             <td className="border-r border-slate-200 text-center text-slate-400 select-none">-</td>
                             <td className="border-r border-slate-200 p-0 text-left">
                                 <select
                                     value={tramos[0].origin_port_id}
                                     onChange={(e) => updateTramoField(0, 'origin_port_id', e.target.value)}
-                                    className="w-[96%] bg-white border border-transparent hover:border-slate-300 rounded text-[10px] font-bold text-indigo-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-sans pl-1.5 h-[18px]"
+                                    className="w-[96%] bg-white border border-transparent hover:border-slate-300 rounded text-xs font-bold text-indigo-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-sans pl-1.5 h-[26px]"
                                 >
                                     {ports.map(p => (
                                         <option key={p.port_id} value={p.port_id}>{p.port_id} — {p.port_name}</option>
@@ -1492,7 +1741,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         type="number"
                                         value={puertosConfig[0].overhead ?? ''}
                                         onChange={(e) => updatePuertoConfigField(0, 'overhead', e.target.value)}
-                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
                                         placeholder="6.0"
                                     />
                                 ) : (
@@ -1507,7 +1756,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         type="number"
                                         value={puertosConfig[0].positioning ?? ''}
                                         onChange={(e) => updatePuertoConfigField(0, 'positioning', e.target.value)}
-                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
                                         placeholder="0.0"
                                     />
                                 ) : (
@@ -1519,7 +1768,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 <select
                                     value={puertosConfig[0].action}
                                     onChange={(e) => updatePuertoConfigField(0, 'action', e.target.value)}
-                                    className="w-[96%] bg-white border border-indigo-200 hover:border-indigo-400 rounded text-[9.5px] font-bold text-indigo-900 focus:outline-none font-sans text-center h-[18px]"
+                                    className="w-[96%] bg-white border border-indigo-200 hover:border-indigo-400 rounded text-[11.5px] font-bold text-indigo-900 focus:outline-none font-sans text-center h-[26px]"
                                 >
                                     <option value="NONE">NONE</option>
                                     <option value="CARGAR">CARGAR</option>
@@ -1534,13 +1783,13 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                             type="number"
                                             value={puertosConfig[0].op_rate ?? ''}
                                             onChange={(e) => updatePuertoConfigField(0, 'op_rate', e.target.value)}
-                                            className="w-[60%] h-full bg-white border-0 px-1 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                            className="w-[60%] h-full bg-white border-0 px-1 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
                                             placeholder="Auto"
                                         />
                                         <select
                                             value={puertosConfig[0].rate_unit || 'TH'}
                                             onChange={(e) => updatePuertoConfigField(0, 'rate_unit', e.target.value)}
-                                            className="w-[40%] h-[16px] text-[7.5px] bg-slate-50 border border-slate-250 rounded font-sans cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400 pl-0.5 text-slate-500 font-bold mr-1"
+                                            className="w-[40%] h-[22px] text-[9.5px] bg-slate-50 border border-slate-250 rounded font-sans cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400 pl-0.5 text-slate-500 font-bold mr-1"
                                         >
                                             <option value="TD">T/d</option>
                                             <option value="TH">T/h</option>
@@ -1559,7 +1808,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         placeholder="Q"
                                         value={puertosConfig[0].quantity ?? ''}
                                         onChange={(e) => updatePuertoConfigField(0, 'quantity', e.target.value)}
-                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
                                     />
                                 ) : (
                                     <span className="text-slate-350 select-none pr-2">—</span>
@@ -1573,7 +1822,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         placeholder="F"
                                         value={puertosConfig[0].freight_rate ?? ''}
                                         onChange={(e) => updatePuertoConfigField(0, 'freight_rate', e.target.value)}
-                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
                                     />
                                 ) : (
                                     <span className="text-slate-350 select-none pr-2">—</span>
@@ -1585,7 +1834,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         type="number"
                                         value={puertosConfig[0].manual_port_cost ?? ''}
                                         onChange={(e) => updatePuertoConfigField(0, 'manual_port_cost', e.target.value)}
-                                        className={`w-full h-full bg-white border-0 px-1.5 text-right font-mono text-[10px] focus:outline-none ${
+                                        className={`w-full h-full bg-white border-0 px-1.5 text-right font-mono text-xs focus:outline-none ${
                                             puertosConfig[0].manual_port_cost !== '' && puertosConfig[0].manual_port_cost !== undefined
                                                 ? 'text-blue-800 font-extrabold bg-blue-50/20'
                                                 : 'text-slate-500 font-medium'
@@ -1609,7 +1858,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             const trResult = result?.tramos?.[idx];
                             
                             return (
-                                <tr key={idx} className="border-b border-slate-200 h-6 hover:bg-slate-50">
+                                <tr key={idx} className="border-b border-slate-200 h-8 hover:bg-slate-50">
                                     
                                     {/* Leg */}
                                     <td className="border-r border-slate-200 text-center font-bold text-slate-500 select-none">
@@ -1618,7 +1867,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     
                                     {/* Tipo de Viaje */}
                                     <td className="border-r border-slate-200 text-center font-bold">
-                                        <span className={`text-[9px] px-1 py-0.25 rounded ${trCalculado.type === 'LADEN' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'}`}>
+                                        <span className={`text-[11px] px-1 py-0.25 rounded ${trCalculado.type === 'LADEN' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'}`}>
                                             {trCalculado.type}
                                         </span>
                                     </td>
@@ -1628,7 +1877,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         <select
                                             value={tr.destination_port_id}
                                             onChange={(e) => updateTramoField(idx, 'destination_port_id', e.target.value)}
-                                            className="w-[96%] bg-white border border-transparent hover:border-slate-300 rounded text-[10px] font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans pl-1.5 h-[18px]"
+                                            className="w-[96%] bg-white border border-transparent hover:border-slate-300 rounded text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans pl-1.5 h-[26px]"
                                         >
                                             {ports.map(p => (
                                                 <option key={p.port_id} value={p.port_id}>{p.port_id} — {p.port_name}</option>
@@ -1642,7 +1891,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                             type="number"
                                             value={tr.route_distance ?? ''}
                                             onChange={(e) => updateTramoField(idx, 'route_distance', e.target.value)}
-                                            className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-[10px]"
+                                            className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs"
                                             placeholder="Auto"
                                         />
                                     </td>
@@ -1653,7 +1902,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                             type="number"
                                             value={tr.weather_factor ?? ''}
                                             onChange={(e) => updateTramoField(idx, 'weather_factor', e.target.value)}
-                                            className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-[10px]"
+                                            className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs"
                                             placeholder="Auto"
                                         />
                                     </td>
@@ -1672,7 +1921,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                     updateTramoField(tIdx, 'speed', val);
                                                 });
                                             }}
-                                            className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-[10px]"
+                                            className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs"
                                             placeholder="Auto"
                                         />
                                     </td>
@@ -1694,7 +1943,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 type="number"
                                                 value={puertosConfig[idx + 1].overhead ?? ''}
                                                 onChange={(e) => updatePuertoConfigField(idx + 1, 'overhead', e.target.value)}
-                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
                                                 placeholder="6.0"
                                             />
                                         ) : (
@@ -1709,7 +1958,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 type="number"
                                                 value={puertosConfig[idx + 1].positioning ?? ''}
                                                 onChange={(e) => updatePuertoConfigField(idx + 1, 'positioning', e.target.value)}
-                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
                                                 placeholder="0.0"
                                             />
                                         ) : (
@@ -1722,7 +1971,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         <select
                                             value={puertosConfig[idx + 1].action}
                                             onChange={(e) => updatePuertoConfigField(idx + 1, 'action', e.target.value)}
-                                            className="w-[96%] bg-white border border-indigo-200 hover:border-indigo-400 rounded text-[9.5px] font-bold text-indigo-900 focus:outline-none font-sans text-center h-[18px]"
+                                            className="w-[96%] bg-white border border-indigo-200 hover:border-indigo-400 rounded text-[11.5px] font-bold text-indigo-900 focus:outline-none font-sans text-center h-[26px]"
                                         >
                                             <option value="NONE">NONE</option>
                                             <option value="CARGAR">CARGAR</option>
@@ -1738,13 +1987,13 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                     type="number"
                                                     value={puertosConfig[idx + 1].op_rate ?? ''}
                                                     onChange={(e) => updatePuertoConfigField(idx + 1, 'op_rate', e.target.value)}
-                                                    className="w-[60%] h-full bg-white border-0 px-1 text-right font-mono font-bold text-slate-700 focus:outline-none text-[10px]"
+                                                    className="w-[60%] h-full bg-white border-0 px-1 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
                                                     placeholder="Auto"
                                                 />
                                                 <select
                                                     value={puertosConfig[idx + 1].rate_unit || 'TD'}
                                                     onChange={(e) => updatePuertoConfigField(idx + 1, 'rate_unit', e.target.value)}
-                                                    className="w-[40%] h-[16px] text-[7.5px] bg-slate-50 border border-slate-250 rounded font-sans cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400 pl-0.5 text-slate-500 font-bold mr-1"
+                                                    className="w-[40%] h-[22px] text-[9.5px] bg-slate-50 border border-slate-250 rounded font-sans cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400 pl-0.5 text-slate-500 font-bold mr-1"
                                                 >
                                                     <option value="TD">T/d</option>
                                                     <option value="TH">T/h</option>
@@ -1765,7 +2014,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 placeholder="Q"
                                                 value={puertosConfig[idx + 1].quantity ?? ''}
                                                 onChange={(e) => updatePuertoConfigField(idx + 1, 'quantity', e.target.value)}
-                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-[10px]"
+                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs"
                                             />
                                         ) : (
                                             <span className="text-slate-350 select-none pr-2">—</span>
@@ -1781,7 +2030,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 placeholder="F"
                                                 value={puertosConfig[idx + 1].freight_rate ?? ''}
                                                 onChange={(e) => updatePuertoConfigField(idx + 1, 'freight_rate', e.target.value)}
-                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-[10px]"
+                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs"
                                             />
                                         ) : (
                                             <span className="text-slate-350 select-none pr-2">—</span>
@@ -1795,7 +2044,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 type="number"
                                                 value={puertosConfig[idx + 1].manual_port_cost ?? ''}
                                                 onChange={(e) => updatePuertoConfigField(idx + 1, 'manual_port_cost', e.target.value)}
-                                                className={`w-full h-full bg-white border-0 px-1.5 text-right font-mono text-[10px] focus:outline-none ${
+                                                className={`w-full h-full bg-white border-0 px-1.5 text-right font-mono text-xs focus:outline-none ${
                                                     puertosConfig[idx + 1].manual_port_cost !== '' && puertosConfig[idx + 1].manual_port_cost !== undefined
                                                         ? 'text-blue-800 font-extrabold bg-blue-50/20'
                                                         : 'text-slate-500 font-medium'
@@ -1826,8 +2075,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                         })}
 
                         {/* Fila de Totales Generales (Estilo Excel) */}
-                        <tr className="bg-slate-100 border-t-2 border-double border-slate-400 h-6 select-none font-bold text-slate-700 text-[10px]">
-                            <td colSpan={3} className="border-r border-slate-200 text-left pl-3 font-sans text-[8.5px] uppercase tracking-wide">Total Estimado</td>
+                        <tr className="bg-slate-100 border-t-2 border-double border-slate-400 h-8 select-none font-bold text-slate-700 text-xs">
+                            <td colSpan={3} className="border-r border-slate-200 text-left pl-3 font-sans text-[10.5px] uppercase tracking-wide">Total Estimado</td>
                             <td className="border-r border-slate-200 text-right pr-2">
                                 {result ? fmtNum(result.tramos.reduce((s: any, t: any) => s + (t.distance || 0), 0)) : '0'}
                             </td>
@@ -1843,7 +2092,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
-                            <td className={`border-r border-slate-200 text-right pr-2 font-mono font-bold text-[9px] ${isBalanced ? 'text-emerald-700 bg-emerald-50/20' : 'text-rose-600 bg-rose-50/60'}`} title={isBalanced ? "Carga y descarga balanceadas" : `Desbalance: Carga ${totalCargas.toLocaleString()} MT vs Descarga ${totalDescargas.toLocaleString()} MT`}>
+                            <td className={`border-r border-slate-200 text-right pr-2 font-mono font-bold text-[11px] ${isBalanced ? 'text-emerald-700 bg-emerald-50/20' : 'text-rose-600 bg-rose-50/60'}`} title={isBalanced ? "Carga y descarga balanceadas" : `Desbalance: Carga ${totalCargas.toLocaleString()} MT vs Descarga ${totalDescargas.toLocaleString()} MT`}>
                                 {isBalanced ? (
                                     <span>{totalDescargas > 0 ? fmtNum(totalDescargas) : '—'}</span>
                                 ) : (
@@ -1873,12 +2122,12 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 {/* Bunker Expenses */}
                 <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
                     <div>
-                        <h3 className="text-[9px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 flex items-center gap-1 font-sans">
+                        <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 flex items-center gap-1 font-sans">
                             <span>⛽</span> Bunker Expenses (Combustible)
                         </h3>
-                        <table className="w-full border-collapse text-[10px] font-mono">
+                        <table className="w-full border-collapse text-xs font-mono">
                             <thead>
-                                <tr className="bg-slate-50 border-b border-slate-200 font-sans text-[8.5px] text-slate-500 font-bold">
+                                <tr className="bg-slate-50 border-b border-slate-200 font-sans text-[10.5px] text-slate-500 font-bold">
                                     <th className="text-left py-0.5 pl-1.5">Fuel</th>
                                     <th className="text-right py-0.5 pr-1.5">Tonnage (T)</th>
                                     <th className="text-right py-0.5 pr-1.5">Expense (USD)</th>
@@ -1904,7 +2153,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     </td>
                                 </tr>
                                 <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
-                                    <td className="py-1 pl-1.5 font-sans text-[8.5px] uppercase">Total Fuel</td>
+                                    <td className="py-1 pl-1.5 font-sans text-[10.5px] uppercase">Total Fuel</td>
                                     <td className="text-right py-1 pr-1.5">
                                         {result ? fmtNum((result.consolidated.bunker_ifo_tonnage || 0) + (result.consolidated.bunker_mdo_tonnage || 0)) : '0.0'}
                                     </td>
@@ -1918,20 +2167,20 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                         {/* Desplegable interactivo para Auditoría de Bunker */}
                         {result?.tramos && (
                             <details className="mt-2 border border-slate-250 rounded bg-slate-50 p-1.5 cursor-pointer">
-                                <summary className="text-[8.5px] font-bold text-slate-500 hover:text-slate-800 outline-none select-none">
+                                <summary className="text-[10.5px] font-bold text-slate-500 hover:text-slate-800 outline-none select-none">
                                     🔍 Rastro de Auditoría Bunker (Fórmula & Toneladas)
                                 </summary>
-                                <div className="mt-1.5 space-y-1.5 text-[8.5px] font-mono text-slate-700 bg-white border border-slate-100 rounded p-1.5 max-h-36 overflow-y-auto">
+                                <div className="mt-1.5 space-y-1.5 text-[10.5px] font-mono text-slate-700 bg-white border border-slate-100 rounded p-1.5 max-h-36 overflow-y-auto">
                                     {result.tramos.map((tr: any, i: number) => (
                                         <div key={i} className="border-b border-slate-100 pb-1.5 last:border-0 last:pb-0">
-                                            <div className="font-sans font-bold text-slate-800 text-[9px] mb-0.5">
+                                            <div className="font-sans font-bold text-slate-800 text-[11px] mb-0.5">
                                                 Leg {i + 1} ({tr.origin_port_id} → {tr.destination_port_id}) — {tr.type}
                                             </div>
                                             {tr.type === 'LADEN' ? (
                                                 <div className="space-y-0.5 pl-1.5 border-l-2 border-orange-300">
                                                     <div>• Días: Mar {fmtNum(tr.sea_days)} | Pto {fmtNum(tr.port_days)}</div>
                                                     <div>• IFO: {fmtNum(tr.bunker_ifo)} t</div>
-                                                    <div className="text-[7.5px] text-slate-450 leading-none">
+                                                    <div className="text-[9.5px] text-slate-450 leading-none">
                                                         Fórm: ({fmtNum(tr.sea_days)}d * {vesselParams.consumption_sea_ifo}t) + (d_puerto_norm * {vesselParams.consumption_idle_ifo}t) + (d_carga * {vesselParams.consumption_load_ifo}t) + (d_desc * {vesselParams.consumption_disch_ifo}t)
                                                     </div>
                                                     <div className="mt-0.5">• MDO: {fmtNum(tr.bunker_mdo)} t</div>
@@ -1954,12 +2203,12 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 {/* Port Costs */}
                 <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
                     <div>
-                        <h3 className="text-[9px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 flex items-center gap-1 font-sans">
+                        <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 flex items-center gap-1 font-sans">
                             <span>⚓</span> Port Costs (Gastos de Puerto)
                         </h3>
-                        <table className="w-full border-collapse text-[10px] font-mono">
+                        <table className="w-full border-collapse text-xs font-mono">
                             <thead>
-                                <tr className="bg-slate-50 border-b border-slate-200 font-sans text-[8.5px] text-slate-500 font-bold">
+                                <tr className="bg-slate-50 border-b border-slate-200 font-sans text-[10.5px] text-slate-500 font-bold">
                                     <th className="text-left py-0.5 pl-1.5">Expense Concept</th>
                                     <th className="text-right py-0.5 pr-1.5">Costo (USD)</th>
                                 </tr>
@@ -1996,7 +2245,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 </tr>
                                             )}
                                             <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
-                                                <td className="py-1.5 pl-1.5 font-sans text-[8.5px] uppercase">Total Port Costs</td>
+                                                <td className="py-1.5 pl-1.5 font-sans text-[10.5px] uppercase">Total Port Costs</td>
                                                 <td className="text-right py-1.5 pr-1.5">
                                                     {result ? fmtCur(totalPortCosts) : '$0'}
                                                 </td>
@@ -2010,16 +2259,16 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                         {/* Desplegable interactivo para Auditoría de Port Costs */}
                         {result?.tramos && (
                             <details className="mt-2 border border-slate-250 rounded bg-slate-50 p-1.5 cursor-pointer">
-                                <summary className="text-[8.5px] font-bold text-slate-500 hover:text-slate-800 outline-none select-none">
+                                <summary className="text-[10.5px] font-bold text-slate-500 hover:text-slate-800 outline-none select-none">
                                     🔍 Rastro de Auditoría Port Costs (Matriz / Fallback)
                                 </summary>
-                                <div className="mt-1.5 space-y-1.5 text-[8.5px] font-mono text-slate-700 bg-white border border-slate-100 rounded p-1.5 max-h-36 overflow-y-auto">
+                                <div className="mt-1.5 space-y-1.5 text-[10.5px] font-mono text-slate-700 bg-white border border-slate-100 rounded p-1.5 max-h-36 overflow-y-auto">
                                     {result.tramos.map((tr: any, i: number) => {
                                         const origDet = tr.agency_costs_origin_details;
                                         const destDet = tr.agency_costs_destination_details;
                                         return (
                                             <div key={i} className="border-b border-slate-100 pb-1.5 last:border-0 last:pb-0">
-                                                <div className="font-sans font-bold text-slate-800 text-[9px] mb-0.5">
+                                                <div className="font-sans font-bold text-slate-800 text-[11px] mb-0.5">
                                                     Leg {i + 1} ({tr.origin_port_id} → {tr.destination_port_id})
                                                 </div>
                                                 <div className="space-y-1.5 pl-1.5">
@@ -2028,13 +2277,13 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                         <div className="border-l-2 border-indigo-300 pl-1">
                                                             <span className="font-bold text-slate-650">Origen {tr.origin_port_id}:</span> {fmtCur(origDet.total_cost)}
                                                             {origDet.breakdown && Object.keys(origDet.breakdown).length > 0 ? (
-                                                                <div className="grid grid-cols-2 gap-x-2 pl-1.5 text-[7.5px] text-slate-450">
+                                                                <div className="grid grid-cols-2 gap-x-2 pl-1.5 text-[9.5px] text-slate-450">
                                                                     {Object.entries(origDet.breakdown).map(([concept, cost]: any) => (
                                                                         <div key={concept}>{concept}: {fmtCur(cost)}</div>
                                                                     ))}
                                                                 </div>
                                                             ) : (
-                                                                <div className="pl-1.5 text-[7.5px] text-slate-400 italic">• Fallback Plano (Agency Matrix)</div>
+                                                                <div className="pl-1.5 text-[9.5px] text-slate-400 italic">• Fallback Plano (Agency Matrix)</div>
                                                             )}
                                                         </div>
                                                     )}
@@ -2043,18 +2292,18 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                         <div className="border-l-2 border-teal-300 pl-1">
                                                             <span className="font-bold text-slate-650">Destino {tr.destination_port_id}:</span> {fmtCur(destDet.total_cost)}
                                                             {destDet.breakdown && Object.keys(destDet.breakdown).length > 0 ? (
-                                                                <div className="grid grid-cols-2 gap-x-2 pl-1.5 text-[7.5px] text-slate-450">
+                                                                <div className="grid grid-cols-2 gap-x-2 pl-1.5 text-[9.5px] text-slate-450">
                                                                     {Object.entries(destDet.breakdown).map(([concept, cost]: any) => (
                                                                         <div key={concept}>{concept}: {fmtCur(cost)}</div>
                                                                     ))}
                                                                 </div>
                                                             ) : (
-                                                                <div className="pl-1.5 text-[7.5px] text-slate-400 italic">• Fallback Plano (Agency Matrix)</div>
+                                                                <div className="pl-1.5 text-[9.5px] text-slate-400 italic">• Fallback Plano (Agency Matrix)</div>
                                                             )}
                                                         </div>
                                                     )}
                                                     {(!origDet || origDet.total_cost === 0) && (!destDet || destDet.total_cost === 0) && (
-                                                        <div className="text-slate-400 italic text-[7.5px] pl-1">• Sin cargos (NONE o visitado)</div>
+                                                        <div className="text-slate-400 italic text-[9.5px] pl-1">• Sin cargos (NONE o visitado)</div>
                                                     )}
                                                 </div>
                                             </div>
@@ -2069,12 +2318,12 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 {/* Comisiones (Commercial Rules) */}
                 <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
                     <div>
-                        <h3 className="text-[9px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 flex items-center justify-between font-sans">
+                        <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 flex items-center justify-between font-sans">
                             <span className="flex items-center gap-1"><span>💼</span> Comisiones de Viaje</span>
                         </h3>
                         <div className="flex flex-col gap-2">
                             {/* Address Comm Input */}
-                            <div className="flex justify-between items-center text-[10px] font-sans">
+                            <div className="flex justify-between items-center text-xs font-sans">
                                 <span className="font-semibold text-slate-600">Address Comm (%)</span>
                                 <div className="flex items-center gap-1">
                                     <input
@@ -2084,14 +2333,14 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         max="100"
                                         value={addressCommPct}
                                         onChange={(e) => setAddressCommPct(Math.max(0, parseFloat(e.target.value) || 0))}
-                                        className="w-12 h-5 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                        className="w-12 h-7 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                                     />
                                     <span className="font-bold text-slate-500">%</span>
                                 </div>
                             </div>
                             
                             {/* Broker Comm Input */}
-                            <div className="flex justify-between items-center text-[10px] font-sans">
+                            <div className="flex justify-between items-center text-xs font-sans">
                                 <span className="font-semibold text-slate-600">Broker Comm (%)</span>
                                 <div className="flex items-center gap-1">
                                     <input
@@ -2101,14 +2350,14 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         max="100"
                                         value={brokerCommPct}
                                         onChange={(e) => setBrokerCommPct(Math.max(0, parseFloat(e.target.value) || 0))}
-                                        className="w-12 h-5 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                        className="w-12 h-7 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                                     />
                                     <span className="font-bold text-slate-500">%</span>
                                 </div>
                             </div>
 
                             {/* Resumen de Montos en Tabla */}
-                            <table className="w-full border-collapse border-t border-slate-100 mt-1 text-[10px] font-mono">
+                            <table className="w-full border-collapse border-t border-slate-100 mt-1 text-xs font-mono">
                                 <tbody>
                                     <tr className="border-b border-slate-100">
                                         <td className="py-1 pl-1 text-slate-500">Address (USD)</td>
@@ -2123,7 +2372,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         </td>
                                     </tr>
                                     <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
-                                        <td className="py-1 pl-1 font-sans text-[8px] uppercase">Total Comm</td>
+                                        <td className="py-1 pl-1 font-sans text-[10px] uppercase">Total Comm</td>
                                         <td className="text-right py-1 pr-1 text-rose-600 font-bold">
                                             {result ? `-${fmtCur(result.consolidated.total_commissions || 0)}` : '$0'}
                                         </td>
@@ -2137,14 +2386,14 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 {/* Financial Result (Voyage Result) */}
                 <div className="bg-emerald-50 border-2 border-emerald-500/30 rounded p-2 shadow-sm flex flex-col justify-between">
                     <div>
-                        <h3 className="text-[9.5px] font-black text-emerald-800 uppercase tracking-wide border-b border-emerald-200 pb-1 mb-1.5 flex items-center gap-1 font-sans">
+                        <h3 className="text-[11.5px] font-black text-emerald-800 uppercase tracking-wide border-b border-emerald-200 pb-1 mb-1.5 flex items-center gap-1 font-sans">
                             <span>💹</span> Financial Voyage Result (P/L)
                         </h3>
-                        <table className="w-full border-collapse text-[10px] font-mono">
+                        <table className="w-full border-collapse text-xs font-mono">
                             <tbody>
                                 {/* P/L — MÉTRICA PRINCIPAL */}
                                 <tr className="border-b-2 border-emerald-300">
-                                    <td className="py-1 pl-1.5 text-emerald-900 font-sans text-[9px] font-black uppercase tracking-wide">P/L (vs TCE Req)</td>
+                                    <td className="py-1 pl-1.5 text-emerald-900 font-sans text-[11px] font-black uppercase tracking-wide">P/L (vs TCE Req)</td>
                                     <td className={`text-right py-1 pr-1.5 font-black text-xl ${result ? ((result.consolidated.pnl_net_utility - (result.consolidated.tce_required * result.consolidated.total_days)) >= 0 ? 'text-emerald-700' : 'text-rose-600') : 'text-slate-400'}`}>
                                         {result ? fmtCur(result.consolidated.pnl_net_utility - (result.consolidated.tce_required * result.consolidated.total_days)) : '$0'}
                                     </td>
@@ -2163,7 +2412,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 </tr>
                                 <tr className="border-b border-emerald-100/40">
                                     <td className="py-0.5 pl-1.5 text-slate-500">Voyage Result (Net Profit)</td>
-                                    <td className={`text-right py-0.5 pr-1.5 font-bold text-sm ${result?.consolidated.pnl_net_utility >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                                    <td className={`text-right py-0.5 pr-1.5 font-bold text-base ${result?.consolidated.pnl_net_utility >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
                                         {result ? fmtCur(result.consolidated.pnl_net_utility || 0) : '$0'}
                                     </td>
                                 </tr>
@@ -2174,8 +2423,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     </td>
                                 </tr>
                                 <tr className="font-bold border-t border-emerald-250">
-                                    <td className="py-0.5 pl-1.5 text-slate-600 font-sans text-[8.5px] uppercase">TCE Realizado</td>
-                                    <td className={`text-right py-0.5 pr-1.5 font-black text-sm ${result?.consolidated.tce_real >= result?.consolidated.tce_required ? 'text-emerald-750' : 'text-yellow-600'}`}>
+                                    <td className="py-0.5 pl-1.5 text-slate-600 font-sans text-[10.5px] uppercase">TCE Realizado</td>
+                                    <td className={`text-right py-0.5 pr-1.5 font-black text-base ${result?.consolidated.tce_real >= result?.consolidated.tce_required ? 'text-emerald-750' : 'text-yellow-600'}`}>
                                         {result ? `${fmtCur(result.consolidated.tce_real || 0)}/d` : '$0/d'}
                                     </td>
                                 </tr>
@@ -2191,7 +2440,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-white p-5 rounded-xl w-80 shadow-2xl border border-slate-200">
                         <div className="flex justify-between items-center border-b border-slate-100 pb-2 mb-3">
-                            <h3 className="text-sm font-bold text-slate-900">Grabar Ruta Multicotizador</h3>
+                            <h3 className="text-base font-bold text-slate-900">Grabar Ruta Multicotizador</h3>
                             <button onClick={() => setShowSaveModal(false)} className="text-slate-400 hover:text-slate-650"><X size={16} /></button>
                         </div>
                         <input
@@ -2199,9 +2448,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             placeholder="Nombre de la ruta (Ej: Callao-Valparaiso)"
                             value={routeName}
                             onChange={(e) => setRouteName(e.target.value)}
-                            className="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs text-slate-700 mb-4 focus:outline-none focus:border-indigo-500 shadow-sm"
+                            className="w-full border border-slate-300 rounded px-2.5 py-1.5 text-sm text-slate-700 mb-4 focus:outline-none focus:border-indigo-500 shadow-sm"
                         />
-                        <div className="flex justify-end gap-2 text-xs">
+                        <div className="flex justify-end gap-2 text-sm">
                             <button
                                 onClick={() => setShowSaveModal(false)}
                                 className="h-7 font-semibold rounded px-3 bg-white text-slate-700 border border-slate-300 shadow-sm hover:bg-slate-50 cursor-pointer"
@@ -2224,14 +2473,14 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-white p-5 rounded-xl w-96 shadow-2xl border border-slate-200">
                         <div className="flex justify-between items-center border-b border-slate-100 pb-2 mb-3">
-                            <h3 className="text-sm font-bold text-slate-900">Cargar Ruta Multicotizador</h3>
+                            <h3 className="text-base font-bold text-slate-900">Cargar Ruta Multicotizador</h3>
                             <button onClick={() => setShowLoadModal(false)} className="text-slate-400 hover:text-slate-650"><X size={16} /></button>
                         </div>
-                        <div className="max-h-60 overflow-y-auto flex flex-col gap-1.5 mb-4">
+                        <div className="max-h-80 overflow-y-auto flex flex-col gap-1.5 mb-4">
                             {isLoadingRoutes ? (
-                                <div className="text-xs text-slate-500 py-4 text-center">Listando rutas grabadas...</div>
+                                <div className="text-sm text-slate-500 py-4 text-center">Listando rutas grabadas...</div>
                             ) : savedRoutes.length === 0 ? (
-                                <div className="text-xs text-slate-400 py-4 text-center">No hay rutas grabadas para el Multicotizador</div>
+                                <div className="text-sm text-slate-400 py-4 text-center">No hay rutas grabadas para el Multicotizador</div>
                             ) : (
                                 savedRoutes.map(route => (
                                     <button
@@ -2240,20 +2489,156 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         className="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 hover:border-indigo-500 transition-all flex justify-between items-center group cursor-pointer"
                                     >
                                         <div>
-                                            <span className="text-xs font-bold text-slate-700 block group-hover:text-indigo-650">{route.name}</span>
-                                            <span className="text-[9px] text-slate-400">{route.description || 'Sin descripción'}</span>
+                                            <span className="text-sm font-bold text-slate-700 block group-hover:text-indigo-650">{route.name}</span>
+                                            <span className="text-[11px] text-slate-400">{route.description || 'Sin descripción'}</span>
                                         </div>
-                                        <span className="text-[9px] font-mono text-slate-400">{route.created_at ? new Date(route.created_at).toLocaleDateString() : ''}</span>
+                                        <span className="text-[11px] font-mono text-slate-400">{route.created_at ? new Date(route.created_at).toLocaleDateString() : ''}</span>
                                     </button>
                                 ))
                             )}
                         </div>
-                        <div className="flex justify-end text-xs">
+                        <div className="flex justify-end text-sm">
                             <button
                                 onClick={() => setShowLoadModal(false)}
                                 className="h-7 font-semibold rounded px-3 bg-white text-slate-700 border border-slate-300 shadow-sm hover:bg-slate-50 cursor-pointer"
                             >
                                 Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {showExportModal && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 font-sans">
+                    <div className="bg-white p-6 rounded-xl w-[420px] shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                                <span>📦 Exportar a Matriz Financiera</span>
+                            </h3>
+                            <button onClick={() => setShowExportModal(false)} className="text-slate-400 hover:text-slate-650 cursor-pointer">
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="flex flex-col gap-4 text-sm text-slate-700 mb-6">
+                            {/* 1. Cliente */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">1. Cliente</label>
+                                <select
+                                    value={exportClient}
+                                    onChange={(e) => setExportClient(e.target.value)}
+                                    className="w-full border border-slate-300 rounded px-2.5 py-1.5 text-sm bg-white focus:outline-none focus:border-indigo-500 shadow-sm"
+                                >
+                                    {exportClientsList.map(c => (
+                                        <option key={c} value={c}>{c}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* 2. Mes de la Proyección */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">2. Mes Proyectado</label>
+                                <select
+                                    value={exportMonth}
+                                    onChange={(e) => setExportMonth(e.target.value)}
+                                    className="w-full border border-slate-300 rounded px-2.5 py-1.5 text-sm bg-white focus:outline-none focus:border-indigo-500 shadow-sm"
+                                >
+                                    {context.dynamicMonths.map(m => {
+                                        const [y, mm] = m.split('-');
+                                        const date = new Date(parseInt(y), parseInt(mm) - 1);
+                                        const monthLabel = date.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+                                        return (
+                                            <option key={m} value={m}>
+                                                {monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                            </div>
+
+                            {/* 3. Nombre de la Ruta */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">3. Nombre de Ruta (SPOT)</label>
+                                <input
+                                    type="text"
+                                    value={exportCustomRouteName}
+                                    onChange={(e) => setExportCustomRouteName(e.target.value)}
+                                    placeholder="Ej: SPCC.ILO.MATARANI (MOQUEGUA)"
+                                    className="w-full border border-slate-300 rounded px-2.5 py-1.5 text-sm focus:outline-none focus:border-indigo-500 shadow-sm"
+                                />
+                            </div>
+
+                            {/* 4. Escenario Destino */}
+                            <div className="flex flex-col gap-2 border-t border-slate-100 pt-3">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">4. Escenario Destino</label>
+                                
+                                <div className="flex flex-col gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                    <label className="flex items-center gap-2 font-medium cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="exportMode"
+                                            value="active"
+                                            disabled={!context.currentForecastId}
+                                            checked={exportMode === 'active'}
+                                            onChange={() => setExportMode('active')}
+                                            className="text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:opacity-50"
+                                        />
+                                        <span className={!context.currentForecastId ? 'opacity-50 text-slate-400' : 'text-slate-700'}>
+                                            Actualizar escenario activo {context.forecastName ? `("${context.forecastName}")` : ''}
+                                        </span>
+                                    </label>
+
+                                    <label className="flex items-center gap-2 font-medium cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="exportMode"
+                                            value="new"
+                                            checked={exportMode === 'new'}
+                                            onChange={() => setExportMode('new')}
+                                            className="text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                        />
+                                        <span className="text-slate-700">Crear un nuevo escenario</span>
+                                    </label>
+
+                                    {exportMode === 'new' && (
+                                        <div className="flex flex-col gap-2.5 pl-5 mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                                            <input
+                                                type="text"
+                                                value={exportNewScenarioName}
+                                                onChange={(e) => setExportNewScenarioName(e.target.value)}
+                                                placeholder="Nombre del nuevo escenario"
+                                                className="w-full border border-slate-300 bg-white rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-indigo-500 shadow-sm"
+                                            />
+                                            {context.currentForecastId && (
+                                                <label className="flex items-center gap-2 text-xs text-slate-500 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={exportCloneActive}
+                                                        onChange={(e) => setExportCloneActive(e.target.checked)}
+                                                        className="rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                                    />
+                                                    <span>Clonar líneas de proyección del escenario activo</span>
+                                                </label>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2 text-sm border-t border-slate-100 pt-3">
+                            <button
+                                onClick={() => setShowExportModal(false)}
+                                className="h-8 font-semibold rounded px-4 bg-white text-slate-700 border border-slate-300 shadow-sm hover:bg-slate-50 cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleConfirmExport}
+                                disabled={isExporting}
+                                className="h-8 font-semibold rounded px-4 bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700 shadow-sm cursor-pointer disabled:opacity-50 flex items-center justify-center min-w-[100px]"
+                            >
+                                {isExporting ? "Exportando..." : "Confirmar"}
                             </button>
                         </div>
                     </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts';
 
@@ -250,7 +250,6 @@ const computeSpaghettiDataForMonth = (
 
     if (showPies) {
         nodesForGraph.forEach(n => {
-        const petralTotal = n.carga + n.descarga;
 
         // El pastel de mercado (Sink/Source) en tierra (Este -> offset positivo)
         // El pastel de Petral en el mar (Oeste -> offset negativo)
@@ -326,12 +325,17 @@ const computeSpaghettiDataForMonth = (
             zlevel: 4
         });
 
-        if (petralTotal > 0) {
+        const totalProratedCapacity = (n.capacity_mt / 12) * monthsCount;
+
+        if (n.carga > 0) {
+            const cargaRatio = totalProratedCapacity > 0 ? (n.carga / totalProratedCapacity) : 0;
+            const cargaRadius = Math.max(3, n.pieRadius * cargaRatio);
+            
             pieSeries.push({
                 type: 'pie',
                 coordinateSystem: 'geo',
                 center: seaCenter,
-                radius: [0, n.pieRadius],
+                radius: [0, cargaRadius],
                 label: { show: false },
                 emphasis: { 
                     label: { 
@@ -348,7 +352,34 @@ const computeSpaghettiDataForMonth = (
                         name: 'Carga Petral', 
                         itemStyle: { color: '#0EA5E9' }, 
                         portInfo: n
-                    },
+                    }
+                ],
+                zlevel: 4
+            });
+        }
+
+        const seaCenterDescarga = [seaCenter[0] - 2.5, seaCenter[1]];
+
+        if (n.descarga > 0) {
+            const descargaRatio = totalProratedCapacity > 0 ? (n.descarga / totalProratedCapacity) : 0;
+            const descargaRadius = Math.max(3, n.pieRadius * descargaRatio);
+            
+            pieSeries.push({
+                type: 'pie',
+                coordinateSystem: 'geo',
+                center: seaCenterDescarga,
+                radius: [0, descargaRadius],
+                label: { show: false },
+                emphasis: { 
+                    label: { 
+                        show: true, 
+                        formatter: '{b}',
+                        position: 'inside',
+                        fontSize: 9,
+                        color: '#ffffff'
+                    } 
+                },
+                data: [
                     { 
                         value: n.descarga, 
                         name: 'Descarga Petral', 
@@ -366,11 +397,13 @@ const computeSpaghettiDataForMonth = (
             lineStyle: { color: '#94A3B8', type: 'dashed', width: 1.2, opacity: 0.7 }
         });
         
-        // La línea hacia el pastel de mar solo si se renderiza (sea visible o gris silencioso)
-        calloutLinesData.push({
-            coords: [n.value, seaCenter],
-            lineStyle: { color: '#94A3B8', type: 'dashed', width: 1.2, opacity: 0.7 }
-        });
+        if (n.carga > 0 || n.descarga > 0) {
+            const targetCenter = n.carga > 0 ? seaCenter : seaCenterDescarga;
+            calloutLinesData.push({
+                coords: [n.value, targetCenter],
+                lineStyle: { color: '#94A3B8', type: 'dashed', width: 1.2, opacity: 0.7 }
+            });
+        }
     });
 
         if (calloutLinesData.length > 0) {
@@ -409,6 +442,9 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
     onPortClick
 }) => {
     const [mapLoaded, setMapLoaded] = useState(false);
+    const chartRef = useRef<any>(null);
+    const zoomRef = useRef<number>(2.8);
+    const centerRef = useRef<[number, number]>([-73.0, -20.0]);
 
     useEffect(() => {
         const loadMap = async () => {
@@ -444,8 +480,8 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
             geo: {
                 map: 'peru_chile',
                 roam: true,
-                zoom: 2.8,
-                center: [-73.0, -20.0],
+                zoom: zoomRef.current,
+                center: centerRef.current,
                 aspectScale: 0.85,
                 itemStyle: {
                     borderColor: isDarkMode ? '#334155' : '#cbd5e1',
@@ -577,6 +613,22 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
                         onPortClick(portId);
                     }
                 }
+            },
+            georoam: () => {
+                const chartInstance = chartRef.current?.getEchartsInstance();
+                if (chartInstance) {
+                    const opt = chartInstance.getOption();
+                    const geo = opt.geo;
+                    const newZoom = Array.isArray(geo) ? geo[0].zoom : geo?.zoom;
+                    const newCenter = Array.isArray(geo) ? geo[0].center : geo?.center;
+                    
+                    if (newZoom !== undefined) {
+                        zoomRef.current = newZoom;
+                    }
+                    if (newCenter !== undefined) {
+                        centerRef.current = newCenter;
+                    }
+                }
             }
         };
     }, [onPortClick]);
@@ -601,6 +653,7 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
     return (
         <div className="flex-1 relative w-full h-full">
             <ReactECharts 
+                ref={chartRef}
                 option={option} 
                 style={{ height: '100%', width: '100%', minHeight: '600px' }}
                 notMerge={true}

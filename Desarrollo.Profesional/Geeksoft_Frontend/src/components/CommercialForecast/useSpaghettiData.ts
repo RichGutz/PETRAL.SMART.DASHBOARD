@@ -103,8 +103,8 @@ export function useSpaghettiData(
 
         // Helper para extraer piernas físicas válidas de una ruta
         const getRouteLegs = (routeKey: string): Array<{ origin: string; dest: string }> => {
-            if (routeKey.includes('SPOT-NEXA')) {
-                const parts = routeKey.split(/[\.-]/);
+            if (routeKey.startsWith('SPOT-')) {
+                const parts = routeKey.split(/[\.\-\s\(\)]+/);
                 const validRoutePorts = parts.filter(part => ports.some(p => p.port_id === part));
                 
                 const legs: Array<{ origin: string; dest: string }> = [];

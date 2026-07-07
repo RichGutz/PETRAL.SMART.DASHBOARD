@@ -13,6 +13,9 @@ import { VesselsMaster } from './pages/Masters/VesselsMaster_V2';
 import { RoutesMaster } from './pages/Masters/RoutesMaster_V2';
 import { ClientsMaster } from './pages/Masters/ClientsMaster_V2';
 import { ContractsMaster } from './pages/Masters/ContractsMaster_V2';
+import { PortsMaster_V2 } from './pages/Masters/PortsMaster_V2';
+import { PortCostsMaster_V2 } from './pages/Masters/PortCostsMaster_V2';
+import { SourcesSinksMaster_V2 } from './pages/Masters/SourcesSinksMaster_V2';
 import { MasterTemplate } from './components/Masters/MasterTemplate_V2';
 
 // Placeholder component for routes that don't exist yet
@@ -36,7 +39,9 @@ function App_V2() {
             <Route path="/routes" element={<RoutesMaster />} />
             <Route path="/clients" element={<ClientsMaster />} />
             <Route path="/contracts" element={<ContractsMaster />} />
-            <Route path="/ports" element={<PlaceholderPage title="Maestro de Puertos" activeTab="ports" />} />
+            <Route path="/ports" element={<PortsMaster_V2 />} />
+            <Route path="/port-costs" element={<PortCostsMaster_V2 />} />
+            <Route path="/sources-sinks" element={<SourcesSinksMaster_V2 />} />
             
             {/* Herramientas (Comparten el estado y el Ribbon via ToolsLayout) */}
             <Route element={<ToolsLayout_V2 />}>

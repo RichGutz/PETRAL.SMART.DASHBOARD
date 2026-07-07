@@ -380,7 +380,7 @@ def get_ports(year: int = 2026):
     try:
         from backend.database import get_supabase
         sb = get_supabase()
-        res = sb.table("ports").select("*, sources_sinks(capacity_mt, type, empresa, color_hex, producto)").eq("sources_sinks.year", year).execute()
+        res = sb.table("ports").select("*, sources_sinks(capacity_mt, type, empresa, color_hex, producto)").eq("sources_sinks.year", year).order("display_order").execute()
         
         flat_data = []
         for p in res.data:
@@ -634,3 +634,119 @@ def save_contracts_master(payload: List[ContractMaster]):
         return {"status": "success"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+from backend.models.forecast_models import PortUpdate, PortReorderItem
+
+@router.post('/ports')
+def save_ports(payload: PortUpdate):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        data = payload.dict()
+        sb.table('ports').upsert(data).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post('/ports/reorder')
+def reorder_ports(items: List[PortReorderItem]):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        payload = [{'port_id': item.port_id, 'display_order': item.display_order} for item in items]
+        sb.table('ports').upsert(payload).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+from backend.models.forecast_models import PortCostStaticUpdateItem
+
+@router.get('/port_costs_static')
+def get_port_costs_static():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table('port_cost_static').select('*').execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post('/port_costs_static')
+def save_port_costs_static(items: List[PortCostStaticUpdateItem]):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        from datetime import datetime
+        now_str = datetime.utcnow().isoformat()
+        payload = []
+        for item in items:
+            payload.append({
+                'client_id': item.client_id,
+                'port_id': item.port_id,
+                'operation_type': item.operation_type,
+                'vessel_id': item.vessel_id,
+                'cost': item.cost,
+                'updated_at': now_str,
+                'updated_by': item.updated_by
+            })
+        sb.table('port_cost_static').upsert(payload).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+from backend.models.forecast_models import SourceSinkUpdateItem
+
+@router.get('/sources_sinks')
+def get_sources_sinks():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table('sources_sinks').select('*').execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post('/sources_sinks')
+def save_sources_sinks(items: List[SourceSinkUpdateItem]):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        payload = []
+        for item in items:
+            payload.append({
+                'port_id': item.port_id,
+                'year': item.year,
+                'capacity_mt': item.capacity_mt,
+                'type': item.type,
+                'empresa': item.empresa,
+                'color_hex': item.color_hex,
+                'producto': item.producto
+            })
+        sb.table('sources_sinks').upsert(payload).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class DeleteSourceSinkRequest(BaseModel):
+    port_id: str
+    year: int
+    empresa: str
+    producto: str
+
+@router.post('/sources_sinks/delete')
+def delete_source_sink(req: DeleteSourceSinkRequest):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        sb.table('sources_sinks').delete().match({
+            'port_id': req.port_id,
+            'year': req.year,
+            'empresa': req.empresa,
+            'producto': req.producto
+        }).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+

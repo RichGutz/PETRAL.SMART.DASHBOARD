@@ -511,6 +511,14 @@ Las capacidades del mercado (Sinks/Sources) están declaradas en la base de dato
 - Capacidad Mostrada = `(Capacidad Anual / 12) * Cantidad de Meses Seleccionados`
 - El Tooltip se actualizó para indicar `"Cap. Mercado (X meses)"` y calcular el porcentaje exacto de **Market Share** en base a este prorrateo dinámico, eliminando distorsiones estadísticas.
 
+### 11.7. [TODO] Tratamiento de Tramos BALLAST en Rutas Complejas (NEXA)
+**Análisis del Bug Actual:** 
+El algoritmo actual en `getRouteLegs` está malinterpretando las rutas complejas (como `SPOT-NEXA`). Cuando detecta múltiples puertos en el string de la ruta, asume erróneamente que el buque repartió su carga equitativamente entre todos los tramos (ej. divide 50k MT en 25k y 25k). 
+Esto ignora la realidad operativa: uno de esos tramos es un movimiento **BALLAST** (reposicionamiento vacío) y el otro es el tramo con carga al 100%. Dividir el volumen infla artificialmente el Market Share de puertos que solo sirvieron de paso vacío y dibuja espaguetis con grosor de carga donde no la hay.
+
+**Pendiente de Implementación:**
+Se ha desarrollado una nueva herramienta externa para crear rutas complejas más entendibles. Queda pendiente integrar y refactorizar la lógica de `getRouteLegs` en base a esa nueva herramienta para que el mapa sepa diferenciar algorítmicamente cuál es el origen real de la carga y asigne 0 MT a los tramos de posicionamiento en lastre (BALLAST).
+
 ---
 
 *Especificacion técnica y detalles de implementación del módulo de visualización geoespacial.*

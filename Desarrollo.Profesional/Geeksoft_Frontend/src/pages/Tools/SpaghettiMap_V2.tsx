@@ -3,6 +3,7 @@ import { SpaghettiMap } from '../../components/CommercialForecast/SpaghettiMap';
 import { SourcesSinksEditor } from '../../components/CommercialForecast/SourcesSinksEditor';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 import type { SourceSink } from '../../components/CommercialForecast/useSpaghettiData';
+import { ForecastService } from '../../services/api';
 
 export const SpaghettiMap_V2: React.FC = () => {
     const context = useForecastContext_V2();
@@ -10,12 +11,26 @@ export const SpaghettiMap_V2: React.FC = () => {
     const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
     const [selectedPortId, setSelectedPortId] = useState<string | null>(null);
     const [, setForceRender] = useState(0);
+    const [ports, setPorts] = useState<any[]>([]);
 
     // Controles de animación y nodos
     const [showPies, setShowPies] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [playSpeed, setPlaySpeed] = useState(2);
     const [, setAnimationIndex] = useState(0);
+
+    // Cargar puertos al montar
+    useEffect(() => {
+        const loadPorts = async () => {
+            try {
+                const data = await ForecastService.getPorts();
+                setPorts(data);
+            } catch (e) {
+                console.error("Error al cargar puertos en SpaghettiMap:", e);
+            }
+        };
+        loadPorts();
+    }, []);
 
     // Default to the first month when months change
     useEffect(() => {
@@ -279,7 +294,7 @@ export const SpaghettiMap_V2: React.FC = () => {
                         data={context.data} 
                         months={months} 
                         selectedMonths={selectedMonths}
-                        ports={context.ports} 
+                        ports={ports} 
                         isDarkMode={false} 
                         showPies={showPies}
                         playSpeed={playSpeed}
@@ -290,15 +305,17 @@ export const SpaghettiMap_V2: React.FC = () => {
                     {selectedPortId && (
                         <SourcesSinksEditor
                             portId={selectedPortId}
-                            portName={context.ports.find((p: any) => p.port_id === selectedPortId)?.port_name || selectedPortId}
-                            sourcesSinks={context.ports.find((p: any) => p.port_id === selectedPortId)?.sources_sinks || []}
+                            portName={ports.find((p: any) => p.port_id === selectedPortId)?.port_name || selectedPortId}
+                            sourcesSinks={ports.find((p: any) => p.port_id === selectedPortId)?.sources_sinks || []}
                             onClose={() => setSelectedPortId(null)}
                             onSave={(updatedData) => {
                                 // Muta los datos en memoria para simular el cambio visual instantáneo
-                                const port = context.ports.find((p: any) => p.port_id === selectedPortId);
+                                const newPorts = [...ports];
+                                const port = newPorts.find((p: any) => p.port_id === selectedPortId);
                                 if (port) {
                                     port.sources_sinks = updatedData;
                                     port.capacity_mt = updatedData.reduce((acc: number, curr: SourceSink) => acc + (curr.capacity_mt || 0), 0);
+                                    setPorts(newPorts);
                                     setForceRender(prev => prev + 1);
                                 }
                                 setSelectedPortId(null);

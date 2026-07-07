@@ -363,11 +363,9 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 else:
                     vparams = copy.deepcopy(v_data)
 
-                # --- BUNKER: usar el precio del legs_data si no hay override en la línea del forecast ---
-                bunker_ifo_saved = legs_data.get("bunker_price_ifo")
-                bunker_mdo_saved = legs_data.get("bunker_price_mdo")
-                final_p_ifo = p_ifo if line.forecast_bunker_price_ifo else (bunker_ifo_saved or p_ifo)
-                final_p_mdo = p_mdo if line.forecast_bunker_price_mdo else (bunker_mdo_saved or p_mdo)
+                # --- BUNKER: usar precios dinámicos de la simulación ---
+                final_p_ifo = p_ifo
+                final_p_mdo = p_mdo
                 vparams["bunker_price_ifo"] = final_p_ifo
                 vparams["bunker_price_mdo"] = final_p_mdo
                 vparams["tce_required"] = tce_req
@@ -750,10 +748,9 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                 else:
                     vparams = copy.deepcopy(v_data)
 
-                bunker_ifo_saved = legs_data.get("bunker_price_ifo")
-                bunker_mdo_saved = legs_data.get("bunker_price_mdo")
-                final_p_ifo = p_ifo if line.forecast_bunker_price_ifo else (bunker_ifo_saved or p_ifo)
-                final_p_mdo = p_mdo if line.forecast_bunker_price_mdo else (bunker_mdo_saved or p_mdo)
+                # --- BUNKER: usar precios dinámicos de la simulación ---
+                final_p_ifo = p_ifo
+                final_p_mdo = p_mdo
                 vparams["bunker_price_ifo"] = final_p_ifo
                 vparams["bunker_price_mdo"] = final_p_mdo
                 vparams["tce_required"] = tce_req

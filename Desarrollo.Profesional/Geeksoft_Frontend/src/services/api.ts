@@ -82,6 +82,34 @@ export const ForecastService = {
         const response = await api.get('/forecast/ports');
         return response.data;
     },
+    savePorts: async (payload: any) => {
+        const response = await api.post('/forecast/ports', payload);
+        return response.data;
+    },
+    reorderPorts: async (payload: any[]) => {
+        const response = await api.post('/forecast/ports/reorder', payload);
+        return response.data;
+    },
+    getPortCostsStatic: async () => {
+        const response = await api.get('/forecast/port_costs_static');
+        return response.data;
+    },
+    savePortCostsStatic: async (payload: any[]) => {
+        const response = await api.post('/forecast/port_costs_static', payload);
+        return response.data;
+    },
+    getSourcesSinks: async () => {
+        const response = await api.get('/forecast/sources_sinks');
+        return response.data;
+    },
+    saveSourcesSinks: async (payload: any[]) => {
+        const response = await api.post('/forecast/sources_sinks', payload);
+        return response.data;
+    },
+    deleteSourceSink: async (payload: { port_id: string, year: number, empresa: string, producto: string }) => {
+        const response = await api.post('/forecast/sources_sinks/delete', payload);
+        return response.data;
+    },
     getRoutes: async () => {
         const response = await api.get('/forecast/routes');
         return response.data;
