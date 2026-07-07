@@ -29,6 +29,7 @@ const getTwinColor = (p1: string, p2: string) => {
 
 export const RoutesMaster: React.FC = () => {
     const [ports, setPorts] = useState<string[]>([]);
+    const [dbPorts, setDbPorts] = useState<any[]>([]);
     const [matrix, setMatrix] = useState<Record<string, Record<string, RouteCell>>>({});
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -64,14 +65,29 @@ export const RoutesMaster: React.FC = () => {
                     ForecastService.getRoutes()
                 ]);
 
-                const validPorts = initialOrder.filter(po => portsData.some((p: any) => p.port_id === po));
-                setPorts(validPorts);
+                setDbPorts(portsData || []);
+
+                const dbPortIds = (portsData || []).map((p: any) => p.port_id);
+                // Ordenar puertos: initialOrder primero, luego los demás de la DB
+                const sortedPorts: string[] = [];
+                initialOrder.forEach((po: string) => {
+                    if (dbPortIds.includes(po)) {
+                        sortedPorts.push(po);
+                    }
+                });
+                dbPortIds.forEach((po: string) => {
+                    if (!sortedPorts.includes(po)) {
+                        sortedPorts.push(po);
+                    }
+                });
+
+                setPorts(sortedPorts);
 
                 const mat: Record<string, Record<string, RouteCell>> = {};
                 
-                validPorts.forEach(p1 => {
+                sortedPorts.forEach(p1 => {
                     mat[p1] = {};
-                    validPorts.forEach(p2 => {
+                    sortedPorts.forEach(p2 => {
                         if (p1 !== p2) {
                             mat[p1][p2] = {
                                 port_a: p1 < p2 ? p1 : p2,
@@ -239,14 +255,14 @@ export const RoutesMaster: React.FC = () => {
 
     if (loading) {
         return (
-            <MasterTemplate title="Maestro de Rutas" activeTab="routes">
-                <div className="flex items-center justify-center h-64 text-slate-500 font-bold">Cargando matriz de rutas...</div>
+            <MasterTemplate title="Maestro de Navegación" activeTab="routes">
+                <div className="flex items-center justify-center h-64 text-slate-500 font-bold">Cargando matriz de navegación...</div>
             </MasterTemplate>
         );
     }
 
     return (
-        <MasterTemplate title="Maestro de Rutas" subtitle="Gestión de distancias y fricción climática (Matriz No Dirigida)" activeTab="routes">
+        <MasterTemplate title="Maestro de Navegación" subtitle="Gestión de distancias y fricción climática (Matriz No Dirigida)" activeTab="routes">
             <div className="flex flex-col gap-4">
                 
                 {/* Header Actions */}
@@ -257,17 +273,23 @@ export const RoutesMaster: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                            <input 
-                                type="text"
-                                placeholder="NOMBRE DEL PUERTO"
+                            <select 
                                 value={newPortId} 
-                                onChange={(e) => setNewPortId(e.target.value.toUpperCase())}
-                                className="h-8 w-40 text-xs border border-slate-300 rounded px-2 outline-none focus:border-blue-500 font-bold uppercase"
-                                onKeyDown={(e) => { if (e.key === 'Enter') handleAddPort(); }}
-                            />
+                                onChange={(e) => setNewPortId(e.target.value)}
+                                className="h-8 w-44 text-xs border border-slate-300 rounded px-2 outline-none focus:border-blue-500 font-bold bg-white text-slate-700"
+                            >
+                                <option value="">-- SELECCIONAR PUERTO --</option>
+                                {dbPorts
+                                    .filter((p: any) => !ports.includes(p.port_id))
+                                    .map((p: any) => (
+                                        <option key={p.port_id} value={p.port_id}>
+                                            {p.port_name || p.port_id} ({p.port_id})
+                                        </option>
+                                    ))}
+                            </select>
                             <button 
                                 onClick={handleAddPort}
-                                disabled={!newPortId.trim()}
+                                disabled={!newPortId}
                                 className="flex items-center gap-1 bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
                             >
                                 <Plus size={14} /> Agregar

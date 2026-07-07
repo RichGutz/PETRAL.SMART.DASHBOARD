@@ -131,7 +131,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                 onClick={() => navigate('/routes')}
                                 className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'routes' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                             >
-                                <span className="text-sm">🗺️</span> Maestro de Rutas
+                                <span className="text-sm">🗺️</span> Maestro de Navegación
                             </button>
                             
                             <button 
