@@ -11,7 +11,7 @@ interface InteractiveChartProps {
 }
 
 type GroupBy = 'vessel' | 'route' | 'client' | 'petral' | 'tradeType';
-type PlotMetric = 'viajes' | 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'pl_vs_required' | 'total_cargo' | 'demurrage' | 'gross_plus_dem' | 'yield' | 'yield_flete' | 'total_duration' | 'none';
+type PlotMetric = 'viajes' | 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'pl_vs_required' | 'pl_percentage' | 'total_cargo' | 'demurrage' | 'gross_plus_dem' | 'yield' | 'yield_flete' | 'total_duration' | 'none';
 
 const getHexColor = (name: string, type: GroupBy) => {
     if (type === 'petral') return '#0089CF'; // Petral Blue (RGB 0-137-207)
@@ -137,6 +137,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         
         // For Yield Calculation
         const totalTonsMap: { [key: string]: { [month: string]: number } } = {};
+        const totalPLMap: { [key: string]: { [month: string]: number } } = {};
+        const globalPLMap: { [month: string]: number } = {};
         const totalGrossDemMap: { [key: string]: { [month: string]: number } } = {};
         const totalGrossRevenueMap: { [key: string]: { [month: string]: number } } = {};
         const globalTonsMap: { [month: string]: number } = {};
@@ -148,6 +150,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 case 'viajes': return 'Viajes';
                 case 'voyage_result': return 'Voyage Result';
                 case 'pl_vs_required': return 'P/L';
+                case 'pl_percentage': return 'P/L (%)';
                 case 'net_income': return 'Gross Revenue';
                 case 'total_port_costs': return 'Port Costs';
                 case 'total_bunker_costs': return 'Bunker Costs';
@@ -228,20 +231,24 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             seriesMapSec[key] = {};
                             seriesMapSec2[key] = {};
                             totalTonsMap[key] = {};
+                            totalPLMap[key] = {};
                             totalGrossDemMap[key] = {};
                             totalGrossRevenueMap[key] = {};
                         }
                         
-                        // Accumulate base variables for Yield
+                        // Accumulate base variables for Yield and P/L %
                         const tons = getMetricValue(metrics, 'total_cargo', client, route, vessel, month);
                         const grossDem = getMetricValue(metrics, 'gross_plus_dem', client, route, vessel, month);
                         const grossRev = getMetricValue(metrics, 'net_income', client, route, vessel, month);
+                        const pl = getMetricValue(metrics, 'voyage_result', client, route, vessel, month);
                         
                         totalTonsMap[key][month] = (totalTonsMap[key][month] || 0) + tons;
+                        totalPLMap[key][month] = (totalPLMap[key][month] || 0) + pl;
                         totalGrossDemMap[key][month] = (totalGrossDemMap[key][month] || 0) + grossDem;
                         totalGrossRevenueMap[key][month] = (totalGrossRevenueMap[key][month] || 0) + grossRev;
                         
                         globalTonsMap[month] = (globalTonsMap[month] || 0) + tons;
+                        globalPLMap[month] = (globalPLMap[month] || 0) + pl;
                         globalGrossDemMap[month] = (globalGrossDemMap[month] || 0) + grossDem;
                         globalGrossRevenueMap[month] = (globalGrossRevenueMap[month] || 0) + grossRev;
                         
@@ -299,9 +306,10 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             
             const grandTotal = Object.values(totalMap).reduce((a: any, b: any) => a + b, 0) as number;
             
-            // For Yield, we use the specific maps instead of seriesMap
+            const isPLPct = metric === 'pl_percentage';
             const isYield = metric === 'yield' || metric === 'yield_flete';
-            const baseMap = metric === 'yield' ? totalGrossDemMap : (metric === 'yield_flete' ? totalGrossRevenueMap : seriesMap);
+            const isRatio = isYield || isPLPct;
+            const baseMap = isPLPct ? totalPLMap : (metric === 'yield' ? totalGrossDemMap : (metric === 'yield_flete' ? totalGrossRevenueMap : seriesMap));
             
             return Object.entries(baseMap).map(([name, mData]: [string, any]) => {
                 let runningTotal = 0;
@@ -311,6 +319,11 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 let runningTons = 0;
                 let globalRunningGrossDem = 0;
                 let globalRunningTons = 0;
+
+                let runningPL = 0;
+                let runningRevenue = 0;
+                let globalRunningPL = 0;
+                let globalRunningRevenue = 0;
 
                 const dataArr = months.map(m => {
                     const val = mData[m] || 0;
@@ -334,12 +347,24 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                         globalRunningTons += globTons;
                         globalRunningGrossDem += globValue;
                         finalTot = isCumulative ? (globalRunningTons ? globalRunningGrossDem / globalRunningTons : 0) : (globTons ? globValue / globTons : 0);
+                    } else if (isPLPct) {
+                        const localRevenue = totalGrossRevenueMap[name]?.[m] || 0;
+                        const localPL = val;
+                        runningPL += localPL;
+                        runningRevenue += localRevenue;
+                        finalVal = isCumulative ? (runningRevenue ? (runningPL / runningRevenue) * 100 : 0) : (localRevenue ? (localPL / localRevenue) * 100 : 0);
+
+                        const globRevenue = globalGrossRevenueMap[m] || 0;
+                        const globPL = globalPLMap[m] || 0;
+                        globalRunningPL += globPL;
+                        globalRunningRevenue += globRevenue;
+                        finalTot = isCumulative ? (globalRunningRevenue ? (globalRunningPL / globalRunningRevenue) * 100 : 0) : (globRevenue ? (globPL / globRevenue) * 100 : 0);
                     }
 
                     const pct = isCumulative ? (grandTotal ? (finalVal / grandTotal) * 100 : 0) : (finalTot ? (finalVal / finalTot) * 100 : 0);
                     
                     return {
-                        value: isPercentage && !isYield ? pct : finalVal,
+                        value: isPercentage && !isRatio ? pct : finalVal,
                         pct: pct,
                         rawVal: finalVal
                     };
@@ -499,7 +524,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         const series = [...seriesPri, ...seriesSec, ...globalSeries];
 
         const getAxisFormatter = (metric: PlotMetric | 'gross_and_gross_plus_dem', isPct: boolean) => {
-            if (isPct) return '{value}%';
+            if (isPct || metric === 'pl_percentage') return '{value}%';
             if (metric === 'viajes') return '{value}';
             if (metric === 'total_duration') return '{value}';
             if (metric === 'yield' || metric === 'yield_flete') return (v: number) => `$${v.toFixed(2)}`;
@@ -526,6 +551,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             else if (m === 'total_duration') valStr = `${Math.round(p.value).toLocaleString()} d`;
                             else if (m === 'yield' || m === 'yield_flete') valStr = `$${p.value.toFixed(2)}`;
                             else if (m === 'total_cargo') valStr = `${Math.round(p.value).toLocaleString()} MT`;
+                            else if (m === 'pl_percentage') valStr = `${p.value.toFixed(1)}%`;
                             else valStr = `$${Math.round(p.value).toLocaleString()}`;
                         }
                         
@@ -588,6 +614,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     const metricOptions = [
         { value: 'none', label: 'Ninguno', icon: '🚫', desc: 'No graficar' },
         { value: 'pl_vs_required', label: 'P/L', icon: '⚖️', desc: 'USD / Resultado neto real vs requerido' },
+        { value: 'pl_percentage', label: 'P/L (%)', icon: '📈', desc: 'Porcentaje / Margen P/L sobre Ingreso Flete' },
         { value: 'voyage_result', label: 'Voyage Result', icon: '💰', desc: 'USD / Resultado Viaje' },
         { value: 'net_income', label: 'Gross Revenue', icon: '💸', desc: 'USD / Flete Bruto' },
         { value: 'demurrage', label: 'Demurrage', icon: '⏳', desc: 'USD / Estadía' },
