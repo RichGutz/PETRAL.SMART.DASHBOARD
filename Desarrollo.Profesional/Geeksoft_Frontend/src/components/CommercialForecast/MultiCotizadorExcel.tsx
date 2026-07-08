@@ -342,9 +342,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
             setPuertosConfig(prevPorts => {
                 const newList = [...prevPorts];
                 if (newList[0] && newList[0].action !== 'NONE') {
-                    newList[0].op_rate = getAutoPortRate(value, newList[0].action);
-                    newList[0].overhead = getAutoPortOverhead(value, newList[0].action);
-                    newList[0].positioning = getAutoPortPositioning(value, newList[0].action);
+                    newList[0].op_rate = '';
+                    newList[0].overhead = '';
+                    newList[0].positioning = '';
                 }
                 return newList;
             });
@@ -354,9 +354,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 const newList = [...prevPorts];
                 const pIdx = index + 1;
                 if (newList[pIdx] && newList[pIdx].action !== 'NONE') {
-                    newList[pIdx].op_rate = getAutoPortRate(value, newList[pIdx].action);
-                    newList[pIdx].overhead = getAutoPortOverhead(value, newList[pIdx].action);
-                    newList[pIdx].positioning = getAutoPortPositioning(value, newList[pIdx].action);
+                    newList[pIdx].op_rate = '';
+                    newList[pIdx].overhead = '';
+                    newList[pIdx].positioning = '';
                 }
                 return newList;
             });
@@ -378,10 +378,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     list[idx].overhead = '';
                     list[idx].positioning = '';
                 } else {
-                    const portId = idx === 0 ? tramos[0].origin_port_id : tramos[idx - 1].destination_port_id;
-                    list[idx].op_rate = getAutoPortRate(portId, val);
-                    list[idx].overhead = getAutoPortOverhead(portId, val);
-                    list[idx].positioning = getAutoPortPositioning(portId, val);
+                    list[idx].op_rate = '';
+                    list[idx].overhead = '';
+                    list[idx].positioning = '';
                 }
             }
 
@@ -1752,7 +1751,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         value={puertosConfig[0].overhead ?? ''}
                                         onChange={(e) => updatePuertoConfigField(0, 'overhead', e.target.value)}
                                         className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
-                                        placeholder="6.0"
+                                        placeholder={String(getAutoPortOverhead(tramos[0]?.origin_port_id || '', puertosConfig[0].action) || '6.0')}
                                     />
                                 ) : (
                                     <span className="text-slate-350 select-none pr-2">—</span>
@@ -1767,7 +1766,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         value={puertosConfig[0].positioning ?? ''}
                                         onChange={(e) => updatePuertoConfigField(0, 'positioning', e.target.value)}
                                         className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
-                                        placeholder="0.0"
+                                        placeholder={String(getAutoPortPositioning(tramos[0]?.origin_port_id || '', puertosConfig[0].action) || '0.0')}
                                     />
                                 ) : (
                                     <span className="text-slate-350 select-none pr-2">—</span>
@@ -1955,7 +1954,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 value={puertosConfig[idx + 1].overhead ?? ''}
                                                 onChange={(e) => updatePuertoConfigField(idx + 1, 'overhead', e.target.value)}
                                                 className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
-                                                placeholder="6.0"
+                                                placeholder={String(getAutoPortOverhead(tr.destination_port_id, puertosConfig[idx + 1].action) || '6.0')}
                                             />
                                         ) : (
                                             <span className="text-slate-350 select-none pr-2">—</span>
@@ -1970,7 +1969,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 value={puertosConfig[idx + 1].positioning ?? ''}
                                                 onChange={(e) => updatePuertoConfigField(idx + 1, 'positioning', e.target.value)}
                                                 className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
-                                                placeholder="0.0"
+                                                placeholder={String(getAutoPortPositioning(tr.destination_port_id, puertosConfig[idx + 1].action) || '0.0')}
                                             />
                                         ) : (
                                             <span className="text-slate-350 select-none pr-2">—</span>
