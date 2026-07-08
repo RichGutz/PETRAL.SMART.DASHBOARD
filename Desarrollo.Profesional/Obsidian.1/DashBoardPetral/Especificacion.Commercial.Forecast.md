@@ -197,4 +197,27 @@ El cuarto módulo del Ribbon es una vista geoespacial del Perú que superpone la
 👉 Ver especificación completa: [[Especificacion.Mapa.Espaguetis]]
 
 ---
+
+### 5.9 Corrección de Integridad en `projection_lines` y Selector de Cliente (2026-07-08)
+
+#### Regla de llave compuesta en `projection_lines`
+
+Se descubrió y corrigió un bug de **duplicidad silenciosa** en el estado React `projectionLines`. Al editar la frecuencia de un viaje, la función `handleFrequencyChange` usaba solo `destination_port_id` para buscar la línea a actualizar (`route_key.split('-')[1]`). Si el `findIndex` devolvía `-1`, se insertaba un nuevo registro en lugar de actualizar el existente.
+
+**Regla definitiva establecida:**
+> La llave natural de cada elemento de `projection_lines` son los **5 campos**: `client_id + origin_port_id + destination_port_id + vessel_id + month_index`. Toda función que lea, modifique o deduplique este array **debe** validar los 5 campos.
+
+**Funciones corregidas en `CommercialForecast.tsx`:**
+- `handleFrequencyChange` — comparación de 5 campos + deduplicación en caliente.
+- `handleTariffChange` — mismo patrón que `handleFrequencyChange`.
+- `handleLoadSelected` — deduplicación automática con `Map<string>` al cargar escenarios.
+
+#### Selector de Cliente en `ForecastBuilder_V2`
+
+Se corrigió un bug que impedía que `SPCC` apareciera en el selector "Cliente" de la barra de control de la Matriz Financiera. El `useEffect` de carga solo añadía clientes desde la tabla `spots` con `is_multicotizador === true`, tabla en la que SPCC no tiene registros (sus rutas son hardcodeadas).
+
+**Regla definitiva establecida:**
+> Clientes con rutas simples hardcodeadas (actualmente `SPCC`) deben declararse en el array `fixedClients` de `ForecastBuilder_V2.tsx`. Clientes con rutas multicotizador complejas (NEXA y futuros) aparecen dinámicamente desde la tabla `spots`.
+
+---
 *Documento vivo mantenido por el equipo Geeksoft - Naviera Petral.*

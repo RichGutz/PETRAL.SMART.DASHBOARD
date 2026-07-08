@@ -107,4 +107,21 @@ Se presenta una tabla de doble entrada que cruza todos los puertos. Refleja el c
 - [ ] Reemplazar `$9,999` placeholders en `agency_matrix` con costos portuarios reales por puerto.
 - [✅ HECHO] Función de guardado de ruta (UI para nombre + botón Save → `POST /spot/save`).
 - [✅ HECHO] Cargar rutas guardadas en el Ruteador Spot (catálogo y carga reactiva en UI).
-- [ ] Integrar rutas spot guardadas dentro del módulo de Forecast mensual consolidado.
+- [✅ HECHO] Integrar rutas spot guardadas dentro del módulo de Forecast mensual consolidado.
+
+---
+
+## 7. Nota Arquitectónica — Clientes en `ForecastBuilder_V2` (2026-07-08)
+
+El `ForecastBuilder_V2` (barra de control superior de la Matriz Financiera) construye dinámicamente el selector de "Cliente" leyendo los registros de la tabla `spots` con bandera `legs_data.is_multicotizador = true`. Sin embargo, esto excluía a **SPCC**, cuyas rutas (`ILO-MATARANI`, `ILO-MARCONA`, `ILO-MEJILLONES`) son simples y están hardcodeadas en el `useMemo clientRoutes`, no en la tabla `spots`.
+
+**Regla implementada:**
+
+| Tipo de cliente | Fuente de rutas | Apare en selector |
+|---|---|---|
+| `SPCC` | Hardcodeadas en `ForecastBuilder_V2.tsx` (`useMemo clientRoutes`) | Fijo garantizado (`fixedClients`) |
+| `NEXA` y futuros | Tabla `spots` con `is_multicotizador: true` | Dinámico desde BD |
+
+> Para agregar un nuevo cliente con rutas simples al sistema, declararlo en `fixedClients = ['SPCC', ...]` en `ForecastBuilder_V2.tsx`. Para clientes con rutas multicotizador, grabar sus rutas en la tabla `spots` con `is_multicotizador: true`.
+
+**Commit:** `f651ff2`

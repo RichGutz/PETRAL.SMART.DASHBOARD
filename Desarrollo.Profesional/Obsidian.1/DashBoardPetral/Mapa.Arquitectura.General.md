@@ -283,3 +283,97 @@ Worker 2: primer request → cold start de 3s 🐌
 
 6. **Uvicorn con `--workers 1` + caché en memoria** es la configuración correcta para este sistema. Con múltiples workers, el caché en RAM se fragmenta y cada worker paga su propio cold start. Para escalar horizontalmente en el futuro, se debe migrar el caché a **Redis** (`redis-py` + TTL 30s) en lugar de variables Python en memoria.
 
+---
+
+## 🔬 Diagnóstico y Correcciones — Sesión 2026-07-08
+
+> **Autor del análisis:** Antigravity (Claude Sonnet 4.6 Thinking)
+> **Commits generados:** `a6beb3e`, `1f8375b`, `f651ff2`
+
+---
+
+### ⚡ Bug 1: Anomalía Visual en Yield de Enero 2027 — Duplicidad de `projectionLines`
+
+**Síntoma:** En la columna de Enero 2027 de la Matriz Financiera (escenario `PB 2027`, ruta `ILO-MARCONA`, buque `MOQUEGUA`, cliente `SPCC`), la grilla pintaba **1 viaje** y **13,500 MT**, pero los campos financieros correspondían a **2 viajes** (`Gross Revenue: $616,140`), disparando el `Yield Flete` a `$32.33 USD/MT` en lugar del correcto `$20.92 USD/MT`.
+
+**Causa Raíz — 3 capas encadenadas:**
+
+1. **Indexación incompleta en `handleFrequencyChange`:** La función usaba `route_key.split('-')[1]` para obtener solo el `destination_port_id`. Al comparar solo destino + vessel + client + month (sin el `origin_port_id`), `findIndex` podía fallar en rutas con destinos compartidos o al haber colisiones. El índice devuelto (`-1`) activaba el bloque `else if`, que **insertaba una nueva línea duplicada** (freq=1) en lugar de actualizar la existente (freq=2).
+
+2. **Desincronización UI vs Backend:** La grilla del navegador buscaba la primera coincidencia en `projectionLines` → encontraba la nueva línea duplicada → pintaba **1 viaje** en pantalla. Pero al simular, el frontend enviaba al backend **ambas líneas** (la original con freq=2 + la nueva con freq=1).
+
+3. **Sobreescritura en agregación del backend:** En `forecast_service.py`, el diccionario de agregación usa `agg_data[client][route_key][vessel][month] = monthly_result`. Al procesar ambas líneas de Enero, el resultado de la línea con freq=2 sobreescribía al de freq=1. El frontend recibía la respuesta financiera de 2 viajes mientras mostraba visualmente 1.
+
+**Corrección aplicada — `CommercialForecast.tsx`:**
+
+```typescript
+// ANTES (incompleto — solo destination_port_id):
+const destination_port_id = route_key.split('-')[1];
+const existingIndex = prev.findIndex(p =>
+    p.month_index === month_index &&
+    p.vessel_id === vessel_id &&
+    p.destination_port_id === destination_port_id && // ← faltaba origin
+    p.client_id === client_id
+);
+
+// DESPUÉS (completo — origin + destination):
+const parts = route_key.split('-');
+const origin_port_id = parts[0];
+const destination_port_id = parts[1];
+const firstMatchIndex = prev.findIndex(p =>
+    p.month_index === month_index &&
+    p.vessel_id === vessel_id &&
+    p.origin_port_id === origin_port_id &&    // ← añadido
+    p.destination_port_id === destination_port_id &&
+    p.client_id === client_id
+);
+// + limpieza en caliente de duplicados residuales al actualizar
+```
+
+También se implementó **deduplicación automática en `handleLoadSelected`** usando un `Map` con llave compuesta `client-origin-dest-vessel-month` para curar inconsistencias históricas al cargar escenarios desde Supabase.
+
+**Regla Arquitectónica derivada:**
+
+> Todo `findIndex` o `find` sobre `projectionLines` debe validar **siempre** los 5 campos de llave: `client_id`, `origin_port_id`, `destination_port_id`, `vessel_id`, `month_index`. Omitir cualquiera introduce el riesgo de colisiones y duplicados silenciosos que desincronizen la UI del backend.
+
+---
+
+### ⚡ Bug 2: Selector de Cliente en `ForecastBuilder_V2` no mostraba SPCC
+
+**Síntoma:** Al intentar agregar una nueva línea de ruta SPCC a un escenario ya cargado en la Matriz Financiera (`ToolsLayout_V2`), el selector de "Cliente" solo mostraba NEXA (y SPOT). SPCC era invisible.
+
+**Causa Raíz:** El `useEffect` de carga del `ForecastBuilder_V2` construía la lista de clientes disponibles filtrando **únicamente** los registros de la tabla `spots` con bandera `is_multicotizador === true`. Las rutas de SPCC (`ILO-MATARANI`, `ILO-MARCONA`, `ILO-MEJILLONES`) son simples y están hardcodeadas directamente en el `useMemo` de `clientRoutes`, no en la tabla `spots`. Por lo tanto SPCC nunca aparecía en la lista dinámica.
+
+**Corrección aplicada — `ForecastBuilder_V2.tsx`:**
+
+```typescript
+// ANTES — solo clientes dinámicos de spots (SPCC nunca aparecía):
+const uniqueClients = Array.from(new Set(clientIds));
+setAvailableClients(uniqueClients);
+
+// DESPUÉS — SPCC fijo + dinámicos de spots (NEXA, etc.):
+const fixedClients = ['SPCC'];
+const allClients = Array.from(new Set([...fixedClients, ...dynamicClientIds]));
+setAvailableClients(allClients);
+```
+
+**Regla Arquitectónica derivada:**
+
+> Los clientes con rutas simples hardcodeadas (actualmente solo `SPCC`) deben declararse como **fijos garantizados** en el `ForecastBuilder_V2`. Los clientes con rutas multicotizador complejas (NEXA y futuros) aparecen dinámicamente desde la tabla `spots`. Esta separación debe mantenerse explícita al agregar nuevos clientes al sistema.
+
+---
+
+### 🖼️ Mejora: Actualización de Asset Visual
+
+- Imagen del **B/T MOQUEGUA** en el Maestro de Buques (`VesselsMaster.tsx` / `VesselsMaster_V2.tsx`) actualizada por la fotografía oficial a color.
+- Ruta: `public/moquegua_1.jpg` (reemplazo in-place, sin cambio de nombre en el código fuente).
+
+### ✅ Resumen de Fixes — Sesión 2026-07-08
+
+| Archivo | Cambio |
+|---|---|
+| `src/pages/CommercialForecast/CommercialForecast.tsx` | `handleFrequencyChange` y `handleTariffChange` — comparación simétrica `origin_port_id` + `destination_port_id` + deduplicación en caliente |
+| `src/pages/CommercialForecast/CommercialForecast.tsx` | `handleLoadSelected` — deduplicación automática de `projectionLines` al cargar escenarios |
+| `src/components/CommercialForecast/ForecastBuilder_V2.tsx` | Clientes del selector: `SPCC` agregado como fijo; SPOT retirado |
+| `public/moquegua_1.jpg` | Fotografía oficial del B/T MOQUEGUA actualizada |
+

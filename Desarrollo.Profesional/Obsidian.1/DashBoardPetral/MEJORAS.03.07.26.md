@@ -567,3 +567,47 @@ Se implementó el comportamiento en el componente:
 - `[x]` **Rediseño UI:** Se eliminó la barra lateral vertical. Ahora la interfaz es 100% horizontal utilizando el ancho completo de la pantalla. El Nivel 1 tiene Pestañas de Clientes (Tabs) en la cabecera, y el Nivel 2 contiene Sub-pestañas para cada Ruta.
 - `[x]` **Fix Backend:** Se corrigió el método `get_contracts_master` en FastAPI para que asigne las tarifas a la ruta correcta usando la validación de clave compuesta `(contract_id, origin_port_id, destination_port_id)`.
 - `[x]` **Fix React State:** Se reemplazó el uso de `contract_id` como clave única en el renderizado y estado (`selectedContractId`) por una función `getRouteKey(route)` que genera un identificador compuesto seguro (`contract_id|origin|destination`), resolviendo el bloqueo de navegación entre pestañas.
+
+---
+
+## 🛠️ Correcciones de Integridad y Mejoras — Sesión 2026-07-08
+
+### Bug 1: Anomalía de Yield en Enero 2027 — Duplicados en `projection_lines`
+
+**Problema:** La grilla de la Matriz Financiera mostraba **1 viaje** y **13,500 MT** para Enero 2027 (ILO-MARCONA / MOQUEGUA / SPCC), pero los financieros calculaban **2 viajes** (`Gross Revenue: $616,140`), disparando el Yield Flete a `$32.33 USD/MT` en lugar del correcto `$20.92 USD/MT`.
+
+**Causa Raíz:** La función `handleFrequencyChange` en `CommercialForecast.tsx` usaba `route_key.split('-')[1]` para obtener solo el `destination_port_id`, lo que hacía que `findIndex` devolviera `-1` en ciertos casos. En lugar de actualizar la línea existente, insertaba un duplicado. La UI pintaba el duplicado (1 viaje) pero el backend recibía ambas líneas y el resultado de 2 viajes sobreescribía al de 1.
+
+**Solución:**
+- `[x]` `handleFrequencyChange` y `handleTariffChange` refactorizados para comparar los **5 campos de llave**: `client_id + origin_port_id + destination_port_id + vessel_id + month_index`.
+- `[x]` Deduplicación en caliente con `Map<string>` al actualizar líneas.
+- `[x]` `handleLoadSelected` aplica deduplicación automática al cargar escenarios desde Supabase.
+
+**Archivos:** `src/pages/CommercialForecast/CommercialForecast.tsx`
+**Commits:** `a6beb3e`
+
+---
+
+### Bug 2: SPCC no aparecía en selector de Cliente del ForecastBuilder
+
+**Problema:** Al agregar una nueva línea de ruta SPCC a un escenario ya cargado en la Matriz Financiera, el selector de "Cliente" solo mostraba NEXA. SPCC era invisible.
+
+**Causa Raíz:** `ForecastBuilder_V2` construía `availableClients` filtrando únicamente `spots` con `is_multicotizador === true`. SPCC tiene rutas simples hardcodeadas en el `useMemo`, no en esa tabla.
+
+**Solución:**
+- `[x]` `SPCC` declarado como cliente **fijo garantizado** (`fixedClients = ['SPCC']`).
+- `[x]` `SPOT` evaluado y retirado (no relevante en contexto de Matriz Financiera).
+- `[x]` NEXA y futuros clientes siguen siendo dinámicos desde BD.
+
+**Archivos:** `src/components/CommercialForecast/ForecastBuilder_V2.tsx`
+**Commits:** `1f8375b`, `f651ff2`
+
+---
+
+### Mejora: Foto del B/T MOQUEGUA actualizada
+
+- `[x]` Imagen `public/moquegua_1.jpg` reemplazada por fotografía oficial a color en el **Maestro de Buques**.
+- `[x]` Recompilado y desplegado en VPS.
+
+**Commit:** `1f8375b`
+

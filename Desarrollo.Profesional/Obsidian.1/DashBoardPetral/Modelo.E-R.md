@@ -297,3 +297,63 @@ Las migraciones DDL secuenciales en bases de datos relacionales con datos preexi
 
 ## 💡 Instrucción de Contexto para el Agente (Antigravity IDE):
 > "El agente utilizará este esquema físico estructurado para cruzar las variables lógicas en Supabase. El backend en FastAPI extraerá algebraicamente los tiempos de carga, descarga y tiempos muertos para multiplicarlos de forma matricial aplicando la sumatoria de consumos por fase (`SUM(t_fase * c_fase)`), barriendo los campos granulares de la tabla `vessels` y extrayendo los costos dinámicos de la tabla `bunker_prices`."
+
+---
+
+## 📋 Changelog del Esquema y del Modelo de Datos
+
+### 🗓️ 2026-07-08 — Corrección de Integridad en `commercial_forecasts.projection_lines`
+
+**Tabla afectada:** `commercial_forecasts` (campo `projection_lines` tipo JSONB)
+
+#### Regla de integridad de llave compuesta en `projection_lines`
+
+Cada elemento del array `projection_lines` representa una línea de simulación. Se descubrió un **bug de duplicidad silenciosa** en el frontend que producía dos registros para el mismo mes/ruta/buque/cliente cuando el usuario editaba la frecuencia de un viaje. La causa fue que el código de React solo comparaba `destination_port_id` (ignorando `origin_port_id`) al buscar la línea a actualizar.
+
+**Regla de negocio crítica derivada:**
+> La llave natural de cada elemento de `projection_lines` es la combinación de **5 campos**: `client_id + origin_port_id + destination_port_id + vessel_id + month_index`. Deben ser únicos en el array. Cualquier lógica frontend o backend que lea, actualice o deduplique este array debe validar los 5 campos.
+
+**Estructura canónica de un elemento de `projection_lines`:**
+```json
+{
+  "client_id": "SPCC",
+  "origin_port_id": "ILO",
+  "destination_port_id": "MARCONA",
+  "vessel_id": "MOQUEGUA",
+  "month_index": "2027-01",
+  "quantity": 13500,
+  "monthly_frequency": 2,
+  "custom_tariff": null,
+  "forecast_bunker_price_ifo": null,
+  "forecast_bunker_price_mdo": null
+}
+```
+
+**Corrección aplicada en el frontend (`CommercialForecast.tsx`):**
+- `handleFrequencyChange` y `handleTariffChange` ahora comparan los 5 campos al hacer `findIndex`.
+- `handleLoadSelected` aplica deduplicación automática con `Map<string, any>` usando la llave compuesta `client-origin-dest-vessel-month` al cargar escenarios desde Supabase.
+
+> ⚠️ **Nota de Deuda Técnica:** Los escenarios grabados con anterioridad a esta corrección podrían contener registros duplicados en el campo JSONB `projection_lines`. La deduplicación en `handleLoadSelected` los cura en memoria al cargar, pero no los reescribe en la BD. Si se desea una limpieza permanente, se debe ejecutar un script de migración sobre la tabla `commercial_forecasts` que aplique la misma lógica de deduplicación sobre el campo JSONB directamente en Supabase.
+
+---
+
+### 🗓️ 2026-07-08 — Actualización de `vessels` (Asset Visual)
+
+**Tabla afectada:** `vessels` (campo visual en frontend, no en BD)
+
+- La fotografía del buque **MOQUEGUA** fue actualizada en el Maestro de Buques (`VesselsMaster_V2.tsx`). El archivo en el servidor es `public/moquegua_1.jpg`. El campo `vessel_id = 'MOQUEGUA'` no cambia; el mapeo es hardcodeado en el frontend.
+
+---
+
+### 🗓️ 2026-07-08 — Clarificación de Clientes del `ForecastBuilder_V2`
+
+**Tabla afectada:** `routes_spot` (tabla `spots` en Supabase)
+
+Se documentó la siguiente **regla de clasificación de clientes** en el selector de la Matriz Financiera:
+
+| Tipo de cliente | Origen de rutas | Aparición en selector |
+|---|---|---|
+| `SPCC` | Rutas simples hardcodeadas en frontend (`ILO-MATARANI`, `ILO-MARCONA`, `ILO-MEJILLONES`) | **Fijo garantizado** |
+| `NEXA` y futuros | Rutas multicotizador con `legs_data.is_multicotizador = true` en tabla `spots` | **Dinámico** desde BD |
+
+> Al agregar un nuevo cliente al sistema con rutas multicotizador complejas, simplemente se graban sus rutas en la tabla `spots` con la bandera `is_multicotizador: true` y aparecerá automáticamente en el selector. Si el cliente tiene rutas simples (sin multicotizador), debe agregarse explícitamente al array `fixedClients` en `ForecastBuilder_V2.tsx`.
