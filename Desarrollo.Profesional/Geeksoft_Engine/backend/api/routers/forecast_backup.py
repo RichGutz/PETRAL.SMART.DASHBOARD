@@ -300,77 +300,41 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
             if tr.origin_action == 'NONE':
                 tr_dict["agency_costs_origin"] = 0.0
                 tr_dict["agency_costs_origin_details"] = {"total_cost": 0.0, "breakdown": {}, "method": "NONE"}
+            elif tr.agency_costs_origin > 0.0:
+                # Si el frontend envía un override de costo manual mayor a 0
+                tr_dict["agency_costs_origin"] = tr.agency_costs_origin
+                tr_dict["agency_costs_origin_details"] = {
+                    "total_cost": tr.agency_costs_origin,
+                    "breakdown": {"manual_override": tr.agency_costs_origin},
+                    "method": "MANUAL"
+                }
             else:
                 o_type = 'CARGA' if tr.origin_action == 'CARGAR' else 'DESCARGA'
                 orig_cost_res = calculate_detailed_port_costs(
                     client_id, tr.origin_port_id, o_type, request.vessel_id, port_costs_data, agency_matrix_data, request.port_cost_mode
                 )
-                if tr.agency_costs_origin > 0.0:
-                    db_total = orig_cost_res.get("total_cost", 0.0)
-                    db_breakdown = orig_cost_res.get("breakdown", {})
-                    diff = tr.agency_costs_origin - db_total
-                    
-                    adjusted_breakdown = db_breakdown.copy()
-                    main_key = None
-                    if "MAIN" in adjusted_breakdown:
-                        main_key = "MAIN"
-                    elif "agency_fee" in adjusted_breakdown:
-                        main_key = "agency_fee"
-                    elif adjusted_breakdown:
-                        main_key = list(adjusted_breakdown.keys())[0]
-                        
-                    if main_key:
-                        adjusted_breakdown[main_key] = round(adjusted_breakdown[main_key] + diff, 2)
-                    else:
-                        adjusted_breakdown["manual_override"] = tr.agency_costs_origin
-                        
-                    tr_dict["agency_costs_origin"] = tr.agency_costs_origin
-                    tr_dict["agency_costs_origin_details"] = {
-                        "total_cost": tr.agency_costs_origin,
-                        "breakdown": adjusted_breakdown,
-                        "method": "MANUAL"
-                    }
-                else:
-                    tr_dict["agency_costs_origin"] = orig_cost_res["total_cost"]
-                    tr_dict["agency_costs_origin_details"] = orig_cost_res
+                tr_dict["agency_costs_origin"] = orig_cost_res["total_cost"]
+                tr_dict["agency_costs_origin_details"] = orig_cost_res
 
             # Costo destino según acción del destino
             if tr.destination_action == 'NONE':
                 tr_dict["agency_costs_destination"] = 0.0
                 tr_dict["agency_costs_destination_details"] = {"total_cost": 0.0, "breakdown": {}, "method": "NONE"}
+            elif tr.agency_costs_destination > 0.0:
+                # Si el frontend envía un override de costo manual mayor a 0
+                tr_dict["agency_costs_destination"] = tr.agency_costs_destination
+                tr_dict["agency_costs_destination_details"] = {
+                    "total_cost": tr.agency_costs_destination,
+                    "breakdown": {"manual_override": tr.agency_costs_destination},
+                    "method": "MANUAL"
+                }
             else:
                 d_type = 'CARGA' if tr.destination_action == 'CARGAR' else 'DESCARGA'
                 dest_cost_res = calculate_detailed_port_costs(
                     client_id, tr.destination_port_id, d_type, request.vessel_id, port_costs_data, agency_matrix_data, request.port_cost_mode
                 )
-                if tr.agency_costs_destination > 0.0:
-                    db_total = dest_cost_res.get("total_cost", 0.0)
-                    db_breakdown = dest_cost_res.get("breakdown", {})
-                    diff = tr.agency_costs_destination - db_total
-                    
-                    adjusted_breakdown = db_breakdown.copy()
-                    main_key = None
-                    if "MAIN" in adjusted_breakdown:
-                        main_key = "MAIN"
-                    elif "agency_fee" in adjusted_breakdown:
-                        main_key = "agency_fee"
-                    elif adjusted_breakdown:
-                        main_key = list(adjusted_breakdown.keys())[0]
-                        
-                    if main_key:
-                        adjusted_breakdown[main_key] = round(adjusted_breakdown[main_key] + diff, 2)
-                    else:
-                        adjusted_breakdown["manual_override"] = tr.agency_costs_destination
-                        
-                    tr_dict["agency_costs_destination"] = tr.agency_costs_destination
-                    tr_dict["agency_costs_destination_details"] = {
-                        "total_cost": tr.agency_costs_destination,
-                        "breakdown": adjusted_breakdown,
-                        "method": "MANUAL"
-                    }
-                else:
-                    tr_dict["agency_costs_destination"] = dest_cost_res["total_cost"]
-                    tr_dict["agency_costs_destination_details"] = dest_cost_res
+                tr_dict["agency_costs_destination"] = dest_cost_res["total_cost"]
+                tr_dict["agency_costs_destination_details"] = dest_cost_res
             
             tramos_payload.append(tr_dict)
             
@@ -381,33 +345,6 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
         
         result = calculate_multicotizador_simulation(payload)
         return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/port-cost/lookup")
-def lookup_port_cost(
-    vessel_id: str,
-    port_id: str,
-    operation: str,
-    client_id: str = "SPCC",
-    port_cost_mode: str = "static"
-):
-    try:
-        from backend.database import get_supabase
-        from backend.services.forecast_service import calculate_detailed_port_costs
-        sb = get_supabase()
-        
-        pc_res = sb.table("port_costs_matrix").select("*").execute()
-        port_costs_data = pc_res.data
-        ag_res = sb.table("port_cost_static").select("*").execute()
-        agency_matrix_data = ag_res.data
-        
-        o_type = 'CARGA' if operation.upper() == 'CARGAR' else 'DESCARGA'
-        cost_res = calculate_detailed_port_costs(
-            client_id, port_id, o_type, vessel_id, port_costs_data, agency_matrix_data, port_cost_mode
-        )
-        return cost_res
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

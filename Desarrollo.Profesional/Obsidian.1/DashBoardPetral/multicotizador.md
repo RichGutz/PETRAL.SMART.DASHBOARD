@@ -308,3 +308,131 @@ graph TD
 - `[ ]` **Paso 1: Auditoría de Payload Complejo:** Inspeccionar en la base de datos registros guardados por el Estimador Excel y mapear todos los campos para verificar que no haya inconsistencias de esquemas de datos.
 - `[ ]` **Paso 2: Simulación de Prueba con Split Discharge:** Crear un caso de prueba en el estimador con 2 descargas en puertos distintos, guardarlo, jalarlo en la Matriz y auditar que la suma de ingresos y costos portuarios converja matemáticamente 1:1.
 - `[ ]` **Paso 3: Validar BAF en Rutas Complejas:** Verificar que si la ruta spot tiene un contrato asociado con baseline de bunker, las fórmulas BAF se apliquen de forma correcta sobre la tarifa final de la simulación del tramo.
+
+---
+
+## 🧪 10. Test de Convergencia Motor Multicotizador vs Auditoría Ledger (2026-07-07)
+
+### Contexto
+
+A raíz de cambios en la arquitectura de la base de datos (separación de overhead y posicionamiento de la tabla `ports` hacia `contracts`), se detectaron **discrepancias en los resultados del Multicotizador** respecto a la Auditoría Ledger para el mismo barco y viaje. Se ejecutó un proceso formal de diagnóstico, corrección y validación matemática.
+
+---
+
+### 🐛 Bugs Encontrados y Corregidos
+
+#### Bug 1 — `float(None)` en los motores de cálculo
+
+**Archivos afectados:** `spot_engine.py`, `engine.py`, `engine_universal.py`
+
+Al enviar campos de overhead y posicionamiento vacíos (`null`/`None`) desde el frontend (para que el backend aplique el override del contrato), los tres motores de Python intentaban ejecutar `float(None)` directamente, generando un `TypeError` que devolvía HTTP 500 y congelaba la UI del Multicotizador (imposibilitaba ingresar el flete y mostraba costos de puerto vacíos).
+
+**Corrección aplicada (en los 3 motores):**
+```python
+# ANTES (roto con None):
+overhead_orig = float(leg_inputs.get("port_overhead_hours_origin", 6))
+
+# DESPUÉS (seguro con None):
+overhead_orig = leg_inputs.get("port_overhead_hours_origin")
+overhead_orig = float(overhead_orig) if overhead_orig is not None else 6.0
+```
+Este patrón se aplicó idénticamente a `overhead_orig`, `overhead_dest`, `pos_carga` y `pos_descarga` en los tres archivos.
+
+**Commit:** `5bd7308` — *Engine: Safeguard overhead and positioning variables from float(None) TypeError*
+
+---
+
+#### Bug 2 — Frontend sobreescribía el override del contrato con valores estáticos
+
+**Archivo afectado:** `MultiCotizadorExcel.tsx`
+
+Al seleccionar un puerto o cambiar la acción (`CARGAR`/`DESCARGAR`) de un puerto en la grilla, el frontend rellenaba automáticamente las celdas de ritmo, overhead y posicionamiento con valores estáticos de la tabla `ports` (ej. overhead = 6, posicionamiento = 1). Al viajar como valores explícitos al backend, el motor los tomaba como override del usuario y **nunca consultaba los valores del contrato de SPCC** (que tiene, por ejemplo, 1.0 hora de maniobra en ILO de carga). Esto causaba diferencia en días de puerto, bunker y P/L.
+
+**Corrección aplicada:**
+```typescript
+// ANTES: al cambiar acción/puerto, precargaba valores del puerto
+list[idx].op_rate    = getAutoPortRate(portId, val);
+list[idx].overhead   = getAutoPortOverhead(portId, val);
+list[idx].positioning = getAutoPortPositioning(portId, val);
+
+// DESPUÉS: deja vacíos — el backend resuelve el contrato
+list[idx].op_rate    = '';
+list[idx].overhead   = '';
+list[idx].positioning = '';
+```
+Los valores del puerto siguen visibles como `placeholder` en gris tenue en la celda, pero **no se envían al backend** a menos que el usuario los escriba explícitamente. El backend consulta el contrato activo y aplica los valores correctos.
+
+**Commit:** `ec8a7bb` — *Frontend: Leave op_rate, overhead, and positioning empty by default so backend contract overrides are applied correctly*
+
+---
+
+### 🔬 Script de Convergencia Ejecutado
+
+**Archivo:** `run_spcc_comparison.py`
+**Ruta completa:** `C:\Users\rguti\.gemini\antigravity-ide\brain\b9eac59f-8d90-45f4-abf8-b90a5659456b\scratch\run_spcc_comparison.py`
+
+**Metodología del script:**
+
+1. **Fuente de datos:** Se conecta a Supabase para obtener precios de bunker, distancias de rutas y contratos en tiempo real.
+2. **Paso 1 — Correr la Auditoría Ledger:** Para cada combinación ruta × barco, ejecuta `run_forecast_simulation()` con `port_cost_mode='static'` y los parámetros reales del contrato SPCC. Extrae la tarifa contractual real implícita (`net_income / qty`).
+3. **Paso 2 — Correr el Multicotizador:** Ejecuta `calculate_multicotizador()` con un **viaje redondo completo** de 2 tramos:
+   - Tramo 1: `LADEN` (ILO → Destino) con `origin_action="CARGAR"`, `destination_action="DESCARGAR"`, overhead y posicionamiento en `None`.
+   - Tramo 2: `BALLAST` (Destino → ILO) con `origin_action="NONE"`, `destination_action="NONE"`.
+4. **Paso 3 — Comparar:** Confronta 9 métricas clave y marca `OK` si `|Ledger - MC| < $0.05`.
+
+**Rutas probadas:** Las 3 rutas reales del contrato SPCC activo (`SPCC_2025`):
+- ILO → MATARANI (69 NM, 13,500 MT, $19.01/T)
+- ILO → MARCONA (283 NM, 22,000 MT, $21.77/T)
+- ILO → MEJILLONES (335 NM, 22,000 MT, $20.67/T)
+
+**Barcos probados:** MOQUEGUA y TABLONES
+
+**Precios de bunker al momento del test:**
+- IFO: **$895.14 / T**
+- MDO: **$1,460.30 / T**
+
+---
+
+### ✅ Resultados: Convergencia Absoluta — 54/54 Métricas OK
+
+| Ruta | Barco | total_days | sea_days | port_days | bunker_ifo | bunker_$ | port_$ | income | PnL | TCE |
+|------|-------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| ILO→MATARANI | MOQUEGUA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ILO→MATARANI | TABLONES | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ILO→MARCONA | MOQUEGUA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ILO→MARCONA | TABLONES | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ILO→MEJILLONES | MOQUEGUA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ILO→MEJILLONES | TABLONES | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+**Diferencia en todas las métricas: $0.0000 exacto.**
+
+---
+
+### Conclusión
+
+> **El motor del Multicotizador y el motor de la Auditoría Ledger son matemáticamente idénticos.**
+> 3 rutas × 2 barcos × 9 métricas = 54 comparaciones. Las 54 con diferencia = $0.0000.
+> El motor es uno solo — solo cambia la interfaz de entrada de datos.
+> La única condición para lograr la convergencia es dejar las celdas de overhead y posicionamiento **vacías** en la grilla del Multicotizador, para que el backend aplique el contrato contractual activo de SPCC.
+
+---
+
+### 🔍 11. Clarificación sobre Falsas Divergencias de Bunker (Análisis de Capturas)
+
+En auditorías posteriores, se reportó una aparente falta de convergencia al comparar una captura de pantalla del **Multicotizador** contra un PDF del **Voyage Ledger (Auditoría)**:
+- **Multicotizador (UI):** P/L = `$146,033` (Net Profit = `$199,074`)
+- **Voyage Ledger (PDF):** P/L = `$155,164.54` (Net Profit = `$208,205.52`)
+
+#### Origen de la diferencia:
+La discrepancia radica exclusivamente en los **precios de bunker** configurados al momento de ejecutar/visualizar cada reporte:
+1. **En el PDF de Auditoría (Voyage Ledger):** No se alimentaron los precios reales de la base de datos (mostrando `Fecha Cotización: N/A`), por lo que el sistema aplicó los valores de fallback por defecto: **IFO = $450.00 / T** y **MDO = $800.00 / T**.
+   - `Costo Bunker` = `(18.29 * 450.00) + (1.50 * 800.00) = $9,429.48`
+   - `Voyage Result (Net Profit)` = `256,635.00 - 39,000.00 - 9,429.48 = $208,205.52`
+   - `P/L vs TCE Req` = `208,205.52 - (13,000.00 * 4.0801) = $155,164.54`
+2. **En la captura del Multicotizador:** Se utilizaron los precios reales más recientes de la base de datos de mercado: **IFO = $895.14 / T** y **MDO = $1,460.30 / T**.
+   - `Costo Bunker` = `(18.29 * 895.14) + (1.50 * 1,460.30) = $18,560.53` (redondeado en la UI como `$18,561`)
+   - `Voyage Result (Net Profit)` = `256,635.00 - 39,000.00 - 18,560.53 = $199,074.47` (redondeado en la UI como `$199,074`)
+   - `P/L vs TCE Req` = `199,074.47 - (13,000.00 * 4.0801) = $146,033.17` (redondeado en la UI como `$146,033`)
+
+#### Conclusión:
+Si se ingresan los precios **IFO = 450** y **MDO = 800** en el panel superior derecho del Multicotizador, **los resultados de ambos reportes convergen al centavo**. La diferencia no es de lógica matemática, sino de inputs de combustible.

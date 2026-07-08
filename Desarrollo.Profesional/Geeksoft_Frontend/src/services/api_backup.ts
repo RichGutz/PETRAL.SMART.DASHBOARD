@@ -54,17 +54,6 @@ export const ForecastService = {
         const response = await api.post('/forecast/multicotizador/calculate', payload);
         return response.data;
     },
-    lookupPortCost: async (vesselId: string, portId: string, operation: string, portCostMode: string = 'static') => {
-        const response = await api.get('/forecast/port-cost/lookup', {
-            params: {
-                vessel_id: vesselId,
-                port_id: portId,
-                operation,
-                port_cost_mode: portCostMode
-            }
-        });
-        return response.data;
-    },
     getLatestBunker: async () => {
         const response = await api.get('/forecast/bunker/latest');
         return response.data;

@@ -488,11 +488,9 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
             else:
                 # Tramos siguientes: origen ya visitado. Destino solo paga si no fue visitado antes en el viaje
                 res["agency_costs_origin"] = 0.0
-                res["agency_costs_origin_details"] = {"total_cost": 0.0, "breakdown": {}, "method": "NONE"}
                 if dest in visited_ports:
                     res["port_costs"] = 0.0
                     res["agency_costs_destination"] = 0.0
-                    res["agency_costs_destination_details"] = {"total_cost": 0.0, "breakdown": {}, "method": "NONE"}
                 else:
                     res["port_costs"] = c_dest
                     res["agency_costs_destination"] = c_dest
@@ -509,12 +507,6 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
             
         res["origin_port_id"] = orig
         res["destination_port_id"] = dest
-        res["positioning_carga_hrs"] = tr.get("positioning_carga_hrs")
-        res["positioning_descarga_hrs"] = tr.get("positioning_descarga_hrs")
-        res["port_overhead_hours_origin"] = tr.get("port_overhead_hours_origin")
-        res["port_overhead_hours_dest"] = tr.get("port_overhead_hours_dest")
-        res["contract_agreed_load_rate"] = tr.get("contract_agreed_load_rate")
-        res["contract_agreed_discharge_rate"] = tr.get("contract_agreed_discharge_rate")
         res["agency_costs_origin_details"] = tr.get("agency_costs_origin_details")
         res["agency_costs_destination_details"] = tr.get("agency_costs_destination_details")
         processed_tramos.append(res)
