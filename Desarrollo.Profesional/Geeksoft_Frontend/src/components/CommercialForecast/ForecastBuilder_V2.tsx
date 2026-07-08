@@ -163,8 +163,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         import('../../services/api').then(({ ForecastService }) => {
             ForecastService.listSpots().then(spotRoutes => {
                 setSpotRoutes(spotRoutes || []);
-                // Clientes fijos siempre disponibles
-                const fixedClients = ['SPCC', 'SPOT'];
+                // SPCC es cliente fijo (sus rutas simples no están en spots)
+                const fixedClients = ['SPCC'];
                 // Clientes dinámicos derivados de rutas multicotizador guardadas
                 const filtered = (spotRoutes || []).filter((s: any) => s.legs_data?.is_multicotizador === true);
                 const dynamicClientIds: string[] = filtered.map((s: any) => {
