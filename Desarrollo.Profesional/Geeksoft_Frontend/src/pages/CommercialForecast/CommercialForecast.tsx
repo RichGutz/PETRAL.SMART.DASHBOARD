@@ -142,22 +142,37 @@ export const CommercialForecast: React.FC = () => {
 
     const handleFrequencyChange = (client_id: string, route_key: string, vessel_id: string, month_index: string, newFrequency: number) => {
         setProjectionLines(prev => {
-            const destination_port_id = route_key.split('-')[1];
-            const existingIndex = prev.findIndex(p => 
+            const parts = route_key.split('-');
+            const origin_port_id = parts[0];
+            const destination_port_id = parts[1];
+
+            const firstMatchIndex = prev.findIndex(p => 
                 p.month_index === month_index && 
                 p.vessel_id === vessel_id &&
+                p.origin_port_id === origin_port_id &&
                 p.destination_port_id === destination_port_id &&
                 p.client_id === client_id
             );
 
-            if (existingIndex >= 0) {
-                const clone = [...prev];
-                clone[existingIndex] = { ...clone[existingIndex], monthly_frequency: newFrequency };
-                return clone;
+            if (firstMatchIndex >= 0) {
+                const updatedLine = { ...prev[firstMatchIndex], monthly_frequency: newFrequency };
+                const filtered = prev.filter((p, idx) => {
+                    if (idx === firstMatchIndex) return false;
+                    const isDup = (
+                        p.month_index === month_index && 
+                        p.vessel_id === vessel_id &&
+                        p.origin_port_id === origin_port_id &&
+                        p.destination_port_id === destination_port_id &&
+                        p.client_id === client_id
+                    );
+                    return !isDup;
+                });
+                return [updatedLine, ...filtered];
             } else if (newFrequency > 0) {
                 // Si la celda estaba en 0 (no existía el viaje en este mes), buscamos otro mes como plantilla
                 const templateLine = prev.find(p => 
                     p.vessel_id === vessel_id &&
+                    p.origin_port_id === origin_port_id &&
                     p.destination_port_id === destination_port_id &&
                     p.client_id === client_id
                 );
@@ -176,18 +191,32 @@ export const CommercialForecast: React.FC = () => {
     };
     const handleTariffChange = (client_id: string, route_key: string, vessel_id: string, month_index: string, newTariff: number) => {
         setProjectionLines(prev => {
-            const destination_port_id = route_key.split('-')[1];
-            const existingIndex = prev.findIndex(p => 
+            const parts = route_key.split('-');
+            const origin_port_id = parts[0];
+            const destination_port_id = parts[1];
+
+            const firstMatchIndex = prev.findIndex(p => 
                 p.month_index === month_index && 
                 p.vessel_id === vessel_id &&
+                p.origin_port_id === origin_port_id &&
                 p.destination_port_id === destination_port_id &&
                 p.client_id === client_id
             );
 
-            if (existingIndex >= 0) {
-                const clone = [...prev];
-                clone[existingIndex] = { ...clone[existingIndex], custom_tariff: newTariff };
-                return clone;
+            if (firstMatchIndex >= 0) {
+                const updatedLine = { ...prev[firstMatchIndex], custom_tariff: newTariff };
+                const filtered = prev.filter((p, idx) => {
+                    if (idx === firstMatchIndex) return false;
+                    const isDup = (
+                        p.month_index === month_index && 
+                        p.vessel_id === vessel_id &&
+                        p.origin_port_id === origin_port_id &&
+                        p.destination_port_id === destination_port_id &&
+                        p.client_id === client_id
+                    );
+                    return !isDup;
+                });
+                return [updatedLine, ...filtered];
             }
             return prev;
         });
@@ -298,16 +327,26 @@ export const CommercialForecast: React.FC = () => {
                 };
             });
 
+            // Deduplicar de inmediato al cargar para curar inconsistencias históricas
+            const uniqueLinesMap = new Map<string, any>();
+            cleanedLines.forEach((line: any) => {
+                const key = `${line.client_id}-${line.origin_port_id}-${line.destination_port_id}-${line.vessel_id}-${line.month_index}`;
+                if (!uniqueLinesMap.has(key)) {
+                    uniqueLinesMap.set(key, line);
+                }
+            });
+            const deduplicatedLines = Array.from(uniqueLinesMap.values());
+
             // Correr la simulación directamente con los datos cargados
             // (no solo depender del useEffect que puede tener cierre sobre estados viejos)
-            setProjectionLines(cleanedLines);
+            setProjectionLines(deduplicatedLines);
             setCurrentForecastId(loadedData.id);
             setForecastName(loadedData.name);
             setLoadedAuthor(loadedData.user_id);
             setShowLoadModal(false);
 
             // Forzar la simulación de forma inmediata con los valores exactos del escenario
-            await runSimulationWith(cleanedLines, newStartDate, newEndDate);
+            await runSimulationWith(deduplicatedLines, newStartDate, newEndDate);
 
         } catch(e: any) {
             const msg = e?.response?.data?.detail || e?.message || "Error desconocido";
