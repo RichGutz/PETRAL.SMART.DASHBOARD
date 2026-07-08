@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
-import { Save, AlertCircle, Plus } from 'lucide-react';
+import { Save, AlertCircle, Plus, Compass } from 'lucide-react';
 
 interface RouteCell {
     port_a: string;
@@ -34,6 +34,7 @@ export const RoutesMaster: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
+    const [isEstimating, setIsEstimating] = useState(false);
 
     const [newPortId, setNewPortId] = useState("");
     const [draggedItem, setDraggedItem] = useState<string | null>(null);
@@ -197,6 +198,100 @@ export const RoutesMaster: React.FC = () => {
         }
     };
 
+    const handleEstimateRoutes = async () => {
+        try {
+            setIsEstimating(true);
+            
+            const portCoordsMap: Record<string, { lat: number, lon: number }> = {};
+            dbPorts.forEach(p => {
+                if (p.lat !== undefined && p.lon !== undefined && p.lat !== null && p.lon !== null) {
+                    portCoordsMap[p.port_id] = { lat: Number(p.lat), lon: Number(p.lon) };
+                }
+            });
+
+            const routesToEstimate: Array<{ origin: string, destination: string, lat_a: number, lon_a: number, lat_b: number, lon_b: number }> = [];
+
+            ports.forEach(p1 => {
+                ports.forEach(p2 => {
+                    if (p1 !== p2) {
+                        const cell = matrix[p1]?.[p2];
+                        if (!cell || !cell.route_distance || cell.route_distance <= 0) {
+                            const c1 = portCoordsMap[p1];
+                            const c2 = portCoordsMap[p2];
+                            if (c1 && c2 && c1.lat !== undefined && c1.lon !== undefined && c2.lat !== undefined && c2.lon !== undefined) {
+                                routesToEstimate.push({
+                                    origin: p1,
+                                    destination: p2,
+                                    lat_a: c1.lat,
+                                    lon_a: c1.lon,
+                                    lat_b: c2.lat,
+                                    lon_b: c2.lon
+                                });
+                            }
+                        }
+                    }
+                });
+            });
+
+            if (routesToEstimate.length === 0) {
+                alert("Todas las rutas de la grilla ya tienen distancias configuradas o falta cargar coordenadas lat/lon en los puertos.");
+                return;
+            }
+
+            const response = await ForecastService.estimateRoutesDistances({ routes: routesToEstimate });
+            const results = response.results || [];
+
+            if (results.length > 0) {
+                setMatrix(prev => {
+                    const next = { ...prev };
+                    results.forEach((res: any) => {
+                        const p1 = res.origin;
+                        const p2 = res.destination;
+                        const dist = res.distance;
+
+                        if (!next[p1]) next[p1] = {};
+                        if (!next[p2]) next[p2] = {};
+
+                        const currentCell1 = next[p1][p2] || {
+                            port_a: p1 < p2 ? p1 : p2,
+                            port_b: p1 < p2 ? p2 : p1,
+                            weather_factor_laden: 0.03,
+                            weather_factor_ballast: 0.03,
+                            color_hex: getTwinColor(p1, p2)
+                        };
+                        next[p1][p2] = {
+                            ...currentCell1,
+                            route_distance: dist
+                        };
+
+                        const currentCell2 = next[p2][p1] || {
+                            port_a: p1 < p2 ? p1 : p2,
+                            port_b: p1 < p2 ? p2 : p1,
+                            weather_factor_laden: 0.03,
+                            weather_factor_ballast: 0.03,
+                            color_hex: getTwinColor(p1, p2)
+                        };
+                        next[p2][p1] = {
+                            ...currentCell2,
+                            route_distance: dist
+                        };
+                    });
+                    return next;
+                });
+
+                setHasChanges(true);
+                alert(`¡Se estimaron con éxito ${results.length} rutas mediante SeaRoute! Revisa las distancias en la grilla y presiona 'Guardar Cambios' para persistirlas en Supabase.`);
+            } else {
+                alert("No se obtuvieron resultados de estimación.");
+            }
+        } catch (error) {
+            console.error("Error estimating routes:", error);
+            alert("Ocurrió un error al estimar las rutas marítimas.");
+        } finally {
+            setIsEstimating(false);
+        }
+    };
+
     const onDragStart = (e: React.DragEvent, port: string) => {
         setDraggedItem(port);
         e.dataTransfer.effectAllowed = 'move';
@@ -295,6 +390,14 @@ export const RoutesMaster: React.FC = () => {
                                 <Plus size={14} /> Agregar
                             </button>
                         </div>
+                        <button 
+                            onClick={handleEstimateRoutes}
+                            disabled={isEstimating || isSaving}
+                            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors"
+                        >
+                            <Compass size={14} className={isEstimating ? "animate-spin" : ""} />
+                            {isEstimating ? "Estimando..." : "Estimar Rutas"}
+                        </button>
                         <button 
                             onClick={handleSave}
                             disabled={!hasChanges || isSaving}

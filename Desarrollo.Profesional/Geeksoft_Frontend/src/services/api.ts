@@ -138,5 +138,9 @@ export const ForecastService = {
     saveContractsMaster: async (payload: any) => {
         const response = await api.post('/forecast/masters/contracts', payload);
         return response.data;
+    },
+    estimateRoutesDistances: async (payload: { routes: Array<{ origin: string, destination: string, lat_a: number, lon_a: number, lat_b: number, lon_b: number }> }) => {
+        const response = await api.post('/forecast/routes/estimate-distances', payload);
+        return response.data;
     }
 };

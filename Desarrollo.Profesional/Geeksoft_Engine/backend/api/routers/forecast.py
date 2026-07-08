@@ -818,3 +818,51 @@ def delete_source_sink(req: DeleteSourceSinkRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+class RouteEstimateItem(BaseModel):
+    origin: str
+    destination: str
+    lat_a: float
+    lon_a: float
+    lat_b: float
+    lon_b: float
+
+class BatchRouteEstimateRequest(BaseModel):
+    routes: List[RouteEstimateItem]
+
+@router.post("/routes/estimate-distances")
+def estimate_routes_distances(req: BatchRouteEstimateRequest):
+    try:
+        import searoute as sr
+        results = []
+        for r in req.routes:
+            try:
+                # searoute expects [longitude, latitude]
+                origin_coords = [r.lon_a, r.lat_a]
+                dest_coords = [r.lon_b, r.lat_b]
+                route_geojson = sr.searoute(origin_coords, dest_coords)
+                raw_dist = float(route_geojson.properties.get("length", 0.0))
+                units = route_geojson.properties.get("units", "km")
+                
+                # Convert to Nautical Miles (NM)
+                if units == "km":
+                    distance_nm = raw_dist / 1.852
+                elif units == "m":
+                    distance_nm = (raw_dist / 1000.0) / 1.852
+                else:
+                    distance_nm = raw_dist
+                
+                distance_nm = round(distance_nm, 2)
+            except Exception as inner_e:
+                distance_nm = 0.0
+                
+            results.append({
+                "origin": r.origin,
+                "destination": r.destination,
+                "distance": distance_nm
+            })
+        return {"results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
