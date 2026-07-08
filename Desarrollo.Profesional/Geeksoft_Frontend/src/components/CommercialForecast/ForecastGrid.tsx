@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { ChevronRight, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import './ForecastGrid.css';
 
 const getClientColor = (name: string) => {
@@ -22,6 +22,19 @@ const getVesselColor = (name: string) => {
     if (name.includes('CONCON')) return 'bg-slate-600 text-white';
     if (name.includes('HUEMUL')) return 'bg-indigo-600 text-white';
     return 'bg-slate-100 text-slate-800 font-bold';
+};
+
+const getCellColor = (type: 'client' | 'route' | 'vessel' | undefined, name: string) => {
+    if (!type) return '';
+    if (type === 'client') return getClientColor(name);
+    if (type === 'route') return getRouteColor(name);
+    return getVesselColor(name);
+};
+
+const getColumnHeaderLabel = (type: 'client' | 'route' | 'vessel') => {
+    if (type === 'client') return 'Cliente';
+    if (type === 'route') return 'Ruta';
+    return 'Buque';
 };
 
 interface ForecastGridProps {
@@ -51,6 +64,15 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
     const [expandedDemurrages, setExpandedDemurrages] = useState<Record<string, boolean>>({});
     const [collapsedSubtotals, setCollapsedSubtotals] = useState<Record<string, boolean>>({});
+    const [groupOrder, setGroupOrder] = useState<('client' | 'route' | 'vessel')[]>(['client', 'route', 'vessel']);
+
+    const handleGroupOrderSwap = (idx1: number, idx2: number) => {
+        setGroupOrder(prev => {
+            const next = [...prev];
+            [next[idx1], next[idx2]] = [next[idx2], next[idx1]];
+            return next;
+        });
+    };
     
     // Sort orders
     const [clientOrder, setClientOrder] = useState<string[]>([]);
@@ -124,18 +146,78 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         if (!data || !data.aggregated_data) return [];
         
         const result: any[] = [];
-        
-        let clients = Object.keys(data.aggregated_data);
-        if (clientOrder.length > 0) {
-            clients.sort((a,b) => {
-                const idxA = clientOrder.indexOf(a);
-                const idxB = clientOrder.indexOf(b);
-                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-                return 0;
-            });
-        }
-
         const sum = (arr: number[]) => arr.reduce((a,b) => a+b, 0);
+
+        // 1. Aplanar las hojas del árbol original
+        const flatLeaves: Array<{
+            client: string;
+            route: string;
+            vessel: string;
+            monthData: any;
+        }> = [];
+
+        Object.entries(data.aggregated_data).forEach(([client, routesData]: any) => {
+            Object.entries(routesData).forEach(([route, vesselsData]: any) => {
+                Object.entries(vesselsData).forEach(([vessel, monthData]: any) => {
+                    flatLeaves.push({ client, route, vessel, monthData });
+                });
+            });
+        });
+
+        // 2. Re-agrupar en base al orden dinámico especificado en groupOrder
+        const regroupedTree: Record<string, Record<string, Record<string, any>>> = {};
+        flatLeaves.forEach(({ client, route, vessel, monthData }) => {
+            const keys = { client, route, vessel };
+            const l1 = keys[groupOrder[0]];
+            const l2 = keys[groupOrder[1]];
+            const l3 = keys[groupOrder[2]];
+
+            if (!regroupedTree[l1]) regroupedTree[l1] = {};
+            if (!regroupedTree[l1][l2]) regroupedTree[l1][l2] = {};
+            regroupedTree[l1][l2][l3] = monthData;
+        });
+
+        // Mapeador para resolver los IDs originales según la jerarquía actual
+        const getOriginalKeys = (l1: string, l2: string, l3: string) => {
+            const keys: Record<string, string> = {};
+            keys[groupOrder[0]] = l1;
+            keys[groupOrder[1]] = l2;
+            keys[groupOrder[2]] = l3;
+            return {
+                client: keys['client'],
+                route: keys['route'],
+                vessel: keys['vessel']
+            };
+        };
+
+        // Helper de ordenamiento
+        const sortKeys = (keysList: string[], type: 'client' | 'route' | 'vessel', parentKey?: string) => {
+            if (type === 'client' && clientOrder.length > 0) {
+                return [...keysList].sort((a, b) => {
+                    const idxA = clientOrder.indexOf(a);
+                    const idxB = clientOrder.indexOf(b);
+                    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                    return 0;
+                });
+            }
+            if (type === 'route' && parentKey && routeOrder[parentKey] && routeOrder[parentKey].length > 0) {
+                return [...keysList].sort((a, b) => {
+                    const idxA = routeOrder[parentKey].indexOf(a);
+                    const idxB = routeOrder[parentKey].indexOf(b);
+                    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                    return 0;
+                });
+            }
+            if (type === 'vessel' && parentKey && vesselOrder[parentKey] && vesselOrder[parentKey].length > 0) {
+                return [...keysList].sort((a, b) => {
+                    const idxA = vesselOrder[parentKey].indexOf(a);
+                    const idxB = vesselOrder[parentKey].indexOf(b);
+                    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                    return 0;
+                });
+            }
+            return [...keysList].sort();
+        };
 
         const globalTrips = new Array(months.length).fill(0);
         const globalTons = new Array(months.length).fill(0);
@@ -146,48 +228,38 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const globalPlVsRequired = new Array(months.length).fill(0);
         const globalDemurrage = new Array(months.length).fill(0);
 
-        clients.forEach((client) => {
-            const routesData = data.aggregated_data[client];
-            const clientRowSpanRef = { value: 0 };
-            
-            let isFirstClientRow = true;
+        const level1List = sortKeys(Object.keys(regroupedTree), groupOrder[0]);
 
-            const clientGrossRevenue = new Array(months.length).fill(0);
-            const clientPortCosts = new Array(months.length).fill(0);
-            const clientBunkerCosts = new Array(months.length).fill(0);
-            const clientVoyageResult = new Array(months.length).fill(0);
-            const clientPlVsRequired = new Array(months.length).fill(0);
-            const clientDemurrage = new Array(months.length).fill(0);
-            const clientTonsTotal = new Array(months.length).fill(0);
-            
-            let routesList = Object.keys(routesData);
-            if (routeOrder[client] && routeOrder[client].length > 0) {
-                routesList.sort((a,b) => {
-                    const idxA = routeOrder[client].indexOf(a);
-                    const idxB = routeOrder[client].indexOf(b);
-                    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-                    return 0;
-                });
-            }
+        level1List.forEach((level1Name) => {
+            const level2Data = regroupedTree[level1Name];
+            const level1RowSpanRef = { value: 0 };
+            let isFirstLevel1Row = true;
 
-            routesList.forEach((route) => {
-                const vesselsData = routesData[route];
-                const routeRowSpanRef = { value: 0 };
-                let isFirstRouteRow = true;
-                
-                let vesselsList = Object.keys(vesselsData);
-                const rKey = `${client}-${route}`;
-                if (vesselOrder[rKey] && vesselOrder[rKey].length > 0) {
-                    vesselsList.sort((a,b) => {
-                        const idxA = vesselOrder[rKey].indexOf(a);
-                        const idxB = vesselOrder[rKey].indexOf(b);
-                        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-                        return 0;
-                    });
+            const level1GrossRevenue = new Array(months.length).fill(0);
+            const level1PortCosts = new Array(months.length).fill(0);
+            const level1BunkerCosts = new Array(months.length).fill(0);
+            const level1VoyageResult = new Array(months.length).fill(0);
+            const level1PlVsRequired = new Array(months.length).fill(0);
+            const level1Demurrage = new Array(months.length).fill(0);
+            const level1TonsTotal = new Array(months.length).fill(0);
+
+            const level2List = sortKeys(Object.keys(level2Data), groupOrder[1], groupOrder[0] === 'client' ? level1Name : undefined);
+
+            level2List.forEach((level2Name) => {
+                const level3Data = level2Data[level2Name];
+                const level2RowSpanRef = { value: 0 };
+                let isFirstLevel2Row = true;
+
+                let parentKeyLevel3: string | undefined = undefined;
+                if (groupOrder[0] === 'client' && groupOrder[1] === 'route') {
+                    parentKeyLevel3 = `${level1Name}-${level2Name}`;
                 }
+                const level3List = sortKeys(Object.keys(level3Data), groupOrder[2], parentKeyLevel3);
 
-                vesselsList.forEach((vessel) => {
-                    const monthData = vesselsData[vessel];
+                level3List.forEach((level3Name) => {
+                    const monthData = level3Data[level3Name];
+                    const { client, route, vessel } = getOriginalKeys(level1Name, level2Name, level3Name);
+
                     const rowKey = `${client}-${route}-${vessel}`;
                     const isExpanded = !!expandedRows[rowKey];
                     const numSubRows = isExpanded ? 17 : 0;
@@ -195,13 +267,12 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     const isDemurrageVisible = showDemurrage && demurragePct !== '' && !isDemurrageExcluded;
                     
                     const isDemurrageExpanded = !!expandedDemurrages[rowKey];
-                    // If visible, it adds 1 main row. If expanded, it adds 2 sub-rows.
                     const demurrageRowsCount = isDemurrageVisible ? (isDemurrageExpanded ? 3 : 1) : 0;
                     
                     const vesselRowSpan = 6 + numSubRows + demurrageRowsCount;
                     
-                    clientRowSpanRef.value += vesselRowSpan;
-                    routeRowSpanRef.value += vesselRowSpan;
+                    level1RowSpanRef.value += vesselRowSpan;
+                    level2RowSpanRef.value += vesselRowSpan;
 
                     const getMonthlyValues = (metricKey: string) => {
                         return months.map(m => {
@@ -226,13 +297,12 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     const voyageResult = getMonthlyValues("voyage_result");
                     const plVsRequired = getMonthlyValues("pl_vs_required");
 
-                    revenues.forEach((v, i) => clientGrossRevenue[i] += v);
-                    portCosts.forEach((v, i) => clientPortCosts[i] += v);
-                    bunker.forEach((v, i) => clientBunkerCosts[i] += v);
-                    voyageResult.forEach((v, i) => clientVoyageResult[i] += v);
-                    plVsRequired.forEach((v, i) => clientPlVsRequired[i] += v);
+                    revenues.forEach((v, i) => level1GrossRevenue[i] += v);
+                    portCosts.forEach((v, i) => level1PortCosts[i] += v);
+                    bunker.forEach((v, i) => level1BunkerCosts[i] += v);
+                    voyageResult.forEach((v, i) => level1VoyageResult[i] += v);
+                    plVsRequired.forEach((v, i) => level1PlVsRequired[i] += v);
                     
-                    // Calculamos el demurrage con porcentajes customizados si los hay
                     const demurragePctArray = months.map((_, i) => {
                         if (customDemurrages[rowKey] && customDemurrages[rowKey][i] !== undefined) {
                             return parseFloat(customDemurrages[rowKey][i]) || 0;
@@ -242,14 +312,13 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
                     const demurrageArr = isDemurrageVisible ? revenues.map((r, i) => r * (demurragePctArray[i] / 100)) : new Array(months.length).fill(0);
                     if (isDemurrageVisible) {
-                        demurrageArr.forEach((v, i) => clientDemurrage[i] += v);
+                        demurrageArr.forEach((v, i) => level1Demurrage[i] += v);
                     }
 
                     const unitCargos = getMonthlyValues("carga_unit");
                     const tonsTotal = months.map((_, i) => unitCargos[i] * trips[i]);
-                    tonsTotal.forEach((v, i) => clientTonsTotal[i] += v);
+                    tonsTotal.forEach((v, i) => level1TonsTotal[i] += v);
 
-                    const sum = (arr: number[]) => arr.reduce((a,b) => a+b, 0);
                     const calcPct = (arr: number[]) => arr.map((v, i) => revenues[i] ? (v / revenues[i]) * 100 : 0);
                     const calcTotalPct = (totalVal: number, totalRev: number) => totalRev ? (totalVal / totalRev) * 100 : 0;
 
@@ -268,9 +337,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
                     metrics.forEach((metric, index) => {
                         result.push({
-                            client: isFirstClientRow && isFirstRouteRow && index === 0 ? { name: client, rowSpanRef: clientRowSpanRef } : null,
-                            route: isFirstRouteRow && index === 0 ? { name: route, rowSpanRef: routeRowSpanRef } : null,
-                            vessel: index === 0 ? { name: vessel, rowSpan: vesselRowSpan } : null,
+                            col1: isFirstLevel1Row && isFirstLevel2Row && index === 0 ? { type: groupOrder[0], name: level1Name, rowSpanRef: level1RowSpanRef } : null,
+                            col2: isFirstLevel2Row && index === 0 ? { type: groupOrder[1], name: level2Name, rowSpanRef: level2RowSpanRef } : null,
+                            col3: index === 0 ? { type: groupOrder[2], name: level3Name, rowSpan: vesselRowSpan } : null,
                             clientName: client,
                             routeName: route,
                             vesselName: vessel,
@@ -279,9 +348,8 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         });
 
                         if (metric.name === "Demurrage" && isDemurrageExpanded) {
-                            // Sub-row 1: Demurrage (%) - editable
                             result.push({
-                                client: null, route: null, vessel: null,
+                                col1: null, col2: null, col3: null,
                                 clientName: client, routeName: route, vesselName: vessel,
                                 metric: {
                                     name: "↳ Demurrage (%)",
@@ -296,9 +364,8 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 },
                                 isSubRow: true
                             });
-                            // Sub-row 2: Demurrage (USD) - calculated
                             result.push({
-                                client: null, route: null, vessel: null,
+                                col1: null, col2: null, col3: null,
                                 clientName: client, routeName: route, vesselName: vessel,
                                 metric: {
                                     name: "↳ Demurrage (USD)",
@@ -315,12 +382,10 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
                         if (metric.isExpandable && isExpanded) {
                             const subMetricsData = [
-                                { isHeader: true, name: "▶ Operativo" },
                                 { name: "Distancia (MN)", key: "distancia_total", curr: false },
                                 { name: "Carga Transportada (MT)", key: "carga_unit", curr: false },
                                 { name: "Flete (USD/MT)", key: "flete_unit", curr: true },
                                 { name: "Gross Revenue (USD)", key: "net_income_unit", curr: true },
-                                { isHeader: true, name: "▶ Tiempos / Costos" },
                                 { name: "Sea Days", key: "sea_days_unit", curr: false },
                                 { name: "Port/Idle Days", key: "port_days_unit", curr: false },
                                 { name: "Duración Total (Días)", key: "total_duration_unit", curr: false },
@@ -328,72 +393,43 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 { name: "Bunker MDO (MT)", key: "bunker_mdo_tonnage_unit", curr: false },
                                 { name: "Port Costs (USD)", key: "total_port_costs_unit", curr: true },
                                 { name: "Bunker Costs (USD)", key: "total_bunker_costs_unit", curr: true },
-                                { isHeader: true, name: "▶ Financiero" },
                                 { name: "TCE (USD/Día)", key: "tce_real_unit", curr: true },
                                 { name: "PCM (USD)", key: "pcm_projected", curr: true },
                                 { name: "P/L Neto (USD)", key: "pl_vs_required_unit", curr: true }
                             ];
                             
                             subMetricsData.forEach(sub => {
-                                if (sub.isHeader) {
-                                    result.push({
-                                        client: null,
-                                        route: null,
-                                        vessel: null,
-                                        clientName: client,
-                                        routeName: route,
-                                        vesselName: vessel,
-                                        metric: {
-                                            name: sub.name,
-                                            values: months.map(() => null),
-                                            total: null,
-                                            pct: null,
-                                            totalPct: null,
-                                            isCurrency: false,
-                                            isTotal: false,
-                                            isSubRowMetric: true,
-                                            isCategoryHeader: true
-                                        },
-                                        isSubRow: true
-                                    });
-                                } else {
-                                    let vals = getMonthlyValues(sub.key as string);
-                                    if (sub.name === "Flete (USD/MT)") {
-                                        vals = months.map((m, mIdx) => {
-                                            const line = projectionLines.find(p => 
-                                                p.client_id === client && 
-                                                `${p.origin_port_id}-${p.destination_port_id}` === route && 
-                                                p.vessel_id === vessel && 
-                                                p.month_index === m
-                                            );
-                                            if (line && line.custom_tariff !== undefined) {
-                                                return line.custom_tariff;
-                                            }
-                                            return vals[mIdx];
-                                        });
-                                    }
-
-                                    result.push({
-                                        client: null,
-                                        route: null,
-                                        vessel: null,
-                                        clientName: client,
-                                        routeName: route,
-                                        vesselName: vessel,
-                                        metric: {
-                                            name: sub.name,
-                                            values: vals,
-                                            total: 0,
-                                            pct: null,
-                                            totalPct: null,
-                                            isCurrency: sub.curr,
-                                            isTotal: false,
-                                            isSubRowMetric: true,
-                                            isCategoryHeader: false
-                                        },
-                                        isSubRow: true
+                                let vals = getMonthlyValues(sub.key as string);
+                                if (sub.name === "Flete (USD/MT)") {
+                                    vals = months.map((m, mIdx) => {
+                                        const line = projectionLines.find(p => 
+                                            p.client_id === client && 
+                                            `${p.origin_port_id}-${p.destination_port_id}` === route && 
+                                            p.vessel_id === vessel && 
+                                            p.month_index === m
+                                        );
+                                        if (line && line.custom_tariff !== undefined) {
+                                            return line.custom_tariff;
+                                        }
+                                        return vals[mIdx];
                                     });
                                 }
+
+                                result.push({
+                                    col1: null, col2: null, col3: null,
+                                    clientName: client, routeName: route, vesselName: vessel,
+                                    metric: {
+                                        name: sub.name,
+                                        values: vals,
+                                        total: 0,
+                                        pct: null,
+                                        totalPct: null,
+                                        isCurrency: sub.curr,
+                                        isTotal: false,
+                                        isSubRowMetric: true
+                                    },
+                                    isSubRow: true
+                                });
                             });
                         }
                     });
@@ -409,53 +445,52 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         globalDemurrage[i] += demurrageArr[i] || 0;
                     });
 
-                    isFirstRouteRow = false;
-                    isFirstClientRow = false;
+                    isFirstLevel2Row = false;
+                    isFirstLevel1Row = false;
                 });
             });
 
-            const clientCalcPct = (arr: number[]) => arr.map((v, i) => clientGrossRevenue[i] ? (v / clientGrossRevenue[i]) * 100 : 0);
-            const clientCalcTotalPct = (totalVal: number, totalRev: number) => totalRev ? (totalVal / totalRev) * 100 : 0;
+            const level1CalcPct = (arr: number[]) => arr.map((v, i) => level1GrossRevenue[i] ? (v / level1GrossRevenue[i]) * 100 : 0);
+            const level1CalcTotalPct = (totalVal: number, totalRev: number) => totalRev ? (totalVal / totalRev) * 100 : 0;
 
-            // New 6-KPI layout for Subtotals
-            const clientGrossPlusDem = clientGrossRevenue.map((rev, i) => rev + (clientDemurrage[i] || 0));
-            const totalGrossPlusDem = sum(clientGrossPlusDem);
-            const totalClientTons = sum(clientTonsTotal);
-            const clientYield = clientTonsTotal.map((tons, i) => tons ? clientGrossPlusDem[i] / tons : 0);
-            const totalClientYield = totalClientTons ? totalGrossPlusDem / totalClientTons : 0;
-            const clientYieldFlete = clientTonsTotal.map((tons, i) => tons ? clientGrossRevenue[i] / tons : 0);
-            const totalClientYieldFlete = totalClientTons ? sum(clientGrossRevenue) / totalClientTons : 0;
+            const level1GrossPlusDem = level1GrossRevenue.map((rev, i) => rev + (level1Demurrage[i] || 0));
+            const totalGrossPlusDem = sum(level1GrossPlusDem);
+            const totalLevel1Tons = sum(level1TonsTotal);
+            const level1Yield = level1TonsTotal.map((tons, i) => tons ? level1GrossPlusDem[i] / tons : 0);
+            const totalLevel1Yield = totalLevel1Tons ? totalGrossPlusDem / totalLevel1Tons : 0;
+            const level1YieldFlete = level1TonsTotal.map((tons, i) => tons ? level1GrossRevenue[i] / tons : 0);
+            const totalLevel1YieldFlete = totalLevel1Tons ? sum(level1GrossRevenue) / totalLevel1Tons : 0;
 
             const subMetrics = [
-                { name: "P/L", values: clientPlVsRequired, total: sum(clientPlVsRequired), pct: clientCalcPct(clientPlVsRequired), totalPct: clientCalcTotalPct(sum(clientPlVsRequired), sum(clientGrossRevenue)), isCurrency: true, isTotal: false },
-                { name: "Toneladas", values: clientTonsTotal, total: totalClientTons, pct: null, totalPct: null, isCurrency: false, isTotal: false },
-                { name: "Gross Revenue", values: clientGrossRevenue, total: sum(clientGrossRevenue), pct: clientGrossRevenue.map(r => r ? 100 : 0), totalPct: sum(clientGrossRevenue) ? 100 : 0, isCurrency: true, isTotal: false },
-                { name: "Demurrage", values: clientDemurrage, total: sum(clientDemurrage), pct: clientCalcPct(clientDemurrage), totalPct: clientCalcTotalPct(sum(clientDemurrage), sum(clientGrossRevenue)), isCurrency: true, isTotal: false },
-                { name: "Gross + Demurrage", values: clientGrossPlusDem, total: totalGrossPlusDem, pct: clientCalcPct(clientGrossPlusDem), totalPct: clientCalcTotalPct(totalGrossPlusDem, sum(clientGrossRevenue)), isCurrency: true, isTotal: false },
-                { name: "Yield Flete (USD/MT)", values: clientYieldFlete, total: totalClientYieldFlete, pct: null, totalPct: null, isCurrency: true, isTotal: true },
-                { name: "Yield (USD/MT)", values: clientYield, total: totalClientYield, pct: null, totalPct: null, isCurrency: true, isTotal: true }
+                { name: "P/L", values: level1PlVsRequired, total: sum(level1PlVsRequired), pct: level1CalcPct(level1PlVsRequired), totalPct: level1CalcTotalPct(sum(level1PlVsRequired), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "Toneladas", values: level1TonsTotal, total: totalLevel1Tons, pct: null, totalPct: null, isCurrency: false, isTotal: false },
+                { name: "Gross Revenue", values: level1GrossRevenue, total: sum(level1GrossRevenue), pct: level1GrossRevenue.map(r => r ? 100 : 0), totalPct: sum(level1GrossRevenue) ? 100 : 0, isCurrency: true, isTotal: false },
+                { name: "Demurrage", values: level1Demurrage, total: sum(level1Demurrage), pct: level1CalcPct(level1Demurrage), totalPct: level1CalcTotalPct(sum(level1Demurrage), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "Gross + Demurrage", values: level1GrossPlusDem, total: totalGrossPlusDem, pct: level1CalcPct(level1GrossPlusDem), totalPct: level1CalcTotalPct(totalGrossPlusDem, sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "Yield Flete (USD/MT)", values: level1YieldFlete, total: totalLevel1YieldFlete, pct: null, totalPct: null, isCurrency: true, isTotal: true },
+                { name: "Yield (USD/MT)", values: level1Yield, total: totalLevel1Yield, pct: null, totalPct: null, isCurrency: true, isTotal: true }
             ];
 
-            const isSubtotalCollapsed = !!collapsedSubtotals[client];
+            const isSubtotalCollapsed = !!collapsedSubtotals[level1Name];
             const visibleSubMetrics = isSubtotalCollapsed ? [subMetrics[0]] : subMetrics;
 
-            clientRowSpanRef.value += visibleSubMetrics.length;
+            level1RowSpanRef.value += visibleSubMetrics.length;
             const subtotalRouteRowSpanRef = { value: visibleSubMetrics.length };
 
             visibleSubMetrics.forEach((metric, index) => {
                 const isExpandableRow = metric.name === "P/L";
                 
                 result.push({
-                    client: null,
-                    route: index === 0 ? { name: "Σ SUBTOTAL", rowSpanRef: subtotalRouteRowSpanRef, isSubtotal: true } : null,
-                    vessel: index === 0 ? { name: "TOTAL CLIENTE", rowSpan: visibleSubMetrics.length, isSubtotal: true } : null,
-                    clientName: client,
+                    col1: null,
+                    col2: index === 0 ? { name: "Σ SUBTOTAL", rowSpanRef: subtotalRouteRowSpanRef, isSubtotal: true } : null,
+                    col3: index === 0 ? { name: `TOTAL ${groupOrder[0].toUpperCase()}`, rowSpan: visibleSubMetrics.length, isSubtotal: true } : null,
+                    clientName: level1Name,
                     routeName: "",
                     vesselName: "",
                     metric: {
                         ...metric,
                         isExpandableSubtotal: isExpandableRow,
-                        clientKey: client,
+                        clientKey: level1Name,
                         isCollapsed: isSubtotalCollapsed
                     },
                     isSubRow: false,
@@ -493,9 +528,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         visibleGlobalMetrics.forEach((metric, index) => {
             const isExpandableRow = metric.name === "P/L";
             result.push({
-                client: index === 0 ? { name: "TOTAL FLOTA", rowSpanRef: globalRouteRowSpanRef, isSubtotal: true, color: "bg-slate-800 text-white" } : null,
-                route: null,
-                vessel: null,
+                col1: index === 0 ? { name: "TOTAL FLOTA", rowSpanRef: globalRouteRowSpanRef, isSubtotal: true, color: "bg-slate-800 text-white" } : null,
+                col2: null,
+                col3: null,
                 clientName: "TOTAL FLOTA",
                 routeName: "",
                 vesselName: "",
@@ -543,9 +578,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         visibleAccumMetrics.forEach((metric, index) => {
             const isExpandableRow = metric.name === "P/L";
             result.push({
-                client: index === 0 ? { name: "TOTAL ACUMULADO", rowSpanRef: accumRouteRowSpanRef, isSubtotal: true, color: "bg-petral-teal text-white" } : null,
-                route: null,
-                vessel: null,
+                col1: index === 0 ? { name: "TOTAL ACUMULADO", rowSpanRef: accumRouteRowSpanRef, isSubtotal: true, color: "bg-petral-teal text-white" } : null,
+                col2: null,
+                col3: null,
                 clientName: "TOTAL ACUMULADO",
                 routeName: "",
                 vesselName: "",
@@ -561,7 +596,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         });
 
         return result;
-    }, [data, months, projectionLines, expandedRows, clientOrder, routeOrder, vesselOrder, collapsedSubtotals, isGlobalTotalCollapsed, isGlobalAcumCollapsed, demurragePct, showDemurrage, expandedDemurrages, excludedDemurrages, customDemurrages]);
+    }, [data, months, projectionLines, expandedRows, clientOrder, routeOrder, vesselOrder, collapsedSubtotals, isGlobalTotalCollapsed, isGlobalAcumCollapsed, demurragePct, showDemurrage, expandedDemurrages, excludedDemurrages, customDemurrages, groupOrder]);
 
     const formatCurrency = (val: number) => {
         if (val === 0) return "-";
@@ -592,9 +627,49 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                 <table className="w-full text-sm text-left border-collapse">
                 <thead className="bg-slate-800 text-white uppercase font-semibold text-xs tracking-wider sticky top-0 z-20 shadow-md">
                     <tr>
-                        <th className="py-1 px-2 text-center border border-slate-700 w-12 bg-slate-800">Cliente</th>
-                        <th className="py-1 px-2 text-center border border-slate-700 w-12 bg-slate-800">Ruta</th>
-                        <th className="py-1 px-2 text-center border border-slate-700 w-12 bg-slate-800">Buque</th>
+                        <th className="py-1 px-2 border border-slate-700 w-24 bg-slate-800 text-center font-bold text-xs tracking-wider">
+                            <div className="flex items-center justify-center gap-1.5 min-w-[70px]">
+                                <span className="truncate">{getColumnHeaderLabel(groupOrder[0])}</span>
+                                <button 
+                                    onClick={() => handleGroupOrderSwap(0, 1)} 
+                                    className="text-slate-400 hover:text-white transition-colors cursor-pointer p-0.5 rounded hover:bg-slate-700 flex items-center justify-center"
+                                    title="Mover a la derecha"
+                                >
+                                    <ChevronRight size={14} />
+                                </button>
+                            </div>
+                        </th>
+                        <th className="py-1 px-2 border border-slate-700 w-28 bg-slate-800 text-center font-bold text-xs tracking-wider">
+                            <div className="flex items-center justify-center gap-1.5 min-w-[90px]">
+                                <button 
+                                    onClick={() => handleGroupOrderSwap(1, 0)} 
+                                    className="text-slate-400 hover:text-white transition-colors cursor-pointer p-0.5 rounded hover:bg-slate-700 flex items-center justify-center"
+                                    title="Mover a la izquierda"
+                                >
+                                    <ChevronLeft size={14} />
+                                </button>
+                                <span className="truncate">{getColumnHeaderLabel(groupOrder[1])}</span>
+                                <button 
+                                    onClick={() => handleGroupOrderSwap(1, 2)} 
+                                    className="text-slate-400 hover:text-white transition-colors cursor-pointer p-0.5 rounded hover:bg-slate-700 flex items-center justify-center"
+                                    title="Mover a la derecha"
+                                >
+                                    <ChevronRight size={14} />
+                                </button>
+                            </div>
+                        </th>
+                        <th className="py-1 px-2 border border-slate-700 w-24 bg-slate-800 text-center font-bold text-xs tracking-wider">
+                            <div className="flex items-center justify-center gap-1.5 min-w-[70px]">
+                                <button 
+                                    onClick={() => handleGroupOrderSwap(2, 1)} 
+                                    className="text-slate-400 hover:text-white transition-colors cursor-pointer p-0.5 rounded hover:bg-slate-700 flex items-center justify-center"
+                                    title="Mover a la izquierda"
+                                >
+                                    <ChevronLeft size={14} />
+                                </button>
+                                <span className="truncate">{getColumnHeaderLabel(groupOrder[2])}</span>
+                            </div>
+                        </th>
                         <th className="py-1 px-2 border border-slate-700 w-48 bg-slate-800">Métricas</th>
                         {months.map(m => {
                             const date = new Date(`${m}-02`);
@@ -614,43 +689,58 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 }
                             }}
                             className={`border border-slate-200 transition-colors ${row.isSubRow ? 'bg-slate-50/50' : 'hover:bg-slate-50'} ${row.metric.isTotal ? 'bg-slate-100 font-semibold' : ''} ${row.isClientSubtotal ? 'bg-amber-50/30 font-semibold' : ''} ${row.isGlobalTotal ? 'bg-indigo-50/20 font-bold' : ''}`}>
-                            {row.client && (
-                                <td rowSpan={row.client.rowSpanRef.value} colSpan={row.isGlobalTotal ? 3 : 1}
-                                    onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'client', client: row.client.name }); }}
-                                    className={`p-0 border border-slate-200 align-middle ${row.client.color || getClientColor(row.client.name)} relative group cursor-context-menu`}>
-                                    {!row.isGlobalTotal && (
+                            {row.col1 && (
+                                <td rowSpan={row.col1.rowSpanRef ? row.col1.rowSpanRef.value : row.col1.rowSpan} colSpan={row.isGlobalTotal ? 3 : 1}
+                                    onContextMenu={(e) => { 
+                                        if (row.col1.type) {
+                                            e.preventDefault(); 
+                                            setContextMenu({ x: e.clientX, y: e.clientY, type: row.col1.type, client: row.clientName, route: row.routeName, vessel: row.vesselName, rowKey: row.metric.rowKey }); 
+                                        }
+                                    }}
+                                    className={`p-0 border border-slate-200 align-middle ${row.col1.color || getCellColor(row.col1.type, row.col1.name)} relative group cursor-context-menu`}>
+                                    {!row.isGlobalTotal && row.col1.type && (
                                     <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => handleMove('client', row.client.name, '', '', 'up')} className="text-slate-300 hover:text-white"><ChevronUp size={14} /></button>
-                                        <button onClick={() => handleMove('client', row.client.name, '', '', 'down')} className="text-slate-300 hover:text-white"><ChevronDown size={14} /></button>
+                                        <button onClick={() => handleMove(row.col1.type, row.clientName, row.routeName, row.vesselName, 'up')} className="text-slate-300 hover:text-white"><ChevronUp size={14} /></button>
+                                        <button onClick={() => handleMove(row.col1.type, row.clientName, row.routeName, row.vesselName, 'down')} className="text-slate-300 hover:text-white"><ChevronDown size={14} /></button>
                                     </div>
                                     )}
-                                    <div className={`vertical-text mx-auto px-2 ${row.isGlobalTotal ? 'text-lg tracking-wider transform rotate-0 writing-mode-unset flex items-center justify-center h-full' : ''}`} style={row.isGlobalTotal ? { writingMode: 'unset', transform: 'none' } : {}}>{row.client.name}</div>
+                                    <div className={`vertical-text mx-auto px-2 ${row.isGlobalTotal ? 'text-lg tracking-wider transform rotate-0 writing-mode-unset flex items-center justify-center h-full' : ''}`} style={row.isGlobalTotal ? { writingMode: 'unset', transform: 'none' } : {}}>{row.col1.name}</div>
                                 </td>
                             )}
-                            {row.route && (
-                                <td rowSpan={row.route.rowSpanRef.value} 
-                                    onContextMenu={(e) => { if(!row.route.isSubtotal) { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'route', client: row.clientName, route: row.route.name }); } }}
-                                    className={`p-0 border border-slate-200 align-middle relative group ${row.route.isSubtotal ? 'bg-slate-800 text-amber-400 font-bold' : getRouteColor(row.route.name) + ' cursor-context-menu'}`}>
-                                    {!row.route.isSubtotal && (
+                            {row.col2 && (
+                                <td rowSpan={row.col2.rowSpanRef ? row.col2.rowSpanRef.value : row.col2.rowSpan} 
+                                    onContextMenu={(e) => { 
+                                        if (!row.col2.isSubtotal && row.col2.type) { 
+                                            e.preventDefault(); 
+                                            setContextMenu({ x: e.clientX, y: e.clientY, type: row.col2.type, client: row.clientName, route: row.routeName, vessel: row.vesselName, rowKey: row.metric.rowKey }); 
+                                        } 
+                                    }}
+                                    className={`p-0 border border-slate-200 align-middle relative group ${row.col2.isSubtotal ? 'bg-slate-800 text-amber-400 font-bold' : getCellColor(row.col2.type, row.col2.name) + ' cursor-context-menu'}`}>
+                                    {!row.col2.isSubtotal && row.col2.type && (
                                         <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                            <button onClick={() => handleMove('route', row.clientName, row.route.name, '', 'up')} className="text-slate-400 hover:text-white"><ChevronUp size={14} /></button>
-                                            <button onClick={() => handleMove('route', row.clientName, row.route.name, '', 'down')} className="text-slate-400 hover:text-white"><ChevronDown size={14} /></button>
+                                            <button onClick={() => handleMove(row.col2.type, row.clientName, row.routeName, row.vesselName, 'up')} className="text-slate-400 hover:text-white"><ChevronUp size={14} /></button>
+                                            <button onClick={() => handleMove(row.col2.type, row.clientName, row.routeName, row.vesselName, 'down')} className="text-slate-400 hover:text-white"><ChevronDown size={14} /></button>
                                         </div>
                                     )}
-                                    <div className="vertical-text mx-auto px-2">{row.route.name}</div>
+                                    <div className="vertical-text mx-auto px-2">{row.col2.name}</div>
                                 </td>
                             )}
-                            {row.vessel && (
-                                <td rowSpan={row.vessel.rowSpan} 
-                                    onContextMenu={(e) => { if(!row.vessel.isSubtotal) { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, type: 'vessel', client: row.clientName, route: row.routeName, vessel: row.vessel.name }); } }}
-                                    className={`p-0 border border-slate-200 align-middle relative group ${row.vessel.isSubtotal ? 'bg-amber-100 text-amber-900 font-bold' : getVesselColor(row.vessel.name) + ' cursor-context-menu'}`}>
-                                    {!row.vessel.isSubtotal && (
+                            {row.col3 && (
+                                <td rowSpan={row.col3.rowSpanRef ? row.col3.rowSpanRef.value : row.col3.rowSpan} 
+                                    onContextMenu={(e) => { 
+                                        if (!row.col3.isSubtotal && row.col3.type) { 
+                                            e.preventDefault(); 
+                                            setContextMenu({ x: e.clientX, y: e.clientY, type: row.col3.type, client: row.clientName, route: row.routeName, vessel: row.vesselName, rowKey: row.metric.rowKey }); 
+                                        } 
+                                    }}
+                                    className={`p-0 border border-slate-200 align-middle relative group ${row.col3.isSubtotal ? 'bg-amber-100 text-amber-900 font-bold' : getCellColor(row.col3.type, row.col3.name) + ' cursor-context-menu'}`}>
+                                    {!row.col3.isSubtotal && row.col3.type && (
                                         <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                            <button onClick={() => handleMove('vessel', row.clientName, row.routeName, row.vessel.name, 'up')} className="text-slate-400 hover:text-petral-blue"><ChevronUp size={14} /></button>
-                                            <button onClick={() => handleMove('vessel', row.clientName, row.routeName, row.vessel.name, 'down')} className="text-slate-400 hover:text-petral-blue"><ChevronDown size={14} /></button>
+                                            <button onClick={() => handleMove(row.col3.type, row.clientName, row.routeName, row.vesselName, 'up')} className="text-slate-400 hover:text-petral-blue"><ChevronUp size={14} /></button>
+                                            <button onClick={() => handleMove(row.col3.type, row.clientName, row.routeName, row.vesselName, 'down')} className="text-slate-400 hover:text-petral-blue"><ChevronDown size={14} /></button>
                                         </div>
                                     )}
-                                    <div className="vertical-text mx-auto px-2">{row.vessel.name}</div>
+                                    <div className="vertical-text mx-auto px-2">{row.col3.name}</div>
                                 </td>
                             )}
                             <td 
