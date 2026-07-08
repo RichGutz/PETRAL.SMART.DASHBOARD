@@ -163,13 +163,17 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         import('../../services/api').then(({ ForecastService }) => {
             ForecastService.listSpots().then(spotRoutes => {
                 setSpotRoutes(spotRoutes || []);
+                // Clientes fijos siempre disponibles
+                const fixedClients = ['SPCC', 'SPOT'];
+                // Clientes dinámicos derivados de rutas multicotizador guardadas
                 const filtered = (spotRoutes || []).filter((s: any) => s.legs_data?.is_multicotizador === true);
-                const clientIds: string[] = filtered.map((s: any) => {
+                const dynamicClientIds: string[] = filtered.map((s: any) => {
                     const parts = (s.name || "").split('.');
                     return parts.length > 1 ? parts[0].toUpperCase() : "";
                 }).filter(Boolean);
-                const uniqueClients = Array.from(new Set(clientIds));
-                setAvailableClients(uniqueClients);
+                // Unir fijos + dinámicos sin duplicados
+                const allClients = Array.from(new Set([...fixedClients, ...dynamicClientIds]));
+                setAvailableClients(allClients);
             }).catch(err => console.error("Failed to fetch spot routes and clients:", err));
         });
     }, []);
