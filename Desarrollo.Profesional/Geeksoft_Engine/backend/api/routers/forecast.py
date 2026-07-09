@@ -634,24 +634,42 @@ def get_clients_master():
 @router.post("/masters/clients")
 def save_clients_master(payload: List[ClientMaster]):
     try:
-        from backend.database import get_supabase
-        sb = get_supabase()
+        from backend.database import get_db_connection
+        conn = get_db_connection()
+        cur = conn.cursor()
         
-        data = [c.dict() for c in payload]
-        
-        # Obtener existentes
-        existing = sb.table("clients").select("client_id").execute()
-        existing_ids = [r["client_id"] for r in existing.data]
-        
-        new_ids = [c.client_id for c in payload]
-        
-        # Eliminar los que ya no estan
-        for eid in existing_ids:
-            if eid not in new_ids:
-                sb.table("clients").delete().eq("client_id", eid).execute()
-        
-        if data:
-            sb.table("clients").upsert(data).execute()
+        try:
+            # 1. Obtener existentes
+            cur.execute("SELECT client_id FROM clients;")
+            existing_ids = [r[0] for r in cur.fetchall()]
+            
+            new_ids = [c.client_id for c in payload]
+            
+            # 2. Eliminar los que ya no están
+            for eid in existing_ids:
+                if eid not in new_ids:
+                    cur.execute("DELETE FROM clients WHERE client_id = %s;", (eid,))
+            
+            # 3. Upsert de los recibidos
+            for c in payload:
+                cur.execute("""
+                    INSERT INTO clients (client_id, client_name, color_hex, is_active, is_prospect)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON CONFLICT (client_id) 
+                    DO UPDATE SET 
+                        client_name = EXCLUDED.client_name,
+                        color_hex = EXCLUDED.color_hex,
+                        is_active = EXCLUDED.is_active,
+                        is_prospect = EXCLUDED.is_prospect;
+                """, (c.client_id, c.client_name, c.color_hex, c.is_active, c.is_prospect))
+                
+            conn.commit()
+        except Exception as db_err:
+            conn.rollback()
+            raise db_err
+        finally:
+            cur.close()
+            conn.close()
             
         return {"status": "success"}
     except Exception as e:
