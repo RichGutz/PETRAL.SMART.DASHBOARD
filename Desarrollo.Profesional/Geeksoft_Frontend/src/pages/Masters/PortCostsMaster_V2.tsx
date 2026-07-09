@@ -15,6 +15,9 @@ export const PortCostsMaster_V2: React.FC = () => {
     // Maestros
     const [ports, setPorts] = useState<any[]>([]);
     const [clients, setClients] = useState<any[]>([]);
+    const [rawClients, setRawClients] = useState<any[]>([]);
+    const [filterActivo, setFilterActivo] = useState(true);
+    const [filterProspecto, setFilterProspecto] = useState(false);
     const [vessels, setVessels] = useState<any[]>([]);
     
     // Estado de costos: costs[port_id][client_id][vessel_id] = { CARGA, DESCARGA, updated_at, updated_by }
@@ -51,9 +54,7 @@ export const PortCostsMaster_V2: React.FC = () => {
             setPorts(portsData);
             
             const clientsList = clientsData || [];
-            const clientIds: string[] = clientsList.map((c: any) => c.client_id as string).filter(Boolean);
-            const sortedClients: string[] = Array.from(new Set(clientIds)).sort();
-            setClients(sortedClients);
+            setRawClients(clientsList);
             
             setVessels(vesselsData);
             
@@ -88,7 +89,6 @@ export const PortCostsMaster_V2: React.FC = () => {
             setCostsState(newState);
             
             if (portsData.length > 0) setActivePortId(portsData[0].port_id);
-            if (sortedClients.length > 0) setActiveClientId(sortedClients[0]);
             
         } catch (error) {
             console.error("Error al obtener los datos de costos portuarios:", error);
@@ -100,6 +100,44 @@ export const PortCostsMaster_V2: React.FC = () => {
     useEffect(() => {
         fetchData();
     }, []);
+
+    useEffect(() => {
+        let filtered = rawClients;
+        if (filterActivo && !filterProspecto) {
+            filtered = rawClients.filter(c => c.is_active !== false);
+        } else if (!filterActivo && filterProspecto) {
+            filtered = rawClients.filter(c => c.is_prospect === true);
+        } else if (!filterActivo && !filterProspecto) {
+            filtered = [];
+        }
+        
+        const clientIds: string[] = filtered.map((c: any) => c.client_id as string).filter(Boolean);
+        const uniqueIds = Array.from(new Set(clientIds));
+        uniqueIds.sort();
+        setClients(uniqueIds);
+        
+        if (uniqueIds.length > 0) {
+            if (!activeClientId || !uniqueIds.includes(activeClientId)) {
+                setActiveClientId(uniqueIds[0]);
+            }
+        } else {
+            setActiveClientId('');
+        }
+    }, [rawClients, filterActivo, filterProspecto]);
+
+    const toggleActivo = () => {
+        setFilterActivo(prev => {
+            if (prev && !filterProspecto) return prev;
+            return !prev;
+        });
+    };
+
+    const toggleProspecto = () => {
+        setFilterProspecto(prev => {
+            if (prev && !filterActivo) return prev;
+            return !prev;
+        });
+    };
 
     const handleCostChange = (portId: string, clientId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA', subOp: string, value: string) => {
         const cleanValue = value.replace(/,/g, '');
@@ -206,21 +244,42 @@ export const PortCostsMaster_V2: React.FC = () => {
                                 Modelo Matriz Compleja
                             </button>
                         </div>
-                        
-                        {mode === 'static' && (
-                            <button 
-                                onClick={handleSaveGlobal}
-                                disabled={saving}
-                                className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 transition-colors font-bold text-sm flex items-center gap-2 disabled:opacity-50"
-                            >
-                                {saving ? (
-                                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                                ) : (
-                                    <Save size={16} />
-                                )}
-                                Guardar Todos los Costos
-                            </button>
-                        )}
+
+                        <div className="flex items-center gap-4">
+                            {/* Selector elegante de Activos / Prospectos */}
+                            <div className="flex flex-col gap-1 items-start select-none">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Clientes</span>
+                                <div className="flex bg-slate-100 p-0.5 rounded-lg h-8 shadow-inner items-center border border-slate-200">
+                                    <button
+                                        onClick={toggleActivo}
+                                        className={`px-3 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${filterActivo ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        Activos
+                                    </button>
+                                    <button
+                                        onClick={toggleProspecto}
+                                        className={`px-3 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${filterProspecto ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        Prospectos
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            {mode === 'static' && (
+                                <button 
+                                    onClick={handleSaveGlobal}
+                                    disabled={saving}
+                                    className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 transition-colors font-bold text-sm flex items-center gap-2 disabled:opacity-50 mt-4 sm:mt-0"
+                                >
+                                    {saving ? (
+                                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                    ) : (
+                                        <Save size={16} />
+                                    )}
+                                    Guardar Todos los Costos
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {mode === 'matrix' ? (

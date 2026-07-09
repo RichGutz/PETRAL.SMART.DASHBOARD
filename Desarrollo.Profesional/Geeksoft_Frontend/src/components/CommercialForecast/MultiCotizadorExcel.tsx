@@ -36,6 +36,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     const [ports, setPorts] = useState<any[]>([]);
     const [routes, setRoutes] = useState<any[]>([]);
     const [clients, setClients] = useState<string[]>([]);
+    const [rawClients, setRawClients] = useState<any[]>([]);
+    const [filterActivo, setFilterActivo] = useState(true);
+    const [filterProspecto, setFilterProspecto] = useState(false);
     const [selectedClient, setSelectedClient] = useState('');
 
     // Comisiones
@@ -222,10 +225,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         });
 
         ForecastService.getClientsMaster().then(clientsList => {
-            const clientIds: string[] = (clientsList || []).map((c: any) => c.client_id as string).filter(Boolean);
-            const uniqueClients: string[] = Array.from(new Set(clientIds));
-            uniqueClients.sort(); // Ordenar alfabéticamente
-            setClients(uniqueClients);
+            setRawClients(clientsList || []);
         }).catch(err => {
             console.error("Error al cargar clientes desde el Maestro de Clientes:", err);
         });
@@ -240,6 +240,40 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
             console.error("Error al cargar precios de bunker:", err);
         });
     }, []);
+
+    useEffect(() => {
+        let filtered = rawClients;
+        if (filterActivo && !filterProspecto) {
+            filtered = rawClients.filter(c => c.is_active !== false);
+        } else if (!filterActivo && filterProspecto) {
+            filtered = rawClients.filter(c => c.is_prospect === true);
+        } else if (!filterActivo && !filterProspecto) {
+            filtered = [];
+        }
+        
+        const clientIds = filtered.map(c => c.client_id).filter(Boolean);
+        const uniqueIds = Array.from(new Set(clientIds));
+        uniqueIds.sort();
+        setClients(uniqueIds);
+        
+        if (selectedClient && !uniqueIds.includes(selectedClient)) {
+            setSelectedClient('');
+        }
+    }, [rawClients, filterActivo, filterProspecto]);
+
+    const toggleActivo = () => {
+        setFilterActivo(prev => {
+            if (prev && !filterProspecto) return prev;
+            return !prev;
+        });
+    };
+
+    const toggleProspecto = () => {
+        setFilterProspecto(prev => {
+            if (prev && !filterActivo) return prev;
+            return !prev;
+        });
+    };
 
     // Actualizar estado local del buque seleccionado
     const updateVesselState = (vId: string, list: any[]) => {
@@ -1974,6 +2008,22 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     <option key={c} value={c}>{c}</option>
                                 ))}
                             </select>
+                        </div>
+
+                        {/* Botón de dos posiciones elegantes no-excluyentes */}
+                        <div className="flex bg-slate-200/70 p-0.5 rounded h-7 shadow-inner items-center">
+                            <button
+                                onClick={toggleActivo}
+                                className={`px-2 h-6 text-[9.5px] font-black rounded transition-all cursor-pointer ${filterActivo ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Activos
+                            </button>
+                            <button
+                                onClick={toggleProspecto}
+                                className={`px-2 h-6 text-[9.5px] font-black rounded transition-all cursor-pointer ${filterProspecto ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Prospectos
+                            </button>
                         </div>
 
                         {/* Botones de Control de Tramos */}

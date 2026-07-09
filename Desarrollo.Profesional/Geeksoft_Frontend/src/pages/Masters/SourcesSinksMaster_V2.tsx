@@ -24,6 +24,9 @@ export const SourcesSinksMaster_V2: React.FC = () => {
     const [ports, setPorts] = useState<any[]>([]);
     const [dbData, setDbData] = useState<any[]>([]);
     const [clientsMaster, setClientsMaster] = useState<any[]>([]);
+    const [rawClients, setRawClients] = useState<any[]>([]);
+    const [filterActivo, setFilterActivo] = useState(true);
+    const [filterProspecto, setFilterProspecto] = useState(false);
     
     // Configuración de Años (Arranca en 2026, se agregan dinámicamente)
     const [years, setYears] = useState<number[]>([2026, 2027, 2028, 2029, 2030]);
@@ -55,7 +58,7 @@ export const SourcesSinksMaster_V2: React.FC = () => {
             
             setPorts(portsData);
             setDbData(sourcesSinksData);
-            setClientsMaster(clientsMasterData);
+            setRawClients(clientsMasterData || []);
             
             // Detectar si hay más años guardados en la BD y agregarlos al listado
             const dbYears = sourcesSinksData.map((row: any) => row.year);
@@ -75,6 +78,32 @@ export const SourcesSinksMaster_V2: React.FC = () => {
     useEffect(() => {
         fetchData();
     }, []);
+
+    useEffect(() => {
+        let filtered = rawClients;
+        if (filterActivo && !filterProspecto) {
+            filtered = rawClients.filter(c => c.is_active !== false);
+        } else if (!filterActivo && filterProspecto) {
+            filtered = rawClients.filter(c => c.is_prospect === true);
+        } else if (!filterActivo && !filterProspecto) {
+            filtered = [];
+        }
+        setClientsMaster(filtered);
+    }, [rawClients, filterActivo, filterProspecto]);
+
+    const toggleActivo = () => {
+        setFilterActivo(prev => {
+            if (prev && !filterProspecto) return prev;
+            return !prev;
+        });
+    };
+
+    const toggleProspecto = () => {
+        setFilterProspecto(prev => {
+            if (prev && !filterActivo) return prev;
+            return !prev;
+        });
+    };
 
     // Al cambiar de puerto o cargarse datos, auto-seleccionar el tipo que tenga información
     useEffect(() => {
@@ -317,7 +346,26 @@ export const SourcesSinksMaster_V2: React.FC = () => {
                             </span>
                         </div>
                         
-                        <div className="flex gap-2">
+                        <div className="flex items-center gap-4">
+                            {/* Selector elegante de Activos / Prospectos */}
+                            <div className="flex flex-col gap-1 items-start select-none">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Clientes</span>
+                                <div className="flex bg-slate-100 p-0.5 rounded-lg h-8 shadow-inner items-center border border-slate-200">
+                                    <button
+                                        onClick={toggleActivo}
+                                        className={`px-3 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${filterActivo ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        Activos
+                                    </button>
+                                    <button
+                                        onClick={toggleProspecto}
+                                        className={`px-3 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${filterProspecto ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        Prospectos
+                                    </button>
+                                </div>
+                            </div>
+
                             <button 
                                 onClick={handleAddRow}
                                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-lg shadow-sm transition-colors font-bold text-xs flex items-center gap-1.5"
