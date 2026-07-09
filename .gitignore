@@ -18,3 +18,13 @@ dist-ssr/
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Media and PDFs (Restricted by workspace rules)
+*.pdf
+*.ogg
+*.mp3
+*.wav
+*.mp4
+audio_transcrip/
+*.xlsx
+*.xlsx.tmp

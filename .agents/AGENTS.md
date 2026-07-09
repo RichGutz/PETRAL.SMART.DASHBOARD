@@ -35,4 +35,8 @@ Para realizar tareas de despliegue, actualización o diagnóstico en el servidor
 
 * **Navegador Automático:** Queda estrictamente prohibido el uso de la herramienta `browser_subagent` o abrir cualquier instancia de navegador automático.
 
+## Restricciones de Carga a Git (Control de Versiones)
+
+* **Archivos Prohibidos en Git:** Queda estrictamente prohibido subir o hacer `git commit` / `git push` de archivos binarios o multimedia como PDFs (`.pdf`), audios (`.ogg`, `.mp3`, `.wav`), fotos/imágenes (`.png`, `.jpeg`, `.jpg`) o videos. Estos archivos deben mantenerse únicamente de forma local o ser ignorados formalmente en el `.gitignore` del repositorio.
+
 
