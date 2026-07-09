@@ -4,6 +4,29 @@ import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { Anchor, Save, Edit3, MapPin, Globe, Plus, ExternalLink } from 'lucide-react';
 
+// Helper para obtener el emoji de la bandera en base al nombre o código del país
+const getCountryFlag = (countryStr: string): string => {
+    if (!countryStr) return '🌐';
+    const c = countryStr.trim().toUpperCase();
+    
+    // Mapeo tolerante para códigos de país comunes de 2 letras y nombres completos
+    if (c === 'PE' || c === 'PERU' || c === 'PERÚ') return '🇵🇪';
+    if (c === 'CL' || c === 'CHILE') return '🇨🇱';
+    if (c === 'US' || c === 'USA' || c === 'ESTADOS UNIDOS') return '🇺🇸';
+    if (c === 'PA' || c === 'PANAMA' || c === 'PANAMÁ') return '🇵🇦';
+    if (c === 'EC' || c === 'ECUADOR') return '🇪🇨';
+    if (c === 'BR' || c === 'BRAZIL' || c === 'BRASIL') return '🇧🇷';
+    if (c === 'CO' || c === 'COLOMBIA') return '🇨🇴';
+    if (c === 'AR' || c === 'ARGENTINA') return '🇦🇷';
+    if (c === 'MX' || c === 'MEXICO' || c === 'MÉXICO') return '🇲🇽';
+    if (c === 'CN' || c === 'CHINA') return '🇨🇳';
+    if (c === 'JP' || c === 'JAPAN' || c === 'JAPÓN') return '🇯🇵';
+    if (c === 'CA' || c === 'CANADA' || c === 'CANADÁ') return '🇨🇦';
+    if (c === 'VE' || c === 'VENEZUELA') return '🇻🇪';
+    
+    return '🌐'; // Globo por defecto
+};
+
 export const PortsMaster_V2: React.FC = () => {
     const navigate = navigateHook();
     const [ports, setPorts] = useState<any[]>([]);
@@ -26,7 +49,13 @@ export const PortsMaster_V2: React.FC = () => {
         try {
             setLoading(true);
             const data = await ForecastService.getPorts();
-            setPorts(data);
+            // Ordenar de Norte a Sur (latitud descendente de +90 a -90)
+            const sorted = (data || []).sort((a: any, b: any) => {
+                const latA = parseFloat(a.lat) || 0;
+                const latB = parseFloat(b.lat) || 0;
+                return latB - latA;
+            });
+            setPorts(sorted);
         } catch (error) {
             console.error("Error al obtener los puertos:", error);
         } finally {
@@ -296,9 +325,12 @@ export const PortsMaster_V2: React.FC = () => {
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
                                                 <Globe size={14} className="text-slate-400" />
-                                                <span>{port.country || '-'}</span>
+                                                <span className="flex items-center gap-1.5">
+                                                    <span className="text-base select-none">{getCountryFlag(port.country)}</span>
+                                                    <span>{port.country || '-'}</span>
+                                                </span>
                                             </div>
-                                            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold border border-slate-200">
+                                            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold border border-slate-200 uppercase">
                                                 {port.country}
                                             </span>
                                         </div>
