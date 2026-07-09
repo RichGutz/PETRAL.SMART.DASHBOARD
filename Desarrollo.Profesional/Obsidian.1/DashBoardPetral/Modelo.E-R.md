@@ -106,6 +106,8 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 * `client_id` *(VARCHAR, PK)* → Identificador único comercial (ej. 'SPCC', 'SPOT').
 * `client_name` *(VARCHAR)* → Razón social del cliente.
 * `color_hex` *(VARCHAR(7))* → Código de color de UI para el Dashboard (ej. "#0369A1").
+* `is_active` *(BOOLEAN, DEFAULT true)* → Define si el cliente es activo.
+* `is_prospect` *(BOOLEAN, DEFAULT false)* → Define si el cliente es prospecto (mutuamente excluyente con `is_active`).
 
 ---
 
@@ -356,4 +358,20 @@ Se documentó la siguiente **regla de clasificación de clientes** en el selecto
 | `SPCC` | Rutas simples hardcodeadas en frontend (`ILO-MATARANI`, `ILO-MARCONA`, `ILO-MEJILLONES`) | **Fijo garantizado** |
 | `NEXA` y futuros | Rutas multicotizador con `legs_data.is_multicotizador = true` en tabla `spots` | **Dinámico** desde BD |
 
-> Al agregar un nuevo cliente al sistema con rutas multicotizador complejas, simplemente se graban sus rutas en la tabla `spots` con la bandera `is_multicotizador: true` y aparecerá automáticamente en el selector. Si el cliente tiene rutas simples (sin multicotizador), debe agregarse explícitamente al array `fixedClients` en `ForecastBuilder_V2.tsx`.
+> Al agregar un nuevo cliente al sistema con rutas multicotizador complejas, simplemente se graban sus rutas en la tabla `spots` con la bandera `is_multicotizador: true` y aparecerá automáticamente en el selector. Si el cliente tiene rutas simples (sin multicotizador), debe agregarse explícitamente al array `fixedClients` en `ForecastBuilder_V2.tsx`.
+
+---
+
+### 🗓️ 2026-07-09 — Inclusión de Estados de Clientes Activos y Prospectos
+
+**Tabla afectada:** `clients` (Nuevas columnas booleanas `is_active` e `is_prospect`)
+
+Se agregaron a la tabla `clients` de Supabase las columnas `is_active` (`BOOLEAN`, por defecto `true`) e `is_prospect` (`BOOLEAN`, por defecto `false`).
+
+**Regla crítica de negocio en BD:**
+> Un cliente corporativo registrado en el maestro solo puede poseer un estado activo o prospecto de manera mutuamente excluyente. No es posible que un cliente sea catalogado en ambos estados simultáneamente.
+
+**Impacto en la API (FastAPI backend):**
+- El esquema de datos de Pydantic (`ClientMaster` en `forecast_models.py`) se actualizó para incorporar los atributos booleanos.
+- La transacción del endpoint `POST /masters/clients` (en `forecast.py`) ahora mapea de forma nativa e inyecta estos campos en el `UPSERT` sobre Supabase.
+- El script de despliegue del VPS (`deploy_backend.py`) se modificó para transferir `forecast_models.py` en cada despliegue, solucionando caídas por discrepancia en el esquema de clases en producción.
