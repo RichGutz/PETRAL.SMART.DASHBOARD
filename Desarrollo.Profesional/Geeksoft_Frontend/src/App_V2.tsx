@@ -17,6 +17,16 @@ import { PortsMaster_V2 } from './pages/Masters/PortsMaster_V2';
 import { PortCostsMaster_V2 } from './pages/Masters/PortCostsMaster_V2';
 import { SourcesSinksMaster_V2 } from './pages/Masters/SourcesSinksMaster_V2';
 import { MasterTemplate } from './components/Masters/MasterTemplate_V2';
+import { Login } from './pages/Auth/Login';
+
+// Componente para proteger rutas privadas
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    const isAuthenticated = localStorage.getItem('petral_session') === 'authenticated';
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+    return <>{children}</>;
+};
 
 // Placeholder component for routes that don't exist yet
 const PlaceholderPage = ({ title, activeTab }: { title: string, activeTab: string }) => (
@@ -34,17 +44,20 @@ function App_V2() {
       <div className="min-h-screen bg-gray-50">
         <ForecastProvider_V2>
           <Routes>
-            {/* Maestros */}
-            <Route path="/vessels" element={<VesselsMaster />} />
-            <Route path="/routes" element={<RoutesMaster />} />
-            <Route path="/clients" element={<ClientsMaster />} />
-            <Route path="/contracts" element={<ContractsMaster />} />
-            <Route path="/ports" element={<PortsMaster_V2 />} />
-            <Route path="/port-costs" element={<PortCostsMaster_V2 />} />
-            <Route path="/sources-sinks" element={<SourcesSinksMaster_V2 />} />
+            {/* Ruta Pública de Login */}
+            <Route path="/login" element={<Login />} />
             
-            {/* Herramientas (Comparten el estado y el Ribbon via ToolsLayout) */}
-            <Route element={<ToolsLayout_V2 />}>
+            {/* Maestros Protegidos */}
+            <Route path="/vessels" element={<ProtectedRoute><VesselsMaster /></ProtectedRoute>} />
+            <Route path="/routes" element={<ProtectedRoute><RoutesMaster /></ProtectedRoute>} />
+            <Route path="/clients" element={<ProtectedRoute><ClientsMaster /></ProtectedRoute>} />
+            <Route path="/contracts" element={<ProtectedRoute><ContractsMaster /></ProtectedRoute>} />
+            <Route path="/ports" element={<ProtectedRoute><PortsMaster_V2 /></ProtectedRoute>} />
+            <Route path="/port-costs" element={<ProtectedRoute><PortCostsMaster_V2 /></ProtectedRoute>} />
+            <Route path="/sources-sinks" element={<ProtectedRoute><SourcesSinksMaster_V2 /></ProtectedRoute>} />
+            
+            {/* Herramientas Protegidas (Comparten el estado y el Ribbon via ToolsLayout) */}
+            <Route element={<ProtectedRoute><ToolsLayout_V2 /></ProtectedRoute>}>
                 <Route path="/multicotizador" element={<MultiCotizador_V2 />} />
                 <Route path="/dashboard" element={<FinancialMatrix_V2 />} />
                 <Route path="/graphic-analysis" element={<GraphicAnalysis_V2 />} />
@@ -53,8 +66,8 @@ function App_V2() {
                 <Route path="/audit-engine" element={<AuditEngine_V2 />} />
             </Route>
             
-            {/* Usuarios */}
-            <Route path="/users" element={<PlaceholderPage title="Gestión de Usuarios" activeTab="users" />} />
+            {/* Usuarios Protegidos */}
+            <Route path="/users" element={<ProtectedRoute><PlaceholderPage title="Gestión de Usuarios" activeTab="users" /></ProtectedRoute>} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -377,3 +377,33 @@ setAvailableClients(allClients);
 | `src/components/CommercialForecast/ForecastBuilder_V2.tsx` | Clientes del selector: `SPCC` agregado como fijo; SPOT retirado |
 | `public/moquegua_1.jpg` | Fotografía oficial del B/T MOQUEGUA actualizada |
 
+---
+
+## 🚢 Portada del Software (Login) — Guía de Aspecto Corporativo Naviero
+
+Esta sección establece las directrices de diseño y comportamiento para la portada de inicio de sesión de **PETRAL SMART DASHBOARD**.
+
+### 🎨 Identidad Visual y Estilo Corporativo
+* **Tono de Marca:** Serio, profesional, institucional y marítimo. Evitar colores vibrantes o informales (cybercafé).
+* **Paleta de Colores:**
+  * **Azul Naval Profundo (`#0A192F` o `#0B2545`):** Fondo de marca principal que proyecta solidez.
+  * **Azul Acero y Gris Claro (`#8D99AE` / `#E2E8F0`):** Contornos y placeholders discretos.
+  * **Blanco Premium (`#F4F6F9`):** Contraste legible.
+* **Tipografía:** Letra sans-serif moderna, limpia y de peso balanceado (Inter o Outfit).
+
+### 📐 Layout de Pantalla Dividida (Split Screen)
+El acceso se divide en dos secciones principales para equilibrar el impacto comercial y la operatividad:
+
+1. **Panel Visual (Lado Izquierdo - 60%):**
+   * Contiene una composición visual que presenta los buques insignia de la naviera: **B/T Moquegua** ([moquegua.color.jpeg](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Imagenes/moquegua.color.jpeg)) y **B/T Tablones** ([tablones.jpeg](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Imagenes/tablones.jpeg)).
+   * Tendrá una máscara azul naval semitransparente (`linear-gradient`) para homogeneizar el tono y garantizar la legibilidad de la marca.
+   * Leyenda de impacto: *"Optimización y Control Marítimo de la Flota"*.
+
+2. **Panel de Acceso (Lado Derecho - 40%):**
+   * Fondo blanco o gris muy suave.
+   * **Logo de Petral** ([Logo.Petral.png](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Imagenes/Logo.Petral.png)) centrado y destacado en la cabecera.
+   * Campos minimalistas y elegantes para `Usuario` y `Contraseña`.
+   * Botón de ingreso en azul naval profundo con un hover dinámico suave.
+   * **Firma de Desarrollo:** El **Logo de Geeksoft** ([Logo.Geeksoft.png](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Imagenes/Logo.Geeksoft.png)) posicionado discretamente en el pie de página del panel, con el texto *"Desarrollado por"*.
+
+

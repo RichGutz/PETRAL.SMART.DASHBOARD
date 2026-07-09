@@ -28,7 +28,8 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
 
     const handleLogout = () => {
         if (confirm('¿Desea cerrar la sesión de usuario?')) {
-            alert('Sesión cerrada (Demo Mode)');
+            localStorage.removeItem('petral_session');
+            navigate('/login');
         }
     };
 
