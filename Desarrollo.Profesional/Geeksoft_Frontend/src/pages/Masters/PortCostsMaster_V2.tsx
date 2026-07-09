@@ -247,8 +247,8 @@ export const PortCostsMaster_V2: React.FC = () => {
 
                         <div className="flex items-center gap-4">
                             {/* Selector elegante de Activos / Prospectos */}
-                            <div className="flex flex-col gap-1 items-start select-none">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Clientes</span>
+                            <div className="flex items-center gap-2 select-none">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Clientes:</span>
                                 <div className="flex bg-slate-100 p-0.5 rounded-lg h-8 shadow-inner items-center border border-slate-200">
                                     <button
                                         onClick={toggleActivo}
