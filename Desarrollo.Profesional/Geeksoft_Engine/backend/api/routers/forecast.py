@@ -673,6 +673,12 @@ def save_clients_master(payload: List[ClientMaster]):
             
         return {"status": "success"}
     except Exception as e:
+        import traceback
+        try:
+            with open("/opt/geeksoft_engine/error_log.txt", "w") as f:
+                f.write(traceback.format_exc())
+        except Exception:
+            pass
         raise HTTPException(status_code=500, detail=str(e))
 
 from backend.models.forecast_models import ContractMaster, ContractTariffMaster
