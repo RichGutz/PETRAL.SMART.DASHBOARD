@@ -37,6 +37,10 @@ FILES_TO_UPLOAD = [
         r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine\backend\api\routers\auth.py",
         "/opt/geeksoft_engine/backend/api/routers/auth.py"
     ),
+    (
+        r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine\backend\models\forecast_models.py",
+        "/opt/geeksoft_engine/backend/models/forecast_models.py"
+    ),
 ]
 
 
