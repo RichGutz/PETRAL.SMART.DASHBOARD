@@ -3,10 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { Ship, Shield, Settings, Fuel, Save, Edit3, Plus, Activity } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const VesselsMaster: React.FC = () => {
     const navigate = navigateHook();
+    const { hasPermission } = useAuth();
+    const isReadOnly = !hasPermission('maestro_buques', 'Editor');
     const [vessels, setVessels] = useState<any[]>([]);
+
     const [loading, setLoading] = useState(true);
     const [activeVesselId, setActiveVesselId] = useState('MOQUEGUA');
     const [isEditing, setIsEditing] = useState(false);
@@ -130,28 +134,31 @@ export const VesselsMaster: React.FC = () => {
                                 </button>
                             );
                         })}
-                        <button 
-                            onClick={() => {
-                                if (isEditing && activeVesselId !== 'NUEVO') {
-                                    if (!confirm("Hay cambios sin guardar. ¿Desea descartarlos?")) return;
-                                }
-                                setIsEditing(true);
-                                setEditFormData({ 
-                                    vessel_id: '', 
-                                    vessel_name: 'NUEVO BARCO',
-                                    flag: 'Peruana',
-                                    imo: '',
-                                    mmsi: '',
-                                    flag_ais: 'Peru',
-                                    ais_type: 'Tanker',
-                                    draft_m: 6.0
-                                });
-                                setActiveVesselId('NUEVO');
-                            }}
-                            className="px-4 py-1.5 ml-2 text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-md hover:bg-emerald-100 transition-colors flex items-center gap-1 shrink-0"
-                        >
-                            <Plus size={14} /> Agregar Nuevo Barco
-                        </button>
+                        {!isReadOnly && (
+                            <button 
+                                onClick={() => {
+                                    if (isEditing && activeVesselId !== 'NUEVO') {
+                                        if (!confirm("Hay cambios sin guardar. ¿Desea descartarlos?")) return;
+                                    }
+                                    setIsEditing(true);
+                                    setEditFormData({ 
+                                        vessel_id: '', 
+                                        vessel_name: 'NUEVO BARCO',
+                                        flag: 'Peruana',
+                                        imo: '',
+                                        mmsi: '',
+                                        flag_ais: 'Peru',
+                                        ais_type: 'Tanker',
+                                        draft_m: 6.0
+                                    });
+                                    setActiveVesselId('NUEVO');
+                                }}
+                                className="px-4 py-1.5 ml-2 text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-md hover:bg-emerald-100 transition-colors flex items-center gap-1 shrink-0"
+                            >
+                                <Plus size={14} /> Agregar Nuevo Barco
+                            </button>
+                        )}
+
                     </div>
 
                     {selectedVessel && (
@@ -161,8 +168,14 @@ export const VesselsMaster: React.FC = () => {
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full items-stretch">
                                 
                                 {/* FOTO DEL BARCO */}
-                                <div className="bg-slate-100 border border-slate-200 rounded-xl overflow-hidden shadow-sm relative group h-full min-h-[224px]">
-                                    {selectedVessel.vessel_id === 'MOQUEGUA' ? (
+                                <div className="bg-slate-100 border border-slate-200 rounded-xl overflow-hidden shadow-sm relative group h-full min-h-[224px] flex items-center justify-center">
+                                    {((isEditing ? editFormData?.image_url : selectedVessel.image_url) ? (
+                                        <img 
+                                            src={isEditing ? editFormData?.image_url : selectedVessel.image_url} 
+                                            alt={selectedVessel.vessel_name} 
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                                        />
+                                    ) : selectedVessel.vessel_id === 'MOQUEGUA' ? (
                                         <img 
                                             src="/moquegua_1.jpg" 
                                             alt="B/T MOQUEGUA" 
@@ -175,23 +188,56 @@ export const VesselsMaster: React.FC = () => {
                                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                                         />
                                     ) : (
-                                        <div className="w-full h-full bg-gradient-to-br from-slate-800 to-blue-900 flex flex-col items-center justify-center text-white p-6 gap-3">
+                                        <div className="w-full h-full min-h-[224px] bg-gradient-to-br from-slate-800 to-blue-900 flex flex-col items-center justify-center text-white p-6 gap-3">
                                             <Ship size={48} className="text-blue-300 animate-pulse" />
                                             <div className="text-center">
                                                 <span className="font-bold text-sm block">Sin fotografía oficial</span>
                                                 <span className="text-[10px] text-blue-200 uppercase tracking-widest font-bold">Maqueta de Fallback</span>
                                             </div>
                                         </div>
+                                    ))}
+
+                                    {/* Interfaz de carga de imagen si se está editando */}
+                                    {isEditing && (
+                                        <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white cursor-pointer gap-2 select-none z-20">
+                                            <Activity size={24} className="animate-bounce text-blue-400" />
+                                            <span className="text-xs font-bold uppercase tracking-wider">Subir Nueva Foto</span>
+                                            <span className="text-[9px] text-slate-300">Formatos: JPG, PNG, WEBP</span>
+                                            <input 
+                                                type="file" 
+                                                accept="image/*" 
+                                                className="hidden" 
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        if (file.size > 2 * 1024 * 1024) {
+                                                            alert("La imagen excede el límite de 2MB recomendado para optimización.");
+                                                            return;
+                                                        }
+                                                        const reader = new FileReader();
+                                                        reader.onloadend = () => {
+                                                            setEditFormData({
+                                                                ...editFormData,
+                                                                image_url: reader.result as string
+                                                            });
+                                                        };
+                                                        reader.readAsDataURL(file);
+                                                    }
+                                                }}
+                                            />
+                                        </label>
                                     )}
-                                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-white/10">
+
+                                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-white/10 z-10">
                                         🇵🇪 {selectedVessel.flag || 'Peruana'}
                                     </div>
                                     <div 
-                                        className="absolute top-3 right-3 w-5 h-5 rounded-full border-2 border-white shadow-md cursor-help"
+                                        className="absolute top-3 right-3 w-5 h-5 rounded-full border-2 border-white shadow-md cursor-help z-10"
                                         style={{ backgroundColor: selectedVessel.color_hex || '#ccc' }}
                                         title={`Identificador visual: ${selectedVessel.color_hex || 'N/A'}`}
                                     ></div>
                                 </div>
+
 
                                 {/* IDENTIFICACIÓN NAVAL (Ahora en Col 2 y 3, en 3 columnas) */}
                                 <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col gap-4">
@@ -297,7 +343,7 @@ export const VesselsMaster: React.FC = () => {
 
                                     {/* BOTONES DE EDICIÓN - Alineados al fondo */}
                                     <div className="mt-auto pt-4 border-t border-slate-100 flex gap-2 justify-end">
-                                        {!isEditing ? (
+                                        {!isReadOnly && !isEditing && (
                                             <button 
                                                 onClick={() => {
                                                     setEditFormData(selectedVessel);
@@ -307,8 +353,15 @@ export const VesselsMaster: React.FC = () => {
                                             >
                                                 <Edit3 size={14} /> Editar Registro Naval
                                             </button>
-                                        ) : (
+                                        )}
+                                        {isReadOnly && (
+                                            <div className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg flex items-center gap-1">
+                                                <span>⚠️ Modo Visor: Sin permisos de edición sobre la flota</span>
+                                            </div>
+                                        )}
+                                        {isEditing && (
                                             <div className="flex gap-2 w-full sm:w-auto">
+
                                                 <button 
                                                     onClick={() => {
                                                         setIsEditing(false);

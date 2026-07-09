@@ -1,32 +1,36 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
-    const [username, setUsername] = useState('admin');
+    const { login } = useAuth();
+    const [email, setEmail] = useState('izavala@petral.com.pe');
     const [password, setPassword] = useState('petral2026');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
 
-        // Simulación de autenticación (admin / petral2026)
-        setTimeout(() => {
-            if (username === 'admin' && password === 'petral2026') {
-                localStorage.setItem('petral_session', 'authenticated');
-                navigate('/dashboard');
+        try {
+            await login(email, password);
+            navigate('/dashboard');
+        } catch (err: any) {
+            console.error(err);
+            if (err.response && err.response.data && err.response.data.detail) {
+                setError(err.response.data.detail);
             } else {
-                setError('Credenciales incorrectas. Verifique el usuario y contraseña.');
-                setLoading(false);
+                setError('Error de conexión con el servidor. Intente más tarde.');
             }
-        }, 800);
+            setLoading(false);
+        }
     };
 
     return (
-        <div className="relative min-h-screen w-screen flex items-center justify-center overflow-hidden font-sans select-none">
+        <div className="relative min-h-screen w-screen flex items-center justify-center overflow-hidden font-sans select-none bg-slate-900">
             
             {/* 1. Carrusel de Fondo de Buques Insignia con Animación CSS y máscara azul marino */}
             <div 
@@ -38,7 +42,7 @@ export const Login: React.FC = () => {
             {/* Máscara azul marina y elegante (Overlay más translúcido) */}
             <div className="absolute inset-0 bg-gradient-to-br from-[#0A192F]/45 via-[#0B2545]/35 to-[#0F1E36]/45 z-0" />
 
-            {/* 2. Tarjeta Flotante Central (Glassmorphism Premium) */}
+            {/* 2. Tarjeta Flotante Central (Glassmorphism Premium Original) */}
             <div className="relative w-full max-w-[420px] mx-4 bg-[#F8FAFC]/15 border border-white/30 rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.35),0_30px_60px_-30px_rgba(0,0,0,0.4)] p-8 md:p-10 z-10 flex flex-col justify-between">
                 
                 <div>
@@ -64,16 +68,16 @@ export const Login: React.FC = () => {
                         )}
 
                         <div className="space-y-1">
-                            <label htmlFor="username" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                Usuario
+                            <label htmlFor="email" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                Correo Electrónico
                             </label>
                             <input
-                                type="text"
-                                id="username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                placeholder="nombre@correo.com"
-                                className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm text-slate-900 bg-white placeholder-slate-400 transition-all focus:outline-none focus:border-slate-800 focus:ring-4 focus:ring-slate-850/10"
+                                type="email"
+                                id="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="nombre@petral.com.pe"
+                                className="w-full rounded-lg border border-slate-250 px-4 py-2.5 text-sm text-slate-900 bg-white placeholder-slate-400 transition-all focus:outline-none focus:border-slate-800 focus:ring-4 focus:ring-slate-850/10"
                                 required
                             />
                         </div>
@@ -88,7 +92,7 @@ export const Login: React.FC = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
-                                className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm text-slate-900 bg-white placeholder-slate-400 transition-all focus:outline-none focus:border-slate-800 focus:ring-4 focus:ring-slate-850/10"
+                                className="w-full rounded-lg border border-slate-250 px-4 py-2.5 text-sm text-slate-900 bg-white placeholder-slate-400 transition-all focus:outline-none focus:border-slate-800 focus:ring-4 focus:ring-slate-850/10"
                                 required
                             />
                         </div>

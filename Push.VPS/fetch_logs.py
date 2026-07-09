@@ -1,5 +1,7 @@
 import paramiko
 import sys
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
 
 VPS_HOST  = "91.108.125.253"
 VPS_USER  = "root"

@@ -20,12 +20,9 @@ const getTwinColor = (p1: string, p2: string) => {
         hash = pair.charCodeAt(i) + ((hash << 5) - hash);
     }
     const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-    const color = "00000".substring(0, 6 - c.length) + c;
-    const r = Math.floor((parseInt(color.substring(0, 2), 16) + 255 * 4) / 5);
-    const g = Math.floor((parseInt(color.substring(2, 4), 16) + 255 * 4) / 5);
-    const b = Math.floor((parseInt(color.substring(4, 6), 16) + 255 * 4) / 5);
-    return `rgb(${r}, ${g}, ${b})`;
+    return `#` + ("000000" + c).slice(-6);
 };
+
 
 export const RoutesMaster: React.FC = () => {
     const [ports, setPorts] = useState<string[]>([]);
@@ -43,7 +40,6 @@ export const RoutesMaster: React.FC = () => {
     const [contextMenu, setContextMenu] = useState<{port: string, x: number, y: number} | null>(null);
     const [cellContextMenu, setCellContextMenu] = useState<{rowPort: string, colPort: string, x: number, y: number} | null>(null);
 
-    const initialOrder = ['TALARA', 'CALLAO', 'MARCONA', 'MATARANI', 'ILO', 'MEJILLONES', 'BARQUITO'];
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -57,71 +53,67 @@ export const RoutesMaster: React.FC = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const loadData = async () => {
+        try {
+            setLoading(true);
+            const [portsData, routesData] = await Promise.all([
+                ForecastService.getPorts(),
+                ForecastService.getRoutes()
+            ]);
+
+            setDbPorts(portsData || []);
+
+            // Ordenar todos los puertos geográficamente de Norte a Sur (de mayor a menor latitud)
+            const sortedPortsData = [...(portsData || [])].sort((a, b) => {
+                const latA = a.lat !== undefined && a.lat !== null ? parseFloat(a.lat) : 0;
+                const latB = b.lat !== undefined && b.lat !== null ? parseFloat(b.lat) : 0;
+                return latB - latA; // De mayor a menor (Norte a Sur)
+            });
+
+            const sortedPorts = sortedPortsData.map((p: any) => p.port_id);
+            setPorts(sortedPorts);
+
+            const mat: Record<string, Record<string, RouteCell>> = {};
+            
+            sortedPorts.forEach(p1 => {
+                mat[p1] = {};
+                sortedPorts.forEach(p2 => {
+                    if (p1 !== p2) {
+                        mat[p1][p2] = {
+                            port_a: p1 < p2 ? p1 : p2,
+                            port_b: p1 < p2 ? p2 : p1,
+                            route_distance: 0,
+                            weather_factor_laden: 0.03,
+                            weather_factor_ballast: 0.03,
+                            color_hex: getTwinColor(p1, p2)
+                        };
+                    }
+                });
+            });
+
+            routesData.forEach((r: any) => {
+                const p1 = r.port_a;
+                const p2 = r.port_b;
+                if (mat[p1] && mat[p1][p2]) {
+                    mat[p1][p2] = { ...r };
+                }
+                if (mat[p2] && mat[p2][p1]) {
+                    mat[p2][p1] = { ...r };
+                }
+            });
+
+            setMatrix(mat);
+        } catch (error) {
+            console.error("Error loading routes master:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const loadData = async () => {
-            try {
-                setLoading(true);
-                const [portsData, routesData] = await Promise.all([
-                    ForecastService.getPorts(),
-                    ForecastService.getRoutes()
-                ]);
-
-                setDbPorts(portsData || []);
-
-                const dbPortIds = (portsData || []).map((p: any) => p.port_id);
-                // Ordenar puertos: initialOrder primero, luego los demás de la DB
-                const sortedPorts: string[] = [];
-                initialOrder.forEach((po: string) => {
-                    if (dbPortIds.includes(po)) {
-                        sortedPorts.push(po);
-                    }
-                });
-                dbPortIds.forEach((po: string) => {
-                    if (!sortedPorts.includes(po)) {
-                        sortedPorts.push(po);
-                    }
-                });
-
-                setPorts(sortedPorts);
-
-                const mat: Record<string, Record<string, RouteCell>> = {};
-                
-                sortedPorts.forEach(p1 => {
-                    mat[p1] = {};
-                    sortedPorts.forEach(p2 => {
-                        if (p1 !== p2) {
-                            mat[p1][p2] = {
-                                port_a: p1 < p2 ? p1 : p2,
-                                port_b: p1 < p2 ? p2 : p1,
-                                route_distance: 0,
-                                weather_factor_laden: 0.03,
-                                weather_factor_ballast: 0.03,
-                                color_hex: getTwinColor(p1, p2)
-                            };
-                        }
-                    });
-                });
-
-                routesData.forEach((r: any) => {
-                    const p1 = r.port_a;
-                    const p2 = r.port_b;
-                    if (mat[p1] && mat[p1][p2]) {
-                        mat[p1][p2] = { ...r };
-                    }
-                    if (mat[p2] && mat[p2][p1]) {
-                        mat[p2][p1] = { ...r };
-                    }
-                });
-
-                setMatrix(mat);
-            } catch (error) {
-                console.error("Error loading routes master:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
         loadData();
     }, []);
+
 
     const handleCellChange = (p1: string, p2: string, field: keyof RouteCell, value: string) => {
         const numValue = parseFloat(value) || 0;
@@ -190,12 +182,14 @@ export const RoutesMaster: React.FC = () => {
             await ForecastService.saveRoutes(payload);
             setHasChanges(false);
             alert("Rutas guardadas exitosamente!");
+            await loadData();
         } catch (error) {
             console.error("Error saving routes:", error);
             alert("Error al guardar las rutas");
         } finally {
             setIsSaving(false);
         }
+
     };
 
     const handleEstimateRoutes = async () => {

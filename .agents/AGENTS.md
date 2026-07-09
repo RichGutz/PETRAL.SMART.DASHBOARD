@@ -31,3 +31,8 @@ Para realizar tareas de despliegue, actualización o diagnóstico en el servidor
 
 * **Compilación de PDF:** Queda estrictamente prohibido transformar archivos Markdown (`.md`) a PDF de forma automática. Esta acción solo debe realizarse bajo solicitud explícita del usuario en el chat.
 
+## Restricciones de Herramientas
+
+* **Navegador Automático:** Queda estrictamente prohibido el uso de la herramienta `browser_subagent` o abrir cualquier instancia de navegador automático.
+
+

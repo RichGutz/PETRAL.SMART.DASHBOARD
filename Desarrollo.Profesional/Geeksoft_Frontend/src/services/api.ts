@@ -144,3 +144,32 @@ export const ForecastService = {
         return response.data;
     }
 };
+
+export const AuthService = {
+    login: async (payload: any) => {
+        const response = await api.post('/auth/login', payload);
+        return response.data;
+    },
+    getUsers: async () => {
+        const response = await api.get('/users');
+        return response.data;
+    },
+    createUser: async (payload: any) => {
+        const response = await api.post('/users', payload);
+        return response.data;
+    },
+    updateUser: async (id: string, payload: any) => {
+        const response = await api.put(`/users/${id}`, payload);
+        return response.data;
+    },
+    deleteUser: async (id: string) => {
+        const response = await api.delete(`/users/${id}`);
+        return response.data;
+    },
+    changePassword: async (payload: any) => {
+        const response = await api.post('/auth/change-password', payload);
+        return response.data;
+    }
+};
+
+

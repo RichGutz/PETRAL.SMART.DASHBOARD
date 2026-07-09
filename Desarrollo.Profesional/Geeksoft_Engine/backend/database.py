@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
+import psycopg2
 
 # Cargar variables de entorno desde el archivo .env
 load_dotenv()
@@ -19,3 +20,17 @@ def get_supabase() -> Client:
         # Crear el cliente oficial de Supabase
         _supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
     return _supabase_client
+
+def get_db_connection():
+    db_uri = os.getenv("SUPABASE_DB_URI")
+    db_password = os.getenv("SUPABASE_DB_PASSWORD")
+    
+    if not db_uri or not db_password:
+        raise ValueError("Faltan credenciales SUPABASE_DB_URI o SUPABASE_DB_PASSWORD en el archivo .env")
+        
+    # Reemplazar la contraseña en la URI si contiene el placeholder [PASSWORD]
+    if "[PASSWORD]" in db_uri:
+        db_uri = db_uri.replace("[PASSWORD]", db_password)
+        
+    return psycopg2.connect(db_uri)
+

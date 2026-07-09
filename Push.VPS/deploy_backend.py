@@ -25,7 +25,20 @@ FILES_TO_UPLOAD = [
         r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine\backend\api\routers\forecast.py",
         "/opt/geeksoft_engine/backend/api/routers/forecast.py"
     ),
+    (
+        r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine\backend\database.py",
+        "/opt/geeksoft_engine/backend/database.py"
+    ),
+    (
+        r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine\backend\main.py",
+        "/opt/geeksoft_engine/backend/main.py"
+    ),
+    (
+        r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine\backend\api\routers\auth.py",
+        "/opt/geeksoft_engine/backend/api/routers/auth.py"
+    ),
 ]
+
 
 def run(client, cmd, desc=""):
     print(f"\n[{desc}]")
@@ -73,10 +86,11 @@ def deploy_backend():
         sftp.close()
 
         # 3. Reiniciar el servicio uvicorn/backend
-        run(client, "systemctl restart geeksoft_engine 2>/dev/null || systemctl restart uvicorn 2>/dev/null || pkill -f uvicorn && sleep 2 && echo 'Proceso reiniciado'", "3. Reiniciando backend")
+        run(client, "systemctl restart geeksoft-engine 2>/dev/null || systemctl restart uvicorn 2>/dev/null || pkill -f uvicorn && sleep 2 && echo 'Proceso reiniciado'", "3. Reiniciando backend")
         
         # 4. Verificar que el servicio quedó activo
-        run(client, "systemctl status geeksoft_engine 2>/dev/null | head -10 || ps aux | grep uvicorn | grep -v grep", "4. Verificando estado")
+        run(client, "systemctl status geeksoft-engine 2>/dev/null | head -10 || ps aux | grep uvicorn | grep -v grep", "4. Verificando estado")
+
 
         print("\n" + "="*55)
         print("  [OK] BACKEND ACTUALIZADO EN VPS")

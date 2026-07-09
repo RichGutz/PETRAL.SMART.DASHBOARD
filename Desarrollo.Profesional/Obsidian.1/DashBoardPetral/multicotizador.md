@@ -436,3 +436,25 @@ La discrepancia radica exclusivamente en los **precios de bunker** configurados 
 
 #### Conclusión:
 Si se ingresan los precios **IFO = 450** y **MDO = 800** en el panel superior derecho del Multicotizador, **los resultados de ambos reportes convergen al centavo**. La diferencia no es de lógica matemática, sino de inputs de combustible.
+
+---
+
+## 🚀 12. Plan de Mejoras de Usabilidad y Funciones Comerciales (2026-07-09)
+
+A continuación se detallan las mejoras de usabilidad y funcionalidad comercial planificadas para perfeccionar el Multicotizador Spot:
+
+### A. Integración con la Matriz Financiera (Flujo de Proyecciones)
+*   **Mapeo 1:1 de Tramos:** Garantizar que cuando la Matriz Financiera jale una cotización Spot multileg guardada en Supabase (`routes_spot`), el backend simule con exactitud cada tramo (con sus correspondientes costos de puerto, tiempos y consumos), evitando que se asuma como un tramo simplificado de origen-destino único.
+*   **Consistencia de Bunker y Overhead en la Simulación Mensual:** Asegurar que los cálculos mensuales de la proyección incorporen las mismas reglas de herencia del contrato y precios de combustible simulados por el mes en curso.
+
+### B. Mejoras de Usabilidad y Feedback Visual en la UI
+*   **Pintado Dinámico de Tramo (Laden/Ballast):** Aplicar colores de fondo suaves en la columna "Tipo" de la grilla en caliente:
+    *   `Laden` (Cargado): Fondo azul marino translúcido con texto azul oscuro.
+    *   `Ballast` (Vacío): Fondo gris pizarra translúcido con texto gris.
+*   **Visualización de Inventario en Bodega:** Añadir un indicador flotante o columna oculta que muestre la carga acumulada que el buque lleva en bodega al finalizar cada tramo, ayudando a validar visualmente si el buque viaja vacío o con carga.
+
+### C. Funcionalidades de Exportación y Compartición
+*   **Exportar a CSV/Excel de Shipping:** Botón en el panel de acciones para descargar la grilla consolidada de P&L tramo por tramo y los resultados consolidados en un formato de hoja de cálculo nativo y limpio para compartirlo directamente con gerencia o clientes.
+
+### D. Gestión de Escenarios Múltiples (Catálogo de Cotizaciones)
+*   **Historial de Guardados:** Implementar un desplegable lateral en la UI que liste las últimas cotizaciones guardadas con información clave (Buque, Fecha, Flete Estimado, P/L total). Esto permitirá al usuario saltar de una cotización de prueba a otra con un solo clic en lugar de sobreescribir la cotización activa.
