@@ -56,7 +56,18 @@ export const SourcesSinksMaster_V2: React.FC = () => {
                 ForecastService.getClientsMaster()
             ]);
             
-            setPorts(portsData);
+            // Ordenar puertos de norte a sur: Talara, Callao, Marcona, Matarani, Ilo, Mejillones y Barquito
+            const order = ['TALARA', 'CALLAO', 'MARCONA', 'MATARANI', 'ILO', 'MEJILLONES', 'BARQUITO'];
+            const sortedPorts = [...(portsData || [])].sort((a: any, b: any) => {
+                const idxA = order.indexOf(a.port_id.toUpperCase());
+                const idxB = order.indexOf(b.port_id.toUpperCase());
+                if (idxA === -1 && idxB === -1) return 0;
+                if (idxA === -1) return 1;
+                if (idxB === -1) return -1;
+                return idxA - idxB;
+            });
+
+            setPorts(sortedPorts);
             setDbData(sourcesSinksData);
             setRawClients(clientsMasterData || []);
             
@@ -65,8 +76,8 @@ export const SourcesSinksMaster_V2: React.FC = () => {
             const allYears = Array.from(new Set([2026, 2027, 2028, 2029, 2030, ...dbYears])).sort((a, b) => a - b);
             setYears(allYears);
             
-            if (portsData.length > 0 && !activePortId) {
-                setActivePortId(portsData[0].port_id);
+            if (sortedPorts.length > 0 && !activePortId) {
+                setActivePortId(sortedPorts[0].port_id);
             }
         } catch (error) {
             console.error("Error al cargar datos de Sinks & Sources:", error);
