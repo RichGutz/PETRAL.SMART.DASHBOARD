@@ -344,14 +344,14 @@ export const RoutesMaster: React.FC = () => {
 
     if (loading) {
         return (
-            <MasterTemplate title="Maestro de Navegación" activeTab="routes">
+            <MasterTemplate title="Maestro de Distancias" activeTab="routes">
                 <div className="flex items-center justify-center h-64 text-slate-500 font-bold">Cargando matriz de navegación...</div>
             </MasterTemplate>
         );
     }
 
     return (
-        <MasterTemplate title="Maestro de Navegación" subtitle="Gestión de distancias y fricción climática (Matriz No Dirigida)" activeTab="routes">
+        <MasterTemplate title="Maestro de Distancias" subtitle="Gestión de distancias y fricción climática (Matriz No Dirigida)" activeTab="routes">
             <div className="flex flex-col gap-4">
                 
                 {/* Header Actions */}

@@ -174,7 +174,7 @@ export const UsersPermissions: React.FC = () => {
         { key: 'multicotizador_spot', label: 'Multicotizador' },
         { key: 'matriz_financiera', label: 'Matriz Financiera' },
         { key: 'maestro_buques', label: 'M. Buques' },
-        { key: 'maestro_rutas', label: 'M. Rutas' },
+        { key: 'maestro_rutas', label: 'M. Distancias' },
         { key: 'maestro_puertos', label: 'M. Puertos' },
         { key: 'maestro_contratos', label: 'M. Contratos' },
         { key: 'maestro_tarifas', label: 'M. Tarifas/Clientes' },
