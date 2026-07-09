@@ -101,6 +101,8 @@ class ClientMaster(BaseModel):
     client_id: str
     client_name: str
     color_hex: Optional[str] = None
+    is_active: Optional[bool] = True
+    is_prospect: Optional[bool] = False
 
 class ContractTariffMaster(BaseModel):
     min_tonnage: float

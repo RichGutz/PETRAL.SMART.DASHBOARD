@@ -7,6 +7,8 @@ interface Client {
     client_id: string;
     client_name: string;
     color_hex: string;
+    is_active?: boolean;
+    is_prospect?: boolean;
 }
 
 export const ClientsMaster: React.FC = () => {
@@ -34,7 +36,9 @@ export const ClientsMaster: React.FC = () => {
         const newClient: Client = {
             client_id: `CLIENT_${clients.length + 1}`,
             client_name: "NUEVO CLIENTE",
-            color_hex: "#3b82f6"
+            color_hex: "#3b82f6",
+            is_active: true,
+            is_prospect: false
         };
         setClients([...clients, newClient]);
         setHasChanges(true);
@@ -50,6 +54,13 @@ export const ClientsMaster: React.FC = () => {
     };
 
     const handleChange = (idx: number, field: keyof Client, value: string) => {
+        const next = [...clients];
+        next[idx] = { ...next[idx], [field]: value };
+        setClients(next);
+        setHasChanges(true);
+    };
+
+    const handleCheckboxChange = (idx: number, field: 'is_active' | 'is_prospect', value: boolean) => {
         const next = [...clients];
         next[idx] = { ...next[idx], [field]: value };
         setClients(next);
@@ -106,15 +117,17 @@ export const ClientsMaster: React.FC = () => {
 
                 <div className="p-6 overflow-auto">
                     <div className="max-w-4xl mx-auto space-y-4">
-                        <div className="grid grid-cols-[1fr_2fr_1fr_auto] gap-4 px-4 py-2 bg-slate-100 rounded-lg font-black text-xs text-slate-600 uppercase">
-                            <div>ID Cliente</div>
-                            <div>Razón Social</div>
-                            <div>Color UI</div>
+                        <div className="grid grid-cols-[1.2fr_2fr_1fr_1fr_1.2fr_auto] gap-4 px-4 py-2 bg-slate-100 rounded-lg font-black text-xs text-slate-600 uppercase items-center text-center">
+                            <div className="text-left">ID Cliente</div>
+                            <div className="text-left">Razón Social</div>
+                            <div>Activo</div>
+                            <div>Prospecto</div>
+                            <div className="text-left pl-3">Color UI</div>
                             <div className="w-8"></div>
                         </div>
 
                         {clients.map((client, idx) => (
-                            <div key={idx} className="grid grid-cols-[1fr_2fr_1fr_auto] gap-4 items-center bg-white border border-slate-200 rounded-lg p-3 hover:border-blue-300 transition-colors shadow-sm">
+                            <div key={idx} className="grid grid-cols-[1.2fr_2fr_1fr_1fr_1.2fr_auto] gap-4 items-center bg-white border border-slate-200 rounded-lg p-3 hover:border-blue-300 transition-colors shadow-sm text-center">
                                 <div>
                                     <input 
                                         type="text" 
@@ -130,10 +143,26 @@ export const ClientsMaster: React.FC = () => {
                                         value={client.client_name}
                                         onChange={(e) => handleChange(idx, 'client_name', e.target.value)}
                                         placeholder="Razón Social Completa"
-                                        className="w-full h-9 px-3 text-sm border border-slate-300 rounded focus:border-blue-500 outline-none font-medium text-slate-700"
+                                        className="w-full h-9 px-3 text-sm border border-slate-300 rounded focus:border-blue-500 outline-none font-medium text-slate-700 text-left"
                                     />
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex justify-center">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={!!client.is_active}
+                                        onChange={(e) => handleCheckboxChange(idx, 'is_active', e.target.checked)}
+                                        className="h-5 w-5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
+                                    />
+                                </div>
+                                <div className="flex justify-center">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={!!client.is_prospect}
+                                        onChange={(e) => handleCheckboxChange(idx, 'is_prospect', e.target.checked)}
+                                        className="h-5 w-5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-3 justify-start pl-3">
                                     <input 
                                         type="color" 
                                         value={client.color_hex || "#cccccc"}
