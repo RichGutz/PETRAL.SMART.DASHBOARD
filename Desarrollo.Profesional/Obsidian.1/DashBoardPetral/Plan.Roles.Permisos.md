@@ -106,3 +106,14 @@ El sistema se validó en producción en la URL oficial **https://forecast.geekso
 *   **Gestión de Usuarios operativa:** Muestra la lista de los 7 usuarios del sistema en caliente.
 *   **Cambio de contraseña verificado:** Modificación en caliente de claves desde el modal del header funcionando al 100%.
 *   **Avatares renderizados:** Las iniciales se despliegan dinámicamente con degradados acordes al rol del usuario.
+
+---
+
+## 7. Actualizaciones y Ajustes de Nomenclatura (Sesión 2026-07-09)
+
+Se actualizaron las etiquetas de visualización de los módulos en la matriz de permisos para coincidir con la nueva nomenclatura comercial:
+
+*   **Maestro de Navegación** ── Cambió a **M. Distancias** (campo de control: `maestro_rutas`).
+*   **Maestro de Costos Portuarios** ── Cambió a **M. Gastos Portuarios** (campo de control: `maestro_costos_agencia`).
+
+Estos renombres se reflejan en la interfaz de `/users` en el VPS de producción de forma inmediata.
