@@ -51,15 +51,11 @@ export const PortCostsMaster_V2: React.FC = () => {
                 ForecastService.getPortCostsStatic()
             ]);
             
-            // Ordenar puertos de norte a sur: Talara, Callao, Marcona, Matarani, Ilo, Mejillones y Barquito
-            const order = ['TALARA', 'CALLAO', 'MARCONA', 'MATARANI', 'ILO', 'MEJILLONES', 'BARQUITO'];
+            // Ordenar todos los puertos geográficamente de Norte a Sur (de mayor a menor latitud)
             const sortedPorts = [...(portsData || [])].sort((a: any, b: any) => {
-                const idxA = order.indexOf(a.port_id.toUpperCase());
-                const idxB = order.indexOf(b.port_id.toUpperCase());
-                if (idxA === -1 && idxB === -1) return 0;
-                if (idxA === -1) return 1;
-                if (idxB === -1) return -1;
-                return idxA - idxB;
+                const latA = a.lat !== undefined && a.lat !== null ? parseFloat(a.lat) : 0;
+                const latB = b.lat !== undefined && b.lat !== null ? parseFloat(b.lat) : 0;
+                return latB - latA; // De mayor a menor (Norte a Sur)
             });
 
             setPorts(sortedPorts);
