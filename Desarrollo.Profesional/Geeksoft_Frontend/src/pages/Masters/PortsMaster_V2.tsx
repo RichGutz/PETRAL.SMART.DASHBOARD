@@ -4,27 +4,29 @@ import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { Anchor, Save, Edit3, MapPin, Globe, Plus, ExternalLink } from 'lucide-react';
 
-// Helper para obtener el emoji de la bandera en base al nombre o código del país
-const getCountryFlag = (countryStr: string): string => {
-    if (!countryStr) return '🌐';
+// Helper para obtener código ISO de 2 letras y nombre limpio de país
+const getCountryInfo = (countryStr: string) => {
+    if (!countryStr) return { code: 'pe', name: '-' };
     const c = countryStr.trim().toUpperCase();
     
-    // Mapeo tolerante para códigos de país comunes de 2 letras y nombres completos
-    if (c === 'PE' || c === 'PERU' || c === 'PERÚ') return '🇵🇪';
-    if (c === 'CL' || c === 'CHILE') return '🇨🇱';
-    if (c === 'US' || c === 'USA' || c === 'ESTADOS UNIDOS') return '🇺🇸';
-    if (c === 'PA' || c === 'PANAMA' || c === 'PANAMÁ') return '🇵🇦';
-    if (c === 'EC' || c === 'ECUADOR') return '🇪🇨';
-    if (c === 'BR' || c === 'BRAZIL' || c === 'BRASIL') return '🇧🇷';
-    if (c === 'CO' || c === 'COLOMBIA') return '🇨🇴';
-    if (c === 'AR' || c === 'ARGENTINA') return '🇦🇷';
-    if (c === 'MX' || c === 'MEXICO' || c === 'MÉXICO') return '🇲🇽';
-    if (c === 'CN' || c === 'CHINA') return '🇨🇳';
-    if (c === 'JP' || c === 'JAPAN' || c === 'JAPÓN') return '🇯🇵';
-    if (c === 'CA' || c === 'CANADA' || c === 'CANADÁ') return '🇨🇦';
-    if (c === 'VE' || c === 'VENEZUELA') return '🇻🇪';
+    // Mapeo tolerante
+    if (c === 'PE' || c === 'PERU' || c === 'PERÚ') return { code: 'pe', name: 'Perú' };
+    if (c === 'CL' || c === 'CHILE') return { code: 'cl', name: 'Chile' };
+    if (c === 'US' || c === 'USA' || c === 'ESTADOS UNIDOS') return { code: 'us', name: 'USA' };
+    if (c === 'PA' || c === 'PANAMA' || c === 'PANAMÁ') return { code: 'pa', name: 'Panamá' };
+    if (c === 'EC' || c === 'ECUADOR') return { code: 'ec', name: 'Ecuador' };
+    if (c === 'BR' || c === 'BRAZIL' || c === 'BRASIL') return { code: 'br', name: 'Brasil' };
+    if (c === 'CO' || c === 'COLOMBIA') return { code: 'co', name: 'Colombia' };
+    if (c === 'AR' || c === 'ARGENTINA') return { code: 'ar', name: 'Argentina' };
+    if (c === 'MX' || c === 'MEXICO' || c === 'MÉXICO') return { code: 'mx', name: 'México' };
+    if (c === 'CN' || c === 'CHINA') return { code: 'cn', name: 'China' };
+    if (c === 'JP' || c === 'JAPAN' || c === 'JAPÓN') return { code: 'jp', name: 'Japón' };
+    if (c === 'CA' || c === 'CANADA' || c === 'CANADÁ') return { code: 'ca', name: 'Canadá' };
+    if (c === 'VE' || c === 'VENEZUELA') return { code: 've', name: 'Venezuela' };
     
-    return '🌐'; // Globo por defecto
+    // Fallback dinámico para códigos de 2 letras
+    const fallbackCode = countryStr.slice(0, 2).toLowerCase();
+    return { code: fallbackCode, name: countryStr };
 };
 
 export const PortsMaster_V2: React.FC = () => {
@@ -325,13 +327,20 @@ export const PortsMaster_V2: React.FC = () => {
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
                                                 <Globe size={14} className="text-slate-400" />
-                                                <span className="flex items-center gap-1.5">
-                                                    <span className="text-base select-none">{getCountryFlag(port.country)}</span>
-                                                    <span>{port.country || '-'}</span>
+                                                <span className="flex items-center gap-2">
+                                                    <img 
+                                                        src={`https://flagcdn.com/16x12/${getCountryInfo(port.country).code}.png`} 
+                                                        alt={getCountryInfo(port.country).name} 
+                                                        className="w-4 h-3 object-cover rounded shadow-sm border border-slate-200"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).style.display = 'none';
+                                                        }}
+                                                    />
+                                                    <span>{getCountryInfo(port.country).name}</span>
                                                 </span>
                                             </div>
                                             <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold border border-slate-200 uppercase">
-                                                {port.country}
+                                                {getCountryInfo(port.country).code}
                                             </span>
                                         </div>
                                         
