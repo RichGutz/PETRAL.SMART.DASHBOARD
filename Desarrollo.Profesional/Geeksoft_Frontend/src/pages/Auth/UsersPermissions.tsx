@@ -178,7 +178,7 @@ export const UsersPermissions: React.FC = () => {
         { key: 'maestro_puertos', label: 'M. Puertos' },
         { key: 'maestro_contratos', label: 'M. Contratos' },
         { key: 'maestro_tarifas', label: 'M. Tarifas/Clientes' },
-        { key: 'maestro_costos_agencia', label: 'M. Costos Agencia' },
+        { key: 'maestro_costos_agencia', label: 'M. Gastos Portuarios' },
         { key: 'maestro_bunker', label: 'M. Bunker ⛽' }
     ];
 

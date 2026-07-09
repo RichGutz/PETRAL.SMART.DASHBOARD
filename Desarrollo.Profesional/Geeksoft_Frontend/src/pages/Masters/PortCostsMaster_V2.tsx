@@ -177,7 +177,7 @@ export const PortCostsMaster_V2: React.FC = () => {
 
     return (
         <MasterTemplate 
-            title="Maestro de Costos Portuarios" 
+            title="Maestro de Gastos Portuarios" 
             subtitle="Configuración de tarifas operativas por Puerto, Cliente y Buque"
             activeTab="port-costs"
             onBackToDashboard={() => navigate('/dashboard')}
@@ -310,7 +310,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                             <span className="text-xs font-black text-blue-700 uppercase border-b border-blue-100 pb-0.5">Carga</span>
                                                             
                                                             <div className="flex items-center justify-between gap-2 pl-1">
-                                                                <label className="font-bold text-slate-500 uppercase">Principal (MAIN)</label>
+                                                                <label className="font-bold text-slate-500 uppercase">Gastos Portuarios</label>
                                                                 <input 
                                                                     type="text"
                                                                     value={focusedInput === `${v.vessel_id}-CARGA-MAIN` ? (vData.CARGA?.MAIN ?? '') : formatCostValue(vData.CARGA?.MAIN)}
@@ -352,7 +352,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                             <span className="text-xs font-black text-amber-700 uppercase border-b border-amber-100 pb-0.5">Descarga</span>
                                                             
                                                             <div className="flex items-center justify-between gap-2 pl-1">
-                                                                <label className="font-bold text-slate-500 uppercase">Principal (MAIN)</label>
+                                                                <label className="font-bold text-slate-500 uppercase">Gastos Portuarios</label>
                                                                 <input 
                                                                     type="text"
                                                                     value={focusedInput === `${v.vessel_id}-DESCARGA-MAIN` ? (vData.DESCARGA?.MAIN ?? '') : formatCostValue(vData.DESCARGA?.MAIN)}
