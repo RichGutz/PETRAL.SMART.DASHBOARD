@@ -159,3 +159,217 @@ graph TD
 *   **Fase 4 (Frontend UI):** Crear el componente React del modal aplicando estilo exceliano contable de alta densidad con bordes definidos.
 *   **Fase 5 (Integración y Despliegue):** Cablear el modal y desplegar todo a producción en el VPS.
 
+---
+
+## 📐 Fórmulas Universales para Puertos Peruanos
+
+> 📌 **Validación:** Las siguientes fórmulas son **universales y reguladas** a nivel nacional por la **Autoridad Portuaria Nacional (APN)** y la **Dirección General de Capitanías y Guardacostas (DICAPI)**. Aplican de forma estándar a todos los terminales portuarios del Perú: Ilo, Matarani, Callao, Marcona, Pisco, Talara, etc. Los Exceles de costos del cliente **SPCC** (Paola) confirman exactamente estas mismas fórmulas en su estructura matemática interna.
+
+---
+
+### 1. Derecho de Faro (Lighthouse Dues)
+
+Tarifa universal regulada por la APN. Se cobra a todo buque que arriba a un puerto peruano, basada en el **TRB (GRT — Gross Register Tonnage)**:
+
+$$\text{Costo de Faro} = \text{Tarifa} \times \text{GRT (TRB)}$$
+
+| Origen del Buque | Tarifa por unidad de GRT |
+| :--- | :---: |
+| Puerto Nacional (Cabotaje) | **$0.03 USD** |
+| Puerto Extranjero | **$0.12 USD** |
+
+*Ejemplo Moquegua (GRT = 8,259, cabotaje):* `8,259 × $0.03 = $247.77 USD`
+
+---
+
+### 2. Muellaje de Amarradero (Dockage)
+
+Cobro por el tiempo que el buque permanece amarrado al muelle. La estructura matemática es universal en todos los terminales peruanos:
+
+$$\text{Muellaje} = \text{Tarifa Base} \times \text{LOA (metros)} \times \text{Horas de Estadía}$$
+
+*   **Tarifa estándar confirmada en los exceles de Ilo y Matarani:** **`$0.65 USD`** por metro-hora.
+*   **Fórmula en Excel:** `= Horas_Puerto × LOA × 0.65`
+
+*Ejemplo Moquegua (LOA = 134.16 m, 32 horas en puerto):* `134.16 × 32 × $0.65 = $2,790.53 USD`
+
+---
+
+### 3. Tiempo Estimado de Puerto (Horas de Estadía)
+
+Fórmula estándar naviera para calcular las horas de estadía de un buque en puerto:
+
+$$\text{Horas de Puerto} = \frac{\text{Carga o Descarga (MT)}}{\text{Ritmo (MT/hr)}} + 3\text{ (maniobras)} + 2\text{ (esperas)}$$
+
+*   Las **3 horas** corresponden a maniobras de atraque y desatraque.
+*   Las **2 horas** corresponden a tiempos muertos operativos (inspecciones, autoridades, etc.).
+*   **Fórmula en Excel:** `= (Cantidad / Ritmo) + 3 + 2`
+
+---
+
+### 4. Practicaje (Pilotage)
+
+Obligatorio por DICAPI para buques de más de 500 GRT. Se cobra por maniobra completa (entrada + salida = **×2**):
+
+$$\text{Practicaje} = \text{Tarifa Fija del Puerto} \times 2\text{ (maniobras)}$$
+
+*   La tarifa varía por puerto. En los exceles de SPCC:
+    *   **Ilo:** Servicio Integral (Práctico + Remolcadores + Lancha) = `$5,550` × 2 = **`$11,100 USD`**
+    *   **Marcona:** Solo Práctico + Lancha = `$4,980` × 2 = **`$9,960 USD`**
+*   **Recargos universales aplicables:**
+    *   Horario nocturno (18:00–06:00): **+50%** sobre la tarifa base.
+    *   Domingos y Feriados Nacionales: **+50% o +100%** sobre la tarifa base.
+
+---
+
+### 5. Remolcaje (Towage)
+
+Obligatorio según la eslora y el arqueo del buque para maniobra segura en el amarradero:
+
+$$\text{Remolcaje} = \text{N° Remolcadores} \times \text{Tarifa (escala GRT)} \times \text{Maniobras}$$
+
+*   **Marcona (por complejidad del terminal):** `$18,000` × 2 maniobras = **`$36,000 USD`** por viaje.
+*   **Ilo/Matarani:** Incluido en el servicio integral del práctico.
+
+---
+
+### 6. Gastos de Agencia (Agency Expenses)
+
+Comisión de la agencia marítima local. Consta de:
+
+| Concepto | Tarifa ILO/MATARANI | Tarifa MARCONA |
+| :--- | :---: | :---: |
+| Honorarios de Agencia | $1,100 USD | $1,400 USD |
+| Movilidad (Autoridades + Coord.) | $200 USD | $200 USD |
+| Comunicaciones | $200 USD | $250 USD |
+| **Total Agencia** | **$1,500 USD** | **$1,850 USD** |
+
+---
+
+## 🔧 Diseño del Motor de Cálculo — `PortCostsEngine`
+
+El motor de cálculo será una función en el backend FastAPI que recibirá los parámetros del tramo y retornará el desglose completo auditado de costos.
+
+### A. Estructura de Parámetros en Base de Datos (Supabase)
+
+Tabla propuesta: **`port_tariffs_config`** (coeficientes por puerto, actualizables sin recompilar):
+
+```json
+{
+  "port_id": "ILO",
+  "lighthouse_national_rate": 0.03,
+  "lighthouse_foreign_rate": 0.12,
+  "dockage_rate_per_meter_hour": 0.65,
+  "pilotage_base_rate": 5550.00,
+  "linesmen_rate": 357.30,
+  "towage_rate": 0.00,
+  "agency_fee": 1100.00,
+  "transport_flat": 200.00,
+  "comms_flat": 200.00
+}
+```
+
+**Ventaja clave:** Si la APN actualiza tarifas, solo se modifica la tabla en Supabase. El motor recalcula todo automáticamente sin tocar el código fuente.
+
+---
+
+### B. Algoritmo del Motor en Python
+
+Archivo propuesto: **`backend/services/port_costs_engine.py`**
+
+```python
+def calculate_dynamic_port_costs(
+    port_id: str,
+    vessel: dict,       # { 'loa': 134.16, 'grt': 8259 }
+    quantity: float,    # Toneladas a cargar/descargar
+    rate: float,        # Ritmo operativo en MT/hr
+    prev_port_country: str  # 'PE' = nacional, otro = extranjero
+) -> dict:
+
+    # 1. Tiempo estimado universal en puerto
+    op_hours = (quantity / rate) if rate > 0 else 0
+    port_hours = op_hours + 3 + 2  # +3 maniobras, +2 esperas
+
+    # 2. Cargar coeficientes del puerto desde Supabase
+    tariffs = db.get_port_tariffs(port_id)
+
+    # 3. Derecho de Faro (APN — Universal)
+    is_national = (prev_port_country.upper() == 'PE')
+    faro_rate = tariffs['lighthouse_national_rate'] if is_national \
+                else tariffs['lighthouse_foreign_rate']
+    lighthouse_cost = faro_rate * vessel['grt']
+
+    # 4. Muellaje (APN — Universal)
+    dockage_cost = tariffs['dockage_rate_per_meter_hour'] * vessel['loa'] * port_hours
+
+    # 5. Practicaje + Maniobras (Shifting)
+    shifting_cost = (tariffs['pilotage_base_rate'] * 2) + \
+                    tariffs.get('linesmen_rate', 0) + \
+                    tariffs.get('towage_rate', 0)
+
+    # 6. Gastos de Agencia (Agency)
+    agency_cost = tariffs['agency_fee'] + \
+                  tariffs['transport_flat'] + \
+                  tariffs['comms_flat']
+
+    # 7. Retorno estructurado para el Modal de Auditoría
+    total = lighthouse_cost + dockage_cost + shifting_cost + agency_cost
+    return {
+        "port_id": port_id,
+        "mode": "DYNAMIC",
+        "total_cost_usd": round(total, 2),
+        "details": {
+            "vessel_loa_m": vessel['loa'],
+            "vessel_grt": vessel['grt'],
+            "quantity_mt": quantity,
+            "rate_mt_hr": rate,
+            "port_hours_estimated": round(port_hours, 2),
+            "origin_country": prev_port_country,
+            "lighthouse_dues": round(lighthouse_cost, 2),
+            "dockage": round(dockage_cost, 2),
+            "shifting_expenses": round(shifting_cost, 2),
+            "agency_expenses": round(agency_cost, 2)
+        }
+    }
+```
+
+---
+
+### C. Endpoint de la API (FastAPI)
+
+```python
+@router.post("/api/v1/forecast/port_costs/audit")
+async def audit_port_costs(payload: PortCostAuditRequest):
+    """
+    Recibe los parámetros del tramo y retorna el desglose
+    auditado de costos portuarios dinámicos.
+    """
+    result = calculate_dynamic_port_costs(
+        port_id=payload.port_id,
+        vessel={"loa": payload.loa, "grt": payload.grt},
+        quantity=payload.quantity_mt,
+        rate=payload.rate_mt_hr,
+        prev_port_country=payload.origin_country
+    )
+    return result
+```
+
+---
+
+### D. Comparativo Estático vs. Dinámico
+
+El API también puede incluir el costo estático de la `agency_matrix` para que el frontend muestre la comparación:
+
+| Modo | Descripción | Valor Ejemplo (Moquegua / ILO) |
+| :--- | :--- | :---: |
+| **Estático** | Tarifa plana guardada en BD | $22,000 USD |
+| **Dinámico** | Calculado con fórmulas APN | ~$20,500–$23,500 USD |
+| **Desviación** | Diferencia absoluta y % | ±$1,500 (~6.8%) |
+
+---
+
+## 📋 Conclusión del Plan
+
+> [!IMPORTANT]
+> Las fórmulas de Derecho de Faro, Muellaje y tiempo de estadía son **universales y reguladas a nivel nacional**. Esto significa que el motor de cálculo puede aplicar exactamente las mismas ecuaciones para **cualquier puerto peruano** (Callao, Pisco, Talara, Paita, etc.) simplemente cambiando los coeficientes de la tabla `port_tariffs_config` en Supabase. **No se necesitan cambios de código** para agregar nuevos puertos al motor.
+
