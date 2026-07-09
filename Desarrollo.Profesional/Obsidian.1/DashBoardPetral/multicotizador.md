@@ -458,3 +458,17 @@ A continuación se detallan las mejoras de usabilidad y funcionalidad comercial 
 
 ### D. Gestión de Escenarios Múltiples (Catálogo de Cotizaciones)
 *   **Historial de Guardados:** Implementar un desplegable lateral en la UI que liste las últimas cotizaciones guardadas con información clave (Buque, Fecha, Flete Estimado, P/L total). Esto permitirá al usuario saltar de una cotización de prueba a otra con un solo clic en lugar de sobreescribir la cotización activa.
+
+---
+
+## 🚀 13. Ajustes de Usabilidad y Control Comercial en Producción (2026-07-09)
+
+Se integraron y desplegaron las siguientes optimizaciones sobre la barra de herramientas del Multicotizador:
+
+1. **Filtrado Dinámico de Clientes por Estado (Activos / Prospectos):**
+   * Se acopló el botón selector horizontal inline de Clientes en el Multicotizador.
+   * Al conmutar entre **Activos** y **Prospectos**, el selector de clientes se restringe en tiempo real para mostrar únicamente a las empresas pertenecientes a dicho subconjunto (ej. Cerro Verde y Codelco como prospectos, NEXA y SPCC como activos), evitando errores de digitación o asignación de cotizaciones.
+2. **Consistencia de Puertos Norte a Sur:**
+   * La grilla de puertos y matrices del ruteador heredan la ordenación dinámica basada en la coordenada latitudinal (`latB - latA`), manteniendo la simetría visual con el resto de maestros.
+3. **Alineación de Eje y Simetría:**
+   * El botón selector de Clientes fue alineado al eje horizontal de la fila de tramos (inline) para conservar una simetría impecable con los inputs de "Add Leg", "Remove Leg" y el resto de la barra de acciones.
