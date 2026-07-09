@@ -62,7 +62,19 @@ export const ClientsMaster: React.FC = () => {
 
     const handleCheckboxChange = (idx: number, field: 'is_active' | 'is_prospect', value: boolean) => {
         const next = [...clients];
-        next[idx] = { ...next[idx], [field]: value };
+        if (field === 'is_active') {
+            next[idx] = { 
+                ...next[idx], 
+                is_active: value, 
+                is_prospect: !value 
+            };
+        } else {
+            next[idx] = { 
+                ...next[idx], 
+                is_prospect: value, 
+                is_active: !value 
+            };
+        }
         setClients(next);
         setHasChanges(true);
     };

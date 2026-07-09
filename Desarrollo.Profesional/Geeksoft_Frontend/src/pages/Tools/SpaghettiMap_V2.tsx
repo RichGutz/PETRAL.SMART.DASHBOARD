@@ -14,8 +14,6 @@ export const SpaghettiMap_V2: React.FC = () => {
     const [ports, setPorts] = useState<any[]>([]);
     const [clients, setClients] = useState<any[]>([]);
     const [rawClients, setRawClients] = useState<any[]>([]);
-    const [filterActivo, setFilterActivo] = useState(true);
-    const [filterProspecto, setFilterProspecto] = useState(false);
 
     // Controles de animación y nodos
     const [showPies, setShowPies] = useState(false);
@@ -41,30 +39,10 @@ export const SpaghettiMap_V2: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        let filtered = rawClients;
-        if (filterActivo && !filterProspecto) {
-            filtered = rawClients.filter(c => c.is_active !== false);
-        } else if (!filterActivo && filterProspecto) {
-            filtered = rawClients.filter(c => c.is_prospect === true);
-        } else if (!filterActivo && !filterProspecto) {
-            filtered = [];
-        }
-        setClients(filtered);
-    }, [rawClients, filterActivo, filterProspecto]);
-
-    const toggleActivo = () => {
-        setFilterActivo(prev => {
-            if (prev && !filterProspecto) return prev;
-            return !prev;
-        });
-    };
-
-    const toggleProspecto = () => {
-        setFilterProspecto(prev => {
-            if (prev && !filterActivo) return prev;
-            return !prev;
-        });
-    };
+        // En el Spaghetti Map solo mostramos los clientes activos
+        const activeClients = rawClients.filter(c => c.is_active !== false);
+        setClients(activeClients);
+    }, [rawClients]);
 
     // Default to the first month when months change
     useEffect(() => {
@@ -181,24 +159,6 @@ export const SpaghettiMap_V2: React.FC = () => {
                 
                 {/* COLUMN 1: Custom HTML Timeline */}
                 <div className="w-[340px] md:w-[380px] bg-slate-50 border-r border-slate-200 flex flex-col py-6 px-4 shadow-[4px_0_15px_rgba(0,0,0,0.05)] z-10 overflow-y-auto">
-                    {/* Selector elegante de Activos / Prospectos */}
-                    <div className="bg-white border border-slate-200 rounded-lg p-3 mb-4 shadow-sm flex flex-col gap-2 shrink-0 select-none">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Clientes del Mapa</span>
-                        <div className="flex bg-slate-105 p-0.5 rounded-lg h-8 shadow-inner items-center border border-slate-200 w-full">
-                            <button
-                                onClick={toggleActivo}
-                                className={`flex-1 text-center py-1 text-xs font-black rounded-md transition-all cursor-pointer ${filterActivo ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'}`}
-                            >
-                                Activos
-                            </button>
-                            <button
-                                onClick={toggleProspecto}
-                                className={`flex-1 text-center py-1 text-xs font-black rounded-md transition-all cursor-pointer ${filterProspecto ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'}`}
-                            >
-                                Prospectos
-                            </button>
-                        </div>
-                    </div>
 
                     {/* Controls Panel */}
                     <div className="bg-white border border-slate-200 rounded-lg p-3 mb-4 shadow-sm flex flex-col gap-3 shrink-0">

@@ -35,8 +35,6 @@ export const ContractsMaster: React.FC = () => {
     const [contracts, setContracts] = useState<Contract[]>([]);
     const [clients, setClients] = useState<any[]>([]);
     const [rawClients, setRawClients] = useState<any[]>([]);
-    const [filterActivo, setFilterActivo] = useState(true);
-    const [filterProspecto, setFilterProspecto] = useState(false);
     const [ports, setPorts] = useState<any[]>([]);
     
     const [loading, setLoading] = useState(true);
@@ -74,30 +72,10 @@ export const ContractsMaster: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        let filtered = rawClients;
-        if (filterActivo && !filterProspecto) {
-            filtered = rawClients.filter(c => c.is_active !== false);
-        } else if (!filterActivo && filterProspecto) {
-            filtered = rawClients.filter(c => c.is_prospect === true);
-        } else if (!filterActivo && !filterProspecto) {
-            filtered = [];
-        }
-        setClients(filtered);
-    }, [rawClients, filterActivo, filterProspecto]);
-
-    const toggleActivo = () => {
-        setFilterActivo(prev => {
-            if (prev && !filterProspecto) return prev;
-            return !prev;
-        });
-    };
-
-    const toggleProspecto = () => {
-        setFilterProspecto(prev => {
-            if (prev && !filterActivo) return prev;
-            return !prev;
-        });
-    };
+        // En contratos solo mostramos clientes activos
+        const activeClients = rawClients.filter(c => c.is_active !== false);
+        setClients(activeClients);
+    }, [rawClients]);
 
     const activeClientIds = useMemo(() => {
         const ids = new Set(contracts.map(c => c.client_id));
@@ -322,32 +300,14 @@ export const ContractsMaster: React.FC = () => {
                         </div>
                     </div>
                     
-                    <div className="flex items-center gap-4">
-                        {/* Selector elegante de Activos / Prospectos */}
-                        <div className="flex bg-slate-200/70 p-0.5 rounded-lg h-8 shadow-inner items-center border border-slate-200">
-                            <button
-                                onClick={toggleActivo}
-                                className={`px-3 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${filterActivo ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'}`}
-                            >
-                                Activos
-                            </button>
-                            <button
-                                onClick={toggleProspecto}
-                                className={`px-3 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${filterProspecto ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'}`}
-                            >
-                                Prospectos
-                            </button>
-                        </div>
-
-                        <button 
-                            onClick={handleSave}
-                            disabled={!hasChanges || isSaving}
-                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors"
-                        >
-                            <Save size={14} />
-                            {isSaving ? "Guardando..." : "Guardar Cambios"}
-                        </button>
-                    </div>
+                    <button 
+                        onClick={handleSave}
+                        disabled={!hasChanges || isSaving}
+                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors"
+                    >
+                        <Save size={14} />
+                        {isSaving ? "Guardando..." : "Guardar Cambios"}
+                    </button>
                 </div>
 
                 <div className="flex flex-1 overflow-hidden">
