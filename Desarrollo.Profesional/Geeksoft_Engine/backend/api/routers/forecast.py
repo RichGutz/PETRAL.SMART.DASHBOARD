@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException
+from typing import List, Any
+from fastapi import APIRouter, HTTPException, Body
 from backend.models.forecast_models import ForecastRequest, ForecastResponse, ForecastSaveRequest, ForecastListResponse
 from backend.services.forecast_service import run_forecast_simulation, run_forecast_simulation_universal
 
@@ -173,6 +174,35 @@ def get_latest_bunker_prices():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/bunker")
+def list_bunker_prices():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table("bunker_prices").select("*").execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/bunker")
+def save_bunker_prices(payload: List[Any] = Body(...)):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table("bunker_prices").upsert(payload, on_conflict="fuel_type,date").execute()
+        return {"status": "success", "data": res.data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/bunker/{date_str}")
+def delete_bunker_prices(date_str: str):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table("bunker_prices").delete().eq("date", date_str).execute()
+        return {"status": "success", "data": res.data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 from backend.models.forecast_models import MultiCotizadorRequest
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { AuthService } from '../../services/api';
 import type { UserPermissions, PermissionLevel } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { UserPlus, Save, Trash2, Edit2, Shield, User as UserIcon, X, Check, AlertCircle } from 'lucide-react';
 
 interface FullUser {
@@ -13,6 +14,7 @@ interface FullUser {
 }
 
 export const UsersPermissions: React.FC = () => {
+    const { user } = useAuth();
     const [users, setUsers] = useState<FullUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -36,7 +38,8 @@ export const UsersPermissions: React.FC = () => {
         maestro_puertos: 'Visor',
         maestro_contratos: 'Visor',
         maestro_tarifas: 'Visor',
-        maestro_costos_agencia: 'Visor'
+        maestro_costos_agencia: 'Visor',
+        maestro_bunker: 'Visor'
     });
 
     const loadUsers = async () => {
@@ -53,8 +56,24 @@ export const UsersPermissions: React.FC = () => {
     };
 
     useEffect(() => {
-        loadUsers();
-    }, []);
+        if (user?.role === 'ADMIN') {
+            loadUsers();
+        }
+    }, [user]);
+
+    if (!user || user.role !== 'ADMIN') {
+        return (
+            <MasterTemplate title="Acceso Restringido" subtitle="Seguridad del Sistema">
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Shield className="h-16 w-16 text-red-500 mb-4 animate-bounce" />
+                    <h3 className="text-lg font-bold text-slate-800 mb-1">Acceso Denegado</h3>
+                    <p className="text-sm text-slate-500 max-w-sm">
+                        Esta sección está reservada exclusivamente para usuarios administradores. Su actividad ha sido registrada.
+                    </p>
+                </div>
+            </MasterTemplate>
+        );
+    }
 
     const showNotification = (msg: string, type: 'success' | 'error') => {
         if (type === 'success') {
@@ -159,7 +178,8 @@ export const UsersPermissions: React.FC = () => {
         { key: 'maestro_puertos', label: 'M. Puertos' },
         { key: 'maestro_contratos', label: 'M. Contratos' },
         { key: 'maestro_tarifas', label: 'M. Tarifas/Clientes' },
-        { key: 'maestro_costos_agencia', label: 'M. Costos Agencia' }
+        { key: 'maestro_costos_agencia', label: 'M. Costos Agencia' },
+        { key: 'maestro_bunker', label: 'M. Bunker ⛽' }
     ];
 
     return (

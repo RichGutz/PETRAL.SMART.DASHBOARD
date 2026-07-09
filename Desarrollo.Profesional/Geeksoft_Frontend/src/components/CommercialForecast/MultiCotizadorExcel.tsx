@@ -29,6 +29,8 @@ interface PuertoConfig {
 
 export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' }> = ({ portCostMode = 'static' }) => {
     const context = useForecastContext_V2();
+    const [activeMainTab, setActiveMainTab] = useState<'estimator' | 'audit'>('estimator');
+    const [selectedAuditLegIdx, setSelectedAuditLegIdx] = useState<number>(0);
     const [vessels, setVessels] = useState<any[]>([]);
     const [selectedVessel, setSelectedVessel] = useState('');
     const [ports, setPorts] = useState<any[]>([]);
@@ -66,10 +68,22 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         consumption_disch_mdo: ''
     });
 
-    // Lista de tramos (inicialmente 1 tramo vacío)
+    // Lista de tramos (inicialmente 2 tramos para viaje redondo: LADEN + BALLAST)
     const [tramos, setTramos] = useState<TramoState[]>([
         {
             type: 'LADEN',
+            origin_port_id: '',
+            destination_port_id: '',
+            quantity: '',
+            freight_rate: '',
+            port_delay_hours_loading: 0,
+            port_delay_hours_discharging: 0,
+            route_distance: '',
+            weather_factor: '',
+            speed: ''
+        },
+        {
+            type: 'BALLAST',
             origin_port_id: '',
             destination_port_id: '',
             quantity: '',
@@ -85,7 +99,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     // Configuración de puertos a eje de las letras (tramos.length + 1)
     const [puertosConfig, setPuertosConfig] = useState<PuertoConfig[]>([
         { action: 'NONE', quantity: '', freight_rate: '', op_rate: '', rate_unit: 'TH', overhead: '', positioning: '', manual_port_cost: '' },       // Puerto 0 (A)
-        { action: 'NONE', quantity: '', freight_rate: '', op_rate: '', rate_unit: 'TH', overhead: '', positioning: '', manual_port_cost: '' }        // Puerto 1 (B)
+        { action: 'NONE', quantity: '', freight_rate: '', op_rate: '', rate_unit: 'TH', overhead: '', positioning: '', manual_port_cost: '' },        // Puerto 1 (B)
+        { action: 'NONE', quantity: '', freight_rate: '', op_rate: '', rate_unit: 'TH', overhead: '', positioning: '', manual_port_cost: '' }         // Puerto 2 (C)
     ]);
 
     const [result, setResult] = useState<any>(null);
@@ -211,9 +226,6 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
             const uniqueClients: string[] = Array.from(new Set(clientIds));
             uniqueClients.sort(); // Ordenar alfabéticamente
             setClients(uniqueClients);
-            if (uniqueClients.length > 0) {
-                setSelectedClient(uniqueClients[0]);
-            }
         }).catch(err => {
             console.error("Error al cargar clientes desde el Maestro de Clientes:", err);
         });
@@ -1419,6 +1431,477 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         return { portDays, bunkerCost };
     };
 
+    const colorizeFormula = (formula: string) => {
+        if (!formula) return <span className="text-slate-400">—</span>;
+        let res = formula;
+        const mappings = [
+            { regex: /\b(v_intake|v_pump|speed|ifo_tons|mdo_tons|tce_req|c_load_ifo|c_idle_ifo|c_load_mdo|c_idle_mdo)\b/g, color: 'text-blue-600 font-bold' },
+            { regex: /\b(dist|w_laden|w_ball|w_factor|sea_d|idle_d_norm|load_d|disch_d)\b/g, color: 'text-purple-600 font-bold' },
+            { regex: /\b(t_load_rate|p_disch_limit|over_or|over_de|pos_or|pos_de|act_load|actual_load_rate|act_disch|actual_discharge_rate|overhead_orig|overhead_dest|delay_load|delay_disch|delay_loading|delay_disch)\b/g, color: 'text-orange-600 font-bold' },
+            { regex: /\b(port_costs|agency_origin|agency_dest|agency_costs_origin|agency_costs_destination)\b/g, color: 'text-rose-600 font-bold' },
+            { regex: /\b(c_load|c_disch|F|Q)\b/g, color: 'text-emerald-600 font-bold' },
+            { regex: /\b(p_ifo|p_mdo|price_IFO|price_MDO)\b/g, color: 'text-amber-600 font-bold' },
+        ];
+        mappings.forEach(m => {
+            res = res.replace(m.regex, `<span class="${m.color}">$1</span>`);
+        });
+        return <span dangerouslySetInnerHTML={{ __html: res }} />;
+    };
+
+    const renderAuditTab = () => {
+        if (!result) {
+            return (
+                <div className="flex-1 flex flex-col justify-center items-center bg-white border border-slate-300 rounded shadow-sm p-12 text-slate-500 font-bold">
+                    <span>⚠️ Por favor, simule o cargue una cotización en la pestaña "Estimador" antes de ingresar a la auditoría.</span>
+                </div>
+            );
+        }
+
+        const tramosList = result.tramos || [];
+        const legResult = tramosList[selectedAuditLegIdx];
+        const audit = legResult?.audit_trail || {};
+
+        // Definimos las filas de auditoría detalladas
+        const auditRows = [
+            { 
+                metric: "Días de Mar", 
+                formula: audit.sea_days?.formula || "—", 
+                values: audit.sea_days?.values || "—", 
+                val: legResult?.sea_days || 0, 
+                isCurr: false, 
+                db: "routes · vessels", 
+                ui: "Maestro Rutas / Flota" 
+            },
+            { 
+                metric: "Días de Puerto", 
+                formula: audit.port_days?.formula || "—", 
+                values: audit.port_days?.values || "—", 
+                val: legResult?.port_days || 0, 
+                isCurr: false, 
+                db: "ports · contracts", 
+                ui: "Puertos / Contratos" 
+            },
+            { 
+                metric: "Costo Bunker", 
+                formula: audit.bunker_costs?.formula || "—", 
+                values: audit.bunker_costs?.values || "—", 
+                val: legResult?.bunker_costs || 0, 
+                isCurr: true, 
+                db: "vessels · bunker_prices", 
+                ui: "Consumos Flota / Precios" 
+            },
+            { 
+                metric: "Costos Portuarios", 
+                formula: audit.port_costs?.formula || "—", 
+                values: audit.port_costs?.values || "—", 
+                val: legResult?.port_costs || 0, 
+                isCurr: true, 
+                db: "port_costs_matrix · agency_matrix", 
+                ui: "Maestro Costos Portuarios" 
+            },
+            { 
+                metric: "Ingreso Flete (Tramo)", 
+                formula: "Q * F", 
+                values: legResult?.type === 'LADEN' ? `${legResult.quantity || 0} * ${legResult.freight_rate || 0}` : "0", 
+                val: legResult?.net_income || 0, 
+                isCurr: true, 
+                db: "contracts · contract_tariffs", 
+                ui: "Inputs Estimador" 
+            },
+            { 
+                metric: "Resultado de Tramo (P&L)", 
+                formula: legResult?.type === 'LADEN' ? "Flete − Bunker − Puertos" : "− Bunker − Puertos", 
+                values: legResult?.type === 'LADEN' 
+                    ? `${fmtCur(legResult.net_income)} − ${fmtCur(legResult.bunker_costs)} − ${fmtCur(legResult.port_costs)}` 
+                    : `− ${fmtCur(legResult.bunker_costs)} − ${fmtCur(legResult.port_costs)}`, 
+                val: legResult?.pnl_tramo || 0, 
+                isCurr: true, 
+                db: "Calculado", 
+                ui: "Motor" 
+            }
+        ];
+
+        return (
+            <div className="flex-1 flex flex-col min-h-0 w-full gap-2 bg-slate-100 p-2 rounded">
+                <style>{`
+                    @media print {
+                        .no-print {
+                            display: none !important;
+                        }
+                        .print-only {
+                            display: block !important;
+                        }
+                        body, html {
+                            background: white !important;
+                            color: black !important;
+                            width: 297mm;
+                            height: 210mm;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                        }
+                        .page-break {
+                            page-break-after: always;
+                            break-after: page;
+                            width: 297mm;
+                            height: 210mm;
+                            padding: 10mm 15mm;
+                            box-sizing: border-box;
+                            overflow: hidden;
+                            margin: 0 !important;
+                        }
+                        .print-grid {
+                            display: grid !important;
+                            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                            gap: 10px !important;
+                        }
+                        .print-table {
+                            font-size: 11px !important;
+                        }
+                    }
+                `}</style>
+
+                {/* HEADER DE ACCIONES DE AUDITORÍA */}
+                <div className="bg-white border border-slate-300 rounded shadow-sm p-3 flex-shrink-0 flex items-center justify-between no-print">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm">🔬</span>
+                        <div>
+                            <h2 className="text-sm font-bold text-slate-900 leading-none">Ledger de Auditoría Matemática</h2>
+                            <span className="text-[10.5px] text-slate-400 font-medium">Demostración algebraica y aritmética paso a paso del viaje activo</span>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => window.print()}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded shadow transition-colors flex items-center gap-1.5"
+                    >
+                        🖨️ Imprimir Auditoría (PDF)
+                    </button>
+                </div>
+
+                <div className="flex-1 flex flex-col lg:flex-row gap-2 min-h-0 overflow-auto no-print">
+                    {/* PANEL IZQUIERDO: VARIABLES GLOBALES Y CONSOLIDADO */}
+                    <div className="w-full lg:w-[350px] flex flex-col gap-2 flex-shrink-0">
+                        {/* VARIABLES DEL BUQUE */}
+                        <div className="bg-white border border-slate-300 rounded shadow-sm p-3">
+                            <div className="border-b border-slate-200 pb-1.5 mb-2 flex justify-between items-center bg-slate-50 px-2 py-1 rounded">
+                                <h3 className="text-xs font-bold text-blue-900 uppercase">Particularidades Buque</h3>
+                                <span className="text-[9px] font-mono bg-blue-105 text-blue-900 px-1.5 py-0.5 rounded font-bold uppercase">vessel</span>
+                            </div>
+                            <div className="space-y-1.5 text-xs font-mono">
+                                <div className="flex justify-between"><span>Buque:</span><span className="font-bold text-slate-800">{vesselParams.vessel_name || 'Virtual'}</span></div>
+                                <div className="flex justify-between"><span>Speed Base:</span><span className="font-bold">{vesselParams.vessel_speed || '—'} kn</span></div>
+                                <div className="flex justify-between"><span>TCE Requerido:</span><span className="font-bold">{fmtCur(vesselParams.tce_required || 0)}/d</span></div>
+                                <div className="flex justify-between pt-1 border-t border-dashed"><span>DWT:</span><span>{fmtNum(vesselParams.dwt || 0)} t</span></div>
+                                <div className="flex justify-between"><span>DWCC:</span><span>{fmtNum(vesselParams.dwcc || 0)} t</span></div>
+                                <div className="flex justify-between"><span>GRT:</span><span>{fmtNum(vesselParams.grt || 0)} t</span></div>
+                            </div>
+                        </div>
+
+                        {/* PRECIOS BUNKER */}
+                        <div className="bg-white border border-slate-300 rounded shadow-sm p-3">
+                            <div className="border-b border-slate-200 pb-1.5 mb-2 flex justify-between items-center bg-slate-50 px-2 py-1 rounded">
+                                <h3 className="text-xs font-bold text-amber-900 uppercase">Precios Bunker</h3>
+                                <span className="text-[9px] font-mono bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded font-bold uppercase">market</span>
+                            </div>
+                            <div className="space-y-1.5 text-xs font-mono">
+                                <div className="flex justify-between"><span>Precio IFO (p_ifo):</span><span className="font-bold">{fmtCur(bunkerPriceIfo)}</span></div>
+                                <div className="flex justify-between"><span>Precio MDO (p_mdo):</span><span className="font-bold">{fmtCur(bunkerPriceMdo)}</span></div>
+                            </div>
+                        </div>
+
+                        {/* CONSOLIDADO DE VIAJE */}
+                        <div className="bg-emerald-50 border border-emerald-300 rounded shadow-sm p-3">
+                            <div className="border-b border-emerald-250 pb-1.5 mb-2 flex justify-between items-center bg-emerald-100 px-2 py-1 rounded">
+                                <h3 className="text-xs font-bold text-emerald-950 uppercase">Resultado Consolidado</h3>
+                                <span className="text-[9px] font-mono bg-emerald-200 text-emerald-950 px-1.5 py-0.5 rounded font-bold uppercase">p&l</span>
+                            </div>
+                            <div className="space-y-1.5 text-xs font-mono">
+                                <div className="flex justify-between"><span>Ingreso Fletes:</span><span className="font-bold text-emerald-800">{fmtCur(result.consolidated.total_freight_revenue)}</span></div>
+                                <div className="flex justify-between"><span>Costo Puertos:</span><span className="text-rose-700 font-semibold">({fmtCur(result.consolidated.total_port_costs)})</span></div>
+                                <div className="flex justify-between"><span>Costo Bunker:</span><span className="text-rose-700 font-semibold">({fmtCur(result.consolidated.total_bunker_costs)})</span></div>
+                                <div className="flex justify-between pt-1.5 border-t border-emerald-250 text-slate-900 font-bold">
+                                    <span>Net Profit:</span>
+                                    <span className="text-sm">{fmtCur(result.consolidated.pnl_net_utility)}</span>
+                                </div>
+                                <div className="flex justify-between pt-1 border-t border-dashed border-emerald-250 text-[11px] text-slate-700">
+                                    <span>Días de Viaje:</span>
+                                    <span>{result.consolidated.total_days} d</span>
+                                </div>
+                                <div className="flex justify-between text-[11px] text-slate-700">
+                                    <span>TCE Realizado:</span>
+                                    <span>{fmtCur(result.consolidated.tce_real)}/d</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* PANEL DERECHO: DETALLE DE TRAMOS INTERACTIVO */}
+                    <div className="flex-1 bg-white border border-slate-300 rounded shadow-sm p-4 flex flex-col min-h-0">
+                        {/* SELECTOR DE TRAMO EN AUDITORÍA */}
+                        <div className="flex flex-wrap gap-1.5 border-b border-slate-200 pb-2 mb-3">
+                            {tramosList.map((tr: any, idx: number) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => setSelectedAuditLegIdx(idx)}
+                                    className={`px-3 py-1 rounded text-xs font-bold transition-all border ${
+                                        selectedAuditLegIdx === idx
+                                            ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                                    }`}
+                                >
+                                    Leg {idx + 1}: {tr.type} ({tr.origin_port_id} &rarr; {tr.destination_port_id})
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* DETALLE DEL TRAMO SELECCIONADO */}
+                        {legResult ? (
+                            <div className="flex-1 flex flex-col min-h-0 overflow-auto">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-slate-50 p-2.5 rounded border border-slate-200 mb-3 text-xs">
+                                    <div><span className="text-slate-400 font-bold uppercase block text-[9.5px]">Origen</span><strong className="text-slate-800">{legResult.origin_port_id}</strong></div>
+                                    <div><span className="text-slate-400 font-bold uppercase block text-[9.5px]">Destino</span><strong className="text-slate-800">{legResult.destination_port_id}</strong></div>
+                                    <div><span className="text-slate-400 font-bold uppercase block text-[9.5px]">Distancia</span><strong>{legResult.distance} NM</strong></div>
+                                    <div><span className="text-slate-400 font-bold uppercase block text-[9.5px]">Tipo Leg</span><strong className={legResult.type === 'LADEN' ? 'text-blue-700' : 'text-slate-500'}>{legResult.type}</strong></div>
+                                </div>
+
+                                <div className="border border-slate-250 rounded overflow-hidden">
+                                    <table className="w-full text-left text-xs border-collapse">
+                                        <thead>
+                                            <tr className="bg-slate-100 border-b border-slate-250 text-slate-700">
+                                                <th className="p-2 font-bold w-[18%]">Métrica</th>
+                                                <th className="p-2 font-bold w-[32%]">Fórmula Algorítmica</th>
+                                                <th className="p-2 font-bold w-[25%]">Reemplazo Numérico</th>
+                                                <th className="p-2 font-bold text-right w-[12%]">GEEKSOFT</th>
+                                                <th className="p-2 font-bold w-[13%]">Tabla Origen</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-200">
+                                            {auditRows.map((row, idx) => (
+                                                <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                                                    <td className="p-2 font-bold text-slate-800">{row.metric}</td>
+                                                    <td className="p-2 font-mono text-[10.5px] text-slate-500 bg-slate-50/50 leading-relaxed">{colorizeFormula(row.formula)}</td>
+                                                    <td className="p-2 font-mono text-[10.5px] text-slate-700 bg-slate-50/50 font-semibold leading-relaxed">{colorizeFormula(row.values)}</td>
+                                                    <td className="p-2 font-mono font-bold text-right text-slate-900 whitespace-nowrap">
+                                                        {row.isCurr ? fmtCur(row.val) : fmtNum(row.val)}
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 uppercase">
+                                                            {row.ui}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Pie de Firmas / Acta de Auditoría */}
+                                <div className="mt-8 border-t border-slate-200 pt-4 pb-2 text-xs">
+                                    <div className="grid grid-cols-2 gap-8">
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold text-slate-700">Auditor Responsable:</span>
+                                                <div className="border-b border-slate-300 flex-1 h-4"></div>
+                                            </div>
+                                            <div className="flex gap-4">
+                                                <span className="font-bold text-slate-700">Resultado:</span>
+                                                <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="rounded text-blue-600" /> OK Sin Observación</label>
+                                                <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="rounded text-blue-600" /> Con Desviación</label>
+                                            </div>
+                                            <div className="flex justify-between gap-4">
+                                                <div className="flex items-center gap-2 flex-1">
+                                                    <span className="font-bold text-slate-700">Firma:</span>
+                                                    <div className="border-b border-slate-300 flex-1 h-5"></div>
+                                                </div>
+                                                <div className="flex items-center gap-2 w-32">
+                                                    <span className="font-bold text-slate-700">Fecha:</span>
+                                                    <div className="border-b border-slate-300 flex-1 h-5"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-slate-700 mb-1">Notas / Observaciones de Auditoría:</span>
+                                            <div className="border border-slate-300 bg-slate-50 flex-1 rounded p-2 min-h-[70px]"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="p-8 text-center text-slate-400 italic">Selecciona un tramo para auditar.</div>
+                        )}
+                    </div>
+                </div>
+
+                {/* VISTA DE IMPRESIÓN EXCLUSIVA (PRINT-ONLY) */}
+                <div className="hidden print-only print-grid space-y-6">
+                    {/* PORTADA / RESUMEN CONSOLIDADO */}
+                    <div className="page-break flex flex-col gap-4">
+                        <div className="border-b-2 border-slate-800 pb-2 flex justify-between items-center">
+                            <h1 className="text-sm font-black text-slate-900 uppercase">
+                                🔬 REPORT DE AUDITORÍA COMERCIAL Spot (CONSOLIDADO)
+                            </h1>
+                            <span className="font-mono text-[9px] font-bold text-slate-500 uppercase">GEEKSOFT VOYAGE ESTIMATOR</span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="border border-slate-400 p-3 rounded">
+                                <h3 className="text-xs font-bold text-slate-900 border-b border-slate-300 pb-1 mb-2 uppercase">Parámetros del Viaje</h3>
+                                <div className="space-y-1 text-xs font-mono">
+                                    <div className="flex justify-between"><span>Buque:</span><span className="font-bold">{vesselParams.vessel_name}</span></div>
+                                    <div className="flex justify-between"><span>Cliente Asociado:</span><span className="font-bold">{selectedClient || 'Spot'}</span></div>
+                                    <div className="flex justify-between"><span>Velocidad Base:</span><span>{vesselParams.vessel_speed} kn</span></div>
+                                    <div className="flex justify-between"><span>TCE Requerido:</span><span>{fmtCur(vesselParams.tce_required)}/d</span></div>
+                                    <div className="flex justify-between"><span>Bunker IFO / MDO:</span><span>{fmtCur(bunkerPriceIfo)} / {fmtCur(bunkerPriceMdo)}</span></div>
+                                </div>
+                            </div>
+
+                            <div className="border border-slate-400 p-3 rounded bg-slate-50">
+                                <h3 className="text-xs font-bold text-slate-900 border-b border-slate-300 pb-1 mb-2 uppercase">Resultado Financiero del Viaje</h3>
+                                <div className="space-y-1 text-xs font-mono">
+                                    <div className="flex justify-between"><span>Ingreso Flete Bruto:</span><span className="font-bold text-slate-900">{fmtCur(result.consolidated.total_freight_revenue)}</span></div>
+                                    <div className="flex justify-between"><span>Gastos Bunker Totales:</span><span className="text-rose-700">({fmtCur(result.consolidated.total_bunker_costs)})</span></div>
+                                    <div className="flex justify-between"><span>Gastos Portuarios Totales:</span><span className="text-rose-700">({fmtCur(result.consolidated.total_port_costs)})</span></div>
+                                    <div className="flex justify-between border-t border-slate-400 pt-1 font-bold text-slate-950">
+                                        <span>Utilidad Neta (Net Profit):</span>
+                                        <span>{fmtCur(result.consolidated.pnl_net_utility)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-[11px] text-slate-700 pt-1 border-t border-dashed">
+                                        <span>Duración Total:</span>
+                                        <span>{result.consolidated.total_days} d (Mar: {result.consolidated.total_sea_days}d / Pto: {result.consolidated.total_port_days}d)</span>
+                                    </div>
+                                    <div className="flex justify-between text-[11px] text-slate-700">
+                                        <span>TCE Realizado:</span>
+                                        <span className="font-bold">{fmtCur(result.consolidated.tce_real)}/día</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* DETALLE DE ROTACIÓN DE PUERTOS EN PDF */}
+                        <div className="border border-slate-400 rounded overflow-hidden mt-2">
+                            <table className="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-100 border-b border-slate-400 font-bold">
+                                        <th className="p-1.5 w-12 text-center">Leg</th>
+                                        <th className="p-1.5 w-20">Tipo</th>
+                                        <th className="p-1.5">Puerto Origen</th>
+                                        <th className="p-1.5">Puerto Destino</th>
+                                        <th className="p-1.5 text-right w-24">Distancia</th>
+                                        <th className="p-1.5 text-right w-24">Cant (MT)</th>
+                                        <th className="p-1.5 text-right w-24">Flete ($/t)</th>
+                                        <th className="p-1.5 text-right w-24">Ingresos</th>
+                                        <th className="p-1.5 text-right w-24">Costo Pto</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-300 font-mono">
+                                    {tramosList.map((tr: any, idx: number) => (
+                                        <tr key={idx}>
+                                            <td className="p-1.5 text-center font-bold">{idx + 1}</td>
+                                            <td className="p-1.5">{tr.type}</td>
+                                            <td className="p-1.5">{tr.origin_port_id}</td>
+                                            <td className="p-1.5">{tr.destination_port_id}</td>
+                                            <td className="p-1.5 text-right">{tr.distance} NM</td>
+                                            <td className="p-1.5 text-right">{tr.type === 'LADEN' ? fmtNum(tr.quantity) : '—'}</td>
+                                            <td className="p-1.5 text-right">{tr.type === 'LADEN' ? fmtCur(tr.freight_rate) : '—'}</td>
+                                            <td className="p-1.5 text-right">{fmtCur(tr.net_income)}</td>
+                                            <td className="p-1.5 text-right">{fmtCur(tr.port_costs)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* ACTA DE FIRMA EN RESUMEN */}
+                        <div className="mt-auto border-t border-slate-400 pt-4 pb-2 text-xs">
+                            <div className="grid grid-cols-2 gap-8">
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-slate-700">Auditor Responsable:</span>
+                                        <div className="border-b border-slate-400 flex-1 h-4"></div>
+                                    </div>
+                                    <div className="flex gap-4">
+                                        <span className="font-bold text-slate-700">Resultado:</span>
+                                        <label className="flex items-center gap-1"><span className="border border-slate-400 w-3 h-3 block mr-1"></span> Aprobado</label>
+                                        <label className="flex items-center gap-1"><span className="border border-slate-400 w-3 h-3 block mr-1"></span> Con Observaciones</label>
+                                    </div>
+                                    <div className="flex justify-between gap-4">
+                                        <div className="flex items-center gap-2 flex-1">
+                                            <span className="font-bold text-slate-700">Firma:</span>
+                                            <div className="border-b border-slate-400 w-full h-5"></div>
+                                        </div>
+                                        <div className="flex items-center gap-2 w-32">
+                                            <span className="font-bold text-slate-700">Fecha:</span>
+                                            <div className="border-b border-slate-400 w-full h-5"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="font-bold text-slate-700 mb-1">Notas / Justificación de Cierre del Reporte:</span>
+                                    <div className="border border-slate-400 flex-1 rounded min-h-[70px]"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* PÁGINAS INDEPENDIENTES PARA CADA TRAMO */}
+                    {tramosList.map((tr: any, idx: number) => {
+                        const trAudit = tr.audit_trail || {};
+                        const trRows = [
+                            { metric: "Días de Mar", formula: trAudit.sea_days?.formula || "—", values: trAudit.sea_days?.values || "—", val: tr.sea_days || 0, isCurr: false },
+                            { metric: "Días de Puerto", formula: trAudit.port_days?.formula || "—", values: trAudit.port_days?.values || "—", val: tr.port_days || 0, isCurr: false },
+                            { metric: "Costo Bunker", formula: trAudit.bunker_costs?.formula || "—", values: trAudit.bunker_costs?.values || "—", val: tr.bunker_costs || 0, isCurr: true },
+                            { metric: "Costos Portuarios", formula: trAudit.port_costs?.formula || "—", values: trAudit.port_costs?.values || "—", val: tr.port_costs || 0, isCurr: true },
+                            { metric: "Ingreso Flete (Tramo)", formula: "Q * F", values: tr.type === 'LADEN' ? `${tr.quantity || 0} * ${tr.freight_rate || 0}` : "0", val: tr.net_income || 0, isCurr: true },
+                            { metric: "Resultado de Tramo (P&L)", formula: tr.type === 'LADEN' ? "Flete − Bunker − Puertos" : "− Bunker − Puertos", values: tr.type === 'LADEN' ? `${fmtCur(tr.net_income)} − ${fmtCur(tr.bunker_costs)} − ${fmtCur(tr.port_costs)}` : `− ${fmtCur(tr.bunker_costs)} − ${fmtCur(tr.port_costs)}`, val: tr.pnl_tramo || 0, isCurr: true }
+                        ];
+
+                        return (
+                            <div key={idx} className="page-break flex flex-col gap-4">
+                                <div className="border-b-2 border-slate-800 pb-2 flex justify-between items-center">
+                                    <h1 className="text-sm font-black text-slate-900 uppercase">
+                                        🔬 DETALLE DE CÁLCULO ALGEBRAICO — TRAMO {idx + 1}
+                                    </h1>
+                                    <span className="font-mono text-[9px] font-bold text-slate-500 uppercase">Leg {idx + 1}: {tr.origin_port_id} &rarr; {tr.destination_port_id} ({tr.type})</span>
+                                </div>
+
+                                <div className="grid grid-cols-4 gap-4 bg-slate-50 p-2.5 rounded border border-slate-350 text-xs font-mono">
+                                    <div><span>Origen:</span> <strong className="text-slate-800">{tr.origin_port_id}</strong></div>
+                                    <div><span>Destino:</span> <strong className="text-slate-800">{tr.destination_port_id}</strong></div>
+                                    <div><span>Distancia:</span> <strong>{tr.distance} NM</strong></div>
+                                    <div><span>Tipo Leg:</span> <strong>{tr.type}</strong></div>
+                                </div>
+
+                                <div className="border border-slate-400 rounded overflow-hidden mt-2">
+                                    <table className="w-full text-left text-xs border-collapse print-table">
+                                        <thead>
+                                            <tr className="bg-slate-100 border-b border-slate-400 font-bold">
+                                                <th className="p-2 w-[18%]">Métrica</th>
+                                                <th className="p-2 w-[35%]">Fórmula Algorítmica</th>
+                                                <th className="p-2 w-[32%]">Reemplazo Numérico</th>
+                                                <th className="p-2 text-right w-[15%]">GEEKSOFT</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-300 font-mono">
+                                            {trRows.map((row, rIdx) => (
+                                                <tr key={rIdx}>
+                                                    <td className="p-2 font-bold text-slate-800">{row.metric}</td>
+                                                    <td className="p-2 text-[10px] text-slate-600 bg-slate-50/50 leading-relaxed">{colorizeFormula(row.formula)}</td>
+                                                    <td className="p-2 text-[10px] text-slate-700 bg-slate-50/50 font-semibold leading-relaxed">{colorizeFormula(row.values)}</td>
+                                                    <td className="p-2 font-bold text-right text-slate-900 whitespace-nowrap">
+                                                        {row.isCurr ? fmtCur(row.val) : fmtNum(row.val)}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
+
     const getBodegaSaliente = (idx: number) => {
         let qty = 0;
         for (let i = 0; i <= idx; i++) {
@@ -1435,9 +1918,34 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
     return (
         <div className="bg-[#f3f4f6] text-[13px] text-slate-800 flex-1 flex flex-col min-h-0 w-full p-2 font-sans">
-            
-            {/* 1. RIBBON SUPERIOR DE DOS FILAS: ACCIONES Y FACT SHEET */}
-            <div className="bg-white border border-slate-300 rounded shadow-sm p-2 mb-2 flex flex-col gap-2 select-none flex-shrink-0">
+            {/* TABS PRINCIPALES (no-print) */}
+            <div className="flex gap-1 mb-2 no-print shrink-0">
+                <button
+                    onClick={() => setActiveMainTab('estimator')}
+                    className={`px-4 py-1.5 rounded-t-lg font-bold text-xs transition-colors flex items-center gap-1.5 border border-b-0 ${
+                        activeMainTab === 'estimator'
+                            ? 'bg-white border-slate-300 text-blue-600 shadow-sm font-black'
+                            : 'bg-slate-200/60 border-transparent text-slate-500 hover:bg-slate-250 hover:text-slate-700'
+                    }`}
+                >
+                    📊 Estimador (Excel)
+                </button>
+                <button
+                    onClick={() => setActiveMainTab('audit')}
+                    className={`px-4 py-1.5 rounded-t-lg font-bold text-xs transition-colors flex items-center gap-1.5 border border-b-0 ${
+                        activeMainTab === 'audit'
+                            ? 'bg-white border-slate-300 text-blue-600 shadow-sm font-black'
+                            : 'bg-slate-200/60 border-transparent text-slate-500 hover:bg-slate-250 hover:text-slate-700'
+                    }`}
+                >
+                    🔬 Auditoría Matemática
+                </button>
+            </div>
+
+            {activeMainTab === 'estimator' ? (
+                <div className="flex-1 flex flex-col min-h-0 w-full">
+                    {/* 1. RIBBON SUPERIOR DE DOS FILAS: ACCIONES Y FACT SHEET */}
+                    <div className="bg-white border border-slate-300 rounded shadow-sm p-2 mb-2 flex flex-col gap-2 select-none flex-shrink-0">
                 
                 {/* FILA 1: CABECERA Y ACCIONES DE PERSISTENCIA */}
                 <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
@@ -1660,30 +2168,24 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     />
                                 </td>
 
-                                {/* Precios Bunker */}
-                                <td className="border-r border-slate-200 p-0 text-center align-middle bg-slate-50/20" rowSpan={2}>
+                                {/* Precios Bunker (Fila IFO) */}
+                                <td className="border-r border-slate-200 p-0 text-center align-middle bg-red-600">
                                     <input
                                         type="number"
                                         step="0.01"
                                         value={bunkerPriceIfo}
                                         onChange={(e) => setBunkerPriceIfo(Number(e.target.value))}
-                                        className="w-full h-7 bg-white border-0 p-0 text-center text-xs font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        className="w-full h-8 bg-red-600 border-0 p-0 text-center text-xs font-mono font-black text-white focus:outline-none focus:ring-1 focus:ring-red-400 align-middle"
                                     />
-                                    <div className="text-[6.5px] text-slate-400 font-mono text-center border-t border-slate-100 py-0.5 leading-none select-none">
-                                        Lec: {bunkerDate}
-                                    </div>
                                 </td>
-                                <td className="p-0 text-center align-middle bg-slate-50/20" rowSpan={2}>
+                                <td className="p-0 text-center align-middle bg-red-600">
                                     <input
                                         type="number"
                                         step="0.01"
                                         value={bunkerPriceMdo}
                                         onChange={(e) => setBunkerPriceMdo(Number(e.target.value))}
-                                        className="w-full h-7 bg-white border-0 p-0 text-center text-xs font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        className="w-full h-8 bg-red-600 border-0 p-0 text-center text-xs font-mono font-black text-white focus:outline-none focus:ring-1 focus:ring-red-400 align-middle"
                                     />
-                                    <div className="text-[6.5px] text-slate-400 font-mono text-center border-t border-slate-100 py-0.5 leading-none select-none">
-                                        Lec: {bunkerDate}
-                                    </div>
                                 </td>
                             </tr>
                             
@@ -1725,6 +2227,13 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         onChange={(e) => handleVesselParamChange('consumption_disch_mdo', e.target.value)}
                                         className="w-full h-full min-h-[26px] bg-white border-0 p-0 text-center text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
                                     />
+                                </td>
+                                {/* Fechas de Bunker en fila MDO con estilo gris */}
+                                <td className="border-r border-slate-200 text-center bg-slate-100 font-sans font-bold text-[9.5px] text-slate-500 select-none align-middle font-mono">
+                                    {bunkerDate}
+                                </td>
+                                <td className="text-center bg-slate-100 font-sans font-bold text-[9.5px] text-slate-500 select-none align-middle font-mono">
+                                    {bunkerDate}
                                 </td>
                             </tr>
                         </tbody>
@@ -2527,7 +3036,11 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     </div>
                 </div>
 
-            </div>
+                </div>
+                </div>
+            ) : (
+                renderAuditTab()
+            )}
 
             {/* MODALES DE PERSISTENCIA */}
             {showSaveModal && (

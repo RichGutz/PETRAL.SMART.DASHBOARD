@@ -19,6 +19,7 @@ export const PortCostsMaster_V2: React.FC = () => {
     
     // Estado de costos: costs[port_id][client_id][vessel_id] = { CARGA, DESCARGA, updated_at, updated_by }
     const [costsState, setCostsState] = useState<any>({});
+    const [focusedInput, setFocusedInput] = useState<string | null>(null);
     
     // Selección Activa
     const [activePortId, setActivePortId] = useState('');
@@ -32,18 +33,28 @@ export const PortCostsMaster_V2: React.FC = () => {
         }
     }
 
+    const formatCostValue = (value: number | undefined | null) => {
+        if (value == null || isNaN(value)) return '';
+        return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+    };
+
     const fetchData = async () => {
         try {
             setLoading(true);
             const [portsData, clientsData, vesselsData, staticCostsData] = await Promise.all([
                 ForecastService.getPorts(),
-                ForecastService.getClients(),
+                ForecastService.getClientsMaster(),
                 ForecastService.getVessels(),
                 ForecastService.getPortCostsStatic()
             ]);
             
             setPorts(portsData);
-            setClients(clientsData);
+            
+            const clientsList = clientsData || [];
+            const clientIds: string[] = clientsList.map((c: any) => c.client_id as string).filter(Boolean);
+            const sortedClients: string[] = Array.from(new Set(clientIds)).sort();
+            setClients(sortedClients);
+            
             setVessels(vesselsData);
             
             // Build the state matrix
@@ -77,7 +88,7 @@ export const PortCostsMaster_V2: React.FC = () => {
             setCostsState(newState);
             
             if (portsData.length > 0) setActivePortId(portsData[0].port_id);
-            if (clientsData.length > 0) setActiveClientId(clientsData[0]);
+            if (sortedClients.length > 0) setActiveClientId(sortedClients[0]);
             
         } catch (error) {
             console.error("Error al obtener los datos de costos portuarios:", error);
@@ -91,7 +102,8 @@ export const PortCostsMaster_V2: React.FC = () => {
     }, []);
 
     const handleCostChange = (portId: string, clientId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA', subOp: string, value: string) => {
-        const numValue = parseFloat(value) || 0;
+        const cleanValue = value.replace(/,/g, '');
+        const numValue = parseFloat(cleanValue) || 0;
         setCostsState((prev: any) => {
             const next = { ...prev };
             if (!next[portId]) next[portId] = {};
@@ -300,33 +312,36 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                             <div className="flex items-center justify-between gap-2 pl-1">
                                                                 <label className="font-bold text-slate-500 uppercase">Principal (MAIN)</label>
                                                                 <input 
-                                                                    type="number"
-                                                                    step="0.01"
-                                                                    value={vData.CARGA?.MAIN != null ? vData.CARGA.MAIN : ''}
+                                                                    type="text"
+                                                                    value={focusedInput === `${v.vessel_id}-CARGA-MAIN` ? (vData.CARGA?.MAIN ?? '') : formatCostValue(vData.CARGA?.MAIN)}
+                                                                    onFocus={() => setFocusedInput(`${v.vessel_id}-CARGA-MAIN`)}
+                                                                    onBlur={() => setFocusedInput(null)}
                                                                     onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'CARGA', 'MAIN', e.target.value)}
-                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs"
+                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
                                                                     placeholder="0.00"
                                                                 />
                                                             </div>
                                                             <div className="flex items-center justify-between gap-2 pl-1">
                                                                 <label className="font-bold text-slate-500 uppercase">Loading Master</label>
                                                                 <input 
-                                                                    type="number"
-                                                                    step="0.01"
-                                                                    value={vData.CARGA?.loading_master != null ? vData.CARGA.loading_master : ''}
+                                                                    type="text"
+                                                                    value={focusedInput === `${v.vessel_id}-CARGA-loading_master` ? (vData.CARGA?.loading_master ?? '') : formatCostValue(vData.CARGA?.loading_master)}
+                                                                    onFocus={() => setFocusedInput(`${v.vessel_id}-CARGA-loading_master`)}
+                                                                    onBlur={() => setFocusedInput(null)}
                                                                     onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'CARGA', 'loading_master', e.target.value)}
-                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs"
+                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
                                                                     placeholder="0.00"
                                                                 />
                                                             </div>
                                                             <div className="flex items-center justify-between gap-2 pl-1">
                                                                 <label className="font-bold text-slate-500 uppercase">Otros Costos</label>
                                                                 <input 
-                                                                    type="number"
-                                                                    step="0.01"
-                                                                    value={vData.CARGA?.other != null ? vData.CARGA.other : ''}
+                                                                    type="text"
+                                                                    value={focusedInput === `${v.vessel_id}-CARGA-other` ? (vData.CARGA?.other ?? '') : formatCostValue(vData.CARGA?.other)}
+                                                                    onFocus={() => setFocusedInput(`${v.vessel_id}-CARGA-other`)}
+                                                                    onBlur={() => setFocusedInput(null)}
                                                                     onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'CARGA', 'other', e.target.value)}
-                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs"
+                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
                                                                     placeholder="0.00"
                                                                 />
                                                             </div>
@@ -339,33 +354,36 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                             <div className="flex items-center justify-between gap-2 pl-1">
                                                                 <label className="font-bold text-slate-500 uppercase">Principal (MAIN)</label>
                                                                 <input 
-                                                                    type="number"
-                                                                    step="0.01"
-                                                                    value={vData.DESCARGA?.MAIN != null ? vData.DESCARGA.MAIN : ''}
+                                                                    type="text"
+                                                                    value={focusedInput === `${v.vessel_id}-DESCARGA-MAIN` ? (vData.DESCARGA?.MAIN ?? '') : formatCostValue(vData.DESCARGA?.MAIN)}
+                                                                    onFocus={() => setFocusedInput(`${v.vessel_id}-DESCARGA-MAIN`)}
+                                                                    onBlur={() => setFocusedInput(null)}
                                                                     onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'DESCARGA', 'MAIN', e.target.value)}
-                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs"
+                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
                                                                     placeholder="0.00"
                                                                 />
                                                             </div>
                                                             <div className="flex items-center justify-between gap-2 pl-1">
                                                                 <label className="font-bold text-slate-500 uppercase">Loading Master</label>
                                                                 <input 
-                                                                    type="number"
-                                                                    step="0.01"
-                                                                    value={vData.DESCARGA?.loading_master != null ? vData.DESCARGA.loading_master : ''}
+                                                                    type="text"
+                                                                    value={focusedInput === `${v.vessel_id}-DESCARGA-loading_master` ? (vData.DESCARGA?.loading_master ?? '') : formatCostValue(vData.DESCARGA?.loading_master)}
+                                                                    onFocus={() => setFocusedInput(`${v.vessel_id}-DESCARGA-loading_master`)}
+                                                                    onBlur={() => setFocusedInput(null)}
                                                                     onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'DESCARGA', 'loading_master', e.target.value)}
-                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs"
+                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
                                                                     placeholder="0.00"
                                                                 />
                                                             </div>
                                                             <div className="flex items-center justify-between gap-2 pl-1">
                                                                 <label className="font-bold text-slate-500 uppercase">Otros Costos</label>
                                                                 <input 
-                                                                    type="number"
-                                                                    step="0.01"
-                                                                    value={vData.DESCARGA?.other != null ? vData.DESCARGA.other : ''}
+                                                                    type="text"
+                                                                    value={focusedInput === `${v.vessel_id}-DESCARGA-other` ? (vData.DESCARGA?.other ?? '') : formatCostValue(vData.DESCARGA?.other)}
+                                                                    onFocus={() => setFocusedInput(`${v.vessel_id}-DESCARGA-other`)}
+                                                                    onBlur={() => setFocusedInput(null)}
                                                                     onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'DESCARGA', 'other', e.target.value)}
-                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs"
+                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
                                                                     placeholder="0.00"
                                                                 />
                                                             </div>

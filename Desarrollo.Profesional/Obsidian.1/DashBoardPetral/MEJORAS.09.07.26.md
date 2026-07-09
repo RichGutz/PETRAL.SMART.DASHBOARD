@@ -603,11 +603,117 @@ Se implementó el comportamiento en el componente:
 **Commits:** `1f8375b`, `f651ff2`
 
 ---
-
 ### Mejora: Foto del B/T MOQUEGUA actualizada
 
 - `[x]` Imagen `public/moquegua_1.jpg` reemplazada por fotografía oficial a color en el **Maestro de Buques**.
 - `[x]` Recompilado y desplegado en VPS.
 
 **Commit:** `1f8375b`
+
+---
+
+## 🛠️ Plan de Mejoras — Sesión 2026-07-09
+
+### Tarea 1: Construir el Maestro de Bunker (`bunker_prices`)
+
+**Objetivo:** Desarrollar una pantalla de gestión simple para los precios históricos de combustible IFO y MDO por fecha de vigencia.
+
+**Esquema de BD (`bunker_prices`):**
+*   `fuel_type` (text/varchar): 'IFO' o 'MDO'
+*   `market_price_usd` (numeric/float): Precio en USD por tonelada.
+*   `date` (date): Fecha de cotización (clave de vigencia).
+
+**Comportamiento de la UI:**
+*   Grilla que agrupa los registros por **Fecha**, mostrando columnas: `Fecha`, `Precio IFO (USD/MT)`, `Precio MDO (USD/MT)`.
+*   Formulario de ingreso y edición con:
+    *   Selector de Fecha (Calendario).
+    *   Input numérico para Precio IFO.
+    *   Input numérico para Precio MDO.
+*   Acciones de **Agregar**, **Editar** y **Eliminar**. Al guardar una fecha, se guardarán/actualizarán dos registros correspondientes en Supabase (uno para IFO y otro para MDO).
+*   Integrar en el Sidebar de Maestros y registrar la ruta `/bunker-prices` en el enrutador.
+ 
+### Tarea 2: Corregir Cliente por Defecto en el Multicotizador
+ 
+**Objetivo:** Evitar que el dropdown de selección de cliente del Multicotizador inicialice con "CERRO VERDE" de forma automática, forzándolo a mostrar "[SELECCIONAR]" (valor vacío) al cargar la pantalla.
+ 
+**Comportamiento de la UI:**
+*   Modificar la inicialización del estado React `selectedClient` a una cadena vacía `""` en el componente.
+*   Asegurar que el primer elemento renderizado en la lista del select sea la opción de placeholder `[SELECCIONAR]`.
+ 
+### Tarea 3: Resaltar Celdas de Precios de Bunker en el Multicotizador
+ 
+**Objetivo:** Aplicar un estilo de color rojo intenso con texto blanco a los inputs y celdas de precios de bunker (IFO y MDO) en el ribbon del Multicotizador para captar inmediatamente la atención del usuario.
+ 
+**Comportamiento de la UI:**
+*   Localizar los inputs de `bunkerPriceIfo` y `bunkerPriceMdo` en la barra de Fact Sheet / Ribbon del Multicotizador.
+*   Modificar las clases CSS (Tailwind) a `bg-rose-600 text-white font-bold border-rose-700` (o similar rojo amigable) con estados de foco coherentes para resaltar de manera muy llamativa estos valores de mercado.
+ 
+### Tarea 4: Formatear Cifras con Separador de Miles en el Maestro de Costos Portuarios Estáticos
+ 
+**Objetivo:** Asegurar que los importes financieros de costos y tarifas mostrados en la grilla y en el formulario de edición de la matriz estática de costos portuarios (`PortCostsMaster_V2.tsx`) siempre utilicen el formato contable con comas separadoras de miles para facilitar la lectura.
+ 
+**Comportamiento de la UI:**
+*   Implementar o aplicar un formateador contable (ej. `new Intl.NumberFormat` o similar) para formatear los valores de los costos portuarios que se renderizan en la grilla del maestro.
+*   Cambiar los inputs a `type="text"`. Usar eventos `onFocus` y `onBlur` junto a un estado `focusedInput` para mostrar el valor numérico crudo al editar, y el valor formateado con comas de miles cuando el input no esté activo, garantizando una excelente usabilidad.
+ 
+### Tarea 5: Consumir el Maestro de Clientes Completo en el Maestro de Costos Portuarios Estáticos
+ 
+**Objetivo:** Permitir configurar costos portuarios para todos los clientes registrados en Supabase (y no solo los contractuales `SPCC` y `NEXA`).
+ 
+**Comportamiento de la UI:**
+*   En `PortCostsMaster_V2.tsx`, reemplazar el consumo de `ForecastService.getClients()` por `ForecastService.getClientsMaster()`.
+*   Esto cargará automáticamente las pestañas horizontales de todos los clientes configurados (`SPCC`, `NEXA`, `CERRO VERDE`, `MARCOBRE`, `PETROPERU`, `CODELCO`, `R TRADING`).
+*   Al registrar cualquier cliente nuevo en la sección de "Clientes", su pestaña de costos portuarios se auto-poblará de forma inmediata.
+
+---
+
+## ✅ REGISTRO DE EJECUCIÓN — 09.07.2026
+
+**Fecha de Ejecución:** 09 de Julio de 2026
+**Desarrollado por:** Antigravity (AI Coding Agent)
+**Commit de Seguridad Previo:** `PRE.2.TABS.MULTICOTIZADOR`
+
+### Resumen de Tareas Ejecutadas
+
+| # | Tarea | Archivo(s) Modificado(s) | Estado |
+|---|-------|--------------------------|--------|
+| 1 | Maestro de Bunker con CRUD completo (IFO/MDO por fecha) | `BunkerMaster.tsx` (NUEVO), `App_V2.tsx`, `MasterTemplate_V2.tsx`, `forecast.py`, `api.ts` | ✅ COMPLETADO |
+| 2 | Multicotizador: cliente `[SELECCIONAR]` por defecto | `MultiCotizadorExcel.tsx` | ✅ COMPLETADO |
+| 3 | Resaltado en rojo (fondo `bg-red-600`) de celdas IFO y MDO | `MultiCotizadorExcel.tsx` | ✅ COMPLETADO |
+| 4 | Formato contable con comas de miles (`15,000.00`) en Costos Portuarios | `PortCostsMaster_V2.tsx` | ✅ COMPLETADO |
+| 5 | Cargar catálogo completo de clientes vía `getClientsMaster()` en Costos Portuarios | `PortCostsMaster_V2.tsx` | ✅ COMPLETADO |
+
+### Detalle Técnico de Cambios
+
+**Backend (`forecast.py`):**
+- Agregados tres nuevos endpoints a la API REST:
+  - `GET /forecast/bunker` — Lista todo el historial de precios de bunker.
+  - `POST /forecast/bunker` — Upsert masivo de precios por `(fuel_type, date)`.
+  - `DELETE /forecast/bunker/{date_str}` — Elimina todos los registros de una fecha.
+
+**Frontend — Maestro de Bunker:**
+- Creado `BunkerMaster.tsx` con grilla histórica agrupada por fecha, formulario modal de creación/edición y botón de eliminar.
+- Registrada la ruta `/bunker-prices` en `App_V2.tsx`.
+- Añadido botón ⛽ **Maestro de Bunker** en la barra lateral de `MasterTemplate_V2.tsx`.
+
+**Frontend — Multicotizador:**
+- Removida la auto-selección `setSelectedClient(uniqueClients[0])` para que el dropdown inicie en `[SELECCIONAR]`.
+- Aplicadas clases `bg-red-600 text-white font-black` a los inputs de `bunkerPriceIfo` y `bunkerPriceMdo` en la Fact Sheet del Ribbon superior.
+
+**Frontend — Maestro de Costos Portuarios:**
+- Reemplazado `ForecastService.getClients()` por `ForecastService.getClientsMaster()` para cargar el universo completo de clientes.
+- Agregado estado `focusedInput` y helper `formatCostValue` con `Intl.NumberFormat`.
+- Los 6 inputs de costos (CARGA y DESCARGA × MAIN, loading_master, other) cambiados a `type="text"` con comportamiento dinámico: valor crudo al editar, valor formateado con comas al perder el foco.
+
+### Resultado de Despliegue
+
+- **Build:** ✅ `tsc && vite build` — 1000 módulos transformados sin errores.
+- **Frontend:** ✅ Desplegado en `https://forecast.geeksoft.tech`
+- **Backend:** ✅ `geeksoft-engine.service` activo y corriendo en VPS (puerto 8000).
+- **Verificación:** ✅ `check_backend_vps.py` — Servicio `enabled/enabled`.
+
+
+
+
+
 

@@ -237,6 +237,15 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                         </button>
                                     )}
 
+                                    {hasPermission('maestro_bunker', 'Visor') && (
+                                        <button 
+                                            onClick={() => navigate('/bunker-prices')}
+                                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'bunker' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                        >
+                                            <span className="text-sm">⛽</span> Maestro de Bunker
+                                        </button>
+                                    )}
+
                                     {hasPermission('maestro_costos_agencia', 'Visor') && (
                                         <button 
                                             onClick={() => navigate('/port-costs')}

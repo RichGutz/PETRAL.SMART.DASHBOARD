@@ -19,6 +19,7 @@ import { ContractsMaster } from './pages/Masters/ContractsMaster_V2';
 import { PortsMaster_V2 } from './pages/Masters/PortsMaster_V2';
 import { PortCostsMaster_V2 } from './pages/Masters/PortCostsMaster_V2';
 import { SourcesSinksMaster_V2 } from './pages/Masters/SourcesSinksMaster_V2';
+import { BunkerMaster } from './pages/Masters/BunkerMaster';
 import { Login } from './pages/Auth/Login';
 import { UsersPermissions } from './pages/Auth/UsersPermissions';
 
@@ -77,6 +78,7 @@ function App_V2() {
               <Route path="/ports" element={<ProtectedRoute module="maestro_puertos"><PortsMaster_V2 /></ProtectedRoute>} />
               <Route path="/port-costs" element={<ProtectedRoute module="maestro_costos_agencia"><PortCostsMaster_V2 /></ProtectedRoute>} />
               <Route path="/sources-sinks" element={<ProtectedRoute module="maestro_rutas"><SourcesSinksMaster_V2 /></ProtectedRoute>} />
+              <Route path="/bunker-prices" element={<ProtectedRoute module="maestro_bunker"><BunkerMaster /></ProtectedRoute>} />
               
               {/* Herramientas Protegidas (Ribbon via ToolsLayout) */}
               <Route element={<ProtectedRoute><ToolsLayout_V2 /></ProtectedRoute>}>

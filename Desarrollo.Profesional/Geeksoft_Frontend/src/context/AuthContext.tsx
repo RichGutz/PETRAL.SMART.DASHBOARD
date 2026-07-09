@@ -19,6 +19,7 @@ export interface UserPermissions {
     maestro_contratos: PermissionLevel;
     maestro_tarifas: PermissionLevel;
     maestro_costos_agencia: PermissionLevel;
+    maestro_bunker: PermissionLevel;
     [key: string]: PermissionLevel; // Firma de índice para acceso dinámico
 }
 

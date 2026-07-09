@@ -69,6 +69,18 @@ export const ForecastService = {
         const response = await api.get('/forecast/bunker/latest');
         return response.data;
     },
+    getBunkerPrices: async () => {
+        const response = await api.get('/forecast/bunker');
+        return response.data;
+    },
+    saveBunkerPrices: async (payload: any[]) => {
+        const response = await api.post('/forecast/bunker', payload);
+        return response.data;
+    },
+    deleteBunkerPrices: async (dateStr: string) => {
+        const response = await api.delete(`/forecast/bunker/${dateStr}`);
+        return response.data;
+    },
     saveSpot: async (payload: any) => {
         const response = await api.post('/forecast/spot/save', payload);
         return response.data;
