@@ -379,6 +379,35 @@ setAvailableClients(allClients);
 
 ---
 
+### ✅ Resumen de Fixes & Mejoras — Sesión 2026-07-09
+
+#### 📋 1. Reestructuración de Nombres de Maestros
+* El **Maestro de Navegación** se renombró oficialmente a **Maestro de Distancias** (en vistas, rutas y control de accesos).
+* El **Maestro de Costos Portuarios** se renombró oficialmente a **Maestro de Gastos Portuarios**.
+* En el Maestro de Gastos Portuarios, la subcategoría de costos se simplificó de *"Principal (MAIN)"* a *"Gastos Portuarios"*.
+
+#### 👥 2. Modelo de Clientes Activos y Prospectos
+* Se crearon en Supabase y el backend FastAPI (`ClientMaster`) los atributos booleanos `is_active` e `is_prospect`.
+* En el Maestro de Clientes (`ClientsMaster_V2.tsx`) se implementó exclusión mutua interactiva (un cliente puede ser Activo o Prospecto, pero nunca ambos a la vez).
+* **Filtros Dinámicos**: Se añadió un selector elegante horizontal `[Clientes: Activos | Prospectos]` en la barra de herramientas del Multicotizador y Gastos Portuarios.
+* Se eliminó este botón selector en **Contratos** y **Spaghetti Map** debido a que estos módulos solo operan con clientes activos (lógica de negocio).
+
+#### 🛠️ 3. Pipeline de Despliegue de Modelos al VPS
+* Se integró el archivo de modelos del backend (`forecast_models.py`) en la lista de subida de `deploy_backend.py`. Esto previene errores 500 silenciosos al validar objetos actualizados con propiedades recién agregadas.
+
+#### 🧭 4. Ordenamiento Dinámico de Puertos (Norte a Sur)
+* Se implementó el ordenamiento geográfico de puertos de Norte a Sur utilizando la latitud (`latB - latA`) de la base de datos de manera dinámica en el **Maestro de Originación / Destino** (`SourcesSinksMaster_V2.tsx`) y el **Maestro de Gastos Portuarios** (`PortCostsMaster_V2.tsx`).
+
+**Reglas Arquitectónicas derivadas (2026-07-09):**
+
+> **1. Exclusión de Estados en Clientes:** La asignación de estado (`is_active` / `is_prospect`) debe mantenerse estrictamente mutuamente excluyente. Toda interacción visual que modifique uno debe forzar la desactivación del otro antes de enviar la persistencia.
+> 
+> **2. Consistencia en Despliegues de Backend:** Toda adición de atributos a las entidades del frontend debe reflejarse en los esquemas de Pydantic de `forecast_models.py` y este archivo debe asegurarse en el despliegue del VPS.
+> 
+> **3. Ordenamiento Geográfico:** El ordenamiento de puertos en vistas horizontales tipo pestañas debe calcularse dinámicamente mediante `latB - latA` (de mayor a menor latitud) para mantener la compatibilidad con nuevos puertos agregados a la base de datos.
+
+---
+
 ## 🚢 Portada del Software (Login) — Guía de Aspecto Corporativo Naviero
 
 Esta sección establece las directrices de diseño y comportamiento para la portada de inicio de sesión de **PETRAL SMART DASHBOARD**.
