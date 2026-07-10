@@ -121,6 +121,17 @@ export const ForecastService = {
         const response = await api.post('/forecast/port_costs_static', payload);
         return response.data;
     },
+    getPortCostsMatrix: async (portId?: string, clientId?: string) => {
+        const params: Record<string, string> = {};
+        if (portId) params['port_id'] = portId;
+        if (clientId) params['client_id'] = clientId;
+        const response = await api.get('/forecast/port_costs_matrix', { params });
+        return response.data;
+    },
+    savePortCostsMatrix: async (payload: any[]) => {
+        const response = await api.post('/forecast/port_costs_matrix', payload);
+        return response.data;
+    },
     getSourcesSinks: async () => {
         const response = await api.get('/forecast/sources_sinks');
         return response.data;

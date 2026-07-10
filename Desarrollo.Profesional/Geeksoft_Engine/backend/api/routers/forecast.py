@@ -920,3 +920,76 @@ def estimate_routes_distances(req: BatchRouteEstimateRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# ENDPOINTS: port_costs_matrix (Tarifas Dinámicas Desglosadas)
+# ──────────────────────────────────────────────────────────────────────────────
+
+class PortCostMatrixUpdateItem(BaseModel):
+    client_id: str
+    port_id: str
+    terminal: str = 'GENERAL'
+    operation_type: str
+    vessel_id: str
+    concept_id: str
+    cost: float = 0
+    rate_usd: Optional[float] = None
+    multiplier_source: str = 'FIXED'
+    min_limit: Optional[float] = None
+    max_limit: Optional[float] = None
+    calculation_formula_template: Optional[str] = None
+    origin_country: Optional[str] = None
+
+
+@router.get('/port_costs_matrix')
+def get_port_costs_matrix(port_id: Optional[str] = None, client_id: Optional[str] = None):
+    """
+    Retorna los coeficientes de tarifas dinámicas desglosadas por puerto.
+    Opcional: filtrar por port_id y/o client_id.
+    Incluye join con port_cost_concepts para nombre y categoría de cada concepto.
+    """
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        query = sb.table('port_costs_matrix').select(
+            '*, port_cost_concepts(concept_name, category, default_calculation_type)'
+        )
+        if port_id:
+            query = query.eq('port_id', port_id)
+        if client_id:
+            query = query.eq('client_id', client_id)
+        res = query.order('port_id').order('concept_id').execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post('/port_costs_matrix')
+def save_port_costs_matrix(items: List[PortCostMatrixUpdateItem]):
+    """
+    Upsert de coeficientes de tarifas dinámicas.
+    El frontend MatrixComplexPanel usa este endpoint al presionar Guardar.
+    """
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        payload = []
+        for item in items:
+            payload.append({
+                'client_id': item.client_id,
+                'port_id': item.port_id,
+                'terminal': item.terminal,
+                'operation_type': item.operation_type,
+                'vessel_id': item.vessel_id,
+                'concept_id': item.concept_id,
+                'cost': item.cost,
+                'rate_usd': item.rate_usd,
+                'multiplier_source': item.multiplier_source,
+                'min_limit': item.min_limit,
+                'max_limit': item.max_limit,
+                'calculation_formula_template': item.calculation_formula_template,
+                'origin_country': item.origin_country,
+            })
+        sb.table('port_costs_matrix').upsert(payload).execute()
+        return {'status': 'success', 'updated': len(payload)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
