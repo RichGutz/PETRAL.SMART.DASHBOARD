@@ -125,6 +125,8 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 * `multiplier_source` *(VARCHAR, DEFAULT 'FIXED')* ── Variable multiplicadora para cálculo de tarifa variable: `FIXED`, `LOA`, `TRB`, `DWT`, `PORT_HOURS`, `CARGO_TONS` (`CHECK (multiplier_source IN ('FIXED', 'LOA', 'TRB', 'DWT', 'PORT_HOURS', 'CARGO_TONS'))`).
 * `min_limit` / `max_limit` *(NUMERIC)* ── Límites mínimos y máximos de cobro de tarifa.
 * `calculation_formula_template` *(TEXT)* ── Plantilla o fórmula de cálculo dinámico para el motor.
+* `origin_country` *(VARCHAR(2), DEFAULT NULL)* ── **[Agregado 2026-07-09]** Código ISO del país de procedencia del buque (`PE`, `CL`, `EC`). `NULL` = el concepto aplica independientemente del país de origen. Usada para discriminar la tarifa de **Lighthouse Dues**: mismo país (cabotaje) → `$0.03/GRT`; distinto país (exportación) → `$0.12/GRT`.
+
 
 **Clave Primaria Compuesta:** `(client_id, port_id, terminal, operation_type, vessel_id, concept_id)`
 
