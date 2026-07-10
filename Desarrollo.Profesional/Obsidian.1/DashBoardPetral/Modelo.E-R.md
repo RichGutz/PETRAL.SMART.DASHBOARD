@@ -137,6 +137,39 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 * `category` *(VARCHAR)* ── Categoría del costo: `shifting`, `general_port` o `agency` (`CHECK (category IN ('shifting', 'general_port', 'agency'))`).
 * `default_calculation_type` *(VARCHAR, DEFAULT 'FIXED')* ── Tipo de cálculo base: `FIXED`, `VARIABLE_TIME`, `VARIABLE_TONS` (`CHECK (default_calculation_type IN ('FIXED', 'VARIABLE_TIME', 'VARIABLE_TONS'))`).
 
+**Catálogo completo — 22 conceptos registrados (estado: 2026-07-09):**
+
+| `concept_id` | Categoría | Cálculo | Fórmula / Nota |
+| :--- | :--- | :--- | :--- |
+| `towage_1st` | shifting | FIXED | Remolcador 1 × 2 maniobras |
+| `towage_2nd` | shifting | FIXED | Remolcador 2 × 2 maniobras |
+| `pilotage` | shifting | FIXED | Practicaje (+ Lancha Integral si aplica) × 2 maniobras |
+| `linesmen` | shifting | FIXED | Amarradores (amarre + desamarre) |
+| `shifting_surcharges` | shifting | FIXED | Recargos por condiciones climáticas / demoras |
+| `coordinator_board` | shifting | FIXED | Coordinador a Bordo × 2 visitas |
+| `port_toll` | shifting | FIXED | Port Toll / Terminal Fee × 2 maniobras |
+| `lighthouse_national` | general_port | VARIABLE_TIME | `rate_usd × GRT` · Puerto mismo país (cabotaje) |
+| `lighthouse_foreign` | general_port | VARIABLE_TIME | `rate_usd × GRT` · Puerto distinto país (exportación) |
+| `lighthouse_dues` | general_port | VARIABLE_TIME | Concepto genérico (legado, reemplazado por _national/_foreign) |
+| `dockage` | general_port | VARIABLE_TIME | `rate_usd × LOA × port_hours` |
+| `launch_authorities` | general_port | FIXED | Lancha de Autoridades (fija por llamada) |
+| `launch_standby` | general_port | VARIABLE_TIME | `rate_usd × port_hours` (Lancha Stand-By / Espera) |
+| `launch_hire` | general_port | FIXED | Alquiler de Lancha (tarifa fija) |
+| `sanitary_inspection` | general_port | FIXED | Inspección Sanitaria (Recepción / Despacho) |
+| `clearance` | general_port | FIXED | Clearance In / Out |
+| `watchmen` | general_port | FIXED | Guardias de Puerto |
+| `agency_fee` | agency | FIXED | Honorarios de Agencia Marítima |
+| `loading_master` | agency | FIXED | Loading Master / Inspector de Carga |
+| `transportation_communication` | agency | FIXED | Movilidad + Comunicaciones (concepto unificado legado) |
+| `transport_agency` | agency | FIXED | Movilidad de Agencia (separado) |
+| `comms_agency` | agency | FIXED | Comunicaciones de Agencia (separado) |
+
+> [!NOTE]
+> **Estado de datos en `port_costs_matrix` (2026-07-09):** 230 filas totales.
+> - 42 filas dinámicas (`client_id='DEFAULT'`, `vessel_id='DEFAULT'`) con `rate_usd` y `calculation_formula_template` — fuente de verdad del **Motor de Cálculo Dinámico**.
+> - 188 filas consolidadas (`client_id='SPCC'|'DEFAULT'`, buques específicos) con `cost` fijo — usadas por el **Modelo Estático** y el Estimador Excel.
+> - Puertos con tarifas dinámicas: **ILO** (CARGA), **MATARANI** (DESCARGA), **MARCONA** (DESCARGA).
+
 #### 4.2. Tabla: `port_cost_static` (Tarifas Planas de Costos Portuarios por Defecto — Duplicación Física)
 *Almacena tarifas históricas consolidadas por puerto, cliente, operación y buque. Es la fuente de verdad primaria para las simulaciones de Forecast clásico y el Estimador Excel.*
 * `client_id` *(VARCHAR, PK)* ── ID del cliente (ej. `'SPCC'`, `'NEXA'`) o `'DEFAULT'`.
