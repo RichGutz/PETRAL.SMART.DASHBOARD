@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { Anchor, Save, Ship, User, Clock } from 'lucide-react';
+import { MatrixComplexPanel } from './MatrixComplexPanel';
+
 
 export const PortCostsMaster_V2: React.FC = () => {
     const navigate = navigateHook();
@@ -290,11 +292,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                     </div>
 
                     {mode === 'matrix' ? (
-                        <div className="flex-1 flex flex-col items-center justify-center p-12 text-slate-400 font-semibold gap-2 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50">
-                            <span className="text-4xl">🚧</span>
-                            <span>El Modelo Matriz Compleja está en desarrollo.</span>
-                            <span className="text-xs font-normal">Por favor, utilice el modelo estático mientras tanto.</span>
-                        </div>
+                        <MatrixComplexPanel ports={ports} activePortId={activePortId} setActivePortId={setActivePortId} />
                     ) : (
                         <div className="flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                             
