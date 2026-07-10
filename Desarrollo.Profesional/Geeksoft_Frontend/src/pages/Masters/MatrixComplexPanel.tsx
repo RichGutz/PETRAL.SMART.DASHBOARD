@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Anchor, Waves, Zap, Briefcase } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Anchor, Waves, Zap, Briefcase, Save } from "lucide-react";
+import { ForecastService } from "../../services/api";
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 interface PortTariffs {
@@ -220,6 +221,7 @@ interface MatrixComplexPanelProps {
 
 export const MatrixComplexPanel: React.FC<MatrixComplexPanelProps> = ({ ports, activePortId, setActivePortId }) => {
     const [tariffs, setTariffs] = useState<Record<string, PortTariffs>>(() => {
+        // Precarga con valores de Excel como fallback inicial mientras carga la API
         const init: Record<string, PortTariffs> = {};
         ports.forEach(p => {
             const key = (p.port_id || "").toUpperCase();
@@ -227,6 +229,99 @@ export const MatrixComplexPanel: React.FC<MatrixComplexPanelProps> = ({ ports, a
         });
         return init;
     });
+    const [apiLoaded, setApiLoaded] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [saveMsg, setSaveMsg] = useState<string | null>(null);
+
+    // Cargar coeficientes reales desde port_costs_matrix
+    useEffect(() => {
+        ForecastService.getPortCostsMatrix(undefined, 'DEFAULT')
+            .then((rows: any[]) => {
+                if (!rows || rows.length === 0) return;
+                const merged: Record<string, PortTariffs> = {};
+                ports.forEach(p => {
+                    const key = (p.port_id || "").toUpperCase();
+                    merged[p.port_id] = TARIFFS_BY_PORT[key] ? { ...TARIFFS_BY_PORT[key] } : { ...DEFAULT_TARIFFS };
+                });
+                // Sobreescribir con valores reales de la DB
+                rows.forEach((row: any) => {
+                    const pid = row.port_id;
+                    if (!merged[pid]) merged[pid] = { ...DEFAULT_TARIFFS };
+                    const fieldMap: Record<string, keyof PortTariffs> = {
+                        pilotage: 'pilotage_integral',
+                        shifting_surcharges: 'pilotage_surcharge_25',
+                        towage_1st: 'towage',
+                        linesmen: 'linesmen',
+                        port_toll: 'port_toll',
+                        lighthouse_national: 'lighthouse_national',
+                        lighthouse_foreign: 'lighthouse_foreign',
+                        dockage: 'dockage_per_meter_hour',
+                        launch_authorities: 'launch_authorities',
+                        launch_standby: 'launch_standby_hr',
+                        sanitary_inspection: 'sanitary_inspection',
+                        clearance: 'clearance',
+                        coordinator_board: 'coordinator_board',
+                        agency_fee: 'agency_fee',
+                        transport_agency: 'transport',
+                        comms_agency: 'comms',
+                    };
+                    const field = fieldMap[row.concept_id];
+                    if (field) {
+                        (merged[pid] as any)[field] = row.rate_usd ?? row.cost ?? 0;
+                    }
+                });
+                setTariffs(merged);
+                setApiLoaded(true);
+            })
+            .catch(() => setApiLoaded(false));
+    }, [ports]);
+
+    const handleSave = async () => {
+        setSaving(true);
+        setSaveMsg(null);
+        try {
+            const currentPortId2 = activePortId || (ports[0]?.port_id ?? '');
+            const t = tariffs[currentPortId2] ?? DEFAULT_TARIFFS;
+            const opType = ports.find(p => p.port_id === currentPortId2);
+            const operation = opType?.default_operation || 'CARGA';
+            const fieldToConceptMap: Array<[keyof PortTariffs, string, number]> = [
+                ['pilotage_integral', 'pilotage', t.pilotage_integral / 2],
+                ['pilotage_surcharge_25', 'shifting_surcharges', t.pilotage_surcharge_25],
+                ['towage', 'towage_1st', t.towage / 2],
+                ['linesmen', 'linesmen', t.linesmen],
+                ['port_toll', 'port_toll', t.port_toll / 2],
+                ['lighthouse_national', 'lighthouse_national', t.lighthouse_national],
+                ['lighthouse_foreign', 'lighthouse_foreign', t.lighthouse_foreign],
+                ['dockage_per_meter_hour', 'dockage', t.dockage_per_meter_hour],
+                ['launch_authorities', 'launch_authorities', t.launch_authorities],
+                ['launch_standby_hr', 'launch_standby', t.launch_standby_hr],
+                ['sanitary_inspection', 'sanitary_inspection', t.sanitary_inspection],
+                ['clearance', 'clearance', t.clearance],
+                ['coordinator_board', 'coordinator_board', t.coordinator_board / 2],
+                ['agency_fee', 'agency_fee', t.agency_fee],
+                ['transport', 'transport_agency', t.transport],
+                ['comms', 'comms_agency', t.comms],
+            ];
+            const payload = fieldToConceptMap.map(([, concept_id, rate]) => ({
+                client_id: 'DEFAULT',
+                port_id: currentPortId2,
+                terminal: 'GENERAL',
+                operation_type: operation,
+                vessel_id: 'DEFAULT',
+                concept_id,
+                cost: 0,
+                rate_usd: rate,
+                multiplier_source: 'FIXED',
+            }));
+            await ForecastService.savePortCostsMatrix(payload);
+            setSaveMsg('Guardado exitosamente ✓');
+            setTimeout(() => setSaveMsg(null), 3000);
+        } catch {
+            setSaveMsg('Error al guardar ✗');
+        } finally {
+            setSaving(false);
+        }
+    };
 
     const currentPortId = activePortId || (ports[0]?.port_id ?? "");
     const currentPort = ports.find(p => p.port_id === currentPortId);
@@ -256,15 +351,35 @@ export const MatrixComplexPanel: React.FC<MatrixComplexPanelProps> = ({ ports, a
                 ))}
             </div>
 
-            {/* ── Barra de País ── */}
-            <div className="flex items-center gap-2 px-5 py-2 border-b border-slate-100 bg-white">
-                <span className="text-base leading-none">{countryMeta.flag}</span>
-                <span className="text-xs font-black uppercase tracking-wider" style={{ color: countryMeta.color }}>
-                    {countryMeta.label}
-                </span>
-                <span className="text-xs text-slate-400 font-medium">
-                    — Regulación portuaria aplicable a {currentPort?.port_name || currentPortId}
-                </span>
+            {/* ── Barra de País + Guardar ── */}
+            <div className="flex items-center justify-between px-5 py-2 border-b border-slate-100 bg-white">
+                <div className="flex items-center gap-2">
+                    <span className="text-base leading-none">{countryMeta.flag}</span>
+                    <span className="text-xs font-black uppercase tracking-wider" style={{ color: countryMeta.color }}>
+                        {countryMeta.label}
+                    </span>
+                    <span className="text-xs text-slate-400 font-medium">
+                        — Regulación portuaria aplicable a {currentPort?.port_name || currentPortId}
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${apiLoaded ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                        {apiLoaded ? '● DB' : '● Local'}
+                    </span>
+                </div>
+                <div className="flex items-center gap-3">
+                    {saveMsg && (
+                        <span className={`text-xs font-bold ${saveMsg.includes('✓') ? 'text-green-600' : 'text-red-500'}`}>
+                            {saveMsg}
+                        </span>
+                    )}
+                    <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 text-white text-xs font-black rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    >
+                        {saving ? <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" /> : <Save size={12} />}
+                        Guardar {currentPortId}
+                    </button>
+                </div>
             </div>
 
             {/* ── Cuerpo 1/3 inputs / 2/3 explicación ── */}
