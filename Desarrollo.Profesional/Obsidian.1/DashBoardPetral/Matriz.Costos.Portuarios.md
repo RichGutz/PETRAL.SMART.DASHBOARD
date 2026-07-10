@@ -373,3 +373,111 @@ El API también puede incluir el costo estático de la `agency_matrix` para que 
 > [!IMPORTANT]
 > Las fórmulas de Derecho de Faro, Muellaje y tiempo de estadía son **universales y reguladas a nivel nacional**. Esto significa que el motor de cálculo puede aplicar exactamente las mismas ecuaciones para **cualquier puerto peruano** (Callao, Pisco, Talara, Paita, etc.) simplemente cambiando los coeficientes de la tabla `port_tariffs_config` en Supabase. **No se necesitan cambios de código** para agregar nuevos puertos al motor.
 
+---
+
+## 🛠️ Implementación Ejecutada — 09-07-2026
+
+### E.1 Migración de Base de Datos (Supabase)
+
+#### Tabla `port_costs_matrix`
+- ✅ Se agregó la columna `origin_country VARCHAR(2) DEFAULT NULL`
+- **Semántica:** `NULL` = tarifa aplica a cualquier origen. `'PE'`, `'CL'`, `'EC'` = solo aplica cuando el buque proviene de ese país.
+- **Uso primario:** Discriminar la tarifa de **Lighthouse Dues** entre cabotaje (`$0.03/GRT`) y exportación (`$0.12/GRT`).
+
+#### Tabla `port_cost_concepts`
+Se agregaron los siguientes conceptos nuevos (22 en total):
+
+| concept_id | Categoría | Tipo de Cálculo | Descripción |
+| :--- | :--- | :--- | :--- |
+| `lighthouse_national` | general_port | VARIABLE_TIME | Faro Nacional (USD/GRT) |
+| `lighthouse_foreign` | general_port | VARIABLE_TIME | Faro Extranjero (USD/GRT) |
+| `launch_standby` | general_port | VARIABLE_TIME | Lancha Stand-By (USD/hr) |
+| `launch_authorities` | general_port | FIXED | Lancha de Autoridades |
+| `port_toll` | shifting | FIXED | Port Toll / Cargo de Acceso |
+| `transport_agency` | agency | FIXED | Movilidad de Agencia |
+| `comms_agency` | agency | FIXED | Comunicaciones de Agencia |
+
+#### Poblado de `port_costs_matrix` — 42 filas dinámicas
+
+Se insertaron los coeficientes de tarifas reales para los tres puertos principales usando `client_id='DEFAULT'` y `vessel_id='DEFAULT'` (fallback universal):
+
+| Puerto | Op. | Conceptos cargados | Fuente |
+| :--- | :--- | :--- | :--- |
+| **ILO** | CARGA | pilotage×2, surcharges, linesmen, port_toll×2, faro_nacional, faro_extran., muellaje, lancha_aut., sanitaria, clearance, coordinador×2, agencia, movilidad, comms | Excel SPCC/Paola |
+| **MATARANI** | DESCARGA | Ídem a ILO (misma regulación APN, port_toll $75) | Excel SPCC/Paola |
+| **MARCONA** | DESCARGA | pilotage×2, linesmen×2, **towage×2 ($18k/maniobra)**, port_toll×2, faro, **launch_standby ($40/hr)** en lugar de muellaje, lancha_aut., sanitaria, clearance, coordinador×2, agencia $1,400 | Excel SPCC/Paola |
+
+> [!NOTE]
+> Marcona usa **servicios segregados** (no integral): práctico, amarradores y remolcadores se cobran por separado. No tiene muellaje sino lancha de espera por horas. Su agencia es la más cara del grupo ($1,400 USD).
+
+---
+
+### E.2 Backend — Nuevos Endpoints FastAPI
+
+Archivo: `backend/api/routers/forecast.py`
+
+```python
+GET  /api/v1/forecast/port_costs_matrix
+     ?port_id={ID}&client_id={ID}
+     → Retorna tarifas con join a port_cost_concepts (nombre, categoría, tipo de cálculo)
+
+POST /api/v1/forecast/port_costs_matrix
+     Body: List[PortCostMatrixUpdateItem]
+     → Upsert de coeficientes desde el frontend MatrixComplexPanel
+```
+
+**Modelo Pydantic `PortCostMatrixUpdateItem`:** incluye `client_id`, `port_id`, `terminal`, `operation_type`, `vessel_id`, `concept_id`, `cost`, `rate_usd`, `multiplier_source`, `min_limit`, `max_limit`, `calculation_formula_template`, `origin_country`.
+
+---
+
+### E.3 Frontend — Componente `MatrixComplexPanel`
+
+Archivo: `Geeksoft_Frontend/src/pages/Masters/MatrixComplexPanel.tsx`
+
+**Interfaz implementada:**
+- **Tab de puertos** (ILO, MATARANI, MARCONA, etc.) — misma navegación que modelo estático
+- **Barra de País** — lee el campo `country` del maestro de puertos y muestra 🇵🇪/🇪🇨/🇨🇱
+- **Indicador `● DB` / `● Local`** — verde si los datos vienen de Supabase, ámbar si es fallback hardcoded
+- **Botón "Guardar [PUERTO]"** — llama a `POST /port_costs_matrix` con los coeficientes del formulario
+- **Layout 1/3 inputs + 2/3 explicación:**
+  - Columna izquierda: inputs editables por sección (A/B/C)
+  - Columna derecha: tarjetas explicativas con la fórmula de cada concepto y su unidad
+
+**Lógica de carga desde API:**
+```typescript
+// Al montar el componente:
+ForecastService.getPortCostsMatrix(undefined, 'DEFAULT')
+→ mapea concept_id a campo del formulario (pilotage → pilotage_integral, dockage → dockage_per_meter_hour, etc.)
+→ sobreescribe los valores hardcoded del Excel (fallback) con los reales de la DB
+→ activa el indicador '● DB'
+```
+
+---
+
+### E.4 Servicio Frontend — `ForecastService` en `api.ts`
+
+```typescript
+getPortCostsMatrix(portId?, clientId?)  → GET /forecast/port_costs_matrix
+savePortCostsMatrix(payload[])          → POST /forecast/port_costs_matrix
+```
+
+---
+
+### E.5 Despliegue
+
+| Componente | Estado | Fecha |
+| :--- | :--- | :--- |
+| Backend FastAPI (VPS) | ✅ `active (running)` puerto 8000 | 2026-07-09 |
+| Frontend React (VPS) | ✅ Publicado vía SFTP + Nginx | 2026-07-09 |
+| Supabase DB | ✅ 230 filas en `port_costs_matrix` | 2026-07-09 |
+
+**URL de producción:** https://forecast.geeksoft.tech → Maestros → Gastos Portuarios → **Modelo Matriz Compleja**
+
+---
+
+### E.6 Próximos Pasos
+
+1. **Validar los valores de ILO/MATARANI** al abrir el tab (debe aparecer `● DB` en verde).
+2. **Agregar puertos adicionales** (CALLAO, MEJILLONES, PISCO) insertando sus tarifas en `port_costs_matrix` — sin cambios de código.
+3. **Construir el motor de cálculo** `backend/services/port_costs_engine.py` que use `rate_usd`, `multiplier_source` y `calculation_formula_template` para calcular el costo total dinámico dado un buque real (LOA, GRT, horas de puerto).
+4. **Exponer endpoint de auditoría** `POST /forecast/port_costs/audit` que devuelva el desglose completo del costo portuario para una cotización específica.
