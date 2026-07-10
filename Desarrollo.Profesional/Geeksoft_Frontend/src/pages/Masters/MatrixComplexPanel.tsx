@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { Anchor, Waves, Zap, Briefcase } from "lucide-react";
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -267,11 +267,11 @@ export const MatrixComplexPanel: React.FC<MatrixComplexPanelProps> = ({ ports, a
                 </span>
             </div>
 
-            {/* ── Cuerpo 50/50 ── */}
+            {/* ── Cuerpo 1/3 inputs / 2/3 explicación ── */}
             <div className="flex gap-0 overflow-auto divide-x divide-slate-100">
 
-                {/* Columna izquierda (50%): Formulario de coeficientes */}
-                <div className="w-1/2 flex flex-col gap-4 p-5 overflow-auto">
+                {/* Columna izquierda (1/3): Formulario de coeficientes */}
+                <div className="w-1/3 flex flex-col gap-4 p-5 overflow-auto">
 
                     <Section icon={<Zap size={14} />} title="A) Maniobras y Shifting" color="#f59e0b">
                         <TariffRow label="Practicaje + Remolcadores + Lancha (Integral por maniobra)" unit="USD / maniobra" value={current.pilotage_integral} onChange={v => update("pilotage_integral", v)} tooltip="×2 (entrada + salida)" />
@@ -299,18 +299,8 @@ export const MatrixComplexPanel: React.FC<MatrixComplexPanelProps> = ({ ports, a
                     </Section>
                 </div>
 
-                {/* Columna derecha (50%): Guía de cómo se usa cada concepto en el cálculo */}
-                <div className="w-1/2 flex flex-col p-5 overflow-auto bg-slate-50 gap-5">
-                    <div>
-                        <p className="text-xs font-black text-slate-700 uppercase tracking-wider mb-1">¿Cómo se calcula el Gasto Portuario Total?</p>
-                        <p className="text-xs text-slate-500">
-                            Cada coeficiente ingresado en la columna izquierda se multiplica por las variables físicas del buque
-                            y el tiempo real de estadía en puerto. La fórmula universal de horas es:
-                        </p>
-                        <div className="mt-2 bg-slate-700 rounded-lg px-4 py-2.5 font-mono text-xs text-green-400">
-                            Horas = (Carga MT ÷ Ritmo MT/hr) + 3 (maniobras) + 2 (esperas)
-                        </div>
-                    </div>
+                {/* Columna derecha (2/3): Guía de cómo se usa cada concepto en el cálculo */}
+                <div className="w-2/3 flex flex-col p-5 overflow-auto bg-slate-50 gap-5">
 
                     {FORMULA_GUIDE.map(section => (
                         <div key={section.section}>
