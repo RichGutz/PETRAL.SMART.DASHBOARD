@@ -1,6 +1,7 @@
 ﻿import React, { useState } from "react";
-import { Anchor, Waves, Zap, Briefcase, Info } from "lucide-react";
+import { Anchor, Waves, Zap, Briefcase } from "lucide-react";
 
+// ─── Tipos ───────────────────────────────────────────────────────────────────
 interface PortTariffs {
     pilotage_integral: number;
     pilotage_surcharge_25: number;
@@ -20,6 +21,7 @@ interface PortTariffs {
     comms: number;
 }
 
+// ─── Valores extraídos de los Exceles de PORT.COSTS.PAOLA ────────────────────
 const TARIFFS_BY_PORT: Record<string, PortTariffs> = {
     ILO: {
         pilotage_integral: 5550, pilotage_surcharge_25: 1387.5,
@@ -57,23 +59,141 @@ const DEFAULT_TARIFFS: PortTariffs = {
     clearance: 0, coordinator_board: 0, agency_fee: 0, transport: 0, comms: 0,
 };
 
+// ─── Banderas y nombre del país ───────────────────────────────────────────────
+const COUNTRY_META: Record<string, { flag: string; label: string; color: string }> = {
+    PE: { flag: "🇵🇪", label: "Perú", color: "#dc2626" },
+    EC: { flag: "🇪🇨", label: "Ecuador", color: "#ca8a04" },
+    CL: { flag: "🇨🇱", label: "Chile", color: "#2563eb" },
+};
+
+// ─── Guía explicativa de cómo se usa cada concepto en el cálculo ─────────────
+const FORMULA_GUIDE = [
+    {
+        section: "A) Maniobras (Shifting)",
+        color: "#f59e0b",
+        items: [
+            {
+                concept: "Practicaje + Remolcadores + Lancha (Integral)",
+                formula: "Tarifa × 2",
+                explanation: "Se cobra por maniobra (entrada y salida del buque). Si el puerto usa servicio integral, este valor cubre práctico, remolcadores y lancha de piloto en un solo cobro.",
+                unit: "USD / maniobra",
+            },
+            {
+                concept: "Remolcadores / Towage (no integral)",
+                formula: "Tarifa × 2",
+                explanation: "Cuando el puerto NO ofrece servicio integral, el remolque se cotiza de forma separada por cada maniobra de atraque o desatraque.",
+                unit: "USD / maniobra",
+            },
+            {
+                concept: "Amarradores / Linesmen",
+                formula: "Tarifa × 1 (o ×2)",
+                explanation: "Servicio de amarre y desamarre de cabos en el muelle. Puede cobrarse por servicio completo o por maniobra, según el terminal.",
+                unit: "USD / servicio",
+            },
+            {
+                concept: "Port Toll / Cargo de Acceso",
+                formula: "Tarifa × 2",
+                explanation: "Derecho de acceso a las instalaciones del terminal o del muelle. Se cobra por cada maniobra (entrada y salida).",
+                unit: "USD / maniobra",
+            },
+        ],
+    },
+    {
+        section: "B) Gastos Generales de Puerto",
+        color: "#0ea5e9",
+        items: [
+            {
+                concept: "Faro Nacional (Lighthouse Dues)",
+                formula: "Tarifa × GRT del Buque",
+                explanation: "Tarifa regulada por la APN (Perú), DIRECTEMAR (Chile) o DIGMER (Ecuador). Se aplica cuando el buque procede de un puerto del mismo país. Universal: $0.03 USD/GRT en Perú.",
+                unit: "USD / GRT",
+            },
+            {
+                concept: "Faro Extranjero (Lighthouse Dues)",
+                formula: "Tarifa × GRT del Buque",
+                explanation: "Misma regulación de faro, pero tarifa mayor cuando el buque procede de un puerto de otro país. Universal: $0.12 USD/GRT en Perú.",
+                unit: "USD / GRT",
+            },
+            {
+                concept: "Muellaje / Dockage",
+                formula: "Tarifa × LOA (metros) × Horas en Puerto",
+                explanation: "Cobro por el tiempo que el buque ocupa el berth (posición de atraque). La fórmula multiplica la tarifa por metro de eslora por cada hora de estadía. Confirmado en Ilo y Matarani: $0.65 USD/m·hr.",
+                unit: "USD / m · hr",
+            },
+            {
+                concept: "Lancha de Autoridades",
+                formula: "Tarifa fija (por llamada)",
+                explanation: "Lancha para el transporte de autoridades portuarias (Capitanía, Aduanas, Sanidad) hacia y desde el buque. Generalmente se cobra como tarifa plana fija.",
+                unit: "USD / llamada",
+            },
+            {
+                concept: "Lancha Stand-By / Espera",
+                formula: "Tarifa × Horas en Puerto",
+                explanation: "Servicio de lancha en espera continua durante toda la estadía del buque. Se cobra por hora. Aplicable en Marcona y puertos sin muelle fijo de autoridades.",
+                unit: "USD / hora",
+            },
+            {
+                concept: "Inspección Sanitaria",
+                formula: "Tarifa fija",
+                explanation: "Cobro por la inspección de DIGESA o autoridad sanitaria al arribar y despachar el buque. Tarifa fija por escala.",
+                unit: "USD fijo",
+            },
+            {
+                concept: "Clearance In / Out",
+                formula: "Tarifa fija",
+                explanation: "Gestión de despacho aduanero y migratorio de entrada y salida. Cobro fijo por escala independiente del tonelaje.",
+                unit: "USD fijo",
+            },
+            {
+                concept: "Coordinador a Bordo",
+                formula: "Tarifa × 2",
+                explanation: "Personal de coordinación operativa a bordo del buque durante las maniobras de entrada y salida. Cobro por visita (entrada + salida).",
+                unit: "USD / visita",
+            },
+        ],
+    },
+    {
+        section: "C) Gastos de Agencia",
+        color: "#8b5cf6",
+        items: [
+            {
+                concept: "Honorarios de Agencia",
+                formula: "Tarifa fija por escala",
+                explanation: "Comisión de la agencia marítima local por gestionar toda la operación portuaria: trámites, coordinación con autoridades, provisiones y despacho.",
+                unit: "USD / escala",
+            },
+            {
+                concept: "Movilidad",
+                formula: "Tarifa fija",
+                explanation: "Gastos de transporte del personal de agencia (autoridades, coordinadores, operadores) durante la estadía del buque en el terminal.",
+                unit: "USD fijo",
+            },
+            {
+                concept: "Comunicaciones",
+                formula: "Tarifa fija",
+                explanation: "Gastos de comunicación del agente con el buque, la naviera y las autoridades durante la escala.",
+                unit: "USD fijo",
+            },
+        ],
+    },
+];
+
+// ─── Sub-componentes ──────────────────────────────────────────────────────────
 const TariffRow: React.FC<{
     label: string; unit: string; value: number;
     onChange: (v: number) => void; tooltip?: string;
 }> = ({ label, unit, value, onChange, tooltip }) => (
-    <div className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0 group">
+    <div className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
         <div className="flex items-center gap-2 flex-1 min-w-0">
             <span className="text-xs text-slate-600 font-medium truncate">{label}</span>
-            {tooltip && (
-                <span title={tooltip} className="text-slate-300 cursor-help text-xs select-none">ⓘ</span>
-            )}
+            {tooltip && <span title={tooltip} className="text-slate-300 cursor-help text-xs select-none shrink-0">ⓘ</span>}
         </div>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider w-24 text-right">{unit}</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider w-20 text-right">{unit}</span>
             <input
                 type="number" value={value} step="0.01"
                 onChange={e => onChange(parseFloat(e.target.value) || 0)}
-                className="w-28 border border-slate-200 rounded-md px-2 py-1 text-right text-xs font-mono text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all"
+                className="w-28 border border-slate-200 rounded-md px-2 py-1 text-right text-xs font-mono text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             />
         </div>
     </div>
@@ -91,6 +211,7 @@ const Section: React.FC<{ icon: React.ReactNode; title: string; color: string; c
     </div>
 );
 
+// ─── Componente Principal ─────────────────────────────────────────────────────
 interface MatrixComplexPanelProps {
     ports: any[];
     activePortId: string;
@@ -108,25 +229,18 @@ export const MatrixComplexPanel: React.FC<MatrixComplexPanelProps> = ({ ports, a
     });
 
     const currentPortId = activePortId || (ports[0]?.port_id ?? "");
+    const currentPort = ports.find(p => p.port_id === currentPortId);
+    const countryCode = (currentPort?.country || "").toUpperCase();
+    const countryMeta = COUNTRY_META[countryCode] ?? { flag: "🌐", label: countryCode || "Desconocido", color: "#64748b" };
+
     const current: PortTariffs = tariffs[currentPortId] ?? { ...DEFAULT_TARIFFS };
     const update = (field: keyof PortTariffs, value: number) =>
         setTariffs(prev => ({ ...prev, [currentPortId]: { ...(prev[currentPortId] ?? DEFAULT_TARIFFS), [field]: value } }));
 
-    // Vista previa (B/T Moquegua: LOA=134.16, GRT=8259, Carga=13500 MT, Ritmo=500 MT/hr)
-    const portHours = (13500 / 500) + 3 + 2;
-    const calcFaro = current.lighthouse_national * 8259;
-    const calcMuellaje = current.dockage_per_meter_hour * 134.16 * portHours;
-    const calcShifting = current.pilotage_integral > 0
-        ? (current.pilotage_integral * 2) + current.linesmen + (current.port_toll * 2)
-        : (current.towage * 2) + (current.linesmen * 2) + (current.port_toll * 2);
-    const calcAgencia = current.agency_fee + current.transport + current.comms;
-    const calcLaunchOtros = (current.launch_standby_hr > 0 ? current.launch_standby_hr * portHours : current.launch_authorities)
-        + current.sanitary_inspection + current.clearance + (current.coordinator_board * 2);
-    const totalEstimado = calcFaro + calcMuellaje + calcShifting + calcAgencia + calcLaunchOtros;
-
     return (
         <div className="flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            {/* Tabs de Puertos */}
+
+            {/* ── Tabs de Puertos ── */}
             <div className="flex overflow-x-auto border-b border-slate-200 bg-slate-50 scrollbar-none">
                 {ports.map(p => (
                     <button key={p.port_id} onClick={() => setActivePortId(p.port_id)}
@@ -142,38 +256,40 @@ export const MatrixComplexPanel: React.FC<MatrixComplexPanelProps> = ({ ports, a
                 ))}
             </div>
 
-            {/* Cuerpo en dos columnas */}
-            <div className="flex gap-6 p-5 overflow-auto">
-                {/* Columna izquierda: Formularios */}
-                <div className="flex-1 flex flex-col gap-4 min-w-0">
-                    <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3">
-                        <Info size={16} className="text-blue-500 mt-0.5 shrink-0" />
-                        <div>
-                            <p className="text-xs font-bold text-blue-700">Coeficientes de Tarifas Portuarias — {currentPortId}</p>
-                            <p className="text-xs text-blue-600 mt-0.5">
-                                Valores precargados desde Exceles de costos SPCC (Paola). Las tarifas de Faro (APN) son universales
-                                para todos los puertos peruanos. El motor los multiplicará por LOA, GRT y Horas de Puerto al cotizar.
-                            </p>
-                        </div>
-                    </div>
+            {/* ── Barra de País ── */}
+            <div className="flex items-center gap-2 px-5 py-2 border-b border-slate-100 bg-white">
+                <span className="text-base leading-none">{countryMeta.flag}</span>
+                <span className="text-xs font-black uppercase tracking-wider" style={{ color: countryMeta.color }}>
+                    {countryMeta.label}
+                </span>
+                <span className="text-xs text-slate-400 font-medium">
+                    — Regulación portuaria aplicable a {currentPort?.port_name || currentPortId}
+                </span>
+            </div>
+
+            {/* ── Cuerpo 50/50 ── */}
+            <div className="flex gap-0 overflow-auto divide-x divide-slate-100">
+
+                {/* Columna izquierda (50%): Formulario de coeficientes */}
+                <div className="w-1/2 flex flex-col gap-4 p-5 overflow-auto">
 
                     <Section icon={<Zap size={14} />} title="A) Maniobras y Shifting" color="#f59e0b">
-                        <TariffRow label="Practicaje + Remolcadores + Lancha (Integral por maniobra)" unit="USD / maniobra" value={current.pilotage_integral} onChange={v => update("pilotage_integral", v)} tooltip="Se multiplica ×2 (entrada + salida)" />
+                        <TariffRow label="Practicaje + Remolcadores + Lancha (Integral por maniobra)" unit="USD / maniobra" value={current.pilotage_integral} onChange={v => update("pilotage_integral", v)} tooltip="×2 (entrada + salida)" />
                         <TariffRow label="Recargo Integral 25% (condiciones climáticas)" unit="USD" value={current.pilotage_surcharge_25} onChange={v => update("pilotage_surcharge_25", v)} />
-                        <TariffRow label="Remolcadores / Towage (si NO es servicio integral)" unit="USD / maniobra" value={current.towage} onChange={v => update("towage", v)} tooltip="Se multiplica ×2 (entrada + salida)" />
+                        <TariffRow label="Remolcadores / Towage (si NO es servicio integral)" unit="USD / maniobra" value={current.towage} onChange={v => update("towage", v)} tooltip="×2 (entrada + salida)" />
                         <TariffRow label="Amarradores / Linesmen (amarre y desamarre)" unit="USD / servicio" value={current.linesmen} onChange={v => update("linesmen", v)} />
-                        <TariffRow label="Port Toll / Terminal Fee / Cargo de Acceso" unit="USD / maniobra" value={current.port_toll} onChange={v => update("port_toll", v)} tooltip="Se multiplica ×2 (entrada + salida)" />
+                        <TariffRow label="Port Toll / Terminal Fee / Cargo de Acceso" unit="USD / maniobra" value={current.port_toll} onChange={v => update("port_toll", v)} tooltip="×2 (entrada + salida)" />
                     </Section>
 
                     <Section icon={<Waves size={14} />} title="B) Gastos Generales de Puerto" color="#0ea5e9">
-                        <TariffRow label="Faro Nacional — Lighthouse Dues (Puerto Peruano)" unit="USD / GRT" value={current.lighthouse_national} onChange={v => update("lighthouse_national", v)} tooltip="APN: Tarifa × GRT del buque" />
-                        <TariffRow label="Faro Extranjero — Lighthouse Dues (Puerto Externo)" unit="USD / GRT" value={current.lighthouse_foreign} onChange={v => update("lighthouse_foreign", v)} tooltip="APN: Tarifa × GRT del buque" />
-                        <TariffRow label="Muellaje / Dockage (por metro de eslora por hora)" unit="USD / m · hr" value={current.dockage_per_meter_hour} onChange={v => update("dockage_per_meter_hour", v)} tooltip="Fórmula: Tarifa × LOA (m) × Horas en Puerto" />
+                        <TariffRow label="Faro Nacional — Lighthouse Dues (Puerto mismo país)" unit="USD / GRT" value={current.lighthouse_national} onChange={v => update("lighthouse_national", v)} tooltip="Tarifa × GRT del buque" />
+                        <TariffRow label="Faro Extranjero — Lighthouse Dues (Puerto distinto país)" unit="USD / GRT" value={current.lighthouse_foreign} onChange={v => update("lighthouse_foreign", v)} tooltip="Tarifa × GRT del buque" />
+                        <TariffRow label="Muellaje / Dockage (por metro de eslora por hora)" unit="USD / m · hr" value={current.dockage_per_meter_hour} onChange={v => update("dockage_per_meter_hour", v)} tooltip="Tarifa × LOA × Horas en Puerto" />
                         <TariffRow label="Lancha de Autoridades (fija por llamada)" unit="USD / llamada" value={current.launch_authorities} onChange={v => update("launch_authorities", v)} />
-                        <TariffRow label="Lancha Stand-By / Espera (por hora de estadía)" unit="USD / hora" value={current.launch_standby_hr} onChange={v => update("launch_standby_hr", v)} tooltip="Fórmula: Tarifa × Horas en Puerto" />
+                        <TariffRow label="Lancha Stand-By / Espera (por hora de estadía)" unit="USD / hora" value={current.launch_standby_hr} onChange={v => update("launch_standby_hr", v)} tooltip="Tarifa × Horas en Puerto" />
                         <TariffRow label="Inspección Sanitaria (Recepción / Despacho)" unit="USD fijo" value={current.sanitary_inspection} onChange={v => update("sanitary_inspection", v)} />
                         <TariffRow label="Clearance In / Out" unit="USD fijo" value={current.clearance} onChange={v => update("clearance", v)} />
-                        <TariffRow label="Coordinador a Bordo (por visita)" unit="USD / visita" value={current.coordinator_board} onChange={v => update("coordinator_board", v)} tooltip="Se multiplica ×2 (entrada + salida)" />
+                        <TariffRow label="Coordinador a Bordo (por visita)" unit="USD / visita" value={current.coordinator_board} onChange={v => update("coordinator_board", v)} tooltip="×2 (entrada + salida)" />
                     </Section>
 
                     <Section icon={<Briefcase size={14} />} title="C) Gastos de Agencia" color="#8b5cf6">
@@ -183,54 +299,46 @@ export const MatrixComplexPanel: React.FC<MatrixComplexPanelProps> = ({ ports, a
                     </Section>
                 </div>
 
-                {/* Columna derecha: Vista previa del cálculo */}
-                <div className="w-72 shrink-0 flex flex-col gap-4">
-                    <div className="rounded-xl border border-slate-200 overflow-hidden sticky top-0">
-                        <div className="bg-slate-700 px-4 py-3">
-                            <p className="text-white font-black text-xs uppercase tracking-wider">Vista Previa del Cálculo</p>
-                            <p className="text-slate-400 text-[10px] mt-0.5">
-                                B/T Moquegua · LOA: 134.16 m · GRT: 8,259 · 13,500 MT · 500 MT/hr
-                            </p>
-                        </div>
-                        <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs text-slate-500">Horas en Puerto estimadas</span>
-                                <span className="text-xs font-mono font-bold text-slate-700">{portHours.toFixed(1)} hrs</span>
-                            </div>
-                        </div>
-                        <div className="px-4 py-2 bg-white flex flex-col gap-0.5">
-                            {[
-                                { label: "A) Maniobras (Shifting)", value: calcShifting, color: "#f59e0b" },
-                                { label: "B.1) Derecho de Faro", value: calcFaro, color: "#0ea5e9" },
-                                { label: "B.2) Muellaje", value: calcMuellaje, color: "#0ea5e9" },
-                                { label: "B.3) Lanchas + Inspecciones", value: calcLaunchOtros - current.sanitary_inspection - current.clearance - current.coordinator_board * 2, color: "#0ea5e9" },
-                                { label: "B.4) Sanitaria + Clearance + Coord.", value: current.sanitary_inspection + current.clearance + current.coordinator_board * 2, color: "#0ea5e9" },
-                                { label: "C) Agencia", value: calcAgencia, color: "#8b5cf6" },
-                            ].map(item => (
-                                <div key={item.label} className="flex justify-between items-center py-1.5 border-b border-slate-100 last:border-0">
-                                    <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1.5">
-                                        <span className="w-2 h-2 rounded-full inline-block shrink-0" style={{ backgroundColor: item.color }} />
-                                        {item.label}
-                                    </span>
-                                    <span className="text-xs font-mono text-slate-700 ml-2 shrink-0">
-                                        ${item.value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="bg-slate-700 px-4 py-3 flex justify-between items-center">
-                            <span className="text-white text-xs font-black uppercase tracking-wider">TOTAL ESTIMADO</span>
-                            <span className="text-green-400 font-mono font-black text-sm">
-                                ${totalEstimado.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                        </div>
-                        <div className="bg-amber-50 border-t border-amber-100 px-4 py-2.5">
-                            <p className="text-amber-700 text-[10px] font-semibold text-center">
-                                ⚠️ Vista previa con parámetros de ejemplo · Aún no conectado al backend
-                            </p>
+                {/* Columna derecha (50%): Guía de cómo se usa cada concepto en el cálculo */}
+                <div className="w-1/2 flex flex-col p-5 overflow-auto bg-slate-50 gap-5">
+                    <div>
+                        <p className="text-xs font-black text-slate-700 uppercase tracking-wider mb-1">¿Cómo se calcula el Gasto Portuario Total?</p>
+                        <p className="text-xs text-slate-500">
+                            Cada coeficiente ingresado en la columna izquierda se multiplica por las variables físicas del buque
+                            y el tiempo real de estadía en puerto. La fórmula universal de horas es:
+                        </p>
+                        <div className="mt-2 bg-slate-700 rounded-lg px-4 py-2.5 font-mono text-xs text-green-400">
+                            Horas = (Carga MT ÷ Ritmo MT/hr) + 3 (maniobras) + 2 (esperas)
                         </div>
                     </div>
+
+                    {FORMULA_GUIDE.map(section => (
+                        <div key={section.section}>
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: section.color }} />
+                                <span className="text-xs font-black uppercase tracking-wider" style={{ color: section.color }}>
+                                    {section.section}
+                                </span>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                {section.items.map(item => (
+                                    <div key={item.concept} className="bg-white rounded-lg border border-slate-200 px-4 py-3">
+                                        <div className="flex items-start justify-between gap-3 mb-1">
+                                            <span className="text-xs font-bold text-slate-700">{item.concept}</span>
+                                            <span className="text-[10px] font-mono font-black text-white px-2 py-0.5 rounded shrink-0"
+                                                style={{ backgroundColor: section.color }}>
+                                                {item.formula}
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-500 leading-relaxed">{item.explanation}</p>
+                                        <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider">Unidad: {item.unit}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
                 </div>
+
             </div>
         </div>
     );
