@@ -5,6 +5,16 @@ import { ForecastService } from '../../services/api';
 import { Anchor, Save, Ship, User, Clock } from 'lucide-react';
 import { MatrixComplexPanel } from './MatrixComplexPanel';
 
+// Helper para obtener código ISO de 2 letras y nombre limpio de país
+const getCountryInfo = (countryStr: string) => {
+    if (!countryStr) return { code: 'pe', name: '-', color: '#64748b' };
+    const c = countryStr.trim().toUpperCase();
+    if (c === 'PE' || c === 'PERU' || c === 'PERÚ') return { code: 'pe', name: 'Perú', color: '#dc2626' };
+    if (c === 'CL' || c === 'CHILE') return { code: 'cl', name: 'Chile', color: '#2563eb' };
+    if (c === 'EC' || c === 'ECUADOR') return { code: 'ec', name: 'Ecuador', color: '#ca8a04' };
+    const fallbackCode = countryStr.slice(0, 2).toLowerCase();
+    return { code: fallbackCode, name: countryStr, color: '#64748b' };
+};
 
 export const PortCostsMaster_V2: React.FC = () => {
     const navigate = navigateHook();
@@ -222,6 +232,18 @@ export const PortCostsMaster_V2: React.FC = () => {
         }
     };
 
+    const currentPort = ports.find(p => p.port_id === activePortId);
+    const activeCountry = (currentPort?.country || "PE").toUpperCase();
+    const uniqueCountries = Array.from(new Set(ports.map(p => (p.country || "PE").toUpperCase())));
+    const portsForCountry = ports.filter(p => (p.country || "PE").toUpperCase() === activeCountry);
+
+    const handleCountryClick = (countryCode: string) => {
+        const firstPort = ports.find(p => (p.country || "PE").toUpperCase() === countryCode);
+        if (firstPort) {
+            setActivePortId(firstPort.port_id);
+        }
+    };
+
     return (
         <MasterTemplate 
             title="Maestro de Gastos Portuarios" 
@@ -296,25 +318,55 @@ export const PortCostsMaster_V2: React.FC = () => {
                     ) : (
                         <div className="flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                             
-                            {/* Nivel 1: TABS DE PUERTOS */}
+                            {/* Nivel 1: TABS DE PAÍSES */}
+                            <div className="flex overflow-x-auto border-b border-slate-200 bg-white scrollbar-none shrink-0">
+                                {uniqueCountries.map(countryCode => {
+                                    const meta = getCountryInfo(countryCode);
+                                    const isActive = activeCountry === countryCode;
+                                    return (
+                                        <button 
+                                            key={countryCode} 
+                                            onClick={() => handleCountryClick(countryCode)}
+                                            className={`px-6 py-3 font-black text-xs uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap flex items-center gap-2 ${
+                                                isActive
+                                                    ? "bg-slate-50"
+                                                    : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                                            }`}
+                                            style={isActive ? { color: meta.color, borderColor: meta.color } : {}}
+                                        >
+                                            <img 
+                                                src={`https://flagcdn.com/16x12/${meta.code}.png`} 
+                                                alt={meta.name} 
+                                                className="w-5 h-3.5 object-cover rounded shadow-sm border border-slate-200 shrink-0"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).style.display = 'none';
+                                                }}
+                                            />
+                                            {meta.name}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Nivel 2: TABS DE PUERTOS */}
                             <div className="flex overflow-x-auto border-b border-slate-200 bg-slate-50 scrollbar-none">
-                                {ports.map((p) => (
+                                {portsForCountry.map((p) => (
                                     <button
                                         key={p.port_id}
                                         onClick={() => setActivePortId(p.port_id)}
-                                        className={`px-6 py-3 font-black text-xs uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap flex items-center gap-2 ${
+                                        className={`px-6 py-2.5 font-black text-[11px] uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap flex items-center gap-2 ${
                                             activePortId === p.port_id
-                                                ? 'border-blue-600 text-blue-600 bg-white'
+                                                ? 'border-slate-800 text-slate-800 bg-white'
                                                 : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                                         }`}
                                     >
-                                        <Anchor size={14} />
+                                        <Anchor size={12} />
                                         {p.port_name || p.port_id}
                                     </button>
                                 ))}
                             </div>
 
-                            {/* Nivel 2: TABS DE CLIENTES */}
+                            {/* Nivel 3: TABS DE CLIENTES */}
                             <div className="flex overflow-x-auto border-b border-slate-100 bg-white px-4 scrollbar-none">
                                 {clients.map((c) => (
                                     <button

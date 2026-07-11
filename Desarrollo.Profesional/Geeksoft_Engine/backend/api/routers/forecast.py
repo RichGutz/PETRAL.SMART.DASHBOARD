@@ -1,6 +1,20 @@
-from typing import List, Any
+from typing import List, Any, Optional
 from fastapi import APIRouter, HTTPException, Body
-from backend.models.forecast_models import ForecastRequest, ForecastResponse, ForecastSaveRequest, ForecastListResponse
+from backend.models.forecast_models import (
+    ForecastRequest,
+    ForecastResponse,
+    ForecastSaveRequest,
+    ForecastListResponse,
+    SpotCalculationRequest,
+    SpotSaveRequest,
+    MultiCotizadorRequest,
+    ClientMaster,
+    ContractMaster,
+    PortUpdate,
+    PortReorderItem,
+    TerminalUpdate,
+    SourceSinkUpdateItem
+)
 from backend.services.forecast_service import run_forecast_simulation, run_forecast_simulation_universal
 
 router = APIRouter(tags=["Commercial Forecast"])
@@ -769,6 +783,16 @@ def save_ports(payload: PortUpdate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.delete('/ports')
+def delete_port(port_id: str):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        sb.table('ports').delete().eq('port_id', port_id).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post('/ports/reorder')
 def reorder_ports(items: List[PortReorderItem]):
     try:
@@ -780,6 +804,39 @@ def reorder_ports(items: List[PortReorderItem]):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get('/terminals')
+def get_terminals(port_id: Optional[str] = None):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        query = sb.table('terminals').select("*").order("created_at")
+        if port_id:
+            query = query.eq('port_id', port_id)
+        res = query.execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post('/terminals')
+def save_terminals(payload: TerminalUpdate):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        data = payload.dict()
+        sb.table('terminals').upsert(data).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete('/terminals')
+def delete_terminal(terminal_id: str, port_id: str):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        sb.table('terminals').delete().eq('terminal_id', terminal_id).eq('port_id', port_id).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 from backend.models.forecast_models import PortCostStaticUpdateItem
 

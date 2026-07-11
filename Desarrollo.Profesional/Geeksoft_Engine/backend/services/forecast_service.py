@@ -41,7 +41,39 @@ def safe_fetch(supabase, table_name):
         print(f"Warning: Could not fetch table {table_name}: {e}")
         return []
 
-def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: str, vessel_id: str, port_costs_data: list, agency_matrix_data: list, port_cost_mode: str = "static") -> dict:
+def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: str, vessel_id: str, port_costs_data: list, agency_matrix_data: list, port_cost_mode: str = "static", v_data: dict = None, quantity: float = 0.0, contract: dict = None, ports_db: dict = None) -> dict:
+    if port_cost_mode == "dynamic" and v_data is not None and ports_db is not None:
+        from backend.port_engines.core import calculate_dynamic_port_costs
+        country = ports_db.get(port_id, {}).get("country", "PE")
+        
+        # Estimate PORT_HOURS exactly as engine.py audit ledger calculates it
+        port_hours = 24.0
+        if operation_type == 'CARGA':
+            rate = contract.get("load_rate") if contract else ports_db.get(port_id, {}).get("max_load_rate", 0)
+            actual_rate = float(rate) if rate and float(rate) > 0 else 9999.0
+            overhead = float(contract.get("time_to_count_carga_hrs", 6.0) if contract else 6.0)
+            maneuver = float(contract.get("maneuver_carga_hrs", 0.0) if contract else 0.0)
+            port_hours = (quantity / actual_rate) + overhead + maneuver
+        else:
+            rate = contract.get("discharge_rate") if contract else ports_db.get(port_id, {}).get("max_disch_rate", 0)
+            actual_rate = float(rate) if rate and float(rate) > 0 else 9999.0
+            overhead = float(contract.get("time_to_count_descarga_hrs", 6.0) if contract else 6.0)
+            maneuver = float(contract.get("maneuver_descarga_hrs", 0.0) if contract else 0.0)
+            port_hours = (quantity / actual_rate) + overhead + maneuver
+            
+        # Filtros iniciales de port_costs_data
+        candidatos = [
+            c for c in port_costs_data
+            if c.get("port_id") == port_id 
+            and c.get("operation_type") == operation_type
+            and c.get("terminal") == "GENERAL" 
+        ]
+        filas_cliente = [c for c in candidatos if c.get("client_id") == client_id]
+        if not filas_cliente:
+            filas_cliente = [c for c in candidatos if c.get("client_id") == "DEFAULT"]
+            
+        return calculate_dynamic_port_costs(port_id, country, v_data, port_hours, filas_cliente)
+
     """
     Calcula los costos de puerto basándose en números duros (campo 'cost') configurados en port_costs_matrix.
     Si no encuentra datos desglosados en port_costs_matrix, busca el costo plano consolidado en agency_matrix como fallback.
@@ -427,7 +459,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                             if orig_port and tr.get("origin_action", "NONE") != "NONE":
                                 tr["agency_costs_origin"] = calculate_detailed_port_costs(
                                     client, orig_port, "CARGA", vessel,
-                                    port_costs_data, agency_matrix_data, request.port_cost_mode
+                                    port_costs_data, agency_matrix_data, request.port_cost_mode,
+                                    vparams, float(tr.get("quantity", 0)), contract, ports_db
                                 )["total_cost"]
 
                         # Costo de puerto destino: respetar override grabado; recalcular solo si es 0
@@ -435,7 +468,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                             if dest_port and tr.get("destination_action", "NONE") != "NONE":
                                 tr["agency_costs_destination"] = calculate_detailed_port_costs(
                                     client, dest_port, "DESCARGA", vessel,
-                                    port_costs_data, agency_matrix_data, request.port_cost_mode
+                                    port_costs_data, agency_matrix_data, request.port_cost_mode,
+                                    vparams, float(tr.get("quantity", 0)), contract, ports_db
                                 )["total_cost"]
 
                 # --- YIELD PONDERADO: tarifa representativa para la Matriz ---
@@ -503,11 +537,13 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     dest_port = laden_leg.get("destination_port_id")
                     if orig_port:
                         laden_leg["agency_costs_origin"] = calculate_detailed_port_costs(
-                            "DEFAULT", orig_port, 'CARGA', "DEFAULT", port_costs_data, agency_matrix_data, request.port_cost_mode
+                            "DEFAULT", orig_port, 'CARGA', "DEFAULT", port_costs_data, agency_matrix_data, request.port_cost_mode,
+                            v_data, line.quantity, contract, ports_db
                         )["total_cost"]
                     if dest_port:
                         laden_leg["agency_costs_destination"] = calculate_detailed_port_costs(
-                            "DEFAULT", dest_port, 'DESCARGA', "DEFAULT", port_costs_data, agency_matrix_data, request.port_cost_mode
+                            "DEFAULT", dest_port, 'DESCARGA', "DEFAULT", port_costs_data, agency_matrix_data, request.port_cost_mode,
+                            v_data, line.quantity, contract, ports_db
                         )["total_cost"]
                     
                 legs_copy["bunker_price_ifo"] = p_ifo
@@ -561,8 +597,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             
         else:
             # Calcular costos detallados usando el nuevo helper
-            orig_result = calculate_detailed_port_costs(client, line.origin_port_id, 'CARGA', vessel, port_costs_data, agency_matrix_data, request.port_cost_mode)
-            dest_result = calculate_detailed_port_costs(client, line.destination_port_id, 'DESCARGA', vessel, port_costs_data, agency_matrix_data, request.port_cost_mode)
+            orig_result = calculate_detailed_port_costs(client, line.origin_port_id, 'CARGA', vessel, port_costs_data, agency_matrix_data, request.port_cost_mode, v_data, line.quantity, contract, ports_db)
+            dest_result = calculate_detailed_port_costs(client, line.destination_port_id, 'DESCARGA', vessel, port_costs_data, agency_matrix_data, request.port_cost_mode, v_data, line.quantity, contract, ports_db)
             
             ag_orig = orig_result["total_cost"]
             ag_dest = dest_result["total_cost"]
@@ -821,14 +857,16 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                             if orig_port and tr.get("origin_action", "NONE") != "NONE":
                                 tr["agency_costs_origin"] = calculate_detailed_port_costs(
                                     client, orig_port, "CARGA", vessel,
-                                    port_costs_data, agency_matrix_data, request.port_cost_mode
+                                    port_costs_data, agency_matrix_data, request.port_cost_mode,
+                                    vparams, float(tr.get("quantity", 0)), contract, ports_db
                                 )["total_cost"]
 
                         if float(tr.get("agency_costs_destination", 0)) == 0.0:
                             if dest_port and tr.get("destination_action", "NONE") != "NONE":
                                 tr["agency_costs_destination"] = calculate_detailed_port_costs(
                                     client, dest_port, "DESCARGA", vessel,
-                                    port_costs_data, agency_matrix_data, request.port_cost_mode
+                                    port_costs_data, agency_matrix_data, request.port_cost_mode,
+                                    vparams, float(tr.get("quantity", 0)), contract, ports_db
                                 )["total_cost"]
 
                 yield_flete = (total_laden_revenue / total_laden_qty) if total_laden_qty > 0 else 0.0
@@ -892,11 +930,13 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                     dest_port = laden_leg.get("destination_port_id")
                     if orig_port:
                         laden_leg["agency_costs_origin"] = calculate_detailed_port_costs(
-                            "DEFAULT", orig_port, 'CARGA', "DEFAULT", port_costs_data, agency_matrix_data, request.port_cost_mode
+                            "DEFAULT", orig_port, 'CARGA', "DEFAULT", port_costs_data, agency_matrix_data, request.port_cost_mode,
+                            v_data, line.quantity, contract, ports_db
                         )["total_cost"]
                     if dest_port:
                         laden_leg["agency_costs_destination"] = calculate_detailed_port_costs(
-                            "DEFAULT", dest_port, 'DESCARGA', "DEFAULT", port_costs_data, agency_matrix_data, request.port_cost_mode
+                            "DEFAULT", dest_port, 'DESCARGA', "DEFAULT", port_costs_data, agency_matrix_data, request.port_cost_mode,
+                            v_data, line.quantity, contract, ports_db
                         )["total_cost"]
                     
                 legs_copy["bunker_price_ifo"] = p_ifo
@@ -946,8 +986,8 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                 route_key = f"{line.origin_port_id}-{line.destination_port_id}"
             
         else:
-            orig_result = calculate_detailed_port_costs(client, line.origin_port_id, 'CARGA', vessel, port_costs_data, agency_matrix_data, request.port_cost_mode)
-            dest_result = calculate_detailed_port_costs(client, line.destination_port_id, 'DESCARGA', vessel, port_costs_data, agency_matrix_data, request.port_cost_mode)
+            orig_result = calculate_detailed_port_costs(client, line.origin_port_id, 'CARGA', vessel, port_costs_data, agency_matrix_data, request.port_cost_mode, v_data, line.quantity, contract, ports_db)
+            dest_result = calculate_detailed_port_costs(client, line.destination_port_id, 'DESCARGA', vessel, port_costs_data, agency_matrix_data, request.port_cost_mode, v_data, line.quantity, contract, ports_db)
             
             ag_orig = orig_result["total_cost"]
             ag_dest = dest_result["total_cost"]

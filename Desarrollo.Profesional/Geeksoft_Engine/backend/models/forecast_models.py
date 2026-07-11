@@ -144,6 +144,12 @@ class PortReorderItem(BaseModel):
     port_id: str
     display_order: int
 
+class TerminalUpdate(BaseModel):
+    terminal_id: str
+    port_id: str
+    terminal_name: str
+    is_active: bool = True
+
 class PortCostStaticUpdateItem(BaseModel):
     client_id: str
     port_id: str

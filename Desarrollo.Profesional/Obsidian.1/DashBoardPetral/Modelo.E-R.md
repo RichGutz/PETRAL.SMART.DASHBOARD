@@ -101,7 +101,18 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 
 ---
 
-### 3.3. Tabla: `clients` (Maestro de Clientes Corporativos)
+### 3.3. Tabla: `terminals` (Maestro de Terminales Físicos)
+*Desglosa los puertos en terminales específicos. Un puerto (ej. MEJILLONES) puede tener múltiples terminales (ej. TPM, INTERACID).*
+* `terminal_id` *(VARCHAR, PK)* → Identificador único del terminal (ej. 'TPM').
+* `port_id` *(VARCHAR, FK → ports.port_id)* → Puerto al que pertenece.
+* `terminal_name` *(VARCHAR)* → Nombre completo del terminal.
+* `max_draft` *(FLOAT, DEFAULT 9999)* → Calado máximo permitido en el terminal (metros).
+* `max_loa` *(FLOAT, DEFAULT 9999)* → Eslora máxima permitida en el terminal (metros).
+* `is_active` *(BOOLEAN, DEFAULT true)* → Define si el terminal está operativo.
+
+---
+
+### 3.4. Tabla: `clients` (Maestro de Clientes Corporativos)
 *Catálogo de clientes comerciales. Permite mantener identidad visual global.*
 * `client_id` *(VARCHAR, PK)* → Identificador único comercial (ej. 'SPCC', 'SPOT').
 * `client_name` *(VARCHAR)* → Razón social del cliente.
@@ -116,7 +127,7 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 *Almacena la matriz de costos detallados y desglosados (remolcadores, pilotaje, lanchas, honorarios, etc.) por cliente, puerto, terminal y tipo de operación para cada buque específico.*
 * `client_id` *(VARCHAR, PK)* ── ID del cliente comercial (ej. `'SPCC'`) o `'DEFAULT'` como fallback global.
 * `port_id` *(VARCHAR, PK)* ── ID del puerto de la operación (ej. `'ILO'`, `'MATARANI'`).
-* `terminal` *(VARCHAR, PK, DEFAULT 'GENERAL')* ── Terminal específico dentro del puerto (ej. `'TERMINAL_A'`, `'INTERACID'`, `'TERQUIM'`).
+* `terminal` *(VARCHAR, PK, DEFAULT 'GENERAL')* ── Terminal específico dentro del puerto (ej. `'TPM'`, `'INTERACID'`).
 * `operation_type` *(VARCHAR, PK)* ── Tipo de operación: `CARGA` (Origen) o `DESCARGA` (Destino) (`CHECK (operation_type IN ('CARGA', 'DESCARGA'))`).
 * `vessel_id` *(VARCHAR, PK)* ── ID del buque (ej. `'TABLONES'`, `'MOQUEGUA'`) o `'DEFAULT'` para fallback general.
 * `concept_id` *(VARCHAR, PK, FK ── port_cost_concepts.concept_id)* ── Concepto de costo específico (ej. `'towage_1st'`, `'pilotage'`, `'lighthouse_dues'`, `'agency_fee'`, etc.).
@@ -163,6 +174,16 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 | `transportation_communication` | agency | FIXED | Movilidad + Comunicaciones (concepto unificado legado) |
 | `transport_agency` | agency | FIXED | Movilidad de Agencia (separado) |
 | `comms_agency` | agency | FIXED | Comunicaciones de Agencia (separado) |
+| `isps_fee` | general_port | FIXED | ISPS Fee / Cargo de Seguridad Internacional (Chile) |
+| `pilot_insurance` | shifting | FIXED | Seguro de Práctico en maniobras (Chile) |
+| `immigration_authorities` | general_port | FIXED | Autoridades Migratorias / PDI (Chile) |
+| `launch_anchorage` | general_port | FIXED | Lancha en Fondeadero (Chile) |
+| `launch_pier_usage` | general_port | FIXED | Uso de Muelle de Lancha (Chile) |
+| `launch_mooring` | general_port | FIXED | Lancha de Amarre / Desamarre (Chile) |
+| `launch_clearance` | general_port | FIXED | Lancha Clearance In/Out (Chile) |
+| `pilot_transport` | general_port | FIXED | Transporte de Práctico (Chile) |
+| `authorities_transport` | general_port | FIXED | Transporte de Autoridades (Chile) |
+| `authorities_charges` | general_port | FIXED | Cargos Oficiales de Clearance (Chile) |
 
 > [!NOTE]
 > **Estado de datos en `port_costs_matrix` (2026-07-09):** 230 filas totales.

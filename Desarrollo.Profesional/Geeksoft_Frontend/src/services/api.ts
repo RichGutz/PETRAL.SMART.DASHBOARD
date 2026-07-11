@@ -109,8 +109,25 @@ export const ForecastService = {
         const response = await api.post('/forecast/ports', payload);
         return response.data;
     },
+    deletePort: async (port_id: string) => {
+        const response = await api.delete('/forecast/ports', { params: { port_id } });
+        return response.data;
+    },
     reorderPorts: async (payload: any[]) => {
         const response = await api.post('/forecast/ports/reorder', payload);
+        return response.data;
+    },
+    getTerminals: async (port_id?: string) => {
+        const params = port_id ? { port_id } : {};
+        const response = await api.get('/forecast/terminals', { params });
+        return response.data;
+    },
+    saveTerminals: async (payload: any) => {
+        const response = await api.post('/forecast/terminals', payload);
+        return response.data;
+    },
+    deleteTerminal: async (terminal_id: string, port_id: string) => {
+        const response = await api.delete('/forecast/terminals', { params: { terminal_id, port_id } });
         return response.data;
     },
     getPortCostsStatic: async () => {
