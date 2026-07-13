@@ -631,26 +631,26 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                 <table id="forecast-grid-table" className="w-full text-sm text-left border-collapse">
                 <thead className="bg-slate-800 text-white uppercase font-semibold text-xs tracking-wider sticky top-0 z-20 shadow-md">
                     <tr>
-                        <th className="py-1 px-2 border border-slate-700 w-24 bg-slate-800 text-center font-bold text-xs tracking-wider">
-                            <div className="flex items-center justify-center gap-1.5 min-w-[70px]">
+                        <th className="py-1 px-1 border border-slate-700 w-12 bg-slate-800 text-center font-bold text-[10px] tracking-normal">
+                            <div className="flex items-center justify-center gap-0.5 min-w-[46px]">
                                 <span className="truncate">{getColumnHeaderLabel(groupOrder[0])}</span>
                                 <button 
                                     onClick={() => handleGroupOrderSwap(0, 1)} 
                                     className="text-slate-400 hover:text-white transition-colors cursor-pointer p-0.5 rounded hover:bg-slate-700 flex items-center justify-center"
                                     title="Mover a la derecha"
                                 >
-                                    <ChevronRight size={14} />
+                                    <ChevronRight size={12} />
                                 </button>
                             </div>
                         </th>
-                        <th className="py-1 px-2 border border-slate-700 w-28 bg-slate-800 text-center font-bold text-xs tracking-wider">
-                            <div className="flex items-center justify-center gap-1.5 min-w-[90px]">
+                        <th className="py-1 px-1 border border-slate-700 w-12 bg-slate-800 text-center font-bold text-[10px] tracking-normal">
+                            <div className="flex items-center justify-center gap-0.5 min-w-[46px]">
                                 <button 
                                     onClick={() => handleGroupOrderSwap(1, 0)} 
                                     className="text-slate-400 hover:text-white transition-colors cursor-pointer p-0.5 rounded hover:bg-slate-700 flex items-center justify-center"
                                     title="Mover a la izquierda"
                                 >
-                                    <ChevronLeft size={14} />
+                                    <ChevronLeft size={12} />
                                 </button>
                                 <span className="truncate">{getColumnHeaderLabel(groupOrder[1])}</span>
                                 <button 
@@ -658,18 +658,18 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                     className="text-slate-400 hover:text-white transition-colors cursor-pointer p-0.5 rounded hover:bg-slate-700 flex items-center justify-center"
                                     title="Mover a la derecha"
                                 >
-                                    <ChevronRight size={14} />
+                                    <ChevronRight size={12} />
                                 </button>
                             </div>
                         </th>
-                        <th className="py-1 px-2 border border-slate-700 w-24 bg-slate-800 text-center font-bold text-xs tracking-wider">
-                            <div className="flex items-center justify-center gap-1.5 min-w-[70px]">
+                        <th className="py-1 px-1 border border-slate-700 w-12 bg-slate-800 text-center font-bold text-[10px] tracking-normal">
+                            <div className="flex items-center justify-center gap-0.5 min-w-[46px]">
                                 <button 
                                     onClick={() => handleGroupOrderSwap(2, 1)} 
                                     className="text-slate-400 hover:text-white transition-colors cursor-pointer p-0.5 rounded hover:bg-slate-700 flex items-center justify-center"
                                     title="Mover a la izquierda"
                                 >
-                                    <ChevronLeft size={14} />
+                                    <ChevronLeft size={12} />
                                 </button>
                                 <span className="truncate">{getColumnHeaderLabel(groupOrder[2])}</span>
                             </div>
