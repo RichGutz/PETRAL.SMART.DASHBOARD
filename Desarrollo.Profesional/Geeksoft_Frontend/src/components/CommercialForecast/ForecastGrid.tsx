@@ -1,5 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronRight, ChevronLeft, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
+import { ForecastGridFilters } from './ForecastGridFilters';
 import './ForecastGrid.css';
 
 const getClientColor = (name: string) => {
@@ -60,6 +62,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
     excludedDemurrages = [], customDemurrages = {}, onExcludeDemurrage, onCustomDemurrageChange,
     spotRoutes = []
 }) => {
+    const { hiddenClients, hiddenRoutes, hiddenVessels, hiddenMonths, showSubtotals, showAccumulatedTotal } = useForecastContext_V2();
     
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
     const [expandedDemurrages, setExpandedDemurrages] = useState<Record<string, boolean>>({});
@@ -623,8 +626,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
     return (
         <div className="flex flex-col gap-2 relative">
+            <ForecastGridFilters />
             <div className="table-container shadow-sm border border-slate-200 rounded-lg overflow-auto max-h-[75vh] bg-white relative">
-                <table className="w-full text-sm text-left border-collapse">
+                <table id="forecast-grid-table" className="w-full text-sm text-left border-collapse">
                 <thead className="bg-slate-800 text-white uppercase font-semibold text-xs tracking-wider sticky top-0 z-20 shadow-md">
                     <tr>
                         <th className="py-1 px-2 border border-slate-700 w-24 bg-slate-800 text-center font-bold text-xs tracking-wider">
@@ -670,17 +674,26 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 <span className="truncate">{getColumnHeaderLabel(groupOrder[2])}</span>
                             </div>
                         </th>
-                        <th className="py-1 px-2 border border-slate-700 w-48 bg-slate-800">Métricas</th>
-                        {months.map(m => {
-                            const date = new Date(`${m}-02`);
-                            const formatted = new Intl.DateTimeFormat('es-ES', { month: 'short', year: '2-digit' }).format(date).replace('.', '');
-                            return <th key={m} className="py-1 px-2 text-center border border-slate-700 capitalize bg-slate-800">{formatted}</th>;
-                        })}
-                        <th className="py-1 px-2 text-right border border-slate-700 bg-slate-900">TOTAL</th>
+                        <th className="py-1 px-2 border border-slate-700 bg-slate-800 text-center font-bold text-xs tracking-wider w-36 min-w-[120px]">Métrica</th>
+                        {months.filter(m => !hiddenMonths.includes(m)).map((m, idx) => (
+                            <th key={idx} className="py-1 px-2 border border-slate-700 bg-slate-800 text-center font-bold text-xs tracking-wider min-w-[60px] w-16">{m}</th>
+                        ))}
+                        <th className="py-1 px-2 border border-slate-700 bg-petral-teal text-white text-center font-bold text-xs tracking-wider min-w-[80px]">TOTAL</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {rows.map((row, i) => (
+                    {rows.filter(row => {
+                        if (row.isGlobalTotal) {
+                            if (row.metric.globalType === 'accum' && !showAccumulatedTotal) return false;
+                            return true;
+                        }
+                        if (row.isClientSubtotal && !showSubtotals) return false;
+                        
+                        if (hiddenClients.includes(row.clientName)) return false;
+                        if (row.routeName && hiddenRoutes.includes(row.routeName)) return false;
+                        if (row.vesselName && hiddenVessels.includes(row.vesselName)) return false;
+                        return true;
+                    }).map((row, i) => (
                         <tr key={i} 
                             onDoubleClick={() => {
                                 if (row.metric.isExpandableGlobal) {
@@ -791,8 +804,11 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                     row.metric.name
                                 )}
                             </td>
-                            {row.metric.values.map((v: number | null, colIdx: number) => (
-                                <td key={colIdx} className={`py-1 px-2 text-right tabular-nums border border-slate-200 ${row.isSubRow ? 'text-xs text-slate-600' : ''} ${v === 0 ? 'text-slate-400' : 'text-slate-800'} ${row.metric.isTotal && (v ?? 0) < 0 ? 'text-red-600' : ''} ${row.metric.isTotal && (v ?? 0) > 0 ? 'text-teal-700' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
+                            {months.filter(m => !hiddenMonths.includes(m)).map((m: string, visibleIdx: number) => {
+                                const origColIdx = months.indexOf(m);
+                                const v = row.metric.values[origColIdx];
+                                return (
+                                <td key={visibleIdx} className={`py-1 px-2 text-right tabular-nums border border-slate-200 ${row.isSubRow ? 'text-xs text-slate-600' : ''} ${v === 0 ? 'text-slate-400' : 'text-slate-800'} ${row.metric.isTotal && (v ?? 0) < 0 ? 'text-red-600' : ''} ${row.metric.isTotal && (v ?? 0) > 0 ? 'text-teal-700' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
                                     {v === null ? '' : (
                                         row.metric.isDemurragePctEditable ? (
                                             <input 
@@ -806,7 +822,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                             ...prev,
                                                             [row.metric.rowKey]: {
                                                                 ...(prev[row.metric.rowKey] || {}),
-                                                                [colIdx]: val
+                                                                [origColIdx]: val
                                                             }
                                                         }));
                                                     }
@@ -820,7 +836,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                 value={v}
                                                 onChange={(e) => {
                                                     const val = parseInt(e.target.value) || 0;
-                                                    onFrequencyChange && onFrequencyChange(row.clientName, row.routeName, row.vesselName, months[colIdx], val);
+                                                    onFrequencyChange && onFrequencyChange(row.clientName, row.routeName, row.vesselName, months[origColIdx], val);
                                                 }}
                                                 className="w-14 p-1 text-center block mx-auto text-xs font-bold border border-slate-200 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white"
                                             />
@@ -839,16 +855,16 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                 value={v}
                                                 onChange={(e) => {
                                                     const val = parseFloat(e.target.value) || 0;
-                                                    onTariffChange && onTariffChange(row.clientName, row.routeName, row.vesselName, months[colIdx], val);
+                                                    onTariffChange && onTariffChange(row.clientName, row.routeName, row.vesselName, months[origColIdx], val);
                                                 }}
                                                 className="w-16 p-1 text-right text-xs font-bold border border-slate-300 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white text-petral-blue"
                                             />
                                         ) : (
                                             row.metric.isCurrency ? (
                                                 <div className="flex items-center justify-end w-full min-w-[60px]">
-                                                    {displayMode === 'pct' && row.metric.pct && row.metric.pct[colIdx] !== null ? (
+                                                    {displayMode === 'pct' && row.metric.pct && row.metric.pct[origColIdx] !== null && row.metric.pct[origColIdx] !== undefined ? (
                                                         <span className="font-medium text-slate-700">
-                                                            {row.metric.pct[colIdx].toFixed(1)}%
+                                                            {row.metric.pct[origColIdx].toFixed(1)}%
                                                         </span>
                                                     ) : (
                                                         <span className="font-medium">
@@ -862,10 +878,22 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                         )
                                     )}
                                 </td>
-                            ))}
+                                );
+                            })}
                             <td className={`py-1 px-2 text-right tabular-nums font-bold border border-slate-200 ${row.metric.isTotal ? 'bg-slate-200' : 'bg-slate-50'} ${row.isSubRow ? 'text-slate-300' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
-                                {row.metric.isCategoryHeader ? '' : (row.metric.isSubRowMetric ? '-' : (
-                                    row.metric.isCurrency ? (
+                                {row.metric.isCategoryHeader ? '' : (row.metric.isSubRowMetric ? '-' : (() => {
+                                    // Recalculate total using only visible months
+                                    const visibleIndices = months
+                                        .map((m, i) => ({ m, i }))
+                                        .filter(({ m }) => !hiddenMonths.includes(m))
+                                        .map(({ i }) => i);
+                                    const isYieldMetric = row.metric.name === "Yield (USD/MT)" || row.metric.name === "Yield Flete (USD/MT)" || row.metric.name === "Flete (USD/MT)";
+                                    const visibleValues = visibleIndices.map(i => row.metric.values[i] ?? 0).filter(v => v !== null);
+                                    const visibleTotal = isYieldMetric
+                                        ? (visibleValues.length > 0 ? visibleValues.reduce((a, b) => a + b, 0) / visibleValues.length : 0)
+                                        : visibleValues.reduce((a, b) => a + b, 0);
+
+                                    return row.metric.isCurrency ? (
                                         <div className="flex items-center justify-end w-full min-w-[60px]">
                                             {displayMode === 'pct' && row.metric.totalPct !== null && row.metric.totalPct !== undefined ? (
                                                 <span className="font-bold">
@@ -873,12 +901,12 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                 </span>
                                             ) : (
                                                 <span className="font-bold">
-                                                    {row.metric.name === "Yield (USD/MT)" || row.metric.name === "Yield Flete (USD/MT)" || row.metric.name === "Flete (USD/MT)" ? formatYield(row.metric.total) : formatCurrency(row.metric.total)}
+                                                    {isYieldMetric ? formatYield(visibleTotal) : formatCurrency(visibleTotal)}
                                                 </span>
                                             )}
                                         </div>
-                                    ) : formatNumber(row.metric.total)
-                                ))}
+                                    ) : formatNumber(visibleTotal);
+                                })())}
                             </td>
                         </tr>
                     ))}

@@ -53,6 +53,23 @@ interface ForecastContextType {
     customDemurrages: Record<string, Record<number, string>>;
     setCustomDemurrages: React.Dispatch<React.SetStateAction<Record<string, Record<number, string>>>>;
 
+    // UI Toggles & Filters
+    hiddenClients: string[];
+    setHiddenClients: React.Dispatch<React.SetStateAction<string[]>>;
+    hiddenRoutes: string[];
+    setHiddenRoutes: React.Dispatch<React.SetStateAction<string[]>>;
+    hiddenVessels: string[];
+    setHiddenVessels: React.Dispatch<React.SetStateAction<string[]>>;
+    hiddenMonths: string[];
+    setHiddenMonths: React.Dispatch<React.SetStateAction<string[]>>;
+    
+    isFiltersCollapsed: boolean;
+    setIsFiltersCollapsed: (v: boolean) => void;
+    showSubtotals: boolean;
+    setShowSubtotals: (v: boolean) => void;
+    showAccumulatedTotal: boolean;
+    setShowAccumulatedTotal: (v: boolean) => void;
+
     // Actions
     handleAddLine: (newLine: any) => void;
     handleFrequencyChange: (client_id: string, route_key: string, vessel_id: string, month_index: string, newFrequency: number) => void;
@@ -141,6 +158,16 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
         }
         return months;
     }, [startDate, endDate]);
+
+    // UI Toggles & Filters states
+    const [hiddenClients, setHiddenClients] = useState<string[]>([]);
+    const [hiddenRoutes, setHiddenRoutes] = useState<string[]>([]);
+    const [hiddenVessels, setHiddenVessels] = useState<string[]>([]);
+    const [hiddenMonths, setHiddenMonths] = useState<string[]>([]);
+    
+    const [isFiltersCollapsed, setIsFiltersCollapsed] = useState<boolean>(true);
+    const [showSubtotals, setShowSubtotals] = useState<boolean>(true);
+    const [showAccumulatedTotal, setShowAccumulatedTotal] = useState<boolean>(true);
 
     // Mantener portCostModeRef sincronizado con el estado sin disparar el useEffect
     useEffect(() => {
@@ -394,6 +421,10 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             displayMode, setDisplayMode, ports, spotRoutes, portCostMode, setPortCostMode,
             demurragePct, setDemurragePct, showDemurrage, setShowDemurrage,
             excludedDemurrages, setExcludedDemurrages, customDemurrages, setCustomDemurrages,
+            hiddenClients, setHiddenClients, hiddenRoutes, setHiddenRoutes,
+            hiddenVessels, setHiddenVessels, hiddenMonths, setHiddenMonths,
+            isFiltersCollapsed, setIsFiltersCollapsed,
+            showSubtotals, setShowSubtotals, showAccumulatedTotal, setShowAccumulatedTotal,
             handleAddLine, handleFrequencyChange, handleTariffChange, handleDeleteNode,
             handleSaveForecast, handleLoadClick, handleLoadSelected, runSimulationWith
         }}>
