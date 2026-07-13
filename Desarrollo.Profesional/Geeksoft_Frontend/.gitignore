@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Media and assets (Restricted by project rules)
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.gif

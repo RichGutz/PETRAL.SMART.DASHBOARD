@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 import { ChevronDown, ChevronRight, Download, Filter, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import logoPetral from '../../assets/Logo.Petral.png';
+import logoGeeksoft from '../../assets/Logo.Geeksoft.png';
 
 export const ForecastGridFilters: React.FC = () => {
     const { 
@@ -73,7 +75,7 @@ export const ForecastGridFilters: React.FC = () => {
         XLSX.writeFile(wb, "Petral_Forecast_Matriz.xlsx");
     };
 
-    const handlePrintPDF = () => {
+    const handlePrintPDF = (orientation: 'portrait' | 'landscape') => {
         const table = document.getElementById('forecast-grid-table');
         if (!table) return alert('No se encontró la tabla para imprimir.');
 
@@ -87,6 +89,10 @@ export const ForecastGridFilters: React.FC = () => {
             if (parent) parent.textContent = val;
         });
 
+        // Dynamic absolute image paths
+        const absolutePetralLogo = window.location.origin + logoPetral;
+        const absoluteGeeksoftLogo = window.location.origin + logoGeeksoft;
+
         // Add Petral logo logic
         const html = `
             <html>
@@ -97,7 +103,7 @@ export const ForecastGridFilters: React.FC = () => {
                     .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #0f172a; padding-bottom: 10px; }
                     .title { font-size: 20px; font-weight: bold; color: #0f172a; }
                     .subtitle { font-size: 12px; color: #475569; margin-top: 4px; }
-                    .logo-placeholder { background: #0f172a; color: white; padding: 10px 20px; font-weight: bold; border-radius: 4px; font-size: 18px; letter-spacing: 2px; }
+                    .logo-img { height: 40px; object-fit: contain; }
                     table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
                     th, td { border: 1px solid #cbd5e1; padding: 4px 6px; text-align: right; }
                     th { background-color: #1e293b; color: white; text-transform: uppercase; font-size: 9px; text-align: center; }
@@ -108,9 +114,10 @@ export const ForecastGridFilters: React.FC = () => {
                     .bg-slate-200 { background-color: #e2e8f0; }
                     .text-red-600 { color: #dc2626; }
                     .text-teal-700 { color: #0f766e; }
-                    .footer-container { margin-top: 40px; border-top: 1px solid #cbd5e1; padding-top: 10px; display: flex; justify-content: space-between; font-size: 9px; color: #64748b; }
+                    .footer-container { margin-top: 40px; border-top: 1px solid #cbd5e1; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: #64748b; }
+                    .footer-logo { height: 16px; object-fit: contain; vertical-align: middle; margin-left: 5px; }
                     @media print {
-                        @page { size: landscape; margin: 10mm; }
+                        @page { size: ${orientation}; margin: 10mm; }
                         body { padding: 0; }
                         table { page-break-inside: auto; }
                         tr { page-break-inside: avoid; page-break-after: auto; }
@@ -125,14 +132,17 @@ export const ForecastGridFilters: React.FC = () => {
                         <div class="title">Matriz de Forecast Comercial</div>
                         <div class="subtitle">Generado el: ${new Date().toLocaleString('es-PE')}</div>
                     </div>
-                    <div class="logo-placeholder">PETRAL</div>
+                    <img src="${absolutePetralLogo}" alt="PETRAL" class="logo-img" />
                 </div>
                 
                 ${clone.outerHTML}
 
                 <div class="footer-container">
                     <div>Generado por Shipping Soft</div>
-                    <div>Desarrollado por Geeksoft</div>
+                    <div style="display: flex; align-items: center;">
+                        <span>Desarrollado por</span>
+                        <img src="${absoluteGeeksoftLogo}" alt="Geeksoft" class="footer-logo" />
+                    </div>
                 </div>
                 
                 <script>
@@ -297,16 +307,23 @@ export const ForecastGridFilters: React.FC = () => {
 
                         <div className="flex items-center gap-3">
                             <button 
-                                onClick={handlePrintPDF}
-                                className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-md text-sm font-bold shadow-sm transition-all hover:shadow-md"
+                                onClick={() => handlePrintPDF('portrait')}
+                                className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-md text-sm font-bold shadow-sm transition-all hover:shadow-md"
                             >
                                 <FileText size={16} />
-                                Imprimir PDF
+                                PDF Vertical
+                            </button>
+                            <button 
+                                onClick={() => handlePrintPDF('landscape')}
+                                className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-md text-sm font-bold shadow-sm transition-all hover:shadow-md"
+                            >
+                                <FileText size={16} />
+                                PDF Horizontal
                             </button>
                             <button 
                                 onClick={handleExportExcel}
                                 id="btn-export-excel"
-                                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-md text-sm font-bold shadow-sm transition-all hover:shadow-md"
+                                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-md text-sm font-bold shadow-sm transition-all hover:shadow-md"
                             >
                                 <Download size={16} />
                                 Bajar a Excel
