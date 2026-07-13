@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
-import { Anchor, Save, Edit3, MapPin, Globe, Plus, ExternalLink, Factory, Trash2 } from 'lucide-react';
+import { Anchor, Edit3, MapPin, Plus, Factory, Trash2 } from 'lucide-react';
 
 // Helper para obtener código ISO de 2 letras y nombre limpio de país
 const getCountryInfo = (countryStr: string) => {
