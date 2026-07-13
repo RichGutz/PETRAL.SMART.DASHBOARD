@@ -89,9 +89,17 @@ export const ForecastGridFilters: React.FC = () => {
             if (parent) parent.textContent = val;
         });
 
-        // Dynamic absolute image paths
-        const absolutePetralLogo = window.location.origin + logoPetral;
-        const absoluteGeeksoftLogo = window.location.origin + logoGeeksoft;
+        // Dynamic absolute image paths with safe URL resolution
+        const getAbsoluteUrl = (path: string) => {
+            if (!path) return '';
+            if (path.startsWith('http://') || path.startsWith('https://')) {
+                return path;
+            }
+            const cleanPath = path.startsWith('/') ? path : '/' + path;
+            return window.location.origin + cleanPath;
+        };
+        const absolutePetralLogo = getAbsoluteUrl(logoPetral);
+        const absoluteGeeksoftLogo = getAbsoluteUrl(logoGeeksoft);
 
         // Add Petral logo logic
         const html = `
@@ -207,7 +215,19 @@ export const ForecastGridFilters: React.FC = () => {
                 </div>
                 
                 <script>
-                    window.onload = function() { window.print(); }
+                    Promise.all(
+                        Array.from(document.querySelectorAll('img')).map(img => {
+                            if (img.complete) return Promise.resolve();
+                            return new Promise(resolve => {
+                                img.onload = resolve;
+                                img.onerror = resolve;
+                            });
+                        })
+                    ).then(() => {
+                        setTimeout(() => {
+                            window.print();
+                        }, 500);
+                    });
                 </script>
             </body>
             </html>
