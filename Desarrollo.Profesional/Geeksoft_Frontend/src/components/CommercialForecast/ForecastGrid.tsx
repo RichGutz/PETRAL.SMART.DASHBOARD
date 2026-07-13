@@ -678,7 +678,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         {months.filter(m => !hiddenMonths.includes(m)).map((m, idx) => (
                             <th key={idx} className="py-1 px-2 border border-slate-700 bg-slate-800 text-center font-bold text-xs tracking-wider min-w-[60px] w-16">{m}</th>
                         ))}
-                        <th className="py-1 px-2 border border-slate-700 bg-petral-teal text-white text-center font-bold text-xs tracking-wider min-w-[80px]">TOTAL</th>
+                        <th className="py-1 px-1 border border-slate-700 bg-petral-teal text-white text-center font-bold text-xs tracking-wider min-w-[60px] w-16">TOTAL</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -880,7 +880,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 </td>
                                 );
                             })}
-                            <td className={`py-1 px-2 text-right tabular-nums font-bold border border-slate-200 ${row.metric.isTotal ? 'bg-slate-200' : 'bg-slate-50'} ${row.isSubRow ? 'text-slate-300' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
+                            <td className={`py-1 px-1 text-right tabular-nums font-bold border border-slate-200 ${row.metric.isTotal ? 'bg-slate-200' : 'bg-slate-50'} ${row.isSubRow ? 'text-slate-300' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
                                 {row.metric.isCategoryHeader ? '' : (row.metric.isSubRowMetric ? '-' : (() => {
                                     // Recalculate total using only visible months
                                     const visibleIndices = months
@@ -894,7 +894,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                         : visibleValues.reduce((a, b) => a + b, 0);
 
                                     return row.metric.isCurrency ? (
-                                        <div className="flex items-center justify-end w-full min-w-[60px]">
+                                        <div className="flex items-center justify-end w-full min-w-[50px]">
                                             {displayMode === 'pct' && row.metric.totalPct !== null && row.metric.totalPct !== undefined ? (
                                                 <span className="font-bold">
                                                     {row.metric.totalPct.toFixed(1)}%
