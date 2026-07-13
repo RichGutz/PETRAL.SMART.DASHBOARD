@@ -17,6 +17,17 @@ interface GroupedRow {
     originalProducto?: string;
 }
 
+// Helper para obtener código ISO de 2 letras y nombre limpio de país
+const getCountryInfo = (countryStr: string) => {
+    if (!countryStr) return { code: 'pe', name: '-' };
+    const c = countryStr.trim().toUpperCase();
+    if (c === 'PE' || c === 'PERU' || c === 'PERÚ') return { code: 'pe', name: 'Perú' };
+    if (c === 'CL' || c === 'CHILE') return { code: 'cl', name: 'Chile' };
+    if (c === 'EC' || c === 'ECUADOR') return { code: 'ec', name: 'Ecuador' };
+    const fallbackCode = countryStr.slice(0, 2).toLowerCase();
+    return { code: fallbackCode, name: countryStr };
+};
+
 export const SourcesSinksMaster_V2: React.FC = () => {
     const navigate = navigateHook();
     const [loading, setLoading] = useState(true);
@@ -40,6 +51,33 @@ export const SourcesSinksMaster_V2: React.FC = () => {
     // Estado de la tabla agrupada por empresa + producto
     const [tableRows, setTableRows] = useState<GroupedRow[]>([]);
     const [isDirty, setIsDirty] = useState(false);
+
+    const groupedPortsByCountry = useMemo(() => {
+        const ecuadorPorts: any[] = [];
+        const peruPorts: any[] = [];
+        const chilePorts: any[] = [];
+        const othersPorts: any[] = [];
+
+        ports.forEach(p => {
+            const countryInfo = getCountryInfo(p.country);
+            if (countryInfo.code === 'ec') {
+                ecuadorPorts.push(p);
+            } else if (countryInfo.code === 'pe') {
+                peruPorts.push(p);
+            } else if (countryInfo.code === 'cl') {
+                chilePorts.push(p);
+            } else {
+                othersPorts.push(p);
+            }
+        });
+
+        return {
+            EC: ecuadorPorts,
+            PE: peruPorts,
+            CL: chilePorts,
+            OTHERS: othersPorts
+        };
+    }, [ports]);
 
     function navigateHook() {
         try {
@@ -449,22 +487,123 @@ export const SourcesSinksMaster_V2: React.FC = () => {
 
                     <div className="flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                         
-                        {/* NIVEL 1: TABS DE PUERTOS */}
-                        <div className="flex overflow-x-auto border-b border-slate-200 bg-slate-50 scrollbar-none">
-                            {ports.map((p) => (
-                                <button
-                                    key={p.port_id}
-                                    onClick={() => setActivePortId(p.port_id)}
-                                    className={`px-6 py-3 font-black text-xs uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap flex items-center gap-2 ${
-                                        activePortId === p.port_id
-                                            ? 'border-blue-600 text-blue-600 bg-white'
-                                            : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-                                    }`}
-                                >
-                                    <Anchor size={14} />
-                                    {p.port_name || p.port_id}
-                                </button>
-                            ))}
+                        {/* NIVEL 1: TABS DE PUERTOS POR PAÍS */}
+                        <div className="flex flex-col border-b border-slate-200 bg-slate-50/70 p-4 gap-3">
+                            
+                            {/* ECUADOR */}
+                            {groupedPortsByCountry.EC.length > 0 && (
+                                <div className="flex flex-col md:flex-row md:items-center gap-3">
+                                    <div className="flex items-center gap-1.5 min-w-[140px] text-[10px] font-black text-slate-500 uppercase tracking-widest select-none border-b md:border-b-0 md:border-r border-slate-200 pb-1 md:pb-0 md:pr-3">
+                                        <img 
+                                            src="https://flagcdn.com/16x12/ec.png" 
+                                            alt="Ecuador" 
+                                            className="w-5 h-3.5 object-cover rounded shadow-sm border border-slate-200 shrink-0"
+                                        />
+                                        Ecuador (EC)
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {groupedPortsByCountry.EC.map((p) => (
+                                            <button
+                                                key={p.port_id}
+                                                onClick={() => setActivePortId(p.port_id)}
+                                                className={`px-4 py-1.5 font-bold text-xs uppercase tracking-wider rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                                                    activePortId === p.port_id
+                                                        ? 'bg-blue-600 border-blue-600 text-white shadow-sm font-black'
+                                                        : 'bg-white border-slate-300 text-slate-600 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-400'
+                                                }`}
+                                            >
+                                                <Anchor size={12} />
+                                                {p.port_name || p.port_id}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* PERÚ */}
+                            {groupedPortsByCountry.PE.length > 0 && (
+                                <div className="flex flex-col md:flex-row md:items-center gap-3">
+                                    <div className="flex items-center gap-1.5 min-w-[140px] text-[10px] font-black text-slate-500 uppercase tracking-widest select-none border-b md:border-b-0 md:border-r border-slate-200 pb-1 md:pb-0 md:pr-3">
+                                        <img 
+                                            src="https://flagcdn.com/16x12/pe.png" 
+                                            alt="Perú" 
+                                            className="w-5 h-3.5 object-cover rounded shadow-sm border border-slate-200 shrink-0"
+                                        />
+                                        Perú (PE)
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {groupedPortsByCountry.PE.map((p) => (
+                                            <button
+                                                key={p.port_id}
+                                                onClick={() => setActivePortId(p.port_id)}
+                                                className={`px-4 py-1.5 font-bold text-xs uppercase tracking-wider rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                                                    activePortId === p.port_id
+                                                        ? 'bg-blue-600 border-blue-600 text-white shadow-sm font-black'
+                                                        : 'bg-white border-slate-300 text-slate-600 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-400'
+                                                }`}
+                                            >
+                                                <Anchor size={12} />
+                                                {p.port_name || p.port_id}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* CHILE */}
+                            {groupedPortsByCountry.CL.length > 0 && (
+                                <div className="flex flex-col md:flex-row md:items-center gap-3">
+                                    <div className="flex items-center gap-1.5 min-w-[140px] text-[10px] font-black text-slate-500 uppercase tracking-widest select-none border-b md:border-b-0 md:border-r border-slate-200 pb-1 md:pb-0 md:pr-3">
+                                        <img 
+                                            src="https://flagcdn.com/16x12/cl.png" 
+                                            alt="Chile" 
+                                            className="w-5 h-3.5 object-cover rounded shadow-sm border border-slate-200 shrink-0"
+                                        />
+                                        Chile (CL)
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {groupedPortsByCountry.CL.map((p) => (
+                                            <button
+                                                key={p.port_id}
+                                                onClick={() => setActivePortId(p.port_id)}
+                                                className={`px-4 py-1.5 font-bold text-xs uppercase tracking-wider rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                                                    activePortId === p.port_id
+                                                        ? 'bg-blue-600 border-blue-600 text-white shadow-sm font-black'
+                                                        : 'bg-white border-slate-300 text-slate-600 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-400'
+                                                }`}
+                                            >
+                                                <Anchor size={12} />
+                                                {p.port_name || p.port_id}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* OTROS PAÍSES */}
+                            {groupedPortsByCountry.OTHERS.length > 0 && (
+                                <div className="flex flex-col md:flex-row md:items-center gap-3">
+                                    <div className="flex items-center gap-1.5 min-w-[140px] text-[10px] font-black text-slate-500 uppercase tracking-widest select-none border-b md:border-b-0 md:border-r border-slate-200 pb-1 md:pb-0 md:pr-3">
+                                        🌐 Otros
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {groupedPortsByCountry.OTHERS.map((p) => (
+                                            <button
+                                                key={p.port_id}
+                                                onClick={() => setActivePortId(p.port_id)}
+                                                className={`px-4 py-1.5 font-bold text-xs uppercase tracking-wider rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                                                    activePortId === p.port_id
+                                                        ? 'bg-blue-600 border-blue-600 text-white shadow-sm font-black'
+                                                        : 'bg-white border-slate-300 text-slate-600 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-400'
+                                                }`}
+                                            >
+                                                <Anchor size={12} />
+                                                {p.port_name || p.port_id}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* NIVEL 2: ORIGINACIÓN / DESTINO */}
