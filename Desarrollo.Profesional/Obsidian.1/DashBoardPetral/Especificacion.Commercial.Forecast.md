@@ -220,4 +220,28 @@ Se corrigió un bug que impedía que `SPCC` apareciera en el selector "Cliente" 
 > Clientes con rutas simples hardcodeadas (actualmente `SPCC`) deben declararse en el array `fixedClients` de `ForecastBuilder_V2.tsx`. Clientes con rutas multicotizador complejas (NEXA y futuros) aparecen dinámicamente desde la tabla `spots`.
 
 ---
+
+### 5.10 Correcciones en Exportaciones, P/L Total Acumulado, Formateo y Maestros (Julio 2026)
+
+#### P/L Total Acumulado (Columna TOTAL)
+- **Problema:** En el reporte consolidado del P&L (Matriz Financiera), la columna de `TOTAL` sumaba de forma errónea la fila completa para métricas de carácter acumulativo (como saldo final de caja o márgenes acumulados), lo cual distorsionaba el resultado real del ejercicio.
+- **Solución:** Se corrigió en `ForecastGrid.tsx` la función que calcula los totales de cada fila. Si la métrica es de tipo acumulado, la columna `TOTAL` toma el valor de la última columna de la serie de tiempo (el último mes de la proyección), mientras que para las métricas de flujo (como ingresos, costos, etc.) se mantiene la suma total de la fila.
+
+#### Formato Numérico con Separador de Miles en Excel
+- **Mejora:** Se refinó el exportador general de Excel para forzar el formateo numérico con separador de miles y formato monetario en todas las exportaciones del forecast, eliminando los números crudos planos y mejorando la legibilidad financiera de las planillas descargadas.
+
+#### Descarga Humanizada de PDF y Excel en Maestros
+- **Mejora:** Se integraron botones de exportación a PDF y Excel en todas las pantallas maestras del sistema (`Puertos`, `Rutas`, `Contratos`, `Gastos Portuarios`, `Clientes`, `Bunker`, `Embarcaciones`, `Originación/Destino`).
+- **Humanización:** Las descargas no imprimen los IDs de base de datos directamente, sino que se mapean dinámicamente a nombres amigables legibles (ej. nombres completos de clientes, puertos de origen/destino reales, nombres de barcos).
+- **Estilo de Impresión PDF:** Se estructuró un diseño en formato horizontal/apaisado con tipografía *Outfit*, alternancia de color en filas y el logotipo oficial de Naviera Petral, optimizando las columnas para evitar el desborde y asegurar que se imprima todo en una sola página limpia.
+
+#### Corrección de Factores Climáticos (Maestro de Distancias)
+- **Problema:** En la exportación a PDF de la matriz de distancias, los factores climáticos (`W-Laden` y `W-Ballast`) se exportaban en `0.0%` a pesar de que la interfaz de usuario mostraba un factor real como `3.0%`.
+- **Causa:** En la base de datos se almacenan como decimal fraccionario (ej. `0.03`), mientras que la función de exportación esperaba una escala `0-100` (como la de los contratos) para formatearla a porcentaje.
+- **Solución:** Se actualizó `RoutesMaster_V2.tsx` para multiplicar por `100` los factores climáticos durante la preparación de la exportación en `exportData`, logrando que tanto el PDF como el Excel muestren el porcentaje exacto y coincidan con la UI.
+
+#### Rediseño de Pestañas de Puertos por País (Maestro de Originación / Destino)
+- **Mejora:** Se rediseñó el selector horizontal de puertos en el Maestro de Originación / Destino para agrupar los puertos geográficamente por su país (Ecuador, Perú, Chile) en tres filas paralelas una sobre la otra. Cada fila cuenta con su etiqueta distintiva y su bandera correspondiente provista por `flagcdn.com`, optimizando el espacio en pantalla y organizando la planilla de capacidades de forma más intuitiva.
+
+---
 *Documento vivo mantenido por el equipo Geeksoft - Naviera Petral.*
