@@ -884,9 +884,12 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                         .map(({ i }) => i);
                                     const isYieldMetric = row.metric.name === "Yield (USD/MT)" || row.metric.name === "Yield Flete (USD/MT)" || row.metric.name === "Flete (USD/MT)";
                                     const visibleValues = visibleIndices.map(i => row.metric.values[i] ?? 0).filter(v => v !== null);
-                                    const visibleTotal = isYieldMetric
-                                        ? (visibleValues.length > 0 ? visibleValues.reduce((a, b) => a + b, 0) / visibleValues.length : 0)
-                                        : visibleValues.reduce((a, b) => a + b, 0);
+                                    const isAccumMetric = row.metric.globalType === 'accum';
+                                    const visibleTotal = isAccumMetric
+                                        ? (visibleValues.length > 0 ? visibleValues[visibleValues.length - 1] : 0)
+                                        : isYieldMetric
+                                            ? (visibleValues.length > 0 ? visibleValues.reduce((a, b) => a + b, 0) / visibleValues.length : 0)
+                                            : visibleValues.reduce((a, b) => a + b, 0);
 
                                     return row.metric.isCurrency ? (
                                         <div className="flex items-center justify-end w-full min-w-[50px]">
