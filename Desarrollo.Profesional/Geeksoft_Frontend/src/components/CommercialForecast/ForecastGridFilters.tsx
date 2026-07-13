@@ -72,6 +72,65 @@ export const ForecastGridFilters: React.FC = () => {
         });
 
         const wb = XLSX.utils.table_to_book(clone, { sheet: "Forecast" });
+        
+        // Formatear las celdas numéricas con separador de miles y formato de moneda
+        const ws = wb.Sheets["Forecast"];
+        if (ws) {
+            const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+            for (let r = range.s.r; r <= range.e.r; r++) {
+                // 1. Buscar la métrica de esta fila en las columnas 0 a 4
+                let metricName = '';
+                for (let c = 0; c <= 4; c++) {
+                    const cellRef = XLSX.utils.encode_cell({ r, c });
+                    const cell = ws[cellRef];
+                    if (cell && cell.t === 's' && cell.v) {
+                        const valStr = String(cell.v).trim();
+                        if (valStr.includes('P/L') || valStr.includes('Toneladas') || valStr.includes('Revenue') || 
+                            valStr.includes('Costs') || valStr.includes('Bunker') || valStr.includes('Margen') || 
+                            valStr.includes('Yield') || valStr.includes('Demurrage') || valStr.includes('Flete') ||
+                            valStr.includes('Viajes')) {
+                            metricName = valStr;
+                            break;
+                        }
+                    }
+                }
+
+                if (!metricName) continue;
+
+                // 2. Limpiar y formatear las celdas numéricas de la fila
+                for (let c = 0; c <= range.e.c; c++) {
+                    const cellRef = XLSX.utils.encode_cell({ r, c });
+                    const cell = ws[cellRef];
+                    if (!cell) continue;
+
+                    // Si fue parseado como string pero representa un número
+                    if (cell.t === 's' && cell.v) {
+                        const cleanVal = String(cell.v).replace(/[\$,]/g, '').trim();
+                        const num = parseFloat(cleanVal);
+                        if (!isNaN(num)) {
+                            cell.t = 'n';
+                            cell.v = num;
+                        }
+                    }
+
+                    // Aplicar formato de acuerdo a la métrica
+                    if (cell.t === 'n') {
+                        if (metricName.includes('%')) {
+                            cell.z = '0.0%';
+                        } else if (metricName.includes('Yield') || metricName.includes('USD/MT') || metricName.includes('Flete (USD/MT)')) {
+                            cell.z = '$#,##0.00';
+                        } else if (metricName.includes('Viajes') || metricName.includes('freq')) {
+                            cell.z = '0.0';
+                        } else if (metricName.includes('Toneladas')) {
+                            cell.z = '#,##0';
+                        } else {
+                            cell.z = '$#,##0';
+                        }
+                    }
+                }
+            }
+        }
+
         XLSX.writeFile(wb, "Petral_Forecast_Matriz.xlsx");
     };
 
