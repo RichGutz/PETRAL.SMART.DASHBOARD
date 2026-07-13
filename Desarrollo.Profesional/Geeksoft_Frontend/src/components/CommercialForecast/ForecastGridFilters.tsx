@@ -89,6 +89,15 @@ export const ForecastGridFilters: React.FC = () => {
             if (parent) parent.textContent = val;
         });
 
+        // Reemplazar botones (expandibles, etc.) con spans para evitar que se oculten en la impresión
+        const buttons = clone.querySelectorAll('button');
+        buttons.forEach(btn => {
+            const val = btn.textContent || '';
+            const span = document.createElement('span');
+            span.textContent = val;
+            btn.parentNode?.replaceChild(span, btn);
+        });
+
         // Asignar clases fijas a las columnas del clon para que no se desfacen por rowspan
         const visibleMonthsCount = months.filter(m => !hiddenMonths.includes(m)).length;
         const trs = clone.querySelectorAll('tr');
