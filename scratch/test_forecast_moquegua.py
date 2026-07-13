@@ -25,7 +25,7 @@ def test_moquegua_forecast():
         projection_lines=lines,
         start_date="2026-07-01",
         end_date="2026-12-31",
-        port_cost_mode="dynamic"
+        port_cost_mode="static"
     )
     
     try:

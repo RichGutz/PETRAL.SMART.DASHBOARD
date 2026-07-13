@@ -169,10 +169,13 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     const [showSubtotals, setShowSubtotals] = useState<boolean>(true);
     const [showAccumulatedTotal, setShowAccumulatedTotal] = useState<boolean>(true);
 
-    // Mantener portCostModeRef sincronizado con el estado sin disparar el useEffect
-    useEffect(() => {
-        portCostModeRef.current = portCostMode;
-    }, [portCostMode]);
+    const handlePortCostModeChange = async (mode: 'static' | 'matrix') => {
+        setPortCostMode(mode);
+        portCostModeRef.current = mode;
+        if (projectionLines.length > 0) {
+            await runSimulationWith(projectionLines, startDate, endDate);
+        }
+    };
 
     // Ref para evitar simulaciones concurrentes (mutex simple)
     const simulatingRef = useRef(false);
@@ -418,7 +421,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             forecastName, setForecastName, userId, setUserId, loadedAuthor,
             showSaveModal, setShowSaveModal, showLoadModal, setShowLoadModal, savedForecasts,
             isDirty, handleManualRecalculate,
-            displayMode, setDisplayMode, ports, spotRoutes, portCostMode, setPortCostMode,
+            displayMode, setDisplayMode, ports, spotRoutes, portCostMode, setPortCostMode: handlePortCostModeChange,
             demurragePct, setDemurragePct, showDemurrage, setShowDemurrage,
             excludedDemurrages, setExcludedDemurrages, customDemurrages, setCustomDemurrages,
             hiddenClients, setHiddenClients, hiddenRoutes, setHiddenRoutes,
