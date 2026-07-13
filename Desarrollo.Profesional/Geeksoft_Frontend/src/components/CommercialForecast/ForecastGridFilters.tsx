@@ -89,6 +89,57 @@ export const ForecastGridFilters: React.FC = () => {
             if (parent) parent.textContent = val;
         });
 
+        // Asignar clases fijas a las columnas del clon para que no se desfacen por rowspan
+        const visibleMonthsCount = months.filter(m => !hiddenMonths.includes(m)).length;
+        const trs = clone.querySelectorAll('tr');
+        trs.forEach(tr => {
+            // Procesar cabeceras th
+            const ths = tr.querySelectorAll('th');
+            if (ths.length > 0) {
+                if (ths.length >= 4) {
+                    ths[0].classList.add('col-header-client');
+                    ths[1].classList.add('col-header-route');
+                    ths[2].classList.add('col-header-vessel');
+                    ths[3].classList.add('col-header-metric');
+                }
+                if (ths.length >= 1) {
+                    ths[ths.length - 1].classList.add('col-header-total');
+                }
+                for (let j = 1; j <= visibleMonthsCount; j++) {
+                    const idx = ths.length - 1 - j;
+                    if (idx >= 0) {
+                        ths[idx].classList.add('col-header-month');
+                    }
+                }
+            }
+
+            // Procesar celdas de datos td
+            const tds = tr.querySelectorAll('td');
+            if (tds.length === 0) return;
+            
+            // Total (último td)
+            tds[tds.length - 1].classList.add('col-total');
+            
+            // Meses (los td precedentes al total)
+            for (let j = 1; j <= visibleMonthsCount; j++) {
+                const idx = tds.length - 1 - j;
+                if (idx >= 0) {
+                    tds[idx].classList.add('col-month');
+                }
+            }
+            
+            // Métrica (el td justo antes de los meses)
+            const metricIdx = tds.length - visibleMonthsCount - 2;
+            if (metricIdx >= 0) {
+                tds[metricIdx].classList.add('col-metric');
+            }
+            
+            // Columnas de navegación (Cliente, Ruta, Buque)
+            for (let idx = 0; idx < metricIdx; idx++) {
+                tds[idx].classList.add('col-nav-cell');
+            }
+        });
+
         // Dynamic absolute image paths with safe URL resolution
         const getAbsoluteUrl = (path: string) => {
             if (!path) return '';
@@ -114,9 +165,9 @@ export const ForecastGridFilters: React.FC = () => {
                     .logo-img { height: 35px; object-fit: contain; }
                     
                     /* Table base print config */
-                    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 8px; table-layout: fixed; }
-                    th, td { border: 1px solid #cbd5e1; padding: 3px 4px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-                    th { background-color: #1e293b; color: white; text-transform: uppercase; font-size: 8px; text-align: center; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 7px; table-layout: fixed; }
+                    th, td { border: 1px solid #cbd5e1; padding: 3px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                    th { background-color: #1e293b; color: white; text-transform: uppercase; font-size: 7px; text-align: center; }
                     .text-left { text-align: left; }
                     .text-center { text-align: center; }
                     .font-bold { font-weight: bold; }
@@ -128,7 +179,7 @@ export const ForecastGridFilters: React.FC = () => {
                         font-weight: bold;
                         white-space: nowrap;
                         margin: auto;
-                        font-size: 8px;
+                        font-size: 7px;
                         line-height: 1;
                         padding: 4px 0;
                     }
@@ -136,29 +187,62 @@ export const ForecastGridFilters: React.FC = () => {
                     /* Hide UI actions on print */
                     button, .absolute { display: none !important; }
                     
-                    /* Column widths for printing */
-                    table th:nth-child(1), table td:nth-child(1),
-                    table th:nth-child(2), table td:nth-child(2),
-                    table th:nth-child(3), table td:nth-child(3) {
+                    /* Estilo específico para cabeceras de columnas */
+                    .col-header-client, .col-header-route, .col-header-vessel {
                         width: 25px !important;
                         min-width: 25px !important;
                         max-width: 25px !important;
-                        padding: 2px !important;
+                        font-size: 7px !important;
                     }
-                    table th:nth-child(4), table td:nth-child(4),
-                    table td:nth-child(4) * {
+                    .col-header-metric {
+                        width: 70px !important;
+                        min-width: 70px !important;
+                        max-width: 70px !important;
+                        font-size: 7px !important;
+                        text-align: left !important;
+                    }
+                    .col-header-month {
+                        font-size: 7px !important;
+                    }
+                    .col-header-total {
+                        width: 45px !important;
+                        min-width: 45px !important;
+                        max-width: 45px !important;
+                        font-size: 7px !important;
+                    }
+
+                    /* Ancho de celdas de navegación (Cliente, Ruta, Buque) */
+                    td.col-nav-cell {
+                        width: 25px !important;
+                        min-width: 25px !important;
+                        max-width: 25px !important;
+                    }
+
+                    /* Columna Métricas: Ancho reducido a 70px y contenido alineado a la izquierda */
+                    td.col-metric, td.col-metric * {
                         width: 70px !important;
                         min-width: 70px !important;
                         max-width: 70px !important;
                         text-align: left !important;
                         justify-content: flex-start !important;
                     }
-                    table th:last-child, table td:last-child,
-                    table td:last-child * {
+                    
+                    /* Cifras mensuales: Fuente reducida en 1pt (de 8px a 7px) y alineadas a la derecha */
+                    td.col-month, td.col-month * {
+                        font-size: 7px !important;
+                        text-align: right !important;
+                        justify-content: flex-end !important;
+                    }
+                    
+                    /* Columna de Total: Ancho de 45px y alineada a la derecha */
+                    td.col-total, td.col-total * {
                         width: 45px !important;
                         min-width: 45px !important;
                         max-width: 45px !important;
+                        font-size: 7px !important;
                         font-weight: bold !important;
+                        text-align: right !important;
+                        justify-content: flex-end !important;
                     }
                     
                     /* Force background colors to print */
@@ -185,12 +269,6 @@ export const ForecastGridFilters: React.FC = () => {
                     .text-slate-700 { color: #334155 !important; }
                     .text-teal-700 { color: #0f766e !important; }
                     .text-red-600 { color: #dc2626 !important; }
-
-                    /* Force alignment of all month and total numbers to the right */
-                    table td:nth-child(n+5), table td:nth-child(n+5) * {
-                        text-align: right !important;
-                        justify-content: flex-end !important;
-                    }
 
                     .footer-container { margin-top: 40px; border-top: 1px solid #cbd5e1; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 8px; color: #64748b; }
                     .footer-logo { height: 28px; object-fit: contain; vertical-align: middle; margin-left: 5px; }
