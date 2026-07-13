@@ -160,8 +160,11 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         }> = [];
 
         Object.entries(data.aggregated_data).forEach(([client, routesData]: any) => {
+            if (hiddenClients.includes(client)) return;
             Object.entries(routesData).forEach(([route, vesselsData]: any) => {
+                if (hiddenRoutes.includes(route)) return;
                 Object.entries(vesselsData).forEach(([vessel, monthData]: any) => {
+                    if (hiddenVessels.includes(vessel)) return;
                     flatLeaves.push({ client, route, vessel, monthData });
                 });
             });
@@ -474,33 +477,34 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                 { name: "Yield (USD/MT)", values: level1Yield, total: totalLevel1Yield, pct: null, totalPct: null, isCurrency: true, isTotal: true }
             ];
 
-            const isSubtotalCollapsed = !!collapsedSubtotals[level1Name];
-            const visibleSubMetrics = isSubtotalCollapsed ? [subMetrics[0]] : subMetrics;
+            if (showSubtotals) {
+                const isSubtotalCollapsed = !!collapsedSubtotals[level1Name];
+                const visibleSubMetrics = isSubtotalCollapsed ? [subMetrics[0]] : subMetrics;
 
-            level1RowSpanRef.value += visibleSubMetrics.length;
-            const subtotalRouteRowSpanRef = { value: visibleSubMetrics.length };
+                level1RowSpanRef.value += visibleSubMetrics.length;
+                const subtotalRouteRowSpanRef = { value: visibleSubMetrics.length };
 
-            visibleSubMetrics.forEach((metric, index) => {
-                const isExpandableRow = metric.name === "P/L";
-                
-                result.push({
-                    col1: null,
-                    col2: index === 0 ? { name: "Σ SUBTOTAL", rowSpanRef: subtotalRouteRowSpanRef, isSubtotal: true } : null,
-                    col3: index === 0 ? { name: `TOTAL ${groupOrder[0].toUpperCase()}`, rowSpan: visibleSubMetrics.length, isSubtotal: true } : null,
-                    clientName: level1Name,
-                    routeName: "",
-                    vesselName: "",
-                    metric: {
-                        ...metric,
-                        isExpandableSubtotal: isExpandableRow,
-                        clientKey: level1Name,
-                        isCollapsed: isSubtotalCollapsed
-                    },
-                    isSubRow: false,
-                    isClientSubtotal: true
+                visibleSubMetrics.forEach((metric, index) => {
+                    const isExpandableRow = metric.name === "P/L";
+                    
+                    result.push({
+                        col1: null,
+                        col2: index === 0 ? { name: "Σ SUBTOTAL", rowSpanRef: subtotalRouteRowSpanRef, isSubtotal: true } : null,
+                        col3: index === 0 ? { name: `TOTAL ${groupOrder[0].toUpperCase()}`, rowSpan: visibleSubMetrics.length, isSubtotal: true } : null,
+                        clientName: level1Name,
+                        routeName: "",
+                        vesselName: "",
+                        metric: {
+                            ...metric,
+                            isExpandableSubtotal: isExpandableRow,
+                            clientKey: level1Name,
+                            isCollapsed: isSubtotalCollapsed
+                        },
+                        isSubRow: false,
+                        isClientSubtotal: true
+                    });
                 });
-            });
-
+            }
         });
         
         // TOTAL FLOTA
@@ -575,31 +579,33 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             { name: "Yield (USD/MT)", values: accumYield, total: lastVal(accumYield), pct: null, totalPct: null, isCurrency: true, isTotal: true }
         ];
 
-        const visibleAccumMetrics = isGlobalAcumCollapsed ? [accumMetrics[0]] : accumMetrics;
-        const accumRouteRowSpanRef = { value: visibleAccumMetrics.length };
+        if (showAccumulatedTotal) {
+            const visibleAccumMetrics = isGlobalAcumCollapsed ? [accumMetrics[0]] : accumMetrics;
+            const accumRouteRowSpanRef = { value: visibleAccumMetrics.length };
 
-        visibleAccumMetrics.forEach((metric, index) => {
-            const isExpandableRow = metric.name === "P/L";
-            result.push({
-                col1: index === 0 ? { name: "TOTAL ACUMULADO", rowSpanRef: accumRouteRowSpanRef, isSubtotal: true, color: "bg-petral-teal text-white" } : null,
-                col2: null,
-                col3: null,
-                clientName: "TOTAL ACUMULADO",
-                routeName: "",
-                vesselName: "",
-                metric: {
-                    ...metric,
-                    isExpandableGlobal: isExpandableRow,
-                    globalType: 'accum',
-                    isCollapsed: isGlobalAcumCollapsed
-                },
-                isSubRow: false,
-                isGlobalTotal: true
+            visibleAccumMetrics.forEach((metric, index) => {
+                const isExpandableRow = metric.name === "P/L";
+                result.push({
+                    col1: index === 0 ? { name: "TOTAL ACUMULADO", rowSpanRef: accumRouteRowSpanRef, isSubtotal: true, color: "bg-petral-teal text-white" } : null,
+                    col2: null,
+                    col3: null,
+                    clientName: "TOTAL ACUMULADO",
+                    routeName: "",
+                    vesselName: "",
+                    metric: {
+                        ...metric,
+                        isExpandableGlobal: isExpandableRow,
+                        globalType: 'accum',
+                        isCollapsed: isGlobalAcumCollapsed
+                    },
+                    isSubRow: false,
+                    isGlobalTotal: true
+                });
             });
-        });
+        }
 
         return result;
-    }, [data, months, projectionLines, expandedRows, clientOrder, routeOrder, vesselOrder, collapsedSubtotals, isGlobalTotalCollapsed, isGlobalAcumCollapsed, demurragePct, showDemurrage, expandedDemurrages, excludedDemurrages, customDemurrages, groupOrder]);
+    }, [data, months, projectionLines, expandedRows, clientOrder, routeOrder, vesselOrder, collapsedSubtotals, isGlobalTotalCollapsed, isGlobalAcumCollapsed, demurragePct, showDemurrage, expandedDemurrages, excludedDemurrages, customDemurrages, groupOrder, hiddenClients, hiddenRoutes, hiddenVessels, showSubtotals, showAccumulatedTotal]);
 
     const formatCurrency = (val: number) => {
         if (val === 0) return "-";
@@ -682,18 +688,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     </tr>
                 </thead>
                 <tbody>
-                    {rows.filter(row => {
-                        if (row.isGlobalTotal) {
-                            if (row.metric.globalType === 'accum' && !showAccumulatedTotal) return false;
-                            return true;
-                        }
-                        if (row.isClientSubtotal && !showSubtotals) return false;
-                        
-                        if (hiddenClients.includes(row.clientName)) return false;
-                        if (row.routeName && hiddenRoutes.includes(row.routeName)) return false;
-                        if (row.vesselName && hiddenVessels.includes(row.vesselName)) return false;
-                        return true;
-                    }).map((row, i) => (
+                    {rows.map((row, i) => (
                         <tr key={i} 
                             onDoubleClick={() => {
                                 if (row.metric.isExpandableGlobal) {
