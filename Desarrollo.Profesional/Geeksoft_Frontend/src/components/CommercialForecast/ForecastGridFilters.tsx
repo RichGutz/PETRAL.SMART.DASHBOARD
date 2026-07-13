@@ -99,25 +99,86 @@ export const ForecastGridFilters: React.FC = () => {
             <head>
                 <title>Matriz Comercial - PDF</title>
                 <style>
-                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; font-size: 10px; }
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; font-size: 9px; }
                     .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #0f172a; padding-bottom: 10px; }
-                    .title { font-size: 20px; font-weight: bold; color: #0f172a; }
-                    .subtitle { font-size: 12px; color: #475569; margin-top: 4px; }
-                    .logo-img { height: 40px; object-fit: contain; }
-                    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-                    th, td { border: 1px solid #cbd5e1; padding: 4px 6px; text-align: right; }
-                    th { background-color: #1e293b; color: white; text-transform: uppercase; font-size: 9px; text-align: center; }
+                    .title { font-size: 18px; font-weight: bold; color: #0f172a; }
+                    .subtitle { font-size: 10px; color: #475569; margin-top: 4px; }
+                    .logo-img { height: 35px; object-fit: contain; }
+                    
+                    /* Table base print config */
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 8px; table-layout: fixed; }
+                    th, td { border: 1px solid #cbd5e1; padding: 3px 4px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                    th { background-color: #1e293b; color: white; text-transform: uppercase; font-size: 8px; text-align: center; }
                     .text-left { text-align: left; }
                     .text-center { text-align: center; }
                     .font-bold { font-weight: bold; }
-                    .bg-slate-100 { background-color: #f1f5f9; }
-                    .bg-slate-200 { background-color: #e2e8f0; }
-                    .text-red-600 { color: #dc2626; }
-                    .text-teal-700 { color: #0f766e; }
-                    .footer-container { margin-top: 40px; border-top: 1px solid #cbd5e1; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: #64748b; }
-                    .footer-logo { height: 16px; object-fit: contain; vertical-align: middle; margin-left: 5px; }
+                    
+                    /* Vertical text support in PDF */
+                    .vertical-text {
+                        writing-mode: vertical-rl;
+                        transform: rotate(180deg);
+                        font-weight: bold;
+                        white-space: nowrap;
+                        margin: auto;
+                        font-size: 8px;
+                        line-height: 1;
+                        padding: 4px 0;
+                    }
+                    
+                    /* Hide UI actions on print */
+                    button, .absolute { display: none !important; }
+                    
+                    /* Column widths for printing */
+                    table th:nth-child(1), table td:nth-child(1),
+                    table th:nth-child(2), table td:nth-child(2),
+                    table th:nth-child(3), table td:nth-child(3) {
+                        width: 25px !important;
+                        min-width: 25px !important;
+                        max-width: 25px !important;
+                        padding: 2px !important;
+                    }
+                    table th:nth-child(4), table td:nth-child(4) {
+                        width: 100px !important;
+                        min-width: 100px !important;
+                        max-width: 100px !important;
+                        text-align: left !important;
+                    }
+                    table th:last-child, table td:last-child {
+                        width: 60px !important;
+                        min-width: 60px !important;
+                        max-width: 60px !important;
+                        font-weight: bold !important;
+                    }
+                    
+                    /* Force background colors to print */
+                    th, td, tr, table {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+
+                    /* Tailwind Background Color mapping for print */
+                    .bg-slate-800 { background-color: #1e293b !important; color: white !important; }
+                    .bg-petral-teal { background-color: #0f766e !important; color: white !important; }
+                    .bg-slate-200 { background-color: #e2e8f0 !important; }
+                    .bg-slate-100 { background-color: #f1f5f9 !important; }
+                    .bg-slate-50 { background-color: #f8fafc !important; }
+                    .bg-amber-50\/30 { background-color: #fffdf5 !important; }
+                    .bg-indigo-50\/20 { background-color: #fcfbfe !important; }
+                    .bg-indigo-50\/50 { background-color: #e0e7ff !important; }
+                    .bg-slate-100\/50 { background-color: #f8fafc !important; }
+                    
+                    /* Tailwind Text Color mapping for print */
+                    .text-slate-300 { color: #cbd5e1 !important; }
+                    .text-slate-400 { color: #94a3b8 !important; }
+                    .text-slate-500 { color: #64748b !important; }
+                    .text-slate-700 { color: #334155 !important; }
+                    .text-teal-700 { color: #0f766e !important; }
+                    .text-red-600 { color: #dc2626 !important; }
+
+                    .footer-container { margin-top: 40px; border-top: 1px solid #cbd5e1; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 8px; color: #64748b; }
+                    .footer-logo { height: 14px; object-fit: contain; vertical-align: middle; margin-left: 5px; }
                     @media print {
-                        @page { size: ${orientation}; margin: 10mm; }
+                        @page { size: ${orientation}; margin: 8mm; }
                         body { padding: 0; }
                         table { page-break-inside: auto; }
                         tr { page-break-inside: avoid; page-break-after: auto; }
