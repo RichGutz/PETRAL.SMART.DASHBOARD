@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { Plus, Trash2, Edit3, X, Calendar, DollarSign } from 'lucide-react';
+import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
+import type { ExportColumn } from '../../lib/masterExport';
 
 interface BunkerRow {
     date: string;
@@ -128,6 +130,20 @@ export const BunkerMaster: React.FC = () => {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
     };
 
+    const exportColumns: ExportColumn[] = [
+        { header: 'Fecha Cotización', key: 'date', type: 'string' },
+        { header: 'Precio IFO (USD/MT)', key: 'ifo_price', type: 'currency' },
+        { header: 'Precio MDO (USD/MT)', key: 'mdo_price', type: 'currency' }
+    ];
+
+    const handleExportExcel = () => {
+        exportMasterToExcel('Maestro de Precios de Bunker', exportColumns, rows);
+    };
+
+    const handleExportPDF = () => {
+        exportMasterToPDF('Maestro de Precios de Bunker', exportColumns, rows);
+    };
+
     if (loading && rows.length === 0) {
         return (
             <MasterTemplate title="Maestro de Precios de Bunker" activeTab="bunker">
@@ -139,7 +155,12 @@ export const BunkerMaster: React.FC = () => {
     }
 
     return (
-        <MasterTemplate title="Maestro de Precios de Bunker" activeTab="bunker">
+        <MasterTemplate 
+            title="Maestro de Precios de Bunker" 
+            activeTab="bunker"
+            onExportExcel={handleExportExcel}
+            onExportPDF={handleExportPDF}
+        >
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6 flex flex-col h-[calc(100vh-140px)]">
                 {/* Cabecera / Controles */}
                 <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between shrink-0">

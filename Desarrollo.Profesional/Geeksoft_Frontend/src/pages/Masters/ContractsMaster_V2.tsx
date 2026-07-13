@@ -3,6 +3,8 @@ import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { Save, Plus, Trash2, FileText } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
+import type { ExportColumn } from '../../lib/masterExport';
 
 interface ContractTariff {
     min_tonnage: number;
@@ -247,6 +249,43 @@ export const ContractsMaster: React.FC = () => {
         }
     }, [selectedClientId, clientRoutes, selectedRouteKey]);
 
+    const exportColumns: ExportColumn[] = [
+        { 
+            header: 'Cliente', 
+            key: 'client_id', 
+            type: 'string',
+            render: (val) => {
+                const c = rawClients.find(x => x.client_id === val);
+                return c ? c.client_name : val;
+            }
+        },
+        { header: 'Puerto Origen', key: 'origin_port_id', type: 'string' },
+        { header: 'Puerto Destino', key: 'destination_port_id', type: 'string' },
+        { header: 'Ritmo Carga (MT/Día)', key: 'load_rate', type: 'number' },
+        { header: 'Ritmo Descarga (MT/Día)', key: 'discharge_rate', type: 'number' },
+        { header: 'Comisión Dirección (%)', key: 'address_commission', type: 'percent' },
+        { header: 'Comisión Broker (%)', key: 'broker_commission', type: 'percent' },
+        { header: 'Bunker Base IFO (USD)', key: 'bunker_baseline_price_ifo', type: 'currency' },
+        { 
+            header: 'Bandas Tarifarias', 
+            key: 'tariffs', 
+            type: 'string',
+            render: (val: any) => {
+                if (!val || !Array.isArray(val) || val.length === 0) return 'Sin tarifas';
+                return val.map((t: any) => `${t.min_tonnage.toLocaleString()}-${t.max_tonnage.toLocaleString()} MT: $${t.freight_rate}`).join(' | ');
+            }
+        },
+        { header: 'Activo', key: 'is_active', type: 'boolean' }
+    ];
+
+    const handleExportExcel = () => {
+        exportMasterToExcel('Maestro de Contratos', exportColumns, contracts);
+    };
+
+    const handleExportPDF = () => {
+        exportMasterToPDF('Maestro de Contratos', exportColumns, contracts);
+    };
+
     const selectedRoute = contracts.find(c => getRouteKey(c) === selectedRouteKey);
 
     if (loading) {
@@ -260,7 +299,12 @@ export const ContractsMaster: React.FC = () => {
     }
 
     return (
-        <MasterTemplate title="Maestro de Contratos" activeTab="contracts">
+        <MasterTemplate 
+            title="Maestro de Contratos" 
+            activeTab="contracts"
+            onExportExcel={handleExportExcel}
+            onExportPDF={handleExportPDF}
+        >
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6 flex flex-col h-[calc(100vh-140px)]">
                 {/* Cabecera / Controles Superiores */}
                 <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between shrink-0">

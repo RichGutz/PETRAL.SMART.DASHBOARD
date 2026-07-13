@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { Save, Plus, Trash2 } from 'lucide-react';
+import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
+import type { ExportColumn } from '../../lib/masterExport';
 
 interface Client {
     client_id: string;
@@ -93,6 +95,22 @@ export const ClientsMaster: React.FC = () => {
         }
     };
 
+    const exportColumns: ExportColumn[] = [
+        { header: 'ID Cliente', key: 'client_id', type: 'string' },
+        { header: 'Razón Social / Nombre', key: 'client_name', type: 'string' },
+        { header: 'Activo', key: 'is_active', type: 'boolean' },
+        { header: 'Prospecto', key: 'is_prospect', type: 'boolean' },
+        { header: 'Color Identificador', key: 'color_hex', type: 'string' }
+    ];
+
+    const handleExportExcel = () => {
+        exportMasterToExcel('Maestro de Clientes', exportColumns, clients);
+    };
+
+    const handleExportPDF = () => {
+        exportMasterToPDF('Maestro de Clientes', exportColumns, clients);
+    };
+
     if (loading) {
         return (
             <MasterTemplate title="Maestro de Clientes" activeTab="clients">
@@ -104,7 +122,12 @@ export const ClientsMaster: React.FC = () => {
     }
 
     return (
-        <MasterTemplate title="Maestro de Clientes" activeTab="clients">
+        <MasterTemplate 
+            title="Maestro de Clientes" 
+            activeTab="clients"
+            onExportExcel={handleExportExcel}
+            onExportPDF={handleExportPDF}
+        >
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6 flex flex-col h-[calc(100vh-140px)]">
                 {/* Cabecera / Controles */}
                 <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between shrink-0">

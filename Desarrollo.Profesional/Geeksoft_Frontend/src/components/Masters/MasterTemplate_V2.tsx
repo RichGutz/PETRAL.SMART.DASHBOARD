@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database, Sun, Moon, Key } from 'lucide-react';
+import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database, Sun, Moon, Key, FileSpreadsheet, FileDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
@@ -12,6 +12,8 @@ interface MasterTemplateProps {
     children: React.ReactNode;
     activeTab?: string;
     onBackToDashboard?: () => void;
+    onExportExcel?: () => void;
+    onExportPDF?: () => void;
 }
 
 export const MasterTemplate: React.FC<MasterTemplateProps> = ({
@@ -19,7 +21,9 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
     subtitle,
     children,
     activeTab = '',
-    onBackToDashboard
+    onBackToDashboard,
+    onExportExcel,
+    onExportPDF
 }) => {
     const navigate = useNavigate();
     const context = useForecastContext_V2();
@@ -75,6 +79,32 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                     <div className="flex items-center gap-4">
                         {/* Botones de Control de Ventana */}
                         <div className="flex items-center gap-1.5 border-r border-slate-200 pr-3">
+                            {onExportExcel && (
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-8 text-xs font-semibold flex items-center gap-1.5 hover:bg-emerald-50 hover:text-emerald-750 border-slate-200 text-slate-600 cursor-pointer"
+                                    onClick={onExportExcel}
+                                    title="Exportar datos a Excel"
+                                >
+                                    <FileSpreadsheet size={13} className="text-emerald-600" />
+                                    <span className="hidden sm:inline">Bajar Excel</span>
+                                </Button>
+                            )}
+                            
+                            {onExportPDF && (
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-8 text-xs font-semibold flex items-center gap-1.5 hover:bg-rose-50 hover:text-rose-750 border-slate-200 text-slate-600 cursor-pointer"
+                                    onClick={onExportPDF}
+                                    title="Exportar datos a PDF"
+                                >
+                                    <FileDown size={13} className="text-rose-600" />
+                                    <span className="hidden sm:inline">Bajar PDF</span>
+                                </Button>
+                            )}
+
                             <Button 
                                 variant="outline" 
                                 size="sm" 

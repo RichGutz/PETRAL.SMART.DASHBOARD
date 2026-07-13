@@ -4,6 +4,8 @@ import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { Ship, Shield, Settings, Fuel, Save, Edit3, Plus, Activity } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
+import type { ExportColumn } from '../../lib/masterExport';
 
 export const VesselsMaster: React.FC = () => {
     const navigate = navigateHook();
@@ -45,6 +47,30 @@ export const VesselsMaster: React.FC = () => {
         fetchVessels();
     }, []);
 
+    const exportColumns: ExportColumn[] = [
+        { header: 'ID Buque', key: 'vessel_id', type: 'string' },
+        { header: 'Nombre Buque', key: 'vessel_name', type: 'string' },
+        { header: 'IMO', key: 'imo', type: 'string' },
+        { header: 'MMSI', key: 'mmsi', type: 'string' },
+        { header: 'Tipo AIS', key: 'ais_type', type: 'string' },
+        { header: 'Velocidad (kn)', key: 'vessel_speed', type: 'number' },
+        { header: 'Eslora (m)', key: 'length', type: 'number' },
+        { header: 'Manga (m)', key: 'beam', type: 'number' },
+        { header: 'Calado (m)', key: 'draft_m', type: 'number' },
+        { header: 'GRT (t)', key: 'grt', type: 'number' },
+        { header: 'DWT (t)', key: 'dwt', type: 'number' },
+        { header: 'DWCC (t)', key: 'dwcc', type: 'number' },
+        { header: 'TCE Requerido (USD/Día)', key: 'tce_required', type: 'currency' }
+    ];
+
+    const handleExportExcel = () => {
+        exportMasterToExcel('Maestro de Buques', exportColumns, vessels);
+    };
+
+    const handleExportPDF = () => {
+        exportMasterToPDF('Maestro de Buques', exportColumns, vessels);
+    };
+
     const selectedVessel = activeVesselId === 'NUEVO' 
         ? editFormData 
         : vessels.find((v: any) => v.vessel_id === activeVesselId);
@@ -55,6 +81,8 @@ export const VesselsMaster: React.FC = () => {
             subtitle="Ficha técnica detallada, límites operativos e hidráulicos y consumos granulares"
             activeTab="vessels"
             onBackToDashboard={() => navigate('/dashboard')}
+            onExportExcel={handleExportExcel}
+            onExportPDF={handleExportPDF}
         >
             {loading ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-12 text-slate-400 font-semibold animate-pulse gap-2">

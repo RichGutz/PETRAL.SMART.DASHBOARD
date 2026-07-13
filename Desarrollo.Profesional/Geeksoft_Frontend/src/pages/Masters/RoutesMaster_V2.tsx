@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { Save, AlertCircle, Plus, Compass } from 'lucide-react';
+import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
+import type { ExportColumn } from '../../lib/masterExport';
 
 interface RouteCell {
     port_a: string;
@@ -342,6 +344,47 @@ export const RoutesMaster: React.FC = () => {
         }
     };
 
+    const exportData = useMemo(() => {
+        const list: any[] = [];
+        const seen = new Set<string>();
+        Object.keys(matrix).forEach(portA => {
+            Object.keys(matrix[portA] || {}).forEach(portB => {
+                if (portA === portB) return;
+                const pairKey = portA < portB ? `${portA}-${portB}` : `${portB}-${portA}`;
+                if (seen.has(pairKey)) return;
+                seen.add(pairKey);
+
+                const cell = matrix[portA][portB];
+                if (cell && cell.route_distance > 0) {
+                    list.push({
+                        port_a: portA,
+                        port_b: portB,
+                        route_distance: cell.route_distance,
+                        weather_factor_laden: cell.weather_factor_laden,
+                        weather_factor_ballast: cell.weather_factor_ballast
+                    });
+                }
+            });
+        });
+        return list;
+    }, [matrix]);
+
+    const exportColumns: ExportColumn[] = [
+        { header: 'Puerto Origen', key: 'port_a', type: 'string' },
+        { header: 'Puerto Destino', key: 'port_b', type: 'string' },
+        { header: 'Distancia (Millas Náuticas)', key: 'route_distance', type: 'number' },
+        { header: 'Fricción Clima Cargado (%)', key: 'weather_factor_laden', type: 'percent' },
+        { header: 'Fricción Clima Lastre (%)', key: 'weather_factor_ballast', type: 'percent' }
+    ];
+
+    const handleExportExcel = () => {
+        exportMasterToExcel('Maestro de Distancias y Rutas', exportColumns, exportData);
+    };
+
+    const handleExportPDF = () => {
+        exportMasterToPDF('Maestro de Distancias y Rutas', exportColumns, exportData);
+    };
+
     if (loading) {
         return (
             <MasterTemplate title="Maestro de Distancias" activeTab="routes">
@@ -351,7 +394,13 @@ export const RoutesMaster: React.FC = () => {
     }
 
     return (
-        <MasterTemplate title="Maestro de Distancias" subtitle="Gestión de distancias y fricción climática (Matriz No Dirigida)" activeTab="routes">
+        <MasterTemplate 
+            title="Maestro de Distancias" 
+            subtitle="Gestión de distancias y fricción climática (Matriz No Dirigida)" 
+            activeTab="routes"
+            onExportExcel={handleExportExcel}
+            onExportPDF={handleExportPDF}
+        >
             <div className="flex flex-col gap-4">
                 
                 {/* Header Actions */}

@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { Anchor, Save, Ship, User, Clock } from 'lucide-react';
 import { MatrixComplexPanel } from './MatrixComplexPanel';
+import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
+import type { ExportColumn } from '../../lib/masterExport';
 
 // Helper para obtener código ISO de 2 letras y nombre limpio de país
 const getCountryInfo = (countryStr: string) => {
@@ -244,12 +246,90 @@ export const PortCostsMaster_V2: React.FC = () => {
         }
     };
 
+    const exportData = useMemo(() => {
+        const rows: any[] = [];
+        Object.keys(costsState).forEach(portId => {
+            const portObj = ports.find(p => p.port_id === portId);
+            const portName = portObj ? portObj.port_name : portId;
+
+            Object.keys(costsState[portId] || {}).forEach(clientId => {
+                const clientObj = rawClients.find(c => c.client_id === clientId);
+                const clientName = clientObj ? clientObj.client_name : clientId;
+
+                Object.keys(costsState[portId][clientId] || {}).forEach(vesselId => {
+                    const vesselObj = vessels.find(v => v.vessel_id === vesselId);
+                    const vesselName = vesselObj ? vesselObj.vessel_name : vesselId;
+
+                    const data = costsState[portId][clientId][vesselId];
+                    
+                    // CARGA
+                    const cMain = data.CARGA?.MAIN || 0;
+                    const cLm = data.CARGA?.loading_master || 0;
+                    const cOther = data.CARGA?.other || 0;
+                    const cTotal = cMain + cLm + cOther;
+                    if (cTotal > 0) {
+                        rows.push({
+                            port_name: portName,
+                            client_name: clientName,
+                            vessel_name: vesselName,
+                            operation: 'Carga',
+                            main_cost: cMain,
+                            lm_cost: cLm,
+                            other_cost: cOther,
+                            total_cost: cTotal
+                        });
+                    }
+
+                    // DESCARGA
+                    const dMain = data.DESCARGA?.MAIN || 0;
+                    const dLm = data.DESCARGA?.loading_master || 0;
+                    const dOther = data.DESCARGA?.other || 0;
+                    const dTotal = dMain + dLm + dOther;
+                    if (dTotal > 0) {
+                        rows.push({
+                            port_name: portName,
+                            client_name: clientName,
+                            vessel_name: vesselName,
+                            operation: 'Descarga',
+                            main_cost: dMain,
+                            lm_cost: dLm,
+                            other_cost: dOther,
+                            total_cost: dTotal
+                        });
+                    }
+                });
+            });
+        });
+        return rows;
+    }, [costsState, ports, rawClients, vessels]);
+
+    const exportColumns: ExportColumn[] = [
+        { header: 'Puerto', key: 'port_name', type: 'string' },
+        { header: 'Cliente', key: 'client_name', type: 'string' },
+        { header: 'Buque', key: 'vessel_name', type: 'string' },
+        { header: 'Operación', key: 'operation', type: 'string' },
+        { header: 'Costo Agencia (USD)', key: 'main_cost', type: 'currency' },
+        { header: 'Loading Master (USD)', key: 'lm_cost', type: 'currency' },
+        { header: 'Otros Costos (USD)', key: 'other_cost', type: 'currency' },
+        { header: 'Costo Total (USD)', key: 'total_cost', type: 'currency' }
+    ];
+
+    const handleExportExcel = () => {
+        exportMasterToExcel('Maestro de Costos de Puerto', exportColumns, exportData);
+    };
+
+    const handleExportPDF = () => {
+        exportMasterToPDF('Maestro de Costos de Puerto', exportColumns, exportData);
+    };
+
     return (
         <MasterTemplate 
             title="Maestro de Gastos Portuarios" 
             subtitle="Configuración de tarifas operativas por Puerto, Cliente y Buque"
             activeTab="port-costs"
             onBackToDashboard={() => navigate('/dashboard')}
+            onExportExcel={handleExportExcel}
+            onExportPDF={handleExportPDF}
         >
             {loading ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-12 text-slate-400 font-semibold animate-pulse gap-2">

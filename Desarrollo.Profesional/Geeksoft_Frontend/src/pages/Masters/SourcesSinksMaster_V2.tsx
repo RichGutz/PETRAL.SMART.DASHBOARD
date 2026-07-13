@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { Anchor, Save, Plus, Trash2, Compass, Layers } from 'lucide-react';
+import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
+import type { ExportColumn } from '../../lib/masterExport';
 
 interface GroupedRow {
     empresa: string;
@@ -329,12 +331,62 @@ export const SourcesSinksMaster_V2: React.FC = () => {
         }
     };
 
+    const exportData = useMemo(() => {
+        const groups: { [key: string]: any } = {};
+        dbData.forEach(row => {
+            const portObj = ports.find(p => p.port_id === row.port_id);
+            const portName = portObj ? portObj.port_name : row.port_id;
+            const key = `${row.port_id}||${row.type}||${row.empresa.toUpperCase()}||${row.producto.toUpperCase()}`;
+            if (!groups[key]) {
+                groups[key] = {
+                    port_name: portName,
+                    type: row.type === 'SOURCE' ? 'Origen (Source)' : 'Destino (Sink)',
+                    empresa: row.empresa,
+                    producto: row.producto,
+                };
+                // Inicializar años con 0
+                years.forEach(y => {
+                    groups[key][`year_${y}`] = 0;
+                });
+            }
+            groups[key][`year_${row.year}`] = Number(row.capacity_mt || 0);
+        });
+        return Object.values(groups);
+    }, [dbData, ports, years]);
+
+    const exportColumns = useMemo(() => {
+        const cols: ExportColumn[] = [
+            { header: 'Puerto', key: 'port_name', type: 'string' },
+            { header: 'Tipo', key: 'type', type: 'string' },
+            { header: 'Empresa', key: 'empresa', type: 'string' },
+            { header: 'Producto', key: 'producto', type: 'string' },
+        ];
+        years.forEach(y => {
+            cols.push({
+                header: `Año ${y} (MT)`,
+                key: `year_${y}`,
+                type: 'number'
+            });
+        });
+        return cols;
+    }, [years]);
+
+    const handleExportExcel = () => {
+        exportMasterToExcel('Maestro de Origenes y Destinos', exportColumns, exportData);
+    };
+
+    const handleExportPDF = () => {
+        exportMasterToPDF('Maestro de Origenes y Destinos', exportColumns, exportData);
+    };
+
     return (
         <MasterTemplate 
             title="Maestro de Originación / Destino" 
             subtitle="Planificación del horizonte de capacidad por Puerto, Empresa y Año"
             activeTab="sources-sinks"
             onBackToDashboard={() => navigate('/dashboard')}
+            onExportExcel={handleExportExcel}
+            onExportPDF={handleExportPDF}
         >
             {loading ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-12 text-slate-400 font-semibold animate-pulse gap-2">

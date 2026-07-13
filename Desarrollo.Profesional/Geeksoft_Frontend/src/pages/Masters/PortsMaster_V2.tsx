@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { Anchor, Edit3, MapPin, Plus, Factory, Trash2 } from 'lucide-react';
+import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
+import type { ExportColumn } from '../../lib/masterExport';
 
 // Helper para obtener código ISO de 2 letras y nombre limpio de país
 const getCountryInfo = (countryStr: string) => {
@@ -165,12 +167,71 @@ export const PortsMaster_V2: React.FC = () => {
         }
     };
 
+    const exportData = useMemo(() => {
+        const rows: any[] = [];
+        ports.forEach(port => {
+            const portTerminals = terminals.filter(t => t.port_id === port.port_id);
+            if (portTerminals.length === 0) {
+                rows.push({
+                    port_id: port.port_id,
+                    port_name: port.port_name,
+                    country: port.country,
+                    lat: port.lat,
+                    lon: port.lon,
+                    terminal_id: '(Sin terminal)',
+                    terminal_name: '—',
+                    is_active: false
+                });
+            } else {
+                portTerminals.forEach(t => {
+                    rows.push({
+                        port_id: port.port_id,
+                        port_name: port.port_name,
+                        country: port.country,
+                        lat: port.lat,
+                        lon: port.lon,
+                        terminal_id: t.terminal_id,
+                        terminal_name: t.terminal_name,
+                        is_active: t.is_active
+                    });
+                });
+            }
+        });
+        return rows;
+    }, [ports, terminals]);
+
+    const exportColumns: ExportColumn[] = [
+        { header: 'ID Puerto', key: 'port_id', type: 'string' },
+        { header: 'Nombre Puerto', key: 'port_name', type: 'string' },
+        { 
+            header: 'País', 
+            key: 'country', 
+            type: 'string',
+            render: (val) => getCountryInfo(val).name
+        },
+        { header: 'Latitud', key: 'lat', type: 'number' },
+        { header: 'Longitud', key: 'lon', type: 'number' },
+        { header: 'ID Terminal', key: 'terminal_id', type: 'string' },
+        { header: 'Nombre Terminal', key: 'terminal_name', type: 'string' },
+        { header: 'Terminal Activo', key: 'is_active', type: 'boolean' }
+    ];
+
+    const handleExportExcel = () => {
+        exportMasterToExcel('Maestro de Puertos y Terminales', exportColumns, exportData);
+    };
+
+    const handleExportPDF = () => {
+        exportMasterToPDF('Maestro de Puertos y Terminales', exportColumns, exportData);
+    };
+
     return (
         <MasterTemplate 
             title="Maestro de Puertos & Terminales" 
             subtitle="Ubicación geográfica de puertos y sus terminales operativos"
             activeTab="ports"
             onBackToDashboard={() => navigate('/dashboard')}
+            onExportExcel={handleExportExcel}
+            onExportPDF={handleExportPDF}
         >
             {loading ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-12 text-slate-400 font-semibold animate-pulse gap-2">
