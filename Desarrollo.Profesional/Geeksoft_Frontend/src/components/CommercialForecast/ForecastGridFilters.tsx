@@ -183,8 +183,14 @@ export const ForecastGridFilters: React.FC = () => {
                     .text-teal-700 { color: #0f766e !important; }
                     .text-red-600 { color: #dc2626 !important; }
 
+                    /* Force alignment of all month and total numbers to the right */
+                    table td:nth-child(n+5), table td:nth-child(n+5) * {
+                        text-align: right !important;
+                        justify-content: flex-end !important;
+                    }
+
                     .footer-container { margin-top: 40px; border-top: 1px solid #cbd5e1; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 8px; color: #64748b; }
-                    .footer-logo { height: 14px; object-fit: contain; vertical-align: middle; margin-left: 5px; }
+                    .footer-logo { height: 28px; object-fit: contain; vertical-align: middle; margin-left: 5px; }
                     @media print {
                         @page { size: ${orientation}; margin: 8mm; }
                         body { padding: 0; }
@@ -208,9 +214,11 @@ export const ForecastGridFilters: React.FC = () => {
 
                 <div class="footer-container">
                     <div>Generado por Shipping Soft</div>
-                    <div style="display: flex; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 4px;">
                         <span>Desarrollado por</span>
-                        <img src="${absoluteGeeksoftLogo}" alt="Geeksoft" class="footer-logo" />
+                        <a href="https://www.geeksoft.tech" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; text-decoration: none;">
+                            <img src="${absoluteGeeksoftLogo}" alt="Geeksoft" class="footer-logo" />
+                        </a>
                     </div>
                 </div>
                 
