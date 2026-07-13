@@ -182,7 +182,16 @@ export const ForecastGridFilters: React.FC = () => {
                     {/* Filtros de Datos en Cascada */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="flex flex-col gap-2">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Clientes Activos</span>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={hiddenClients.length === 0}
+                                    ref={el => { if (el) el.indeterminate = hiddenClients.length > 0 && hiddenClients.length < clientList.length; }}
+                                    onChange={() => setHiddenClients(hiddenClients.length === 0 ? clientList : [])}
+                                    className="rounded text-petral-teal focus:ring-petral-teal"
+                                />
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Clientes</span>
+                            </label>
                             <div className="max-h-40 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50 flex flex-col gap-1">
                                 {clientList.map(c => (
                                     <label key={c} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
@@ -195,7 +204,16 @@ export const ForecastGridFilters: React.FC = () => {
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rutas (Filtradas)</span>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={hiddenRoutes.length === 0}
+                                    ref={el => { if (el) el.indeterminate = hiddenRoutes.length > 0 && hiddenRoutes.length < routeList.length; }}
+                                    onChange={() => setHiddenRoutes(hiddenRoutes.length === 0 ? routeList : [])}
+                                    className="rounded text-petral-teal focus:ring-petral-teal"
+                                />
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rutas</span>
+                            </label>
                             <div className="max-h-40 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50 flex flex-col gap-1">
                                 {routeList.map(r => (
                                     <label key={r} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
@@ -208,7 +226,16 @@ export const ForecastGridFilters: React.FC = () => {
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Buques (Filtrados)</span>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={hiddenVessels.length === 0}
+                                    ref={el => { if (el) el.indeterminate = hiddenVessels.length > 0 && hiddenVessels.length < vesselList.length; }}
+                                    onChange={() => setHiddenVessels(hiddenVessels.length === 0 ? vesselList : [])}
+                                    className="rounded text-petral-teal focus:ring-petral-teal"
+                                />
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Buques</span>
+                            </label>
                             <div className="max-h-40 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50 flex flex-col gap-1">
                                 {vesselList.map(v => (
                                     <label key={v} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
@@ -221,14 +248,25 @@ export const ForecastGridFilters: React.FC = () => {
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Meses Visibles</span>
-                            <div className="max-h-40 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50 flex flex-col gap-1">
-                                {months.map(m => (
-                                    <label key={m} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                                        <input type="checkbox" checked={!hiddenMonths.includes(m)} onChange={() => toggleFilter(m, hiddenMonths, setHiddenMonths)} className="rounded text-petral-teal focus:ring-petral-teal" />
-                                        {m}
-                                    </label>
-                                ))}
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={hiddenMonths.length === 0}
+                                    ref={el => { if (el) el.indeterminate = hiddenMonths.length > 0 && hiddenMonths.length < months.length; }}
+                                    onChange={() => setHiddenMonths(hiddenMonths.length === 0 ? [...months] : [])}
+                                    className="rounded text-petral-teal focus:ring-petral-teal"
+                                />
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Meses</span>
+                            </label>
+                            <div className="border border-slate-200 rounded p-2 bg-slate-50">
+                                <div className="grid grid-cols-4 gap-x-3 gap-y-1">
+                                    {months.map(m => (
+                                        <label key={m} className="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer hover:text-petral-teal transition-colors">
+                                            <input type="checkbox" checked={!hiddenMonths.includes(m)} onChange={() => toggleFilter(m, hiddenMonths, setHiddenMonths)} className="rounded text-petral-teal focus:ring-petral-teal w-3 h-3" />
+                                            <span className="font-medium truncate">{m}</span>
+                                        </label>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
