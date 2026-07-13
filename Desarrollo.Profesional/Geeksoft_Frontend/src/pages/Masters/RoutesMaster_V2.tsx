@@ -360,8 +360,8 @@ export const RoutesMaster: React.FC = () => {
                         port_a: portA,
                         port_b: portB,
                         route_distance: cell.route_distance,
-                        weather_factor_laden: cell.weather_factor_laden,
-                        weather_factor_ballast: cell.weather_factor_ballast
+                        weather_factor_laden: cell.weather_factor_laden != null ? cell.weather_factor_laden * 100 : 0,
+                        weather_factor_ballast: cell.weather_factor_ballast != null ? cell.weather_factor_ballast * 100 : 0
                     });
                 }
             });
