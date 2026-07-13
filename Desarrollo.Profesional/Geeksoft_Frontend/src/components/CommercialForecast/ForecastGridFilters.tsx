@@ -145,16 +145,19 @@ export const ForecastGridFilters: React.FC = () => {
                         max-width: 25px !important;
                         padding: 2px !important;
                     }
-                    table th:nth-child(4), table td:nth-child(4) {
-                        width: 100px !important;
-                        min-width: 100px !important;
-                        max-width: 100px !important;
+                    table th:nth-child(4), table td:nth-child(4),
+                    table td:nth-child(4) * {
+                        width: 70px !important;
+                        min-width: 70px !important;
+                        max-width: 70px !important;
                         text-align: left !important;
+                        justify-content: flex-start !important;
                     }
-                    table th:last-child, table td:last-child {
-                        width: 60px !important;
-                        min-width: 60px !important;
-                        max-width: 60px !important;
+                    table th:last-child, table td:last-child,
+                    table td:last-child * {
+                        width: 45px !important;
+                        min-width: 45px !important;
+                        max-width: 45px !important;
                         font-weight: bold !important;
                     }
                     
