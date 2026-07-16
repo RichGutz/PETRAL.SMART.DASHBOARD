@@ -428,6 +428,27 @@ Se agregaron a la tabla `clients` de Supabase las columnas `is_active` (`BOOLEAN
 > Un cliente corporativo registrado en el maestro solo puede poseer un estado activo o prospecto de manera mutuamente excluyente. No es posible que un cliente sea catalogado en ambos estados simultáneamente.
 
 **Impacto en la API (FastAPI backend):**
-- El esquema de datos de Pydantic (`ClientMaster` en `forecast_models.py`) se actualizó para incorporar los atributos booleanos.
 - La transacción del endpoint `POST /masters/clients` (en `forecast.py`) ahora mapea de forma nativa e inyecta estos campos en el `UPSERT` sobre Supabase.
-- El script de despliegue del VPS (`deploy_backend.py`) se modificó para transferir `forecast_models.py` en cada despliegue, solucionando caídas por discrepancia en el esquema de clases en producción.
+- El script de despliegue del VPS (`deploy_backend.py`) se modificó para transferir `forecast_models.py` en cada despliegue, solucionando caídas por discrepancia en el esquema de clases en producción.
+
+---
+
+### 🗓️ 2026-07-16 — PRE.COST.MATRIX.STEROIDS (Evolución de la Matriz de Costos)
+
+**Tablas afectadas:** `port_costs_matrix` (ALTER), `suppliers` (NUEVA)
+
+Se documenta la inminente inyección de esteroides al motor de reglas de costos portuarios para soportar las complejas operaciones de Chile (Mejillones, Terquim, Interacid, Barquito). 
+Como **Supabase no tiene versionamiento directo (GIT)**, este registro actúa como bitácora arquitectónica previa a la ejecución SQL.
+
+**Acción 1: Nueva Tabla `suppliers` (Maestro de Proveedores)**
+Para solucionar colisiones de servicios idénticos prestados por distintas empresas (Ej: Remolcadores PSA vs Petranso), se crea la tabla `suppliers`.
+* `supplier_id` *(UUID, PK)*
+* `supplier_name` *(VARCHAR)*
+* `is_active` *(BOOLEAN)*
+
+**Acción 2: Evolución Estructural (`ALTER TABLE port_costs_matrix`)**
+La tabla existente mantendrá su núcleo lógico, pero expandirá sus dimensiones:
+* `supplier_id` *(UUID, FK → suppliers)* → Llave foránea para bifurcar cálculos dependiendo del vendor seleccionado en el Frontend.
+* `sub_item_name` *(VARCHAR)* → Soporte para **Splits Variables**. Permite que un mismo `concept_id` (Ej. Launch Hire) se divida en N filas (Stand By, Pier Usage, Anchorage) sin contaminar el catálogo maestro.
+* `allow_pass_through` *(BOOLEAN, DEFAULT FALSE)* → Control de UI. Habilita el checkbox *"Pass Through (Asumido por cliente)"* en el frontend para anular matemáticamente el cobro a la agencia (Ej: Muellaje en Interacid).
+* `is_optional` *(BOOLEAN, DEFAULT FALSE)* → Identifica costos marcados como "Solo si requiere" (Ej: Hose Connection en Barquito).

@@ -126,7 +126,9 @@ class ContractMaster(BaseModel):
     address_commission: float = 0.0
     broker_commission: float = 0.0
     bunker_baseline_price_ifo: float = 0.0
+    bunker_baseline_price_mdo: float = 0.0
     baf_rules: Optional[str] = None
+    comments: Optional[list] = []
     time_to_count_carga_hrs: float = 6.0
     maneuver_carga_hrs: float = 0.0
     time_to_count_descarga_hrs: float = 6.0

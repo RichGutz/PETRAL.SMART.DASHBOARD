@@ -6,9 +6,10 @@ Para realizar tareas de despliegue, actualización o diagnóstico en el servidor
 `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Push.VPS`
 
 ### Scripts Principales de Despliegue:
-1. **Despliegue y Arranque de Forecast (Smart Dashboard):**
+1. **Despliegue y Arranque de Forecast (Smart Dashboard - Frontend):**
+   * *Prerrequisito:* Se debe compilar el código primero ejecutando `npm run build` dentro del directorio `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend`.
    * Usar: `python C:\Users\rguti\PETRAL.SMART.DASHBOARD\Push.VPS\deploy_forecast_kickoff.py`
-   * *Propósito:* Despliega y reinicia el servicio del estimador de flotas en producción.
+   * *Propósito:* Sube la carpeta compilada (`dist/`) y recarga el servicio Nginx para desplegar el frontend en producción (`forecast.geeksoft.tech`).
 2. **Despliegue de Backend:**
    * Usar: `python C:\Users\rguti\PETRAL.SMART.DASHBOARD\Push.VPS\deploy_backend.py`
    * *Propósito:* Sube y despliega las últimas modificaciones del backend API al VPS.

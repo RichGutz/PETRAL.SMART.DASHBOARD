@@ -4,6 +4,7 @@ import { ForecastService } from '../../services/api';
 import { Save, Plus, Trash2, FileText } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
+import { useAuth } from '../../context/AuthContext';
 import type { ExportColumn } from '../../lib/masterExport';
 
 interface ContractTariff {
@@ -25,7 +26,9 @@ interface Contract {
     address_commission: number;
     broker_commission: number;
     bunker_baseline_price_ifo: number;
+    bunker_baseline_price_mdo: number;
     baf_rules: string | null;
+    comments: { text: string; date: string; user: string }[];
     time_to_count_carga_hrs: number;
     maneuver_carga_hrs: number;
     time_to_count_descarga_hrs: number;
@@ -42,6 +45,10 @@ export const ContractsMaster: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
+    
+    // Auth context for comments
+    const { user } = useAuth();
+    const [newCommentText, setNewCommentText] = useState('');
     
     // UI State for grouping
     const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
@@ -106,7 +113,9 @@ export const ContractsMaster: React.FC = () => {
             address_commission: 0,
             broker_commission: 0,
             bunker_baseline_price_ifo: 0,
+            bunker_baseline_price_mdo: 0,
             baf_rules: '',
+            comments: [],
             time_to_count_carga_hrs: 6,
             maneuver_carga_hrs: 0,
             time_to_count_descarga_hrs: 6,
@@ -137,7 +146,9 @@ export const ContractsMaster: React.FC = () => {
             address_commission: 0,
             broker_commission: 0,
             bunker_baseline_price_ifo: 0,
+            bunker_baseline_price_mdo: 0,
             baf_rules: '',
+            comments: [],
             time_to_count_carga_hrs: 6,
             maneuver_carga_hrs: 0,
             time_to_count_descarga_hrs: 6,
@@ -408,11 +419,11 @@ export const ContractsMaster: React.FC = () => {
                                                 </button>
                                             </div>
 
-                                            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full items-stretch">
                                                 {/* ================= COLUMNA 1 ================= */}
-                                                <div className="space-y-6">
+                                                <div className="flex flex-col gap-6 h-full">
                                                     {/* 1. Definición */}
-                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm">
+                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm flex-1">
                                                         <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-200 pb-2">1. Definición Operativa & Vigencia</h4>
                                                         
                                                         <div className="flex flex-col gap-4">
@@ -494,7 +505,7 @@ export const ContractsMaster: React.FC = () => {
                                                     </section>
 
                                                     {/* 4. Comisiones */}
-                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm">
+                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm flex-1">
                                                         <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2">4. Comisiones</h4>
                                                         <div className="grid grid-cols-2 gap-3">
                                                             <div>
@@ -515,23 +526,14 @@ export const ContractsMaster: React.FC = () => {
                                                                     className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
                                                                 />
                                                             </div>
-                                                            <div className="col-span-2">
-                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Baseline IFO Price ($)</label>
-                                                                <input 
-                                                                    type="number" step="0.01"
-                                                                    value={selectedRoute.bunker_baseline_price_ifo}
-                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_ifo', parseFloat(e.target.value))}
-                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                                />
-                                                            </div>
                                                         </div>
                                                     </section>
                                                 </div>
 
                                                 {/* ================= COLUMNA 2 ================= */}
-                                                <div className="space-y-6">
+                                                <div className="flex flex-col gap-6 h-full">
                                                     {/* 2. Operativo & Tiempos */}
-                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-6 shadow-sm">
+                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-6 shadow-sm flex-1">
                                                         <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-200 pb-2">2. Operaciones & Tiempos</h4>
                                                         
                                                         <div className="space-y-4">
@@ -600,12 +602,37 @@ export const ContractsMaster: React.FC = () => {
                                                             </div>
                                                         </div>
                                                     </section>
+
+                                                    {/* 5. BAF */}
+                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm flex-1">
+                                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2">5. Acuerdos Bunker Adjustment Factor (BAF)</h4>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Baseline IFO Price ($)</label>
+                                                                <input 
+                                                                    type="number" step="0.01"
+                                                                    value={selectedRoute.bunker_baseline_price_ifo}
+                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_ifo', parseFloat(e.target.value))}
+                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Baseline MDO Price ($/mt)</label>
+                                                                <input 
+                                                                    type="number" step="0.01"
+                                                                    value={selectedRoute.bunker_baseline_price_mdo || 0}
+                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_mdo', parseFloat(e.target.value))}
+                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </section>
                                                 </div>
 
                                                 {/* ================= COLUMNA 3 ================= */}
-                                                <div className="space-y-6">
+                                                <div className="flex flex-col gap-6 h-full">
                                                     {/* 3. Tarifas (Tiers) */}
-                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col h-full" style={{ maxHeight: '780px' }}>
+                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col flex-1">
                                                         <div className="flex justify-between items-center border-b border-slate-200 pb-2 mb-4">
                                                             <h4 className="text-xs font-black text-teal-800 uppercase tracking-wider">3. Tarifas (Tiers)</h4>
                                                             <button 
@@ -666,6 +693,55 @@ export const ContractsMaster: React.FC = () => {
                                                                 <div className="text-center text-xs text-slate-400 py-6 bg-white rounded-lg border border-dashed border-slate-300 font-medium flex items-center justify-center">
                                                                     Sin bandas configuradas ($0)
                                                                 </div>
+                                                            )}
+                                                        </div>
+                                                    </section>
+
+                                                    {/* 6. Comentarios */}
+                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm flex-1 flex flex-col">
+                                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-200 pb-2">6. Comentarios</h4>
+                                                        
+                                                        <div className="flex gap-2 mb-4">
+                                                            <textarea 
+                                                                value={newCommentText}
+                                                                onChange={(e) => setNewCommentText(e.target.value)}
+                                                                placeholder="Escribe un comentario o bitácora..."
+                                                                className="flex-grow text-sm border border-slate-300 rounded-lg p-2 bg-white resize-none"
+                                                                rows={2}
+                                                            />
+                                                            <button 
+                                                                onClick={() => {
+                                                                    if (!newCommentText.trim()) return;
+                                                                    const newComment = {
+                                                                        text: newCommentText.trim(),
+                                                                        date: new Date().toISOString(),
+                                                                        user: user?.full_name || 'Administrador'
+                                                                    };
+                                                                    const existingComments = selectedRoute.comments || [];
+                                                                    handleChange(selectedRouteKey!, 'comments', [newComment, ...existingComments]);
+                                                                    setNewCommentText('');
+                                                                }}
+                                                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1 transition-colors whitespace-nowrap"
+                                                            >
+                                                                <Plus className="w-4 h-4" /> Agregar
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                                                            {(!selectedRoute.comments || selectedRoute.comments.length === 0) ? (
+                                                                <div className="text-center text-slate-400 text-xs py-4 border border-dashed border-slate-300 rounded">
+                                                                    No hay comentarios registrados
+                                                                </div>
+                                                            ) : (
+                                                                selectedRoute.comments.map((c, i) => (
+                                                                    <div key={i} className="bg-white p-3 rounded-lg border border-slate-200 text-sm shadow-sm">
+                                                                        <div className="flex justify-between items-center mb-1">
+                                                                            <span className="font-bold text-slate-700 text-xs">{c.user}</span>
+                                                                            <span className="text-slate-400 text-[10px]">{new Date(c.date).toLocaleString()}</span>
+                                                                        </div>
+                                                                        <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{c.text}</p>
+                                                                    </div>
+                                                                ))
                                                             )}
                                                         </div>
                                                     </section>
