@@ -3,33 +3,23 @@ import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts';
 
 
-// Reglas de curvatura del usuario para evitar solapamientos
-const getBaseCurveness = (origin: string, dest: string): number => {
-    const pair = `${origin}-${dest}`;
-    const reverse = `${dest}-${origin}`;
-
-    if (pair === 'ILO-MATARANI' || reverse === 'ILO-MATARANI') return 0.10;
-    if (pair === 'ILO-MARCONA' || reverse === 'ILO-MARCONA') return 0.22;
-    if (pair === 'CALLAO-MARCONA' || reverse === 'CALLAO-MARCONA') return 0.15;
-
-    // Ruta compleja de Nexa: dales más curvatura para alejarlos de la costa y diferenciarlos
-    if (pair === 'ILO-CALLAO') return 0.65;      // Sur a Norte (positivo curva al Oeste/océano)
-    if (pair === 'CALLAO-ILO') return -0.65;     // Norte a Sur (negativo curva al Oeste/océano)
-
-    if (pair === 'CALLAO-MEJILLONES') return -0.80; // Norte a Sur (negativo curva al Oeste/océano)
-    if (pair === 'MEJILLONES-CALLAO') return 0.80;  // Sur a Norte (positivo curva al Oeste/océano)
-
-    if (pair === 'MEJILLONES-ILO') return 0.75;  // Mayor curvatura para el retorno complejo
-    if (pair === 'ILO-MEJILLONES') return -0.40; // Menor curvatura para la ruta simple
-
-    // Otras rutas
-    if (pair === 'CALLAO-MATARANI') return -0.28;
-    if (pair === 'MATARANI-CALLAO') return 0.28;
-
-    if (pair === 'ILO-BARQUITO') return -0.32;
-    if (pair === 'BARQUITO-ILO') return 0.32;
-
-    return 0.20;
+// Reglas de curvatura del usuario para evitar solapamientos y asegurar concavidad hacia el Este (panza hacia el mar)
+const getDynamicCurveness = (sourcePort: any, targetPort: any): number => {
+    if (!sourcePort || !targetPort || sourcePort.lat === null || targetPort.lat === null) return 0.2;
+    
+    const latDiff = Math.abs(sourcePort.lat - targetPort.lat);
+    const lonDiff = Math.abs(sourcePort.lon - targetPort.lon);
+    const distance = Math.sqrt(latDiff * latDiff + lonDiff * lonDiff);
+    
+    // Scale curvature with distance so long routes bulge more
+    let magnitude = 0.1 + (distance * 0.04);
+    magnitude = Math.min(magnitude, 0.85);
+    
+    const isNorthToSouth = sourcePort.lat > targetPort.lat;
+    
+    // Si vamos de Norte a Sur, la curvatura en ECharts debe ser negativa para ir a la derecha (Oeste)
+    // Si vamos de Sur a Norte, la curvatura debe ser positiva para ir a la derecha (Oeste)
+    return isNorthToSouth ? -magnitude : magnitude;
 };
 
 // Helper para calcular puntos a lo largo de una curva de Bezier cuadrática para simular arcos con polilíneas
@@ -190,7 +180,7 @@ const computeSpaghettiDataForMonth = (
                                         const sPort = activePorts.find(p => p.port_id === leg.origin);
                                         const tPort = activePorts.find(p => p.port_id === leg.dest);
                                         if (sPort && tPort && sPort.lon !== null && sPort.lat !== null && tPort.lon !== null && tPort.lat !== null) {
-                                            const c = getBaseCurveness(leg.origin, leg.dest);
+                                            const c = getDynamicCurveness(sPort, tPort);
                                             const bezier = getBezierPoints([sPort.lon, sPort.lat], [tPort.lon, tPort.lat], c, 20);
                                             if (i === 0) {
                                                 coordsList = coordsList.concat(bezier);
@@ -260,10 +250,13 @@ const computeSpaghettiDataForMonth = (
 
     Object.entries(edgesGroupedByPair).forEach(([pairKey, edgesInPair]) => {
         const [source, target] = pairKey.split('-');
-        const baseCurveness = getBaseCurveness(source, target);
+        const sPort = activePorts.find(p => p.port_id === source);
+        const tPort = activePorts.find(p => p.port_id === target);
+        const baseCurveness = (sPort && tPort) ? getDynamicCurveness(sPort, tPort) : 0.2;
         
         edgesInPair.forEach((edge, index) => {
-            const curveness = baseCurveness + index * 0.06;
+            const sign = baseCurveness < 0 ? -1 : 1;
+            const curveness = baseCurveness + sign * (index * 0.06);
             
             const edgeConfig: any = {
                 source: edge.source,
@@ -305,12 +298,18 @@ const computeSpaghettiDataForMonth = (
         });
     });
 
-    const maxCapacity = Math.max(...ports.map(p => p.capacity_mt || 0), 1);
+    const maxCapacity = Math.max(...ports.map(p => {
+        return p.sources_sinks?.reduce((sum: number, ss: any) => sum + (Number(ss.capacity_mt) || 0), 0) || 0;
+    }), 1);
 
-    const nodesForGraph = activePorts.map(p => {
+    const nodesForGraph = activePorts.filter(p => {
+        const marketTotal = p.sources_sinks?.reduce((sum: number, ss: any) => sum + (Number(ss.capacity_mt) || 0), 0) || 0;
+        const petralTotal = (portMap[p.port_id]?.carga || 0) + (portMap[p.port_id]?.descarga || 0);
+        return marketTotal > 0 || petralTotal > 0;
+    }).map(p => {
         const petralCarga = portMap[p.port_id]?.carga || 0;
         const petralDescarga = portMap[p.port_id]?.descarga || 0;
-        const capacity = p.capacity_mt || 50000;
+        const capacity = p.sources_sinks?.reduce((sum: number, ss: any) => sum + (Number(ss.capacity_mt) || 0), 0) || 0;
         const pieRadius = 14 + (capacity / maxCapacity) * 20;
 
         return {
@@ -351,7 +350,7 @@ const computeSpaghettiDataForMonth = (
             const monthsCount = targetMonths.length;
 
             const marketData = n.sources_sinks?.map((ss: any) => {
-                const proratedCapacity = (ss.capacity_mt / 12) * monthsCount;
+                const proratedCapacity = (Number(ss.capacity_mt) / 12) * monthsCount;
                 return {
                     value: Math.round(proratedCapacity),
                     name: `${ss.empresa} (${ss.type})`,
@@ -360,40 +359,44 @@ const computeSpaghettiDataForMonth = (
                 };
             }) || [];
             
-            if (marketData.length === 0) {
+            if (marketData.length === 0 && Number(n.capacity_mt) > 0) {
                 let fallbackColor = '#64748B';
                 if (n.type === 'SOURCE') fallbackColor = '#A78BFA';
                 if (n.type === 'MIXED') fallbackColor = '#3B82F6';
-                const proratedFallback = (n.capacity_mt / 12) * monthsCount;
-                marketData.push({
-                    value: Math.round(proratedFallback),
-                    name: `Capacidad Mercado (${n.type})`,
-                    itemStyle: { color: fallbackColor },
-                    portInfo: n
+                const proratedFallback = (Number(n.capacity_mt) / 12) * monthsCount;
+                if (proratedFallback > 0) {
+                    marketData.push({
+                        value: Math.round(proratedFallback),
+                        name: `Capacidad Mercado (${n.type})`,
+                        itemStyle: { color: fallbackColor },
+                        portInfo: n
+                    });
+                }
+            }
+
+            if (marketData.length > 0) {
+                pieSeries.push({
+                    type: 'pie',
+                    coordinateSystem: 'geo',
+                    center: landCenter,
+                    radius: [0, n.pieRadius],
+                    label: { show: false },
+                    emphasis: { 
+                        label: { 
+                            show: true, 
+                            position: 'inside', 
+                            formatter: '{b}\n{c} MT',
+                            fontSize: 9,
+                            color: '#ffffff',
+                            fontWeight: 'bold'
+                        } 
+                    },
+                    data: marketData,
+                    zlevel: 4
                 });
             }
 
-            pieSeries.push({
-                type: 'pie',
-                coordinateSystem: 'geo',
-                center: landCenter,
-                radius: [0, n.pieRadius],
-                label: { show: false },
-                emphasis: { 
-                    label: { 
-                        show: true, 
-                        position: 'inside', 
-                        formatter: '{b}\n{c} MT',
-                        fontSize: 9,
-                        color: '#ffffff',
-                        fontWeight: 'bold'
-                    } 
-                },
-                data: marketData,
-                zlevel: 4
-            });
-
-            const totalProratedCapacity = (n.capacity_mt / 12) * monthsCount;
+            const totalProratedCapacity = (Number(n.capacity_mt) / 12) * monthsCount;
 
             if (n.carga > 0) {
                 const cargaRatio = totalProratedCapacity > 0 ? (n.carga / totalProratedCapacity) : 0;
@@ -512,15 +515,15 @@ export const SpaghettiMap_V2: React.FC<SpaghettiMapProps> = ({
 }) => {
     const [mapLoaded, setMapLoaded] = useState(false);
     const chartRef = useRef<any>(null);
-    const zoomRef = useRef<number>(2.8);
-    const centerRef = useRef<[number, number]>([-73.0, -20.0]);
+    const zoomRef = useRef<number>(2.5);
+    const centerRef = useRef<[number, number]>([-75.0, -12.0]);
 
     useEffect(() => {
         const loadMap = async () => {
             try {
-                const response = await fetch('/peru_chile.json');
+                const response = await fetch('/peru_chile_ecuador.json?v=3');
                 const geoJson = await response.json();
-                echarts.registerMap('peru_chile', geoJson);
+                echarts.registerMap('peru_chile_ecuador', geoJson);
                 setMapLoaded(true);
             } catch (error) {
                 console.error("Error loading Peru/Chile GeoJSON map:", error);
@@ -555,7 +558,7 @@ export const SpaghettiMap_V2: React.FC<SpaghettiMapProps> = ({
                 }
             },
             geo: {
-                map: 'peru_chile',
+                map: 'peru_chile_ecuador',
                 roam: true,
                 zoom: zoomRef.current,
                 center: centerRef.current,
@@ -575,6 +578,12 @@ export const SpaghettiMap_V2: React.FC<SpaghettiMapProps> = ({
                         name: 'Chile',
                         itemStyle: {
                             areaColor: isDarkMode ? 'rgba(15, 23, 42, 0.8)' : 'rgba(226, 232, 240, 0.75)'
+                        }
+                    },
+                    {
+                        name: 'Ecuador',
+                        itemStyle: {
+                            areaColor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : 'rgba(241, 245, 249, 0.75)'
                         }
                     }
                 ],
