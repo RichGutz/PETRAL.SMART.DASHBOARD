@@ -41,3 +41,15 @@ Para realizar tareas de despliegue, actualizaciÃ³n o diagnÃ³stico en el servidor
 * **Archivos Prohibidos en Git:** Queda estrictamente prohibido subir o hacer `git commit` / `git push` de archivos binarios o multimedia como PDFs (`.pdf`), audios (`.ogg`, `.mp3`, `.wav`), fotos/imÃ¡genes (`.png`, `.jpeg`, `.jpg`) o videos. Estos archivos deben mantenerse Ãºnicamente de forma local o ser ignorados formalmente en el `.gitignore` del repositorio.
 
 
+
+## Flujo de Desarrollo Costos Portuarios
+
+* **Fase 1:** Replicar la estructura del Excel al pie de la letra.
+* **Fase 2:** Revisitar y validar la lógica.
+* **Fase 3:** Realizar la comparación final (Ledger) contra los datos del Excel.
+
+## Regla Aprendida: Integración de Nuevos Puertos
+1. Leer exceles o documentos de lógica.
+2. Extraer conceptos EXACTOS (1:1 con el Excel) y organizarlos visualmente.
+3. Inyectar toda la lógica matemática en la columna 'logic_comments'.
+4. Ejecutar comparación vs Excel y exportar a PDF automáticamente sin pedir autorización.

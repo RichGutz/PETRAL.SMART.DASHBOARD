@@ -20,6 +20,8 @@ def run(matrix_rows: list, v_data: dict, port_hours: float, evaluate_formula_fn)
         "PORT_HOURS": port_hours
     }
     
+    parameters = v_data.get('parameters', {})
+    
     # Inyectar variables operativas del vessel_terminal_operations
     for k, v in v_data.items():
         if isinstance(v, (int, float, str)):
@@ -27,12 +29,19 @@ def run(matrix_rows: list, v_data: dict, port_hours: float, evaluate_formula_fn)
 
     
     for row in matrix_rows:
+        rule_id = row.get("rule_id", "")
         concept = row.get("concept_id")
         rate_val = row.get("rate_usd")
         rate = float(rate_val) if rate_val is not None else 0.0
         mult_source = row.get("multiplier_source", "FIXED")
         formula = row.get("calculation_formula_template", None)
         sub_name = row.get("sub_item_name", concept)
+        allow_pass_through = row.get("allow_pass_through", False)
+        
+        # Check if parameter has a user input for this concept
+        param_qty = parameters.get(concept, 0.0)
+        variables["QTY"] = param_qty
+        variables["TUGBOATS"] = v_data.get("tugboats_count", 0)
         
         # Actualizar RATE_USD dinámico por cada concepto
         variables["RATE_USD"] = rate
@@ -40,7 +49,10 @@ def run(matrix_rows: list, v_data: dict, port_hours: float, evaluate_formula_fn)
         calculated_cost = 0.0
         audit_str = ""
         
-        if formula and str(formula).strip():
+        if allow_pass_through:
+            calculated_cost = param_qty
+            audit_str = f"Pass-Through Ingresado = ${calculated_cost:,.2f}"
+        elif formula and str(formula).strip():
             # Si hay una fórmula explícita
             calculated_cost = evaluate_formula_fn(formula, variables)
             audit_str = f"Fórmula '{formula}' aplicada = ${calculated_cost:,.2f}"
@@ -63,12 +75,9 @@ def run(matrix_rows: list, v_data: dict, port_hours: float, evaluate_formula_fn)
             elif mult_source in ["PORT_HOURS", "PER_HOUR"]:
                 calculated_cost = rate * port_hours
                 audit_str = f"${rate:,.2f} x {port_hours:,.2f} (Hrs) = ${calculated_cost:,.2f}"
-            elif mult_source == "PER_MANEUVER":
-                # For PER_MANEUVER we assume 2 maneuvers by default if not specified elsewhere, 
-                # but let's default to 1 maneuver here, usually handled by a formula for multiples
-                maneuvers = 2
-                calculated_cost = rate * maneuvers
-                audit_str = f"${rate:,.2f} x {maneuvers} (Maniobras) = ${calculated_cost:,.2f}"
+            elif mult_source in ["PER_MANEUVER", "PER_UNIT", "PER_CALL", "PER_HOUR_STATIC"]:
+                calculated_cost = rate * param_qty
+                audit_str = f"${rate:,.2f} x {param_qty} (Cant. Ingresada) = ${calculated_cost:,.2f}"
             else:
                 calculated_cost = rate
                 audit_str = f"Valor Directo = ${calculated_cost:,.2f}"

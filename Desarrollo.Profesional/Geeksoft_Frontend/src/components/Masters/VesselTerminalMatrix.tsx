@@ -1,71 +1,96 @@
 import React, { useState, useEffect } from 'react';
 import { ForecastService } from '../../services/api';
-import { Save, RefreshCw } from 'lucide-react';
+import { Save, RefreshCw, FileText } from 'lucide-react';
 
 interface VesselTerminalMatrixProps {
     portId: string;
     terminalId: string;
 }
 
-const CONCEPT_GROUPS = [
-    {
-        title: 'Estadía y Rendimiento',
-        concepts: [
-            { key: 'ritmo_carga', label: 'Ritmo de Carga (MT/hr)', isInput: true },
-            { key: 'ritmo_descarga', label: 'Ritmo de Descarga (MT/hr)', isInput: true },
-            { key: 'amarre_hrs', label: 'Tiempo Amarre (Hrs)', isInput: true },
-            { key: 'desamarre_hrs', label: 'Tiempo Desamarre (Hrs)', isInput: true }
-        ]
-    },
-    {
-        title: 'A) Shifting Expenses',
-        concepts: [
-            { key: 'maniobras', label: 'Pilotage', isInput: true },
-            { key: 'remolcadores', label: 'Remolcaje', isInput: true }
-        ]
-    },
-    {
-        title: 'B) General Port Expenses',
-        concepts: [
-            { key: 'lighthouse_nac', label: 'Lighthouse Dues (Aplica si el buque viene de PUERTO NACIONAL)', isInput: false, calcText: 'Automático (GRT)' },
-            { key: 'lighthouse_ext', label: 'Lighthouse Dues (Aplica si el buque viene de PUERTO EXTRANJERO)', isInput: false, calcText: 'Automático (GRT)' },
-            { key: 'dockage', label: 'Dockage /Muellaje ( $1.50*LOA*Hr)', isInput: false, calcText: 'Automático (Fórmula)' },
-            { key: 'lanchas', label: 'Launch Hire.', isInput: true },
-            { key: 'turnos_coordinador', label: 'Coordinator on board', isInput: true },
-            { key: 'clearance_qty', label: 'Clearance ( In/Out )', isInput: true },
-            { key: 'sanitary_qty', label: 'Sanitary Inspection (Reception/Dispatch)', isInput: true }
-        ]
-    },
-    {
-        title: 'C) Agency Expenses',
-        concepts: [
-            { key: 'agency_qty', label: 'Agency Fee', isInput: true },
-            { key: 'transport_qty', label: 'Transportation (Autoridades,coordinador y personal operativo)', isInput: true },
-            { key: 'comms_qty', label: 'Comunication', isInput: true }
-        ]
-    }
-];
 
 export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ portId, terminalId }) => {
     const [vessels, setVessels] = useState<any[]>([]);
     const [matrixData, setMatrixData] = useState<any[]>([]);
+    const [rules, setRules] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Fetch data
+
+    const handlePrintPDF = () => {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return alert('Por favor, permita las ventanas emergentes para descargar el PDF.');
+
+        const getBadgeHtml = (calcType: string, allowPassThrough: boolean) => {
+            if (allowPassThrough) return '<span style="background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">PASS-THROUGH</span>';
+            if (calcType === 'FIXED' || calcType === 'FLAT') return '<span style="background:#e2e8f0;color:#475569;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">FIJO</span>';
+            if (calcType === 'PER_GRT' || calcType === 'VARIABLE_TONS') return '<span style="background:#dbeafe;color:#1e40af;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">GRT</span>';
+            if (calcType === 'PER_LOA_HOUR' || calcType === 'VARIABLE_TIME') return '<span style="background:#f3e8ff;color:#6b21a8;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">LOAxHR</span>';
+            if (calcType === 'PER_HOUR' || calcType === 'PER_MANEUVER') return '<span style="background:#ffedd5;color:#9a3412;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">TIEMPO</span>';
+            return '<span style="background:#e2e8f0;color:#475569;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">' + calcType + '</span>';
+        };
+
+        const now = new Date().toLocaleString('es-ES', {
+            year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+
+        const baseConcepts = ['Ritmo de Carga (MT/hr)', 'Ritmo de Descarga (MT/hr)', 'Tiempo Amarre (Hrs)', 'Tiempo Desamarre (Hrs)', 'Nro de Remolcadores (Tugboats)'];
+        let rowsHtml = '<tr><td colspan="4" style="background:#334155;color:white;font-weight:900;font-size:11px;text-transform:uppercase;padding:5px 10px">Estadia y Rendimiento (Base)</td></tr>';
+        baseConcepts.forEach((label, i) => {
+            const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+            rowsHtml += '<tr style="background:' + bg + '"><td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-size:11px;font-weight:600;color:#374151">' + label + '</td><td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:center"><span style="background:#dcfce7;color:#166534;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">FISICA</span></td><td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-size:10px;color:#94a3b8;font-style:italic">Valor base de la operacion</td><td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;min-width:80px"></td></tr>';
+        });
+
+        const labelMap: Record<string, string> = { shifting: 'A) Shifting Expenses', general_port: 'B) General Port Expenses', agency: 'C) Agency Expenses' };
+        sortedCategories.forEach(([category, catRules]) => {
+            const label = labelMap[category.toLowerCase()] || category;
+            rowsHtml += '<tr><td colspan="4" style="background:#334155;color:white;font-weight:900;font-size:11px;text-transform:uppercase;padding:5px 10px">' + label + '</td></tr>';
+            (catRules as any[]).forEach((rule, i) => {
+                const calcType = rule.multiplier_source || 'FIXED';
+                const badge = getBadgeHtml(calcType, rule.allow_pass_through);
+                const name = rule.sub_item_name || rule.port_cost_concepts?.concept_name || 'Item';
+                const formula = rule.calculation_formula_template ? '<em style="color:#6366f1;font-size:9px">' + rule.calculation_formula_template + '</em><br/>' : '';
+                const comment = rule.logic_comments || '';
+                const bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+                rowsHtml += '<tr style="background:' + bg + '"><td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-size:11px;font-weight:600;color:#374151">' + name + '</td><td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:center">' + badge + '</td><td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;font-size:10px;color:#4b5563">' + formula + comment + '</td><td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;min-width:80px"></td></tr>';
+            });
+        });
+
+        const htmlContent = `<!DOCTYPE html><html><head><title>Matriz Tarifaria - ${portId} / ${terminalId}</title><meta charset="utf-8"><script src="https://cdn.tailwindcss.com"><\/script><style>@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');body{font-family:'Outfit',sans-serif;}@media print{@page{size:A4 portrait;margin:12mm 10mm;}body{margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}.no-print{display:none!important;}}</style></head><body class="bg-white p-6"><div class="no-print mb-6 p-4 bg-slate-100 rounded-xl flex items-center justify-between border border-slate-200"><span class="text-xs font-bold text-slate-600">Vista previa - Matriz Tarifaria ${portId} / ${terminalId}</span><div class="flex gap-2"><button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white font-bold text-xs rounded-lg shadow">Imprimir / Guardar PDF</button><button onclick="window.close()" class="px-4 py-2 bg-slate-200 text-slate-700 font-bold text-xs rounded-lg">Cerrar</button></div></div><div class="max-w-full mx-auto"><div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #1e293b;padding-bottom:12px;margin-bottom:16px"><div style="display:flex;align-items:center;gap:12px"><img src="/Logo.Petral.png" alt="Petral" style="height:36px;object-fit:contain" onerror="this.src='https://forecast.geeksoft.tech/Logo.Petral.png'"/><div style="border-left:1px solid #e2e8f0;padding-left:12px"><div style="font-size:9px;font-weight:900;color:#64748b;text-transform:uppercase">MAESTRO DE COSTOS PORTUARIOS</div><div style="font-size:15px;font-weight:900;color:#1e293b;text-transform:uppercase">Matriz Tarifaria - ${portId} / ${terminalId}</div></div></div><div style="text-align:right"><div style="font-size:9px;font-weight:700;color:#94a3b8">FECHA</div><div style="font-size:11px;font-weight:700;color:#475569">${now}</div></div></div><table style="width:100%;border-collapse:collapse;border:1px solid #cbd5e1"><thead><tr style="background:#1e293b"><th style="padding:8px 10px;font-size:10px;font-weight:900;text-transform:uppercase;color:white;text-align:left;border:1px solid #334155;width:30%">Concepto / Tarifa</th><th style="padding:8px 10px;font-size:10px;font-weight:900;text-transform:uppercase;color:white;text-align:center;border:1px solid #334155;width:12%">Logica</th><th style="padding:8px 10px;font-size:10px;font-weight:900;text-transform:uppercase;color:white;text-align:left;border:1px solid #334155;width:33%">Formula</th><th style="padding:8px 10px;font-size:10px;font-weight:900;text-transform:uppercase;color:white;text-align:left;border:1px solid #334155;width:25%">Comentarios — Sandra Galvez</th></tr></thead><tbody>${rowsHtml}</tbody></table><div style="margin-top:24px;display:flex;justify-content:space-between;border-top:1px solid #e2e8f0;padding-top:12px;font-size:9px;font-weight:700;color:#94a3b8"><span>© ${new Date().getFullYear()} NAVIERA PETRAL S.A.</span><span>Powered by Geeksoft</span></div></div></body></html>`;
+
+        printWindow.document.open();
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+    };
+
+
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [vesselsRes, opsRes] = await Promise.all([
+            const [vesselsRes, opsRes, rulesRes] = await Promise.all([
                 ForecastService.getVessels(),
-                ForecastService.getVesselTerminalOperations()
+                ForecastService.getVesselTerminalOperations(),
+                ForecastService.getPortCostsMatrix(portId)
             ]);
             
             const activeVessels = (vesselsRes || []).sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0));
             setVessels(activeVessels);
             
             const filteredOps = (opsRes || []).filter((op: any) => op.port_id === portId && op.terminal_id === terminalId);
-            setMatrixData(filteredOps);
+            setMatrixData(filteredOps.map((op: any) => ({
+                ...op,
+                parameters: op.parameters || {}
+            })));
+
+            const filteredRules = (rulesRes || []).filter((r: any) => r.terminal === terminalId);
+            
+            // Deduplicate rules by concept_id so we don't render CARGA/DESCARGA duplicates in the matrix
+            const uniqueRulesMap = new Map();
+            filteredRules.forEach((r: any) => {
+                if (!uniqueRulesMap.has(r.concept_id)) {
+                    uniqueRulesMap.set(r.concept_id, r);
+                }
+            });
+            setRules(Array.from(uniqueRulesMap.values()));
         } catch (error) {
             console.error("Error fetching ops data", error);
         } finally {
@@ -79,44 +104,68 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
         }
     }, [portId, terminalId]);
 
-    const getValue = (vesselId: string, conceptKey: string) => {
+    const getBaseValue = (vesselId: string, conceptKey: string) => {
         const row = matrixData.find(m => m.vessel_id === vesselId);
-        if (row && row[conceptKey] !== undefined) {
-            return row[conceptKey];
-        }
+        if (row && row[conceptKey] !== undefined) return row[conceptKey];
         return 0;
     };
 
-    const handleCellChange = (vesselId: string, conceptKey: string, value: string) => {
+    const getParamValue = (vesselId: string, conceptId: string) => {
+        const row = matrixData.find(m => m.vessel_id === vesselId);
+        if (row && row.parameters && row.parameters[conceptId] !== undefined) {
+            return row.parameters[conceptId];
+        }
+        return '';
+    };
+
+    const handleBaseChange = (vesselId: string, conceptKey: string, value: string) => {
         const numVal = parseFloat(value) || 0;
+        updateMatrixRow(vesselId, { [conceptKey]: numVal });
+    };
+
+    const handleParamChange = (vesselId: string, conceptId: string, value: string) => {
+        const numVal = value === '' ? '' : parseFloat(value);
         setMatrixData(prev => {
             const existingIdx = prev.findIndex(m => m.vessel_id === vesselId);
             if (existingIdx >= 0) {
                 const newData = [...prev];
-                newData[existingIdx] = { ...newData[existingIdx], [conceptKey]: numVal };
+                const newParams = { ...(newData[existingIdx].parameters || {}) };
+                if (numVal === '') {
+                    delete newParams[conceptId];
+                } else {
+                    newParams[conceptId] = numVal;
+                }
+                newData[existingIdx] = { ...newData[existingIdx], parameters: newParams };
                 return newData;
             } else {
-                // Crear nueva fila
-                const newRow = {
-                    port_id: portId,
-                    terminal_id: terminalId,
-                    vessel_id: vesselId,
-                    ritmo_carga: 0,
-                    ritmo_descarga: 0,
-                    amarre_hrs: 0,
-                    desamarre_hrs: 0,
-                    maniobras: 2,
-                    remolcadores: 4,
-                    lanchas: 4,
-                    turnos_coordinador: 2,
-                    clearance_qty: 1,
-                    sanitary_qty: 1,
-                    agency_qty: 1,
-                    transport_qty: 1,
-                    comms_qty: 1,
-                    [conceptKey]: numVal
-                };
+                const newRow = createDefaultRow(vesselId);
+                newRow.parameters[conceptId] = numVal === '' ? 0 : numVal;
                 return [...prev, newRow];
+            }
+        });
+    };
+
+    const createDefaultRow = (vesselId: string) => ({
+        port_id: portId,
+        terminal_id: terminalId,
+        vessel_id: vesselId,
+        ritmo_carga: 0,
+        ritmo_descarga: 0,
+        amarre_hrs: 0,
+        desamarre_hrs: 0,
+        tugboats_count: 0,
+        parameters: {} as Record<string, any>
+    });
+
+    const updateMatrixRow = (vesselId: string, updates: any) => {
+        setMatrixData(prev => {
+            const existingIdx = prev.findIndex(m => m.vessel_id === vesselId);
+            if (existingIdx >= 0) {
+                const newData = [...prev];
+                newData[existingIdx] = { ...newData[existingIdx], ...updates };
+                return newData;
+            } else {
+                return [...prev, { ...createDefaultRow(vesselId), ...updates }];
             }
         });
     };
@@ -132,15 +181,7 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
                 ritmo_descarga: Number(m.ritmo_descarga) || 0,
                 amarre_hrs: Number(m.amarre_hrs) || 0,
                 desamarre_hrs: Number(m.desamarre_hrs) || 0,
-                maniobras: Number(m.maniobras) || 0,
-                remolcadores: Number(m.remolcadores) || 0,
-                lanchas: Number(m.lanchas) || 0,
-                turnos_coordinador: Number(m.turnos_coordinador) || 0,
-                clearance_qty: Number(m.clearance_qty) || 0,
-                sanitary_qty: Number(m.sanitary_qty) || 0,
-                agency_qty: Number(m.agency_qty) || 0,
-                transport_qty: Number(m.transport_qty) || 0,
-                comms_qty: Number(m.comms_qty) || 0
+                parameters: m.parameters || {}
             }));
             
             await ForecastService.saveVesselTerminalOperations(payload);
@@ -153,6 +194,49 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
         }
     };
 
+    // Grouping logic for UI
+    const baseConcepts = [
+        { key: 'ritmo_carga', label: 'Ritmo de Carga (MT/hr)' },
+        { key: 'ritmo_descarga', label: 'Ritmo de Descarga (MT/hr)' },
+        { key: 'amarre_hrs', label: 'Tiempo Amarre (Hrs)' },
+        { key: 'desamarre_hrs', label: 'Tiempo Desamarre (Hrs)' },
+        { key: 'tugboats_count', label: 'Nro de Remolcadores (Tugboats)' }
+    ];
+
+    const groupedRules: Record<string, any[]> = {};
+    rules.forEach(rule => {
+        // Group by cost concept name or category if available
+        const category = rule.port_cost_concepts?.category || 'General Port Expenses';
+        if (!groupedRules[category]) groupedRules[category] = [];
+        groupedRules[category].push(rule);
+    });
+
+    const CATEGORY_MAP: Record<string, { order: number, label: string }> = {
+        'shifting': { order: 1, label: 'A) Shifting Expenses' },
+        'general_port': { order: 2, label: 'B) General Port Expenses' },
+        'agency': { order: 3, label: 'C) Agency Expenses' }
+    };
+
+    const sortedCategories = Object.entries(groupedRules).sort((a, b) => {
+        const catA = a[0].toLowerCase();
+        const catB = b[0].toLowerCase();
+        const orderA = CATEGORY_MAP[catA]?.order || 99;
+        const orderB = CATEGORY_MAP[catB]?.order || 99;
+        return orderA - orderB;
+    });
+
+    // Determine calculation badge logic
+    const renderCalculationBadge = (calcType: string, allowPassThrough: boolean) => {
+        if (allowPassThrough) return <span className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-[10px] font-bold">PASS-THROUGH</span>;
+        switch (calcType) {
+            case 'FLAT': return <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold">AUTOMÁTICO (FIJO)</span>;
+            case 'PER_GRT': return <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold">AUTOMÁTICO (GRT)</span>;
+            case 'PER_LOA_HOUR': return <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-[10px] font-bold">FÓRMULA (LOA*HR)</span>;
+            case 'PER_HOUR': return <span className="bg-orange-100 text-orange-800 px-2 py-0.5 rounded text-[10px] font-bold">FÓRMULA (HORAS)</span>;
+            default: return null;
+        }
+    };
+
     if (loading) {
         return <div className="p-4 text-center text-slate-500 animate-pulse">Cargando matriz...</div>;
     }
@@ -162,24 +246,40 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
             <div className="bg-slate-800 p-3 flex justify-between items-center text-white">
                 <h3 className="font-bold text-sm uppercase flex items-center gap-2">
                     <RefreshCw size={14} className="text-blue-300" />
-                    Parámetros Operativos del Terminal
+                    Matriz Dinámica: Parámetros y Conceptos Tarifarios
                 </h3>
-                <button 
-                    onClick={handleSave} 
-                    disabled={isSaving}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 transition-colors"
-                >
-                    <Save size={14} />
-                    {isSaving ? "Guardando..." : "Guardar Matriz"}
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={handlePrintPDF}
+                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 transition-colors"
+                        title="Imprimir tabla en PDF A4 vertical"
+                    >
+                        <FileText size={14} />
+                        PDF A4
+                    </button>
+                    <button 
+                        onClick={handleSave} 
+                        disabled={isSaving}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 transition-colors"
+                    >
+                        <Save size={14} />
+                        {isSaving ? "Guardando..." : "Guardar Matriz"}
+                    </button>
+                </div>
             </div>
             
             <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300">
                 <table className="w-full text-left border-collapse text-xs">
                     <thead>
                         <tr className="bg-slate-50 border-b border-slate-200">
-                            <th className="p-3 font-bold text-slate-600 uppercase w-48 sticky left-0 bg-slate-50 border-r border-slate-200 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
-                                Concepto Operativo
+                            <th className="p-3 font-bold text-slate-600 uppercase w-64 sticky left-0 bg-slate-50 border-r border-slate-200 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
+                                Concepto Operativo / Tarifa
+                            </th>
+                            <th className="p-3 font-bold text-slate-600 uppercase w-32 border-r border-slate-200 text-center">
+                                Lógica de Cálculo
+                            </th>
+                            <th className="p-3 font-bold text-slate-600 uppercase w-48 border-r border-slate-200">
+                                Comentarios / Lógica
                             </th>
                             {vessels.map(v => (
                                 <th key={v.vessel_id} className="p-3 font-bold text-slate-800 text-center min-w-[100px] border-r border-slate-200">
@@ -189,40 +289,88 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
                         </tr>
                     </thead>
                     <tbody>
-                        {CONCEPT_GROUPS.map((group) => (
-                            <React.Fragment key={group.title}>
-                                <tr className="bg-slate-200/80 border-b border-slate-300">
-                                    <td colSpan={vessels.length + 1} className="px-3 py-2 font-black text-slate-800 text-xs uppercase tracking-wider sticky left-0 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
-                                        {group.title}
+                        {/* BASE CONCEPTS */}
+                        <tr className="bg-slate-200/80 border-b border-slate-300">
+                            <td colSpan={vessels.length + 2} className="px-3 py-2 font-black text-slate-800 text-xs uppercase tracking-wider sticky left-0 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
+                                Estadía y Rendimiento (Base)
+                            </td>
+                        </tr>
+                        {baseConcepts.map((concept, idx) => (
+                            <tr key={concept.key} className={idx % 2 === 0 ? 'bg-white hover:bg-blue-50/50' : 'bg-slate-50/50 hover:bg-blue-50/50'}>
+                                <td className={`p-2.5 border-b border-r border-slate-200 font-semibold text-slate-700 sticky left-0 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.02)] ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
+                                    <div className="pl-3 border-l-2 border-slate-400">{concept.label}</div>
+                                </td>
+                                <td className="p-2 border-b border-r border-slate-200 text-center">
+                                    <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">FÍSICA (TIEMPOS)</span>
+                                </td>
+                                <td className="p-2 border-b border-r border-slate-200 text-xs text-slate-500 italic">
+                                    Valor base de la operación
+                                </td>
+                                {vessels.map(v => (
+                                    <td key={`${concept.key}-${v.vessel_id}`} className="p-1 border-b border-r border-slate-200">
+                                        <input 
+                                            type="number" 
+                                            step="any"
+                                            className="w-full text-center p-1.5 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium text-slate-800 bg-transparent hover:bg-white transition-colors"
+                                            value={getBaseValue(v.vessel_id, concept.key) === 0 ? '' : getBaseValue(v.vessel_id, concept.key)}
+                                            placeholder="0"
+                                            onChange={(e) => handleBaseChange(v.vessel_id, concept.key, e.target.value)}
+                                        />
                                     </td>
-                                </tr>
-                                {group.concepts.map((concept: any, idx) => (
-                                    <tr key={concept.key} className={idx % 2 === 0 ? 'bg-white hover:bg-blue-50/50' : 'bg-slate-50/50 hover:bg-blue-50/50'}>
-                                        <td className={`p-2.5 border-b border-r border-slate-200 font-semibold text-slate-700 sticky left-0 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.02)] ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
-                                            <div className="pl-3 border-l-2 border-slate-300">{concept.label}</div>
+                                ))}
+                            </tr>
+                        ))}
+
+                        {/* DYNAMIC RULE CONCEPTS BY CATEGORY */}
+                        {sortedCategories.map(([category, catRules]) => {
+                            const catLower = category.toLowerCase();
+                            const displayLabel = CATEGORY_MAP[catLower]?.label || category;
+                            return (
+                                <React.Fragment key={category}>
+                                    <tr className="bg-slate-200/80 border-b border-slate-300">
+                                        <td colSpan={vessels.length + 3} className="px-3 py-2 font-black text-slate-800 text-xs uppercase tracking-wider sticky left-0 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
+                                            {displayLabel}
                                         </td>
-                                        {vessels.map(v => (
-                                            <td key={`${concept.key}-${v.vessel_id}`} className="p-1 border-b border-r border-slate-200">
-                                                {concept.isInput ? (
-                                                    <input 
-                                                        type="number" 
-                                                        step="any"
-                                                        className="w-full text-center p-1.5 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium text-slate-800 bg-transparent hover:bg-white transition-colors"
-                                                        value={getValue(v.vessel_id, concept.key) === 0 ? '' : getValue(v.vessel_id, concept.key)}
-                                                        placeholder="0"
-                                                        onChange={(e) => handleCellChange(v.vessel_id, concept.key, e.target.value)}
-                                                    />
-                                                ) : (
-                                                    <div className="w-full text-center p-1.5 text-[10px] font-bold text-slate-400 bg-slate-100 rounded uppercase tracking-tighter">
-                                                        {concept.calcText}
-                                                    </div>
+                                    </tr>
+                                    {catRules.map((rule, idx) => {
+                                    // Determine if it needs manual quantity
+                                    const calcType = rule.calculation_formula_template || rule.multiplier_source || 'FLAT';
+                                    const needsInput = rule.allow_pass_through || ['PER_MANEUVER', 'PER_UNIT', 'PER_HOUR', 'PER_CALL'].includes(calcType);
+                                    
+                                    return (
+                                        <tr key={rule.concept_id} className={idx % 2 === 0 ? 'bg-white hover:bg-blue-50/50' : 'bg-slate-50/50 hover:bg-blue-50/50'}>
+                                            <td className={`p-2.5 border-b border-r border-slate-200 font-semibold text-slate-700 sticky left-0 z-10 shadow-[2px_0_5px_rgba(0,0,0,0.02)] ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
+                                                <div className="pl-3 border-l-2 border-slate-300">{rule.sub_item_name || rule.port_cost_concepts?.concept_name || 'Item'}</div>
+                                            </td>
+                                            <td className="p-2 border-b border-r border-slate-200 text-center">
+                                                {renderCalculationBadge(calcType, rule.allow_pass_through) || (
+                                                    <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">{calcType}</span>
                                                 )}
                                             </td>
-                                        ))}
-                                    </tr>
-                                ))}
+                                            <td className="p-2 border-b border-r border-slate-200 text-xs text-slate-600 whitespace-normal">
+                                                {rule.logic_comments || <span className="text-slate-400 italic">Sin comentarios</span>}
+                                            </td>
+                                            {vessels.map(v => (
+                                                <td key={`${rule.concept_id}-${v.vessel_id}`} className="p-1 border-b border-r border-slate-200">
+                                                    {needsInput ? (
+                                                        <input 
+                                                            type="number" 
+                                                            step="any"
+                                                            className="w-full text-center p-1.5 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium text-slate-800 bg-transparent hover:bg-white transition-colors"
+                                                            value={getParamValue(v.vessel_id, rule.concept_id)}
+                                                            placeholder="0"
+                                                            onChange={(e) => handleParamChange(v.vessel_id, rule.concept_id, e.target.value)}
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full text-center p-1.5 text-transparent select-none">-</div>
+                                                    )}
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    );
+                                })}
                             </React.Fragment>
-                        ))}
+                        )})}
                     </tbody>
                 </table>
             </div>

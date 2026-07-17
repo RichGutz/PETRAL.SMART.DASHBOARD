@@ -15,6 +15,10 @@ def main():
     cur.execute("SELECT * FROM port_costs_matrix")
     cols = [desc[0] for desc in cur.description]
     matrix_data = [dict(zip(cols, row)) for row in cur.fetchall()]
+    
+    cur.execute("SELECT vessel_id, parameters, tugboats_count FROM vessel_terminal_operations WHERE terminal_id = 'APM' AND port_id = 'CALLAO'")
+    ops = cur.fetchall()
+    vessel_ops_db = {v[0]: {"parameters": v[1], "tugboats_count": v[2]} for v in ops}
     conn.close()
     
     import sys
@@ -23,7 +27,7 @@ def main():
     
     PORT_ID = "CALLAO"
     TERMINAL = "APM"
-    OP_TYPE = "DESCARGA"
+    OP_TYPE = "CARGA"
     COUNTRY = "PE"
     
     # Filtro de candidatos
@@ -45,16 +49,20 @@ def main():
             print(f"Vessel {v_id} no encontrado en BD.")
             continue
             
-        v_data = vessels_db[v_id]
-        
-        # calculate_dynamic_port_costs recibe: port_id, country, vessel_data, port_hours, port_costs_data
+        ops_data = vessel_ops_db.get(v_id, {})
+        v_data = {
+            **vessels_db[v_id],
+            "parameters": ops_data.get("parameters", {}),
+            "port_hours": t["port_hours"],
+            "tugboats_count": ops_data.get("tugboats_count", 0)
+        }# calculate_dynamic_port_costs recibe: port_id, country, vessel_data, port_hours, port_costs_data
         res = calculate_dynamic_port_costs(PORT_ID, COUNTRY, v_data, t["port_hours"], candidatos)
         
         motor_total = res["total_cost"]
         excel_total = t["excel_total"]
         diff = motor_total - excel_total
         
-        status = "✅ OK" if abs(diff) < 0.1 else f"❌ DIFF: ${diff:,.2f}"
+        status = "OK" if abs(diff) < 0.1 else f"DIFF: ${diff:,.2f}"
         print(f"[{v_id}] Excel: ${excel_total:,.2f} | Motor: ${motor_total:,.2f} => {status}")
         
         if abs(diff) >= 0.1:

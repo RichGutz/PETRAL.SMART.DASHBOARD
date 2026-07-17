@@ -1,0 +1,40 @@
+{
+  "columns": [
+    "Unnamed: 0",
+    "Unnamed: 1",
+    "Unnamed: 2",
+    "Unnamed: 3"
+  ],
+  "head": [
+    {
+      "Unnamed: 0": NaN,
+      "Unnamed: 1": NaN,
+      "Unnamed: 2": NaN,
+      "Unnamed: 3": NaN
+    },
+    {
+      "Unnamed: 0": NaN,
+      "Unnamed: 1": "Rutas",
+      "Unnamed: 2": NaN,
+      "Unnamed: 3": "Distancias"
+    },
+    {
+      "Unnamed: 0": NaN,
+      "Unnamed: 1": "Ilo",
+      "Unnamed: 2": "Matarani",
+      "Unnamed: 3": 69
+    },
+    {
+      "Unnamed: 0": NaN,
+      "Unnamed: 1": "Ilo",
+      "Unnamed: 2": "Mejillones",
+      "Unnamed: 3": 335
+    },
+    {
+      "Unnamed: 0": NaN,
+      "Unnamed: 1": "Ilo",
+      "Unnamed: 2": "Callao",
+      "Unnamed: 3": 514
+    }
+  ]
+}
