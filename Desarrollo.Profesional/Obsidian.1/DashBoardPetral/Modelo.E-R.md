@@ -451,4 +451,28 @@ La tabla existente mantendrá su núcleo lógico, pero expandirá sus dimensione
 * `supplier_id` *(UUID, FK → suppliers)* → Llave foránea para bifurcar cálculos dependiendo del vendor seleccionado en el Frontend.
 * `sub_item_name` *(VARCHAR)* → Soporte para **Splits Variables**. Permite que un mismo `concept_id` (Ej. Launch Hire) se divida en N filas (Stand By, Pier Usage, Anchorage) sin contaminar el catálogo maestro.
 * `allow_pass_through` *(BOOLEAN, DEFAULT FALSE)* → Control de UI. Habilita el checkbox *"Pass Through (Asumido por cliente)"* en el frontend para anular matemáticamente el cobro a la agencia (Ej: Muellaje en Interacid).
-* `is_optional` *(BOOLEAN, DEFAULT FALSE)* → Identifica costos marcados como "Solo si requiere" (Ej: Hose Connection en Barquito).
+* `is_optional` *(BOOLEAN, DEFAULT FALSE)* → Identifica costos marcados como "Solo si requiere" (Ej: Hose Connection en Barquito).
+
+**Acción 3: Desacoplamiento de `client_id` (Corrección Lógica Comercial)**
+El tarifario portuario se le cobra al armador naviero (PETRAL), no al dueño de la carga (SPCC, NEXA). Por tanto, la dimensión `client_id` es irrelevante para un puerto.
+* En `port_costs_matrix`: Se eliminará la columna `client_id` y se reconstruirá la llave primaria.
+* En `port_cost_static`: Se eliminará la columna `client_id`, se agregará `terminal_id` (`DEFAULT 'GENERAL'`) y se reconstruirá la llave primaria para alinearla al modelo de terminales.
+
+**Acción 4: Plan de Reversión (ROLLBACK) ante fallos**
+En caso de que la inyección de estas columnas rompa el Backend o el Frontend existente de Callao/Ilo/Matarani, la instrucción para devolver la base de datos a la normalidad (eliminando la tabla y deshaciendo el ALTER) es ejecutar el siguiente SQL de reversión:
+```sql
+-- 1. Quitar las nuevas columnas de la matriz y revertir PK
+ALTER TABLE port_costs_matrix DROP COLUMN supplier_id, DROP COLUMN sub_item_name, DROP COLUMN allow_pass_through, DROP COLUMN is_optional;
+ALTER TABLE port_costs_matrix ADD COLUMN client_id VARCHAR DEFAULT 'DEFAULT';
+ALTER TABLE port_costs_matrix DROP CONSTRAINT port_costs_matrix_pkey;
+ALTER TABLE port_costs_matrix ADD PRIMARY KEY (client_id, port_id, terminal, operation_type, vessel_id, concept_id);
+
+-- 2. Revertir Matriz Estática
+ALTER TABLE port_cost_static ADD COLUMN client_id VARCHAR DEFAULT 'DEFAULT';
+ALTER TABLE port_cost_static DROP CONSTRAINT port_cost_static_pkey;
+ALTER TABLE port_cost_static DROP COLUMN terminal_id;
+ALTER TABLE port_cost_static ADD PRIMARY KEY (client_id, port_id, operation_type, vessel_id);
+
+-- 3. Eliminar la tabla de proveedores
+DROP TABLE suppliers CASCADE;
+```

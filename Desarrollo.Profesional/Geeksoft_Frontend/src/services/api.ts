@@ -12,6 +12,14 @@ export const ForecastService = {
         const response = await api.post('/forecast/run', payload, { signal });
         return response.data;
     },
+    getVesselTerminalOperations: async () => {
+        const response = await api.get('/forecast/vessel_terminal_operations');
+        return response.data;
+    },
+    saveVesselTerminalOperations: async (payload: any) => {
+        const response = await api.post('/forecast/vessel_terminal_operations', payload);
+        return response.data;
+    },
     runSimulationUniversal: async (payload: any, signal?: AbortSignal) => {
         const response = await api.post('/forecast/run_universal', payload, { signal });
         return response.data;
@@ -63,6 +71,10 @@ export const ForecastService = {
                 port_cost_mode: portCostMode
             }
         });
+        return response.data;
+    },
+    deletePortCostRule: async (ruleId: string) => {
+        const response = await api.delete(`/forecast/port_costs_matrix/${ruleId}`);
         return response.data;
     },
     getLatestBunker: async () => {
@@ -138,15 +150,22 @@ export const ForecastService = {
         const response = await api.post('/forecast/port_costs_static', payload);
         return response.data;
     },
-    getPortCostsMatrix: async (portId?: string, clientId?: string) => {
+    getPortCostsMatrix: async (portId?: string) => {
         const params: Record<string, string> = {};
         if (portId) params['port_id'] = portId;
-        if (clientId) params['client_id'] = clientId;
         const response = await api.get('/forecast/port_costs_matrix', { params });
         return response.data;
     },
     savePortCostsMatrix: async (payload: any[]) => {
         const response = await api.post('/forecast/port_costs_matrix', payload);
+        return response.data;
+    },
+    getSuppliers: async () => {
+        const response = await api.get('/forecast/suppliers');
+        return response.data;
+    },
+    saveSuppliers: async (payload: any[]) => {
+        const response = await api.post('/forecast/suppliers', payload);
         return response.data;
     },
     getSourcesSinks: async () => {

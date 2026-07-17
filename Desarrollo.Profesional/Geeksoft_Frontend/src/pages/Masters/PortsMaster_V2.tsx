@@ -5,6 +5,7 @@ import { ForecastService } from '../../services/api';
 import { Anchor, Edit3, MapPin, Plus, Factory, Trash2 } from 'lucide-react';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
+import { VesselTerminalMatrix } from '../../components/Masters/VesselTerminalMatrix';
 
 // Helper para obtener código ISO de 2 letras y nombre limpio de país
 const getCountryInfo = (countryStr: string) => {
@@ -35,6 +36,8 @@ export const PortsMaster_V2: React.FC = () => {
     
     const [editingTerminalId, setEditingTerminalId] = useState<string | null>(null);
     const [editTerminalData, setEditTerminalData] = useState<any>(null);
+    
+    const [activeTerminalId, setActiveTerminalId] = useState<string>('GENERAL');
     
     const [isSaving, setIsSaving] = useState(false);
 
@@ -135,7 +138,7 @@ export const PortsMaster_V2: React.FC = () => {
     const handleNewTerminalClick = () => {
         if (!activePortId) return;
         setEditingTerminalId('NUEVO');
-        setEditTerminalData({ terminal_id: '', port_id: activePortId, terminal_name: '', is_active: true });
+        setEditTerminalData({ terminal_id: '', port_id: activePortId, terminal_name: '', is_active: true, mooring_time_hrs: 0, unmooring_time_hrs: 0 });
     };
     
     const handleSaveTerminal = async () => {
@@ -156,16 +159,7 @@ export const PortsMaster_V2: React.FC = () => {
         }
     };
 
-    const handleDeleteTerminal = async (terminal_id: string, port_id: string) => {
-        if (window.confirm(`¿Está seguro que desea eliminar el terminal ${terminal_id}?`)) {
-            try {
-                await ForecastService.deleteTerminal(terminal_id, port_id);
-                await fetchData();
-            } catch (e) {
-                alert("Error al eliminar terminal");
-            }
-        }
-    };
+
 
     const exportData = useMemo(() => {
         const rows: any[] = [];
@@ -333,72 +327,55 @@ export const PortsMaster_V2: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* Sección de Terminales */}
-                                <div className="flex flex-col gap-4 mt-2">
-                                    <div className="flex items-center justify-between">
+                                {/* Sección Matriz Barco x Terminal */}
+                                <div className="mt-6">
+                                    <div className="flex items-center justify-between mb-4">
                                         <h3 className="font-black text-slate-700 text-sm uppercase flex items-center gap-2">
                                             <Factory size={16} className="text-slate-400" />
-                                            Terminales Asociados ({terminalsForPort.length})
+                                            Terminal Operativo
                                         </h3>
-                                        <button onClick={handleNewTerminalClick} className="px-3 py-1.5 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-700 flex items-center gap-1 shadow-sm transition-colors">
-                                            <Plus size={14} /> Nuevo Terminal
-                                        </button>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                        {/* Editor Nuevo Terminal */}
-                                        {editingTerminalId === 'NUEVO' && (
-                                            <div className="bg-white border-2 border-slate-800 rounded-xl p-4 shadow-lg flex flex-col gap-3 transform scale-[1.02] transition-transform">
-                                                <input autoFocus placeholder="ID Terminal (Ej. TPM)" className="border p-1.5 rounded text-xs uppercase font-bold focus:ring-2 focus:ring-slate-800 focus:outline-none" value={editTerminalData.terminal_id} onChange={e=>setEditTerminalData({...editTerminalData, terminal_id: e.target.value})} />
-                                                <input placeholder="Nombre Completo" className="border p-1.5 rounded text-xs font-semibold focus:ring-2 focus:ring-slate-800 focus:outline-none" value={editTerminalData.terminal_name} onChange={e=>setEditTerminalData({...editTerminalData, terminal_name: e.target.value})} />
-                                                <div className="flex gap-2 justify-end mt-2">
-                                                    <button onClick={()=>setEditingTerminalId(null)} className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-500 hover:bg-slate-200 transition-colors">Cancelar</button>
-                                                    <button onClick={handleSaveTerminal} disabled={isSaving} className="px-3 py-1 bg-slate-800 text-white rounded text-xs font-bold flex items-center gap-1 hover:bg-slate-900 transition-colors">Guardar</button>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {terminalsForPort.map(t => (
-                                            editingTerminalId === t.terminal_id ? (
-                                                <div key={t.terminal_id} className="bg-white border-2 border-slate-800 rounded-xl p-4 shadow-lg flex flex-col gap-3 transform scale-[1.02] transition-transform">
-                                                    <input disabled className="border p-1.5 rounded text-xs uppercase font-bold bg-slate-50 text-slate-400" value={editTerminalData.terminal_id} />
-                                                    <input autoFocus placeholder="Nombre Completo" className="border p-1.5 rounded text-xs font-semibold focus:ring-2 focus:ring-slate-800 focus:outline-none" value={editTerminalData.terminal_name} onChange={e=>setEditTerminalData({...editTerminalData, terminal_name: e.target.value})} />
-                                                    <div className="flex items-center gap-2 text-xs font-bold text-slate-600 mt-1">
-                                                        <input type="checkbox" checked={editTerminalData.is_active} onChange={e=>setEditTerminalData({...editTerminalData, is_active: e.target.checked})} className="accent-slate-800 w-3.5 h-3.5" /> Activo
-                                                    </div>
-                                                    <div className="flex gap-2 justify-end mt-2">
-                                                        <button onClick={()=>setEditingTerminalId(null)} className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-500 hover:bg-slate-200 transition-colors">Cancelar</button>
-                                                        <button onClick={handleSaveTerminal} disabled={isSaving} className="px-3 py-1 bg-slate-800 text-white rounded text-xs font-bold flex items-center gap-1 hover:bg-slate-900 transition-colors">Guardar</button>
-                                                    </div>
-                                                </div>
+                                        <div className="flex gap-2 items-center">
+                                            {terminalsForPort.length > 0 ? (
+                                                <select 
+                                                    className="border border-slate-300 rounded px-3 py-1.5 text-sm font-bold bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    value={activeTerminalId}
+                                                    onChange={(e) => setActiveTerminalId(e.target.value)}
+                                                >
+                                                    {terminalsForPort.map(t => (
+                                                        <option key={t.terminal_id} value={t.terminal_id}>{t.terminal_name} ({t.terminal_id})</option>
+                                                    ))}
+                                                    <option value="GENERAL">GENERAL (Por Defecto)</option>
+                                                </select>
                                             ) : (
-                                                <div key={t.terminal_id} className={`bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col gap-2 relative group hover:border-slate-300 transition-colors ${!t.is_active ? 'opacity-60 grayscale' : ''}`}>
-                                                    <div className="absolute top-2 right-2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button onClick={() => { setEditingTerminalId(t.terminal_id); setEditTerminalData({...t}); }} className="p-1.5 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
-                                                            <Edit3 size={14} />
-                                                        </button>
-                                                        <button onClick={() => handleDeleteTerminal(t.terminal_id, t.port_id)} className="p-1.5 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-lg">
-                                                            <Trash2 size={14} />
-                                                        </button>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Factory size={16} className="text-teal-600" />
-                                                        <span className="text-[10px] font-black uppercase text-slate-600 bg-slate-100 px-1.5 rounded border border-slate-200">{t.terminal_id}</span>
-                                                    </div>
-                                                    <h4 className="font-bold text-slate-800 text-sm mt-1 leading-tight">{t.terminal_name}</h4>
-                                                    {!t.is_active && <span className="text-[10px] font-bold text-red-500 uppercase mt-auto">Inactivo</span>}
-                                                </div>
-                                            )
-                                        ))}
-                                        
-                                        {terminalsForPort.length === 0 && editingTerminalId !== 'NUEVO' && (
-                                            <div className="col-span-full border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center text-slate-400 gap-2 bg-white/50">
-                                                <Factory size={32} className="text-slate-300 mb-2" />
-                                                <span className="text-sm font-semibold text-slate-500">Este puerto aún no tiene terminales registrados.</span>
-                                                <button onClick={handleNewTerminalClick} className="mt-2 text-xs font-bold text-blue-600 hover:underline">Haga clic aquí para agregar el primero.</button>
-                                            </div>
-                                        )}
+                                                <span className="px-3 py-1.5 bg-slate-100 text-slate-500 rounded text-sm font-bold border border-slate-200">Terminal: GENERAL</span>
+                                            )}
+                                            
+                                            <button onClick={handleNewTerminalClick} className="px-3 py-1.5 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-700 flex items-center gap-1 shadow-sm transition-colors">
+                                                <Plus size={14} /> Crear Terminal
+                                            </button>
+                                        </div>
                                     </div>
+
+                                    {/* Editor de Nuevo Terminal (Oculto en modal/inline si el usuario presiona el botón) */}
+                                    {editingTerminalId === 'NUEVO' && (
+                                        <div className="bg-white border-2 border-slate-800 rounded-xl p-4 shadow-lg flex flex-col gap-3 mb-4 w-full md:w-1/2">
+                                            <div className="flex justify-between items-center">
+                                                <h4 className="font-bold text-sm">Nuevo Terminal</h4>
+                                            </div>
+                                            <input autoFocus placeholder="ID Terminal (Ej. TPM)" className="border p-1.5 rounded text-xs uppercase font-bold focus:ring-2 focus:ring-slate-800 focus:outline-none" value={editTerminalData.terminal_id} onChange={e=>setEditTerminalData({...editTerminalData, terminal_id: e.target.value})} />
+                                            <input placeholder="Nombre Completo" className="border p-1.5 rounded text-xs font-semibold focus:ring-2 focus:ring-slate-800 focus:outline-none" value={editTerminalData.terminal_name} onChange={e=>setEditTerminalData({...editTerminalData, terminal_name: e.target.value})} />
+                                            <div className="flex gap-2 justify-end mt-2">
+                                                <button onClick={()=>setEditingTerminalId(null)} className="px-3 py-1.5 bg-slate-100 rounded text-xs font-bold text-slate-500 hover:bg-slate-200 transition-colors">Cancelar</button>
+                                                <button onClick={handleSaveTerminal} disabled={isSaving} className="px-3 py-1.5 bg-slate-800 text-white rounded text-xs font-bold flex items-center gap-1 hover:bg-slate-900 transition-colors">Guardar</button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Componente Data Grid de la Matriz */}
+                                    <VesselTerminalMatrix 
+                                        portId={currentPort.port_id} 
+                                        terminalId={activeTerminalId === '' ? (terminalsForPort.length > 0 ? terminalsForPort[0].terminal_id : 'GENERAL') : activeTerminalId} 
+                                    />
                                 </div>
                             </>
                         )}

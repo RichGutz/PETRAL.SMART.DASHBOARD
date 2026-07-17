@@ -13,7 +13,8 @@ from backend.models.forecast_models import (
     PortUpdate,
     PortReorderItem,
     TerminalUpdate,
-    SourceSinkUpdateItem
+    SourceSinkUpdateItem,
+    VesselTerminalOperation
 )
 from backend.services.forecast_service import run_forecast_simulation, run_forecast_simulation_universal
 
@@ -980,28 +981,209 @@ def estimate_routes_distances(req: BatchRouteEstimateRequest):
 # ──────────────────────────────────────────────────────────────────────────────
 # ENDPOINTS: port_costs_matrix (Tarifas Dinámicas Desglosadas)
 # ──────────────────────────────────────────────────────────────────────────────
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        sb.table('ports').delete().eq('port_id', port_id).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-class PortCostMatrixUpdateItem(BaseModel):
-    client_id: str
+@router.post('/ports/reorder')
+def reorder_ports(items: List[PortReorderItem]):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        payload = [{'port_id': item.port_id, 'display_order': item.display_order} for item in items]
+        sb.table('ports').upsert(payload).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get('/terminals')
+def get_terminals(port_id: Optional[str] = None):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        query = sb.table('terminals').select("*").order("created_at")
+        if port_id:
+            query = query.eq('port_id', port_id)
+        res = query.execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post('/terminals')
+def save_terminals(payload: TerminalUpdate):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        data = payload.dict()
+        sb.table('terminals').upsert(data).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete('/terminals')
+def delete_terminal(terminal_id: str, port_id: str):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        sb.table('terminals').delete().eq('terminal_id', terminal_id).eq('port_id', port_id).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+from backend.models.forecast_models import PortCostStaticUpdateItem
+
+@router.get('/port_costs_static')
+def get_port_costs_static():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table('port_cost_static').select('*').execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post('/port_costs_static')
+def save_port_costs_static(items: List[PortCostStaticUpdateItem]):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        from datetime import datetime
+        now_str = datetime.utcnow().isoformat()
+        payload = []
+        for item in items:
+            payload.append({
+                'client_id': item.client_id,
+                'port_id': item.port_id,
+                'operation_type': item.operation_type,
+                'vessel_id': item.vessel_id,
+                'cost': item.cost,
+                'sub_operation_type': item.sub_operation_type or 'MAIN',
+                'updated_at': now_str,
+                'updated_by': item.updated_by
+            })
+        sb.table('port_cost_static').upsert(payload).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+from backend.models.forecast_models import SourceSinkUpdateItem
+
+@router.get('/sources_sinks')
+def get_sources_sinks():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table('sources_sinks').select('*').execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post('/sources_sinks')
+def save_sources_sinks(items: List[SourceSinkUpdateItem]):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        payload = []
+        for item in items:
+            payload.append({
+                'port_id': item.port_id,
+                'year': item.year,
+                'capacity_mt': item.capacity_mt,
+                'type': item.type,
+                'empresa': item.empresa,
+                'color_hex': item.color_hex,
+                'producto': item.producto
+            })
+        sb.table('sources_sinks').upsert(payload).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class DeleteSourceSinkRequest(BaseModel):
     port_id: str
-    terminal: str = 'GENERAL'
-    operation_type: str
-    vessel_id: str
-    concept_id: str
-    cost: float = 0
-    rate_usd: Optional[float] = None
-    multiplier_source: str = 'FIXED'
-    min_limit: Optional[float] = None
-    max_limit: Optional[float] = None
-    calculation_formula_template: Optional[str] = None
-    origin_country: Optional[str] = None
+    year: int
+    empresa: str
+    producto: str
 
+@router.post('/sources_sinks/delete')
+def delete_source_sink(req: DeleteSourceSinkRequest):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        sb.table('sources_sinks').delete().match({
+            'port_id': req.port_id,
+            'year': req.year,
+            'empresa': req.empresa,
+            'producto': req.producto
+        }).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class RouteEstimateItem(BaseModel):
+    origin: str
+    destination: str
+    lat_a: float
+    lon_a: float
+    lat_b: float
+    lon_b: float
+
+class BatchRouteEstimateRequest(BaseModel):
+    routes: List[RouteEstimateItem]
+
+@router.post("/routes/estimate-distances")
+def estimate_routes_distances(req: BatchRouteEstimateRequest):
+    try:
+        import searoute as sr
+        results = []
+        for r in req.routes:
+            try:
+                # searoute expects [longitude, latitude]
+                origin_coords = [r.lon_a, r.lat_a]
+                dest_coords = [r.lon_b, r.lat_b]
+                route_geojson = sr.searoute(origin_coords, dest_coords)
+                raw_dist = float(route_geojson.properties.get("length", 0.0))
+                units = route_geojson.properties.get("units", "km")
+                
+                # Convert to Nautical Miles (NM)
+                if units == "km":
+                    distance_nm = raw_dist / 1.852
+                elif units == "m":
+                    distance_nm = (raw_dist / 1000.0) / 1.852
+                else:
+                    distance_nm = raw_dist
+                
+                distance_nm = round(distance_nm, 2)
+            except Exception as inner_e:
+                distance_nm = 0.0
+                
+            results.append({
+                "origin": r.origin,
+                "destination": r.destination,
+                "distance": distance_nm
+            })
+        return {"results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# ENDPOINTS: port_costs_matrix (Tarifas Dinámicas Desglosadas)
+# ──────────────────────────────────────────────────────────────────────────────
+
+from backend.models.forecast_models import PortCostRuleMaster, SupplierMaster
 
 @router.get('/port_costs_matrix')
-def get_port_costs_matrix(port_id: Optional[str] = None, client_id: Optional[str] = None):
+def get_port_costs_matrix(port_id: Optional[str] = None):
     """
     Retorna los coeficientes de tarifas dinámicas desglosadas por puerto.
-    Opcional: filtrar por port_id y/o client_id.
+    Opcional: filtrar por port_id.
     Incluye join con port_cost_concepts para nombre y categoría de cada concepto.
     """
     try:
@@ -1012,8 +1194,6 @@ def get_port_costs_matrix(port_id: Optional[str] = None, client_id: Optional[str
         )
         if port_id:
             query = query.eq('port_id', port_id)
-        if client_id:
-            query = query.eq('client_id', client_id)
         res = query.order('port_id').order('concept_id').execute()
         return res.data
     except Exception as e:
@@ -1021,18 +1201,17 @@ def get_port_costs_matrix(port_id: Optional[str] = None, client_id: Optional[str
 
 
 @router.post('/port_costs_matrix')
-def save_port_costs_matrix(items: List[PortCostMatrixUpdateItem]):
+def save_port_costs_matrix(items: List[PortCostRuleMaster]):
     """
     Upsert de coeficientes de tarifas dinámicas.
-    El frontend MatrixComplexPanel usa este endpoint al presionar Guardar.
+    El frontend PortTariffsMaster usa este endpoint al presionar Guardar.
     """
     try:
         from backend.database import get_supabase
         sb = get_supabase()
         payload = []
         for item in items:
-            payload.append({
-                'client_id': item.client_id,
+            rule_dict = {
                 'port_id': item.port_id,
                 'terminal': item.terminal,
                 'operation_type': item.operation_type,
@@ -1045,8 +1224,79 @@ def save_port_costs_matrix(items: List[PortCostMatrixUpdateItem]):
                 'max_limit': item.max_limit,
                 'calculation_formula_template': item.calculation_formula_template,
                 'origin_country': item.origin_country,
-            })
+                'supplier_id': item.supplier_id,
+                'sub_item_name': item.sub_item_name,
+                'allow_pass_through': item.allow_pass_through,
+                'is_optional': item.is_optional,
+            }
+            if item.rule_id:
+                rule_dict['rule_id'] = item.rule_id
+            payload.append(rule_dict)
         sb.table('port_costs_matrix').upsert(payload).execute()
         return {'status': 'success', 'updated': len(payload)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete('/port_costs_matrix/{rule_id}')
+def delete_port_cost_rule(rule_id: str):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        sb.table('port_costs_matrix').delete().eq('rule_id', rule_id).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get('/suppliers')
+def get_suppliers():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table('suppliers').select('*').order('supplier_name').execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post('/suppliers')
+def save_suppliers(payload: List[SupplierMaster]):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        
+        data = []
+        for item in payload:
+            d = item.dict(exclude_none=True)
+            data.append(d)
+            
+        res = sb.table('suppliers').upsert(data).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get('/vessel_terminal_operations')
+def get_vessel_terminal_operations():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table('vessel_terminal_operations').select('*').execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post('/vessel_terminal_operations')
+def save_vessel_terminal_operations(payload: List[VesselTerminalOperation]):
+    try:
+        from backend.database import get_supabase
+        from backend.services.forecast_service import clear_forecast_cache
+        sb = get_supabase()
+        
+        data = []
+        for item in payload:
+            d = item.dict(exclude_none=True)
+            data.append(d)
+            
+        res = sb.table('vessel_terminal_operations').upsert(data).execute()
+        clear_forecast_cache()
+        return {'status': 'success'}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

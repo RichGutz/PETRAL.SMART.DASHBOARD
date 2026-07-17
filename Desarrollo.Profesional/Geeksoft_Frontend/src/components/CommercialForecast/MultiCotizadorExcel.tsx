@@ -1928,6 +1928,66 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         </tbody>
                                     </table>
                                 </div>
+                                
+                                {tr.audit_trail?.port_costs_audit && Object.keys(tr.audit_trail.port_costs_audit.origin || {}).length > 0 && (
+                                    <div className="mt-2">
+                                        <div className="border-b border-slate-300 pb-1 mb-1">
+                                            <span className="font-bold text-[11px] text-slate-800">🚢 DETALLE DE GASTOS PORTUARIOS - ORIGEN ({tr.origin_port_id})</span>
+                                        </div>
+                                        <table className="w-full text-left text-xs border-collapse font-mono">
+                                            <thead>
+                                                <tr className="bg-slate-100 border-b border-slate-300 text-[10px]">
+                                                    <th className="p-1.5 w-[25%]">Concepto Base</th>
+                                                    <th className="p-1.5 w-[25%]">Sub-Costo</th>
+                                                    <th className="p-1.5 w-[35%]">Fórmula Aplicada</th>
+                                                    <th className="p-1.5 text-right w-[15%]">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-200 text-[10px]">
+                                                {Object.entries(tr.audit_trail.port_costs_audit.origin).map(([concept, lines]: any) => (
+                                                    lines.map((line: any, idx: number) => (
+                                                        <tr key={`${concept}-${idx}`}>
+                                                            {idx === 0 && <td rowSpan={lines.length} className="p-1.5 font-semibold bg-slate-50 align-top border-r border-slate-200">{concept}</td>}
+                                                            <td className="p-1.5 text-slate-700 border-r border-slate-100">{line.name}</td>
+                                                            <td className="p-1.5 text-slate-500 border-r border-slate-100">{line.formula_desc}</td>
+                                                            <td className="p-1.5 font-bold text-sky-600 text-right">{fmtCur(line.cost)}</td>
+                                                        </tr>
+                                                    ))
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+
+                                {tr.audit_trail?.port_costs_audit && Object.keys(tr.audit_trail.port_costs_audit.destination || {}).length > 0 && (
+                                    <div className="mt-2">
+                                        <div className="border-b border-slate-300 pb-1 mb-1">
+                                            <span className="font-bold text-[11px] text-slate-800">🚢 DETALLE DE GASTOS PORTUARIOS - DESTINO ({tr.destination_port_id})</span>
+                                        </div>
+                                        <table className="w-full text-left text-xs border-collapse font-mono">
+                                            <thead>
+                                                <tr className="bg-slate-100 border-b border-slate-300 text-[10px]">
+                                                    <th className="p-1.5 w-[25%]">Concepto Base</th>
+                                                    <th className="p-1.5 w-[25%]">Sub-Costo</th>
+                                                    <th className="p-1.5 w-[35%]">Fórmula Aplicada</th>
+                                                    <th className="p-1.5 text-right w-[15%]">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-200 text-[10px]">
+                                                {Object.entries(tr.audit_trail.port_costs_audit.destination).map(([concept, lines]: any) => (
+                                                    lines.map((line: any, idx: number) => (
+                                                        <tr key={`${concept}-${idx}`}>
+                                                            {idx === 0 && <td rowSpan={lines.length} className="p-1.5 font-semibold bg-slate-50 align-top border-r border-slate-200">{concept}</td>}
+                                                            <td className="p-1.5 text-slate-700 border-r border-slate-100">{line.name}</td>
+                                                            <td className="p-1.5 text-slate-500 border-r border-slate-100">{line.formula_desc}</td>
+                                                            <td className="p-1.5 font-bold text-sky-600 text-right">{fmtCur(line.cost)}</td>
+                                                        </tr>
+                                                    ))
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
                             </div>
                         );
                     })}

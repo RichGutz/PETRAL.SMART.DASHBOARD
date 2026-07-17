@@ -752,6 +752,52 @@ export const VoyageLedgerTest: React.FC<{ portCostMode?: 'static' | 'matrix' }> 
                                     </tr></thead>
                                     <tbody>${tableRows}</tbody>
                                 </table>
+                                
+                                ${runResult.port_costs_audit && Object.keys(runResult.port_costs_audit.origin || {}).length > 0 ? `
+                                <div style="margin-top:10px;margin-bottom:4px;font-weight:bold;font-size:11px;color:#0f172a;border-bottom:1px solid #cbd5e1;padding-bottom:2px;">🚢 DETALLE DE GASTOS PORTUARIOS - ORIGEN (${ri.origin_port_id})</div>
+                                <table>
+                                    <thead><tr>
+                                        <th style="width:25%">Concepto Base</th>
+                                        <th style="width:25%">Sub-Costo</th>
+                                        <th style="width:35%">Fórmula Aplicada</th>
+                                        <th style="width:15%;text-align:right">Total</th>
+                                    </tr></thead>
+                                    <tbody>
+                                        ${Object.entries(runResult.port_costs_audit.origin).map(([concept, lines]: any) => {
+                                            return lines.map((line: any, idx: number) => `
+                                                <tr>
+                                                    ${idx === 0 ? `<td rowspan="${lines.length}" style="padding:3px 5px;font-weight:600;border-bottom:1px solid #e2e8f0;background:#f8fafc;vertical-align:top;">${concept}</td>` : ''}
+                                                    <td style="padding:3px 5px;font-size:10px;border-bottom:1px dashed #e2e8f0">${line.name}</td>
+                                                    <td style="padding:3px 5px;font-family:monospace;font-size:10px;color:#475569;border-bottom:1px dashed #e2e8f0">${line.formula_desc}</td>
+                                                    <td style="padding:3px 5px;font-family:monospace;font-weight:600;color:#0ea5e9;text-align:right;border-bottom:1px dashed #e2e8f0">${fmtCur(line.cost)}</td>
+                                                </tr>
+                                            `).join('');
+                                        }).join('')}
+                                    </tbody>
+                                </table>` : ''}
+
+                                ${runResult.port_costs_audit && Object.keys(runResult.port_costs_audit.destination || {}).length > 0 ? `
+                                <div style="margin-top:10px;margin-bottom:4px;font-weight:bold;font-size:11px;color:#0f172a;border-bottom:1px solid #cbd5e1;padding-bottom:2px;">🚢 DETALLE DE GASTOS PORTUARIOS - DESTINO (${ri.destination_port_id})</div>
+                                <table>
+                                    <thead><tr>
+                                        <th style="width:25%">Concepto Base</th>
+                                        <th style="width:25%">Sub-Costo</th>
+                                        <th style="width:35%">Fórmula Aplicada</th>
+                                        <th style="width:15%;text-align:right">Total</th>
+                                    </tr></thead>
+                                    <tbody>
+                                        ${Object.entries(runResult.port_costs_audit.destination).map(([concept, lines]: any) => {
+                                            return lines.map((line: any, idx: number) => `
+                                                <tr>
+                                                    ${idx === 0 ? `<td rowspan="${lines.length}" style="padding:3px 5px;font-weight:600;border-bottom:1px solid #e2e8f0;background:#f8fafc;vertical-align:top;">${concept}</td>` : ''}
+                                                    <td style="padding:3px 5px;font-size:10px;border-bottom:1px dashed #e2e8f0">${line.name}</td>
+                                                    <td style="padding:3px 5px;font-family:monospace;font-size:10px;color:#475569;border-bottom:1px dashed #e2e8f0">${line.formula_desc}</td>
+                                                    <td style="padding:3px 5px;font-family:monospace;font-weight:600;color:#0ea5e9;text-align:right;border-bottom:1px dashed #e2e8f0">${fmtCur(line.cost)}</td>
+                                                </tr>
+                                            `).join('');
+                                        }).join('')}
+                                    </tbody>
+                                </table>` : ''}
                                 <div class="acta">
                                     <div class="acta-title">✍️ Acta de Conformidad Matemática — Firmas y Validación</div>
                                     <div class="acta-grid">

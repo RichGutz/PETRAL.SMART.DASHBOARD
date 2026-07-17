@@ -277,12 +277,20 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                     )}
 
                                     {hasPermission('maestro_costos_agencia', 'Visor') && (
-                                        <button 
-                                            onClick={() => navigate('/port-costs')}
-                                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'port-costs' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                        >
-                                            <span className="text-sm">💰</span> Maestro Gastos Portuarios
-                                        </button>
+                                        <>
+                                            <button 
+                                                onClick={() => navigate('/port-tariffs')}
+                                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'port-tariffs' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                            >
+                                                <span className="text-sm">🚢</span> Maestro Tarifas Portuarias
+                                            </button>
+                                            <button 
+                                                onClick={() => navigate('/port-costs')}
+                                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'port-costs' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                            >
+                                                <span className="text-sm">💰</span> Maestro Gastos Portuarios
+                                            </button>
+                                        </>
                                     )}
 
                                     {hasPermission('maestro_rutas', 'Visor') && (

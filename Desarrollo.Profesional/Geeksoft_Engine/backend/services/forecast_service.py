@@ -28,7 +28,8 @@ def get_cached_masters(supabase) -> Dict[str, Any]:
             "contracts": safe_fetch(supabase, "contracts"),
             "contract_tariffs": safe_fetch(supabase, "contract_tariffs"),
             "port_costs_matrix": safe_fetch(supabase, "port_costs_matrix"),
-            "port_cost_static": safe_fetch(supabase, "port_cost_static")
+            "port_cost_static": safe_fetch(supabase, "port_cost_static"),
+            "vessel_terminal_operations": safe_fetch(supabase, "vessel_terminal_operations")
         }
         _cache_time = now
     return _masters_cache
@@ -45,6 +46,14 @@ def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: 
     if port_cost_mode == "dynamic" and v_data is not None and ports_db is not None:
         from backend.port_engines.core import calculate_dynamic_port_costs
         country = ports_db.get(port_id, {}).get("country", "PE")
+        
+        # Inyectar matriz de operaciones barco-terminal en v_data (clonado)
+        vt_ops_data = _masters_cache.get("vessel_terminal_operations", [])
+        op_row = next((op for op in vt_ops_data if op.get("vessel_id") == vessel_id and op.get("port_id") == port_id), None)
+        if op_row:
+            v_data = dict(v_data)
+            v_data.update(op_row)
+
         
         # Estimate PORT_HOURS exactly as engine.py audit ledger calculates it
         port_hours = 24.0
@@ -687,8 +696,12 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "raw_inputs": inputs,
             "route_name": spot_route.get("name") if is_spot_route else None,
             "port_costs_breakdown": {
-                "origin": {} if is_spot_route else orig_result["breakdown"],
-                "destination": {} if is_spot_route else dest_result["breakdown"]
+                "origin": {} if is_spot_route else orig_result.get("breakdown", {}),
+                "destination": {} if is_spot_route else dest_result.get("breakdown", {})
+            },
+            "port_costs_audit": {
+                "origin": {} if is_spot_route else orig_result.get("audit_trail", {}),
+                "destination": {} if is_spot_route else dest_result.get("audit_trail", {})
             }
         }
         
@@ -1070,8 +1083,12 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             "raw_inputs": inputs,
             "route_name": spot_route.get("name") if is_spot_route else None,
             "port_costs_breakdown": {
-                "origin": {} if is_spot_route else orig_result["breakdown"],
-                "destination": {} if is_spot_route else dest_result["breakdown"]
+                "origin": {} if is_spot_route else orig_result.get("breakdown", {}),
+                "destination": {} if is_spot_route else dest_result.get("breakdown", {})
+            },
+            "port_costs_audit": {
+                "origin": {} if is_spot_route else orig_result.get("audit_trail", {}),
+                "destination": {} if is_spot_route else dest_result.get("audit_trail", {})
             }
         }
         

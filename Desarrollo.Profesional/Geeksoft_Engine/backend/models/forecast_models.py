@@ -151,6 +151,8 @@ class TerminalUpdate(BaseModel):
     port_id: str
     terminal_name: str
     is_active: bool = True
+    mooring_time_hrs: float = 0.0
+    unmooring_time_hrs: float = 0.0
 
 class PortCostStaticUpdateItem(BaseModel):
     client_id: str
@@ -171,3 +173,46 @@ class SourceSinkUpdateItem(BaseModel):
     color_hex: str
     producto: str
 
+
+class SupplierMaster(BaseModel):
+    supplier_id: Optional[str] = None
+    supplier_name: str
+    is_active: bool = True
+
+
+class PortCostRuleMaster(BaseModel):
+    rule_id: Optional[str] = None
+    port_id: str
+    terminal: str
+    operation_type: str
+    vessel_id: str
+    concept_id: str
+    cost: Optional[float] = 0.0
+    rate_usd: Optional[float] = 0.0
+    multiplier_source: Optional[str] = 'FIXED'
+    min_limit: Optional[float] = None
+    max_limit: Optional[float] = None
+    calculation_formula_template: Optional[str] = None
+    origin_country: Optional[str] = None
+    supplier_id: Optional[str] = None
+    sub_item_name: Optional[str] = None
+    allow_pass_through: bool = False
+    is_optional: bool = False
+
+class VesselTerminalOperation(BaseModel):
+    port_id: str
+    terminal_id: str
+    vessel_id: str
+    ritmo_carga: float = 0.0
+    ritmo_descarga: float = 0.0
+    amarre_hrs: float = 0.0
+    desamarre_hrs: float = 0.0
+    maniobras: int = 2
+    remolcadores: int = 4
+    lanchas: int = 4
+    turnos_coordinador: int = 2
+    clearance_qty: int = 1
+    sanitary_qty: int = 1
+    agency_qty: int = 1
+    transport_qty: int = 1
+    comms_qty: int = 1
