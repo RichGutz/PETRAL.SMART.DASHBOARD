@@ -358,7 +358,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     ];
 
                     if (isDemurrageVisible || isDemurrageDaysVisible) {
-                        metrics.push({ name: "Demurrage", values: demurrageArr, total: sum(demurrageArr), pct: null, totalPct: null, isCurrency: true, isTotal: false, isExpandableDemurrage: true, rowKey, isExpanded: isDemurrageExpanded });
+                        metrics.push({ name: "Demurrage", values: demurrageArr, total: sum(demurrageArr), pct: calcPct(demurrageArr), totalPct: calcTotalPct(sum(demurrageArr), sum(revenues)), isCurrency: true, isTotal: false, isExpandableDemurrage: true, rowKey, isExpanded: isDemurrageExpanded });
                     }
 
                     metrics.forEach((metric, index) => {
