@@ -26,6 +26,10 @@ interface ForecastBuilderProps {
     showDemurrage?: boolean;
     onDemurragePctChange?: (val: string) => void;
     onShowDemurrageChange?: (val: boolean) => void;
+    demurrageDays?: string;
+    showDemurrageDays?: boolean;
+    onDemurrageDaysChange?: (val: string) => void;
+    onShowDemurrageDaysChange?: (val: boolean) => void;
 }
 
 export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({ 
@@ -45,7 +49,11 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     demurragePct = '0',
     showDemurrage = false,
     onDemurragePctChange,
-    onShowDemurrageChange
+    onShowDemurrageChange,
+    demurrageDays = '0',
+    showDemurrageDays = false,
+    onDemurrageDaysChange,
+    onShowDemurrageDaysChange
 }) => {
     // Form State
     const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
@@ -512,38 +520,42 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </div>
                     </div>
 
-                    {/* 9. Botón Añadir */}
+                    {/* 11. Demurrage (d) */}
                     <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                        <Label className="text-xs opacity-0 pointer-events-none">X</Label>
-                        <Button 
-                            onClick={handleAdd} 
-                            className={`relative w-full h-8 overflow-hidden transition-colors rounded-full ${isAdding ? 'bg-primary text-white pointer-events-none' : 'bg-primary hover:bg-primary/90 text-white'}`}
-                            disabled={isAdding || !client || !route || !vessel || selectedMonths.length === 0 || !quantity || !frequency || (client === 'SPOT' && (!customTariff || !spotSuffix.trim())) || (client === 'NEXA' && !customTariff)}
-                        >
-                            {isAdding && (
-                                <div className="absolute inset-0 bg-white/20 animate-pulse" style={{ width: '100%' }}></div>
-                            )}
-                            <span className="relative flex items-center justify-center z-10 w-full">
-                                {isAdding ? (
-                                    <>
-                                        <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                                        <span>Procesando...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <PlusCircle className="mr-2 h-4 w-4" />
-                                        <span>Añadir</span>
-                                    </>
-                                )}
-                            </span>
-                        </Button>
+                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">11. Demurrage (d)</Label>
+                        <div className="flex gap-1 h-8">
+                            <Input 
+                                type="number" 
+                                min="0"
+                                value={demurrageDays} 
+                                onChange={e => onDemurrageDaysChange?.(e.target.value)}
+                                placeholder="días"
+                                className="w-16 h-8"
+                            />
+                            <button 
+                                onClick={() => onShowDemurrageDaysChange?.(!showDemurrageDays)}
+                                className={`flex-1 text-[11px] font-semibold rounded transition-colors border ${showDemurrageDays ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                                title="Mostrar Demurrage en Días"
+                            >
+                                Mostrar
+                            </button>
+                        </div>
                     </div>
-                    
-                    {/* 10. Vista ($ / %) */}
-                    {displayMode && onDisplayModeChange && (
-                        <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                            <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">Vista de tabla</Label>
-                            <div className="flex bg-slate-200 rounded p-0.5 h-8 w-full shadow-inner">
+
+                    </div>
+                    {/* FIN FILA 1 */}
+
+                    {/* FILA 2: Controles y Acciones */}
+                    <div className="flex flex-row items-center gap-4 w-full mt-3">
+                        {/* Indicador de Escenario */}
+                        <div className="flex items-center gap-2 font-bold text-sky-800 bg-sky-50 border border-sky-200 px-3 h-8 rounded-full shadow-sm text-[11px]">
+                            📁 Escenario: {forecastName || 'Sin guardar'}
+                        </div>
+
+                        {/* Vista ($ / %) */}
+                        {displayMode && onDisplayModeChange && (
+                            <div className="flex items-center gap-1 bg-slate-200 rounded p-0.5 h-8 w-32 shadow-inner">
+                                <span className="text-[10px] uppercase font-bold text-slate-600 px-2">Vista:</span>
                                 <button
                                     onClick={() => onDisplayModeChange('usd')}
                                     className={`flex-1 text-center py-1 text-[10px] font-bold rounded transition-colors ${displayMode === 'usd' ? 'bg-white shadow-sm text-petral-blue' : 'text-slate-500 hover:bg-slate-300'}`}
@@ -557,14 +569,11 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                     %
                                 </button>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {/* 11. Costo Puerto */}
-                    {onPortCostModeChange && (
-                        <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                            <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">Costo Puerto</Label>
-                            <div className="flex bg-slate-200 rounded p-0.5 h-8 w-full shadow-inner">
+                        {/* Costo Puerto */}
+                        {onPortCostModeChange && (
+                            <div className="w-40 flex bg-slate-200 rounded p-0.5 h-8 shadow-inner">
                                 <button
                                     onClick={() => onPortCostModeChange('static')}
                                     className={`flex-1 text-center py-1 text-[10px] uppercase font-bold rounded transition-colors ${portCostMode === 'static' ? 'bg-emerald-600 shadow-sm text-white' : 'text-slate-500 hover:bg-slate-300'}`}
@@ -578,13 +587,43 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                     MATRIX
                                 </button>
                             </div>
+                        )}
+
+                        {/* Spacer para empujar el resto a la derecha */}
+                        <div className="flex-1"></div>
+
+                        {/* Guardar / Cargar (bottomRightContent) */}
+                        {bottomRightContent}
+
+                        {/* Botón Añadir */}
+                        <div className="w-32 ml-2">
+                            <Button 
+                                onClick={handleAdd} 
+                                className={`relative w-full h-8 overflow-hidden transition-colors rounded-full ${isAdding ? 'bg-primary text-white pointer-events-none' : 'bg-primary hover:bg-primary/90 text-white'}`}
+                                disabled={isAdding || !client || !route || !vessel || selectedMonths.length === 0 || !quantity || !frequency || (client === 'SPOT' && (!customTariff || !spotSuffix.trim())) || (client === 'NEXA' && !customTariff)}
+                            >
+                                {isAdding && (
+                                    <div className="absolute inset-0 bg-white/20 animate-pulse" style={{ width: '100%' }}></div>
+                                )}
+                                <span className="relative flex items-center justify-center z-10 w-full text-[11px]">
+                                    {isAdding ? (
+                                        <>
+                                            <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                                            <span>Procesando...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <PlusCircle className="mr-1.5 h-3.5 w-3.5" />
+                                            <span>Añadir</span>
+                                        </>
+                                    )}
+                                </span>
+                            </Button>
                         </div>
-                    )}
 
-                    {/* 12. Guardar / Cargar (bottomRightContent) */}
-                    {bottomRightContent}
+                    </div>
+                    {/* FIN FILA 2 */}
 
-                </div>
             </CardContent>
         </Card>
     );

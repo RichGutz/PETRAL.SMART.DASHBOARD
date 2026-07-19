@@ -41,15 +41,19 @@ export const ToolsLayout_V2: React.FC = () => {
                         demurragePct={context.demurragePct}
                         showDemurrage={context.showDemurrage}
                         onDemurragePctChange={context.setDemurragePct}
-                        onShowDemurrageChange={context.setShowDemurrage}
+                        onShowDemurrageChange={context.handleSetShowDemurrage}
+                        demurrageDays={context.demurrageDays}
+                        showDemurrageDays={context.showDemurrageDays}
+                        onDemurrageDaysChange={context.setDemurrageDays}
+                        onShowDemurrageDaysChange={context.handleSetShowDemurrageDays}
                         onPortCostModeChange={context.setPortCostMode}
                         bottomRightContent={
                             <>
-                                <div className="flex flex-col gap-1 min-w-[95px] max-w-[115px] flex-1 justify-end h-full">
+                                <div className="flex flex-row items-center gap-2 h-8">
                                     <button 
                                         onClick={context.handleManualRecalculate} 
                                         disabled={context.loading}
-                                        className={`flex items-center justify-center gap-1 h-6 w-full rounded font-semibold text-[10px] transition-all duration-300 shadow-sm cursor-pointer ${
+                                        className={`flex items-center justify-center gap-1 h-8 px-3 rounded font-semibold text-[11px] transition-all duration-300 shadow-sm cursor-pointer ${
                                             context.loading
                                                 ? 'bg-slate-400 text-white cursor-not-allowed'
                                                 : context.isDirty 
@@ -58,30 +62,30 @@ export const ToolsLayout_V2: React.FC = () => {
                                         }`}
                                     >
                                         {context.loading ? (
-                                            <div className="animate-spin h-2.5 w-2.5 border-2 border-current border-t-transparent rounded-full"></div>
+                                            <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full"></div>
                                         ) : (
-                                            <RefreshCw size={12} />
+                                            <RefreshCw size={14} />
                                         )}
                                         <span>{context.loading ? 'Calculando...' : context.isDirty ? '¡Recalcular!' : 'Recalcular'}</span>
                                     </button>
-                                    <button onClick={() => context.setShowSaveModal(true)} className="flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground h-6 w-full rounded font-medium text-[10px] transition-colors shadow-sm cursor-pointer">
-                                        <Save size={12} /> Guardar
+                                    <button onClick={() => context.setShowSaveModal(true)} className="flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground h-8 px-3 rounded font-medium text-[11px] transition-colors shadow-sm cursor-pointer">
+                                        <Save size={14} /> Guardar
                                     </button>
                                     <button 
                                         onClick={context.handleLoadClick} 
                                         disabled={context.actionLoading === 'loadList'}
-                                        className={`relative overflow-hidden flex items-center justify-center gap-1 h-6 w-full rounded font-medium text-[10px] transition-colors shadow-sm cursor-pointer ${context.actionLoading === 'loadList' ? 'bg-slate-200 pointer-events-none' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'}`}
+                                        className={`relative overflow-hidden flex items-center justify-center gap-1 h-8 px-3 rounded font-medium text-[11px] transition-colors shadow-sm cursor-pointer ${context.actionLoading === 'loadList' ? 'bg-slate-200 pointer-events-none' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'}`}
                                     >
                                         {context.actionLoading === 'loadList' && <div className="absolute inset-0 bg-slate-300/50 animate-pulse" style={{ width: '100%' }}></div>}
                                         <span className="relative flex items-center justify-center z-10 w-full gap-1">
                                             {context.actionLoading === 'loadList' ? (
                                                 <>
-                                                    <div className="animate-spin h-2.5 w-2.5 border-2 border-slate-500 border-t-transparent rounded-full"></div>
+                                                    <div className="animate-spin h-3 w-3 border-2 border-slate-500 border-t-transparent rounded-full"></div>
                                                     <span>Abrir...</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <FolderOpen size={12} /> Cargar
+                                                    <FolderOpen size={14} /> Cargar
                                                 </>
                                             )}
                                         </span>

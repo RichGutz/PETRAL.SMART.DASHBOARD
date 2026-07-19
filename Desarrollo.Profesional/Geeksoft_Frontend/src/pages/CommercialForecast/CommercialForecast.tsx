@@ -9,6 +9,7 @@ import { VoyageLedgerTest } from '../../components/CommercialForecast/VoyageLedg
 import { VoyageLedgerUniversal } from '../../components/CommercialForecast/VoyageLedgerUniversal';
 import { SpaghettiMap } from '../../components/CommercialForecast/SpaghettiMap';
 import { MultiCotizadorExcel } from '../../components/CommercialForecast/MultiCotizadorExcel';
+import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 
 export const CommercialForecast: React.FC = () => {
     const [data, setData] = useState<any>(null);
@@ -61,10 +62,17 @@ export const CommercialForecast: React.FC = () => {
     }, []);
 
     // Demurrage State
-    const [demurragePct, setDemurragePct] = useState<string>('');
-    const [showDemurrage, setShowDemurrage] = useState<boolean>(false);
-    const [excludedDemurrages, setExcludedDemurrages] = useState<string[]>([]);
-    const [customDemurrages, setCustomDemurrages] = useState<Record<string, Record<number, string>>>({});
+    const { 
+        demurragePct, setDemurragePct,
+        showDemurrage, setShowDemurrage, handleSetShowDemurrage,
+        demurrageDays, setDemurrageDays,
+        showDemurrageDays, setShowDemurrageDays, handleSetShowDemurrageDays,
+        excludedDemurrages, setExcludedDemurrages,
+        customDemurrages, setCustomDemurrages,
+        customDemurrageDays, setCustomDemurrageDays,
+        handleManualRecalculate,
+        spotRoutes
+    } = useForecastContext_V2();
 
     // Derive months from horizon without JS Date timezone shifts
     const dynamicMonths = useMemo(() => {
@@ -244,8 +252,11 @@ export const CommercialForecast: React.FC = () => {
                 ...line,
                 metadata_demurrage_pct: demurragePct,
                 metadata_show_demurrage: showDemurrage,
+                metadata_demurrage_days: demurrageDays,
+                metadata_show_demurrage_days: showDemurrageDays,
                 metadata_excluded_demurrages: excludedDemurrages,
-                metadata_custom_demurrages: customDemurrages
+                metadata_custom_demurrages: customDemurrages,
+                metadata_custom_demurrage_days: customDemurrageDays
             }));
 
             const payload = {
@@ -299,11 +310,20 @@ export const CommercialForecast: React.FC = () => {
                 if (firstLine.metadata_show_demurrage !== undefined) {
                     setShowDemurrage(firstLine.metadata_show_demurrage);
                 }
+                if (firstLine.metadata_demurrage_days !== undefined) {
+                    setDemurrageDays(firstLine.metadata_demurrage_days);
+                }
+                if (firstLine.metadata_show_demurrage_days !== undefined) {
+                    setShowDemurrageDays(firstLine.metadata_show_demurrage_days);
+                }
                 if (firstLine.metadata_excluded_demurrages !== undefined) {
                     setExcludedDemurrages(firstLine.metadata_excluded_demurrages);
                 }
                 if (firstLine.metadata_custom_demurrages !== undefined) {
                     setCustomDemurrages(firstLine.metadata_custom_demurrages);
+                }
+                if (firstLine.metadata_custom_demurrage_days !== undefined) {
+                    setCustomDemurrageDays(firstLine.metadata_custom_demurrage_days);
                 }
             }
 
@@ -312,8 +332,11 @@ export const CommercialForecast: React.FC = () => {
                 const {
                     metadata_demurrage_pct,
                     metadata_show_demurrage,
+                    metadata_demurrage_days,
+                    metadata_show_demurrage_days,
                     metadata_excluded_demurrages,
                     metadata_custom_demurrages,
+                    metadata_custom_demurrage_days,
                     ...rest
                 } = line;
                 // Normalizar campos numéricos que podrían venir como strings desde la BD
@@ -380,7 +403,11 @@ export const CommercialForecast: React.FC = () => {
                         demurragePct={demurragePct}
                         showDemurrage={showDemurrage}
                         onDemurragePctChange={setDemurragePct}
-                        onShowDemurrageChange={setShowDemurrage}
+                        onShowDemurrageChange={handleSetShowDemurrage}
+                        demurrageDays={demurrageDays}
+                        showDemurrageDays={showDemurrageDays}
+                        onDemurrageDaysChange={setDemurrageDays}
+                        onShowDemurrageDaysChange={handleSetShowDemurrageDays}
                         centerContent={
                             <div className="bg-slate-200 p-1 rounded-lg inline-flex items-center gap-1 shadow-inner">
                                 <button 
@@ -425,25 +452,6 @@ export const CommercialForecast: React.FC = () => {
                                 >
                                     <Database size={16} /> Data Maestros
                                 </button>
-                                
-                                {/* Selector Port Cost Mode */}
-                                <div className="ml-2 pl-2 border-l border-slate-350 flex items-center gap-1 bg-slate-300 rounded-full p-0.5">
-                                    <span className="text-[10px] uppercase font-bold text-slate-600 px-2">Costo Puerto:</span>
-                                    <button 
-                                        onClick={() => setPortCostMode('static')}
-                                        className={`px-3 py-1 rounded-full font-black text-[10px] transition-all uppercase ${portCostMode === 'static' ? 'bg-emerald-600 text-white shadow' : 'text-slate-500 hover:text-slate-700'}`}
-                                        title="Usa costo plano de port_cost_static"
-                                    >
-                                        Static
-                                    </button>
-                                    <button 
-                                        onClick={() => setPortCostMode('matrix')}
-                                        className={`px-3 py-1 rounded-full font-black text-[10px] transition-all uppercase ${portCostMode === 'matrix' ? 'bg-amber-600 text-white shadow' : 'text-slate-500 hover:text-slate-700'}`}
-                                        title="Usa desglose detallado de port_costs_matrix"
-                                    >
-                                        Matrix
-                                    </button>
-                                </div>
                             </div>
                         }
                         rightContent={
@@ -476,17 +484,43 @@ export const CommercialForecast: React.FC = () => {
                                 </div>
                             </div>
                         }
+                        portCostModeToggle={
+                            <div className="flex items-center gap-1 bg-slate-300 rounded p-0.5 h-8 w-full shadow-inner">
+                                <span className="text-[10px] uppercase font-bold text-slate-600 px-2">Pto:</span>
+                                <button 
+                                    onClick={() => setPortCostMode('static')}
+                                    className={`flex-1 text-center py-1 text-[10px] font-bold rounded transition-colors uppercase ${portCostMode === 'static' ? 'bg-emerald-600 text-white shadow' : 'text-slate-500 hover:bg-slate-300 hover:text-slate-700'}`}
+                                >
+                                    Static
+                                </button>
+                                <button 
+                                    onClick={() => setPortCostMode('matrix')}
+                                    className={`flex-1 text-center py-1 text-[10px] font-bold rounded transition-colors uppercase ${portCostMode === 'matrix' ? 'bg-amber-600 text-white shadow' : 'text-slate-500 hover:bg-slate-300 hover:text-slate-700'}`}
+                                >
+                                    Matrix
+                                </button>
+                            </div>
+                        }
+                        manualRecalculateBtn={
+                            <button 
+                                onClick={handleManualRecalculate}
+                                className="flex items-center justify-center gap-1 bg-slate-200 hover:bg-slate-300 text-slate-700 h-8 px-4 rounded font-medium text-[11px] transition-colors shadow-sm cursor-pointer"
+                                title="Forzar recálculo manual"
+                            >
+                                Recalcular
+                            </button>
+                        }
                         bottomRightContent={
                             activeTab !== 'ledger' && activeTab !== 'ledger_universal' && activeTab !== 'multicotizador_excel' && (
                                 <>
-                                    <div className="flex flex-col gap-1 min-w-[90px] max-w-[110px] flex-1 justify-end h-full">
-                                        <button onClick={() => setShowSaveModal(true)} className="flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground h-6 w-full rounded font-medium text-[10px] transition-colors shadow-sm cursor-pointer">
-                                            <Save size={12} /> Guardar
+                                    <div className="flex gap-2 w-full justify-end h-full">
+                                        <button onClick={() => setShowSaveModal(true)} className="flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground h-8 px-4 rounded font-medium text-[11px] transition-colors shadow-sm cursor-pointer">
+                                            <Save size={14} /> Guardar
                                         </button>
                                         <button 
                                             onClick={handleLoadClick} 
                                             disabled={actionLoading === 'loadList'}
-                                            className={`relative overflow-hidden flex items-center justify-center gap-1 h-6 w-full rounded font-medium text-[10px] transition-colors shadow-sm cursor-pointer ${actionLoading === 'loadList' ? 'bg-slate-200 pointer-events-none' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'}`}
+                                            className={`relative overflow-hidden flex items-center justify-center gap-1 h-8 px-4 rounded font-medium text-[11px] transition-colors shadow-sm cursor-pointer ${actionLoading === 'loadList' ? 'bg-slate-200 pointer-events-none' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'}`}
                                         >
                                             {actionLoading === 'loadList' && <div className="absolute inset-0 bg-slate-300/50 animate-pulse" style={{ width: '100%' }}></div>}
                                             <span className="relative flex items-center justify-center z-10 w-full gap-1">
@@ -497,7 +531,7 @@ export const CommercialForecast: React.FC = () => {
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <FolderOpen size={12} /> Cargar
+                                                        <FolderOpen size={14} /> Cargar
                                                     </>
                                                 )}
                                             </span>
@@ -512,7 +546,7 @@ export const CommercialForecast: React.FC = () => {
                 {/* 2. Custom Grid (1:1 with Mockup) */}
                 {activeTab === 'grid' && (
                     <section className="flex flex-col gap-2 relative animate-in fade-in slide-in-from-bottom-2 duration-300 mt-2">
-                        <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} onTariffChange={handleTariffChange} onDeleteNode={handleDeleteNode} displayMode={displayMode} demurragePct={demurragePct} showDemurrage={showDemurrage} excludedDemurrages={excludedDemurrages} customDemurrages={customDemurrages} onExcludeDemurrage={setExcludedDemurrages} onCustomDemurrageChange={setCustomDemurrages} />
+                        <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} onTariffChange={handleTariffChange} onDeleteNode={handleDeleteNode} displayMode={displayMode} demurragePct={demurragePct} showDemurrage={showDemurrage} excludedDemurrages={excludedDemurrages} customDemurrages={customDemurrages} onExcludeDemurrage={setExcludedDemurrages} onCustomDemurrageChange={setCustomDemurrages} demurrageDays={demurrageDays} showDemurrageDays={showDemurrageDays} customDemurrageDays={customDemurrageDays} onCustomDemurrageDaysChange={setCustomDemurrageDays} spotRoutes={spotRoutes} />
                     </section>
                 )}
                 

@@ -48,10 +48,18 @@ interface ForecastContextType {
     setDemurragePct: (v: string) => void;
     showDemurrage: boolean;
     setShowDemurrage: (v: boolean) => void;
+    handleSetShowDemurrage: (v: boolean) => void;
+    demurrageDays: string;
+    setDemurrageDays: (v: string) => void;
+    showDemurrageDays: boolean;
+    setShowDemurrageDays: (v: boolean) => void;
+    handleSetShowDemurrageDays: (v: boolean) => void;
     excludedDemurrages: string[];
     setExcludedDemurrages: React.Dispatch<React.SetStateAction<string[]>>;
     customDemurrages: Record<string, Record<number, string>>;
     setCustomDemurrages: React.Dispatch<React.SetStateAction<Record<string, Record<number, string>>>>;
+    customDemurrageDays: Record<string, Record<number, string>>;
+    setCustomDemurrageDays: React.Dispatch<React.SetStateAction<Record<string, Record<number, string>>>>;
 
     // UI Toggles & Filters
     hiddenClients: string[];
@@ -131,8 +139,22 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
 
     const [demurragePct, setDemurragePct] = useState<string>('');
     const [showDemurrage, setShowDemurrage] = useState<boolean>(false);
+    
+    const [demurrageDays, setDemurrageDays] = useState<string>('');
+    const [showDemurrageDays, setShowDemurrageDays] = useState<boolean>(false);
+    
+    const handleSetShowDemurrage = (v: boolean) => {
+        setShowDemurrage(v);
+        if (v) setShowDemurrageDays(false);
+    };
+    const handleSetShowDemurrageDays = (v: boolean) => {
+        setShowDemurrageDays(v);
+        if (v) setShowDemurrage(false);
+    };
+
     const [excludedDemurrages, setExcludedDemurrages] = useState<string[]>([]);
     const [customDemurrages, setCustomDemurrages] = useState<Record<string, Record<number, string>>>({});
+    const [customDemurrageDays, setCustomDemurrageDays] = useState<Record<string, Record<number, string>>>({});
     const [portCostMode, setPortCostMode] = useState<'static' | 'matrix'>('static');
     // Ref para leer portCostMode en runSimulationWith sin añadirlo como dependencia del useEffect
     const portCostModeRef = useRef<'static' | 'matrix'>('static');
@@ -331,7 +353,10 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
                 metadata_demurrage_pct: demurragePct,
                 metadata_show_demurrage: showDemurrage,
                 metadata_excluded_demurrages: excludedDemurrages,
-                metadata_custom_demurrages: customDemurrages
+                metadata_custom_demurrages: customDemurrages,
+                metadata_demurrage_days: demurrageDays,
+                metadata_show_demurrage_days: showDemurrageDays,
+                metadata_custom_demurrage_days: customDemurrageDays
             }));
 
             const payload = {
@@ -383,10 +408,13 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
                 if (firstLine.metadata_show_demurrage !== undefined) setShowDemurrage(firstLine.metadata_show_demurrage);
                 if (firstLine.metadata_excluded_demurrages !== undefined) setExcludedDemurrages(firstLine.metadata_excluded_demurrages);
                 if (firstLine.metadata_custom_demurrages !== undefined) setCustomDemurrages(firstLine.metadata_custom_demurrages);
+                if (firstLine.metadata_demurrage_days !== undefined) setDemurrageDays(firstLine.metadata_demurrage_days);
+                if (firstLine.metadata_show_demurrage_days !== undefined) setShowDemurrageDays(firstLine.metadata_show_demurrage_days);
+                if (firstLine.metadata_custom_demurrage_days !== undefined) setCustomDemurrageDays(firstLine.metadata_custom_demurrage_days);
             }
 
             const cleanedLines = loadedLines.map((line: any) => {
-                const { metadata_demurrage_pct, metadata_show_demurrage, metadata_excluded_demurrages, metadata_custom_demurrages, ...rest } = line;
+                const { metadata_demurrage_pct, metadata_show_demurrage, metadata_excluded_demurrages, metadata_custom_demurrages, metadata_demurrage_days, metadata_show_demurrage_days, metadata_custom_demurrage_days, ...rest } = line;
                 return {
                     ...rest,
                     quantity: parseFloat(rest.quantity) || 0,
@@ -422,8 +450,9 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             showSaveModal, setShowSaveModal, showLoadModal, setShowLoadModal, savedForecasts,
             isDirty, handleManualRecalculate,
             displayMode, setDisplayMode, ports, spotRoutes, portCostMode, setPortCostMode: handlePortCostModeChange,
-            demurragePct, setDemurragePct, showDemurrage, setShowDemurrage,
-            excludedDemurrages, setExcludedDemurrages, customDemurrages, setCustomDemurrages,
+            demurragePct, setDemurragePct, showDemurrage, setShowDemurrage, handleSetShowDemurrage,
+            demurrageDays, setDemurrageDays, showDemurrageDays, setShowDemurrageDays, handleSetShowDemurrageDays,
+            excludedDemurrages, setExcludedDemurrages, customDemurrages, setCustomDemurrages, customDemurrageDays, setCustomDemurrageDays,
             hiddenClients, setHiddenClients, hiddenRoutes, setHiddenRoutes,
             hiddenVessels, setHiddenVessels, hiddenMonths, setHiddenMonths,
             isFiltersCollapsed, setIsFiltersCollapsed,

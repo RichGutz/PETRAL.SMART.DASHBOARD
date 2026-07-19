@@ -53,6 +53,10 @@ interface ForecastGridProps {
     customDemurrages?: Record<string, Record<number, string>>;
     onExcludeDemurrage?: React.Dispatch<React.SetStateAction<string[]>>;
     onCustomDemurrageChange?: React.Dispatch<React.SetStateAction<Record<string, Record<number, string>>>>;
+    showDemurrageDays?: boolean;
+    demurrageDays?: string;
+    customDemurrageDays?: Record<string, Record<number, string>>;
+    onCustomDemurrageDaysChange?: React.Dispatch<React.SetStateAction<Record<string, Record<number, string>>>>;
     spotRoutes?: any[];
 }
 
@@ -60,6 +64,8 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
     data, months, projectionLines, onFrequencyChange, onTariffChange, onDeleteNode, displayMode, 
     demurragePct = '', showDemurrage = false,
     excludedDemurrages = [], customDemurrages = {}, onExcludeDemurrage, onCustomDemurrageChange,
+    demurrageDays = '', showDemurrageDays = false,
+    customDemurrageDays = {}, onCustomDemurrageDaysChange,
     spotRoutes = []
 }) => {
     const { hiddenClients, hiddenRoutes, hiddenVessels, hiddenMonths, showSubtotals, showAccumulatedTotal } = useForecastContext_V2();
@@ -271,9 +277,10 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     const numSubRows = isExpanded ? 17 : 0;
                     const isDemurrageExcluded = excludedDemurrages.includes(rowKey);
                     const isDemurrageVisible = showDemurrage && demurragePct !== '' && !isDemurrageExcluded;
+                    const isDemurrageDaysVisible = showDemurrageDays && demurrageDays !== '' && !isDemurrageExcluded;
                     
                     const isDemurrageExpanded = !!expandedDemurrages[rowKey];
-                    const demurrageRowsCount = isDemurrageVisible ? (isDemurrageExpanded ? 3 : 1) : 0;
+                    const demurrageRowsCount = (isDemurrageVisible || isDemurrageDaysVisible) ? (isDemurrageExpanded ? 3 : 1) : 0;
                     
                     const vesselRowSpan = 6 + numSubRows + demurrageRowsCount;
                     
@@ -315,9 +322,22 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         }
                         return parseFloat(demurragePct) || 0;
                     });
+                    
+                    const demurrageDaysArray = months.map((_, i) => {
+                        if (customDemurrageDays[rowKey] && customDemurrageDays[rowKey][i] !== undefined) {
+                            return parseFloat(customDemurrageDays[rowKey][i]) || 0;
+                        }
+                        return parseFloat(demurrageDays) || 0;
+                    });
+                    
+                    const vesselDemurrageRate = getMonthlyValues("vessel_demurrage_rate");
 
-                    const demurrageArr = isDemurrageVisible ? revenues.map((r, i) => r * (demurragePctArray[i] / 100)) : new Array(months.length).fill(0);
+                    let demurrageArr = new Array(months.length).fill(0);
                     if (isDemurrageVisible) {
+                        demurrageArr = revenues.map((r, i) => r * (demurragePctArray[i] / 100));
+                        demurrageArr.forEach((v, i) => level1Demurrage[i] += v);
+                    } else if (isDemurrageDaysVisible) {
+                        demurrageArr = trips.map((t, i) => t * demurrageDaysArray[i] * (vesselDemurrageRate[i] || 20000));
                         demurrageArr.forEach((v, i) => level1Demurrage[i] += v);
                     }
 
@@ -337,7 +357,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         { name: "P/L", values: plVsRequired, total: sum(plVsRequired), pct: calcPct(plVsRequired), totalPct: calcTotalPct(sum(plVsRequired), sum(revenues)), isCurrency: true, isTotal: true }
                     ];
 
-                    if (isDemurrageVisible) {
+                    if (isDemurrageVisible || isDemurrageDaysVisible) {
                         metrics.push({ name: "Demurrage", values: demurrageArr, total: sum(demurrageArr), pct: null, totalPct: null, isCurrency: true, isTotal: false, isExpandableDemurrage: true, rowKey, isExpanded: isDemurrageExpanded });
                     }
 
@@ -354,22 +374,41 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         });
 
                         if (metric.name === "Demurrage" && isDemurrageExpanded) {
-                            result.push({
-                                col1: null, col2: null, col3: null,
-                                clientName: client, routeName: route, vesselName: vessel,
-                                metric: {
-                                    name: "↳ Demurrage (%)",
-                                    values: demurragePctArray,
-                                    total: 0,
-                                    pct: null,
-                                    totalPct: null,
-                                    isCurrency: false,
-                                    isTotal: false,
-                                    isDemurragePctEditable: true,
-                                    rowKey
-                                },
-                                isSubRow: true
-                            });
+                            if (isDemurrageVisible) {
+                                result.push({
+                                    col1: null, col2: null, col3: null,
+                                    clientName: client, routeName: route, vesselName: vessel,
+                                    metric: {
+                                        name: "↳ Demurrage (%)",
+                                        values: demurragePctArray,
+                                        total: 0,
+                                        pct: null,
+                                        totalPct: null,
+                                        isCurrency: false,
+                                        isTotal: false,
+                                        isDemurragePctEditable: true,
+                                        rowKey
+                                    },
+                                    isSubRow: true
+                                });
+                            } else if (isDemurrageDaysVisible) {
+                                result.push({
+                                    col1: null, col2: null, col3: null,
+                                    clientName: client, routeName: route, vesselName: vessel,
+                                    metric: {
+                                        name: "↳ Demurrage (días)",
+                                        values: demurrageDaysArray,
+                                        total: 0,
+                                        pct: null,
+                                        totalPct: null,
+                                        isCurrency: false,
+                                        isTotal: false,
+                                        isDemurrageDaysEditable: true,
+                                        rowKey
+                                    },
+                                    isSubRow: true
+                                });
+                            }
                             result.push({
                                 col1: null, col2: null, col3: null,
                                 clientName: client, routeName: route, vesselName: vessel,
@@ -605,7 +644,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         }
 
         return result;
-    }, [data, months, projectionLines, expandedRows, clientOrder, routeOrder, vesselOrder, collapsedSubtotals, isGlobalTotalCollapsed, isGlobalAcumCollapsed, demurragePct, showDemurrage, expandedDemurrages, excludedDemurrages, customDemurrages, groupOrder, hiddenClients, hiddenRoutes, hiddenVessels, showSubtotals, showAccumulatedTotal]);
+    }, [data, months, projectionLines, expandedRows, clientOrder, routeOrder, vesselOrder, collapsedSubtotals, isGlobalTotalCollapsed, isGlobalAcumCollapsed, demurragePct, showDemurrage, demurrageDays, showDemurrageDays, customDemurrageDays, expandedDemurrages, excludedDemurrages, customDemurrages, groupOrder, hiddenClients, hiddenRoutes, hiddenVessels, showSubtotals, showAccumulatedTotal]);
 
     const formatCurrency = (val: number) => {
         if (val === 0) return "-";
@@ -814,6 +853,25 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                     const val = e.target.value;
                                                     if (onCustomDemurrageChange) {
                                                         onCustomDemurrageChange(prev => ({
+                                                            ...prev,
+                                                            [row.metric.rowKey]: {
+                                                                ...(prev[row.metric.rowKey] || {}),
+                                                                [origColIdx]: val
+                                                            }
+                                                        }));
+                                                    }
+                                                }}
+                                                className="w-14 p-1 text-center block mx-auto text-xs font-bold border border-slate-200 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-amber-50"
+                                            />
+                                        ) : row.metric.isDemurrageDaysEditable ? (
+                                            <input 
+                                                type="number"
+                                                min="0"
+                                                value={v}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    if (onCustomDemurrageDaysChange) {
+                                                        onCustomDemurrageDaysChange(prev => ({
                                                             ...prev,
                                                             [row.metric.rowKey]: {
                                                                 ...(prev[row.metric.rowKey] || {}),

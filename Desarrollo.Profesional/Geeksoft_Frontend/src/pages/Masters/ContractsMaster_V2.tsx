@@ -69,7 +69,7 @@ export const ContractsMaster: React.FC = () => {
                     ForecastService.getContractsMaster(),
                     ForecastService.getClientsMaster(),
                     ForecastService.getPorts(),
-                    ForecastService.getVesselsMaster()
+                    ForecastService.getVessels()
                 ]);
                 setContracts(contractsData || []);
                 setRawClients(clientsData || []);
