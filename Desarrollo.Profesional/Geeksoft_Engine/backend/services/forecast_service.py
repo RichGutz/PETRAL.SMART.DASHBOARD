@@ -668,6 +668,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         # Apply Frequency for aggregate totals, but keep unit values for the Ledger view
         monthly_result = {
             "freq": freq,
+            "vessel_demurrage_rate": float(contract.get("demurrage_rates", {}).get(vessel, 0.0)) if contract and isinstance(contract.get("demurrage_rates"), dict) else 0.0,
             "net_income": unit_result["net_income"] * freq,
             "total_port_costs": unit_result["total_port_costs"] * freq,
             "total_bunker_costs": unit_result["total_bunker_costs"] * freq,
@@ -1056,6 +1057,7 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
         freq = line.monthly_frequency
         monthly_result = {
             "freq": freq,
+            "vessel_demurrage_rate": float(contract.get("demurrage_rates", {}).get(vessel, 0.0)) if contract and isinstance(contract.get("demurrage_rates"), dict) else 0.0,
             "net_income": unit_result["net_income"] * freq,
             "total_port_costs": unit_result["total_port_costs"] * freq,
             "total_bunker_costs": unit_result["total_bunker_costs"] * freq,

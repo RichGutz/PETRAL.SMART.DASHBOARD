@@ -1,7 +1,7 @@
 # Lanzamiento Local y VPS
 
 > [!WARNING]
-> **IMPORTANTE (Desarrollo Frontend):** Toda nueva ruta, maestro o lógica visual debe configurarse y enrutarse obligatoriamente en **`src/App_V2.tsx`**. El archivo `src/App.tsx` es la versión legacy (App 1) y **no se está usando en producción ni en desarrollo activo**. Si no logras visualizar un cambio tras compilar, asegúrate de no haber modificado `App.tsx` por error.
+> **IMPORTANTE (Arquitectura V2 - LA BURRADA):** TODA nueva lógica visual, componentes y enrutamientos se hacen en los archivos **`_V2.tsx`** (Ej. `App_V2.tsx`, `ForecastBuilder_V2.tsx`, `ToolsLayout_V2.tsx`). Las versiones legacy (sin _V2) como `App.tsx` o `ForecastBuilder.tsx` ya no se utilizan en producción ni en desarrollo. Si el código compila perfecto pero los cambios no se ven en la UI, ¡es porque estás editando el archivo fantasma equivocado! No repitamos esta historia.
 
 ## 1. Lanzamiento Local (Entorno de Desarrollo)
 
