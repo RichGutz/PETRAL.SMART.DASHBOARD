@@ -221,8 +221,9 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 * `time_to_count_descarga_hrs` *(NUMERIC, DEFAULT 6.0)* → Tiempo muerto estándar pactado en puerto de destino antes de iniciar descarga.
 * `maneuver_carga_hrs` *(NUMERIC, DEFAULT 0)* → Horas adicionales requeridas para la maniobra de posicionamiento del buque antes de la carga.
 * `maneuver_descarga_hrs` *(NUMERIC, DEFAULT 0)* → Horas adicionales requeridas para la maniobra de posicionamiento del buque antes de la descarga.
-* `address_commission` *(NUMERIC, DEFAULT 0.00)* → Comisión de dirección comercial deducible directa del flete bruto (%).
-* `broker_commission` *(NUMERIC, DEFAULT 0.00)* → Comisión de corretaje pagada a brokers intermediarios deducible del flete (%).
+*   `address_commission` *(NUMERIC, DEFAULT 0.00)* → Comisión de dirección comercial deducible directa del flete bruto (%).
+*   `broker_commission` *(NUMERIC, DEFAULT 0.00)* → Comisión de corretaje pagada a brokers intermediarios deducible del flete (%).
+*   `demurrage_rates` *(JSONB, DEFAULT '{}')* → Tarifas de demurrage por buque (USD/día). Almacena un objeto con el ID del buque como clave y la tarifa como valor (ej. `{"TABLONES": 20000}`).
 
 **Clave Primaria Compuesta:** `(contract_id, origin_port_id, destination_port_id)`
 — Permite que un contrato macro legible (ej. `'SPCC_2025'`) tenga múltiples rutas asociadas como filas únicas.

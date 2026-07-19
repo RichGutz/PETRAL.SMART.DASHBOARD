@@ -11,6 +11,7 @@ La tabla cabecera agrupa las reglas y aloja los campos de ajuste comercial e imp
 *   **load_rate** y **discharge_rate:** Tasas operativas (MT/hora) que determinan el laytime.
 *   **address_commission:** Comisión de dirección deducible directa del flete bruto (%).
 *   **broker_commission:** Comisión de corretaje del intermediario marítimo deducible (%).
+*   **demurrage_rates:** Tarifas de demurrage por buque (USD/día). Formato JSONB: `{"vessel_id": tarifa}`.
     
 
 ## 📐 2. Modelo Matemático: El Algoritmo Inverso (Goal Seek)

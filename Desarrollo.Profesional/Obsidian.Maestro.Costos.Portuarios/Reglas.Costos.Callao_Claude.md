@@ -1,82 +1,101 @@
-# ⚓ CALLAO — Reglas de Costos Portuarios `_Claude`
+# ⚓ CALLAO — Reglas de Costos Portuarios (Modelo JSONB)
 > **Terminal**: APM Terminals | **País**: Perú 🇵🇪
 > **Fuente PNG**: [[PNG_Callao_Layout]] | **DB**: `port_id=CALLAO`, `terminal=APM`
 > **Agente**: Transtotal | **t/c referencia**: 3.42
-> **Buque ref (Moquegua)**: Eslora 134 | GRT 8,259 | DW 14,298
+> **Buque ref (Moquegua)**: Eslora 134 | GRT 8,259
 
 ---
 
-## A) Shifting Expenses — Reglas y Tarifas
+## 🎯 Principio de Operación: La Regla del Casino
+En el Callao, los servicios que dependen de una maniobra física (Práctico, Remolcadores, Lanchas) están sujetos a variaciones de precio (fijos o porcentuales) dependiendo de la **fecha y hora exacta en que TERMINA la maniobra**. Por lo tanto:
+1. Los conceptos genéricos (ej. "Pilotage x 2") se **desdoblan** en eventos independientes de IN y OUT.
+2. Cada concepto se evalúa contra su propia `hora_termino` (`end_time`).
+3. Las tarifas se extraen de un campo `JSONB` que contiene la tarifa base y un array de reglas de recargo (`absolute` o `percentage`).
 
-### 🚢 Pilotaje (Pilotage)
-> **Lógica**: Dos pasos — evaluar horario → aplicar MAX(tarifa, fórmula GRT)
+---
 
-| Concepto | Tarifa | Fórmula | Observaciones |
+## A) Shifting Expenses — Conceptos Desdoblados (IN / OUT)
+
+### 🚢 Pilotaje (Practicaje)
+> **Fórmula Backend**: `MAX( [Tarifa_Extraída_JSONB], 0.055 * GRT )`
+
+| Concepto ID | Tipo Cálculo | JSONB `default_rate` | Reglas de Recargo (Casino Rule) |
 |---|---|---|---|
-| Pilotage.($750 + OT) | $750.00 / maniobra | `MAX(750, 0.055 * GRT) × QTY` | Tarifa Transtotal Fija. Práctico por maniobra. |
-| Pilotage ($ 0.055 *GRT) | $0.055 / GRT | `0.055 × GRT` | Solo aplica si resulta mayor a $750. |
-
-**Regla de Oro**: `MAX($750, $0.055 × GRT)` — la casa siempre cobra el mayor.
-- Horario normal: $750 fijo
-- Si cruza horario nocturno/feriado: aplica tarifa extraordinaria (Regla del Casino)
+| **Pilotage_IN** | `CONDITIONAL_MAX` | $750.00 | • Overtime: `+ $ Fijo` (absolute) o `+ %` (percentage)<br>• Feriado/Domingo: `$ Fijo` (absolute) |
+| **Pilotage_OUT** | `CONDITIONAL_MAX` | $750.00 | *(Mismo JSONB, pero evaluado con hora de salida)* |
 
 ### 🚤 Remolcaje (Towage)
-> **Proveedor**: Petranso Remolcadores | **Configuración**: 2 in 2 out = 4 maniobras
+> **Fórmula Backend**: `MAX( [Tarifa_Extraída_JSONB], 0.065 * GRT ) × Remolcadores_Usados`
 
-| Concepto | Tarifa | Fórmula | Observaciones |
+| Concepto ID | Tipo Cálculo | JSONB `default_rate` | Reglas de Recargo (Casino Rule) |
 |---|---|---|---|
-| Remolcaje | $800.00 / maniobra | `MAX(800, 0.065*GRT) × QTY × TUGS` | Tarifa mínima $800 por maniobra. |
-| Remolcaje($ 0.065*GRT) | $0.065 / GRT | `0.065 × GRT × TUGBOATS` | Solo aplica si resulta mayor a $800. |
+| **Towage_IN** | `CONDITIONAL_MAX` | $800.00 | • Overtime: `$ TBD` o `% TBD`<br>• Feriado/Domingo: `$ TBD` |
+| **Towage_OUT** | `CONDITIONAL_MAX` | $800.00 | *(Mismo JSONB, pero evaluado con hora de salida)* |
 
-**Regla**: `MAX($800, $0.065 × GRT)` aplicado por cada maniobra × por cada remolcador.
+### 🛥️ Lanchas Operativas (Launch Hire)
+> **Fórmula Backend**: `[Tarifa_Extraída_JSONB] × Lanchas_Usadas`
 
----
-
-## B) General Port Expenses — Reglas y Tarifas
-
-| Concepto | Tarifa | Fórmula | Observaciones |
+| Concepto ID | Tipo Cálculo | JSONB `default_rate` | Reglas de Recargo (Casino Rule) |
 |---|---|---|---|
-| Lighthouse Dues (Puerto Nacional) | $0.03 / GRT | `0.03 × GRT` | **Condicional**: Solo si viene de puerto PE. |
-| Lighthouse Dues (Puerto Extranjero) | $0.12 / GRT | `0.12 × GRT` | **Condicional**: Solo si viene del extranjero. |
-| Dockage /Muellaje ($1.50×LOA×Hr) | $1.50 / LOA×Hr | `1.50 × LOA × HOURS` | APM Terminals. $1.50 por hora o fracción. |
-| Launch Hire. | $85.00 fijo | `85 × QTY` | Mooring/unmooring por maniobra/por lancha. |
-| Coordinator on board | $225.00 / día | `225 × DAYS` | Tarifa fija Transtotal. Por Nave/Turno x día. |
-| Clearance ( In/Out ) | $200.00 fijo | `200` | Aplica solo en viajes internacionales. |
-| Sanitary Inspection | $520.00 fijo | `520` | Tarifa fija según Sanidad Marítima. |
-
-### 🔑 Reglas Condicionales Clave
-- **Lighthouse**: Nacional `$0.03` vs Extranjero `$0.12` — siempre verificar último puerto
-- **Clearance + Sanitary**: Solo aplican en viajes internacionales (no cabotaje)
-- **Horas de Puerto**: `Tiempo amarre → inicio carga + (Q/Ritmo) + término carga → desamarre`
+| **Launch_IN** | `PER_QTY` | $85.00 | • Overtime: `$ TBD`<br>• Feriado/Domingo: `$ TBD` |
+| **Launch_OUT** | `PER_QTY` | $85.00 | *(Mismo JSONB, pero evaluado con hora de salida)* |
 
 ---
 
-## C) Agency Expenses — Tarifas Planas
+## B) General Port Expenses — Tarifas Estándar
 
-| Concepto | Tarifa | Fórmula | Observaciones |
+*Estos ítems NO están sujetos a la Regla del Casino de las maniobras, por lo que su JSONB no tiene `time_rules` complejas, solo el `default_rate`.*
+
+| Concepto ID | Tipo Cálculo | JSONB `default_rate` | Condición / Observación |
 |---|---|---|---|
-| Agency Fee | $1,000.00 fijo | `1000` | Tarifa fija Transtotal por Agenciamiento. |
-| Transportation | $200.00 fijo | `200` | Autoridades, coordinador y personal operativo. |
-| Comunication | $250.00 fijo | `250` | Tarifa fija Transtotal. |
+| **Lighthouse_Dues** | `PER_GRT` | $0.03 (Nac) / $0.12 (Ext) | Condicionado a la procedencia del último puerto. |
+| **Dockage_APM** | `PER_LOA_HOUR` | $1.50 | Fórmula: `1.50 × LOA × Horas_Totales`. |
+| **Coordinator** | `PER_QTY` | $225.00 | Por número de días o turnos. |
+| **Clearance** | `FIXED_FLAT` | $200.00 | Solo aplica en viajes internacionales. |
+| **Sanitary** | `FIXED_FLAT` | $520.00 | Tarifa plana fija. |
 
 ---
 
-## 📊 Ejemplo de Cálculo — Buque Moquegua (GRT 8,259 | LOA 134 | 32 hrs)
+## C) Agency Expenses — Tarifas Estándar
 
-| Ítem | Cálculo | Total |
-|---|---|---|
-| Pilotage (2 maniobras) | MAX(750, 0.055×8259) × 2 = MAX(750,454) × 2 | $1,500.00 |
-| Remolcaje (4 maniobras) | MAX(800, 0.065×8259) × 4 = MAX(800,537) × 4 | $3,200.00 |
-| Lighthouse Nacional | 0.03 × 8,259 | $247.77 |
-| Dockage APM | 1.50 × 134 × 32 | $6,432.00 |
-| Launch Hire (4 lanchas) | 85 × 4 | $340.00 |
-| Coordinator (2 turnos) | 225 × 2 | $450.00 |
-| Clearance | 200 × 1 | $200.00 |
-| Sanitary | 520 × 1 | $520.00 |
-| Agency Fee | 1,000 | $1,000.00 |
-| Transportation | 200 | $200.00 |
-| Comunication | 250 | $250.00 |
+| Concepto ID | Tipo Cálculo | JSONB `default_rate` | Condición / Observación |
+|---|---|---|---|
+| **Agency_Fee** | `FIXED_FLAT` | $1,000.00 | Tarifa plana agencia. |
+| **Transportation** | `FIXED_FLAT` | $200.00 | Tarifa plana logística (autoridades). |
+| **Comunication** | `FIXED_FLAT` | $250.00 | Tarifa plana comunicación. |
 
 ---
-> 🔗 **Ver tabla completa PNG**: [[PNG_Callao_Layout]]
-> 🗄️ **DB**: `SELECT * FROM port_costs_matrix WHERE port_id='CALLAO' AND terminal='APM'`
+
+## 🛠️ Estructura JSONB y Ejemplo Matemático 
+**(Para el ítem `Pilotage_IN`)**
+
+```json
+{
+  "default_rate": 750.00,
+  "time_rules": [
+    {
+      "name": "Domingos y Feriados",
+      "condition_type": "is_holiday_or_sunday",
+      "value_type": "absolute",
+      "value": 1700.00
+    },
+    {
+      "name": "Fuera de Horario (Overtime)",
+      "condition_type": "time_range",
+      "start_time": "17:00",
+      "end_time": "08:00",
+      "value_type": "percentage",
+      "value": 25.0
+    }
+  ]
+}
+```
+
+**Escenario de Prueba (Buque Moquegua: GRT 8,259)**
+* La maniobra de Ingreso (IN) termina a las **19:00 hrs un Jueves hábil**.
+* El motor identifica que cae en la condición `Fuera de Horario` (17:00 a 08:00) y que el `value_type` es porcentaje (`25.0`).
+* Calcula tarifa temporal: `750 * 1.25 = $937.50`
+* Ejecuta la lógica matemática asignada al concepto (`CONDITIONAL_MAX`):
+  * `MAX(937.50, 0.055 × 8259)`
+  * `MAX(937.50, 454.25) = $937.50`
+* **Costo final de Pilotage_IN = $937.50**

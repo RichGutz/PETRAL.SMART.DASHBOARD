@@ -181,6 +181,7 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
                 ritmo_descarga: Number(m.ritmo_descarga) || 0,
                 amarre_hrs: Number(m.amarre_hrs) || 0,
                 desamarre_hrs: Number(m.desamarre_hrs) || 0,
+                tugboats_count: Number(m.tugboats_count) || 0,
                 parameters: m.parameters || {}
             }));
             

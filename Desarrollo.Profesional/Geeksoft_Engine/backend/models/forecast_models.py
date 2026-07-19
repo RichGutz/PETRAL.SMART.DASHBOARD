@@ -134,6 +134,7 @@ class ContractMaster(BaseModel):
     time_to_count_descarga_hrs: float = 6.0
     maneuver_descarga_hrs: float = 0.0
     tariffs: List[ContractTariffMaster] = []
+    demurrage_rates: Optional[Dict[str, float]] = Field(default_factory=dict)
 
 class PortUpdate(BaseModel):
     port_id: str

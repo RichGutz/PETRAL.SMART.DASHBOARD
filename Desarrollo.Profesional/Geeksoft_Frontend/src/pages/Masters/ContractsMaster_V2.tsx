@@ -34,6 +34,7 @@ interface Contract {
     time_to_count_descarga_hrs: number;
     maneuver_descarga_hrs: number;
     tariffs: ContractTariff[];
+    demurrage_rates: Record<string, number>;
 }
 
 export const ContractsMaster: React.FC = () => {
@@ -41,6 +42,7 @@ export const ContractsMaster: React.FC = () => {
     const [clients, setClients] = useState<any[]>([]);
     const [rawClients, setRawClients] = useState<any[]>([]);
     const [ports, setPorts] = useState<any[]>([]);
+    const [vessels, setVessels] = useState<any[]>([]);
     
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -63,14 +65,16 @@ export const ContractsMaster: React.FC = () => {
         const loadData = async () => {
             try {
                 setLoading(true);
-                const [contractsData, clientsData, portsData] = await Promise.all([
+                const [contractsData, clientsData, portsData, vesselsData] = await Promise.all([
                     ForecastService.getContractsMaster(),
                     ForecastService.getClientsMaster(),
-                    ForecastService.getPorts()
+                    ForecastService.getPorts(),
+                    ForecastService.getVesselsMaster()
                 ]);
                 setContracts(contractsData || []);
                 setRawClients(clientsData || []);
                 setPorts(portsData || []);
+                setVessels(vesselsData || []);
             } catch (err) {
                 console.error("Error loading contracts:", err);
             } finally {
@@ -120,7 +124,8 @@ export const ContractsMaster: React.FC = () => {
             maneuver_carga_hrs: 0,
             time_to_count_descarga_hrs: 6,
             maneuver_descarga_hrs: 0,
-            tariffs: []
+            tariffs: [],
+            demurrage_rates: {}
         };
         setContracts([...contracts, newContract]);
         setSelectedClientId('');
@@ -153,7 +158,8 @@ export const ContractsMaster: React.FC = () => {
             maneuver_carga_hrs: 0,
             time_to_count_descarga_hrs: 6,
             maneuver_descarga_hrs: 0,
-            tariffs: []
+            tariffs: [],
+            demurrage_rates: {}
         };
         setContracts([...contracts, newContract]);
         setSelectedRouteKey(getRouteKey(newContract));
@@ -504,10 +510,12 @@ export const ContractsMaster: React.FC = () => {
                                                         </div>
                                                     </section>
 
-                                                    {/* 4. Comisiones */}
+                                                    {/* 4. Comisiones y Recargos */}
                                                     <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm flex-1">
-                                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2">4. Comisiones</h4>
-                                                        <div className="grid grid-cols-2 gap-3">
+                                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2">4. Comisiones y Recargos</h4>
+                                                        
+                                                        {/* Comisiones Arriba */}
+                                                        <div className="grid grid-cols-2 gap-3 mb-4">
                                                             <div>
                                                                 <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Address Comm. (%)</label>
                                                                 <input 
@@ -525,6 +533,30 @@ export const ContractsMaster: React.FC = () => {
                                                                     onChange={(e) => handleChange(selectedRouteKey!, 'broker_commission', parseFloat(e.target.value))}
                                                                     className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
                                                                 />
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Demurrage Abajo */}
+                                                        <div className="border-t border-slate-200 pt-3">
+                                                            <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-3">Demurrage por Buque ($/día)</h5>
+                                                            <div className="grid grid-cols-2 gap-3 max-h-[220px] overflow-y-auto pr-1">
+                                                                {vessels.map(v => (
+                                                                    <div key={v.vessel_id}>
+                                                                        <label className="block text-[9px] font-bold text-slate-500 mb-1 uppercase truncate" title={v.vessel_name}>
+                                                                            {v.vessel_name}
+                                                                        </label>
+                                                                        <input 
+                                                                            type="number" step="100"
+                                                                            value={selectedRoute.demurrage_rates?.[v.vessel_id] || 0}
+                                                                            onChange={(e) => {
+                                                                                const newRates = { ...(selectedRoute.demurrage_rates || {}) };
+                                                                                newRates[v.vessel_id] = parseFloat(e.target.value) || 0;
+                                                                                handleChange(selectedRouteKey!, 'demurrage_rates', newRates);
+                                                                            }}
+                                                                            className="w-full text-xs border border-slate-300 rounded p-1.5 font-mono"
+                                                                        />
+                                                                    </div>
+                                                                ))}
                                                             </div>
                                                         </div>
                                                     </section>

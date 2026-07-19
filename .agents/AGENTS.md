@@ -53,3 +53,11 @@ Para realizar tareas de despliegue, actualizaciÃ³n o diagnÃ³stico en el servidor
 2. Extraer conceptos EXACTOS (1:1 con el Excel) y organizarlos visualmente.
 3. Inyectar toda la lógica matemática en la columna 'logic_comments'.
 4. Ejecutar comparación vs Excel y exportar a PDF automáticamente sin pedir autorización.
+
+<RULE[project_scoped]>
+- **Orden de Ítems Tarifarios**: NUNCA alterar el orden de los ítems de liquidación. Siempre deben listarse, diagramarse y procesarse en el MISMO ORDEN estricto en el que se muestran en el documento tarifario original (Excel/PNG).
+</RULE[project_scoped]>
+
+<RULE[project_scoped]>
+- **Procesamiento de Nuevos Puertos**: Al recibir el requerimiento de mapear un nuevo puerto, tarifario, o leer un Excel portuario, el agente debe leer OBLIGATORIAMENTE el archivo Logica.Serial.Universal.de.Costos.md ubicado en Obsidian.Maestro.Costos.Portuarios. Toda la estructuracion (JSONB, Desdoblamiento, 3 Filtros) debe basarse al 100% en ese documento.
+</RULE[project_scoped]>
