@@ -1,3 +1,9 @@
+/**
+ * @deprecated 
+ * IMPORTANTE (Arquitectura V2 - LA BURRADA): 
+ * ESTA ES UNA VERSIÓN LEGACY. NO DEBE SER UTILIZADA NI MODIFICADA.
+ * Toda nueva lógica visual, componentes y enrutamientos se hacen en los archivos _V2.tsx
+ */
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';

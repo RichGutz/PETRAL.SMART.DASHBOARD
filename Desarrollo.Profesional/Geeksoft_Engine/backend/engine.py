@@ -174,6 +174,7 @@ def calculate_voyage_pnl(inputs: dict) -> dict:
         "sea_days": round(sea_days, 6),
         "port_days": round(port_days, 6),
         "total_duration": round(total_duration, 6),
+        "total_distance": round(dist * 2 if is_round_trip else dist, 2),
         "gross_income": round(gross_income, 2),
         "total_commissions": round(total_commissions, 2),
         "net_income": round(net_income, 2),

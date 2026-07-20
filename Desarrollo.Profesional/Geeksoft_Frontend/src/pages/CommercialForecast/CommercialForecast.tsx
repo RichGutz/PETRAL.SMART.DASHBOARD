@@ -1,3 +1,9 @@
+/**
+ * @deprecated 
+ * IMPORTANTE (Arquitectura V2 - LA BURRADA): 
+ * ESTA ES UNA VERSIÓN LEGACY. NO DEBE SER UTILIZADA NI MODIFICADA.
+ * Toda nueva lógica visual, componentes y enrutamientos se hacen en los archivos _V2.tsx
+ */
 import React, { useEffect, useState, useMemo } from 'react';
 import { ForecastGrid } from '../../components/CommercialForecast/ForecastGrid';
 import { ForecastBuilder } from '../../components/CommercialForecast/ForecastBuilder';

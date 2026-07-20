@@ -673,7 +673,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "tce_real": unit_result["tce_real"],
             "total_duration": unit_result["total_duration"] * freq,
             # Unit details for Ledger
-            "distancia_total": inputs["route_distance"],
+            "distancia_total": unit_result.get("total_distance", inputs.get("route_distance")),
             "carga_unit": inputs["quantity"],
             "flete_unit": inputs["freight_rate"],
             "net_income_unit": unit_result["net_income"],
@@ -1061,7 +1061,7 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             "pl_vs_required": unit_result["pl_vs_required"] * freq,
             "tce_real": unit_result["tce_real"],
             "total_duration": unit_result["total_duration"] * freq,
-            "distancia_total": inputs["route_distance"],
+            "distancia_total": unit_result.get("total_distance", inputs.get("route_distance")),
             "carga_unit": inputs["quantity"],
             "flete_unit": inputs["freight_rate"],
             "net_income_unit": unit_result["net_income"],

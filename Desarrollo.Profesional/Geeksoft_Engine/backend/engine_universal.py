@@ -200,6 +200,7 @@ def calculate_voyage_pnl_universal(inputs: dict) -> dict:
         "sea_days": round(sea_days, 6),
         "port_days": round(port_days, 6),
         "total_duration": round(total_duration, 6),
+        "total_distance": round(consolidated.get("total_distance", 0.0), 2),
         "gross_income": round(gross_income, 2),
         "total_commissions": round(total_commissions, 2),
         "net_income": round(net_income, 2),

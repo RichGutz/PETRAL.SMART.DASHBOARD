@@ -1,3 +1,9 @@
+/**
+ * @deprecated 
+ * IMPORTANTE (Arquitectura V2 - LA BURRADA): 
+ * ESTA ES UNA VERSIÓN LEGACY. NO DEBE SER UTILIZADA NI MODIFICADA.
+ * Toda nueva lógica visual, componentes y enrutamientos se hacen en los archivos _V2.tsx
+ */
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { CommercialForecast } from './pages/CommercialForecast/CommercialForecast';
 import { VesselsMaster } from './pages/Masters/VesselsMaster';
