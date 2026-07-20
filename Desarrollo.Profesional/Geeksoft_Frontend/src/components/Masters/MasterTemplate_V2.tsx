@@ -248,6 +248,15 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                             <span className="text-sm">🗺️</span> Maestro de Distancias
                                         </button>
                                     )}
+
+                                    {hasPermission('maestro_rutas', 'Visor') && (
+                                        <button 
+                                            onClick={() => navigate('/spot-routes')}
+                                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'spot-routes' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                        >
+                                            <span className="text-sm">📍</span> Maestro de Rutas
+                                        </button>
+                                    )}
                                     
                                     {hasPermission('maestro_tarifas', 'Visor') && (
                                         <button 

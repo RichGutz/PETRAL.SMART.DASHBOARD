@@ -201,6 +201,10 @@ export const ForecastService = {
     estimateRoutesDistances: async (payload: { routes: Array<{ origin: string, destination: string, lat_a: number, lon_a: number, lat_b: number, lon_b: number }> }) => {
         const response = await api.post('/forecast/routes/estimate-distances', payload);
         return response.data;
+    },
+    getSpotVoyages: async () => {
+        const response = await api.get('/forecast/spot/list');
+        return response.data;
     }
 };
 

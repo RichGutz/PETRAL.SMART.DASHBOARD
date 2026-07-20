@@ -14,6 +14,7 @@ import { MultiCotizador_V2 } from './pages/Tools/MultiCotizador_V2';
 
 import { VesselsMaster } from './pages/Masters/VesselsMaster_V2';
 import { RoutesMaster } from './pages/Masters/RoutesMaster_V2';
+import { RouteMaster_V2 } from './components/Masters/RouteMaster_V2';
 import { ClientsMaster } from './pages/Masters/ClientsMaster_V2';
 import { ContractsMaster } from './pages/Masters/ContractsMaster_V2';
 import { PortsMaster_V2 } from './pages/Masters/PortsMaster_V2';
@@ -74,6 +75,7 @@ function App_V2() {
               {/* Maestros Protegidos */}
               <Route path="/vessels" element={<ProtectedRoute module="maestro_buques"><VesselsMaster /></ProtectedRoute>} />
               <Route path="/routes" element={<ProtectedRoute module="maestro_rutas"><RoutesMaster /></ProtectedRoute>} />
+              <Route path="/spot-routes" element={<ProtectedRoute module="maestro_rutas"><RouteMaster_V2 /></ProtectedRoute>} />
               <Route path="/clients" element={<ProtectedRoute module="maestro_tarifas"><ClientsMaster /></ProtectedRoute>} />
               <Route path="/contracts" element={<ProtectedRoute module="maestro_contratos"><ContractsMaster /></ProtectedRoute>} />
               <Route path="/ports" element={<ProtectedRoute module="maestro_puertos"><PortsMaster_V2 /></ProtectedRoute>} />

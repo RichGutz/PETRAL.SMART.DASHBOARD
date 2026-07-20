@@ -100,12 +100,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         if (!client) return [];
         const routesMap = new Map<string, string>();
 
-        if (client === 'SPCC') {
-            routesMap.set('ILO-MATARANI', 'ILO-MATARANI');
-            routesMap.set('ILO-MARCONA', 'ILO-MARCONA');
-            routesMap.set('ILO-MEJILLONES', 'ILO-MEJILLONES');
-            return Array.from(routesMap.values());
-        }
+
 
         spotRoutes.forEach(s => {
             const name = s.name || "";
@@ -173,16 +168,14 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         import('../../services/api').then(({ ForecastService }) => {
             ForecastService.listSpots().then(spotRoutes => {
                 setSpotRoutes(spotRoutes || []);
-                // SPCC es cliente fijo (sus rutas simples no están en spots)
-                const fixedClients = ['SPCC'];
                 // Clientes dinámicos derivados de rutas multicotizador guardadas
                 const filtered = (spotRoutes || []).filter((s: any) => s.legs_data?.is_multicotizador === true);
                 const dynamicClientIds: string[] = filtered.map((s: any) => {
                     const parts = (s.name || "").split('.');
                     return parts.length > 1 ? parts[0].toUpperCase() : "";
                 }).filter(Boolean);
-                // Unir fijos + dinámicos sin duplicados
-                const allClients = Array.from(new Set([...fixedClients, ...dynamicClientIds]));
+                
+                const allClients = Array.from(new Set([...dynamicClientIds]));
                 setAvailableClients(allClients);
             }).catch(err => console.error("Failed to fetch spot routes and clients:", err));
         });
