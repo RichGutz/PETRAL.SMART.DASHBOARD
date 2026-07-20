@@ -184,6 +184,9 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
                 tramos[i].quantity = conf.quantity;
                 tramos[i].freight_rate = conf.freight_rate;
             }
+            if (!tramos[i].type) {
+                tramos[i].type = (conf && conf.action === 'NONE') ? 'BALLAST' : 'LADEN';
+            }
         }
 
         setSimulating(true);
@@ -198,9 +201,9 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             const res = await ForecastService.calculateMultiCotizador(payload);
             let sim_key = Object.keys(res.aggregated_data?.['SPOT']?.['DYNAMIC']?.[selectedVesselId] || {})[0];
             setRunResult(res.aggregated_data?.['SPOT']?.['DYNAMIC']?.[selectedVesselId]?.[sim_key] || null);
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            alert('Error en el cálculo.');
+            alert('Error en el cálculo: ' + (err.response?.data?.detail || err.message));
         } finally {
             setSimulating(false);
         }
