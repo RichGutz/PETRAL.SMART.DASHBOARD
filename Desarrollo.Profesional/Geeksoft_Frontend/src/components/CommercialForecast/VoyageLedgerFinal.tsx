@@ -179,13 +179,18 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
         const tramos = JSON.parse(JSON.stringify(route.legs_data.tramos));
         
         for (let i = 0; i < tramos.length; i++) {
-            const conf = legsConfig.find(c => c.idx === i);
-            if (conf && conf.action === 'CARGAR') {
-                tramos[i].quantity = conf.quantity;
-                tramos[i].freight_rate = conf.freight_rate;
+            const origConf = legsConfig.find(c => c.idx === i);
+            const destConf = legsConfig.find(c => c.idx === i + 1);
+            
+            if (origConf && origConf.action === 'CARGAR') {
+                tramos[i].quantity = origConf.quantity;
+                tramos[i].freight_rate = origConf.freight_rate;
             }
+            if (origConf) tramos[i].origin_action = origConf.action;
+            if (destConf) tramos[i].destination_action = destConf.action;
+            
             if (!tramos[i].type) {
-                tramos[i].type = (conf && conf.action === 'NONE') ? 'BALLAST' : 'LADEN';
+                tramos[i].type = (origConf && origConf.action === 'NONE') ? 'BALLAST' : 'LADEN';
             }
         }
 
