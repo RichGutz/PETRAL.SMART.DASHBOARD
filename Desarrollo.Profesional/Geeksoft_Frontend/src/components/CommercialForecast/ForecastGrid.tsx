@@ -273,7 +273,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
                     const rowKey = `${client}-${route}-${vessel}`;
                     const isExpanded = !!expandedRows[rowKey];
-                    const numSubRows = isExpanded ? 17 : 0;
+                    const numSubRows = isExpanded ? 14 : 0;
                     const isDemurrageExcluded = excludedDemurrages.includes(rowKey);
                     const isDemurrageVisible = showDemurrage && demurragePct !== '' && !isDemurrageExcluded;
                     const isDemurrageDaysVisible = showDemurrageDays && demurrageDays !== '' && !isDemurrageExcluded;
