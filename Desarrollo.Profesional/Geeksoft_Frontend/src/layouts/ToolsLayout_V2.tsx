@@ -17,6 +17,7 @@ export const ToolsLayout_V2: React.FC = () => {
     else if (location.pathname.includes('/spaghetti-map')) activeTab = 'spaghetti-map';
     else if (location.pathname.includes('/audit-ledger')) activeTab = 'audit-ledger';
     else if (location.pathname.includes('/audit-engine')) activeTab = 'audit-engine';
+    else if (location.pathname.includes('/audit-final')) activeTab = 'audit-final';
 
     return (
         <MasterTemplate title="Herramientas" subtitle="Análisis y Proyección" activeTab={activeTab}>
