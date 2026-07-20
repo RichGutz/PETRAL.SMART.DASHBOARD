@@ -513,7 +513,7 @@ const renderScenarioContent = (
                     <Label className="text-xs font-semibold text-slate-600">Ruta</Label>
                     <Select value={selectedRouteId} onValueChange={(val: any) => setSelectedRouteId(val || "")}>
                         <SelectTrigger className="bg-white text-xs h-9">
-                            <SelectValue placeholder="Seleccione una ruta">{routes.find(r => r.route_id === selectedRouteId)?.name || ""}</SelectValue>
+                            <SelectValue placeholder="Seleccione una ruta" />
                         </SelectTrigger>
                         <SelectContent>
                             {routes.map(r => (
@@ -527,7 +527,7 @@ const renderScenarioContent = (
                     <Label className="text-xs font-semibold text-slate-600">Buque</Label>
                     <Select value={selectedVesselId} onValueChange={(val: any) => setSelectedVesselId(val || "")}>
                         <SelectTrigger className="bg-white text-xs h-9">
-                            <SelectValue placeholder="Seleccione un buque">{vessels.find(v => v.vessel_id === selectedVesselId)?.vessel_name || ""}</SelectValue>
+                            <SelectValue placeholder="Seleccione un buque" />
                         </SelectTrigger>
                         <SelectContent>
                             {vessels.map(v => (
