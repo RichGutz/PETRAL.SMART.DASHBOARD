@@ -199,8 +199,8 @@ act_disch = MIN(c_disch [contracts], v_pump  [vessels], p_disch_limit [ports.max
 * `vessel_id` *(VARCHAR, PK)* ── ID del buque (ej. `'MOQUEGUA'`, `'TABLONES'`) o `'DEFAULT'`.
 * `cost` *(NUMERIC, DEFAULT 0)* ── Costo portuario consolidado aplicable (USD).
 
-> ⚠️ **Arquitectura Fallback (Transición Gradual):**
-> La tabla `agency_matrix` fue duplicada físicamente en la nueva tabla `port_cost_static` para el uso exclusivo de Forecast. La tabla `agency_matrix` se mantiene viva únicamente como respaldo histórico. 
+> ⚠️ **Arquitectura Fallback:**
+> *(Nota Histórica)*: La tabla `agency_matrix` original fue dada de baja y su rol fue transferido completamente a `port_cost_static`.
 > Al realizar una simulación, el motor de forecast busca de forma prioritaria en `port_costs_matrix` (costos desglosados); si no existen registros, realiza un **fallback automático** a la tabla plana `port_cost_static`.
 
 ---
@@ -343,16 +343,7 @@ Las migraciones DDL secuenciales en bases de datos relacionales con datos preexi
 
 ---
 
-### 10. Tabla: `agency_matrix` (Histórico de Costos de Agencia)
-*Matriz histórica de costos base de agencia y servicios portuarios para lookups de respaldo.*
-* `client_id` *(VARCHAR, PK)* ── Cliente comercial.
-* `port_id` *(VARCHAR, PK)* ── Puerto de escala.
-* `operation_type` *(VARCHAR, PK)* ── Tipo de maniobra (`CARGA` / `DESCARGA`).
-* `vessel_id` *(VARCHAR, PK, DEFAULT 'DEFAULT')* ── Buque asignado o fallback general.
-* `cost` *(NUMERIC)* ── Costo total consolidado de agencia (USD).
-* `loading_master_cost` *(NUMERIC, DEFAULT 0.0)* ── Costo específico de servicio de Loading Master (USD).
 
----
 
 ## 💡 Instrucción de Contexto para el Agente (Antigravity IDE):
 > "El agente utilizará este esquema físico estructurado para cruzar las variables lógicas en Supabase. El backend en FastAPI extraerá algebraicamente los tiempos de carga, descarga y tiempos muertos para multiplicarlos de forma matricial aplicando la sumatoria de consumos por fase (`SUM(t_fase * c_fase)`), barriendo los campos granulares de la tabla `vessels` y extrayendo los costos dinámicos de la tabla `bunker_prices`."

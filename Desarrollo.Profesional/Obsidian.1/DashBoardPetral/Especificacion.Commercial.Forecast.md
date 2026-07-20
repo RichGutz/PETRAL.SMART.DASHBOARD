@@ -42,10 +42,10 @@ Tras una auditoría profunda del motor backend (`forecast_service.py` y `engine.
   `port_days = ((Q / act_load + time_to_count_carga + maneuver_carga) + (Q / act_disch + time_to_count_descarga + maneuver_descarga)) / 24`
 
 ### 1.6 Arquitectura de Fallback para Costos Portuarios y Dimensiones del Maestro Flota (Julio 2026)
-- **Preservación Física de `agency_matrix`:** Se establece explícitamente la **permanencia de la tabla física `agency_matrix`** en la base de datos de Supabase. Funciona como fallback intermedio fundamental:
+- **Preservación Física de `port_cost_static`:** Se establece explícitamente la **permanencia de la tabla física `port_cost_static`** en la base de datos de Supabase. Funciona como fallback intermedio fundamental:
   - Cuando se ejecuta una simulación, el motor de forecast (`forecast_service.py`) consulta prioritariamente la tabla de desgloses `port_costs_matrix`.
-  - Si no existen tarifas detalladas registradas en `port_costs_matrix` para el buque/puerto/operación, el motor realiza un fallback directo a la tabla `agency_matrix` para obtener el costo consolidado de puerto (como concepto único de `agency_fee`).
-  - **REGLA DE CONSERVACIÓN:** Ningún agente AI o desarrollador futuro debe eliminar, alterar o dar de baja la tabla `agency_matrix`, la cual debe convivir indefinidamente con `port_costs_matrix` como safety net.
+  - Si no existen tarifas detalladas registradas en `port_costs_matrix` para el buque/puerto/operación, el motor realiza un fallback directo a la tabla `port_cost_static` para obtener el costo consolidado de puerto.
+  - *(Nota Histórica)*: Originalmente existía una tabla `agency_matrix`, pero ha sido dada de baja y su rol fue transferido completamente a `port_cost_static`.
 - **Nuevas Variables en Maestro Flota (`vessels`):** Se añadieron las columnas físicas `length` (Eslora) y `beam` (Manga) a la tabla `vessels` en Supabase para todos los buques de la flota (Moquegua, Tablones, Concon Trader, Huemul).
 - **Visualización en dos columnas en el Ledger:** El card de **Maestro Flota** en el componente `VoyageLedgerTest.tsx` (tanto en la visualización interactiva de React como en la vista de impresión/PDF) se actualizó para renderizar en dos columnas paralelas las variables clave: `DWT` y `dwcc` en una fila, y `Length (L)` y `Beam (B)` en la siguiente, consolidando la visualización de los datos físicos básicos del buque.
 
@@ -131,7 +131,7 @@ El cliente **NEXA** opera bajo un modelo de rutas complejas (múltiples puertos 
       "legs": { ... }            # Piernas operativas (laden, positioning, etc.)
   }
   ```
-- Se inyectan dinámicamente los costos de agencia del tramo `laden` desde `agency_matrix` para origen y destino, resolviendo las fórmulas de Port Costs sin hardcodes.
+- Se inyectan dinámicamente los costos de agencia del tramo `laden` desde `port_cost_static` para origen y destino, resolviendo las fórmulas de Port Costs sin hardcodes.
 - Los demás clientes (ILO-MATARANI, ILO-MARCONA, etc.) siguen usando el motor clásico sin cambios.
 
 ### 5.3 Fix de Firma — `TypeError` Resuelto

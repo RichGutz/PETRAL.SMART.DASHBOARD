@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
-import { ChevronDown, ChevronRight, Download, Filter, FileText } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import logoPetral from '../../assets/Logo.Petral.png';
 import logoGeeksoft from '../../assets/Logo.Geeksoft.png';
@@ -13,7 +13,6 @@ export const ForecastGridFilters: React.FC = () => {
         hiddenRoutes, setHiddenRoutes,
         hiddenVessels, setHiddenVessels,
         hiddenMonths, setHiddenMonths,
-        isFiltersCollapsed, setIsFiltersCollapsed,
         showSubtotals, setShowSubtotals,
         showAccumulatedTotal, setShowAccumulatedTotal
     } = useForecastContext_V2();
