@@ -91,7 +91,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             ForecastService.getContractsMaster()
         ]).then(([r, v, c]) => {
             setRoutes(r || []);
-            setVessels((v || []).filter((x:any) => x.is_active));
+            setVessels((v || []));
             setContracts(c || []);
             setLoading(false);
         }).catch(err => {
@@ -506,7 +506,7 @@ const renderScenarioContent = (
                     <Label className="text-xs font-semibold text-slate-600">Ruta</Label>
                     <Select value={selectedRouteId} onValueChange={(val: any) => setSelectedRouteId(val || "")}>
                         <SelectTrigger className="bg-white text-xs h-9">
-                            <SelectValue placeholder="Seleccione una ruta" />
+                            <SelectValue placeholder="Seleccione una ruta">{routes.find(r => r.route_id === selectedRouteId)?.name || ""}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             {routes.map(r => (
@@ -520,7 +520,7 @@ const renderScenarioContent = (
                     <Label className="text-xs font-semibold text-slate-600">Buque</Label>
                     <Select value={selectedVesselId} onValueChange={(val: any) => setSelectedVesselId(val || "")}>
                         <SelectTrigger className="bg-white text-xs h-9">
-                            <SelectValue placeholder="Seleccione un buque" />
+                            <SelectValue placeholder="Seleccione un buque">{vessels.find(v => v.vessel_id === selectedVesselId)?.vessel_name || ""}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             {vessels.map(v => (
@@ -534,7 +534,7 @@ const renderScenarioContent = (
                     <Label className="text-xs font-semibold text-slate-600">Matriz Portuaria</Label>
                     <Select value={localPortCostMode} onValueChange={(val: any) => setLocalPortCostMode(val)}>
                         <SelectTrigger className="bg-white text-xs h-9">
-                            <SelectValue />
+                            <SelectValue>{localPortCostMode === "static" ? "Estática" : "Dinámica"}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="static">Estática</SelectItem>
