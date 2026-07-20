@@ -399,178 +399,179 @@ export const ForecastGridFilters: React.FC = () => {
         }
     };
 
+    const monthNames = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
+    
+    const quarters = useMemo(() => {
+        const qMap: Record<string, string[]> = {};
+        months.forEach(m => {
+            const parts = m.split('-');
+            const year = parts[0];
+            const monthNum = parseInt(parts[1], 10);
+            const q = Math.ceil(monthNum / 3);
+            const key = `Q${q} ${year}`;
+            if (!qMap[key]) qMap[key] = [];
+            qMap[key].push(m);
+        });
+        return qMap;
+    }, [months]);
+
     return (
-        <div className="w-full bg-white border border-slate-200 shadow-sm rounded-lg overflow-hidden flex flex-col mb-4">
-            <div 
-                className="bg-slate-50 px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors"
-                onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
-            >
-                <div className="flex items-center gap-2 text-slate-700 font-bold">
-                    <Filter className="w-5 h-5 text-petral-teal" />
-                    <span>Filtros Dinámicos y Controles de Exportación</span>
-                </div>
-                <div className="flex items-center gap-4">
-                    {isFiltersCollapsed && (
-                        <div className="flex gap-2 text-xs text-slate-500 font-medium">
-                            <span>{clientList.length - hiddenClients.length}/{clientList.length} Clientes</span>
-                            <span>{routeList.length - hiddenRoutes.length}/{routeList.length} Rutas</span>
-                            <span>{vesselList.length - hiddenVessels.length}/{vesselList.length} Buques</span>
-                            <span>{months.length - hiddenMonths.length}/{months.length} Meses</span>
-                        </div>
-                    )}
-                    <button className="text-slate-400 hover:text-slate-600 focus:outline-none">
-                        {isFiltersCollapsed ? <ChevronRight size={20}/> : <ChevronDown size={20}/>}
-                    </button>
-                </div>
-            </div>
-
-            {!isFiltersCollapsed && (
-                <div className="p-4 flex flex-col gap-6 bg-white border-t border-slate-100">
+        <div className="w-full bg-white flex flex-col">
+            <div className="p-4 flex flex-col gap-4 bg-white">
+                
+                {/* Filtros de Datos en Cascada */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                     
-                    {/* Filtros de Datos en Cascada */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="flex flex-col gap-2">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={hiddenClients.length === 0}
-                                    ref={el => { if (el) el.indeterminate = hiddenClients.length > 0 && hiddenClients.length < clientList.length; }}
-                                    onChange={() => setHiddenClients(hiddenClients.length === 0 ? clientList : [])}
-                                    className="rounded text-petral-teal focus:ring-petral-teal"
-                                />
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Clientes</span>
-                            </label>
-                            <div className="max-h-40 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50 flex flex-col gap-1">
-                                {clientList.map(c => (
-                                    <label key={c} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                                        <input type="checkbox" checked={!hiddenClients.includes(c)} onChange={() => toggleFilter(c, hiddenClients, setHiddenClients)} className="rounded text-petral-teal focus:ring-petral-teal" />
-                                        {c}
-                                    </label>
-                                ))}
-                                {clientList.length === 0 && <span className="text-xs text-slate-400 italic">No hay clientes</span>}
-                            </div>
+                    {/* Clientes */}
+                    <div className="flex flex-col gap-2 col-span-1 md:col-span-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={hiddenClients.length === 0}
+                                ref={el => { if (el) el.indeterminate = hiddenClients.length > 0 && hiddenClients.length < clientList.length; }}
+                                onChange={() => setHiddenClients(hiddenClients.length === 0 ? clientList : [])}
+                                className="rounded text-petral-teal focus:ring-petral-teal"
+                            />
+                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Clientes</span>
+                        </label>
+                        <div className="max-h-40 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50 flex flex-col gap-1.5">
+                            {clientList.map(c => (
+                                <label key={c} className="flex items-center gap-2 text-[13px] font-medium text-slate-700 cursor-pointer hover:text-petral-teal transition-colors">
+                                    <input type="checkbox" checked={!hiddenClients.includes(c)} onChange={() => toggleFilter(c, hiddenClients, setHiddenClients)} className="rounded text-petral-teal focus:ring-petral-teal" />
+                                    {c}
+                                </label>
+                            ))}
+                            {clientList.length === 0 && <span className="text-[13px] text-slate-400 italic">No hay clientes</span>}
                         </div>
+                    </div>
 
-                        <div className="flex flex-col gap-2">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={hiddenRoutes.length === 0}
-                                    ref={el => { if (el) el.indeterminate = hiddenRoutes.length > 0 && hiddenRoutes.length < routeList.length; }}
-                                    onChange={() => setHiddenRoutes(hiddenRoutes.length === 0 ? routeList : [])}
-                                    className="rounded text-petral-teal focus:ring-petral-teal"
-                                />
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rutas</span>
-                            </label>
-                            <div className="max-h-40 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50 flex flex-col gap-1">
+                    {/* Rutas (2 columnas) */}
+                    <div className="flex flex-col gap-2 col-span-1 md:col-span-3">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={hiddenRoutes.length === 0}
+                                ref={el => { if (el) el.indeterminate = hiddenRoutes.length > 0 && hiddenRoutes.length < routeList.length; }}
+                                onChange={() => setHiddenRoutes(hiddenRoutes.length === 0 ? routeList : [])}
+                                className="rounded text-petral-teal focus:ring-petral-teal"
+                            />
+                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Rutas</span>
+                        </label>
+                        <div className="max-h-40 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50">
+                            <div className="grid grid-cols-2 gap-x-2 gap-y-1.5">
                                 {routeList.map(r => (
-                                    <label key={r} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                                    <label key={r} className="flex items-center gap-2 text-[13px] font-medium text-slate-700 cursor-pointer hover:text-petral-teal transition-colors">
                                         <input type="checkbox" checked={!hiddenRoutes.includes(r)} onChange={() => toggleFilter(r, hiddenRoutes, setHiddenRoutes)} className="rounded text-petral-teal focus:ring-petral-teal" />
-                                        {r}
+                                        <span className="truncate">{r}</span>
                                     </label>
                                 ))}
-                                {routeList.length === 0 && <span className="text-xs text-slate-400 italic">No hay rutas</span>}
                             </div>
+                            {routeList.length === 0 && <span className="text-[13px] text-slate-400 italic">No hay rutas</span>}
                         </div>
+                    </div>
 
-                        <div className="flex flex-col gap-2">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={hiddenVessels.length === 0}
-                                    ref={el => { if (el) el.indeterminate = hiddenVessels.length > 0 && hiddenVessels.length < vesselList.length; }}
-                                    onChange={() => setHiddenVessels(hiddenVessels.length === 0 ? vesselList : [])}
-                                    className="rounded text-petral-teal focus:ring-petral-teal"
-                                />
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Buques</span>
-                            </label>
-                            <div className="max-h-40 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50 flex flex-col gap-1">
-                                {vesselList.map(v => (
-                                    <label key={v} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                                        <input type="checkbox" checked={!hiddenVessels.includes(v)} onChange={() => toggleFilter(v, hiddenVessels, setHiddenVessels)} className="rounded text-petral-teal focus:ring-petral-teal" />
-                                        {v}
-                                    </label>
-                                ))}
-                                {vesselList.length === 0 && <span className="text-xs text-slate-400 italic">No hay buques</span>}
-                            </div>
+                    {/* Buques */}
+                    <div className="flex flex-col gap-2 col-span-1 md:col-span-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={hiddenVessels.length === 0}
+                                ref={el => { if (el) el.indeterminate = hiddenVessels.length > 0 && hiddenVessels.length < vesselList.length; }}
+                                onChange={() => setHiddenVessels(hiddenVessels.length === 0 ? vesselList : [])}
+                                className="rounded text-petral-teal focus:ring-petral-teal"
+                            />
+                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Buques</span>
+                        </label>
+                        <div className="max-h-40 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50 flex flex-col gap-1.5">
+                            {vesselList.map(v => (
+                                <label key={v} className="flex items-center gap-2 text-[13px] font-medium text-slate-700 cursor-pointer hover:text-petral-teal transition-colors">
+                                    <input type="checkbox" checked={!hiddenVessels.includes(v)} onChange={() => toggleFilter(v, hiddenVessels, setHiddenVessels)} className="rounded text-petral-teal focus:ring-petral-teal" />
+                                    {v}
+                                </label>
+                            ))}
+                            {vesselList.length === 0 && <span className="text-[13px] text-slate-400 italic">No hay buques</span>}
                         </div>
+                    </div>
 
-                        <div className="flex flex-col gap-2">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={hiddenMonths.length === 0}
-                                    ref={el => { if (el) el.indeterminate = hiddenMonths.length > 0 && hiddenMonths.length < months.length; }}
-                                    onChange={() => setHiddenMonths(hiddenMonths.length === 0 ? [...months] : [])}
-                                    className="rounded text-petral-teal focus:ring-petral-teal"
-                                />
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Meses</span>
-                            </label>
-                            <div className="border border-slate-200 rounded p-2 bg-slate-50">
-                                <div className="grid grid-cols-4 gap-x-3 gap-y-1">
-                                    {months.map(m => (
-                                        <label key={m} className="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer hover:text-petral-teal transition-colors">
-                                            <input type="checkbox" checked={!hiddenMonths.includes(m)} onChange={() => toggleFilter(m, hiddenMonths, setHiddenMonths)} className="rounded text-petral-teal focus:ring-petral-teal w-3 h-3" />
-                                            <span className="font-medium truncate">{m}</span>
-                                        </label>
-                                    ))}
+                    {/* Meses (Quarters en Filas) */}
+                    <div className="flex flex-col gap-2 col-span-1 md:col-span-5">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={hiddenMonths.length === 0}
+                                ref={el => { if (el) el.indeterminate = hiddenMonths.length > 0 && hiddenMonths.length < months.length; }}
+                                onChange={() => setHiddenMonths(hiddenMonths.length === 0 ? [...months] : [])}
+                                className="rounded text-petral-teal focus:ring-petral-teal"
+                            />
+                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Meses</span>
+                        </label>
+                        <div className="max-h-40 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50 grid grid-cols-2 gap-x-4 gap-y-2">
+                            {Object.entries(quarters).map(([qKey, qMonths]) => (
+                                <div key={qKey} className="flex flex-wrap items-center gap-2">
+                                    <span className="text-[12px] font-bold text-slate-800 w-16 shrink-0">{qKey}:</span>
+                                    {qMonths.map(m => {
+                                        const monthIdx = parseInt(m.split('-')[1], 10) - 1;
+                                        const mName = monthNames[monthIdx];
+                                        return (
+                                            <label key={m} className="flex items-center gap-1.5 text-[12px] font-medium text-slate-700 cursor-pointer hover:text-petral-teal transition-colors">
+                                                <input type="checkbox" checked={!hiddenMonths.includes(m)} onChange={() => toggleFilter(m, hiddenMonths, setHiddenMonths)} className="rounded text-petral-teal focus:ring-petral-teal" />
+                                                <span>{mName}</span>
+                                            </label>
+                                        );
+                                    })}
                                 </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
-
-                    <div className="border-t border-slate-200 my-1"></div>
-
-                    {/* Forma de la Tabla y Acciones */}
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-50 p-4 rounded-md border border-slate-200">
-                        <div className="flex items-center gap-6">
-                            <div className="flex flex-col gap-1">
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Estructura de la Tabla</span>
-                                <label className="flex items-center gap-2 cursor-pointer group">
-                                    <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${showSubtotals ? 'bg-petral-teal' : 'bg-slate-300'}`}>
-                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showSubtotals ? 'translate-x-4' : 'translate-x-1'}`} />
-                                    </div>
-                                    <input type="checkbox" className="hidden" checked={showSubtotals} onChange={(e) => setShowSubtotals(e.target.checked)} />
-                                    <span className="text-sm font-medium text-slate-700 group-hover:text-petral-blue transition-colors">Mostrar Subtotales por Cliente</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer group mt-2">
-                                    <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${showAccumulatedTotal ? 'bg-indigo-600' : 'bg-slate-300'}`}>
-                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showAccumulatedTotal ? 'translate-x-4' : 'translate-x-1'}`} />
-                                    </div>
-                                    <input type="checkbox" className="hidden" checked={showAccumulatedTotal} onChange={(e) => setShowAccumulatedTotal(e.target.checked)} />
-                                    <span className="text-sm font-medium text-slate-700 group-hover:text-indigo-800 transition-colors">Mostrar Total Acumulado Global</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <button 
-                                onClick={() => handlePrintPDF('portrait')}
-                                className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-md text-sm font-bold shadow-sm transition-all hover:shadow-md"
-                            >
-                                <FileText size={16} />
-                                PDF Vertical
-                            </button>
-                            <button 
-                                onClick={() => handlePrintPDF('landscape')}
-                                className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-md text-sm font-bold shadow-sm transition-all hover:shadow-md"
-                            >
-                                <FileText size={16} />
-                                PDF Horizontal
-                            </button>
-                            <button 
-                                onClick={handleExportExcel}
-                                id="btn-export-excel"
-                                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-md text-sm font-bold shadow-sm transition-all hover:shadow-md"
-                            >
-                                <Download size={16} />
-                                Bajar a Excel
-                            </button>
-                        </div>
-                    </div>
-
                 </div>
-            )}
+
+                {/* Forma de la Tabla y Acciones en una sola linea horizontal */}
+                <div className="flex flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-6">
+                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-2">Estructura:</span>
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <div className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors ${showSubtotals ? 'bg-petral-teal' : 'bg-slate-300'}`}>
+                                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${showSubtotals ? 'translate-x-4' : 'translate-x-1'}`} />
+                                </div>
+                                <input type="checkbox" className="hidden" checked={showSubtotals} onChange={(e) => setShowSubtotals(e.target.checked)} />
+                                <span className="text-[12px] font-medium text-slate-700 group-hover:text-petral-blue transition-colors">Subtotales Cliente</span>
+                            </label>
+                            
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <div className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors ${showAccumulatedTotal ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${showAccumulatedTotal ? 'translate-x-4' : 'translate-x-1'}`} />
+                                </div>
+                                <input type="checkbox" className="hidden" checked={showAccumulatedTotal} onChange={(e) => setShowAccumulatedTotal(e.target.checked)} />
+                                <span className="text-[12px] font-medium text-slate-700 group-hover:text-indigo-800 transition-colors">Acumulado Global</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={() => handlePrintPDF('portrait')}
+                            className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-md text-[11px] font-bold shadow-sm transition-all hover:shadow-md"
+                        >
+                            <FileText size={14} /> PDF Vertical
+                        </button>
+                        <button 
+                            onClick={() => handlePrintPDF('landscape')}
+                            className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-md text-[11px] font-bold shadow-sm transition-all hover:shadow-md"
+                        >
+                            <FileText size={14} /> PDF Horizontal
+                        </button>
+                        <button 
+                            onClick={handleExportExcel}
+                            id="btn-export-excel"
+                            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-md text-[11px] font-bold shadow-sm transition-all hover:shadow-md"
+                        >
+                            <Download size={14} /> a Excel
+                        </button>
+                    </div>
+                </div>
+
+            </div>
         </div>
     );
 };

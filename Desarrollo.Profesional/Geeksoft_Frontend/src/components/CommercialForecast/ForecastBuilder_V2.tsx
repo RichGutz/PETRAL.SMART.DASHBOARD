@@ -6,7 +6,8 @@ import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { MonthPicker } from '../ui/month-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Filter } from 'lucide-react';
+import { ForecastGridFilters } from './ForecastGridFilters';
 
 interface ForecastBuilderProps {
     onHorizonChange: (start: string, end: string) => void;
@@ -57,6 +58,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 }) => {
     // Form State
     const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
+    const [showFilters, setShowFilters] = useState(false);
     const [client, setClient] = useState('');
     const [route, setRoute] = useState('');
     const [vessel, setVessel] = useState('');
@@ -245,14 +247,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     }
 
     return (
-        <Card className="border-slate-200 shadow-sm">
-            {forecastName && (
-                <div className="bg-sky-50 border-b border-sky-100 py-1.5 px-4 flex justify-center w-full">
-                    <span className="text-xs font-bold text-sky-800">
-                        📁 Escenario Activo: {forecastName}
-                    </span>
-                </div>
-            )}
+        <Card className="border-slate-200 shadow-sm relative overflow-visible">
             <CardContent className="py-1 px-6">
                 
                 {/* Contenedor Flex en una sola línea sin wrap, con scroll horizontal si es muy pequeña la pantalla */}
@@ -551,6 +546,18 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         <div className="flex items-center gap-2 font-bold text-sky-800 bg-sky-50 border border-sky-200 px-3 h-8 rounded-full shadow-sm text-[11px]">
                             📁 Escenario: {forecastName || 'Sin guardar'}
                         </div>
+
+                        {/* Botón de Filtros */}
+                        <div>
+                            <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-4 h-8 rounded-full text-[11px] font-bold shadow-sm transition-colors">
+                                <Filter size={14} /> Filtros de Tabla y Exportación
+                            </button>
+                        </div>
+                        {showFilters && (
+                            <div className="absolute top-[100%] left-0 w-full z-50 mt-1 shadow-2xl rounded-xl border border-slate-200 overflow-hidden bg-white">
+                                <ForecastGridFilters />
+                            </div>
+                        )}
 
                         {/* Vista ($ / %) */}
                         {displayMode && onDisplayModeChange && (

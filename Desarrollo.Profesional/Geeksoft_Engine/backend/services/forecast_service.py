@@ -127,23 +127,19 @@ def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: 
     # 2. Fallback: Buscar costo plano consolidado en agency_matrix (port_cost_static)
     #    Suma TODOS los sub_operation_types (MAIN, loading_master, etc.)
     def get_flat_cost_from_agency_matrix():
-        def find_rows(c_id, v_id):
+        def find_rows(v_id):
             return [
                 a for a in agency_matrix_data
-                if a.get("client_id") == c_id
-                and a.get("port_id") == port_id
+                if a.get("port_id") == port_id
                 and a.get("operation_type") == operation_type
                 and a.get("vessel_id") == v_id
             ]
 
-        # Prioridad A: client_id + vessel_id especifico
-        rows = find_rows(client_id, vessel_id)
-        # Prioridad B: client_id + DEFAULT
+        # Prioridad A: vessel_id especifico
+        rows = find_rows(vessel_id)
+        # Prioridad B: DEFAULT
         if not rows:
-            rows = find_rows(client_id, "DEFAULT")
-        # Prioridad C: DEFAULT + DEFAULT
-        if not rows:
-            rows = find_rows("DEFAULT", "DEFAULT")
+            rows = find_rows("DEFAULT")
 
         if not rows:
             return None

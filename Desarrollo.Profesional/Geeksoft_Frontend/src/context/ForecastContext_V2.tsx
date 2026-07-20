@@ -155,9 +155,9 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     const [excludedDemurrages, setExcludedDemurrages] = useState<string[]>([]);
     const [customDemurrages, setCustomDemurrages] = useState<Record<string, Record<number, string>>>({});
     const [customDemurrageDays, setCustomDemurrageDays] = useState<Record<string, Record<number, string>>>({});
-    const [portCostMode, setPortCostMode] = useState<'static' | 'matrix'>('static');
+    const [portCostMode, setPortCostMode] = useState<'static' | 'matrix'>('matrix');
     // Ref para leer portCostMode en runSimulationWith sin añadirlo como dependencia del useEffect
-    const portCostModeRef = useRef<'static' | 'matrix'>('static');
+    const portCostModeRef = useRef<'static' | 'matrix'>('matrix');
 
     const dynamicMonths = useMemo(() => {
         if (!startDate || !endDate) return [];

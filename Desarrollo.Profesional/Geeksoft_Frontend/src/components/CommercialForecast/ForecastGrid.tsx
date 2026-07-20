@@ -1,7 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronRight, ChevronLeft, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
-import { ForecastGridFilters } from './ForecastGridFilters';
 import './ForecastGrid.css';
 
 const getClientColor = (name: string) => {
@@ -671,7 +670,6 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
     return (
         <div className="flex flex-col gap-2 relative">
-            <ForecastGridFilters />
             <div className="table-container shadow-sm border border-slate-200 rounded-lg overflow-auto max-h-[75vh] bg-white relative">
                 <table id="forecast-grid-table" className="w-full text-sm text-left border-collapse">
                 <thead className="bg-slate-800 text-white uppercase font-semibold text-xs tracking-wider sticky top-0 z-20 shadow-md">
