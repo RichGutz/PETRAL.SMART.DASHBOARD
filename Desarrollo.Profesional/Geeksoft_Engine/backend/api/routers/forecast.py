@@ -550,6 +550,12 @@ def get_routes():
     try:
         from backend.database import get_supabase
         sb = get_supabase()
+        try:
+            res = sb.table("distances").select("*").execute()
+            if res.data:
+                return res.data
+        except Exception:
+            pass
         res = sb.table("routes").select("*").execute()
         return res.data
     except Exception as e:

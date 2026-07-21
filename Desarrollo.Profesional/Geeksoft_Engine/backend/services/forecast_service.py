@@ -21,6 +21,7 @@ def get_cached_masters(supabase) -> Dict[str, Any]:
     if not _masters_cache or (now - _cache_time) > CACHE_TTL:
         _masters_cache = {
             "vessels": safe_fetch(supabase, "vessels"),
+            "distances": safe_fetch(supabase, "distances") or safe_fetch(supabase, "routes"),
             "routes": safe_fetch(supabase, "routes"),
             "routes_master": safe_fetch(supabase, "routes_master"),
             "bunker_prices": safe_fetch(supabase, "bunker_prices"),
@@ -322,7 +323,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     vessels_data = masters["vessels"]
     vessels_db = {v["vessel_id"]: v for v in vessels_data}
     
-    routes_data = masters["routes"]
+    routes_data = masters.get("distances") or masters.get("routes") or []
     routes_db = {}
     for r in routes_data:
         routes_db[f"{r['port_a']}-{r['port_b']}"] = r
@@ -760,7 +761,7 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
     vessels_data = masters["vessels"]
     vessels_db = {v["vessel_id"]: v for v in vessels_data}
     
-    routes_data = masters["routes"]
+    routes_data = masters.get("distances") or masters.get("routes") or []
     routes_db = {}
     for r in routes_data:
         routes_db[f"{r['port_a']}-{r['port_b']}"] = r

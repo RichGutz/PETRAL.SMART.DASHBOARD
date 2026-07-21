@@ -48,35 +48,27 @@ Este documento define la estructura relacional definitiva del motor de **Geeksof
 
 ---
 
-### 3. Tabla: `routes` (Maestro de Tramos Marítimos)
-* `origin_port_id` *(VARCHAR, PK, FK → ports.port_id)* → Puerto base de carga (ej. 'ILO').
-* `destination_port_id` *(VARCHAR, PK, FK → ports.port_id)* → Puerto de destino (ej. 'MATARANI', 'MARCONA', 'MEJILLONES').
+### 3. Tabla: `distances` / `routes` (Maestro de Distancias Náuticas y Clima)
+*Almacena la matriz física de distancias marítimas y fricción climática entre pares de puertos Origen ➔ Destino.*
+* `origin_port_id` / `port_a` *(VARCHAR, PK, FK → ports.port_id)* → Puerto base de carga (ej. 'ILO').
+* `destination_port_id` / `port_b` *(VARCHAR, PK, FK → ports.port_id)* → Puerto de destino (ej. 'MATARANI', 'MARCONA', 'MEJILLONES').
 * `route_distance` *(NUMERIC)* → Distancia oficial medida en millas náuticas (NM).
-* `weather_factor_laden` *(NUMERIC)* → Porcentaje de fricción operativa ambiental (pierna única; usar `weather_factor_laden` y `weather_factor_ballast` en el motor para viaje redondo).
+* `weather_factor_laden` *(NUMERIC)* → Porcentaje de fricción operativa ambiental (pierna cargada).
+* `weather_factor_ballast` *(NUMERIC)* → Porcentaje de fricción operativa ambiental (pierna en vacío).
 * `color_hex` *(VARCHAR(7))* → Código de color de UI para el Dashboard (ej. "#06B6D4").
-* `pais` *(TEXT, DEFAULT 'Peru')* → País del puerto de destino. **Regla de negocio:** `Mejillones` y `Barquito` = `'Chile'`; todos los demás puertos = `'Peru'`. Usado para clasificar operaciones como **Cabotaje** (Perú) vs. **exportación** (Chile) en el Análisis Gráfico.
+* `pais` *(TEXT, DEFAULT 'Peru')* → País del puerto de destino (`'Chile'` para Mejillones/Barquito; `'Peru'` en el resto).
 
-> ⚠️ Los límites físicos de terminales **NO** se almacenan aquí para evitar duplicación (3NF). Viven en la tabla `ports`.
+> 📌 **Nota de Arquitectura:** En la base de datos Supabase, esta matriz física se consulta prioritariamente como **`distances`** (con alias de compatibilidad en `routes`) para evitar confusión conceptual con las rutas completas de viaje que residen en **`routes_master`**.
 
 ---
 
-### 3.1. Tabla: `routes_spot` (Rutas Spot Multileg — Catálogo de Cotizaciones Complejas)
-*Almacena rutas de múltiples piernas (posicionamiento + laden + retorno) diseñadas para clientes como NEXA con operaciones de exportación multiescala. Cada registro representa una ruta guardada desde el Ruteador Spot.*
-* `spot_id` *(UUID, PK, DEFAULT gen_random_uuid())* → Identificador técnico único autogenerado.
-* `name` *(VARCHAR, NOT NULL)* → Nombre amigable asignado por el usuario al grabar la ruta (ej. `'NEXA.ILO.CALLAO.MEJILLONES.ILO'`). **Es la clave funcional usada en la Matriz Financiera** — se prefija con `SPOT-` para identificar el motor paralelo.
+### 3.1. Tabla: `routes_master` (Maestro Unificado de Rutas y Cotizaciones Spot Multileg)
+*Almacena el catálogo unificado de circuitos navieros completos de múltiples piernas (posicionamiento + laden + retorno). Cada registro representa una ruta guardada desde el Ruteador Spot / Multicotizador o una ruta fija contractual.*
+* `route_id` / `spot_id` *(UUID, PK, DEFAULT gen_random_uuid())* → Identificador técnico único.
+* `name` *(VARCHAR, NOT NULL)* → Nombre amigable del circuito (ej. `'SPCC.ILO.MATARANI.ILO'`). Es la clave funcional usada en la Matriz Financiera.
 * `description` *(VARCHAR)* → Autor o descripción libre de la ruta.
-* `legs_data` *(JSONB, NOT NULL)* → Estructura completa de la ruta:
-  ```json
-  {
-    "vessel_id": "TABLONES",
-    "legs": {
-      "positioning": { "origin_port_id": "...", "destination_port_id": "...", ... },
-      "laden":       { "origin_port_id": "ILO", "destination_port_id": "MEJILLONES", "quantity": 12000, ... },
-      "return":      { "origin_port_id": "MEJILLONES", "destination_port_id": "ILO", ... }
-    }
-  }
-  ```
-* `pais` *(TEXT, DEFAULT 'Peru')* → País de destino de la operación de exportación. **Regla de negocio:** se infiere automáticamente del `destination_port_id` de la **pierna laden** al guardar la ruta. Si el puerto destino laden es `MEJILLONES` o `BARQUITO` → `'Chile'`; caso contrario → `'Peru'`. Permite clasificar operaciones en el filtro **Tipo Op.** del Análisis Gráfico (Cabotaje = Perú / Chile).
+* `legs_data` *(JSONB, NOT NULL)* → Estructura completa del viaje en formato JSONB.
+* `pais` *(TEXT, DEFAULT 'Peru')* → País de destino de la operación.
 * `created_at` *(TIMESTAMPTZ, DEFAULT now())* → Timestamp de creación del registro.
 
 > 🔀 **Motor Paralelo:** Las líneas de proyección en `commercial_forecasts` que usan `origin_port_id = 'SPOT'` hacen join lógico contra esta tabla por el campo `name` (prefijado como `SPOT-{name}`) para ejecutar `calculate_spot_multileg` en lugar del motor estándar `calculate_voyage_pnl`.
