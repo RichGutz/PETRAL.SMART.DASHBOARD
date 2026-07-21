@@ -289,8 +289,8 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
         ag_res = sb.table("port_cost_static").select("*").execute()
         agency_matrix_data = ag_res.data
         
-        # 3. Obtener rutas para autocompletar distancia y weather factor
-        routes_res = sb.table("routes").select("*").execute()
+        # 3. Obtener distancias para autocompletar distancia y weather factor
+        routes_res = sb.table("distances").select("*").execute()
         routes_db = routes_res.data
         
         # 4. Obtener puertos para overheads
@@ -502,10 +502,14 @@ def save_spot_voyage(request: SpotSaveRequest):
             "pais": request.pais
         }
         
-        res = sb.table("routes_master").insert(payload).execute()
+        target_table = "routes_prospects" if request.is_prospect else "routes_clients"
+        res = sb.table(target_table).insert(payload).execute()
+        if not res.data:
+            res = sb.table("routes_master").insert(payload).execute()
         if not res.data:
             raise Exception("Failed to save spot route")
-        return {"status": "success", "spot_id": res.data[0]["route_id"]}
+        spot_id = res.data[0].get("client_route_id") or res.data[0].get("prospect_route_id") or res.data[0].get("route_id") or res.data[0].get("spot_id")
+        return {"status": "success", "spot_id": spot_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -550,13 +554,7 @@ def get_routes():
     try:
         from backend.database import get_supabase
         sb = get_supabase()
-        try:
-            res = sb.table("distances").select("*").execute()
-            if res.data:
-                return res.data
-        except Exception:
-            pass
-        res = sb.table("routes").select("*").execute()
+        res = sb.table("distances").select("*").execute()
         return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -607,7 +605,7 @@ def save_routes(payload: List[RouteUpdate]):
             ports_to_insert = [{"port_id": p, "name": p} for p in missing_ports]
             sb.table("ports").insert(ports_to_insert).execute()
             
-        res = sb.table("routes").upsert(data_to_upsert).execute()
+        res = sb.table("distances").upsert(data_to_upsert).execute()
         return {"status": "success", "data": res.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -617,8 +615,15 @@ def list_spot_voyages():
     try:
         from backend.database import get_supabase
         sb = get_supabase()
-        res = sb.table("routes_master").select("*, spot_id:route_id").order("created_at", desc=True).execute()
-        return res.data
+        res_clients = sb.table("routes_clients").select("*, spot_id:client_route_id").order("created_at", desc=True).execute().data or []
+        res_prospects = sb.table("routes_prospects").select("*, spot_id:prospect_route_id").order("created_at", desc=True).execute().data or []
+        
+        # Combine list
+        all_routes = res_clients + res_prospects
+        if not all_routes:
+            res = sb.table("routes_master").select("*, spot_id:route_id").order("created_at", desc=True).execute()
+            return res.data
+        return all_routes
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

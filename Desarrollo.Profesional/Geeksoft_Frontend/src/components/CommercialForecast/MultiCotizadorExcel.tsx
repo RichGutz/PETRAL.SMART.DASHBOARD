@@ -814,18 +814,21 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 };
             });
 
+            const isClientProspect = rawClients.find((c: any) => c.client_id === selectedClient)?.is_prospect || false;
+
             const payload = {
                 name: routeName,
-                description: "Ruta de Multicotizador",
+                description: isClientProspect ? "Ruta Prospecto Spot" : "Ruta Cliente Regular",
                 pais,
+                is_prospect: isClientProspect,
                 legs_data: {
                     is_multicotizador: true,
-                    vessel_id: selectedVessel,
+                    vessel_id: isClientProspect ? selectedVessel : undefined,
                     bunker_price_ifo: bunkerPriceIfo,
                     bunker_price_mdo: bunkerPriceMdo,
                     tramos: tramosEnriquecidos,    // ← paquete completo para el engine
                     puertosConfig,                 // ← configuración visual de cada puerto
-                    vesselParams,                  // ← particularidades del buque
+                    vesselParams: isClientProspect ? vesselParams : undefined,
                     addressCommPct,                // ← comisión de dirección (%)
                     brokerCommPct                  // ← comisión de corretaje (%)
                 }

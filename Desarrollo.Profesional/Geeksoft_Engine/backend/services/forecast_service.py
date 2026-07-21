@@ -21,8 +21,9 @@ def get_cached_masters(supabase) -> Dict[str, Any]:
     if not _masters_cache or (now - _cache_time) > CACHE_TTL:
         _masters_cache = {
             "vessels": safe_fetch(supabase, "vessels"),
-            "distances": safe_fetch(supabase, "distances") or safe_fetch(supabase, "routes"),
-            "routes": safe_fetch(supabase, "routes"),
+            "distances": safe_fetch(supabase, "distances"),
+            "routes_clients": safe_fetch(supabase, "routes_clients"),
+            "routes_prospects": safe_fetch(supabase, "routes_prospects"),
             "routes_master": safe_fetch(supabase, "routes_master"),
             "bunker_prices": safe_fetch(supabase, "bunker_prices"),
             "ports": safe_fetch(supabase, "ports"),
@@ -323,12 +324,14 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     vessels_data = masters["vessels"]
     vessels_db = {v["vessel_id"]: v for v in vessels_data}
     
-    routes_data = masters.get("distances") or masters.get("routes") or []
+    routes_data = masters.get("distances") or []
     routes_db = {}
     for r in routes_data:
         routes_db[f"{r['port_a']}-{r['port_b']}"] = r
     
-    routes_master_data = masters["routes_master"]
+    routes_clients_data = masters.get("routes_clients") or []
+    routes_prospects_data = masters.get("routes_prospects") or []
+    routes_master_data = routes_clients_data + routes_prospects_data or masters.get("routes_master") or []
     
     bunker_data = masters["bunker_prices"]
     # Asegurar que se tome el precio con la fecha más reciente ordenando ascendentemente
@@ -761,12 +764,14 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
     vessels_data = masters["vessels"]
     vessels_db = {v["vessel_id"]: v for v in vessels_data}
     
-    routes_data = masters.get("distances") or masters.get("routes") or []
+    routes_data = masters.get("distances") or []
     routes_db = {}
     for r in routes_data:
         routes_db[f"{r['port_a']}-{r['port_b']}"] = r
     
-    routes_master_data = masters["routes_master"]
+    routes_clients_data = masters.get("routes_clients") or []
+    routes_prospects_data = masters.get("routes_prospects") or []
+    routes_master_data = routes_clients_data + routes_prospects_data or masters.get("routes_master") or []
     
     bunker_data = masters["bunker_prices"]
     bunker_data = sorted(bunker_data, key=lambda x: x.get("date", "2000-01-01"))
