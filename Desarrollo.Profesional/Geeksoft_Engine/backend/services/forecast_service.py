@@ -460,7 +460,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     if laden_tramos:
                         first_o = (laden_tramos[0].get("origin_port_id") or "").upper()
                         last_d = (laden_tramos[-1].get("destination_port_id") or "").upper()
-                        if first_o == line.origin_port_id.upper() and last_d == line.destination_port_id.upper():
+                        if last_d == line.destination_port_id.upper() or (first_o == line.origin_port_id.upper() and last_d == line.destination_port_id.upper()):
                             spot_route = s
                             break
 
@@ -892,7 +892,7 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                     if laden_tramos:
                         first_o = (laden_tramos[0].get("origin_port_id") or "").upper()
                         last_d = (laden_tramos[-1].get("destination_port_id") or "").upper()
-                        if first_o == line.origin_port_id.upper() and last_d == line.destination_port_id.upper():
+                        if last_d == line.destination_port_id.upper() or (first_o == line.origin_port_id.upper() and last_d == line.destination_port_id.upper()):
                             spot_route = s
                             break
 
