@@ -207,8 +207,10 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
         setRunResult(null);
 
         try {
+            const selectedVessel = vessels.find(v => (v.vessel_id || v.id) === selectedVesselId) || {};
             const payload = {
                 vessel_id: selectedVesselId,
+                vessel_params: selectedVessel,
                 tramos: tramos,
                 port_cost_mode: localPortCostMode
             };

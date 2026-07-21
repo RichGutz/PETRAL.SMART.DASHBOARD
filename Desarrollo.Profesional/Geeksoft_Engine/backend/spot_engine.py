@@ -255,6 +255,20 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
     vessel = payload.get("vessel_params", {})
     tramos = payload.get("tramos", [])
     
+    vessel_id_val = payload.get("vessel_id") or vessel.get("vessel_id") or vessel.get("id")
+    if vessel_id_val and (not vessel or not vessel.get("consumption_sea_ifo")):
+        try:
+            from backend.database import get_supabase
+            from backend.services.forecast_service import get_cached_masters
+            sb = get_supabase()
+            masters = get_cached_masters(sb)
+            v_list = masters.get("vessels", [])
+            found_v = next((v for v in v_list if (v.get("vessel_id") or "").upper() == str(vessel_id_val).upper() or (v.get("vessel_name") or "").upper() == str(vessel_id_val).upper()), {})
+            if found_v:
+                vessel = {**found_v, **vessel}
+        except Exception:
+            pass
+    
     speed = float(vessel.get("vessel_speed") or vessel.get("speed") or 11.0)
     tce_req = float(vessel.get("tce_required") or 0)
     
