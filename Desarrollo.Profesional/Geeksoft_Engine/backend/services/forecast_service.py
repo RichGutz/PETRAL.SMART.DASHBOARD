@@ -484,10 +484,14 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
 
                 # --- VESSEL PARAMS: usar los del legs_data si existen (buque personalizado) ---
                 saved_vparams = legs_data.get("vesselParams", {})
-                if saved_vparams and saved_vparams.get("vessel_id"):
-                    vparams = copy.deepcopy(saved_vparams)
-                else:
-                    vparams = copy.deepcopy(v_data)
+                vparams = copy.deepcopy(v_data)
+                if saved_vparams:
+                    for k, v in saved_vparams.items():
+                        if v is not None and v != "":
+                            vparams[k] = v
+                            if k.startswith("bunker_consumption_"):
+                                short_k = k.replace("bunker_consumption_", "consumption_")
+                                vparams[short_k] = v
 
                 # --- BUNKER: usar precios dinámicos de la simulación ---
                 final_p_ifo = p_ifo

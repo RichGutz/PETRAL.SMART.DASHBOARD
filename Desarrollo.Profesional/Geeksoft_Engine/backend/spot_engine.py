@@ -255,21 +255,21 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
     vessel = payload.get("vessel_params", {})
     tramos = payload.get("tramos", [])
     
-    speed = float(vessel.get("vessel_speed", 11.0))
-    tce_req = float(vessel.get("tce_required", 0))
+    speed = float(vessel.get("vessel_speed") or vessel.get("speed") or 11.0)
+    tce_req = float(vessel.get("tce_required") or 0)
     
-    p_ifo = float(vessel.get("bunker_price_ifo") or 600)
-    p_mdo = float(vessel.get("bunker_price_mdo") or 900)
+    p_ifo = float(vessel.get("bunker_price_ifo") or vessel.get("p_ifo") or 895.14)
+    p_mdo = float(vessel.get("bunker_price_mdo") or vessel.get("p_mdo") or 1460.30)
     
-    c_sea_ifo = float(vessel.get("consumption_sea_ifo") or 0)
-    c_idle_ifo = float(vessel.get("consumption_idle_ifo") or 0)
-    c_load_ifo = float(vessel.get("consumption_load_ifo") or 0)
-    c_disch_ifo = float(vessel.get("consumption_disch_ifo") or 0)
+    c_sea_ifo = float(vessel.get("consumption_sea_ifo") or vessel.get("bunker_consumption_sea_ifo") or 0)
+    c_idle_ifo = float(vessel.get("consumption_idle_ifo") or vessel.get("bunker_consumption_idle_ifo") or 0)
+    c_load_ifo = float(vessel.get("consumption_load_ifo") or vessel.get("bunker_consumption_load_ifo") or 0)
+    c_disch_ifo = float(vessel.get("consumption_disch_ifo") or vessel.get("bunker_consumption_disch_ifo") or 0)
     
-    c_sea_mdo = float(vessel.get("consumption_sea_mdo") or 0)
-    c_idle_mdo = float(vessel.get("consumption_idle_mdo") or 0)
-    c_load_mdo = float(vessel.get("consumption_load_mdo") or 0)
-    c_disch_mdo = float(vessel.get("consumption_disch_mdo") or 0)
+    c_sea_mdo = float(vessel.get("consumption_sea_mdo") or vessel.get("bunker_consumption_sea_mdo") or 0)
+    c_idle_mdo = float(vessel.get("consumption_idle_mdo") or vessel.get("bunker_consumption_idle_mdo") or 0)
+    c_load_mdo = float(vessel.get("consumption_load_mdo") or vessel.get("bunker_consumption_load_mdo") or 0)
+    c_disch_mdo = float(vessel.get("consumption_disch_mdo") or vessel.get("bunker_consumption_disch_mdo") or 0)
 
     # --- FORMATTING HELPERS ---
     def fmt(val): return f"{val:,.0f}" if val > 0 else "0"
