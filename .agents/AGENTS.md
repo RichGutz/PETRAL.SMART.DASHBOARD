@@ -9,3 +9,8 @@
   3. `cd C:\Users\rguti\PETRAL.SMART.DASHBOARD\Push.VPS`
   4. `python deploy_forecast_kickoff.py`
 </RULE[deployment_vps]>
+
+<RULE[markdown_pdf_conversion]>
+- **NO** convertir archivos Markdown (.md) a PDF automáticamente. Solo generar o convertir a PDF cuando el usuario lo solicite de manera explícita y directa.
+</RULE[markdown_pdf_conversion]>
+
