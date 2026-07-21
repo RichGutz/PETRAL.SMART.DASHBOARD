@@ -564,6 +564,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     "pl_vs_required": round(pnl_after_comm - (total_days * tce_req), 2),
                     "tce_real": round(tce_real, 2),
                     "total_duration": total_days,
+                    "total_distance": consolidated.get("total_distance", 0),
                     "sea_days": consolidated.get("total_sea_days", 0),
                     "port_days": consolidated.get("total_port_days", 0),
                     "bunker_ifo_tonnage": consolidated.get("bunker_ifo_tonnage", 0),
