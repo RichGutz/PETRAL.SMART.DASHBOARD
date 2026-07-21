@@ -81,7 +81,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
     // Identificar si la ruta seleccionada es una ruta multicotizador compleja
     const matchedSpot = useMemo(() => {
-        if (!client || !route || !vessel) return null;
+        if (!client || !route) return null;
         const ports = route.split('-');
         if (ports.length < 2) return null;
         const orig = ports[0].toUpperCase();
@@ -89,13 +89,16 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
         return spotRoutes.find(s => {
             const name = (s.name || "").toUpperCase();
-            if (!name.startsWith(`${client.toUpperCase()}.`) || !name.endsWith(`.${vessel.toUpperCase()}`)) return false;
+            if (!name.startsWith(`${client.toUpperCase()}.`)) return false;
 
             const tramos = s.legs_data?.tramos || [];
             const laden = tramos.filter((t: any) => t.type?.toUpperCase() === 'LADEN');
             if (laden.length === 0) return false;
 
-            return laden[0].origin_port_id?.toUpperCase() === orig && laden[laden.length - 1].destination_port_id?.toUpperCase() === dest;
+            const firstOrig = laden[0].origin_port_id?.toUpperCase();
+            const lastDest = laden[laden.length - 1].destination_port_id?.toUpperCase();
+
+            return firstOrig === orig && lastDest === dest;
         });
     }, [client, route, vessel, spotRoutes]);
 

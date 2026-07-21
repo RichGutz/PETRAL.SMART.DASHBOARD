@@ -445,13 +445,28 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         
         if is_spot_route:
             spot_id = line.destination_port_id
-            spot_route = next((s for s in routes_master_data if s.get("route_id") == spot_id or s.get("name") == spot_id), {})
+            spot_route = next((s for s in routes_master_data if s.get("route_id") == spot_id or s.get("name") == spot_id or s.get("client_route_id") == spot_id or s.get("prospect_route_id") == spot_id), {})
         else:
             lookup_key = f"{client.upper()}.{line.origin_port_id.upper()}.{line.destination_port_id.upper()}.{line.origin_port_id.upper()}.{vessel.upper()}"
             spot_route = next((s for s in routes_master_data if s.get("name", "").upper() == lookup_key), None)
+            
+            if not spot_route:
+                for s in routes_master_data:
+                    s_name = (s.get("name") or "").upper()
+                    if not s_name.startswith(f"{client.upper()}."):
+                        continue
+                    tramos_list = s.get("legs_data", {}).get("tramos", [])
+                    laden_tramos = [t for t in tramos_list if t.get("type", "").upper() == "LADEN"]
+                    if laden_tramos:
+                        first_o = (laden_tramos[0].get("origin_port_id") or "").upper()
+                        last_d = (laden_tramos[-1].get("destination_port_id") or "").upper()
+                        if first_o == line.origin_port_id.upper() and last_d == line.destination_port_id.upper():
+                            spot_route = s
+                            break
+
             if spot_route:
                 is_spot_route = True
-                spot_id = spot_route.get("route_id") or spot_route.get("name")
+                spot_id = spot_route.get("route_id") or spot_route.get("client_route_id") or spot_route.get("prospect_route_id") or spot_route.get("name")
         
         if is_spot_route and spot_route:
             legs_data = spot_route.get("legs_data", {})
@@ -861,13 +876,28 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
         
         if is_spot_route:
             spot_id = line.destination_port_id
-            spot_route = next((s for s in routes_master_data if s.get("route_id") == spot_id or s.get("name") == spot_id), {})
+            spot_route = next((s for s in routes_master_data if s.get("route_id") == spot_id or s.get("name") == spot_id or s.get("client_route_id") == spot_id or s.get("prospect_route_id") == spot_id), {})
         else:
             lookup_key = f"{client.upper()}.{line.origin_port_id.upper()}.{line.destination_port_id.upper()}.{line.origin_port_id.upper()}.{vessel.upper()}"
             spot_route = next((s for s in routes_master_data if s.get("name", "").upper() == lookup_key), None)
+            
+            if not spot_route:
+                for s in routes_master_data:
+                    s_name = (s.get("name") or "").upper()
+                    if not s_name.startswith(f"{client.upper()}."):
+                        continue
+                    tramos_list = s.get("legs_data", {}).get("tramos", [])
+                    laden_tramos = [t for t in tramos_list if t.get("type", "").upper() == "LADEN"]
+                    if laden_tramos:
+                        first_o = (laden_tramos[0].get("origin_port_id") or "").upper()
+                        last_d = (laden_tramos[-1].get("destination_port_id") or "").upper()
+                        if first_o == line.origin_port_id.upper() and last_d == line.destination_port_id.upper():
+                            spot_route = s
+                            break
+
             if spot_route:
                 is_spot_route = True
-                spot_id = spot_route.get("route_id") or spot_route.get("name")
+                spot_id = spot_route.get("route_id") or spot_route.get("client_route_id") or spot_route.get("prospect_route_id") or spot_route.get("name")
         
         if is_spot_route and spot_route:
             legs_data = spot_route.get("legs_data", {})
