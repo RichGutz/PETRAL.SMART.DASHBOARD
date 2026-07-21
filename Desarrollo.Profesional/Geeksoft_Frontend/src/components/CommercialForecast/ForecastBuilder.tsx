@@ -109,18 +109,18 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     // Filtrar las rutas disponibles comercialmente para el cliente activo
     const clientRoutes = useMemo(() => {
         if (!client) return [];
+        const cleanClient = client.trim().toUpperCase();
         const routesMap = new Map<string, string>();
 
-        if (client === 'SPCC') {
+        if (cleanClient === 'SPCC') {
             routesMap.set('ILO-MATARANI', 'ILO-MATARANI');
             routesMap.set('ILO-MARCONA', 'ILO-MARCONA');
             routesMap.set('ILO-MEJILLONES', 'ILO-MEJILLONES');
-            return Array.from(routesMap.values());
         }
 
         spotRoutes.forEach(s => {
-            const name = s.name || "";
-            if (name.toUpperCase().startsWith(`${client.toUpperCase()}.`)) {
+            const name = (s.name || "").trim().toUpperCase();
+            if (name.startsWith(`${cleanClient}.`) || name.startsWith(`${cleanClient}_`)) {
                 const tramos = s.legs_data?.tramos || [];
                 const laden = tramos.filter((t: any) => t.type?.toUpperCase() === 'LADEN');
                 if (laden.length > 0) {
@@ -128,9 +128,24 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     const dest = laden[laden.length - 1].destination_port_id;
                     const key = `${orig}-${dest}`;
                     routesMap.set(key, key);
+                } else if (s.origin_port_id && s.destination_port_id) {
+                    const key = `${s.origin_port_id}-${s.destination_port_id}`;
+                    routesMap.set(key, key);
                 }
             }
         });
+
+        if (routesMap.size === 0) {
+            if (cleanClient === 'NEXA') {
+                routesMap.set('CALLAO-MEJILLONES', 'CALLAO-MEJILLONES');
+                routesMap.set('CALLAO-MATARANI', 'CALLAO-MATARANI');
+                routesMap.set('CALLAO-MARCONA', 'CALLAO-MARCONA');
+            } else if (cleanClient.startsWith('SPOT')) {
+                routesMap.set('CALLAO-MEJILLONES', 'CALLAO-MEJILLONES');
+                routesMap.set('ILO-MATARANI', 'ILO-MATARANI');
+                routesMap.set('ILO-MEJILLONES', 'ILO-MEJILLONES');
+            }
+        }
 
         return Array.from(routesMap.values());
     }, [client, spotRoutes]);
@@ -162,16 +177,9 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
             const yieldFlete = totalQty > 0 ? (totalRevenue / totalQty) : 0;
             if (yieldFlete > 0) {
                 setCustomTariff(yieldFlete.toFixed(2));
-            } else {
-                setCustomTariff('');
             }
-        } else if (client === 'NEXA' && route && !isComplexRoute) {
-            // Si es ruta Spot tradicional, limpiar para que el usuario defina manualmente
-            setVessel('');
-            setQuantity('');
-            setCustomTariff('');
         }
-    }, [isComplexRoute, matchedSpot, client, route, vessel]);
+    }, [isComplexRoute, matchedSpot, client, route]);
 
     const formatMonthPill = (yyyymm: string) => {
         const [y, m] = yyyymm.split('-');
