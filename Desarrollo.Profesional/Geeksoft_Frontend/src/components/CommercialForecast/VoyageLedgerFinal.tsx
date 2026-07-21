@@ -114,7 +114,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             setLegsConfig([]);
             return;
         }
-        const route = routes.find(r => r.route_id === selectedRouteId);
+        const route = routes.find(r => (r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id) === selectedRouteId);
         if (!route || !route.legs_data || !route.legs_data.tramos) return;
         
         const tramos = route.legs_data.tramos;
@@ -147,7 +147,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
         newConf[idx].quantity = val;
         
         if (newConf[idx].action === 'CARGAR') {
-            const route = routes.find(r => r.route_id === selectedRouteId);
+            const route = routes.find(r => (r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id) === selectedRouteId);
             if (route) {
                 const client = (route.name || "").split('.')[0];
                 const tr = route.legs_data.tramos.find((t:any) => t.origin_port_id === newConf[idx].port_id);
@@ -184,7 +184,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             return;
         }
 
-        const route = routes.find(r => r.route_id === selectedRouteId);
+        const route = routes.find(r => (r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id) === selectedRouteId);
         const tramos = JSON.parse(JSON.stringify(route.legs_data.tramos));
         
         for (let i = 0; i < tramos.length; i++) {
@@ -525,9 +525,10 @@ const renderScenarioContent = (
                             <SelectValue placeholder="Seleccione una ruta" />
                         </SelectTrigger>
                         <SelectContent>
-                            {routes.map(r => (
-                                <SelectItem key={r.route_id} value={r.route_id}>{r.name}</SelectItem>
-                            ))}
+                            {routes.map((r, rIdx) => {
+                                const idVal = r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id || `route-${rIdx}`;
+                                return <SelectItem key={idVal} value={idVal}>{r.name}</SelectItem>;
+                            })}
                         </SelectContent>
                     </Select>
                 </div>
