@@ -257,9 +257,18 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
             vessel_params = v_res.data[0]
         
         # Inyectar precios de bunker e incorporar overrides de particularidades y consumos del request
-        if request.bunker_price_ifo is not None:
+        # Obtener precios de bunker actualizados si no vienen en la petición
+        from backend.services.forecast_service import get_latest_bunker_prices
+        bp_latest = get_latest_bunker_prices()
+        if bp_latest:
+            if vessel_params.get("bunker_price_ifo") is None or float(vessel_params.get("bunker_price_ifo") or 0) <= 0:
+                vessel_params["bunker_price_ifo"] = float(bp_latest.get("bunker_price_ifo", 895.14))
+            if vessel_params.get("bunker_price_mdo") is None or float(vessel_params.get("bunker_price_mdo") or 0) <= 0:
+                vessel_params["bunker_price_mdo"] = float(bp_latest.get("bunker_price_mdo", 1460.30))
+
+        if request.bunker_price_ifo is not None and request.bunker_price_ifo > 0:
             vessel_params["bunker_price_ifo"] = request.bunker_price_ifo
-        if request.bunker_price_mdo is not None:
+        if request.bunker_price_mdo is not None and request.bunker_price_mdo > 0:
             vessel_params["bunker_price_mdo"] = request.bunker_price_mdo
         if request.vessel_speed is not None and request.vessel_speed > 0:
             vessel_params["vessel_speed"] = request.vessel_speed
@@ -297,41 +306,64 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
         for tr in request.tramos:
             tr_dict = tr.dict()
             
-            # Autocompletar distancia y weather_factor si no vienen o son 0
-            if tr_dict.get("route_distance", 0) <= 0 or tr_dict.get("weather_factor", 0) <= 0:
-                matched_route = None
-                port1, port2 = sorted([tr.origin_port_id, tr.destination_port_id])
-                for r in routes_db:
-                    if r.get("port_a") == port1 and r.get("port_b") == port2:
-                        matched_route = r
-                        break
-                if matched_route:
-                    if tr_dict.get("route_distance", 0) <= 0:
-                        tr_dict["route_distance"] = float(matched_route.get("route_distance", 0))
-                    if tr_dict.get("weather_factor", 0) <= 0:
-                        wf_key = "weather_factor_laden" if tr.type.upper() == "LADEN" else "weather_factor_ballast"
-                        tr_dict["weather_factor"] = float(matched_route.get(wf_key, matched_route.get("weather_factor", 0.05)))
-                else:
-                    if tr_dict.get("route_distance", 0) <= 0:
-                        tr_dict["route_distance"] = 100.0
-                    if tr_dict.get("weather_factor", 0) <= 0:
-                        tr_dict["weather_factor"] = 0.05
+            # SIEMPRE consultar la tabla routes (fuente de verdad para distancias y weather_factor)
+            # Schema real de BD: columnas port_a y port_b (no origin/destination_port_id)
+            orig = tr.origin_port_id
+            dest = tr.destination_port_id
+            matched_route = None
+            for r in routes_db:
+                # La tabla routes usa port_a y port_b — búsqueda bidireccional
+                r_a = r.get("port_a", "")
+                r_b = r.get("port_b", "")
+                if (r_a == orig and r_b == dest) or (r_a == dest and r_b == orig):
+                    matched_route = r
+                    break
+            if matched_route:
+                # Override incondicional desde la tabla routes
+                tr_dict["route_distance"] = float(matched_route.get("route_distance", tr_dict.get("route_distance", 100.0)))
+                # La BD tiene weather_factor_laden y weather_factor_ballast separados
+                wf_key = "weather_factor_laden" if tr.type.upper() == "LADEN" else "weather_factor_ballast"
+                tr_dict["weather_factor"] = float(matched_route.get(wf_key, matched_route.get("weather_factor", 0.05)))
+            else:
+                # Fallback: si no hay match en routes, usar lo que vino en el request o defaults
+                if tr_dict.get("route_distance", 0) <= 0:
+                    tr_dict["route_distance"] = 100.0
+                if tr_dict.get("weather_factor", 0) <= 0:
+                    tr_dict["weather_factor"] = 0.05
                         
             # Autocompletar limites y otros usando ports
             orig_port_info = ports_db.get(tr.origin_port_id, {})
             dest_port_info = ports_db.get(tr.destination_port_id, {})
-            
-            # Buscar contrato para overheads y posicionamientos
+                       # Buscar contrato para overheads y posicionamientos
             contract = next((c for c in contracts_db if c.get("origin_port_id") == tr.origin_port_id and c.get("destination_port_id") == tr.destination_port_id and c.get("is_active") is True), None)
             
-            tr_dict["port_overhead_hours_origin"] = tr.port_overhead_hours_origin if tr.port_overhead_hours_origin is not None else float(contract.get("time_to_count_carga_hrs") if contract and contract.get("time_to_count_carga_hrs") is not None else 6.0)
-            tr_dict["port_overhead_hours_dest"] = tr.port_overhead_hours_dest if tr.port_overhead_hours_dest is not None else float(contract.get("time_to_count_descarga_hrs") if contract and contract.get("time_to_count_descarga_hrs") is not None else 6.0)
-            tr_dict["positioning_carga_hrs"] = tr.positioning_carga_hrs if tr.positioning_carga_hrs is not None else float(contract.get("maneuver_carga_hrs") if contract and contract.get("maneuver_carga_hrs") is not None else 0.0)
-            tr_dict["positioning_descarga_hrs"] = tr.positioning_descarga_hrs if tr.positioning_descarga_hrs is not None else float(contract.get("maneuver_descarga_hrs") if contract and contract.get("maneuver_descarga_hrs") is not None else 0.0)
+            # Si el contrato existe, priorizar sus valores si no vienen o son 0
+            time_load_hrs = float(contract.get("time_to_count_carga_hrs") if contract and contract.get("time_to_count_carga_hrs") is not None else 6.0)
+            time_disch_hrs = float(contract.get("time_to_count_descarga_hrs") if contract and contract.get("time_to_count_descarga_hrs") is not None else 6.0)
+            manuever_load_hrs = float(contract.get("maneuver_carga_hrs") if contract and contract.get("maneuver_carga_hrs") is not None else 1.0)
+            manuever_disch_hrs = float(contract.get("maneuver_descarga_hrs") if contract and contract.get("maneuver_descarga_hrs") is not None else 0.0)
+            load_rate_contract = float(contract.get("load_rate") if contract and contract.get("load_rate") is not None else 500.0)
+            disch_rate_contract = float(contract.get("discharge_rate") if contract and contract.get("discharge_rate") is not None else 345.0)
+
+            po_or = tr_dict.get("port_overhead_hours_origin")
+            po_de = tr_dict.get("port_overhead_hours_dest")
+            pos_c = tr_dict.get("positioning_carga_hrs")
+            pos_d = tr_dict.get("positioning_descarga_hrs")
+            c_lr = tr_dict.get("contract_agreed_load_rate")
+            c_dr = tr_dict.get("contract_agreed_discharge_rate")
+
+            tr_dict["port_overhead_hours_origin"] = float(po_or) if (po_or is not None and float(po_or) > 0) else time_load_hrs
+            tr_dict["port_overhead_hours_dest"] = float(po_de) if (po_de is not None and float(po_de) > 0) else time_disch_hrs
+            tr_dict["positioning_carga_hrs"] = float(pos_c) if (pos_c is not None and float(pos_c) > 0) else manuever_load_hrs
+            tr_dict["positioning_descarga_hrs"] = float(pos_d) if (pos_d is not None and float(pos_d) > 0) else manuever_disch_hrs
             
-            # Inyectar tasas acordadas del contrato (si existen)
-            tr_dict["contract_agreed_load_rate"] = float(contract.get("load_rate") if contract and contract.get("load_rate") is not None else 0.0)
-            tr_dict["contract_agreed_discharge_rate"] = float(contract.get("discharge_rate") if contract and contract.get("discharge_rate") is not None else 0.0)
+            # La Matriz de Contratos (contracts) es la fuente de verdad incondicional para los ritmos contractuales (load_rate / discharge_rate)
+            if contract:
+                tr_dict["contract_agreed_load_rate"] = load_rate_contract
+                tr_dict["contract_agreed_discharge_rate"] = disch_rate_contract
+            else:
+                tr_dict["contract_agreed_load_rate"] = float(c_lr) if (c_lr is not None and float(c_lr) > 0) else 500.0
+                tr_dict["contract_agreed_discharge_rate"] = float(c_dr) if (c_dr is not None and float(c_dr) > 0) else 345.0
 
             # Autocompletar limites físicos para Laden
             if tr.type.upper() == "LADEN":

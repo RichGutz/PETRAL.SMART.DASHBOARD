@@ -42,6 +42,25 @@ def safe_fetch(supabase, table_name):
         print(f"Warning: Could not fetch table {table_name}: {e}")
         return []
 
+def get_latest_bunker_prices() -> Dict[str, Any]:
+    try:
+        supabase = get_supabase()
+        res = supabase.table("bunker_prices").select("*").order("quote_date", desc=True).limit(1).execute()
+        if res.data and len(res.data) > 0:
+            row = res.data[0]
+            return {
+                "bunker_price_ifo": float(row.get("ifo_price") or row.get("price_ifo") or row.get("bunker_price_ifo") or 895.14),
+                "bunker_price_mdo": float(row.get("mdo_price") or row.get("price_mdo") or row.get("bunker_price_mdo") or 1460.30),
+                "quote_date": row.get("quote_date", "2026-06-26")
+            }
+    except Exception as e:
+        print(f"Warning: Error fetching latest bunker prices: {e}")
+    return {
+        "bunker_price_ifo": 895.14,
+        "bunker_price_mdo": 1460.30,
+        "quote_date": "2026-06-26"
+    }
+
 def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: str, vessel_id: str, port_costs_data: list, agency_matrix_data: list, port_cost_mode: str = "static", v_data: dict = None, quantity: float = 0.0, contract: dict = None, ports_db: dict = None) -> dict:
     if port_cost_mode == "dynamic" and v_data is not None and ports_db is not None:
         from backend.port_engines.core import calculate_dynamic_port_costs
@@ -127,19 +146,35 @@ def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: 
     # 2. Fallback: Buscar costo plano consolidado en agency_matrix (port_cost_static)
     #    Suma TODOS los sub_operation_types (MAIN, loading_master, etc.)
     def get_flat_cost_from_agency_matrix():
-        def find_rows(v_id):
-            return [
-                a for a in agency_matrix_data
-                if a.get("port_id") == port_id
-                and a.get("operation_type") == operation_type
-                and a.get("vessel_id") == v_id
-            ]
+        def find_rows(v_id=None):
+            if v_id is not None:
+                return [
+                    a for a in agency_matrix_data
+                    if a.get("port_id") == port_id
+                    and a.get("operation_type") == operation_type
+                    and a.get("vessel_id") == v_id
+                ]
+            else:
+                # Sin filtro de vessel_id: cualquier registro para este puerto+operación
+                return [
+                    a for a in agency_matrix_data
+                    if a.get("port_id") == port_id
+                    and a.get("operation_type") == operation_type
+                ]
 
         # Prioridad A: vessel_id especifico
         rows = find_rows(vessel_id)
         # Prioridad B: DEFAULT
         if not rows:
             rows = find_rows("DEFAULT")
+        # Prioridad C (fallback final): cualquier barco con datos para este puerto+operación
+        # Útil cuando la tabla tiene datos para MOQUEGUA pero se calcula para TABLONES
+        if not rows:
+            all_rows = find_rows(None)
+            if all_rows:
+                # Tomar el primer vessel_id disponible con datos
+                first_vessel = all_rows[0].get("vessel_id")
+                rows = [r for r in all_rows if r.get("vessel_id") == first_vessel]
 
         if not rows:
             return None

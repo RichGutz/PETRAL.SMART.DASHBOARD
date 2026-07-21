@@ -1,23 +1,19 @@
-import os
-from supabase import create_client
+import psycopg2
 
-env_path = 'C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/.env'
-url = None
-key = None
-with open(env_path, 'r', encoding='utf-8') as f:
-    for line in f:
-        line = line.strip()
-        if line.startswith('SUPABASE_URL='):
-            url = line.split('=', 1)[1].strip('"\' ')
-        elif line.startswith('SUPABASE_SERVICE_ROLE_KEY='):
-            key = line.split('=', 1)[1].strip('"\' ')
+conn_str = "postgresql://postgres.hjjxooxcpvlvbaxgifbn:VivaLaVida2026$@aws-1-us-east-2.pooler.supabase.com:6543/postgres"
+conn = psycopg2.connect(conn_str)
+conn.autocommit = True
+cur = conn.cursor()
 
-if url and key:
-    sb = create_client(url, key)
-    res = sb.table('contract_tariffs').select('*').limit(1).execute()
-    if res.data:
-        print('Contract Tariffs columns:', list(res.data[0].keys()))
-    else:
-        print('Contract Tariffs table empty or missing, checking schema via postgrest if possible...')
-        res = sb.table('contract_tariffs').select('*').limit(0).execute()
-        # postgrest doesn't easily return schema if empty without specific headers, but let's see what happens
+sql_query = """
+SELECT t.origin_port_id, t.destination_port_id, t.min_tonnage, t.max_tonnage, t.freight_rate
+FROM contract_tariffs t
+JOIN contracts c ON t.contract_id = c.contract_id
+WHERE c.client_id = 'SPCC';
+"""
+cur.execute(sql_query)
+for row in cur.fetchall():
+    print(row)
+
+cur.close()
+conn.close()

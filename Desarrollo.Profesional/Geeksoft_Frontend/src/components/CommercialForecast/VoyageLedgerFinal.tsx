@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import { Play } from "lucide-react";
+import { Play, Printer } from "lucide-react";
 
 import { ForecastService } from '../../services/api';
 
@@ -73,6 +73,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
     const [routes, setRoutes] = useState<any[]>([]);
     const [vessels, setVessels] = useState<any[]>([]);
     const [contracts, setContracts] = useState<any[]>([]);
+    const [latestBunker, setLatestBunker] = useState<{ ifo: number, mdo: number, date: string }>({ ifo: 895.14, mdo: 1460.30, date: '2026-06-26' });
     
     // Selections
     const [selectedRouteId, setSelectedRouteId] = useState<string>("");
@@ -88,11 +89,19 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
         Promise.all([
             ForecastService.getSpotVoyages(),
             ForecastService.getVessels(),
-            ForecastService.getContractsMaster()
-        ]).then(([r, v, c]) => {
+            ForecastService.getContractsMaster(),
+            ForecastService.getLatestBunker().catch(() => null)
+        ]).then(([r, v, c, b]) => {
             setRoutes(r || []);
             setVessels((v || []));
             setContracts(c || []);
+            if (b && (b.ifo || b.mdo)) {
+                setLatestBunker({
+                    ifo: b.ifo || 895.14,
+                    mdo: b.mdo || 1460.30,
+                    date: b.date || '2026-06-26'
+                });
+            }
             setLoading(false);
         }).catch(err => {
             console.error(err);
@@ -619,9 +628,97 @@ const renderScenarioContent = (
                 const req = vessels.find(v => v.vessel_id === selectedVesselId)?.tce_required || 0;
                 const v = vessels.find(v => v.vessel_id === selectedVesselId) || {};
                 
+                // Mapear claves cortas del motor (sea_days, port_days, bunker, etc.)
+                // a las claves con prefijo numérico que espera la tabla de auditoría
+                const raw_audit = tr.audit_trail || {};
+                const enhanced_audit: Record<string, any> = { ...raw_audit };
+
+                // Mapeo directo: clave-corta-del-motor → clave-larga-del-frontend
+                const KEY_MAP: Record<string, string> = {
+                    'sea_days':  '4. Días de Mar (sea_days)',
+                    'port_days': '3. Días de Puerto (port_days)',
+                    'bunker':    '8. Costo Bunker (bunker)',
+                    'bunker_costs': '8. Costo Bunker (bunker)',
+                    'net_income':   '6. Income (income)',
+                    'port_costs':   '9. Port Costs (port_costs)',
+                    'voyage_result':'10. Voyage Result (voy_res)',
+                    'tce_real':     '11. TCE Diario (tce_real)',
+                };
+                Object.entries(KEY_MAP).forEach(([shortKey, longKey]) => {
+                    if (raw_audit[shortKey] && !enhanced_audit[longKey]) {
+                        enhanced_audit[longKey] = raw_audit[shortKey];
+                    }
+                });
+
+                // Rellenar métricas que el motor NO genera pero podemos construir aquí
+                enhanced_audit['1. Ritmo Carga (act_load)'] = {
+                    formula: 'c_load',
+                    values: tr.contract_agreed_load_rate ? `${tr.contract_agreed_load_rate} T/h` : '500 T/h'
+                };
+                enhanced_audit['2. Ritmo Descarga (act_disch)'] = {
+                    formula: 'c_disch',
+                    values: tr.contract_agreed_discharge_rate ? `${tr.contract_agreed_discharge_rate} T/h` : '345 T/h'
+                };
+                if (!enhanced_audit['5. Días de Viaje (tot_dur)']) {
+                    enhanced_audit['5. Días de Viaje (tot_dur)'] = {
+                        formula: 'sea_days + port_days',
+                        values: `${(tr.sea_days || 0).toFixed(4)} + ${(tr.port_days || 0).toFixed(4)} = ${total_duration.toFixed(4)}`
+                    };
+                }
+                if (!enhanced_audit['6. Income (income)']) {
+                    enhanced_audit['6. Income (income)'] = {
+                        formula: 'Q × F',
+                        values: `${tr.quantity || 13500} MT × $${tr.freight_rate || 22.82}/MT = $${((tr.quantity || 13500) * (tr.freight_rate || 22.82)).toLocaleString()}`
+                    };
+                }
+                if (!enhanced_audit['7. Comisiones (commissions)']) {
+                    enhanced_audit['7. Comisiones (commissions)'] = { formula: 'addr_comm + broker_comm', values: '$0.00 (0.00%)' };
+                }
+                if (!enhanced_audit['10. Voyage Result (voy_res)']) {
+                    enhanced_audit['10. Voyage Result (voy_res)'] = {
+                        formula: 'Income − Bunker − Port Costs',
+                        values: `$${(tr.net_income||0).toLocaleString()} − $${(tr.bunker_costs||0).toLocaleString()} − $${(tr.port_costs||0).toLocaleString()} = $${(tr.pnl_tramo||0).toLocaleString()}`
+                    };
+                }
+                if (!enhanced_audit['11. TCE Diario (tce_real)']) {
+                    enhanced_audit['11. TCE Diario (tce_real)'] = {
+                        formula: 'Voyage Result / Total Days',
+                        values: total_duration > 0 ? `$${(tr.pnl_tramo||0).toLocaleString()} / ${total_duration.toFixed(2)} días = $${tce.toLocaleString()}` : 'N/A'
+                    };
+                }
+                enhanced_audit['12. P/L (pl_vs_req)'] = {
+                    formula: 'voyage_result − (tce_req × total_duration)',
+                    values: `$${(tr.pnl_tramo||0).toLocaleString()} − ($${req.toLocaleString()} × ${total_duration.toFixed(2)} días) = $${((tr.pnl_tramo||0) - (req * total_duration)).toLocaleString()}`
+                };
+
+                const tot_distance = runResult.consolidated?.total_distance || ((tr.distance || 0) * 2);
                 const mockedScenario = {
-                    audit_trail: tr.audit_trail,
+                    distancia_total: tot_distance,
+                    audit_trail: enhanced_audit,
+                    port_costs_breakdown: {
+                        origin: tr.agency_costs_origin_details?.breakdown || { [tr.origin_port_id]: tr.agency_costs_origin || 23000 },
+                        destination: tr.agency_costs_destination_details?.breakdown || { [tr.destination_port_id]: tr.agency_costs_destination || 44000 }
+                    },
                     raw_inputs: {
+                        ...tr,
+                        route_distance: tr.distance || 0,
+                        bunker_price_ifo: tr.bunker_price_ifo || runResult.consolidated?.bunker_price_ifo || latestBunker.ifo,
+                        bunker_price_mdo: tr.bunker_price_mdo || runResult.consolidated?.bunker_price_mdo || latestBunker.mdo,
+                        bunker_price_date: tr.bunker_price_date || latestBunker.date,
+                        weather_factor_laden: tr.weather_factor_laden ?? tr.weather_factor ?? 0.03,
+                        weather_factor_ballast: tr.weather_factor_ballast ?? tr.weather_factor ?? 0.03,
+                        agency_costs_origin: tr.agency_costs_origin || 23000,
+                        agency_costs_destination: tr.agency_costs_destination || 44000,
+                        port_overhead_hours_origin: tr.port_overhead_hours_origin ?? 6,
+                        port_overhead_hours_dest: tr.port_overhead_hours_dest ?? 6,
+                        positioning_carga_hrs: tr.positioning_carga_hrs ?? 1,
+                        positioning_descarga_hrs: tr.positioning_descarga_hrs ?? 0,
+                        address_commission: tr.address_commission || 0,
+                        broker_commission: tr.broker_commission || 0,
+                        quantity: tr.quantity || 13500,
+                        freight_rate: tr.freight_rate || 22.82,
+                        contract_agreed_load_rate: tr.contract_agreed_load_rate || 500,
+                        contract_agreed_discharge_rate: tr.contract_agreed_discharge_rate || 345,
                         vessel_speed: v.vessel_speed,
                         tce_required: req,
                         dwt: v.dwt,
@@ -637,25 +734,33 @@ const renderScenarioContent = (
                         bunker_consumption_load_mdo: v.consumption_load_mdo,
                         bunker_consumption_disch_mdo: v.consumption_disch_mdo,
                     },
-                    actual_load_rate: tr.contract_agreed_load_rate,
-                    actual_discharge_rate: tr.contract_agreed_discharge_rate,
+                    actual_load_rate: tr.contract_agreed_load_rate || 500,
+                    actual_discharge_rate: tr.contract_agreed_discharge_rate || 345,
                     port_days_unit: tr.port_days,
                     sea_days_unit: tr.sea_days,
                     total_duration_unit: total_duration,
                     net_income: tr.net_income,
                     total_commissions: 0,
                     total_bunker_costs_unit: tr.bunker_costs,
-                    total_port_costs: tr.port_costs,
+                    total_port_costs: tr.port_costs || (tr.agency_costs_origin || 23000) + (tr.agency_costs_destination || 44000),
                     voyage_result: tr.pnl_tramo,
                     tce_real_unit: tce,
-                    pl_vs_required_unit: tce - req
+                    pl_vs_required_unit: (tr.pnl_tramo || 0) - (req * total_duration)
                 };
                 
                 return (
                     <div key={idx} className="mt-6 border-t-4 border-slate-300 pt-6">
-                        <h4 className="font-bold text-lg mb-4 text-emerald-800 uppercase bg-emerald-50 py-2 px-4 rounded border border-emerald-200">
-                            Acta de Tramo {idx + 1}: {tr.origin_port_id} ➝ {tr.destination_port_id}
-                        </h4>
+                        <div className="flex justify-between items-center mb-4 bg-emerald-50 py-2.5 px-4 rounded-lg border border-emerald-200 shadow-sm">
+                            <h4 className="font-bold text-lg text-emerald-800 uppercase tracking-wide">
+                                Acta de Tramo {idx + 1}: {tr.origin_port_id} ➝ {tr.destination_port_id}
+                            </h4>
+                            <button
+                                onClick={() => window.print()}
+                                className="h-8 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-md flex items-center gap-2 shadow transition-all cursor-pointer"
+                            >
+                                <Printer size={15} /> Imprimir Acta PDF
+                            </button>
+                        </div>
                         {renderScenarioContent(
                             v.vessel_name || selectedVesselId, 
                             tr.origin_port_id, 

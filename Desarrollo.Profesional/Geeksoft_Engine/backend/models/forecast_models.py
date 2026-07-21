@@ -72,6 +72,8 @@ class MultiCotizadorTramo(BaseModel):
     agency_costs_destination: float = 0.0
     custom_load_rate: Optional[float] = None
     custom_discharge_rate: Optional[float] = None
+    contract_agreed_load_rate: Optional[float] = None
+    contract_agreed_discharge_rate: Optional[float] = None
 
 
 class MultiCotizadorRequest(BaseModel):
