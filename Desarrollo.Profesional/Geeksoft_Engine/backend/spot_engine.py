@@ -393,8 +393,8 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         delay_disch_mdo = (delay_discharging / 24) * c_idle_mdo
         delay_disch_cost = (delay_disch_ifo * p_ifo) + (delay_disch_mdo * p_mdo)
 
-        # Consumo de tránsito/operaciones normales (usando la navegación total de 2 piernas)
-        tot_sea_d = sea_days * 2
+        # Consumo de tránsito/operaciones normales (usando la navegación real de esta pierna)
+        tot_sea_d = sea_days
         ifo_tons_normal = (tot_sea_d * c_sea_ifo) + (idle_days_normal * c_idle_ifo) + (load_days * c_load_ifo) + (disch_days * c_disch_ifo)
         mdo_tons_normal = (tot_sea_d * c_sea_mdo) + (idle_days_normal * c_idle_mdo) + (load_days * c_load_mdo) + (disch_days * c_disch_mdo)
         bunker_costs_normal = (ifo_tons_normal * p_ifo) + (mdo_tons_normal * p_mdo)
@@ -425,15 +425,15 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
                       f"Costo: ({vc(fmt_dec(delay_disch_ifo))} * {fmt_dec(p_ifo)}) + ({vc(fmt_dec(delay_disch_mdo))} * {fmt_dec(p_mdo)}) = {ec(fmt_dec(delay_disch_cost))}"
         }
 
-        tot_sea_d = sea_days * 2
+        tot_sea_d = sea_days
         ifo_tons_total = (tot_sea_d * c_sea_ifo) + (idle_days_normal * c_idle_ifo) + (load_days * c_load_ifo) + (disch_days * c_disch_ifo)
         mdo_tons_total = (tot_sea_d * c_sea_mdo) + (idle_days_normal * c_idle_mdo) + (load_days * c_load_mdo) + (disch_days * c_disch_mdo)
         bunker_costs_total = (ifo_tons_total * p_ifo) + (mdo_tons_total * p_mdo)
 
         audit_trail = {
             "sea_days": {
-                "formula": "(dist * (1+w_laden) + dist * (1+w_ballast)) / (speed * 24)",
-                "values": f"({rc(fmt(dist))} * (1+{rc(fmt_dec(w_factor))}) + {rc(fmt(dist))} * (1+{rc(fmt_dec(w_factor))})) / ({vc(fmt_dec(speed))} * 24) = {vc(fmt_dec(tot_sea_d))}"
+                "formula": "(dist * (1+w_factor)) / (speed * 24)",
+                "values": f"({rc(fmt(dist))} * (1+{rc(fmt_dec(w_factor))})) / ({vc(fmt_dec(speed))} * 24) = {vc(fmt_dec(tot_sea_d))}"
             },
             "port_days": {
                 "formula": "((Q/act_load + over_or + pos_or + delay_load) + (Q/act_disch + over_de + pos_de + delay_disch)) / 24",
@@ -458,7 +458,7 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
             "port_days": port_days,
             "bunker_ifo": ifo_tons_total,
             "bunker_mdo": mdo_tons_total,
-            "distance": dist * 2,
+            "distance": dist,
             "bunker_costs": bunker_costs_total,
             "net_income": net_income,
             "port_costs": port_costs,
