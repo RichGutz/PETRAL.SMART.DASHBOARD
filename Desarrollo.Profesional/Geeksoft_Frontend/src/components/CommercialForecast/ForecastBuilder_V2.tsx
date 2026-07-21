@@ -68,7 +68,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     const [spotSuffix, setSpotSuffix] = useState('');
     
     // Dynamic Clients State
-    const [availableClients, setAvailableClients] = useState<string[]>([]);
+    const [availableClients, setAvailableClients] = useState<string[]>(['SPCC', 'NEXA', 'SPOT']);
     const [spotRoutes, setSpotRoutes] = useState<any[]>([]);
 
     // Identificar si la ruta seleccionada es una ruta multicotizador compleja

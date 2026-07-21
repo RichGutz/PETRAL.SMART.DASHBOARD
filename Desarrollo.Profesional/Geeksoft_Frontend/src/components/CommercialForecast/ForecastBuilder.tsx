@@ -184,14 +184,17 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         import('../../services/api').then(({ ForecastService }) => {
             ForecastService.listSpots().then(spotRoutes => {
                 setSpotRoutes(spotRoutes || []);
-                const filtered = (spotRoutes || []).filter((s: any) => s.legs_data?.is_multicotizador === true);
-                const clientIds: string[] = filtered.map((s: any) => {
+                const defaultClients = ['SPCC', 'NEXA', 'SPOT'];
+                const dynamicClientIds: string[] = (spotRoutes || []).map((s: any) => {
                     const parts = (s.name || "").split('.');
                     return parts.length > 1 ? parts[0].toUpperCase() : "";
                 }).filter(Boolean);
-                const uniqueClients = Array.from(new Set(clientIds));
-                setAvailableClients(uniqueClients);
-            }).catch(err => console.error("Failed to fetch spot routes and clients:", err));
+                const mergedClients = Array.from(new Set([...defaultClients, ...dynamicClientIds]));
+                setAvailableClients(mergedClients);
+            }).catch(err => {
+                console.error("Failed to fetch spot routes and clients:", err);
+                setAvailableClients(['SPCC', 'NEXA', 'SPOT']);
+            });
         });
     }, []);
 
