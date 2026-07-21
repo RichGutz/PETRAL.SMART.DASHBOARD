@@ -322,7 +322,16 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     masters = get_cached_masters(supabase)
     
     vessels_data = masters["vessels"]
-    vessels_db = {v["vessel_id"]: v for v in vessels_data}
+    vessels_db = {}
+    for v in vessels_data:
+        v_id = (v.get("vessel_id") or "").strip().upper()
+        v_name = (v.get("vessel_name") or "").strip().upper()
+        if v_id:
+            vessels_db[v_id] = v
+            vessels_db[v_id.replace("_", " ")] = v
+        if v_name:
+            vessels_db[v_name] = v
+            vessels_db[v_name.replace("_", " ")] = v
     
     routes_data = masters.get("distances") or []
     routes_db = {}
@@ -366,7 +375,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         month = line.month_index
         
         # 1. Fetching Vessel Data
-        v_data = vessels_db.get(vessel, {})
+        clean_vessel_key = (vessel or "").strip().upper()
+        v_data = vessels_db.get(clean_vessel_key) or vessels_db.get(clean_vessel_key.replace("_", " ")) or {}
         
         # 2. Fetching Route Data
         p1, p2 = sorted([line.origin_port_id, line.destination_port_id])
