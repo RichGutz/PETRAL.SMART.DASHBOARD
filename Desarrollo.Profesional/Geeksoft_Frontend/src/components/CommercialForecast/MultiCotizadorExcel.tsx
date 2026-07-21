@@ -878,7 +878,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     };
 
     const getSuggestedRouteName = (clientId: string) => {
-        if (!selectedVessel || tramos.length === 0) return '';
+        if (tramos.length === 0) return '';
         const portList = [tramos[0]?.origin_port_id || ''];
         tramos.forEach(tr => {
             if (tr.destination_port_id && tr.destination_port_id !== portList[portList.length - 1]) {
@@ -886,9 +886,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
             }
         });
         const cleanPorts = portList.filter(Boolean).map(p => p.toUpperCase());
-        const vesselName = selectedVessel.toUpperCase();
         const clientPrefix = clientId ? `${clientId.toUpperCase()}.` : '';
-        return `${clientPrefix}${cleanPorts.join('.')}.${vesselName}`;
+        return `${clientPrefix}${cleanPorts.join('.')}`;
     };
 
     const handleOpenExportModal = async () => {
