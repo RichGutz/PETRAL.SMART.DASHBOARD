@@ -109,14 +109,20 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
     for block_text in routes_blocks:
         html += f"""
         <div class="page-route">
-            <div class="header-logos">
-                <img src="file:///{LOGO_PETRAL_PATH}" alt="PETRAL LOGO" />
-                <div class="header-title">
-                    PETRAL SMART DASHBOARD • MOTOR SPOT GEEKSOFT ENGINE<br/>
-                    <span style="font-size: 8pt; font-weight: normal;">ACTA OFICIAL DE AUDITORÍA Y TRAZABILIDAD (SPCC & NEXA)</span>
-                </div>
-                <img src="file:///{LOGO_GEEKSOFT_PATH}" alt="GEEKSOFT LOGO" />
-            </div>
+            <table style="width: 100%; border-collapse: collapse; border-bottom: 2px solid #000000; margin-bottom: 8px;">
+                <tr>
+                    <td style="width: 25%; text-align: left; vertical-align: middle; border: none; padding: 0;">
+                        <img src="file:///{LOGO_PETRAL_PATH}" style="height: 38px; width: auto;" alt="PETRAL LOGO" />
+                    </td>
+                    <td style="width: 50%; text-align: center; vertical-align: middle; border: none; padding: 0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 9.5pt; color: #000000;">
+                        PETRAL SMART DASHBOARD • MOTOR SPOT GEEKSOFT ENGINE<br/>
+                        <span style="font-size: 7.5pt; font-weight: normal;">ACTA OFICIAL DE AUDITORÍA Y TRAZABILIDAD (SPCC & NEXA)</span>
+                    </td>
+                    <td style="width: 25%; text-align: right; vertical-align: middle; border: none; padding: 0;">
+                        <img src="file:///{LOGO_GEEKSOFT_PATH}" style="height: 38px; width: auto;" alt="GEEKSOFT LOGO" />
+                    </td>
+                </tr>
+            </table>
             <pre>{block_text}</pre>
         </div>
         """
