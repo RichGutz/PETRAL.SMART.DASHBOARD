@@ -501,30 +501,20 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         if tipo == "BALLAST":
             res = process_ballast_leg(tr)
             res["net_income"] = 0.0
-            if idx == 0:
-                # Primer tramo del viaje: paga origen y destino
-                res["port_costs"] = c_orig + c_dest
-                res["agency_costs_origin"] = c_orig
-                res["agency_costs_destination"] = c_dest
-            else:
-                # Tramos siguientes: origen ya visitado. Destino solo paga si no fue visitado antes en el viaje
-                res["agency_costs_origin"] = 0.0
-                res["agency_costs_origin_details"] = {"total_cost": 0.0, "breakdown": {}, "method": "NONE"}
-                if dest in visited_ports:
-                    res["port_costs"] = 0.0
-                    res["agency_costs_destination"] = 0.0
-                    res["agency_costs_destination_details"] = {"total_cost": 0.0, "breakdown": {}, "method": "NONE"}
-                else:
-                    res["port_costs"] = c_dest
-                    res["agency_costs_destination"] = c_dest
-            res["pnl_tramo"] = -res["bunker_costs"] - res["port_costs"]
+            res["port_costs"] = 0.0
+            res["agency_costs_origin"] = 0.0
+            res["agency_costs_destination"] = 0.0
+            res["agency_costs_origin_details"] = {"total_cost": 0.0, "breakdown": {}, "method": "NONE"}
+            res["agency_costs_destination_details"] = {"total_cost": 0.0, "breakdown": {}, "method": "NONE"}
+            res["pnl_tramo"] = -res["bunker_costs"]
             res["type"] = "BALLAST"
         else:
             res = process_laden_leg(tr)
-            # En laden leg, cobra origen y destino
-            res["port_costs"] = c_orig + c_dest
+            # En tramos LADEN, asignamos costos de agencia de Carga en Origen y Descarga en Destino
             res["agency_costs_origin"] = c_orig
             res["agency_costs_destination"] = c_dest
+            res["port_costs"] = c_orig + c_dest
+            res["net_income"] = float(tr.get("quantity", 0)) * float(tr.get("freight_rate", 0))
             res["pnl_tramo"] = res["net_income"] - res["bunker_costs"] - res["port_costs"]
             res["type"] = "LADEN"
             

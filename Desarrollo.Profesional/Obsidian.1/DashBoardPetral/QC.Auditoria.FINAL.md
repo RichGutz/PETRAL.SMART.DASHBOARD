@@ -139,5 +139,25 @@ Tanto el motor central `spot_engine.py` como las Vistas en Frontend (Matriz Fina
   - **Distancia Total del Viaje:** `distancia_total` (NM) acumulando la suma exacta de todas las piernas.
   - **Factores de Clima:** `weather_factor_laden` (%) y `weather_factor_ballast` (%).
 
+---
+
+## ⚓ 6. Regla de Asignación Exclusiva de Costos Portuarios (`port_costs`)
+1. **Identificación Operativa:**
+   - El motor central identifica explícitamente en qué puertos se efectúa operación de **`CARGAR`** o **`DESCARGAR`**.
+   - **Únicamente los puertos con operación activa de Carga o Descarga acumulan costos portuarios de agencia.**
+2. **Tránstitos y Lastre (`BALLAST`):**
+   - Las piernas de lastre o tránsitos simples sin operación portuaria comercial asignan costo portuario nulo (**`$0.00 USD`**).
+
+---
+
+## 💰 7. Regla de Cálculo del Ingreso Bruto de Flete (`Gross Revenue / Net Income`)
+1. **Cálculo por Pierna Comercial (`LADEN`):**
+   - Cada pierna de carga calcula su ingreso multiplicando el volumen cargado real por la tarifa contractual asignada para ese tramo:
+     $$\text{Ingreso}_{\text{pierna}} = Q_{\text{pierna}} \times F_{\text{pierna}}$$
+2. **Ingreso Consolidado del Viaje:**
+   - El Ingreso Bruto Total del viaje es la sumatoria exacta de los ingresos de todas las piernas con carga comercial:
+     $$\text{Ingreso Total} = \sum_{\text{pierna} \in \text{LADEN}} (Q_{\text{pierna}} \times F_{\text{pierna}})$$
+
+
 
 
