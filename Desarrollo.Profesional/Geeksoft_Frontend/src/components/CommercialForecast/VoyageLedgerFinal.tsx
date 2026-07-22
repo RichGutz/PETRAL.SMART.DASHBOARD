@@ -858,6 +858,40 @@ const renderScenarioContent = (
                                             </tr>`;
                                         });
 
+                                        const legsFishbowlHTML = `
+                                         <div style="margin-top:14px; margin-bottom:14px; border:1px solid #0f766e; border-radius:6px; overflow:hidden;">
+                                             <div style="background:#0f766e; color:white; padding:6px 10px; font-weight:800; font-size:10px; text-transform:uppercase;">
+                                                 🐟 FISHBOWL AUDIT TRAIL — DESGLOSE DE PIERNAS Y FÓRMULAS SUSTITUIDAS
+                                             </div>
+                                             <div style="padding:8px; background:#fafafa;">
+                                                 ${tramos.map((tr: any, idx: number) => {
+                                                     const audit = tr.audit_trail || {};
+                                                     const seaFormula = audit.sea_days?.formula || 'N/A';
+                                                     const seaVals = audit.sea_days?.values || 'N/A';
+                                                     const portFormula = audit.port_days?.formula || 'N/A';
+                                                     const portVals = audit.port_days?.values || 'N/A';
+                                                     const bunkerFormula = audit.bunker_costs?.formula || 'N/A';
+                                                     const bunkerVals = audit.bunker_costs?.values || 'N/A';
+                                                     const portCostFormula = audit.port_costs?.formula || 'N/A';
+                                                     const portCostVals = audit.port_costs?.values || 'N/A';
+                                                     return `
+                                                         <div style="border:1px solid #cbd5e1; border-radius:4px; padding:6px; margin-bottom:6px; background:white;">
+                                                             <div style="font-weight:800; font-size:9.5px; color:#0f172a; border-bottom:1px solid #e2e8f0; padding-bottom:4px; margin-bottom:4px; display:flex; justify-content:space-between;">
+                                                                 <span>Pierna #${idx+1} [${tr.type || 'N/A'}]: ${tr.origin_port_id || 'ORIG'} &rarr; ${tr.destination_port_id || 'DEST'}</span>
+                                                                 <span style="color:#0f766e;">Distancia: ${tr.distance || 0} NM | Sea: ${(tr.sea_days || 0).toFixed(2)}d | Port: ${(tr.port_days || 0).toFixed(2)}d | Búnker: $${(tr.bunker_costs || 0).toLocaleString()} | Agencia: $${(tr.port_costs || 0).toLocaleString()}</span>
+                                                             </div>
+                                                             <table style="width:100%; border:none; margin:0; font-size:8.5px;">
+                                                                 <tr style="background:transparent;"><td style="border:none; width:18%; font-weight:700; color:#334155;">Sea Days:</td><td style="border:none; width:35%; color:#475569;">${seaFormula}</td><td style="border:none; font-family:monospace; color:#0284c7;">${seaVals}</td></tr>
+                                                                 <tr style="background:transparent;"><td style="border:none; font-weight:700; color:#334155;">Port Days:</td><td style="border:none; color:#475569;">${portFormula}</td><td style="border:none; font-family:monospace; color:#0284c7;">${portVals}</td></tr>
+                                                                 <tr style="background:transparent;"><td style="border:none; font-weight:700; color:#334155;">Bunker Costs:</td><td style="border:none; color:#475569;">${bunkerFormula}</td><td style="border:none; font-family:monospace; color:#059669;">${bunkerVals}</td></tr>
+                                                                 <tr style="background:transparent;"><td style="border:none; font-weight:700; color:#334155;">Port Costs:</td><td style="border:none; color:#475569;">${portCostFormula}</td><td style="border:none; font-family:monospace; color:#d97706;">${portCostVals}</td></tr>
+                                                             </table>
+                                                         </div>
+                                                     `;
+                                                 }).join('')}
+                                             </div>
+                                         </div>`;
+
                                         const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Acta Auditoría</title>
                                         <style>
                                             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
@@ -921,6 +955,7 @@ const renderScenarioContent = (
                                                 ${tableRows}
                                             </tbody>
                                         </table>
+                                        ${legsFishbowlHTML}
                                         <div class="acta">
                                             <div class="acta-title">✍️ Acta de Conformidad Matemática — Firmas y Validación</div>
                                             <div class="acta-grid">
