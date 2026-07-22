@@ -183,6 +183,18 @@ Tanto el motor central `spot_engine.py` como las Vistas en Frontend (Matriz Fina
 ### 🔹 8.3 Desglose Auditable en Interfaz (UI) y PDF (Fishbowl)
 - Tanto en la Vista Web de **Auditoría Final** como en la **Acta PDF**, se renderiza el bloque transparente **`🐟 FISHBOWL AUDIT TRAIL — DESGLOSE DE PIERNAS Y FÓRMULAS SUSTITUIDAS`**, desglosando pierna por pierna las millas náuticas, días de mar, horas extras de puerto, consumo de toneladas IFO/MDO y costo en USD con fórmulas numéricas reales sustituidas.
 
+---
+
+## 📄 9. Protocolo de Entrega de Acta PDF Oficial por Ruta
+
+Como parte del **Loop Autónomo de Control de Calidad (QC Loop)**, cada ejecución de auditoría genera de forma automatizada un reporte PDF oficial compilando la ficha de auditoría detallada (Fishbowl) por cada ruta oficial de SPCC y NEXA:
+
+- **Archivo PDF Oficial:** [ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf](file:///C:/Users/rguti/.gemini/antigravity-ide/brain/2e0de588-072f-4fee-9575-6a37156b7fa3/ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf)
+- **Contenido:**
+  1. **Tabla de Resumen Consolidado:** Distancias, Días Totales, Búnker USD, Puerto Carga USD, Puerto Descarga USD, Ingreso Flete USD, PnL Neto USD y TCE Real.
+  2. **Ficha Detallada por Ruta (Fishbowl Pierna por Pierna):** Sustitución numérica de días de mar, días de puerto, búnker navegación, búnker puerto, agencias portuarias y flete.
+
+
 
 
 

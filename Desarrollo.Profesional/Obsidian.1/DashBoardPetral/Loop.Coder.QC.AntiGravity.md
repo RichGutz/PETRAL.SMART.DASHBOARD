@@ -284,5 +284,17 @@ Para cualquier pierna $k$, el costo total de combustible se descompone de forma 
 | **#1** | `LADEN` | `ILO` $\rightarrow$ `MATARANI` | `69.0 NM` | `0.27 d` | `3.03 d` | `14.47 MT` | `0.26 MT` | `$13,310.05` | `$71,327.99` | `$344,250.00` | `+$259,611.96` |
 | **TOTAL** | — | **SUMATORIA CONSOLIDADA** | **`69.0 NM`** | **`0.27 d`** | **`3.03 d`** | **`14.47 MT`** | **`0.26 MT`** | **`$13,310.05`** | **`$71,327.99`** | **`$344,250.00`** | **`+$259,611.96`** |
 
+---
+
+## 📄 7. Entrega de Artefacto PDF Oficial de Auditoría
+
+En cada iteración del **Loop Coder-QC**, el script `run_qc_loop_pdf.py` genera de forma automatizada la **Acta Oficial de Auditoría en formato PDF** que compila las fichas de auditoría desglosadas por pierna para todas las rutas corporativas de SPCC y NEXA.
+
+- **Ubicación del PDF Generado:**
+  `C:\Users\rguti\.gemini\antigravity-ide\brain\2e0de588-072f-4fee-9575-6a37156b7fa3\ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf`
+- **Enlace Directo para Auditoría Humana:**
+  [ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf](file:///C:/Users/rguti/.gemini/antigravity-ide/brain/2e0de588-072f-4fee-9575-6a37156b7fa3/ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf)
+
+
 
 
