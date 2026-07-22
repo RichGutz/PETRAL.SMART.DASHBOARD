@@ -201,4 +201,51 @@ Se implementó y ejecutó exitosamente el script de prueba no-interactivo `run_q
 - **100% de Aprobación Auditora:** Las 6 rutas corporativas de SPCC y NEXA pasaron la validación sin registrar anomalías de búnkeres ridículos, ceros indeseados ni cobros en lastre.
 - **Inmutabilidad y Trazabilidad:** Todo el flujo y el código del script de auditoría quedaron registrados en el repositorio de Git.
 
+---
+
+## 📊 6. Formato Estándar de Auditoría Desglosada por Pierna (Para Revisión y Feedback Rápido)
+
+Se establece la plantilla estandarizada oficial para visualizar y dar feedback de un solo vistazo sobre cualquier ruta (consolidado + tabla desglose por pierna):
+
+### 🚢 6.1 Ruta Compleja de 3 Piernas: `NEXA.ILO.CALLAO.MARCONA.ILO`
+
+#### 📋 Resumen Consolidado del Viaje
+- **Buque Auditor:** `MOQUEGUA` (Velocidad: `11.0 kn`, Consumo Mar IFO: `14.0 t/d`, Consumo Mar MDO: `0.0 t/d`)
+- **Precios Búnker:** IFO = `$895.14 USD/MT`, MDO = `$1,460.30 USD/MT`
+- **Distancia Náutica Total:** `1,051.0 NM` | **Duración Total:** `7.40 Días` (`4.10 d` Mar + `3.30 d` Puerto)
+- **Búnker Consumido Total:** `67.28 MT IFO` | `1.38 MT MDO`
+- **Costo Total Búnker:** **`$62,233.73 USD`**
+- **Costos Portuarios Totales:** **`$71,327.99 USD`** (Callao Carga + Marcona Descarga)
+- **Ingreso Bruto de Flete:** **`$344,250.00 USD`** (13,500 MT × $25.50 USD/MT)
+- **PnL Neto del Viaje:** **`$210,688.28 USD`** | **TCE Real:** **`$28,480.65 USD/Día`**
+
+#### 🔍 Desglose Auditable Pierna por Pierna (Fishbowl Table)
+
+| PIERNA | TIPO | TRAYECTO (PUERTOS) | DISTANCIA (NM) | DÍAS MAR | DÍAS PUERTO | TONELADAS IFO | TONELADAS MDO | COSTO BÚNKER (USD) | COSTO PUERTO (USD) | INGRESO FLETE (USD) | PnL PIERNA (USD) |
+| :---: | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **#1** | `BALLAST` | `ILO` $\rightarrow$ `CALLAO` | `514.0 NM` | `2.01 d` | `0.00 d` | `28.08 MT` | `0.00 MT` | `$25,131.33` | `$0.00` | `$0.00` | `-$25,131.33` |
+| **#2** | `LADEN` | `CALLAO` $\rightarrow$ `MARCONA` | `254.0 NM` | `0.99 d` | `3.30 d` | `23.74 MT` | `1.38 MT` | `$23,265.51` | `$71,327.99` | `$344,250.00` | `+$249,656.50` |
+| **#3** | `BALLAST` | `MARCONA` $\rightarrow$ `ILO` | `283.0 NM` | `1.10 d` | `0.00 d` | `15.46 MT` | `0.00 MT` | `$13,836.90` | `$0.00` | `$0.00` | `-$13,836.90` |
+| **TOTAL** | — | **SUMATORIA CONSOLIDADA** | **`1,051.0 NM`** | **`4.10 d`** | **`3.30 d`** | **`67.28 MT`** | **`1.38 MT`** | **`$62,233.73`** | **`$71,327.99`** | **`$344,250.00`** | **`+$210,688.28`** |
+
+---
+
+### 🚢 6.2 Ruta Directa de 1 Pierna: `SPCC.ILO.MATARANI`
+
+#### 📋 Resumen Consolidado del Viaje
+- **Buque Auditor:** `MOQUEGUA`
+- **Distancia Náutica Total:** `69.0 NM` | **Duración Total:** `3.30 Días` (`0.27 d` Mar + `3.03 d` Puerto)
+- **Costo Total Búnker:** **`$13,310.05 USD`** (`14.47 MT IFO` | `0.26 MT MDO`)
+- **Costos Portuarios Totales:** **`$71,327.99 USD`** (Ilo Carga + Matarani Descarga)
+- **Ingreso Bruto de Flete:** **`$344,250.00 USD`** (13,500 MT × $25.50 USD/MT)
+- **PnL Neto del Viaje:** **`$259,611.96 USD`** | **TCE Real:** **`$78,535.07 USD/Día`**
+
+#### 🔍 Desglose Auditable Pierna por Pierna (Fishbowl Table)
+
+| PIERNA | TIPO | TRAYECTO (PUERTOS) | DISTANCIA (NM) | DÍAS MAR | DÍAS PUERTO | TONELADAS IFO | TONELADAS MDO | COSTO BÚNKER (USD) | COSTO PUERTO (USD) | INGRESO FLETE (USD) | PnL PIERNA (USD) |
+| :---: | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **#1** | `LADEN` | `ILO` $\rightarrow$ `MATARANI` | `69.0 NM` | `0.27 d` | `3.03 d` | `14.47 MT` | `0.26 MT` | `$13,310.05` | `$71,327.99` | `$344,250.00` | `+$259,611.96` |
+| **TOTAL** | — | **SUMATORIA CONSOLIDADA** | **`69.0 NM`** | **`0.27 d`** | **`3.03 d`** | **`14.47 MT`** | **`0.26 MT`** | **`$13,310.05`** | **`$71,327.99`** | **`$344,250.00`** | **`+$259,611.96`** |
+
+
 
