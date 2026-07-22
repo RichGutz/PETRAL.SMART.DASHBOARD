@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import React, { useEffect, useState, useMemo } from 'react';
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Play, Printer } from "lucide-react";
@@ -76,6 +75,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
     // const [latestBunker, setLatestBunker] = useState<{ ifo: number, mdo: number, date: string }>({ ifo: 895.14, mdo: 1460.30, date: '2026-06-26' });
     
     // Selections
+    const [selectedClientId, setSelectedClientId] = useState<string>("NEXA");
     const [selectedRouteId, setSelectedRouteId] = useState<string>("");
     const [selectedVesselId, setSelectedVesselId] = useState<string>("");
     
@@ -115,7 +115,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             setContracts(c || []);
 
             if (mergedRoutes.length > 0 && !selectedRouteId) {
-                const defaultR = mergedRoutes.find((r: any) => (r.name || "").includes("NEXA")) || mergedRoutes[0];
+                const defaultR = mergedRoutes.find((r: any) => (r.name || "").toUpperCase().startsWith("NEXA")) || mergedRoutes[0];
                 setSelectedRouteId(defaultR._id);
             }
             if (mergedVessels.length > 0 && !selectedVesselId) {
@@ -129,6 +129,49 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             setLoading(false);
         });
     }, []);
+
+    // Clientes extraídos dinámicamente de routes_clients y routes_prospects
+    const availableClients = useMemo(() => {
+        const clientsSet = new Set<string>();
+        routes.forEach((r: any) => {
+            const name = (r.name || "").trim().toUpperCase();
+            if (name.startsWith("SPCC")) clientsSet.add("SPCC");
+            else if (name.startsWith("NEXA")) clientsSet.add("NEXA");
+            else {
+                const firstPart = name.split(".")[0];
+                if (firstPart && firstPart.length < 15) clientsSet.add(firstPart);
+                else clientsSet.add("SPOT");
+            }
+        });
+        const list = Array.from(clientsSet);
+        if (!list.includes("NEXA")) list.unshift("NEXA");
+        if (!list.includes("SPCC")) list.unshift("SPCC");
+        return list;
+    }, [routes]);
+
+    // Rutas filtradas en cascada según el cliente seleccionado
+    const filteredRoutes = useMemo(() => {
+        if (!selectedClientId) return routes;
+        const cleanClient = selectedClientId.trim().toUpperCase();
+        const res = routes.filter((r: any) => {
+            const name = (r.name || "").trim().toUpperCase();
+            if (cleanClient === "SPOT") {
+                return !name.startsWith("NEXA") && !name.startsWith("SPCC");
+            }
+            return name.startsWith(cleanClient);
+        });
+        return res.length > 0 ? res : routes;
+    }, [selectedClientId, routes]);
+
+    // Autoseleccionar la primera ruta del cliente activo cuando cambia selectedClientId
+    useEffect(() => {
+        if (filteredRoutes.length > 0) {
+            const isCurrentInFiltered = filteredRoutes.some((r: any) => r._id === selectedRouteId);
+            if (!isCurrentInFiltered) {
+                setSelectedRouteId(filteredRoutes[0]._id);
+            }
+        }
+    }, [selectedClientId, filteredRoutes]);
 
     useEffect(() => {
         if (!selectedRouteId) {
@@ -541,23 +584,39 @@ const renderScenarioContent = (
             </h2>
 
             <div className="flex gap-4 items-end flex-wrap">
-                <div className="flex flex-col gap-2 w-80">
-                    <Label className="text-xs font-bold text-slate-700">Ruta Comercial / Spot</Label>
+                {/* 1. Cliente */}
+                <div className="flex flex-col gap-1.5 w-48">
+                    <Label className="text-xs font-bold text-slate-700">1. Cliente</Label>
+                    <select
+                        value={selectedClientId}
+                        onChange={(e) => setSelectedClientId(e.target.value)}
+                        className="w-full h-9 px-3 bg-white border border-slate-300 shadow-sm rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600 cursor-pointer"
+                    >
+                        {availableClients.map((c: string) => (
+                            <option key={c} value={c}>{c}</option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* 2. Ruta de Cliente */}
+                <div className="flex flex-col gap-1.5 w-80">
+                    <Label className="text-xs font-bold text-slate-700">2. Ruta Comercial ({selectedClientId})</Label>
                     <select
                         value={selectedRouteId}
                         onChange={(e) => setSelectedRouteId(e.target.value)}
                         className="w-full h-9 px-3 bg-white border border-slate-300 shadow-sm rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600 cursor-pointer"
                     >
                         <option value="">-- Seleccione una Ruta --</option>
-                        {routes.map((r, rIdx) => {
+                        {filteredRoutes.map((r: any, rIdx: number) => {
                             const idVal = r._id || r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id || r.name || `route-${rIdx}`;
                             return <option key={idVal} value={idVal}>{r.name || idVal}</option>;
                         })}
                     </select>
                 </div>
                 
-                <div className="flex flex-col gap-2 w-52">
-                    <Label className="text-xs font-bold text-slate-700">Buque de Flota</Label>
+                {/* 3. Buque */}
+                <div className="flex flex-col gap-1.5 w-48">
+                    <Label className="text-xs font-bold text-slate-700">3. Buque de Flota</Label>
                     <select
                         value={selectedVesselId}
                         onChange={(e) => setSelectedVesselId(e.target.value)}
@@ -570,17 +629,17 @@ const renderScenarioContent = (
                     </select>
                 </div>
 
-                <div className="flex flex-col gap-2 w-48">
-                    <Label className="text-xs font-semibold text-slate-600">Matriz Portuaria</Label>
-                    <Select value={localPortCostMode} onValueChange={(val: any) => setLocalPortCostMode(val)}>
-                        <SelectTrigger className="bg-white text-xs h-9">
-                            <SelectValue>{localPortCostMode === "static" ? "Estática" : "Dinámica"}</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="static">Estática</SelectItem>
-                            <SelectItem value="matrix">Dinámica</SelectItem>
-                        </SelectContent>
-                    </Select>
+                {/* 4. Matriz Portuaria */}
+                <div className="flex flex-col gap-1.5 w-44">
+                    <Label className="text-xs font-bold text-slate-700">4. Matriz Portuaria</Label>
+                    <select
+                        value={localPortCostMode}
+                        onChange={(e) => setLocalPortCostMode(e.target.value as "static" | "matrix")}
+                        className="w-full h-9 px-3 bg-white border border-slate-300 shadow-sm rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600 cursor-pointer"
+                    >
+                        <option value="static">Estática</option>
+                        <option value="matrix">Dinámica</option>
+                    </select>
                 </div>
 
                 <button 
