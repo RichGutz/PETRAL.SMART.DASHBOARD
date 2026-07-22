@@ -92,11 +92,6 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
         { vessel_id: 'HUEMUL', vessel_name: 'HUEMUL', vessel_speed: 11, consumption_sea_ifo: 14, dwt: 13500, tce_required: 13000 }
     ];
 
-    const getRouteId = (r: any, idx?: number) => {
-        if (!r) return '';
-        return r._id || r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id || r.name || r.id || (idx !== undefined ? `route-${idx}` : '');
-    };
-
     useEffect(() => {
         Promise.all([
             ForecastService.getSpotVoyages().catch(() => []),
@@ -546,33 +541,33 @@ const renderScenarioContent = (
             </h2>
 
             <div className="flex gap-4 items-end flex-wrap">
-                <div className="flex flex-col gap-2 w-72">
-                    <Label className="text-xs font-semibold text-slate-600">Ruta</Label>
-                    <Select value={selectedRouteId} onValueChange={(val: any) => setSelectedRouteId(val || "")}>
-                        <SelectTrigger className="bg-white text-xs h-9">
-                            <SelectValue placeholder="Seleccione una ruta" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {routes.map((r, rIdx) => {
-                                const idVal = getRouteId(r, rIdx);
-                                return <SelectItem key={idVal} value={idVal}>{r.name || idVal}</SelectItem>;
-                            })}
-                        </SelectContent>
-                    </Select>
+                <div className="flex flex-col gap-2 w-80">
+                    <Label className="text-xs font-bold text-slate-700">Ruta Comercial / Spot</Label>
+                    <select
+                        value={selectedRouteId}
+                        onChange={(e) => setSelectedRouteId(e.target.value)}
+                        className="w-full h-9 px-3 bg-white border border-slate-300 shadow-sm rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600 cursor-pointer"
+                    >
+                        <option value="">-- Seleccione una Ruta --</option>
+                        {routes.map((r, rIdx) => {
+                            const idVal = r._id || r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id || r.name || `route-${rIdx}`;
+                            return <option key={idVal} value={idVal}>{r.name || idVal}</option>;
+                        })}
+                    </select>
                 </div>
                 
-                <div className="flex flex-col gap-2 w-48">
-                    <Label className="text-xs font-semibold text-slate-600">Buque</Label>
-                    <Select value={selectedVesselId} onValueChange={(val: any) => setSelectedVesselId(val || "")}>
-                        <SelectTrigger className="bg-white text-xs h-9">
-                            <SelectValue placeholder="Seleccione un buque" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {vessels.map(v => (
-                                <SelectItem key={v.vessel_id} value={v.vessel_id}>{v.vessel_name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                <div className="flex flex-col gap-2 w-52">
+                    <Label className="text-xs font-bold text-slate-700">Buque de Flota</Label>
+                    <select
+                        value={selectedVesselId}
+                        onChange={(e) => setSelectedVesselId(e.target.value)}
+                        className="w-full h-9 px-3 bg-white border border-slate-300 shadow-sm rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600 cursor-pointer"
+                    >
+                        <option value="">-- Seleccione un Buque --</option>
+                        {vessels.map(v => (
+                            <option key={v.vessel_id} value={v.vessel_id}>{v.vessel_name}</option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="flex flex-col gap-2 w-48">

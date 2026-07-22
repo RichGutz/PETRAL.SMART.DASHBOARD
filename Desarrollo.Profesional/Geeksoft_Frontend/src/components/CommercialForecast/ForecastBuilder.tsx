@@ -6,7 +6,6 @@
  */
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
@@ -402,20 +401,16 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     {/* 4. Cliente */}
                     <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">4. Cliente</Label>
-                        <Select value={client} onValueChange={(val) => setClient(val || '')}>
-                            <SelectTrigger className="w-full h-8 bg-white">
-                                <SelectValue placeholder="Cliente" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {availableClients.map(c => (
-                                    <SelectItem key={c} value={c}>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2.5 h-2.5 rounded-full bg-[#1E3A8A]"></div>{c}
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                             </SelectContent>
-                        </Select>
+                        <select
+                            value={client}
+                            onChange={(e) => setClient(e.target.value)}
+                            className="w-full h-8 px-2 bg-white border border-slate-300 shadow-sm rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-petral-teal cursor-pointer"
+                        >
+                            <option value="">-- Cliente --</option>
+                            {availableClients.map(c => (
+                                <option key={c} value={c}>{c}</option>
+                            ))}
+                        </select>
                     </div>
 
                     {client === 'SPOT' && (
@@ -431,59 +426,37 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </div>
                     )}
 
-                    {/* 4. Ruta */}
                     {/* 5. Ruta */}
                     <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">5. Ruta</Label>
-                        <Select value={route} onValueChange={(val) => setRoute(val || '')} disabled={!client}>
-                            <SelectTrigger className="w-full h-8">
-                                <SelectValue placeholder="Ruta" />
-                            </SelectTrigger>
-                            <SelectContent className="w-auto min-w-[max-content] max-h-[300px] overflow-y-auto">
-                                {clientRoutes.length === 0 ? (
-                                    <SelectItem value="" disabled>No hay rutas para {client}</SelectItem>
-                                ) : (
-                                    clientRoutes.map(rVal => {
-                                        const color = rVal.includes('MATARANI') ? '#06B6D4' :
-                                                      rVal.includes('MARCONA') ? '#A855F7' :
-                                                      rVal.includes('MEJILLONES') ? '#D946EF' :
-                                                      rVal.includes('CALLAO') ? '#F59E0B' : '#64748B';
-                                        return (
-                                            <SelectItem key={rVal} value={rVal}>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }}></div>
-                                                    {rVal.replace('-', ' - ')}
-                                                </div>
-                                            </SelectItem>
-                                        );
-                                    })
-                                )}
-                            </SelectContent>
-                        </Select>
+                        <select
+                            value={route}
+                            onChange={(e) => setRoute(e.target.value)}
+                            className="w-full h-8 px-2 bg-white border border-slate-300 shadow-sm rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-petral-teal cursor-pointer"
+                        >
+                            <option value="">{client ? "-- Seleccionar Ruta --" : "-- Elija Cliente --"}</option>
+                            {clientRoutes.map(rVal => (
+                                <option key={rVal} value={rVal}>
+                                    {rVal.replace('-', ' - ')}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
-                    {/* 5. Buque */}
+                    {/* 6. Buque */}
                     <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">6. Buque</Label>
-                        <Select value={vessel} onValueChange={(val) => setVessel(val || '')} disabled={!route}>
-                            <SelectTrigger className="w-full h-8 bg-white disabled:opacity-80">
-                                <SelectValue placeholder="Buque" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="MOQUEGUA">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#16A34A]"></div>MOQUEGUA</div>
-                                </SelectItem>
-                                <SelectItem value="TABLONES">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#DC2626]"></div>TABLONES</div>
-                                </SelectItem>
-                                <SelectItem value="CONCON_TRADER">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#475569]"></div>CONCON TRADER</div>
-                                </SelectItem>
-                                <SelectItem value="HUEMUL">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#4F46E5]"></div>HUEMUL</div>
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <select
+                            value={vessel}
+                            onChange={(e) => setVessel(e.target.value)}
+                            className="w-full h-8 px-2 bg-white border border-slate-300 shadow-sm rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-petral-teal cursor-pointer"
+                        >
+                            <option value="">-- Buque --</option>
+                            <option value="MOQUEGUA">MOQUEGUA</option>
+                            <option value="TABLONES">TABLONES</option>
+                            <option value="CONCON_TRADER">CONCON TRADER</option>
+                            <option value="HUEMUL">HUEMUL</option>
+                        </select>
                     </div>
 
                     {/* 6. Viajes */}
