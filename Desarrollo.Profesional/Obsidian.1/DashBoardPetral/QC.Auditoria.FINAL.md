@@ -158,6 +158,32 @@ Tanto el motor central `spot_engine.py` como las Vistas en Frontend (Matriz Fina
    - El Ingreso Bruto Total del viaje es la sumatoria exacta de los ingresos de todas las piernas con carga comercial:
      $$\text{Ingreso Total} = \sum_{\text{pierna} \in \text{LADEN}} (Q_{\text{pierna}} \times F_{\text{pierna}})$$
 
+---
+
+## ⛽ 8. Especificación del Cálculo de Búnker por Pierna (Fishbowl Auditable)
+
+### 🔹 8.1 Regla para Piernas en Lastre / Vacío (`BALLAST`)
+- **Fórmula de Días de Mar (`Sea Days`):**
+  $$\text{Sea Days}_{\text{ballast}} = \frac{\text{Distancia} \times (1 + \text{WeatherFactor})}{\text{Velocidad} \times 24}$$
+- **Días de Puerto (`Port Days`):** `0.00 Días` (sin operación portuaria ni sobrecostos aplicables).
+- **Consumo Búnker:**
+  $$\text{IFO}_{\text{ballast}} = \text{Sea Days}_{\text{ballast}} \times \text{ConsumoMarIFO}$$
+  $$\text{MDO}_{\text{ballast}} = \text{Sea Days}_{\text{ballast}} \times \text{ConsumoMarMDO}$$
+
+### 🔹 8.2 Regla para Piernas Cargadas (`LADEN`)
+- **Fórmula de Días de Mar (`Sea Days`):**
+  $$\text{Sea Days}_{\text{laden}} = \frac{\text{Distancia} \times (1 + \text{WeatherFactor})}{\text{Velocidad} \times 24}$$
+- **Días de Puerto y Horas Extras Operativas (`Port Days`):**
+  - **Operación de Carga/Descarga:** $(\frac{Q}{\text{Ritmo Carga}}) + (\frac{Q}{\text{Ritmo Descarga}})$.
+  - **Horas Extras de Puerto (*Turn Time Overheads* & *Positioning Maneuvers*):** Incluye las horas de espera (*Time to Count*) en origen y destino, más las maniobras de atraque (*Positioning Maneuvers*):
+    $$\text{Horas Extra} = \text{Overhead}_{\text{origen}} + \text{Overhead}_{\text{destino}} + \text{Maniobra}_{\text{carga}} + \text{Maniobra}_{\text{descarga}}$$
+- **Consumo Búnker Consolidado:**
+  $$\text{IFO}_{\text{laden}} = (\text{SeaDays} \times \text{ConsumoMar}) + (\text{IdleDays} \times \text{ConsumoIdle}) + (\text{LoadDays} \times \text{ConsumoLoad}) + (\text{DischDays} \times \text{ConsumoDisch})$$
+
+### 🔹 8.3 Desglose Auditable en Interfaz (UI) y PDF (Fishbowl)
+- Tanto en la Vista Web de **Auditoría Final** como en la **Acta PDF**, se renderiza el bloque transparente **`🐟 FISHBOWL AUDIT TRAIL — DESGLOSE DE PIERNAS Y FÓRMULAS SUSTITUIDAS`**, desglosando pierna por pierna las millas náuticas, días de mar, horas extras de puerto, consumo de toneladas IFO/MDO y costo en USD con fórmulas numéricas reales sustituidas.
+
+
 
 
 
