@@ -132,9 +132,12 @@ Tanto el motor central `spot_engine.py` como las Vistas en Frontend (Matriz Fina
 ### 🔹 Card 4 — Maestro Rutas (Badge: `routes`)
 - **Tablas Fuentes en Supabase:** `routes_clients` (para NEXA y SPCC) y `routes_prospects` (para Prospectos).
 - **Campos Mapeados:**
-  - Trayecto: `origin_port_id` $\rightarrow$ `destination_port_id`.
-  - Distancia 1-way: `route_distance` (NM).
-  - Distancia Total del Viaje: `distancia_total` (NM) acumulando todas las piernas (lastre y cargadas).
-  - Factores de Clima: `weather_factor_laden` (%) y `weather_factor_ballast` (%).
+  - **Trayecto General:** `origin_port_id` $\rightarrow$ `destination_port_id`.
+  - **Desglose Obligatorio Pierna por Pierna (`LADEN` vs `BALLAST`):**
+    - Muestra explícitamente cada pierna del itinerario (`P#1 BALLAST`, `P#2 LADEN`, etc.) indicando su puerto origen, puerto destino y la distancia náutica individual de esa pierna (`distance` en NM).
+    - Aplica tanto para rutas simples de ida y vuelta como para rutas complejas multiruta (p.ej. NEXA de 3 piernas).
+  - **Distancia Total del Viaje:** `distancia_total` (NM) acumulando la suma exacta de todas las piernas.
+  - **Factores de Clima:** `weather_factor_laden` (%) y `weather_factor_ballast` (%).
+
 
 

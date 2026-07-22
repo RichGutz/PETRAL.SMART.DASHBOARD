@@ -94,15 +94,15 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
 
     useEffect(() => {
         Promise.all([
+            ForecastService.getRoutesMaster().catch(() => []),
             ForecastService.getSpotVoyages().catch(() => []),
-            ForecastService.listSpots().catch(() => []),
             ForecastService.getVessels().catch(() => []),
             ForecastService.getContractsMaster().catch(() => []),
-        ]).then(([spotVoyages, listSpots, v, c]) => {
-            const allRoutes = [...(spotVoyages || []), ...(listSpots || [])];
+        ]).then(([masterRoutes, spotVoyages, v, c]) => {
+            const allRoutes = [...(masterRoutes || []), ...(spotVoyages || [])];
             const routeMap = new Map();
             allRoutes.forEach((r: any, i: number) => {
-                const id = r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id || r.name || r.id || `route-${i}`;
+                const id = r._id || r.client_route_id || r.prospect_route_id || r.route_id || r.spot_id || r.name || `route-${i}`;
                 if (id && !routeMap.has(id)) {
                     routeMap.set(id, { ...r, _id: id });
                 }
@@ -130,37 +130,26 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
         });
     }, []);
 
-    // Clientes extraídos dinámicamente de routes_clients y routes_prospects
-    const availableClients = useMemo(() => {
-        const clientsSet = new Set<string>();
-        routes.forEach((r: any) => {
-            const name = (r.name || "").trim().toUpperCase();
-            if (name.startsWith("SPCC")) clientsSet.add("SPCC");
-            else if (name.startsWith("NEXA")) clientsSet.add("NEXA");
-            else {
-                const firstPart = name.split(".")[0];
-                if (firstPart && firstPart.length < 15) clientsSet.add(firstPart);
-                else clientsSet.add("SPOT");
-            }
-        });
-        const list = Array.from(clientsSet);
-        if (!list.includes("NEXA")) list.unshift("NEXA");
-        if (!list.includes("SPCC")) list.unshift("SPCC");
-        return list;
-    }, [routes]);
+    // Clientes fijos según regla de negocio
+    const availableClients = ["NEXA", "SPCC", "PROSPECTOS"];
 
     // Rutas filtradas en cascada según el cliente seleccionado
     const filteredRoutes = useMemo(() => {
         if (!selectedClientId) return routes;
         const cleanClient = selectedClientId.trim().toUpperCase();
-        const res = routes.filter((r: any) => {
+        return routes.filter((r: any) => {
             const name = (r.name || "").trim().toUpperCase();
-            if (cleanClient === "SPOT") {
-                return !name.startsWith("NEXA") && !name.startsWith("SPCC");
+            if (cleanClient === "SPCC") {
+                return r.client_group === "SPCC" || name.startsWith("SPCC");
             }
-            return name.startsWith(cleanClient);
+            if (cleanClient === "NEXA") {
+                return (r.client_group === "NEXA" || name.startsWith("NEXA")) && !r.is_prospect;
+            }
+            if (cleanClient === "PROSPECTOS") {
+                return r.is_prospect || (!name.startsWith("SPCC") && !name.startsWith("NEXA"));
+            }
+            return true;
         });
-        return res.length > 0 ? res : routes;
     }, [selectedClientId, routes]);
 
     // Autoseleccionar la primera ruta del cliente activo cuando cambia selectedClientId
@@ -388,7 +377,7 @@ const renderScenarioContent = (
                             </div>
                             <div className="p-3 flex flex-col gap-1.5 flex-1 justify-between">
                                 <div className={`text-[10px] italic leading-tight mb-1 ${COLOR_SCHEME.agency_matrix.text}`}>Llaves: Cliente + Puerto + Op + Barco</div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Cliente</span><span className="font-mono text-slate-800 font-bold text-xs">SPCC</span></div>
+                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Cliente</span><span className="font-mono text-slate-800 font-bold text-xs">{selectedClientId || "NEXA"}</span></div>
                                 <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Port Cost Origen (port_costs)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(Object.values(scenarioResult.port_costs_breakdown?.origin || {}).reduce((s: any, v: any) => s + (v || 0), 0))}</span></div>
                                 <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Port Cost Destino (port_costs)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(Object.values(scenarioResult.port_costs_breakdown?.destination || {}).reduce((s: any, v: any) => s + (v || 0), 0))}</span></div>
                                 <div className="flex justify-between items-baseline border-t border-dashed border-rose-200 pt-1 mt-0.5">
@@ -440,7 +429,7 @@ const renderScenarioContent = (
                                         </div>
                                         {/* Derecha: Tabla miniatura */}
                                         <div className="border-l border-emerald-100 pl-3 flex flex-col justify-start gap-2">
-                                            <div className={`text-[8px] font-bold uppercase mb-1 ${COLOR_SCHEME.contracts.text}`}>Tarifario SPCC por Bracket</div>
+                                            <div className={`text-[8px] font-bold uppercase mb-1 ${COLOR_SCHEME.contracts.text}`}>Tarifario {selectedClientId || "NEXA"} por Bracket</div>
                                             <div className="overflow-x-auto rounded border border-emerald-100 bg-white">
                                                 <table className="w-full text-[9px] border-collapse table-fixed">
                                                     <thead>
@@ -451,7 +440,7 @@ const renderScenarioContent = (
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-100 font-mono">
-                                                        {(TARIFFS_MAP[destPort] || []).map((t, idx) => {
+                                                        {((activeContract && activeContract.tariffs && activeContract.tariffs.length > 0) ? activeContract.tariffs.map((t: any) => ({ min: t.min_tonnage || t.min || 0, max: t.max_tonnage || t.max || 0, rate: t.freight_rate || t.rate || 0 })) : (TARIFFS_MAP[destPort] || TARIFFS_MAP['MARCONA'] || [])).map((t: any, idx: number) => {
                                                             const isActive = (scenarioResult.raw_inputs?.quantity || 0) >= t.min && (scenarioResult.raw_inputs?.quantity || 0) <= t.max;
                                                             return (
                                                                 <tr key={idx} className={`${isActive ? 'bg-emerald-100 font-bold text-emerald-950' : 'text-slate-600'}`}>
@@ -494,9 +483,34 @@ const renderScenarioContent = (
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.routes.badge}`}>routes</span>
                             </div>
                             <div className="p-3 flex flex-col gap-1.5 flex-1 justify-between">
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.routes.text}`}>Origen &rarr; Destino</span><span className="font-mono text-slate-800 font-bold text-xs">{originPort} &rarr; {destPort}</span></div>
-                                <div className="flex justify-between items-baseline border-t border-dashed border-cyan-200 pt-1 mt-0.5"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.routes.text}`}>Distancia 1-way (dist)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(scenarioResult.raw_inputs?.route_distance || 0)} NM</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-bold text-[10px] uppercase text-cyan-700`}>Dist. TOTAL VIAJE</span><span className="font-mono text-cyan-800 font-black text-xs">{formatNumber(scenarioResult.distancia_total || 0)} NM</span></div>
+                                <div className="flex justify-between items-baseline mb-1">
+                                    <span className={`font-bold text-[10px] uppercase ${COLOR_SCHEME.routes.text}`}>Trayecto General</span>
+                                    <span className="font-mono text-slate-800 font-bold text-xs">{originPort} &rarr; {destPort}</span>
+                                </div>
+
+                                {/* Desglose Detallado Pierna por Pierna (LADEN vs BALLAST) */}
+                                <div className="flex flex-col gap-1 my-1 border-t border-b border-purple-200/60 py-1.5 bg-white/50 rounded px-1.5">
+                                    <span className="text-[9px] font-extrabold uppercase text-purple-900 tracking-wider">Desglose de Piernas ({((scenarioResult.tramos || tramos || []).length)}):</span>
+                                    {(scenarioResult.tramos || tramos || []).map((tr: any, idx: number) => {
+                                        const isLaden = (tr.type || '').toUpperCase() === 'LADEN';
+                                        const badgeStyle = isLaden 
+                                            ? 'bg-emerald-100 text-emerald-900 border-emerald-300 font-black' 
+                                            : 'bg-slate-100 text-slate-700 border-slate-300 font-bold';
+                                        return (
+                                            <div key={idx} className="flex justify-between items-center text-[9.5px]">
+                                                <div className="flex items-center gap-1">
+                                                    <span className={`px-1 py-0.5 rounded border text-[8px] uppercase tracking-tighter ${badgeStyle}`}>
+                                                        P#{idx+1} {isLaden ? 'LADEN' : 'BALLAST'}
+                                                    </span>
+                                                    <span className="font-medium text-slate-800">{tr.origin_port_id} &rarr; {tr.destination_port_id}</span>
+                                                </div>
+                                                <span className="font-mono font-bold text-slate-900">{formatNumber(tr.distance || tr.route_distance || 0)} NM</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className="flex justify-between items-baseline border-t border-dashed border-cyan-200 pt-1 mt-0.5"><span className={`font-bold text-[10px] uppercase text-cyan-700`}>Dist. TOTAL VIAJE</span><span className="font-mono text-cyan-800 font-black text-xs">{formatNumber(scenarioResult.distancia_total || 0)} NM</span></div>
                                 <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.routes.text}`}>W Fct (Laden)</span><span className="font-mono text-slate-800 font-bold text-xs">{((scenarioResult.raw_inputs?.weather_factor_laden || 0)*100).toFixed(1)}%</span></div>
                                 <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.routes.text}`}>W Fct (Ballast)</span><span className="font-mono text-slate-800 font-bold text-xs">{((scenarioResult.raw_inputs?.weather_factor_ballast || 0)*100).toFixed(1)}%</span></div>
                             </div>
