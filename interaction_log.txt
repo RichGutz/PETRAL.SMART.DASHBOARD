@@ -2,8 +2,13 @@
 INTERACTION LOG - PETRAL SMART DASHBOARD
 Fecha: 2026-07-22
 ================================================================================
-- Tarea: Inicio de refinamiento de Reglas Comerciales en Inputs/Cards Maestros de Auditoría.
-- Hito / Commit: PULIENDO.ACTA.AUDITORIA.
-- Estado: Commit registrado exitosamente.
+- Tarea: Refinamiento de Reglas Comerciales, Búnker y Logos en Acta de Auditoría.
+- Hito / Commit: PULIENDO.ACTA.AUDITORIA (Commit 4da8b34).
+- Ajustes Logos: PETRAL -20% (30px), GEEKSOFT +30% (49px).
+- Estructura: 5 Cards Maestros (Rutas, Buques, Búnker, Contratos & Comercial, Puertos).
+- Ajuste Fórmulas: Ritmos Carga/Descarga corregidos a ritmos contractuales directos (contract_load_rate / contract_discharge_rate).
+- Orden de Impresión: Rutas de SPCC priorizadas en primer lugar, seguidas por rutas NEXA.
+- Resultado: ✅ Acta PDF B&W Landscape re-generada con éxito en Obsidian y Raíz.
 ================================================================================
+
 

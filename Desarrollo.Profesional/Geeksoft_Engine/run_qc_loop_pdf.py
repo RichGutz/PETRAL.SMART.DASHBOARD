@@ -112,14 +112,14 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
             <table style="width: 100%; border-collapse: collapse; border-bottom: 2px solid #000000; margin-bottom: 8px;">
                 <tr>
                     <td style="width: 25%; text-align: left; vertical-align: middle; border: none; padding: 0;">
-                        <img src="file:///{LOGO_PETRAL_PATH}" style="height: 38px; width: auto;" alt="PETRAL LOGO" />
+                        <img src="file:///{LOGO_PETRAL_PATH}" style="height: 30px; width: auto;" alt="PETRAL LOGO" />
                     </td>
                     <td style="width: 50%; text-align: center; vertical-align: middle; border: none; padding: 0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 9.5pt; color: #000000;">
                         PETRAL SMART DASHBOARD • MOTOR SPOT GEEKSOFT ENGINE<br/>
                         <span style="font-size: 7.5pt; font-weight: normal;">ACTA OFICIAL DE AUDITORÍA Y TRAZABILIDAD (SPCC & NEXA)</span>
                     </td>
                     <td style="width: 25%; text-align: right; vertical-align: middle; border: none; padding: 0;">
-                        <img src="file:///{LOGO_GEEKSOFT_PATH}" style="height: 38px; width: auto;" alt="GEEKSOFT LOGO" />
+                        <img src="file:///{LOGO_GEEKSOFT_PATH}" style="height: 49px; width: auto;" alt="GEEKSOFT LOGO" />
                     </td>
                 </tr>
             </table>
@@ -173,10 +173,11 @@ def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list, ve
     lines.append(f"🚢 AUDITANDO RUTA: {name} ({num_legs} Piernas)")
     lines.append("═" * W)
     lines.append("📋 [INPUTS Y VARIABLES DE ORIGEN DE CÁLCULO - CARDS MAESTROS]:")
-    lines.append(f"  • CARD 1 (RUTAS):     Itinerario: {trayecto_str} | Dist. Total: {tot_dist:,.1f} NM | Weather Factor: 3.0% (0.03)")
-    lines.append(f"  • CARD 2 (BUQUES):    Vessel: {vessel.get('vessel_id')} | Speed: {vessel.get('vessel_speed')} kts | Cons. Sea IFO: {vessel.get('consumption_sea_ifo')} t/d | Idle: {vessel.get('consumption_idle_ifo')} t/d | Precios: IFO ${p_ifo}/t | MDO ${p_mdo}/t")
-    lines.append(f"  • CARD 3 (CONTRATOS): Cliente: {client_name} | Q: {Q:,.0f} MT | Freight Base: ${F:,.2f}/MT | Ritmo Carga: {r_l:,.0f} T/h | Ritmo Desc: {r_d:,.0f} T/h")
-    lines.append(f"  • CARD 4 (PUERTOS):   Agencia Carga ({orig_p}): ${c_orig:,.2f} USD | Agencia Descarga ({dest_p}): ${c_dest:,.2f} USD | Total Port Costs: ${port_costs:,.2f} USD")
+    lines.append(f"  • CARD 1 (RUTAS):                 Itinerario: {trayecto_str} | Dist. Total: {tot_dist:,.1f} NM | Weather Factor: 3.0% (0.03)")
+    lines.append(f"  • CARD 2 (BUQUES):                Vessel: {vessel.get('vessel_id')} | Speed: {vessel.get('vessel_speed')} kts | Cons. Sea IFO: {vessel.get('consumption_sea_ifo')} t/d | Cons. Idle IFO: {vessel.get('consumption_idle_ifo')} t/d")
+    lines.append(f"  • CARD 3 (BÚNKER):                Precio IFO: ${p_ifo:,.2f}/t | Precio MDO: ${p_mdo:,.2f}/t | Consumo Est.: {ifo_tonnage:,.2f} t IFO / {mdo_tonnage:,.2f} t MDO | BAF Baseline: $430.00/t")
+    lines.append(f"  • CARD 4 (CONTRATOS & COMERCIAL): Cliente: {client_name} | Q: {Q:,.0f} MT | Freight Base: ${F:,.2f}/MT | Ritmo Carga: {r_l:,.0f} T/h | Ritmo Desc: {r_d:,.0f} T/h | Comisiones: Address 0.0% / Broker 0.0%")
+    lines.append(f"  • CARD 5 (PUERTOS & AGENCIA):     Agencia Carga ({orig_p}): ${c_orig:,.2f} USD | Agencia Descarga ({dest_p}): ${c_dest:,.2f} USD | Total Port Costs: ${port_costs:,.2f} USD")
     lines.append("─" * W)
     lines.append("  ┌" + "─" * (W - 4))
     lines.append(f"  │ 📍 RESUMEN CONSOLIDADO: Distancia {tot_dist:,.1f} NM | Días Totales {tot_days:.2f}d ({sea_days:.2f}d Mar + {port_days:.2f}d Puerto)")
@@ -246,8 +247,8 @@ def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list, ve
     lines.append(border_mid)
     
     metrics = [
-        ("1. Ritmo Carga (act_load)", "min(contract, v_pump, t_lim)", f"{r_l:,.0f} T/h", f"{r_l:,.0f} T/h"),
-        ("2. Ritmo Descarga (act_disch)", "min(contract, v_pump, t_lim)", f"{r_d:,.0f} T/h", f"{r_d:,.0f} T/h"),
+        ("1. Ritmo Carga (act_load)", "contract_load_rate", f"{r_l:,.0f} T/h", f"{r_l:,.0f} T/h"),
+        ("2. Ritmo Descarga (act_disch)", "contract_discharge_rate", f"{r_d:,.0f} T/h", f"{r_d:,.0f} T/h"),
         ("3. Días de Puerto (port_days)", "(Q/act_load)/24 + (Q/act_disch)/24 + idle", f"Load({(Q/r_l)/24:.2f}d) + Disch({(Q/r_d)/24:.2f}d) + Overheads", f"{port_days:.2f} Días"),
         ("4. Días de Mar (sea_days)", "(dist * (1 + WF)) / (speed * 24)", f"[{tot_dist:,.1f} NM × (1 + 3% WF)] / [11 kts × 24h]", f"{sea_days:.2f} Días"),
         ("5. Días de Viaje (tot_dur)", "sea_days + port_days", f"{sea_days:.2f}d Mar + {port_days:.2f}d Puerto", f"{tot_days:.2f} Días"),
@@ -279,6 +280,17 @@ def run_qc_test_suite():
     sb = get_supabase()
     routes_res = sb.table("routes_clients").select("*").execute()
     routes = routes_res.data or []
+    
+    # Ordenar rutas: SPCC primero (0), luego NEXA (1), luego otros (2)
+    def route_sort_key(r):
+        name = (r.get("name") or "").upper()
+        if "SPCC" in name:
+            return (0, name)
+        elif "NEXA" in name:
+            return (1, name)
+        return (2, name)
+
+    routes = sorted(routes, key=route_sort_key)
     
     v_res = sb.table("vessels").select("*").eq("vessel_id", "MOQUEGUA").execute()
     vessel = v_res.data[0] if v_res.data else {

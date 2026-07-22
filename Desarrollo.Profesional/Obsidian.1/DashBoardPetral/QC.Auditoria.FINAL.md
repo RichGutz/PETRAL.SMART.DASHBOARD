@@ -22,9 +22,10 @@ El informe oficial se genera mediante el script de validación autónoma `run_qc
 1. **Orientación de Página**: `A4 Landscape` (Horizontal) — 1 Ruta por Página (`page-break-after: always`).
 2. **Estilo Visual**: Monocromático estricto en **Blanco y Negro** (`#ffffff` fondo, `#000000` texto), con tipografía monoespaciada de consola (`Courier New`).
 3. **Cabecera Institucional Superior (Tabla HTML 100% Ancho)**:
-   - **Extrema Izquierda**: Logo Oficial PETRAL (`Logo.Petral.png`).
+   - **Extrema Izquierda**: Logo Oficial PETRAL (`Logo.Petral.png`) — Altura ajustada a `30px` (reducción de 20%).
    - **Centro**: Título Oficial `PETRAL SMART DASHBOARD • MOTOR SPOT GEEKSOFT ENGINE`.
-   - **Extrema Derecha**: Logo Oficial GEEKSOFT (`Logo.Geeksoft.png`).
+   - **Extrema Derecha**: Logo Oficial GEEKSOFT (`Logo.Geeksoft.png`) — Altura ajustada a `49px` (ampliación de 30%).
+4. **Secuencia de Impresión de Rutas**: Prioridad estricta para que las rutas comerciales del cliente **SPCC** se procesen e impriman primero, seguidas por las rutas de **NEXA**.
 
 ---
 
@@ -33,9 +34,10 @@ El informe oficial se genera mediante el script de validación autónoma `run_qc
 En el encabezado de cada ficha por ruta se listan de forma explícita los parámetros leídos desde las tablas base de Supabase (`routes_clients`, `vessels`, `contracts`):
 
 - **CARD 1 (RUTAS)**: Itinerario completo (p. ej. `ILO ➔ CALLAO ➔ MARCONA ➔ ILO`), Distancia Náutica Total ($NM$), Factor Clima ($WF = 3.0\%$).
-- **CARD 2 (BUQUES)**: Nombre del Buque (`MOQUEGUA`), Velocidad ($11.0\text{ kts}$), Consumo Sea/Idle IFO ($14.0 / 2.4\text{ t/d}$), Precios Búnker ($IFO = \$895.14\text{/t}$, $MDO = \$1,460.30\text{/t}$).
-- **CARD 3 (CONTRATOS)**: Cliente Comercial (`SPCC` / `NEXA`), Cantidad Carga ($Q = 13,500\text{ MT}$ o $15,000\text{ MT}$), Tarifa Base Flete ($F = \$25.00$ - $\$30.00\text{/MT}$), Ritmos de Carga/Descarga Acordados ($T/h$).
-- **CARD 4 (PUERTOS)**: Tarifas de Agencia Portuaria por Puerto y Total Costos de Puerto.
+- **CARD 2 (BUQUES)**: Nombre del Buque (`MOQUEGUA`), Velocidad ($11.0\text{ kts}$), Consumo Sea/Idle IFO ($14.0 / 2.4\text{ t/d}$).
+- **CARD 3 (BÚNKER)**: Precios Mercado ($IFO = \$895.14\text{/t}$, $MDO = \$1,460.30\text{/t}$), Consumo Total Estimado IFO/MDO (t) y Cláusula BAF Baseline ($430.00\text{ USD/t}$).
+- **CARD 4 (CONTRATOS & REGLAS COMERCIALES)**: Cliente Comercial (`SPCC` / `NEXA`), Cantidad Carga ($Q = 13,500\text{ MT}$ o $15,000\text{ MT}$), Tarifa Base Flete ($F = \$25.00$ - $\$30.00\text{/MT}$), Ritmos de Carga/Descarga Acordados ($T/h$), Comisiones Commercial/Brokerage ($0.0\%$).
+- **CARD 5 (PUERTOS & AGENCIA)**: Tarifas de Agencia Portuaria por Puerto (Origen / Destino) y Total Costos de Puerto.
 
 ---
 
@@ -65,8 +67,8 @@ Al pie de cada ficha se incluye la replica de las 12 Métricas Oficiales de la U
 
 | ÍTEM / MÉTRICA OFICIAL | FÓRMULA APLICADA | CÁLCULO SUSTITUIDO NUMÉRICO | GEEKSOFT ENGINE | PETRAL | DELTA |
 | :--- | :--- | :--- | :---: | :---: | :---: |
-| **1. Ritmo Carga (`act_load`)** | `min(contract, v_pump, t_lim)` | `500 T/h` | `500 T/h` | `______` | `______` |
-| **2. Ritmo Descarga (`act_disch`)** | `min(contract, v_pump, t_lim)` | `345 T/h` | `345 T/h` | `______` | `______` |
+| **1. Ritmo Carga (`act_load`)** | `contract_load_rate` | `500 T/h` | `500 T/h` | `______` | `______` |
+| **2. Ritmo Descarga (`act_disch`)** | `contract_discharge_rate` | `345 T/h` | `345 T/h` | `______` | `______` |
 | **3. Días de Puerto (`port_days`)** | `(Q/act_load)/24 + (Q/act_disch)/24 + idle` | `Load + Disch + Overheads` | `3.30 Días` | `______` | `______` |
 | **4. Días de Mar (`sea_days`)** | `(dist * (1 + WF)) / (speed * 24)` | `[Dist × (1 + 3%)] / [11 × 24]` | `4.10 Días` | `______` | `______` |
 | **5. Días de Viaje (`tot_dur`)** | `sea_days + port_days` | `Sea Days + Port Days` | `7.40 Días` | `______` | `______` |

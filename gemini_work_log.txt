@@ -24,8 +24,32 @@ Fecha: 2026-07-21 (Sesión de Cierre de Trabajo)
 ================================================================================
 Fecha: 2026-07-22
 ================================================================================
-[INICIO DE REFINAMIENTO REGLAS COMERCIALES]:
-- Hito: Commit `PULIENDO.ACTA.AUDITORIA` registrado en repositorio local.
-- Siguiente paso: Revisar e integrar detalle completo de reglas comerciales en Cards Maestros de Inputs.
+[REFINAMIENTO DE ACTA PDF Y REGLAS COMERCIALES]:
+1. Hito de Control de Cambios:
+   - Git commit grabado: `PULIENDO.ACTA.AUDITORIA` (Commit `4da8b34`).
+
+2. Ajustes de Maquetación de Cabecera:
+   - Logo PETRAL: Reducción del 20% (de `38px` a `30px`).
+   - Logo GEEKSOFT: Ampliación del 30% (de `38px` a `49px`).
+
+3. Ampliación de Inputs a 5 Cards Maestros:
+   - CARD 1 (RUTAS): Itinerario, Distancia NM, Weather Factor 3.0%.
+   - CARD 2 (BUQUES): Buque, Velocidad kts, Consumos Sea/Idle.
+   - CARD 3 (BÚNKER): Precios IFO/MDO, Consumos Totales Est., Cláusula BAF Baseline ($430/t).
+   - CARD 4 (CONTRATOS & REGLAS COMERCIALES): Q (MT), Freight Base ($/MT), Ritmos Carga/Descarga, Comisiones.
+   - CARD 5 (PUERTOS & AGENCIA): Costos de agencia por puerto (Origen/Destino) y total.
+
+4. Corrección de Fórmulas en Tabla 12 Métricas:
+   - Ritmo Carga (`act_load`): `contract_load_rate` (Ritmo Contractual Directo de Matriz).
+   - Ritmo Descarga (`act_disch`): `contract_discharge_rate` (Ritmo Contractual Directo de Matriz).
+
+5. Orden de Impresión de Rutas:
+   - Rutas SPCC ordenadas y procesadas primero (prioridad 0), seguidas por NEXA.
+
+6. Estado de QC y Artefactos:
+   - Documento actualizado: QC.Auditoria.FINAL.md.
+   - Script ejecutado: run_qc_loop_pdf.py.
+   - PDF Oficial re-generado exitosamente: ✅ ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf.
 ================================================================================
+
 
