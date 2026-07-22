@@ -52,3 +52,25 @@ python Desarrollo.Profesional/Geeksoft_Engine/run_qc_matriz_financiera.py
 ```
 
 El script consulta Supabase, ejecuta las simulaciones para el buque `MOQUEGUA` e imprime la matriz consolidada verificando la tasa de éxito al 100%.
+
+---
+
+## 5. 📜 Evidencia de Ejecución Autónoma del QC Loop (Registro de Log)
+
+```text
+==============================================================================================================
+📊 [QC MATRIZ FINANCIERA] CALCULANDO MATRIZ FINANCIERA CONSOLIDADA DE RUTAS SPCC Y NEXA
+==============================================================================================================
+
+CLIENTE  │ NOMBRE RUTA                      │ DIST (NM)  │ DÍAS MAR  │ DÍAS PTO  │ BÚNKER ($)   │ PUERTOS ($)  │ FLETE ($)    │ PNL NETO ($) │ TCE ($/d)   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+NEXA     │ NEXA.ILO.CALLAO.MEJILLONES.ILO   │ 1632.0     │ 6.49      │ 3.31      │ 92,192.11    │ 81,327.99    │ 375,000.00   │ 201,479.90   │ 20,552.02   
+NEXA     │ NEXA.ILO.CALLAO.MATARANI.ILO     │ 1040.0     │ 4.06      │ 3.03      │ 60,720.26    │ 48,327.99    │ 405,000.00   │ 295,951.75   │ 41,749.05   
+SPCC     │ SPCC.ILO.MATARANI                │ 69.0       │ 0.27      │ 3.03      │ 13,310.05    │ 32,000.00    │ 344,250.00   │ 298,939.95   │ 90,432.16   
+SPCC     │ SPCC.ILO.MARCONA                 │ 279.0      │ 1.11      │ 3.03      │ 23,777.09    │ 55,000.00    │ 344,250.00   │ 265,472.91   │ 64,109.81   
+SPCC     │ SPCC.ILO.MEJILLONES              │ 335.0      │ 1.33      │ 3.03      │ 26,568.30    │ 65,000.00    │ 344,250.00   │ 252,681.70   │ 57,906.22   
+NEXA     │ NEXA.ILO.CALLAO.MARCONA.ILO      │ 1051.0     │ 4.10      │ 3.30      │ 62,233.73    │ 71,327.99    │ 344,250.00   │ 210,688.28   │ 28,480.65   
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+✅ [QC PASSED] Matriz Financiera validada 100% coincidente con Acta PDF.
+```
+

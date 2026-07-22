@@ -288,7 +288,19 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
                     const getMonthlyValues = (metricKey: string) => {
                         return months.map(m => {
-                            const val = monthData[m]?.[metricKey];
+                            let val = monthData[m]?.[metricKey];
+                            if (val === undefined || val === null || val === 0) {
+                                if (metricKey === "distancia_total") val = monthData[m]?.["total_distance"] || monthData[m]?.["distancia"];
+                                if (metricKey === "sea_days_unit") val = monthData[m]?.["sea_days"] || monthData[m]?.["tot_sea_days"];
+                                if (metricKey === "port_days_unit") val = monthData[m]?.["port_days"] || monthData[m]?.["tot_port_days"];
+                                if (metricKey === "total_duration_unit") val = monthData[m]?.["total_duration"] || monthData[m]?.["total_days"];
+                                if (metricKey === "bunker_ifo_tonnage_unit") val = monthData[m]?.["bunker_ifo_tonnage"] || monthData[m]?.["ifo_tons"];
+                                if (metricKey === "bunker_mdo_tonnage_unit") val = monthData[m]?.["bunker_mdo_tonnage"] || monthData[m]?.["mdo_tons"];
+                                if (metricKey === "total_port_costs_unit") val = monthData[m]?.["total_port_costs"] || monthData[m]?.["port_costs"];
+                                if (metricKey === "total_bunker_costs_unit") val = monthData[m]?.["total_bunker_costs"] || monthData[m]?.["bunker_costs"];
+                                if (metricKey === "tce_real_unit") val = monthData[m]?.["tce_real"] || monthData[m]?.["tce"];
+                                if (metricKey === "pl_vs_required_unit") val = monthData[m]?.["pl_vs_required"] || monthData[m]?.["pl_neto"];
+                            }
                             return val || 0;
                         });
                     };

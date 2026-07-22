@@ -12,5 +12,8 @@
 
 <RULE[markdown_pdf_conversion]>
 - **NO** convertir archivos Markdown (.md) a PDF automáticamente. Solo generar o convertir a PDF cuando el usuario lo solicite de manera explícita y directa.
-</RULE[markdown_pdf_conversion]>
+<RULE[no_browser]>
+- **NUNCA** abras ni utilices el navegador del usuario (browser_subagent). Toda prueba, auditoría y generación de PDF debe ejecutarse de forma no-interactiva en terminal mediante scripts de Python / Node.
+</RULE[no_browser]>
+
 

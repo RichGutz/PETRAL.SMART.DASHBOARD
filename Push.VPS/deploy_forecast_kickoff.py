@@ -57,15 +57,20 @@ def deploy():
         # 1. Crear directorio en VPS
         run(client, f"mkdir -p {APP_DIR} && rm -rf {APP_DIR}/*", "1. Preparar directorio")
 
-        # 2. Subir carpeta dist via SFTP
-        print(f"\n[2. Subiendo carpeta dist via SFTP]")
+        # 2. Subir carpeta dist y Geeksoft_Engine via SFTP
+        print(f"\n[2. Subiendo carpeta dist y backend Geeksoft_Engine via SFTP]")
         sftp = client.open_sftp()
         put_dir(sftp, DIST_DIR, APP_DIR)
+        
+        engine_local = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine"
+        engine_remote = "/opt/geeksoft_engine"
+        put_dir(sftp, engine_local, engine_remote)
         sftp.close()
-        print(f"  >> Carpeta dist subida con éxito ✓")
+        print(f"  >> Carpeta dist y Geeksoft_Engine subidas con éxito ✓")
 
-        # 3. Permisos correctos
-        run(client, f"find {APP_DIR} -type f -exec chmod 644 {{}} \\; && find {APP_DIR} -type d -exec chmod 755 {{}} \\; && chown -R www-data:www-data {APP_DIR} 2>/dev/null || true", "3. Permisos")
+        # 3. Permisos correctos y Reinicio de Backend
+        run(client, f"find {APP_DIR} -type f -exec chmod 644 {{}} \\; && find {APP_DIR} -type d -exec chmod 755 {{}} \\; && chown -R www-data:www-data {APP_DIR} 2>/dev/null || true", "3. Permisos Frontend")
+        run(client, "systemctl restart geeksoft-engine", "3. Reiniciar Servicio Backend FastAPI (geeksoft-engine)")
 
         # 4. Configurar Nginx con SSL Manual robusto
         nginx_cfg = f"""server {{

@@ -549,6 +549,40 @@ def get_ports(year: int = 2026):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/masters/routes")
+def get_routes_master():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        
+        clients_res = sb.table("routes_clients").select("*").execute()
+        prospects_res = sb.table("routes_prospects").select("*").execute()
+        
+        routes = []
+        for r in (clients_res.data or []):
+            name = (r.get("name") or "").strip().upper()
+            client_group = "SPCC" if name.startswith("SPCC") else ("NEXA" if name.startswith("NEXA") else "NEXA")
+            route_id = r.get("client_route_id") or r.get("route_id") or r.get("name")
+            routes.append({
+                **r,
+                "is_prospect": False,
+                "client_group": client_group,
+                "_id": route_id
+            })
+            
+        for r in (prospects_res.data or []):
+            route_id = r.get("prospect_route_id") or r.get("route_id") or r.get("name")
+            routes.append({
+                **r,
+                "is_prospect": True,
+                "client_group": "PROSPECTOS",
+                "_id": route_id
+            })
+            
+        return routes
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/routes")
 def get_routes():
     try:

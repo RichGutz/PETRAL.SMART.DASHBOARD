@@ -180,6 +180,10 @@ export const ForecastService = {
         const response = await api.post('/forecast/sources_sinks/delete', payload);
         return response.data;
     },
+    getRoutesMaster: async () => {
+        const response = await api.get('/forecast/masters/routes');
+        return response.data;
+    },
     getRoutes: async () => {
         const response = await api.get('/forecast/routes');
         return response.data;
