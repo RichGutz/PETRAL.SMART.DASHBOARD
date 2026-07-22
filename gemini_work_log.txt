@@ -22,3 +22,10 @@ Fecha: 2026-07-21 (Sesión de Cierre de Trabajo)
    - Reescritos e inmaculados: QC.Auditoria.FINAL.md, Loop.Coder.QC.AntiGravity.md, QC.Matriz.Financiera.md.
 
 ================================================================================
+Fecha: 2026-07-22
+================================================================================
+[INICIO DE REFINAMIENTO REGLAS COMERCIALES]:
+- Hito: Commit `PULIENDO.ACTA.AUDITORIA` registrado en repositorio local.
+- Siguiente paso: Revisar e integrar detalle completo de reglas comerciales en Cards Maestros de Inputs.
+================================================================================
+
