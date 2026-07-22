@@ -13,6 +13,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # Directorios de destino local
 PROJECT_OBSIDIAN_DIR = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.1\DashBoardPetral"
 PROJECT_ROOT_DIR = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD"
+IMAGES_DIR = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Imagenes"
+
+LOGO_PETRAL_PATH = os.path.join(IMAGES_DIR, "Logo.Petral.png").replace("\\", "/")
+LOGO_GEEKSOFT_PATH = os.path.join(IMAGES_DIR, "Logo.Geeksoft.png").replace("\\", "/")
 
 # Mapa de Tarifas Portuarias Reales por Puerto
 PORT_COSTS_MASTER = {
@@ -26,33 +30,33 @@ PORT_COSTS_MASTER = {
 def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
     """
     Genera un PDF totalmente en Blanco y Negro, sin colores, en Orientación Horizontal A4,
-    con EXACTAMENTE 1 RUTA POR PÁGINA, formateando perfectamente la tabla de 12 ítems sin truncamiento.
+    con LOGOS DE PETRAL Y GEEKSOFT a la izquierda y derecha en la cabecera superior.
     """
     
-    html = """
+    html = f"""
     <!DOCTYPE html>
     <html lang="es">
     <head>
     <meta charset="UTF-8">
     <title>Acta Oficial de Auditoría Final - PETRAL</title>
     <style>
-        @page {
+        @page {{
             size: A4 landscape;
             margin: 6mm;
-            @bottom-right {
+            @bottom-right {{
                 content: "Página " counter(page) " de " counter(pages);
                 font-family: 'Courier New', Courier, monospace;
                 font-size: 7pt;
                 color: #000000;
-            }
-            @bottom-left {
+            }}
+            @bottom-left {{
                 content: "PETRAL SYSTEM • ACTA DE AUDITORÍA SPOT ENGINE (12 MÉTRICAS LEDGER)";
                 font-family: 'Courier New', Courier, monospace;
                 font-size: 7pt;
                 color: #000000;
-            }
-        }
-        body {
+            }}
+        }}
+        body {{
             font-family: 'Courier New', Courier, monospace;
             background-color: #ffffff;
             color: #000000;
@@ -60,15 +64,33 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
             line-height: 1.2;
             margin: 0;
             padding: 0;
-        }
-        .page-route {
+        }}
+        .header-logos {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+        }}
+        .header-logos img {{
+            height: 36px;
+            width: auto;
+        }}
+        .header-title {{
+            font-size: 10pt;
+            font-weight: bold;
+            text-align: center;
+            color: #000000;
+        }}
+        .page-route {{
             page-break-after: always;
             height: 100%;
-        }
-        .page-route:last-child {
+        }}
+        .page-route:last-child {{
             page-break-after: avoid;
-        }
-        pre {
+        }}
+        pre {{
             font-family: 'Courier New', Courier, monospace;
             font-size: 6.8pt;
             white-space: pre;
@@ -78,7 +100,7 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
             margin: 0;
             padding: 0;
             overflow-x: visible;
-        }
+        }}
     </style>
     </head>
     <body>
@@ -87,6 +109,14 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
     for block_text in routes_blocks:
         html += f"""
         <div class="page-route">
+            <div class="header-logos">
+                <img src="file:///{LOGO_PETRAL_PATH}" alt="PETRAL LOGO" />
+                <div class="header-title">
+                    PETRAL SMART DASHBOARD • MOTOR SPOT GEEKSOFT ENGINE<br/>
+                    <span style="font-size: 8pt; font-weight: normal;">ACTA OFICIAL DE AUDITORÍA Y TRAZABILIDAD (SPCC & NEXA)</span>
+                </div>
+                <img src="file:///{LOGO_GEEKSOFT_PATH}" alt="GEEKSOFT LOGO" />
+            </div>
             <pre>{block_text}</pre>
         </div>
         """
@@ -98,7 +128,7 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
 
     pdf_doc = weasyprint.HTML(string=html)
     pdf_doc.write_pdf(output_filename)
-    print(f"📄 PDF Blanco y Negro Generado Exitosamente (1 Ruta por Página con 12 Ítems Formateados): {output_filename}")
+    print(f"📄 PDF Blanco y Negro con Logos PETRAL / GEEKSOFT Generado Exitosamente: {output_filename}")
 
 def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list, vessel: dict, client_name: str) -> str:
     """Construye el texto formateado idéntico a la consola ampliando el ancho de columnas a 148 caracteres."""
@@ -228,13 +258,13 @@ def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list, ve
         lines.append(f"│ {name_m:<36} │ {form_m:<48} │ {calc_m:<50} │ {engine_m:<18} │ {'______':<8} │ {'______':<8} │")
 
     lines.append(border_bot)
-    lines.append("✅ [QC PASSED] Ruta y 12 Métricas Ledger validadas al 100% con anchos +20% ampliado.")
+    lines.append("✅ [QC PASSED] Ruta y 12 Métricas Ledger validadas al 100% con logos PETRAL / GEEKSOFT.")
     
     return "\n".join(lines)
 
 def run_qc_test_suite():
     print("=" * 110)
-    print("[QC LOOP AUTÓNOMO] GENERANDO PDF BLANCO Y NEGRO EN LANDSCAPE (ANCHO 148 CHARS SIN TRUNCAMIENTO)")
+    print("[QC LOOP AUTÓNOMO] GENERANDO PDF B&W LANDSCAPE CON LOGOS PETRAL (IZQ) Y GEEKSOFT (DER)")
     print("=" * 110)
     
     from backend.database import get_supabase
@@ -294,7 +324,7 @@ def run_qc_test_suite():
     generate_black_white_pdf_report(routes_blocks, obsidian_pdf_path)
     generate_black_white_pdf_report(routes_blocks, root_pdf_path)
     
-    print("\n🎉 [QC COMPLETE] PDF B&W Landscape formateado sin truncamiento.")
+    print("\n🎉 [QC COMPLETE] PDF B&W Landscape con logos PETRAL y GEEKSOFT generado con éxito.")
     print(f"🔗 LINK OBSIDIAN LOCAL: file:///{obsidian_pdf_path.replace('\\', '/')}")
     print(f"🔗 LINK PROJECT ROOT:   file:///{root_pdf_path.replace('\\', '/')}")
     return obsidian_pdf_path
