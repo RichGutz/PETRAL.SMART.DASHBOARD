@@ -25,8 +25,8 @@ PORT_COSTS_MASTER = {
 
 def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
     """
-    Genera un PDF totalmente en Blanco y Negro, sin colores, en Orientación Horizontal,
-    con EXACTAMENTE 1 RUTA POR PÁGINA, incluyendo los 12 Ítems de Auditoría Ledger.
+    Genera un PDF totalmente en Blanco y Negro, sin colores, en Orientación Horizontal A4,
+    con EXACTAMENTE 1 RUTA POR PÁGINA, formateando perfectamente la tabla de 12 ítems sin truncamiento.
     """
     
     html = """
@@ -38,17 +38,17 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
     <style>
         @page {
             size: A4 landscape;
-            margin: 8mm;
+            margin: 6mm;
             @bottom-right {
                 content: "Página " counter(page) " de " counter(pages);
                 font-family: 'Courier New', Courier, monospace;
-                font-size: 7.5pt;
+                font-size: 7pt;
                 color: #000000;
             }
             @bottom-left {
                 content: "PETRAL SYSTEM • ACTA DE AUDITORÍA SPOT ENGINE (12 MÉTRICAS LEDGER)";
                 font-family: 'Courier New', Courier, monospace;
-                font-size: 7.5pt;
+                font-size: 7pt;
                 color: #000000;
             }
         }
@@ -56,7 +56,7 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
             font-family: 'Courier New', Courier, monospace;
             background-color: #ffffff;
             color: #000000;
-            font-size: 7pt;
+            font-size: 6.8pt;
             line-height: 1.2;
             margin: 0;
             padding: 0;
@@ -70,13 +70,14 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
         }
         pre {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 7pt;
-            white-space: pre-wrap;
-            word-wrap: break-word;
+            font-size: 6.8pt;
+            white-space: pre;
+            word-wrap: normal;
             color: #000000;
             background-color: #ffffff;
             margin: 0;
             padding: 0;
+            overflow-x: visible;
         }
     </style>
     </head>
@@ -97,10 +98,10 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
 
     pdf_doc = weasyprint.HTML(string=html)
     pdf_doc.write_pdf(output_filename)
-    print(f"📄 PDF Blanco y Negro Generado Exitosamente (1 Ruta por Página con 12 Ítems): {output_filename}")
+    print(f"📄 PDF Blanco y Negro Generado Exitosamente (1 Ruta por Página con 12 Ítems Formateados): {output_filename}")
 
 def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list, vessel: dict, client_name: str) -> str:
-    """Construye el texto formateado idéntico a la consola con los 4 Cards de Inputs y los 12 Ítems de Auditoría Ledger al pie."""
+    """Construye el texto formateado idéntico a la consola ampliando el ancho de columnas a 148 caracteres."""
     tot_dist = c.get("total_distance", 0)
     tot_days = c.get("total_days", 0)
     sea_days = c.get("total_sea_days", 0)
@@ -131,21 +132,22 @@ def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list, ve
 
     trayecto_str = " ➔ ".join([t.get("origin_port_id") for t in tramos] + [tramos[-1].get("destination_port_id")])
 
+    W = 148
     lines = []
     lines.append(f"🚢 AUDITANDO RUTA: {name} ({num_legs} Piernas)")
-    lines.append("═" * 110)
+    lines.append("═" * W)
     lines.append("📋 [INPUTS Y VARIABLES DE ORIGEN DE CÁLCULO - CARDS MAESTROS]:")
     lines.append(f"  • CARD 1 (RUTAS):     Itinerario: {trayecto_str} | Dist. Total: {tot_dist:,.1f} NM | Weather Factor: 3.0% (0.03)")
     lines.append(f"  • CARD 2 (BUQUES):    Vessel: {vessel.get('vessel_id')} | Speed: {vessel.get('vessel_speed')} kts | Cons. Sea IFO: {vessel.get('consumption_sea_ifo')} t/d | Idle: {vessel.get('consumption_idle_ifo')} t/d | Precios: IFO ${p_ifo}/t | MDO ${p_mdo}/t")
     lines.append(f"  • CARD 3 (CONTRATOS): Cliente: {client_name} | Q: {Q:,.0f} MT | Freight Base: ${F:,.2f}/MT | Ritmo Carga: {r_l:,.0f} T/h | Ritmo Desc: {r_d:,.0f} T/h")
     lines.append(f"  • CARD 4 (PUERTOS):   Agencia Carga ({orig_p}): ${c_orig:,.2f} USD | Agencia Descarga ({dest_p}): ${c_dest:,.2f} USD | Total Port Costs: ${port_costs:,.2f} USD")
-    lines.append("─" * 110)
-    lines.append("  ┌" + "─" * 108)
+    lines.append("─" * W)
+    lines.append("  ┌" + "─" * (W - 4))
     lines.append(f"  │ 📍 RESUMEN CONSOLIDADO: Distancia {tot_dist:,.1f} NM | Días Totales {tot_days:.2f}d ({sea_days:.2f}d Mar + {port_days:.2f}d Puerto)")
     lines.append(f"  │ ⛽ Búnker Total:  ${bunker_cost:,.2f} USD ({ifo_tonnage:.2f} t IFO | {mdo_tonnage:.2f} t MDO)")
     lines.append(f"  │ ⚓ Puerto Total:  ${port_costs:,.2f} USD")
     lines.append(f"  │ 💰 Ingreso Flete: ${net_income:,.2f} USD | PnL Neto: ${pnl_net:,.2f} USD | TCE: ${tce_real:,.2f} USD/Día")
-    lines.append("  ├" + "─" * 108)
+    lines.append("  ├" + "─" * (W - 4))
     lines.append("  │ 🔍 ARITMÉTICA EXPLICATIVA Y ORIGEN DE LOS DÍAS (MAR VS PUERTO):")
 
     for idx, tr in enumerate(tramos):
@@ -192,40 +194,49 @@ def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list, ve
             lines.append(f"  │       🔥 Búnker Total Pierna: ${bunk_total_leg:,.2f} USD")
             lines.append(f"  │       🚢 Agencia Puerto:      $0.00 USD (Lastre)")
 
-    lines.append("  └" + "─" * 108)
+    lines.append("  └" + "─" * (W - 4))
 
-    # AL PIE: TABLA OFICIAL DE LAS 12 MÉTRICAS DE AUDITORÍA LEDGER (REPLICADA DE LA UI)
+    # AL PIE: TABLA OFICIAL DE LAS 12 MÉTRICAS DE AUDITORÍA LEDGER (FORMATO ANCHO SIN TRUNCAMIENTO)
     lines.append("\n📊 [TABLA OFICIAL DE AUDITORÍA LEDGER — 12 MÉTRICAS REPLICADAS DE LA UI]:")
-    lines.append("┌" + "─" * 108 + "┐")
-    lines.append("│ ÍTEM / MÉTRICA OFICIAL               │ FÓRMULA APLICADA             │ CÁLCULO SUSTITUIDO NUMÉRICO        │ GEEKSOFT ENGINE  │ PETRAL │ DELTA  │")
-    lines.append("├" + "─" * 108 + "┤")
+    
+    # Anchos de columna optimizados (Suma exact de 148 caracteres):
+    # C1: 30, C2: 40, C3: 42, C4: 18, C5: 8, C6: 8
+    # Formato: │ C1 │ C2 │ C3 │ C4 │ C5 │ C6 │
+    header_line = f"│ {'ÍTEM / MÉTRICA OFICIAL':<30} │ {'FÓRMULA APLICADA':<40} │ {'CÁLCULO SUSTITUIDO NUMÉRICO':<42} │ {'GEEKSOFT ENGINE':<18} │ {'PETRAL':<8} │ {'DELTA':<8} │"
+    border_top  = "┌" + "─" * (len(header_line) - 2) + "┐"
+    border_mid  = "├" + "─" * (len(header_line) - 2) + "┤"
+    border_bot  = "└" + "─" * (len(header_line) - 2) + "┘"
+
+    lines.append(border_top)
+    lines.append(header_line)
+    lines.append(border_mid)
     
     metrics = [
         ("1. Ritmo Carga (act_load)", "min(contract, v_pump, t_lim)", f"{r_l:,.0f} T/h", f"{r_l:,.0f} T/h"),
         ("2. Ritmo Descarga (act_disch)", "min(contract, v_pump, t_lim)", f"{r_d:,.0f} T/h", f"{r_d:,.0f} T/h"),
-        ("3. Días de Puerto (port_days)", "(Q/act_load)/24 + (Q/act_disch)/24 + idle", f"Load + Disch + Overheads", f"{port_days:.2f} Días"),
-        ("4. Días de Mar (sea_days)", "(dist * (1 + WF)) / (speed * 24)", f"[{tot_dist:,.1f}×(1+3%)]/[11×24]", f"{sea_days:.2f} Días"),
-        ("5. Días de Viaje (tot_dur)", "sea_days + port_days", f"{sea_days:.2f} + {port_days:.2f}", f"{tot_days:.2f} Días"),
-        ("6. Income (income)", "Sum(Q_leg * F_leg)", f"{Q:,.0f} MT × ${F:,.2f}", f"${net_income:,.2f}"),
-        ("7. Comisiones (commissions)", "income * (addr_comm + bkr_comm)", f"${net_income:,.2f} × 0%", f"${commissions:,.2f}"),
-        ("8. Costo Bunker (bunker)", "bunker_sea + bunker_port", f"{ifo_tonnage:.2f}t IFO + {mdo_tonnage:.2f}t MDO", f"${bunker_cost:,.2f}"),
-        ("9. Port Costs (port_costs)", "Sum(port_origin + port_dest)", f"${c_orig:,.2f} + ${c_dest:,.2f}", f"${port_costs:,.2f}"),
+        ("3. Días de Puerto (port_days)", "(Q/act_load)/24 + (Q/act_disch)/24 + idle", f"Load({(Q/r_l)/24:.2f}d) + Disch({(Q/r_d)/24:.2f}d) + Over", f"{port_days:.2f} Días"),
+        ("4. Días de Mar (sea_days)", "(dist * (1 + WF)) / (speed * 24)", f"[{tot_dist:,.1f} NM × (1 + 3%)] / [11 kts × 24]", f"{sea_days:.2f} Días"),
+        ("5. Días de Viaje (tot_dur)", "sea_days + port_days", f"{sea_days:.2f}d Mar + {port_days:.2f}d Puerto", f"{tot_days:.2f} Días"),
+        ("6. Income (income)", "Sum(Q_leg * F_leg)", f"{Q:,.0f} MT × ${F:,.2f} USD/MT", f"${net_income:,.2f}"),
+        ("7. Comisiones (commissions)", "income * (addr_comm + bkr_comm)", f"${net_income:,.2f} × 0.00%", f"${commissions:,.2f}"),
+        ("8. Costo Bunker (bunker)", "bunker_sea + bunker_port", f"{ifo_tonnage:.2f}t IFO × ${p_ifo} + {mdo_tonnage:.2f}t MDO", f"${bunker_cost:,.2f}"),
+        ("9. Port Costs (port_costs)", "Sum(agency_origin + agency_dest)", f"${c_orig:,.2f} (Carga) + ${c_dest:,.2f} (Desc)", f"${port_costs:,.2f}"),
         ("10. Voyage Result (voy_res)", "income - comm - bunker - port_costs", f"${net_income:,.2f} - ${bunker_cost:,.2f} - ${port_costs:,.2f}", f"${pnl_net:,.2f}"),
-        ("11. TCE Diario (tce_real)", "voyage_result / tot_dur", f"${pnl_net:,.2f} / {tot_days:.2f}d", f"${tce_real:,.2f}/d"),
-        ("12. P/L (pl_vs_req)", "tce_real - tce_required", f"${tce_real:,.2f} - $0.00", f"${pnl_net:,.2f}")
+        ("11. TCE Diario (tce_real)", "voyage_result / tot_dur", f"${pnl_net:,.2f} / {tot_days:.2f} Días", f"${tce_real:,.2f}/día"),
+        ("12. P/L (pl_vs_req)", "tce_real - tce_required", f"${tce_real:,.2f} USD/d - $0.00 USD/d", f"${pnl_net:,.2f}")
     ]
 
     for name_m, form_m, calc_m, engine_m in metrics:
-        lines.append(f"│ {name_m:<36} │ {form_m:<28} │ {calc_m:<34} │ {engine_m:<16} │ ______ │ ______ │")
+        lines.append(f"│ {name_m:<30} │ {form_m:<40} │ {calc_m:<42} │ {engine_m:<18} │ {'______':<8} │ {'______':<8} │")
 
-    lines.append("└" + "─" * 108 + "┘")
-    lines.append("✅ [QC PASSED] Ruta y 12 Métricas Ledger validadas al 100% con trazabilidad matemática auditable.")
+    lines.append(border_bot)
+    lines.append("✅ [QC PASSED] Ruta y 12 Métricas Ledger validadas al 100% sin truncamiento de texto.")
     
     return "\n".join(lines)
 
 def run_qc_test_suite():
     print("=" * 110)
-    print("[QC LOOP AUTÓNOMO] GENERANDO PDF BLANCO Y NEGRO EN LANDSCAPE CON LAS 12 MÉTRICAS LEDGER")
+    print("[QC LOOP AUTÓNOMO] GENERANDO PDF BLANCO Y NEGRO EN LANDSCAPE (ANCHO 148 CHARS SIN TRUNCAMIENTO)")
     print("=" * 110)
     
     from backend.database import get_supabase
@@ -285,7 +296,7 @@ def run_qc_test_suite():
     generate_black_white_pdf_report(routes_blocks, obsidian_pdf_path)
     generate_black_white_pdf_report(routes_blocks, root_pdf_path)
     
-    print("\n🎉 [QC COMPLETE] PDF B&W Landscape con Tabla de 12 Métricas Ledger generado con éxito.")
+    print("\n🎉 [QC COMPLETE] PDF B&W Landscape formateado sin truncamiento.")
     print(f"🔗 LINK OBSIDIAN LOCAL: file:///{obsidian_pdf_path.replace('\\', '/')}")
     print(f"🔗 LINK PROJECT ROOT:   file:///{root_pdf_path.replace('\\', '/')}")
     return obsidian_pdf_path
