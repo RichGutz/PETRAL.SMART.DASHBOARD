@@ -10,8 +10,9 @@ if sys.platform == "win32":
 # Add parent directory to path to load backend modules
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Artifacts output directory
-ARTIFACTS_DIR = r"C:\Users\rguti\.gemini\antigravity-ide\brain\2e0de588-072f-4fee-9575-6a37156b7fa3"
+# Carpeta local del proyecto para entregar PDFs
+PROJECT_OBSIDIAN_DIR = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.1\DashBoardPetral"
+PROJECT_ROOT_DIR = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD"
 
 # Mapa de Tarifas Portuarias Reales por Puerto
 PORT_COSTS_MASTER = {
@@ -164,7 +165,7 @@ def generate_pdf_report(routes_data: list, output_filename: str):
     </div>
 
     <div class="summary-card">
-        <h2>📊 Resumen Ejecuto de Validación QC (6 Rutas Oficiales)</h2>
+        <h2>📊 Resumen Ejecutivo de Validación QC (6 Rutas Oficiales)</h2>
         <table>
             <thead>
                 <tr>
@@ -333,7 +334,7 @@ def generate_pdf_report(routes_data: list, output_filename: str):
 
 def run_qc_test_suite():
     print("=" * 100)
-    print("[QC LOOP AUTÓNOMO] AUDITORÍA DETALLADA Y GENERACIÓN DE PDF OFICIAL (SISTEMA PETRAL)")
+    print("[QC LOOP AUTÓNOMO] AUDITORÍA DETALLADA Y GENERACIÓN DE PDF LOCAL DE PROYECTO (SISTEMA PETRAL)")
     print("=" * 100)
     
     from backend.database import get_supabase
@@ -358,7 +359,6 @@ def run_qc_test_suite():
         tramos = r.get("legs_data", {}).get("tramos", [])
         if not tramos: continue
 
-        # Preparar tramos
         port_orig_charge = 0.0
         port_dest_charge = 0.0
 
@@ -394,13 +394,17 @@ def run_qc_test_suite():
             "port_charge_dest": port_dest_charge
         })
 
-    # Generar PDF Consolidado Oficial en Artifacts
-    master_pdf_path = os.path.join(ARTIFACTS_DIR, "ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf")
-    generate_pdf_report(routes_audit_data, master_pdf_path)
+    # Guardar directamente en la carpeta de Obsidian y en la raíz del proyecto local
+    obsidian_pdf_path = os.path.join(PROJECT_OBSIDIAN_DIR, "ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf")
+    root_pdf_path = os.path.join(PROJECT_ROOT_DIR, "ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf")
+
+    generate_pdf_report(routes_audit_data, obsidian_pdf_path)
+    generate_pdf_report(routes_audit_data, root_pdf_path)
     
-    print("\n🎉 [QC COMPLETE] PDF de Auditoría generado exitosamente.")
-    print(f"🔗 LINK AL ARCHIVO PDF: file:///{master_pdf_path.replace('\\', '/')}")
-    return master_pdf_path
+    print("\n🎉 [QC COMPLETE] PDF de Auditoría generado exitosamente en carpeta local del proyecto.")
+    print(f"🔗 LINK OBSIDIAN LOCAL: file:///{obsidian_pdf_path.replace('\\', '/')}")
+    print(f"🔗 LINK PROJECT ROOT:   file:///{root_pdf_path.replace('\\', '/')}")
+    return obsidian_pdf_path
 
 if __name__ == "__main__":
     run_qc_test_suite()

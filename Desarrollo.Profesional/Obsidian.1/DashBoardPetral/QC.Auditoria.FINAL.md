@@ -187,12 +187,14 @@ Tanto el motor central `spot_engine.py` como las Vistas en Frontend (Matriz Fina
 
 ## 📄 9. Protocolo de Entrega de Acta PDF Oficial por Ruta
 
-Como parte del **Loop Autónomo de Control de Calidad (QC Loop)**, cada ejecución de auditoría genera de forma automatizada un reporte PDF oficial compilando la ficha de auditoría detallada (Fishbowl) por cada ruta oficial de SPCC y NEXA:
+Como parte del **Loop Autónomo de Control de Calidad (QC Loop)**, cada ejecución de auditoría genera de forma automatizada un reporte PDF oficial compilando la ficha de auditoría detallada (Fishbowl) por cada ruta oficial de SPCC y NEXA directamente en la carpeta local de tu proyecto y vault de Obsidian:
 
-- **Archivo PDF Oficial:** [ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf](file:///C:/Users/rguti/.gemini/antigravity-ide/brain/2e0de588-072f-4fee-9575-6a37156b7fa3/ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf)
+- **PDF en Vault de Obsidian:** [ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.1/DashBoardPetral/ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf)
+- **PDF en Raíz del Proyecto:** [ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf)
 - **Contenido:**
   1. **Tabla de Resumen Consolidado:** Distancias, Días Totales, Búnker USD, Puerto Carga USD, Puerto Descarga USD, Ingreso Flete USD, PnL Neto USD y TCE Real.
   2. **Ficha Detallada por Ruta (Fishbowl Pierna por Pierna):** Sustitución numérica de días de mar, días de puerto, búnker navegación, búnker puerto, agencias portuarias y flete.
+
 
 
 

@@ -288,12 +288,16 @@ Para cualquier pierna $k$, el costo total de combustible se descompone de forma 
 
 ## 📄 7. Entrega de Artefacto PDF Oficial de Auditoría
 
-En cada iteración del **Loop Coder-QC**, el script `run_qc_loop_pdf.py` genera de forma automatizada la **Acta Oficial de Auditoría en formato PDF** que compila las fichas de auditoría desglosadas por pierna para todas las rutas corporativas de SPCC y NEXA.
+En cada iteración del **Loop Coder-QC**, el script `run_qc_loop_pdf.py` genera de forma automatizada la **Acta Oficial de Auditoría en formato PDF** que compila las fichas de auditoría desglosadas por pierna para todas las rutas corporativas de SPCC y NEXA, guardándolas directamente en la carpeta local de tu proyecto y vault de Obsidian.
 
-- **Ubicación del PDF Generado:**
-  `C:\Users\rguti\.gemini\antigravity-ide\brain\2e0de588-072f-4fee-9575-6a37156b7fa3\ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf`
-- **Enlace Directo para Auditoría Humana:**
-  [ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf](file:///C:/Users/rguti/.gemini/antigravity-ide/brain/2e0de588-072f-4fee-9575-6a37156b7fa3/ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf)
+- **Ubicación en Carpeta de Obsidian:**
+  `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.1\DashBoardPetral\ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf`
+  - Enlace Directo: [ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.1/DashBoardPetral/ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf)
+
+- **Ubicación en Raíz del Proyecto:**
+  `C:\Users\rguti\PETRAL.SMART.DASHBOARD\ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf`
+  - Enlace Directo: [ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf)
+
 
 
 
