@@ -215,14 +215,33 @@ Se establece la plantilla estandarizada oficial para visualizar y dar feedback d
 - **Ingreso Bruto de Flete:** **`$375,000.00 USD`** (15,000 MT × $25.00 USD/MT)
 - **PnL Neto del Viaje:** **`$201,479.90 USD`** | **TCE Real:** **`$20,554.98 USD/Día`**
 
-#### 🔍 Desglose Auditable Pierna por Pierna (Fishbowl Table)
+#### 🔍 Desglose Auditable Pierna por Pierna (Aritmética Visual: Búnker Mar vs Puerto)
 
-| PIERNA | TIPO | TRAYECTO (PUERTOS) | DISTANCIA (NM) | DÍAS MAR | DÍAS PUERTO | TONELADAS IFO | TONELADAS MDO | COSTO BÚNKER (USD) | PUERTO CARGA (USD) | PUERTO DESCARGA (USD) | COSTO PUERTO (USD) | INGRESO FLETE (USD) | PnL PIERNA (USD) |
-| :---: | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **#1** | `BALLAST` | `ILO` $\rightarrow$ `CALLAO` | `514.0 NM` | `2.01 d` | `0.00 d` | `28.08 MT` | `0.00 MT` | `$25,131.33` | `$0.00` | `$0.00` | `$0.00` | `$0.00` | `-$25,131.33` |
-| **#2** | `LADEN` | `CALLAO` $\rightarrow$ `MEJILLONES` | `783.0 NM` | `3.07 d` | `3.42 d` | `54.42 MT` | `1.33 MT` | `$50,671.88` | `$31,327.99` | `$50,000.00` | `$81,327.99` | `$375,000.00` | `+$243,000.13` |
-| **#3** | `BALLAST` | `MEJILLONES` $\rightarrow$ `ILO` | `335.0 NM` | `1.31 d` | `0.00 d` | `18.31 MT` | `0.00 MT` | `$16,388.90` | `$0.00` | `$0.00` | `$0.00` | `$0.00` | `-$16,388.90` |
-| **TOTAL** | — | **SUMATORIA CONSOLIDADA** | **`1,632.0 NM`** | **`6.39 d`** | **`3.42 d`** | **`100.81 MT`** | **`1.33 MT`** | **`$92,192.11`** | **`$31,327.99`** | **`$50,000.00`** | **`$81,327.99`** | **`$375,000.00`** | **`+$201,479.90`** |
+| PIERNA | TIPO | TRAYECTO (PUERTOS) | DIST. (NM) | DÍAS MAR | DÍAS PUERTO | ARITMÉTICA BÚNKER MAR (USD) | ARITMÉTICA BÚNKER PUERTO (USD) | BÚNKER TOTAL LEGS (USD) | PUERTO CARGA (USD) | PUERTO DESCARGA (USD) | COSTO PUERTO (USD) | INGRESO FLETE (USD) | PnL PIERNA (USD) |
+| :---: | :---: | :--- | :---: | :---: | :---: | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **#1** | `BALLAST` | `ILO` $\rightarrow$ `CALLAO` | `514.0` | `2.01 d` | `0.00 d` | `28.08t IFO × $895.14 = $25,131.33` | `0.00t = $0.00` | `$25,131.33` | `$0.00` | `$0.00` | `$0.00` | `$0.00` | `-$25,131.33` |
+| **#2** | `LADEN` | `CALLAO` $\rightarrow$ `MEJILLONES` | `783.0` | `3.07 d` | `3.42 d` | `42.94t IFO × $895.14 = $38,437.28` | `11.48t IFO + 1.33t MDO = $12,234.60` | `$50,671.88` | `$31,327.99` | `$50,000.00` | `$81,327.99` | `$375,000.00` | `+$243,000.13` |
+| **#3** | `BALLAST` | `MEJILLONES` $\rightarrow$ `ILO` | `335.0` | `1.31 d` | `0.00 d` | `18.31t IFO × $895.14 = $16,388.90` | `0.00t = $0.00` | `$16,388.90` | `$0.00` | `$0.00` | `$0.00` | `$0.00` | `-$16,388.90` |
+| **TOTAL** | — | **CONSOLIDADO** | **`1,632`** | **`6.39 d`** | **`3.42 d`** | **`89.33t IFO = $79,957.51`** | **`11.48t IFO + 1.33t MDO = $12,234.60`** | **`$92,192.11`** | **`$31,327.99`** | **`$50,000.00`** | **`$81,327.99`** | **`$375,000.00`** | **`+$201,479.90`** |
+
+---
+
+### 🧮 6.2 Fórmulas de Aritmética Visual de Búnker (Sea vs Port)
+
+Para cualquier pierna $k$, el costo total de combustible se descompone de forma transparente:
+
+1. **Búnker de Navegación en Mar (`Bunker Sea`):**
+   $$\text{Tons IFO}_{\text{sea}} = \text{SeaDays}_k \times \text{ConsumoMarIFO}$$
+   $$\text{Costo Búnker Sea} = \text{Tons IFO}_{\text{sea}} \times P_{\text{IFO}}$$
+
+2. **Búnker de Operación y Esperas en Puerto (`Bunker Port`):**
+   $$\text{Tons IFO}_{\text{port}} = (\text{IdleDays}_k \times \text{ConsumoIdleIFO}) + (\text{LoadDays}_k \times \text{ConsumoLoadIFO}) + (\text{DischDays}_k \times \text{ConsumoDischIFO})$$
+   $$\text{Tons MDO}_{\text{port}} = (\text{IdleDays}_k \times \text{ConsumoIdleMDO}) + (\text{LoadDays}_k \times \text{ConsumoLoadMDO}) + (\text{DischDays}_k \times \text{ConsumoDischMDO})$$
+   $$\text{Costo Búnker Port} = (\text{Tons IFO}_{\text{port}} \times P_{\text{IFO}}) + (\text{Tons MDO}_{\text{port}} \times P_{\text{MDO}})$$
+
+3. **Costo Total de Búnker Pierna $k$:**
+   $$\text{Búnker Total Pierna}_k = \text{Costo Búnker Sea}_k + \text{Costo Búnker Port}_k$$
+
 
 
 ---
