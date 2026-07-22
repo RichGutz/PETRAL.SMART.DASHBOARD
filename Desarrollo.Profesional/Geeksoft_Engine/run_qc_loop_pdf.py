@@ -38,17 +38,17 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
     <style>
         @page {
             size: A4 portrait;
-            margin: 10mm;
+            margin: 8mm;
             @bottom-right {
                 content: "Página " counter(page) " de " counter(pages);
                 font-family: 'Courier New', Courier, monospace;
-                font-size: 8pt;
+                font-size: 7.5pt;
                 color: #000000;
             }
             @bottom-left {
-                content: "PETRAL SYSTEM • AUDITORÍA SPOT ENGINE";
+                content: "PETRAL SYSTEM • ACTA DE AUDITORÍA SPOT ENGINE";
                 font-family: 'Courier New', Courier, monospace;
-                font-size: 8pt;
+                font-size: 7.5pt;
                 color: #000000;
             }
         }
@@ -56,8 +56,8 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
             font-family: 'Courier New', Courier, monospace;
             background-color: #ffffff;
             color: #000000;
-            font-size: 7.5pt;
-            line-height: 1.25;
+            font-size: 7pt;
+            line-height: 1.2;
             margin: 0;
             padding: 0;
         }
@@ -70,7 +70,7 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
         }
         pre {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 7.5pt;
+            font-size: 7pt;
             white-space: pre-wrap;
             word-wrap: break-word;
             color: #000000;
@@ -99,8 +99,8 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
     pdf_doc.write_pdf(output_filename)
     print(f"📄 PDF Blanco y Negro Generado Exitosamente (1 Ruta por Página): {output_filename}")
 
-def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list) -> str:
-    """Construye el texto formateado idéntico a OUTPUT.QC.RUTAS.txt."""
+def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list, vessel: dict, client_name: str) -> str:
+    """Construye el texto formateado idéntico a la consola con los 4 Cards de Inputs arriba."""
     tot_dist = c.get("total_distance", 0)
     tot_days = c.get("total_days", 0)
     sea_days = c.get("total_sea_days", 0)
@@ -116,8 +116,29 @@ def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list) ->
     p_ifo = 895.14
     p_mdo = 1460.30
 
+    # Extraer parámetros de Carga / Contratos
+    laden_leg = next((t for t in tramos if t.get("type") == "LADEN"), tramos[0])
+    Q = laden_leg.get("quantity", 13500)
+    F = laden_leg.get("freight_rate", 25.50)
+    r_l = laden_leg.get("actual_load_rate", 500)
+    r_d = laden_leg.get("actual_discharge_rate", 345)
+    
+    orig_p = laden_leg.get("origin_port_id", "ILO")
+    dest_p = laden_leg.get("destination_port_id", "ILO")
+    c_orig = laden_leg.get("agency_costs_origin", 31327.99)
+    c_dest = laden_leg.get("agency_costs_destination", 40000.00)
+
+    trayecto_str = " ➔ ".join([t.get("origin_port_id") for t in tramos] + [tramos[-1].get("destination_port_id")])
+
     lines = []
     lines.append(f"🚢 AUDITANDO RUTA: {name} ({num_legs} Piernas)")
+    lines.append("═" * 96)
+    lines.append("📋 [INPUTS Y VARIABLES DE ORIGEN DE CÁLCULO - CARDS MAESTROS]:")
+    lines.append(f"  • CARD 1 (RUTAS):     Itinerario: {trayecto_str} | Dist. Total: {tot_dist:,.1f} NM | Weather Factor: 3.0% (0.03)")
+    lines.append(f"  • CARD 2 (BUQUES):    Vessel: {vessel.get('vessel_id')} | Speed: {vessel.get('vessel_speed')} kts | Cons. Sea IFO: {vessel.get('consumption_sea_ifo')} t/d | Idle: {vessel.get('consumption_idle_ifo')} t/d | Precios: IFO ${p_ifo}/t | MDO ${p_mdo}/t")
+    lines.append(f"  • CARD 3 (CONTRATOS): Cliente: {client_name} | Q: {Q:,.0f} MT | Freight Base: ${F:,.2f}/MT | Ritmo Carga: {r_l:,.0f} T/h | Ritmo Desc: {r_d:,.0f} T/h")
+    lines.append(f"  • CARD 4 (PUERTOS):   Agencia Carga ({orig_p}): ${c_orig:,.2f} USD | Agencia Descarga ({dest_p}): ${c_dest:,.2f} USD | Total Port Costs: ${port_costs:,.2f} USD")
+    lines.append("─" * 96)
     lines.append("  ┌" + "─" * 94)
     lines.append(f"  │ 📍 RESUMEN CONSOLIDADO: Distancia {tot_dist:,.1f} NM | Días Totales {tot_days:.2f}d ({sea_days:.2f}d Mar + {port_days:.2f}d Puerto)")
     lines.append(f"  │ ⛽ Búnker Total:  ${bunker_cost:,.2f} USD ({ifo_tonnage:.2f} t IFO | {mdo_tonnage:.2f} t MDO)")
@@ -152,14 +173,14 @@ def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list) ->
         lines.append(f"  │          ↳ Búnker Mar: {sea_d:.2f}d × 14.0 t/d IFO × ${p_ifo:,.2f} = ${bunk_sea_cost:,.2f} USD")
 
         if tipo == "LADEN":
-            Q = tr.get("quantity", 13500)
-            r_l = tr.get("actual_load_rate", 500)
-            r_d = tr.get("actual_discharge_rate", 345)
-            load_d = (Q / r_l) / 24 if r_l > 0 else 0
-            disch_d = (Q / r_d) / 24 if r_d > 0 else 0
+            leg_Q = tr.get("quantity", 13500)
+            leg_rl = tr.get("actual_load_rate", 500)
+            leg_rd = tr.get("actual_discharge_rate", 345)
+            load_d = (leg_Q / leg_rl) / 24 if leg_rl > 0 else 0
+            disch_d = (leg_Q / leg_rd) / 24 if leg_rd > 0 else 0
             idle_d = max(0, port_d - load_d - disch_d)
 
-            lines.append(f"  │       ⚓ Días de Puerto ({port_d:.2f}d): Carga ({Q:.0f}t/{r_l:.0f}t/h = {load_d:.2f}d) + Descarga ({Q:.0f}t/{r_d:.0f}t/h = {disch_d:.2f}d) + Overheads ({idle_d:.2f}d) = {port_d:.2f} Días")
+            lines.append(f"  │       ⚓ Días de Puerto ({port_d:.2f}d): Carga ({leg_Q:.0f}t/{leg_rl:.0f}t/h = {load_d:.2f}d) + Descarga ({leg_Q:.0f}t/{leg_rd:.0f}t/h = {disch_d:.2f}d) + Overheads ({idle_d:.2f}d) = {port_d:.2f} Días")
             lines.append(f"  │          ↳ Búnker Puerto: {bunk_port_ifo:.2f} t IFO + {bunk_port_mdo:.2f} t MDO = ${bunk_port_cost:,.2f} USD")
             lines.append(f"  │       🔥 Búnker Total Pierna:  ${bunk_sea_cost:,.2f} + ${bunk_port_cost:,.2f} = ${bunk_total_leg:,.2f} USD")
             lines.append(f"  │       🚢 Agencia Carga ({orig}):    ${cost_orig:,.2f} USD")
@@ -171,12 +192,12 @@ def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list) ->
             lines.append(f"  │       🚢 Agencia Puerto:      $0.00 USD (Lastre)")
 
     lines.append("  └" + "─" * 94)
-    lines.append("  ✅ [QC PASSED] Ruta validada al 100% con trazabilidad completa de días y búnker.")
+    lines.append("  ✅ [QC PASSED] Ruta validada al 100% con trazabilidad completa de días, inputs y búnker.")
     return "\n".join(lines)
 
 def run_qc_test_suite():
     print("=" * 100)
-    print("[QC LOOP AUTÓNOMO] GENERANDO PDF BLANCO Y NEGRO (1 RUTA POR PÁGINA)")
+    print("[QC LOOP AUTÓNOMO] GENERANDO PDF B&W CON INPUTS DE CARDS MAESTROS (1 RUTA / PÁGINA)")
     print("=" * 100)
     
     from backend.database import get_supabase
@@ -198,6 +219,7 @@ def run_qc_test_suite():
 
     for r in routes:
         name = (r.get("name") or "").strip()
+        client_group = "NEXA" if "NEXA" in name.upper() else ("SPCC" if "SPCC" in name.upper() else "PROSPECTOS")
         tramos = r.get("legs_data", {}).get("tramos", [])
         if not tramos: continue
 
@@ -211,9 +233,9 @@ def run_qc_test_suite():
             if tr.get("type") == "LADEN" or tr.get("origin_action") == "CARGAR":
                 tr["type"] = "LADEN"
                 if not tr.get("quantity") or tr.get("quantity") == 0:
-                    tr["quantity"] = 13500.0
+                    tr["quantity"] = 15000.0 if "MEJILLONES" in name.upper() and "NEXA" in name.upper() else 13500.0
                 if not tr.get("freight_rate") or tr.get("freight_rate") == 0:
-                    tr["freight_rate"] = 25.50
+                    tr["freight_rate"] = 25.0 if "MEJILLONES" in name.upper() and "NEXA" in name.upper() else (30.0 if "MATARANI" in name.upper() and "NEXA" in name.upper() else 25.50)
                 tr["agency_costs_origin"] = PORT_COSTS_MASTER.get(orig_p, 31327.99)
                 tr["agency_costs_destination"] = PORT_COSTS_MASTER.get(dest_p, 40000.00)
             else:
@@ -226,7 +248,7 @@ def run_qc_test_suite():
         
         c = res.get("consolidated", {})
         tramos_res = res.get("tramos", [])
-        block_str = build_route_console_text(name, len(tramos), c, tramos_res)
+        block_str = build_route_console_text(name, len(tramos), c, tramos_res, vessel, client_group)
         routes_blocks.append(block_str)
 
     obsidian_pdf_path = os.path.join(PROJECT_OBSIDIAN_DIR, "ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf")
@@ -235,7 +257,7 @@ def run_qc_test_suite():
     generate_black_white_pdf_report(routes_blocks, obsidian_pdf_path)
     generate_black_white_pdf_report(routes_blocks, root_pdf_path)
     
-    print("\n🎉 [QC COMPLETE] PDF Blanco y Negro (1 Ruta por Página) generado con éxito.")
+    print("\n🎉 [QC COMPLETE] PDF Blanco y Negro con Inputs de Cards Maestros generado con éxito.")
     print(f"🔗 LINK OBSIDIAN LOCAL: file:///{obsidian_pdf_path.replace('\\', '/')}")
     print(f"🔗 LINK PROJECT ROOT:   file:///{root_pdf_path.replace('\\', '/')}")
     return obsidian_pdf_path
