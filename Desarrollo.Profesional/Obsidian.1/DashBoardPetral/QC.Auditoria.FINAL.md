@@ -103,3 +103,38 @@ Tanto el motor central `spot_engine.py` como las Vistas en Frontend (Matriz Fina
    - **Paso 3 (Buque):** Selección del buque de la flota (`MOQUEGUA`, `TABLONES`, `CONCON TRADER`, `HUEMUL`).
    - **Paso 4 (Matriz Portuaria):** Selección de la modalidad de tarifa portuaria (`static` / `matrix`).
 
+---
+
+## 🎴 5. Mapeo Reactivo de Tarjetas (Cards) con Tablas Fuentes (Supabase)
+
+### 🔹 Card 1 — Maestro Flota (Badge: `vessels`)
+- **Tabla Fuente en Supabase:** `vessels`
+- **Campos Mapeados:**
+  - Identificación del barco: `vessel_name`.
+  - Velocidad comercial: `vessel_speed` (kn).
+  - TCE Requerido: `tce_required` ($/día).
+  - Dimensiones y Capacidades: `dwt`, `dwcc`, `length` (L), `beam` (B).
+  - Matriz de Consumos de Combustible: Consumos IFO y MDO en navegación (`sea`), en puerto sin operación (`idle`), en maniobras de carga (`load`) y en descarga (`disch`).
+
+### 🔹 Card 2 — Combustible & Costos Portuarios (Badges: `bunker_prices` & `port_cost_static` / `port_costs_matrix`)
+- **Tablas Fuentes en Supabase:** `bunker_prices`, `port_cost_static` (Modo Estático), `port_costs_matrix` (Modo Dinámico).
+- **Campos Mapeados:**
+  - **Sección Combustibles:** `bunker_price_date`, `bunker_price_ifo` ($/MT), `bunker_price_mdo` ($/MT).
+  - **Sección Costos Portuarios:** Mapea reactivamente el cliente activo `{selectedClientId}`, junto con la suma de costos de agencia en origen y destino (`port_costs_breakdown.origin` y `port_costs_breakdown.destination`), incluyendo el rubro especial de *Loading Master*.
+
+### 🔹 Card 3 — Reglas Comerciales & Tarifario (Badge: `contracts`)
+- **Tablas Fuentes en Supabase:** `contracts` y `contract_tariffs`.
+- **Campos Mapeados:**
+  - **Parámetros Comerciales:** Cantidad $Q$ (MT), Flete Base $F$ ($/MT), Ritmo de carga (`contract_agreed_load_rate`), Ritmo de descarga (`contract_agreed_discharge_rate`).
+  - **Tiempos Operativos & Comisiones:** *Time to Count* origen/destino (`port_overhead_hours_origin`/`dest`), *Maneuver* carga/descarga (`positioning_carga_hrs`/`descarga_hrs`), *Address Commission* (`address_commission`) y *Broker Commission* (`broker_commission`).
+  - **Mini-Tabla Tarifario por Bracket:** Se conecta reactivamente a la tabla `contract_tariffs` en Supabase correspondiente al contrato del cliente seleccionado (`selectedClientId`), leyendo dinámicamente los rangos de tonelaje (`min_tonnage`, `max_tonnage`) y sus fletes asociados (`freight_rate`), reemplazando mapas estáticos hardcodeados.
+
+### 🔹 Card 4 — Maestro Rutas (Badge: `routes`)
+- **Tablas Fuentes en Supabase:** `routes_clients` (para NEXA y SPCC) y `routes_prospects` (para Prospectos).
+- **Campos Mapeados:**
+  - Trayecto: `origin_port_id` $\rightarrow$ `destination_port_id`.
+  - Distancia 1-way: `route_distance` (NM).
+  - Distancia Total del Viaje: `distancia_total` (NM) acumulando todas las piernas (lastre y cargadas).
+  - Factores de Clima: `weather_factor_laden` (%) y `weather_factor_ballast` (%).
+
+
