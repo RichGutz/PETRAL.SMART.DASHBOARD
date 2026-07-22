@@ -85,26 +85,52 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
     // Result
     const [runResult, setRunResult] = useState<any>(null);
 
+    const defaultVessels = [
+        { vessel_id: 'MOQUEGUA', vessel_name: 'MOQUEGUA', vessel_speed: 11, consumption_sea_ifo: 14, dwt: 13500, tce_required: 13000 },
+        { vessel_id: 'TABLONES', vessel_name: 'TABLONES', vessel_speed: 11, consumption_sea_ifo: 14, dwt: 13500, tce_required: 13000 },
+        { vessel_id: 'CONCON_TRADER', vessel_name: 'CONCON TRADER', vessel_speed: 11, consumption_sea_ifo: 14, dwt: 13500, tce_required: 13000 },
+        { vessel_id: 'HUEMUL', vessel_name: 'HUEMUL', vessel_speed: 11, consumption_sea_ifo: 14, dwt: 13500, tce_required: 13000 }
+    ];
+
+    const getRouteId = (r: any, idx?: number) => {
+        if (!r) return '';
+        return r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id || r.name || r.id || (idx !== undefined ? `route-${idx}` : '');
+    };
+
     useEffect(() => {
         Promise.all([
-            ForecastService.getSpotVoyages(),
-            ForecastService.getVessels(),
-            ForecastService.getContractsMaster(),
-            ForecastService.getLatestBunker().catch(() => null)
-        ]).then(([r, v, c, b]) => {
-            setRoutes(r || []);
-            setVessels((v || []));
+            ForecastService.getSpotVoyages().catch(() => []),
+            ForecastService.listSpots().catch(() => []),
+            ForecastService.getVessels().catch(() => []),
+            ForecastService.getContractsMaster().catch(() => []),
+        ]).then(([spotVoyages, listSpots, v, c]) => {
+            const allRoutes = [...(spotVoyages || []), ...(listSpots || [])];
+            const routeMap = new Map();
+            allRoutes.forEach((r: any, i: number) => {
+                const id = getRouteId(r, i);
+                if (id && !routeMap.has(id)) {
+                    routeMap.set(id, r);
+                }
+            });
+            const mergedRoutes = Array.from(routeMap.values());
+            setRoutes(mergedRoutes);
+
+            const mergedVessels = (v && v.length > 0) ? v : defaultVessels;
+            setVessels(mergedVessels);
             setContracts(c || []);
-            if (b && (b.ifo || b.mdo)) {
-                // setLatestBunker({
-                //     ifo: b.ifo || 895.14,
-                //     mdo: b.mdo || 1460.30,
-                //     date: b.date || '2026-06-26'
-                // });
+
+            if (mergedRoutes.length > 0 && !selectedRouteId) {
+                const defaultR = mergedRoutes.find((r: any) => (r.name || "").includes("NEXA")) || mergedRoutes[0];
+                setSelectedRouteId(getRouteId(defaultR, 0));
             }
+            if (mergedVessels.length > 0 && !selectedVesselId) {
+                setSelectedVesselId(mergedVessels[0].vessel_id);
+            }
+
             setLoading(false);
         }).catch(err => {
             console.error(err);
+            setVessels(defaultVessels);
             setLoading(false);
         });
     }, []);
@@ -114,7 +140,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             setLegsConfig([]);
             return;
         }
-        const route = routes.find(r => (r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id) === selectedRouteId);
+        const route = routes.find((r, idx) => getRouteId(r, idx) === selectedRouteId || r.name === selectedRouteId);
         if (!route || !route.legs_data || !route.legs_data.tramos) return;
         
         const tramos = route.legs_data.tramos;
@@ -125,8 +151,8 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
                 idx: i,
                 port_id: tr.origin_port_id,
                 action: tr.origin_action || 'NONE',
-                quantity: 0,
-                freight_rate: 0
+                quantity: tr.quantity || (tr.type === 'LADEN' ? 13500 : 0),
+                freight_rate: tr.freight_rate || (tr.type === 'LADEN' ? 25.5 : 0)
             });
             if (i === tramos.length - 1) {
                 config.push({
@@ -528,8 +554,8 @@ const renderScenarioContent = (
                         </SelectTrigger>
                         <SelectContent>
                             {routes.map((r, rIdx) => {
-                                const idVal = r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id || `route-${rIdx}`;
-                                return <SelectItem key={idVal} value={idVal}>{r.name}</SelectItem>;
+                                const idVal = getRouteId(r, rIdx);
+                                return <SelectItem key={idVal} value={idVal}>{r.name || idVal}</SelectItem>;
                             })}
                         </SelectContent>
                     </Select>
