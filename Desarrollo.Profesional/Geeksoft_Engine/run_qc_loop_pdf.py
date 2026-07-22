@@ -37,8 +37,8 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
     <title>Acta Oficial de Auditoría Final - PETRAL</title>
     <style>
         @page {
-            size: A4 portrait;
-            margin: 8mm;
+            size: A4 landscape;
+            margin: 10mm;
             @bottom-right {
                 content: "Página " counter(page) " de " counter(pages);
                 font-family: 'Courier New', Courier, monospace;
@@ -56,8 +56,8 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
             font-family: 'Courier New', Courier, monospace;
             background-color: #ffffff;
             color: #000000;
-            font-size: 7pt;
-            line-height: 1.2;
+            font-size: 8pt;
+            line-height: 1.25;
             margin: 0;
             padding: 0;
         }
