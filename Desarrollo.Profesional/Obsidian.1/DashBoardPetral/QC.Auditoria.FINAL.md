@@ -80,3 +80,26 @@
 
 ## 🎯 Conclusión del Loop QC
 Tanto el motor central `spot_engine.py` como las Vistas en Frontend (Matriz Financiera e Impresión PDF) concuerdan al 100% en todas sus piernas y valores sustituidos.
+
+---
+
+## 🏛️ 4. Reglas de Negocio de Filtrado de Rutas y Clientes (Especificación Oficial)
+
+### 🔹 4.1 Clasificación de Clientes
+1. **Clientes Oficiales Corporativos:**
+   - **`NEXA`**: Cliente corporativo oficial con sus rutas maestras en la tabla `routes_clients`.
+   - **`SPCC`**: Cliente corporativo oficial con sus rutas maestras en la tabla `routes_clients` (`SPCC.ILO.MATARANI`, `SPCC.ILO.MARCONA`, `SPCC.ILO.MEJILLONES`).
+2. **Prospectos (`PROSPECTOS`):**
+   - Todo cliente, prospecto o cotización spot que **no esté grabado en la matriz oficial de clientes** se agrupa y consolida bajo la categoría **`PROSPECTOS`**.
+
+### 🔹 4.2 Tablas Fuentes en Base de Datos (Supabase)
+- **`routes_clients`**: Fuente de verdad para las rutas contractuales y corporativas de `NEXA` y `SPCC`.
+- **`routes_prospects`**: Fuente de verdad para prospectos, oportunidades y cotizaciones spot.
+
+### 🔹 4.3 Comportamiento Requerido en la Interfaz (UI — `VoyageLedgerFinal.tsx`)
+1. **Filtro Secuencial en Cascada:**
+   - **Paso 1 (Cliente):** Selección entre `NEXA`, `SPCC` y `PROSPECTOS`.
+   - **Paso 2 (Ruta):** Filtro reactivo en cascada. Al seleccionar **`SPCC`**, el segundo selector despliega **exclusivamente** las rutas registradas para SPCC en `routes_clients`. Al elegir **`PROSPECTOS`**, despliega únicamente las rutas pertenecientes a `routes_prospects`.
+   - **Paso 3 (Buque):** Selección del buque de la flota (`MOQUEGUA`, `TABLONES`, `CONCON TRADER`, `HUEMUL`).
+   - **Paso 4 (Matriz Portuaria):** Selección de la modalidad de tarifa portuaria (`static` / `matrix`).
+
