@@ -226,7 +226,27 @@ Se establece la plantilla estandarizada oficial para visualizar y dar feedback d
 
 ---
 
-### 🧮 6.2 Fórmulas de Aritmética Visual de Búnker (Sea vs Port)
+### 🧮 6.2 Fórmulas de Origen Numérico de los Días (Mar vs Puerto)
+
+Para cada pierna $k$, todos los números provienen de las siguientes ecuaciones explícitas:
+
+#### A. Origen de Días de Mar (`Sea Days`):
+$$\text{Sea Days}_k = \frac{\text{Distancia}_k \times (1 + \text{Weather Factor}_k)}{\text{Velocidad} \times 24}$$
+- **Ejemplo Pierna #1 (514 NM, WF 3%, Speed 11.0 kts):**
+  $$\text{Sea Days} = \frac{514.0 \times (1 + 0.03)}{11.0 \times 24} = \frac{529.42}{264} = \mathbf{2.01 \text{ Días}}$$
+
+#### B. Origen de Días de Puerto (`Port Days`):
+- **Pierna `BALLAST`:** $\mathbf{0.00 \text{ Días}}$ (Sin operación portuaria).
+- **Pierna `LADEN`:** Suma exacta de tres componentes:
+  $$\text{Port Days} = \text{Días Carga} + \text{Días Descarga} + \text{Días Overheads}$$
+  1. **Días Carga:** $\frac{Q}{\text{Ritmo Carga} \times 24} = \frac{13,500 \text{ MT}}{500 \text{ T/h} \times 24} = \mathbf{1.12 \text{ Días}}$
+  2. **Días Descarga:** $\frac{Q}{\text{Ritmo Descarga} \times 24} = \frac{13,500 \text{ MT}}{345 \text{ T/h} \times 24} = \mathbf{1.63 \text{ Días}}$
+  3. **Días Overheads & Maniobras:** $\frac{\text{Overhead}_{\text{orig}} + \text{Overhead}_{\text{dest}} + \text{Pos}_{\text{carga}} + \text{Pos}_{\text{desc}}}{24} = \frac{6\text{h} + 6\text{h} + 1\text{h} + 0\text{h}}{24} = \mathbf{0.54 \text{ Días}}$
+  - **Sumatoria Total Port Days:** $1.12 + 1.63 + 0.54 = \mathbf{3.30 \text{ Días}}$
+
+---
+
+### 🧮 6.3 Fórmulas de Aritmética Visual de Búnker (Sea vs Port)
 
 Para cualquier pierna $k$, el costo total de combustible se descompone de forma transparente:
 
@@ -241,6 +261,7 @@ Para cualquier pierna $k$, el costo total de combustible se descompone de forma 
 
 3. **Costo Total de Búnker Pierna $k$:**
    $$\text{Búnker Total Pierna}_k = \text{Costo Búnker Sea}_k + \text{Costo Búnker Port}_k$$
+
 
 
 
