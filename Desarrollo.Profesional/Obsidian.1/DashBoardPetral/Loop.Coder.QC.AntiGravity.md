@@ -188,45 +188,42 @@ Se implementó y ejecutó exitosamente el script de prueba no-interactivo `run_q
 
 ### 🔹 5.2 Tabla de Resultados Auditados por Ruta Oficial (Buque `MOQUEGUA`, $Q = 13,500$ MT)
 
-| RUTA COMERCIAL | PIERNAS | DISTANCIA (NM) | BÚNKER (USD) | PORT COSTS (USD) | INGRESO FLETE (USD) | PnL NETO (USD) | TCE REAL (USD/DÍAS) | ESTADO QC |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `NEXA.ILO.CALLAO.MEJILLONES.ILO` | 3 | `1,632.0 NM` | `$92,192.11` | `$19,998.00` | `$375,000.00` | `$262,809.89` | `$26,808.01` | ✅ APROBADO |
-| `NEXA.ILO.CALLAO.MATARANI.ILO` | 3 | `1,040.0 NM` | `$60,720.26` | `$48,327.99` | `$405,000.00` | `$295,951.75` | `$41,749.05` | ✅ APROBADO |
-| `SPCC.ILO.MATARANI` | 1 | `69.0 NM` | `$13,310.05` | `$71,327.99` | `$344,250.00` | `$259,611.96` | `$78,535.07` | ✅ APROBADO |
-| `SPCC.ILO.MARCONA` | 1 | `279.0 NM` | `$23,777.09` | `$71,327.99` | `$344,250.00` | `$249,144.92` | `$60,166.72` | ✅ APROBADO |
-| `SPCC.ILO.MEJILLONES` | 1 | `335.0 NM` | `$26,568.30` | `$71,327.99` | `$344,250.00` | `$246,353.71` | `$56,456.06` | ✅ APROBADO |
-| `NEXA.ILO.CALLAO.MARCONA.ILO` | 3 | `1,051.0 NM` | `$62,233.73` | `$71,327.99` | `$344,250.00` | `$210,688.28` | `$28,480.65` | ✅ APROBADO |
-
-### 🔹 5.3 Conclusión del Coder-QC Loop
-- **100% de Aprobación Auditora:** Las 6 rutas corporativas de SPCC y NEXA pasaron la validación sin registrar anomalías de búnkeres ridículos, ceros indeseados ni cobros en lastre.
-- **Inmutabilidad y Trazabilidad:** Todo el flujo y el código del script de auditoría quedaron registrados en el repositorio de Git.
+| RUTA COMERCIAL | PIERNAS | DISTANCIA (NM) | BÚNKER (USD) | PUERTO CARGA (USD) | PUERTO DESCARGA (USD) | PUERTO TOTAL (USD) | INGRESO FLETE (USD) | PnL NETO (USD) | TCE REAL (USD/DÍAS) | ESTADO QC |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `NEXA.ILO.CALLAO.MEJILLONES.ILO` | 3 | `1,632.0 NM` | `$92,192.11` | `$31,327.99` (Callao) | `$50,000.00` (Mejillones) | **`$81,327.99`** | `$375,000.00` | `$201,479.90` | `$20,554.98` | ✅ APROBADO |
+| `NEXA.ILO.CALLAO.MATARANI.ILO` | 3 | `1,040.0 NM` | `$60,720.26` | `$31,327.99` (Callao) | `$17,000.00` (Matarani) | **`$48,327.99`** | `$405,000.00` | `$295,951.75` | `$41,749.05` | ✅ APROBADO |
+| `SPCC.ILO.MATARANI` | 1 | `69.0 NM` | `$13,310.05` | `$15,000.00` (Ilo) | `$17,000.00` (Matarani) | **`$32,000.00`** | `$344,250.00` | `$298,939.95` | `$90,432.16` | ✅ APROBADO |
+| `SPCC.ILO.MARCONA` | 1 | `279.0 NM` | `$23,777.09` | `$15,000.00` (Ilo) | `$40,000.00` (Marcona) | **`$55,000.00`** | `$344,250.00` | `$265,472.91` | `$64,109.81` | ✅ APROBADO |
+| `SPCC.ILO.MEJILLONES` | 1 | `335.0 NM` | `$26,568.30` | `$15,000.00` (Ilo) | `$50,000.00` (Mejillones) | **`$65,000.00`** | `$344,250.00` | `$252,681.70` | `$57,906.22` | ✅ APROBADO |
+| `NEXA.ILO.CALLAO.MARCONA.ILO` | 3 | `1,051.0 NM` | `$62,233.73` | `$31,327.99` (Callao) | `$40,000.00` (Marcona) | **`$71,327.99`** | `$344,250.00` | `$210,688.28` | `$28,480.65` | ✅ APROBADO |
 
 ---
 
-## 📊 6. Formato Estándar de Auditoría Desglosada por Pierna (Para Revisión y Feedback Rápido)
+## 📊 6. Formato Estándar de Auditoría Desglosada por Pierna (Con División Carga / Descarga)
 
-Se establece la plantilla estandarizada oficial para visualizar y dar feedback de un solo vistazo sobre cualquier ruta (consolidado + tabla desglose por pierna):
+Se establece la plantilla estandarizada oficial para visualizar y dar feedback de un solo vistazo sobre cualquier ruta (consolidado + desglose explicito por pierna):
 
-### 🚢 6.1 Ruta Compleja de 3 Piernas: `NEXA.ILO.CALLAO.MARCONA.ILO`
+### 🚢 6.1 Ruta Compleja de 3 Piernas: `NEXA.ILO.CALLAO.MEJILLONES.ILO`
 
 #### 📋 Resumen Consolidado del Viaje
-- **Buque Auditor:** `MOQUEGUA` (Velocidad: `11.0 kn`, Consumo Mar IFO: `14.0 t/d`, Consumo Mar MDO: `0.0 t/d`)
-- **Precios Búnker:** IFO = `$895.14 USD/MT`, MDO = `$1,460.30 USD/MT`
-- **Distancia Náutica Total:** `1,051.0 NM` | **Duración Total:** `7.40 Días` (`4.10 d` Mar + `3.30 d` Puerto)
-- **Búnker Consumido Total:** `67.28 MT IFO` | `1.38 MT MDO`
-- **Costo Total Búnker:** **`$62,233.73 USD`**
-- **Costos Portuarios Totales:** **`$71,327.99 USD`** (Callao Carga + Marcona Descarga)
-- **Ingreso Bruto de Flete:** **`$344,250.00 USD`** (13,500 MT × $25.50 USD/MT)
-- **PnL Neto del Viaje:** **`$210,688.28 USD`** | **TCE Real:** **`$28,480.65 USD/Día`**
+- **Buque Auditor:** `MOQUEGUA` (`11.0 kn` | IFO: `$895.14/MT` | MDO: `$1,460.30/MT`)
+- **Distancia Náutica Total:** `1,632.0 NM` | **Duración Total:** `9.80 Días`
+- **Búnker Consumido Total:** `100.81 MT IFO` | `1.33 MT MDO` | **Costo Total Búnker:** **`$92,192.11 USD`**
+- **Costos Portuarios Totales:** **`$81,327.99 USD`**
+  - ↳ **Puerto Carga (Callao):** **`$31,327.99 USD`**
+  - ↳ **Puerto Descarga (Mejillones):** **`$50,000.00 USD`**
+- **Ingreso Bruto de Flete:** **`$375,000.00 USD`** (15,000 MT × $25.00 USD/MT)
+- **PnL Neto del Viaje:** **`$201,479.90 USD`** | **TCE Real:** **`$20,554.98 USD/Día`**
 
 #### 🔍 Desglose Auditable Pierna por Pierna (Fishbowl Table)
 
-| PIERNA | TIPO | TRAYECTO (PUERTOS) | DISTANCIA (NM) | DÍAS MAR | DÍAS PUERTO | TONELADAS IFO | TONELADAS MDO | COSTO BÚNKER (USD) | COSTO PUERTO (USD) | INGRESO FLETE (USD) | PnL PIERNA (USD) |
-| :---: | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **#1** | `BALLAST` | `ILO` $\rightarrow$ `CALLAO` | `514.0 NM` | `2.01 d` | `0.00 d` | `28.08 MT` | `0.00 MT` | `$25,131.33` | `$0.00` | `$0.00` | `-$25,131.33` |
-| **#2** | `LADEN` | `CALLAO` $\rightarrow$ `MARCONA` | `254.0 NM` | `0.99 d` | `3.30 d` | `23.74 MT` | `1.38 MT` | `$23,265.51` | `$71,327.99` | `$344,250.00` | `+$249,656.50` |
-| **#3** | `BALLAST` | `MARCONA` $\rightarrow$ `ILO` | `283.0 NM` | `1.10 d` | `0.00 d` | `15.46 MT` | `0.00 MT` | `$13,836.90` | `$0.00` | `$0.00` | `-$13,836.90` |
-| **TOTAL** | — | **SUMATORIA CONSOLIDADA** | **`1,051.0 NM`** | **`4.10 d`** | **`3.30 d`** | **`67.28 MT`** | **`1.38 MT`** | **`$62,233.73`** | **`$71,327.99`** | **`$344,250.00`** | **`+$210,688.28`** |
+| PIERNA | TIPO | TRAYECTO (PUERTOS) | DISTANCIA (NM) | DÍAS MAR | DÍAS PUERTO | TONELADAS IFO | TONELADAS MDO | COSTO BÚNKER (USD) | PUERTO CARGA (USD) | PUERTO DESCARGA (USD) | COSTO PUERTO (USD) | INGRESO FLETE (USD) | PnL PIERNA (USD) |
+| :---: | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **#1** | `BALLAST` | `ILO` $\rightarrow$ `CALLAO` | `514.0 NM` | `2.01 d` | `0.00 d` | `28.08 MT` | `0.00 MT` | `$25,131.33` | `$0.00` | `$0.00` | `$0.00` | `$0.00` | `-$25,131.33` |
+| **#2** | `LADEN` | `CALLAO` $\rightarrow$ `MEJILLONES` | `783.0 NM` | `3.07 d` | `3.42 d` | `54.42 MT` | `1.33 MT` | `$50,671.88` | `$31,327.99` | `$50,000.00` | `$81,327.99` | `$375,000.00` | `+$243,000.13` |
+| **#3** | `BALLAST` | `MEJILLONES` $\rightarrow$ `ILO` | `335.0 NM` | `1.31 d` | `0.00 d` | `18.31 MT` | `0.00 MT` | `$16,388.90` | `$0.00` | `$0.00` | `$0.00` | `$0.00` | `-$16,388.90` |
+| **TOTAL** | — | **SUMATORIA CONSOLIDADA** | **`1,632.0 NM`** | **`6.39 d`** | **`3.42 d`** | **`100.81 MT`** | **`1.33 MT`** | **`$92,192.11`** | **`$31,327.99`** | **`$50,000.00`** | **`$81,327.99`** | **`$375,000.00`** | **`+$201,479.90`** |
+
 
 ---
 

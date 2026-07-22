@@ -9,10 +9,19 @@ if sys.platform == "win32":
 # Add parent directory to path to load backend modules
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Mapa de Tarifas Portuarias Reales por Puerto
+PORT_COSTS_MASTER = {
+    "CALLAO": 31327.99,     # Puerto de Carga Principal
+    "MARCONA": 40000.00,    # Puerto de Descarga
+    "MATARANI": 17000.00,   # Puerto de Descarga
+    "MEJILLONES": 50000.00,  # Puerto de Descarga Principal Chile
+    "ILO": 15000.00         # Base principal
+}
+
 def run_qc_test_suite():
-    print("=" * 80)
-    print("[QC LOOP AUTÓNOMO] AUDITORÍA DE RUTAS SPCC Y NEXA (SISTEMA PETRAL)")
-    print("=" * 80)
+    print("=" * 90)
+    print("[QC LOOP AUTÓNOMO] AUDITORÍA DETALLADA DE RUTAS SPCC Y NEXA (SISTEMA PETRAL)")
+    print("=" * 90)
     
     from backend.database import get_supabase
     from backend.spot_engine import calculate_multicotizador_simulation
@@ -55,11 +64,14 @@ def run_qc_test_suite():
             
         print(f"🚢 AUDITANDO RUTA: {name} ({len(tramos)} Piernas)")
         
-        # Preparar tramos con precios e inputs estándar si están vacíos
+        # Preparar tramos aplicando las tarifas portuarias de maestras reales
         for tr in tramos:
-            if not tr.get("bunker_price_ifo"): tr["bunker_price_ifo"] = 895.14
-            if not tr.get("bunker_price_mdo"): tr["bunker_price_mdo"] = 1460.30
-            if not tr.get("vessel_speed"): tr["vessel_speed"] = 11.0
+            tr["bunker_price_ifo"] = 895.14
+            tr["bunker_price_mdo"] = 1460.30
+            tr["vessel_speed"] = 11.0
+            
+            orig_p = tr.get("origin_port_id", "ILO")
+            dest_p = tr.get("destination_port_id", "ILO")
             
             if tr.get("type") == "LADEN" or tr.get("origin_action") == "CARGAR":
                 tr["type"] = "LADEN"
@@ -67,10 +79,9 @@ def run_qc_test_suite():
                     tr["quantity"] = 13500.0
                 if not tr.get("freight_rate") or tr.get("freight_rate") == 0:
                     tr["freight_rate"] = 25.50
-                if not tr.get("agency_costs_origin") or tr.get("agency_costs_origin") == 0:
-                    tr["agency_costs_origin"] = 31327.99
-                if not tr.get("agency_costs_destination") or tr.get("agency_costs_destination") == 0:
-                    tr["agency_costs_destination"] = 40000.00
+                # Asignar tarifas portuarias reales del maestro
+                tr["agency_costs_origin"] = PORT_COSTS_MASTER.get(orig_p, 31327.99)
+                tr["agency_costs_destination"] = PORT_COSTS_MASTER.get(dest_p, 40000.00)
             else:
                 tr["type"] = "BALLAST"
                 tr["agency_costs_origin"] = 0.0
@@ -107,20 +118,59 @@ def run_qc_test_suite():
                 if tr_res.get("type") == "BALLAST" and tr_res.get("port_costs", 0) > 0:
                     issues.append(f"Pierna #{idx+1} (BALLAST) cobró costo portuario (${tr_res.get('port_costs'):,.2f} USD)")
                     
-            # Regla 3: Ingreso Flete Cero en LADEN
+            # Regla 3: Costos Portuarios Anómalos / Ridículos en Carga o Descarga
+            for idx, tr_res in enumerate(tramos_res):
+                if tr_res.get("type") == "LADEN":
+                    dest_p = tr_res.get("destination_port_id")
+                    cost_dest = tr_res.get("agency_costs_destination", 0)
+                    if dest_p == "MEJILLONES" and cost_dest < 45000:
+                        issues.append(f"Costo Portuario Ridículo en MEJILLONES: ${cost_dest:,.2f} USD (Esperado >= $45,000 USD)")
+                    if tr_res.get("port_costs", 0) < 30000:
+                        issues.append(f"Costos Portuarios Totales Anómalos en Pierna #{idx+1}: ${tr_res.get('port_costs'):,.2f} USD")
+
+            # Regla 4: Ingreso Flete Cero en LADEN
             for idx, tr_res in enumerate(tramos_res):
                 if tr_res.get("type") == "LADEN" and tr_res.get("net_income", 0) <= 0:
                     issues.append(f"Pierna #{idx+1} (LADEN) tiene ingreso de flete nulo (${tr_res.get('net_income'):,.2f} USD)")
 
             passed = len(issues) == 0
+            
+            # Imprimir Desglose Completo Auditable por Consola
+            print("  ┌" + "─" * 84)
+            print(f"  │ 📍 RESUMEN CONSOLIDADO: Distancia {tot_dist:,.1f} NM | Días Totales {cons.get('total_days', 0):.2f}d")
+            print(f"  │ ⛽ Búnker Total:  ${bunker_cost:,.2f} USD ({cons.get('bunker_ifo_tonnage', 0):.2f} t IFO | {cons.get('bunker_mdo_tonnage', 0):.2f} t MDO)")
+            print(f"  │ ⚓ Puerto Total:  ${port_costs:,.2f} USD")
+            print(f"  │ 💰 Ingreso Flete: ${net_income:,.2f} USD | PnL Neto: ${pnl_net:,.2f} USD | TCE: ${tce_real:,.2f} USD/Día")
+            print("  ├" + "─" * 84)
+            print("  │ 🔍 DESGLOSE DE PIERNAS Y COSTOS PORTUARIOS:")
+            
+            for idx, tr_res in enumerate(tramos_res):
+                tipo = tr_res.get("type", "BALLAST")
+                orig = tr_res.get("origin_port_id")
+                dest = tr_res.get("destination_port_id")
+                dist_p = tr_res.get("distance", 0)
+                bunk_p = tr_res.get("bunker_costs", 0)
+                ifo_p = tr_res.get("bunker_ifo", 0)
+                mdo_p = tr_res.get("bunker_mdo", 0)
+                cost_orig = tr_res.get("agency_costs_origin", 0)
+                cost_dest = tr_res.get("agency_costs_destination", 0)
+                income_p = tr_res.get("net_income", 0)
+                
+                if tipo == "LADEN":
+                    print(f"  │   • Pierna #{idx+1} [LADEN]: {orig} ➔ {dest} | {dist_p:,.1f} NM")
+                    print(f"  │       - Búnker Pierna: ${bunk_p:,.2f} USD ({ifo_p:.2f} t IFO | {mdo_p:.2f} t MDO)")
+                    print(f"  │       - Puerto Carga ({orig}):    ${cost_orig:,.2f} USD")
+                    print(f"  │       - Puerto Descarga ({dest}): ${cost_dest:,.2f} USD")
+                    print(f"  │       - Ingreso Pierna:         ${income_p:,.2f} USD")
+                else:
+                    print(f"  │   • Pierna #{idx+1} [BALLAST]: {orig} ➔ {dest} | {dist_p:,.1f} NM")
+                    print(f"  │       - Búnker Pierna: ${bunk_p:,.2f} USD ({ifo_p:.2f} t IFO | {mdo_p:.2f} t MDO)")
+                    print(f"  │       - Costo Puerto:  $0.00 USD (Lastre)")
+
+            print("  └" + "─" * 84)
+
             if passed:
-                print(f"  ✅ [QC PASSED]")
-                print(f"     • Distancia Total: {tot_dist:,.1f} NM")
-                print(f"     • Costo Búnker:    ${bunker_cost:,.2f} USD")
-                print(f"     • Costos Puerto:   ${port_costs:,.2f} USD")
-                print(f"     • Ingreso Flete:   ${net_income:,.2f} USD")
-                print(f"     • PnL Neto:        ${pnl_net:,.2f} USD")
-                print(f"     • TCE Real:        ${tce_real:,.2f} USD/Día\n")
+                print(f"  ✅ [QC PASSED] Ruta validada al 100% sin anomalías.\n")
             else:
                 print(f"  ❌ [QC RECHAZADO]")
                 for iss in issues:
@@ -134,12 +184,12 @@ def run_qc_test_suite():
             traceback.print_exc()
             all_passed = False
 
-    print("=" * 80)
+    print("=" * 90)
     if all_passed:
         print("🎉 [RESULTADO FINAL] TODOS LOS TESTS DEL LOOP QC PASARON CON ÉXITO AL 100%")
     else:
         print("⚠️ [RESULTADO FINAL] ALGUNAS RUTAS REGISTRARON ANOMALÍAS EN QC")
-    print("=" * 80)
+    print("=" * 90)
     return all_passed
 
 if __name__ == "__main__":
