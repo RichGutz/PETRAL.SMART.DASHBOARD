@@ -94,7 +94,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
 
     const getRouteId = (r: any, idx?: number) => {
         if (!r) return '';
-        return r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id || r.name || r.id || (idx !== undefined ? `route-${idx}` : '');
+        return r._id || r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id || r.name || r.id || (idx !== undefined ? `route-${idx}` : '');
     };
 
     useEffect(() => {
@@ -107,9 +107,9 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             const allRoutes = [...(spotVoyages || []), ...(listSpots || [])];
             const routeMap = new Map();
             allRoutes.forEach((r: any, i: number) => {
-                const id = getRouteId(r, i);
+                const id = r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id || r.name || r.id || `route-${i}`;
                 if (id && !routeMap.has(id)) {
-                    routeMap.set(id, r);
+                    routeMap.set(id, { ...r, _id: id });
                 }
             });
             const mergedRoutes = Array.from(routeMap.values());
@@ -121,7 +121,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
 
             if (mergedRoutes.length > 0 && !selectedRouteId) {
                 const defaultR = mergedRoutes.find((r: any) => (r.name || "").includes("NEXA")) || mergedRoutes[0];
-                setSelectedRouteId(getRouteId(defaultR, 0));
+                setSelectedRouteId(defaultR._id);
             }
             if (mergedVessels.length > 0 && !selectedVesselId) {
                 setSelectedVesselId(mergedVessels[0].vessel_id);
@@ -140,7 +140,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             setLegsConfig([]);
             return;
         }
-        const route = routes.find((r, idx) => getRouteId(r, idx) === selectedRouteId || r.name === selectedRouteId);
+        const route = routes.find((r: any) => r._id === selectedRouteId || r.name === selectedRouteId || r.route_id === selectedRouteId);
         if (!route || !route.legs_data || !route.legs_data.tramos) return;
         
         const tramos = route.legs_data.tramos;
