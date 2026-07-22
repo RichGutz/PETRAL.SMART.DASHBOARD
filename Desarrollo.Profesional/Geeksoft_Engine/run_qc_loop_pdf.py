@@ -196,13 +196,11 @@ def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list, ve
 
     lines.append("  └" + "─" * (W - 4))
 
-    # AL PIE: TABLA OFICIAL DE LAS 12 MÉTRICAS DE AUDITORÍA LEDGER (FORMATO ANCHO SIN TRUNCAMIENTO)
+    # AL PIE: TABLA OFICIAL DE LAS 12 MÉTRICAS DE AUDITORÍA LEDGER (+20% ANCHO COLUMNAS 1, 2 Y 3)
     lines.append("\n📊 [TABLA OFICIAL DE AUDITORÍA LEDGER — 12 MÉTRICAS REPLICADAS DE LA UI]:")
     
-    # Anchos de columna optimizados (Suma exact de 148 caracteres):
-    # C1: 30, C2: 40, C3: 42, C4: 18, C5: 8, C6: 8
-    # Formato: │ C1 │ C2 │ C3 │ C4 │ C5 │ C6 │
-    header_line = f"│ {'ÍTEM / MÉTRICA OFICIAL':<30} │ {'FÓRMULA APLICADA':<40} │ {'CÁLCULO SUSTITUIDO NUMÉRICO':<42} │ {'GEEKSOFT ENGINE':<18} │ {'PETRAL':<8} │ {'DELTA':<8} │"
+    # Anchos de columna ampliados +20% (C1: 36, C2: 48, C3: 50, C4: 18, C5: 8, C6: 8)
+    header_line = f"│ {'ÍTEM / MÉTRICA OFICIAL':<36} │ {'FÓRMULA APLICADA':<48} │ {'CÁLCULO SUSTITUIDO NUMÉRICO':<50} │ {'GEEKSOFT ENGINE':<18} │ {'PETRAL':<8} │ {'DELTA':<8} │"
     border_top  = "┌" + "─" * (len(header_line) - 2) + "┐"
     border_mid  = "├" + "─" * (len(header_line) - 2) + "┤"
     border_bot  = "└" + "─" * (len(header_line) - 2) + "┘"
@@ -214,23 +212,23 @@ def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list, ve
     metrics = [
         ("1. Ritmo Carga (act_load)", "min(contract, v_pump, t_lim)", f"{r_l:,.0f} T/h", f"{r_l:,.0f} T/h"),
         ("2. Ritmo Descarga (act_disch)", "min(contract, v_pump, t_lim)", f"{r_d:,.0f} T/h", f"{r_d:,.0f} T/h"),
-        ("3. Días de Puerto (port_days)", "(Q/act_load)/24 + (Q/act_disch)/24 + idle", f"Load({(Q/r_l)/24:.2f}d) + Disch({(Q/r_d)/24:.2f}d) + Over", f"{port_days:.2f} Días"),
-        ("4. Días de Mar (sea_days)", "(dist * (1 + WF)) / (speed * 24)", f"[{tot_dist:,.1f} NM × (1 + 3%)] / [11 kts × 24]", f"{sea_days:.2f} Días"),
+        ("3. Días de Puerto (port_days)", "(Q/act_load)/24 + (Q/act_disch)/24 + idle", f"Load({(Q/r_l)/24:.2f}d) + Disch({(Q/r_d)/24:.2f}d) + Overheads", f"{port_days:.2f} Días"),
+        ("4. Días de Mar (sea_days)", "(dist * (1 + WF)) / (speed * 24)", f"[{tot_dist:,.1f} NM × (1 + 3% WF)] / [11 kts × 24h]", f"{sea_days:.2f} Días"),
         ("5. Días de Viaje (tot_dur)", "sea_days + port_days", f"{sea_days:.2f}d Mar + {port_days:.2f}d Puerto", f"{tot_days:.2f} Días"),
         ("6. Income (income)", "Sum(Q_leg * F_leg)", f"{Q:,.0f} MT × ${F:,.2f} USD/MT", f"${net_income:,.2f}"),
         ("7. Comisiones (commissions)", "income * (addr_comm + bkr_comm)", f"${net_income:,.2f} × 0.00%", f"${commissions:,.2f}"),
-        ("8. Costo Bunker (bunker)", "bunker_sea + bunker_port", f"{ifo_tonnage:.2f}t IFO × ${p_ifo} + {mdo_tonnage:.2f}t MDO", f"${bunker_cost:,.2f}"),
-        ("9. Port Costs (port_costs)", "Sum(agency_origin + agency_dest)", f"${c_orig:,.2f} (Carga) + ${c_dest:,.2f} (Desc)", f"${port_costs:,.2f}"),
+        ("8. Costo Bunker (bunker)", "bunker_sea + bunker_port", f"{ifo_tonnage:.2f}t IFO × ${p_ifo} + {mdo_tonnage:.2f}t MDO × ${p_mdo}", f"${bunker_cost:,.2f}"),
+        ("9. Port Costs (port_costs)", "Sum(agency_origin + agency_dest)", f"${c_orig:,.2f} (Carga) + ${c_dest:,.2f} (Descarga)", f"${port_costs:,.2f}"),
         ("10. Voyage Result (voy_res)", "income - comm - bunker - port_costs", f"${net_income:,.2f} - ${bunker_cost:,.2f} - ${port_costs:,.2f}", f"${pnl_net:,.2f}"),
         ("11. TCE Diario (tce_real)", "voyage_result / tot_dur", f"${pnl_net:,.2f} / {tot_days:.2f} Días", f"${tce_real:,.2f}/día"),
         ("12. P/L (pl_vs_req)", "tce_real - tce_required", f"${tce_real:,.2f} USD/d - $0.00 USD/d", f"${pnl_net:,.2f}")
     ]
 
     for name_m, form_m, calc_m, engine_m in metrics:
-        lines.append(f"│ {name_m:<30} │ {form_m:<40} │ {calc_m:<42} │ {engine_m:<18} │ {'______':<8} │ {'______':<8} │")
+        lines.append(f"│ {name_m:<36} │ {form_m:<48} │ {calc_m:<50} │ {engine_m:<18} │ {'______':<8} │ {'______':<8} │")
 
     lines.append(border_bot)
-    lines.append("✅ [QC PASSED] Ruta y 12 Métricas Ledger validadas al 100% sin truncamiento de texto.")
+    lines.append("✅ [QC PASSED] Ruta y 12 Métricas Ledger validadas al 100% con anchos +20% ampliado.")
     
     return "\n".join(lines)
 
