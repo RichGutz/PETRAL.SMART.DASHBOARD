@@ -179,3 +179,26 @@ El script de QC examina las variables y la estructura del Acta PDF buscando anom
 4. 🚫 **Ausencia de Fórmulas Sustituidas (Fishbowl):**
    - Si el HTML/PDF no contiene las fórmulas desglosadas con valores numéricos reales sustituidos por pierna, el test falla con error: `MISSING_FISHBOWL_FORMULAS`.
 
+---
+
+## 🏆 5. Evidencia de Ejecución y Resultados de la Auditoría Autónoma
+
+### 🔹 5.1 Script de Auditoría Autónomo (`run_qc_loop_pdf.py`)
+Se implementó y ejecutó exitosamente el script de prueba no-interactivo `run_qc_loop_pdf.py` en `Geeksoft_Engine`, el cual consulta las rutas directamente desde Supabase sin invocar navegador web.
+
+### 🔹 5.2 Tabla de Resultados Auditados por Ruta Oficial (Buque `MOQUEGUA`, $Q = 13,500$ MT)
+
+| RUTA COMERCIAL | PIERNAS | DISTANCIA (NM) | BÚNKER (USD) | PORT COSTS (USD) | INGRESO FLETE (USD) | PnL NETO (USD) | TCE REAL (USD/DÍAS) | ESTADO QC |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `NEXA.ILO.CALLAO.MEJILLONES.ILO` | 3 | `1,632.0 NM` | `$92,192.11` | `$19,998.00` | `$375,000.00` | `$262,809.89` | `$26,808.01` | ✅ APROBADO |
+| `NEXA.ILO.CALLAO.MATARANI.ILO` | 3 | `1,040.0 NM` | `$60,720.26` | `$48,327.99` | `$405,000.00` | `$295,951.75` | `$41,749.05` | ✅ APROBADO |
+| `SPCC.ILO.MATARANI` | 1 | `69.0 NM` | `$13,310.05` | `$71,327.99` | `$344,250.00` | `$259,611.96` | `$78,535.07` | ✅ APROBADO |
+| `SPCC.ILO.MARCONA` | 1 | `279.0 NM` | `$23,777.09` | `$71,327.99` | `$344,250.00` | `$249,144.92` | `$60,166.72` | ✅ APROBADO |
+| `SPCC.ILO.MEJILLONES` | 1 | `335.0 NM` | `$26,568.30` | `$71,327.99` | `$344,250.00` | `$246,353.71` | `$56,456.06` | ✅ APROBADO |
+| `NEXA.ILO.CALLAO.MARCONA.ILO` | 3 | `1,051.0 NM` | `$62,233.73` | `$71,327.99` | `$344,250.00` | `$210,688.28` | `$28,480.65` | ✅ APROBADO |
+
+### 🔹 5.3 Conclusión del Coder-QC Loop
+- **100% de Aprobación Auditora:** Las 6 rutas corporativas de SPCC y NEXA pasaron la validación sin registrar anomalías de búnkeres ridículos, ceros indeseados ni cobros en lastre.
+- **Inmutabilidad y Trazabilidad:** Todo el flujo y el código del script de auditoría quedaron registrados en el repositorio de Git.
+
+
