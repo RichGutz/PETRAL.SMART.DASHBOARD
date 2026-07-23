@@ -1,4 +1,13 @@
 ================================================================================
+INTERACTION LOG
+================================================================================
+- Tarea: QC Loop Multicotizador Spot, Persistencia routes_quotes y Rediseño Cálculos Detallados.
+- Persistencia: Supabase `routes_clients` (Armazón Activo) y `routes_quotes` (Armazón + Carne JSONB).
+- Fix Backend API: Corregido endpoint GET /spot/list en `forecast.py` (`spot_id:route_id`).
+- Formato Cálculos Detallados: Rediseñado a consola en Fondo Blanco / Texto Negro con Logos PETRAL y GEEKSOFT y Título Oficial `PETRAL SMART DASHBOARD • MOTOR SPOT GEEKSOFT ENGINE`.
+- Impresión PDF: Función `handlePrintCalculosDetalladosHtml` con paginación `page-break-inside: avoid` trasladando la Tabla Oficial de 12 Métricas completa a la Página 2 si se excede la primera página.
+- Suite de QC Autónoma: `run_qc_multicotizador_quotes.py` aprobada con 100% de éxito en Fases 1, 2 y 3 ($\Delta = \$0.0000$).
+================================================================================
 INTERACTION LOG - PETRAL SMART DASHBOARD
 Fecha: 2026-07-22
 ================================================================================
@@ -8,7 +17,27 @@ Fecha: 2026-07-22
 - Estructura: 5 Cards Maestros (Rutas, Buques, Búnker, Contratos & Comercial, Puertos).
 - Ajuste Fórmulas: Ritmos Carga/Descarga corregidos a ritmos contractuales directos (contract_load_rate / contract_discharge_rate).
 - Orden de Impresión: Rutas de SPCC priorizadas en primer lugar, seguidas por rutas NEXA.
+- Tonelaje Estándar: Q = 13,500 MT fijado invariablemente para todas las rutas y cálculos.
 - Resultado: ✅ Acta PDF B&W Landscape re-generada con éxito en Obsidian y Raíz.
+================================================================================
+- Tarea: Refinamiento de UI Auditoría Final (VoyageLedgerFinal.tsx).
+- Ajustes UI: Selector de Ruta individual eliminado; selector de Cliente, Buque y Matriz Portuaria conservados.
+- Modal Viewer: Visor modal iframe interactivo de alta fidelidad implementado estilo Inandes ERP React con botón de exportación PDF.
+- Tonelaje: Q = 13,500 MT unificado en todas las simulaciones multi-ruta.
+- Resultado: ✅ Compilación TypeScript 100% exitosa sin errores en Geeksoft_Frontend.
+================================================================================
+- Tarea: Rediseño Integral de la UI Auditoría Final (Ventana PDF Directa).
+- Cambios UI: Eliminadas completamente la tabla de itinerario/carga, la selección de ruta individual y los botones modales intermedios.
+- Visor PDF Embebido: La página es ahora una ventana directa con el documento PDF (iframe embebido en pantalla completa) que calcula y presenta automáticamente TODAS las rutas del cliente seleccionado (SPCC, NEXA, PROSPECTOS).
+- Corrección de Tabla 1 al 12: Eliminadas las columnas PETRAL y DELTA. La tabla de 12 métricas cuenta ahora con 4 columnas amplias y flexibles (Métrica 25%, Fórmula 32%, Cálculo Sustituido 28%, Geeksoft Engine 15%), garantizando la lectura holgada sin recortes.
+- Rediseño de Cabecera Superior: Reemplazado el fondo negro por un acabado claro corporativo (`bg-slate-50 border border-slate-200 text-slate-800`), limpio y sobrio.
+- Sección de Firmas e Inputs de Auditoría: Agregado al pie de cada página el bloque oficial de trazabilidad con Responsable, Checkboxes de Estado (Aprobado / Con Errores / Observado), Firma, Fecha y recuadro de Comentarios/Justificación.
+- Despliegue VPS: ✅ Publicado en https://forecast.geeksoft.tech.
+================================================================================
+- Tarea: Estandarización de Rutas SPCC a 2 Piernas (Viaje Redondo).
+- Cambios DB: Actualizada la tabla `routes_clients` en Supabase para convertir las 3 rutas de SPCC (`SPCC.ILO.MATARANI`, `SPCC.ILO.MARCONA`, `SPCC.ILO.MEJILLONES`) de 1 pierna a 2 piernas estandarizadas (Ida LADEN + Retorno BALLAST a ILO).
+- QC & PDF Loop: Ejecutados `update_spcc_routes_two_legs.py`, `run_qc_loop_pdf.py` y `run_qc_matriz_financiera.py`.
+- Resultado: ✅ Matriz financiera y Acta PDF re-generadas incorporando ambas piernas para SPCC y NEXA con 100% éxito.
 ================================================================================
 
 

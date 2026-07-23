@@ -23,8 +23,7 @@ def get_cached_masters(supabase) -> Dict[str, Any]:
             "vessels": safe_fetch(supabase, "vessels"),
             "distances": safe_fetch(supabase, "distances"),
             "routes_clients": safe_fetch(supabase, "routes_clients"),
-            "routes_prospects": safe_fetch(supabase, "routes_prospects"),
-            "routes_master": safe_fetch(supabase, "routes_master"),
+            "routes_quotes": safe_fetch(supabase, "routes_quotes"),
             "bunker_prices": safe_fetch(supabase, "bunker_prices"),
             "ports": safe_fetch(supabase, "ports"),
             "contracts": safe_fetch(supabase, "contracts"),
@@ -339,8 +338,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         routes_db[f"{r['port_a']}-{r['port_b']}"] = r
     
     routes_clients_data = masters.get("routes_clients") or []
-    routes_prospects_data = masters.get("routes_prospects") or []
-    routes_master_data = routes_clients_data + routes_prospects_data or masters.get("routes_master") or []
+    routes_prospects_data = masters.get("routes_quotes") or []
+    routes_master_data = routes_clients_data + routes_prospects_data
     
     bunker_data = masters["bunker_prices"]
     # Asegurar que se tome el precio con la fecha más reciente ordenando ascendentemente
@@ -800,8 +799,8 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
         routes_db[f"{r['port_a']}-{r['port_b']}"] = r
     
     routes_clients_data = masters.get("routes_clients") or []
-    routes_prospects_data = masters.get("routes_prospects") or []
-    routes_master_data = routes_clients_data + routes_prospects_data or masters.get("routes_master") or []
+    routes_prospects_data = masters.get("routes_quotes") or []
+    routes_master_data = routes_clients_data + routes_prospects_data
     
     bunker_data = masters["bunker_prices"]
     bunker_data = sorted(bunker_data, key=lambda x: x.get("date", "2000-01-01"))

@@ -47,6 +47,7 @@ class SpotSaveRequest(BaseModel):
     legs_data: Dict[str, Any]
     pais: Optional[str] = "Peru"
     is_prospect: Optional[bool] = False
+    created_by: Optional[str] = "izavala@petral.com.pe"
 
 class SpotCalculationRequest(BaseModel):
     vessel_id: str

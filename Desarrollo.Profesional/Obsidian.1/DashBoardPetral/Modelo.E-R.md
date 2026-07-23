@@ -58,20 +58,37 @@ Este documento define la estructura relacional definitiva del motor de **Geeksof
 * `color_hex` *(VARCHAR(7))* → Código de color de UI para el Dashboard (ej. "#06B6D4").
 * `pais` *(TEXT, DEFAULT 'Peru')* → País del puerto de destino (`'Chile'` para Mejillones/Barquito; `'Peru'` en el resto).
 
-> 📌 **Nota de Arquitectura:** En la base de datos Supabase, esta matriz física se consulta prioritariamente como **`distances`** (con alias de compatibilidad en `routes`) para evitar confusión conceptual con las rutas completas de viaje que residen en **`routes_master`**.
+> 📌 **Nota de Arquitectura:** En la base de datos Supabase, esta matriz física se consulta prioritariamente como **`distances`** (con alias de compatibilidad en `routes`) para evitar confusión conceptual con las rutas completas de viaje que residen en **`routes_clients`** y **`routes_quotes`**.
 
 ---
 
-### 3.1. Tabla: `routes_master` (Maestro Unificado de Rutas y Cotizaciones Spot Multileg)
-*Almacena el catálogo unificado de circuitos navieros completos de múltiples piernas (posicionamiento + laden + retorno). Cada registro representa una ruta guardada desde el Ruteador Spot / Multicotizador o una ruta fija contractual.*
-* `route_id` / `spot_id` *(UUID, PK, DEFAULT gen_random_uuid())* → Identificador técnico único.
-* `name` *(VARCHAR, NOT NULL)* → Nombre amigable del circuito (ej. `'SPCC.ILO.MATARANI.ILO'`). Es la clave funcional usada en la Matriz Financiera.
-* `description` *(VARCHAR)* → Autor o descripción libre de la ruta.
-* `legs_data` *(JSONB, NOT NULL)* → Estructura completa del viaje en formato JSONB.
-* `pais` *(TEXT, DEFAULT 'Peru')* → País de destino de la operación.
-* `created_at` *(TIMESTAMPTZ, DEFAULT now())* → Timestamp de creación del registro.
+### 3.1. Tablas de Persistencia Naviera: `routes_clients` y `routes_quotes` (Armazón vs. Carne)
 
-> 🔀 **Motor Paralelo:** Las líneas de proyección en `commercial_forecasts` que usan `origin_port_id = 'SPOT'` hacen join lógico contra esta tabla por el campo `name` (prefijado como `SPOT-{name}`) para ejecutar `calculate_spot_multileg` en lugar del motor estándar `calculate_voyage_pnl`.
+*Para alinear la base de datos con la operativa naviera real, se eliminó la vista obsoleta `routes_master` y se formalizó la separación entre la ruta física inmutable (Armazón) y la cotización financiera dinámica (La Carne):*
+
+#### A. Tabla: `routes_clients` (Armazón Geométrico — Clientes Activos)
+*Almacena el itinerario físico estático de navegación (secuencia de puertos y distancias en NM) para Clientes Activos (ej. SPCC, NEXA).*
+* `route_id` *(UUID, PK, DEFAULT gen_random_uuid())* → Identificador técnico único de la ruta de cliente.
+* `name` *(VARCHAR, NOT NULL)* → Nombre amigable del circuito (ej. `'SPCC.ILO.MATARANI.ILO'`).
+* `description` *(VARCHAR)* → Descripción funcional o anotación del contrato.
+* `pais` *(TEXT, DEFAULT 'Peru')* → País principal de destino del circuito.
+* `is_prospect` *(BOOLEAN, DEFAULT false)* → Identifica que la ruta pertenece a un cliente activo regular (`false`).
+* `created_by` *(TEXT, DEFAULT 'izavala@petral.com.pe')* → Usuario autor de la ruta.
+* `created_at` *(TIMESTAMPTZ, DEFAULT now())* → Timestamp de creación del registro.
+* `legs_data` *(JSONB, NOT NULL)* → Geometría estática de los tramos de navegación.
+
+#### B. Tabla: `routes_quotes` (La Carne Comercial — Cotizaciones Dinámicas Spot / Prospectos)
+*Almacena la foto financiera viva de mercado (precios de búnker IFO/MDO, buque asignado, fletes pactados, comisiones address/broker, ritmos y sobrecostos portuarios) para Prospectos y Cotizaciones Multicotizador.*
+* `spot_id` *(UUID, PK, DEFAULT gen_random_uuid())* → Identificador técnico único de la cotización.
+* `name` *(VARCHAR, NOT NULL)* → Nombre amigable de la cotización comercial (ej. `'PROSPECT.ILO.ANTOFAGASTA.ILO'`).
+* `description` *(VARCHAR)* → Detalle o notas comerciales de la propuesta.
+* `pais` *(TEXT, DEFAULT 'Peru')* → País de destino.
+* `is_prospect` *(BOOLEAN, DEFAULT true)* → Identifica que el registro es una cotización comercial / prospecto (`true`).
+* `created_by` *(TEXT, DEFAULT 'izavala@petral.com.pe')* → Usuario autor de la cotización.
+* `created_at` *(TIMESTAMPTZ, DEFAULT now())* → Timestamp de creación del registro.
+* `legs_data` *(JSONB, NOT NULL)* → Estructura completa enriquecida (`vessel_id`, `bunker_price_ifo`, `bunker_price_mdo`, `tramos`, `puertosConfig`, `addressCommPct`, `brokerCommPct`).
+
+> 🔀 **Motor Paralelo:** La API de backend (`forecast.py`) inyecta y consulta de forma transparente `routes_clients` para clientes activos y `routes_quotes` para prospectos mediante el endpoint `/spot/save` y `/spot/list`.
 
 ---
 
@@ -459,4 +476,18 @@ ALTER TABLE port_cost_static ADD PRIMARY KEY (client_id, port_id, operation_type
 
 -- 3. Eliminar la tabla de proveedores
 DROP TABLE suppliers CASCADE;
-```
+```
+
+---
+
+### 🗓️ 2026-07-22 — Reestructuración del Modelo de Rutas y Cotizaciones (Armazón vs. Carne)
+
+**Tablas afectadas:** `routes_clients`, `routes_quotes` (antes `routes_prospects`), `routes_master` (ELIMINADA)
+
+1. **Eliminación de la vista obsoleta `routes_master`**:
+   - `DROP VIEW routes_master`: Se dio de baja la vista huérfana para alinear la arquitectura relacional.
+2. **Renombre formal `routes_prospects` ➔ `routes_quotes`**:
+   - `ALTER TABLE routes_prospects RENAME TO routes_quotes`: Renombrada para contener formalmente todas las cotizaciones comerciales vivas (la carne) con `vessel_id`, precios de búnker IFO/MDO, comisiones y ritmos por puerto.
+3. **Inclusión de la columna `created_by` (`izavala@petral.com.pe`)**:
+   - Se agregó la columna `created_by TEXT DEFAULT 'izavala@petral.com.pe'` en **`routes_clients`** y **`routes_quotes`**, asignando `izavala@petral.com.pe` como autor por defecto en toda la base de datos y la API.
+

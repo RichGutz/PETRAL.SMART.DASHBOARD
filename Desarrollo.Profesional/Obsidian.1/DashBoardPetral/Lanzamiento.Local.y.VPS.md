@@ -1,5 +1,27 @@
 
+## ⚡ QUICK COMMANDS — LANZAMIENTO LOCAL
+
+### 🖥️ Terminal 1 — Backend (Uvicorn)
+```powershell
+cd C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine
+uvicorn backend.main:app --reload
+```
+→ Disponible en `http://localhost:8000`
+
+### 🌐 Terminal 2 — Frontend (Vite)
+```powershell
+cd C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend
+npm run dev
+```
+→ Disponible en `http://localhost:5173`
+
+> [!WARNING]
+> Siempre arrancar el backend desde `Geeksoft_Engine` (NO desde `Geeksoft_Engine\backend`), si no explota con `ModuleNotFoundError`.
+
+---
+
 # Lanzamiento Local y VPS
+
 
 > [!WARNING]
 > **IMPORTANTE (Arquitectura V2 - LA BURRADA):** TODA nueva lógica visual, componentes y enrutamientos se hacen en los archivos **`_V2.tsx`** (Ej. `App_V2.tsx`, `ForecastBuilder_V2.tsx`, `ToolsLayout_V2.tsx`). Las versiones legacy (sin _V2) como `App.tsx` o `ForecastBuilder.tsx` ya no se utilizan en producción ni en desarrollo. Si el código compila perfecto pero los cambios no se ven en la UI, ¡es porque estás editando el archivo fantasma equivocado! No repitamos esta historia.

@@ -106,7 +106,9 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
     <body>
     """
 
-    for block_text in routes_blocks:
+    for block_item in routes_blocks:
+        ascii_txt = block_item.get("ascii_text", "") if isinstance(block_item, dict) else str(block_item)
+        table_htm = block_item.get("metrics_table_html", "") if isinstance(block_item, dict) else ""
         html += f"""
         <div class="page-route">
             <table style="width: 100%; border-collapse: collapse; border-bottom: 2px solid #000000; margin-bottom: 8px;">
@@ -123,7 +125,8 @@ def generate_black_white_pdf_report(routes_blocks: list, output_filename: str):
                     </td>
                 </tr>
             </table>
-            <pre>{block_text}</pre>
+            <pre>{ascii_txt}</pre>
+            {table_htm}
         </div>
         """
 
@@ -150,6 +153,10 @@ def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list, ve
     pnl_net = c.get("pnl_net_utility", 0)
     tce_real = c.get("tce_real", 0)
     commissions = c.get("total_commissions", 0)
+    # TCE requerido del Card de Buque (vessel)
+    tce_req = float(vessel.get("tce_required") or 0)
+    # P/L correcto: voyage_result - (tot_days * tce_required)
+    pl_vs_req = pnl_net - (tot_days * tce_req)
 
     p_ifo = 895.14
     p_mdo = 1460.30
@@ -174,7 +181,7 @@ def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list, ve
     lines.append("═" * W)
     lines.append("📋 [INPUTS Y VARIABLES DE ORIGEN DE CÁLCULO - CARDS MAESTROS]:")
     lines.append(f"  • CARD 1 (RUTAS):                 Itinerario: {trayecto_str} | Dist. Total: {tot_dist:,.1f} NM | Weather Factor: 3.0% (0.03)")
-    lines.append(f"  • CARD 2 (BUQUES):                Vessel: {vessel.get('vessel_id')} | Speed: {vessel.get('vessel_speed')} kts | Cons. Sea IFO: {vessel.get('consumption_sea_ifo')} t/d | Cons. Idle IFO: {vessel.get('consumption_idle_ifo')} t/d")
+    lines.append(f"  • CARD 2 (BUQUES):                Vessel: {vessel.get('vessel_id')} | Speed: {vessel.get('vessel_speed')} kts | Cons. Sea IFO: {vessel.get('consumption_sea_ifo')} t/d | Cons. Idle IFO: {vessel.get('consumption_idle_ifo')} t/d | TCE Requerido: ${tce_req:,.2f}/d")
     lines.append(f"  • CARD 3 (BÚNKER):                Precio IFO: ${p_ifo:,.2f}/t | Precio MDO: ${p_mdo:,.2f}/t | Consumo Est.: {ifo_tonnage:,.2f} t IFO / {mdo_tonnage:,.2f} t MDO | BAF Baseline: $430.00/t")
     lines.append(f"  • CARD 4 (CONTRATOS & COMERCIAL): Cliente: {client_name} | Q: {Q:,.0f} MT | Freight Base: ${F:,.2f}/MT | Ritmo Carga: {r_l:,.0f} T/h | Ritmo Desc: {r_d:,.0f} T/h | Comisiones: Address 0.0% / Broker 0.0%")
     lines.append(f"  • CARD 5 (PUERTOS & AGENCIA):     Agencia Carga ({orig_p}): ${c_orig:,.2f} USD | Agencia Descarga ({dest_p}): ${c_dest:,.2f} USD | Total Port Costs: ${port_costs:,.2f} USD")
@@ -232,25 +239,21 @@ def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list, ve
             lines.append(f"  │       🚢 Agencia Puerto:      $0.00 USD (Lastre)")
 
     lines.append("  └" + "─" * (W - 4))
-
-    # AL PIE: TABLA OFICIAL DE LAS 12 MÉTRICAS DE AUDITORÍA LEDGER (+20% ANCHO COLUMNAS 1, 2 Y 3)
-    lines.append("\n📊 [TABLA OFICIAL DE AUDITORÍA LEDGER — 12 MÉTRICAS REPLICADAS DE LA UI]:")
     
-    # Anchos de columna ampliados +20% (C1: 36, C2: 48, C3: 50, C4: 18, C5: 8, C6: 8)
-    header_line = f"│ {'ÍTEM / MÉTRICA OFICIAL':<36} │ {'FÓRMULA APLICADA':<48} │ {'CÁLCULO SUSTITUIDO NUMÉRICO':<50} │ {'GEEKSOFT ENGINE':<18} │ {'PETRAL':<8} │ {'DELTA':<8} │"
-    border_top  = "┌" + "─" * (len(header_line) - 2) + "┐"
-    border_mid  = "├" + "─" * (len(header_line) - 2) + "┤"
-    border_bot  = "└" + "─" * (len(header_line) - 2) + "┘"
+    sea_days_parts = []
+    for idx, tr in enumerate(tramos):
+        t_type = tr.get("type", "BALLAST")
+        t_dist = tr.get("distance", 0)
+        t_sd = tr.get("sea_days", 0)
+        sea_days_parts.append(f"P#{idx+1} {t_type}({t_dist:,.0f}NM: {t_sd:.2f}d)")
 
-    lines.append(border_top)
-    lines.append(header_line)
-    lines.append(border_mid)
-    
+    sea_days_calc_str = " + ".join(sea_days_parts)
+
     metrics = [
         ("1. Ritmo Carga (act_load)", "contract_load_rate", f"{r_l:,.0f} T/h", f"{r_l:,.0f} T/h"),
         ("2. Ritmo Descarga (act_disch)", "contract_discharge_rate", f"{r_d:,.0f} T/h", f"{r_d:,.0f} T/h"),
         ("3. Días de Puerto (port_days)", "(Q/act_load)/24 + (Q/act_disch)/24 + idle", f"Load({(Q/r_l)/24:.2f}d) + Disch({(Q/r_d)/24:.2f}d) + Overheads", f"{port_days:.2f} Días"),
-        ("4. Días de Mar (sea_days)", "(dist * (1 + WF)) / (speed * 24)", f"[{tot_dist:,.1f} NM × (1 + 3% WF)] / [11 kts × 24h]", f"{sea_days:.2f} Días"),
+        ("4. Días de Mar (sea_days)", "Sum((dist_leg * (1 + WF)) / (speed * 24))", sea_days_calc_str, f"{sea_days:.2f} Días"),
         ("5. Días de Viaje (tot_dur)", "sea_days + port_days", f"{sea_days:.2f}d Mar + {port_days:.2f}d Puerto", f"{tot_days:.2f} Días"),
         ("6. Income (income)", "Sum(Q_leg * F_leg)", f"{Q:,.0f} MT × ${F:,.2f} USD/MT", f"${net_income:,.2f}"),
         ("7. Comisiones (commissions)", "income * (addr_comm + bkr_comm)", f"${net_income:,.2f} × 0.00%", f"${commissions:,.2f}"),
@@ -258,16 +261,81 @@ def build_route_console_text(name: str, num_legs: int, c: dict, tramos: list, ve
         ("9. Port Costs (port_costs)", "Sum(agency_origin + agency_dest)", f"${c_orig:,.2f} (Carga) + ${c_dest:,.2f} (Descarga)", f"${port_costs:,.2f}"),
         ("10. Voyage Result (voy_res)", "income - comm - bunker - port_costs", f"${net_income:,.2f} - ${bunker_cost:,.2f} - ${port_costs:,.2f}", f"${pnl_net:,.2f}"),
         ("11. TCE Diario (tce_real)", "voyage_result / tot_dur", f"${pnl_net:,.2f} / {tot_days:.2f} Días", f"${tce_real:,.2f}/día"),
-        ("12. P/L (pl_vs_req)", "tce_real - tce_required", f"${tce_real:,.2f} USD/d - $0.00 USD/d", f"${pnl_net:,.2f}")
+        ("12. P/L (pl_vs_req)", "income - comm - bunker - port_costs - (tot_days * tce_req)", f"${pnl_net:,.2f} - ({tot_days:.2f}d x ${tce_req:,.2f}/d)", f"${pl_vs_req:,.2f}")
     ]
 
+    metrics_html_rows = ""
     for name_m, form_m, calc_m, engine_m in metrics:
-        lines.append(f"│ {name_m:<36} │ {form_m:<48} │ {calc_m:<50} │ {engine_m:<18} │ {'______':<8} │ {'______':<8} │")
+        metrics_html_rows += f"""
+        <tr>
+            <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">{name_m}</td>
+            <td style="border: 1px solid #000000; padding: 2.5px 5px;">{form_m}</td>
+            <td style="border: 1px solid #000000; padding: 2.5px 5px;">{calc_m}</td>
+            <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">{engine_m}</td>
+        </tr>
+        """
 
-    lines.append(border_bot)
-    lines.append("✅ [QC PASSED] Ruta y 12 Métricas Ledger validadas al 100% con logos PETRAL / GEEKSOFT.")
-    
-    return "\n".join(lines)
+    metrics_table_html = f"""
+    <div style="margin-top: 6px; font-family: 'Courier New', monospace;">
+        <div style="font-weight: bold; font-size: 7.5pt; margin-bottom: 3px; color: #000000;">
+            📊 [TABLA OFICIAL DE AUDITORÍA LEDGER — 12 MÉTRICAS REPLICADAS DE LA UI]:
+        </div>
+        <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; table-layout: fixed; font-family: 'Courier New', monospace; font-size: 6.8pt; line-height: 1.25;">
+            <thead>
+                <tr style="background-color: #f2f2f2; border-bottom: 1.5px solid #000000;">
+                    <th style="width: 25%; border: 1px solid #000000; padding: 3px 5px; text-align: left; font-weight: bold;">ÍTEM / MÉTRICA OFICIAL</th>
+                    <th style="width: 32%; border: 1px solid #000000; padding: 3px 5px; text-align: left; font-weight: bold;">FÓRMULA APLICADA</th>
+                    <th style="width: 28%; border: 1px solid #000000; padding: 3px 5px; text-align: left; font-weight: bold;">CÁLCULO SUSTITUIDO NUMÉRICO</th>
+                    <th style="width: 15%; border: 1px solid #000000; padding: 3px 5px; text-align: right; font-weight: bold;">GEEKSOFT ENGINE</th>
+                </tr>
+            </thead>
+            <tbody>
+                {metrics_html_rows}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pie de Firma, Aprobación e Inputs de Auditoría Ledger -->
+    <div style="margin-top: 10px; padding-top: 6px; border-top: 1.5px solid #000000; font-family: 'Courier New', monospace; font-size: 7.2pt; page-break-inside: avoid;">
+        <table style="width: 100%; border-collapse: collapse; border: none;">
+            <tr>
+                <!-- Panel Izquierdo: Responsable, Estado, Firma, Fecha -->
+                <td style="width: 50%; vertical-align: top; padding-right: 15px;">
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span style="font-weight: bold; white-space: nowrap; color: #000000;">Responsable Auditor:</span>
+                            <div style="border-bottom: 1px dashed #000000; flex: 1; height: 12px;"></div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 16px; margin-top: 2px;">
+                            <span style="font-weight: bold; color: #000000;">Estado:</span>
+                            <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="display: inline-block; width: 10px; height: 10px; border: 1px solid #000000;"></span> Aprobado</span>
+                            <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="display: inline-block; width: 10px; height: 10px; border: 1px solid #000000;"></span> Con Errores</span>
+                            <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="display: inline-block; width: 10px; height: 10px; border: 1px solid #000000;"></span> Observado</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                            <span style="font-weight: bold; white-space: nowrap; color: #000000;">Firma Auditor:</span>
+                            <div style="border-bottom: 1px dashed #000000; flex: 1; height: 14px;"></div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                            <span style="font-weight: bold; white-space: nowrap; color: #000000;">Fecha Validación:</span>
+                            <div style="border-bottom: 1px dashed #000000; flex: 1; height: 12px;"></div>
+                        </div>
+                    </div>
+                </td>
+
+                <!-- Panel Derecho: Comentarios y Justificación de Auditoría -->
+                <td style="width: 50%; vertical-align: top; padding-left: 15px;">
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-weight: bold; color: #000000; margin-bottom: 3px;">Comentarios / Justificación de Auditoría Ledger:</span>
+                        <div style="border: 1px solid #000000; height: 56px; background-color: #fafafa; padding: 4px; box-sizing: border-box;"></div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    """
+
+    return {"ascii_text": "\n".join(lines), "metrics_table_html": metrics_table_html}
 
 def run_qc_test_suite():
     print("=" * 110)
@@ -317,8 +385,7 @@ def run_qc_test_suite():
             
             if tr.get("type") == "LADEN" or tr.get("origin_action") == "CARGAR":
                 tr["type"] = "LADEN"
-                if not tr.get("quantity") or tr.get("quantity") == 0:
-                    tr["quantity"] = 15000.0 if "MEJILLONES" in name.upper() and "NEXA" in name.upper() else 13500.0
+                tr["quantity"] = 13500.0
                 if not tr.get("freight_rate") or tr.get("freight_rate") == 0:
                     tr["freight_rate"] = 25.0 if "MEJILLONES" in name.upper() and "NEXA" in name.upper() else (30.0 if "MATARANI" in name.upper() and "NEXA" in name.upper() else 25.50)
                 tr["agency_costs_origin"] = PORT_COSTS_MASTER.get(orig_p, 31327.99)

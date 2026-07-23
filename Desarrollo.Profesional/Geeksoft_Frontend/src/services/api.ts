@@ -209,6 +209,10 @@ export const ForecastService = {
     getSpotVoyages: async () => {
         const response = await api.get('/forecast/spot/list');
         return response.data;
+    },
+    deleteSpotVoyage: async (spotId: string) => {
+        const response = await api.delete(`/forecast/spot/delete/${spotId}`);
+        return response.data;
     }
 };
 

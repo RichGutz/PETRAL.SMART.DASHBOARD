@@ -1,65 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Label } from "../ui/label";
-import { Input } from "../ui/input";
-import { Play, Printer } from "lucide-react";
-
+import { Printer, RefreshCw } from "lucide-react";
 import { ForecastService } from '../../services/api';
-
-
-const COLOR_SCHEME = {
-    vessels: { cardBg: 'bg-blue-50', border: 'border-blue-200', headerBg: 'bg-blue-100', text: 'text-blue-900', badge: 'bg-blue-200 text-blue-900' },
-    routes: { cardBg: 'bg-purple-50', border: 'border-purple-200', headerBg: 'bg-purple-100', text: 'text-purple-900', badge: 'bg-purple-200 text-purple-900' },
-    ports: { cardBg: 'bg-orange-50', border: 'border-orange-200', headerBg: 'bg-orange-100', text: 'text-orange-900', badge: 'bg-orange-200 text-orange-900' },
-    agency_matrix: { cardBg: 'bg-rose-50', border: 'border-rose-200', headerBg: 'bg-rose-100', text: 'text-rose-900', badge: 'bg-rose-200 text-rose-900' },
-    contracts: { cardBg: 'bg-emerald-50', border: 'border-emerald-200', headerBg: 'bg-emerald-100', text: 'text-emerald-900', badge: 'bg-emerald-200 text-emerald-900' },
-    contract_tariffs: { cardBg: 'bg-emerald-50', border: 'border-emerald-200', headerBg: 'bg-emerald-100', text: 'text-emerald-900', badge: 'bg-emerald-200 text-emerald-900' },
-    bunker_prices: { cardBg: 'bg-amber-50', border: 'border-amber-200', headerBg: 'bg-amber-100', text: 'text-amber-900', badge: 'bg-amber-200 text-amber-900' },
-    Calculado: { cardBg: 'bg-slate-50', border: 'border-slate-200', headerBg: 'bg-slate-100', text: 'text-slate-900', badge: 'bg-slate-200 text-slate-800' }
-};
-
-const renderBadges = (dbString: string) => {
-    return dbString.split('·').map(s => s.trim()).map((table, idx) => {
-        const scheme = (COLOR_SCHEME as any)[table] || COLOR_SCHEME.Calculado;
-        return <span key={idx} className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase mr-1 ${scheme.badge}`}>{table}</span>;
-    });
-};
-
-const colorizeFormula = (formula: string) => {
-    if (!formula) return <span className="text-slate-400">N/A</span>;
-    let res = formula;
-    const mappings = [
-        { regex: /\b(v_intake|v_pump|speed|ifo_tons|mdo_tons|tce_req)\b/g, color: 'text-blue-600 font-black' },
-        { regex: /\b(dist|w_laden|w_ballast)\b/g, color: 'text-purple-600 font-black' },
-        { regex: /\b(t_load_rate|p_disch_limit|over_or|over_de|pos_or|pos_de)\b/g, color: 'text-orange-600 font-black' },
-        { regex: /\b(port_costs)\b/g, color: 'text-rose-600 font-black' },
-        { regex: /\b(c_load|c_disch|F|Q)\b/g, color: 'text-emerald-600 font-black' },
-        { regex: /\b(p_ifo|p_mdo)\b/g, color: 'text-amber-600 font-black' },
-    ];
-    mappings.forEach(m => {
-        res = res.replace(m.regex, `<span class="${m.color}">$1</span>`);
-    });
-    return <span dangerouslySetInnerHTML={{__html: res}} />;
-};
-const TARIFFS_MAP: Record<string, Array<{min: number, max: number, rate: number}>> = {
-    'MATARANI': [
-        { min: 10000, max: 11500, rate: 20.12 },
-        { min: 11501, max: 13000, rate: 19.52 },
-        { min: 13001, max: 13500, rate: 19.01 },
-        { min: 13600, max: 14500, rate: 18.92 }
-    ],
-    'MARCONA': [
-        { min: 10000, max: 11500, rate: 25.87 },
-        { min: 11501, max: 13000, rate: 23.12 },
-        { min: 13001, max: 13500, rate: 22.82 },
-        { min: 13600, max: 14500, rate: 21.77 }
-    ],
-    'MEJILLONES': [
-        { min: 10000, max: 11500, rate: 23.23 },
-        { min: 11501, max: 13000, rate: 21.87 },
-        { min: 13001, max: 13500, rate: 20.87 },
-        { min: 13600, max: 14500, rate: 20.67 }
-    ]
-};
 
 export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }> = ({ portCostMode = 'static' }) => {
     const [localPortCostMode, setLocalPortCostMode] = useState<'static' | 'matrix'>(portCostMode);
@@ -71,19 +13,12 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
     // Data masters
     const [routes, setRoutes] = useState<any[]>([]);
     const [vessels, setVessels] = useState<any[]>([]);
-    const [contracts, setContracts] = useState<any[]>([]);
-    // const [latestBunker, setLatestBunker] = useState<{ ifo: number, mdo: number, date: string }>({ ifo: 895.14, mdo: 1460.30, date: '2026-06-26' });
     
     // Selections
-    const [selectedClientId, setSelectedClientId] = useState<string>("NEXA");
-    const [selectedRouteId, setSelectedRouteId] = useState<string>("");
-    const [selectedVesselId, setSelectedVesselId] = useState<string>("");
-    
-    // Leg configuration
-    const [legsConfig, setLegsConfig] = useState<any[]>([]);
-    
-    // Result
-    const [runResult, setRunResult] = useState<any>(null);
+    const [selectedClientId, setSelectedClientId] = useState<string>("SPCC");
+    const [selectedVesselId, setSelectedVesselId] = useState<string>("MOQUEGUA");
+
+    const [consolidatedResults, setConsolidatedResults] = useState<any[]>([]);
 
     const defaultVessels = [
         { vessel_id: 'MOQUEGUA', vessel_name: 'MOQUEGUA', vessel_speed: 11, consumption_sea_ifo: 14, dwt: 13500, tce_required: 13000 },
@@ -97,8 +32,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             ForecastService.getRoutesMaster().catch(() => []),
             ForecastService.getSpotVoyages().catch(() => []),
             ForecastService.getVessels().catch(() => []),
-            ForecastService.getContractsMaster().catch(() => []),
-        ]).then(([masterRoutes, spotVoyages, v, c]) => {
+        ]).then(([masterRoutes, spotVoyages, v]) => {
             const allRoutes = [...(masterRoutes || []), ...(spotVoyages || [])];
             const routeMap = new Map();
             allRoutes.forEach((r: any, i: number) => {
@@ -112,12 +46,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
 
             const mergedVessels = (v && v.length > 0) ? v : defaultVessels;
             setVessels(mergedVessels);
-            setContracts(c || []);
 
-            if (mergedRoutes.length > 0 && !selectedRouteId) {
-                const defaultR = mergedRoutes.find((r: any) => (r.name || "").toUpperCase().startsWith("NEXA")) || mergedRoutes[0];
-                setSelectedRouteId(defaultR._id);
-            }
             if (mergedVessels.length > 0 && !selectedVesselId) {
                 setSelectedVesselId(mergedVessels[0].vessel_id);
             }
@@ -131,13 +60,13 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
     }, []);
 
     // Clientes fijos según regla de negocio
-    const availableClients = ["NEXA", "SPCC", "PROSPECTOS"];
+    const availableClients = ["SPCC", "NEXA", "PROSPECTOS"];
 
-    // Rutas filtradas en cascada según el cliente seleccionado
+    // Rutas filtradas y ordenadas (SPCC primero)
     const filteredRoutes = useMemo(() => {
         if (!selectedClientId) return routes;
         const cleanClient = selectedClientId.trim().toUpperCase();
-        return routes.filter((r: any) => {
+        const res = routes.filter((r: any) => {
             const name = (r.name || "").trim().toUpperCase();
             if (cleanClient === "SPCC") {
                 return r.client_group === "SPCC" || name.startsWith("SPCC");
@@ -150,940 +79,453 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             }
             return true;
         });
+
+        return res.sort((a: any, b: any) => {
+            const nameA = (a.name || "").toUpperCase();
+            const nameB = (b.name || "").toUpperCase();
+            const scoreA = nameA.includes("SPCC") ? 0 : (nameA.includes("NEXA") ? 1 : 2);
+            const scoreB = nameB.includes("SPCC") ? 0 : (nameB.includes("NEXA") ? 1 : 2);
+            if (scoreA !== scoreB) return scoreA - scoreB;
+            return nameA.localeCompare(nameB);
+        });
     }, [selectedClientId, routes]);
 
-    // Autoseleccionar la primera ruta del cliente activo cuando cambia selectedClientId
-    useEffect(() => {
-        if (filteredRoutes.length > 0) {
-            const isCurrentInFiltered = filteredRoutes.some((r: any) => r._id === selectedRouteId);
-            if (!isCurrentInFiltered) {
-                setSelectedRouteId(filteredRoutes[0]._id);
-            }
-        }
-    }, [selectedClientId, filteredRoutes]);
-
-    useEffect(() => {
-        if (!selectedRouteId) {
-            setLegsConfig([]);
-            return;
-        }
-        const route = routes.find((r: any) => r._id === selectedRouteId || r.name === selectedRouteId || r.route_id === selectedRouteId);
-        if (!route || !route.legs_data || !route.legs_data.tramos) return;
-        
-        const tramos = route.legs_data.tramos;
-        const config: any[] = [];
-        for (let i = 0; i < tramos.length; i++) {
-            const tr = tramos[i];
-            config.push({
-                idx: i,
-                port_id: tr.origin_port_id,
-                action: tr.origin_action || 'NONE',
-                quantity: tr.quantity || (tr.type === 'LADEN' ? 13500 : 0),
-                freight_rate: tr.freight_rate || (tr.type === 'LADEN' ? 25.5 : 0)
-            });
-            if (i === tramos.length - 1) {
-                config.push({
-                    idx: i + 1,
-                    port_id: tr.destination_port_id,
-                    action: tr.destination_action || 'NONE',
-                    quantity: 0,
-                    freight_rate: 0
-                });
-            }
-        }
-        setLegsConfig(config);
-    }, [selectedRouteId, routes]);
-
-    const handleQuantityChange = (idx: number, valStr: string) => {
-        const val = parseFloat(valStr) || 0;
-        const newConf = [...legsConfig];
-        newConf[idx].quantity = val;
-        
-        if (newConf[idx].action === 'CARGAR') {
-            const route = routes.find(r => (r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id) === selectedRouteId);
-            if (route) {
-                const client = (route.name || "").split('.')[0];
-                const tr = route.legs_data.tramos.find((t:any) => t.origin_port_id === newConf[idx].port_id);
-                if (tr) {
-                    const dest = tr.destination_port_id;
-                    const cMatch = contracts.find(c => c.client_id === client);
-                    if (cMatch && cMatch.tariffs) {
-                        const tMatch = cMatch.tariffs.find((t:any) => val >= t.min_tonnage && val <= t.max_tonnage && t.origin_port_id === tr.origin_port_id && t.destination_port_id === dest);
-                        if (tMatch) {
-                            newConf[idx].freight_rate = tMatch.freight_rate;
-                        } else {
-                            newConf[idx].freight_rate = 0;
-                        }
-                    }
-                }
-            }
-        }
-        setLegsConfig(newConf);
-    };
-
-    const handleCalculate = async () => {
-        if (!selectedRouteId || !selectedVesselId) return;
-        
-        const totalCargas = legsConfig.filter(p => p.action === 'CARGAR').reduce((acc, p) => acc + (p.quantity || 0), 0);
-        const totalDesc = legsConfig.filter(p => p.action === 'DESCARGAR').reduce((acc, p) => acc + (p.quantity || 0), 0);
-        if (totalCargas === 0 || totalCargas !== totalDesc) {
-            alert('Las toneladas de carga deben ser mayores a 0 y coincidir con las de descarga.');
-            return;
-        }
-        
-        const missingTariffs = legsConfig.filter(p => p.action === 'CARGAR' && (!p.freight_rate || p.freight_rate <= 0));
-        if (missingTariffs.length > 0) {
-            alert('Debe ingresar una tarifa mayor a 0 para todos los puertos de carga.');
-            return;
-        }
-
-        const route = routes.find(r => (r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id) === selectedRouteId);
-        const tramos = JSON.parse(JSON.stringify(route.legs_data.tramos));
-        
-        for (let i = 0; i < tramos.length; i++) {
-            const origConf = legsConfig.find(c => c.idx === i);
-            const destConf = legsConfig.find(c => c.idx === i + 1);
-            
-            if (origConf && origConf.action === 'CARGAR') {
-                tramos[i].quantity = origConf.quantity;
-                tramos[i].freight_rate = origConf.freight_rate;
-            }
-            if (origConf) tramos[i].origin_action = origConf.action;
-            if (destConf) tramos[i].destination_action = destConf.action;
-            
-            if (!tramos[i].type) {
-                tramos[i].type = (origConf && origConf.action === 'NONE') ? 'BALLAST' : 'LADEN';
-            }
-        }
-
+    const handleCalculateConsolidated = async () => {
+        if (!selectedClientId || !selectedVesselId) return;
         setSimulating(true);
-        setRunResult(null);
 
         try {
             const selectedVessel = vessels.find(v => (v.vessel_id || v.id) === selectedVesselId) || {};
-            const payload = {
-                vessel_id: selectedVesselId,
-                vessel_params: selectedVessel,
-                tramos: tramos,
-                port_cost_mode: localPortCostMode
+            const PORT_COSTS_MASTER: Record<string, number> = {
+                "CALLAO": 31327.99,
+                "MARCONA": 40000.00,
+                "MATARANI": 17000.00,
+                "MEJILLONES": 50000.00,
+                "ILO": 15000.00
             };
-            const res = await ForecastService.calculateMultiCotizador(payload);
-            setRunResult(res);
+
+            const resultsList: any[] = [];
+            for (const route of filteredRoutes) {
+                if (!route.legs_data || !route.legs_data.tramos) continue;
+                const tramos = JSON.parse(JSON.stringify(route.legs_data.tramos));
+                
+                for (let i = 0; i < tramos.length; i++) {
+                    tramos[i].bunker_price_ifo = 895.14;
+                    tramos[i].bunker_price_mdo = 1460.30;
+                    tramos[i].vessel_speed = 11.0;
+                    const origP = tramos[i].origin_port_id || "ILO";
+                    const destP = tramos[i].destination_port_id || "ILO";
+
+                    if (tramos[i].type === 'LADEN' || tramos[i].origin_action === 'CARGAR') {
+                        tramos[i].type = 'LADEN';
+                        tramos[i].quantity = 13500.0; // Tonelaje fijo en 13,500 MT
+                        if (!tramos[i].freight_rate || tramos[i].freight_rate <= 0) {
+                            const nameUpper = (route.name || "").toUpperCase();
+                            tramos[i].freight_rate = nameUpper.includes("MEJILLONES") && nameUpper.includes("NEXA") ? 25.0 : (nameUpper.includes("MATARANI") && nameUpper.includes("NEXA") ? 30.0 : 25.50);
+                        }
+                        tramos[i].agency_costs_origin = PORT_COSTS_MASTER[origP] || 31327.99;
+                        tramos[i].agency_costs_destination = PORT_COSTS_MASTER[destP] || 40000.00;
+                    } else {
+                        tramos[i].type = 'BALLAST';
+                        tramos[i].agency_costs_origin = 0.0;
+                        tramos[i].agency_costs_destination = 0.0;
+                    }
+                }
+
+                const payload = {
+                    vessel_id: selectedVesselId,
+                    vessel_params: selectedVessel,
+                    tramos: tramos,
+                    port_cost_mode: localPortCostMode
+                };
+                const res = await ForecastService.calculateMultiCotizador(payload);
+                resultsList.push({
+                    routeName: route.name || route._id,
+                    routeObj: route,
+                    simResult: res,
+                    tramos: res.tramos || tramos
+                });
+            }
+
+            setConsolidatedResults(resultsList);
         } catch (err: any) {
             console.error(err);
-            alert('Error en el cálculo: ' + (err.response?.data?.detail || err.message));
         } finally {
             setSimulating(false);
         }
     };
 
-    if (loading) return <div className="p-8 text-center text-slate-500 font-semibold animate-pulse">Cargando Auditoría Final...</div>;
+    // Ejecutar la simulación automáticamente cuando cambia el cliente, buque o matriz
+    useEffect(() => {
+        if (selectedClientId && selectedVesselId && filteredRoutes.length > 0) {
+            handleCalculateConsolidated();
+        }
+    }, [selectedClientId, selectedVesselId, localPortCostMode, filteredRoutes.length]);
 
-const renderScenarioContent = (
-        vesselName: string,
-        originPort: string,
-        destPort: string,
-        scenarioResult: any,
-        scenarioPetral: any,
-        isPrint: boolean,
-        col4Header?: React.ReactNode,
-        col4Footer?: React.ReactNode
-    ) => {
-        if (!scenarioResult || !scenarioResult.audit_trail) return null;
-        const audit = scenarioResult.audit_trail;
-
-        const formatCurrency = (val: any) => {
-            const num = parseFloat(val);
-            return isNaN(num) ? '—' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
-        };
-        const formatNumber = (val: any) => {
-            const num = parseFloat(val);
-            return isNaN(num) ? '—' : new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(num);
-        };
-
-        const auditRows = [
-            { metric: "1. Ritmo Carga (MT/hr)",  key: "1. Ritmo Carga (act_load)",       gk: scenarioResult.actual_load_rate,      ptr: scenarioPetral.act_load,  isCurr: false, db: "contracts · vessels · ports", ui: "Contratos / Flota / Puertos" },
-            { metric: "2. Ritmo Desc. (MT/hr)", key: "2. Ritmo Descarga (act_disch)",  gk: scenarioResult.actual_discharge_rate, ptr: scenarioPetral.act_disch, isCurr: false, db: "contracts · vessels · ports", ui: "Contratos / Flota / Puertos" },
-            { metric: "3. Días de Puerto",       key: "3. Días de Puerto (port_days)",  gk: scenarioResult.port_days_unit,          ptr: scenarioPetral.port_days, isCurr: false, db: "ports · Calculado",  ui: "Motor" },
-            { metric: "4. Días de Mar",          key: "4. Días de Mar (sea_days)",      gk: scenarioResult.sea_days_unit,           ptr: scenarioPetral.sea_days,  isCurr: false, db: "routes · vessels",              ui: "Maestro Rutas / Flota" },
-            { metric: "5. Días de Viaje",        key: "5. Días de Viaje (tot_dur)",     gk: scenarioResult.total_duration_unit,     ptr: scenarioPetral.total_duration,   isCurr: false, db: "Calculado",                     ui: "Motor" },
-            { metric: "6. Income",               key: "6. Income (income)",              gk: scenarioResult.net_income,              ptr: scenarioPetral.net_income,isCurr: true,  db: "contracts · contract_tariffs",     ui: "Contratos / Tarifario" },
-            { metric: "7. Comisiones",            key: "7. Comisiones (commissions)",     gk: scenarioResult.total_commissions,       ptr: 0,                        isCurr: true,  db: "contracts",                         ui: "Addr+Broker Comm" },
-            { metric: "8. Costo Bunker",          key: "8. Costo Bunker (bunker)",        gk: scenarioResult.total_bunker_costs_unit, ptr: scenarioPetral.bunker_costs,    isCurr: true,  db: "vessels · bunker_prices",           ui: "Maestro Flota / Bunker" },
-            { metric: "9. Port Costs",            key: "9. Port Costs (port_costs)",      gk: scenarioResult.total_port_costs,        ptr: scenarioPetral.total_port_costs, isCurr: true,  db: localPortCostMode === 'static' ? "port_cost_static" : "port_costs_matrix",                  ui: "Costos Portuarios" },
-            { metric: "10. Voyage Result",        key: "10. Voyage Result (voy_res)",     gk: scenarioResult.voyage_result,           ptr: scenarioPetral.voyage_result,   isCurr: true,  db: localPortCostMode === 'static' ? "contract_tariffs · port_cost_static" : "contract_tariffs · port_costs_matrix", ui: "Tarifas / Costos Portuarios" },
-            { metric: "11. TCE Diario",           key: "11. TCE Diario (tce_real)",       gk: scenarioResult.tce_real_unit,           ptr: scenarioPetral.tce_real,  isCurr: true,  db: "Calculado",                         ui: "Motor" },
-            { metric: "12. P/L",                  key: "12. P/L (pl_vs_req)",             gk: scenarioResult.pl_vs_required_unit,     ptr: scenarioPetral.pl_vs_req, isCurr: true,  db: "vessels",                           ui: "Maestro Flota" },
-        ];
-
-        return (
-            <div className={`flex flex-col ${isPrint ? 'gap-2' : 'gap-4'}`}>
-                {isPrint && (
-                    <div className="border-b border-slate-800 pb-1 mb-1 flex justify-between items-center">
-                        <h2 className="text-xs font-black text-slate-800 uppercase tracking-wide">
-                            🧪 GEEKSOFT Voyage Ledger Auditoría: <span className="text-blue-600">{vesselName.replace('_', ' ')}</span> &rarr; <span className="text-purple-600">{originPort} - {destPort}</span>
-                        </h2>
-                        <span className="text-[9px] text-slate-500 font-bold font-mono uppercase">2026-07</span>
-                    </div>
-                )}
-
-                <div className="flex gap-4 items-stretch">
-                    {/* Col 1: Maestro Flota */}
-                    <div className={`flex-1 flex flex-col border rounded-lg shadow-sm overflow-hidden ${COLOR_SCHEME.vessels.cardBg} ${COLOR_SCHEME.vessels.border}`}>
-                        <div className={`border-b px-3 py-2 flex items-center justify-between ${COLOR_SCHEME.vessels.headerBg} ${COLOR_SCHEME.vessels.border}`}>
-                            <h3 className={`text-xs font-bold uppercase tracking-wider ${COLOR_SCHEME.vessels.text}`}>Maestro Flota</h3>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.vessels.badge}`}>vessels</span>
-                        </div>
-                        <div className="p-3 flex flex-col gap-1.5 flex-1 justify-between">
-                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.vessels.text}`}>Barco</span><span className="font-mono text-slate-800 font-bold text-xs">{vesselName.replace('_', ' ')}</span></div>
-                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.vessels.text}`}>Velocidad (speed)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatNumber(scenarioResult.raw_inputs?.vessel_speed || 0)} kn</span></div>
-                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.vessels.text}`}>TCE Requerido (tce_req)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.tce_required || 0)}/d</span></div>
-                            <div className={`mt-0.5 pt-1.5 border-t border-dashed ${COLOR_SCHEME.vessels.border} grid grid-cols-2 gap-x-4 gap-y-1`}>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>DWT</span><span className="font-mono text-slate-700 font-bold text-[10px]">{formatNumber(scenarioResult.raw_inputs?.dwt || 0)} t</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>DWCC</span><span className="font-mono text-slate-700 font-bold text-[10px]">{formatNumber(scenarioResult.raw_inputs?.dwcc || 0)} t</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>Length (L)</span><span className="font-mono text-slate-700 font-bold text-[10px]">{scenarioResult.raw_inputs?.length || 0} m</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>Beam (B)</span><span className="font-mono text-slate-700 font-bold text-[10px]">{scenarioResult.raw_inputs?.beam || 0} m</span></div>
-                            </div>
-                            <div className={`mt-1 pt-2 border-t ${COLOR_SCHEME.vessels.border} grid grid-cols-2 gap-x-4 gap-y-1`}>
-                                <div className="flex justify-between items-baseline"><span className={`font-bold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>IFO Mar</span><span className="font-mono text-slate-700 font-semibold text-[11px]">{formatNumber(scenarioResult.raw_inputs?.bunker_consumption_sea_ifo || 0)}</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-bold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>MDO Mar</span><span className="font-mono text-slate-700 font-semibold text-[11px]">{formatNumber(scenarioResult.raw_inputs?.bunker_consumption_sea_mdo || 0)}</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-bold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>IFO Idle</span><span className="font-mono text-slate-700 font-semibold text-[11px]">{formatNumber(scenarioResult.raw_inputs?.bunker_consumption_idle_ifo || 0)}</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-bold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>MDO Idle</span><span className="font-mono text-slate-700 font-semibold text-[11px]">{formatNumber(scenarioResult.raw_inputs?.bunker_consumption_idle_mdo || 0)}</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-bold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>IFO Carga</span><span className="font-mono text-slate-700 font-semibold text-[11px]">{formatNumber(scenarioResult.raw_inputs?.bunker_consumption_load_ifo || 0)}</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-bold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>MDO Carga</span><span className="font-mono text-slate-700 font-semibold text-[11px]">{formatNumber(scenarioResult.raw_inputs?.bunker_consumption_load_mdo || 0)}</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-bold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>IFO Desc.</span><span className="font-mono text-slate-700 font-semibold text-[11px]">{formatNumber(scenarioResult.raw_inputs?.bunker_consumption_disch_ifo || 0)}</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-bold text-[9px] uppercase ${COLOR_SCHEME.vessels.text}`}>MDO Desc.</span><span className="font-mono text-slate-700 font-semibold text-[11px]">{formatNumber(scenarioResult.raw_inputs?.bunker_consumption_disch_mdo || 0)}</span></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Col 2: Combustible + Costos Portuarios */}
-                    <div className="flex-1 flex flex-col gap-1">
-                        <div className={`border rounded-lg shadow-sm overflow-hidden ${COLOR_SCHEME.bunker_prices.cardBg} ${COLOR_SCHEME.bunker_prices.border}`}>
-                            <div className={`border-b px-3 py-2 flex items-center justify-between ${COLOR_SCHEME.bunker_prices.headerBg} ${COLOR_SCHEME.bunker_prices.border}`}>
-                                <h3 className={`text-xs font-bold uppercase tracking-wider ${COLOR_SCHEME.bunker_prices.text}`}>Combustible</h3>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.bunker_prices.badge}`}>bunker_prices</span>
-                            </div>
-                            <div className="p-3 flex flex-col gap-1.5">
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.bunker_prices.text}`}>Fecha Cotización</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.bunker_price_date || '—'}</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.bunker_prices.text}`}>Precio IFO (p_ifo)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.bunker_price_ifo || 0)}</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.bunker_prices.text}`}>Precio MDO (p_mdo)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.bunker_price_mdo || 0)}</span></div>
-                            </div>
-                        </div>
-                        <div className={`flex-1 flex flex-col border rounded-lg shadow-sm overflow-hidden ${COLOR_SCHEME.agency_matrix.cardBg} ${COLOR_SCHEME.agency_matrix.border}`}>
-                            <div className={`border-b px-3 py-2 flex items-center justify-between ${COLOR_SCHEME.agency_matrix.headerBg} ${COLOR_SCHEME.agency_matrix.border}`}>
-                                <h3 className={`text-xs font-bold uppercase tracking-wider ${COLOR_SCHEME.agency_matrix.text}`}>Costos Portuarios</h3>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.agency_matrix.badge}`}>{localPortCostMode === 'static' ? 'port_cost_static' : 'port_costs_matrix'}</span>
-                            </div>
-                            <div className="p-3 flex flex-col gap-1.5 flex-1 justify-between">
-                                <div className={`text-[10px] italic leading-tight mb-1 ${COLOR_SCHEME.agency_matrix.text}`}>Llaves: Cliente + Puerto + Op + Barco</div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Cliente</span><span className="font-mono text-slate-800 font-bold text-xs">{selectedClientId || "NEXA"}</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Port Cost Origen (port_costs)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(Object.values(scenarioResult.port_costs_breakdown?.origin || {}).reduce((s: any, v: any) => s + (v || 0), 0))}</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.agency_matrix.text}`}>Port Cost Destino (port_costs)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(Object.values(scenarioResult.port_costs_breakdown?.destination || {}).reduce((s: any, v: any) => s + (v || 0), 0))}</span></div>
-                                <div className="flex justify-between items-baseline border-t border-dashed border-rose-200 pt-1 mt-0.5">
-                                    <span className="font-semibold text-[10px] uppercase text-rose-600">↳ Loading Master</span>
-                                    <span className="font-mono text-rose-700 font-bold text-xs">{formatCurrency(scenarioResult.port_costs_breakdown?.destination?.loading_master || 0)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Col 3: Reglas Comerciales */}
-                    <div className="flex-[1.3] flex flex-col gap-1">
-                        <div className={`flex-1 flex flex-col border rounded-lg shadow-sm overflow-hidden ${COLOR_SCHEME.contracts.cardBg} ${COLOR_SCHEME.contracts.border}`}>
-                            <div className={`border-b px-3 py-2 flex items-center justify-between ${COLOR_SCHEME.contracts.headerBg} ${COLOR_SCHEME.contracts.border}`}>
-                                <h3 className={`text-xs font-bold uppercase tracking-wider ${COLOR_SCHEME.contracts.text}`}>Reglas Comerciales</h3>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.contracts.badge}`}>contracts</span>
-                            </div>
-                            <div className="p-3 flex-1 flex flex-col justify-start gap-2">
-                                {!isPrint ? (
-                                    <div className="grid grid-cols-2 gap-4 h-full items-stretch">
-                                        {/* Izquierda: Inputs y campos */}
-                                        <div className="flex flex-col gap-1 justify-start">
-                                            <div className="flex justify-between items-center">
-                                                <span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Cantidad (Q)</span>
-                                                <div className="flex items-center gap-1">
-                                                    <input
-                                                        type="number"
-                                                        min={10000}
-                                                        max={15000}
-                                                        step={100}
-                                                        value={(scenarioResult.raw_inputs?.quantity || 0)}
-                                                        readOnly
-                                                        className="w-20 text-xs font-mono font-bold text-center bg-white border-2 border-emerald-400 rounded px-1 py-0.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                                    />
-                                                    <span className={`text-[10px] font-bold ${simulating ? 'text-amber-500 animate-pulse' : 'text-slate-500'}`}>MT{simulating ? ' ⟳' : ''}</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Flete Base (F)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.freight_rate || 0)}/MT</span></div>
-                                            <div className="flex justify-between items-baseline border-t border-dashed border-emerald-100 pt-1 mt-0.5"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Carga (c_load)</span><span className="font-mono text-slate-850 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_load_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_load_rate) + " T/h" : "TBD"}</span></div>
-                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Desc (c_disch)</span><span className="font-mono text-slate-850 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_discharge_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_discharge_rate) + " T/h" : "TBD"}</span></div>
-                                            
-                                            {/* Nuevas 6 Variables */}
-                                            <div className="flex justify-between items-baseline border-t border-dashed border-emerald-100 pt-1 mt-0.5"><span className={`font-semibold text-[9px] uppercase text-emerald-700`}>Time to Count Cg.</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.port_overhead_hours_origin || 0)} H</span></div>
-                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-700`}>Time to Count Dg.</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.port_overhead_hours_dest || 0)} H</span></div>
-                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-700`}>Manuever Carga</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.positioning_carga_hrs || 0)} H</span></div>
-                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-700`}>Manuever Descarga</span><span className="font-mono text-slate-700 font-semibold text-xs">{formatNumber(scenarioResult.raw_inputs?.positioning_descarga_hrs || 0)} H</span></div>
-                                            <div className="flex justify-between items-baseline border-t border-dashed border-emerald-100 pt-1 mt-0.5"><span className={`font-semibold text-[9px] uppercase text-emerald-700`}>Address Comm.</span><span className="font-mono text-slate-800 font-bold text-xs">{(scenarioResult.raw_inputs?.address_commission || 0).toFixed(2)}%</span></div>
-                                            <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-700`}>Broker Comm.</span><span className="font-mono text-slate-800 font-bold text-xs">{(scenarioResult.raw_inputs?.broker_commission || 0).toFixed(2)}%</span></div>
-                                        </div>
-                                        {/* Derecha: Tabla miniatura */}
-                                        <div className="border-l border-emerald-100 pl-3 flex flex-col justify-start gap-2">
-                                            <div className={`text-[8px] font-bold uppercase mb-1 ${COLOR_SCHEME.contracts.text}`}>Tarifario {selectedClientId || "NEXA"} por Bracket</div>
-                                            <div className="overflow-x-auto rounded border border-emerald-100 bg-white">
-                                                <table className="w-full text-[9px] border-collapse table-fixed">
-                                                    <thead>
-                                                        <tr className="bg-emerald-50 border-b border-emerald-100 text-emerald-800">
-                                                            <th className="p-0.5 font-bold text-center" style={{ width: '33.33%' }}>Min (MT)</th>
-                                                            <th className="p-0.5 font-bold text-center" style={{ width: '33.33%' }}>Max (MT)</th>
-                                                            <th className="p-0.5 font-bold text-center" style={{ width: '33.33%' }}>Flete ($)</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-slate-100 font-mono">
-                                                        {((activeContract && activeContract.tariffs && activeContract.tariffs.length > 0) ? activeContract.tariffs.map((t: any) => ({ min: t.min_tonnage || t.min || 0, max: t.max_tonnage || t.max || 0, rate: t.freight_rate || t.rate || 0 })) : (TARIFFS_MAP[destPort] || TARIFFS_MAP['MARCONA'] || [])).map((t: any, idx: number) => {
-                                                            const isActive = (scenarioResult.raw_inputs?.quantity || 0) >= t.min && (scenarioResult.raw_inputs?.quantity || 0) <= t.max;
-                                                            return (
-                                                                <tr key={idx} className={`${isActive ? 'bg-emerald-100 font-bold text-emerald-950' : 'text-slate-600'}`}>
-                                                                    <td className="p-0.5 text-center" style={{ width: '33.33%' }}>{formatNumber(t.min)}</td>
-                                                                    <td className="p-0.5 text-center" style={{ width: '33.33%' }}>{formatNumber(t.max)}</td>
-                                                                    <td className="p-0.5 text-center" style={{ width: '33.33%' }}>{formatCurrency(t.rate)}</td>
-                                                                </tr>
-                                                            );
-                                                        })}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col gap-1">
-                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Cantidad (Q)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatNumber((scenarioResult.raw_inputs?.quantity || 0))} MT</span></div>
-                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Flete Base (F)</span><span className="font-mono text-slate-800 font-bold text-xs">{formatCurrency(scenarioResult.raw_inputs?.freight_rate || 0)}/MT</span></div>
-                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Carga (c_load)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_load_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_load_rate) + " T/h" : "TBD"}</span></div>
-                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.contracts.text}`}>Ritmo Desc (c_disch)</span><span className="font-mono text-slate-800 font-bold text-xs">{scenarioResult.raw_inputs?.contract_agreed_discharge_rate ? formatNumber(scenarioResult.raw_inputs.contract_agreed_discharge_rate) + " T/h" : "TBD"}</span></div>
-                                        
-                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-800`}>Time to Count Cg.</span><span className="font-mono text-slate-700 text-xs">{formatNumber(scenarioResult.raw_inputs?.port_overhead_hours_origin || 0)} H</span></div>
-                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-800`}>Time to Count Dg.</span><span className="font-mono text-slate-700 text-xs">{formatNumber(scenarioResult.raw_inputs?.port_overhead_hours_dest || 0)} H</span></div>
-                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-800`}>Manuever Carga</span><span className="font-mono text-slate-700 text-xs">{formatNumber(scenarioResult.raw_inputs?.positioning_carga_hrs || 0)} H</span></div>
-                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-800`}>Manuever Descarga</span><span className="font-mono text-slate-700 text-xs">{formatNumber(scenarioResult.raw_inputs?.positioning_descarga_hrs || 0)} H</span></div>
-                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-800`}>Address Comm.</span><span className="font-mono text-slate-800 text-xs">{(scenarioResult.raw_inputs?.address_commission || 0).toFixed(2)}%</span></div>
-                                        <div className="flex justify-between items-baseline"><span className={`font-semibold text-[9px] uppercase text-emerald-800`}>Broker Comm.</span><span className="font-mono text-slate-800 text-xs">{(scenarioResult.raw_inputs?.broker_commission || 0).toFixed(2)}%</span></div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Col 4: Maestro Rutas */}
-                    <div className="flex-[0.7] flex flex-col gap-4">
-                        {col4Header}
-                        <div className={`border rounded-lg shadow-sm overflow-hidden ${COLOR_SCHEME.routes.cardBg} ${COLOR_SCHEME.routes.border} ${isPrint ? 'flex-1' : ''}`}>
-                            <div className={`border-b px-3 py-2 flex items-center justify-between ${COLOR_SCHEME.routes.headerBg} ${COLOR_SCHEME.routes.border}`}>
-                                <h3 className={`text-xs font-bold uppercase tracking-wider ${COLOR_SCHEME.routes.text}`}>Maestro Rutas</h3>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${COLOR_SCHEME.routes.badge}`}>routes</span>
-                            </div>
-                            <div className="p-3 flex flex-col gap-1.5 flex-1 justify-between">
-                                <div className="flex justify-between items-baseline mb-1">
-                                    <span className={`font-bold text-[10px] uppercase ${COLOR_SCHEME.routes.text}`}>Trayecto General</span>
-                                    <span className="font-mono text-slate-800 font-bold text-xs">{originPort} &rarr; {destPort}</span>
-                                </div>
-
-                                {/* Desglose Detallado Pierna por Pierna (LADEN vs BALLAST) */}
-                                <div className="flex flex-col gap-1 my-1 border-t border-b border-purple-200/60 py-1.5 bg-white/50 rounded px-1.5">
-                                    <span className="text-[9px] font-extrabold uppercase text-purple-900 tracking-wider">Desglose de Piernas ({((scenarioResult.tramos || tramos || []).length)}):</span>
-                                    {(scenarioResult.tramos || tramos || []).map((tr: any, idx: number) => {
-                                        const isLaden = (tr.type || '').toUpperCase() === 'LADEN';
-                                        const badgeStyle = isLaden 
-                                            ? 'bg-emerald-100 text-emerald-900 border-emerald-300 font-black' 
-                                            : 'bg-slate-100 text-slate-700 border-slate-300 font-bold';
-                                        return (
-                                            <div key={idx} className="flex justify-between items-center text-[9.5px]">
-                                                <div className="flex items-center gap-1">
-                                                    <span className={`px-1 py-0.5 rounded border text-[8px] uppercase tracking-tighter ${badgeStyle}`}>
-                                                        P#{idx+1} {isLaden ? 'LADEN' : 'BALLAST'}
-                                                    </span>
-                                                    <span className="font-medium text-slate-800">{tr.origin_port_id} &rarr; {tr.destination_port_id}</span>
-                                                </div>
-                                                <span className="font-mono font-bold text-slate-900">{formatNumber(tr.distance || tr.route_distance || 0)} NM</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                <div className="flex justify-between items-baseline border-t border-dashed border-cyan-200 pt-1 mt-0.5"><span className={`font-bold text-[10px] uppercase text-cyan-700`}>Dist. TOTAL VIAJE</span><span className="font-mono text-cyan-800 font-black text-xs">{formatNumber(scenarioResult.distancia_total || 0)} NM</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.routes.text}`}>W Fct (Laden)</span><span className="font-mono text-slate-800 font-bold text-xs">{((scenarioResult.raw_inputs?.weather_factor_laden || 0)*100).toFixed(1)}%</span></div>
-                                <div className="flex justify-between items-baseline"><span className={`font-semibold text-[10px] uppercase ${COLOR_SCHEME.routes.text}`}>W Fct (Ballast)</span><span className="font-mono text-slate-800 font-bold text-xs">{((scenarioResult.raw_inputs?.weather_factor_ballast || 0)*100).toFixed(1)}%</span></div>
-                            </div>
-                        </div>
-                        {col4Footer}
-                    </div>
-                </div>
-
-                <div className={`overflow-x-auto relative border-b border-slate-200 ${isPrint ? '' : 'overflow-y-auto max-h-[55vh]'}`}>
-                    <table className="w-full text-left text-sm border-collapse table-fixed">
-                        <thead className="sticky top-0 z-10 shadow-sm">
-                            <tr className="bg-slate-100 border-b border-slate-300 text-slate-700">
-                                <th className="p-2 font-bold" style={{width:'13%'}}>Métrica</th>
-                                <th className="p-2 font-bold" style={{width:'25%'}}>Fórmula Algorítmica</th>
-                                <th className="p-2 font-bold" style={{width:'20%'}}>Reemplazo Numérico</th>
-                                <th className="p-2 font-bold text-center" style={{width:'9%'}}>GEEKSOFT (Motor)</th>
-                                <th className="p-2 font-bold text-center" style={{width:'9%'}}>PETRAL (Excel)</th>
-                                <th className="p-2 font-bold text-center" style={{width:'9%'}}>Delta (Δ)</th>
-                                <th className="p-2 font-bold" style={{width:'15%'}}>Tabla Origen</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {auditRows.map((row, idx) => {
-                                const auditObj = audit[row.key] || { formula: "N/A", values: "N/A" };
-                                return (
-                                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                        <td className="p-2 font-bold text-slate-800">{row.metric}</td>
-                                        <td className="p-2 font-mono text-xs text-slate-500 bg-slate-50">{colorizeFormula(auditObj.formula)}</td>
-                                        <td className="p-2 font-mono text-xs text-slate-700 bg-slate-50 font-semibold">{colorizeFormula(auditObj.values)}</td>
-                                        <td className="p-2 font-mono text-petral-blue font-semibold">{row.isCurr ? formatCurrency(row.gk) : formatNumber(row.gk)}</td>
-                                        <td className="p-2 font-mono text-slate-500">
-                                            <div className="border-b border-slate-300 border-dashed h-5 w-24 mx-auto"></div>
-                                        </td>
-                                        <td className="p-2">
-                                            <div className="border-b border-slate-300 border-dashed h-5 w-20 mx-auto"></div>
-                                        </td>
-                                        <td className="p-2 text-xs flex flex-wrap gap-1">{renderBadges(row.db)}</td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-
-                    {/* Pie de firma / Acta Ultra Compacta (Visible siempre y dentro del scroll) */}
-                    <div className="flex mt-6 mb-2 px-2 flex-col text-sm page-break-inside-avoid">
-                        <div className="grid grid-cols-2 gap-12">
-                            {/* Panel Izquierdo: Responsable + Estado + Firma + Fecha */}
-                            <div className="flex flex-col gap-4">
-                                <div className="flex items-center gap-2">
-                                    <p className="font-bold whitespace-nowrap text-slate-700">Responsable:</p>
-                                    <div className="border-b border-slate-400 w-full h-4"></div>
-                                </div>
-                                <div className="flex items-center gap-6">
-                                    <p className="font-bold text-slate-700">Estado:</p>
-                                    <label className="flex items-center gap-2 text-slate-600"><div className="w-3 h-3 border border-slate-400"></div> Aprobado</label>
-                                    <label className="flex items-center gap-2 text-slate-600"><div className="w-3 h-3 border border-slate-400"></div> Con Errores</label>
-                                </div>
-                                <div className="flex gap-4 items-end">
-                                    <p className="font-bold text-slate-700 w-16">Firma:</p>
-                                    <div className="border-b border-slate-400 w-full h-6"></div>
-                                </div>
-                                <div className="flex gap-4 items-end">
-                                    <p className="font-bold text-slate-700 w-16">Fecha:</p>
-                                    <div className="border-b border-slate-400 w-full h-6"></div>
-                                </div>
-                            </div>
-
-                            {/* Panel Derecho: Comentarios ocupando toda la mitad */}
-                            <div className="flex flex-col">
-                                <p className="font-bold text-slate-700 mb-1">Comentarios / Justificación:</p>
-                                <div className="border border-slate-300 flex-1 min-h-[80px] bg-slate-50 rounded"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
+    const handlePrintPdf = (htmlContent: string) => {
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        }
     };
 
+    const generateConsolidatedHtml = () => {
+        if (!consolidatedResults || consolidatedResults.length === 0) return '';
 
-    return (
-        <div className="flex flex-col gap-4 p-4 bg-white border border-slate-200 rounded-md">
-            <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
-                <span className="text-2xl">⚖️</span> Auditoría Final
-            </h2>
+        let routeBlocksHtml = '';
 
-            <div className="flex gap-4 items-end flex-wrap">
-                {/* 1. Cliente */}
-                <div className="flex flex-col gap-1.5 w-48">
-                    <Label className="text-xs font-bold text-slate-700">1. Cliente</Label>
-                    <select
-                        value={selectedClientId}
-                        onChange={(e) => setSelectedClientId(e.target.value)}
-                        className="w-full h-9 px-3 bg-white border border-slate-300 shadow-sm rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600 cursor-pointer"
-                    >
-                        {availableClients.map((c: string) => (
-                            <option key={c} value={c}>{c}</option>
-                        ))}
-                    </select>
-                </div>
+        consolidatedResults.forEach((item, idx) => {
+            const { routeName, simResult, tramos } = item;
+            const c = simResult.consolidated || {};
+            const totDist = c.total_distance || 0;
+            const totDays = c.total_days || 0;
+            const seaDays = c.total_sea_days || 0;
+            const portDays = c.total_port_days || 0;
+            const bunkerCost = c.total_bunker_costs || 0;
+            const ifoTon = c.bunker_ifo_tonnage || 0;
+            const mdoTon = c.bunker_mdo_tonnage || 0;
+            const portCosts = c.total_port_costs || 0;
+            const netIncome = c.total_freight_revenue || 0;
+            const pnlNet = c.pnl_net_utility || 0;
+            const tceReal = c.tce_real || 0;
+            const tceRequired = c.tce_required || 0;
+            // P/L correcto: voyage_result - (tot_days * tce_required)
+            const plVsReq = pnlNet - (totDays * tceRequired);
 
-                {/* 2. Ruta de Cliente */}
-                <div className="flex flex-col gap-1.5 w-80">
-                    <Label className="text-xs font-bold text-slate-700">2. Ruta Comercial ({selectedClientId})</Label>
-                    <select
-                        value={selectedRouteId}
-                        onChange={(e) => setSelectedRouteId(e.target.value)}
-                        className="w-full h-9 px-3 bg-white border border-slate-300 shadow-sm rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600 cursor-pointer"
-                    >
-                        <option value="">-- Seleccione una Ruta --</option>
-                        {filteredRoutes.map((r: any, rIdx: number) => {
-                            const idVal = r._id || r.route_id || r.spot_id || r.client_route_id || r.prospect_route_id || r.name || `route-${rIdx}`;
-                            return <option key={idVal} value={idVal}>{r.name || idVal}</option>;
-                        })}
-                    </select>
-                </div>
-                
-                {/* 3. Buque */}
-                <div className="flex flex-col gap-1.5 w-48">
-                    <Label className="text-xs font-bold text-slate-700">3. Buque de Flota</Label>
-                    <select
-                        value={selectedVesselId}
-                        onChange={(e) => setSelectedVesselId(e.target.value)}
-                        className="w-full h-9 px-3 bg-white border border-slate-300 shadow-sm rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600 cursor-pointer"
-                    >
-                        <option value="">-- Seleccione un Buque --</option>
-                        {vessels.map(v => (
-                            <option key={v.vessel_id} value={v.vessel_id}>{v.vessel_name}</option>
-                        ))}
-                    </select>
-                </div>
+            const pIfo = 895.14;
 
-                {/* 4. Matriz Portuaria */}
-                <div className="flex flex-col gap-1.5 w-44">
-                    <Label className="text-xs font-bold text-slate-700">4. Matriz Portuaria</Label>
-                    <select
-                        value={localPortCostMode}
-                        onChange={(e) => setLocalPortCostMode(e.target.value as "static" | "matrix")}
-                        className="w-full h-9 px-3 bg-white border border-slate-300 shadow-sm rounded text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-600 cursor-pointer"
-                    >
-                        <option value="static">Estática</option>
-                        <option value="matrix">Dinámica</option>
-                    </select>
-                </div>
+            const ladenLeg = tramos.find((t: any) => t.type === 'LADEN') || tramos[0] || {};
+            const Q = 13500;
+            const F = ladenLeg.freight_rate || 25.50;
+            const rL = simResult.actual_load_rate || 500;
+            const rD = simResult.actual_discharge_rate || 345;
+            const origP = ladenLeg.origin_port_id || "ILO";
+            const destP = ladenLeg.destination_port_id || "ILO";
+            const cOrig = ladenLeg.agency_costs_origin || 31327.99;
+            const cDest = ladenLeg.agency_costs_destination || 40000.00;
 
-                <button 
-                    onClick={handleCalculate}
-                    disabled={!selectedRouteId || !selectedVesselId || simulating}
-                    className="h-9 px-6 bg-teal-600 hover:bg-teal-700 text-white text-xs uppercase tracking-wider font-bold rounded flex items-center gap-2 transition-colors disabled:opacity-50"
-                >
-                    {simulating ? 'Calculando...' : <><Play size={14} /> Calcular</>}
-                </button>
-            </div>
+            const trayectoStr = tramos.map((t: any) => t.origin_port_id).join(" ➔ ") + " ➔ " + (tramos[tramos.length - 1]?.destination_port_id || "");
 
-            {legsConfig.length > 0 && (
-                <div className="mt-4 border border-slate-200 rounded-md overflow-hidden bg-slate-50 p-4">
-                    <h3 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider">Itinerario y Carga</h3>
-                    <table className="w-full text-sm text-left bg-white border border-slate-200 shadow-sm rounded">
-                        <thead className="bg-slate-100 text-slate-600 font-semibold text-[10px] uppercase tracking-wider border-b border-slate-200">
-                            <tr>
-                                <th className="px-4 py-3">Puerto</th>
-                                <th className="px-4 py-3 text-center">Acción</th>
-                                <th className="px-4 py-3 text-right">Toneladas (MT)</th>
-                                <th className="px-4 py-3 text-right">Tarifa (USD)</th>
+            let piernasStr = '';
+            tramos.forEach((tr: any, legIdx: number) => {
+                const isLaden = tr.type === 'LADEN';
+                const distP = tr.distance || tr.route_distance || 0;
+                const wf = tr.weather_factor || 0.03;
+                const seaD = tr.sea_days || 0;
+                const portD = tr.port_days || 0;
+                const bunkSeaIfo = seaD * 14.0;
+                const bunkSeaCost = bunkSeaIfo * pIfo;
+
+                piernasStr += `  │   • PIERNA #${legIdx + 1} [${tr.type}]: ${tr.origin_port_id} ➔ ${tr.destination_port_id} | Distancia: ${distP.toFixed(1)} NM\n`;
+                piernasStr += `  │       🌊 Días de Mar (${seaD.toFixed(2)}d): [${distP.toFixed(1)} NM × (1 + ${(wf * 100).toFixed(1)}% WF)] / [11.0 kts × 24h] = ${seaD.toFixed(2)} Días\n`;
+                piernasStr += `  │          ↳ Búnker Mar: ${seaD.toFixed(2)}d × 14.0 t/d IFO × $${pIfo.toFixed(2)} = $${bunkSeaCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
+
+                if (isLaden) {
+                    const legQ = 13500;
+                    const loadD = (legQ / rL) / 24;
+                    const dischD = (legQ / rD) / 24;
+                    const idleD = Math.max(0, portD - loadD - dischD);
+                    const bunkPortCost = (tr.bunker_costs || 0) - bunkSeaCost;
+                    piernasStr += `  │       ⚓ Días de Puerto (${portD.toFixed(2)}d): Carga (${legQ}t/${rL}t/h = ${loadD.toFixed(2)}d) + Descarga (${legQ}t/${rD}t/h = ${dischD.toFixed(2)}d) + Overheads (${idleD.toFixed(2)}d) = ${portD.toFixed(2)} Días\n`;
+                    piernasStr += `  │          ↳ Búnker Puerto: $${bunkPortCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
+                    piernasStr += `  │       🔥 Búnker Total Pierna:  $${(tr.bunker_costs || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
+                    piernasStr += `  │       🚢 Agencia Carga (${tr.origin_port_id}):    $${cOrig.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
+                    piernasStr += `  │       🚢 Agencia Descarga (${tr.destination_port_id}): $${cDest.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
+                    piernasStr += `  │       💵 Ingreso Flete Leg:     $${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
+                } else {
+                    piernasStr += `  │       ⚓ Días de Puerto: 0.00 Días (Pierna en Lastre)\n`;
+                    piernasStr += `  │       🔥 Búnker Total Pierna: $${(tr.bunker_costs || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
+                    piernasStr += `  │       🚢 Agencia Puerto:      $0.00 USD (Lastre)\n`;
+                }
+            });
+
+            const seaDaysParts = tramos.map((tr: any, legIdx: number) => {
+                const tType = tr.type || "BALLAST";
+                const tDist = tr.distance || tr.route_distance || 0;
+                const tSd = tr.sea_days || 0;
+                return `P#${legIdx + 1} ${tType}(${tDist.toFixed(0)}NM: ${tSd.toFixed(2)}d)`;
+            });
+            const seaDaysCalcStr = seaDaysParts.join(" + ");
+
+            routeBlocksHtml += `
+            <div class="page-route" style="${idx < consolidatedResults.length - 1 ? 'page-break-after: always;' : ''}">
+                <table style="width: 100%; border-collapse: collapse; border-bottom: 2px solid #000000; margin-bottom: 8px;">
+                    <tr>
+                        <td style="width: 25%; text-align: left; vertical-align: middle; border: none; padding: 0;">
+                            <img src="/Logo.Petral.png" style="height: 30px; width: auto;" alt="PETRAL LOGO" />
+                        </td>
+                        <td style="width: 50%; text-align: center; vertical-align: middle; border: none; padding: 0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 9.5pt; color: #000000;">
+                            PETRAL SMART DASHBOARD • MOTOR SPOT GEEKSOFT ENGINE<br/>
+                            <span style="font-size: 7.5pt; font-weight: normal;">ACTA OFICIAL DE AUDITORÍA Y TRAZABILIDAD (${selectedClientId})</span>
+                        </td>
+                        <td style="width: 25%; text-align: right; vertical-align: middle; border: none; padding: 0;">
+                            <img src="/Logo.Geeksoft.png" style="height: 49px; width: auto;" alt="GEEKSOFT LOGO" />
+                        </td>
+                    </tr>
+                </table>
+                <pre style="font-family: 'Courier New', Courier, monospace; font-size: 6.8pt; line-height: 1.2; color: #000000; margin: 0; white-space: pre;">
+🚢 AUDITANDO RUTA: ${routeName} (${tramos.length} Piernas)
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+📋 [INPUTS Y VARIABLES DE ORIGEN DE CÁLCULO - CARDS MAESTROS]:
+  • CARD 1 (RUTAS):                 Itinerario: ${trayectoStr} | Dist. Total: ${totDist.toFixed(1)} NM | Weather Factor: 3.0% (0.03)
+  • CARD 2 (BUQUES):                Vessel: ${selectedVesselId} | Speed: 11.0 kts | Cons. Sea IFO: 14.0 t/d | Cons. Idle IFO: 2.4 t/d | TCE Requerido: $${tceRequired.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}/d
+  • CARD 3 (BÚNKER):                Precio IFO: $895.14/t | Precio MDO: $1,460.30/t | Consumo Est.: ${ifoTon.toFixed(2)} t IFO / ${mdoTon.toFixed(2)} t MDO | BAF Baseline: $430.00/t
+  • CARD 4 (CONTRATOS & COMERCIAL): Cliente: ${selectedClientId} | Q: 13,500 MT | Freight Base: $${F.toFixed(2)}/MT | Ritmo Carga: ${rL} T/h | Ritmo Desc: ${rD} T/h | Comisiones: Address 0.0% / Broker 0.0%
+  • CARD 5 (PUERTOS & AGENCIA):     Agencia Carga (${origP}): $${cOrig.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD | Agencia Descarga (${destP}): $${cDest.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD | Total Port Costs: $${portCosts.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  │ 📍 RESUMEN CONSOLIDADO: Distancia ${totDist.toFixed(1)} NM | Días Totales ${totDays.toFixed(2)}d (${seaDays.toFixed(2)}d Mar + ${portDays.toFixed(2)}d Puerto)
+  │ ⛽ Búnker Total:  $${bunkerCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD (${ifoTon.toFixed(2)} t IFO | ${mdoTon.toFixed(2)} t MDO)
+  │ ⚓ Puerto Total:  $${portCosts.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD
+  │ 💰 Ingreso Flete: $${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD | PnL Neto: $${pnlNet.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD | TCE: $${tceReal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD/Día
+  ├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  │ 🔍 ARITMÉTICA EXPLICATIVA Y ORIGEN DE LOS DÍAS (MAR VS PUERTO):
+${piernasStr}  └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+</pre>
+
+                <div style="margin-top: 6px; font-family: 'Courier New', monospace;">
+                    <div style="font-weight: bold; font-size: 7.5pt; margin-bottom: 3px; color: #000000;">
+                        📊 [TABLA OFICIAL DE AUDITORÍA LEDGER — 12 MÉTRICAS REPLICADAS DE LA UI]:
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; table-layout: fixed; font-family: 'Courier New', monospace; font-size: 6.8pt; line-height: 1.25;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2; border-bottom: 1.5px solid #000000;">
+                                <th style="width: 25%; border: 1px solid #000000; padding: 3px 5px; text-align: left; font-weight: bold;">ÍTEM / MÉTRICA OFICIAL</th>
+                                <th style="width: 32%; border: 1px solid #000000; padding: 3px 5px; text-align: left; font-weight: bold;">FÓRMULA APLICADA</th>
+                                <th style="width: 28%; border: 1px solid #000000; padding: 3px 5px; text-align: left; font-weight: bold;">CÁLCULO SUSTITUIDO NUMÉRICO</th>
+                                <th style="width: 15%; border: 1px solid #000000; padding: 3px 5px; text-align: right; font-weight: bold;">GEEKSOFT ENGINE</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {legsConfig.map((conf, idx) => (
-                                <tr key={idx} className={conf.action === 'NONE' ? 'bg-slate-50 opacity-60' : 'hover:bg-blue-50/30'}>
-                                    <td className="px-4 py-3 font-bold text-slate-800 text-xs">{conf.port_id}</td>
-                                    <td className="px-4 py-3 text-center">
-                                        <span className={`px-2 py-1 rounded text-[10px] uppercase tracking-wider font-black ${conf.action === 'CARGAR' ? 'bg-blue-100 text-blue-800' : conf.action === 'DESCARGAR' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>
-                                            {conf.action}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-2 text-right">
-                                        {conf.action !== 'NONE' ? (
-                                            <Input 
-                                                type="number" 
-                                                className="w-32 h-8 text-right ml-auto text-xs font-bold bg-white"
-                                                value={conf.quantity || ''}
-                                                onChange={e => handleQuantityChange(idx, e.target.value)}
-                                                placeholder="0.00"
-                                            />
-                                        ) : '-'}
-                                    </td>
-                                    <td className="px-4 py-2 text-right">
-                                        {conf.action === 'CARGAR' ? (
-                                            <Input 
-                                                type="number" 
-                                                className="w-24 h-8 text-right ml-auto text-xs font-bold bg-amber-50 border-amber-200 focus:border-amber-400 text-amber-900"
-                                                value={conf.freight_rate || ''}
-                                                onChange={e => {
-                                                    const newConf = [...legsConfig];
-                                                    newConf[idx].freight_rate = parseFloat(e.target.value) || 0;
-                                                    setLegsConfig(newConf);
-                                                }}
-                                                placeholder="0.00"
-                                            />
-                                        ) : '-'}
-                                    </td>
-                                </tr>
-                            ))}
+                        <tbody>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">1. Ritmo Carga (act_load)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">contract_load_rate</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">${rL} T/h</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">${rL} T/h</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">2. Ritmo Descarga (act_disch)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">contract_discharge_rate</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">${rD} T/h</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">${rD} T/h</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">3. Días de Puerto (port_days)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">(Q/act_load)/24 + (Q/act_disch)/24 + idle</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">Load(${(Q/rL/24).toFixed(2)}d) + Disch(${(Q/rD/24).toFixed(2)}d) + Overheads</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">${portDays.toFixed(2)} Días</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">4. Días de Mar (sea_days)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">Sum((dist_leg * (1 + WF)) / (speed * 24))</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">${seaDaysCalcStr}</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">${seaDays.toFixed(2)} Días</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">5. Días de Viaje (tot_dur)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">sea_days + port_days</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">${seaDays.toFixed(2)}d Mar + ${portDays.toFixed(2)}d Puerto</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">${totDays.toFixed(2)} Días</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">6. Income (income)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">Sum(Q_leg * F_leg)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">13,500 MT × $${F.toFixed(2)} USD/MT</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">7. Comisiones (commissions)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">income * (addr_comm + bkr_comm)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} × 0.00%</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">8. Costo Bunker (bunker)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">bunker_sea + bunker_port</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">${ifoTon.toFixed(2)}t IFO × $895.14 + ${mdoTon.toFixed(2)}t MDO × $1460.30</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${bunkerCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">9. Port Costs (port_costs)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">Sum(agency_origin + agency_dest)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${cOrig.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} (Carga) + $${cDest.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} (Descarga)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${portCosts.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">10. Voyage Result (voy_res)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">income - comm - bunker - port_costs</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} - $${bunkerCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} - $${portCosts.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${pnlNet.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">11. TCE Diario (tce_real)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">voyage_result / tot_dur</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${pnlNet.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} / ${totDays.toFixed(2)} Días</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${tceReal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}/día</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">12. P/L (pl_vs_req)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">income - comm - bunker - port_costs - (tot_days * tce_req)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${pnlNet.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} - (${totDays.toFixed(2)}d x $${tceRequired.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}/d)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${plVsReq.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
-            )}
 
-                        {runResult && (() => {
-                const tramos = runResult.tramos || [];
-                const cons = runResult.consolidated || {};
-                const req = vessels.find(v => v.vessel_id === selectedVesselId)?.tce_required || 0;
-                const v = vessels.find(v => v.vessel_id === selectedVesselId) || {};
-                
-                const total_duration = cons.total_days || 0;
-                const tce = cons.tce_real || 0;  // backend returns tce_real not tce
-                const net_utility = cons.pnl_net_utility ?? cons.net_utility ?? 0; // backend returns pnl_net_utility
+                <!-- Pie de Firma, Aprobación e Inputs de Auditoría Ledger -->
+                <div style="margin-top: 10px; padding-top: 6px; border-top: 1.5px solid #000000; font-family: 'Courier New', monospace; font-size: 7.2pt; page-break-inside: avoid;">
+                    <table style="width: 100%; border-collapse: collapse; border: none;">
+                        <tr>
+                            <!-- Panel Izquierdo: Responsable, Estado, Firma, Fecha -->
+                            <td style="width: 50%; vertical-align: top; padding-right: 15px;">
+                                <div style="display: flex; flex-direction: column; gap: 6px;">
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <span style="font-weight: bold; white-space: nowrap; color: #000000;">Responsable Auditor:</span>
+                                        <div style="border-bottom: 1px dashed #000000; flex: 1; height: 12px;"></div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 16px; margin-top: 2px;">
+                                        <span style="font-weight: bold; color: #000000;">Estado:</span>
+                                        <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="display: inline-block; width: 10px; height: 10px; border: 1px solid #000000;"></span> Aprobado</span>
+                                        <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="display: inline-block; width: 10px; height: 10px; border: 1px solid #000000;"></span> Con Errores</span>
+                                        <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="display: inline-block; width: 10px; height: 10px; border: 1px solid #000000;"></span> Observado</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                                        <span style="font-weight: bold; white-space: nowrap; color: #000000;">Firma Auditor:</span>
+                                        <div style="border-bottom: 1px dashed #000000; flex: 1; height: 14px;"></div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                                        <span style="font-weight: bold; white-space: nowrap; color: #000000;">Fecha Validación:</span>
+                                        <div style="border-bottom: 1px dashed #000000; flex: 1; height: 12px;"></div>
+                                    </div>
+                                </div>
+                            </td>
 
-                // Aggregate port_costs_breakdown for UI
-                const aggOrigin: any = {};
-                const aggDest: any = {};
-                tramos.forEach((tr: any) => {
-                    const oBreak = tr.agency_costs_origin_details?.breakdown || { [tr.origin_port_id]: tr.agency_costs_origin || 0 };
-                    for (const k in oBreak) aggOrigin[k] = (aggOrigin[k] || 0) + oBreak[k];
-                    
-                    const dBreak = tr.agency_costs_destination_details?.breakdown || { [tr.destination_port_id]: tr.agency_costs_destination || 0 };
-                    for (const k in dBreak) aggDest[k] = (aggDest[k] || 0) + dBreak[k];
-                });
-                
-                const sum_port_days = tramos.map((t:any) => t.port_days?.toFixed(2) || '0.00').join(' + ') + ` = ${cons.total_port_days?.toFixed(4)}`;
-                const sum_sea_days = tramos.map((t:any) => t.sea_days?.toFixed(2) || '0.00').join(' + ') + ` = ${cons.total_sea_days?.toFixed(4)}`;
-                const sum_income = tramos.map((t:any) => `($${(t.freight_rate||0)} × ${t.quantity||0})`).join(' + ') + ` = $${(cons.total_freight_revenue||0).toLocaleString()}`;
-                const sum_bunker = tramos.map((t:any) => `$${(t.bunker_costs||0).toLocaleString()}`).join(' + ') + ` = $${(cons.total_bunker_costs||0).toLocaleString()}`;
-                const sum_port = tramos.map((t:any) => `$${(t.port_costs||0).toLocaleString()}`).join(' + ') + ` = $${(cons.total_port_costs||0).toLocaleString()}`;
-                
-                const avg_load = tramos.filter((t:any) => t.type === 'LADEN').map((t:any) => `${t.contract_agreed_load_rate||500}`).join(' | ') + ' T/h';
-                const avg_disch = tramos.filter((t:any) => t.type === 'LADEN').map((t:any) => `${t.contract_agreed_discharge_rate||345}`).join(' | ') + ' T/h';
-                
-                const t_sum = tramos.map((_:any, i:number) => `T${i+1}`).join(' + ');
+                            <!-- Panel Derecho: Comentarios y Justificación de Auditoría -->
+                            <td style="width: 50%; vertical-align: top; padding-left: 15px;">
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="font-weight: bold; color: #000000; margin-bottom: 3px;">Comentarios / Justificación de Auditoría Ledger:</span>
+                                    <div style="border: 1px solid #000000; height: 56px; background-color: #fafafa; padding: 4px; box-sizing: border-box;"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            `;
+        });
 
-                const tot_q = legsConfig.filter(p => p.action === 'CARGAR').reduce((acc, p) => acc + (p.quantity || 0), 0);
-                const avg_f = tot_q > 0 ? (cons.total_freight_revenue / tot_q) : 0;
-                const ladens = tramos.filter((t:any) => t.type === 'LADEN');
-                const avg_l_n = ladens.length > 0 ? ladens.reduce((a:number,b:any)=>a+parseFloat(b.contract_agreed_load_rate||'0'),0)/ladens.length : 0;
-                const avg_d_n = ladens.length > 0 ? ladens.reduce((a:number,b:any)=>a+parseFloat(b.contract_agreed_discharge_rate||'0'),0)/ladens.length : 0;
-                const avg_addr_comm = ladens.length > 0 ? ladens.reduce((a:number,b:any)=>a+(b.address_commission||0),0)/ladens.length : 0;
-                const avg_brok_comm = ladens.length > 0 ? ladens.reduce((a:number,b:any)=>a+(b.broker_commission||0),0)/ladens.length : 0;
-                const total_commissions_val = (cons.total_freight_revenue || 0) * ((avg_addr_comm + avg_brok_comm) / 100);
+        return `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+        <meta charset="UTF-8">
+        <title>Acta Oficial de Auditoría Consolidada - PETRAL</title>
+        <style>
+            @page { size: A4 landscape; margin: 5mm; }
+            body { font-family: 'Courier New', Courier, monospace; background-color: #ffffff; color: #000000; font-size: 6.8pt; line-height: 1.2; margin: 0; padding: 6px; }
+            .page-route { page-break-after: always; break-after: page; box-sizing: border-box; }
+            .page-route:last-child { page-break-after: avoid; break-after: avoid; }
+        </style>
+        </head>
+        <body>
+            ${routeBlocksHtml}
+        </body>
+        </html>
+        `;
+    };
 
-                // Consolidad audit formulas
-                const enhanced_audit: Record<string, any> = {
-                    '1. Ritmo Carga (act_load)': { formula: `Promedio (${tramos.filter((t:any) => t.type === 'LADEN').map((t:any) => `T${tramos.indexOf(t)+1}`).join(', ')})`, values: avg_load },
-                    '2. Ritmo Descarga (act_disch)': { formula: `Promedio (${tramos.filter((t:any) => t.type === 'LADEN').map((t:any) => `T${tramos.indexOf(t)+1}`).join(', ')})`, values: avg_disch },
-                    '3. Días de Puerto (port_days)': { formula: `Σ Días puerto (${t_sum})`, values: sum_port_days },
-                    '4. Días de Mar (sea_days)': { formula: `Σ Días mar (${t_sum})`, values: sum_sea_days },
-                    '5. Días de Viaje (tot_dur)': { formula: 'sea_days + port_days', values: `${cons.total_sea_days?.toFixed(2)} + ${cons.total_port_days?.toFixed(2)} = ${total_duration.toFixed(4)}` },
-                    '6. Income (income)': { formula: `Σ Q×F (${t_sum})`, values: sum_income },
-                    '7. Comisiones (commissions)': { formula: 'addr_comm + broker_comm', values: `$${total_commissions_val.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})} (${(avg_addr_comm + avg_brok_comm).toFixed(2)}%)` },
-                    '8. Costo Bunker (bunker)': { formula: `Σ Bunker (${t_sum})`, values: sum_bunker },
-                    '9. Port Costs (port_costs)': { formula: `Σ Agencia (${t_sum})`, values: sum_port },
-                    '10. Voyage Result (voy_res)': { formula: 'Income − Bunker − Port Costs', values: `$${net_utility.toLocaleString()}` },
-                    '11. TCE Diario (tce_real)': { formula: 'Voyage Result / Total Days', values: `$${net_utility.toLocaleString()} / ${total_duration.toFixed(2)} = $${tce.toLocaleString()}` },
-                    '12. P/L (pl_vs_req)': { formula: 'voy_res − (tce_req × tot_dur)', values: `$${(net_utility - (req * total_duration)).toLocaleString()}` }
-                };
+    if (loading) return <div className="p-8 text-center text-slate-500 font-semibold animate-pulse">Cargando Auditoría Final...</div>;
 
-                const mockedScenario = {
-                    distancia_total: cons.total_distance || 0,
-                    audit_trail: enhanced_audit,
-                    port_costs_breakdown: {
-                        origin: aggOrigin,
-                        destination: aggDest
-                    },
-                    raw_inputs: {
-                        tramos: legsConfig,
-                        quantity: tot_q,
-                        freight_rate: avg_f,
-                        contract_agreed_load_rate: avg_l_n,
-                        contract_agreed_discharge_rate: avg_d_n,
-                        address_commission: avg_addr_comm,
-                        broker_commission: avg_brok_comm,
-                        weather_factor_laden: tramos[0]?.weather_factor_laden ?? 0.03,
-                        weather_factor_ballast: tramos[0]?.weather_factor_ballast ?? 0.03,
-                        vessel_speed: v.vessel_speed,
-                        tce_required: req,
-                        dwt: v.dwt,
-                        dwcc: v.dwcc,
-                        length: v.length,
-                        beam: v.beam,
-                        bunker_consumption_sea_ifo: v.consumption_sea_ifo,
-                        bunker_consumption_idle_ifo: v.consumption_idle_ifo,
-                        bunker_consumption_load_ifo: v.consumption_load_ifo,
-                        bunker_consumption_disch_ifo: v.consumption_disch_ifo,
-                        bunker_consumption_sea_mdo: v.consumption_sea_mdo,
-                        bunker_consumption_idle_mdo: v.consumption_idle_mdo,
-                        bunker_consumption_load_mdo: v.consumption_load_mdo,
-                        bunker_consumption_disch_mdo: v.consumption_disch_mdo
-                    },
-                    actual_load_rate: avg_l_n,
-                    actual_discharge_rate: avg_d_n,
-                    port_days_unit: cons.total_port_days,
-                    sea_days_unit: cons.total_sea_days,
-                    total_duration_unit: total_duration,
-                    net_income: cons.total_freight_revenue,
-                    total_commissions: total_commissions_val,
-                    total_bunker_costs_unit: cons.total_bunker_costs,
-                    total_port_costs: cons.total_port_costs,
-                    voyage_result: net_utility,
-                    tce_real_unit: tce,
-                    pl_vs_required_unit: net_utility - (req * total_duration)
-                };
+    const htmlDoc = generateConsolidatedHtml();
 
-                return (
-                    <div className="mt-6 border-t-4 border-slate-300 pt-6">
-                        <div className="flex justify-between items-center mb-4 bg-emerald-50 py-2.5 px-4 rounded-lg border border-emerald-200 shadow-sm">
-                            <h4 className="font-bold text-lg text-emerald-800 uppercase tracking-wide">
-                                Acta Matemática Consolidada (Multiruta)
-                            </h4>
-                        </div>
-                        {renderScenarioContent(
-                            v.vessel_name || selectedVesselId, 
-                            tramos[0]?.origin_port_id || "MULTI", 
-                            tramos[tramos.length-1]?.destination_port_id || "MULTI", 
-                            mockedScenario, 
-                            { act_load: 0, act_disch: 0, port_days: 0, sea_days: 0, bunker_costs: 0, voyage_result: 0, total_duration: 0, tce_real: 0, pl_vs_req: 0 }, 
-                            false,
-                            undefined,
-                            (
-                                <button
-                                    onClick={() => {
-                                        if (!mockedScenario || !mockedScenario.audit_trail) { alert('No hay datos cargados aún.'); return; }
-                                        const audit_t = mockedScenario.audit_trail;
-                                        const fmtCur = (val: any) => {
-                                            const num = parseFloat(val);
-                                            return isNaN(num) ? '—' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
-                                        };
-                                        const fmtNum = (val: any) => {
-                                            const num = parseFloat(val);
-                                            return isNaN(num) ? '—' : new Intl.NumberFormat('en-US', { maximumFractionDigits: 4 }).format(num);
-                                        };
-                                        const vName = v.vessel_name || selectedVesselId;
-                                        const o = tramos[0]?.origin_port_id || "MULTI";
-                                        const d = tramos[tramos.length-1]?.destination_port_id || "MULTI";
-                                        const now = new Date();
-                                        const fechaStr = now.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
-                                        // Leg distances come from backend tramos (legsConfig has no distance)
-                                        const legsHtml = legsConfig.map((t: any, i: number) => {
-                                            if (i === legsConfig.length - 1) return '';
-                                            const tipo = t.action === 'NONE' ? 'BALLAST' : 'LADEN';
-                                            const nextDest = legsConfig[i+1].port_id;
-                                            // tramos[i] has the real distance from backend engine
-                                            const realDist = tramos[i]?.distance || tramos[i]?.route_distance || 0;
-                                            return `<div class="card-row"><span>Pierna ${i+1} (${tipo})</span><strong>${t.port_id} &rarr; ${nextDest}: ${fmtNum(realDist)} NM</strong></div>`;
-                                        }).join('');
-
-                                        const cardsHTML = `
-                                        <div class="cards-grid">
-                                            <div class="card card-blue">
-                                                <div class="card-header">
-                                                    <h3>Maestro Rutas</h3><span class="card-badge">ROUTES</span>
-                                                </div>
-                                                <div class="card-content">
-                                                    <div class="card-row"><span>Origen &rarr; Destino</span><strong>${o} &rarr; ${d}</strong></div>
-                                                    ${legsHtml}
-                                                    <div class="card-row card-divider"><span>Dist. TOTAL VIAJE</span><strong>${fmtNum(cons.total_distance)} NM</strong></div>
-                                                    <div class="card-row"><span>W Fct (Laden)</span><strong>${((tramos[0]?.weather_factor_laden || 0)*100).toFixed(1)}%</strong></div>
-                                                    <div class="card-row"><span>W Fct (Ballast)</span><strong>${((tramos[0]?.weather_factor_ballast || 0)*100).toFixed(1)}%</strong></div>
-                                                </div>
-                                            </div>
-                                            <div class="card card-green">
-                                                <div class="card-header">
-                                                    <h3>Barco (Flota)</h3><span class="card-badge">VESSELS</span>
-                                                </div>
-                                                <div class="card-content">
-                                                    <div class="card-row"><span>Buque</span><strong>${vName}</strong></div>
-                                                    <div class="card-row"><span>TCE Requerido</span><strong>${fmtCur(req)}/día</strong></div>
-                                                    <div class="card-row"><span>Velocidad</span><strong>${fmtNum(v.vessel_speed)} Kts</strong></div>
-                                                    <div class="card-row card-divider"><span>DWT</span><strong>${fmtNum(v.dwt)} MT</strong></div>
-                                                    <div class="card-row"><span>IFO (Sea/Idle)</span><strong>${fmtNum(v.consumption_sea_ifo)} / ${fmtNum(v.consumption_idle_ifo)} T/d</strong></div>
-                                                    <div class="card-row"><span>MDO (Sea/Idle)</span><strong>${fmtNum(v.consumption_sea_mdo)} / ${fmtNum(v.consumption_idle_mdo)} T/d</strong></div>
-                                                </div>
-                                            </div>
-                                            <div class="card card-purple">
-                                                <div class="card-header">
-                                                    <h3>Contratos</h3><span class="card-badge">CONTRACTS</span>
-                                                </div>
-                                                <div class="card-content">
-                                                    <div class="card-row"><span>Cantidad (Q)</span><strong>${fmtNum((mockedScenario.raw_inputs as any)?.quantity || 0)} MT</strong></div>
-                                                    <div class="card-row"><span>Flete Base (F)</span><strong>${fmtCur((mockedScenario.raw_inputs as any)?.freight_rate || 0)}/MT</strong></div>
-                                                    <div class="card-row"><span>Ritmo Carga</span><strong>${(mockedScenario.raw_inputs as any)?.contract_agreed_load_rate ? fmtNum((mockedScenario.raw_inputs as any).contract_agreed_load_rate) + " T/h" : "TBD"}</strong></div>
-                                                    <div class="card-row"><span>Ritmo Desc</span><strong>${(mockedScenario.raw_inputs as any)?.contract_agreed_discharge_rate ? fmtNum((mockedScenario.raw_inputs as any).contract_agreed_discharge_rate) + " T/h" : "TBD"}</strong></div>
-                                                    <div class="card-row card-divider"><span>Address Comm.</span><strong>${((mockedScenario.raw_inputs as any)?.address_commission || 0).toFixed(2)}%</strong></div>
-                                                    <div class="card-row"><span>Broker Comm.</span><strong>${((mockedScenario.raw_inputs as any)?.broker_commission || 0).toFixed(2)}%</strong></div>
-                                                </div>
-                                            </div>
-                                            <div class="card card-orange">
-                                                <div class="card-header">
-                                                    <h3>Costos Portuarios</h3><span class="card-badge">PORT COSTS</span>
-                                                </div>
-                                                <div class="card-content">
-                                                    <div class="card-row"><span>Total Port Costs</span><strong>${fmtCur(cons.total_port_costs)}</strong></div>
-                                                    ${Object.entries(aggOrigin).map(([k,val]) => `<div class="card-row"><span>↳ ${k}</span><strong>${fmtCur(val)}</strong></div>`).join('')}
-                                                    ${Object.entries(aggDest).map(([k,val]) => `<div class="card-row"><span>↳ ${k}</span><strong>${fmtCur(val)}</strong></div>`).join('')}
-                                                </div>
-                                            </div>
-                                        </div>`;
-
-                                        const METRICS = [
-                                            { k: '1. Ritmo Carga (act_load)', gk: mockedScenario.actual_load_rate, ex: 'Carga', isCurr: false },
-                                            { k: '2. Ritmo Descarga (act_disch)', gk: mockedScenario.actual_discharge_rate, ex: 'Desc', isCurr: false },
-                                            { k: '3. Días de Puerto (port_days)', gk: mockedScenario.port_days_unit, ex: 'Total', isCurr: false },
-                                            { k: '4. Días de Mar (sea_days)', gk: mockedScenario.sea_days_unit, ex: 'Total', isCurr: false },
-                                            { k: '5. Días de Viaje (tot_dur)', gk: mockedScenario.total_duration_unit, ex: 'Total', isCurr: false },
-                                            { k: '6. Income (income)', gk: mockedScenario.net_income, ex: 'Net', isCurr: true },
-                                            { k: '7. Comisiones (commissions)', gk: mockedScenario.total_commissions, ex: '0%', isCurr: true },
-                                            { k: '8. Costo Bunker (bunker)', gk: mockedScenario.total_bunker_costs_unit, ex: 'Sum', isCurr: true },
-                                            { k: '9. Port Costs (port_costs)', gk: mockedScenario.total_port_costs, ex: 'Sum', isCurr: true },
-                                            { k: '10. Voyage Result (voy_res)', gk: mockedScenario.voyage_result, ex: 'Net', isCurr: true },
-                                            { k: '11. TCE Diario (tce_real)', gk: mockedScenario.tce_real_unit, ex: 'Net', isCurr: true },
-                                            { k: '12. P/L (pl_vs_req)', gk: mockedScenario.pl_vs_required_unit, ex: 'Net', isCurr: true }
-                                        ];
-
-                                        let tableRows = '';
-                                        METRICS.forEach(m => {
-                                            const info = audit_t[m.k] || {};
-                                            const f = info.formula || 'No formula';
-                                            const calcVal = info.values || 'No calc';
-                                            const gkStr = typeof m.gk === 'number' ? (m.isCurr ? fmtCur(m.gk) : fmtNum(m.gk)) : (m.gk != null ? String(m.gk) : '—');
-                                            // PETRAL column: blank line for manual fill
-                                            const petralCell = `<div style="border-bottom:1px solid #94a3b8;height:14px;width:80px;margin:0 auto;"></div>`;
-                                            // Delta column: blank line for manual fill
-                                            const deltaCell = `<div style="border-bottom:1px solid #94a3b8;height:14px;width:60px;margin:0 auto;"></div>`;
-                                            tableRows += `<tr>
-                                                <td style="font-weight:700; color:#0f172a;font-size:9px;">${m.k}</td>
-                                                <td style="font-size:8.5px; color:#475569;">${f}</td>
-                                                <td style="font-size:9px; font-family:monospace; color:#334155; letter-spacing:-0.2px">${calcVal}</td>
-                                                <td style="text-align:center; font-weight:900; color:#059669; font-size:10px">${gkStr}</td>
-                                                <td style="text-align:center;">${petralCell}</td>
-                                                <td style="text-align:center;">${deltaCell}</td>
-                                            </tr>`;
-                                        });
-
-                                        const legsFishbowlHTML = `
-                                         <div style="margin-top:14px; margin-bottom:14px; border:1px solid #0f766e; border-radius:6px; overflow:hidden;">
-                                             <div style="background:#0f766e; color:white; padding:6px 10px; font-weight:800; font-size:10px; text-transform:uppercase;">
-                                                 🐟 FISHBOWL AUDIT TRAIL — DESGLOSE DE PIERNAS Y FÓRMULAS SUSTITUIDAS
-                                             </div>
-                                             <div style="padding:8px; background:#fafafa;">
-                                                 ${tramos.map((tr: any, idx: number) => {
-                                                     const audit = tr.audit_trail || {};
-                                                     const seaFormula = audit.sea_days?.formula || 'N/A';
-                                                     const seaVals = audit.sea_days?.values || 'N/A';
-                                                     const portFormula = audit.port_days?.formula || 'N/A';
-                                                     const portVals = audit.port_days?.values || 'N/A';
-                                                     const bunkerFormula = audit.bunker_costs?.formula || 'N/A';
-                                                     const bunkerVals = audit.bunker_costs?.values || 'N/A';
-                                                     const portCostFormula = audit.port_costs?.formula || 'N/A';
-                                                     const portCostVals = audit.port_costs?.values || 'N/A';
-                                                     return `
-                                                         <div style="border:1px solid #cbd5e1; border-radius:4px; padding:6px; margin-bottom:6px; background:white;">
-                                                             <div style="font-weight:800; font-size:9.5px; color:#0f172a; border-bottom:1px solid #e2e8f0; padding-bottom:4px; margin-bottom:4px; display:flex; justify-content:space-between;">
-                                                                 <span>Pierna #${idx+1} [${tr.type || 'N/A'}]: ${tr.origin_port_id || 'ORIG'} &rarr; ${tr.destination_port_id || 'DEST'}</span>
-                                                                 <span style="color:#0f766e;">Distancia: ${tr.distance || 0} NM | Sea: ${(tr.sea_days || 0).toFixed(2)}d | Port: ${(tr.port_days || 0).toFixed(2)}d | Búnker: $${(tr.bunker_costs || 0).toLocaleString()} | Agencia: $${(tr.port_costs || 0).toLocaleString()}</span>
-                                                             </div>
-                                                             <table style="width:100%; border:none; margin:0; font-size:8.5px;">
-                                                                 <tr style="background:transparent;"><td style="border:none; width:18%; font-weight:700; color:#334155;">Sea Days:</td><td style="border:none; width:35%; color:#475569;">${seaFormula}</td><td style="border:none; font-family:monospace; color:#0284c7;">${seaVals}</td></tr>
-                                                                 <tr style="background:transparent;"><td style="border:none; font-weight:700; color:#334155;">Port Days:</td><td style="border:none; color:#475569;">${portFormula}</td><td style="border:none; font-family:monospace; color:#0284c7;">${portVals}</td></tr>
-                                                                 <tr style="background:transparent;"><td style="border:none; font-weight:700; color:#334155;">Bunker Costs:</td><td style="border:none; color:#475569;">${bunkerFormula}</td><td style="border:none; font-family:monospace; color:#059669;">${bunkerVals}</td></tr>
-                                                                 <tr style="background:transparent;"><td style="border:none; font-weight:700; color:#334155;">Port Costs:</td><td style="border:none; color:#475569;">${portCostFormula}</td><td style="border:none; font-family:monospace; color:#d97706;">${portCostVals}</td></tr>
-                                                             </table>
-                                                         </div>
-                                                     `;
-                                                 }).join('')}
-                                             </div>
-                                         </div>`;
-
-                                        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Acta Auditoría</title>
-                                        <style>
-                                            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
-                                            body { font-family: 'Inter', sans-serif; font-size: 10px; color: #1e293b; padding: 12px; margin: 0; background: #fff; line-height: 1.3; }
-                                            .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #cbd5e1; padding-bottom: 6px; margin-bottom: 12px; }
-                                            .header-bar h1 { font-size: 12px; font-weight: 900; text-transform: uppercase; color: #0f172a; margin: 0; letter-spacing: -0.3px; }
-                                            .badge { background: #0f172a; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 800; }
-                                            table { width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #cbd5e1; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-                                            th { background: #f1f5f9; color: #334155; font-size: 9.5px; font-weight: 800; text-transform: uppercase; padding: 6px; text-align: left; border: 1px solid #cbd5e1; }
-                                            td { padding: 5px 6px; border: 1px solid #e2e8f0; vertical-align: middle; }
-                                            tbody tr:nth-child(even) { background: #f8fafc; }
-                                            .cards-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
-                                            .card { border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-                                            .card-header { padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #cbd5e1; }
-                                            .card-header h3 { margin: 0; font-size: 10px; font-weight: 800; text-transform: uppercase; }
-                                            .card-badge { font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 3px; }
-                                            .card-content { padding: 6px 8px; display: flex; flex-direction: column; gap: 3px; }
-                                            .card-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 9.5px; }
-                                            .card-row span { color: #475569; font-weight: 600; text-transform: uppercase; font-size: 8.5px; }
-                                            .card-row strong { color: #0f172a; font-family: monospace; font-size: 10px; font-weight: 700; }
-                                            .card-divider { border-top: 1px dashed #cbd5e1; margin-top: 2px; padding-top: 2px; }
-                                            .card-blue .card-header  { background: #dbeafe; color: #1e3a8a; }
-                                            .card-blue .card-badge   { background: #bfdbfe; color: #1e3a8a; }
-                                            .card-blue               { background: #eff6ff; }
-                                            .card-green .card-header { background: #d1fae5; color: #064e3b; }
-                                            .card-green .card-badge  { background: #a7f3d0; color: #064e3b; }
-                                            .card-green              { background: #f0fdf4; }
-                                            .card-purple .card-header { background: #f3e8ff; color: #581c87; }
-                                            .card-purple .card-badge  { background: #e9d5ff; color: #581c87; }
-                                            .card-purple              { background: #faf5ff; }
-                                            .card-orange .card-header { background: #ffedd5; color: #9a3412; }
-                                            .card-orange .card-badge  { background: #fed7aa; color: #9a3412; }
-                                            .card-orange              { background: #fff7ed; }
-                                            .acta { border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; margin-top: 3px; background: #fafafa; }
-                                            .acta-title { font-weight: 700; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.4px; color: #475569; margin-bottom: 2px; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; }
-                                            .acta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-                                            .field-row { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
-                                            .field-label { font-weight: 700; color: #334155; font-size: 9.5px; white-space: nowrap; min-width: 65px; }
-                                            .field-line { border-bottom: 1px solid #94a3b8; height: 12px; flex: 1; }
-                                            .check-row { display: flex; gap: 10px; align-items: center; margin-bottom: 2px; font-size: 9.5px; }
-                                            .check-box { display: inline-block; width: 9px; height: 9px; border: 1px solid #64748b; vertical-align: middle; margin-right: 2px; }
-                                            -webkit-print-color-adjust: exact; print-color-adjust: exact;
-                                        </style></head><body>
-                                        <div class="header-bar">
-                                            <div style="flex:1">
-                                                <h1>GEEKSOFT Voyage Ledger — Auditoría Matemática (Multiruta) &nbsp;|&nbsp; Barco: ${vName.replace('_',' ')} &nbsp;|&nbsp; Ruta: ${o} → ${d} &nbsp;|&nbsp; Período: 2026-07 &nbsp;|&nbsp; Generado: ${fechaStr}</h1>
-                                            </div>
-                                            <span class="badge">PETRAL · ACTA DE CONFORMIDAD</span>
-                                        </div>
-                                        ${cardsHTML}
-                                        <table>
-                                            <thead><tr>
-                                                <th style="width:13%">Métrica</th>
-                                                <th style="width:27%">Fórmula Algorítmica</th>
-                                                <th style="width:22%">Reemplazo Numérico</th>
-                                                <th style="width:12%;text-align:center">GEEKSOFT (Motor)</th>
-                                                <th style="width:13%;text-align:center">PETRAL (Excel)</th>
-                                                <th style="width:13%;text-align:center">Delta (Δ)</th>
-                                            </tr></thead>
-                                            <tbody>
-                                                ${tableRows}
-                                            </tbody>
-                                        </table>
-                                        ${legsFishbowlHTML}
-                                        <div class="acta">
-                                            <div class="acta-title">✍️ Acta de Conformidad Matemática — Firmas y Validación</div>
-                                            <div class="acta-grid">
-                                                <div style="display:flex;flex-direction:column;gap:4px">
-                                                    <div class="field-row"><div class="field-label">Responsable:</div><div class="field-line"></div></div>
-                                                    <div class="check-row">
-                                                        <span class="field-label">Estado:</span>
-                                                        <span><span class="check-box"></span> Aprobado</span>
-                                                        <span><span class="check-box"></span> Con Errores</span>
-                                                    </div>
-                                                    <div class="field-row"><div class="field-label">Firma:</div><div class="field-line"></div></div>
-                                                    <div class="field-row"><div class="field-label">Fecha:</div><div class="field-line"></div></div>
-                                                </div>
-                                                <div style="display:flex;flex-direction:column;">
-                                                    <div class="field-label">Comentarios / Justificación de divergencias:</div>
-                                                    <div style="border:1px solid #cbd5e1;flex:1;min-height:70px;background:white;border-radius:4px;margin-top:4px;"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <script>window.onload = function(){ window.print(); }</script>
-                                        </body></html>`;
-                                        const pw = window.open('', '_blank', 'width=1100,height=750');
-                                        if (pw) { pw.document.write(html); pw.document.close(); }
-                                        else { alert('El navegador bloqueó la ventana emergente. Habilítala para este sitio.'); }
-                                    }}
-                                    className="mt-2 h-8 w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-md flex justify-center items-center gap-2 shadow transition-all cursor-pointer page-break-inside-avoid"
-                                >
-                                    <Printer size={15} /> Imprimir Acta PDF
-                                </button>
-                            )
-                        )}
+    return (
+        <div className="flex flex-col gap-3 p-4 bg-white border border-slate-200 rounded-md h-[calc(100vh-100px)]">
+            {/* Barra de Controles Superior Estilo Claro Limpio */}
+            <div className="flex gap-4 items-center justify-between bg-slate-50 border border-slate-200 text-slate-800 p-3 rounded-md shadow-sm">
+                <div className="flex items-center gap-4 flex-wrap">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xl">⚖️</span>
+                        <h2 className="text-sm font-bold text-slate-800 tracking-tight">Acta de Auditoría Final</h2>
                     </div>
-                );
-            })()}
+
+                    {/* 1. Cliente */}
+                    <div className="flex items-center gap-2">
+                        <Label className="text-xs font-bold text-slate-600">Cliente:</Label>
+                        <select
+                            value={selectedClientId}
+                            onChange={(e) => setSelectedClientId(e.target.value)}
+                            className="h-8 px-3 bg-white border border-slate-300 rounded text-xs font-bold text-teal-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 cursor-pointer"
+                        >
+                            {availableClients.map((c: string) => (
+                                <option key={c} value={c}>{c}</option>
+                            ))}
+                        </select>
+                    </div>
+                    
+                    {/* 2. Buque */}
+                    <div className="flex items-center gap-2">
+                        <Label className="text-xs font-bold text-slate-600">Buque:</Label>
+                        <select
+                            value={selectedVesselId}
+                            onChange={(e) => setSelectedVesselId(e.target.value)}
+                            className="h-8 px-3 bg-white border border-slate-300 rounded text-xs font-bold text-purple-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-600 cursor-pointer"
+                        >
+                            {vessels.map(v => (
+                                <option key={v.vessel_id} value={v.vessel_id}>{v.vessel_name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* 3. Matriz Portuaria */}
+                    <div className="flex items-center gap-2">
+                        <Label className="text-xs font-bold text-slate-600">Matriz:</Label>
+                        <select
+                            value={localPortCostMode}
+                            onChange={(e) => setLocalPortCostMode(e.target.value as "static" | "matrix")}
+                            className="h-8 px-3 bg-white border border-slate-300 rounded text-xs font-bold text-amber-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-600 cursor-pointer"
+                        >
+                            <option value="static">Estática (Master)</option>
+                            <option value="matrix">Dinámica (JSONB)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    {simulating && (
+                        <span className="text-xs text-amber-400 font-mono animate-pulse flex items-center gap-1">
+                            <RefreshCw className="animate-spin" size={12} /> Calculando rutas...
+                        </span>
+                    )}
+                    <button
+                        onClick={() => handlePrintPdf(htmlDoc)}
+                        disabled={!htmlDoc || simulating}
+                        className="h-8 px-4 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold uppercase tracking-wider rounded flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                        <Printer size={14} /> Imprimir / Exportar PDF
+                    </button>
+                </div>
+            </div>
+
+            {/* Contenedor Principal con el Visor iframe del PDF */}
+            <div className="flex-1 bg-slate-100 rounded border border-slate-300 overflow-hidden relative shadow-inner">
+                {htmlDoc ? (
+                    <iframe
+                        title="Visor PDF Acta Auditoria"
+                        srcDoc={htmlDoc}
+                        className="w-full h-full border-none bg-white"
+                    />
+                ) : (
+                    <div className="flex items-center justify-center h-full text-slate-400 font-semibold text-sm">
+                        Procesando documento PDF de Auditoría Consolidada...
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

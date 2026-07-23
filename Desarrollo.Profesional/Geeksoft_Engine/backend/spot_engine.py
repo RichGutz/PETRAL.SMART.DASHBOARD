@@ -447,7 +447,7 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         audit_trail = {
             "sea_days": {
                 "formula": "(dist * (1+w_factor)) / (speed * 24)",
-                "values": f"({rc(fmt(dist))} * (1+{rc(fmt_dec(w_factor))})) / ({vc(fmt_dec(speed))} * 24) = {vc(fmt_dec(tot_sea_d))}"
+                "values": f"({rc(fmt(dist))} * (1+{rc(fmt_dec(w_factor))})) / ({vc(fmt_dec(speed))} * 24) = {vc(fmt_dec(sea_days))}"
             },
             "port_days": {
                 "formula": "((Q/act_load + over_or + pos_or + delay_load) + (Q/act_disch + over_de + pos_de + delay_disch)) / 24",
@@ -544,6 +544,8 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
     
     pnl_net_utility = tot_freight_revenue - tot_port_costs - tot_bunker_costs
     tce_real = pnl_net_utility / tot_days if tot_days > 0 else 0
+    # P/L correcto: voyage_result - (total_days * tce_required)
+    pl_vs_req = pnl_net_utility - (tot_days * tce_req)
     
     return {
         "tramos": processed_tramos,
@@ -559,6 +561,7 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
             "total_freight_revenue": round(tot_freight_revenue, 2),
             "pnl_net_utility": round(pnl_net_utility, 2),
             "tce_real": round(tce_real, 2),
-            "tce_required": round(tce_req, 2)
+            "tce_required": round(tce_req, 2),
+            "pl_vs_req": round(pl_vs_req, 2)
         }
     }

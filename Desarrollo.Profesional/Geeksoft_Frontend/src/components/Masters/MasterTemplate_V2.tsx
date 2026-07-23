@@ -354,15 +354,17 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                         >
                                             <span className="text-sm">🗺️</span> Spaguetti Map
                                         </button>
+                                        {/* OCULTO DE UI — no borrar, mantener para uso futuro */}
                                         <button 
                                             onClick={() => navigate('/audit-ledger')}
-                                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'audit-ledger' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                            className="hidden"
                                         >
                                             <span className="text-sm">🔍</span> Auditoría Ledger
                                         </button>
+                                        {/* OCULTO DE UI — no borrar, mantener para uso futuro */}
                                         <button 
                                             onClick={() => navigate('/audit-engine')}
-                                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'audit-engine' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                            className="hidden"
                                         >
                                             <span className="text-sm">🔎</span> Auditoría Motor
                                         </button>

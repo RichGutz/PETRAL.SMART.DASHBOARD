@@ -1,6 +1,9 @@
-# 🧮 Lógica Serial Universal de Costos Portuarios (Modelo JSONB)
+# 🧮 Lógica Serial Universal de Costos Portuarios (Modelo JSONB & Motor Configurable)
 
-> **Objetivo**: Estandarizar la inmensa complejidad y variabilidad de las tarifas portuarias (Perú y Chile) en una arquitectura predecible, escalable y auditable.
+> **Objetivo**: Estandarizar la inmensa complejidad y variabilidad de las tarifas portuarias (Perú y Chile) en una arquitectura predecible, escalable y 100% auditable.
+> **Definición de Etapas del Sistema**:
+> - **Etapa 1 (Actual - Comercial & Planning)**: **Proyecciones Realistas**. El motor proyecta con precisión quirúrgica el costo real de puerto para simulaciones comerciales, Voyage Estimation y Multicotizador.
+> - **Etapa 2 (Futura - Operaciones & Auditing)**: **Liquidaciones Reales de Cuentas de Agencia**. El sistema se utilizará como **Auditor/Liquidador de DAs (Disbursement Accounts)** para conciliar las facturas reales enviadas por los agentes marítimos (Trans Total, PSA Marine, etc.) contra el tarifario configurable.
 > **Diseño Central**: El "Pipeline de 3 Filtros" (Tubería Serial). Cada ítem de costo pasa por una secuencia estricta de filtros que mutan y calculan su valor final basándose en las propiedades del viaje, la hora de la maniobra y las matemáticas del barco.
 > **Regla de Oro**: Ningún concepto genérico agrupa eventos que ocurren en distintos tiempos. Los servicios que dependen de la hora exacta de la maniobra se **desdoblan** en Base de Datos (ej. `Pilotage IN` y `Pilotage OUT`).
 
@@ -38,7 +41,7 @@ Dado que el desdoblamiento nos garantiza que cada ítem (ej. `Towage IN`) tiene 
 ### 3️⃣ Filtro 3: Reglas Matemáticas Base (Las 7 Categorías)
 > **¿Cuál es el multiplicador físico de este servicio?**
 
-Una vez que la tarifa superó el Filtro 1 y el Filtro 2, llega como un valor "limpio y final" a la ecuación matemática asignada a ese concepto en la base de datos (`calculation_type`). El motor cruza esa tarifa final con las dimensiones físicas del buque o de la operación.
+Una vez que la tarifa superó el Filtro 1 y el Filtro 2, llega como un valor "limpio y final" a la ecuación matemática asignada a ese concepto en la base de datos (`multiplier_source` / `calculation_type`). El motor cruza esa tarifa final con las dimensiones físicas del buque o de la operación.
 
 Las 7 fórmulas matemáticas posibles son:
 
@@ -65,9 +68,19 @@ Las 7 fórmulas matemáticas posibles son:
 
 ---
 
+## 🎯 Evolución Estratégica: De Proyecciones a Liquidaciones Reales
+
+| Dimensión | **Etapa 1 (Actual - Comercial / Forecast)** | **Etapa 2 (Futura - Operaciones / Liquidaciones)** |
+| :--- | :--- | :--- |
+| **Caso de Uso** | Proyecciones realistas para Multicotizador, Voyage Estimation y Forecast. | Auditar, conciliar y liquidar facturas reales de Agencias (DA Auditing). |
+| **Entradas** | Parámetros proyectados del viaje (GRT, LOA, horas estimadas de puerto). | SOF (Statement of Facts), horarios reales de practicaje y factura enviada. |
+| **Configurabilidad** | Reglas sembradas para proyecciones comerciales de alta fidelidad. | Administrador visual UI en **`PortTariffsMaster.tsx`** para ajustar tarifarios vigentes. |
+
+---
+
 ## 💾 Estructura de Datos (El Modelo JSONB)
 
-Esta "serialidad" se sustenta en una única columna de base de datos (`tariffs` de tipo `jsonb`) que acompaña a cada concepto tarifario. Su diseño permite que el motor de Python realice los 3 filtros sin hardcodear excepciones ni llenar la base de datos de tablas cruzadas y magic numbers.
+Esta "serialidad" se sustenta en una única columna de base de datos (`tariffs` de tipo `jsonb`) que acompaña a cada concepto tarifario. Su diseño permite que el motor de Python realice los 3 filtros y que el frontend de React construya y guarde las reglas desde la UI.
 
 ```json
 {
@@ -96,6 +109,13 @@ Esta "serialidad" se sustenta en una única columna de base de datos (`tariffs` 
       "value_type": "percentage",
       "value": 25.0
     }
+  ],
+  "brent_rules": [
+    { "brent_min": 91, "brent_max": 100, "tug_surcharge": 67.0, "pushing_surcharge": 65.0 }
+  ],
+  "volume_discounts": [
+    { "min_voyages": 13, "max_voyages": 18, "discount_pct": 6.0 },
+    { "min_voyages": 19, "discount_pct": 7.5 }
   ]
 }
 ```
@@ -109,7 +129,7 @@ Esta "serialidad" se sustenta en una única columna de base de datos (`tariffs` 
 > 3. ¿Aplica al Filtro 2 (Regla del Casino / Horarios)? 
 > 4. ¿Qué Filtro 3 (Fórmula Matemática Base de las 7) usa?
 > 
-> **Con esas 4 respuestas, cualquier costo portuario del mundo puede ser configurado y absorbido por el motor.**
+> **Con esas 4 respuestas, cualquier costo portuario del mundo puede ser configurado en la UI y absorbido por el motor.**
 
 ---
 

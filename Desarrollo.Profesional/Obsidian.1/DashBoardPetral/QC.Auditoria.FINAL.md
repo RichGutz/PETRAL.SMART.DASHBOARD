@@ -36,7 +36,7 @@ En el encabezado de cada ficha por ruta se listan de forma explícita los parám
 - **CARD 1 (RUTAS)**: Itinerario completo (p. ej. `ILO ➔ CALLAO ➔ MARCONA ➔ ILO`), Distancia Náutica Total ($NM$), Factor Clima ($WF = 3.0\%$).
 - **CARD 2 (BUQUES)**: Nombre del Buque (`MOQUEGUA`), Velocidad ($11.0\text{ kts}$), Consumo Sea/Idle IFO ($14.0 / 2.4\text{ t/d}$).
 - **CARD 3 (BÚNKER)**: Precios Mercado ($IFO = \$895.14\text{/t}$, $MDO = \$1,460.30\text{/t}$), Consumo Total Estimado IFO/MDO (t) y Cláusula BAF Baseline ($430.00\text{ USD/t}$).
-- **CARD 4 (CONTRATOS & REGLAS COMERCIALES)**: Cliente Comercial (`SPCC` / `NEXA`), Cantidad Carga ($Q = 13,500\text{ MT}$ o $15,000\text{ MT}$), Tarifa Base Flete ($F = \$25.00$ - $\$30.00\text{/MT}$), Ritmos de Carga/Descarga Acordados ($T/h$), Comisiones Commercial/Brokerage ($0.0\%$).
+- **CARD 4 (CONTRATOS & REGLAS COMERCIALES)**: Cliente Comercial (`SPCC` / `NEXA`), Cantidad Carga Estándar ($Q = 13,500\text{ MT}$ invariable), Tarifa Base Flete ($F = \$25.00$ - $\$30.00\text{/MT}$), Ritmos de Carga/Descarga Acordados ($T/h$), Comisiones Commercial/Brokerage ($0.0\%$).
 - **CARD 5 (PUERTOS & AGENCIA)**: Tarifas de Agencia Portuaria por Puerto (Origen / Destino) y Total Costos de Puerto.
 
 ---
@@ -63,22 +63,22 @@ Cada viaje se desglosa pierna por pierna dentro de una caja ASCII explicativa:
 
 ## 5. 📊 Tabla Oficial de las 12 Métricas de Auditoría Ledger (Al Pie)
 
-Al pie de cada ficha se incluye la replica de las 12 Métricas Oficiales de la UI de Auditoría Ledger con columnas ampliadas (+20% de ancho):
+Al pie de cada ficha se incluye la réplica de las 12 Métricas Oficiales con columnas amplias (Métrica 25%, Fórmula 32%, Cálculo Sustituido 28%, Geeksoft Engine 15%):
 
-| ÍTEM / MÉTRICA OFICIAL | FÓRMULA APLICADA | CÁLCULO SUSTITUIDO NUMÉRICO | GEEKSOFT ENGINE | PETRAL | DELTA |
-| :--- | :--- | :--- | :---: | :---: | :---: |
-| **1. Ritmo Carga (`act_load`)** | `contract_load_rate` | `500 T/h` | `500 T/h` | `______` | `______` |
-| **2. Ritmo Descarga (`act_disch`)** | `contract_discharge_rate` | `345 T/h` | `345 T/h` | `______` | `______` |
-| **3. Días de Puerto (`port_days`)** | `(Q/act_load)/24 + (Q/act_disch)/24 + idle` | `Load + Disch + Overheads` | `3.30 Días` | `______` | `______` |
-| **4. Días de Mar (`sea_days`)** | `(dist * (1 + WF)) / (speed * 24)` | `[Dist × (1 + 3%)] / [11 × 24]` | `4.10 Días` | `______` | `______` |
-| **5. Días de Viaje (`tot_dur`)** | `sea_days + port_days` | `Sea Days + Port Days` | `7.40 Días` | `______` | `______` |
-| **6. Income (`income`)** | `Sum(Q_leg * F_leg)` | `Q × Freight Rate` | `$344,250.00` | `______` | `______` |
-| **7. Comisiones (`commissions`)** | `income * (addr_comm + bkr_comm)` | `Income × 0.00%` | `$0.00` | `______` | `______` |
-| **8. Costo Bunker (`bunker`)** | `bunker_sea + bunker_port` | `Tons IFO × Price + Tons MDO × Price` | `$62,233.73` | `______` | `______` |
-| **9. Port Costs (`port_costs`)** | `Sum(agency_origin + agency_dest)` | `Port Origin + Port Dest` | `$71,327.99` | `______` | `______` |
-| **10. Voyage Result (`voy_res`)** | `income - comm - bunker - port_costs` | `Income - Comm - Bunk - Port` | `$210,688.28` | `______` | `______` |
-| **11. TCE Diario (`tce_real`)** | `voyage_result / tot_dur` | `Voyage Result / Total Days` | `$28,480.65/d` | `______` | `______` |
-| **12. P/L (`pl_vs_req`)** | `tce_real - tce_required` | `TCE Real - TCE Required` | `$210,688.28` | `______` | `______` |
+| ÍTEM / MÉTRICA OFICIAL | FÓRMULA APLICADA | CÁLCULO SUSTITUIDO NUMÉRICO | GEEKSOFT ENGINE |
+| :--- | :--- | :--- | :---: |
+| **1. Ritmo Carga (`act_load`)** | `contract_load_rate` | `500 T/h` | `500 T/h` |
+| **2. Ritmo Descarga (`act_disch`)** | `contract_discharge_rate` | `345 T/h` | `345 T/h` |
+| **3. Días de Puerto (`port_days`)** | `(Q/act_load)/24 + (Q/act_disch)/24 + idle` | `Load(0.56d) + Disch(0.81d) + Overheads` | `3.30 Días` |
+| **4. Días de Mar (`sea_days`)** | `Sum((dist_leg * (1 + WF)) / (speed * 24))` | `P#1 LADEN(283NM: 1.10d) + P#2 BALLAST(283NM: 1.10d)` | `2.21 Días` |
+| **5. Días de Viaje (`tot_dur`)** | `sea_days + port_days` | `2.21d Mar + 3.30d Puerto` | `5.51 Días` |
+| **6. Income (`income`)** | `Sum(Q_leg * F_leg)` | `13,500 MT × $25.50 USD/MT` | `$344,250.00` |
+| **7. Comisiones (`commissions`)** | `income * (addr_comm + bkr_comm)` | `$344,250.00 × 0.00%` | `$0.00` |
+| **8. Costo Bunker (`bunker`)** | `bunker_sea + bunker_port` | `41.67t IFO × $895.14 + 0.77t MDO × $1,460.30` | `$38,430.80` |
+| **9. Port Costs (`port_costs`)** | `Sum(agency_origin + agency_dest)` | `$15,000.00 (Carga) + $40,000.00 (Descarga)` | `$55,000.00` |
+| **10. Voyage Result (`voy_res`)** | `income - comm - bunker - port_costs` | `$344,250.00 - $38,430.80 - $55,000.00` | `$250,819.20` |
+| **11. TCE Diario (`tce_real`)** | `voyage_result / tot_dur` | `$250,819.20 / 5.47 Días` | `$45,906.54/día` |
+| **12. P/L (`pl_vs_req`)** | `income - comm - bunker - port_costs - (tot_days * tce_req)` | `$250,819.20 - (5.46d × $13,000.00/d)` | `$179,791.20` |
 
 ---
 

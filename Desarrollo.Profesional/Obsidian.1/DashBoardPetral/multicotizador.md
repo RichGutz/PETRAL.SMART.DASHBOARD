@@ -472,3 +472,75 @@ Se integraron y desplegaron las siguientes optimizaciones sobre la barra de herr
    * La grilla de puertos y matrices del ruteador heredan la ordenación dinámica basada en la coordenada latitudinal (`latB - latA`), manteniendo la simetría visual con el resto de maestros.
 3. **Alineación de Eje y Simetría:**
    * El botón selector de Clientes fue alineado al eje horizontal de la fila de tramos (inline) para conservar una simetría impecable con los inputs de "Add Leg", "Remove Leg" y el resto de la barra de acciones.
+
+---
+
+## 🏛️ 14. Reestructuración de Arquitectura de Datos: Armazón vs. Carne (2026-07-22)
+
+Para alinear el sistema a la realidad operativa de Shipping, se formalizó la separación entre la **Ruta Física** y la **Cotización Comercial**:
+
+### A. Principio Conceptual:
+1. **La Ruta (Armazón Geométrico / Estático):**
+   * Es el itinerario físico e inmutable de navegación (secuencia de puertos, distancias en NM, y naturaleza de operaciones de carga/descarga).
+   * **Persistencia:** Se almacena en la tabla **`routes_clients`** únicamente para **Clientes Activos** (ej. SPCC, NEXA).
+2. **La Cotización (La Carne / Instancia Comercial Dinámica):**
+   * Es la foto financiera viva que aplica las variables de coyuntura de mercado (precios de búnker IFO/MDO del día, fletes acordados, buque asignado, consumos y comisiones) sobre un itinerario dado.
+   * **Persistencia:** Se almacena en la tabla **`routes_quotes`** (anteriormente `routes_prospects`).
+
+### B. Depuración de Tablas en Supabase:
+* **`DROP VIEW routes_master`**: Eliminada por ser una vista huérfana redundante.
+* **`ALTER TABLE routes_prospects RENAME TO routes_quotes`**: Renombrada exitosamente para contener formalmente todas las cotizaciones comerciales y prospectos.
+
+### C. Conmutación de Interfaz e Inyección UI (`MultiCotizadorExcel.tsx`):
+* **Switch de 2 Posiciones Exclusivo:** Los botones `Activos` y `Prospectos` operan como un control de radio limpio de dos posiciones mutuamente exclusivas:
+  * **Modo Activos:** Filtra los clientes regulares activos y direcciona la inyección de guardado hacia **`routes_clients`** (`is_prospect: false`).
+  * **Modo Prospectos:** Filtra los clientes prospectos y direcciona la inyección de guardado hacia **`routes_quotes`** (`is_prospect: true`).
+
+---
+
+## 📐 15. Rediseño del Tab "Cálculos Detallados" al Formato Oficial en Blanco y Negro (2026-07-22)
+
+Se transformó la pestaña interna **📐 Cálculos Detallados** dentro de `MultiCotizadorExcel.tsx` para replicar exactamente la maquetación corporativa del documento PDF de Auditoría Final:
+
+1. **Cabecera Corporativa de Identidad**:
+   * **Izquierda**: Logo oficial PETRAL (`src/assets/Logo.Petral.png`).
+   * **Centro**: Título exacto **`PETRAL SMART DASHBOARD • MOTOR SPOT GEEKSOFT ENGINE`** con el subtítulo *"ACTA OFICIAL DE CÁLCULOS DETALLADOS Y LEDGER DE VIAJE (AUDITORÍA MATEMÁTICA V2)"*.
+   * **Derecha**: Logo oficial GEEKSOFT (`src/assets/Logo.Geeksoft.png`).
+2. **Consola Aritmética de Fondo Claro**:
+   * Reemplazado el fondo negro de terminal por un contenedor monoespaciado en **Fondo Blanco/Gris Claro con Texto Negro (`bg-slate-50 text-slate-900 border-slate-300`)** para lectura impecable en pantalla e impresión.
+   * Preservación de la estructura ASCII con los **Cards 1 a 5** (Rutas, Buques, Búnker, Contratos & Comercial, Puertos & Agencia) y el desglose explicativo pierna por pierna.
+3. **Tabla Oficial de 12 Métricas al Pie**:
+   * Réplica completa de la tabla de auditoría con las 12 métricas algorítmicas (Ritmo Carga, Ritmo Descarga, Días Puerto, Días Mar, Días Viaje, Income, Comisiones, Costo Bunker, Port Costs, Voyage Result, TCE Diario y P/L vs Req).
+
+---
+
+## 🖨️ 16. Receta de Impresión PDF en Ventana Limpia y Paginación Indivisible (2026-07-22)
+
+Para garantizar que la exportación a PDF desde el botón `🖨️ Imprimir Cálculos Detallados` mantenga una calidad de imprenta sin distorsiones del navegador:
+
+1. **Inyección HTML en Ventana Independiente (`handlePrintCalculosDetalladosHtml`)**:
+   * Al presionar el botón de impresión, se abre un contexto limpio `window.open('', '_blank')` inyectando la plantilla HTML oficial con fuente `Courier New` a `6.8pt` y hoja horizontal `@page { size: A4 landscape; margin: 6mm 8mm; }`.
+2. **Paginación Indivisible para la Tabla de Métricas**:
+   * Se aplicó la regla CSS de paginación `page-break-inside: avoid !important; break-inside: avoid !important;` tanto a la `table.metrics-table` como a su contenedor `.metrics-block`.
+   * **Comportamiento**: En cotizaciones largas (de 4 o 5 piernas) que exceden la primera página, la Tabla Oficial de 12 Métricas se traslada **en un bloque completo e indivisible a la Página 2**, impidiendo que se corte a la mitad.
+
+---
+
+## 🛠️ 17. Diagnóstico y Corrección de la API de Carga (`GET /spot/list`) (2026-07-22)
+
+### A. Diagnóstico de Causa Raíz:
+Al presionar el botón `Load`, la interfaz mostraba la alerta *"No hay rutas grabadas para el multicotizador"* debido a un fallo interno HTTP 500 en el backend FastAPI:
+* El endpoint `@router.get("/spot/list")` en `forecast.py` intentaba seleccionar la columna inexistente `client_route_id` en `routes_clients` y `prospect_route_id` en `routes_quotes`.
+
+### B. Corrección Aplicada (`forecast.py`):
+```python
+# ✅ CÓDIGO CORREGIDO Y OPERATIVO:
+res_clients = sb.table("routes_clients").select("*, spot_id:route_id").order("created_at", desc=True).execute().data or []
+res_prospects = sb.table("routes_quotes").select("*").order("created_at", desc=True).execute().data or []
+```
+
+### C. Carga Universal en Frontend (`handleLoadClick` / `handleLoadRoute`):
+* El modal `Load` filtra dinámicamente según el modo seleccionado (rutas fijas en **Activos** vs. cotizaciones en **Prospectos**).
+* Soporta la reconstrucción inmediata de la grilla tanto para armazones geométricos planos (`routes_clients`) como para cotizaciones con carne completa (`routes_quotes`).
+
+
