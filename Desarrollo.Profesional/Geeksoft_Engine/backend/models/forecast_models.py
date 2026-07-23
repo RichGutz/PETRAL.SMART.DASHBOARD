@@ -212,5 +212,11 @@ class VesselTerminalOperation(BaseModel):
     ritmo_descarga: float = 0.0
     amarre_hrs: float = 0.0
     desamarre_hrs: float = 0.0
+    time_to_count_carga_hrs: float = 6.0
+    time_to_count_descarga_hrs: float = 6.0
+    maneuver_carga_hrs: float = 2.0
+    maneuver_descarga_hrs: float = 2.0
+    tugboats_in: int = 0
+    tugboats_out: int = 0
     tugboats_count: int = 0
     parameters: Dict[str, Any] = Field(default_factory=dict)

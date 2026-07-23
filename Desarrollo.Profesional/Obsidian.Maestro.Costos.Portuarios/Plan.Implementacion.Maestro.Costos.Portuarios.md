@@ -19,101 +19,109 @@ graph TD
 
 ---
 
-## 📌 CAPA 1: LÓGICA (Pipeline Universal de 3 Filtros) — ✅ 100% DEFINIDA
+## 📌 ESTADO DE AVANCE ACTUAL (RESUMEN EJECUTIVO)
 
-- **Desdoblamiento de Maniobras**: Eventos de ingreso (`IN`) y salida (`OUT`) evaluados contra su hora exacta de término (`end_time`).
-- **Filtro 1 (Propiedades)**: Procedencia (`last_port`), destino (`next_port`), cabotaje vs. exportación.
-- **Filtro 2 (Regla del Casino / Tiempo)**: Overtime (`18-24h` 25%, `00-07h` 50%), `Domingos`, `Feriados`, `Cierre de Puerto`.
-- **Filtro 3 (Fórmulas Matemáticas Base - 7 Categorías)**:
-  1. `FIXED_FLAT`: Tarifa fija.
-  2. `PER_QTY`: Tarifa × Cantidad eventos.
-  3. `PER_HOUR`: Tarifa × Horas de puerto.
-  4. `PER_GRT`: Tarifa × Tonelaje Bruto.
-  5. `PER_LOA_HOUR`: Tarifa × Eslora × Horas de puerto (Muellaje APM / Tisur).
-  6. `CONDITIONAL_MAX`: $\max(\text{Tarifa Base}, k \times \text{GRT})$.
-  7. `PERCENTAGE_SURCHARGE`: Recargo porcentual acumulativo (o tablas Brent / Rebates por Volumen).
-
----
-
-## 📌 CAPA 2: INTERFACES DE USUARIO (UI & Diseños de Alto Impacto)
-
-> 🎨 **Objetivo de Diseño**: Construir pantallas modernas, ejecutivas y fluidas que superen la rigidez de los Excels tradicionales y convenzan visualmente al analista.
-
-### 2.1. 🏛️ Maestro de Tarifas Portuarias (`PortTariffsMaster.tsx`)
-- **Responsabilidad**: Almacena y administra las **tarifas y reglas del Excel** por agencia, proveedor, puerto y terminal.
-- **Componentes Visuales**:
-  - Selector de Cascada: **País ➔ Puerto ➔ Terminal ➔ Proveedor (Agencia)**.
-  - Tabla Inteligente con distintivos de categoría (`Shifting`, `General Port`, `Agency`).
-  - Modal Generador de Reglas (Configuración de Tarifa Base, $1\text{er}$ Filtro Propiedad, $2\text{do}$ Filtro Casino, $3\text{er}$ Filtro Fórmula).
-  - Toggles visuales para **Pass-Through** (asumido por cliente) y **Es Opcional**.
-
-### 2.2. ⚓ Maestro de Puertos & Terminales (`PortMaster_V2.tsx`)
-- **Responsabilidad**: Almacena los **parámetros físicos y reglas operativas del terminal**.
-- **Campos Administrables**:
-  - Ritmo máximo de carga (`max_load_rate` MT/h) y descarga (`max_disch_rate` MT/h).
-  - Límites físicos: Calado máximo (`max_draft` m) y Eslora máxima (`max_loa` m).
-  - Tiempos muertos contractuales estándar (Time to count en origen y destino).
-  - Coordenadas geoespaciales (Latitud/Longitud) para el Mapa Espagueti.
-
-### 2.3. 🏢 Maestro de Proveedores (`SuppliersMaster.tsx`)
-- **Responsabilidad**: Almacena la identidad de agencias marítimas y operadores (`Trans Total`, `PSA Marine`, `Petranso`, `Ultratug`, `Port Operations`, `Tisur`).
-
----
-
-## 📌 CAPA 3: TABLAS (Base de Datos Supabase SQL + JSONB)
-
-- **`ports`**: Identidad de puertos (`CALLAO`, `MARCONA`, `MATARANI`, `ILO`).
-- **`terminals`**: Terminales físicos (`APM`, `TISUR`, `ENAPU`, `TPM`, `INTERACID`).
-- **`suppliers`**: Catálogo de proveedores y agencias marítimas.
-- **`port_cost_concepts`**: Catálogo unificado de 22+ conceptos de gasto.
-- **`port_costs_matrix` (`PORT_COST_RULES`)**:
-  - Clave técnica primaria: `rule_id` (UUID).
-  - Atributos relacionales: `port_id`, `terminal`, `operation_type`, `vessel_id`, `concept_id`, `sub_item_name`, `supplier_id`, `multiplier_source`, `rate_usd`, `cost`, `allow_pass_through`, `is_optional`.
-  - Columna JSONB dinámico: `tariffs` (contiene `property_rules`, `time_rules`, `brent_rules`, `volume_discounts`).
-
----
-
-## 📌 CAPA 4: MOTOR DE GASTOS PORTUARIOS (Backend Python Engine)
-
-- **Firma del Endpoint / Función de Cálculo**:
-  ```python
-  def calculate_port_expenses(
-      vessel_id: str,              # Buque (extrae LOA, GRT, DWT de vessels)
-      port_id: str,                # Puerto (ej: CALLAO)
-      terminal_id: str,            # Terminal (ej: APM)
-      operation_type: str,         # CARGA / DESCARGA
-      cargo_tons: float,           # Volumen de carga en TM
-      maneuver_start_time: datetime, # Fecha/Hora inicio maniobra
-      maneuver_end_time: datetime,   # Fecha/Hora fin maniobra (evalúa Casino/Overtime)
-      last_port_country: str,      # Procedencia (evalúa Faro $0.03 vs $0.12)
-      brent_price_usd: float = 80.0 # Precio de crudo Brent opcional
-  ) -> PortCalculationResult:
-  ```
-
-- **Flujo de Ejecución Interno del Motor**:
-  1. Extrae dimensiones físicas del buque desde `vessels` (`LOA`, `GRT`).
-  2. Extrae las reglas activas de `port_costs_matrix` para el `port_id` y `terminal_id`.
-  3. Ejecuta la **Tubería de 3 Filtros** en serie para cada regla.
-  4. Genera el total acumulado en USD y la cadena transparente de auditoría (`audit_trail`).
-
----
-
-## 📌 CAPA 5: HERRAMIENTA DE AUDITORÍA (Audit Ledger & Reporte PDF)
-
-- **Auditoría en Pantalla (UI Audit Ledger)**:
-  - Desglose transparente línea por línea con badge de estado (*Verificado / Sobrecargo Overtime*).
-  - Muestra la ecuación exacta evaluada (ej: `"$1.50 × 134.16m (LOA) × 27h (Puerto) = $5,758.48 USD"`).
-- **Reporte PDF de Auditoría**:
-  - Generación del Acta de Gastos Portuarios de Origen y Destino con logos corporativos PETRAL y GEEKSOFT.
-
----
-
-## 📋 Cronograma de Ejecución por Etapas
-
-| Etapa | Alcance / Entregable | Estado |
+| Capa / Etapa | Alcance / Entregable | Estado |
 | :---: | :--- | :---: |
-| **Etapa 1.1** | Levantamiento Lógico & Flujogramas Lineales PDF (Perú: Callao, Marcona, Matarani, Ilo) | **✅ COMPLETADO** |
-| **Etapa 1.2** | Diseño e Implementación de Pantallas UI convencedoras (`PortTariffsMaster.tsx` y `PortMaster_V2.tsx`) | **🔄 SIGUIENTE PASO** |
-| **Etapa 1.3** | Ajuste de Tablas en Supabase y endpoints CRUD en FastAPI | **⏳ PENDIENTE** |
-| **Etapa 1.4** | Ensamblaje del Motor de Gastos Portuarios (Buque + Tiempos + TM ➔ Costo) | **⏳ PENDIENTE** |
-| **Etapa 1.5** | Herramienta de Auditoría UI & Reporte PDF de Liquidación | **⏳ PENDIENTE** |
+| **Capa 1 (LÓGICA)** | Levantamiento Lógico & Flujogramas Lineales PDF (Callao, Marcona, Matarani, Ilo) | **✅ COMPLETADO** |
+| **Capa 2 (UI MAESTROS)** | `PortTariffsMaster.tsx` (UI limpia a ancho completo desglosada en A, B y C) & `PortsMaster_V2.tsx` (Parámetros físicos y Matriz 10 variables Buque-Terminal desdoblada) | **✅ COMPLETADO** |
+| **Capa 3 (TABLAS BD)** | Esquema Supabase + Sembrados Oficiales (`seed_callao_experta.py`, `seed_matarani_experta.py`, `seed_marcona_experta.py`, `seed_ilo_experta.py`) con proveedores vinculados | **✅ COMPLETADO** |
+| **Capa 4 (MOTOR)** | Motores de cálculo modular por puerto (`backend/port_engines/`) | **📌 HOJA DE RUTA MAÑANA** |
+| **Capa 5 (AUDITORÍA)** | Herramienta de Auditoría y Modelo Matriz Compleja (`MatrixComplexPanel.tsx`) | **📌 HOJA DE RUTA MAÑANA** |
+
+---
+
+## 📅 HOJA DE RUTA EXACTA PARA MAÑANA (SESIÓN DE TRABAJO)
+
+Mañana nos enfocaremos en completar la **Capa 4 (Motor de Cálculo Backend)** y la **Capa 5 (Herramienta de Auditoría UI estilo AuditFinal)**.
+
+```mermaid
+graph LR
+    Fase1[FASE 1: BACKEND<br>Motores Dedicados por Puerto] --> Fase2[FASE 2: FRONTEND<br>Herramienta de Auditoría en MatrixComplexPanel]
+    Fase2 --> Fase3[FASE 3: VERIFICACIÓN<br>Simulación & Liquidación Real de la Flota]
+```
+
+---
+
+### ☀️ FASE 1: Construcción de Motores Dedicados Backend (`port_engines/`)
+
+Desarrollaremos la arquitectura modular backend en `Geeksoft_Engine/backend/port_engines/`:
+
+1. **`core.py` (Tubería Orquestadora Base & Endpoint FastAPI)**:
+   - Expone el endpoint `POST /api/v2/port-costs/calculate-audit`.
+   - Recibe los 5 inputs operativos: `route_id`, `vessel_id`, `cargo_tons`, `entry_datetime`, `exit_datetime`.
+   - Consulta `vessels` para extraer automáticamente $\text{LOA}$, $\text{GRT}$, $\text{DWT}$ y llama al calculador de puerto correspondiente.
+
+2. **`calculator_callao.py` (Motor Dedicado Callao - APM Terminals)**:
+   - Muellaje APM: $\$1.50 \times \text{LOA} \times \text{Horas Puerto}$.
+   - Practicaje IN/OUT: $\max(\$750.00, 0.055 \times \text{GRT}) + \text{Overtime (25%/50%)}$.
+   - Remolcaje IN/OUT: $\$800.00 \times \text{tugboats\_in}$ / $\text{tugboats\_out}$.
+   - Faro y Balisas: $\$0.03\text{/GRT}$ Nacional vs. $\$0.12\text{/GRT}$ Extranjero.
+   - Sanidad: $\$520.00\text{ USD Flat}$ (solo extranjero).
+
+3. **`calculator_matarani.py` (Motor Dedicado Matarani - Tisur S.A. / Addenda PSA)**:
+   - Servicio Integral PSA Addenda: $\$3,368.00\text{ USD}$ por maniobra ($\$6,736.00\text{ escala}$).
+   - Recargos Overtime PSA: $+25\%$ ($\$842.00$) / $+50\%$ ($\$1,684.00$).
+   - Muellaje Tisur: $\$0.65 \times \text{LOA} \times \text{Horas Puerto}$.
+   - Sanidad: $\$670.00\text{ USD Flat}$.
+
+4. **`calculator_marcona.py` (Motor Dedicado Marcona - SPCC / San Juan)**:
+   - Aplicación directa de la Tarifa Acuerdo Petral/Southern: **$\$36,000.00\text{ USD Flat}$** por escala.
+   - Desglose preferencial: Servicio Integral Atraque $\$30,508.48\text{ USD}$ + Agencia.
+
+5. **`calculator_ilo.py` (Motor Dedicado Ilo - Enapu / SPCC)**:
+   - Muellaje SPCC: $\$300.00 + (\$0.05 \times \text{GRT} \times \text{Días Muelle})$.
+   - Remolcaje PSA Marine: $\max(\$1,800.00, 0.16 \times \text{GRT}) \times 2\text{ remolcadores}$.
+   - Remolcaje Petranso: $0.18 \times \text{GRT} \times 2\text{ remolcadores}$ ($-10\%$ desc. comercial).
+
+---
+
+### ☀️ FASE 2: Desarrollo de la Herramienta de Auditoría (`MatrixComplexPanel.tsx`)
+
+Implementaremos en la pestaña **"Modelo Matriz Compleja"** (dentro de `/port-costs`):
+
+1. **Barra Superior de Inputs de Simulación**:
+   - Selectores de **Ruta Commercial** (`Callao -> Matarani`, `Marcona -> Ilo`, etc.).
+   - Selector de **Buque** (`BT MOQUEGUA`, `BT TABLONES`, `BT HUEMUL`, `CONCON TRADER`).
+   - Input de **Toneladas de Carga** ($\text{MT}$).
+   - Date-Pickers de **Fecha/Hora Entrada** y **Fecha/Hora Salida** (para cálculo de horas reales en muelle y recargos horario/festivo).
+
+2. **4 Tarjetas KPI de Impacto Financiero (Estilo `AuditFinal_V2`)**:
+   - 🔵 **Puerto Origen (Carga USD)**
+   - 🟢 **Puerto Destino (Descarga USD)**
+   - 🟣 **Total Escala Portuaria (USD)**
+   - ⏱️ **Horas Totales en Puerto**
+
+3. **Grilla Transparente de Auditoría Línea por Línea**:
+   - Desglose por Puerto (Origen y Destino) organizado en sus 3 secciones oficiales:
+     - 🟦 `A) SHIFTING EXPENSES`
+     - 🟩 `B) GENERAL PORT EXPENSES`
+     - 🟪 `C) AGENCY EXPENSES`
+   - Mapeo de Ecuación Matemática Evaluada Real (ej: `"$1.50 × 134.16m (LOA) × 27h (Puerto)"` o `"MAX($750.00, 0.055 × 8,259 GRT) + 25% Overtime"`).
+   - Badges de `<Pass Through>`, `<Overtime 25%>`, `<Acuerdo SPCC>`.
+
+4. **Exportación de Auditoría**:
+   - Botón de Exportar a Excel y Generar Acta PDF Oficial.
+
+---
+
+### ☀️ FASE 3: QC & Verificación con Escenarios Reales de la Flota
+
+- Ejecutar las 4 simulaciones reales de la proforma oficial:
+  - `BT MOQUEGUA` en Callao ➔ Matarani ($14,938.34 + $15,364.50 = $30,302.84 USD).
+  - `BT TABLONES` en Callao ➔ Matarani.
+  - `BT HUEMUL` en Callao ➔ Matarani.
+  - `CONCON TRADER` en Callao ➔ Matarani.
+- Verificar coincidencia al 100% de centavos contra la proforma de la experta.
+
+---
+
+## 📌 Documentación de Referencia en Obsidian
+
+- 📄 `Obsidian.Maestro.Costos.Portuarios/motores.calculo.complejo.md`
+- 📄 `Obsidian.Maestro.Costos.Portuarios/hta.auditoria.md`
+- 📄 `Obsidian.Maestro.Costos.Portuarios/Modelo.ER.Motor.Costos.Portuarios.md`
+- 📄 `Obsidian.Maestro.Costos.Portuarios/PNG_Callao_Layout.md`
+- 📄 `Obsidian.Maestro.Costos.Portuarios/PNG_Matarani_Layout.md`
+- 📄 `Obsidian.Maestro.Costos.Portuarios/PNG_Marcona_Layout.md`
+- 📄 `Obsidian.Maestro.Costos.Portuarios/PNG_Ilo_Layout.md`

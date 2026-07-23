@@ -153,6 +153,12 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
         ritmo_descarga: 0,
         amarre_hrs: 0,
         desamarre_hrs: 0,
+        time_to_count_carga_hrs: 6.0,
+        time_to_count_descarga_hrs: 6.0,
+        maneuver_carga_hrs: 2.0,
+        maneuver_descarga_hrs: 2.0,
+        tugboats_in: 0,
+        tugboats_out: 0,
         tugboats_count: 0,
         parameters: {} as Record<string, any>
     });
@@ -181,7 +187,13 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
                 ritmo_descarga: Number(m.ritmo_descarga) || 0,
                 amarre_hrs: Number(m.amarre_hrs) || 0,
                 desamarre_hrs: Number(m.desamarre_hrs) || 0,
-                tugboats_count: Number(m.tugboats_count) || 0,
+                time_to_count_carga_hrs: Number(m.time_to_count_carga_hrs) || 0,
+                time_to_count_descarga_hrs: Number(m.time_to_count_descarga_hrs) || 0,
+                maneuver_carga_hrs: Number(m.maneuver_carga_hrs) || 0,
+                maneuver_descarga_hrs: Number(m.maneuver_descarga_hrs) || 0,
+                tugboats_in: Number(m.tugboats_in) || Number(m.tugboats_count) || 0,
+                tugboats_out: Number(m.tugboats_out) || Number(m.tugboats_count) || 0,
+                tugboats_count: Number(m.tugboats_in) || Number(m.tugboats_count) || 0,
                 parameters: m.parameters || {}
             }));
             
@@ -195,13 +207,17 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
         }
     };
 
-    // Grouping logic for UI
     const baseConcepts = [
         { key: 'ritmo_carga', label: 'Ritmo de Carga (MT/hr)' },
         { key: 'ritmo_descarga', label: 'Ritmo de Descarga (MT/hr)' },
-        { key: 'amarre_hrs', label: 'Tiempo Amarre (Hrs)' },
-        { key: 'desamarre_hrs', label: 'Tiempo Desamarre (Hrs)' },
-        { key: 'tugboats_count', label: 'Nro de Remolcadores (Tugboats)' }
+        { key: 'amarre_hrs', label: 'Tiempo Amarre / Atraque (Hrs)' },
+        { key: 'desamarre_hrs', label: 'Tiempo Desamarre / Zarpe (Hrs)' },
+        { key: 'time_to_count_carga_hrs', label: 'Time to Count Carga (Hrs - Manguera/Aduana)' },
+        { key: 'time_to_count_descarga_hrs', label: 'Time to Count Descarga (Hrs - Manguera/Aduana)' },
+        { key: 'maneuver_carga_hrs', label: 'Tiempo Maniobra Carga Extra (Hrs)' },
+        { key: 'maneuver_descarga_hrs', label: 'Tiempo Maniobra Descarga Extra (Hrs)' },
+        { key: 'tugboats_in', label: 'Remolcadores Ingreso / Atraque (Tugboats IN)' },
+        { key: 'tugboats_out', label: 'Remolcadores Salida / Desatraque (Tugboats OUT)' }
     ];
 
     const groupedRules: Record<string, any[]> = {};

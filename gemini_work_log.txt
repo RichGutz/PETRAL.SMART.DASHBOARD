@@ -1,90 +1,11 @@
-================================================================================
-REGISTRO DE TRABAJO Y EVIDENCIA QC - PETRAL SMART DASHBOARD
-Fecha: 2026-07-21 (Sesión de Cierre de Trabajo)
-================================================================================
+=== REGISTRO DE TRABAJO GEMINI ===
+Fecha: 2026-07-22 21:53
 
-[RESUMEN DE LOGROS DEL DÍA]:
-1. QC Loop de Auditoría PDF (run_qc_loop_pdf.py):
-   - Generación del informe PDF oficial A4 Landscape en Blanco y Negro (1 ruta por página).
-   - Incorporación de Tabla HTML de 3 columnas para logos (Logo PETRAL a la izquierda, Logo GEEKSOFT a la derecha).
-   - Incorporación de 4 Cards de Inputs de Origen (Rutas, Buques, Contratos, Puertos).
-   - Aritmética explicativa visual pierna por pierna (Días Mar, Días Puerto, Costo Búnker IFO/MDO, Gastos Agencia).
-   - Tabla oficial de las 12 Métricas de Auditoría Ledger al pie con anchos ampliados +20%.
-   - Depósito en Vault de Obsidian: ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf
-
-2. QC Loop de Matriz Financiera (run_qc_matriz_financiera.py):
-   - Creación del script autónomo que consolida las 6 rutas oficiales de SPCC y NEXA.
-   - Alineación 100% exacta con los números del Acta PDF (PnL Neto, TCE Real, Distancia, Búnker, Puertos).
-   - Estado del QC: ✅ 100% PASSED.
-
-3. Limpieza de Documentación (Obsidian Vault):
-   - Renombrados históricos a _OLD_V1.md.
-   - Reescritos e inmaculados: QC.Auditoria.FINAL.md, Loop.Coder.QC.AntiGravity.md, QC.Matriz.Financiera.md.
-
-================================================================================
-Fecha: 2026-07-22
-================================================================================
-[REFINAMIENTO DE ACTA PDF Y REGLAS COMERCIALES]:
-1. Hito de Control de Cambios:
-   - Git commit grabado: `PULIENDO.ACTA.AUDITORIA` (Commit `4da8b34`).
-
-2. Ajustes de Maquetación de Cabecera:
-   - Logo PETRAL: Reducción del 20% (de `38px` a `30px`).
-   - Logo GEEKSOFT: Ampliación del 30% (de `38px` a `49px`).
-
-3. Ampliación de Inputs a 5 Cards Maestros:
-   - CARD 1 (RUTAS): Itinerario, Distancia NM, Weather Factor 3.0%.
-   - CARD 2 (BUQUES): Buque, Velocidad kts, Consumos Sea/Idle.
-   - CARD 3 (BÚNKER): Precios IFO/MDO, Consumos Totales Est., Cláusula BAF Baseline ($430/t).
-   - CARD 4 (CONTRATOS & REGLAS COMERCIALES): Q (MT), Freight Base ($/MT), Ritmos Carga/Descarga, Comisiones.
-   - CARD 5 (PUERTOS & AGENCIA): Costos de agencia por puerto (Origen/Destino) y total.
-
-4. Corrección de Fórmulas en Tabla 12 Métricas:
-   - Ritmo Carga (`act_load`): `contract_load_rate` (Ritmo Contractual Directo de Matriz).
-   - Ritmo Descarga (`act_disch`): `contract_discharge_rate` (Ritmo Contractual Directo de Matriz).
-
-5. Orden de Impresión de Rutas:
-   - Rutas SPCC ordenadas y procesadas primero (prioridad 0), seguidas por NEXA.
-
-6. Tonelaje Estándar de Carga:
-   - Tonelaje de carga fijado invariablemente en Q = 13,500 MT para todas las rutas.
-
-7. Estado de QC y Artefactos:
-   - Documento actualizado: QC.Auditoria.FINAL.md.
-   - Script ejecutado: run_qc_loop_pdf.py.
-   - PDF Oficial re-generado exitosamente: ✅ ACTA_AUDITORIA_FINAL_RUTAS_SPCC_NEXA.pdf.
-2. Refinamiento de UI Auditoría Final (VoyageLedgerFinal.tsx & run_qc_loop_pdf.py):
-   - Rediseño Total: Eliminados el selector de ruta individual, las tablas de itinerario/carga y los modales intermedios.
-   - Ventana Documento PDF Directa: La pantalla es directamente el visor del Acta PDF oficial (iframe a pantalla completa) para todas las rutas del cliente (SPCC, NEXA, PROSPECTOS).
-   - Eliminación de PETRAL & DELTA: Retiradas las columnas PETRAL y DELTA para otorgar ancho 100% flexible y holgado a Métrica (25%), Fórmula (32%), Cálculo Sustituido (28%) y Engine (15%).
-   - Cabecera Estilo Claro: Eliminado el fondo negro; reemplazado por un contenedor corporativo suave (`bg-slate-50 border border-slate-200 text-slate-800`).
-   - Bloque de Firma & Justificación: Añadido al pie de cada página del reporte el panel de Firma del Auditor, Responsable, Estado de Validación y Caja de Comentarios/Justificación.
-   - Despliegue VPS: ✅ Exitoso y publicado en https://forecast.geeksoft.tech.
-8. Estandarización de Rutas SPCC a 2 Piernas (`routes_clients`):
-   - Migración en Supabase: Ejecutado `update_spcc_routes_two_legs.py` afectando únicamente la tabla `routes_clients`.
-   - Conversión de Estructura: Las rutas `SPCC.ILO.MATARANI`, `SPCC.ILO.MARCONA` y `SPCC.ILO.MEJILLONES` fueron transformadas de 1 pierna a 2 piernas completas (Pierna 1: LADEN Origen ➔ Destino | Pierna 2: BALLAST Retorno Destino ➔ ILO).
-   - Simulación y PDF: `run_qc_loop_pdf.py` y `run_qc_matriz_financiera.py` ejecutados con 100% éxito. Las 2 piernas se desglosan en el Acta PDF y en la Matriz Financiera.
-================================================================================
-
-
-
-[2026-07-22 16:13] DEPLOY COMPLETO A VPS - Fix sea_days audit_trail por pierna
-  - Build Frontend: 3793 modules OK (59.85s)
-  - Backend VPS (91.108.125.253): geeksoft-engine.service activo OK
-  - Frontend VPS: dist/ subido + Nginx recargado OK
-  - Fix aplicado: audit_trail.sea_days en spot_engine.py usa sea_days por pierna (no tot_sea_d)
-  - Eliminado string legacy: [558.0 NM x (1+3%WF)] / [11 kts x 24h] 2.18 Dias
-
-[2026-07-22 16:20] FIX P/L FORMULA - Correcci�n metrica #12
-  - ANTES: tce_real - tce_required (incorrecto)
-  - AHORA: voyage_result - (tot_days * tce_required) = income - comm - bunker - port_costs - (dias * TCE_req)
-  - tce_required se lee del card de buque (vessel.tce_required en Supabase)
-  - Archivos modificados: run_qc_loop_pdf.py + spot_engine.py (consolidated ahora incluye pl_vs_req)
-  - PDF regenerado y verificado OK
-  - Backend redesplegado al VPS OK
-
-[2026-07-22 17:27] QC LOOP MULTICOTIZADOR & ROUTES_QUOTES - 100% SUITE APROBADA
-  - Fase 1 (Rutas Reales): 6/6 Rutas SPCC y NEXA validadas en Calculos Detallados OK
-  - Fase 2 (Prospectos 13,500 MT @ /MT): 3/3 Cotizaciones inyectadas en routes_quotes y re-simuladas OK (Diff: .0000)
-  - Frontend: Compilacion TypeScript limpia tsc --noEmit (0 errores)
-  - Documentacion: Loop.Coder.QC.AntiGravity.md y Plan.QC.Loop.Multicotizador.Quotes.md actualizados
+- Culminado al 100% el sembrado y conexión en Supabase de la red portuaria completa de Perú (Callao, Matarani, Marcona, Ilo).
+- UI de PortTariffsMaster.tsx 100% limpia a ancho completo con sub-cabeceras A, B y C, proveedores explícitos y fórmulas explicativas al lado.
+- Estandarización de tabla limpia sin filas basura para puertos vacíos (Talara).
+- Documentación completa creada en Obsidian:
+  - Plan.Implementacion.Maestro.Costos.Portuarios.md (Hoja de ruta exacta para mañana)
+  - Modelo.ER.Motor.Costos.Portuarios.md
+  - motores.calculo.complejo.md
+  - hta.auditoria.md
