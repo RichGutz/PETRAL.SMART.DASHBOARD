@@ -1,5 +1,5 @@
-import React from 'react';
-import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database } from 'lucide-react';
+import React, { useState } from 'react';
+import { LogOut, ExternalLink, User, Settings, ArrowLeft, Database, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 
@@ -19,6 +19,29 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
     onBackToDashboard
 }) => {
     const navigate = useNavigate();
+
+    // Estado para colapsar / expandir el Sidebar Izquierdo (Permite anchar la vista de auditoría a 100%)
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+        return localStorage.getItem('petral_sidebar_collapsed') === 'true';
+    });
+
+    React.useEffect(() => {
+        const handleToggleEvent = () => {
+            setIsSidebarCollapsed(localStorage.getItem('petral_sidebar_collapsed') === 'true');
+        };
+        window.addEventListener('petral_sidebar_toggle', handleToggleEvent);
+        return () => window.removeEventListener('petral_sidebar_toggle', handleToggleEvent);
+    }, []);
+
+    const toggleSidebar = () => {
+        setIsSidebarCollapsed(prev => {
+            const next = !prev;
+            localStorage.setItem('petral_sidebar_collapsed', String(next));
+            window.dispatchEvent(new Event('petral_sidebar_toggle'));
+            return next;
+        });
+    };
+
     
     const handleNewWindow = () => {
         window.open(window.location.href, '_blank', 'width=1200,height=800,menubar=no,status=no');
@@ -34,7 +57,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
         <div className="min-h-screen bg-slate-50 font-sans flex flex-col antialiased">
             {/* Header Superior Principal */}
             <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm px-6 py-3">
-                <div className="flex items-center justify-between max-w-[1600px] mx-auto w-full">
+                <div className="flex items-center justify-between max-w-full mx-auto w-full">
                     
                     {/* Logos y Título de App */}
                     <div className="flex items-center gap-3">
@@ -44,6 +67,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                             <span className="text-[10px] text-slate-500 font-bold tracking-wider uppercase">Módulos de Datos Maestros</span>
                         </div>
                     </div>
+
 
                     {/* Título Central del Módulo */}
                     <div className="hidden md:flex flex-col items-center">
@@ -111,11 +135,38 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                 </div>
             </header>
 
+            {/* PESTAÑA / RIBBON FLOTANTE VERTICAL CUANDO EL MENÚ ESTÁ COLAPSADO */}
+            {isSidebarCollapsed && (
+                <button
+                    onClick={toggleSidebar}
+                    className="fixed left-0 top-1/2 -translate-y-1/2 z-50 bg-white hover:bg-slate-100 text-slate-700 py-4 px-2 rounded-r-lg shadow-md flex flex-col items-center gap-2 text-[10px] font-extrabold uppercase tracking-wider cursor-pointer border border-l-0 border-slate-300 transition-all hover:pr-3 group select-none pointer-events-auto"
+                    title="Expandir Menú Lateral de NAVEGACIÓN"
+                >
+                    <PanelLeftOpen size={16} className="text-teal-600 group-hover:scale-110 transition-transform pointer-events-none" />
+                    <span className="[writing-mode:vertical-lr] rotate-180 tracking-widest text-[9px] text-slate-600 font-bold pointer-events-none">EXPANDIR MENÚ</span>
+                </button>
+            )}
+
             {/* Layout Principal con Sidebar Lateral de Maestros */}
-            <div className="flex-1 flex max-w-[1600px] w-full mx-auto p-6 gap-6">
+            <div className="flex-1 flex max-w-full w-full mx-auto p-4 gap-4">
                 
-                {/* Sidebar Izquierdo */}
-                <aside className="w-64 shrink-0 flex flex-col gap-4 hidden md:flex">
+                {/* Sidebar Izquierdo Colapsable */}
+                <aside className={`${isSidebarCollapsed ? 'w-0 opacity-0 overflow-hidden p-0 m-0 border-0 pointer-events-none' : 'w-64 opacity-100'} shrink-0 flex flex-col gap-4 hidden md:flex transition-all duration-300`}>
+
+                    {/* CINTA / RIBBON SUPERIOR DEL SIDEBAR */}
+                    <button
+                        onClick={toggleSidebar}
+                        className="w-full py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center justify-between shadow-sm cursor-pointer transition-all border border-slate-300 select-none group pointer-events-auto"
+                        title="Colapsar Menú Lateral hacia la Izquierda (Anchar 100% Pantalla)"
+                    >
+                        <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-slate-700 pointer-events-none">
+                            <PanelLeftClose size={15} className="text-slate-500 group-hover:-translate-x-0.5 transition-transform" /> COLAPSAR MAESTROS
+                        </span>
+                        <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-mono font-bold pointer-events-none">100%</span>
+                    </button>
+
+
+
                     <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 flex flex-col gap-2">
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-1">Menú de Navegación</div>
                         

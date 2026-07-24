@@ -106,8 +106,17 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
 
     const getBaseValue = (vesselId: string, conceptKey: string) => {
         const row = matrixData.find(m => m.vessel_id === vesselId);
-        if (row && row[conceptKey] !== undefined) return row[conceptKey];
-        return 0;
+        if (row && row[conceptKey] !== undefined && row[conceptKey] !== null && row[conceptKey] !== 0) {
+            return row[conceptKey];
+        }
+        // Fallbacks operativos realistas por defecto
+        if (conceptKey === 'ritmo_carga' || conceptKey === 'ritmo_descarga') return 500;
+        if (conceptKey === 'amarre_hrs') return 3;
+        if (conceptKey === 'desamarre_hrs') return 2;
+        if (conceptKey === 'tugboats_in' || conceptKey === 'tugboats_out') return 2;
+        if (conceptKey === 'time_to_count_carga_hrs' || conceptKey === 'time_to_count_descarga_hrs') return 6;
+        if (conceptKey === 'maneuver_carga_hrs' || conceptKey === 'maneuver_descarga_hrs') return 2;
+        return row ? (row[conceptKey] ?? 0) : 0;
     };
 
     const getParamValue = (vesselId: string, conceptId: string) => {
@@ -149,17 +158,17 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
         port_id: portId,
         terminal_id: terminalId,
         vessel_id: vesselId,
-        ritmo_carga: 0,
-        ritmo_descarga: 0,
-        amarre_hrs: 0,
-        desamarre_hrs: 0,
+        ritmo_carga: 500,
+        ritmo_descarga: 500,
+        amarre_hrs: 3.0,
+        desamarre_hrs: 2.0,
         time_to_count_carga_hrs: 6.0,
         time_to_count_descarga_hrs: 6.0,
         maneuver_carga_hrs: 2.0,
         maneuver_descarga_hrs: 2.0,
-        tugboats_in: 0,
-        tugboats_out: 0,
-        tugboats_count: 0,
+        tugboats_in: 2,
+        tugboats_out: 2,
+        tugboats_count: 2,
         parameters: {} as Record<string, any>
     });
 
@@ -208,17 +217,18 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
     };
 
     const baseConcepts = [
-        { key: 'ritmo_carga', label: 'Ritmo de Carga (MT/hr)' },
-        { key: 'ritmo_descarga', label: 'Ritmo de Descarga (MT/hr)' },
-        { key: 'amarre_hrs', label: 'Tiempo Amarre / Atraque (Hrs)' },
-        { key: 'desamarre_hrs', label: 'Tiempo Desamarre / Zarpe (Hrs)' },
-        { key: 'time_to_count_carga_hrs', label: 'Time to Count Carga (Hrs - Manguera/Aduana)' },
-        { key: 'time_to_count_descarga_hrs', label: 'Time to Count Descarga (Hrs - Manguera/Aduana)' },
-        { key: 'maneuver_carga_hrs', label: 'Tiempo Maniobra Carga Extra (Hrs)' },
-        { key: 'maneuver_descarga_hrs', label: 'Tiempo Maniobra Descarga Extra (Hrs)' },
-        { key: 'tugboats_in', label: 'Remolcadores Ingreso / Atraque (Tugboats IN)' },
-        { key: 'tugboats_out', label: 'Remolcadores Salida / Desatraque (Tugboats OUT)' }
+        { key: 'ritmo_carga', label: 'Ritmo de Carga (MT/hr)', comment: 'Velocidad neta de bombeo/transferencia de carga por hora' },
+        { key: 'ritmo_descarga', label: 'Ritmo de Descarga (MT/hr)', comment: 'Velocidad neta de descarga de producto por hora' },
+        { key: 'amarre_hrs', label: 'Tiempo Amarre / Atraque (Hrs)', comment: 'Maniobra desde canal a muelle, amarrado de espías' },
+        { key: 'desamarre_hrs', label: 'Tiempo Desamarre / Zarpe (Hrs)', comment: 'Suelta de espías, maniobra de práctico y salida a mar' },
+        { key: 'time_to_count_carga_hrs', label: 'Time to Count Carga (Hrs)', comment: 'Tiempo de preparación (mangueras/aduana) previo al Laytime' },
+        { key: 'time_to_count_descarga_hrs', label: 'Time to Count Descarga (Hrs)', comment: 'Tiempo de inspección tanques/desglose previo al Laytime' },
+        { key: 'maneuver_carga_hrs', label: 'Tiempo Maniobra Carga Extra (Hrs)', comment: 'Horas muertas adicionales por congestión/marejadas/noches' },
+        { key: 'maneuver_descarga_hrs', label: 'Tiempo Maniobra Descarga Extra (Hrs)', comment: 'Horas muertas adicionales por congestión/marejadas/noches' },
+        { key: 'tugboats_in', label: 'Remolcadores Ingreso (Tugboats IN)', comment: 'Nro remolcadores exigidos por Capitanía para atraque ingreso' },
+        { key: 'tugboats_out', label: 'Remolcadores Salida (Tugboats OUT)', comment: 'Nro remolcadores exigidos por Capitanía para zarpe salida' }
     ];
+
 
     const groupedRules: Record<string, any[]> = {};
     rules.forEach(rule => {
@@ -320,8 +330,8 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
                                 <td className="p-2 border-b border-r border-slate-200 text-center">
                                     <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">FÍSICA (TIEMPOS)</span>
                                 </td>
-                                <td className="p-2 border-b border-r border-slate-200 text-xs text-slate-500 italic">
-                                    Valor base de la operación
+                                <td className="p-2 border-b border-r border-slate-200 text-[11px] text-slate-500 italic">
+                                    {concept.comment}
                                 </td>
                                 {vessels.map(v => (
                                     <td key={`${concept.key}-${v.vessel_id}`} className="p-1 border-b border-r border-slate-200">

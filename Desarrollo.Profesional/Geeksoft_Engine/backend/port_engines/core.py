@@ -1,5 +1,6 @@
 from . import calculator_pe
 from . import calculator_cl
+from . import calculator_callao
 
 def evaluate_formula(template: str, variables: dict) -> float:
     """
@@ -33,16 +34,19 @@ def evaluate_formula(template: str, variables: dict) -> float:
         print(f"Error evaluando fórmula '{template}' con vars {variables}: {e}")
         return 0.0
 
-def calculate_dynamic_port_costs(port_id: str, country: str, v_data: dict, port_hours: float, matrix_rows: list) -> dict:
+def calculate_dynamic_port_costs(port_id: str, country: str, v_data: dict, port_hours: float, matrix_rows: list = None, inputs: dict = None) -> dict:
     """
-    Función orquestadora que delega el cálculo al motor del país correspondiente.
-    matrix_rows es la lista de diccionarios que vienen de port_costs_matrix filtrados 
-    previamente por cliente, terminal y operación.
+    Función orquestadora que delega el cálculo al motor del puerto o país correspondiente.
+    matrix_rows es la lista de diccionarios que vienen de port_costs_matrix.
     """
     country = str(country).upper()
+    port_id_clean = str(port_id).upper()
     
-    if country in ['CL', 'CHILE']:
-        return calculator_cl.run(matrix_rows, v_data, port_hours, evaluate_formula)
+    if "CALLAO" in port_id_clean or port_id_clean in ["PE-CAL", "CALLAO_APM"]:
+        return calculator_callao.run(v_data, port_hours, inputs)
+    elif country in ['CL', 'CHILE']:
+        return calculator_cl.run(matrix_rows or [], v_data, port_hours, evaluate_formula)
     else:
-        # Default a Perú (incluyendo Ecuador por ahora)
-        return calculator_pe.run(matrix_rows, v_data, port_hours, evaluate_formula)
+        # Default a Perú
+        return calculator_pe.run(matrix_rows or [], v_data, port_hours, evaluate_formula)
+
