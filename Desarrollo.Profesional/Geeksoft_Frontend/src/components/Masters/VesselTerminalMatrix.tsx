@@ -106,18 +106,36 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
 
     const getBaseValue = (vesselId: string, conceptKey: string) => {
         const row = matrixData.find(m => m.vessel_id === vesselId);
-        if (row && row[conceptKey] !== undefined && row[conceptKey] !== null && row[conceptKey] !== 0) {
+        if (row && row[conceptKey] !== undefined && row[conceptKey] !== null && row[conceptKey] !== 0 && row[conceptKey] !== '') {
             return row[conceptKey];
         }
-        // Fallbacks operativos realistas por defecto
-        if (conceptKey === 'ritmo_carga' || conceptKey === 'ritmo_descarga') return 500;
-        if (conceptKey === 'amarre_hrs') return 3;
-        if (conceptKey === 'desamarre_hrs') return 2;
-        if (conceptKey === 'tugboats_in' || conceptKey === 'tugboats_out') return 2;
-        if (conceptKey === 'time_to_count_carga_hrs' || conceptKey === 'time_to_count_descarga_hrs') return 6;
-        if (conceptKey === 'maneuver_carga_hrs' || conceptKey === 'maneuver_descarga_hrs') return 2;
-        return row ? (row[conceptKey] ?? 0) : 0;
+        
+        // Si el puerto/terminal tiene motor activo (Perú & Chile), retornamos las Q iniciales del motor
+        const cleanPort = (portId || '').toUpperCase();
+        const activePortsWithEngines = [
+            'CALLAO', 'PE-CAL', 
+            'MARCONA', 'SAN_JUAN', 'PE-MAR', 
+            'MATARANI', 'PE-MAT', 
+            'ILO', 'PE-ILO', 'SPCC_ILO',
+            'MEJILLONES', 'INTERACID', 'TERQUIM', 'BARQUITO',
+            'CL-MEJ', 'CL-INT', 'CL-TRQ', 'CL-BAR'
+        ];
+        const hasEngine = activePortsWithEngines.some(p => cleanPort.includes(p));
+
+
+        if (hasEngine) {
+            if (conceptKey === 'ritmo_carga' || conceptKey === 'ritmo_descarga') return 500;
+            if (conceptKey === 'amarre_hrs') return 3;
+            if (conceptKey === 'desamarre_hrs') return 2;
+            if (conceptKey === 'tugboats_in' || conceptKey === 'tugboats_out') return 2;
+            if (conceptKey === 'time_to_count_carga_hrs' || conceptKey === 'time_to_count_descarga_hrs') return 6;
+            if (conceptKey === 'maneuver_carga_hrs' || conceptKey === 'maneuver_descarga_hrs') return 2;
+        }
+
+        // Para cualquier otro terminal sin motor ni data -> COMPLETAMENTE EN BLANCO
+        return '';
     };
+
 
     const getParamValue = (vesselId: string, conceptId: string) => {
         const row = matrixData.find(m => m.vessel_id === vesselId);
@@ -340,7 +358,7 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
                                             step="any"
                                             className="w-full text-center p-1.5 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium text-slate-800 bg-transparent hover:bg-white transition-colors"
                                             value={getBaseValue(v.vessel_id, concept.key) === 0 ? '' : getBaseValue(v.vessel_id, concept.key)}
-                                            placeholder="0"
+                                            placeholder=""
                                             onChange={(e) => handleBaseChange(v.vessel_id, concept.key, e.target.value)}
                                         />
                                     </td>
@@ -385,9 +403,10 @@ export const VesselTerminalMatrix: React.FC<VesselTerminalMatrixProps> = ({ port
                                                             step="any"
                                                             className="w-full text-center p-1.5 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium text-slate-800 bg-transparent hover:bg-white transition-colors"
                                                             value={getParamValue(v.vessel_id, rule.concept_id)}
-                                                            placeholder="0"
+                                                            placeholder=""
                                                             onChange={(e) => handleParamChange(v.vessel_id, rule.concept_id, e.target.value)}
                                                         />
+
                                                     ) : (
                                                         <div className="w-full text-center p-1.5 text-transparent select-none">-</div>
                                                     )}

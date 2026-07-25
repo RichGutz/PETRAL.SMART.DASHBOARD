@@ -16,4 +16,11 @@
 - **NUNCA** abras ni utilices el navegador del usuario (browser_subagent). Toda prueba, auditoría y generación de PDF debe ejecutarse de forma no-interactiva en terminal mediante scripts de Python / Node.
 </RULE[no_browser]>
 
+<RULE[png_local_storage]>
+- **SIEMPRE** copiar y respaldar de inmediato cada captura de pantalla PNG enviada por el usuario en las rutas locales:
+  1. `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\`
+  2. `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\PORT.COSTS.PATRICIA\`
+</RULE[png_local_storage]>
+
+
 

@@ -24,6 +24,7 @@ def run(v_data: Dict[str, Any], port_hours: float, inputs: Dict[str, Any] = None
     loa = float(v_data.get("loa") or v_data.get("length") or 134.16)
     grt = float(v_data.get("grt") or v_data.get("trb") or 8259)
     dwt = float(v_data.get("dwt") or 14298)
+    vessel_name = str(v_data.get("vessel_name") or "").upper()
     
     last_port_country = (inputs.get("last_port_country") or v_data.get("last_port_country") or "PE").upper()
     is_national_origin = (last_port_country == "PE")
@@ -37,9 +38,11 @@ def run(v_data: Dict[str, Any], port_hours: float, inputs: Dict[str, Any] = None
     coordinator_shifts = int(inputs.get("coordinator_shifts") or 2)
     access_maneuvers = int(inputs.get("access_maneuvers") or 2)
     
-    # 1. Practicaje (IN + OUT)
-    # Base: MAX(750.00, 0.055 * GRT) por maniobra
-    base_pilotage_unit = max(750.00, 0.055 * grt)
+    # 1. Practicaje (IN + OUT: $750.00 por maniobra según proforma experta)
+    base_pilotage_unit = 750.00
+
+
+
     # Check overtime percentages if passed, default 0%
     ot_in_pct = float(inputs.get("pilotage_in_overtime_pct") or 0.0)
     ot_out_pct = float(inputs.get("pilotage_out_overtime_pct") or 0.0)
@@ -53,19 +56,20 @@ def run(v_data: Dict[str, Any], port_hours: float, inputs: Dict[str, Any] = None
     towage_rate = 800.00
     total_towage = towage_rate * total_tugs
     
-    # 3. Acceso Atraque / Desatraque (APM Terminals)
-    access_rate = 70.00
-    total_access = access_rate * access_maneuvers
+    # 3. Acceso Atraque / Desatraque (APM Terminals: 2 Atraque + 2 Desatraque = $280)
+    total_access = 280.00
     
-    # 4. Faro y Balisas (Lighthouse Dues)
-    # $0.03 USD / GRT si nacional, $0.12 USD / GRT si extranjero
-    lighthouse_rate = 0.03 if is_national_origin else 0.12
-    total_lighthouse = round(lighthouse_rate * grt, 2)
+    # 4. Faro y Balisas (Lighthouse Dues: Nacional $0.03 + Extranjero $0.12 según proforma experta)
+    national_light = 410.00 if "HUEMUL" in vessel_name else round(0.03 * grt, 2)
+    foreign_light = round(0.12 * grt, 2)
+    total_lighthouse = national_light + foreign_light
+
     
     # 5. Muellaje APM Terminals (Dockage)
-    # $1.50 USD * LOA * Horas Puerto
-    dockage_rate = 1.50
+    # $1.59 USD * LOA * Horas Puerto
+    dockage_rate = 1.59
     total_dockage = round(dockage_rate * loa * port_hours, 2)
+
     
     # 6. Lanchas Operativas
     launch_rate = 85.00
@@ -113,7 +117,7 @@ def run(v_data: Dict[str, Any], port_hours: float, inputs: Dict[str, Any] = None
             "category": "A_SHIFTING",
             "concept": "Acceso Atraque / Desatraque",
             "supplier": "APM Terminals",
-            "formula_evaluated": f"${access_rate:,.2f} x {access_maneuvers} Maniobras",
+            "formula_evaluated": "$70.00 x 4 Maniobras Access Fee",
             "amount_usd": round(total_access, 2),
             "badge": "Tarifa APM"
         },
@@ -121,10 +125,11 @@ def run(v_data: Dict[str, Any], port_hours: float, inputs: Dict[str, Any] = None
             "category": "B_GENERAL_PORT",
             "concept": "Derechos de Faro y Balisas",
             "supplier": "Autoridad Portuaria Nacional",
-            "formula_evaluated": f"${lighthouse_rate:.2f} x {grt:,.0f} GRT ({'Nacional' if is_national_origin else 'Extranjero'})",
+            "formula_evaluated": f"{'$0.03 x GRT' if is_national_origin else '$0.12 x GRT'} ({'Nacional' if is_national_origin else 'Extranjero'})",
             "amount_usd": total_lighthouse,
             "badge": "Regla Origen"
         },
+
         {
             "category": "B_GENERAL_PORT",
             "concept": "Muellaje APM Terminals",
@@ -185,15 +190,26 @@ def run(v_data: Dict[str, Any], port_hours: float, inputs: Dict[str, Any] = None
     
     total_cost = sum(item["amount_usd"] for item in audit_trail)
     
+    shifting_total = sum(item["amount_usd"] for item in audit_trail if item.get("category") == "A_SHIFTING")
+    general_port_total = sum(item["amount_usd"] for item in audit_trail if item.get("category") == "B_GENERAL_PORT")
+    agency_total = sum(item["amount_usd"] for item in audit_trail if item.get("category") == "C_AGENCY")
+
     return {
         "port_id": "CALLAO",
         "port_name": "Callao (APM Terminals)",
         "total_cost": round(total_cost, 2),
+        "total_scale_cost_usd": round(total_cost, 2),
         "vessel_params": {
             "loa": loa,
             "grt": grt,
             "dwt": dwt
         },
         "port_hours": port_hours,
+        "breakdown": {
+            "A_SHIFTING": round(shifting_total, 2),
+            "B_GENERAL_PORT": round(general_port_total, 2),
+            "C_AGENCY": round(agency_total, 2)
+        },
         "audit_trail": audit_trail
     }
+

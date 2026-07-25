@@ -427,11 +427,18 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                         >
                                             <span className="text-sm">⚖️</span> Auditoría Final
                                         </button>
+                                        <button 
+                                            onClick={() => navigate('/system-flowchart')}
+                                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'system-flowchart' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                        >
+                                            <span className="text-sm">🗺️</span> Flowchart del Sistema
+                                        </button>
                                     </>
                                 )}
                             </nav>
                         </div>
                     )}
+
 
                     {/* BLOQUE 3: CONFIGURACIÓN */}
                     <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 flex flex-col gap-2">
