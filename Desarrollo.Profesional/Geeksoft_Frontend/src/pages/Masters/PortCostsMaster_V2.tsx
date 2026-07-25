@@ -19,6 +19,14 @@ const getCountryInfo = (countryStr: string) => {
     return { code: fallbackCode, name: countryStr, color: '#64748b' };
 };
 
+// Helper de normalización universal de buques
+const normalizeVesselKey = (vId: string) => {
+    if (!vId) return '';
+    return vId.toUpperCase()
+        .replace(/^B\/?T\s*/, '')
+        .replace(/[\s_-]+/g, '');
+};
+
 export const PortCostsMaster_V2: React.FC = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
@@ -29,19 +37,17 @@ export const PortCostsMaster_V2: React.FC = () => {
     
     // Maestros
     const [ports, setPorts] = useState<any[]>([]);
-    const [rawClients, setRawClients] = useState<any[]>([]);
+    const [_rawClients, setRawClients] = useState<any[]>([]);
     const [filterActivo, setFilterActivo] = useState(true);
     const [filterProspecto, setFilterProspecto] = useState(false);
     const [vessels, setVessels] = useState<any[]>([]);
     
-    // Estado de costos
+    // Estado de costos: costsState[portId][vesselKey][operation][subOp]
     const [costsState, setCostsState] = useState<any>({});
     const [focusedInput, setFocusedInput] = useState<string | null>(null);
     
     // Selección Activa
     const [activePortId, setActivePortId] = useState('');
-    const activeClientId = 'PETRAL';
-
 
     const formatCostValue = (value: number | undefined | null) => {
         if (value == null || isNaN(value)) return '';
@@ -66,33 +72,32 @@ export const PortCostsMaster_V2: React.FC = () => {
 
             setPorts(sortedPorts);
             setRawClients(clientsData || []);
-            setVessels(vesselsData);
+            setVessels(vesselsData || []);
             
             const newState: any = {};
-            staticCostsData.forEach((row: any) => {
+            (staticCostsData || []).forEach((row: any) => {
                 const portId = (row.port_id || '').toUpperCase();
-                const clientId = (row.client_id || 'PETRAL').toUpperCase();
-                const vesselId = (row.vessel_id || '').toUpperCase();
+                const rawVesselId = (row.vessel_id || '').toUpperCase();
+                const vKey = normalizeVesselKey(rawVesselId);
                 const op = (row.operation_type || 'CARGA').toUpperCase();
                 const subOp = row.sub_operation_type || 'MAIN';
 
                 if (!newState[portId]) newState[portId] = {};
-                if (!newState[portId][clientId]) newState[portId][clientId] = {};
-                if (!newState[portId][clientId][vesselId]) {
-                    newState[portId][clientId][vesselId] = {
+                if (!newState[portId][vKey]) {
+                    newState[portId][vKey] = {
                         CARGA: { MAIN: 0, loading_master: 0, other: 0 },
                         DESCARGA: { MAIN: 0, loading_master: 0, other: 0 },
                         updated_at: row.updated_at || null,
-                        updated_by: row.updated_by || null
+                        updated_by: row.updated_by || null,
+                        raw_vessel_id: rawVesselId
                     };
                 }
 
-                if (newState[portId][clientId][vesselId][op]) {
-                    newState[portId][clientId][vesselId][op][subOp] = Number(row.cost || 0);
+                if (newState[portId][vKey][op]) {
+                    newState[portId][vKey][op][subOp] = Number(row.cost || 0);
                 }
-                // Conservar metadata de la última fila leída
-                newState[portId][clientId][vesselId].updated_at = row.updated_at || newState[portId][clientId][vesselId].updated_at;
-                newState[portId][clientId][vesselId].updated_by = row.updated_by || newState[portId][clientId][vesselId].updated_by;
+                if (row.updated_at) newState[portId][vKey].updated_at = row.updated_at;
+                if (row.updated_by) newState[portId][vKey].updated_by = row.updated_by;
             });
             setCostsState(newState);
 
@@ -120,26 +125,27 @@ export const PortCostsMaster_V2: React.FC = () => {
         setFilterActivo(false);
     };
 
-    const handleCostChange = (portId: string, clientId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA', subOp: string, value: string) => {
-
+    const handleCostChange = (portId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA', subOp: string, value: string) => {
         const cleanValue = value.replace(/,/g, '');
         const numValue = parseFloat(cleanValue) || 0;
+        const vKey = normalizeVesselKey(vesselId);
+
         setCostsState((prev: any) => {
             const next = { ...prev };
             if (!next[portId]) next[portId] = {};
-            if (!next[portId][clientId]) next[portId][clientId] = {};
-            if (!next[portId][clientId][vesselId]) {
-                next[portId][clientId][vesselId] = {
+            if (!next[portId][vKey]) {
+                next[portId][vKey] = {
                     CARGA: { MAIN: 0, loading_master: 0, other: 0 },
                     DESCARGA: { MAIN: 0, loading_master: 0, other: 0 },
                     updated_at: null,
-                    updated_by: null
+                    updated_by: null,
+                    raw_vessel_id: vesselId
                 };
             }
-            if (!next[portId][clientId][vesselId][operation]) {
-                next[portId][clientId][vesselId][operation] = { MAIN: 0, loading_master: 0, other: 0 };
+            if (!next[portId][vKey][operation]) {
+                next[portId][vKey][operation] = { MAIN: 0, loading_master: 0, other: 0 };
             }
-            next[portId][clientId][vesselId][operation][subOp] = numValue;
+            next[portId][vKey][operation][subOp] = numValue;
             return next;
         });
     };
@@ -149,43 +155,41 @@ export const PortCostsMaster_V2: React.FC = () => {
             setSaving(true);
             const payload: any[] = [];
             
-            // Recorremos el estado completo para armar el payload de upsert masivo
             Object.keys(costsState).forEach(portId => {
-                Object.keys(costsState[portId]).forEach(clientId => {
-                    Object.keys(costsState[portId][clientId]).forEach(vesselId => {
-                        const costData = costsState[portId][clientId][vesselId];
+                Object.keys(costsState[portId]).forEach(vKey => {
+                    const costData = costsState[portId][vKey];
+                    const targetVesselId = costData.raw_vessel_id || vKey;
+                    
+                    const subOps = ['MAIN', 'loading_master', 'other'];
+                    subOps.forEach(subOp => {
+                        const cargaVal = costData.CARGA?.[subOp] ?? 0;
+                        const descargaVal = costData.DESCARGA?.[subOp] ?? 0;
                         
-                        const subOps = ['MAIN', 'loading_master', 'other'];
-                        subOps.forEach(subOp => {
-                            const cargaVal = costData.CARGA?.[subOp] ?? 0;
-                            const descargaVal = costData.DESCARGA?.[subOp] ?? 0;
-                            
-                            payload.push({
-                                client_id: clientId,
-                                port_id: portId,
-                                operation_type: 'CARGA',
-                                vessel_id: vesselId,
-                                sub_operation_type: subOp,
-                                cost: cargaVal,
-                                updated_by: 'USUARIO'
-                            });
-                            
-                            payload.push({
-                                client_id: clientId,
-                                port_id: portId,
-                                operation_type: 'DESCARGA',
-                                vessel_id: vesselId,
-                                sub_operation_type: subOp,
-                                cost: descargaVal,
-                                updated_by: 'USUARIO'
-                            });
+                        payload.push({
+                            client_id: 'PETRAL',
+                            port_id: portId,
+                            operation_type: 'CARGA',
+                            vessel_id: targetVesselId,
+                            sub_operation_type: subOp,
+                            cost: cargaVal,
+                            updated_by: 'USUARIO'
+                        });
+                        
+                        payload.push({
+                            client_id: 'PETRAL',
+                            port_id: portId,
+                            operation_type: 'DESCARGA',
+                            vessel_id: targetVesselId,
+                            sub_operation_type: subOp,
+                            cost: descargaVal,
+                            updated_by: 'USUARIO'
                         });
                     });
                 });
             });
             
             await ForecastService.savePortCostsStatic(payload);
-            await fetchData(); // Refresh para traer los nuevos updated_at
+            await fetchData();
             alert("Costos portuarios guardados exitosamente.");
         } catch (error) {
             console.error("Error al guardar costos:", error);
@@ -207,24 +211,19 @@ export const PortCostsMaster_V2: React.FC = () => {
         }
     };
 
-    // Un puerto está "configurado" si tiene al menos un valor > 0 en costsState para PETRAL
+    // Un puerto está configurado si tiene al menos un valor > 0 en costsState
     const isPortConfigured = (portId: string): boolean => {
-        const normalizeStr = (s: string) => (s || '').toUpperCase().replace(/[\s_-]+/g, '');
-        const targetNorm = normalizeStr(portId);
+        const pNorm = (portId || '').toUpperCase().replace(/[\s_-]+/g, '');
         for (const pKey of Object.keys(costsState)) {
-            const pNorm = normalizeStr(pKey);
-            if (pNorm === targetNorm || pNorm.includes(targetNorm) || targetNorm.includes(pNorm)) {
+            const kNorm = pKey.toUpperCase().replace(/[\s_-]+/g, '');
+            if (kNorm === pNorm || kNorm.includes(pNorm) || pNorm.includes(kNorm)) {
                 const portData = costsState[pKey];
-                // Buscar en todos los clientIds
-                for (const clientKey of Object.keys(portData || {})) {
-                    const clientData = portData[clientKey];
-                    for (const vesselKey of Object.keys(clientData || {})) {
-                        const d = clientData[vesselKey];
-                        if (d && typeof d === 'object' && ('CARGA' in d || 'DESCARGA' in d)) {
-                            const totalQ = (d.CARGA?.MAIN || 0) + (d.CARGA?.loading_master || 0) + (d.CARGA?.other || 0)
-                                         + (d.DESCARGA?.MAIN || 0) + (d.DESCARGA?.loading_master || 0) + (d.DESCARGA?.other || 0);
-                            if (totalQ > 0) return true;
-                        }
+                for (const vKey of Object.keys(portData || {})) {
+                    const d = portData[vKey];
+                    if (d && typeof d === 'object') {
+                        const totalQ = (d.CARGA?.MAIN || 0) + (d.CARGA?.loading_master || 0) + (d.CARGA?.other || 0)
+                                     + (d.DESCARGA?.MAIN || 0) + (d.DESCARGA?.loading_master || 0) + (d.DESCARGA?.other || 0);
+                        if (totalQ > 0) return true;
                     }
                 }
             }
@@ -238,56 +237,51 @@ export const PortCostsMaster_V2: React.FC = () => {
             const portObj = ports.find(p => p.port_id === portId);
             const portName = portObj ? portObj.port_name : portId;
 
-            Object.keys(costsState[portId] || {}).forEach(clientId => {
-                const clientObj = rawClients.find(c => c.client_id === clientId);
-                const clientName = clientObj ? clientObj.client_name : clientId;
+            Object.keys(costsState[portId] || {}).forEach(vKey => {
+                const data = costsState[portId][vKey];
+                const vesselId = data.raw_vessel_id || vKey;
+                const vesselObj = vessels.find(v => normalizeVesselKey(v.vessel_id) === vKey || v.vessel_id === vesselId);
+                const vesselName = vesselObj ? vesselObj.vessel_name : vesselId;
 
-                Object.keys(costsState[portId][clientId] || {}).forEach(vesselId => {
-                    const vesselObj = vessels.find(v => v.vessel_id === vesselId);
-                    const vesselName = vesselObj ? vesselObj.vessel_name : vesselId;
+                // CARGA
+                const cMain = data.CARGA?.MAIN || 0;
+                const cLm = data.CARGA?.loading_master || 0;
+                const cOther = data.CARGA?.other || 0;
+                const cTotal = cMain + cLm + cOther;
+                if (cTotal > 0) {
+                    rows.push({
+                        port_name: portName,
+                        client_name: 'PETRAL',
+                        vessel_name: vesselName,
+                        operation: 'Carga',
+                        main_cost: cMain,
+                        lm_cost: cLm,
+                        other_cost: cOther,
+                        total_cost: cTotal
+                    });
+                }
 
-                    const data = costsState[portId][clientId][vesselId];
-                    
-                    // CARGA
-                    const cMain = data.CARGA?.MAIN || 0;
-                    const cLm = data.CARGA?.loading_master || 0;
-                    const cOther = data.CARGA?.other || 0;
-                    const cTotal = cMain + cLm + cOther;
-                    if (cTotal > 0) {
-                        rows.push({
-                            port_name: portName,
-                            client_name: clientName,
-                            vessel_name: vesselName,
-                            operation: 'Carga',
-                            main_cost: cMain,
-                            lm_cost: cLm,
-                            other_cost: cOther,
-                            total_cost: cTotal
-                        });
-                    }
-
-                    // DESCARGA
-                    const dMain = data.DESCARGA?.MAIN || 0;
-                    const dLm = data.DESCARGA?.loading_master || 0;
-                    const dOther = data.DESCARGA?.other || 0;
-                    const dTotal = dMain + dLm + dOther;
-                    if (dTotal > 0) {
-                        rows.push({
-                            port_name: portName,
-                            client_name: clientName,
-                            vessel_name: vesselName,
-                            operation: 'Descarga',
-                            main_cost: dMain,
-                            lm_cost: dLm,
-                            other_cost: dOther,
-                            total_cost: dTotal
-                        });
-                    }
-                });
+                // DESCARGA
+                const dMain = data.DESCARGA?.MAIN || 0;
+                const dLm = data.DESCARGA?.loading_master || 0;
+                const dOther = data.DESCARGA?.other || 0;
+                const dTotal = dMain + dLm + dOther;
+                if (dTotal > 0) {
+                    rows.push({
+                        port_name: portName,
+                        client_name: 'PETRAL',
+                        vessel_name: vesselName,
+                        operation: 'Descarga',
+                        main_cost: dMain,
+                        lm_cost: dLm,
+                        other_cost: dOther,
+                        total_cost: dTotal
+                    });
+                }
             });
         });
         return rows;
-    }, [costsState, ports, rawClients, vessels]);
+    }, [costsState, ports, vessels]);
 
     const exportColumns: ExportColumn[] = [
         { header: 'Puerto', key: 'port_name', type: 'string' },
@@ -461,31 +455,15 @@ export const PortCostsMaster_V2: React.FC = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                         {vessels.map(v => {
                                             const getVesselData = (portId: string, vesselId: string) => {
-                                                const normalizeStr2 = (s: string) => (s || '').toUpperCase().replace(/[\s_-]+/g, '');
-                                                const targetPortNorm = normalizeStr2(portId);
-                                                const targetVesselNorm = normalizeStr2(vesselId);
+                                                const pNorm = (portId || '').toUpperCase().replace(/[\s_-]+/g, '');
+                                                const vKey = normalizeVesselKey(vesselId);
 
                                                 for (const pKey of Object.keys(costsState)) {
-                                                    const pNorm = normalizeStr2(pKey);
-                                                    const matchPort = pNorm === targetPortNorm ||
-                                                        (targetPortNorm.includes('SANJUAN') && pNorm.includes('MARCONA')) ||
-                                                        (targetPortNorm.includes('MARCONA') && pNorm.includes('SANJUAN')) ||
-                                                        (targetPortNorm.includes('CALLAO') && pNorm.includes('CALLAO')) ||
-                                                        (targetPortNorm.includes('MATARANI') && pNorm.includes('MATARANI')) ||
-                                                        (targetPortNorm.includes('ILO') && pNorm.includes('ILO'));
-
-                                                    if (matchPort) {
+                                                    const kNorm = pKey.toUpperCase().replace(/[\s_-]+/g, '');
+                                                    if (kNorm === pNorm || kNorm.includes(pNorm) || pNorm.includes(kNorm)) {
                                                         const portObj = costsState[pKey];
-                                                        if (!portObj) continue;
-                                                        // Buscar dentro de todos los clientIds
-                                                        for (const clientKey of Object.keys(portObj)) {
-                                                            const clientObj = portObj[clientKey];
-                                                            if (!clientObj) continue;
-                                                            for (const vKey of Object.keys(clientObj)) {
-                                                                if (normalizeStr2(vKey) === targetVesselNorm) {
-                                                                    return clientObj[vKey];
-                                                                }
-                                                            }
+                                                        if (portObj && portObj[vKey]) {
+                                                            return portObj[vKey];
                                                         }
                                                     }
                                                 }
@@ -535,7 +513,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                     value={focusedInput === `${v.vessel_id}-CARGA-MAIN` ? (vData.CARGA?.MAIN ?? '') : formatCostValue(vData.CARGA?.MAIN)}
                                                                     onFocus={() => setFocusedInput(`${v.vessel_id}-CARGA-MAIN`)}
                                                                     onBlur={() => setFocusedInput(null)}
-                                                                    onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'CARGA', 'MAIN', e.target.value)}
+                                                                    onChange={(e) => handleCostChange(activePortId, v.vessel_id, 'CARGA', 'MAIN', e.target.value)}
                                                                     className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
                                                                     placeholder="0.00"
                                                                 />
@@ -547,7 +525,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                     value={focusedInput === `${v.vessel_id}-CARGA-loading_master` ? (vData.CARGA?.loading_master ?? '') : formatCostValue(vData.CARGA?.loading_master)}
                                                                     onFocus={() => setFocusedInput(`${v.vessel_id}-CARGA-loading_master`)}
                                                                     onBlur={() => setFocusedInput(null)}
-                                                                    onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'CARGA', 'loading_master', e.target.value)}
+                                                                    onChange={(e) => handleCostChange(activePortId, v.vessel_id, 'CARGA', 'loading_master', e.target.value)}
                                                                     className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
                                                                     placeholder="0.00"
                                                                 />
@@ -559,7 +537,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                     value={focusedInput === `${v.vessel_id}-CARGA-other` ? (vData.CARGA?.other ?? '') : formatCostValue(vData.CARGA?.other)}
                                                                     onFocus={() => setFocusedInput(`${v.vessel_id}-CARGA-other`)}
                                                                     onBlur={() => setFocusedInput(null)}
-                                                                    onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'CARGA', 'other', e.target.value)}
+                                                                    onChange={(e) => handleCostChange(activePortId, v.vessel_id, 'CARGA', 'other', e.target.value)}
                                                                     className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
                                                                     placeholder="0.00"
                                                                 />
@@ -577,7 +555,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                     value={focusedInput === `${v.vessel_id}-DESCARGA-MAIN` ? (vData.DESCARGA?.MAIN ?? '') : formatCostValue(vData.DESCARGA?.MAIN)}
                                                                     onFocus={() => setFocusedInput(`${v.vessel_id}-DESCARGA-MAIN`)}
                                                                     onBlur={() => setFocusedInput(null)}
-                                                                    onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'DESCARGA', 'MAIN', e.target.value)}
+                                                                    onChange={(e) => handleCostChange(activePortId, v.vessel_id, 'DESCARGA', 'MAIN', e.target.value)}
                                                                     className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
                                                                     placeholder="0.00"
                                                                 />
@@ -589,7 +567,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                     value={focusedInput === `${v.vessel_id}-DESCARGA-loading_master` ? (vData.DESCARGA?.loading_master ?? '') : formatCostValue(vData.DESCARGA?.loading_master)}
                                                                     onFocus={() => setFocusedInput(`${v.vessel_id}-DESCARGA-loading_master`)}
                                                                     onBlur={() => setFocusedInput(null)}
-                                                                    onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'DESCARGA', 'loading_master', e.target.value)}
+                                                                    onChange={(e) => handleCostChange(activePortId, v.vessel_id, 'DESCARGA', 'loading_master', e.target.value)}
                                                                     className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
                                                                     placeholder="0.00"
                                                                 />
@@ -601,7 +579,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                     value={focusedInput === `${v.vessel_id}-DESCARGA-other` ? (vData.DESCARGA?.other ?? '') : formatCostValue(vData.DESCARGA?.other)}
                                                                     onFocus={() => setFocusedInput(`${v.vessel_id}-DESCARGA-other`)}
                                                                     onBlur={() => setFocusedInput(null)}
-                                                                    onChange={(e) => handleCostChange(activePortId, activeClientId, v.vessel_id, 'DESCARGA', 'other', e.target.value)}
+                                                                    onChange={(e) => handleCostChange(activePortId, v.vessel_id, 'DESCARGA', 'other', e.target.value)}
                                                                     className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
                                                                     placeholder="0.00"
                                                                 />

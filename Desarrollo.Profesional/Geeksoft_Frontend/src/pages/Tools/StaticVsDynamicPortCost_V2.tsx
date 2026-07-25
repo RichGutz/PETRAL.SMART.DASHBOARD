@@ -6,6 +6,14 @@ import { Anchor, Layers, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react'
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
 
+// Normalizador universal de buques
+const normalizeVesselKey = (vId: string) => {
+    if (!vId) return '';
+    return vId.toUpperCase()
+        .replace(/^B\/?T\s*/, '')
+        .replace(/[\s_-]+/g, '');
+};
+
 // Helper para banderas y países
 const getCountryInfo = (countryStr: string) => {
     if (!countryStr) return { code: 'pe', name: 'Perú', color: '#dc2626' };
@@ -73,11 +81,11 @@ export const StaticVsDynamicPortCost: React.FC = () => {
         const map = new Map<string, number>();
         staticCostsRaw.forEach(row => {
             const pId = (row.port_id || '').toUpperCase();
-            const vId = (row.vessel_id || '').toUpperCase();
+            const vNorm = normalizeVesselKey(row.vessel_id || '');
             const op = (row.operation_type || 'CARGA').toUpperCase();
             const cost = Number(row.cost || 0);
 
-            const key = `${pId}_${vId}_${op}`;
+            const key = `${pId}_${vNorm}_${op}`;
             const currentTotal = map.get(key) || 0;
             map.set(key, currentTotal + cost);
         });
@@ -162,10 +170,8 @@ export const StaticVsDynamicPortCost: React.FC = () => {
         PETRAL_FLEET.forEach(vessel => {
             operations.forEach(op => {
                 const pUpper = activePortId.toUpperCase();
-                const vUpper = vessel.vesselId.toUpperCase();
-                const keyStaticExact = `${pUpper}_${vUpper}_${op}`;
-
-                // ESTÁTICO: Solo lo que viene de Supabase. Si es 0 → no hay tarifa → se omite esta card.
+                const vNorm = normalizeVesselKey(vessel.vesselId);
+                const keyStaticExact = `${pUpper}_${vNorm}_${op}`;
                 const staticCost = staticMap.get(keyStaticExact) || 0;
                 if (staticCost === 0) return; // Sin dato en BD → excluir
 
