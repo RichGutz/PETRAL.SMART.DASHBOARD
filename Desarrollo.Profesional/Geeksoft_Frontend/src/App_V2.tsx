@@ -14,6 +14,7 @@ import { AuditFinal_V2 } from './pages/Tools/AuditFinal_V2';
 import { MultiCotizador_V2 } from './pages/Tools/MultiCotizador_V2';
 import { SystemFlowchartViewer_V2 } from './pages/Tools/SystemFlowchartViewer_V2';
 import { StaticVsDynamicPortCost } from './pages/Tools/StaticVsDynamicPortCost_V2';
+import { SystemDocumentation_V2 } from './pages/Tools/SystemDocumentation_V2';
 
 
 import { VesselsMaster } from './pages/Masters/VesselsMaster_V2';
@@ -102,6 +103,7 @@ function App_V2() {
                   <Route path="/audit-final" element={<ProtectedRoute module="matriz_financiera"><AuditFinal_V2 /></ProtectedRoute>} />
                   <Route path="/system-flowchart" element={<ProtectedRoute><SystemFlowchartViewer_V2 /></ProtectedRoute>} />
                   <Route path="/static-vs-dynamic-port-cost" element={<ProtectedRoute><StaticVsDynamicPortCost /></ProtectedRoute>} />
+                  <Route path="/system-documentation" element={<ProtectedRoute><SystemDocumentation_V2 /></ProtectedRoute>} />
               </Route>
 
               

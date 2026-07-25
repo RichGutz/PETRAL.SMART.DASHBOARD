@@ -20,6 +20,7 @@ export const ToolsLayout_V2: React.FC = () => {
     else if (location.pathname.includes('/audit-final')) activeTab = 'audit-final';
     else if (location.pathname.includes('/system-flowchart')) activeTab = 'system-flowchart';
     else if (location.pathname.includes('/static-vs-dynamic-port-cost')) activeTab = 'static-vs-dynamic-port-cost';
+    else if (location.pathname.includes('/system-documentation')) activeTab = 'system-documentation';
 
 
     return (
