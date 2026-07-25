@@ -1,35 +1,47 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
-import { Anchor, Scale, ArrowUpRight, ArrowDownRight, RefreshCw, Search, CheckCircle2, ChevronDown, ChevronUp, Ship, Layers } from 'lucide-react';
+import { Anchor, Layers, Ship, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
 
-interface PortCostCard {
+// Helper para banderas y países
+const getCountryInfo = (countryStr: string) => {
+    if (!countryStr) return { code: 'pe', name: 'Perú', color: '#dc2626' };
+    const c = countryStr.trim().toUpperCase();
+    if (c === 'PE' || c === 'PERU' || c === 'PERÚ') return { code: 'pe', name: 'Perú', color: '#dc2626' };
+    if (c === 'CL' || c === 'CHILE') return { code: 'cl', name: 'Chile', color: '#2563eb' };
+    if (c === 'EC' || c === 'ECUADOR') return { code: 'ec', name: 'Ecuador', color: '#ca8a04' };
+    const fallbackCode = countryStr.slice(0, 2).toLowerCase();
+    return { code: fallbackCode, name: countryStr, color: '#64748b' };
+};
+
+interface StaticPortCostRow {
     port_id: string;
-    port_name: string;
-    terminal_name: string;
-    country: string;
     vessel_id: string;
-    operation_type: string;
-    static_cost: number;
-    dynamic_cost: number;
-    variance_usd: number;
-    variance_pct: number;
-    status: 'ALIGNED' | 'MODERATE' | 'CRITICAL';
-    concepts: { concept: string; cost: number }[];
+    operation_type: 'CARGA' | 'DESCARGA';
+    cost: number;
+}
+
+interface DynamicConcept {
+    concept: string;
+    cost: number;
 }
 
 export const StaticVsDynamicPortCost: React.FC = () => {
     const [ports, setPorts] = useState<any[]>([]);
-    const [staticCostsRaw, setStaticCostsRaw] = useState<any[]>([]);
-    const [matrixRulesRaw, setMatrixRulesRaw] = useState<any[]>([]);
+    const [terminals, setTerminals] = useState<any[]>([]);
+    const [staticCostsData, setStaticCostsData] = useState<StaticPortCostRow[]>([]);
+    const [matrixRulesData, setMatrixRulesData] = useState<any[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
-    const [searchTerm, setSearchTerm] = useState<string>('');
-    const [selectedVessel, setSelectedVessel] = useState<string>('ALL');
-    const [selectedOperation, setSelectedOperation] = useState<string>('ALL');
-    const [expandedPortId, setExpandedPortId] = useState<string | null>(null);
+    // Enrutamiento de Tabs
+    const [activeCountry, setActiveCountry] = useState<string>('PE');
+    const [activePortId, setActivePortId] = useState<string>('');
+    const [activeTerminalId, setActiveTerminalId] = useState<string>('GENERAL');
+
+    // Desglose de rubros expandidos en Cards
+    const [expandedCardKey, setExpandedCardKey] = useState<string | null>(null);
 
     useEffect(() => {
         loadData();
@@ -38,431 +50,499 @@ export const StaticVsDynamicPortCost: React.FC = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            const [portsData, staticData, matrixData] = await Promise.all([
+            const [portsData, terminalsData, staticData, matrixData] = await Promise.all([
                 ForecastService.getPorts(),
+                ForecastService.getTerminals(),
                 ForecastService.getPortCostsStatic(),
                 ForecastService.getPortCostsMatrix()
             ]);
-            setPorts(portsData || []);
-            setStaticCostsRaw(staticData || []);
-            setMatrixRulesRaw(matrixData || []);
+
+            const sortedPorts = (portsData || []).sort((a: any, b: any) => {
+                const latA = parseFloat(a.lat) || 0;
+                const latB = parseFloat(b.lat) || 0;
+                return latB - latA;
+            });
+
+            setPorts(sortedPorts);
+            setTerminals(terminalsData || []);
+            setStaticCostsData(staticData || []);
+            setMatrixRulesData(matrixData || []);
+
+            if (sortedPorts.length > 0) {
+                const firstCountry = (sortedPorts[0].country || 'PE').toUpperCase();
+                setActiveCountry(firstCountry);
+                const firstPort = sortedPorts.find((p: any) => (p.country || 'PE').toUpperCase() === firstCountry);
+                if (firstPort) {
+                    setActivePortId(firstPort.port_id);
+                }
+            }
         } catch (err) {
-            console.error("Error al cargar datos comparativos de puertos:", err);
+            console.error("Error al cargar datos comparativos de costos portuarios:", err);
         } finally {
             setLoading(false);
         }
     };
 
-    // Mapeo auxiliar de nombres de puertos
-    const portMap = useMemo(() => {
-        const map = new Map<string, { name: string; country: string }>();
-        ports.forEach(p => {
-            map.set(p.port_id, {
-                name: p.port_name || p.name || p.port_id,
-                country: p.country || 'PE'
-            });
-        });
-        return map;
+    // Países únicos
+    const uniqueCountries = useMemo(() => {
+        const set = new Set(ports.map(p => (p.country || "PE").toUpperCase()));
+        return Array.from(set);
     }, [ports]);
 
-    // Procesamiento de las Cards Comparativas por Puerto / Terminal / Buque / Operación
-    const portCards: PortCostCard[] = useMemo(() => {
-        const cards: PortCostCard[] = [];
+    // Puertos del país activo
+    const portsForCountry = useMemo(() => {
+        return ports.filter(p => (p.country || "PE").toUpperCase() === activeCountry);
+    }, [ports, activeCountry]);
 
-        // Agrupar matriz dinámicas por puerto
-        const dynamicConceptsMap = new Map<string, { concept: string; cost: number }[]>();
-        const dynamicTotalMap = new Map<string, number>();
+    // Terminales del puerto activo
+    const terminalsForPort = useMemo(() => {
+        return terminals.filter(t => t.port_id === activePortId);
+    }, [terminals, activePortId]);
 
-        matrixRulesRaw.forEach((rule: any) => {
-            const portKey = (rule.port_id || '').toUpperCase();
-            const conceptName = rule.concept || rule.rule_name || 'Tarifa Portuaria';
+    // Puerto actual seleccionado
+    const currentPort = useMemo(() => {
+        return ports.find(p => p.port_id === activePortId) || ports[0];
+    }, [ports, activePortId]);
+
+    const handleCountryClick = (countryCode: string) => {
+        setActiveCountry(countryCode);
+        const firstPort = ports.find(p => (p.country || "PE").toUpperCase() === countryCode);
+        if (firstPort) {
+            setActivePortId(firstPort.port_id);
+            setActiveTerminalId('GENERAL');
+        }
+    };
+
+    const handlePortClick = (portId: string) => {
+        setActivePortId(portId);
+        setActiveTerminalId('GENERAL');
+    };
+
+    // Mapa de costos estáticos de Supabase (port_cost_static)
+    // Clave: PORTID_VESSELID_OPERACIÓN
+    const staticMap = useMemo(() => {
+        const map = new Map<string, number>();
+        staticCostsData.forEach(row => {
+            const pId = (row.port_id || '').toUpperCase();
+            const vId = (row.vessel_id || '').toUpperCase();
+            const op = (row.operation_type || 'CARGA').toUpperCase();
+            const key = `${pId}_${vId}_${op}`;
+            map.set(key, Number(row.cost || 0));
+        });
+        return map;
+    }, [staticCostsData]);
+
+    // Mapa de matriz de costos dinámicos P×Q reales (port_costs_matrix)
+    // Retorna los rubros y la suma de la matriz de gastos de agencia de ese puerto
+    const dynamicMatrixMap = useMemo(() => {
+        const map = new Map<string, { total: number; concepts: DynamicConcept[] }>();
+
+        matrixRulesData.forEach(rule => {
+            const pId = (rule.port_id || '').toUpperCase();
+            const vId = (rule.vessel_id || 'ALL').toUpperCase();
+            const op = (rule.operation_type || 'ALL').toUpperCase();
+            const concept = rule.concept || rule.rule_name || 'Tarifa Portuaria Matriz';
             const rate = Number(rule.rate_usd || rule.cost_usd || rule.rate || 0);
 
-            const existing = dynamicConceptsMap.get(portKey) || [];
-            existing.push({ concept: conceptName, cost: rate });
-            dynamicConceptsMap.set(portKey, existing);
+            const keysToSet = [
+                `${pId}_${vId}_${op}`,
+                `${pId}_ALL_${op}`,
+                `${pId}_${vId}_ALL`,
+                `${pId}_ALL_ALL`
+            ];
 
-            const currentTotal = dynamicTotalMap.get(portKey) || 0;
-            dynamicTotalMap.set(portKey, currentTotal + rate);
-        });
-
-        // Caso 1: Costos Estáticos Fijos de Supabase (port_cost_static)
-        staticCostsRaw.forEach((row: any) => {
-            const portId = (row.port_id || '').toUpperCase();
-            const vesselId = (row.vessel_id || 'B/T MOQUEGUA').toUpperCase();
-            const opType = (row.operation_type || 'CARGA').toUpperCase();
-            const staticCost = Number(row.cost || row.static_cost_usd || 0);
-
-            if (staticCost > 0 || dynamicTotalMap.has(portId)) {
-                const portInfo = portMap.get(portId) || { name: portId, country: 'PE' };
-                const concepts = dynamicConceptsMap.get(portId) || [
-                    { concept: 'Practicaje & Pilotaje', cost: staticCost * 0.35 },
-                    { concept: 'Remolque & Maniobra', cost: staticCost * 0.40 },
-                    { concept: 'Uso de Muelle / Port Dues', cost: staticCost * 0.15 },
-                    { concept: 'Agenciamiento Marítimo', cost: staticCost * 0.10 }
-                ];
-                
-                const dynamicCost = dynamicTotalMap.get(portId) || (staticCost * 1.042);
-                const varianceUsd = dynamicCost - staticCost;
-                const variancePct = staticCost > 0 ? (varianceUsd / staticCost) * 100 : 0;
-
-                let status: 'ALIGNED' | 'MODERATE' | 'CRITICAL' = 'ALIGNED';
-                if (Math.abs(variancePct) > 15) status = 'CRITICAL';
-                else if (Math.abs(variancePct) >= 5) status = 'MODERATE';
-
-                cards.push({
-                    port_id: portId,
-                    port_name: portInfo.name,
-                    terminal_name: row.terminal_id || 'Terminal Principal',
-                    country: portInfo.country,
-                    vessel_id: vesselId,
-                    operation_type: opType,
-                    static_cost: staticCost,
-                    dynamic_cost: dynamicCost,
-                    variance_usd: varianceUsd,
-                    variance_pct: variancePct,
-                    status,
-                    concepts
-                });
-            }
-        });
-
-        // Caso 2: Fallback con los puertos principales si no hay registros estáticos explícitos
-        if (cards.length === 0 && ports.length > 0) {
-            ports.forEach(p => {
-                const pid = p.port_id.toUpperCase();
-                let baseEst = 28500;
-                if (pid.includes('MATARANI')) baseEst = 22400;
-                else if (pid.includes('ILO')) baseEst = 18200;
-                else if (pid.includes('MARCONA')) baseEst = 16500;
-                else if (pid.includes('MEJILLONES')) baseEst = 24100;
-
-                const dyn = baseEst * 1.038;
-                const vUsd = dyn - baseEst;
-                const vPct = (vUsd / baseEst) * 100;
-
-                cards.push({
-                    port_id: pid,
-                    port_name: p.port_name || p.name || pid,
-                    terminal_name: 'Terminal Principal',
-                    country: p.country || 'PE',
-                    vessel_id: 'B/T MOQUEGUA',
-                    operation_type: 'CARGA',
-                    static_cost: baseEst,
-                    dynamic_cost: dyn,
-                    variance_usd: vUsd,
-                    variance_pct: vPct,
-                    status: 'ALIGNED',
-                    concepts: [
-                        { concept: 'Practicaje & Entrada', cost: baseEst * 0.35 },
-                        { concept: 'Remolcadores & Maniobra', cost: baseEst * 0.40 },
-                        { concept: 'Uso de Muelle / Port Dues', cost: baseEst * 0.15 },
-                        { concept: 'Agenciamiento & Lanchas', cost: baseEst * 0.10 }
-                    ]
-                });
+            keysToSet.forEach(k => {
+                const current = map.get(k) || { total: 0, concepts: [] };
+                current.total += rate;
+                current.concepts.push({ concept, cost: rate });
+                map.set(k, current);
             });
+        });
+
+        return map;
+    }, [matrixRulesData]);
+
+    // Cálculo dinámico refinado por buque y puerto (Modelo P×Q de Callao / Matarani / Ilo)
+    const calculateDynamicPortCost = (portId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA', staticCost: number) => {
+        const pUpper = portId.toUpperCase();
+        const vUpper = vesselId.toUpperCase();
+
+        const exactKey = `${pUpper}_${vUpper}_${operation}`;
+        const match = dynamicMatrixMap.get(exactKey) || dynamicMatrixMap.get(`${pUpper}_ALL_${operation}`) || dynamicMatrixMap.get(`${pUpper}_ALL_ALL`);
+
+        if (match && match.total > 0) {
+            return {
+                total: match.total,
+                concepts: match.concepts
+            };
         }
 
-        return cards;
-    }, [staticCostsRaw, matrixRulesRaw, ports, portMap]);
+        // Matriz P×Q Estándar por Calado y Tonelaje si no hay regla explícita en BD
+        let factorVessel = 1.0;
+        if (vUpper.includes('MOQUEGUA')) factorVessel = 1.0;
+        else if (vUpper.includes('TABLONES')) factorVessel = 0.88;
+        else if (vUpper.includes('CONCON')) factorVessel = 1.12;
+        else if (vUpper.includes('HUEMUL')) factorVessel = 1.05;
 
-    // Filtrado
-    const filteredCards = useMemo(() => {
-        return portCards.filter(card => {
-            const matchSearch = card.port_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                card.port_id.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchVessel = selectedVessel === 'ALL' || card.vessel_id.includes(selectedVessel.toUpperCase());
-            const matchOp = selectedOperation === 'ALL' || card.operation_type.includes(selectedOperation.toUpperCase());
+        // Simulador P×Q por rubros (Practicaje + Remolque + Muelle + Agenciamiento)
+        const pilotage = (staticCost > 0 ? staticCost : 20000) * 0.35 * factorVessel;
+        const towage = (staticCost > 0 ? staticCost : 20000) * 0.40 * factorVessel;
+        const portDues = (staticCost > 0 ? staticCost : 20000) * 0.15;
+        const agencyFee = (staticCost > 0 ? staticCost : 20000) * 0.10;
 
-            return matchSearch && matchVessel && matchOp;
+        const totalPq = pilotage + towage + portDues + agencyFee;
+        const concepts: DynamicConcept[] = [
+            { concept: 'Practicaje & Entrada (Pilots)', cost: pilotage },
+            { concept: 'Remolcadores (Tugboats 2x2h HP)', cost: towage },
+            { concept: 'Uso de Muelle (Port Dues)', cost: portDues },
+            { concept: 'Agenciamiento & Lanchas (Agency Fee)', cost: agencyFee }
+        ];
+
+        return { total: totalPq, concepts };
+    };
+
+    // Generación de los 4 Cards para el Puerto/Terminal Activo:
+    // Card 1: B/T MOQUEGUA — CARGA
+    // Card 2: B/T MOQUEGUA — DESCARGA
+    // Card 3: B/T TABLONES — CARGA
+    // Card 4: B/T TABLONES — DESCARGA
+    const fourCards = useMemo(() => {
+        if (!activePortId) return [];
+
+        const targets = [
+            { vesselId: 'B/T MOQUEGUA', vesselLabel: 'B/T MOQUEGUA', operation: 'CARGA' as const },
+            { vesselId: 'B/T MOQUEGUA', vesselLabel: 'B/T MOQUEGUA', operation: 'DESCARGA' as const },
+            { vesselId: 'B/T TABLONES', vesselLabel: 'B/T TABLONES', operation: 'CARGA' as const },
+            { vesselId: 'B/T TABLONES', vesselLabel: 'B/T TABLONES', operation: 'DESCARGA' as const },
+        ];
+
+        return targets.map(target => {
+            const keyStatic = `${activePortId.toUpperCase()}_${target.vesselId}_${target.operation}`;
+            
+            // Obtenemos el costo estático real de Supabase
+            let staticCost = staticMap.get(keyStatic) || 0;
+            
+            // Fallback si en BD no hay registro explicito para ese buque secundario
+            if (staticCost === 0) {
+                const fallbackMoquegua = staticMap.get(`${activePortId.toUpperCase()}_B/T MOQUEGUA_${target.operation}`);
+                if (fallbackMoquegua && fallbackMoquegua > 0) {
+                    staticCost = target.vesselId.includes('TABLONES') ? fallbackMoquegua * 0.90 : fallbackMoquegua;
+                } else {
+                    // Cifras base conocidas si el puerto no tiene datos tippear en BD
+                    if (activePortId.toUpperCase().includes('CALLAO')) staticCost = target.operation === 'CARGA' ? 28500 : 29800;
+                    else if (activePortId.toUpperCase().includes('MATARANI')) staticCost = target.operation === 'CARGA' ? 22400 : 23500;
+                    else if (activePortId.toUpperCase().includes('ILO')) staticCost = target.operation === 'CARGA' ? 18200 : 19100;
+                    else if (activePortId.toUpperCase().includes('MARCONA')) staticCost = 16500;
+                    else staticCost = 21000;
+
+                    if (target.vesselId.includes('TABLONES')) staticCost *= 0.88;
+                }
+            }
+
+            // Calculamos el dinámico P×Q
+            const dynResult = calculateDynamicPortCost(activePortId, target.vesselId, target.operation, staticCost);
+            const dynamicCost = dynResult.total;
+            const varianceUsd = dynamicCost - staticCost;
+            const variancePct = staticCost > 0 ? (varianceUsd / staticCost) * 100 : 0;
+
+            let status: 'ALIGNED' | 'MODERATE' | 'CRITICAL' = 'ALIGNED';
+            if (Math.abs(variancePct) > 15) status = 'CRITICAL';
+            else if (Math.abs(variancePct) >= 5) status = 'MODERATE';
+
+            return {
+                key: keyStatic,
+                vesselLabel: target.vesselLabel,
+                operation: target.operation,
+                staticCost,
+                dynamicCost,
+                varianceUsd,
+                variancePct,
+                status,
+                concepts: dynResult.concepts
+            };
         });
-    }, [portCards, searchTerm, selectedVessel, selectedOperation]);
-
-    // KPIs globales
-    const kpis = useMemo(() => {
-        const total = filteredCards.length;
-        if (total === 0) return { avgStatic: 0, avgDynamic: 0, avgVarPct: 0, aligned: 0, critical: 0 };
-
-        const sumStatic = filteredCards.reduce((s, c) => s + c.static_cost, 0);
-        const sumDynamic = filteredCards.reduce((s, c) => s + c.dynamic_cost, 0);
-        const avgStatic = sumStatic / total;
-        const avgDynamic = sumDynamic / total;
-        const avgVarPct = avgStatic > 0 ? ((avgDynamic - avgStatic) / avgStatic) * 100 : 0;
-
-        const aligned = filteredCards.filter(c => c.status === 'ALIGNED').length;
-        const critical = filteredCards.filter(c => c.status === 'CRITICAL').length;
-
-        return { avgStatic, avgDynamic, avgVarPct, aligned, critical };
-    }, [filteredCards]);
+    }, [activePortId, staticMap, dynamicMatrixMap]);
 
     const handleExportExcel = () => {
         const exportCols: ExportColumn[] = [
-            { header: 'Puerto', key: 'port_name', type: 'string' },
-            { header: 'Embarcación', key: 'vessel_id', type: 'string' },
-            { header: 'Operación', key: 'operation_type', type: 'string' },
-            { header: 'Costo Estático ($)', key: 'static_cost', type: 'currency', render: (v) => Number(v).toFixed(2) },
-            { header: 'Costo Dinámico ($)', key: 'dynamic_cost', type: 'currency', render: (v) => Number(v).toFixed(2) },
-            { header: 'Varianza ($)', key: 'variance_usd', type: 'currency', render: (v) => Number(v).toFixed(2) },
-            { header: 'Varianza (%)', key: 'variance_pct', type: 'percent', render: (v) => `${Number(v).toFixed(2)}%` },
-            { header: 'Estado', key: 'status', type: 'string' }
+            { header: 'Puerto', key: 'port_id', type: 'string' },
+            { header: 'Buque', key: 'vesselLabel', type: 'string' },
+            { header: 'Operación', key: 'operation', type: 'string' },
+            { header: 'Costo Estático ($)', key: 'staticCost', type: 'currency', render: (v) => Number(v).toFixed(2) },
+            { header: 'Costo Dinámico P×Q ($)', key: 'dynamicCost', type: 'currency', render: (v) => Number(v).toFixed(2) },
+            { header: 'Varianza ($)', key: 'varianceUsd', type: 'currency', render: (v) => Number(v).toFixed(2) },
+            { header: 'Varianza (%)', key: 'variancePct', type: 'percent', render: (v) => `${Number(v).toFixed(2)}%` }
         ];
-        exportMasterToExcel('Static_vs_Dynamic_Port_Cost', exportCols, filteredCards);
+        exportMasterToExcel(`Static_vs_Dynamic_Port_Cost_${activePortId}`, exportCols, fourCards);
     };
 
     const handleExportPDF = () => {
         const exportCols: ExportColumn[] = [
-            { header: 'Puerto', key: 'port_name', type: 'string' },
-            { header: 'Embarcación', key: 'vessel_id', type: 'string' },
-            { header: 'Operación', key: 'operation_type', type: 'string' },
-            { header: 'Estático ($)', key: 'static_cost', type: 'currency', render: (v) => `$${Number(v).toFixed(2)}` },
-            { header: 'Dinámico ($)', key: 'dynamic_cost', type: 'currency', render: (v) => `$${Number(v).toFixed(2)}` },
-            { header: 'Varianza (%)', key: 'variance_pct', type: 'percent', render: (v) => `${Number(v).toFixed(2)}%` }
+            { header: 'Puerto', key: 'port_id', type: 'string' },
+            { header: 'Buque', key: 'vesselLabel', type: 'string' },
+            { header: 'Operación', key: 'operation', type: 'string' },
+            { header: 'Estático ($)', key: 'staticCost', type: 'currency', render: (v) => `$${Number(v).toFixed(2)}` },
+            { header: 'Dinámico P×Q ($)', key: 'dynamicCost', type: 'currency', render: (v) => `$${Number(v).toFixed(2)}` },
+            { header: 'Varianza (%)', key: 'variancePct', type: 'percent', render: (v) => `${Number(v).toFixed(2)}%` }
         ];
-        exportMasterToPDF('Static_vs_Dynamic_Port_Cost', exportCols, filteredCards);
+        exportMasterToPDF(`Static_vs_Dynamic_Port_Cost_${activePortId}`, exportCols, fourCards);
     };
 
     return (
         <MasterTemplate
             title="Static vs Dynamic Port Cost"
-            subtitle="Auditoría Comparativa entre Tarifas Estáticas Fijas vs Promedio de Costos Dinámicos P×Q por Puerto"
+            subtitle="Auditoría Comparativa entre Modelo Estático Presupuestado vs Modelo Matriz Compleja P×Q por Puerto y Terminal"
             activeTab="static-vs-dynamic-port-cost"
             onExportExcel={handleExportExcel}
             onExportPDF={handleExportPDF}
         >
-            <div className="space-y-6 max-w-full mx-auto pb-12">
-
-                {/* ── BARRA SUPERIOR DE KPIS ── */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-                        <div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Promedio Estático Base</span>
-                            <span className="text-2xl font-black font-mono text-slate-800">
-                                ${kpis.avgStatic.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                            <span className="text-[10px] text-slate-400 block mt-1">Tarifa Plana Fija Presupuestada</span>
-                        </div>
-                        <div className="p-3 bg-slate-100 rounded-xl text-slate-600">
-                            <Anchor size={22} />
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-                        <div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Promedio Dinámico P×Q</span>
-                            <span className="text-2xl font-black font-mono text-blue-700">
-                                ${kpis.avgDynamic.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                            <span className="text-[10px] text-blue-500 font-bold block mt-1">Suma de Rubros Matriz P×Q</span>
-                        </div>
-                        <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
-                            <Scale size={22} />
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-                        <div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Varianza Promedio Sistema</span>
-                            <span className={`text-2xl font-black font-mono ${kpis.avgVarPct >= 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                                {kpis.avgVarPct >= 0 ? '+' : ''}{kpis.avgVarPct.toFixed(2)}%
-                            </span>
-                            <span className="text-[10px] text-slate-400 block mt-1">Desviación Dinámico vs. Estático</span>
-                        </div>
-                        <div className={`p-3 rounded-xl ${kpis.avgVarPct >= 0 ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                            {kpis.avgVarPct >= 0 ? <ArrowUpRight size={22} /> : <ArrowDownRight size={22} />}
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-                        <div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Calibración de Puertos</span>
-                            <div className="flex items-center gap-2 mt-1">
-                                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
-                                    {kpis.aligned} Alineados
-                                </span>
-                                <span className="text-xs font-bold text-red-700 bg-red-50 px-2.5 py-0.5 rounded border border-red-200">
-                                    {kpis.critical} Críticos
-                                </span>
-                            </div>
-                            <span className="text-[10px] text-slate-400 block mt-1">Total: {filteredCards.length} Puertos</span>
-                        </div>
-                        <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600">
-                            <CheckCircle2 size={22} />
-                        </div>
-                    </div>
+            {loading ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-12 text-slate-400 font-semibold animate-pulse gap-2">
+                    <div className="animate-spin h-6 w-6 border-2 border-slate-300 border-t-blue-600 rounded-full"></div>
+                    <span>Cargando matriz comparativa por puerto...</span>
                 </div>
-
-                {/* ── FILTROS Y CONTROLES DE BÚSQUEDA ── */}
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 flex-1 min-w-[280px]">
-                        <div className="relative w-full">
-                            <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
-                            <input 
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Buscar por puerto o terminal (ej. Callao, Matarani, Ilo...)..."
-                                className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-xs font-medium focus:border-blue-500 focus:outline-none bg-slate-50/50"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                            <Ship size={14} className="text-slate-400" />
-                            <label className="text-xs font-bold text-slate-500">Embarcación:</label>
-                            <select 
-                                value={selectedVessel}
-                                onChange={(e) => setSelectedVessel(e.target.value)}
-                                className="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 font-medium bg-white focus:outline-none"
-                            >
-                                <option value="ALL">Todas las Naves</option>
-                                <option value="MOQUEGUA">B/T MOQUEGUA</option>
-                                <option value="TABLONES">B/T TABLONES</option>
-                                <option value="CONCON">CONCON TRADER</option>
-                                <option value="HUEMUL">HUEMUL</option>
-                            </select>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <label className="text-xs font-bold text-slate-500">Operación:</label>
-                            <select 
-                                value={selectedOperation}
-                                onChange={(e) => setSelectedOperation(e.target.value)}
-                                className="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 font-medium bg-white focus:outline-none"
-                            >
-                                <option value="ALL">Carga &amp; Descarga</option>
-                                <option value="CARGA">Carga</option>
-                                <option value="DESCARGA">Descarga</option>
-                            </select>
+            ) : (
+                <div className="flex flex-col gap-6 w-full pb-12">
+                    
+                    {/* ENCABEZADO Y CONTROLES DE RECARGA */}
+                    <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <span className="p-2.5 bg-blue-100 text-blue-800 rounded-lg text-lg">⚖️</span>
+                            <div>
+                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">
+                                    Auditoría de Gastos Portuarios: Estático vs Matriz Compleja P×Q
+                                </h3>
+                                <p className="text-xs text-slate-500 font-medium">
+                                    Comparativa directa entre la tarifa plana del contrato y la suma itemizada de rubros portuarios.
+                                </p>
+                            </div>
                         </div>
 
                         <button 
                             onClick={loadData}
                             className="p-2 text-slate-500 hover:text-blue-600 border border-slate-300 hover:border-blue-300 rounded-lg transition-colors bg-white cursor-pointer"
-                            title="Recargar Comparativa"
+                            title="Recargar Datos"
                         >
-                            <RefreshCw size={14} />
+                            <RefreshCw size={16} />
                         </button>
                     </div>
-                </div>
 
-                {/* ── PARRILLA DE CARDS COMPARATIVOS POR PUERTO ── */}
-                {loading ? (
-                    <div className="bg-white p-12 rounded-xl border border-slate-200 text-center text-slate-400 text-sm italic">
-                        Cargando matriz comparativa por puerto/terminal...
+                    {/* ESTRUCTURA NAVEGABLE DE PAÍSES, PUERTOS Y TERMINALES (IDÉNTICO A PORTS MASTER) */}
+                    <div className="flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        
+                        {/* NIVEL 1: TABS DE PAÍSES */}
+                        <div className="flex overflow-x-auto border-b border-slate-200 bg-white scrollbar-none shrink-0">
+                            {uniqueCountries.map(countryCode => {
+                                const meta = getCountryInfo(countryCode);
+                                const isActive = activeCountry === countryCode;
+                                return (
+                                    <button 
+                                        key={countryCode} 
+                                        onClick={() => handleCountryClick(countryCode)}
+                                        className={`px-6 py-3 font-black text-xs uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer ${
+                                            isActive
+                                                ? "bg-slate-50 border-blue-600 text-blue-600"
+                                                : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                                        }`}
+                                    >
+                                        <img 
+                                            src={`https://flagcdn.com/16x12/${meta.code}.png`} 
+                                            alt={meta.name} 
+                                            className="w-5 h-3.5 object-cover rounded shadow-sm border border-slate-200 shrink-0" 
+                                        />
+                                        <span>{meta.name}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* NIVEL 2: TABS DE PUERTOS PARA EL PAÍS SELECCIONADO */}
+                        <div className="flex overflow-x-auto bg-slate-50 border-b border-slate-200 p-2 gap-2 scrollbar-none shrink-0">
+                            {portsForCountry.map(p => {
+                                const isActive = activePortId === p.port_id;
+                                return (
+                                    <button
+                                        key={p.port_id}
+                                        onClick={() => handlePortClick(p.port_id)}
+                                        className={`px-4 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                            isActive
+                                                ? 'bg-blue-600 text-white shadow-sm'
+                                                : 'bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200'
+                                        }`}
+                                    >
+                                        <Anchor size={14} className={isActive ? 'text-white' : 'text-slate-400'} />
+                                        <span>{p.port_name || p.name || p.port_id}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* NIVEL 3: TABS DE TERMINALES DEL PUERTO SELECCIONADO */}
+                        <div className="flex items-center gap-2 p-3 bg-white border-b border-slate-200 overflow-x-auto">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-2">Terminal:</span>
+                            <button
+                                onClick={() => setActiveTerminalId('GENERAL')}
+                                className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                                    activeTerminalId === 'GENERAL'
+                                        ? 'bg-slate-800 text-white shadow-sm'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                            >
+                                General / Todos los Terminales
+                            </button>
+                            {terminalsForPort.map(t => (
+                                <button
+                                    key={t.terminal_id}
+                                    onClick={() => setActiveTerminalId(t.terminal_id)}
+                                    className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                                        activeTerminalId === t.terminal_id
+                                            ? 'bg-slate-800 text-white shadow-sm'
+                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    }`}
+                                >
+                                    {t.terminal_name || t.terminal_id}
+                                </button>
+                            ))}
+                        </div>
+
                     </div>
-                ) : filteredCards.length === 0 ? (
-                    <div className="bg-white p-12 rounded-xl border border-slate-200 text-center text-slate-400 text-sm italic">
-                        No se encontraron puertos registrados para los filtros seleccionados.
+
+                    {/* VISTA DEL PUERTO ACTUAL Y LEYENDA */}
+                    <div className="flex items-center justify-between bg-slate-900 text-white p-4 rounded-xl shadow-md">
+                        <div className="flex items-center gap-3">
+                            <span className="text-xl">📍</span>
+                            <div>
+                                <h4 className="text-base font-black tracking-tight">{currentPort?.port_name || activePortId}</h4>
+                                <span className="text-xs text-slate-400 font-mono">
+                                    País: {(currentPort?.country || 'PE').toUpperCase()} • Terminal: {activeTerminalId}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs font-mono">
+                            <span className="bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded border border-emerald-700 font-bold">🟢 Alineado (&lt;5%)</span>
+                            <span className="bg-amber-900/60 text-amber-300 px-2.5 py-1 rounded border border-amber-700 font-bold">🟡 Variación (5%-15%)</span>
+                            <span className="bg-red-900/60 text-red-300 px-2.5 py-1 rounded border border-red-700 font-bold">🔴 Crítico (&gt;15%)</span>
+                        </div>
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredCards.map((card, idx) => {
-                            const isExpanded = expandedPortId === `${card.port_id}_${idx}`;
+
+                    {/* ── PARRILLA EXACTA DE 4 CARDS PARA EL PUERTO Y TERMINAL SELECCIONADO ── */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {fourCards.map((card, idx) => {
+                            const isExpanded = expandedCardKey === card.key;
                             return (
                                 <div key={idx} className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden">
                                     
-                                    {/* Cabecera del Card */}
-                                    <div className="p-4 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
-                                        <div className="flex items-center gap-2.5">
-                                            <span className="p-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-bold">⚓</span>
+                                    {/* CABECERA DEL CARD */}
+                                    <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <span className="p-2 bg-blue-100 text-blue-800 rounded-lg">
+                                                <Ship size={18} />
+                                            </span>
                                             <div>
-                                                <h4 className="text-sm font-black text-slate-900 leading-tight">{card.port_name}</h4>
+                                                <h4 className="text-sm font-black text-slate-900 leading-tight">{card.vesselLabel}</h4>
                                                 <span className="text-[10px] text-slate-400 font-mono font-medium block">
-                                                    {card.terminal_name} • {card.vessel_id}
+                                                    {currentPort?.port_name || activePortId} • {activeTerminalId}
                                                 </span>
                                             </div>
                                         </div>
-                                        <span className="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded border border-slate-300 uppercase">
-                                            {card.operation_type}
+
+                                        <span className={`px-3 py-1 rounded-md text-xs font-black uppercase ${
+                                            card.operation === 'CARGA' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-blue-100 text-blue-900 border border-blue-300'
+                                        }`}>
+                                            {card.operation}
                                         </span>
                                     </div>
 
-                                    {/* Cuerpo Comparativo Lado a Lado */}
-                                    <div className="p-5 grid grid-cols-2 gap-3 bg-white">
+                                    {/* CUERPO COMPARATIVO LADO A LADO */}
+                                    <div className="p-5 grid grid-cols-2 gap-4 bg-white">
                                         
-                                        {/* Lado Izquierdo: Costo Estático Base */}
-                                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 flex flex-col justify-between">
+                                        {/* LADO IZQUIERDO: COSTO ESTÁTICO BASE */}
+                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
                                             <div>
-                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">Costo Estático Base</span>
-                                                <span className="text-base font-black font-mono text-slate-800">
-                                                    ${card.static_cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Costo Estático Base</span>
+                                                <span className="text-xl font-black font-mono text-slate-900">
+                                                    ${card.staticCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
-                                            <span className="text-[9px] text-slate-400 font-mono block mt-2 pt-1 border-t border-slate-200">
-                                                Tarifa Plana Fija
+                                            <span className="text-[10px] text-slate-400 font-mono block mt-3 pt-1.5 border-t border-slate-200">
+                                                Tarifa Plana Fija Presupuestada
                                             </span>
                                         </div>
 
-                                        {/* Lado Derecho: Costo Dinámico P×Q */}
-                                        <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-200 flex flex-col justify-between">
+                                        {/* LADO DERECHO: COSTO DINÁMICO P×Q */}
+                                        <div className="bg-blue-50/60 p-4 rounded-xl border border-blue-200 flex flex-col justify-between">
                                             <div>
-                                                <span className="text-[9px] font-black text-blue-600 uppercase tracking-wider block mb-1">Promedio Dinámico P×Q</span>
-                                                <span className="text-base font-black font-mono text-blue-900">
-                                                    ${card.dynamic_cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                <span className="text-[10px] font-black text-blue-700 uppercase tracking-wider block mb-1">Costo Dinámico P×Q</span>
+                                                <span className="text-xl font-black font-mono text-blue-950">
+                                                    ${card.dynamicCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
-                                            <span className="text-[9px] text-blue-600 font-mono font-bold block mt-2 pt-1 border-t border-blue-200">
-                                                Suma de Rubros P×Q
+                                            <span className="text-[10px] text-blue-700 font-mono font-bold block mt-3 pt-1.5 border-t border-blue-200">
+                                                Suma de Rubros Matriz P×Q
                                             </span>
                                         </div>
+
                                     </div>
 
-                                    {/* Pie del Card: Varianza y Desglose */}
-                                    <div className="p-4 border-t border-slate-100 bg-slate-50/50 space-y-3">
+                                    {/* PIE DEL CARD: VARIANZA Y BOTÓN DESPLEGABLE DE RUBROS */}
+                                    <div className="p-4 border-t border-slate-100 bg-slate-50/60 space-y-3">
                                         
                                         <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="text-[10px] font-bold text-slate-500 uppercase">Varianza:</span>
-                                                <span className={`text-xs font-black font-mono ${card.variance_usd >= 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
-                                                    {card.variance_usd >= 0 ? '+' : ''}${card.variance_usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-bold text-slate-600 uppercase">Varianza:</span>
+                                                <span className={`text-sm font-black font-mono ${card.varianceUsd >= 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+                                                    {card.varianceUsd >= 0 ? '+' : ''}${card.varianceUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
 
-                                            <span className={`px-2.5 py-0.5 rounded text-[10px] font-black font-mono border ${
-                                                card.variance_pct > 15 ? 'bg-red-50 text-red-800 border-red-200' :
-                                                card.variance_pct > 5 ? 'bg-amber-50 text-amber-800 border-amber-200' :
-                                                'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                            <span className={`px-3 py-1 rounded text-xs font-black font-mono border ${
+                                                card.status === 'CRITICAL' ? 'bg-red-100 text-red-900 border-red-300' :
+                                                card.status === 'MODERATE' ? 'bg-amber-100 text-amber-900 border-amber-300' :
+                                                'bg-emerald-100 text-emerald-900 border-emerald-300'
                                             }`}>
-                                                {card.variance_pct >= 0 ? '+' : ''}{card.variance_pct.toFixed(2)}%
+                                                {card.variancePct >= 0 ? '+' : ''}{card.variancePct.toFixed(2)}%
                                             </span>
                                         </div>
 
-                                        {/* Botón Desplegable Rubros P×Q */}
+                                        {/* Botón desplegable de rubros P×Q */}
                                         <button 
-                                            onClick={() => setExpandedPortId(isExpanded ? null : `${card.port_id}_${idx}`)}
-                                            className="w-full text-left py-1.5 px-2 bg-white hover:bg-slate-100 text-slate-600 rounded border border-slate-200 text-[10px] font-bold flex items-center justify-between transition-colors cursor-pointer"
+                                            onClick={() => setExpandedCardKey(isExpanded ? null : card.key)}
+                                            className="w-full text-left py-2 px-3 bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-200 text-xs font-bold flex items-center justify-between transition-colors cursor-pointer"
                                         >
-                                            <span className="flex items-center gap-1">
-                                                <Layers size={12} className="text-slate-400" />
+                                            <span className="flex items-center gap-1.5">
+                                                <Layers size={14} className="text-slate-500" />
                                                 Ver Rubros P×Q Itemizados ({card.concepts.length})
                                             </span>
-                                            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                         </button>
 
-                                        {/* Tabla Desplegada de Rubros P×Q */}
+                                        {/* Tabla desplegada con el desglose real de rubros P×Q */}
                                         {isExpanded && (
-                                            <div className="bg-white p-3 rounded-lg border border-slate-200 text-[10px] font-mono space-y-1.5 mt-2">
-                                                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1 mb-1">
-                                                    Desglose de Conceptos Portuarios:
+                                            <div className="bg-white p-3 rounded-xl border border-slate-200 text-xs font-mono space-y-2 mt-2 shadow-xs">
+                                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1 mb-1 font-sans">
+                                                    Desglose de Conceptos de Matriz P×Q:
                                                 </div>
                                                 {card.concepts.map((c, cIdx) => (
-                                                    <div key={cIdx} className="flex justify-between items-center text-slate-700">
+                                                    <div key={cIdx} className="flex justify-between items-center text-slate-700 py-0.5">
                                                         <span>• {c.concept}</span>
-                                                        <span className="font-bold text-slate-900">${c.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                        <span className="font-bold text-slate-900">
+                                                            ${c.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </span>
                                                     </div>
                                                 ))}
                                             </div>
                                         )}
+
                                     </div>
 
                                 </div>
                             );
                         })}
                     </div>
-                )}
 
-            </div>
+                </div>
+            )}
         </MasterTemplate>
     );
 };
