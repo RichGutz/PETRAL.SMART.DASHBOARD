@@ -71,21 +71,28 @@ export const PortCostsMaster_V2: React.FC = () => {
             const newState: any = {};
             staticCostsData.forEach((row: any) => {
                 const portId = (row.port_id || '').toUpperCase();
+                const clientId = (row.client_id || 'PETRAL').toUpperCase();
                 const vesselId = (row.vessel_id || '').toUpperCase();
                 const op = (row.operation_type || 'CARGA').toUpperCase();
                 const subOp = row.sub_operation_type || 'MAIN';
 
                 if (!newState[portId]) newState[portId] = {};
-                if (!newState[portId][vesselId]) {
-                    newState[portId][vesselId] = {
+                if (!newState[portId][clientId]) newState[portId][clientId] = {};
+                if (!newState[portId][clientId][vesselId]) {
+                    newState[portId][clientId][vesselId] = {
                         CARGA: { MAIN: 0, loading_master: 0, other: 0 },
-                        DESCARGA: { MAIN: 0, loading_master: 0, other: 0 }
+                        DESCARGA: { MAIN: 0, loading_master: 0, other: 0 },
+                        updated_at: row.updated_at || null,
+                        updated_by: row.updated_by || null
                     };
                 }
 
-                if (newState[portId][vesselId][op]) {
-                    newState[portId][vesselId][op][subOp] = Number(row.cost || 0);
+                if (newState[portId][clientId][vesselId][op]) {
+                    newState[portId][clientId][vesselId][op][subOp] = Number(row.cost || 0);
                 }
+                // Conservar metadata de la última fila leída
+                newState[portId][clientId][vesselId].updated_at = row.updated_at || newState[portId][clientId][vesselId].updated_at;
+                newState[portId][clientId][vesselId].updated_by = row.updated_by || newState[portId][clientId][vesselId].updated_by;
             });
             setCostsState(newState);
 
@@ -200,8 +207,7 @@ export const PortCostsMaster_V2: React.FC = () => {
         }
     };
 
-    // Un puerto está "configurado" si tiene al menos un valor Q > 0 en costsState
-    // Esto es 100% data-driven: solo muestran cards los puertos que tienen data real en BD
+    // Un puerto está "configurado" si tiene al menos un valor > 0 en costsState para PETRAL
     const isPortConfigured = (portId: string): boolean => {
         const normalizeStr = (s: string) => (s || '').toUpperCase().replace(/[\s_-]+/g, '');
         const targetNorm = normalizeStr(portId);
@@ -209,12 +215,16 @@ export const PortCostsMaster_V2: React.FC = () => {
             const pNorm = normalizeStr(pKey);
             if (pNorm === targetNorm || pNorm.includes(targetNorm) || targetNorm.includes(pNorm)) {
                 const portData = costsState[pKey];
-                for (const vesselKey of Object.keys(portData || {})) {
-                    const d = portData[vesselKey];
-                    if (d) {
-                        const totalQ = (d.CARGA?.MAIN || 0) + (d.CARGA?.loading_master || 0) + (d.CARGA?.other || 0)
-                                     + (d.DESCARGA?.MAIN || 0) + (d.DESCARGA?.loading_master || 0) + (d.DESCARGA?.other || 0);
-                        if (totalQ > 0) return true;
+                // Buscar en todos los clientIds
+                for (const clientKey of Object.keys(portData || {})) {
+                    const clientData = portData[clientKey];
+                    for (const vesselKey of Object.keys(clientData || {})) {
+                        const d = clientData[vesselKey];
+                        if (d && typeof d === 'object' && ('CARGA' in d || 'DESCARGA' in d)) {
+                            const totalQ = (d.CARGA?.MAIN || 0) + (d.CARGA?.loading_master || 0) + (d.CARGA?.other || 0)
+                                         + (d.DESCARGA?.MAIN || 0) + (d.DESCARGA?.loading_master || 0) + (d.DESCARGA?.other || 0);
+                            if (totalQ > 0) return true;
+                        }
                     }
                 }
             }
@@ -450,16 +460,15 @@ export const PortCostsMaster_V2: React.FC = () => {
                                 ) : activePortId ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                         {vessels.map(v => {
-                                            const normalizeStr = (s: string) => (s || '').toUpperCase().replace(/[\s_-]+/g, '');
-                                            
                                             const getVesselData = (portId: string, vesselId: string) => {
-                                                const targetPortNorm = normalizeStr(portId);
-                                                const targetVesselNorm = normalizeStr(vesselId);
+                                                const normalizeStr2 = (s: string) => (s || '').toUpperCase().replace(/[\s_-]+/g, '');
+                                                const targetPortNorm = normalizeStr2(portId);
+                                                const targetVesselNorm = normalizeStr2(vesselId);
 
                                                 for (const pKey of Object.keys(costsState)) {
-                                                    const pNorm = normalizeStr(pKey);
-                                                    const matchPort = pNorm === targetPortNorm || 
-                                                        (targetPortNorm.includes('SANJUAN') && pNorm.includes('MARCONA')) || 
+                                                    const pNorm = normalizeStr2(pKey);
+                                                    const matchPort = pNorm === targetPortNorm ||
+                                                        (targetPortNorm.includes('SANJUAN') && pNorm.includes('MARCONA')) ||
                                                         (targetPortNorm.includes('MARCONA') && pNorm.includes('SANJUAN')) ||
                                                         (targetPortNorm.includes('CALLAO') && pNorm.includes('CALLAO')) ||
                                                         (targetPortNorm.includes('MATARANI') && pNorm.includes('MATARANI')) ||
@@ -468,10 +477,14 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                     if (matchPort) {
                                                         const portObj = costsState[pKey];
                                                         if (!portObj) continue;
-
-                                                        for (const vKey of Object.keys(portObj)) {
-                                                            if (normalizeStr(vKey) === targetVesselNorm) {
-                                                                return portObj[vKey];
+                                                        // Buscar dentro de todos los clientIds
+                                                        for (const clientKey of Object.keys(portObj)) {
+                                                            const clientObj = portObj[clientKey];
+                                                            if (!clientObj) continue;
+                                                            for (const vKey of Object.keys(clientObj)) {
+                                                                if (normalizeStr2(vKey) === targetVesselNorm) {
+                                                                    return clientObj[vKey];
+                                                                }
                                                             }
                                                         }
                                                     }
