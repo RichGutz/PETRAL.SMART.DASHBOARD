@@ -200,6 +200,28 @@ export const PortCostsMaster_V2: React.FC = () => {
         }
     };
 
+    // Un puerto está "configurado" si tiene al menos un valor Q > 0 en costsState
+    // Esto es 100% data-driven: solo muestran cards los puertos que tienen data real en BD
+    const isPortConfigured = (portId: string): boolean => {
+        const normalizeStr = (s: string) => (s || '').toUpperCase().replace(/[\s_-]+/g, '');
+        const targetNorm = normalizeStr(portId);
+        for (const pKey of Object.keys(costsState)) {
+            const pNorm = normalizeStr(pKey);
+            if (pNorm === targetNorm || pNorm.includes(targetNorm) || targetNorm.includes(pNorm)) {
+                const portData = costsState[pKey];
+                for (const clientKey of Object.keys(portData || {})) {
+                    for (const vesselKey of Object.keys(portData[clientKey] || {})) {
+                        const d = portData[clientKey][vesselKey];
+                        const totalQ = (d?.CARGA?.MAIN || 0) + (d?.CARGA?.loading_master || 0) + (d?.CARGA?.other || 0)
+                                     + (d?.DESCARGA?.MAIN || 0) + (d?.DESCARGA?.loading_master || 0) + (d?.DESCARGA?.other || 0);
+                        if (totalQ > 0) return true;
+                    }
+                }
+            }
+        }
+        return false;
+    };
+
     const exportData = useMemo(() => {
         const rows: any[] = [];
         Object.keys(costsState).forEach(portId => {
@@ -406,7 +428,26 @@ export const PortCostsMaster_V2: React.FC = () => {
 
                             {/* Contenido (Cards de Buques) */}
                             <div className="p-6 bg-slate-50/50 min-h-[400px]">
-                                {activePortId ? (
+                                {activePortId && !isPortConfigured(activePortId) ? (
+                                    // Puerto sin data Q configurada
+                                    <div className="flex flex-col items-center justify-center py-16 gap-4 text-slate-400">
+                                        <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
+                                            <Anchor size={28} className="text-slate-300" />
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="font-black text-slate-500 text-base uppercase tracking-wide">
+                                                {currentPort?.port_name || activePortId}
+                                            </div>
+                                            <div className="text-sm text-slate-400 mt-1 font-semibold">
+                                                Terminal sin data configurada
+                                            </div>
+                                            <div className="text-xs text-slate-300 mt-2 max-w-xs">
+                                                Este puerto no tiene tarifas Q ingresadas en el Motor Geeksoft Engine.
+                                                Los puertos configurados son: Callao, Marcona, Ilo, Matarani, Mejillones y Barquito.
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : activePortId ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                         {vessels.map(v => {
                                             const normalizeStr = (s: string) => (s || '').toUpperCase().replace(/[\s_-]+/g, '');

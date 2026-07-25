@@ -34,9 +34,6 @@ export const PortsMaster_V2: React.FC = () => {
     const [editingPortId, setEditingPortId] = useState<string | null>(null);
     const [editPortData, setEditPortData] = useState<any>(null);
     
-    const [editingTerminalId, setEditingTerminalId] = useState<string | null>(null);
-    const [editTerminalData, setEditTerminalData] = useState<any>(null);
-    
     const [activeTerminalId, setActiveTerminalId] = useState<string>('GENERAL');
     
     const [isSaving, setIsSaving] = useState(false);
@@ -137,27 +134,11 @@ export const PortsMaster_V2: React.FC = () => {
     // Terminal Actions
     const handleNewTerminalClick = () => {
         if (!activePortId) return;
-        setEditingTerminalId('NUEVO');
-        setEditTerminalData({ terminal_id: '', port_id: activePortId, terminal_name: '', is_active: true, mooring_time_hrs: 0, unmooring_time_hrs: 0 });
+        alert('Crear nuevo terminal: funcionalidad disponible próximamente.');
     };
     
-    const handleSaveTerminal = async () => {
-        if (!editTerminalData.terminal_id || !editTerminalData.terminal_name) {
-            alert("ID y Nombre del Terminal son requeridos");
-            return;
-        }
-        try {
-            setIsSaving(true);
-            const payload = { ...editTerminalData, terminal_id: editTerminalData.terminal_id.toUpperCase() };
-            await ForecastService.saveTerminals(payload);
-            setEditingTerminalId(null);
-            await fetchData();
-        } catch(e) {
-            alert("Error al guardar terminal");
-        } finally {
-            setIsSaving(false);
-        }
-    };
+
+
 
 
 
@@ -356,109 +337,43 @@ export const PortsMaster_V2: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Panel de Parámetros Físicos y Tiempos Muertos del Terminal Activo */}
+
+
+                                    {/* Whitelist de puertos/terminales configurados por Geeksoft */}
                                     {(() => {
-                                        const currentTerminalObj = terminalsForPort.find(t => t.terminal_id === activeTerminalId) || terminalsForPort[0];
-                                        if (!currentTerminalObj) return null;
+                                        const CONFIGURED_KEYWORDS = ['CALLAO', 'MARCONA', 'SANJUAN', 'ILO', 'MATARANI', 'MEJILLONES', 'BARQUITO'];
+                                        const norm = (s: string) => (s || '').toUpperCase().replace(/[\s_-]+/g, '');
+                                        const portNorm = norm(currentPort.port_id);
+                                        const isConfigured = CONFIGURED_KEYWORDS.some(kw => portNorm.includes(kw));
+
+                                        if (!isConfigured) {
+                                            return (
+                                                <div className="flex flex-col items-center justify-center py-20 gap-5">
+                                                    <div className="h-20 w-20 rounded-full bg-amber-50 flex items-center justify-center border-2 border-amber-200">
+                                                        <span className="text-3xl">🔒</span>
+                                                    </div>
+                                                    <div className="text-center max-w-md">
+                                                        <div className="font-black text-slate-700 text-base uppercase tracking-wide">
+                                                            Terminal no configurado
+                                                        </div>
+                                                        <div className="mt-2 text-sm font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+                                                            Contáctese con Geeksoft para configuración específica de este puerto/terminal.
+                                                        </div>
+                                                        <div className="mt-3 text-xs text-slate-400">
+                                                            Puertos activos: Callao · Marcona · Ilo · Matarani · Mejillones · Barquito
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
 
                                         return (
-                                            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm mb-4">
-                                                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                                                            ⚙️ Parámetros Físicos & Tiempos Muertos del Terminal: <span className="text-blue-600">{currentTerminalObj.terminal_name} ({currentTerminalObj.terminal_id})</span>
-                                                        </span>
-                                                    </div>
-                                                    <button 
-                                                        onClick={() => {
-                                                            setEditingTerminalId(currentTerminalObj.terminal_id);
-                                                            setEditTerminalData({ ...currentTerminalObj });
-                                                        }}
-                                                        className="px-2.5 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded text-xs font-bold transition-colors flex items-center gap-1"
-                                                    >
-                                                        <Edit3 size={13} /> Editar Parámetros Terminal
-                                                    </button>
-                                                </div>
-
-                                                {/* Edición en caliente del Terminal */}
-                                                {editingTerminalId === currentTerminalObj.terminal_id ? (
-                                                    <div className="bg-slate-50 border border-blue-300 p-3 rounded-lg flex flex-col gap-3">
-                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                                            <div>
-                                                                <label className="text-[10px] font-bold text-slate-500 uppercase">Ritmo Máx Carga (MT/h)</label>
-                                                                <input type="number" className="w-full border p-1.5 rounded text-xs font-bold" value={editTerminalData.max_load_rate || 0} onChange={e=>setEditTerminalData({...editTerminalData, max_load_rate: parseFloat(e.target.value)||0})} />
-                                                            </div>
-                                                            <div>
-                                                                <label className="text-[10px] font-bold text-slate-500 uppercase">Ritmo Máx Descarga (MT/h)</label>
-                                                                <input type="number" className="w-full border p-1.5 rounded text-xs font-bold" value={editTerminalData.max_disch_rate || 0} onChange={e=>setEditTerminalData({...editTerminalData, max_disch_rate: parseFloat(e.target.value)||0})} />
-                                                            </div>
-                                                            <div>
-                                                                <label className="text-[10px] font-bold text-slate-500 uppercase">Calado Máx (m)</label>
-                                                                <input type="number" step="0.1" className="w-full border p-1.5 rounded text-xs font-bold" value={editTerminalData.max_draft || 0} onChange={e=>setEditTerminalData({...editTerminalData, max_draft: parseFloat(e.target.value)||0})} />
-                                                            </div>
-                                                            <div>
-                                                                <label className="text-[10px] font-bold text-slate-500 uppercase">Eslora Máx (LOA m)</label>
-                                                                <input type="number" className="w-full border p-1.5 rounded text-xs font-bold" value={editTerminalData.max_loa || 0} onChange={e=>setEditTerminalData({...editTerminalData, max_loa: parseFloat(e.target.value)||0})} />
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 border-t border-slate-200 pt-3">
-                                                            <div>
-                                                                <label className="text-[10px] font-bold text-slate-500 uppercase">Time to Count Carga (Hrs)</label>
-                                                                <input type="number" step="0.5" className="w-full border p-1.5 rounded text-xs font-bold" value={editTerminalData.time_to_count_carga_hrs || 6.0} onChange={e=>setEditTerminalData({...editTerminalData, time_to_count_carga_hrs: parseFloat(e.target.value)||0})} />
-                                                            </div>
-                                                            <div>
-                                                                <label className="text-[10px] font-bold text-slate-500 uppercase">Time to Count Descarga (Hrs)</label>
-                                                                <input type="number" step="0.5" className="w-full border p-1.5 rounded text-xs font-bold" value={editTerminalData.time_to_count_descarga_hrs || 6.0} onChange={e=>setEditTerminalData({...editTerminalData, time_to_count_descarga_hrs: parseFloat(e.target.value)||0})} />
-                                                            </div>
-                                                            <div>
-                                                                <label className="text-[10px] font-bold text-slate-500 uppercase">Maniobra Carga (Hrs)</label>
-                                                                <input type="number" step="0.5" className="w-full border p-1.5 rounded text-xs font-bold" value={editTerminalData.maneuver_carga_hrs || 2.0} onChange={e=>setEditTerminalData({...editTerminalData, maneuver_carga_hrs: parseFloat(e.target.value)||0})} />
-                                                            </div>
-                                                            <div>
-                                                                <label className="text-[10px] font-bold text-slate-500 uppercase">Maniobra Descarga (Hrs)</label>
-                                                                <input type="number" step="0.5" className="w-full border p-1.5 rounded text-xs font-bold" value={editTerminalData.maneuver_descarga_hrs || 2.0} onChange={e=>setEditTerminalData({...editTerminalData, maneuver_descarga_hrs: parseFloat(e.target.value)||0})} />
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="flex justify-end gap-2 mt-1">
-                                                            <button onClick={()=>setEditingTerminalId(null)} className="px-3 py-1 bg-slate-200 text-slate-700 rounded text-xs font-bold">Cancelar</button>
-                                                            <button onClick={handleSaveTerminal} disabled={isSaving} className="px-3 py-1 bg-blue-600 text-white rounded text-xs font-bold">Guardar Cambios</button>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-                                                        <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                                                            <span className="text-[10px] font-bold text-slate-400 uppercase block">Capacidades Muelle</span>
-                                                            <span className="font-bold text-slate-800">Carga: {currentTerminalObj.max_load_rate || 9999} MT/h</span>
-                                                            <span className="font-bold text-slate-800 block">Descarga: {currentTerminalObj.max_disch_rate || 9999} MT/h</span>
-                                                        </div>
-                                                        <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                                                            <span className="text-[10px] font-bold text-slate-400 uppercase block">Restricciones Hidráulicas</span>
-                                                            <span className="font-bold text-slate-800">Calado Máx: {currentTerminalObj.max_draft || 9999} m</span>
-                                                            <span className="font-bold text-slate-800 block">Eslora LOA: {currentTerminalObj.max_loa || 9999} m</span>
-                                                        </div>
-                                                        <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                                                            <span className="text-[10px] font-bold text-slate-400 uppercase block">Time to Count (Efectivo)</span>
-                                                            <span className="font-bold text-slate-800">Carga: {currentTerminalObj.time_to_count_carga_hrs || 6.0} hrs</span>
-                                                            <span className="font-bold text-slate-800 block">Descarga: {currentTerminalObj.time_to_count_descarga_hrs || 6.0} hrs</span>
-                                                        </div>
-                                                        <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                                                            <span className="text-[10px] font-bold text-slate-400 uppercase block">Tiempos de Maniobra Extra</span>
-                                                            <span className="font-bold text-slate-800">Carga: {currentTerminalObj.maneuver_carga_hrs || 2.0} hrs</span>
-                                                            <span className="font-bold text-slate-800 block">Descarga: {currentTerminalObj.maneuver_descarga_hrs || 2.0} hrs</span>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
+                                            <VesselTerminalMatrix
+                                                portId={currentPort.port_id}
+                                                terminalId={activeTerminalId === '' ? (terminalsForPort.length > 0 ? terminalsForPort[0].terminal_id : 'GENERAL') : activeTerminalId}
+                                            />
                                         );
                                     })()}
-
-                                    {/* Componente Data Grid de la Matriz */}
-                                    <VesselTerminalMatrix 
-                                        portId={currentPort.port_id} 
-                                        terminalId={activeTerminalId === '' ? (terminalsForPort.length > 0 ? terminalsForPort[0].terminal_id : 'GENERAL') : activeTerminalId} 
-                                    />
                                 </div>
                             </>
                         )}
