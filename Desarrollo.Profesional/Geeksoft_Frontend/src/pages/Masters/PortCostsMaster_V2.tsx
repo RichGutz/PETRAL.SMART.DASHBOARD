@@ -209,11 +209,11 @@ export const PortCostsMaster_V2: React.FC = () => {
             const pNorm = normalizeStr(pKey);
             if (pNorm === targetNorm || pNorm.includes(targetNorm) || targetNorm.includes(pNorm)) {
                 const portData = costsState[pKey];
-                for (const clientKey of Object.keys(portData || {})) {
-                    for (const vesselKey of Object.keys(portData[clientKey] || {})) {
-                        const d = portData[clientKey][vesselKey];
-                        const totalQ = (d?.CARGA?.MAIN || 0) + (d?.CARGA?.loading_master || 0) + (d?.CARGA?.other || 0)
-                                     + (d?.DESCARGA?.MAIN || 0) + (d?.DESCARGA?.loading_master || 0) + (d?.DESCARGA?.other || 0);
+                for (const vesselKey of Object.keys(portData || {})) {
+                    const d = portData[vesselKey];
+                    if (d) {
+                        const totalQ = (d.CARGA?.MAIN || 0) + (d.CARGA?.loading_master || 0) + (d.CARGA?.other || 0)
+                                     + (d.DESCARGA?.MAIN || 0) + (d.DESCARGA?.loading_master || 0) + (d.DESCARGA?.other || 0);
                         if (totalQ > 0) return true;
                     }
                 }
