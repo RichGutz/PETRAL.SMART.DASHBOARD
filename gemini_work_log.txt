@@ -1,4 +1,12 @@
 === REGISTRO DE TRABAJO GEMINI ===
+Fecha: 2026-07-25 10:08
+
+- Culminado al 100% el Motor P×Q Promediado y Visor 2×2 de 4 PDFs en CallaoAuditViewer.tsx:
+  - Eliminados todos los pickers editables de fecha/hora para la vista de proforma/forecast.
+  - Grilla uniforme de 6 tarjetas Q del mismo tamaño (1. Ritmo, 2. Q_op, 3. Q_fijo con desglose explícito de Atraque 1.5h + Inspección 1.0h + Desamarre 1.5h, 4. Perm. Total, 5. Remolques, 6. LOA/GRT).
+  - 4 PDFs en 2 Columnas Lado a Lado con cronogramas realistas (Escenario Mínimo Lunes 7am Office Hours vs Escenario Máximo Domingo/Feriado Overtime).
+  - Documentación en Obsidian actualizada en `Obsidian.Maestro.Costos.Portuarios/03_Arquitectura_y_Motores/Motor.PxQ.Promediado.md`.
+
 Fecha: 2026-07-22 21:53
 
 - Culminado al 100% el sembrado y conexión en Supabase de la red portuaria completa de Perú (Callao, Matarani, Marcona, Ilo).

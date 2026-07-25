@@ -56,7 +56,10 @@ Lógica contractual, recargos y addendas validadas centavo a centavo por puerto:
 - [Modelo.ER.Motor.Costos.Portuarios.md](03_Arquitectura_y_Motores/Modelo.ER.Motor.Costos.Portuarios.md): Modelo Entidad-Relación y diseño dinámico.
 - [Logica.Serial.Universal.de.Costos.md](03_Arquitectura_y_Motores/Logica.Serial.Universal.de.Costos.md): Lógica universal de serialización de costos.
 - [Reglas.Holisticas.Costos.md](03_Arquitectura_y_Motores/Reglas.Holisticas.Costos.md): Reglas holísticas del motor de cotización.
-- [motores.calculo.complejo.md](03_Arquitectura_y_Motores/motores.calculo.complejo.md): Documentación de algoritmos complejos.
+- [motores.calculo.complejo.md](03_Arquitectura_y_Motores/motores.calculo.complejo.md): Documentación de algoritmos complejos y proformación dual de 4 PDFs.
+- ⚙️ [Motor.PxQ.Promediado.md](03_Arquitectura_y_Motores/Motor.PxQ.Promediado.md): Especificación del promediado dinámico proforma (4 PDFs 2×2: Mínimos vs Máximos).
+- 🔍 [Liquidador.Gastos.Portuarios.md](03_Arquitectura_y_Motores/Liquidador.Gastos.Portuarios.md): Especificación del Liquidador de Gastos Portuarios (Auditoría Dual Split-View).
+
 
 ---
 

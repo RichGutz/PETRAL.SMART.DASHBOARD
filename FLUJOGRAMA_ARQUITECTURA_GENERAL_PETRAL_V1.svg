@@ -36,8 +36,8 @@
 </g>
 <g id="clust13" class="cluster">
 <title>cluster_lvl5</title>
-<polygon fill="#e2e8f0" stroke="#64748b" stroke-dasharray="5,2" points="2286,-8 2286,-170.9 3718,-170.9 3718,-8 2286,-8"/>
-<text xml:space="preserve" text-anchor="middle" x="3002" y="-138.4" font-family="Arial Bold" font-size="30.00" fill="#0f172a">NIVEL 5: AUDITORÍA NAVIERA DUAL &amp; REPORTES EXPORTABLES</text>
+<polygon fill="#e2e8f0" stroke="#64748b" stroke-dasharray="5,2" points="2177,-8 2177,-170.9 4078,-170.9 4078,-8 2177,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="3127.5" y="-138.4" font-family="Arial Bold" font-size="30.00" fill="#0f172a">NIVEL 5: MOTOR P×Q PROMEDIADO, AUDITORÍA NAVIERA DUAL &amp; REPORTES EXPORTABLES</text>
 </g>
 <!-- M1_Vessels -->
 <g id="node1" class="node">
@@ -252,8 +252,8 @@
 <!-- CoreDispatcher&#45;&gt;EngCallao -->
 <g id="edge24" class="edge">
 <title>CoreDispatcher&#45;&gt;EngCallao</title>
-<path fill="none" stroke="black" stroke-width="2.5" d="M1942.38,-2258.69C1942.38,-2258.69 1942.38,-1938.95 1942.38,-1938.95"/>
-<polygon fill="black" stroke="black" stroke-width="2.5" points="1945.88,-1938.95 1942.38,-1928.95 1938.88,-1938.95 1945.88,-1938.95"/>
+<path fill="none" stroke="black" stroke-width="2.5" d="M1857.62,-2248.52C1857.62,-2248.52 1857.62,-1938.9 1857.62,-1938.9"/>
+<polygon fill="black" stroke="black" stroke-width="2.5" points="1861.13,-1938.9 1857.63,-1928.9 1854.13,-1938.9 1861.13,-1938.9"/>
 </g>
 <!-- EngMarcona -->
 <g id="node16" class="node">
@@ -428,8 +428,8 @@
 <!-- MatrizFinanciera&#45;&gt;AnalisisGrafico -->
 <g id="edge33" class="edge">
 <title>MatrizFinanciera&#45;&gt;AnalisisGrafico</title>
-<path fill="none" stroke="black" stroke-width="2.5" d="M2905.85,-462C3310.66,-462 3944,-462 3944,-462 3944,-462 3944,-465.64 3944,-465.64"/>
-<polygon fill="black" stroke="black" stroke-width="2.5" points="3940.5,-465.64 3944,-475.64 3947.5,-465.64 3940.5,-465.64"/>
+<path fill="none" stroke="black" stroke-width="2.5" d="M2905.72,-462C3303.73,-462 3920.31,-462 3920.31,-462 3920.31,-462 3920.31,-465.64 3920.31,-465.64"/>
+<polygon fill="black" stroke="black" stroke-width="2.5" points="3916.81,-465.64 3920.31,-475.64 3923.81,-465.64 3916.81,-465.64"/>
 </g>
 <!-- AuditoriaLedger -->
 <g id="node27" class="node">
@@ -449,46 +449,46 @@
 <!-- AuditViewer -->
 <g id="node28" class="node">
 <title>AuditViewer</title>
-<polygon fill="#cbd5e1" stroke="black" stroke-width="3" points="2858.38,-120.4 2293.62,-120.4 2293.62,-116.4 2289.62,-116.4 2289.62,-112.4 2293.62,-112.4 2293.62,-24 2289.62,-24 2289.62,-20 2293.62,-20 2293.62,-16 2858.38,-16 2858.38,-120.4"/>
-<polyline fill="none" stroke="black" stroke-width="3" points="2293.62,-116.4 2297.62,-116.4 2297.62,-112.4 2293.62,-112.4"/>
-<polyline fill="none" stroke="black" stroke-width="3" points="2293.62,-24 2297.62,-24 2297.62,-20 2293.62,-20"/>
-<text xml:space="preserve" text-anchor="middle" x="2576" y="-72.4" font-family="Arial Bold" font-size="24.00">🔍 HERRAMIENTA AUDITORÍA DUAL P x Q</text>
-<text xml:space="preserve" text-anchor="middle" x="2576" y="-45.4" font-family="Arial Bold" font-size="24.00">(Visor Split&#45;View PDFs Lado a Lado)</text>
+<polygon fill="#cbd5e1" stroke="black" stroke-width="3" points="2967.12,-120.4 2184.88,-120.4 2184.88,-116.4 2180.88,-116.4 2180.88,-112.4 2184.88,-112.4 2184.88,-24 2180.88,-24 2180.88,-20 2184.88,-20 2184.88,-16 2967.12,-16 2967.12,-120.4"/>
+<polyline fill="none" stroke="black" stroke-width="3" points="2184.88,-116.4 2188.88,-116.4 2188.88,-112.4 2184.88,-112.4"/>
+<polyline fill="none" stroke="black" stroke-width="3" points="2184.88,-24 2188.88,-24 2188.88,-20 2184.88,-20"/>
+<text xml:space="preserve" text-anchor="middle" x="2576" y="-72.4" font-family="Arial Bold" font-size="24.00">⚙️ MOTOR P×Q PROMEDIADO &amp; VISOR 4 PDFs (2x2)</text>
+<text xml:space="preserve" text-anchor="middle" x="2576" y="-45.4" font-family="Arial Bold" font-size="24.00">(Layout 2 Columnas: Carga vs Descarga | Dossier Imprimible)</text>
 </g>
 <!-- MatrizFinanciera&#45;&gt;AuditViewer -->
 <!-- MatrizFinanciera&#45;&gt;AuditViewer -->
 <g id="edge61" class="edge">
 <title>MatrizFinanciera&#45;&gt;AuditViewer</title>
-<path fill="none" stroke="black" stroke-width="2.5" d="M2670.12,-443.11C2670.12,-443.11 2670.12,-135.45 2670.12,-135.45"/>
-<polygon fill="black" stroke="black" stroke-width="2.5" points="2673.63,-135.45 2670.13,-125.45 2666.63,-135.45 2673.63,-135.45"/>
+<path fill="none" stroke="black" stroke-width="2.5" d="M2445.62,-443.11C2445.62,-443.11 2445.62,-135.45 2445.62,-135.45"/>
+<polygon fill="black" stroke="black" stroke-width="2.5" points="2449.13,-135.45 2445.63,-125.45 2442.13,-135.45 2449.13,-135.45"/>
 </g>
 <!-- ReportPdf -->
 <g id="node29" class="node">
 <title>ReportPdf</title>
-<polygon fill="#f1f5f9" stroke="black" points="3704.25,-111.4 3399.75,-111.4 3399.75,-25 3710.25,-25 3710.25,-105.4 3704.25,-111.4"/>
-<polyline fill="none" stroke="black" points="3704.25,-111.4 3704.25,-105.4"/>
-<polyline fill="none" stroke="black" points="3710.25,-105.4 3704.25,-105.4"/>
-<text xml:space="preserve" text-anchor="middle" x="3555" y="-60.83" font-family="Arial Bold" font-size="20.00">📄 ACTA AUDITORÍA PDF</text>
+<polygon fill="#f1f5f9" stroke="black" points="4063.5,-111.4 3628.5,-111.4 3628.5,-25 4069.5,-25 4069.5,-105.4 4063.5,-111.4"/>
+<polyline fill="none" stroke="black" points="4063.5,-111.4 4063.5,-105.4"/>
+<polyline fill="none" stroke="black" points="4069.5,-105.4 4063.5,-105.4"/>
+<text xml:space="preserve" text-anchor="middle" x="3849" y="-60.83" font-family="Arial Bold" font-size="20.00">📄 DOSSIER AUDITORÍA PDF (2 PÁGS)</text>
 </g>
 <!-- AuditViewer&#45;&gt;ReportPdf -->
 <g id="edge35" class="edge">
 <title>AuditViewer&#45;&gt;ReportPdf</title>
-<path fill="none" stroke="black" stroke-width="2.5" d="M2859.75,-116C3141.41,-116 3531.44,-116 3531.44,-116 3531.44,-116 3531.44,-115.56 3531.44,-115.56"/>
-<polygon fill="black" stroke="black" stroke-width="2.5" points="3534.94,-125.37 3531.44,-115.37 3527.94,-125.37 3534.94,-125.37"/>
+<path fill="none" stroke="black" stroke-width="2.5" d="M2968.28,-116C3273.61,-116 3645.81,-116 3645.81,-116 3645.81,-116 3645.81,-115.56 3645.81,-115.56"/>
+<polygon fill="black" stroke="black" stroke-width="2.5" points="3649.31,-125.37 3645.81,-115.37 3642.31,-125.37 3649.31,-125.37"/>
 </g>
 <!-- ReportExcel -->
 <g id="node30" class="node">
 <title>ReportExcel</title>
-<polygon fill="#f1f5f9" stroke="black" points="3285.38,-111.4 2966.62,-111.4 2966.62,-25 3291.38,-25 3291.38,-105.4 3285.38,-111.4"/>
-<polyline fill="none" stroke="black" points="3285.38,-111.4 3285.38,-105.4"/>
-<polyline fill="none" stroke="black" points="3291.38,-105.4 3285.38,-105.4"/>
-<text xml:space="preserve" text-anchor="middle" x="3129" y="-60.83" font-family="Arial Bold" font-size="20.00">📈 EXCEL CONSOLIDADO</text>
+<polygon fill="#f1f5f9" stroke="black" points="3514.75,-111.4 3075.25,-111.4 3075.25,-25 3520.75,-25 3520.75,-105.4 3514.75,-111.4"/>
+<polyline fill="none" stroke="black" points="3514.75,-111.4 3514.75,-105.4"/>
+<polyline fill="none" stroke="black" points="3520.75,-105.4 3514.75,-105.4"/>
+<text xml:space="preserve" text-anchor="middle" x="3298" y="-60.83" font-family="Arial Bold" font-size="20.00">📈 EXCEL PROFORMA CONSOLIDADO</text>
 </g>
 <!-- AuditViewer&#45;&gt;ReportExcel -->
 <g id="edge36" class="edge">
 <title>AuditViewer&#45;&gt;ReportExcel</title>
-<path fill="none" stroke="black" stroke-width="2.5" d="M2859.79,-68C2859.79,-68 2952.35,-68 2952.35,-68"/>
-<polygon fill="black" stroke="black" stroke-width="2.5" points="2952.35,-71.5 2962.35,-68 2952.35,-64.5 2952.35,-71.5"/>
+<path fill="none" stroke="black" stroke-width="2.5" d="M2968.43,-68C2968.43,-68 3061.07,-68 3061.07,-68"/>
+<polygon fill="black" stroke="black" stroke-width="2.5" points="3061.07,-71.5 3071.07,-68 3061.07,-64.5 3061.07,-71.5"/>
 </g>
 </g>
 </svg>

@@ -78,7 +78,10 @@ function App_V2() {
               {/* Maestros Protegidos */}
               <Route path="/vessels" element={<ProtectedRoute module="maestro_buques"><VesselsMaster /></ProtectedRoute>} />
               <Route path="/routes" element={<ProtectedRoute module="maestro_rutas"><RoutesMaster /></ProtectedRoute>} />
-              <Route path="/spot-routes" element={<ProtectedRoute module="maestro_rutas"><RouteMaster_V2 /></ProtectedRoute>} />
+              <Route path="/spot-routes" element={<ProtectedRoute module="maestro_rutas"><RouteMaster_V2 mode="routes" /></ProtectedRoute>} />
+              <Route path="/quotes" element={<ProtectedRoute module="maestro_rutas"><RouteMaster_V2 mode="quotes" /></ProtectedRoute>} />
+
+
               <Route path="/clients" element={<ProtectedRoute module="maestro_tarifas"><ClientsMaster /></ProtectedRoute>} />
               <Route path="/contracts" element={<ProtectedRoute module="maestro_contratos"><ContractsMaster /></ProtectedRoute>} />
               <Route path="/ports" element={<ProtectedRoute module="maestro_puertos"><PortsMaster_V2 /></ProtectedRoute>} />

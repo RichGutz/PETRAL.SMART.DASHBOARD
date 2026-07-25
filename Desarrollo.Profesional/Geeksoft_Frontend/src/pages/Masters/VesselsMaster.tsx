@@ -47,7 +47,8 @@ export const VesselsMaster: React.FC = () => {
 
     return (
         <MasterTemplate 
-            title="Maestro de Buques (Flota)" 
+            title="Maestro de Flota" 
+
             subtitle="Ficha técnica detallada, límites operativos e hidráulicos y consumos granulares"
             activeTab="vessels"
             onBackToDashboard={() => navigate('/dashboard')}

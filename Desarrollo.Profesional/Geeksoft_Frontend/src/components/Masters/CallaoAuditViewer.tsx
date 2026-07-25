@@ -1,38 +1,53 @@
 import React, { useState, useMemo } from 'react';
-import { Printer, Anchor, ArrowRightLeft } from 'lucide-react';
+import { Anchor, ArrowRightLeft, Printer } from 'lucide-react';
 import logoPetral from '../../assets/Logo.Petral.png';
 import logoGeeksoft from '../../assets/Logo.Geeksoft.png';
 
-export const CallaoAuditViewer: React.FC = () => {
+interface CallaoAuditViewerProps {
+    initialRoute?: string;
+    initialVesselId?: string;
+    initialCargoTons?: number;
+    initialLoadRate?: number;
+    initialDischargeRate?: number;
+}
 
+export const CallaoAuditViewer: React.FC<CallaoAuditViewerProps> = ({
+    initialRoute = "NEXA_CALLAO_MATARANI",
+    initialVesselId = "MOQUEGUA",
+    initialCargoTons = 13500,
+    initialLoadRate = 500,
+    initialDischargeRate = 350
+}) => {
 
     // Inputs Compartidos del Viaje (Buque & Carga)
-    const [selectedRoute, setSelectedRoute] = useState<string>("NEXA_CALLAO_MATARANI");
+    const [selectedRoute, setSelectedRoute] = useState<string>(initialRoute);
 
-    const [selectedVesselId, setSelectedVesselId] = useState<string>("MOQUEGUA");
-    const [cargoTons, setCargoTons] = useState<number>(13500);
+    const [selectedVesselId, setSelectedVesselId] = useState<string>(initialVesselId);
+    const [cargoTons, setCargoTons] = useState<number>(initialCargoTons);
 
     // ==========================================
     // ESCALA 1: PUERTO DE CARGA (CALLAO APM)
     // ==========================================
-    const [loadRate, setLoadRate] = useState<number>(500); // MT/h
-    const [entryDateLoad, setEntryDateLoad] = useState<string>("2026-07-25T08:00");
-    const [exitDateLoad, setExitDateLoad] = useState<string>("2026-07-26T23:30");
+    const [loadRate, setLoadRate] = useState<number>(initialLoadRate); // MT/h
+    const [_entryDateLoad, _setEntryDateLoad] = useState<string>("2026-07-25T08:00");
+    const [exitDateLoad, _setExitDateLoad] = useState<string>("2026-07-26T23:30");
     const [portHoursLoad, setPortHoursLoad] = useState<number>(39.5);
-    const [isNationalLoad, setIsNationalLoad] = useState<boolean>(true);
-    const [tugboatsInLoad, setTugboatsInLoad] = useState<number>(2);
-    const [tugboatsOutLoad, setTugboatsOutLoad] = useState<number>(2);
+    const [isNationalLoad, _setIsNationalLoad] = useState<boolean>(true);
+    const [tugboatsInLoad, _setTugboatsInLoad] = useState<number>(2);
+    const [tugboatsOutLoad, _setTugboatsOutLoad] = useState<number>(2);
 
     // ==========================================
     // ESCALA 2: PUERTO DE DESCARGA (MATARANI TISUR - MOCK)
     // ==========================================
-    const [dischargeRate, setDischargeRate] = useState<number>(350); // MT/h
-    const [entryDateDischarge, setEntryDateDischarge] = useState<string>("2026-07-28T10:00");
-    const [exitDateDischarge, setExitDateDischarge] = useState<string>("2026-07-29T21:30");
+    const [dischargeRate, setDischargeRate] = useState<number>(initialDischargeRate); // MT/h
+
+    const [_entryDateDischarge, _setEntryDateDischarge] = useState<string>("2026-07-28T10:00");
+    const [exitDateDischarge, _setExitDateDischarge] = useState<string>("2026-07-29T21:30");
+
     const [portHoursDischarge, setPortHoursDischarge] = useState<number>(35.5);
-    const [isNationalDischarge, setIsNationalDischarge] = useState<boolean>(true);
-    const [tugboatsInDischarge, setTugboatsInDischarge] = useState<number>(2);
-    const [tugboatsOutDischarge, setTugboatsOutDischarge] = useState<number>(2);
+    const [isNationalDischarge, _setIsNationalDischarge] = useState<boolean>(true);
+    const [tugboatsInDischarge, _setTugboatsInDischarge] = useState<number>(2);
+    const [tugboatsOutDischarge, _setTugboatsOutDischarge] = useState<number>(2);
 
     // Tarifas Fijas Contractuales (Maestro Tarifario)
     const dockageRateP = 1.50; // USD / LOA / Hour
@@ -69,24 +84,6 @@ export const CallaoAuditViewer: React.FC = () => {
         }
     };
 
-    const handleEntryLoadChange = (val: string) => {
-        setEntryDateLoad(val);
-        if (val && exitDateLoad) {
-            const d1 = new Date(val).getTime();
-            const d2 = new Date(exitDateLoad).getTime();
-            if (d2 > d1) setPortHoursLoad(Math.round(((d2 - d1) / (1000 * 60 * 60)) * 10) / 10);
-        }
-    };
-
-    const handleExitLoadChange = (val: string) => {
-        setExitDateLoad(val);
-        if (entryDateLoad && val) {
-            const d1 = new Date(entryDateLoad).getTime();
-            const d2 = new Date(val).getTime();
-            if (d2 > d1) setPortHoursLoad(Math.round(((d2 - d1) / (1000 * 60 * 60)) * 10) / 10);
-        }
-    };
-
     // Handlers Descarga
     const handleCargoOrRateDischargeChange = (tons: number, rate: number) => {
         setCargoTons(tons);
@@ -96,23 +93,8 @@ export const CallaoAuditViewer: React.FC = () => {
         }
     };
 
-    const handleEntryDischargeChange = (val: string) => {
-        setEntryDateDischarge(val);
-        if (val && exitDateDischarge) {
-            const d1 = new Date(val).getTime();
-            const d2 = new Date(exitDateDischarge).getTime();
-            if (d2 > d1) setPortHoursDischarge(Math.round(((d2 - d1) / (1000 * 60 * 60)) * 10) / 10);
-        }
-    };
 
-    const handleExitDischargeChange = (val: string) => {
-        setExitDateDischarge(val);
-        if (entryDateDischarge && val) {
-            const d1 = new Date(entryDateDischarge).getTime();
-            const d2 = new Date(val).getTime();
-            if (d2 > d1) setPortHoursDischarge(Math.round(((d2 - d1) / (1000 * 60 * 60)) * 10) / 10);
-        }
-    };
+
 
     // Regla Casino Nocturno Carga
     const isCasinoNightLoad = useMemo(() => {
@@ -250,21 +232,41 @@ export const CallaoAuditViewer: React.FC = () => {
     }, [activeRouteInfo.dischargePort, vessel, portHoursDischarge, isNationalDischarge, tugboatsInDischarge, tugboatsOutDischarge, isCasinoNightDischarge]);
 
 
-    const formatDateTime = (dtStr: string) => (!dtStr ? '-' : dtStr.replace('T', ' ') + ' hrs');
+    // Helper Generador de HTML para cada uno de los 4 PDFs
+    const generatePdfHtml = (type: 'LOAD' | 'DISCHARGE', level: 'MIN' | 'MAX') => {
 
-    // Generador de PDF Carga (Callao)
-    const htmlDocLoad = useMemo(() => {
+        const isLoad = type === 'LOAD';
+        const isMin = level === 'MIN';
+
+        const portName = isLoad ? activeRouteInfo.loadName : activeRouteInfo.dischargeName;
+        const rate = isLoad ? loadRate : dischargeRate;
+        const qOp = cargoTons / rate;
+        const qFijo = 4.0;
+        const totalHours = qOp + qFijo;
+
+        const baseAudit = isLoad ? auditLoad : auditDischarge;
+        const multiplier = isMin ? 1.0 : 1.30;
+        const finalTotal = baseAudit.total * multiplier;
+
+        const titleBadge = isMin
+            ? '[NIVEL BAJO - HORARIO ORDINARIO]'
+            : '[NIVEL ALTO - HORARIO RECARGO]';
+
+        const scheduleTimeline = isMin
+            ? `Atraque: Lunes 07:00 hrs ➔ Desatraque: ${isLoad ? 'Martes 14:00 hrs' : 'Miércoles 01:36 hrs'} (${totalHours.toFixed(1)} Horas en Muelle)\n  • RÉGIMEN HORARIO:      100% Horario Ordinario de Oficina (Office Hours sin recargos)`
+            : `Atraque: Domingo 07:00 hrs (Dominical) ➔ Desatraque: ${isLoad ? 'Lunes (Feriado) 14:00 hrs' : 'Lunes (Feriado) 01:36 hrs'} (${totalHours.toFixed(1)} Horas en Muelle)\n  • RÉGIMEN HORARIO:      100% Recargo Nocturno / Dominical / Feriado (+25% a +50% Overtime & Regla Casino)`;
+
         const renderCategoryBlock = (catKey: string, catTitle: string) => {
-            const catItems = auditLoad.items.filter(i => i.category === catKey);
-            const catSubtotal = catItems.reduce((sum, i) => sum + i.cost, 0);
+            const catItems = baseAudit.items.filter(i => i.category === catKey);
+            const catSubtotal = catItems.reduce((sum, i) => sum + (i.cost * multiplier), 0);
             const itemsRows = catItems.map((item) => `
                 <tr>
                     <td style="border: 1px solid #000000; padding: 3px 5px; font-weight: bold;">${item.id}. ${item.concept}</td>
                     <td style="border: 1px solid #000000; padding: 3px 5px;">${item.supplier}</td>
                     <td style="border: 1px solid #000000; padding: 3px 5px; font-size: 6.5pt; color: #334155;">${item.sourceTag}</td>
-                    <td style="border: 1px solid #000000; padding: 3px 5px; font-family: 'Courier New', monospace;">${item.formula}</td>
-                    <td style="border: 1px solid #000000; padding: 3px 5px; text-align: center;">${item.rule}</td>
-                    <td style="border: 1px solid #000000; padding: 3px 5px; text-align: right; font-weight: bold; font-family: 'Courier New', monospace;">$${item.cost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style="border: 1px solid #000000; padding: 3px 5px; font-family: 'Courier New', monospace;">${item.formula} ${!isMin ? 'x 1.30 OT' : ''}</td>
+                    <td style="border: 1px solid #000000; padding: 3px 5px; text-align: center;">${isMin ? 'Ordinario' : 'Overtime'}</td>
+                    <td style="border: 1px solid #000000; padding: 3px 5px; text-align: right; font-weight: bold; font-family: 'Courier New', monospace;">$${(item.cost * multiplier).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>
             `).join('');
 
@@ -293,13 +295,14 @@ export const CallaoAuditViewer: React.FC = () => {
         <html lang="es">
         <head>
             <meta charset="UTF-8">
-            <title>Acta Auditoría Puerto de Carga (Callao) - PETRAL</title>
+            <title>Acta Auditoría Puerto de ${isLoad ? 'Carga' : 'Descarga'} ${titleBadge}</title>
             <style>
-                @page { size: A4 portrait; margin: 6mm; }
-                body { font-family: 'Courier New', Courier, monospace; color: #000000; background-color: #ffffff; font-size: 7pt; line-height: 1.25; margin: 0; padding: 6px; }
+                @page { size: A4 portrait; margin: 14mm 8mm 8mm 8mm; }
+                body { font-family: 'Courier New', Courier, monospace; color: #000000; background-color: #ffffff; font-size: 7pt; line-height: 1.25; margin: 0; padding: 18px 8px 6px 8px; }
+
                 table { width: 100%; border-collapse: collapse; }
                 .header-table { border-bottom: 2px solid #000000; margin-bottom: 6px; }
-                .title-header { text-align: center; font-weight: bold; font-size: 9pt; }
+                .title-header { text-align: center; font-weight: bold; font-size: 8.5pt; }
                 .box-container { border: 1.5px solid #000000; padding: 5px; margin-bottom: 6px; background-color: #ffffff; }
                 .box-title { font-weight: bold; font-size: 7.5pt; margin-bottom: 3px; }
                 .audit-table { border: 1.5px solid #000000; margin-top: 4px; margin-bottom: 6px; font-size: 6.8pt; }
@@ -315,8 +318,8 @@ export const CallaoAuditViewer: React.FC = () => {
                         <img src="${logoPetral}" style="height: 28px; width: auto;" alt="PETRAL LOGO" />
                     </td>
                     <td style="width: 50%;" class="title-header">
-                        PETRAL SMART DASHBOARD • MOTOR COSTOS PORTUARIOS<br/>
-                        <span style="font-size: 7.5pt; font-weight: normal;">ACTA OFICIAL DE AUDITORÍA — PUERTO DE CARGA (CALLAO APM)</span>
+                        PETRAL SMART DASHBOARD • MOTOR COSTOS PORTUARIOS P×Q<br/>
+                        <span style="font-size: 7.5pt; font-weight: bold; color: ${isMin ? '#047857' : '#b45309'};">ACTA AUDITORÍA PUERTO DE ${isLoad ? 'CARGA' : 'DESCARGA'} ${titleBadge}</span>
                     </td>
                     <td style="width: 25%; text-align: right; vertical-align: middle;">
                         <img src="${logoGeeksoft}" style="height: 38px; width: auto;" alt="GEEKSOFT LOGO" />
@@ -325,18 +328,19 @@ export const CallaoAuditViewer: React.FC = () => {
             </table>
 
             <div class="box-container">
-                <div class="box-title">📋 [INPUTS ESCALA CARGA — CALLAO APM]:</div>
+                <div class="box-title">📋 [INPUTS P×Q — PUERTO DE ${isLoad ? 'CARGA' : 'DESCARGA'} (${portName})]:</div>
                 <pre style="font-family: 'Courier New', Courier, monospace; font-size: 6.8pt; margin: 0; white-space: pre-wrap; line-height: 1.3;">
   • RUTA COMERCIAL:         ${routesMap[selectedRoute] || selectedRoute}
-  • BUQUE (Q_buque):        ${vessel.vessel_name} | Eslora (LOA): ${vessel.loa}m | Arqueo (GRT): ${vessel.grt.toLocaleString()} TRB
-  • TERMINAL CARGA:         APM Terminals Callao | Ritmo Operativo: ${loadRate} MT/h | Remolques: ${tugboatsInLoad + tugboatsOutLoad}
-  • OPERACIÓN & CARGA Q:    Volumen Carga: ${cargoTons.toLocaleString()} MT | Permanencia Muelle: ${portHoursLoad.toFixed(1)} Horas
-                            Atraque Carga: ${formatDateTime(entryDateLoad)} | Desatraque Carga: ${formatDateTime(exitDateLoad)} ${isCasinoNightLoad ? '(🌙 Zarpe Nocturno - Regla Casino)' : ''}
+  • BUQUE (Q_buque):        ${vessel.vessel_name} | LOA: ${vessel.loa}m | GRT: ${vessel.grt.toLocaleString()} TRB
+  • PUERTO / TERMINAL:      ${portName} | Ritmo: ${rate} MT/h | Remolques: 2 IN / 2 OUT
+  • OPERACIÓN & CARGA Q:    Volumen ${isLoad ? 'Carga' : 'Descarga'}: ${cargoTons.toLocaleString()} MT | Permanencia Total: ${totalHours.toFixed(1)} Horas [${qOp.toFixed(1)}h Op + 4.0h Fijo]
+  • CRONOGRAMA SIMULADO:   ${scheduleTimeline}
                 </pre>
             </div>
 
+
             <div style="font-weight: bold; font-size: 7.5pt; margin-top: 4px;">
-                📊 [DESGLOSE LIQUIDACIÓN PUERTO DE CARGA — CALLAO]:
+                📊 [DESGLOSE LIQUIDACIÓN PUERTO DE ${isLoad ? 'CARGA' : 'DESCARGA'} — ${portName}]:
             </div>
             <table class="audit-table">
                 <thead>
@@ -352,8 +356,8 @@ export const CallaoAuditViewer: React.FC = () => {
                 <tbody>
                     ${rowsHtml}
                     <tr class="total-row">
-                        <td colspan="5" style="text-align: right; border: 1px solid #000000; padding-right: 8px;">TOTAL PUERTO DE CARGA (CALLAO):</td>
-                        <td style="text-align: right; border: 1px solid #000000;">$${auditLoad.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</td>
+                        <td colspan="5" style="text-align: right; border: 1px solid #000000; padding-right: 8px;">TOTAL PUERTO DE ${isLoad ? 'CARGA' : 'DESCARGA'} (${titleBadge}):</td>
+                        <td style="text-align: right; border: 1px solid #000000;">$${finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</td>
                     </tr>
                 </tbody>
             </table>
@@ -362,12 +366,12 @@ export const CallaoAuditViewer: React.FC = () => {
                 <table style="width: 100%; border: none; font-size: 7pt;">
                     <tr>
                         <td style="width: 50%; vertical-align: top; padding-right: 10px;">
-                            <div style="font-weight: bold; margin-bottom: 2px;">AUDITORÍA PETRAL S.A. (CARGA):</div>
+                            <div style="font-weight: bold; margin-bottom: 2px;">AUDITORÍA PETRAL S.A. (${isLoad ? 'CARGA' : 'DESCARGA'}):</div>
                             <div style="border-bottom: 1px dashed #000000; height: 14px; margin-bottom: 3px;"></div>
-                            <span style="font-size: 6.5pt; color: #475569;">Firma Responsable Carga</span>
+                            <span style="font-size: 6.5pt; color: #475569;">Firma Responsable Auditoría</span>
                         </td>
                         <td style="width: 50%; vertical-align: top; padding-left: 10px;">
-                            <div style="font-weight: bold; margin-bottom: 2px;">OBSERVACIONES CARGA:</div>
+                            <div style="font-weight: bold; margin-bottom: 2px;">OBSERVACIONES PROFORMA:</div>
                             <div style="border: 1px solid #000000; height: 32px; background-color: #fafafa; padding: 2px;"></div>
                         </td>
                     </tr>
@@ -376,161 +380,76 @@ export const CallaoAuditViewer: React.FC = () => {
         </body>
         </html>
         `;
-    }, [auditLoad, selectedRoute, vessel, cargoTons, loadRate, entryDateLoad, exitDateLoad, portHoursLoad, isNationalLoad, tugboatsInLoad, tugboatsOutLoad, isCasinoNightLoad]);
+    };
 
-    // Generador de PDF Descarga (Matarani / Tisur Mock)
-    const htmlDocDischarge = useMemo(() => {
-        const renderCategoryBlock = (catKey: string, catTitle: string) => {
-            const catItems = auditDischarge.items.filter(i => i.category === catKey);
-            const catSubtotal = catItems.reduce((sum, i) => sum + i.cost, 0);
-            const itemsRows = catItems.map((item) => `
-                <tr>
-                    <td style="border: 1px solid #000000; padding: 3px 5px; font-weight: bold;">${item.id}. ${item.concept}</td>
-                    <td style="border: 1px solid #000000; padding: 3px 5px;">${item.supplier}</td>
-                    <td style="border: 1px solid #000000; padding: 3px 5px; font-size: 6.5pt; color: #334155;">${item.sourceTag}</td>
-                    <td style="border: 1px solid #000000; padding: 3px 5px; font-family: 'Courier New', monospace;">${item.formula}</td>
-                    <td style="border: 1px solid #000000; padding: 3px 5px; text-align: center;">${item.rule}</td>
-                    <td style="border: 1px solid #000000; padding: 3px 5px; text-align: right; font-weight: bold; font-family: 'Courier New', monospace;">$${item.cost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                </tr>
-            `).join('');
+    const htmlDocLoadMin = useMemo(() => generatePdfHtml('LOAD', 'MIN'), [auditLoad, selectedRoute, vessel, cargoTons, loadRate]);
+    const htmlDocLoadMax = useMemo(() => generatePdfHtml('LOAD', 'MAX'), [auditLoad, selectedRoute, vessel, cargoTons, loadRate]);
+    const htmlDocDischargeMin = useMemo(() => generatePdfHtml('DISCHARGE', 'MIN'), [auditDischarge, selectedRoute, vessel, cargoTons, dischargeRate]);
+    const htmlDocDischargeMax = useMemo(() => generatePdfHtml('DISCHARGE', 'MAX'), [auditDischarge, selectedRoute, vessel, cargoTons, dischargeRate]);
 
-            return `
-                <tr style="background-color: #e2e8f0; font-weight: bold;">
-                    <td colspan="6" style="border: 1px solid #000000; padding: 4px 6px; font-size: 7.5pt; text-transform: uppercase;">
-                        ${catTitle}
-                    </td>
-                </tr>
-                ${itemsRows}
-                <tr style="background-color: #f8fafc; font-weight: bold; font-size: 7pt;">
-                    <td colspan="5" style="text-align: right; border: 1px solid #000000; padding: 3px 6px;">SUBTOTAL ${catTitle}:</td>
-                    <td style="text-align: right; border: 1px solid #000000; padding: 3px 5px; font-family: 'Courier New', monospace;">$${catSubtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</td>
-                </tr>
-            `;
-        };
-
-        const rowsHtml = `
-            ${renderCategoryBlock("A_SHIFTING", "A) SHIFTING EXPENSES")}
-            ${renderCategoryBlock("B_GENERAL_PORT", "B) GENERAL PORT EXPENSES")}
-            ${renderCategoryBlock("C_AGENCY", "C) AGENCY EXPENSES")}
-        `;
-
-        return `
+    const handlePrintDossierLoad = () => {
+        const combinedHtml = `
         <!DOCTYPE html>
-        <html lang="es">
+        <html>
         <head>
-            <meta charset="UTF-8">
-            <title>Acta Auditoría Puerto de Descarga (Matarani) - PETRAL</title>
+            <title>Dossier Auditoría Carga (Mínimo y Máximo) - PETRAL</title>
             <style>
-                @page { size: A4 portrait; margin: 6mm; }
-                body { font-family: 'Courier New', Courier, monospace; color: #000000; background-color: #ffffff; font-size: 7pt; line-height: 1.25; margin: 0; padding: 6px; }
-                table { width: 100%; border-collapse: collapse; }
-                .header-table { border-bottom: 2px solid #000000; margin-bottom: 6px; }
-                .title-header { text-align: center; font-weight: bold; font-size: 9pt; }
-                .box-container { border: 1.5px solid #000000; padding: 5px; margin-bottom: 6px; background-color: #ffffff; }
-                .box-title { font-weight: bold; font-size: 7.5pt; margin-bottom: 3px; }
-                .audit-table { border: 1.5px solid #000000; margin-top: 4px; margin-bottom: 6px; font-size: 6.8pt; }
-                .audit-table th { background-color: #f2f2f2; border: 1px solid #000000; padding: 3px 5px; text-align: left; font-weight: bold; text-transform: uppercase; }
-                .total-row { background-color: #f2f2f2; font-weight: bold; font-size: 8pt; border-top: 1.5px solid #000000; }
-                .signatures { margin-top: 10px; border-top: 1.5px solid #000000; padding-top: 6px; }
+                @media print {
+                    .page-break { page-break-before: always; break-before: page; }
+                }
             </style>
         </head>
         <body>
-            <table class="header-table">
-                <tr>
-                    <td style="width: 25%; text-align: left; vertical-align: middle;">
-                        <img src="${logoPetral}" style="height: 28px; width: auto;" alt="PETRAL LOGO" />
-                    </td>
-                    <td style="width: 50%;" class="title-header">
-                        PETRAL SMART DASHBOARD • MOTOR COSTOS PORTUARIOS<br/>
-                        <span style="font-size: 7.5pt; font-weight: normal;">ACTA OFICIAL DE AUDITORÍA — PUERTO DE DESCARGA (MATARANI TISUR MOCK)</span>
-                    </td>
-                    <td style="width: 25%; text-align: right; vertical-align: middle;">
-                        <img src="${logoGeeksoft}" style="height: 38px; width: auto;" alt="GEEKSOFT LOGO" />
-                    </td>
-                </tr>
-            </table>
-
-            <div class="box-container">
-                <div class="box-title">📋 [INPUTS ESCALA DESCARGA — MATARANI TISUR]:</div>
-                <pre style="font-family: 'Courier New', Courier, monospace; font-size: 6.8pt; margin: 0; white-space: pre-wrap; line-height: 1.3;">
-  • RUTA COMERCIAL:         ${routesMap[selectedRoute] || selectedRoute}
-  • BUQUE (Q_buque):        ${vessel.vessel_name} | Eslora (LOA): ${vessel.loa}m | Arqueo (GRT): ${vessel.grt.toLocaleString()} TRB
-  • TERMINAL DESCARGA:      TISUR Matarani | Ritmo Operativo Descarga: ${dischargeRate} MT/h | Remolques: ${tugboatsInDischarge + tugboatsOutDischarge}
-  • OPERACIÓN & CARGA Q:    Volumen Descarga: ${cargoTons.toLocaleString()} MT | Permanencia Muelle: ${portHoursDischarge.toFixed(1)} Horas
-                            Atraque Descarga: ${formatDateTime(entryDateDischarge)} | Desatraque Descarga: ${formatDateTime(exitDateDischarge)} ${isCasinoNightDischarge ? '(🌙 Zarpe Nocturno - Regla Casino)' : ''}
-                </pre>
-            </div>
-
-            <div style="font-weight: bold; font-size: 7.5pt; margin-top: 4px;">
-                📊 [DESGLOSE LIQUIDACIÓN PUERTO DE DESCARGA — MATARANI (MOCK ESTRUCTURADO)]:
-            </div>
-            <table class="audit-table">
-                <thead>
-                    <tr>
-                        <th style="width: 22%;">ÍTEM / RUBRO OFICIAL</th>
-                        <th style="width: 14%;">PROVEEDOR</th>
-                        <th style="width: 18%;">TRAZABILIDAD ORIGEN</th>
-                        <th style="width: 30%;">ECUACIÓN EVALUADA REAL (P x Q)</th>
-                        <th style="width: 6%; text-align: center;">REGLA</th>
-                        <th style="width: 10%; text-align: right;">SUBTOTAL USD</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${rowsHtml}
-                    <tr class="total-row">
-                        <td colspan="5" style="text-align: right; border: 1px solid #000000; padding-right: 8px;">TOTAL PUERTO DE DESCARGA (MATARANI):</td>
-                        <td style="text-align: right; border: 1px solid #000000;">$${auditDischarge.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="signatures">
-                <table style="width: 100%; border: none; font-size: 7pt;">
-                    <tr>
-                        <td style="width: 50%; vertical-align: top; padding-right: 10px;">
-                            <div style="font-weight: bold; margin-bottom: 2px;">AUDITORÍA PETRAL S.A. (DESCARGA):</div>
-                            <div style="border-bottom: 1px dashed #000000; height: 14px; margin-bottom: 3px;"></div>
-                            <span style="font-size: 6.5pt; color: #475569;">Firma Responsable Descarga</span>
-                        </td>
-                        <td style="width: 50%; vertical-align: top; padding-left: 10px;">
-                            <div style="font-weight: bold; margin-bottom: 2px;">OBSERVACIONES DESCARGA:</div>
-                            <div style="border: 1px solid #000000; height: 32px; background-color: #fafafa; padding: 2px;"></div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
+            <div>${htmlDocLoadMin}</div>
+            <div class="page-break"></div>
+            <div>${htmlDocLoadMax}</div>
         </body>
         </html>
         `;
-    }, [auditDischarge, selectedRoute, vessel, cargoTons, dischargeRate, entryDateDischarge, exitDateDischarge, portHoursDischarge, isNationalDischarge, tugboatsInDischarge, tugboatsOutDischarge, isCasinoNightDischarge]);
-
-    const handlePrintPdfLoad = () => {
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-            printWindow.document.write(htmlDocLoad);
-            printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => printWindow.print(), 400);
+        const printWin = window.open('', '_blank');
+        if (printWin) {
+            printWin.document.write(combinedHtml);
+            printWin.document.close();
+            printWin.focus();
+            setTimeout(() => printWin.print(), 400);
         }
     };
 
-    const handlePrintPdfDischarge = () => {
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-            printWindow.document.write(htmlDocDischarge);
-            printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => printWindow.print(), 400);
+    const handlePrintDossierDischarge = () => {
+        const combinedHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Dossier Auditoría Descarga (Mínimo y Máximo) - PETRAL</title>
+            <style>
+                @media print {
+                    .page-break { page-break-before: always; break-before: page; }
+                }
+            </style>
+        </head>
+        <body>
+            <div>${htmlDocDischargeMin}</div>
+            <div class="page-break"></div>
+            <div>${htmlDocDischargeMax}</div>
+        </body>
+        </html>
+        `;
+        const printWin = window.open('', '_blank');
+        if (printWin) {
+            printWin.document.write(combinedHtml);
+            printWin.document.close();
+            printWin.focus();
+            setTimeout(() => printWin.print(), 400);
         }
     };
-
-    const totalVoyageCost = auditLoad.total + auditDischarge.total;
 
     return (
+
+
         <div className="flex flex-col gap-3 bg-white p-4 rounded-xl border border-slate-200 h-full overflow-hidden">
             
-            {/* PANEL PRINCIPAL DE CONTROLES (UNIFICADO EN 1 SOLA VENTANA) */}
-            <div className="flex flex-col gap-2.5 bg-slate-50 border border-slate-200 text-slate-800 p-3 rounded-lg shadow-sm shrink-0">
+            {/* PANEL PRINCIPAL DE CONTROLES DIVISION EN 2 COLUMNAS PARALELAS LADO A LADO */}
+            <div className="flex flex-col gap-3 bg-slate-50 border border-slate-200 text-slate-800 p-3 rounded-lg shadow-sm shrink-0">
                 
                 {/* CABECERA GENERAL VOYAGE & SELECCIÓN DE BUQUE / RUTA */}
                 <div className="flex flex-wrap items-center justify-between gap-3 text-xs pb-2 border-b border-slate-200">
@@ -538,8 +457,6 @@ export const CallaoAuditViewer: React.FC = () => {
                         {/* Ruta */}
                         <div className="flex items-center gap-1.5">
                             <label className="font-extrabold text-slate-700">Ruta Comercial:</label>
-
-
                             <select
                                 value={selectedRoute}
                                 onChange={(e) => setSelectedRoute(e.target.value)}
@@ -572,7 +489,7 @@ export const CallaoAuditViewer: React.FC = () => {
 
                         {/* Carga MT */}
                         <div className="flex items-center gap-1.5">
-                            <label className="font-extrabold text-slate-700">Carga (Q_mt):</label>
+                            <label className="font-extrabold text-slate-700">Volumen Carga (Q_mt):</label>
                             <input
                                 type="number"
                                 value={cargoTons}
@@ -586,217 +503,213 @@ export const CallaoAuditViewer: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* RESUMEN DEL TOTAL ESCALA VOYAGE */}
-                    <div className="flex items-center gap-2 bg-teal-50 border border-teal-200 px-3 py-1.5 rounded-lg shadow-sm">
-                        <ArrowRightLeft size={14} className="text-teal-600" />
-                        <span className="text-xs font-bold text-teal-900">TOTAL ESCALA VOYAGE:</span>
-                        <span className="text-sm font-extrabold text-teal-800 font-mono">
-                            ${totalVoyageCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
+                    {/* RESUMEN TOTAL VOYAGE ASIGNABLE A MATRIZ */}
+                    <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-400 px-3.5 py-1.5 rounded-lg shadow-sm">
+                        <ArrowRightLeft size={16} className="text-emerald-700 shrink-0" />
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-extrabold text-emerald-950 uppercase tracking-wide">
+                                💰 TOTAL VOYAGE PROFORMA P×Q MATRIZ
+                            </span>
+                            <span className="text-[10px] text-emerald-800 font-semibold font-mono">
+                                (Carga: ${((auditLoad.total + auditLoad.total * 1.3) / 2).toLocaleString('en-US', { minimumFractionDigits: 2 })} + Descarga: ${((auditDischarge.total + auditDischarge.total * 1.3) / 2).toLocaleString('en-US', { minimumFractionDigits: 2 })})
+                            </span>
+                        </div>
+                        <span className="text-sm font-black text-emerald-900 font-mono ml-1">
+                            ${(((auditLoad.total + auditLoad.total * 1.3) / 2) + ((auditDischarge.total + auditDischarge.total * 1.3) / 2)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
                         </span>
                     </div>
+
                 </div>
 
-                {/* FILA 1: CONTROLES ESCALA PUERTO CARGA */}
-                <div className="flex flex-wrap items-center justify-between gap-3 text-xs pt-1">
-                    <div className="flex items-center gap-3 flex-wrap">
-                        <span className="px-2 py-0.5 bg-teal-100 text-teal-900 rounded font-extrabold text-[11px] flex items-center gap-1 uppercase">
-                            <Anchor size={12} /> CARGA ({activeRouteInfo.loadPort}):
-                        </span>
-
-
-                        <div className="flex items-center gap-1">
-                            <label className="font-semibold text-slate-600">Ritmo (MT/h):</label>
-                            <input
-                                type="number"
-                                value={loadRate}
-                                onChange={(e) => handleCargoOrRateLoadChange(cargoTons, parseFloat(e.target.value) || 1)}
-                                className="h-7 w-16 px-1 bg-white border border-slate-300 text-teal-700 rounded font-mono font-bold text-center text-xs"
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                            <label className="font-semibold text-slate-600">Atraque:</label>
-                            <input
-                                type="datetime-local"
-                                value={entryDateLoad}
-                                onChange={(e) => handleEntryLoadChange(e.target.value)}
-                                className="h-7 px-1.5 bg-white border border-slate-300 text-slate-800 rounded font-mono text-[10px]"
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                            <label className="font-semibold text-slate-600">Desatraque:</label>
-                            <input
-                                type="datetime-local"
-                                value={exitDateLoad}
-                                onChange={(e) => handleExitLoadChange(e.target.value)}
-                                className="h-7 px-1.5 bg-white border border-slate-300 text-slate-800 rounded font-mono text-[10px]"
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                            <span className="px-2 py-0.5 bg-amber-50 border border-amber-300 text-amber-900 rounded font-mono font-bold text-[11px]">
-                                ⏱️ {portHoursLoad.toFixed(1)} hrs
+                {/* CONTROLES DIVISION EN 2 COLUMNAS PARALELAS LADO A LADO - GRILLA UNIFORME DE 6 VARIABLES Q */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-1">
+                    
+                    {/* BLOQUE IZQUIERDO: VARIABLES Q PUERTO DE CARGA (MAESTRO DE PUERTOS) */}
+                    <div className="bg-white p-3 rounded-lg border border-teal-200 shadow-sm space-y-2">
+                        <div className="flex justify-between items-center border-b border-teal-100 pb-1.5">
+                            <span className="text-xs font-extrabold text-teal-800 flex items-center gap-1 uppercase">
+                                <Anchor size={13} /> 📦 Q PUERTO CARGA — {activeRouteInfo.loadName}
                             </span>
-                            {isCasinoNightLoad && (
-                                <span className="px-1.5 py-0.5 bg-purple-100 text-purple-900 rounded font-extrabold text-[10px]">
-                                    🌙 Casino (+25%)
-                                </span>
-                            )}
+                            <span className="text-[10px] font-bold bg-teal-50 text-teal-700 px-2 py-0.5 rounded border border-teal-200">
+                                Maestro Puertos & Terminales
+                            </span>
                         </div>
 
-                        <div className="flex items-center gap-1">
-                            <label className="font-semibold text-slate-600">Remolques:</label>
-                            <select
-                                value={tugboatsInLoad}
-                                onChange={(e) => {
-                                    const val = parseInt(e.target.value);
-                                    setTugboatsInLoad(val);
-                                    setTugboatsOutLoad(val);
-                                }}
-                                className="h-7 px-1.5 bg-white border border-slate-300 text-slate-800 rounded font-bold text-xs"
-                            >
-                                <option value="1">1 IN / 1 OUT</option>
-                                <option value="2">2 IN / 2 OUT</option>
-                                <option value="3">3 IN / 3 OUT</option>
-                            </select>
+                        {/* Grilla uniforme de 6 variables Q de Carga */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-[11px] text-slate-700 font-mono">
+                            <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
+                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">1. Ritmo</span>
+                                <span className="font-bold text-teal-700">{loadRate} MT/h</span>
+                            </div>
+                            <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
+                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">2. Q_op (MT/Ritmo)</span>
+                                <span className="font-bold text-teal-800">{(cargoTons / loadRate).toFixed(1)} hrs</span>
+                            </div>
+                            <div className="bg-amber-50/80 p-1.5 rounded border border-amber-300">
+                                <span className="text-[9px] text-amber-800 block uppercase font-sans font-bold">3. Q_fijo (4.0 hrs)</span>
+                                <span className="font-semibold text-[9px] text-amber-900 leading-tight block">Atraq 1.5h + Insp 1.0h + Desam 1.5h</span>
+                            </div>
+                            <div className="bg-emerald-50 p-1.5 rounded border border-emerald-300">
+                                <span className="text-[9px] text-emerald-700 block uppercase font-sans font-bold">4. Perm. Total</span>
+                                <span className="font-bold text-emerald-900">{((cargoTons / loadRate) + 4.0).toFixed(1)} hrs</span>
+                            </div>
+                            <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
+                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">5. Remolques</span>
+                                <span className="font-bold text-slate-800">2 IN / 2 OUT</span>
+                            </div>
+                            <div className="bg-purple-50 p-1.5 rounded border border-purple-200">
+                                <span className="text-[9px] text-purple-700 block uppercase font-sans font-bold">6. LOA / GRT</span>
+                                <span className="font-bold text-purple-900">{vessel.loa}m / {vessel.grt}</span>
+                            </div>
                         </div>
-
-                        <button
-                            onClick={() => setIsNationalLoad(!isNationalLoad)}
-                            className={`h-7 px-2 rounded text-[11px] font-bold border ${isNationalLoad ? 'bg-teal-50 text-teal-700 border-teal-300' : 'bg-amber-50 text-amber-700 border-amber-300'}`}
-                        >
-                            {isNationalLoad ? '🇵🇪 Nac.' : '🌐 Ext.'}
-                        </button>
                     </div>
 
-                    {/* BOTÓN IMPRIMIR PDF CARGA */}
-                    <button
-                        onClick={handlePrintPdfLoad}
-                        className="h-7 px-3 bg-teal-700 hover:bg-teal-800 text-white text-[11px] font-bold uppercase tracking-wider rounded flex items-center gap-1 shadow-sm cursor-pointer shrink-0"
-                    >
-                        <Printer size={12} /> PDF Carga (Callao)
-                    </button>
-                </div>
-
-                {/* FILA 2: CONTROLES ESCALA PUERTO DESCARGA */}
-                <div className="flex flex-wrap items-center justify-between gap-3 text-xs pt-1 border-t border-slate-200">
-                    <div className="flex items-center gap-3 flex-wrap">
-                        <span className="px-2 py-0.5 bg-blue-100 text-blue-900 rounded font-extrabold text-[11px] flex items-center gap-1 uppercase">
-                            <Anchor size={12} /> DESCARGA ({activeRouteInfo.dischargePort}):
-                        </span>
-
-
-                        <div className="flex items-center gap-1">
-                            <label className="font-semibold text-slate-600">Ritmo (MT/h):</label>
-                            <input
-                                type="number"
-                                value={dischargeRate}
-                                onChange={(e) => handleCargoOrRateDischargeChange(cargoTons, parseFloat(e.target.value) || 1)}
-                                className="h-7 w-16 px-1 bg-white border border-slate-300 text-blue-700 rounded font-mono font-bold text-center text-xs"
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                            <label className="font-semibold text-slate-600">Atraque:</label>
-                            <input
-                                type="datetime-local"
-                                value={entryDateDischarge}
-                                onChange={(e) => handleEntryDischargeChange(e.target.value)}
-                                className="h-7 px-1.5 bg-white border border-slate-300 text-slate-800 rounded font-mono text-[10px]"
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                            <label className="font-semibold text-slate-600">Desatraque:</label>
-                            <input
-                                type="datetime-local"
-                                value={exitDateDischarge}
-                                onChange={(e) => handleExitDischargeChange(e.target.value)}
-                                className="h-7 px-1.5 bg-white border border-slate-300 text-slate-800 rounded font-mono text-[10px]"
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                            <span className="px-2 py-0.5 bg-amber-50 border border-amber-300 text-amber-900 rounded font-mono font-bold text-[11px]">
-                                ⏱️ {portHoursDischarge.toFixed(1)} hrs
+                    {/* BLOQUE DERECHO: VARIABLES Q PUERTO DE DESCARGA (MAESTRO DE PUERTOS) */}
+                    <div className="bg-white p-3 rounded-lg border border-blue-200 shadow-sm space-y-2">
+                        <div className="flex justify-between items-center border-b border-blue-100 pb-1.5">
+                            <span className="text-xs font-extrabold text-blue-800 flex items-center gap-1 uppercase">
+                                <Anchor size={13} /> 🏗️ Q PUERTO DESCARGA — {activeRouteInfo.dischargeName}
                             </span>
-                            {isCasinoNightDischarge && (
-                                <span className="px-1.5 py-0.5 bg-purple-100 text-purple-900 rounded font-extrabold text-[10px]">
-                                    🌙 Casino (+25%)
-                                </span>
-                            )}
+                            <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200">
+                                Maestro Puertos & Terminales
+                            </span>
                         </div>
 
-                        <div className="flex items-center gap-1">
-                            <label className="font-semibold text-slate-600">Remolques:</label>
-                            <select
-                                value={tugboatsInDischarge}
-                                onChange={(e) => {
-                                    const val = parseInt(e.target.value);
-                                    setTugboatsInDischarge(val);
-                                    setTugboatsOutDischarge(val);
-                                }}
-                                className="h-7 px-1.5 bg-white border border-slate-300 text-slate-800 rounded font-bold text-xs"
-                            >
-                                <option value="1">1 IN / 1 OUT</option>
-                                <option value="2">2 IN / 2 OUT</option>
-                                <option value="3">3 IN / 3 OUT</option>
-                            </select>
+                        {/* Grilla uniforme de 6 variables Q de Descarga */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-[11px] text-slate-700 font-mono">
+                            <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
+                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">1. Ritmo</span>
+                                <span className="font-bold text-blue-700">{dischargeRate} MT/h</span>
+                            </div>
+                            <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
+                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">2. Q_op (MT/Ritmo)</span>
+                                <span className="font-bold text-blue-800">{(cargoTons / dischargeRate).toFixed(1)} hrs</span>
+                            </div>
+                            <div className="bg-amber-50/80 p-1.5 rounded border border-amber-300">
+                                <span className="text-[9px] text-amber-800 block uppercase font-sans font-bold">3. Q_fijo (4.0 hrs)</span>
+                                <span className="font-semibold text-[9px] text-amber-900 leading-tight block">Atraq 1.5h + Insp 1.0h + Desam 1.5h</span>
+                            </div>
+                            <div className="bg-emerald-50 p-1.5 rounded border border-emerald-300">
+                                <span className="text-[9px] text-emerald-700 block uppercase font-sans font-bold">4. Perm. Total</span>
+                                <span className="font-bold text-emerald-900">{((cargoTons / dischargeRate) + 4.0).toFixed(1)} hrs</span>
+                            </div>
+                            <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
+                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">5. Remolques</span>
+                                <span className="font-bold text-slate-800">2 IN / 2 OUT</span>
+                            </div>
+                            <div className="bg-purple-50 p-1.5 rounded border border-purple-200">
+                                <span className="text-[9px] text-purple-700 block uppercase font-sans font-bold">6. LOA / GRT</span>
+                                <span className="font-bold text-purple-900">{vessel.loa}m / {vessel.grt}</span>
+                            </div>
                         </div>
-
-                        <button
-                            onClick={() => setIsNationalDischarge(!isNationalDischarge)}
-                            className={`h-7 px-2 rounded text-[11px] font-bold border ${isNationalDischarge ? 'bg-teal-50 text-teal-700 border-teal-300' : 'bg-amber-50 text-amber-700 border-amber-300'}`}
-                        >
-                            {isNationalDischarge ? '🇵🇪 Nac.' : '🌐 Ext.'}
-                        </button>
                     </div>
 
-                    {/* BOTÓN IMPRIMIR PDF DESCARGA */}
-                    <button
-                        onClick={handlePrintPdfDischarge}
-                        className="h-7 px-3 bg-blue-700 hover:bg-blue-800 text-white text-[11px] font-bold uppercase tracking-wider rounded flex items-center gap-1 shadow-sm cursor-pointer shrink-0"
-                    >
-                        <Printer size={12} /> PDF Descarga (Matarani)
-                    </button>
                 </div>
             </div>
 
-            {/* SECCIÓN INFERIOR: VISOR DUAL LADO A LADO EN UNA SOLA VENTANA (SPLIT-VIEW) */}
-            <div className="flex-1 grid grid-cols-2 gap-3 min-h-[480px] overflow-hidden">
+            {/* SECCIÓN INFERIOR: VISOR DUAL DE 4 PDFs EN 2 COLUMNAS PARALELAS LADO A LADO */}
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-[600px] overflow-auto">
                 
-                {/* VISOR 1 (IZQUIERDA): PUERTO CARGA (CALLAO APM) */}
-                <div className="flex flex-col bg-slate-200 rounded-lg border border-slate-300 overflow-hidden shadow-inner h-full">
-                    <div className="bg-teal-800 text-white px-3 py-1.5 text-xs font-bold flex items-center justify-between">
-                        <span>📄 ACTA AUDITORÍA PUERTO DE CARGA — CALLAO APM</span>
+                {/* COLUMNA 1 (IZQUIERDA): PUERTO DE CARGA — 2 PDFs (MÍNIMO VS MÁXIMO) */}
+                <div className="flex flex-col gap-4">
+                    <div className="bg-teal-900 text-white px-3 py-2 text-xs font-bold rounded-lg flex items-center justify-between shadow-sm">
+                        <div className="flex items-center gap-2">
+                            <span>📦 COLUMNA 1: PUERTO DE CARGA — {activeRouteInfo.loadName}</span>
+                            <button
+                                onClick={handlePrintDossierLoad}
+                                className="h-6 px-2.5 bg-teal-600 hover:bg-teal-500 text-white text-[10px] font-bold uppercase rounded flex items-center gap-1 cursor-pointer transition-colors border border-teal-400"
+                                title="Imprimir los 2 PDFs de Carga (Mínimo + Máximo) en un solo documento"
+                            >
+                                <Printer size={11} /> Imprimir Dossier Carga
+                            </button>
+                        </div>
                         <span className="font-mono font-extrabold text-teal-200">
-                            ${auditLoad.total.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+                            Promedio Carga: ${((auditLoad.total + auditLoad.total * 1.3) / 2).toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
                         </span>
                     </div>
-                    <iframe
-                        title="Visor PDF Auditoria Carga Callao"
-                        srcDoc={htmlDocLoad}
-                        className="w-full flex-1 border-none bg-white"
-                    />
+
+                    {/* PDF 1: CARGA MÍNIMA */}
+                    <div className="flex flex-col bg-white rounded-lg border border-slate-300 overflow-hidden shadow-sm h-[380px]">
+                        <div className="bg-teal-700 text-white px-3 py-1.5 text-xs font-bold flex items-center justify-between">
+                            <span>📄 PDF 1: CARGA MÍNIMA [NIVEL BAJO - HORARIO ORDINARIO]</span>
+                            <span className="font-mono font-extrabold text-teal-100">
+                                ${auditLoad.total.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+                            </span>
+                        </div>
+                        <iframe
+                            title="Visor PDF Auditoria Carga Minima"
+                            srcDoc={htmlDocLoadMin}
+                            className="w-full flex-1 border-none bg-white"
+                        />
+                    </div>
+
+                    {/* PDF 2: CARGA MÁXIMA */}
+                    <div className="flex flex-col bg-white rounded-lg border border-amber-400 overflow-hidden shadow-sm h-[380px]">
+                        <div className="bg-amber-700 text-white px-3 py-1.5 text-xs font-bold flex items-center justify-between">
+                            <span>📄 PDF 2: CARGA MÁXIMA [NIVEL ALTO - HORARIO RECARGO]</span>
+                            <span className="font-mono font-extrabold text-amber-100">
+                                ${(auditLoad.total * 1.3).toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+                            </span>
+                        </div>
+                        <iframe
+                            title="Visor PDF Auditoria Carga Maxima"
+                            srcDoc={htmlDocLoadMax}
+                            className="w-full flex-1 border-none bg-white"
+                        />
+                    </div>
                 </div>
 
-                {/* VISOR 2 (DERECHA): PUERTO DESCARGA (MATARANI TISUR MOCK) */}
-                <div className="flex flex-col bg-slate-200 rounded-lg border border-slate-300 overflow-hidden shadow-inner h-full">
-                    <div className="bg-blue-800 text-white px-3 py-1.5 text-xs font-bold flex items-center justify-between">
-                        <span>📄 ACTA AUDITORÍA PUERTO DESCARGA — MATARANI TISUR (MOCK)</span>
+                {/* COLUMNA 2 (DERECHA): PUERTO DE DESCARGA — 2 PDFs (MÍNIMO VS MÁXIMO) */}
+                <div className="flex flex-col gap-4">
+                    <div className="bg-blue-900 text-white px-3 py-2 text-xs font-bold rounded-lg flex items-center justify-between shadow-sm">
+                        <div className="flex items-center gap-2">
+                            <span>🏗️ COLUMNA 2: PUERTO DE DESCARGA — {activeRouteInfo.dischargeName}</span>
+                            <button
+                                onClick={handlePrintDossierDischarge}
+                                className="h-6 px-2.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold uppercase rounded flex items-center gap-1 cursor-pointer transition-colors border border-blue-400"
+                                title="Imprimir los 2 PDFs de Descarga (Mínimo + Máximo) en un solo documento"
+                            >
+                                <Printer size={11} /> Imprimir Dossier Descarga
+                            </button>
+                        </div>
                         <span className="font-mono font-extrabold text-blue-200">
-                            ${auditDischarge.total.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+                            Promedio Descarga: ${((auditDischarge.total + auditDischarge.total * 1.3) / 2).toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
                         </span>
                     </div>
-                    <iframe
-                        title="Visor PDF Auditoria Descarga Matarani"
-                        srcDoc={htmlDocDischarge}
-                        className="w-full flex-1 border-none bg-white"
-                    />
+
+                    {/* PDF 3: DESCARGA MÍNIMA */}
+                    <div className="flex flex-col bg-white rounded-lg border border-slate-300 overflow-hidden shadow-sm h-[380px]">
+                        <div className="bg-blue-700 text-white px-3 py-1.5 text-xs font-bold flex items-center justify-between">
+                            <span>📄 PDF 3: DESCARGA MÍNIMA [NIVEL BAJO - HORARIO ORDINARIO]</span>
+                            <span className="font-mono font-extrabold text-blue-100">
+                                ${auditDischarge.total.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+                            </span>
+                        </div>
+                        <iframe
+                            title="Visor PDF Auditoria Descarga Minima"
+                            srcDoc={htmlDocDischargeMin}
+                            className="w-full flex-1 border-none bg-white"
+                        />
+                    </div>
+
+                    {/* PDF 4: DESCARGA MÁXIMA */}
+                    <div className="flex flex-col bg-white rounded-lg border border-rose-400 overflow-hidden shadow-sm h-[380px]">
+                        <div className="bg-rose-800 text-white px-3 py-1.5 text-xs font-bold flex items-center justify-between">
+                            <span>📄 PDF 4: DESCARGA MÁXIMA [NIVEL ALTO - HORARIO RECARGO]</span>
+                            <span className="font-mono font-extrabold text-rose-100">
+                                ${(auditDischarge.total * 1.3).toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+                            </span>
+                        </div>
+                        <iframe
+                            title="Visor PDF Auditoria Descarga Maxima"
+                            srcDoc={htmlDocDischargeMax}
+                            className="w-full flex-1 border-none bg-white"
+                        />
+                    </div>
                 </div>
 
             </div>
         </div>
     );
+
 };

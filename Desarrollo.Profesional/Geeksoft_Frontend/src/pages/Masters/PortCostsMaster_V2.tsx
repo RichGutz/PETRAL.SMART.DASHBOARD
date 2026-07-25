@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { Anchor, Save, Clock, Ship } from 'lucide-react';
-import { MatrixComplexPanel } from './MatrixComplexPanel';
+import { CallaoAuditViewer } from '../../components/Masters/CallaoAuditViewer';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
+
 
 // Helper para obtener código ISO de 2 letras y nombre limpio de país
 const getCountryInfo = (countryStr: string) => {
@@ -19,7 +20,7 @@ const getCountryInfo = (countryStr: string) => {
 };
 
 export const PortCostsMaster_V2: React.FC = () => {
-    const navigate = navigateHook();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     
@@ -33,7 +34,7 @@ export const PortCostsMaster_V2: React.FC = () => {
     const [filterProspecto, setFilterProspecto] = useState(false);
     const [vessels, setVessels] = useState<any[]>([]);
     
-    // Estado de costos: costs[port_id][client_id][vessel_id] = { CARGA, DESCARGA, updated_at, updated_by }
+    // Estado de costos
     const [costsState, setCostsState] = useState<any>({});
     const [focusedInput, setFocusedInput] = useState<string | null>(null);
     
@@ -41,13 +42,6 @@ export const PortCostsMaster_V2: React.FC = () => {
     const [activePortId, setActivePortId] = useState('');
     const activeClientId = 'PETRAL';
 
-    function navigateHook() {
-        try {
-            return useNavigate();
-        } catch {
-            return () => {};
-        }
-    }
 
     const formatCostValue = (value: number | undefined | null) => {
         if (value == null || isNaN(value)) return '';
@@ -64,21 +58,16 @@ export const PortCostsMaster_V2: React.FC = () => {
                 ForecastService.getPortCostsStatic()
             ]);
             
-            // Ordenar todos los puertos geográficamente de Norte a Sur (de mayor a menor latitud)
             const sortedPorts = [...(portsData || [])].sort((a: any, b: any) => {
                 const latA = a.lat !== undefined && a.lat !== null ? parseFloat(a.lat) : 0;
                 const latB = b.lat !== undefined && b.lat !== null ? parseFloat(b.lat) : 0;
-                return latB - latA; // De mayor a menor (Norte a Sur)
+                return latB - latA;
             });
 
             setPorts(sortedPorts);
-            
-            const clientsList = clientsData || [];
-            setRawClients(clientsList);
-            
+            setRawClients(clientsData || []);
             setVessels(vesselsData);
             
-            // Build the state matrix (Conexión directa puerto -> buque -> operaciones)
             const newState: any = {};
             staticCostsData.forEach((row: any) => {
                 const portId = (row.port_id || '').toUpperCase();
@@ -90,28 +79,21 @@ export const PortCostsMaster_V2: React.FC = () => {
                 if (!newState[portId][vesselId]) {
                     newState[portId][vesselId] = {
                         CARGA: { MAIN: 0, loading_master: 0, other: 0 },
-                        DESCARGA: { MAIN: 0, loading_master: 0, other: 0 },
-                        updated_at: row.updated_at,
-                        updated_by: row.updated_by
+                        DESCARGA: { MAIN: 0, loading_master: 0, other: 0 }
                     };
                 }
 
                 if (newState[portId][vesselId][op]) {
                     newState[portId][vesselId][op][subOp] = Number(row.cost || 0);
                 }
-
-                if (row.updated_at && (!newState[portId][vesselId].updated_at || row.updated_at > newState[portId][vesselId].updated_at)) {
-                    newState[portId][vesselId].updated_at = row.updated_at;
-                    newState[portId][vesselId].updated_by = row.updated_by;
-                }
             });
-            
             setCostsState(newState);
-            
-            if (sortedPorts.length > 0) setActivePortId(sortedPorts[0].port_id);
-            
-        } catch (error) {
-            console.error("Error al obtener los datos de costos portuarios:", error);
+
+            if (sortedPorts.length > 0 && !activePortId) {
+                setActivePortId(sortedPorts[0].port_id);
+            }
+        } catch (err) {
+            console.error("Error al cargar maestro de costos de puerto:", err);
         } finally {
             setLoading(false);
         }
@@ -122,20 +104,17 @@ export const PortCostsMaster_V2: React.FC = () => {
     }, []);
 
     const toggleActivo = () => {
-        setFilterActivo(prev => {
-            if (prev && !filterProspecto) return prev;
-            return !prev;
-        });
+        setFilterActivo(true);
+        setFilterProspecto(false);
     };
 
     const toggleProspecto = () => {
-        setFilterProspecto(prev => {
-            if (prev && !filterActivo) return prev;
-            return !prev;
-        });
+        setFilterProspecto(true);
+        setFilterActivo(false);
     };
 
     const handleCostChange = (portId: string, clientId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA', subOp: string, value: string) => {
+
         const cleanValue = value.replace(/,/g, '');
         const numValue = parseFloat(cleanValue) || 0;
         setCostsState((prev: any) => {
@@ -369,8 +348,12 @@ export const PortCostsMaster_V2: React.FC = () => {
                     </div>
 
                     {mode === 'matrix' ? (
-                        <MatrixComplexPanel ports={ports} activePortId={activePortId} setActivePortId={setActivePortId} />
+                        <div className="w-full flex-1 min-h-[720px]">
+                            <CallaoAuditViewer />
+                        </div>
                     ) : (
+
+
                         <div className="flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                             
                             {/* Nivel 1: TABS DE PAÍSES */}

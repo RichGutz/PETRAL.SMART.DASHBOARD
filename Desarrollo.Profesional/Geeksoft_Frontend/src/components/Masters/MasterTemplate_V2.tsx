@@ -264,7 +264,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
 
 
 
-                    {/* BLOQUE 1: MAESTROS */}
+                    {/* BLOQUE 1: MAESTROS AGRUPADOS POR CATEGORÍA */}
                     {hasPermission ? (
                         (hasPermission('maestro_buques', 'Visor') || 
                          hasPermission('maestro_rutas', 'Visor') || 
@@ -272,100 +272,143 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                          hasPermission('maestro_puertos', 'Visor') || 
                          hasPermission('maestro_contratos', 'Visor') || 
                          hasPermission('maestro_costos_agencia', 'Visor')) && (
-                            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 flex flex-col gap-2">
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-1">Datos Maestros</div>
-                                <nav className="flex flex-col gap-1">
-                                    {hasPermission('maestro_puertos', 'Visor') && (
-                                        <button 
-                                            onClick={() => navigate('/ports')}
-                                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'ports' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                        >
-                                            <span className="text-sm">⚓</span> Maestro de Puertos & Terminales
-                                        </button>
-                                    )}
-
-                                    {hasPermission('maestro_buques', 'Visor') && (
-                                        <button 
-                                            onClick={() => navigate('/vessels')}
-                                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'vessels' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                        >
-                                            <span className="text-sm">🚢</span> Maestro de Buques
-                                        </button>
-                                    )}
+                            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 flex flex-col gap-3">
+                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-1">DATOS MAESTROS</div>
+                                <nav className="flex flex-col gap-3">
                                     
-                                    {hasPermission('maestro_rutas', 'Visor') && (
-                                        <button 
-                                            onClick={() => navigate('/routes')}
-                                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'routes' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                        >
-                                            <span className="text-sm">🗺️</span> Maestro de Distancias
-                                        </button>
-                                    )}
+                                    {/* CATEGORÍA 1: MAESTROS FÍSICOS */}
+                                    <div className="flex flex-col gap-1">
+                                        <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-1 flex items-center gap-1">
+                                            <span>🏗️</span> Maestros Físicos
+                                        </div>
+                                        <div className="pl-2 flex flex-col gap-0.5 border-l-2 border-slate-100 ml-1.5">
+                                            {hasPermission('maestro_buques', 'Visor') && (
+                                                <button 
+                                                    onClick={() => navigate('/vessels')}
+                                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'vessels' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                                >
+                                                    <span className="text-xs">🚢</span> Maestro de Flota
+                                                </button>
+                                            )}
+                                            {hasPermission('maestro_puertos', 'Visor') && (
+                                                <button 
+                                                    onClick={() => navigate('/ports')}
+                                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'ports' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                                >
+                                                    <span className="text-xs">⚓</span> Maestro de Puertos y Terminales
+                                                </button>
+                                            )}
+                                            {hasPermission('maestro_rutas', 'Visor') && (
+                                                <button 
+                                                    onClick={() => navigate('/routes')}
+                                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'routes' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                                >
+                                                    <span className="text-xs">📏</span> Maestro de Distancias
+                                                </button>
+                                            )}
 
-                                    {hasPermission('maestro_rutas', 'Visor') && (
-                                        <button 
-                                            onClick={() => navigate('/spot-routes')}
-                                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'spot-routes' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                        >
-                                            <span className="text-sm">📍</span> Maestro de Rutas
-                                        </button>
-                                    )}
-                                    
-                                    {hasPermission('maestro_tarifas', 'Visor') && (
-                                        <button 
-                                            onClick={() => navigate('/clients')}
-                                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'clients' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                        >
-                                            <span className="text-sm">💼</span> Maestro de Clientes
-                                        </button>
-                                    )}
+                                        </div>
+                                    </div>
 
-                                    {hasPermission('maestro_contratos', 'Visor') && (
-                                        <button 
-                                            onClick={() => navigate('/contracts')}
-                                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'contracts' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                        >
-                                            <span className="text-sm">📝</span> Maestro de Contratos
-                                        </button>
-                                    )}
+                                    {/* CATEGORÍA 2: MAESTROS COMERCIALES */}
+                                    <div className="flex flex-col gap-1">
+                                        <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-1 flex items-center gap-1">
+                                            <span>💼</span> Maestros Comerciales
+                                        </div>
+                                        <div className="pl-2 flex flex-col gap-0.5 border-l-2 border-slate-100 ml-1.5">
+                                            {hasPermission('maestro_tarifas', 'Visor') && (
+                                                <button 
+                                                    onClick={() => navigate('/clients')}
+                                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'clients' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                                >
+                                                    <span className="text-xs">🏢</span> Maestro de Clientes
+                                                </button>
+                                            )}
+                                            {hasPermission('maestro_contratos', 'Visor') && (
+                                                <button 
+                                                    onClick={() => navigate('/contracts')}
+                                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'contracts' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                                >
+                                                    <span className="text-xs">📜</span> Maestro de Contratos
+                                                </button>
+                                            )}
+                                            {hasPermission('maestro_rutas', 'Visor') && (
+                                                <button 
+                                                    onClick={() => navigate('/spot-routes')}
+                                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'spot-routes' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                                    title="Rutas Físicas Activas (routes_clients)"
+                                                >
+                                                    <span className="text-xs">📍</span> Maestro de Rutas
+                                                </button>
+                                            )}
+                                            {hasPermission('maestro_rutas', 'Visor') && (
+                                                <button 
+                                                    onClick={() => navigate('/quotes')}
+                                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'quotes' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                                    title="Cotizaciones Spot / Prospectos Comercial (routes_quotes)"
+                                                >
+                                                    <span className="text-xs">📑</span> Maestro de Cotizaciones
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
 
-                                    {hasPermission('maestro_bunker', 'Visor') && (
-                                        <button 
-                                            onClick={() => navigate('/bunker-prices')}
-                                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'bunker' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                        >
-                                            <span className="text-sm">⛽</span> Maestro de Bunker
-                                        </button>
-                                    )}
 
-                                    {hasPermission('maestro_costos_agencia', 'Visor') && (
-                                        <>
-                                            <button 
-                                                onClick={() => navigate('/port-tariffs')}
-                                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'port-tariffs' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                            >
-                                                <span className="text-sm">🚢</span> Maestro Tarifas Portuarias
-                                            </button>
-                                            <button 
-                                                onClick={() => navigate('/port-costs')}
-                                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'port-costs' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                            >
-                                                <span className="text-sm">💰</span> Maestro Gastos Portuarios
-                                            </button>
-                                        </>
-                                    )}
 
-                                    {hasPermission('maestro_rutas', 'Visor') && (
-                                        <button 
-                                            onClick={() => navigate('/sources-sinks')}
-                                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'sources-sinks' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                        >
-                                            <span className="text-sm">🔄</span> Maestro Originación / Destino
-                                        </button>
-                                    )}
+                                    {/* CATEGORÍA 3: MAESTROS DE MERCADO */}
+                                    <div className="flex flex-col gap-1">
+                                        <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-1 flex items-center gap-1">
+                                            <span>⛽</span> Maestros de Mercado
+                                        </div>
+                                        <div className="pl-2 flex flex-col gap-0.5 border-l-2 border-slate-100 ml-1.5">
+                                            {hasPermission('maestro_bunker', 'Visor') && (
+                                                <button 
+                                                    onClick={() => navigate('/bunker-prices')}
+                                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'bunker' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                                >
+                                                    <span className="text-xs">⛽</span> Maestro de Búnker
+                                                </button>
+                                            )}
+                                            {hasPermission('maestro_rutas', 'Visor') && (
+                                                <button 
+                                                    onClick={() => navigate('/sources-sinks')}
+                                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'sources-sinks' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                                >
+                                                    <span className="text-xs">⚙️</span> Maestro de Originación
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* CATEGORÍA 4: MAESTROS DE COSTOS */}
+                                    <div className="flex flex-col gap-1">
+                                        <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-1 flex items-center gap-1">
+                                            <span>💰</span> Maestros de Costos
+                                        </div>
+                                        <div className="pl-2 flex flex-col gap-0.5 border-l-2 border-slate-100 ml-1.5">
+                                            {hasPermission('maestro_costos_agencia', 'Visor') && (
+                                                <>
+                                                    <button 
+                                                        onClick={() => navigate('/port-tariffs')}
+                                                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'port-tariffs' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                                    >
+                                                        <span className="text-xs">🏷️</span> Maestro de Tarifas Portuarias
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => navigate('/port-costs')}
+                                                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'port-costs' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                                    >
+                                                        <span className="text-xs">🧮</span> Maestro de Gastos Portuarios
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+
                                 </nav>
                             </div>
                         )
+
                     ) : (
                         /* Fallback por si carga */
                         <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 flex flex-col gap-2">

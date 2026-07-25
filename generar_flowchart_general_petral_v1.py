@@ -145,17 +145,18 @@ def generate_pdf_flowchart_petral_v1():
         #  NIVEL 5: AUDITORÍA NAVIERA DUAL & REPORTES
         # ==========================================
         subgraph cluster_lvl5 {
-            label = "NIVEL 5: AUDITORÍA NAVIERA DUAL & REPORTES EXPORTABLES"; style="filled,dashed"; fillcolor="#E2E8F0"; color="#64748B"; fontcolor="#0F172A"; fontname="Arial Bold"; fontsize=30;
+            label = "NIVEL 5: MOTOR P×Q PROMEDIADO, AUDITORÍA NAVIERA DUAL & REPORTES EXPORTABLES"; style="filled,dashed"; fillcolor="#E2E8F0"; color="#64748B"; fontcolor="#0F172A"; fontname="Arial Bold"; fontsize=30;
             
             { rank=same;
-                AuditViewer [label="🔍 HERRAMIENTA AUDITORÍA DUAL P x Q\\n(Visor Split-View PDFs Lado a Lado)", shape=component, fillcolor="#CBD5E1", penwidth=3.0, fontsize=24, height=1.4];
-                ReportPdf   [label="📄 ACTA AUDITORÍA PDF",   shape=note, fillcolor="#F1F5F9", fontsize=20, height=1.2];
-                ReportExcel [label="📈 EXCEL CONSOLIDADO",    shape=note, fillcolor="#F1F5F9", fontsize=20, height=1.2];
+                AuditViewer [label="⚙️ MOTOR P×Q PROMEDIADO & VISOR 4 PDFs (2x2)\\n(Layout 2 Columnas: Carga vs Descarga | Dossier Imprimible)", shape=component, fillcolor="#CBD5E1", penwidth=3.0, fontsize=24, height=1.4];
+                ReportPdf   [label="📄 DOSSIER AUDITORÍA PDF (2 PÁGS)", shape=note, fillcolor="#F1F5F9", fontsize=20, height=1.2];
+                ReportExcel [label="📈 EXCEL PROFORMA CONSOLIDADO",        shape=note, fillcolor="#F1F5F9", fontsize=20, height=1.2];
             }
 
             AuditViewer -> ReportPdf;
             AuditViewer -> ReportExcel;
         }
+
 
         # --- COLUMNA VERTEBRAL INVISIBLE (1->2->3->4->4B->5) ---
         M6_Contracts -> SpotCalculator [style=invis, weight=10];
