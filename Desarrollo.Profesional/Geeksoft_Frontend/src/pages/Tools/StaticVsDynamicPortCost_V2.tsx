@@ -119,54 +119,41 @@ export const StaticVsDynamicPortCost: React.FC = () => {
         setActiveTerminalId('GENERAL');
     };
 
-    // ⚙️ PROCESADOR QUE IMPORTA Y EJECUTA DIRECTAMENTE LA FUNCIÓN OFICIAL DE SISTEMAS `computePortItems`
-    const calculateExactMatrizPromedio = (portId: string, vessel: typeof PETRAL_FLEET[0], operation: 'CARGA' | 'DESCARGA') => {
+    // ⚙️ PROCESADOR DIRECTO: Importa y ejecuta el motor oficial `computePortItems` de sistemas.
+    // REGLA: No inventa nada. Si el motor no tiene datos para ese puerto → hasDynamic: false.
+    const calculateMatrizPromedio = (portId: string, vessel: typeof PETRAL_FLEET[0], operation: 'CARGA' | 'DESCARGA') => {
         const cargoTons = 13500;
         const rate = operation === 'CARGA' ? 500 : 350;
-        const qOp = cargoTons / rate;
-        const qFijo = 4.0;
-        const portHours = qOp + qFijo; // Callao Carga: 31.0 hrs | Matarani Descarga: 42.57 hrs
+        const portHours = (cargoTons / rate) + 4.0; // P.ej. Callao Carga: 31.0h
 
-        // 1. Escenario Mínimo Ordinario (Horario diurno normal)
+        // Escenario Mínimo: horario diurno ordinario (isCasino = false)
         const itemsMin = computePortItems(portId.toUpperCase(), vessel, portHours, true, 2, 2, false) || [];
         const totalMin = itemsMin.reduce((sum: number, i: any) => sum + (i.cost || 0), 0);
 
-        // 2. Escenario Máximo Recargo (Horario nocturno / casino / dominical +25% OT & Casino)
+        // Escenario Máximo: horario nocturno/casino (isCasino = true)
         const itemsMax = computePortItems(portId.toUpperCase(), vessel, portHours, true, 2, 2, true) || [];
-        
-        // Si el motor devuelve 0 en itemsMax, aplica el multiplicador oficial de recargo del sistema (* 1.30)
-        let totalMax = itemsMax.reduce((sum: number, i: any) => sum + (i.cost || 0), 0);
-        if (totalMax === totalMin) {
-            totalMax = totalMin * 1.30;
-        }
+        const totalMax = itemsMax.reduce((sum: number, i: any) => sum + (i.cost || 0), 0);
 
-        // 3. PROMEDIO DINÁMICO P×Q EXACTO DE LA MATRIZ FINANCIERA (idéntico a CallaoAuditViewer: $19,071.888 USD)
+        // Promedio directo de lo que devuelve el motor — sin multiplicadores artificiales
         const totalAvg = (totalMin + totalMax) / 2;
 
         const concepts = itemsMin.map((item: any, idx: number) => {
             const minCost = item.cost || 0;
-            const maxCost = itemsMax[idx]?.cost || (minCost * 1.30);
-            const avgCost = (minCost + maxCost) / 2;
+            const maxCost = itemsMax[idx]?.cost ?? minCost;
             return {
-                concept: item.concept || item.description || `Concepto ${idx + 1}`,
+                concept: item.concept || `Concepto ${idx + 1}`,
                 costMin: minCost,
                 costMax: maxCost,
-                costAvg: avgCost
+                costAvg: (minCost + maxCost) / 2
             };
         });
 
-        return {
-            totalMin,
-            totalMax,
-            totalAvg,
-            portHours,
-            concepts,
-            hasDynamic: itemsMin.length > 0
-        };
+        return { totalMin, totalMax, totalAvg, portHours, concepts, hasDynamic: itemsMin.length > 0 };
     };
 
-    // GENERACIÓN EXACTA DE LOS 8 CARDS POR TERMINAL PARA LOS 5 PUERTOS CONFIGURADOS
-    const eightCards = useMemo(() => {
+    // GENERACIÓN DE CARDS: Solo incluye combinaciones que tienen AMBOS ingredientes reales.
+    // REGLA: staticCost === 0 → no hay dato en BD → card excluida. hasDynamic === false → motor no soporta ese puerto → card excluida.
+    const validCards = useMemo(() => {
         if (!activePortId) return [];
 
         const cards: any[] = [];
@@ -178,31 +165,17 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                 const vUpper = vessel.vesselId.toUpperCase();
                 const keyStaticExact = `${pUpper}_${vUpper}_${op}`;
 
-                // Lectura DIRECTA Y VERÍDICA de la tabla `port_cost_static` de Supabase
-                let staticCost = staticMap.get(keyStaticExact) || 0;
+                // ESTÁTICO: Solo lo que viene de Supabase. Si es 0 → no hay tarifa → se omite esta card.
+                const staticCost = staticMap.get(keyStaticExact) || 0;
+                if (staticCost === 0) return; // Sin dato en BD → excluir
 
-                if (staticCost === 0) {
-                    const fallbackMoqKey = `${pUpper}_B/T MOQUEGUA_${op}`;
-                    const staticMoq = staticMap.get(fallbackMoqKey) || 0;
-                    if (staticMoq > 0) {
-                        staticCost = vessel.vesselId.includes('TABLONES') ? staticMoq * 0.90 : staticMoq;
-                    } else {
-                        if (pUpper.includes('CALLAO')) staticCost = op === 'CARGA' ? 28500 : 29800;
-                        else if (pUpper.includes('MATARANI')) staticCost = op === 'CARGA' ? 22400 : 23500;
-                        else if (pUpper.includes('ILO')) staticCost = op === 'CARGA' ? 18200 : 19100;
-                        else if (pUpper.includes('MARCONA')) staticCost = 33200;
-                        else if (pUpper.includes('MEJILLONES')) staticCost = 24100;
-                        else staticCost = 18000;
+                // DINÁMICO: Solo lo que devuelve el motor oficial sin modificaciones.
+                const pxqResult = calculateMatrizPromedio(activePortId, vessel, op);
+                if (!pxqResult.hasDynamic) return; // Motor no soporta este puerto → excluir
 
-                        if (vessel.vesselId.includes('TABLONES')) staticCost *= 0.88;
-                    }
-                }
-
-                // Cálculo Dinámico Importando la Función Oficial de Sistemas `computePortItems`
-                const pxqResult = calculateExactMatrizPromedio(activePortId, vessel, op);
                 const dynamicCost = pxqResult.totalAvg;
                 const varianceUsd = dynamicCost - staticCost;
-                const variancePct = staticCost > 0 ? (varianceUsd / staticCost) * 100 : 0;
+                const variancePct = (varianceUsd / staticCost) * 100;
 
                 let status: 'ALIGNED' | 'MODERATE' | 'CRITICAL' = 'ALIGNED';
                 if (Math.abs(variancePct) > 15) status = 'CRITICAL';
@@ -215,7 +188,6 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                     operation: op,
                     staticCost,
                     dynamicCost,
-                    hasDynamic: pxqResult.hasDynamic,
                     varianceUsd,
                     variancePct,
                     status,
@@ -240,7 +212,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
             { header: 'Varianza ($)', key: 'varianceUsd', type: 'currency', render: (v) => Number(v).toFixed(2) },
             { header: 'Varianza (%)', key: 'variancePct', type: 'percent', render: (v) => `${Number(v).toFixed(2)}%` }
         ];
-        exportMasterToExcel(`Static_vs_Dynamic_Port_Cost_${activePortId}`, exportCols, eightCards);
+        exportMasterToExcel(`Static_vs_Dynamic_Port_Cost_${activePortId}`, exportCols, validCards);
     };
 
     const handleExportPDF = () => {
@@ -252,7 +224,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
             { header: 'Promedio Matriz P×Q ($)', key: 'dynamicCost', type: 'currency', render: (v) => `$${Number(v).toFixed(2)}` },
             { header: 'Varianza (%)', key: 'variancePct', type: 'percent', render: (v) => `${Number(v).toFixed(2)}%` }
         ];
-        exportMasterToPDF(`Static_vs_Dynamic_Port_Cost_${activePortId}`, exportCols, eightCards);
+        exportMasterToPDF(`Static_vs_Dynamic_Port_Cost_${activePortId}`, exportCols, validCards);
     };
 
     return (
@@ -393,9 +365,16 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* ── PARRILLA EXACTA DE 8 CARDS POR TERMINAL (4 BUQUES × 2 OPERACIONES) ── */}
+                    {/* ── PARRILLA DE CARDS: Solo las combinaciones con AMBOS modelos reales ── */}
+                    {validCards.length === 0 && (
+                        <div className="flex flex-col items-center justify-center p-12 text-slate-400 gap-3 bg-white rounded-xl border border-slate-200">
+                            <span className="text-3xl">⚓</span>
+                            <p className="text-sm font-bold text-slate-600">Sin comparativa disponible para este puerto.</p>
+                            <p className="text-xs text-slate-400 text-center max-w-sm">No existen tarifas en <code className="bg-slate-100 px-1 rounded">port_cost_static</code> para los buques de la flota PETRAL en este puerto, o el motor P×Q no lo tiene configurado.</p>
+                        </div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
-                        {eightCards.map((card, idx) => {
+                        {validCards.map((card, idx) => {
                             const isExpanded = expandedCardKey === card.key;
                             return (
                                 <div 
