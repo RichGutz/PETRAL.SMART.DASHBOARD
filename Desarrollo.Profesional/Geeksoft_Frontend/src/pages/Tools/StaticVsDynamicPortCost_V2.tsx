@@ -75,10 +75,20 @@ export const StaticVsDynamicPortCost: React.FC = () => {
             setTerminals(terminalsData || []);
             setStaticCostsData(staticData || []);
 
-            if (sortedPorts.length > 0) {
-                const firstCountry = (sortedPorts[0].country || 'PE').toUpperCase();
+            // Filtrar solo puertos que tengan costo registrado en BD
+            const configuredPortSet = new Set<string>();
+            (staticData || []).forEach((row: any) => {
+                if (Number(row.cost || 0) > 0) {
+                    configuredPortSet.add((row.port_id || '').toUpperCase());
+                }
+            });
+
+            const validConfiguredPorts = sortedPorts.filter((p: any) => configuredPortSet.has(p.port_id.toUpperCase()));
+
+            if (validConfiguredPorts.length > 0) {
+                const firstCountry = (validConfiguredPorts[0].country || 'PE').toUpperCase();
                 setActiveCountry(firstCountry);
-                const firstPort = sortedPorts.find((p: any) => (p.country || 'PE').toUpperCase() === firstCountry);
+                const firstPort = validConfiguredPorts.find((p: any) => (p.country || 'PE').toUpperCase() === firstCountry);
                 if (firstPort) {
                     setActivePortId(firstPort.port_id);
                 }
@@ -88,41 +98,6 @@ export const StaticVsDynamicPortCost: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
-
-    // Países únicos
-    const uniqueCountries = useMemo(() => {
-        const set = new Set(ports.map(p => (p.country || "PE").toUpperCase()));
-        return Array.from(set);
-    }, [ports]);
-
-    // Puertos del país activo
-    const portsForCountry = useMemo(() => {
-        return ports.filter(p => (p.country || "PE").toUpperCase() === activeCountry);
-    }, [ports, activeCountry]);
-
-    // Terminales del puerto activo
-    const terminalsForPort = useMemo(() => {
-        return terminals.filter(t => t.port_id === activePortId);
-    }, [terminals, activePortId]);
-
-    // Puerto actual seleccionado
-    const currentPort = useMemo(() => {
-        return ports.find(p => p.port_id === activePortId) || ports[0];
-    }, [ports, activePortId]);
-
-    const handleCountryClick = (countryCode: string) => {
-        setActiveCountry(countryCode);
-        const firstPort = ports.find(p => (p.country || "PE").toUpperCase() === countryCode);
-        if (firstPort) {
-            setActivePortId(firstPort.port_id);
-            setActiveTerminalId('GENERAL');
-        }
-    };
-
-    const handlePortClick = (portId: string) => {
-        setActivePortId(portId);
-        setActiveTerminalId('GENERAL');
     };
 
     // Mapa de costos estáticos de Supabase (port_cost_static)
@@ -137,6 +112,54 @@ export const StaticVsDynamicPortCost: React.FC = () => {
         });
         return map;
     }, [staticCostsData]);
+
+    // Puertos 100% DATA-DRIVEN: Solo se muestran puertos que tengan al menos una tarifa estática o matriz en Supabase
+    const configuredPorts = useMemo(() => {
+        const configuredSet = new Set<string>();
+        staticCostsData.forEach(row => {
+            if (Number(row.cost || 0) > 0) {
+                configuredSet.add((row.port_id || '').toUpperCase());
+            }
+        });
+
+        // Retornar solo los puertos de la BD que están configurados
+        return ports.filter(p => configuredSet.has(p.port_id.toUpperCase()));
+    }, [ports, staticCostsData]);
+
+    // Países únicos basados SOLO en los puertos configurados
+    const uniqueCountries = useMemo(() => {
+        const set = new Set(configuredPorts.map(p => (p.country || "PE").toUpperCase()));
+        return Array.from(set);
+    }, [configuredPorts]);
+
+    // Puertos del país activo
+    const portsForCountry = useMemo(() => {
+        return configuredPorts.filter(p => (p.country || "PE").toUpperCase() === activeCountry);
+    }, [configuredPorts, activeCountry]);
+
+    // Terminales del puerto activo
+    const terminalsForPort = useMemo(() => {
+        return terminals.filter(t => t.port_id === activePortId);
+    }, [terminals, activePortId]);
+
+    // Puerto actual seleccionado
+    const currentPort = useMemo(() => {
+        return configuredPorts.find(p => p.port_id === activePortId) || configuredPorts[0];
+    }, [configuredPorts, activePortId]);
+
+    const handleCountryClick = (countryCode: string) => {
+        setActiveCountry(countryCode);
+        const firstPort = ports.find(p => (p.country || "PE").toUpperCase() === countryCode);
+        if (firstPort) {
+            setActivePortId(firstPort.port_id);
+            setActiveTerminalId('GENERAL');
+        }
+    };
+
+    const handlePortClick = (portId: string) => {
+        setActivePortId(portId);
+        setActiveTerminalId('GENERAL');
+    };
 
     // ⚙️ MOTOR P×Q PROMEDIADO OFICIAL DE PETRAL (Motor.PxQ.Promediado.md) ⚙️
     // Resuelve la incertidumbre del horario mediante 2 escenarios (Mínimo Ordinario vs Máximo Recargo/Casino)
