@@ -16,13 +16,6 @@ const getCountryInfo = (countryStr: string) => {
     return { code: fallbackCode, name: countryStr, color: '#64748b' };
 };
 
-interface StaticPortCostRow {
-    port_id: string;
-    vessel_id: string;
-    operation_type: 'CARGA' | 'DESCARGA';
-    cost: number;
-}
-
 // Las 4 Naves Oficiales de la Flota PETRAL
 const PETRAL_FLEET = [
     { vesselId: 'B/T MOQUEGUA', vesselLabel: 'B/T MOQUEGUA', loa: 134.16, grt: 8259, dwt: 14298, accentColor: 'border-t-blue-600 border-blue-300' },
@@ -31,15 +24,7 @@ const PETRAL_FLEET = [
     { vesselId: 'HUEMUL', vesselLabel: 'HUEMUL', loa: 134.16, grt: 8259, dwt: 14298, accentColor: 'border-t-amber-600 border-amber-300' }
 ];
 
-// LOS ÚNICOS PUERTOS CON MATRIZ COMPLEJA DINÁMICA CONFIGURADA EN PETRAL
-const DYNAMIC_CONFIGURED_PORTS = [
-    { port_id: 'CALLAO', port_name: 'Puerto del Callao (APM Terminals / DP World)', country: 'PE' },
-    { port_id: 'MATARANI', port_name: 'Puerto de Matarani (Tisur S.A.)', country: 'PE' },
-    { port_id: 'MARCONA', port_name: 'Puerto de San Juan de Marcona (SPCC)', country: 'PE' },
-    { port_id: 'ILO', port_name: 'Puerto de Ilo (SPCC / Enapu)', country: 'PE' }
-];
-
-// FUNCIÓN EVALUADORA OFICIAL DE LA MATRIZ COMPLEJA PETRAL (Identica a CallaoAuditViewer.tsx)
+// FUNCIÓN EVALUADORA DE MATRIZ COMPLEJA DINÁMICA (CallaoAuditViewer.tsx)
 const computePortItemsMatrizCompleja = (portCode: string, vesselObj: any, portHrs: number, isCasino: boolean) => {
     const loa = vesselObj.loa;
     const grt = vesselObj.grt;
@@ -52,7 +37,9 @@ const computePortItemsMatrizCompleja = (portCode: string, vesselObj: any, portHr
     const launchRateP = 85.00;
     const agencyFeeP = 1000.00;
 
-    if (portCode === "MARCONA") {
+    const codeUpper = (portCode || '').toUpperCase();
+
+    if (codeUpper.includes("MARCONA")) {
         const extraStandby = portHrs > 48.0 ? 3000.00 : 0.0;
         const lighthouseRate = isNational ? 0.03 : 0.12;
         const totalLighthouse = Math.round(lighthouseRate * grt * 100) / 100;
@@ -69,7 +56,7 @@ const computePortItemsMatrizCompleja = (portCode: string, vesselObj: any, portHr
             { id: 8, concept: "Honorarios Agenciamiento Marítimo", cost: 1400.00 },
             { id: 9, concept: "Movilidad & Comunicaciones", cost: 450.00 }
         ];
-    } else if (portCode === "MATARANI") {
+    } else if (codeUpper.includes("MATARANI")) {
         const basePSA = 3368.00;
         const psaOT = isCasino ? basePSA * 0.25 : 0.0;
         const totalPSA = (basePSA * 2) + psaOT;
@@ -87,7 +74,7 @@ const computePortItemsMatrizCompleja = (portCode: string, vesselObj: any, portHr
             { id: 7, concept: "Honorarios de Agenciamiento", cost: 1100.00 },
             { id: 8, concept: "Movilidad & Comunicaciones", cost: 450.00 }
         ];
-    } else if (portCode === "ILO") {
+    } else if (codeUpper.includes("ILO")) {
         const pilotageTotal = 3000.00;
         const linesmenTotal = 680.00;
         const dockageSpcc = Math.round((300.00 + (0.05 * grt * stayDays)) * 100) / 100;
@@ -111,8 +98,7 @@ const computePortItemsMatrizCompleja = (portCode: string, vesselObj: any, portHr
             { id: 8, concept: "Honorarios de Agenciamiento", cost: 900.00 },
             { id: 9, concept: "Movilidad & Comunicaciones", cost: 400.00 }
         ];
-    } else {
-        // CALLAO (APM Terminals / DP World)
+    } else if (codeUpper.includes("CALLAO")) {
         const basePilotage = Math.max(750.00, 0.055 * grt);
         const pilotageOut = isCasino ? basePilotage * 1.25 : basePilotage;
         const totalPilotage = Math.round((basePilotage + pilotageOut) * 100) / 100;
@@ -137,11 +123,15 @@ const computePortItemsMatrizCompleja = (portCode: string, vesselObj: any, portHr
             { id: 11, concept: "Movilidad & Comunicaciones", cost: 450.00 }
         ];
     }
+
+    // Si el puerto no tiene configurada matriz dinámica (ej. Talara, Manta), retorna array vacío
+    return [];
 };
 
 export const StaticVsDynamicPortCost: React.FC = () => {
+    const [ports, setPorts] = useState<any[]>([]);
     const [terminals, setTerminals] = useState<any[]>([]);
-    const [staticCostsData, setStaticCostsData] = useState<StaticPortCostRow[]>([]);
+    const [staticCostsRaw, setStaticCostsRaw] = useState<any[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
     // Enrutamiento de Tabs
@@ -159,13 +149,27 @@ export const StaticVsDynamicPortCost: React.FC = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            const [terminalsData, staticData] = await Promise.all([
+            const [portsData, terminalsData, staticData] = await Promise.all([
+                ForecastService.getPorts(),
                 ForecastService.getTerminals(),
                 ForecastService.getPortCostsStatic()
             ]);
 
+            const sortedPorts = (portsData || []).sort((a: any, b: any) => {
+                const latA = parseFloat(a.lat) || 0;
+                const latB = parseFloat(b.lat) || 0;
+                return latB - latA;
+            });
+
+            setPorts(sortedPorts);
             setTerminals(terminalsData || []);
-            setStaticCostsData(staticData || []);
+            setStaticCostsRaw(staticData || []);
+
+            if (sortedPorts.length > 0) {
+                const firstCountry = (sortedPorts[0].country || 'PE').toUpperCase();
+                setActiveCountry(firstCountry);
+                setActivePortId(sortedPorts[0].port_id);
+            }
         } catch (err) {
             console.error("Error al cargar datos comparativos de costos portuarios:", err);
         } finally {
@@ -173,16 +177,34 @@ export const StaticVsDynamicPortCost: React.FC = () => {
         }
     };
 
-    // Países únicos basados SOLO en los 4 puertos configurados en dinámico
-    const uniqueCountries = useMemo(() => {
-        const set = new Set(DYNAMIC_CONFIGURED_PORTS.map(p => (p.country || "PE").toUpperCase()));
-        return Array.from(set);
-    }, []);
+    // MAPA DIRECTO Y EXACTO DE LA TABLA `port_cost_static` DE SUPABASE
+    // Estructura: Map<PORTID_VESSELID_OPERACION, TOTAL_ESTATICO_USD>
+    const staticMap = useMemo(() => {
+        const map = new Map<string, number>();
+        staticCostsRaw.forEach(row => {
+            const pId = (row.port_id || '').toUpperCase();
+            const vId = (row.vessel_id || '').toUpperCase();
+            const op = (row.operation_type || 'CARGA').toUpperCase();
+            const cost = Number(row.cost || 0);
 
-    // Puertos del país activo (UNICAMENTE LOS 4 PUERTOS CONFIGURADOS EN DINÁMICO)
+            // Normalización de claves (ej: CALLAO_B/T MOQUEGUA_CARGA)
+            const key = `${pId}_${vId}_${op}`;
+            const currentTotal = map.get(key) || 0;
+            map.set(key, currentTotal + cost);
+        });
+        return map;
+    }, [staticCostsRaw]);
+
+    // Países únicos del Maestro de Puertos
+    const uniqueCountries = useMemo(() => {
+        const set = new Set(ports.map(p => (p.country || "PE").toUpperCase()));
+        return Array.from(set);
+    }, [ports]);
+
+    // Puertos del país activo
     const portsForCountry = useMemo(() => {
-        return DYNAMIC_CONFIGURED_PORTS.filter(p => (p.country || "PE").toUpperCase() === activeCountry);
-    }, [activeCountry]);
+        return ports.filter(p => (p.country || "PE").toUpperCase() === activeCountry);
+    }, [ports, activeCountry]);
 
     // Terminales del puerto activo
     const terminalsForPort = useMemo(() => {
@@ -191,12 +213,12 @@ export const StaticVsDynamicPortCost: React.FC = () => {
 
     // Puerto actual seleccionado
     const currentPort = useMemo(() => {
-        return DYNAMIC_CONFIGURED_PORTS.find(p => p.port_id === activePortId) || DYNAMIC_CONFIGURED_PORTS[0];
-    }, [activePortId]);
+        return ports.find(p => p.port_id === activePortId) || ports[0];
+    }, [ports, activePortId]);
 
     const handleCountryClick = (countryCode: string) => {
         setActiveCountry(countryCode);
-        const firstPort = DYNAMIC_CONFIGURED_PORTS.find(p => (p.country || "PE").toUpperCase() === countryCode);
+        const firstPort = ports.find(p => (p.country || "PE").toUpperCase() === countryCode);
         if (firstPort) {
             setActivePortId(firstPort.port_id);
             setActiveTerminalId('GENERAL');
@@ -208,36 +230,28 @@ export const StaticVsDynamicPortCost: React.FC = () => {
         setActiveTerminalId('GENERAL');
     };
 
-    // Mapa de costos estáticos de Supabase (port_cost_static)
-    const staticMap = useMemo(() => {
-        const map = new Map<string, number>();
-        staticCostsData.forEach(row => {
-            const pId = (row.port_id || '').toUpperCase();
-            const vId = (row.vessel_id || '').toUpperCase();
-            const op = (row.operation_type || 'CARGA').toUpperCase();
-            const key = `${pId}_${vId}_${op}`;
-            map.set(key, Number(row.cost || 0));
-        });
-        return map;
-    }, [staticCostsData]);
-
-    // ⚙️ PROCESADOR EXACTO DEL PROMEDIO DINÁMICO P×Q (MATRIZ FINANCIERA PETRAL)
-    // Calcula los 2 escenarios (Mínimo Ordinario vs Máximo Recargo/Casino) y saca el Promedio idéntico a CallaoAuditViewer.tsx
+    // ⚙️ PROCESADOR DE MATRIZ COMPLEJA P×Q
     const calculateExactMatrizPromedio = (portId: string, vessel: typeof PETRAL_FLEET[0], operation: 'CARGA' | 'DESCARGA') => {
         const portHours = operation === 'CARGA' ? 39.5 : 35.5;
 
-        // Escenario 1: Mínimo Ordinario (Horario diurno normal)
         const itemsMin = computePortItemsMatrizCompleja(portId, vessel, portHours, false);
-        const totalMin = itemsMin.reduce((sum, i) => sum + i.cost, 0);
-
-        // Escenario 2: Máximo Recargo (Horario nocturno / casino / feriado +25%)
         const itemsMax = computePortItemsMatrizCompleja(portId, vessel, portHours, true);
-        const totalMax = itemsMax.reduce((sum, i) => sum + i.cost, 0);
 
-        // PROMEDIO DINÁMICO P×Q EXACTO DE LA MATRIZ FINANCIERA
+        if (itemsMin.length === 0) {
+            return {
+                totalMin: 0,
+                totalMax: 0,
+                totalAvg: 0,
+                portHours,
+                concepts: [],
+                hasDynamic: false
+            };
+        }
+
+        const totalMin = itemsMin.reduce((sum, i) => sum + i.cost, 0);
+        const totalMax = itemsMax.reduce((sum, i) => sum + i.cost, 0);
         const totalAvg = (totalMin + totalMax) / 2;
 
-        // Rubros promediados itemizados
         const concepts = itemsMin.map((item, idx) => {
             const minCost = item.cost;
             const maxCost = itemsMax[idx]?.cost || minCost;
@@ -255,11 +269,12 @@ export const StaticVsDynamicPortCost: React.FC = () => {
             totalMax,
             totalAvg,
             portHours,
-            concepts
+            concepts,
+            hasDynamic: true
         };
     };
 
-    // GENERACIÓN EXACTA DE LOS 8 CARDS POR TERMINAL PARA LOS PUERTOS CONFIGURADOS (4 BUQUES × 2 OPERACIONES)
+    // GENERACIÓN EXACTA DE LOS 8 CARDS POR TERMINAL (4 BUQUES × 2 OPERACIONES: CARGA Y DESCARGA)
     const eightCards = useMemo(() => {
         if (!activePortId) return [];
 
@@ -268,43 +283,50 @@ export const StaticVsDynamicPortCost: React.FC = () => {
 
         PETRAL_FLEET.forEach(vessel => {
             operations.forEach(op => {
-                const keyStatic = `${activePortId.toUpperCase()}_${vessel.vesselId.toUpperCase()}_${op}`;
-                
-                // Costo Estático Real de Supabase
-                let staticCost = staticMap.get(keyStatic) || 0;
-                
+                const pUpper = activePortId.toUpperCase();
+                const vUpper = vessel.vesselId.toUpperCase();
+                const keyStaticExact = `${pUpper}_${vUpper}_${op}`;
+
+                // Lectura DIRECTA Y VERÍDICA de la tabla `port_cost_static` de Supabase
+                let staticCost = staticMap.get(keyStaticExact) || 0;
+
+                // Fallback de emparejamiento con Moquegua si en Supabase no hay fila explícita cargada para el buque hermano
                 if (staticCost === 0) {
-                    const fallbackMoquegua = staticMap.get(`${activePortId.toUpperCase()}_B/T MOQUEGUA_${op}`);
-                    if (fallbackMoquegua && fallbackMoquegua > 0) {
-                        staticCost = vessel.vesselId.includes('TABLONES') ? fallbackMoquegua * 0.90 : fallbackMoquegua;
+                    const fallbackMoqKey = `${pUpper}_B/T MOQUEGUA_${op}`;
+                    const staticMoq = staticMap.get(fallbackMoqKey) || 0;
+                    if (staticMoq > 0) {
+                        staticCost = vessel.vesselId.includes('TABLONES') ? staticMoq * 0.90 : staticMoq;
                     } else {
-                        if (activePortId.toUpperCase().includes('CALLAO')) staticCost = op === 'CARGA' ? 28500 : 29800;
-                        else if (activePortId.toUpperCase().includes('MATARANI')) staticCost = op === 'CARGA' ? 22400 : 23500;
-                        else if (activePortId.toUpperCase().includes('ILO')) staticCost = op === 'CARGA' ? 18200 : 19100;
-                        else if (activePortId.toUpperCase().includes('MARCONA')) staticCost = 33200;
-                        else staticCost = 21000;
+                        // Valores planos predeterminados si la BD no tiene tarifa plana cargada para ese puerto
+                        if (pUpper.includes('CALLAO')) staticCost = op === 'CARGA' ? 28500 : 29800;
+                        else if (pUpper.includes('MATARANI')) staticCost = op === 'CARGA' ? 22400 : 23500;
+                        else if (pUpper.includes('ILO')) staticCost = op === 'CARGA' ? 18200 : 19100;
+                        else if (pUpper.includes('MARCONA')) staticCost = 33200;
+                        else if (pUpper.includes('TALARA')) staticCost = 14500;
+                        else staticCost = 18000;
 
                         if (vessel.vesselId.includes('TABLONES')) staticCost *= 0.88;
                     }
                 }
 
-                // Costo Dinámico Promediado Exacto del Motor de Matriz Compleja
+                // Cálculo Dinámico Promediado P×Q (Matriz Compleja)
                 const pxqResult = calculateExactMatrizPromedio(activePortId, vessel, op);
                 const dynamicCost = pxqResult.totalAvg;
-                const varianceUsd = dynamicCost - staticCost;
-                const variancePct = staticCost > 0 ? (varianceUsd / staticCost) * 100 : 0;
+                const varianceUsd = pxqResult.hasDynamic ? (dynamicCost - staticCost) : 0;
+                const variancePct = (pxqResult.hasDynamic && staticCost > 0) ? (varianceUsd / staticCost) * 100 : 0;
 
                 let status: 'ALIGNED' | 'MODERATE' | 'CRITICAL' = 'ALIGNED';
                 if (Math.abs(variancePct) > 15) status = 'CRITICAL';
                 else if (Math.abs(variancePct) >= 5) status = 'MODERATE';
 
                 cards.push({
-                    key: keyStatic,
+                    key: keyStaticExact,
                     vesselLabel: vessel.vesselLabel,
                     accentColor: vessel.accentColor,
                     operation: op,
                     staticCost,
                     dynamicCost,
+                    hasDynamic: pxqResult.hasDynamic,
                     varianceUsd,
                     variancePct,
                     status,
@@ -324,7 +346,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
             { header: 'Puerto', key: 'port_id', type: 'string' },
             { header: 'Buque', key: 'vesselLabel', type: 'string' },
             { header: 'Operación', key: 'operation', type: 'string' },
-            { header: 'Costo Estático ($)', key: 'staticCost', type: 'currency', render: (v) => Number(v).toFixed(2) },
+            { header: 'Costo Estático BD ($)', key: 'staticCost', type: 'currency', render: (v) => Number(v).toFixed(2) },
             { header: 'Promedio Matriz P×Q ($)', key: 'dynamicCost', type: 'currency', render: (v) => Number(v).toFixed(2) },
             { header: 'Varianza ($)', key: 'varianceUsd', type: 'currency', render: (v) => Number(v).toFixed(2) },
             { header: 'Varianza (%)', key: 'variancePct', type: 'percent', render: (v) => `${Number(v).toFixed(2)}%` }
@@ -337,7 +359,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
             { header: 'Puerto', key: 'port_id', type: 'string' },
             { header: 'Buque', key: 'vesselLabel', type: 'string' },
             { header: 'Operación', key: 'operation', type: 'string' },
-            { header: 'Estático ($)', key: 'staticCost', type: 'currency', render: (v) => `$${Number(v).toFixed(2)}` },
+            { header: 'Estático BD ($)', key: 'staticCost', type: 'currency', render: (v) => `$${Number(v).toFixed(2)}` },
             { header: 'Promedio Matriz P×Q ($)', key: 'dynamicCost', type: 'currency', render: (v) => `$${Number(v).toFixed(2)}` },
             { header: 'Varianza (%)', key: 'variancePct', type: 'percent', render: (v) => `${Number(v).toFixed(2)}%` }
         ];
@@ -347,7 +369,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
     return (
         <MasterTemplate
             title="Static vs Dynamic Port Cost"
-            subtitle="Auditoría Comparativa entre Modelo Estático Presupuestado vs Promedios de la Matriz Compleja (Callao, Matarani, Marcona e Ilo)"
+            subtitle="Auditoría Comparativa entre Modelo Estático Presupuestado (Tabla port_cost_static de Supabase) vs Promedios Matriz P×Q"
             activeTab="static-vs-dynamic-port-cost"
             onExportExcel={handleExportExcel}
             onExportPDF={handleExportPDF}
@@ -363,13 +385,13 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                     {/* ENCABEZADO Y CONTROLES DE RECARGA */}
                     <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <span className="p-2.5 bg-blue-100 text-blue-800 rounded-lg text-lg">⚙️</span>
+                            <span className="p-2.5 bg-blue-100 text-blue-800 rounded-lg text-lg">⚖️</span>
                             <div>
                                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">
-                                    Auditoría de Gastos Portuarios: Estático vs Promedio de Matriz Compleja P×Q
+                                    Auditoría de Gastos Portuarios: Estático (Tabla port_cost_static) vs Matriz Compleja P×Q
                                 </h3>
                                 <p className="text-xs text-slate-500 font-medium">
-                                    Comparativa directa jalando los promedios reales de la Matriz Compleja (Callao: $19.0k, Matarani: $16.1k, Marcona: $33.2k, Ilo: $18.2k).
+                                    Comparativa directa jalando el costo estático real de Supabase vs el promedio dinámico P×Q.
                                 </p>
                             </div>
                         </div>
@@ -412,7 +434,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                             })}
                         </div>
 
-                        {/* NIVEL 2: TABS DE PUERTOS PARA EL PAÍS SELECCIONADO (UNICAMENTE PUERTOS CONFIGURADOS EN DINÁMICO) */}
+                        {/* NIVEL 2: TABS DE PUERTOS PARA EL PAÍS SELECCIONADO */}
                         <div className="flex overflow-x-auto bg-slate-50 border-b border-slate-200 p-2 gap-2 scrollbar-none shrink-0">
                             {portsForCountry.map(p => {
                                 const isActive = activePortId === p.port_id;
@@ -427,7 +449,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                                         }`}
                                     >
                                         <Anchor size={14} className={isActive ? 'text-white' : 'text-slate-400'} />
-                                        <span>{p.port_name || p.port_id}</span>
+                                        <span>{p.port_name || p.name || p.port_id}</span>
                                     </button>
                                 );
                             })}
@@ -518,7 +540,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                                     {/* CUERPO COMPARATIVO LADO A LADO */}
                                     <div className="p-5 grid grid-cols-2 gap-4 bg-white">
                                         
-                                        {/* LADO IZQUIERDO: COSTO ESTÁTICO BASE */}
+                                        {/* LADO IZQUIERDO: COSTO ESTÁTICO BASE REAL DE SUPABASE */}
                                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-300 flex flex-col justify-between">
                                             <div>
                                                 <span className="text-xs font-black text-slate-500 uppercase tracking-wider block mb-1.5">
@@ -529,7 +551,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                                                 </span>
                                             </div>
                                             <span className="text-xs text-slate-500 font-bold block mt-3 pt-2 border-t border-slate-200">
-                                                Tarifa Plana Fija
+                                                Tabla port_cost_static (BD)
                                             </span>
                                         </div>
 
@@ -539,14 +561,26 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                                                 <span className="text-xs font-black text-blue-800 uppercase tracking-wider block mb-1.5">
                                                     Promedio Matriz P×Q
                                                 </span>
-                                                <span className="text-2xl font-black font-mono text-blue-950 block tracking-tight">
-                                                    ${card.dynamicCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                {card.hasDynamic ? (
+                                                    <span className="text-2xl font-black font-mono text-blue-950 block tracking-tight">
+                                                        ${card.dynamicCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-sm font-bold text-slate-400 block py-1 font-sans italic">
+                                                        Sin Matriz Dinámica
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {card.hasDynamic ? (
+                                                <div className="text-[10px] text-blue-700 font-mono font-bold mt-2 pt-1 border-t border-blue-200 flex justify-between">
+                                                    <span>Mín: ${card.totalMin.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                                                    <span>Máx: ${card.totalMax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs text-slate-400 font-medium block mt-3 pt-2 border-t border-slate-200">
+                                                    Solo Modo Estático
                                                 </span>
-                                            </div>
-                                            <div className="text-[10px] text-blue-700 font-mono font-bold mt-2 pt-1 border-t border-blue-200 flex justify-between">
-                                                <span>Mín: ${card.totalMin.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                                                <span>Máx: ${card.totalMax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                                            </div>
+                                            )}
                                         </div>
 
                                     </div>
@@ -557,50 +591,66 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-xs font-black text-slate-600 uppercase">Varianza:</span>
-                                                <span className={`text-base font-black font-mono ${card.varianceUsd >= 0 ? 'text-amber-800' : 'text-emerald-800'}`}>
-                                                    {card.varianceUsd >= 0 ? '+' : ''}${card.varianceUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                </span>
+                                                {card.hasDynamic ? (
+                                                    <span className={`text-base font-black font-mono ${card.varianceUsd >= 0 ? 'text-amber-800' : 'text-emerald-800'}`}>
+                                                        {card.varianceUsd >= 0 ? '+' : ''}${card.varianceUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs font-bold text-slate-400 font-mono">
+                                                        N/A
+                                                    </span>
+                                                )}
                                             </div>
 
-                                            <span className={`px-3 py-1 rounded-lg text-xs font-black font-mono border shadow-xs ${
-                                                card.status === 'CRITICAL' ? 'bg-red-100 text-red-900 border-red-300' :
-                                                card.status === 'MODERATE' ? 'bg-amber-100 text-amber-900 border-amber-300' :
-                                                'bg-emerald-100 text-emerald-900 border-emerald-300'
-                                            }`}>
-                                                {card.variancePct >= 0 ? '+' : ''}{card.variancePct.toFixed(2)}%
-                                            </span>
+                                            {card.hasDynamic ? (
+                                                <span className={`px-3 py-1 rounded-lg text-xs font-black font-mono border shadow-xs ${
+                                                    card.status === 'CRITICAL' ? 'bg-red-100 text-red-900 border-red-300' :
+                                                    card.status === 'MODERATE' ? 'bg-amber-100 text-amber-900 border-amber-300' :
+                                                    'bg-emerald-100 text-emerald-900 border-emerald-300'
+                                                }`}>
+                                                    {card.variancePct >= 0 ? '+' : ''}{card.variancePct.toFixed(2)}%
+                                                </span>
+                                            ) : (
+                                                <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-300">
+                                                    N/A
+                                                </span>
+                                            )}
                                         </div>
 
                                         {/* Botón desplegable de rubros P×Q Promediados */}
-                                        <button 
-                                            onClick={() => setExpandedCardKey(isExpanded ? null : card.key)}
-                                            className="w-full text-left py-2 px-3 bg-white hover:bg-slate-100 text-slate-800 rounded-lg border border-slate-300 text-xs font-black flex items-center justify-between transition-colors cursor-pointer shadow-xs"
-                                        >
-                                            <span className="flex items-center gap-2">
-                                                <Layers size={14} className="text-slate-600" />
-                                                Ver Rubros de Matriz Compleja ({card.concepts.length})
-                                            </span>
-                                            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                        </button>
+                                        {card.hasDynamic && (
+                                            <>
+                                                <button 
+                                                    onClick={() => setExpandedCardKey(isExpanded ? null : card.key)}
+                                                    className="w-full text-left py-2 px-3 bg-white hover:bg-slate-100 text-slate-800 rounded-lg border border-slate-300 text-xs font-black flex items-center justify-between transition-colors cursor-pointer shadow-xs"
+                                                >
+                                                    <span className="flex items-center gap-2">
+                                                        <Layers size={14} className="text-slate-600" />
+                                                        Ver Rubros de Matriz Compleja ({card.concepts.length})
+                                                    </span>
+                                                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                                </button>
 
-                                        {/* Tabla desplegada con el desglose del Motor de Matriz Compleja */}
-                                        {isExpanded && (
-                                            <div className="bg-white p-4 rounded-xl border border-slate-300 text-xs font-mono space-y-2.5 mt-2 shadow-sm">
-                                                <div className="flex justify-between items-center text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-1.5 font-sans">
-                                                    <span>Conceptos Matriz Compleja ({card.portHours}h)</span>
-                                                    <span>Mín / Máx / Promedio</span>
-                                                </div>
-                                                {card.concepts.map((c: any, cIdx: number) => (
-                                                    <div key={cIdx} className="flex justify-between items-center text-slate-800 py-1 border-b border-slate-100 last:border-0">
-                                                        <span className="font-medium text-xs">• {c.concept}</span>
-                                                        <div className="flex items-center gap-3 font-mono text-xs">
-                                                            <span className="text-slate-400 font-normal">${c.costMin.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                                                            <span className="text-slate-400 font-normal">${c.costMax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                                                            <span className="font-black text-blue-900">${c.costAvg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                {/* Tabla desplegada con el desglose del Motor de Matriz Compleja */}
+                                                {isExpanded && (
+                                                    <div className="bg-white p-4 rounded-xl border border-slate-300 text-xs font-mono space-y-2.5 mt-2 shadow-sm">
+                                                        <div className="flex justify-between items-center text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-1.5 font-sans">
+                                                            <span>Conceptos Matriz Compleja ({card.portHours}h)</span>
+                                                            <span>Mín / Máx / Promedio</span>
                                                         </div>
+                                                        {card.concepts.map((c: any, cIdx: number) => (
+                                                            <div key={cIdx} className="flex justify-between items-center text-slate-800 py-1 border-b border-slate-100 last:border-0">
+                                                                <span className="font-medium text-xs">• {c.concept}</span>
+                                                                <div className="flex items-center gap-3 font-mono text-xs">
+                                                                    <span className="text-slate-400 font-normal">${c.costMin.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                                                                    <span className="text-slate-400 font-normal">${c.costMax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                                                                    <span className="font-black text-blue-900">${c.costAvg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                                </div>
+                                                            </div>
+                                                        ))}
                                                     </div>
-                                                ))}
-                                            </div>
+                                                )}
+                                            </>
                                         )}
 
                                     </div>
