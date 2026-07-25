@@ -25,22 +25,23 @@ interface StaticPortCostRow {
 
 interface DynamicConcept {
     concept: string;
-    cost: number;
+    costMin: number;
+    costMax: number;
+    costAvg: number;
 }
 
-// Especificaciones Reales de Flota PETRAL
-const VESSEL_SPECS: Record<string, { loa: number; grt: number; dwt: number }> = {
-    'B/T MOQUEGUA': { loa: 134.16, grt: 8259, dwt: 14298 },
-    'B/T TABLONES': { loa: 134.16, grt: 8259, dwt: 14298 },
-    'CONCON TRADER': { loa: 134.16, grt: 8259, dwt: 14298 },
-    'HUEMUL': { loa: 134.16, grt: 8259, dwt: 14298 }
-};
+// Las 4 Naves Oficiales de la Flota PETRAL con sus parámetros de tonelaje y eslora
+const PETRAL_FLEET = [
+    { vesselId: 'B/T MOQUEGUA', vesselLabel: 'B/T MOQUEGUA', loa: 134.16, grt: 8259, dwt: 14298, accentColor: 'border-t-blue-600 border-blue-300' },
+    { vesselId: 'B/T TABLONES', vesselLabel: 'B/T TABLONES', loa: 134.16, grt: 8259, dwt: 14298, accentColor: 'border-t-teal-600 border-teal-300' },
+    { vesselId: 'CONCON TRADER', vesselLabel: 'CONCON TRADER', loa: 134.16, grt: 8259, dwt: 14298, accentColor: 'border-t-indigo-600 border-indigo-300' },
+    { vesselId: 'HUEMUL', vesselLabel: 'HUEMUL', loa: 134.16, grt: 8259, dwt: 14298, accentColor: 'border-t-amber-600 border-amber-300' }
+];
 
 export const StaticVsDynamicPortCost: React.FC = () => {
     const [ports, setPorts] = useState<any[]>([]);
     const [terminals, setTerminals] = useState<any[]>([]);
     const [staticCostsData, setStaticCostsData] = useState<StaticPortCostRow[]>([]);
-    const [matrixRulesData, setMatrixRulesData] = useState<any[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
     // Enrutamiento de Tabs
@@ -58,11 +59,10 @@ export const StaticVsDynamicPortCost: React.FC = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            const [portsData, terminalsData, staticData, matrixData] = await Promise.all([
+            const [portsData, terminalsData, staticData] = await Promise.all([
                 ForecastService.getPorts(),
                 ForecastService.getTerminals(),
-                ForecastService.getPortCostsStatic(),
-                ForecastService.getPortCostsMatrix()
+                ForecastService.getPortCostsStatic()
             ]);
 
             const sortedPorts = (portsData || []).sort((a: any, b: any) => {
@@ -74,7 +74,6 @@ export const StaticVsDynamicPortCost: React.FC = () => {
             setPorts(sortedPorts);
             setTerminals(terminalsData || []);
             setStaticCostsData(staticData || []);
-            setMatrixRulesData(matrixData || []);
 
             if (sortedPorts.length > 0) {
                 const firstCountry = (sortedPorts[0].country || 'PE').toUpperCase();
@@ -139,189 +138,171 @@ export const StaticVsDynamicPortCost: React.FC = () => {
         return map;
     }, [staticCostsData]);
 
-    // Mapa de matriz de reglas de Supabase (port_costs_matrix)
-    const dbMatrixRulesGrouped = useMemo(() => {
-        const map = new Map<string, { concept: string; cost: number }[]>();
-        matrixRulesData.forEach(rule => {
-            const pId = (rule.port_id || '').toUpperCase();
-            const vId = (rule.vessel_id || 'ALL').toUpperCase();
-            const op = (rule.operation_type || 'ALL').toUpperCase();
-            const concept = rule.concept || rule.rule_name || rule.port_cost_concepts?.concept_name || 'Tarifa Portuaria';
-            const rate = Number(rule.rate_usd || rule.cost_usd || rule.rate || rule.cost || 0);
-
-            const key = `${pId}_${vId}_${op}`;
-            const existing = map.get(key) || [];
-            existing.push({ concept, cost: rate });
-            map.set(key, existing);
-        });
-        return map;
-    }, [matrixRulesData]);
-
-    // ⚡ MOTOR OFICIAL P×Q MATRIZ COMPLEJA DE PETRAL ⚡
-    // Calcula los rubros reales y verídicos del puerto (Remolque, Practicaje, Muelle, Agenciamiento, Faro)
-    const calculateRealDynamicPortCost = (portId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA') => {
+    // ⚙️ MOTOR P×Q PROMEDIADO OFICIAL DE PETRAL (Motor.PxQ.Promediado.md) ⚙️
+    // Resuelve la incertidumbre del horario mediante 2 escenarios (Mínimo Ordinario vs Máximo Recargo/Casino)
+    const calculatePxQAveragedCost = (portId: string, vesselSpec: typeof PETRAL_FLEET[0], operation: 'CARGA' | 'DESCARGA') => {
         const pUpper = portId.toUpperCase();
-        const vUpper = vesselId.toUpperCase();
         
-        // 1. Verificar si existen filas explícitas en Supabase `port_costs_matrix`
-        const exactKey = `${pUpper}_${vUpper}_${operation}`;
-        const wildcardKey = `${pUpper}_ALL_${operation}`;
-        const dbConcepts = dbMatrixRulesGrouped.get(exactKey) || dbMatrixRulesGrouped.get(wildcardKey);
-
-        if (dbConcepts && dbConcepts.length > 0) {
-            const total = dbConcepts.reduce((s, c) => s + c.cost, 0);
-            return { total, concepts: dbConcepts };
-        }
-
-        // 2. Aplicar el Motor de Ecuaciones P×Q Oficial de Naviera Petral (CallaoAuditViewer Core)
-        const spec = VESSEL_SPECS[vUpper] || VESSEL_SPECS['B/T MOQUEGUA'];
-        const loa = spec.loa; // 134.16 m
-        const grt = spec.grt; // 8259 GRT
-        const portHours = operation === 'CARGA' ? 39.5 : 35.5; // Horas estándar en muelle
+        // Grilla Uniforme de Variables Q
+        const volumeMT = 13500;
+        const qRate = operation === 'CARGA' ? 500 : 350;
+        const qOpHours = Math.round((volumeMT / qRate) * 10) / 10;
+        const qFixedHours = 4.0;
+        const qTotalHours = qOpHours + qFixedHours;
 
         let concepts: DynamicConcept[] = [];
 
         if (pUpper.includes('CALLAO')) {
-            // Ecuaciones P×Q Tarifario Oficial APM Terminals Callao & PSA Marine
-            const dockageCost = Math.round(1.50 * loa * portHours * 100) / 100; // $1.50/m/h ($7,954.00)
-            const towageCost = 3200.00; // 2 Remolcadores x 2 Maniobras (Entrada + Salida @ $800/remolque)
-            const pilotageCost = Math.round(Math.max(750, 0.32 * grt) * 100) / 100; // Practicaje ($2,642.88)
-            const lighthouseCost = Math.round(0.03 * grt * 100) / 100; // Derecho Faro ($247.77)
-            const agencyFee = 1000.00; // Agenciamiento Trans Total Flat ($1,000.00)
-            const launchAndMooring = 650.00; // Lanchas & Amarre/Desamarre ($650.00)
+            const dockageBase = 1.50 * vesselSpec.loa * qTotalHours;
+            const towageMin = 3200.00;
+            const towageMax = 3200.00 * 1.25;
+            const pilotageMin = Math.max(750, 0.32 * vesselSpec.grt);
+            const pilotageMax = pilotageMin * 1.25;
+            const lighthouse = 0.03 * vesselSpec.grt;
+            const agencyFee = 1000.00;
+            const launchMooringMin = 650.00;
+            const launchMooringMax = 650.00 * 1.20;
 
             concepts = [
-                { concept: 'Uso de Muelle (Dockage $1.50/m/h APMT)', cost: dockageCost },
-                { concept: 'Remolcadores PSA Marine (2 Tugs x 2 Maniobras @ $800)', cost: towageCost },
-                { concept: 'Practicaje Oficial de Puerto (Pilots)', cost: pilotageCost },
-                { concept: 'Derechos de Faro y Balisas (DHN 0.03/GRT)', cost: lighthouseCost },
-                { concept: 'Honorarios Agenciamiento Marítimo (Trans Total)', cost: agencyFee },
-                { concept: 'Lanchas de Practicaje & Amarre/Desamarre', cost: launchAndMooring }
+                { concept: `Uso de Muelle APMT ($1.50/m/h × ${qTotalHours}h)`, costMin: dockageBase, costMax: dockageBase, costAvg: dockageBase },
+                { concept: `Remolcadores PSA Marine (2 IN / 2 OUT @ $800)`, costMin: towageMin, costMax: towageMax, costAvg: (towageMin + towageMax) / 2 },
+                { concept: `Practicaje de Puerto (Pilots)`, costMin: pilotageMin, costMax: pilotageMax, costAvg: (pilotageMin + pilotageMax) / 2 },
+                { concept: `Derechos de Faro y Balisas (DHN)`, costMin: lighthouse, costMax: lighthouse, costAvg: lighthouse },
+                { concept: `Honorarios Agenciamiento Marítimo (Trans Total)`, costMin: agencyFee, costMax: agencyFee, costAvg: agencyFee },
+                { concept: `Lanchas de Practicaje & Amarre/Desamarre`, costMin: launchMooringMin, costMax: launchMooringMax, costAvg: (launchMooringMin + launchMooringMax) / 2 }
             ];
-        } 
+        }
         else if (pUpper.includes('MATARANI')) {
-            // Tarifario Addenda Tisur S.A. Matarani & PSA Marine
-            const towageAndPilotsPSA = 6736.00; // Addenda PSA 2 Maniobras ($3,368 x 2)
-            const dockageCost = Math.round(0.65 * loa * portHours * 100) / 100; // $0.65/m/h ($3,095.00)
-            const lighthouseCost = Math.round(0.03 * grt * 100) / 100; // Faro ($247.77)
-            const agencyFee = 1000.00; // Agenciamiento ($1,000.00)
-            const portToll = 450.00; // Port Toll Tisur ($450.00)
+            const dockageBase = 0.65 * vesselSpec.loa * qTotalHours;
+            const psaMin = 6736.00;
+            const psaMax = 6736.00 * 1.25;
+            const lighthouse = 0.03 * vesselSpec.grt;
+            const agencyFee = 1000.00;
+            const portToll = 450.00;
 
             concepts = [
-                { concept: 'Servicio Integral PSA (Practicaje + Remolques Tisur)', cost: towageAndPilotsPSA },
-                { concept: 'Uso de Muelle Tisur ($0.65/m/h)', cost: dockageCost },
-                { concept: 'Derechos de Faro y Balisas (DHN)', cost: lighthouseCost },
-                { concept: 'Honorarios Agenciamiento Marítimo', cost: agencyFee },
-                { concept: 'Port Toll & Terminal Access Fee', cost: portToll }
+                { concept: `Servicio Integral PSA (Practicaje + Remolques Tisur)`, costMin: psaMin, costMax: psaMax, costAvg: (psaMin + psaMax) / 2 },
+                { concept: `Uso de Muelle Tisur ($0.65/m/h × ${qTotalHours}h)`, costMin: dockageBase, costMax: dockageBase, costAvg: dockageBase },
+                { concept: `Derechos de Faro y Balisas (DHN)`, costMin: lighthouse, costMax: lighthouse, costAvg: lighthouse },
+                { concept: `Honorarios Agenciamiento Marítimo`, costMin: agencyFee, costMax: agencyFee, costAvg: agencyFee },
+                { concept: `Port Toll & Acceso Terminal`, costMin: portToll, costMax: portToll, costAvg: portToll }
             ];
-        } 
+        }
         else if (pUpper.includes('MARCONA')) {
-            // Convenio SPCC San Juan de Marcona
-            const psaIntegralCost = 30508.48; // Convenio SPCC Atraque/Remolques ($30,508.48)
-            const lighthouseCost = Math.round(0.03 * grt * 100) / 100; // Faro ($247.77)
-            const agencyFee = 1400.00; // Agenciamiento Marcona ($1,400.00)
-            const sanitationAndLaunch = 1070.00; // Sanidad Marítima + Lanchas ($1,070.00)
+            const psaFlat = 30508.48;
+            const lighthouse = 0.03 * vesselSpec.grt;
+            const agencyFee = 1400.00;
+            const sanitationLaunch = 1070.00;
 
             concepts = [
-                { concept: 'Servicio Integral Atraque (PSA Marine Convenio SPCC)', cost: psaIntegralCost },
-                { concept: 'Derechos de Faro y Balisas (DHN)', cost: lighthouseCost },
-                { concept: 'Honorarios Agenciamiento Marítimo (Trans Total)', cost: agencyFee },
-                { concept: 'Inspección Sanitaria & Lancha Standby', cost: sanitationAndLaunch }
+                { concept: `Servicio Integral Atraque (PSA Convenio SPCC)`, costMin: psaFlat, costMax: psaFlat, costAvg: psaFlat },
+                { concept: `Derechos de Faro y Balisas (DHN)`, costMin: lighthouse, costMax: lighthouse, costAvg: lighthouse },
+                { concept: `Honorarios Agenciamiento Marítimo (Trans Total)`, costMin: agencyFee, costMax: agencyFee, costAvg: agencyFee },
+                { concept: `Inspección Sanitaria & Lancha Standby`, costMin: sanitationLaunch, costMax: sanitationLaunch, costAvg: sanitationLaunch }
             ];
-        } 
+        }
         else if (pUpper.includes('ILO')) {
-            // Muelle SPCC / Enapu Ilo
-            const towageAndPilots = 4200.00; // Remolques & Practicaje ($4,200.00)
-            const dockageCost = Math.round(0.85 * loa * portHours * 100) / 100; // Muelle ($4,047.00)
-            const lighthouseCost = Math.round(0.03 * grt * 100) / 100; // Faro ($247.77)
-            const agencyFee = 1000.00; // Agenciamiento ($1,000.00)
+            const dockageBase = 0.85 * vesselSpec.loa * qTotalHours;
+            const towageMin = 4200.00;
+            const towageMax = 4200.00 * 1.25;
+            const lighthouse = 0.03 * vesselSpec.grt;
+            const agencyFee = 1000.00;
 
             concepts = [
-                { concept: 'Remolcadores & Maniobras de Puerto', cost: towageAndPilots },
-                { concept: 'Uso de Muelle (Port Dues Enapu/SPCC)', cost: dockageCost },
-                { concept: 'Derechos de Faro y Balisas (DHN)', cost: lighthouseCost },
-                { concept: 'Honorarios Agenciamiento Marítimo', cost: agencyFee }
+                { concept: `Remolcadores & Maniobras de Puerto`, costMin: towageMin, costMax: towageMax, costAvg: (towageMin + towageMax) / 2 },
+                { concept: `Uso de Muelle (Port Dues Enapu/SPCC × ${qTotalHours}h)`, costMin: dockageBase, costMax: dockageBase, costAvg: dockageBase },
+                { concept: `Derechos de Faro y Balisas (DHN)`, costMin: lighthouse, costMax: lighthouse, costAvg: lighthouse },
+                { concept: `Honorarios Agenciamiento Marítimo`, costMin: agencyFee, costMax: agencyFee, costAvg: agencyFee }
             ];
-        } 
+        }
         else {
-            // Otros puertos internacionales (Mejillones, Guayaquil, etc.)
-            const dockageCost = Math.round(1.10 * loa * portHours * 100) / 100;
-            const towageCost = 4500.00;
-            const pilotageCost = 2800.00;
+            const dockageBase = 1.10 * vesselSpec.loa * qTotalHours;
+            const towageMin = 4500.00;
+            const towageMax = 4500.00 * 1.20;
+            const pilotageMin = 2800.00;
+            const pilotageMax = 2800.00 * 1.20;
             const agencyFee = 1200.00;
 
             concepts = [
-                { concept: 'Uso de Muelle & Terminal Dues', cost: dockageCost },
-                { concept: 'Remolcadores de Puerto', cost: towageCost },
-                { concept: 'Practicaje & Pilotaje', cost: pilotageCost },
-                { concept: 'Agenciamiento & Manejo Documental', cost: agencyFee }
+                { concept: `Uso de Muelle & Terminal Dues`, costMin: dockageBase, costMax: dockageBase, costAvg: dockageBase },
+                { concept: `Remolcadores de Puerto`, costMin: towageMin, costMax: towageMax, costAvg: (towageMin + towageMax) / 2 },
+                { concept: `Practicaje & Pilotaje`, costMin: pilotageMin, costMax: pilotageMax, costAvg: (pilotageMin + pilotageMax) / 2 },
+                { concept: `Agenciamiento & Manejo Documental`, costMin: agencyFee, costMax: agencyFee, costAvg: agencyFee }
             ];
         }
 
-        const total = concepts.reduce((sum, item) => sum + item.cost, 0);
-        return { total, concepts };
+        const totalMin = concepts.reduce((s, c) => s + c.costMin, 0);
+        const totalMax = concepts.reduce((s, c) => s + c.costMax, 0);
+        const totalAvg = (totalMin + totalMax) / 2;
+
+        return {
+            totalMin,
+            totalMax,
+            totalAvg,
+            qTotalHours,
+            concepts
+        };
     };
 
-    // Generación de los 4 Cards Reales para el Puerto/Terminal Activo:
-    // Card 1: B/T MOQUEGUA — CARGA
-    // Card 2: B/T MOQUEGUA — DESCARGA
-    // Card 3: B/T TABLONES — CARGA
-    // Card 4: B/T TABLONES — DESCARGA
-    const fourCards = useMemo(() => {
+    // GENERACIÓN EXACTA DE LOS 8 CARDS POR TERMINAL (4 BUQUES × 2 OPERACIONES: CARGA Y DESCARGA)
+    const eightCards = useMemo(() => {
         if (!activePortId) return [];
 
-        const targets = [
-            { vesselId: 'B/T MOQUEGUA', vesselLabel: 'B/T MOQUEGUA', operation: 'CARGA' as const },
-            { vesselId: 'B/T MOQUEGUA', vesselLabel: 'B/T MOQUEGUA', operation: 'DESCARGA' as const },
-            { vesselId: 'B/T TABLONES', vesselLabel: 'B/T TABLONES', operation: 'CARGA' as const },
-            { vesselId: 'B/T TABLONES', vesselLabel: 'B/T TABLONES', operation: 'DESCARGA' as const },
-        ];
+        const cards: any[] = [];
+        const operations: ('CARGA' | 'DESCARGA')[] = ['CARGA', 'DESCARGA'];
 
-        return targets.map(target => {
-            const keyStatic = `${activePortId.toUpperCase()}_${target.vesselId}_${target.operation}`;
-            
-            // Obtenemos el costo estático real de Supabase
-            let staticCost = staticMap.get(keyStatic) || 0;
-            
-            // Fallback si en BD no hay registro explicito para ese buque secundario
-            if (staticCost === 0) {
-                const fallbackMoquegua = staticMap.get(`${activePortId.toUpperCase()}_B/T MOQUEGUA_${target.operation}`);
-                if (fallbackMoquegua && fallbackMoquegua > 0) {
-                    staticCost = target.vesselId.includes('TABLONES') ? fallbackMoquegua * 0.90 : fallbackMoquegua;
-                } else {
-                    if (activePortId.toUpperCase().includes('CALLAO')) staticCost = target.operation === 'CARGA' ? 28500 : 29800;
-                    else if (activePortId.toUpperCase().includes('MATARANI')) staticCost = target.operation === 'CARGA' ? 22400 : 23500;
-                    else if (activePortId.toUpperCase().includes('ILO')) staticCost = target.operation === 'CARGA' ? 18200 : 19100;
-                    else if (activePortId.toUpperCase().includes('MARCONA')) staticCost = 33200;
-                    else staticCost = 21000;
+        PETRAL_FLEET.forEach(vessel => {
+            operations.forEach(op => {
+                const keyStatic = `${activePortId.toUpperCase()}_${vessel.vesselId.toUpperCase()}_${op}`;
+                
+                // Costo Estático de Supabase
+                let staticCost = staticMap.get(keyStatic) || 0;
+                
+                if (staticCost === 0) {
+                    const fallbackMoquegua = staticMap.get(`${activePortId.toUpperCase()}_B/T MOQUEGUA_${op}`);
+                    if (fallbackMoquegua && fallbackMoquegua > 0) {
+                        staticCost = vessel.vesselId.includes('TABLONES') ? fallbackMoquegua * 0.90 : fallbackMoquegua;
+                    } else {
+                        if (activePortId.toUpperCase().includes('CALLAO')) staticCost = op === 'CARGA' ? 28500 : 29800;
+                        else if (activePortId.toUpperCase().includes('MATARANI')) staticCost = op === 'CARGA' ? 22400 : 23500;
+                        else if (activePortId.toUpperCase().includes('ILO')) staticCost = op === 'CARGA' ? 18200 : 19100;
+                        else if (activePortId.toUpperCase().includes('MARCONA')) staticCost = 33200;
+                        else staticCost = 21000;
 
-                    if (target.vesselId.includes('TABLONES')) staticCost *= 0.88;
+                        if (vessel.vesselId.includes('TABLONES')) staticCost *= 0.88;
+                    }
                 }
-            }
 
-            // Calculamos el costo dinámico real con las reglas verdaderas de PETRAL
-            const dynResult = calculateRealDynamicPortCost(activePortId, target.vesselId, target.operation);
-            const dynamicCost = dynResult.total;
-            const varianceUsd = dynamicCost - staticCost;
-            const variancePct = staticCost > 0 ? (varianceUsd / staticCost) * 100 : 0;
+                // Costo Dinámico Promediado P×Q
+                const pxqResult = calculatePxQAveragedCost(activePortId, vessel, op);
+                const dynamicCost = pxqResult.totalAvg;
+                const varianceUsd = dynamicCost - staticCost;
+                const variancePct = staticCost > 0 ? (varianceUsd / staticCost) * 100 : 0;
 
-            let status: 'ALIGNED' | 'MODERATE' | 'CRITICAL' = 'ALIGNED';
-            if (Math.abs(variancePct) > 15) status = 'CRITICAL';
-            else if (Math.abs(variancePct) >= 5) status = 'MODERATE';
+                let status: 'ALIGNED' | 'MODERATE' | 'CRITICAL' = 'ALIGNED';
+                if (Math.abs(variancePct) > 15) status = 'CRITICAL';
+                else if (Math.abs(variancePct) >= 5) status = 'MODERATE';
 
-            return {
-                key: keyStatic,
-                vesselLabel: target.vesselLabel,
-                operation: target.operation,
-                staticCost,
-                dynamicCost,
-                varianceUsd,
-                variancePct,
-                status,
-                concepts: dynResult.concepts
-            };
+                cards.push({
+                    key: keyStatic,
+                    vesselLabel: vessel.vesselLabel,
+                    accentColor: vessel.accentColor,
+                    operation: op,
+                    staticCost,
+                    dynamicCost,
+                    varianceUsd,
+                    variancePct,
+                    status,
+                    totalMin: pxqResult.totalMin,
+                    totalMax: pxqResult.totalMax,
+                    qTotalHours: pxqResult.qTotalHours,
+                    concepts: pxqResult.concepts
+                });
+            });
         });
-    }, [activePortId, staticMap, dbMatrixRulesGrouped]);
+
+        return cards;
+    }, [activePortId, staticMap]);
 
     const handleExportExcel = () => {
         const exportCols: ExportColumn[] = [
@@ -329,11 +310,11 @@ export const StaticVsDynamicPortCost: React.FC = () => {
             { header: 'Buque', key: 'vesselLabel', type: 'string' },
             { header: 'Operación', key: 'operation', type: 'string' },
             { header: 'Costo Estático ($)', key: 'staticCost', type: 'currency', render: (v) => Number(v).toFixed(2) },
-            { header: 'Costo Dinámico P×Q ($)', key: 'dynamicCost', type: 'currency', render: (v) => Number(v).toFixed(2) },
+            { header: 'Costo Dinámico P×Q Promedio ($)', key: 'dynamicCost', type: 'currency', render: (v) => Number(v).toFixed(2) },
             { header: 'Varianza ($)', key: 'varianceUsd', type: 'currency', render: (v) => Number(v).toFixed(2) },
             { header: 'Varianza (%)', key: 'variancePct', type: 'percent', render: (v) => `${Number(v).toFixed(2)}%` }
         ];
-        exportMasterToExcel(`Static_vs_Dynamic_Port_Cost_${activePortId}`, exportCols, fourCards);
+        exportMasterToExcel(`Static_vs_Dynamic_Port_Cost_${activePortId}`, exportCols, eightCards);
     };
 
     const handleExportPDF = () => {
@@ -342,16 +323,16 @@ export const StaticVsDynamicPortCost: React.FC = () => {
             { header: 'Buque', key: 'vesselLabel', type: 'string' },
             { header: 'Operación', key: 'operation', type: 'string' },
             { header: 'Estático ($)', key: 'staticCost', type: 'currency', render: (v) => `$${Number(v).toFixed(2)}` },
-            { header: 'Dinámico P×Q ($)', key: 'dynamicCost', type: 'currency', render: (v) => `$${Number(v).toFixed(2)}` },
+            { header: 'Dinámico P×Q Promedio ($)', key: 'dynamicCost', type: 'currency', render: (v) => `$${Number(v).toFixed(2)}` },
             { header: 'Varianza (%)', key: 'variancePct', type: 'percent', render: (v) => `${Number(v).toFixed(2)}%` }
         ];
-        exportMasterToPDF(`Static_vs_Dynamic_Port_Cost_${activePortId}`, exportCols, fourCards);
+        exportMasterToPDF(`Static_vs_Dynamic_Port_Cost_${activePortId}`, exportCols, eightCards);
     };
 
     return (
         <MasterTemplate
             title="Static vs Dynamic Port Cost"
-            subtitle="Auditoría Comparativa entre Modelo Estático Presupuestado vs Modelo Matriz Compleja P×Q por Puerto y Terminal"
+            subtitle="Auditoría Comparativa entre Modelo Estático Presupuestado vs Motor P×Q Promediado por Puerto y Terminal (8 Cards por Flota)"
             activeTab="static-vs-dynamic-port-cost"
             onExportExcel={handleExportExcel}
             onExportPDF={handleExportPDF}
@@ -367,13 +348,13 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                     {/* ENCABEZADO Y CONTROLES DE RECARGA */}
                     <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <span className="p-2.5 bg-blue-100 text-blue-800 rounded-lg text-lg">⚖️</span>
+                            <span className="p-2.5 bg-blue-100 text-blue-800 rounded-lg text-lg">⚙️</span>
                             <div>
                                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">
-                                    Auditoría de Gastos Portuarios: Estático vs Matriz Compleja P×Q
+                                    Auditoría de Gastos Portuarios: Estático vs Motor P×Q Promediado (8 Cards)
                                 </h3>
                                 <p className="text-xs text-slate-500 font-medium">
-                                    Comparativa directa entre la tarifa plana del contrato y la suma itemizada de rubros portuarios.
+                                    Comparativa entre tarifa plana del contrato vs Promedio P×Q Dual (4 Buques Flota PETRAL × 2 Operaciones: Carga y Descarga).
                                 </p>
                             </div>
                         </div>
@@ -387,7 +368,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                         </button>
                     </div>
 
-                    {/* ESTRUCTURA NAVEGABLE DE PAÍSES, PUERTOS Y TERMINALES (IDÉNTICO A PORTS MASTER) */}
+                    {/* ESTRUCTURA NAVEGABLE DE PAÍSES, PUERTOS Y TERMINALES */}
                     <div className="flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                         
                         {/* NIVEL 1: TABS DE PAÍSES */}
@@ -474,7 +455,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                             <div>
                                 <h4 className="text-base font-black tracking-tight">{currentPort?.port_name || activePortId}</h4>
                                 <span className="text-xs text-slate-400 font-mono">
-                                    País: {(currentPort?.country || 'PE').toUpperCase()} • Terminal: {activeTerminalId}
+                                    País: {(currentPort?.country || 'PE').toUpperCase()} • Terminal: {activeTerminalId} • 8 Cards de Flota
                                 </span>
                             </div>
                         </div>
@@ -486,23 +467,20 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* ── PARRILLA EXACTA DE 4 CARDS PARA EL PUERTO Y TERMINAL SELECCIONADO ── */}
+                    {/* ── PARRILLA EXACTA DE 8 CARDS POR TERMINAL (4 BUQUES × 2 OPERACIONES) ── */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
-                        {fourCards.map((card, idx) => {
+                        {eightCards.map((card, idx) => {
                             const isExpanded = expandedCardKey === card.key;
-                            const isMoquegua = card.vesselLabel.includes('MOQUEGUA');
                             return (
                                 <div 
                                     key={idx} 
-                                    className={`bg-white rounded-2xl border-2 shadow-md hover:shadow-xl transition-all flex flex-col justify-between overflow-hidden ${
-                                        isMoquegua ? 'border-blue-300 border-t-4 border-t-blue-600' : 'border-teal-300 border-t-4 border-t-teal-600'
-                                    }`}
+                                    className={`bg-white rounded-2xl border-2 shadow-md hover:shadow-xl transition-all flex flex-col justify-between overflow-hidden border-t-4 ${card.accentColor}`}
                                 >
                                     
-                                    {/* CABECERA DEL CARD CON NÚMEROS Y LETRAS GRANDES */}
+                                    {/* CABECERA DEL CARD */}
                                     <div className="p-4 border-b border-slate-200 bg-slate-50/90 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <span className={`p-2.5 rounded-xl text-lg font-black ${isMoquegua ? 'bg-blue-100 text-blue-800' : 'bg-teal-100 text-teal-800'}`}>
+                                            <span className="p-2.5 bg-slate-200 text-slate-800 rounded-xl text-lg font-black">
                                                 🚢
                                             </span>
                                             <div>
@@ -522,7 +500,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                                         </span>
                                     </div>
 
-                                    {/* CUERPO COMPARATIVO LADO A LADO CON NÚMEROS DESTACADOS GRANDES */}
+                                    {/* CUERPO COMPARATIVO LADO A LADO */}
                                     <div className="p-5 grid grid-cols-2 gap-4 bg-white">
                                         
                                         {/* LADO IZQUIERDO: COSTO ESTÁTICO BASE */}
@@ -540,19 +518,20 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                                             </span>
                                         </div>
 
-                                        {/* LADO DERECHO: COSTO DINÁMICO P×Q REAL */}
+                                        {/* LADO DERECHO: COSTO DINÁMICO P×Q PROMEDIADO */}
                                         <div className="bg-blue-50/70 p-4 rounded-xl border border-blue-300 flex flex-col justify-between">
                                             <div>
                                                 <span className="text-xs font-black text-blue-800 uppercase tracking-wider block mb-1.5">
-                                                    Costo Dinámico P×Q Real
+                                                    Costo Dinámico P×Q Promedio
                                                 </span>
                                                 <span className="text-2xl font-black font-mono text-blue-950 block tracking-tight">
                                                     ${card.dynamicCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
-                                            <span className="text-xs text-blue-700 font-black block mt-3 pt-2 border-t border-blue-200">
-                                                Suma Matriz P×Q
-                                            </span>
+                                            <div className="text-[10px] text-blue-700 font-mono font-bold mt-2 pt-1 border-t border-blue-200 flex justify-between">
+                                                <span>Min: ${card.totalMin.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                                                <span>Max: ${card.totalMax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                                            </div>
                                         </div>
 
                                     </div>
@@ -577,30 +556,33 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                                             </span>
                                         </div>
 
-                                        {/* Botón desplegable de rubros P×Q */}
+                                        {/* Botón desplegable de rubros P×Q Promediados */}
                                         <button 
                                             onClick={() => setExpandedCardKey(isExpanded ? null : card.key)}
                                             className="w-full text-left py-2 px-3 bg-white hover:bg-slate-100 text-slate-800 rounded-lg border border-slate-300 text-xs font-black flex items-center justify-between transition-colors cursor-pointer shadow-xs"
                                         >
                                             <span className="flex items-center gap-2">
                                                 <Layers size={14} className="text-slate-600" />
-                                                Ver Rubros P×Q Itemizados ({card.concepts.length})
+                                                Ver Rubros P×Q Promediados ({card.concepts.length})
                                             </span>
                                             {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                         </button>
 
-                                        {/* Tabla desplegada con el desglose real de rubros P×Q */}
+                                        {/* Tabla desplegada con el desglose del Motor P×Q Promediado */}
                                         {isExpanded && (
-                                            <div className="bg-white p-4 rounded-xl border border-slate-300 text-xs font-mono space-y-2 mt-2 shadow-sm">
-                                                <div className="text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-1.5 mb-2 font-sans">
-                                                    Desglose de Conceptos de Matriz P×Q:
+                                            <div className="bg-white p-4 rounded-xl border border-slate-300 text-xs font-mono space-y-2.5 mt-2 shadow-sm">
+                                                <div className="flex justify-between items-center text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-1.5 font-sans">
+                                                    <span>Conceptos Matriz P×Q ({card.qTotalHours}h)</span>
+                                                    <span>Mín / Máx / Promedio</span>
                                                 </div>
-                                                {card.concepts.map((c, cIdx) => (
+                                                {card.concepts.map((c: any, cIdx: number) => (
                                                     <div key={cIdx} className="flex justify-between items-center text-slate-800 py-1 border-b border-slate-100 last:border-0">
-                                                        <span className="font-medium">• {c.concept}</span>
-                                                        <span className="font-black text-slate-900 text-sm">
-                                                            ${c.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                        </span>
+                                                        <span className="font-medium text-xs">• {c.concept}</span>
+                                                        <div className="flex items-center gap-3 font-mono text-xs">
+                                                            <span className="text-slate-400 font-normal">${c.costMin.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                                                            <span className="text-slate-400 font-normal">${c.costMax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                                                            <span className="font-black text-blue-900">${c.costAvg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
