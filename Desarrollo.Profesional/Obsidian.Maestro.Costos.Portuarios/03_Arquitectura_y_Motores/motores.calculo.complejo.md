@@ -207,3 +207,31 @@ El orquestador `core.py` consolida los resultados en un objeto JSON unificado si
   ]
 }
 ```
+
+---
+
+## 🎛️ 8. Proformación Dinámica Forecast — Layout Dual de 4 PDFs (Mínimos vs Máximos)
+
+Para resolver la incertidumbre de fecha y hora exacta de maniobra en la proformación comercial, el sistema genera **4 escenarios en PDF** organizados en 2 filas visuales dentro del panel de control:
+
+### 📐 Layout de 4 PDFs en Pantalla (Fila Superior e Inferior):
+
+```
+┌──────────────────────────────────────────────┬──────────────────────────────────────────────┐
+│ 📄 PDF 1: Carga Mínima (Horario Normal)       │ 📄 PDF 2: Descarga Mínima (Horario Normal)   │
+│   • Maniobra Diurna Ordinaria (07:00-18:00h)  │   • Maniobra Diurna Ordinaria (07:00-18:00h)  │
+│   • Sin recargo de overtime ($ Costo Base)    │   • Sin recargo de overtime ($ Costo Base)    │
+├──────────────────────────────────────────────┼──────────────────────────────────────────────┤
+│ 📄 PDF 3: Carga Máxima (Horario Recargo)      │ 📄 PDF 4: Descarga Máxima (Horario Recargo)  │
+│   • Maniobra Nocturna/Feriado (00:00-07:00h) │   • Maniobra Nocturna/Feriado (00:00-07:00h) │
+│   • Con recargo +25% / +50% por Overtime     │   • Con recargo +25% / +50% por Overtime     │
+└──────────────────────────────────────────────┴──────────────────────────────────────────────┘
+```
+
+### 📊 Regla de Promediado Dinámico para la Matriz Comercial:
+```
+Costo Carga Proforma    = (PDF 1 Carga Mínima + PDF 3 Carga Máxima) / 2
+Costo Descarga Proforma = (PDF 2 Descarga Mínima + PDF 4 Descarga Máxima) / 2
+Gasto Portuario Matriz  = Costo Carga Proforma + Costo Descarga Proforma
+```
+

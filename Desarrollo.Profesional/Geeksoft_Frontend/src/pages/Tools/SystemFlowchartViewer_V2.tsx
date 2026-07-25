@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, ZoomIn, ZoomOut, RotateCcw, Layers, ShoppingCart, BarChart2, BookOpen, Search } from 'lucide-react';
+import { Download, ZoomIn, ZoomOut, RotateCcw, Layers, ShoppingCart, BarChart2, BookOpen, Search, TrendingUp, Globe, Cpu } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 
 interface FlowchartTab {
@@ -35,6 +35,16 @@ const TABS: FlowchartTab[] = [
         color: 'amber',
     },
     {
+        id: 'motor-pxq',
+        label: 'Motor P×Q',
+        icon: <Cpu size={15} />,
+        svgFile: '/FLOWCHART_MOTOR_PXQ.svg',
+        pdfFile: '/FLOWCHART_MOTOR_PXQ.pdf',
+        description: 'Inputs Buque & Operación → Core Dispatcher → Motor Calculador Σ(P×Q) → Tabla Desglose Granular',
+        badge: 'Tarificador P×Q',
+        color: 'amber',
+    },
+    {
         id: 'voyage-ledger',
         label: 'Voyage Ledger',
         icon: <BookOpen size={15} />,
@@ -44,6 +54,7 @@ const TABS: FlowchartTab[] = [
         badge: 'P&L Viaje',
         color: 'teal',
     },
+
     {
         id: 'matriz-financiera',
         label: 'Matriz Financiera',
@@ -55,16 +66,39 @@ const TABS: FlowchartTab[] = [
         color: 'orange',
     },
     {
+        id: 'analisis-grafico',
+        label: 'Análisis Gráfico',
+        icon: <TrendingUp size={15} />,
+        svgFile: '/FLOWCHART_ANALISIS_GRAFICO.svg',
+        pdfFile: '/FLOWCHART_ANALISIS_GRAFICO.pdf',
+        description: 'P&L vs Yield & Demurrage → SpaghettiMap V2 con misiles → Filtros de clientes y operaciones',
+        badge: 'Analítica',
+        color: 'blue',
+    },
+    {
+        id: 'spaghetti-map',
+        label: 'Spaghetti Map V2',
+        icon: <Globe size={15} />,
+        svgFile: '/FLOWCHART_SPAGHETTI_MAP.svg',
+        pdfFile: '/FLOWCHART_SPAGHETTI_MAP.pdf',
+        description: 'Mapa base GeoJSON → Pasteles duales Fuentes/Sumideros → Curvas Bezier con misiles animado',
+        badge: 'GeoJSON',
+        color: 'teal',
+    },
+    {
         id: 'auditoria-dual',
-        label: 'Auditoría Dual P×Q',
+        label: 'Liquidador de Gastos Portuarios',
         icon: <Search size={15} />,
         svgFile: '/FLOWCHART_AUDITORIA_DUAL.svg',
         pdfFile: '/FLOWCHART_AUDITORIA_DUAL.pdf',
-        description: 'PDFs Armador & Agente → Split-View → Comparación Δ Bunkers & Puertos → Acta PDF exportable',
-        badge: 'Δ Factura',
+        description: 'PDFs Armador & Agente → Split-View → Comparación Δ Bunkers & Puertos (PxQ) → Acta PDF exportable',
+        badge: 'Liquidador P×Q',
         color: 'slate',
     },
+
 ];
+
+
 
 const COLOR_MAP: Record<string, { active: string; badge: string; icon: string }> = {
     blue:   { active: 'bg-white text-blue-700 border-blue-200 shadow-sm',   badge: 'bg-blue-50 text-blue-600 border-blue-200',   icon: 'bg-blue-50 border-blue-200 text-blue-600' },

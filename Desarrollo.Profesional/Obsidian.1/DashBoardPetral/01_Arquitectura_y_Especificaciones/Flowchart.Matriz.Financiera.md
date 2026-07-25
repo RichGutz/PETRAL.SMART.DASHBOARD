@@ -77,4 +77,5 @@ AUDITORÍA DUAL P×Q
 - **Script flowchart**: [FLOWCHART_MATRIZ_FINANCIERA.py](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Boiler.Plate/Flow.Charts/FLOWCHART_MATRIZ_FINANCIERA.py)
 - **Componente SW**: `src/pages/CommercialForecast/CommercialForecast_V1.tsx`
 - **Anterior**: [[Flowchart.Voyage.Ledger]]
-- **Siguiente**: [[Flowchart.Auditoria.Dual]]
+- **Siguiente**: [[Flowchart.Analisis.Grafico]]
+

@@ -78,15 +78,19 @@ Una rejilla de datos al estilo Excel con bordes finos `#D3D3D3` de 1px. Las celd
 - Validar la compilación del frontend (`tsc --noEmit`).
 - Compilar y desplegar a producción en el VPS (`deploy_forecast_kickoff.py`).
 
----
-
-## 🧭 4. Reglas de Negocio Específicas del Refinamiento
-
+*   **Modalidades de Cálculo de Gastos Portuarios (Modelo Estático vs. Motor P×Q):**
+    *   **Método 1: Modelo Estático (Por defecto actualmente):** Consulta el Maestro de Gastos Portuarios (tabla `port_cost_static`) y jala una cifra plana fija por la combinación `Puerto × Buque`. Es independiente de la fecha de maniobra, horas de permanencia y toneladas exactas.
+    *   **Método 2: Motor Dinámico P×Q (Cálculo Complejo por desarrollar/conectar):** Invoca al `Core Dispatcher` ➔ `port_engines` y desglosa tarifa por tarifa ($P \times Q$) considerando LOA, GRT, DWT, toneladas exactas cargadas/descargadas, horas de permanencia, prácticos, remolques y terminal específico.
+*   **Doble Funcionalidad de Guardado (Activos vs. Prospectos):**
+    *   **Opción PROSPECTOS ➔ Registra una COTIZACIÓN (Snapshot Estático):** Se graba en la tabla Supabase `routes_quotes` (o `routes_prospects`). Es una *"foto del momento"* estática e inmutable que registra el movimiento geográfico de un buque específico bajo las condiciones comerciales y precios de bunker fijados en esa fecha exacta.
+    *   **Opción ACTIVOS ➔ Registra una RUTA (Desplazamiento Dinámico / Vivo):** Se graba en la tabla Supabase `routes_clients`. Registra un desplazamiento geográfico dinámico y vivo cuyas cifras **varían en el tiempo** al recalcularse automáticamente en función de las fluctuaciones del precio del bunker y la cláusula de ajuste **BAF (Bunker Adjustment Factor)** *(funcionalidad BAF por desarrollar)*.
 *   **Tarifa de Flete a la Descarga:** La tarifa de flete ($/t) se define exclusivamente en las operaciones de **Descarga** en los puertos. Para facilitar la entrada de datos, cuando el usuario introduce una tarifa de flete en la primera descarga del viaje, esta tarifa se propaga de manera automática como valor por defecto a todas las descargas siguientes. El usuario puede modificar manualmente cualquier tarifa particular si es necesario.
 *   **Asignación de Ingresos por Tramo:** El ingreso de flete generado por una descarga en el Puerto $i+1$ se asocia e imputa como ingreso del **Tramo $i$** (el tramo inmediatamente anterior que transportó dicha carga).
 *   **Costos Portuarios de Tramos Ballast (Vacío):** Solo el primer tramo `BALLAST` del viaje (el tramo de posicionamiento inicial) computa costos de entrada y salida (carga y descarga) en sus puertos correspondientes. Los demás tramos `BALLAST` subsiguientes del viaje computarán únicamente costos de descarga en su puerto de destino.
 
 ---
+
+
 
 ## 🚀 5. Registro de Fixes y Ajustes de Producción (2026-07-02)
 

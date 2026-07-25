@@ -1,0 +1,77 @@
+
+    digraph AnalisisGraficoVertical {
+        rankdir=TB;
+        splines=ortho;
+        nodesep=1.2;
+        ranksep=2.8;
+        dpi=300;
+        newrank=true;
+
+        node [shape=box, style="filled", fontname="Arial Bold", fontsize=22, height=1.3, margin="0.5,0.4"];
+        edge [fontname="Arial Bold", fontsize=16, penwidth=2.5];
+
+        # ==========================================
+        # PASO 1: ORIGEN DE DATOS
+        # ==========================================
+        subgraph cluster_origen {
+            label = "PASO 1: ORIGEN DE DATOS (MATRIZ FINANCIERA)";
+            style="filled"; fillcolor="#EFF6FF"; color="#2563EB"; fontcolor="#1E3A5F"; fontname="Arial Bold"; fontsize=26;
+            
+            OrigenData [label="📦 MATRIZ FINANCIERA & FORECAST BUILDER\n(Snapshot de Viajes, Fechas, Tonelaje MT & P&L)", fillcolor="#DBEAFE", shape=note, width=6.5];
+        }
+
+        # ==========================================
+        # PASO 2: SELECCIÓN Y FILTROS DEL OPERADOR
+        # ==========================================
+        subgraph cluster_controles {
+            label = "PASO 2: CONTROLES Y FILTROS INTERACTIVOS";
+            style="filled,dashed"; fillcolor="#FFF7ED"; color="#F97316"; fontcolor="#431407"; fontname="Arial Bold"; fontsize=26;
+            
+            Filtros [label="🎛️ TOOLBAR DE FILTROS\n• Cliente (SPCC, NEXA, SPOT, Prospectos)\n• Tipo Operación (Cabotaje / Exportación)\n• Eje Secundario (Yield / Demurrage / Gross)", fillcolor="#FED7AA", shape=parallelogram, width=6.5];
+        }
+
+        # ==========================================
+        # PASO 3: MOTOR DE ANALÍTICA VISUAL
+        # ==========================================
+        subgraph cluster_motor {
+            label = "PASO 3: MOTOR DE ANALÍTICA VISUAL (GRAPHIC ENGINE V2)";
+            style="filled,dashed"; fillcolor="#F0FDF4"; color="#16A34A"; fontcolor="#14532D"; fontname="Arial Bold"; fontsize=26;
+            
+            EngineVisual [label="📊 GRAPHIC ANALYSIS ENGINE (V2)\n────────────────────────────\n• Cálculo de Acumulados Inteligentes\n• Escalado Porcentual Ponderado\n• Nodos Alternados por Entidad\n• Renderizado de Trayectorias Bezier", shape=doubleoctagon, fillcolor="#DCFCE7", penwidth=3.0, fontsize=22, height=3.2, width=6.5];
+        }
+
+        # ==========================================
+        # PASO 4: COMPONENTES GRÁFICOS EN PANTALLA
+        # ==========================================
+        subgraph cluster_graficos {
+            label = "PASO 4: RENDERIZADO VISUAL EN PANTALLA";
+            style="filled,dashed"; fillcolor="#F0FDFA"; color="#0D9488"; fontcolor="#042F2E"; fontname="Arial Bold"; fontsize=26;
+            
+            ChartDualAxis [label="📉 DUAL-AXIS CHART\n(P&L vs Yield / Demurrage / Gross & Línea Acumulada)", fillcolor="#CCFBF1", shape=component, width=6.5];
+            SpaghettiMap  [label="🗺️ SPAGHETTI MAP V2\n(Misiles Animados en Serie & Pasteles Duales por Puerto)", fillcolor="#CCFBF1", shape=component, width=6.5];
+            KPICards      [label="🏆 CARDS DE KPIS\n(P&L Total, Tonelaje Acumulado & Yield Promedio)", fillcolor="#CCFBF1", shape=component, width=6.5];
+        }
+
+        # ==========================================
+        # PASO 5: CONEXIÓN Y NAVEGACIÓN A AUDITORÍA
+        # ==========================================
+        subgraph cluster_salidas {
+            label = "PASO 5: SALIDAS Y AUDITORÍA DETALLADA";
+            style="filled,dashed"; fillcolor="#F8FAFC"; color="#475569"; fontcolor="#0F172A"; fontname="Arial Bold"; fontsize=26;
+            
+            IrAuditoria [label="🔍 IR A AUDITORÍA LEDGER (Detalle PxQ por Viaje)", shape=cds, fillcolor="#E2E8F0", width=6.5];
+            IrDualAudit [label="⚖️ AUDITORÍA DUAL P×Q (Factura Armador vs Sistema)", shape=cds, fillcolor="#CBD5E1", width=6.5];
+        }
+
+        # ==========================================
+        # CONEXIONES VERTICALES EN CASCADA
+        # ==========================================
+        OrigenData -> Filtros [label="  1. Inyecta Snapshot Comercial", fontname="Arial Bold", fontsize=16];
+        Filtros -> EngineVisual [label="  2. Inyecta Filtros Activos", fontname="Arial Bold", fontsize=16];
+        EngineVisual -> ChartDualAxis [label="  3. Renderiza Gráfico Dual", fontname="Arial Bold", fontsize=16];
+        ChartDualAxis -> SpaghettiMap [label="  4. Proyecta Rutas en Mapa", fontname="Arial Bold", fontsize=16];
+        SpaghettiMap -> KPICards [label="  5. Calcula Totales KPIs", fontname="Arial Bold", fontsize=16];
+        KPICards -> IrAuditoria [label="  6. Selección para Auditoría", fontname="Arial Bold", fontsize=16];
+        IrAuditoria -> IrDualAudit [label="  7. Comparación con Factura", fontname="Arial Bold", fontsize=16];
+    }
+    

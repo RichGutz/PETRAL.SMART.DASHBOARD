@@ -1,0 +1,22 @@
+digraph FlowchartAnalisisGraficoPDF {
+	newrank=true nodesep=0.8 rankdir=TB ranksep=1.2
+	node [fontname=Arial fontsize=12 margin="0.3,0.2" shape=box style="filled,rounded"]
+	N1 [label="MATRIZ FINANCIERA / FORECAST BUILDER
+(Snapshot de Viajes, P&L y Tonelaje)" color="#0284C7" fillcolor="#E0F2FE" penwidth=2]
+	N2 [label="FILTROS Y CONTROLES DE VISTA
+(Cliente, Rango Temporal, Tipo Op)" color="#D97706" fillcolor="#FEF3C7" penwidth=1.5]
+	N3 [label="GRAPHIC ANALYSIS ENGINE (V2)
+(ECharts Dual-Axis & SpaghettiMap)" color="#D97706" fillcolor="#FEF3C7" penwidth=2]
+	N4 [label="DUAL-AXIS CHART
+(P&L vs Yield / Demurrage / Gross)" color="#16A34A" fillcolor="#DCFCE7" penwidth=1.5]
+	N5 [label="SPAGHETTI MAP V2
+(Misiles Animados & Pies por Puerto)" color="#16A34A" fillcolor="#DCFCE7" penwidth=1.5]
+	N6 [label="AUDITORIA LEDGER / VOYAGE LEDGER
+(Auditoría Detallada PxQ)" color="#0284C7" fillcolor="#E0F2FE" penwidth=1.5]
+	N1 -> N2 [label=" Inyecta Data Comercial"]
+	N2 -> N3 [label=" Aplica Filtros"]
+	N3 -> N4 [label=" Renderiza Grafico Dual"]
+	N3 -> N5 [label=" Renderiza Rutas en Mapa"]
+	N4 -> N6 [label=" Seleccionar Viaje para Auditoria"]
+	N5 -> N6 [label=" Ver Detalle por Puerto"]
+}

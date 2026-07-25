@@ -55,8 +55,37 @@ P&L Neto = Ingreso Flete
 | 🔍 Rastro Auditoría | Qué motor y qué regla calculó cada ítem |
 | 📦 Botón Exportar | Envía el viaje a la Matriz Financiera |
 
-### PASO 7 — Exportación a Matriz Financiera
-El viaje se registra en la **Grilla Mensual Multi-Cliente** por mes de zarpe.
+---
+
+## ⚙️ Regla de Negocio: Modalidades de Cálculo de Costos Portuarios
+
+El **Multicotizador** contempla dos modalidades para determinar los gastos portuarios del viaje:
+
+1. 📌 **Método 1: Modelo Estático (Por Defecto)**:
+   - **Fuente**: Maestro de Gastos Portuarios (tabla `port_cost_static`).
+   - **Lógica**: Retorna una cifra fija plana basada únicamente en el par `Puerto × Buque`.
+   - **Características**: Independiente de la fecha de maniobra, horas de permanencia o el volumen exacto de toneladas (MT). Es una consulta simple rápida.
+
+2. ⚙️ **Método 2: Motor Dinámico P×Q (Cálculo Complejo por Desarrollar/Conectar)**:
+   - **Fuente**: `Core Dispatcher` ➔ `port_engines`.
+   - **Lógica**: Desglose minucioso tarifa por tarifa ($P \times Q$) evaluando parámetros del buque (LOA, GRT, DWT), toneladas exactas cargadas/descargadas, horas de permanencia, prácticos, remolques y terminal portuario específico.
+
+---
+
+## 💡 Regla de Negocio: Doble Funcionalidad de Guardado (Activos vs. Prospectos)
+
+
+El **Multicotizador** cuenta con dos modalidades de persistencia diferenciadas según el destino seleccionado por el operador:
+
+1. 📌 **Guardado en PROSPECTOS ➔ Registra una COTIZACIÓN (Snapshot Estático)**:
+   - **Tabla Supabase**: `routes_quotes` (o `routes_prospects`).
+   - **Naturaleza**: Es una **"foto del momento"** estática e inmutable.
+   - **Comportamiento**: Guarda el movimiento geográfico de un buque específico bajo las condiciones comerciales y precios de bunker fijados en esa fecha exacta.
+
+2. 🔄 **Guardado en ACTIVOS ➔ Registra una RUTA (Desplazamiento Dinámico / Vivo)**:
+   - **Tabla Supabase**: `routes_clients`.
+   - **Naturaleza**: Registra una **Ruta activa y viva** (desplazamiento geográfico dinámico).
+   - **Comportamiento**: No es una foto fija; sus cifras **varían dinámicamente en el tiempo** al recalcularse en función de las fluctuaciones del precio del bunker y la cláusula de ajuste **BAF (Bunker Adjustment Factor)** *(funcionalidad BAF por desarrollar)*.
 
 ---
 
@@ -74,6 +103,8 @@ Maestro de Contratos ──────────────────┘
 Precios Bunker ────────────────────────────► BUNKER ENGINE
 
 RESULTADO ─────────────────────────────────► MATRIZ FINANCIERA
+                                             ├─ PROSPECTOS ➔ routes_quotes (Cotización)
+                                             └─ ACTIVOS ────➔ routes_clients (Ruta)
 ```
 
 ---
@@ -82,3 +113,4 @@ RESULTADO ───────────────────────�
 - **Script flowchart**: [FLOWCHART_MULTICOTIZADOR.py](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Boiler.Plate/Flow.Charts/FLOWCHART_MULTICOTIZADOR.py)
 - **Componente SW**: `src/components/CommercialForecast/MultiCotizadorExcel.tsx`
 - **Siguiente paso**: [[Flowchart.Matriz.Financiera]]
+

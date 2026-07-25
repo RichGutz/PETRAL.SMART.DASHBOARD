@@ -1,0 +1,102 @@
+import graphviz, os, subprocess, shutil
+
+def generate():
+    base_name = "FLOWCHART_SPAGHETTI_MAP"
+    GRAPHVIZ_BIN = r"C:\Program Files\Graphviz\bin"
+    if GRAPHVIZ_BIN not in os.environ.get("PATH", ""):
+        os.environ["PATH"] = GRAPHVIZ_BIN + os.pathsep + os.environ.get("PATH", "")
+
+    dot_code = """
+    digraph SpaghettiMapVertical {
+        rankdir=TB;
+        splines=ortho;
+        nodesep=1.2;
+        ranksep=2.8;
+        dpi=300;
+        newrank=true;
+
+        node [shape=box, style="filled", fontname="Arial Bold", fontsize=22, height=1.3, margin="0.5,0.4"];
+        edge [fontname="Arial Bold", fontsize=16, penwidth=2.5];
+
+        # ==========================================
+        # PASO 1: ORIGEN DE DATOS NÁUTICOS & MAPA BASE
+        # ==========================================
+        subgraph cluster_origen {
+            label = "PASO 1: DATOS NÁUTICOS & MAPA GEOJSON";
+            style="filled"; fillcolor="#EFF6FF"; color="#2563EB"; fontcolor="#1E3A5F"; fontname="Arial Bold"; fontsize=26;
+            
+            OrigenMap [label="🗺️ MAPA GEOJSON & PUERTOS\\n(peru_chile_ecuador.json + Latitud/Longitud)", fillcolor="#DBEAFE", shape=note, width=6.5];
+        }
+
+        # ==========================================
+        # PASO 2: CLASIFICACIÓN DE NODOS FUENTES & SUMIDEROS
+        # ==========================================
+        subgraph cluster_nodos {
+            label = "PASO 2: CLASIFICACIÓN DE PUERTOS (FUENTES Y SUMIDEROS)";
+            style="filled,dashed"; fillcolor="#FFF7ED"; color="#F97316"; fontcolor="#431407"; fontname="Arial Bold"; fontsize=26;
+            
+            PuertosRoles [label="🥧 BALANCES DE PUERTOS\\n• Fuentes (Carga / Embarque)\\n• Sumideros (Descarga / Recepción)\\n• Pasteles Duales Carga vs Descarga por Nodo", fillcolor="#FED7AA", shape=parallelogram, width=6.5];
+        }
+
+        # ==========================================
+        # PASO 3: MOTOR ECHARTS & TRAYECTORIAS BEZIER
+        # ==========================================
+        subgraph cluster_engine {
+            label = "PASO 3: MOTOR GEOESPACIAL ECHARTS & ANIMACIÓN DE RUTAS";
+            style="filled,dashed"; fillcolor="#F0FDF4"; color="#16A34A"; fontcolor="#14532D"; fontname="Arial Bold"; fontsize=26;
+            
+            EngineSpaghetti [label="🚀 ECHARTS SPAGHETTI ENGINE (V2)\\n────────────────────────────\\n• Aristas Curvas Bezier (Curvatura 0.3 - 0.75)\\n• Polyline ECharts Lines para misiles en serie\\n• Distinción visual LADEN (Carga) vs BALLAST (Lastre)\\n• Tooltips interactivos de Tonelaje (MT) y NM", shape=doubleoctagon, fillcolor="#DCFCE7", penwidth=3.0, fontsize=22, height=3.2, width=6.5];
+        }
+
+        # ==========================================
+        # PASO 4: INTERFAZ EN PANTALLA & CONTROL DE LÍNEA DE TIEMPO
+        # ==========================================
+        subgraph cluster_ui {
+            label = "PASO 4: INTERFAZ SPAGHETTI MAP V2 & TIMELINE";
+            style="filled,dashed"; fillcolor="#F0FDFA"; color="#0D9488"; fontcolor="#042F2E"; fontname="Arial Bold"; fontsize=26;
+            
+            MapViewer   [label="🗺️ VISOR MAPA BASE DARK MODE\\n(GeoJSON con Pan, Zoom y Roam Activo)", fillcolor="#CCFBF1", shape=component, width=6.5];
+            TimelineUI  [label="⏱️ TIMELINE SLIDER MENSUAL\\n(Navegación Dinámica Mes a Mes)", fillcolor="#CCFBF1", shape=component, width=6.5];
+        }
+
+        # ==========================================
+        # PASO 5: NAVEGACIÓN Y EXPORTACIÓN A AUDITORÍA
+        # ==========================================
+        subgraph cluster_salidas {
+            label = "PASO 5: NAVEGACIÓN COMERCIAL Y CONEXIÓN CON MATRIZ";
+            style="filled,dashed"; fillcolor="#F8FAFC"; color="#475569"; fontcolor="#0F172A"; fontname="Arial Bold"; fontsize=26;
+            
+            IrMatriz [label="📋 IR A MATRIZ FINANCIERA (Snapshot Comercial)", shape=cds, fillcolor="#E2E8F0", width=6.5];
+            IrLedger [label="🧪 IR A VOYAGE LEDGER (Auditoría de Viaje)", shape=cds, fillcolor="#CBD5E1", width=6.5];
+        }
+
+        # ==========================================
+        # CONEXIONES VERTICALES EN CASCADA
+        # ==========================================
+        OrigenMap -> PuertosRoles [label="  1. Inyecta Coordenadas & GeoJSON", fontname="Arial Bold", fontsize=16];
+        PuertosRoles -> EngineSpaghetti [label="  2. Calcula Balance por Puerto", fontname="Arial Bold", fontsize=16];
+        EngineSpaghetti -> MapViewer [label="  3. Renderiza Curvas & Misiles", fontname="Arial Bold", fontsize=16];
+        MapViewer -> TimelineUI [label="  4. Sincroniza Slider Mensual", fontname="Arial Bold", fontsize=16];
+        TimelineUI -> IrMatriz [label="  5. Selección para Auditoría", fontname="Arial Bold", fontsize=16];
+        IrMatriz -> IrLedger [label="  6. Navegación a Ledger", fontname="Arial Bold", fontsize=16];
+    }
+    """
+    src = graphviz.Source(dot_code)
+    output_dir = os.path.dirname(os.path.abspath(__file__))
+    dot_exe = os.path.join(GRAPHVIZ_BIN, "dot.exe")
+    dot_file = os.path.join(output_dir, base_name)
+    src.save(dot_file)
+    subprocess.run([dot_exe, "-Tsvg", "-o", dot_file + ".svg", dot_file], capture_output=True)
+    subprocess.run([dot_exe, "-Tpdf", "-o", dot_file + ".pdf", dot_file], capture_output=True)
+    
+    # Copy to Frontend public directory
+    public_dir = r"c:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend\public"
+    if os.path.exists(public_dir):
+        shutil.copy(dot_file + ".svg", os.path.join(public_dir, base_name + ".svg"))
+        shutil.copy(dot_file + ".pdf", os.path.join(public_dir, base_name + ".pdf"))
+        print(f"Copied SVG and PDF to {public_dir}")
+
+    print(f"OK Vertical: {base_name}")
+
+if __name__ == "__main__":
+    generate()

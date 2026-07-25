@@ -7,7 +7,7 @@
         dpi=300;
         newrank=true;
 
-        node [shape=box, style="filled,rounded", fontname="Arial Bold", fontsize=22, height=1.3, margin="0.5,0.4"];
+        node [shape=box, style="filled", fontname="Arial Bold", fontsize=22, height=1.3, margin="0.5,0.4"];
         edge [fontname="Arial Bold", fontsize=16, penwidth=2.5];
 
         # ==========================================
@@ -48,82 +48,85 @@
         #  PASO 3: CÁLCULO SPOT (NAVEGACIÓN + BUNKERS)
         # ==========================================
         subgraph cluster_spot {
-            label = "PASO 3: MOTOR SPOT — NAVEGACIÓN & BUNKERS";
+            label = "PASO 3: MOTOR SPOT — CÁLCULO DE NAVEGACIÓN Y BUNKERS";
             style="filled,dashed"; fillcolor="#FFFBEB"; color="#D97706"; fontcolor="#78350F";
             fontname="Arial Bold"; fontsize=26;
 
             { rank=same;
-                CalcNavegacion [label="⚙️ CÁLCULO Δt NAVEGACIÓN\n(Distancia NM ÷ Velocidad = Días en Mar)", shape=component, fillcolor="#FDE68A", penwidth=3.0];
-                CalcBunker     [label="⛽ CÁLCULO BUNKER\n(Días × Consumo MT/día × Precio USD/MT)",          shape=component, fillcolor="#FEF3C7"];
-                CalcFlete      [label="💵 ESTIMACIÓN FLETE\n(Q Carga MT × Tarifa USD/MT = Ingreso Bruto)",   shape=component, fillcolor="#FEF3C7"];
+                CalcNavegacion [label="⏱️ Δt NAVEGACIÓN\n(Distancia NM ÷ Velocidad)", fillcolor="#FEF3C7", shape=component];
+                CalcBunker     [label="⛽ COSTO BUNKER\n(Días × Consumo MT/día × USD/MT)", fillcolor="#FEF3C7", shape=component];
+                CalcFlete      [label="💰 INGRESO BRUTO\n(Q MT × Tarifa Flete USD/MT)", fillcolor="#FEF3C7", shape=component];
             }
             CalcNavegacion -> CalcBunker -> CalcFlete [style=invis, weight=30];
-            CalcNavegacion -> CalcBunker;
         }
 
         # ==========================================
-        #  PASO 4: MOTORES DE COSTOS PORTUARIOS
+        #  PASO 4: MODALIDADES DE COSTOS PORTUARIOS
         # ==========================================
         subgraph cluster_puertos {
-            label = "PASO 4: MOTORES DE COSTOS PORTUARIOS (P×Q por Terminal)";
+            label = "PASO 4: COSTOS PORTUARIOS (MODELO ESTÁTICO vs MOTOR P×Q)";
             style="filled,dashed"; fillcolor="#F3E8FF"; color="#9333EA"; fontcolor="#3B0764";
             fontname="Arial Bold"; fontsize=26;
 
-            CoreDispatch2 [label="🔀 CORE DISPATCHER\n(Identifica Motor por Puerto Carga & Descarga)", shape=diamond, fillcolor="#E9D5FF", penwidth=3.0, height=1.6];
-
             { rank=same;
-                MotorCarga    [label="🏭 MOTOR PUERTO CARGA\n(Gastos Agenciamiento, Practicaje,\nRemolques, Derechos Portuarios)", fillcolor="#E9D5FF"];
-                MotorDescarga [label="🏗️ MOTOR PUERTO DESCARGA\n(Gastos Agenciamiento, Practicaje,\nRemolques, Derechos Portuarios)", fillcolor="#FBCFE8"];
+                ModEstatico [label="📌 MODO 1: ESTÁTICO (Por Defecto)\n➔ Maestro port_cost_static\n• Cifra plana fija por Puerto × Barco\n• Sin considerar fecha, tiempo ni MT", fillcolor="#E9D5FF", shape=box, fontsize=19];
+                ModDinamico [label="⚙️ MODO 2: DINÁMICO P×Q (Complejo)\n➔ Core Dispatcher ➔ port_engines\n• Desglose tarifa por tarifa (P × Q)\n• Evalúa LOA, DWT, MT, tiempo & práctico", fillcolor="#E9D5FF", shape=box, fontsize=19];
             }
-            CoreDispatch2 -> MotorCarga;
-            CoreDispatch2 -> MotorDescarga;
+            ModEstatico -> ModDinamico [style=invis, weight=30];
         }
 
         # ==========================================
-        #  PASO 5: VOYAGE P&L (LEDGER DE VIAJE)
+        #  PASO 5: CÁLCULO VOYAGE P&L
         # ==========================================
         subgraph cluster_pl {
-            label = "PASO 5: VOYAGE P&L — RESULTADO FINANCIERO DEL VIAJE";
+            label = "PASO 5: VOYAGE P&L CALCULATOR (RESULTADO FINANCIERO)";
             style="filled,dashed"; fillcolor="#CCFBF1"; color="#0D9488"; fontcolor="#042F2E";
             fontname="Arial Bold"; fontsize=26;
 
-            PLCalculo [label="📊 VOYAGE P&L CALCULATOR\nIngreso Flete (USD)\n─ Costo Bunker (USD)\n─ Gastos Puerto Carga (USD)\n─ Gastos Puerto Descarga (USD)\n= P&L NETO VIAJE (USD & USD/MT)", shape=doubleoctagon, fillcolor="#99F6E4", penwidth=3.0, fontsize=22, height=2.4];
+            PLCalculo [label="📊 P&L NETO DEL VIAJE\n= Ingreso Flete − Bunker − Costo Puerto Carga − Costo Puerto Descarga", shape=doubleoctagon, fillcolor="#99F6E4", penwidth=3.0, fontsize=22];
         }
 
         # ==========================================
-        #  PASO 6: TABLA DE RESULTADOS EN PANTALLA
+        #  PASO 6: VISUALIZACIÓN & RASTRO DE AUDITORÍA
         # ==========================================
-        subgraph cluster_resultado {
-            label = "PASO 6: VISUALIZACIÓN DE RESULTADOS EN PANTALLA";
+        subgraph cluster_ui {
+            label = "PASO 6: INTERFAZ EN PANTALLA & RASTRO DE CÁLCULO";
             style="filled,dashed"; fillcolor="#F8FAFC"; color="#475569"; fontcolor="#0F172A";
             fontname="Arial Bold"; fontsize=26;
 
             { rank=same;
-                TablaResumen   [label="📋 TABLA DESGLOSE\n(Ítems & Costos por Concepto)", fillcolor="#F1F5F9", fontsize=20];
-                AuditTrail     [label="🔍 RASTRO AUDITORÍA\n(Qué motor & regla calculó\ncada ítem del costo)", fillcolor="#E2E8F0", fontsize=20];
-                BtnExportar    [label="📦 BOTÓN EXPORTAR\n➔ Matriz Financiera", shape=cds, fillcolor="#FED7AA", penwidth=2.5, fontsize=20];
+                TablaResumen [label="📋 TABLA DESGLOSE EXCEL\n(Ítems de Costo en USD)", fillcolor="#F1F5F9", fontsize=20];
+                AuditTrail   [label="🔍 RASTRO DE AUDITORÍA\n(Motor y Regla Aplicada)", fillcolor="#F1F5F9", fontsize=20];
+                BtnExportar  [label="📦 SELECCIÓN MODO GUARDADO\n(Prospectos vs Activos)", shape=cds, fillcolor="#FED7AA", fontsize=20, penwidth=2.5];
             }
             TablaResumen -> AuditTrail -> BtnExportar [style=invis, weight=30];
         }
 
         # ==========================================
-        #  PASO 7: DESTINO FINAL
+        #  PASO 7: PERSISTENCIA Y TABLAS DB DE DESTINO
         # ==========================================
         subgraph cluster_destino {
-            label = "PASO 7: EXPORTACIÓN AL FORECAST COMERCIAL";
+            label = "PASO 7: EXPORTACIÓN DUAL & PERSISTENCIA EN TABLAS BASE DE DATOS";
             style="filled,dashed"; fillcolor="#FFF7ED"; color="#F97316"; fontcolor="#431407";
             fontname="Arial Bold"; fontsize=26;
 
-            MatrizDest [label="📋 MATRIZ FINANCIERA\n(Viaje registrado en Grilla Mensual\nMulti-Cliente por Mes de Zarpe)", shape=doubleoctagon, fillcolor="#FED7AA", penwidth=3.0];
+            { rank=same;
+                GuardadoProspectos [label="📌 PROSPECTOS (Cotización)\n➔ TABLA: routes_quotes\n• Foto estática del momento\n• Condiciones y bunker fijos", fillcolor="#FED7AA", shape=cds, penwidth=2.5, fontsize=19];
+                GuardadoActivos    [label="🔄 ACTIVOS (Ruta Dinámica)\n➔ TABLA: routes_clients\n• Desplazamiento dinámico / vivo\n• Recálculo dinámico según BAF", fillcolor="#FDE68A", shape=cds, penwidth=2.5, fontsize=19];
+            }
+            GuardadoProspectos -> GuardadoActivos [style=invis, weight=30];
+
+            MatrizDest [label="📋 MATRIZ FINANCIERA\n(Viaje consolidado en Grilla Mensual Multi-Cliente)", shape=doubleoctagon, fillcolor="#FEF3C7", penwidth=3.0, fontsize=22];
         }
 
         # --- COLUMNA VERTEBRAL INVISIBLE ---
         InputRuta -> ValDistancia [style=invis, weight=10];
         ValDistancia -> CalcNavegacion [style=invis, weight=10];
-        CalcNavegacion -> CoreDispatch2 [style=invis, weight=10];
-        CoreDispatch2 -> PLCalculo [style=invis, weight=10];
+        CalcNavegacion -> ModEstatico [style=invis, weight=10];
+        ModEstatico -> PLCalculo [style=invis, weight=10];
         PLCalculo -> TablaResumen [style=invis, weight=10];
-        TablaResumen -> MatrizDest [style=invis, weight=10];
+        TablaResumen -> GuardadoProspectos [style=invis, weight=10];
+        GuardadoProspectos -> MatrizDest [style=invis, weight=10];
 
         # --- CONEXIONES REALES ---
         InputCliente  -> ValFlota;
@@ -134,16 +137,22 @@
         ValFlota     -> CalcNavegacion;
         ValDistancia -> CalcNavegacion;
         ValBunker    -> CalcBunker;
-        ValPuertos   -> CoreDispatch2;
+        ValPuertos   -> ModEstatico;
+        ValPuertos   -> ModDinamico;
 
         CalcNavegacion -> CalcFlete;
         CalcFlete      -> PLCalculo;
         CalcBunker     -> PLCalculo;
-        MotorCarga     -> PLCalculo;
-        MotorDescarga  -> PLCalculo;
+        ModEstatico    -> PLCalculo [label=" Gastos Planos"];
+        ModDinamico    -> PLCalculo [label=" Desglose P×Q"];
 
         PLCalculo -> TablaResumen;
         PLCalculo -> AuditTrail;
-        BtnExportar -> MatrizDest;
+        TablaResumen -> BtnExportar;
+
+        BtnExportar -> GuardadoProspectos [label=" Opción Prospectos"];
+        BtnExportar -> GuardadoActivos [label=" Opción Activos"];
+        GuardadoProspectos -> MatrizDest;
+        GuardadoActivos -> MatrizDest;
     }
     

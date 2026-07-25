@@ -1,66 +1,71 @@
 
-    digraph AuditoriaDual {
-        rankdir=TB; splines=ortho; nodesep=1.8; ranksep=3.2; dpi=300; newrank=true;
-        node [shape=box, style="filled,rounded", fontname="Arial Bold", fontsize=22, height=1.3, margin="0.5,0.4"];
+    digraph LiquidadorGastosPortuariosVertical {
+        rankdir=TB;
+        splines=ortho;
+        nodesep=1.2;
+        ranksep=2.8;
+        dpi=300;
+        newrank=true;
+
+        node [shape=box, style="filled", fontname="Arial Bold", fontsize=22, height=1.3, margin="0.5,0.4"];
         edge [fontname="Arial Bold", fontsize=16, penwidth=2.5];
 
+        # ==========================================
+        # PASO 1: INPUTS DOCUMENTARIOS (FACTURA REAL vs CÁLCULO)
+        # ==========================================
         subgraph cluster_inputs {
-            label = "INPUTS: DOCUMENTOS A AUDITAR";
+            label = "PASO 1: DOCUMENTOS & DATOS DE ENTRADA A AUDITAR";
             style="filled"; fillcolor="#EFF6FF"; color="#2563EB"; fontcolor="#1E3A5F"; fontname="Arial Bold"; fontsize=26;
-            { rank=same;
-                PdfArmador [label="📄 PDF ARMADOR\n(Factura / SOF del Armador\ncon ítems de costos)", fillcolor="#DBEAFE", shape=note];
-                PdfAgente  [label="📄 PDF AGENTE PORTUARIO\n(Cuenta de Gastos del Agente\nPor Puerto Carga & Descarga)", fillcolor="#DBEAFE", shape=note];
-            }
-            PdfArmador -> PdfAgente [style=invis, weight=50];
+            
+            InputsDocs [label="📄 DOCUMENTOS DE ENTRADA\n• PDF Armador (Factura / SOF con ítems de costos)\n• PDF Agente Portuario (Cuenta de Gastos por Puerto)\n• Cifra Proforma P×Q (Motor P×Q del Sistema)", fillcolor="#DBEAFE", shape=note, width=6.5];
         }
 
+        # ==========================================
+        # PASO 2: VISOR SPLIT-VIEW DE AUDITORÍA
+        # ==========================================
         subgraph cluster_viewer {
-            label = "HERRAMIENTA AUDITORÍA DUAL — VISOR SPLIT-VIEW";
-            style="filled,dashed"; fillcolor="#FEF3C7"; color="#D97706"; fontcolor="#78350F"; fontname="Arial Bold"; fontsize=26;
-            SplitView [label="🔍 VISOR SPLIT-VIEW\n(PDF Armador | PDF Agente\nAmpliar, Navegar, Comparar)", shape=doubleoctagon, fillcolor="#FDE68A", penwidth=3.0, fontsize=22, height=2.2];
+            label = "PASO 2: HERRAMIENTA LIQUIDADOR DE GASTOS PORTUARIOS (VISOR SPLIT-VIEW)";
+            style="filled,dashed"; fillcolor="#FFF7ED"; color="#F97316"; fontcolor="#431407"; fontname="Arial Bold"; fontsize=26;
+            
+            SplitView [label="🔍 VISOR SPLIT-VIEW (LIQUIDADOR DE GASTOS PORTUARIOS)\n────────────────────────────\n• Panel Izquierdo: PDF Factura Armador / Agente\n• Panel Derecho: Matriz de Recálculo P×Q Sistema\n• Controles de Zoom, Navegación & Selección de Ítems", shape=doubleoctagon, fillcolor="#FED7AA", penwidth=3.0, fontsize=22, height=3.2, width=6.5];
         }
 
-        subgraph cluster_calculo {
-            label = "VALORES CALCULADOS POR EL SISTEMA (Para Comparación)";
-            style="filled,dashed"; fillcolor="#F3E8FF"; color="#9333EA"; fontcolor="#3B0764"; fontname="Arial Bold"; fontsize=26;
-            { rank=same;
-                CalcP [label="⚙️ P CALCULADO\n(Precio Bunker VLSFO/LSMGO\ndel Maestro de Bunkers)", fillcolor="#E9D5FF", fontsize=20];
-                CalcQ [label="📐 Q CALCULADO\n(Consumo MT por Día × Días\nvía Spot Calculator)", fillcolor="#E9D5FF", fontsize=20];
-                CalcG [label="🏭 GASTOS PORTUARIOS\n(Motor Dedicado por Puerto\nvía Core Dispatcher)", fillcolor="#E9D5FF", fontsize=20];
-            }
-            CalcP -> CalcQ -> CalcG [style=invis, weight=30];
-        }
-
+        # ==========================================
+        # PASO 3: COMPARACIÓN DUAL & DIVERGENCIAS (Δ)
+        # ==========================================
         subgraph cluster_comparacion {
-            label = "COMPARACIÓN: FACTURA vs CÁLCULO SISTEMA";
-            style="filled,dashed"; fillcolor="#CCFBF1"; color="#0D9488"; fontcolor="#042F2E"; fontname="Arial Bold"; fontsize=26;
-            { rank=same;
-                DeltaBunker [label="Δ BUNKER\nFactura vs Sistema\n(USD & %)", fillcolor="#99F6E4", shape=diamond, height=2.0, fontsize=20];
-                DeltaPuerto [label="Δ PUERTOS\nFactura vs Sistema\n(USD & %)", fillcolor="#99F6E4", shape=diamond, height=2.0, fontsize=20];
-                DeltaTotal  [label="Δ TOTAL P&L\nImpacto Net Final\n(USD & USD/MT)", fillcolor="#99F6E4", shape=diamond, height=2.0, fontsize=20];
-            }
-            DeltaBunker -> DeltaPuerto -> DeltaTotal [style=invis, weight=30];
+            label = "PASO 3: MOTOR DE AUDITORÍA DUAL & DIVERGENCIAS (Δ P×Q)";
+            style="filled,dashed"; fillcolor="#F0FDF4"; color="#16A34A"; fontcolor="#14532D"; fontname="Arial Bold"; fontsize=26;
+            
+            DeltaEngine [label="⚖️ COMPARADOR DUAL P×Q (FACTURA REAL vs SISTEMA)\n• Δ Bunker: Diferencia de Precio VLSFO/LSMGO & Consumo MT\n• Δ Puertos: Diferencia en Agenciamiento, Practicaje & Remolques\n• Δ Total P&L: Impacto Neto en USD y USD/MT en la Liquidación", fillcolor="#DCFCE7", shape=box, width=6.5];
         }
 
+        # ==========================================
+        # PASO 4: RESOLUCIÓN Y VERDICTO DE AUDITORÍA
+        # ==========================================
+        subgraph cluster_resolucion {
+            label = "PASO 4: RESOLUCIÓN Y AUDITORÍA DE TOLERANCIA";
+            style="filled,dashed"; fillcolor="#F0FDFA"; color="#0D9488"; fontcolor="#042F2E"; fontname="Arial Bold"; fontsize=26;
+            
+            Resolucion [label="📋 AUDITORÍA DE TOLERANCIA\n• ✅ APROBADO (Δ dentro de tolerancia contractualmente permitida)\n• ⚠️ OBJECIÓN (Δ supera tolerancia / Nota de Crédito requerida)", fillcolor="#CCFBF1", shape=component, width=6.5];
+        }
+
+        # ==========================================
+        # PASO 5: EMISIÓN DE ACTA EN PDF & REGISTRO
+        # ==========================================
         subgraph cluster_salida {
-            label = "RESOLUCIÓN Y DOCUMENTACIÓN";
-            style="filled,dashed"; fillcolor="#E2E8F0"; color="#64748B"; fontcolor="#0F172A"; fontname="Arial Bold"; fontsize=26;
-            { rank=same;
-                AccAprobado [label="✅ APROBADO\n(Δ dentro de tolerancia\nFactura OK)", fillcolor="#DCFCE7", fontsize=20, shape=cds];
-                AccObjecion [label="⚠️ OBJECIÓN\n(Δ supera tolerancia\nNota de Crédito requerida)", fillcolor="#FEE2E2", fontsize=20, shape=cds];
-                ActaPdf     [label="📄 ACTA AUDITORÍA PDF\n(Reporte firmable con\ndesglose completo)", fillcolor="#F1F5F9", fontsize=20];
-            }
-            AccAprobado -> AccObjecion -> ActaPdf [style=invis, weight=30];
+            label = "PASO 5: DOCUMENTACIÓN OFICIAL & ACTA FIRMABLE EN PDF";
+            style="filled,dashed"; fillcolor="#F8FAFC"; color="#475569"; fontcolor="#0F172A"; fontname="Arial Bold"; fontsize=26;
+            
+            ActaPdf [label="📄 ACTA DE AUDITORÍA LIQUIDADOR DE GASTOS (PDF)\n• Título con Nivel ([NIVEL BAJO] / [NIVEL ALTO])\n• Reporte de Liquidación Firmable con Desglose Granular", shape=cds, fillcolor="#E2E8F0", width=6.5];
         }
 
-        PdfArmador -> SplitView; PdfAgente -> SplitView;
-        SplitView -> CalcP [style=invis, weight=10];
-        SplitView -> DeltaBunker;
-        CalcP -> DeltaBunker; CalcQ -> DeltaBunker;
-        CalcG -> DeltaPuerto;
-        DeltaBunker -> DeltaTotal; DeltaPuerto -> DeltaTotal;
-        DeltaTotal -> AccAprobado [style=invis, weight=10];
-        DeltaTotal -> AccAprobado; DeltaTotal -> AccObjecion;
-        AccAprobado -> ActaPdf; AccObjecion -> ActaPdf;
+        # ==========================================
+        # CONEXIONES VERTICALES EN CASCADA
+        # ==========================================
+        InputsDocs -> SplitView [label="  1. Carga PDFs & Data Sistema", fontname="Arial Bold", fontsize=16];
+        SplitView -> DeltaEngine [label="  2. Ejecuta Cotejo Dual", fontname="Arial Bold", fontsize=16];
+        DeltaEngine -> Resolucion [label="  3. Evalúa Tolerancia", fontname="Arial Bold", fontsize=16];
+        Resolucion -> ActaPdf [label="  4. Emite Veredicto", fontname="Arial Bold", fontsize=16];
     }
     

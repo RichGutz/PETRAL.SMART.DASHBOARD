@@ -1,0 +1,120 @@
+import graphviz, os, subprocess, shutil
+
+def generate():
+    base_name = "FLOWCHART_MOTOR_PXQ"
+    GRAPHVIZ_BIN = r"C:\Program Files\Graphviz\bin"
+    if GRAPHVIZ_BIN not in os.environ.get("PATH", ""):
+        os.environ["PATH"] = GRAPHVIZ_BIN + os.pathsep + os.environ.get("PATH", "")
+
+    dot_code = """
+    digraph MotorPxQVertical {
+        rankdir=TB;
+        splines=ortho;
+        nodesep=1.2;
+        ranksep=2.8;
+        dpi=300;
+        newrank=true;
+
+        node [shape=box, style="filled", fontname="Arial Bold", fontsize=22, height=1.3, margin="0.5,0.4"];
+        edge [fontname="Arial Bold", fontsize=16, penwidth=2.5];
+
+        # ==========================================
+        # PASO 1: INPUTS TÉCNICOS & OPERATIVOS
+        # ==========================================
+        subgraph cluster_inputs {
+            label = "PASO 1: INPUTS TÉCNICOS Y PARÁMETROS DEL BUQUE & PUERTO";
+            style="filled"; fillcolor="#EFF6FF"; color="#2563EB"; fontcolor="#1E3A5F"; fontname="Arial Bold"; fontsize=26;
+            
+            InputsPxQ [label="⚓ ENTORNOS & PARÁMETROS DE MANIOBRA\\n• Buque: LOA, GRT, DWT, Calado & Tramos\\n• Puerto & Terminal: Tipo Operación (Carga / Descarga)\\n• Q Carga (MT) & Días Muelle (Sin fecha/hora fijada en Proforma)", fillcolor="#DBEAFE", shape=note, width=6.5];
+        }
+
+        # ==========================================
+        # PASO 2: SIMULACIÓN DUAL MÍNIMA Y MÁXIMA
+        # ==========================================
+        subgraph cluster_dispatcher {
+            label = "PASO 2: SIMULACIÓN DUAL (HORARIO ORDINARIO DIURNO vs RECARGO NOCTURNO)";
+            style="filled,dashed"; fillcolor="#FFF7ED"; color="#F97316"; fontcolor="#431407"; fontname="Arial Bold"; fontsize=26;
+            
+            { rank=same;
+                SimMinima [label="☀️ ESCENARIO MÍNIMO (Diurno Normal)\\n• Sin recargo de overtime (07:00 - 18:00h)\\n• Tarifa base ordinaria", fillcolor="#FED7AA", shape=parallelogram, width=3.2];
+                SimMaxima [label="🌙 ESCENARIO MÁXIMO (Nocturno / Feriado)\\n• Con recargo +25% / +50% overtime\\n• Tarifa máxima con festivos", fillcolor="#FED7AA", shape=parallelogram, width=3.2];
+            }
+            SimMinima -> SimMaxima [style=invis, weight=30];
+        }
+
+        # ==========================================
+        # PASO 3: MOTOR ALGORÍTMICO & PROMEDIO DINÁMICO
+        # ==========================================
+        subgraph cluster_engine {
+            label = "PASO 3: MOTOR CALCULADOR P×Q & PROMEDIADO PROFORMA";
+            style="filled,dashed"; fillcolor="#F0FDF4"; color="#16A34A"; fontcolor="#14532D"; fontname="Arial Bold"; fontsize=26;
+            
+            EnginePxQ [label="⚙️ MOTOR CALCULADOR P×Q & PROMEDIO (USD)\\n────────────────────────────\\n• Genera 4 Cotizaciones Internas P×Q\\n• Gasto Portuario Matriz = (Mínimo + Máximo) ÷ 2\\n• Asigna Cifra Proforma Ponderada al Forecast", shape=doubleoctagon, fillcolor="#DCFCE7", penwidth=3.0, fontsize=22, height=3.2, width=6.5];
+        }
+
+        # ==========================================
+        # PASO 4: INTERFAZ LAYOUT 4 PDFs (2 FILAS x 2 COLUMNAS)
+        # ==========================================
+        subgraph cluster_ui {
+            label = "PASO 4: INTERFAZ PANEL DE CONTROL — LAYOUT 4 PDFs (2 FILAS x 2 COLUMNAS)";
+            style="filled,dashed"; fillcolor="#F0FDFA"; color="#0D9488"; fontcolor="#042F2E"; fontname="Arial Bold"; fontsize=26;
+            
+            { rank=same;
+                PdfCargaMin    [label="📄 PDF 1: Carga Mínima\\n(Horario Diurno Normal)", fillcolor="#CCFBF1", shape=component, width=3.2];
+                PdfDescargaMin [label="📄 PDF 2: Descarga Mínima\\n(Horario Diurno Normal)", fillcolor="#CCFBF1", shape=component, width=3.2];
+            }
+            { rank=same;
+                PdfCargaMax    [label="📄 PDF 3: Carga Máxima\\n(Horario Nocturno/Feriado)", fillcolor="#99F6E4", shape=component, width=3.2];
+                PdfDescargaMax [label="📄 PDF 4: Descarga Máxima\\n(Horario Nocturno/Feriado)", fillcolor="#99F6E4", shape=component, width=3.2];
+            }
+            PdfCargaMin -> PdfDescargaMin [style=invis, weight=30];
+            PdfCargaMax -> PdfDescargaMax [style=invis, weight=30];
+            PdfCargaMin -> PdfCargaMax [style=invis, weight=10];
+        }
+
+        # ==========================================
+        # PASO 5: INTEGRACIÓN Y SALIDAS
+        # ==========================================
+        subgraph cluster_salidas {
+            label = "PASO 5: INTEGRACIÓN CON MULTICOTIZADOR, LEDGER & AUDITORÍA DUAL";
+            style="filled,dashed"; fillcolor="#F8FAFC"; color="#475569"; fontcolor="#0F172A"; fontname="Arial Bold"; fontsize=26;
+            
+            OutMulticot [label="💼 INYECCIÓN A MULTICOTIZADOR & VOYAGE LEDGER (Costo Promedio P×Q)", shape=cds, fillcolor="#E2E8F0", width=6.5];
+            OutDualAudit [label="⚖️ COMPARACIÓN EN AUDITORÍA DUAL P×Q (vs Factura Armador Real)", shape=cds, fillcolor="#CBD5E1", width=6.5];
+        }
+
+        # ==========================================
+        # CONEXIONES VERTICALES EN CASCADA
+        # ==========================================
+        InputsPxQ -> SimMinima [label="  1. Inyecta Parámetros Buque & Puerto", fontname="Arial Bold", fontsize=16];
+        InputsPxQ -> SimMaxima;
+        SimMinima -> EnginePxQ [label="  2. Computa Escenario Mínimo", fontname="Arial Bold", fontsize=16];
+        SimMaxima -> EnginePxQ [label="  2. Computa Escenario Máximo", fontname="Arial Bold", fontsize=16];
+        EnginePxQ -> PdfCargaMin [label="  3. Renderiza 4 PDFs & Promedio", fontname="Arial Bold", fontsize=16];
+        EnginePxQ -> PdfDescargaMin;
+        EnginePxQ -> PdfCargaMax;
+        EnginePxQ -> PdfDescargaMax;
+        PdfCargaMin -> OutMulticot [label="  4. Alimenta P&L Comercial", fontname="Arial Bold", fontsize=16];
+        PdfCargaMax -> OutMulticot;
+        OutMulticot -> OutDualAudit [label="  5. Validador de Factura Armador", fontname="Arial Bold", fontsize=16];
+    }
+    """
+    src = graphviz.Source(dot_code)
+    output_dir = os.path.dirname(os.path.abspath(__file__))
+    dot_exe = os.path.join(GRAPHVIZ_BIN, "dot.exe")
+    dot_file = os.path.join(output_dir, base_name)
+    src.save(dot_file)
+    subprocess.run([dot_exe, "-Tsvg", "-o", dot_file + ".svg", dot_file], capture_output=True)
+    subprocess.run([dot_exe, "-Tpdf", "-o", dot_file + ".pdf", dot_file], capture_output=True)
+    
+    # Copy to Frontend public directory
+    public_dir = r"c:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend\public"
+    if os.path.exists(public_dir):
+        shutil.copy(dot_file + ".svg", os.path.join(public_dir, base_name + ".svg"))
+        shutil.copy(dot_file + ".pdf", os.path.join(public_dir, base_name + ".pdf"))
+        print(f"Copied SVG and PDF to {public_dir}")
+
+    print(f"OK Vertical: {base_name}")
+
+if __name__ == "__main__":
+    generate()
