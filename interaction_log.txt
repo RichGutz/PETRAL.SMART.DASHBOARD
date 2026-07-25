@@ -41,3 +41,10 @@ Fecha: 2026-07-22
 ================================================================================
 
 
+
+[2026-07-25 16:46:44] Cierre de Sesión - Módulo Static vs Dynamic Port Cost & QC
+- Se exportó e importó computePortItems directamente desde CallaoAuditViewer.tsx sin duplicación.
+- Se eliminaron todos los fallbacks sintéticos e inventos.
+- Se normalizó el matching de buques (normalizeVesselKey) conectando directamente las 46 filas de Supabase.
+- Se creó y ejecutó la Suite Autónoma de QC (run_qc_static_vs_dynamic.py) pasando 19/19 comparativas reales válidas.
+- Se actualizaron las especificaciones en Obsidian (Static_vs_Dynamic_Port_Cost.md y Plan.QC.Loop.Static.vs.Dynamic.Port.Cost.md).
