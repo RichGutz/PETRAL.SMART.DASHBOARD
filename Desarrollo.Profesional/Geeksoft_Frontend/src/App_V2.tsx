@@ -91,6 +91,7 @@ function App_V2() {
               <Route path="/port-tariffs" element={<ProtectedRoute module="maestro_costos_agencia"><PortTariffsMaster /></ProtectedRoute>} />
               <Route path="/sources-sinks" element={<ProtectedRoute module="maestro_rutas"><SourcesSinksMaster_V2 /></ProtectedRoute>} />
               <Route path="/bunker-prices" element={<ProtectedRoute module="maestro_bunker"><BunkerMaster /></ProtectedRoute>} />
+              <Route path="/static-vs-dynamic-port-cost" element={<ProtectedRoute><StaticVsDynamicPortCost /></ProtectedRoute>} />
               
               {/* Herramientas Protegidas (Ribbon via ToolsLayout) */}
               <Route element={<ProtectedRoute><ToolsLayout_V2 /></ProtectedRoute>}>
@@ -102,7 +103,6 @@ function App_V2() {
                   <Route path="/audit-engine" element={<ProtectedRoute module="matriz_financiera"><AuditEngine_V2 /></ProtectedRoute>} />
                   <Route path="/audit-final" element={<ProtectedRoute module="matriz_financiera"><AuditFinal_V2 /></ProtectedRoute>} />
                   <Route path="/system-flowchart" element={<ProtectedRoute><SystemFlowchartViewer_V2 /></ProtectedRoute>} />
-                  <Route path="/static-vs-dynamic-port-cost" element={<ProtectedRoute><StaticVsDynamicPortCost /></ProtectedRoute>} />
                   <Route path="/system-documentation" element={<ProtectedRoute><SystemDocumentation_V2 /></ProtectedRoute>} />
               </Route>
 
