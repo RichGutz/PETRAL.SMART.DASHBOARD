@@ -1,5 +1,5 @@
 from typing import List, Any, Optional
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, UploadFile, File
 from backend.models.forecast_models import (
     ForecastRequest,
     ForecastResponse,
@@ -204,17 +204,88 @@ def save_bunker_prices(payload: List[Any] = Body(...)):
     try:
         from backend.database import get_supabase
         sb = get_supabase()
-        res = sb.table("bunker_prices").upsert(payload, on_conflict="fuel_type,date").execute()
+        
+        sanitized_payload = []
+        for item in payload:
+            if item.get("fuel_type") and float(item.get("market_price_usd", 0)) > 0:
+                sanitized_payload.append({
+                    "fuel_type": str(item.get("fuel_type")).strip().upper(),
+                    "market_price_usd": float(item.get("market_price_usd")),
+                    "date": item.get("date")
+                })
+        
+        if not sanitized_payload:
+            return {"status": "success", "data": []}
+
+        res = sb.table("bunker_prices").upsert(sanitized_payload, on_conflict="fuel_type").execute()
         return {"status": "success", "data": res.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/bunker/parse-pdf")
+async def parse_bunker_pdf(file: UploadFile = File(...)):
+    try:
+        import pdfplumber
+        import io
+        import re
+
+        contents = await file.read()
+        extracted_data = {
+            "date": None,
+            "supplier": "OIL TRADING S.A.C.",
+            "ifo_price": 0.0,
+            "mdo_price": 0.0
+        }
+
+        with pdfplumber.open(io.BytesIO(contents)) as pdf:
+            full_text = ""
+            for page in pdf.pages:
+                text = page.extract_text()
+                if text:
+                    full_text += text + "\n"
+
+        lines = [line.strip() for line in full_text.split('\n') if line.strip()]
+        if lines:
+            first_line = lines[0]
+            if "R.U.C." in first_line:
+                extracted_data["supplier"] = first_line.split("R.U.C.")[0].strip()
+            else:
+                extracted_data["supplier"] = first_line
+
+        date_match = re.search(r'Fecha:\s*(\d{2}/\d{2}/\d{4})', full_text, re.IGNORECASE)
+        if date_match:
+            d_str = date_match.group(1)
+            parts = d_str.split('/')
+            if len(parts) == 3:
+                extracted_data["date"] = f"{parts[2]}-{parts[1]}-{parts[0]}"
+
+        for line in lines:
+            if 'TONELADAS' in line.upper() or 'MT' in line.upper():
+                price_match = re.search(r'([\d,]+\.\d{2})\s+[\d,]+\.\d{2}\s+([\d,]+\.\d{2})', line)
+                if price_match:
+                    unit_price = float(price_match.group(1).replace(',', ''))
+                    if 'IFO' in line.upper() or 'VLSFO' in line.upper():
+                        extracted_data["ifo_price"] = unit_price
+                        extracted_data["fuel_type"] = "IFO"
+                        extracted_data["price"] = unit_price
+                    elif 'MGO' in line.upper() or 'MDO' in line.upper() or 'DIESEL' in line.upper():
+                        extracted_data["mdo_price"] = unit_price
+                        extracted_data["fuel_type"] = "MDO"
+                        extracted_data["price"] = unit_price
+
+        return extracted_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error parseando factura PDF: {str(e)}")
+
 @router.delete("/bunker/{date_str}")
-def delete_bunker_prices(date_str: str):
+def delete_bunker_prices(date_str: str, fuel_type: Optional[str] = None):
     try:
         from backend.database import get_supabase
         sb = get_supabase()
-        res = sb.table("bunker_prices").delete().eq("date", date_str).execute()
+        q = sb.table("bunker_prices").delete().eq("date", date_str)
+        if fuel_type:
+            q = q.eq("fuel_type", fuel_type)
+        res = q.execute()
         return {"status": "success", "data": res.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

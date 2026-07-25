@@ -1,0 +1,163 @@
+PAPER TÉCNICO: METODOLOGÍA DE CÁLCULO Y APLICACIÓN DEL AJUSTE BAF (BUNKER ADJUSTMENT FACTOR)
+Buque Tanque: B/T Moquegua
+
+Referencia de Archivo: Ajuste bunker - 1.07.2026.xlsx
+
+Destinatario: Agente Comercial / Operaciones / Facturación
+
+1. RESUMEN EJECUTIVO Y OBJETIVO
+El presente documento detalla la metodología analítica, matemática y contractual empleada en el archivo Excel para determinar el Nuevo BAF Ajustado. El objetivo de este mecanismo de indexación es trasladar de manera transparente y paramétrica las variaciones del mercado internacional de combustibles fósiles (IFO 380 y MDO Diesel) a la tarifa de flete, garantizando el equilibrio económico del contrato de transporte marítimo del B/T Moquegua.
+
+2. CONCEPTOS CLAVE Y DEFINICIONES OPERATIVAS
+Para comprender la estructura del modelo, es indispensable definir los siguientes términos técnicos presentes en el documento:
+
+ROB (Remaining on Board): Volumen de combustible remanente en los tanques de la nave al cierre de un periodo o previo a una nueva operación de aprovisionamiento (bunkering).
+
+PMT (Per Metric Ton): Tonelada métrica. Unidad de medida estándar sobre la cual se estructuran las tarifas de flete y los componentes de ajuste.
+
+IFO 380 Bajo Azufre: Combustible residual pesado utilizado para la propulsión principal en navegación oceánica.
+
+MDO Diesel (Marine Diesel Oil): Combustible destilado, más ligero, utilizado habitualmente para motores auxiliares, maniobras o navegación restringida.
+
+Periodo N−1: Ciclo tarifario anterior (quinto ajuste previo de combustible).
+
+Periodo N: Ciclo tarifario actual objeto de cálculo.
+
+3. METODOLOGÍA DE CÁLCULO PASO A PASO
+Paso A: Determinación de Precios Promedio Ponderados (N)
+Cuando la nave posee inventario remanente (ROB) adquirido a un precio antiguo y realiza una nueva compra a un precio de mercado vigente, el costo unitario del combustible no se toma de forma aislada, sino que se pondera por volumen:
+
+Precio Promedio Ponderado= 
+ROB 
+qty
+​
+ +Compra 
+qty
+​
+ 
+(ROB 
+qty
+​
+ ×Precio 
+ROB
+​
+ )+(Compra 
+qty
+​
+ ×Precio 
+Compra
+​
+ )
+​
+ 
+Aplicando esta metodología en el archivo Excel:
+
+Para el IFO 380 Bajo Azufre:
+
+Inventario ROB: 200 TM×$655.28/TM=$131,056.00
+
+Nueva Compra: 200 TM×$1,135.00/TM=$227,000.00
+
+Total Volumen: 400 TM | Total Costo: $358,056.00
+
+Nuevo Precio Promedio IFO 380 (N):  
+400 TM
+$358,056.00
+​
+ =$895.14 USD/TM
+
+Para el MDO Diesel:
+
+Inventario ROB: 69 TM×$1,083.84/TM=$74,784.96
+
+Nueva Compra: 80 TM×$1,785.00/TM=$142,800.00
+
+Total Volumen: 149 TM | Total Costo: $217,584.96
+
+Nuevo Precio Promedio MDO (N):  
+149 TM
+$217,584.96
+​
+ =$1,460.3017 USD/TM
+
+Paso B: Estructura de la Fórmula Polinómica del BAF
+El contrato establece una fórmula paramétrica basada en coeficientes fijos de consumo de la nave para evitar fluctuaciones erráticas por ineficiencias operativas puntuales. Los coeficientes contractuales de consumo son 38.40 para el IFO 380 y 9.50 para el MDO.
+
+La expresión matemática oficial contenida en la hoja Formula-Ajuste Bunker es:
+
+BAF=1+ 
+[COST 
+3840
+​
+ (N−1)+COST 
+MDO
+​
+ (N−1)]
+[COST 
+3840
+​
+ (N)+COST 
+MDO
+​
+ (N)]−[COST 
+3840
+​
+ (N−1)+COST 
+MDO
+​
+ (N−1)]
+​
+ 
+Donde los subcomponentes de costos ponderados por los coeficientes fijos se despliegan de la siguiente manera:
+
+1. Costo Base Anterior (N−1):
+Valores previos: IFO 380=$655.28; MDO = $1,083.84
+
+Costo 
+N−1
+​
+ =(655.28×38.40)+(1083.84×9.50)
+
+Costo 
+N−1
+​
+ =25,162.752+10,296.48=$35,459.232
+
+2. Costo Nuevo Periodo (N):
+Nuevos valores: IFO 380=$895.14; MDO = $1,460.3017
+
+Costo 
+N
+​
+ =(895.14×38.40)+(1460.301745×9.50)
+
+Costo 
+N
+​
+ =34,373.376+13,872.8666=$48,246.2426
+
+3. Cálculo del Factor de Ajuste:
+Factor de Ajuste=1+ 
+35,459.232
+48,246.2426−35,459.232
+​
+ =1+ 
+35,459.232
+12,787.0106
+​
+ =1+0.3606116=1.3606116
+Paso C: Traducción a la Tarifa Comercial (Valor BAF Final)
+Una vez obtenido el factor adimensional de incremento (1.3607), se procede a aplicarlo sobre el valor monetario base del combustible reconocido en la tarifa anterior:
+
+Valor de Combustible Inicial (Quinto Ajuste): $2.86 USD/PMT
+
+Aplicación del Factor:
+
+Nuevo BAF Ajustado=$2.86×1.3606116=$3.8916 USD/PMT
+Determinación de la Variación Neta (Delta a Facturar):
+
+Δ Precio=Nuevo BAF−Valor Inicial=$3.8916−$2.86=+$1.0316 USD/PMT
+4. CONCLUSIÓN PARA EL AGENTE COMERCIAL
+Ante un incremento generalizado en el mercado de carburantes marinos, el modelo determina que los costos de operación teóricos del B/T Moquegua han aumentado en un 36.06% respecto al periodo anterior.
+
+En consecuencia, el agente debe aplicar un recargo por variación de combustible de $1.0316 USD/PMT adicionales sobre la estructura tarifaria inicial, elevando el componente BAF total a $3.89 USD/PMT, asegurando de esta forma la recuperación de los mayores costos incurridos en la cadena logística.

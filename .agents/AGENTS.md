@@ -21,6 +21,7 @@
   1. `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\`
   2. `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\PORT.COSTS.PATRICIA\`
 </RULE[png_local_storage]>
-
-
+<RULE[bunker_mdo_mgo_homologation]>
+- En todo el software PETRAL, las siglas **MGO** (Marine Gas Oil / Diesel Marino) que figuran en facturas o cotizaciones equivalen y se registran unificadamente bajo el estándar **MDO**.
+</RULE[bunker_mdo_mgo_homologation]>
 

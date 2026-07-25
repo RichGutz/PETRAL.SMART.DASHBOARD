@@ -89,8 +89,17 @@ export const ForecastService = {
         const response = await api.post('/forecast/bunker', payload);
         return response.data;
     },
-    deleteBunkerPrices: async (dateStr: string) => {
-        const response = await api.delete(`/forecast/bunker/${dateStr}`);
+    deleteBunkerPrices: async (dateStr: string, fuelType?: string) => {
+        const params = fuelType ? { fuel_type: fuelType } : {};
+        const response = await api.delete(`/forecast/bunker/${dateStr}`, { params });
+        return response.data;
+    },
+    parseBunkerPdf: async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await api.post('/forecast/bunker/parse-pdf', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
         return response.data;
     },
     saveSpot: async (payload: any) => {

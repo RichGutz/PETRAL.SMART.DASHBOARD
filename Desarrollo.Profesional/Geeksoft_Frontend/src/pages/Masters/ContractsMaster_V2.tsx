@@ -61,20 +61,39 @@ export const ContractsMaster: React.FC = () => {
         return `${c.contract_id}|${c.origin_port_id}|${c.destination_port_id}`;
     };
 
+    const [bunkerPrices, setBunkerPrices] = useState<{ ifo: number; mdo: number; date: string }>({
+        ifo: 655.28,
+        mdo: 1083.84,
+        date: 'N/A'
+    });
+
     useEffect(() => {
         const loadData = async () => {
             try {
                 setLoading(true);
-                const [contractsData, clientsData, portsData, vesselsData] = await Promise.all([
+                const [contractsData, clientsData, portsData, vesselsData, bunkerData] = await Promise.all([
                     ForecastService.getContractsMaster(),
                     ForecastService.getClientsMaster(),
                     ForecastService.getPorts(),
-                    ForecastService.getVessels()
+                    ForecastService.getVessels(),
+                    ForecastService.getBunkerPrices()
                 ]);
                 setContracts(contractsData || []);
                 setRawClients(clientsData || []);
                 setPorts(portsData || []);
                 setVessels(vesselsData || []);
+
+                if (bunkerData && bunkerData.length > 0) {
+                    const sorted = [...bunkerData].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+                    const latestDate = sorted[0]?.date || 'N/A';
+                    const ifoRow = sorted.find(b => b.fuel_type === 'IFO');
+                    const mdoRow = sorted.find(b => b.fuel_type === 'MDO');
+                    setBunkerPrices({
+                        ifo: ifoRow ? Number(ifoRow.market_price_usd) || 655.28 : 655.28,
+                        mdo: mdoRow ? Number(mdoRow.market_price_usd) || 1083.84 : 1083.84,
+                        date: latestDate
+                    });
+                }
             } catch (err) {
                 console.error("Error loading contracts:", err);
             } finally {
@@ -104,6 +123,9 @@ export const ContractsMaster: React.FC = () => {
     }, [loading, activeClientIds, selectedClientId]);
 
     const handleAddClientContract = () => {
+        const defaultDemurrage: Record<string, number> = {};
+        vessels.forEach(v => { defaultDemurrage[v.vessel_id] = 20000; });
+
         const newContract: Contract = {
             contract_id: uuidv4(),
             client_id: '', // Starts empty, user picks it
@@ -125,7 +147,7 @@ export const ContractsMaster: React.FC = () => {
             time_to_count_descarga_hrs: 6,
             maneuver_descarga_hrs: 0,
             tariffs: [],
-            demurrage_rates: {}
+            demurrage_rates: defaultDemurrage
         };
         setContracts([...contracts, newContract]);
         setSelectedClientId('');
@@ -138,6 +160,9 @@ export const ContractsMaster: React.FC = () => {
         const existingRoute = contracts.find(c => c.client_id === clientId);
         const sharedContractId = existingRoute ? existingRoute.contract_id : uuidv4();
         
+        const defaultDemurrage: Record<string, number> = {};
+        vessels.forEach(v => { defaultDemurrage[v.vessel_id] = 20000; });
+
         const newContract: Contract = {
             contract_id: sharedContractId,
             client_id: clientId,
@@ -159,7 +184,7 @@ export const ContractsMaster: React.FC = () => {
             time_to_count_descarga_hrs: 6,
             maneuver_descarga_hrs: 0,
             tariffs: [],
-            demurrage_rates: {}
+            demurrage_rates: defaultDemurrage
         };
         setContracts([...contracts, newContract]);
         setSelectedRouteKey(getRouteKey(newContract));
@@ -304,6 +329,44 @@ export const ContractsMaster: React.FC = () => {
     };
 
     const selectedRoute = contracts.find(c => getRouteKey(c) === selectedRouteKey);
+
+    const bafData = useMemo(() => {
+        if (!selectedRoute) return null;
+
+        const baseIfo = Number(selectedRoute.bunker_baseline_price_ifo) || 655.28;
+        const baseMdo = Number(selectedRoute.bunker_baseline_price_mdo) || 1083.84;
+        const initialBaf = Number((selectedRoute as any).bunker_baseline_baf_initial) || 2.86;
+
+        const coeffIfo = 38.40;
+        const coeffMdo = 9.50;
+
+        const costoBase = (baseIfo * coeffIfo) + (baseMdo * coeffMdo);
+        const costoActual = (bunkerPrices.ifo * coeffIfo) + (bunkerPrices.mdo * coeffMdo);
+
+        const factorBaf = costoBase > 0 ? (costoActual / costoBase) : 1.0;
+        const variacionPct = (factorBaf - 1) * 100;
+        const nuevoBaf = initialBaf * factorBaf;
+        const deltaBaf = nuevoBaf - initialBaf;
+        const deltaCostoTotal = costoActual - costoBase;
+
+        return {
+            baseIfo,
+            baseMdo,
+            initialBaf,
+            actualIfo: bunkerPrices.ifo,
+            actualMdo: bunkerPrices.mdo,
+            bunkerDate: bunkerPrices.date,
+            coeffIfo,
+            coeffMdo,
+            costoBase,
+            costoActual,
+            factorBaf,
+            variacionPct,
+            nuevoBaf,
+            deltaBaf,
+            deltaCostoTotal
+        };
+    }, [selectedRoute, bunkerPrices]);
 
     if (loading) {
         return (
@@ -511,55 +574,65 @@ export const ContractsMaster: React.FC = () => {
                                                     </section>
 
                                                     {/* 4. Comisiones y Recargos */}
-                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm flex-1">
-                                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2">4. Comisiones y Recargos</h4>
-                                                        
-                                                        {/* Comisiones Arriba */}
-                                                        <div className="grid grid-cols-2 gap-3 mb-4">
-                                                            <div>
-                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Address Comm. (%)</label>
-                                                                <input 
-                                                                    type="number" step="0.01"
-                                                                    value={selectedRoute.address_commission}
-                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'address_commission', parseFloat(e.target.value))}
-                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Broker Comm. (%)</label>
-                                                                <input 
-                                                                    type="number" step="0.01"
-                                                                    value={selectedRoute.broker_commission}
-                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'broker_commission', parseFloat(e.target.value))}
-                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                                />
-                                                            </div>
-                                                        </div>
+                                                     <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm flex-1">
+                                                         <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2">4. Comisiones y Recargos</h4>
+                                                         
+                                                         {/* Comisiones Arriba */}
+                                                         <div className="grid grid-cols-2 gap-3 mb-4">
+                                                             <div>
+                                                                 <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Address Comm. (%)</label>
+                                                                 <input 
+                                                                     type="number" step="0.01"
+                                                                     value={selectedRoute.address_commission}
+                                                                     onFocus={(e) => e.target.select()}
+                                                                     onChange={(e) => handleChange(selectedRouteKey!, 'address_commission', e.target.value === '' ? 0 : parseFloat(e.target.value))}
+                                                                     className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                                                 />
+                                                             </div>
+                                                             <div>
+                                                                 <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Broker Comm. (%)</label>
+                                                                 <input 
+                                                                     type="number" step="0.01"
+                                                                     value={selectedRoute.broker_commission}
+                                                                     onFocus={(e) => e.target.select()}
+                                                                     onChange={(e) => handleChange(selectedRouteKey!, 'broker_commission', e.target.value === '' ? 0 : parseFloat(e.target.value))}
+                                                                     className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                                                 />
+                                                             </div>
+                                                         </div>
 
-                                                        {/* Demurrage Abajo */}
-                                                        <div className="border-t border-slate-200 pt-3">
-                                                            <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-3">Demurrage por Buque ($/día)</h5>
-                                                            <div className="grid grid-cols-2 gap-3 max-h-[220px] overflow-y-auto pr-1">
-                                                                {vessels.map(v => (
-                                                                    <div key={v.vessel_id}>
-                                                                        <label className="block text-[9px] font-bold text-slate-500 mb-1 uppercase truncate" title={v.vessel_name}>
-                                                                            {v.vessel_name}
-                                                                        </label>
-                                                                        <input 
-                                                                            type="number" step="100"
-                                                                            value={selectedRoute.demurrage_rates?.[v.vessel_id] || 0}
-                                                                            onChange={(e) => {
-                                                                                const newRates = { ...(selectedRoute.demurrage_rates || {}) };
-                                                                                newRates[v.vessel_id] = parseFloat(e.target.value) || 0;
-                                                                                handleChange(selectedRouteKey!, 'demurrage_rates', newRates);
-                                                                            }}
-                                                                            className="w-full text-xs border border-slate-300 rounded p-1.5 font-mono"
-                                                                        />
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    </section>
+                                                         {/* Demurrage Abajo */}
+                                                         <div className="border-t border-slate-200 pt-3">
+                                                             <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-3">Demurrage por Buque ($/día)</h5>
+
+                                                             <div className="grid grid-cols-2 gap-3 max-h-[240px] overflow-y-auto pr-1">
+                                                                 {vessels.map(v => {
+                                                                     const currentRate = selectedRoute.demurrage_rates?.[v.vessel_id] !== undefined 
+                                                                         ? selectedRoute.demurrage_rates[v.vessel_id] 
+                                                                         : 20000;
+                                                                     return (
+                                                                         <div key={v.vessel_id}>
+                                                                             <label className="block text-[9px] font-bold text-slate-500 mb-1 uppercase truncate" title={v.vessel_name}>
+                                                                                 {v.vessel_name}
+                                                                             </label>
+                                                                             <input 
+                                                                                 type="number"
+                                                                                 value={currentRate}
+                                                                                 onFocus={(e) => e.target.select()}
+                                                                                 onChange={(e) => {
+                                                                                     const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                                                                                     const newRates = { ...(selectedRoute.demurrage_rates || {}) };
+                                                                                     newRates[v.vessel_id] = isNaN(val) ? 0 : val;
+                                                                                     handleChange(selectedRouteKey!, 'demurrage_rates', newRates);
+                                                                                 }}
+                                                                                 className="w-full text-xs border border-slate-300 rounded p-1.5 font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                                                             />
+                                                                         </div>
+                                                                     );
+                                                                 })}
+                                                             </div>
+                                                         </div>
+                                                     </section>
                                                 </div>
 
                                                 {/* ================= COLUMNA 2 ================= */}
@@ -636,98 +709,148 @@ export const ContractsMaster: React.FC = () => {
                                                     </section>
 
                                                     {/* 5. BAF */}
-                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm flex-1">
-                                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2">5. Acuerdos Bunker Adjustment Factor (BAF)</h4>
-                                                        <div className="grid grid-cols-2 gap-3">
-                                                            <div>
-                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Baseline IFO Price ($)</label>
-                                                                <input 
-                                                                    type="number" step="0.01"
-                                                                    value={selectedRoute.bunker_baseline_price_ifo}
-                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_ifo', parseFloat(e.target.value))}
-                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Baseline MDO Price ($/mt)</label>
-                                                                <input 
-                                                                    type="number" step="0.01"
-                                                                    value={selectedRoute.bunker_baseline_price_mdo || 0}
-                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_mdo', parseFloat(e.target.value))}
-                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </section>
-                                                </div>
+                                                     <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm flex-1">
+                                                         <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                                                             <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">5. Acuerdos BAF (Bunker Adjustment Factor)</h4>
+                                                             {bafData && (
+                                                                 <span className={`px-2.5 py-0.5 rounded text-[11px] font-black font-mono border ${
+                                                                     bafData.deltaBaf >= 0 
+                                                                         ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                                                                         : 'bg-red-50 text-red-800 border-red-200'
+                                                                 }`}>
+                                                                     Δ BAF: {bafData.deltaBaf >= 0 ? '+' : ''}${bafData.deltaBaf.toFixed(4)}/PMT ({bafData.factorBaf.toFixed(4)}x)
+                                                                 </span>
+                                                             )}
+                                                         </div>
+                                                         
+                                                         <div className="grid grid-cols-3 gap-2">
+                                                             <div>
+                                                                 <label className="block text-[9px] font-bold text-slate-500 mb-1 uppercase">Baseline IFO ($/mt)</label>
+                                                                 <input 
+                                                                     type="number" step="0.01"
+                                                                     value={selectedRoute.bunker_baseline_price_ifo || 655.28}
+                                                                     onFocus={(e) => e.target.select()}
+                                                                     onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_ifo', e.target.value === '' ? 0 : parseFloat(e.target.value))}
+                                                                     className="w-full text-xs border border-slate-300 rounded p-1.5 font-mono"
+                                                                 />
+                                                             </div>
+                                                             <div>
+                                                                 <label className="block text-[9px] font-bold text-slate-500 mb-1 uppercase">Baseline MDO ($/mt)</label>
+                                                                 <input 
+                                                                     type="number" step="0.01"
+                                                                     value={selectedRoute.bunker_baseline_price_mdo || 1083.84}
+                                                                     onFocus={(e) => e.target.select()}
+                                                                     onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_mdo', e.target.value === '' ? 0 : parseFloat(e.target.value))}
+                                                                     className="w-full text-xs border border-slate-300 rounded p-1.5 font-mono"
+                                                                 />
+                                                             </div>
+                                                             <div>
+                                                                 <label className="block text-[9px] font-bold text-blue-600 mb-1 uppercase">BAF Inicial ($/PMT)</label>
+                                                                 <input 
+                                                                     type="number" step="0.01"
+                                                                     value={(selectedRoute as any).bunker_baseline_baf_initial ?? 2.86}
+                                                                     onFocus={(e) => e.target.select()}
+                                                                     onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_baf_initial' as any, e.target.value === '' ? 0 : parseFloat(e.target.value))}
+                                                                     className="w-full text-xs border border-blue-300 bg-blue-50/50 rounded p-1.5 font-mono font-bold text-blue-900"
+                                                                 />
+                                                             </div>
+                                                         </div>
+
+                                                         {/* Fórmula Polinómica Explicativa */}
+                                                         <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1.5 text-[11px]">
+                                                             <div className="font-bold text-slate-700 uppercase tracking-wide flex items-center justify-between text-[10px]">
+                                                                 <span>Fórmula Polinómica Contractual:</span>
+                                                                 <span className="text-slate-400 font-mono">Consumos: 38.40 IFO / 9.50 MDO</span>
+                                                             </div>
+                                                             <div className="font-mono text-slate-600 bg-slate-50 p-2 rounded border border-slate-100 text-[10px] leading-relaxed">
+                                                                 Δ BAF = (BAF_Inicial × Factor_fa) - BAF_Inicial
+                                                             </div>
+                                                         </div>
+                                                     </section>
+                                                 </div>
 
                                                 {/* ================= COLUMNA 3 ================= */}
                                                 <div className="flex flex-col gap-6 h-full">
                                                     {/* 3. Tarifas (Tiers) */}
-                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col flex-1">
-                                                        <div className="flex justify-between items-center border-b border-slate-200 pb-2 mb-4">
-                                                            <h4 className="text-xs font-black text-teal-800 uppercase tracking-wider">3. Tarifas (Tiers)</h4>
-                                                            <button 
-                                                                onClick={() => handleAddTariff(selectedRouteKey!)}
-                                                                className="text-[10px] bg-teal-50 border border-teal-200 hover:bg-teal-100 font-bold px-3 py-1.5 rounded text-teal-700 flex items-center gap-1 transition-colors shadow-sm"
-                                                            >
-                                                                <Plus size={12} /> Añadir
-                                                            </button>
-                                                        </div>
-                                                        
-                                                        <div className="space-y-3 overflow-y-auto pr-1">
-                                                            {selectedRoute.tariffs.map((t, idx) => (
-                                                                <div key={idx} className="flex flex-col gap-2 bg-white p-3 pr-8 rounded-lg border border-slate-200 shadow-sm relative">
-                                                                    <button 
-                                                                        onClick={() => handleRemoveTariff(selectedRouteKey!, idx)}
-                                                                        className="absolute right-1 top-[50%] -translate-y-[50%] p-1.5 text-slate-300 hover:text-red-500 transition-colors bg-white rounded"
-                                                                        title="Eliminar tarifa"
-                                                                    >
-                                                                        <Trash2 size={14} />
-                                                                    </button>
-                                                                    
-                                                                    <div className="grid grid-cols-3 gap-2">
-                                                                        <div>
-                                                                            <label className="block text-[9px] font-bold text-slate-400 uppercase">Min (MT)</label>
-                                                                            <input 
-                                                                                type="number" 
-                                                                                value={t.min_tonnage}
-                                                                                onChange={(e) => handleTariffChange(selectedRouteKey!, idx, 'min_tonnage', parseFloat(e.target.value))}
-                                                                                className="w-full text-[11px] border border-slate-300 rounded p-1 font-mono"
-                                                                            />
-                                                                        </div>
-                                                                        <div>
-                                                                            <label className="block text-[9px] font-bold text-slate-400 uppercase">Max (MT)</label>
-                                                                            <input 
-                                                                                type="number" 
-                                                                                value={t.max_tonnage}
-                                                                                onChange={(e) => handleTariffChange(selectedRouteKey!, idx, 'max_tonnage', parseFloat(e.target.value))}
-                                                                                className="w-full text-[11px] border border-slate-300 rounded p-1 font-mono"
-                                                                            />
-                                                                        </div>
-                                                                        <div>
-                                                                            <label className="block text-[9px] font-bold text-teal-600 uppercase">Flete ($/mt)</label>
-                                                                            <div className="relative">
-                                                                                <span className="absolute left-1.5 top-1 text-teal-500 font-bold text-[10px]">$</span>
-                                                                                <input 
-                                                                                    type="number" step="0.01"
-                                                                                    value={t.freight_rate}
-                                                                                    onChange={(e) => handleTariffChange(selectedRouteKey!, idx, 'freight_rate', parseFloat(e.target.value))}
-                                                                                    className="w-full pl-4 pr-1 py-1 text-[11px] border border-teal-300 bg-teal-50/30 focus:border-teal-500 focus:outline-none rounded font-mono text-teal-900 font-bold"
-                                                                                />
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                            
-                                                            {selectedRoute.tariffs.length === 0 && (
-                                                                <div className="text-center text-xs text-slate-400 py-6 bg-white rounded-lg border border-dashed border-slate-300 font-medium flex items-center justify-center">
-                                                                    Sin bandas configuradas ($0)
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </section>
+                                                     <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col flex-1">
+                                                         <div className="flex justify-between items-center border-b border-slate-200 pb-2 mb-4">
+                                                             <h4 className="text-xs font-black text-teal-800 uppercase tracking-wider">3. Tarifas por Tramo & Ajuste BAF</h4>
+                                                             <button 
+                                                                 onClick={() => handleAddTariff(selectedRouteKey!)}
+                                                                 className="text-[10px] bg-teal-50 border border-teal-200 hover:bg-teal-100 font-bold px-3 py-1.5 rounded text-teal-700 flex items-center gap-1 transition-colors shadow-sm cursor-pointer"
+                                                             >
+                                                                 <Plus size={12} /> Añadir
+                                                             </button>
+                                                         </div>
+                                                         
+                                                         <div className="space-y-3 overflow-y-auto pr-1">
+                                                             {selectedRoute.tariffs.map((t, idx) => {
+                                                                 const adjustedFreight = bafData ? (t.freight_rate + bafData.deltaBaf) : t.freight_rate;
+                                                                 return (
+                                                                     <div key={idx} className="flex flex-col gap-2 bg-white p-3 pr-8 rounded-lg border border-slate-200 shadow-sm relative">
+                                                                         <button 
+                                                                             onClick={() => handleRemoveTariff(selectedRouteKey!, idx)}
+                                                                             className="absolute right-1 top-[50%] -translate-y-[50%] p-1.5 text-slate-300 hover:text-red-500 transition-colors bg-white rounded cursor-pointer"
+                                                                             title="Eliminar tarifa"
+                                                                         >
+                                                                             <Trash2 size={14} />
+                                                                         </button>
+                                                                         
+                                                                         <div className="grid grid-cols-4 gap-2">
+                                                                             <div>
+                                                                                 <label className="block text-[9px] font-bold text-slate-400 uppercase">Min (MT)</label>
+                                                                                 <input 
+                                                                                     type="number" 
+                                                                                     value={t.min_tonnage}
+                                                                                     onFocus={(e) => e.target.select()}
+                                                                                     onChange={(e) => handleTariffChange(selectedRouteKey!, idx, 'min_tonnage', parseFloat(e.target.value) || 0)}
+                                                                                     className="w-full text-[11px] border border-slate-300 rounded p-1 font-mono"
+                                                                                 />
+                                                                             </div>
+                                                                             <div>
+                                                                                 <label className="block text-[9px] font-bold text-slate-400 uppercase">Max (MT)</label>
+                                                                                 <input 
+                                                                                     type="number" 
+                                                                                     value={t.max_tonnage}
+                                                                                     onFocus={(e) => e.target.select()}
+                                                                                     onChange={(e) => handleTariffChange(selectedRouteKey!, idx, 'max_tonnage', parseFloat(e.target.value) || 0)}
+                                                                                     className="w-full text-[11px] border border-slate-300 rounded p-1 font-mono"
+                                                                                 />
+                                                                             </div>
+                                                                             <div>
+                                                                                 <label className="block text-[9px] font-bold text-teal-700 uppercase">Flete Base</label>
+                                                                                 <div className="relative">
+                                                                                     <span className="absolute left-1.5 top-1 text-teal-600 font-bold text-[10px]">$</span>
+                                                                                     <input 
+                                                                                         type="number" step="0.01"
+                                                                                         value={t.freight_rate}
+                                                                                         onFocus={(e) => e.target.select()}
+                                                                                         onChange={(e) => handleTariffChange(selectedRouteKey!, idx, 'freight_rate', parseFloat(e.target.value) || 0)}
+                                                                                         className="w-full pl-4 pr-1 py-1 text-[11px] border border-teal-300 bg-teal-50/30 focus:border-teal-500 focus:outline-none rounded font-mono text-teal-900 font-bold"
+                                                                                     />
+                                                                                 </div>
+                                                                             </div>
+                                                                             <div>
+                                                                                 <label className="block text-[9px] font-black text-emerald-700 uppercase">Flete Ajustado BAF</label>
+                                                                                 <div className="bg-emerald-50 border border-emerald-300 rounded p-1 text-[11px] font-mono font-black text-emerald-900 text-right flex items-center justify-between">
+                                                                                     <span className="text-[9px] font-bold text-emerald-600">
+                                                                                         {bafData && bafData.deltaBaf >= 0 ? `+${bafData.deltaBaf.toFixed(2)}` : bafData?.deltaBaf.toFixed(2)}
+                                                                                     </span>
+                                                                                     <span>${adjustedFreight.toFixed(2)}</span>
+                                                                                 </div>
+                                                                             </div>
+                                                                         </div>
+                                                                     </div>
+                                                                 );
+                                                             })}
+                                                             
+                                                             {selectedRoute.tariffs.length === 0 && (
+                                                                 <div className="text-center text-xs text-slate-400 py-6 bg-white rounded-lg border border-dashed border-slate-300 font-medium flex items-center justify-center">
+                                                                     Sin bandas configuradas ($0)
+                                                                 </div>
+                                                             )}
+                                                         </div>
+                                                     </section>
 
                                                     {/* 6. Comentarios */}
                                                     <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm flex-1 flex flex-col">
@@ -753,7 +876,7 @@ export const ContractsMaster: React.FC = () => {
                                                                     handleChange(selectedRouteKey!, 'comments', [newComment, ...existingComments]);
                                                                     setNewCommentText('');
                                                                 }}
-                                                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1 transition-colors whitespace-nowrap"
+                                                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1 transition-colors whitespace-nowrap cursor-pointer"
                                                             >
                                                                 <Plus className="w-4 h-4" /> Agregar
                                                             </button>
@@ -779,6 +902,164 @@ export const ContractsMaster: React.FC = () => {
                                                     </section>
                                                 </div>
                                             </div>
+
+                                            {/* ================= SECCIÓN 7: DESGLOSE MATEMÁTICO & AUDITORÍA BAF ================= */}
+                                            {bafData && (
+                                                <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+                                                    <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-base">📊</span>
+                                                            <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                                                                7. Desglose Matemático & Auditoría del Ajuste BAF (Bunker Adjustment Factor)
+                                                            </h4>
+                                                        </div>
+                                                        <span className="text-[10px] font-mono bg-blue-50 text-blue-700 font-bold px-2.5 py-1 rounded border border-blue-200">
+                                                            Ref. Último Bunker: {bafData.bunkerDate}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                                                        {/* Paso A: Precios Comparativos */}
+                                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+                                                            <div>
+                                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2">Paso A: Comparativo de Combustibles ($/MT)</span>
+                                                                <table className="w-full text-xs font-mono">
+                                                                    <thead>
+                                                                        <tr className="border-b border-slate-200 text-left text-[10px] text-slate-500">
+                                                                            <th className="pb-1">Combustible</th>
+                                                                            <th className="pb-1 text-right">Baseline Contrato</th>
+                                                                            <th className="pb-1 text-right">Último Bunker</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody className="divide-y divide-slate-100">
+                                                                        <tr>
+                                                                            <td className="py-1.5 font-bold text-slate-700">IFO 380 VLSFO</td>
+                                                                            <td className="py-1.5 text-right font-bold text-slate-600">${bafData.baseIfo.toFixed(2)}</td>
+                                                                            <td className="py-1.5 text-right font-bold text-blue-600">${bafData.actualIfo.toFixed(2)}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td className="py-1.5 font-bold text-slate-700">MDO Diesel (MGO)</td>
+                                                                            <td className="py-1.5 text-right font-bold text-slate-600">${bafData.baseMdo.toFixed(2)}</td>
+                                                                            <td className="py-1.5 text-right font-bold text-amber-600">${bafData.actualMdo.toFixed(2)}</td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                            <div className="mt-3 text-[10px] text-slate-400 border-t border-slate-200 pt-2 italic">
+                                                                * Coeficientes B/T Moquegua: 38.40 (IFO) / 9.50 (MDO)
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Paso B: Ecuaciones Resueltas */}
+                                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Paso B: Estructura Polinómica Resuelta</span>
+                                                            
+                                                            <div className="text-[11px] font-mono space-y-2">
+                                                                <div className="bg-white p-2 rounded border border-slate-200">
+                                                                    <span className="text-[9px] text-slate-400 uppercase block font-bold">1. Costo Ponderado Base (N-1):</span>
+                                                                    <span className="text-slate-800">(${bafData.baseIfo.toFixed(2)} × 38.40) + (${bafData.baseMdo.toFixed(2)} × 9.50)</span>
+                                                                    <span className="block font-bold text-slate-900 text-right text-xs mt-0.5">= ${bafData.costoBase.toFixed(2)} USD</span>
+                                                                </div>
+
+                                                                <div className="bg-white p-2 rounded border border-slate-200">
+                                                                    <span className="text-[9px] text-slate-400 uppercase block font-bold">2. Costo Ponderado Actual (N):</span>
+                                                                    <span className="text-slate-800">(${bafData.actualIfo.toFixed(2)} × 38.40) + (${bafData.actualMdo.toFixed(2)} × 9.50)</span>
+                                                                    <span className="block font-bold text-blue-700 text-right text-xs mt-0.5">= ${bafData.costoActual.toFixed(2)} USD</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Paso C: Traducción a Tarifa BAF */}
+                                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Paso C: Traducción a Tarifa BAF</span>
+                                                            
+                                                            <div className="text-[11px] font-mono space-y-2">
+                                                                <div className="bg-white p-2 rounded border border-slate-200">
+                                                                    <span className="text-[9px] text-slate-400 uppercase block font-bold">1. Factor BAF (fa):</span>
+                                                                    <span className="text-slate-800">${bafData.costoActual.toFixed(2)} ÷ ${bafData.costoBase.toFixed(2)}</span>
+                                                                    <span className="block font-bold text-emerald-700 text-right text-xs mt-0.5">= {bafData.factorBaf.toFixed(6)}x ({bafData.variacionPct >= 0 ? '+' : ''}{bafData.variacionPct.toFixed(2)}%)</span>
+                                                                </div>
+
+                                                                <div className="bg-white p-2 rounded border border-slate-200">
+                                                                    <span className="text-[9px] text-slate-400 uppercase block font-bold">2. Nuevo BAF vs. Inicial:</span>
+                                                                    <span className="text-slate-800">${bafData.initialBaf.toFixed(2)} × {bafData.factorBaf.toFixed(4)} = ${bafData.nuevoBaf.toFixed(4)}</span>
+                                                                    <span className={`block font-bold text-right text-xs mt-0.5 ${bafData.deltaBaf >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+                                                                        Δ PMT = {bafData.deltaBaf >= 0 ? '+' : ''}${bafData.deltaBaf.toFixed(4)} USD/PMT
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Paso D: Resumen Ejecutivo */}
+                                                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-5 rounded-xl border border-slate-700 shadow-md flex flex-col justify-between">
+                                                            <div>
+                                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Paso D: Ajuste a Facturar por Tonelada</span>
+                                                                <div className="flex items-baseline justify-between mt-2">
+                                                                    <span className="text-xs text-slate-300 font-bold">Variación Net Δ BAF:</span>
+                                                                    <span className={`text-xl font-black font-mono ${bafData.deltaBaf >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                                        {bafData.deltaBaf >= 0 ? '+' : ''}${bafData.deltaBaf.toFixed(4)} / MT
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-baseline justify-between mt-1">
+                                                                    <span className="text-xs text-slate-300 font-bold">Factor Multiplicador:</span>
+                                                                    <span className="text-sm font-bold font-mono text-slate-300">
+                                                                        {bafData.factorBaf.toFixed(4)}x
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="bg-slate-800/80 p-3 rounded-lg border border-slate-700 text-xs mt-4">
+                                                                <span className="text-[10px] text-slate-400 uppercase block font-bold">Variación Absoluta Total por Viaje:</span>
+                                                                <span className="font-mono font-bold text-white text-sm">
+                                                                    ${bafData.deltaCostoTotal >= 0 ? '+' : ''}${bafData.deltaCostoTotal.toFixed(2)} USD / ciclo
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Resumen por Tiers */}
+                                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-3">
+                                                            Matriz de Tarifas Finales Ajustadas por Tramo (Tarifa Base + Δ BAF)
+                                                        </span>
+
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                                                            {selectedRoute.tariffs.map((t, idx) => {
+                                                                const adjPrice = t.freight_rate + bafData.deltaBaf;
+                                                                return (
+                                                                    <div key={idx} className="bg-white p-3 rounded-lg border border-slate-200 shadow-xs flex flex-col justify-between">
+                                                                        <div>
+                                                                            <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase border-b border-slate-100 pb-1 mb-2">
+                                                                                <span>Tramo {idx + 1}</span>
+                                                                                <span>{t.min_tonnage.toLocaleString()} - {t.max_tonnage.toLocaleString()} MT</span>
+                                                                            </div>
+                                                                            <div className="flex justify-between items-center text-xs text-slate-600 mb-1 font-mono">
+                                                                                <span>Tarifa Base:</span>
+                                                                                <span className="font-bold">${t.freight_rate.toFixed(2)}/MT</span>
+                                                                            </div>
+                                                                            <div className="flex justify-between items-center text-xs text-slate-600 mb-1 font-mono">
+                                                                                <span>Ajuste Δ BAF:</span>
+                                                                                <span className={`font-bold ${bafData.deltaBaf >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                                                                    {bafData.deltaBaf >= 0 ? '+' : ''}${bafData.deltaBaf.toFixed(2)}/MT
+                                                                                </span>
+                                                                            </div>
+                                                                            <div className="flex justify-between items-center text-xs text-emerald-800 font-mono font-black bg-emerald-50 p-1.5 rounded border border-emerald-200">
+                                                                                <span>Flete Final Ajustado:</span>
+                                                                                <span>${adjPrice.toFixed(2)}/MT</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                            {selectedRoute.tariffs.length === 0 && (
+                                                                <div className="col-span-full text-center text-xs text-slate-400 py-3 italic">
+                                                                    No hay tramos configurados para auditar BAF.
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </section>
+                                            )}
 
                                             {/* Espaciado final */}
                                             <div className="h-10"></div>

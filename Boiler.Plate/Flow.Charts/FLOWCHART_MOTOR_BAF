@@ -1,0 +1,46 @@
+// Flowchart Motor BAF PETRAL
+digraph {
+	newrank=true nodesep=0.6 rankdir=TB ranksep=0.8 size="12,16"
+	node [fontname=Helvetica fontsize=12 margin="0.3,0.2" shape=box style="filled,rounded"]
+	edge [color="#64748b" fontname=Helvetica fontsize=10 penwidth=1.5]
+	subgraph cluster_level1 {
+		color="#cbd5e1" fontname="Helvetica-Bold" fontsize=11 label="PASO 1: INPUTS CONTRACTUALES Y BUNKER VIGENTE" style=dashed
+		INPUT_CONTRACT [label="📄 Línea Base Contrato (N-1)
+- Baseline IFO ($/MT)
+- Baseline MDO ($/MT)
+- Componente BAF Inicial ($2.86/PMT)" color="#64748b" fillcolor="#f1f5f9" fontcolor="#0f172a"]
+		INPUT_BUNKER [label="⛽ Último Bunker Registrado (N)
+- Precio Actual IFO ($/MT)
+- Precio Actual MDO ($/MT)
+- Fecha Aprovisionamiento" color="#64748b" fillcolor="#f1f5f9" fontcolor="#0f172a"]
+	}
+	subgraph cluster_level2 {
+		color="#93c5fd" fontname="Helvetica-Bold" fontsize=11 label="PASO 2: ESTRUCTURA POLINÓMICA DE CONSUMOS (B/T MOQUEGUA)" style=dashed
+		COST_BASE [label="⚙️ Costo Ponderado Base (N-1)
+(IFO_Base × 38.40) + (MDO_Base × 9.50)" color="#2563eb" fillcolor="#eff6ff" fontcolor="#1e3a8a"]
+		COST_ACTUAL [label="⚙️ Costo Ponderado Actual (N)
+(IFO_Actual × 38.40) + (MDO_Actual × 9.50)" color="#2563eb" fillcolor="#eff6ff" fontcolor="#1e3a8a"]
+	}
+	subgraph cluster_level3 {
+		color="#6ee7b7" fontname="Helvetica-Bold" fontsize=11 label="PASO 3: MOTOR POLINÓMICO BAF & DELTA NET (USD/PMT)" style=dashed
+		FACTOR_BAF [label="⚡ Factor Multiplicador fa
+fa = Costo_N ÷ Costo_N-1" color="#059669" fillcolor="#ecfdf5" fontcolor="#065f46"]
+		DELTA_BAF [label="📊 Nuevo BAF & Delta Neta (Δ)
+• Nuevo BAF = BAF_Inicial × fa
+• Δ BAF = Nuevo BAF - BAF_Inicial" color="#059669" fillcolor="#ecfdf5" fontcolor="#065f46"]
+	}
+	subgraph cluster_level4 {
+		color="#d8b4fe" fontname="Helvetica-Bold" fontsize=11 label="PASO 4: MATRIZ DE FLETES AJUSTADOS POR TRAMO & SALIDAS" style=dashed
+		TARIFF_ADJUSTED [label="💵 Flete Final Ajustado por Tramo
+Flete_Final_i = Tarifa_Base_i + Δ BAF" color="#9333ea" fillcolor="#faf5ff" fontcolor="#581c87"]
+		SYSTEM_OUT [label="💼 Inyección a Multicotizador Spot
+& Voyage Ledger P&L" color="#9333ea" fillcolor="#faf5ff" fontcolor="#581c87"]
+	}
+	INPUT_CONTRACT -> COST_BASE
+	INPUT_BUNKER -> COST_ACTUAL
+	COST_BASE -> FACTOR_BAF
+	COST_ACTUAL -> FACTOR_BAF
+	FACTOR_BAF -> DELTA_BAF
+	DELTA_BAF -> TARIFF_ADJUSTED
+	TARIFF_ADJUSTED -> SYSTEM_OUT
+}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, ZoomIn, ZoomOut, RotateCcw, Layers, ShoppingCart, BarChart2, BookOpen, Search, TrendingUp, Globe, Cpu } from 'lucide-react';
+import { Download, ZoomIn, ZoomOut, RotateCcw, Layers, ShoppingCart, BarChart2, BookOpen, Search, TrendingUp, Globe, Cpu, Zap } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 
 interface FlowchartTab {
@@ -33,6 +33,16 @@ const TABS: FlowchartTab[] = [
         description: 'Inputs → Validación Maestros → Spot Engine → Costos Portuarios → P&L → Exportar a Matriz',
         badge: '7 Pasos',
         color: 'amber',
+    },
+    {
+        id: 'motor-baf',
+        label: 'Motor BAF',
+        icon: <Zap size={15} />,
+        svgFile: '/FLOWCHART_MOTOR_BAF.svg',
+        pdfFile: '/FLOWCHART_MOTOR_BAF.svg',
+        description: 'Inputs BAF → Estructura Polinómica (38.40 IFO / 9.50 MDO) → Factor fa → Delta BAF USD/PMT → Tiers',
+        badge: 'Ajuste Bunker',
+        color: 'emerald',
     },
     {
         id: 'motor-pxq',
