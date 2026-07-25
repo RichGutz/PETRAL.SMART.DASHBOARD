@@ -1,4 +1,4 @@
-# Metodología y Reglas de Cálculo del Ajuste BAF (Bunker Adjustment Factor)
+# ⚡ Metodología y Reglas de Cálculo del Ajuste BAF (Bunker Adjustment Factor)
 
 **Buque Tanque:** B/T Moquegua  
 **Módulo:** Maestro de Contratos & Tarificador Comercial PETRAL  
@@ -60,7 +60,20 @@ $$\text{Flete Final Ajustado Tramo}_i = \text{Tarifa Base Tramo}_i + \Delta \tex
 
 ---
 
-## 4. Ejemplo Técnico de Aplicación Real (`Ajuste bunker - 1.07.2026.xlsx`)
+## 4. Estructura de Persistencia en Base de Datos (Supabase)
+
+1. **Línea Base del Contrato ($N-1$)** $\rightarrow$ Tabla `contracts_master`:
+   - `bunker_baseline_price_ifo`: Precio base IFO del contrato (ej. **$655.28**).
+   - `bunker_baseline_price_mdo`: Precio base MDO del contrato (ej. **$1,083.84**).
+   - `bunker_baseline_baf_initial`: Componente BAF inicial del contrato (ej. **$2.86**).
+
+2. **Precios de Mercado Vigentes ($N$)** $\rightarrow$ Tabla `bunker_prices`:
+   - Se alimenta mediante la carga de facturas PDF o registro manual en el **Maestro de Bunker**.
+   - Los cotizadores y el Maestro de Contratos consumen automáticamente los precios del último bunker registrado.
+
+---
+
+## 5. Ejemplo Técnico de Aplicación Real (`Ajuste bunker - 1.07.2026.xlsx`)
 
 ### 1. Inputs:
 - $\text{Baseline IFO} = \$655.28 / \text{MT} \quad | \quad \text{Baseline MDO} = \$1,083.84 / \text{MT}$
