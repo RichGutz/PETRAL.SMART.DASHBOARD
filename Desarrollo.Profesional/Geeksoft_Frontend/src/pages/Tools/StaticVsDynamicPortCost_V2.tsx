@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
-import { Anchor, Layers, Ship, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
+import { Anchor, Layers, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
 
@@ -427,76 +427,88 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                     </div>
 
                     {/* ── PARRILLA EXACTA DE 4 CARDS PARA EL PUERTO Y TERMINAL SELECCIONADO ── */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
                         {fourCards.map((card, idx) => {
                             const isExpanded = expandedCardKey === card.key;
+                            const isMoquegua = card.vesselLabel.includes('MOQUEGUA');
                             return (
-                                <div key={idx} className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden">
+                                <div 
+                                    key={idx} 
+                                    className={`bg-white rounded-2xl border-2 shadow-md hover:shadow-xl transition-all flex flex-col justify-between overflow-hidden ${
+                                        isMoquegua ? 'border-blue-300 border-t-4 border-t-blue-600' : 'border-teal-300 border-t-4 border-t-teal-600'
+                                    }`}
+                                >
                                     
-                                    {/* CABECERA DEL CARD */}
-                                    <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                                    {/* CABECERA DEL CARD CON NÚMEROS Y LETRAS GRANDES */}
+                                    <div className="p-4 border-b border-slate-200 bg-slate-50/90 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <span className="p-2 bg-blue-100 text-blue-800 rounded-lg">
-                                                <Ship size={18} />
+                                            <span className={`p-2.5 rounded-xl text-lg font-black ${isMoquegua ? 'bg-blue-100 text-blue-800' : 'bg-teal-100 text-teal-800'}`}>
+                                                🚢
                                             </span>
                                             <div>
-                                                <h4 className="text-sm font-black text-slate-900 leading-tight">{card.vesselLabel}</h4>
-                                                <span className="text-[10px] text-slate-400 font-mono font-medium block">
+                                                <h4 className="text-base font-black text-slate-900 tracking-tight leading-tight">{card.vesselLabel}</h4>
+                                                <span className="text-xs text-slate-500 font-mono font-bold block">
                                                     {currentPort?.port_name || activePortId} • {activeTerminalId}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <span className={`px-3 py-1 rounded-md text-xs font-black uppercase ${
-                                            card.operation === 'CARGA' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-blue-100 text-blue-900 border border-blue-300'
+                                        <span className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider shadow-xs border ${
+                                            card.operation === 'CARGA' 
+                                                ? 'bg-amber-100 text-amber-900 border-amber-300' 
+                                                : 'bg-indigo-100 text-indigo-900 border-indigo-300'
                                         }`}>
                                             {card.operation}
                                         </span>
                                     </div>
 
-                                    {/* CUERPO COMPARATIVO LADO A LADO */}
+                                    {/* CUERPO COMPARATIVO LADO A LADO CON NÚMEROS DESTACADOS GRANDES */}
                                     <div className="p-5 grid grid-cols-2 gap-4 bg-white">
                                         
                                         {/* LADO IZQUIERDO: COSTO ESTÁTICO BASE */}
-                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-300 flex flex-col justify-between">
                                             <div>
-                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Costo Estático Base</span>
-                                                <span className="text-xl font-black font-mono text-slate-900">
+                                                <span className="text-xs font-black text-slate-500 uppercase tracking-wider block mb-1.5">
+                                                    Costo Estático Base
+                                                </span>
+                                                <span className="text-2xl font-black font-mono text-slate-900 block tracking-tight">
                                                     ${card.staticCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
-                                            <span className="text-[10px] text-slate-400 font-mono block mt-3 pt-1.5 border-t border-slate-200">
-                                                Tarifa Plana Fija Presupuestada
+                                            <span className="text-xs text-slate-500 font-bold block mt-3 pt-2 border-t border-slate-200">
+                                                Tarifa Plana Fija
                                             </span>
                                         </div>
 
                                         {/* LADO DERECHO: COSTO DINÁMICO P×Q */}
-                                        <div className="bg-blue-50/60 p-4 rounded-xl border border-blue-200 flex flex-col justify-between">
+                                        <div className="bg-blue-50/70 p-4 rounded-xl border border-blue-300 flex flex-col justify-between">
                                             <div>
-                                                <span className="text-[10px] font-black text-blue-700 uppercase tracking-wider block mb-1">Costo Dinámico P×Q</span>
-                                                <span className="text-xl font-black font-mono text-blue-950">
+                                                <span className="text-xs font-black text-blue-800 uppercase tracking-wider block mb-1.5">
+                                                    Costo Dinámico P×Q
+                                                </span>
+                                                <span className="text-2xl font-black font-mono text-blue-950 block tracking-tight">
                                                     ${card.dynamicCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
-                                            <span className="text-[10px] text-blue-700 font-mono font-bold block mt-3 pt-1.5 border-t border-blue-200">
-                                                Suma de Rubros Matriz P×Q
+                                            <span className="text-xs text-blue-700 font-black block mt-3 pt-2 border-t border-blue-200">
+                                                Suma Matriz P×Q
                                             </span>
                                         </div>
 
                                     </div>
 
                                     {/* PIE DEL CARD: VARIANZA Y BOTÓN DESPLEGABLE DE RUBROS */}
-                                    <div className="p-4 border-t border-slate-100 bg-slate-50/60 space-y-3">
+                                    <div className="p-4 border-t border-slate-200 bg-slate-50/80 space-y-3">
                                         
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xs font-bold text-slate-600 uppercase">Varianza:</span>
-                                                <span className={`text-sm font-black font-mono ${card.varianceUsd >= 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+                                                <span className="text-xs font-black text-slate-600 uppercase">Varianza:</span>
+                                                <span className={`text-base font-black font-mono ${card.varianceUsd >= 0 ? 'text-amber-800' : 'text-emerald-800'}`}>
                                                     {card.varianceUsd >= 0 ? '+' : ''}${card.varianceUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
 
-                                            <span className={`px-3 py-1 rounded text-xs font-black font-mono border ${
+                                            <span className={`px-3 py-1 rounded-lg text-xs font-black font-mono border shadow-xs ${
                                                 card.status === 'CRITICAL' ? 'bg-red-100 text-red-900 border-red-300' :
                                                 card.status === 'MODERATE' ? 'bg-amber-100 text-amber-900 border-amber-300' :
                                                 'bg-emerald-100 text-emerald-900 border-emerald-300'
@@ -508,10 +520,10 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                                         {/* Botón desplegable de rubros P×Q */}
                                         <button 
                                             onClick={() => setExpandedCardKey(isExpanded ? null : card.key)}
-                                            className="w-full text-left py-2 px-3 bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-200 text-xs font-bold flex items-center justify-between transition-colors cursor-pointer"
+                                            className="w-full text-left py-2 px-3 bg-white hover:bg-slate-100 text-slate-800 rounded-lg border border-slate-300 text-xs font-black flex items-center justify-between transition-colors cursor-pointer shadow-xs"
                                         >
-                                            <span className="flex items-center gap-1.5">
-                                                <Layers size={14} className="text-slate-500" />
+                                            <span className="flex items-center gap-2">
+                                                <Layers size={14} className="text-slate-600" />
                                                 Ver Rubros P×Q Itemizados ({card.concepts.length})
                                             </span>
                                             {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -519,14 +531,14 @@ export const StaticVsDynamicPortCost: React.FC = () => {
 
                                         {/* Tabla desplegada con el desglose real de rubros P×Q */}
                                         {isExpanded && (
-                                            <div className="bg-white p-3 rounded-xl border border-slate-200 text-xs font-mono space-y-2 mt-2 shadow-xs">
-                                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-1 mb-1 font-sans">
+                                            <div className="bg-white p-4 rounded-xl border border-slate-300 text-xs font-mono space-y-2 mt-2 shadow-sm">
+                                                <div className="text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-1.5 mb-2 font-sans">
                                                     Desglose de Conceptos de Matriz P×Q:
                                                 </div>
                                                 {card.concepts.map((c, cIdx) => (
-                                                    <div key={cIdx} className="flex justify-between items-center text-slate-700 py-0.5">
-                                                        <span>• {c.concept}</span>
-                                                        <span className="font-bold text-slate-900">
+                                                    <div key={cIdx} className="flex justify-between items-center text-slate-800 py-1 border-b border-slate-100 last:border-0">
+                                                        <span className="font-medium">• {c.concept}</span>
+                                                        <span className="font-black text-slate-900 text-sm">
                                                             ${c.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                         </span>
                                                     </div>
