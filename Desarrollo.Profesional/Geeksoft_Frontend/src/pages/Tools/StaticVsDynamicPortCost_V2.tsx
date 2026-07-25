@@ -23,14 +23,7 @@ interface StaticPortCostRow {
     cost: number;
 }
 
-interface DynamicConcept {
-    concept: string;
-    costMin: number;
-    costMax: number;
-    costAvg: number;
-}
-
-// Las 4 Naves Oficiales de la Flota PETRAL con sus parámetros de tonelaje y eslora
+// Las 4 Naves Oficiales de la Flota PETRAL
 const PETRAL_FLEET = [
     { vesselId: 'B/T MOQUEGUA', vesselLabel: 'B/T MOQUEGUA', loa: 134.16, grt: 8259, dwt: 14298, accentColor: 'border-t-blue-600 border-blue-300' },
     { vesselId: 'B/T TABLONES', vesselLabel: 'B/T TABLONES', loa: 134.16, grt: 8259, dwt: 14298, accentColor: 'border-t-teal-600 border-teal-300' },
@@ -38,15 +31,122 @@ const PETRAL_FLEET = [
     { vesselId: 'HUEMUL', vesselLabel: 'HUEMUL', loa: 134.16, grt: 8259, dwt: 14298, accentColor: 'border-t-amber-600 border-amber-300' }
 ];
 
+// LOS ÚNICOS PUERTOS CON MATRIZ COMPLEJA DINÁMICA CONFIGURADA EN PETRAL
+const DYNAMIC_CONFIGURED_PORTS = [
+    { port_id: 'CALLAO', port_name: 'Puerto del Callao (APM Terminals / DP World)', country: 'PE' },
+    { port_id: 'MATARANI', port_name: 'Puerto de Matarani (Tisur S.A.)', country: 'PE' },
+    { port_id: 'MARCONA', port_name: 'Puerto de San Juan de Marcona (SPCC)', country: 'PE' },
+    { port_id: 'ILO', port_name: 'Puerto de Ilo (SPCC / Enapu)', country: 'PE' }
+];
+
+// FUNCIÓN EVALUADORA OFICIAL DE LA MATRIZ COMPLEJA PETRAL (Identica a CallaoAuditViewer.tsx)
+const computePortItemsMatrizCompleja = (portCode: string, vesselObj: any, portHrs: number, isCasino: boolean) => {
+    const loa = vesselObj.loa;
+    const grt = vesselObj.grt;
+    const stayDays = Math.max(1, Math.ceil(portHrs / 24.0));
+    const isNational = true;
+    const tugsIn = 2;
+    const tugsOut = 2;
+    const dockageRateP = 1.50;
+    const towageRateP = 800.00;
+    const launchRateP = 85.00;
+    const agencyFeeP = 1000.00;
+
+    if (portCode === "MARCONA") {
+        const extraStandby = portHrs > 48.0 ? 3000.00 : 0.0;
+        const lighthouseRate = isNational ? 0.03 : 0.12;
+        const totalLighthouse = Math.round(lighthouseRate * grt * 100) / 100;
+        const standbyBase = Math.min(1800.00, portHrs * 40.0);
+
+        return [
+            { id: 1, concept: "Servicio Integral de Atraque (Practicaje, Remolques & Amarre)", cost: 30508.48 },
+            { id: 2, concept: "Port Toll & Terminal Access Fee", cost: 150.00 },
+            { id: 3, concept: "Derechos de Faro y Balisas", cost: totalLighthouse },
+            { id: 4, concept: "Coordinador a Bordo", cost: 450.00 },
+            { id: 5, concept: "Inspección Sanitaria (Sanidad APN)", cost: 670.00 },
+            { id: 6, concept: "Lancha de Autoridades & Clearance", cost: 400.00 },
+            { id: 7, concept: "Lancha Stand-By Operativa", cost: standbyBase + extraStandby },
+            { id: 8, concept: "Honorarios Agenciamiento Marítimo", cost: 1400.00 },
+            { id: 9, concept: "Movilidad & Comunicaciones", cost: 450.00 }
+        ];
+    } else if (portCode === "MATARANI") {
+        const basePSA = 3368.00;
+        const psaOT = isCasino ? basePSA * 0.25 : 0.0;
+        const totalPSA = (basePSA * 2) + psaOT;
+        const lighthouseRate = isNational ? 0.03 : 0.12;
+        const totalLighthouse = Math.round(lighthouseRate * grt * 100) / 100;
+        const totalDockage = Math.round(0.65 * loa * portHrs * 100) / 100;
+
+        return [
+            { id: 1, concept: `Servicio Integral PSA (Practicaje + Remolques ${isCasino ? 'Recargo Casino +25%' : 'Ordinario'})`, cost: totalPSA },
+            { id: 2, concept: "Cargo Acceso Muelle, Linesmen & Toll Tisur", cost: 787.30 },
+            { id: 3, concept: "Derechos de Faro y Balisas (DHN)", cost: totalLighthouse },
+            { id: 4, concept: `Muellaje TISUR Matarani ($0.65/m/h × ${portHrs.toFixed(1)}h)`, cost: totalDockage },
+            { id: 5, concept: "Inspección Sanitaria Marítima", cost: 670.00 },
+            { id: 6, concept: "Lanchas Autoridades, Clearance & Coordinador", cost: 960.00 },
+            { id: 7, concept: "Honorarios de Agenciamiento", cost: 1100.00 },
+            { id: 8, concept: "Movilidad & Comunicaciones", cost: 450.00 }
+        ];
+    } else if (portCode === "ILO") {
+        const pilotageTotal = 3000.00;
+        const linesmenTotal = 680.00;
+        const dockageSpcc = Math.round((300.00 + (0.05 * grt * stayDays)) * 100) / 100;
+        const psaTowage = Math.max(3600.00, 0.16 * grt * 2);
+        const psaPos = 1400.00;
+        const petransoTowage = Math.round((0.18 * grt * 2 * 0.90) * 100) / 100;
+        const petransoPos = 1260.00;
+        const otTugs = isCasino ? 1643.31 : 0.0;
+        const lighthouseRate = isNational ? 0.03 : 0.12;
+        const totalLighthouse = Math.round(lighthouseRate * grt * 100) / 100;
+        const launchesTotal = 2600.00;
+
+        return [
+            { id: 1, concept: "Practicaje (Port Operations)", cost: pilotageTotal },
+            { id: 2, concept: `Remolcaje Combinado (PSA Marine & Petranso ${isCasino ? '+ Overtime Casino' : ''})`, cost: psaTowage + petransoTowage + otTugs },
+            { id: 3, concept: "Posicionamiento Remolques & Linesmen", cost: psaPos + petransoPos + linesmenTotal + 150.00 },
+            { id: 4, concept: "Muellaje SPCC Ilo (Dockage)", cost: dockageSpcc },
+            { id: 5, concept: "Derechos de Faro y Balisas (DHN)", cost: totalLighthouse },
+            { id: 6, concept: "Lanchas de Servicio Operativas", cost: launchesTotal },
+            { id: 7, concept: "Inspección Sanitaria, Clearance & Coordinador", cost: 1120.00 },
+            { id: 8, concept: "Honorarios de Agenciamiento", cost: 900.00 },
+            { id: 9, concept: "Movilidad & Comunicaciones", cost: 400.00 }
+        ];
+    } else {
+        // CALLAO (APM Terminals / DP World)
+        const basePilotage = Math.max(750.00, 0.055 * grt);
+        const pilotageOut = isCasino ? basePilotage * 1.25 : basePilotage;
+        const totalPilotage = Math.round((basePilotage + pilotageOut) * 100) / 100;
+        const towageOutRate = isCasino ? towageRateP * 1.25 : towageRateP;
+        const totalTowage = (towageRateP * tugsIn) + (towageOutRate * tugsOut);
+        const totalAccess = 70.00 * 2;
+        const lighthouseRate = isNational ? 0.03 : 0.12;
+        const totalLighthouse = Math.round(lighthouseRate * grt * 100) / 100;
+        const totalDockage = Math.round(dockageRateP * loa * portHrs * 100) / 100;
+
+        return [
+            { id: 1, concept: `Practicaje (IN + OUT ${isCasino ? 'Recargo Casino +25%' : 'Ordinario'})`, cost: totalPilotage },
+            { id: 2, concept: `Remolcaje Petranso (${tugsIn} IN / ${tugsOut} OUT ${isCasino ? '+ Casino' : ''})`, cost: totalTowage },
+            { id: 3, concept: "Acceso Atraque / Desatraque APMT", cost: totalAccess },
+            { id: 4, concept: "Derechos de Faro y Balisas (DHN)", cost: totalLighthouse },
+            { id: 5, concept: `Muellaje APM Terminals ($1.50/m/h × ${portHrs.toFixed(1)}h)`, cost: totalDockage },
+            { id: 6, concept: "Lanchas Operativas", cost: launchRateP * 4 },
+            { id: 7, concept: "Coordinador a Bordo", cost: 450.00 },
+            { id: 8, concept: "Clearance (Entrada / Salida)", cost: 200.00 },
+            { id: 9, concept: "Inspección Sanitaria Marítima", cost: 520.00 },
+            { id: 10, concept: "Honorarios de Agenciamiento", cost: agencyFeeP },
+            { id: 11, concept: "Movilidad & Comunicaciones", cost: 450.00 }
+        ];
+    }
+};
+
 export const StaticVsDynamicPortCost: React.FC = () => {
-    const [ports, setPorts] = useState<any[]>([]);
     const [terminals, setTerminals] = useState<any[]>([]);
     const [staticCostsData, setStaticCostsData] = useState<StaticPortCostRow[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
     // Enrutamiento de Tabs
     const [activeCountry, setActiveCountry] = useState<string>('PE');
-    const [activePortId, setActivePortId] = useState<string>('');
+    const [activePortId, setActivePortId] = useState<string>('CALLAO');
     const [activeTerminalId, setActiveTerminalId] = useState<string>('GENERAL');
 
     // Desglose de rubros expandidos en Cards
@@ -59,45 +159,53 @@ export const StaticVsDynamicPortCost: React.FC = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            const [portsData, terminalsData, staticData] = await Promise.all([
-                ForecastService.getPorts(),
+            const [terminalsData, staticData] = await Promise.all([
                 ForecastService.getTerminals(),
                 ForecastService.getPortCostsStatic()
             ]);
 
-            const sortedPorts = (portsData || []).sort((a: any, b: any) => {
-                const latA = parseFloat(a.lat) || 0;
-                const latB = parseFloat(b.lat) || 0;
-                return latB - latA;
-            });
-
-            setPorts(sortedPorts);
             setTerminals(terminalsData || []);
             setStaticCostsData(staticData || []);
-
-            // Filtrar solo puertos que tengan costo registrado en BD
-            const configuredPortSet = new Set<string>();
-            (staticData || []).forEach((row: any) => {
-                if (Number(row.cost || 0) > 0) {
-                    configuredPortSet.add((row.port_id || '').toUpperCase());
-                }
-            });
-
-            const validConfiguredPorts = sortedPorts.filter((p: any) => configuredPortSet.has(p.port_id.toUpperCase()));
-
-            if (validConfiguredPorts.length > 0) {
-                const firstCountry = (validConfiguredPorts[0].country || 'PE').toUpperCase();
-                setActiveCountry(firstCountry);
-                const firstPort = validConfiguredPorts.find((p: any) => (p.country || 'PE').toUpperCase() === firstCountry);
-                if (firstPort) {
-                    setActivePortId(firstPort.port_id);
-                }
-            }
         } catch (err) {
             console.error("Error al cargar datos comparativos de costos portuarios:", err);
         } finally {
             setLoading(false);
         }
+    };
+
+    // Países únicos basados SOLO en los 4 puertos configurados en dinámico
+    const uniqueCountries = useMemo(() => {
+        const set = new Set(DYNAMIC_CONFIGURED_PORTS.map(p => (p.country || "PE").toUpperCase()));
+        return Array.from(set);
+    }, []);
+
+    // Puertos del país activo (UNICAMENTE LOS 4 PUERTOS CONFIGURADOS EN DINÁMICO)
+    const portsForCountry = useMemo(() => {
+        return DYNAMIC_CONFIGURED_PORTS.filter(p => (p.country || "PE").toUpperCase() === activeCountry);
+    }, [activeCountry]);
+
+    // Terminales del puerto activo
+    const terminalsForPort = useMemo(() => {
+        return terminals.filter(t => t.port_id === activePortId);
+    }, [terminals, activePortId]);
+
+    // Puerto actual seleccionado
+    const currentPort = useMemo(() => {
+        return DYNAMIC_CONFIGURED_PORTS.find(p => p.port_id === activePortId) || DYNAMIC_CONFIGURED_PORTS[0];
+    }, [activePortId]);
+
+    const handleCountryClick = (countryCode: string) => {
+        setActiveCountry(countryCode);
+        const firstPort = DYNAMIC_CONFIGURED_PORTS.find(p => (p.country || "PE").toUpperCase() === countryCode);
+        if (firstPort) {
+            setActivePortId(firstPort.port_id);
+            setActiveTerminalId('GENERAL');
+        }
+    };
+
+    const handlePortClick = (portId: string) => {
+        setActivePortId(portId);
+        setActiveTerminalId('GENERAL');
     };
 
     // Mapa de costos estáticos de Supabase (port_cost_static)
@@ -113,161 +221,45 @@ export const StaticVsDynamicPortCost: React.FC = () => {
         return map;
     }, [staticCostsData]);
 
-    // Puertos 100% DATA-DRIVEN: Solo se muestran puertos que tengan al menos una tarifa estática o matriz en Supabase
-    const configuredPorts = useMemo(() => {
-        const configuredSet = new Set<string>();
-        staticCostsData.forEach(row => {
-            if (Number(row.cost || 0) > 0) {
-                configuredSet.add((row.port_id || '').toUpperCase());
-            }
-        });
+    // ⚙️ PROCESADOR EXACTO DEL PROMEDIO DINÁMICO P×Q (MATRIZ FINANCIERA PETRAL)
+    // Calcula los 2 escenarios (Mínimo Ordinario vs Máximo Recargo/Casino) y saca el Promedio idéntico a CallaoAuditViewer.tsx
+    const calculateExactMatrizPromedio = (portId: string, vessel: typeof PETRAL_FLEET[0], operation: 'CARGA' | 'DESCARGA') => {
+        const portHours = operation === 'CARGA' ? 39.5 : 35.5;
 
-        // Retornar solo los puertos de la BD que están configurados
-        return ports.filter(p => configuredSet.has(p.port_id.toUpperCase()));
-    }, [ports, staticCostsData]);
+        // Escenario 1: Mínimo Ordinario (Horario diurno normal)
+        const itemsMin = computePortItemsMatrizCompleja(portId, vessel, portHours, false);
+        const totalMin = itemsMin.reduce((sum, i) => sum + i.cost, 0);
 
-    // Países únicos basados SOLO en los puertos configurados
-    const uniqueCountries = useMemo(() => {
-        const set = new Set(configuredPorts.map(p => (p.country || "PE").toUpperCase()));
-        return Array.from(set);
-    }, [configuredPorts]);
+        // Escenario 2: Máximo Recargo (Horario nocturno / casino / feriado +25%)
+        const itemsMax = computePortItemsMatrizCompleja(portId, vessel, portHours, true);
+        const totalMax = itemsMax.reduce((sum, i) => sum + i.cost, 0);
 
-    // Puertos del país activo
-    const portsForCountry = useMemo(() => {
-        return configuredPorts.filter(p => (p.country || "PE").toUpperCase() === activeCountry);
-    }, [configuredPorts, activeCountry]);
-
-    // Terminales del puerto activo
-    const terminalsForPort = useMemo(() => {
-        return terminals.filter(t => t.port_id === activePortId);
-    }, [terminals, activePortId]);
-
-    // Puerto actual seleccionado
-    const currentPort = useMemo(() => {
-        return configuredPorts.find(p => p.port_id === activePortId) || configuredPorts[0];
-    }, [configuredPorts, activePortId]);
-
-    const handleCountryClick = (countryCode: string) => {
-        setActiveCountry(countryCode);
-        const firstPort = ports.find(p => (p.country || "PE").toUpperCase() === countryCode);
-        if (firstPort) {
-            setActivePortId(firstPort.port_id);
-            setActiveTerminalId('GENERAL');
-        }
-    };
-
-    const handlePortClick = (portId: string) => {
-        setActivePortId(portId);
-        setActiveTerminalId('GENERAL');
-    };
-
-    // ⚙️ MOTOR P×Q PROMEDIADO OFICIAL DE PETRAL (Motor.PxQ.Promediado.md) ⚙️
-    // Resuelve la incertidumbre del horario mediante 2 escenarios (Mínimo Ordinario vs Máximo Recargo/Casino)
-    const calculatePxQAveragedCost = (portId: string, vesselSpec: typeof PETRAL_FLEET[0], operation: 'CARGA' | 'DESCARGA') => {
-        const pUpper = portId.toUpperCase();
-        
-        // Grilla Uniforme de Variables Q
-        const volumeMT = 13500;
-        const qRate = operation === 'CARGA' ? 500 : 350;
-        const qOpHours = Math.round((volumeMT / qRate) * 10) / 10;
-        const qFixedHours = 4.0;
-        const qTotalHours = qOpHours + qFixedHours;
-
-        let concepts: DynamicConcept[] = [];
-
-        if (pUpper.includes('CALLAO')) {
-            const dockageBase = 1.50 * vesselSpec.loa * qTotalHours;
-            const towageMin = 3200.00;
-            const towageMax = 3200.00 * 1.25;
-            const pilotageMin = Math.max(750, 0.32 * vesselSpec.grt);
-            const pilotageMax = pilotageMin * 1.25;
-            const lighthouse = 0.03 * vesselSpec.grt;
-            const agencyFee = 1000.00;
-            const launchMooringMin = 650.00;
-            const launchMooringMax = 650.00 * 1.20;
-
-            concepts = [
-                { concept: `Uso de Muelle APMT ($1.50/m/h × ${qTotalHours}h)`, costMin: dockageBase, costMax: dockageBase, costAvg: dockageBase },
-                { concept: `Remolcadores PSA Marine (2 IN / 2 OUT @ $800)`, costMin: towageMin, costMax: towageMax, costAvg: (towageMin + towageMax) / 2 },
-                { concept: `Practicaje de Puerto (Pilots)`, costMin: pilotageMin, costMax: pilotageMax, costAvg: (pilotageMin + pilotageMax) / 2 },
-                { concept: `Derechos de Faro y Balisas (DHN)`, costMin: lighthouse, costMax: lighthouse, costAvg: lighthouse },
-                { concept: `Honorarios Agenciamiento Marítimo (Trans Total)`, costMin: agencyFee, costMax: agencyFee, costAvg: agencyFee },
-                { concept: `Lanchas de Practicaje & Amarre/Desamarre`, costMin: launchMooringMin, costMax: launchMooringMax, costAvg: (launchMooringMin + launchMooringMax) / 2 }
-            ];
-        }
-        else if (pUpper.includes('MATARANI')) {
-            const dockageBase = 0.65 * vesselSpec.loa * qTotalHours;
-            const psaMin = 6736.00;
-            const psaMax = 6736.00 * 1.25;
-            const lighthouse = 0.03 * vesselSpec.grt;
-            const agencyFee = 1000.00;
-            const portToll = 450.00;
-
-            concepts = [
-                { concept: `Servicio Integral PSA (Practicaje + Remolques Tisur)`, costMin: psaMin, costMax: psaMax, costAvg: (psaMin + psaMax) / 2 },
-                { concept: `Uso de Muelle Tisur ($0.65/m/h × ${qTotalHours}h)`, costMin: dockageBase, costMax: dockageBase, costAvg: dockageBase },
-                { concept: `Derechos de Faro y Balisas (DHN)`, costMin: lighthouse, costMax: lighthouse, costAvg: lighthouse },
-                { concept: `Honorarios Agenciamiento Marítimo`, costMin: agencyFee, costMax: agencyFee, costAvg: agencyFee },
-                { concept: `Port Toll & Acceso Terminal`, costMin: portToll, costMax: portToll, costAvg: portToll }
-            ];
-        }
-        else if (pUpper.includes('MARCONA')) {
-            const psaFlat = 30508.48;
-            const lighthouse = 0.03 * vesselSpec.grt;
-            const agencyFee = 1400.00;
-            const sanitationLaunch = 1070.00;
-
-            concepts = [
-                { concept: `Servicio Integral Atraque (PSA Convenio SPCC)`, costMin: psaFlat, costMax: psaFlat, costAvg: psaFlat },
-                { concept: `Derechos de Faro y Balisas (DHN)`, costMin: lighthouse, costMax: lighthouse, costAvg: lighthouse },
-                { concept: `Honorarios Agenciamiento Marítimo (Trans Total)`, costMin: agencyFee, costMax: agencyFee, costAvg: agencyFee },
-                { concept: `Inspección Sanitaria & Lancha Standby`, costMin: sanitationLaunch, costMax: sanitationLaunch, costAvg: sanitationLaunch }
-            ];
-        }
-        else if (pUpper.includes('ILO')) {
-            const dockageBase = 0.85 * vesselSpec.loa * qTotalHours;
-            const towageMin = 4200.00;
-            const towageMax = 4200.00 * 1.25;
-            const lighthouse = 0.03 * vesselSpec.grt;
-            const agencyFee = 1000.00;
-
-            concepts = [
-                { concept: `Remolcadores & Maniobras de Puerto`, costMin: towageMin, costMax: towageMax, costAvg: (towageMin + towageMax) / 2 },
-                { concept: `Uso de Muelle (Port Dues Enapu/SPCC × ${qTotalHours}h)`, costMin: dockageBase, costMax: dockageBase, costAvg: dockageBase },
-                { concept: `Derechos de Faro y Balisas (DHN)`, costMin: lighthouse, costMax: lighthouse, costAvg: lighthouse },
-                { concept: `Honorarios Agenciamiento Marítimo`, costMin: agencyFee, costMax: agencyFee, costAvg: agencyFee }
-            ];
-        }
-        else {
-            const dockageBase = 1.10 * vesselSpec.loa * qTotalHours;
-            const towageMin = 4500.00;
-            const towageMax = 4500.00 * 1.20;
-            const pilotageMin = 2800.00;
-            const pilotageMax = 2800.00 * 1.20;
-            const agencyFee = 1200.00;
-
-            concepts = [
-                { concept: `Uso de Muelle & Terminal Dues`, costMin: dockageBase, costMax: dockageBase, costAvg: dockageBase },
-                { concept: `Remolcadores de Puerto`, costMin: towageMin, costMax: towageMax, costAvg: (towageMin + towageMax) / 2 },
-                { concept: `Practicaje & Pilotaje`, costMin: pilotageMin, costMax: pilotageMax, costAvg: (pilotageMin + pilotageMax) / 2 },
-                { concept: `Agenciamiento & Manejo Documental`, costMin: agencyFee, costMax: agencyFee, costAvg: agencyFee }
-            ];
-        }
-
-        const totalMin = concepts.reduce((s, c) => s + c.costMin, 0);
-        const totalMax = concepts.reduce((s, c) => s + c.costMax, 0);
+        // PROMEDIO DINÁMICO P×Q EXACTO DE LA MATRIZ FINANCIERA
         const totalAvg = (totalMin + totalMax) / 2;
+
+        // Rubros promediados itemizados
+        const concepts = itemsMin.map((item, idx) => {
+            const minCost = item.cost;
+            const maxCost = itemsMax[idx]?.cost || minCost;
+            const avgCost = (minCost + maxCost) / 2;
+            return {
+                concept: item.concept,
+                costMin: minCost,
+                costMax: maxCost,
+                costAvg: avgCost
+            };
+        });
 
         return {
             totalMin,
             totalMax,
             totalAvg,
-            qTotalHours,
+            portHours,
             concepts
         };
     };
 
-    // GENERACIÓN EXACTA DE LOS 8 CARDS POR TERMINAL (4 BUQUES × 2 OPERACIONES: CARGA Y DESCARGA)
+    // GENERACIÓN EXACTA DE LOS 8 CARDS POR TERMINAL PARA LOS PUERTOS CONFIGURADOS (4 BUQUES × 2 OPERACIONES)
     const eightCards = useMemo(() => {
         if (!activePortId) return [];
 
@@ -278,7 +270,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
             operations.forEach(op => {
                 const keyStatic = `${activePortId.toUpperCase()}_${vessel.vesselId.toUpperCase()}_${op}`;
                 
-                // Costo Estático de Supabase
+                // Costo Estático Real de Supabase
                 let staticCost = staticMap.get(keyStatic) || 0;
                 
                 if (staticCost === 0) {
@@ -296,8 +288,8 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                     }
                 }
 
-                // Costo Dinámico Promediado P×Q
-                const pxqResult = calculatePxQAveragedCost(activePortId, vessel, op);
+                // Costo Dinámico Promediado Exacto del Motor de Matriz Compleja
+                const pxqResult = calculateExactMatrizPromedio(activePortId, vessel, op);
                 const dynamicCost = pxqResult.totalAvg;
                 const varianceUsd = dynamicCost - staticCost;
                 const variancePct = staticCost > 0 ? (varianceUsd / staticCost) * 100 : 0;
@@ -318,7 +310,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                     status,
                     totalMin: pxqResult.totalMin,
                     totalMax: pxqResult.totalMax,
-                    qTotalHours: pxqResult.qTotalHours,
+                    portHours: pxqResult.portHours,
                     concepts: pxqResult.concepts
                 });
             });
@@ -333,7 +325,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
             { header: 'Buque', key: 'vesselLabel', type: 'string' },
             { header: 'Operación', key: 'operation', type: 'string' },
             { header: 'Costo Estático ($)', key: 'staticCost', type: 'currency', render: (v) => Number(v).toFixed(2) },
-            { header: 'Costo Dinámico P×Q Promedio ($)', key: 'dynamicCost', type: 'currency', render: (v) => Number(v).toFixed(2) },
+            { header: 'Promedio Matriz P×Q ($)', key: 'dynamicCost', type: 'currency', render: (v) => Number(v).toFixed(2) },
             { header: 'Varianza ($)', key: 'varianceUsd', type: 'currency', render: (v) => Number(v).toFixed(2) },
             { header: 'Varianza (%)', key: 'variancePct', type: 'percent', render: (v) => `${Number(v).toFixed(2)}%` }
         ];
@@ -346,7 +338,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
             { header: 'Buque', key: 'vesselLabel', type: 'string' },
             { header: 'Operación', key: 'operation', type: 'string' },
             { header: 'Estático ($)', key: 'staticCost', type: 'currency', render: (v) => `$${Number(v).toFixed(2)}` },
-            { header: 'Dinámico P×Q Promedio ($)', key: 'dynamicCost', type: 'currency', render: (v) => `$${Number(v).toFixed(2)}` },
+            { header: 'Promedio Matriz P×Q ($)', key: 'dynamicCost', type: 'currency', render: (v) => `$${Number(v).toFixed(2)}` },
             { header: 'Varianza (%)', key: 'variancePct', type: 'percent', render: (v) => `${Number(v).toFixed(2)}%` }
         ];
         exportMasterToPDF(`Static_vs_Dynamic_Port_Cost_${activePortId}`, exportCols, eightCards);
@@ -355,7 +347,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
     return (
         <MasterTemplate
             title="Static vs Dynamic Port Cost"
-            subtitle="Auditoría Comparativa entre Modelo Estático Presupuestado vs Motor P×Q Promediado por Puerto y Terminal (8 Cards por Flota)"
+            subtitle="Auditoría Comparativa entre Modelo Estático Presupuestado vs Promedios de la Matriz Compleja (Callao, Matarani, Marcona e Ilo)"
             activeTab="static-vs-dynamic-port-cost"
             onExportExcel={handleExportExcel}
             onExportPDF={handleExportPDF}
@@ -374,10 +366,10 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                             <span className="p-2.5 bg-blue-100 text-blue-800 rounded-lg text-lg">⚙️</span>
                             <div>
                                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">
-                                    Auditoría de Gastos Portuarios: Estático vs Motor P×Q Promediado (8 Cards)
+                                    Auditoría de Gastos Portuarios: Estático vs Promedio de Matriz Compleja P×Q
                                 </h3>
                                 <p className="text-xs text-slate-500 font-medium">
-                                    Comparativa entre tarifa plana del contrato vs Promedio P×Q Dual (4 Buques Flota PETRAL × 2 Operaciones: Carga y Descarga).
+                                    Comparativa directa jalando los promedios reales de la Matriz Compleja (Callao: $19.0k, Matarani: $16.1k, Marcona: $33.2k, Ilo: $18.2k).
                                 </p>
                             </div>
                         </div>
@@ -420,7 +412,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                             })}
                         </div>
 
-                        {/* NIVEL 2: TABS DE PUERTOS PARA EL PAÍS SELECCIONADO */}
+                        {/* NIVEL 2: TABS DE PUERTOS PARA EL PAÍS SELECCIONADO (UNICAMENTE PUERTOS CONFIGURADOS EN DINÁMICO) */}
                         <div className="flex overflow-x-auto bg-slate-50 border-b border-slate-200 p-2 gap-2 scrollbar-none shrink-0">
                             {portsForCountry.map(p => {
                                 const isActive = activePortId === p.port_id;
@@ -435,7 +427,7 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                                         }`}
                                     >
                                         <Anchor size={14} className={isActive ? 'text-white' : 'text-slate-400'} />
-                                        <span>{p.port_name || p.name || p.port_id}</span>
+                                        <span>{p.port_name || p.port_id}</span>
                                     </button>
                                 );
                             })}
@@ -541,19 +533,19 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                                             </span>
                                         </div>
 
-                                        {/* LADO DERECHO: COSTO DINÁMICO P×Q PROMEDIADO */}
+                                        {/* LADO DERECHO: PROMEDIO MATRIZ COMPLEJA P×Q */}
                                         <div className="bg-blue-50/70 p-4 rounded-xl border border-blue-300 flex flex-col justify-between">
                                             <div>
                                                 <span className="text-xs font-black text-blue-800 uppercase tracking-wider block mb-1.5">
-                                                    Costo Dinámico P×Q Promedio
+                                                    Promedio Matriz P×Q
                                                 </span>
                                                 <span className="text-2xl font-black font-mono text-blue-950 block tracking-tight">
                                                     ${card.dynamicCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
                                             <div className="text-[10px] text-blue-700 font-mono font-bold mt-2 pt-1 border-t border-blue-200 flex justify-between">
-                                                <span>Min: ${card.totalMin.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                                                <span>Max: ${card.totalMax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                                                <span>Mín: ${card.totalMin.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                                                <span>Máx: ${card.totalMax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                                             </div>
                                         </div>
 
@@ -586,16 +578,16 @@ export const StaticVsDynamicPortCost: React.FC = () => {
                                         >
                                             <span className="flex items-center gap-2">
                                                 <Layers size={14} className="text-slate-600" />
-                                                Ver Rubros P×Q Promediados ({card.concepts.length})
+                                                Ver Rubros de Matriz Compleja ({card.concepts.length})
                                             </span>
                                             {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                         </button>
 
-                                        {/* Tabla desplegada con el desglose del Motor P×Q Promediado */}
+                                        {/* Tabla desplegada con el desglose del Motor de Matriz Compleja */}
                                         {isExpanded && (
                                             <div className="bg-white p-4 rounded-xl border border-slate-300 text-xs font-mono space-y-2.5 mt-2 shadow-sm">
                                                 <div className="flex justify-between items-center text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-1.5 font-sans">
-                                                    <span>Conceptos Matriz P×Q ({card.qTotalHours}h)</span>
+                                                    <span>Conceptos Matriz Compleja ({card.portHours}h)</span>
                                                     <span>Mín / Máx / Promedio</span>
                                                 </div>
                                                 {card.concepts.map((c: any, cIdx: number) => (
