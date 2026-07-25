@@ -355,32 +355,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
 
 
 
-                                    {/* CATEGORÍA 3: MAESTROS DE MERCADO */}
-                                    <div className="flex flex-col gap-1">
-                                        <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-1 flex items-center gap-1">
-                                            <span>⛽</span> Maestros de Mercado
-                                        </div>
-                                        <div className="pl-2 flex flex-col gap-0.5 border-l-2 border-slate-100 ml-1.5">
-                                            {hasPermission('maestro_bunker', 'Visor') && (
-                                                <button 
-                                                    onClick={() => navigate('/bunker-prices')}
-                                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'bunker' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                                >
-                                                    <span className="text-xs">⛽</span> Maestro de Búnker
-                                                </button>
-                                            )}
-                                            {hasPermission('maestro_rutas', 'Visor') && (
-                                                <button 
-                                                    onClick={() => navigate('/sources-sinks')}
-                                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'sources-sinks' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                                >
-                                                    <span className="text-xs">⚙️</span> Maestro de Originación
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* CATEGORÍA 4: MAESTROS DE COSTOS */}
+                                    {/* CATEGORÍA 3: MAESTROS DE COSTOS */}
                                     <div className="flex flex-col gap-1">
                                         <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-1 flex items-center gap-1">
                                             <span>💰</span> Maestros de Costos
@@ -401,6 +376,31 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                                         <span className="text-xs">🧮</span> Maestro de Gastos Portuarios
                                                     </button>
                                                 </>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* CATEGORÍA 4: MERCADO & ORIGINACIÓN */}
+                                    <div className="flex flex-col gap-1">
+                                        <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-1 flex items-center gap-1">
+                                            <span>⛽</span> Mercado &amp; Originación
+                                        </div>
+                                        <div className="pl-2 flex flex-col gap-0.5 border-l-2 border-slate-100 ml-1.5">
+                                            {hasPermission('maestro_bunker', 'Visor') && (
+                                                <button 
+                                                    onClick={() => navigate('/bunker-prices')}
+                                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'bunker' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                                >
+                                                    <span className="text-xs">⛽</span> Maestro de Búnker
+                                                </button>
+                                            )}
+                                            {hasPermission('maestro_rutas', 'Visor') && (
+                                                <button 
+                                                    onClick={() => navigate('/sources-sinks')}
+                                                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'sources-sinks' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                                >
+                                                    <span className="text-xs">⚙️</span> Maestro de Originación
+                                                </button>
                                             )}
                                         </div>
                                     </div>
