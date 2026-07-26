@@ -1,8 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Anchor, ArrowRightLeft, Printer } from 'lucide-react';
 import logoPetral from '../../assets/Logo.Petral.png';
 import logoGeeksoft from '../../assets/Logo.Geeksoft.png';
-import { ForecastService } from '../../services/api';
 
 interface CallaoAuditViewerProps {
     initialRoute?: string;
@@ -219,53 +218,6 @@ export const CallaoAuditViewer: React.FC<CallaoAuditViewerProps> = ({
 
     const activeRouteInfo = routePortMapping[selectedRoute] || routePortMapping["NEXA_CALLAO_MATARANI"];
 
-    // Operaciones dinámicas de Terminal
-    const [vesselTerminalOps, setVesselTerminalOps] = useState<any[]>([]);
-
-    useEffect(() => {
-        ForecastService.getVesselTerminalOperations().then(res => {
-            if (res && Array.isArray(res)) {
-                setVesselTerminalOps(res);
-            }
-        }).catch(err => console.error("Error cargando operaciones de terminal:", err));
-    }, []);
-
-    // Carga de Parámetros Dinámicos Carga
-    const opLoad = useMemo(() => {
-        const portCode = activeRouteInfo.loadPort;
-        const vesselId = selectedVesselId;
-        const matches = vesselTerminalOps.filter(op => op.port_id === portCode);
-        return matches.find(op => op.vessel_id === vesselId) || matches.find(op => op.vessel_id === 'MOQUEGUA') || matches[0];
-    }, [vesselTerminalOps, activeRouteInfo.loadPort, selectedVesselId]);
-
-    const activeLoadRate = Number(opLoad?.ritmo_carga) > 0 ? Number(opLoad?.ritmo_carga) : loadRate;
-    const mooringLoad = parseFloat(opLoad?.amarre_hrs ?? opLoad?.mooring_time_hrs ?? opLoad?.parameters?.amarre_hrs ?? opLoad?.parameters?.mooring_time_hrs ?? 1.5);
-    const timeToCountLoad = parseFloat(opLoad?.time_to_count_carga_hrs ?? opLoad?.time_to_count_carga ?? opLoad?.parameters?.time_to_count_carga_hrs ?? opLoad?.parameters?.time_to_count_carga ?? 1.0);
-    const unmooringLoad = parseFloat(opLoad?.desamarre_hrs ?? opLoad?.unmooring_time_hrs ?? opLoad?.parameters?.desamarre_hrs ?? opLoad?.parameters?.unmooring_time_hrs ?? 1.5);
-    const extraLoad = parseFloat(opLoad?.maneuver_carga_hrs ?? opLoad?.parameters?.maneuver_carga_hrs ?? opLoad?.parameters?.extra_maneuver_carga ?? 0.0);
-    const tugsInLoad = Number(opLoad?.tugboats_in) || Number(opLoad?.tugboats_count) || Number(opLoad?.parameters?.tugs_in) || 2;
-    const tugsOutLoad = Number(opLoad?.tugboats_out) || Number(opLoad?.tugboats_count) || Number(opLoad?.parameters?.tugs_out) || 2;
-
-    const qFijoLoad = mooringLoad + timeToCountLoad + unmooringLoad + extraLoad;
-
-    // Carga de Parámetros Dinámicos Descarga
-    const opDischarge = useMemo(() => {
-        const portCode = activeRouteInfo.dischargePort;
-        const vesselId = selectedVesselId;
-        const matches = vesselTerminalOps.filter(op => op.port_id === portCode);
-        return matches.find(op => op.vessel_id === vesselId) || matches.find(op => op.vessel_id === 'MOQUEGUA') || matches[0];
-    }, [vesselTerminalOps, activeRouteInfo.dischargePort, selectedVesselId]);
-
-    const activeDischargeRate = Number(opDischarge?.ritmo_descarga) > 0 ? Number(opDischarge?.ritmo_descarga) : dischargeRate;
-    const mooringDischarge = parseFloat(opDischarge?.amarre_hrs ?? opDischarge?.mooring_time_hrs ?? opDischarge?.parameters?.amarre_hrs ?? opDischarge?.parameters?.mooring_time_hrs ?? 1.5);
-    const timeToCountDischarge = parseFloat(opDischarge?.time_to_count_descarga_hrs ?? opDischarge?.time_to_count_descarga ?? opDischarge?.parameters?.time_to_count_descarga_hrs ?? opDischarge?.parameters?.time_to_count_descarga ?? 1.0);
-    const unmooringDischarge = parseFloat(opDischarge?.desamarre_hrs ?? opDischarge?.unmooring_time_hrs ?? opDischarge?.parameters?.desamarre_hrs ?? opDischarge?.parameters?.unmooring_time_hrs ?? 1.5);
-    const extraDischarge = parseFloat(opDischarge?.maneuver_descarga_hrs ?? opDischarge?.parameters?.maneuver_descarga_hrs ?? opDischarge?.parameters?.extra_maneuver_descarga ?? 0.0);
-    const tugsInDischarge = Number(opDischarge?.tugboats_in) || Number(opDischarge?.tugboats_count) || Number(opDischarge?.parameters?.tugs_in) || 2;
-    const tugsOutDischarge = Number(opDischarge?.tugboats_out) || Number(opDischarge?.tugboats_count) || Number(opDischarge?.parameters?.tugs_out) || 2;
-
-    const qFijoDischarge = mooringDischarge + timeToCountDischarge + unmooringDischarge + extraDischarge;
-
     // Auditoría Carga (Dape dinámicamente según activeRouteInfo.loadPort)
     const auditLoad = useMemo(() => {
         const items = computePortItems(activeRouteInfo.loadPort, vessel, portHoursLoad, isNationalLoad, tugboatsInLoad, tugboatsOutLoad, isCasinoNightLoad);
@@ -288,7 +240,7 @@ export const CallaoAuditViewer: React.FC<CallaoAuditViewerProps> = ({
         const portName = isLoad ? activeRouteInfo.loadName : activeRouteInfo.dischargeName;
         const rate = isLoad ? loadRate : dischargeRate;
         const qOp = cargoTons / rate;
-        const qFijo = isLoad ? qFijoLoad : qFijoDischarge;
+        const qFijo = 4.0;
         const totalHours = qOp + qFijo;
 
         const baseAudit = isLoad ? auditLoad : auditDischarge;
@@ -585,29 +537,27 @@ export const CallaoAuditViewer: React.FC<CallaoAuditViewerProps> = ({
                         {/* Grilla uniforme de 6 variables Q de Carga */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-[11px] text-slate-700 font-mono">
                             <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
-                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">1. Ritmo Carga</span>
-                                <span className="font-bold text-teal-700">{activeLoadRate} MT/h</span>
+                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">1. Ritmo</span>
+                                <span className="font-bold text-teal-700">{loadRate} MT/h</span>
                             </div>
                             <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
-                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">2. Q_op Carga</span>
-                                <span className="font-bold text-teal-800">{(cargoTons / activeLoadRate).toFixed(1)} hrs</span>
+                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">2. Q_op (MT/Ritmo)</span>
+                                <span className="font-bold text-teal-800">{(cargoTons / loadRate).toFixed(1)} hrs</span>
                             </div>
                             <div className="bg-amber-50/80 p-1.5 rounded border border-amber-300">
-                                <span className="text-[9px] text-amber-800 block uppercase font-sans font-bold">3. Q_fijo Carga ({qFijoLoad.toFixed(1)} h)</span>
-                                <span className="font-semibold text-[9px] text-amber-900 leading-tight block">
-                                    Atraque: {mooringLoad}h | Prep: {timeToCountLoad}h | Zarpe: {unmooringLoad}h{extraLoad > 0 ? ` | Extra: ${extraLoad}h` : ''}
-                                </span>
+                                <span className="text-[9px] text-amber-800 block uppercase font-sans font-bold">3. Q_fijo (4.0 hrs)</span>
+                                <span className="font-semibold text-[9px] text-amber-900 leading-tight block">Atraq 1.5h + Insp 1.0h + Desam 1.5h</span>
                             </div>
                             <div className="bg-emerald-50 p-1.5 rounded border border-emerald-300">
                                 <span className="text-[9px] text-emerald-700 block uppercase font-sans font-bold">4. Perm. Total</span>
-                                <span className="font-bold text-emerald-900">{((cargoTons / activeLoadRate) + qFijoLoad).toFixed(1)} hrs</span>
+                                <span className="font-bold text-emerald-900">{((cargoTons / loadRate) + 4.0).toFixed(1)} hrs</span>
                             </div>
                             <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
-                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">5. Remolcedores</span>
-                                <span className="font-bold text-slate-800">{tugsInLoad} IN / {tugsOutLoad} OUT</span>
+                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">5. Remolques</span>
+                                <span className="font-bold text-slate-800">2 IN / 2 OUT</span>
                             </div>
                             <div className="bg-purple-50 p-1.5 rounded border border-purple-200">
-                                <span className="text-[9px] text-purple-700 block uppercase font-sans font-bold">6. Buque (LOA/GRT)</span>
+                                <span className="text-[9px] text-purple-700 block uppercase font-sans font-bold">6. LOA / GRT</span>
                                 <span className="font-bold text-purple-900">{vessel.loa}m / {vessel.grt}</span>
                             </div>
                         </div>
@@ -627,29 +577,27 @@ export const CallaoAuditViewer: React.FC<CallaoAuditViewerProps> = ({
                         {/* Grilla uniforme de 6 variables Q de Descarga */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-[11px] text-slate-700 font-mono">
                             <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
-                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">1. Ritmo Descarga</span>
-                                <span className="font-bold text-blue-700">{activeDischargeRate} MT/h</span>
+                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">1. Ritmo</span>
+                                <span className="font-bold text-blue-700">{dischargeRate} MT/h</span>
                             </div>
                             <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
-                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">2. Q_op Descarga</span>
-                                <span className="font-bold text-blue-800">{(cargoTons / activeDischargeRate).toFixed(1)} hrs</span>
+                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">2. Q_op (MT/Ritmo)</span>
+                                <span className="font-bold text-blue-800">{(cargoTons / dischargeRate).toFixed(1)} hrs</span>
                             </div>
                             <div className="bg-amber-50/80 p-1.5 rounded border border-amber-300">
-                                <span className="text-[9px] text-amber-800 block uppercase font-sans font-bold">3. Q_fijo Descarga ({qFijoDischarge.toFixed(1)} h)</span>
-                                <span className="font-semibold text-[9px] text-amber-900 leading-tight block">
-                                    Atraque: {mooringDischarge}h | Insp: {timeToCountDischarge}h | Zarpe: {unmooringDischarge}h{extraDischarge > 0 ? ` | Extra: ${extraDischarge}h` : ''}
-                                </span>
+                                <span className="text-[9px] text-amber-800 block uppercase font-sans font-bold">3. Q_fijo (4.0 hrs)</span>
+                                <span className="font-semibold text-[9px] text-amber-900 leading-tight block">Atraq 1.5h + Insp 1.0h + Desam 1.5h</span>
                             </div>
                             <div className="bg-emerald-50 p-1.5 rounded border border-emerald-300">
                                 <span className="text-[9px] text-emerald-700 block uppercase font-sans font-bold">4. Perm. Total</span>
-                                <span className="font-bold text-emerald-900">{((cargoTons / activeDischargeRate) + qFijoDischarge).toFixed(1)} hrs</span>
+                                <span className="font-bold text-emerald-900">{((cargoTons / dischargeRate) + 4.0).toFixed(1)} hrs</span>
                             </div>
                             <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
-                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">5. Remolcedores</span>
-                                <span className="font-bold text-slate-800">{tugsInDischarge} IN / {tugsOutDischarge} OUT</span>
+                                <span className="text-[9px] text-slate-500 block uppercase font-sans font-bold">5. Remolques</span>
+                                <span className="font-bold text-slate-800">2 IN / 2 OUT</span>
                             </div>
                             <div className="bg-purple-50 p-1.5 rounded border border-purple-200">
-                                <span className="text-[9px] text-purple-700 block uppercase font-sans font-bold">6. Buque (LOA/GRT)</span>
+                                <span className="text-[9px] text-purple-700 block uppercase font-sans font-bold">6. LOA / GRT</span>
                                 <span className="font-bold text-purple-900">{vessel.loa}m / {vessel.grt}</span>
                             </div>
                         </div>
