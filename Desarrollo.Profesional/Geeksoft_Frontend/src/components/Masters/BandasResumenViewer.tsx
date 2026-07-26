@@ -121,6 +121,9 @@ export const BandasResumenViewer: React.FC = () => {
               </td>
             </tr>
           </table>
+          <!-- Box observaciones ancho completo -->
+          <div style="font-weight:bold;font-size:6.5pt;margin-bottom:2px;">OBSERVACIONES &amp; FEEDBACK EXPERTA SANDRA:</div>
+          <div class="obs-box"></div>
         </div>`;
 
         const leyendaBlock = `
