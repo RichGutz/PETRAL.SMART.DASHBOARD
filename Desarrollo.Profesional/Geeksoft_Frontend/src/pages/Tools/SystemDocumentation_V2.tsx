@@ -73,40 +73,66 @@ export const SystemDocumentation_V2: React.FC = () => {
             categoryGroup: 'MAESTROS FÍSICOS',
             chapterNum: 2,
             title: 'Maestro de Puertos y Terminales',
-            subtitle: 'Directorio de puertos de Perú y Chile, terminales y parámetro Q de permanencia (P×Q)',
+            subtitle: 'Directorio portuario, tiempos de permanencia Q y matriz de conceptos P×Q (Callao & Puertos PE/CL)',
             icon: <Compass size={16} />,
             badge: 'Maestro Físico',
-            keywords: ['puertos', 'terminales', 'callao', 'matarani', 'ilo', 'marcona', 'mejillones', 'apm', 'tisur', 'spcc', 'q', 'ritmo', 'permanencia'],
+            keywords: ['puertos', 'terminales', 'callao', 'matarani', 'ilo', 'marcona', 'mejillones', 'apm', 'tisur', 'spcc', 'q', 'ritmo', 'permanencia', 'practicaje', 'remolcaje', 'muellaje'],
             content: (
                 <div className="space-y-6">
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">2.1 Parámetros Q de Permanencia &amp; Operatividad P×Q</h4>
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">2.1 Parámetros Q de Permanencia Operativa (Fórmula P×Q)</h4>
                         <p className="text-xs text-slate-600 leading-relaxed mb-4">
-                            El <strong>Maestro de Puertos y Terminales</strong> registra los parámetros operacionales que determinan la variable <strong>Q (Cantidad)</strong> para el cálculo de costos P×Q en proformas y auditorías:
+                            El <strong>Maestro de Puertos y Terminales</strong> registra las tasas de transferencia y los tiempos suplementarios que determinan la variable <strong>Q (Cantidad)</strong> del cálculo P×Q:
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono mb-4">
                             <div className="bg-white p-3 rounded-lg border border-slate-200">
-                                <span className="font-bold text-slate-800 block mb-1 font-sans">⏱️ Ritmo de Carga/Descarga:</span>
+                                <span className="font-bold text-slate-800 block mb-1 font-sans">⏱️ Q_operación (Horas Muelle):</span>
                                 <span className="text-[11px] text-slate-600 font-sans">
-                                    Determina las horas de operación: Q_op = Toneladas / Ritmo MT/h.
+                                    Tiempo de transferencia neta: Q_op = Toneladas MT / Ritmo MT/h.
                                 </span>
                             </div>
                             <div className="bg-white p-3 rounded-lg border border-slate-200">
-                                <span className="font-bold text-slate-800 block mb-1 font-sans">⚓ Horas Fijas de Maniobra:</span>
+                                <span className="font-bold text-slate-800 block mb-1 font-sans">⚓ 4.0h Fijas Suplementarias:</span>
                                 <span className="text-[11px] text-slate-600 font-sans">
-                                    Adiciona 4.0 horas fijas por maniobra de atracadero a Q_total.
+                                    2h amarre/desamarre + 2h conexiado/desconexiado de mangueras e inspección.
                                 </span>
                             </div>
                             <div className="bg-white p-3 rounded-lg border border-slate-200">
-                                <span className="font-bold text-slate-800 block mb-1 font-sans">🚜 Remolcaje Normado:</span>
+                                <span className="font-bold text-slate-800 block mb-1 font-sans">🚜 Q_remolcaje Normado:</span>
                                 <span className="text-[11px] text-slate-600 font-sans">
-                                    Determina la cantidad Q_remolques = 2 IN / 2 OUT obligatorios.
+                                    Maniobra obligatoria de 2 Remolques IN + 2 Remolques OUT por escala.
                                 </span>
                             </div>
                         </div>
+
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">2.2 Matriz de Conceptos P×Q Evaluados en Puerto del Callao (APM / Multiboyas)</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed mb-3">
+                            Para una proforma u operación en el Puerto del Callao, el motor evalúa en detalle los siguientes rubros oficiales:
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs mb-4">
+                            <div className="bg-white p-3 rounded-lg border border-slate-200">
+                                <span className="font-bold text-slate-800 block mb-1">Rubros Físicos &amp; Maniobras:</span>
+                                <ul className="list-disc pl-4 text-slate-600 space-y-1">
+                                    <li><strong>Practicaje Entrante/Saliente:</strong> Evaluado por TRB del buque (Q_TRB).</li>
+                                    <li><strong>Remolcaje Portuario (IN/OUT):</strong> 2 remolques entrada + 2 salida según potencia (HP/TRB).</li>
+                                    <li><strong>Lanchas de Practicante &amp; Autoridades:</strong> Servicios de transporte a fondeadero.</li>
+                                    <li><strong>Amarre y Desamarre de Cabos:</strong> Cuadrilla de amarradores de puerto.</li>
+                                </ul>
+                            </div>
+                            <div className="bg-white p-3 rounded-lg border border-slate-200">
+                                <span className="font-bold text-slate-800 block mb-1">Uso de Infraestructura &amp; Regulaciones:</span>
+                                <ul className="list-disc pl-4 text-slate-600 space-y-1">
+                                    <li><strong>Uso de Amarradero / Muellaje Nave:</strong> Tarifado por LOA y horas permanencia Q_total.</li>
+                                    <li><strong>Uso de Muelle a la Carga:</strong> Tarifa por tonelada métrica embarcada/desembarcada (Q_MT).</li>
+                                    <li><strong>Derechos Regulatorios:</strong> APN (Autoridad Portuaria), DICAPI y Sanidad Marítima.</li>
+                                    <li><strong>Overtime (+25%):</strong> Zarpes nocturnos/dominicales en practicaje y remolques OUT.</li>
+                                </ul>
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                             <div className="bg-white p-3 rounded-lg border border-slate-200">
-                                <span className="font-bold text-slate-800 block mb-1">Callao (APM Terminals)</span>
+                                <span className="font-bold text-slate-800 block mb-1">Callao (APM / Multiboyas)</span>
                                 <span className="text-[11px] text-slate-500">Carga: 500 MT/h | Descarga: 350 MT/h.</span>
                             </div>
                             <div className="bg-white p-3 rounded-lg border border-slate-200">
