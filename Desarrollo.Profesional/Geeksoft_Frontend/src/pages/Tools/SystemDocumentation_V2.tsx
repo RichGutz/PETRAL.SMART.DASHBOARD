@@ -73,29 +73,49 @@ export const SystemDocumentation_V2: React.FC = () => {
             categoryGroup: 'MAESTROS FÍSICOS',
             chapterNum: 2,
             title: 'Maestro de Puertos y Terminales',
-            subtitle: 'Directorio de puertos de Perú y Chile, terminales y límites de atracadero',
+            subtitle: 'Directorio de puertos de Perú y Chile, terminales y parámetro Q de permanencia (P×Q)',
             icon: <Compass size={16} />,
             badge: 'Maestro Físico',
-            keywords: ['puertos', 'terminales', 'callao', 'matarani', 'ilo', 'marcona', 'mejillones', 'apm', 'tisur', 'spcc'],
+            keywords: ['puertos', 'terminales', 'callao', 'matarani', 'ilo', 'marcona', 'mejillones', 'apm', 'tisur', 'spcc', 'q', 'ritmo', 'permanencia'],
             content: (
                 <div className="space-y-6">
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">2.1 Directorio Portuario Nacional e Internacional</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed mb-3">
-                            Centraliza los puertos operados por Naviera Petral en la Costa Oeste de Sudamérica (Perú y Chile), detallando los terminales asignados, ritmos de carga/descarga (MT/hora) y límites máximos de calado y LOA.
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">2.1 Parámetros Q de Permanencia &amp; Operatividad P×Q</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                            El <strong>Maestro de Puertos y Terminales</strong> registra los parámetros operacionales que determinan la variable <strong>Q (Cantidad)</strong> para el cálculo de costos P×Q en proformas y auditorías:
                         </p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono mb-4">
+                            <div className="bg-white p-3 rounded-lg border border-slate-200">
+                                <span className="font-bold text-slate-800 block mb-1 font-sans">⏱️ Ritmo de Carga/Descarga:</span>
+                                <span className="text-[11px] text-slate-600 font-sans">
+                                    Determina las horas de operación: Q_op = Toneladas / Ritmo MT/h.
+                                </span>
+                            </div>
+                            <div className="bg-white p-3 rounded-lg border border-slate-200">
+                                <span className="font-bold text-slate-800 block mb-1 font-sans">⚓ Horas Fijas de Maniobra:</span>
+                                <span className="text-[11px] text-slate-600 font-sans">
+                                    Adiciona 4.0 horas fijas por maniobra de atracadero a Q_total.
+                                </span>
+                            </div>
+                            <div className="bg-white p-3 rounded-lg border border-slate-200">
+                                <span className="font-bold text-slate-800 block mb-1 font-sans">🚜 Remolcaje Normado:</span>
+                                <span className="text-[11px] text-slate-600 font-sans">
+                                    Determina la cantidad Q_remolques = 2 IN / 2 OUT obligatorios.
+                                </span>
+                            </div>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                             <div className="bg-white p-3 rounded-lg border border-slate-200">
                                 <span className="font-bold text-slate-800 block mb-1">Callao (APM Terminals)</span>
-                                <span className="text-[11px] text-slate-500">Ritmo Carga: 500 MT/h | Descarga: 350 MT/h.</span>
+                                <span className="text-[11px] text-slate-500">Carga: 500 MT/h | Descarga: 350 MT/h.</span>
                             </div>
                             <div className="bg-white p-3 rounded-lg border border-slate-200">
                                 <span className="font-bold text-slate-800 block mb-1">Matarani (Tisur S.A.)</span>
-                                <span className="text-[11px] text-slate-500">Ritmo Carga: 500 MT/h | Descarga: 350 MT/h.</span>
+                                <span className="text-[11px] text-slate-500">Carga: 500 MT/h | Descarga: 350 MT/h.</span>
                             </div>
                             <div className="bg-white p-3 rounded-lg border border-slate-200">
                                 <span className="font-bold text-slate-800 block mb-1">Ilo (SPCC / Enapu)</span>
-                                <span className="text-[11px] text-slate-500">Terminal Minero / Enapu para ácido y combustibles.</span>
+                                <span className="text-[11px] text-slate-500">Terminal Minero / Enapu para ácido y búnker.</span>
                             </div>
                         </div>
                     </div>
@@ -487,10 +507,10 @@ export const SystemDocumentation_V2: React.FC = () => {
     };
 
     return (
-        <div className="p-6 space-y-6 max-w-full mx-auto pb-12 print:p-0 print:m-0">
+        <div className="p-6 space-y-6 w-full max-w-[1400px] mx-auto pb-12 print:p-0 print:m-0">
 
             {/* ── CABECERA EJECUTIVA CON LOGOS CORPORATIVOS & BUSCADOR ── */}
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 print:shadow-none print:border-b-2 print:border-slate-800">
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 w-full print:shadow-none print:border-b-2 print:border-slate-800">
                 <div className="flex items-center gap-4">
                     <img src={logoPetral} alt="Naviera Petral" className="h-10 object-contain" />
                     <div className="h-8 border-l border-slate-200 hidden md:block"></div>
@@ -527,11 +547,11 @@ export const SystemDocumentation_V2: React.FC = () => {
                 </div>
             </div>
 
-            {/* ── CONTENEDOR PRINCIPAL ESTILO LIBRO EDITORIAL (LAYOUT FLEX RÍGIDO INVARIABLE) ── */}
+            {/* ── CONTENEDOR PRINCIPAL ESTILO LIBRO EDITORIAL (LAYOUT CONGELADO A NIVEL PIXEL) ── */}
             <div className="flex flex-col lg:flex-row gap-6 items-start w-full min-w-0">
 
-                {/* NAVEGACIÓN LATERAL: 2 BURBUJAS COLAPSABLES (320px FIJOS INVARIABLE) */}
-                <div className="w-full lg:w-[320px] shrink-0 space-y-4 print:hidden">
+                {/* NAVEGACIÓN LATERAL: 2 BURBUJAS COLAPSABLES (320px CONGELADOS EXACTOS) */}
+                <div className="w-full lg:w-[320px] lg:min-w-[320px] lg:max-w-[320px] shrink-0 space-y-4 print:hidden">
 
                     {/* ── BURBUJA 1: DATOS MAESTROS (COLAPSABLE) ── */}
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all w-full">
