@@ -1,5 +1,4 @@
-[2026-07-26 18:30:50] - Ajuste Visual de Desplegables de Filtro Amplios (320px)
-- Corrección de maquetación CSS en LiquidationsInteractiveChart.tsx: Eliminación de recortes y encogimiento en popovers desplegables.
-- Implementación de menú flotante independiente de 320px de ancho y alto de hasta 360px con nivel de capa z-[9999] y sombras profundas shadow-2xl.
-- Verificación de lectura completa de rutas largas (ej. 'ILO ➔ MEJILLONES ➔ TERQUIM') sin afectar el sidebar fijo de 240px ni el contenedor del gráfico.
-- Compilación limpia verificada en terminal (npm run build) e integración en repositorio Git origin main (commit f696ca4).
+[2026-07-26 18:42:40] - Commit Oficial PRE.MATRIX.DUAL.PORT.COSTS
+- Consolidación y respaldo de la sincronización celda por celda de los 31 viajes auditados de la flota (B/T Moquegua y B/T Tablones).
+- Verificación del gráfico interactivo con visualización fluida de los 6 meses de 2026, selector de desplegables holgado de 320px y comportamiento 'Join The Dots' con 'connectNulls: true'.
+- Commit en repositorio Git origin main con la etiqueta 'PRE.MATRIX.DUAL.PORT.COSTS'.
