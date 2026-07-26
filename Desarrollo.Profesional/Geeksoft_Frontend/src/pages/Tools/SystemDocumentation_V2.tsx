@@ -527,30 +527,30 @@ export const SystemDocumentation_V2: React.FC = () => {
                 </div>
             </div>
 
-            {/* ── CONTENEDOR PRINCIPAL ESTILO LIBRO EDITORIAL ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full min-w-0">
+            {/* ── CONTENEDOR PRINCIPAL ESTILO LIBRO EDITORIAL (LAYOUT FLEX RÍGIDO INVARIABLE) ── */}
+            <div className="flex flex-col lg:flex-row gap-6 items-start w-full min-w-0">
 
-                {/* NAVEGACIÓN LATERAL: 2 BURBUJAS COLAPSABLES (MAESTROS + HERRAMIENTAS) */}
-                <div className="lg:col-span-4 w-full min-w-0 space-y-4 print:hidden">
+                {/* NAVEGACIÓN LATERAL: 2 BURBUJAS COLAPSABLES (320px FIJOS INVARIABLE) */}
+                <div className="w-full lg:w-[320px] shrink-0 space-y-4 print:hidden">
 
                     {/* ── BURBUJA 1: DATOS MAESTROS (COLAPSABLE) ── */}
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all">
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all w-full">
                         <button
                             onClick={() => setIsMaestrosOpen(!isMaestrosOpen)}
                             className="w-full bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-200 text-left hover:bg-slate-100 transition-colors cursor-pointer"
                         >
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm">🗂️</span>
-                                <span className="text-xs font-black text-slate-800 uppercase tracking-wide">DATOS MAESTROS</span>
+                            <div className="flex items-center gap-2 min-w-0">
+                                <span className="text-sm shrink-0">🗂️</span>
+                                <span className="text-xs font-black text-slate-800 uppercase tracking-wide truncate">DATOS MAESTROS</span>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 shrink-0">
                                 <span className="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono font-bold">11 Módulos</span>
                                 {isMaestrosOpen ? <ChevronDown size={16} className="text-slate-500" /> : <ChevronRight size={16} className="text-slate-500" />}
                             </div>
                         </button>
 
                         {isMaestrosOpen && (
-                            <div className="p-3 space-y-3 max-h-[480px] overflow-y-auto scrollbar-thin">
+                            <div className="p-3 space-y-3 max-h-[480px] overflow-y-auto scrollbar-thin w-full">
                                 {categoriesMaestros.map(cat => {
                                     const catChapters = filteredChapters.filter(c => c.sectionType === 'MAESTROS' && c.categoryGroup === cat);
                                     if (catChapters.length === 0) return null;
@@ -561,12 +561,12 @@ export const SystemDocumentation_V2: React.FC = () => {
                                                   : '⛽';
 
                                     return (
-                                        <div key={cat} className="space-y-1">
+                                        <div key={cat} className="space-y-1 w-full">
                                             <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-1 flex items-center gap-1.5">
                                                 <span>{catIcon}</span>
-                                                <span>{cat}</span>
+                                                <span className="truncate">{cat}</span>
                                             </div>
-                                            <div className="pl-2 flex flex-col gap-0.5 border-l-2 border-slate-100 ml-1.5">
+                                            <div className="pl-2 flex flex-col gap-0.5 border-l-2 border-slate-100 ml-1.5 w-full">
                                                 {catChapters.map(ch => {
                                                     const isActive = ch.id === activeChapterId;
                                                     return (
@@ -583,7 +583,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                                                                 <span className={isActive ? 'text-white' : 'text-slate-400'}>{ch.icon}</span>
                                                                 <span className="truncate">{ch.chapterNum}. {ch.title}</span>
                                                             </div>
-                                                            <ChevronRight size={14} className={isActive ? 'text-white' : 'text-slate-300'} />
+                                                            <ChevronRight size={14} className={`shrink-0 ${isActive ? 'text-white' : 'text-slate-300'}`} />
                                                         </button>
                                                     );
                                                 })}
@@ -596,23 +596,23 @@ export const SystemDocumentation_V2: React.FC = () => {
                     </div>
 
                     {/* ── BURBUJA 2: HERRAMIENTAS & MOTORES (COLAPSABLE) ── */}
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all">
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all w-full">
                         <button
                             onClick={() => setIsHerramientasOpen(!isHerramientasOpen)}
                             className="w-full bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-200 text-left hover:bg-slate-100 transition-colors cursor-pointer"
                         >
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm">🛠️</span>
-                                <span className="text-xs font-black text-slate-800 uppercase tracking-wide">HERRAMIENTAS &amp; MOTORES</span>
+                            <div className="flex items-center gap-2 min-w-0">
+                                <span className="text-sm shrink-0">🛠️</span>
+                                <span className="text-xs font-black text-slate-800 uppercase tracking-wide truncate">HERRAMIENTAS &amp; MOTORES</span>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 shrink-0">
                                 <span className="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono font-bold">7 Módulos</span>
                                 {isHerramientasOpen ? <ChevronDown size={16} className="text-slate-500" /> : <ChevronRight size={16} className="text-slate-500" />}
                             </div>
                         </button>
 
                         {isHerramientasOpen && (
-                            <div className="p-3 space-y-1 max-h-[380px] overflow-y-auto scrollbar-thin">
+                            <div className="p-3 space-y-1 max-h-[380px] overflow-y-auto scrollbar-thin w-full">
                                 {filteredChapters.filter(c => c.sectionType === 'HERRAMIENTAS').map(ch => {
                                     const isActive = ch.id === activeChapterId;
                                     return (
@@ -629,7 +629,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                                                 <span className={isActive ? 'text-white' : 'text-slate-400'}>{ch.icon}</span>
                                                 <span className="truncate">{ch.chapterNum}. {ch.title}</span>
                                             </div>
-                                            <ChevronRight size={14} className={isActive ? 'text-white' : 'text-slate-300'} />
+                                            <ChevronRight size={14} className={`shrink-0 ${isActive ? 'text-white' : 'text-slate-300'}`} />
                                         </button>
                                     );
                                 })}
@@ -639,8 +639,8 @@ export const SystemDocumentation_V2: React.FC = () => {
 
                 </div>
 
-                {/* VISTA DEL MÓDULO SELECCIONADO */}
-                <div className="lg:col-span-8 w-full min-w-0 bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6 print:w-full print:p-0 print:border-none">
+                {/* VISTA DEL MÓDULO SELECCIONADO (100% ESPACIO RESTANTE SIEMPRE EN CUALQUIER MAESTRO) */}
+                <div className="flex-1 min-w-0 w-full bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6 print:w-full print:p-0 print:border-none">
 
                     {/* ENCABEZADO DEL MÓDULO */}
                     <div className="border-b border-slate-200 pb-4 flex items-center justify-between">
