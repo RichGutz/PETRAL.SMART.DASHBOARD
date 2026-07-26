@@ -366,10 +366,10 @@ export const SystemDocumentation_V2: React.FC = () => {
             </div>
 
             {/* ── CONTENEDOR PRINCIPAL ESTILO LIBRO EDITORIAL ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full min-w-0">
 
                 {/* NAVEGACIÓN LATERAL POR CATEGORÍAS EXACTAS DE DATOS MAESTROS */}
-                <div className="lg:col-span-4 bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-4 print:hidden">
+                <div className="lg:col-span-4 w-full min-w-0 bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-4 print:hidden">
                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-1">
                         DATOS MAESTROS ({filteredChapters.length} de 11)
                     </div>
@@ -406,7 +406,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                                                                 : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
                                                         }`}
                                                     >
-                                                        <div className="flex items-center gap-2 truncate">
+                                                        <div className="flex items-center gap-2 truncate min-w-0">
                                                             <span className={isActive ? 'text-white' : 'text-slate-400'}>{ch.icon}</span>
                                                             <span className="truncate">{ch.chapterNum}. {ch.title}</span>
                                                         </div>
@@ -423,7 +423,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                 </div>
 
                 {/* VISTA DEL MAESTRO SELECCIONADO */}
-                <div className="lg:col-span-8 bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6 print:w-full print:p-0 print:border-none">
+                <div className="lg:col-span-8 w-full min-w-0 bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6 print:w-full print:p-0 print:border-none">
 
                     {/* ENCABEZADO DEL MAESTRO */}
                     <div className="border-b border-slate-200 pb-4 flex items-center justify-between">
