@@ -396,10 +396,10 @@ export const DynamicAuditViewer: React.FC<CallaoAuditViewerProps> = ({
                 @page { size: A4 portrait; margin: 0; }
                 @media print {
                     @page { size: A4 portrait; margin: 0; }
-                html, body { height: 277mm; margin: 0; padding: 0; }
-                body { font-family: 'Courier New', Courier, monospace; color: #000000; background-color: #ffffff; font-size: 6.2pt; line-height: 1.15; padding: 8mm 15mm 8mm 15mm; box-sizing: border-box; display: flex; flex-direction: column; height: 277mm; }
-                .signatures { margin-top: 6px; border-top: 1.5px solid #000000; padding-top: 4px; display: flex; flex-direction: column; flex: 1; min-height: 0; }
-                .obs-box { flex: 1; min-height: 50px; border: 1.5px solid #000000; background-color: #fafafa; width: 100%; box-sizing: border-box; }
+                    html, body { margin: 0; padding: 0; }
+                    .page-break { page-break-before: always; break-before: page; }
+                }
+                body { font-family: 'Courier New', Courier, monospace; color: #000000; background-color: #ffffff; font-size: 6.2pt; line-height: 1.15; margin: 0; padding: 12mm 15mm 8mm 15mm; box-sizing: border-box; }
 
                 table { width: 100%; border-collapse: collapse; }
                 .header-table { border-bottom: 2px solid #000000; margin-bottom: 5px; }
@@ -410,6 +410,7 @@ export const DynamicAuditViewer: React.FC<CallaoAuditViewerProps> = ({
                 .audit-table th { background-color: #f2f2f2; border: 1px solid #000000; padding: 2px 4px; text-align: left; font-weight: bold; text-transform: uppercase; }
                 .audit-table td { border: 1px solid #000000; padding: 2px 4px; }
                 .total-row { background-color: #f2f2f2; font-weight: bold; font-size: 7.5pt; border-top: 1.5px solid #000000; }
+                .signatures { margin-top: 8px; border-top: 1.5px solid #000000; padding-top: 5px; }
             </style>
         </head>
         <body>
@@ -473,24 +474,20 @@ export const DynamicAuditViewer: React.FC<CallaoAuditViewerProps> = ({
                 </pre>
             </div>
 
-
             <div class="signatures" style="margin-top: 6px; border-top: 1.5px solid #000000; padding-top: 4px;">
-                <table style="width: 100%; border: none; font-size: 6.5pt; margin-bottom: 4px;">
+                <table style="width: 100%; border: none; font-size: 6.5pt;">
                     <tr>
-                        <td style="width: 50%; vertical-align: top; padding-right: 12px;">
+                        <td style="width: 50%; vertical-align: top; padding-right: 10px;">
                             <div style="font-weight: bold; margin-bottom: 2px;">AUDITORÍA NAVIERA PETRAL S.A. (${isLoad ? 'CARGA' : 'DESCARGA'}):</div>
-                            <div style="border-bottom: 1px dashed #000000; height: 24px; margin-bottom: 2px;"></div>
-                            <span style="font-size: 6pt; color: #475569;">Firma Responsable Auditoría Engine — Geeksoft</span>
+                            <div style="border-bottom: 1px dashed #000000; height: 28px; margin-bottom: 2px;"></div>
+                            <span style="font-size: 6pt; color: #475569;">Firma Responsable Auditoría Engine</span>
                         </td>
-                        <td style="width: 50%; vertical-align: top; padding-left: 12px;">
-                            <div style="font-weight: bold; margin-bottom: 2px;">V°B° EXPERTA SANDRA — LIQUIDACIÓN OFICIAL:</div>
-                            <div style="border-bottom: 1px dashed #000000; height: 24px; margin-bottom: 2px;"></div>
-                            <span style="font-size: 6pt; color: #475569;">Firma y Nombre — Experta Sandra</span>
+                        <td style="width: 50%; vertical-align: top; padding-left: 10px;">
+                            <div style="font-weight: bold; margin-bottom: 2px;">V°B° & FEEDBACK EXPERTA SANDRA:</div>
+                            <div style="border: 1.5px solid #000000; height: 50px; background-color: #fafafa;"></div>
                         </td>
                     </tr>
                 </table>
-                <div style="font-weight: bold; font-size: 6.5pt; margin-bottom: 2px;">OBSERVACIONES &amp; FEEDBACK EXPERTA SANDRA:</div>
-                <div class="obs-box"></div>
             </div>
         </body>
         </html>
