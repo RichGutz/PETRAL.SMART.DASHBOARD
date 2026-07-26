@@ -2,12 +2,11 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
-import { Anchor, Save, Clock, Ship } from 'lucide-react';
-import { CallaoAuditViewer } from '../../components/Masters/CallaoAuditViewer';
+import { Anchor, Save, ArrowRightLeft, Clock, Ship } from 'lucide-react';
+import { DynamicAuditViewer } from '../../components/Masters/DynamicAuditViewer';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
 import { useAuth } from '../../context/AuthContext';
-
 
 // Helper para obtener código ISO de 2 letras y nombre limpio de país
 const getCountryInfo = (countryStr: string) => {
@@ -65,7 +64,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                 ForecastService.getVessels(),
                 ForecastService.getPortCostsStatic()
             ]);
-            
+
             const sortedPorts = [...(portsData || [])].sort((a: any, b: any) => {
                 const latA = a.lat !== undefined && a.lat !== null ? parseFloat(a.lat) : 0;
                 const latB = b.lat !== undefined && b.lat !== null ? parseFloat(b.lat) : 0;
@@ -98,16 +97,14 @@ export const PortCostsMaster_V2: React.FC = () => {
                 if (newState[portId][vKey][op]) {
                     newState[portId][vKey][op][subOp] = Number(row.cost || 0);
                 }
-                if (row.updated_at) newState[portId][vKey].updated_at = row.updated_at;
-                if (row.updated_by) newState[portId][vKey].updated_by = row.updated_by;
             });
             setCostsState(newState);
-
-            if (sortedPorts.length > 0 && !activePortId) {
-                setActivePortId(sortedPorts[0].port_id);
+            
+            if (portsData?.length > 0 && !activePortId) {
+                setActivePortId(portsData[0].port_id);
             }
-        } catch (err) {
-            console.error("Error al cargar maestro de costos de puerto:", err);
+        } catch (error) {
+            console.error('Error al cargar maestro de costos portuarios:', error);
         } finally {
             setLoading(false);
         }
@@ -126,6 +123,12 @@ export const PortCostsMaster_V2: React.FC = () => {
         setFilterProspecto(true);
         setFilterActivo(false);
     };
+
+    // Suppress unused variable warnings for filter state
+    void filterActivo;
+    void filterProspecto;
+    void toggleActivo;
+    void toggleProspecto;
 
     const handleCostChange = (portId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA', subOp: string, value: string) => {
         const cleanValue = value.replace(/,/g, '');

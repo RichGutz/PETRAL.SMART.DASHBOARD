@@ -87,6 +87,28 @@ export const computePortItems = (portCode: string, vesselObj: any, portHrs: numb
             { id: 12, category: "C_AGENCY", concept: "Movilidad & Transporte", supplier: "Trans Total Ilo", sourceTag: "P:Tarifario Gastos", formula: "P: $200.00 Flat Movilidad", cost: 200.00, rule: "Gastos Agencia" },
             { id: 13, category: "C_AGENCY", concept: "Comunicaciones Agencia", supplier: "Trans Total Ilo", sourceTag: "P:Tarifario Gastos", formula: "P: $200.00 Flat Comunicaciones", cost: 200.00, rule: "Gastos Agencia" }
         ];
+    } else if (portCode === "MEJILLONES" || portCode === "PUERTO ANGAMOS" || portCode === "BARQUITO" || portCode === "ARICA" || portCode === "IQUIQUE" || portCode === "ANTOFAGASTA") {
+        // Evaluación Tarifaria Oficial Puertos Chilenos (Directemar + SAAM/Ultratug + Agunsa)
+        const pilotageChile = Math.max(850.00, 0.06 * grt);
+        const towageChile = Math.max(1200.00, 0.14 * grt);
+        const dockageChile = Math.round(1.80 * loa * portHrs * 100) / 100;
+        const lighthouseRate = isNational ? 0.03 : 0.12;
+        const totalLighthouse = Math.round(lighthouseRate * grt * 100) / 100;
+        const agencyChile = 1200.00;
+
+        return [
+            { id: 1, category: "A_SHIFTING", concept: "Practicaje Directemar IN (Atraque)", supplier: "Prácticos de Puerto Chile", sourceTag: "Tarifa Directemar", formula: `P: $${pilotageChile.toFixed(2)} x 1 maniobra`, cost: pilotageChile, rule: "Tarifa Directemar" },
+            { id: 2, category: "A_SHIFTING", concept: "Practicaje Directemar OUT (Zarpe)", supplier: "Prácticos de Puerto Chile", sourceTag: "Tarifa Directemar", formula: `P: $${pilotageChile.toFixed(2)} x 1 maniobra`, cost: pilotageChile, rule: "Tarifa Directemar" },
+            { id: 3, category: "A_SHIFTING", concept: "Remolcaje IN (SAAM / Ultratug)", supplier: "SAAM Towage / Ultratug", sourceTag: "Tarifa SAAM", formula: `P: $${towageChile.toFixed(2)} x Q: ${tugsIn} remolques`, cost: towageChile * tugsIn, rule: "Tarifa Remolques CL" },
+            { id: 4, category: "A_SHIFTING", concept: "Remolcaje OUT (SAAM / Ultratug)", supplier: "SAAM Towage / Ultratug", sourceTag: "Tarifa SAAM", formula: `P: $${towageChile.toFixed(2)} x Q: ${tugsOut} remolques`, cost: towageChile * tugsOut, rule: "Tarifa Remolques CL" },
+            { id: 5, category: "A_SHIFTING", concept: "Amarre / Desamarre de Líneas", supplier: "Agencia Marítima Chile", sourceTag: "Tarifario Terminal", formula: "P: $450.00 Flat Líneas", cost: 450.00, rule: "Líneas Terminal" },
+            { id: 6, category: "B_GENERAL_PORT", concept: "Derechos de Faro y Balisas Chile", supplier: "Directemar Armada de Chile", sourceTag: "Directemar CL", formula: `P: $${lighthouseRate.toFixed(2)}/GRT x Q: ${grt.toLocaleString()} GRT`, cost: totalLighthouse, rule: "Directemar CL" },
+            { id: 7, category: "B_GENERAL_PORT", concept: "Muellaje Terminal Puerto CL", supplier: "Terminal Portuario CL", sourceTag: "Tarifario Terminal", formula: `P: $1.80/m/h x Q_LOA: ${loa.toFixed(2)}m x Q_hrs: ${portHrs.toFixed(1)}h`, cost: dockageChile, rule: "Tarifa Terminal CL" },
+            { id: 8, category: "B_GENERAL_PORT", concept: "Lanchas & Autoridades Reception", supplier: "Agencia Marítima Chile", sourceTag: "Gastos Puerto CL", formula: "P: $350.00 Flat Lancha", cost: 350.00, rule: "Agencia CL" },
+            { id: 9, category: "C_AGENCY", concept: "Honorarios Agenciamiento Marítimo CL", supplier: "Agencia Marítima CL", sourceTag: "Agencia CL", formula: `P: $${agencyChile.toFixed(2)} Base Agency Fee`, cost: agencyChile, rule: "Agencia CL" },
+            { id: 10, category: "C_AGENCY", concept: "Movilidad & Transporte Local", supplier: "Agencia Marítima CL", sourceTag: "Gastos Agencia", formula: "P: $200.00 Flat Movilidad", cost: 200.00, rule: "Gastos Agencia" },
+            { id: 11, category: "C_AGENCY", concept: "Comunicaciones & Puerto", supplier: "Agencia Marítima CL", sourceTag: "Gastos Agencia", formula: "P: $250.00 Flat Comunicaciones", cost: 250.00, rule: "Gastos Agencia" }
+        ];
     } else {
         // CALLAO (APM Terminals)
         const basePilotage = Math.max(750.00, 0.055 * grt);
@@ -116,7 +138,7 @@ export const computePortItems = (portCode: string, vesselObj: any, portHrs: numb
     }
 };
 
-export const CallaoAuditViewer: React.FC<CallaoAuditViewerProps> = ({
+export const DynamicAuditViewer: React.FC<CallaoAuditViewerProps> = ({
     initialRoute = "NEXA_CALLAO_MATARANI",
     initialVesselId = "MOQUEGUA",
     initialCargoTons = 13500,
@@ -325,8 +347,7 @@ export const CallaoAuditViewer: React.FC<CallaoAuditViewerProps> = ({
                     <td style="border: 1px solid #000000; padding: 3px 5px; text-align: center;">${isMin ? 'Ordinario' : 'Overtime'}</td>
                     <td style="border: 1px solid #000000; padding: 3px 5px; text-align: right; font-weight: bold; font-family: 'Courier New', monospace;">$${(item.cost * multiplier).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>
-            `;
-            }).join('');
+            `}).join('');
 
             return `
                 <tr style="background-color: #e2e8f0; font-weight: bold;">
