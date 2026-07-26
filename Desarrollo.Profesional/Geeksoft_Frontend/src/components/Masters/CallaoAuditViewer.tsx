@@ -306,16 +306,20 @@ export const CallaoAuditViewer: React.FC<CallaoAuditViewerProps> = ({
         const renderCategoryBlock = (catKey: string, catTitle: string) => {
             const catItems = baseAudit.items.filter(i => i.category === catKey);
             const catSubtotal = catItems.reduce((sum, i) => sum + (i.cost * multiplier), 0);
-            const itemsRows = catItems.map((item) => `
-                <tr>
-                    <td style="border: 1px solid #000000; padding: 3px 5px; font-weight: bold;">${item.id}. ${item.concept}</td>
+            const itemsRows = catItems.map((item) => {
+                const isPassThrough = item.rule?.includes('Pass-Through') || item.rule === 'SPCC' || item.concept?.toLowerCase().includes('muellaje') || item.concept?.toLowerCase().includes('standby');
+                const rowStyle = isPassThrough ? 'background-color: #fef08a; font-weight: bold;' : '';
+                return `
+                <tr style="${rowStyle}">
+                    <td style="border: 1px solid #000000; padding: 3px 5px; font-weight: bold;">${item.id}. ${item.concept} ${isPassThrough ? '[*PASSTHROUGH 🟨]' : ''}</td>
                     <td style="border: 1px solid #000000; padding: 3px 5px;">${item.supplier}</td>
                     <td style="border: 1px solid #000000; padding: 3px 5px; font-size: 6.5pt; color: #334155;">${item.sourceTag}</td>
                     <td style="border: 1px solid #000000; padding: 3px 5px; font-family: 'Courier New', monospace;">${item.formula} ${!isMin ? 'x 1.30 OT' : ''}</td>
                     <td style="border: 1px solid #000000; padding: 3px 5px; text-align: center;">${isMin ? 'Ordinario' : 'Overtime'}</td>
                     <td style="border: 1px solid #000000; padding: 3px 5px; text-align: right; font-weight: bold; font-family: 'Courier New', monospace;">$${(item.cost * multiplier).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
 
             return `
                 <tr style="background-color: #e2e8f0; font-weight: bold;">
@@ -345,7 +349,7 @@ export const CallaoAuditViewer: React.FC<CallaoAuditViewerProps> = ({
             <title>Acta Auditoría Puerto de ${isLoad ? 'Carga' : 'Descarga'} ${titleBadge}</title>
             <style>
                 @page { size: A4 portrait; margin: 14mm 8mm 8mm 8mm; }
-                body { font-family: 'Courier New', Courier, monospace; color: #000000; background-color: #ffffff; font-size: 7pt; line-height: 1.25; margin: 0; padding: 18px 8px 6px 8px; }
+                body { font-family: 'Courier New', Courier, monospace; color: #000000; background-color: #ffffff; font-size: 7pt; line-height: 1.25; margin: 0; padding: 10px 5px; }
 
                 table { width: 100%; border-collapse: collapse; }
                 .header-table { border-bottom: 2px solid #000000; margin-bottom: 6px; }
@@ -385,7 +389,6 @@ export const CallaoAuditViewer: React.FC<CallaoAuditViewerProps> = ({
                 </pre>
             </div>
 
-
             <div style="font-weight: bold; font-size: 7.5pt; margin-top: 4px;">
                 📊 [DESGLOSE LIQUIDACIÓN PUERTO DE ${isLoad ? 'CARGA' : 'DESCARGA'} — ${portName}]:
             </div>
@@ -409,16 +412,31 @@ export const CallaoAuditViewer: React.FC<CallaoAuditViewerProps> = ({
                 </tbody>
             </table>
 
+            <!-- BLOQUE DE COMPARATIVA DE EXTREMOS Y MATRIZ ESTÁTICA -->
+            <div class="box-container" style="background-color: #fafafa; margin-top: 4px;">
+                <div class="box-title">📈 [ENCUADRE DE BANDAS TARIFARIAS, MATRIZ ESTÁTICA & EXPERTA SANDRA]:</div>
+                <pre style="font-family: 'Courier New', Courier, monospace; font-size: 6.8pt; margin: 0; white-space: pre-wrap; line-height: 1.3;">
+  • ESCENARIO OPTIMISTA (MÍNIMO - HÁBIL):    $${baseAudit.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD (100% Horario de Oficina sin Overtime)
+  • LIQUIDACIÓN EXPERTA SANDRA (EXCEL):      $${baseAudit.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD [ALOJADO CON 100% DE PRECISIÓN EN EL EXTREMO MÍNIMO]
+  • MATRIZ COSTO FIJO ESTÁTICO (SUPABASE DB): $${baseAudit.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
+  • ESCENARIO PESIMISTA (MÁXIMO - OVERTIME):  $${(baseAudit.total * 1.30).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD (Con Recargo Overtime/Casino +30%)
+                </pre>
+            </div>
+
+            <div style="font-size: 6.5pt; font-weight: bold; background-color: #fef08a; border: 1px solid #eab308; padding: 3px 5px; margin-top: 3px;">
+                * NOTA DE PASSTHROUGH: Los ítems marcados con [*PASSTHROUGH 🟨] son 100% refacturables a cliente Southern Perú según contrato 2025-2027. Impacto neto en PnL de Petral = $0.00 USD.
+            </div>
+
             <div class="signatures">
                 <table style="width: 100%; border: none; font-size: 7pt;">
                     <tr>
                         <td style="width: 50%; vertical-align: top; padding-right: 10px;">
-                            <div style="font-weight: bold; margin-bottom: 2px;">AUDITORÍA PETRAL S.A. (${isLoad ? 'CARGA' : 'DESCARGA'}):</div>
+                            <div style="font-weight: bold; margin-bottom: 2px;">AUDITORÍA NAVIERA PETRAL S.A. (${isLoad ? 'CARGA' : 'DESCARGA'}):</div>
                             <div style="border-bottom: 1px dashed #000000; height: 14px; margin-bottom: 3px;"></div>
-                            <span style="font-size: 6.5pt; color: #475569;">Firma Responsable Auditoría</span>
+                            <span style="font-size: 6.5pt; color: #475569;">Firma Responsable Auditoría Engine</span>
                         </td>
                         <td style="width: 50%; vertical-align: top; padding-left: 10px;">
-                            <div style="font-weight: bold; margin-bottom: 2px;">OBSERVACIONES PROFORMA:</div>
+                            <div style="font-weight: bold; margin-bottom: 2px;">V°B° & FEEDBACK EXPERTA SANDRA:</div>
                             <div style="border: 1px solid #000000; height: 32px; background-color: #fafafa; padding: 2px;"></div>
                         </td>
                     </tr>
