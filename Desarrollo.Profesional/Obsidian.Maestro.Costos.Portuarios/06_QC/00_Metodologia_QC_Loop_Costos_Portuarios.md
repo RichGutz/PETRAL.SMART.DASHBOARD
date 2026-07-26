@@ -36,25 +36,45 @@ Ninguna IA o programador debe alterar esta lógica ni asumir valores por defecto
   - `Maniobra OUT (Desatraque / Salida)`: $P_{\text{OUT}} \times Q_{\text{OUT}}$
 - Aísla con precisión qué maniobra ocurre en horario ordinario vs. la que cae en horario extraordinario/overtime.
 
-### 4️⃣ Resaltado en Fondo Amarillo de Ítems PassThrough (Refacturables a Cliente)
-- Todo ítem cuya columna de base de datos sea **`allow_pass_through = TRUE`** (refacturable 1:1 al cliente Southern Perú u otro armador según contrato 2025-2027) figurará en los PDFs **resaltado en amarillo brillante** con nota explicativa al pie (Impacto neto PnL $0.00 USD).
+### 6️⃣ Regla de QC Exhaustivo del Escenario FULL OT (Pesimista — Overnight / Dominical / Feriado)
 
-### 5️⃣ Regla "ZERO FALLBACKS" (Strict Zero Fallback Enforcement)
-- **PROHIBIDO** usar valores harcodeados o inventados.
-- Si falta una cantidad $Q$ o tarifa $P$, el motor emite un error `❌ MISSING_DATA_ERROR`.
+> **El practicaje NO es el único ítem sujeto a recargo de overtime.** El escenario pesimista debe aplicar el multiplicador correspondiente a TODOS los ítems elegibles según cada terminal.
 
----
+#### 🔍 Lista Canónica de Ítems Sujetos a OT por Puerto
 
-## 3. 🔄 El Ciclo de 4 Pasos y Generación de PDF por Puerto/Terminal
+| Puerto | Ítem | Recargo OT | Ítems Exentos de OT |
+| :--- | :--- | :---: | :--- |
+| **CALLAO (APM)** | Practicaje OUT, Remolcaje OUT, Lanchas Operativas, Coordinador | +25% | Practicaje IN, Remolcaje IN, Muellaje, Faro, Sanidad, Agency Fee, Clearance |
+| **MATARANI (TISUR)** | Servicio Integral PSA (Addenda), Lanchas & Clearance | +25% | Linesmen, Muellaje TISUR, Faro, Sanidad, Agency Fee |
+| **ILO (SPCC/Enapu)** | Practicaje OUT, Remolques (PSA+Petranso), Lanchas Operativas | +25% | Practicaje IN, Dockage SPCC, Faro, Sanidad, Agency Fee |
+| **MARCONA (SPCC)** | **Ninguno** — tarifa Convenio SPCC es precio cerrado | — | Todos (Contrato Marco 2025-2027) |
+| **CHILE (Directemar)** | Practicaje OUT, Remolcaje OUT, Amarre/Desamarre de Líneas | +25% | Practicaje IN, Remolcaje IN, Muellaje, Faro, Lancha Autoridades, Agency Fee |
 
-```mermaid
-graph TD
-    A["1. Inspección Visual de Captura PNG<br/>(Obsidian.../PNGs)"] --> B["2. Verificación de Transcripción Layout<br/>(Obsidian.../01_PNGs_y_Layouts)"]
-    B --> C["3. Revisión de Reglas Experta Sandra<br/>(Obsidian.../02_Reglas_Experta_Sandra)"]
-    C --> D["4. Ejecución del QC Script Autónomo<br/>(run_qc_port_costs_master.py)"]
-    D --> E["5. Generación del PDF Oficial Fiel al PNG<br/>(Módulo Script de UI PDF Generator)"]
-    E --> F["6. Acta de QC MD con Resaltado PassThrough<br/>(Obsidian.../06_QC/Loop.QC.PUERTO.md)"]
+#### ✅ Checklist de QC Obligatorio Escenario MAX (FULL OT)
+
+Para cada puerto auditado en el PDF pesimista, el revisor debe verificar línea a línea:
+
+- `[ ]` **Practicaje OUT** → precio base × 1.25 con label `🌙 Casino +25%`
+- `[ ]` **Remolcaje OUT** → tarifa/remolque × 1.25 con label `🌙 Casino +25%`
+- `[ ]` **Lanchas Operativas** (si aplica al puerto) → total lanchas × 1.25
+- `[ ]` **Coordinador a Bordo** (si aplica al puerto) → tarifa × 1.25
+- `[ ]` **Ítems exentos** → precio idéntico al escenario MIN (NO debe aparecer recargo)
+- `[ ]` **Total MAX > Total MIN** → diferencia debe ser explicable por la suma de ítems OT
+- `[ ]` **Proporción OT** → la diferencia MAX−MIN debe estar entre el 5% y el 25% del total MIN
+
+#### 🔄 Verificación Cruzada MIN vs. MAX en el Motor (DynamicAuditViewer)
+
+El motor `computePortItems` recibe el parámetro booleano `isCasino`:
+- **Escenario MIN** → siempre llamado con `isCasino = false`, independientemente de la hora real de zarpe
+- **Escenario MAX** → siempre llamado con `isCasino = true`, forzando todos los recargos elegibles
+
 ```
+MIN: computePortItems(portCode, vessel, totalHours, isNational, tugsIn, tugsOut, false)
+MAX: computePortItems(portCode, vessel, totalHours, isNational, tugsIn, tugsOut, true)
+```
+
+> **Prohibido**: Usar un multiplicador flat (ej. `×1.30`) aplicado al total MIN para calcular el MAX.  
+> **Obligatorio**: Recalcular ítem a ítem con `isCasino=true` para que cada fórmula P×Q sea trazable.
 
 ---
 
@@ -70,3 +90,4 @@ graph TD
 | **Interacid** | `Mejillones_Interacid.png` | `PNG_Mejillones_Interacid_Layout.md` | `Reglas.Costos.Mejillones_Interacid_Experta.md` | [Loop.QC.Mejillones_Interacid.md](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Maestro.Costos.Portuarios/06_QC/Loop.QC.Mejillones_Interacid.md) |
 | **Terquim** | `Mejillones_Terquim.png` | `PNG_Mejillones_Terquim_Layout.md` | `Reglas.Costos.Mejillones_Terquim_Experta.md` | [Loop.QC.Mejillones_Terquim.md](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Maestro.Costos.Portuarios/06_QC/Loop.QC.Mejillones_Terquim.md) |
 | **Barquito (Codelco)**| `Terminal_Barquito.png` | `PNG_Barquito_Layout.md` | `Reglas.Costos.Barquito_Experta.md` | [Loop.QC.Barquito.md](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Maestro.Costos.Portuarios/06_QC/Loop.QC.Barquito.md) |
+

@@ -44,6 +44,8 @@ export const computePortItems = (portCode: string, vesselObj: any, portHrs: numb
         const basePSA = 3368.00;
         const psaOT = isCasino ? basePSA * 0.25 : 0.0;
         const totalPSA = (basePSA * 2) + psaOT;
+        // OT Matarani: Lanchas+Coordinador +25% en zarpe nocturno
+        const launchesOtMat = isCasino ? 960.00 * 1.25 : 960.00;
         const lighthouseRate = isNational ? 0.03 : 0.12;
         const totalLighthouse = Math.round(lighthouseRate * grt * 100) / 100;
         const totalDockage = Math.round(0.65 * loa * portHrs * 100) / 100;
@@ -56,7 +58,7 @@ export const computePortItems = (portCode: string, vesselObj: any, portHrs: numb
             { id: 5, category: "B_GENERAL_PORT", concept: "Derechos de Faro y Balisas", supplier: "Autoridad Portuaria", sourceTag: "P:Tarifario | Q:GRT & País", formula: `P: $${lighthouseRate.toFixed(2)}/GRT x Q: ${grt.toLocaleString()} GRT (${isNational ? 'Nacional' : 'Extranjero'})`, cost: totalLighthouse, rule: "Regla Origen" },
             { id: 6, category: "B_GENERAL_PORT", concept: "Muellaje TISUR Matarani", supplier: "TISUR Matarani", sourceTag: "P:Tisur | Q:LOA & Horas", formula: `P: $0.65/m/h x Q_LOA: ${loa.toFixed(2)}m x Q_hrs: ${portHrs.toFixed(1)}h`, cost: totalDockage, rule: "Pass-Through" },
             { id: 7, category: "B_GENERAL_PORT", concept: "Inspección Sanitaria Marítima", supplier: "Sanidad Arequipa", sourceTag: "P:Sanidad Flat", formula: "P: $670.00 Flat Sanidad Matarani", cost: 670.00, rule: "Sanidad" },
-            { id: 8, category: "B_GENERAL_PORT", concept: "Lanchas Autoridades & Clearance", supplier: "Trans Total Matarani", sourceTag: "P:Tarifario Gastos", formula: "$310 Lancha + $200 Clearance + $450 Coord.", cost: 960.00, rule: "Agencia" },
+            { id: 8, category: "B_GENERAL_PORT", concept: "Lanchas Autoridades & Clearance", supplier: "Trans Total Matarani", sourceTag: `P:Tarifario ${isCasino ? '(🌙 OT +25%)' : ''}`, formula: `$${launchesOtMat.toFixed(2)} (Lancha+Clearance+Coord.)`, cost: launchesOtMat, rule: isCasino ? "Agencia + Casino" : "Agencia" },
             { id: 9, category: "C_AGENCY", concept: "Honorarios Agenciamiento", supplier: "Trans Total Matarani", sourceTag: "P:Tarifario Agencia", formula: "P: $1,100.00 Base Agency Fee", cost: 1100.00, rule: "Acuerdo Agencia" },
             { id: 10, category: "C_AGENCY", concept: "Movilidad & Transporte", supplier: "Trans Total Matarani", sourceTag: "P:Tarifario Gastos", formula: "P: $200.00 Flat Movilidad", cost: 200.00, rule: "Gastos Agencia" },
             { id: 11, category: "C_AGENCY", concept: "Comunicaciones Agencia", supplier: "Trans Total Matarani", sourceTag: "P:Tarifario Gastos", formula: "P: $250.00 Flat Comunicaciones", cost: 250.00, rule: "Gastos Agencia" }
@@ -69,19 +71,22 @@ export const computePortItems = (portCode: string, vesselObj: any, portHrs: numb
         const petransoTowage = Math.round((0.18 * grt * 2 * 0.90) * 100) / 100;
         const petransoPos = 1260.00;
         const otTugs = isCasino ? 1643.31 : 0.0;
+        // OT Ilo: Practicaje OUT +25%, Lanchas zarpe +25%
+        const pilotageOutIlo = isCasino ? 1500.00 * 1.25 : 1500.00;
+        const launchesOtIlo = isCasino ? 2600.00 * 1.25 : 2600.00;
         const lighthouseRate = isNational ? 0.03 : 0.12;
         const totalLighthouse = Math.round(lighthouseRate * grt * 100) / 100;
 
         return [
             { id: 1, category: "A_SHIFTING", concept: "Practicaje IN (Atraque)", supplier: "Port Operations", sourceTag: "P:SPCC", formula: "P: $1,500.00 x 1 maniobra", cost: 1500.00, rule: "Port Operations" },
-            { id: 2, category: "A_SHIFTING", concept: "Practicaje OUT (Zarpe)", supplier: "Port Operations", sourceTag: "P:SPCC", formula: "P: $1,500.00 x 1 maniobra", cost: 1500.00, rule: "Port Operations" },
+            { id: 2, category: "A_SHIFTING", concept: "Practicaje OUT (Zarpe)", supplier: "Port Operations", sourceTag: `P:SPCC ${isCasino ? '(🌙 OT +25%)' : ''}`, formula: `P: $${pilotageOutIlo.toFixed(2)} x 1 maniobra`, cost: pilotageOutIlo, rule: isCasino ? "Port Operations + Casino" : "Port Operations" },
             { id: 3, category: "A_SHIFTING", concept: "Remolcaje Base PSA Marine", supplier: "PSA Marine", sourceTag: `P:Tarifario ${isCasino ? '(🌙 OT +25%)' : ''}`, formula: `PSA Mínimo: $${psaTowage.toFixed(2)}`, cost: psaTowage, rule: "Remolques" },
             { id: 4, category: "A_SHIFTING", concept: "Remolcaje Base Petranso (-10%)", supplier: "Petranso", sourceTag: "P:Tarifario", formula: `Petranso (-10%): $${petransoTowage.toFixed(2)}`, cost: petransoTowage, rule: "Remolques" },
             { id: 5, category: "A_SHIFTING", concept: "Overtime Remolques (PSA + Petranso)", supplier: "PSA / Petranso", sourceTag: "Overtime", formula: isCasino ? "25% Recargo Overtime ($1,643.31)" : "$0.00 Ordinario", cost: otTugs, rule: "Overtime" },
             { id: 6, category: "A_SHIFTING", concept: "Posicionamiento Remolques & Linesmen", supplier: "PSA / Petranso / Agencia", sourceTag: "P:Tarifario", formula: "$1,400 PSA + $1,260 Petranso + $680 Linesmen + $150 Toll", cost: psaPos + petransoPos + linesmenTotal + 150.00, rule: "Posicionamiento" },
             { id: 7, category: "A_SHIFTING", concept: "Muellaje SPCC Ilo (Dockage)", supplier: "Southern Perú SPCC", sourceTag: "P:SPCC", formula: `P: $300 Amarre + ($0.05 x ${grt.toLocaleString()} GRT x ${stayDays}d)`, cost: dockageSpcc, rule: "Pass-Through" },
             { id: 8, category: "B_GENERAL_PORT", concept: "Derechos de Faro y Balisas", supplier: "Autoridad Portuaria", sourceTag: "P:Tarifario", formula: `P: $${lighthouseRate.toFixed(2)}/GRT x Q: ${grt.toLocaleString()} GRT (${isNational ? 'Nacional' : 'Extranjero'})`, cost: totalLighthouse, rule: "Regla Origen" },
-            { id: 9, category: "B_GENERAL_PORT", concept: "Lanchas de Servicio Operativas", supplier: "Trans Total Ilo", sourceTag: "P:Tarifario", formula: "$1,500 Amarre + $360 Autoridades + $340 Coord. + $400 Posic.", cost: 2600.00, rule: "Lanchas Ilo" },
+            { id: 9, category: "B_GENERAL_PORT", concept: "Lanchas de Servicio Operativas", supplier: "Trans Total Ilo", sourceTag: `P:Tarifario ${isCasino ? '(🌙 OT +25%)' : ''}`, formula: `$${launchesOtIlo.toFixed(2)} (Amarre+Autoridades+Coord.+Posic.)`, cost: launchesOtIlo, rule: isCasino ? "Lanchas Ilo + Casino" : "Lanchas Ilo" },
             { id: 10, category: "B_GENERAL_PORT", concept: "Inspección Sanitaria, Clearance & Coordinador", supplier: "Sanidad / APN", sourceTag: "P:Sanidad", formula: "$520 Sanidad + $200 Clearance + $400 Coordinador", cost: 1120.00, rule: "Sanidad" },
             { id: 11, category: "C_AGENCY", concept: "Honorarios Agenciamiento", supplier: "Trans Total Ilo", sourceTag: "P:Tarifario Agencia", formula: "P: $900.00 Base Agency Fee", cost: 900.00, rule: "Acuerdo Agencia" },
             { id: 12, category: "C_AGENCY", concept: "Movilidad & Transporte", supplier: "Trans Total Ilo", sourceTag: "P:Tarifario Gastos", formula: "P: $200.00 Flat Movilidad", cost: 200.00, rule: "Gastos Agencia" },
@@ -90,7 +95,11 @@ export const computePortItems = (portCode: string, vesselObj: any, portHrs: numb
     } else if (portCode === "MEJILLONES" || portCode === "PUERTO ANGAMOS" || portCode === "BARQUITO" || portCode === "ARICA" || portCode === "IQUIQUE" || portCode === "ANTOFAGASTA") {
         // Evaluación Tarifaria Oficial Puertos Chilenos (Directemar + SAAM/Ultratug + Agunsa)
         const pilotageChile = Math.max(850.00, 0.06 * grt);
+        // OT Chile: Practicaje OUT +25%, Remolcaje OUT +25%, Amarre/Desamarre +25% (Directemar Tabla B)
+        const pilotageOutChile = isCasino ? pilotageChile * 1.25 : pilotageChile;
         const towageChile = Math.max(1200.00, 0.14 * grt);
+        const towageOutChile = isCasino ? towageChile * 1.25 : towageChile;
+        const linesChile = isCasino ? 450.00 * 1.25 : 450.00;
         const dockageChile = Math.round(1.80 * loa * portHrs * 100) / 100;
         const lighthouseRate = isNational ? 0.03 : 0.12;
         const totalLighthouse = Math.round(lighthouseRate * grt * 100) / 100;
@@ -98,10 +107,10 @@ export const computePortItems = (portCode: string, vesselObj: any, portHrs: numb
 
         return [
             { id: 1, category: "A_SHIFTING", concept: "Practicaje Directemar IN (Atraque)", supplier: "Prácticos de Puerto Chile", sourceTag: "Tarifa Directemar", formula: `P: $${pilotageChile.toFixed(2)} x 1 maniobra`, cost: pilotageChile, rule: "Tarifa Directemar" },
-            { id: 2, category: "A_SHIFTING", concept: "Practicaje Directemar OUT (Zarpe)", supplier: "Prácticos de Puerto Chile", sourceTag: "Tarifa Directemar", formula: `P: $${pilotageChile.toFixed(2)} x 1 maniobra`, cost: pilotageChile, rule: "Tarifa Directemar" },
+            { id: 2, category: "A_SHIFTING", concept: "Practicaje Directemar OUT (Zarpe)", supplier: "Prácticos de Puerto Chile", sourceTag: `Tarifa Directemar ${isCasino ? '(🌙 OT +25%)' : ''}`, formula: `P: $${pilotageOutChile.toFixed(2)} x 1 maniobra`, cost: pilotageOutChile, rule: isCasino ? "Directemar + Casino" : "Tarifa Directemar" },
             { id: 3, category: "A_SHIFTING", concept: "Remolcaje IN (SAAM / Ultratug)", supplier: "SAAM Towage / Ultratug", sourceTag: "Tarifa SAAM", formula: `P: $${towageChile.toFixed(2)} x Q: ${tugsIn} remolques`, cost: towageChile * tugsIn, rule: "Tarifa Remolques CL" },
-            { id: 4, category: "A_SHIFTING", concept: "Remolcaje OUT (SAAM / Ultratug)", supplier: "SAAM Towage / Ultratug", sourceTag: "Tarifa SAAM", formula: `P: $${towageChile.toFixed(2)} x Q: ${tugsOut} remolques`, cost: towageChile * tugsOut, rule: "Tarifa Remolques CL" },
-            { id: 5, category: "A_SHIFTING", concept: "Amarre / Desamarre de Líneas", supplier: "Agencia Marítima Chile", sourceTag: "Tarifario Terminal", formula: "P: $450.00 Flat Líneas", cost: 450.00, rule: "Líneas Terminal" },
+            { id: 4, category: "A_SHIFTING", concept: "Remolcaje OUT (SAAM / Ultratug)", supplier: "SAAM Towage / Ultratug", sourceTag: `Tarifa SAAM ${isCasino ? '(🌙 OT +25%)' : ''}`, formula: `P: $${towageOutChile.toFixed(2)} x Q: ${tugsOut} remolques`, cost: towageOutChile * tugsOut, rule: isCasino ? "SAAM + Casino" : "Tarifa Remolques CL" },
+            { id: 5, category: "A_SHIFTING", concept: "Amarre / Desamarre de Líneas", supplier: "Agencia Marítima Chile", sourceTag: `Tarifario Terminal ${isCasino ? '(🌙 OT +25%)' : ''}`, formula: `P: $${linesChile.toFixed(2)} Flat Líneas`, cost: linesChile, rule: isCasino ? "Líneas Terminal + Casino" : "Líneas Terminal" },
             { id: 6, category: "B_GENERAL_PORT", concept: "Derechos de Faro y Balisas Chile", supplier: "Directemar Armada de Chile", sourceTag: "Directemar CL", formula: `P: $${lighthouseRate.toFixed(2)}/GRT x Q: ${grt.toLocaleString()} GRT`, cost: totalLighthouse, rule: "Directemar CL" },
             { id: 7, category: "B_GENERAL_PORT", concept: "Muellaje Terminal Puerto CL", supplier: "Terminal Portuario CL", sourceTag: "Tarifario Terminal", formula: `P: $1.80/m/h x Q_LOA: ${loa.toFixed(2)}m x Q_hrs: ${portHrs.toFixed(1)}h`, cost: dockageChile, rule: "Tarifa Terminal CL" },
             { id: 8, category: "B_GENERAL_PORT", concept: "Lanchas & Autoridades Reception", supplier: "Agencia Marítima Chile", sourceTag: "Gastos Puerto CL", formula: "P: $350.00 Flat Lancha", cost: 350.00, rule: "Agencia CL" },
@@ -114,6 +123,9 @@ export const computePortItems = (portCode: string, vesselObj: any, portHrs: numb
         const basePilotage = Math.max(750.00, 0.055 * grt);
         const pilotageOut = isCasino ? basePilotage * 1.25 : basePilotage;
         const towageOutRate = isCasino ? towageRateP * 1.25 : towageRateP;
+        // OT Callao: Lanchas OUT +25%, Coordinador +25% (turno nocturno)
+        const launchOtCallao = isCasino ? launchRateP * 4 * 1.25 : launchRateP * 4;
+        const coordOtCallao = isCasino ? 450.00 * 1.25 : 450.00;
         const lighthouseRate = isNational ? 0.03 : 0.12;
         const totalLighthouse = Math.round(lighthouseRate * grt * 100) / 100;
         const totalDockage = Math.round(dockageRateP * loa * portHrs * 100) / 100;
@@ -127,8 +139,8 @@ export const computePortItems = (portCode: string, vesselObj: any, portHrs: numb
             { id: 6, category: "A_SHIFTING", concept: "Cargo Acceso Zarpe OUT", supplier: "APM Terminals", sourceTag: "P:Tarifario", formula: "P: $70.00 x 2 accesos", cost: 140.00, rule: "Tarifa APM" },
             { id: 7, category: "B_GENERAL_PORT", concept: "Derechos de Faro y Balisas", supplier: "Autoridad Portuaria", sourceTag: "P:Tarifario", formula: `P: $${lighthouseRate.toFixed(2)}/GRT x Q: ${grt.toLocaleString()} GRT (${isNational ? 'Nacional' : 'Extranjero'})`, cost: totalLighthouse, rule: "Regla Origen" },
             { id: 8, category: "B_GENERAL_PORT", concept: "Muellaje APM Terminals", supplier: "APM Terminals", sourceTag: "P:Tarifario", formula: `P: $${dockageRateP.toFixed(2)}/m/h x Q_LOA: ${loa.toFixed(2)}m x Q_hrs: ${portHrs.toFixed(1)}h`, cost: totalDockage, rule: "Tarifa APM" },
-            { id: 9, category: "B_GENERAL_PORT", concept: "Lanchas Operativas IN/OUT", supplier: "Trans Total", sourceTag: "P:Tarifario", formula: `P: $${launchRateP.toFixed(2)}/h x Q: 4 horas`, cost: launchRateP * 4, rule: "Agencia" },
-            { id: 10, category: "B_GENERAL_PORT", concept: "Coordinador a Bordo", supplier: "Trans Total", sourceTag: "P:Tarifario", formula: "P: $225.00/turno x Q: 2 Turnos", cost: 450.00, rule: "Agencia" },
+            { id: 9, category: "B_GENERAL_PORT", concept: "Lanchas Operativas OUT", supplier: "Trans Total", sourceTag: `P:Tarifario ${isCasino ? '(🌙 Casino +25%)' : ''}`, formula: `P: $${launchRateP.toFixed(2)}/h x Q: 4h${isCasino ? ' x 1.25 OT' : ''}`, cost: launchOtCallao, rule: isCasino ? "Agencia + Casino" : "Agencia" },
+            { id: 10, category: "B_GENERAL_PORT", concept: "Coordinador a Bordo", supplier: "Trans Total", sourceTag: `P:Tarifario ${isCasino ? '(🌙 Casino +25%)' : ''}`, formula: `P: $225.00/turno x Q: 2${isCasino ? ' x 1.25 OT' : ''}`, cost: coordOtCallao, rule: isCasino ? "Agencia + Casino" : "Agencia" },
             { id: 11, category: "B_GENERAL_PORT", concept: "Clearance (Entrada / Salida)", supplier: "Autoridades Portuarias", sourceTag: "P:Tarifario Flat", formula: "P: $200.00 Flat In/Out", cost: 200.00, rule: "Fijo" },
             { id: 12, category: "B_GENERAL_PORT", concept: "Inspección Sanitaria Marítima", supplier: "Sanidad Marítima", sourceTag: "P:Tarifario Sanidad", formula: "P: $520.00 Flat Sanidad Callao", cost: 520.00, rule: "Sanidad" },
             { id: 13, category: "C_AGENCY", concept: "Honorarios Agenciamiento", supplier: "Trans Total Agencia", sourceTag: "P:Tarifario Agencia", formula: `P: $${agencyFeeP.toFixed(2)} Base Agency Fee`, cost: agencyFeeP, rule: "Acuerdo Agencia" },
