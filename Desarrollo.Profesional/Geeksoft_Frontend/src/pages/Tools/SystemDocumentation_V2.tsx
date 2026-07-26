@@ -178,13 +178,13 @@ export const SystemDocumentation_V2: React.FC = () => {
             subtitle: 'Directorio de clientes comerciales, RUC, contactos y condiciones de crédito',
             icon: <Building2 size={16} />,
             badge: 'Maestro Comercial',
-            keywords: ['clientes', 'spcc', 'nexa', 'shougang', 'yura', 'orica', 'southern', 'credito'],
+            keywords: ['clientes', 'spcc', 'nexa', 'southern', 'credito'],
             content: (
                 <div className="space-y-6">
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">4.1 Registro de Clientes Corporativos</h4>
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">4.1 Registro de Clientes Corporativos Activos</h4>
                         <p className="text-xs text-slate-600 leading-relaxed">
-                            Almacena los datos corporativos de clientes comerciales como <strong>Southern Perú Copper Corporation (SPCC)</strong>, <strong>Nexa Resources Peru S.A.A.</strong>, <strong>Shougang Hierro Perú</strong>, <strong>Yura S.A.</strong> y <strong>Orica</strong>, gestionando sus contratos marco de flete, condiciones de crédito y comisiones comerciales.
+                            Almacena los datos corporativos de los 2 clientes comerciales activos de Naviera Petral: <strong>Southern Perú Copper Corporation (SPCC)</strong> y <strong>Nexa Resources Peru S.A.A. (NEXA)</strong>, gestionando sus contratos marco COA de flete, condiciones de crédito y comisiones comerciales.
                         </p>
                     </div>
                 </div>
