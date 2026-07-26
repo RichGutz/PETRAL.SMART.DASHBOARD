@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
-import { Download, Search, ChevronRight, Layers, Anchor, Compass, Database, Zap, Scale, ShoppingCart, BarChart3, CheckCircle2, AlertTriangle, Info } from 'lucide-react';
+import { Download, Search, ChevronRight, Layers, Anchor, Compass, Database, Zap, Scale, ShoppingCart, BarChart3, CheckCircle2, Info } from 'lucide-react';
 import logoPetral from '../../assets/Logo.Petral.png';
-import logoGeeksoft from '../../assets/Logo.Geeksoft.png';
 
 interface DocChapter {
     id: string;
@@ -149,7 +148,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
                         <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">4.1 Matriz Distancial Náutica</h4>
                         <p className="text-xs text-slate-600 leading-relaxed">
-                            Almacena las distancias oficiales en Millas Náuticas ($NM$) entre los puertos de originación y destino en la Costa Oeste de Sudamérica (Perú y Chile), permitiendo calcular los días exactos de navegación en lastre ($T_{ballast}$) y cargado ($T_{laden}$).
+                            Almacena las distancias oficiales en Millas Náuticas (NM) entre los puertos de originación y destino en la Costa Oeste de Sudamérica (Perú y Chile), permitiendo calcular los días exactos de navegación en lastre (T_ballast) y cargado (T_laden).
                         </p>
                     </div>
                 </div>
@@ -168,11 +167,11 @@ export const SystemDocumentation_V2: React.FC = () => {
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
                         <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">5.1 Gestión de Clientes &amp; Contratos de Fletamento</h4>
                         <p className="text-xs text-slate-600 leading-relaxed mb-3">
-                            Registra las condiciones pactadas con clientes estratégicos como **Southern Perú (SPCC)** y **Nexa Resources**:
+                            Registra las condiciones pactadas con clientes estratégicos como <strong>Southern Perú (SPCC)</strong> y <strong>Nexa Resources</strong>:
                         </p>
                         <ul className="list-disc pl-5 text-xs text-slate-600 space-y-1">
-                            <li>Flete Base pactado ($USD/MT$).</li>
-                            <li>Tasa de Carga / Descarga acordada ($MT/día$).</li>
+                            <li>Flete Base pactado (USD/MT).</li>
+                            <li>Tasa de Carga / Descarga acordada (MT/día).</li>
                             <li>Cláusulas de Overtime y Pass-Through refacturables al 100%.</li>
                         </ul>
                     </div>
@@ -217,7 +216,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
                         <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">7.1 Motor de Cotización Comercial</h4>
                         <p className="text-xs text-slate-600 leading-relaxed">
-                            Evalúa múltiples combinaciones de rutas, buques y volúmenes de carga. Computa el costo total del viaje ($Total\ Voyage\ Cost$), calculando el flete mínimo requerido ($TCE\ Target$) para garantizar el margen de utilidad esperado por la naviera.
+                            Evalúa múltiples combinaciones de rutas, buques y volúmenes de carga. Computa el costo total del viaje (Total Voyage Cost), calculando el flete mínimo requerido (TCE Target) para garantizar el margen de utilidad esperado por la naviera.
                         </p>
                     </div>
                 </div>
@@ -236,7 +235,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
                         <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">8.1 Matriz Financiera por Viaje</h4>
                         <p className="text-xs text-slate-600 leading-relaxed">
-                            Consolida los ingresos brutos por flete y deduce ordenadamente: Gastos Portuarios (Port Costs), Combustible Navegando/Puerto (Bunker Cost), Comisiones de Agencia, y Gastos Operativos de la Nave, entregando el **Net Voyage Revenue (NVR)** y el resultado final en USD.
+                            Consolida los ingresos brutos por flete y deduce ordenadamente: Gastos Portuarios (Port Costs), Combustible Navegando/Puerto (Bunker Cost), Comisiones de Agencia, y Gastos Operativos de la Nave, entregando el <strong>Net Voyage Revenue (NVR)</strong> y el resultado final en USD.
                         </p>
                     </div>
                 </div>
@@ -253,9 +252,9 @@ export const SystemDocumentation_V2: React.FC = () => {
             content: (
                 <div className="space-y-6">
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">9.1 Regla 6 de Auditoría QC (Overtime & Recargos)</h4>
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">9.1 Regla 6 de Auditoría QC (Overtime &amp; Recargos)</h4>
                         <p className="text-xs text-slate-600 leading-relaxed mb-3">
-                            En las evaluaciones pesimistas (Escenario MAX), el motor aplica recargos de Overtime (+25% a +50%) mediante cálculo trazable $P \times Q$ ítem a ítem sobre los rubros elegibles:
+                            En las evaluaciones pesimistas (Escenario MAX), el motor aplica recargos de Overtime (+25% a +50%) mediante cálculo trazable P × Q ítem a ítem sobre los rubros elegibles:
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                             <div className="bg-white p-3 rounded-lg border border-slate-200">
@@ -270,7 +269,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                             <div className="bg-white p-3 rounded-lg border border-slate-200">
                                 <span className="font-bold text-slate-800 block mb-1">Verificación Trazable P×Q:</span>
                                 <p className="text-slate-600 text-[11px] leading-relaxed">
-                                    No se aplican multiplicadores flat globales sobre la proforma. Cada ítem calcula su precio base $P_{base} \times 1.25$ individualmente, garantizando auditoría 100% auditable por la Experta Sandra.
+                                    No se aplican multiplicadores flat globales sobre la proforma. Cada ítem calcula su precio base individualmente, garantizando auditoría 100% auditable por la Experta Sandra.
                                 </p>
                             </div>
                         </div>
@@ -310,7 +309,7 @@ export const SystemDocumentation_V2: React.FC = () => {
 
                         <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">10.2 Formato de Actas Oficiales de Auditoría A4</h4>
                         <p className="text-xs text-slate-600 leading-relaxed">
-                            Tanto las auditorías de puerto como la Matriz de Bandas exportan documentos impresos membretados en formato **Acta Oficial**, incluyendo las firmas en dos columnas (Auditoría PETRAL y V°B° Experta Sandra) y un cuadro de observaciones flex que aprovecha toda la altura disponible del papel A4.
+                            Tanto las auditorías de puerto como la Matriz de Bandas exportan documentos impresos membretados en formato <strong>Acta Oficial</strong>, incluyendo las firmas en dos columnas (Auditoría PETRAL y V°B° Experta Sandra) y un cuadro de observaciones flex que aprovecha toda la altura disponible del papel A4.
                         </p>
                     </div>
                 </div>
