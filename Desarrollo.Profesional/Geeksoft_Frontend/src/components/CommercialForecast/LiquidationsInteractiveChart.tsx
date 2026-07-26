@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
+import { ForecastService } from '../../services/api';
 
 interface LiquidationsInteractiveChartProps {
     liquidations: any[];
@@ -18,31 +19,6 @@ const MONTH_COLOR_MAP: Record<string, string> = {
     '2026-06': '#DB2777'  // JUN 26: Magenta Rosé
 };
 
-const getHexColor = (name: string, type: GroupBy, monthKey?: string) => {
-    if (type === 'petral' && monthKey && MONTH_COLOR_MAP[monthKey]) {
-        return MONTH_COLOR_MAP[monthKey];
-    }
-    if (type === 'petral') return '#0089CF';
-    if (type === 'client') {
-        if (name.includes('SPCC')) return '#0369A1';
-        if (name.includes('NEXA')) return '#7C3AED';
-        return '#1E3A8A';
-    }
-    if (type === 'route') {
-        if (name.includes('MATARANI')) return '#06B6D4';
-        if (name.includes('MARCONA')) return '#A855F7';
-        if (name.includes('MEJILLONES')) return '#D946EF';
-        if (name.includes('CALLAO')) return '#3B82F6';
-        return '#334155';
-    }
-    if (type === 'vessel') {
-        if (name.includes('TABLONES')) return '#DC2626';
-        if (name.includes('MOQUEGUA')) return '#16A34A';
-        return '#475569';
-    }
-    return '#2563EB';
-};
-
 // FORMATO CORTO ESTANDARIZADO EN MAYÚSCULA V. (V.045 o V.768)
 const getCleanVoyageCode = (r: any): string => {
     const raw = String(r.voyage_code || '').toUpperCase();
@@ -57,7 +33,7 @@ const getCleanVoyageCode = (r: any): string => {
     return `V.${num}`;
 };
 
-// EXTRACTOR DE RUTA REAL NAVEGADA
+// EXTRACTOR DE RUTA REAL NAVEGADA (SOPORTE MULTITRAMO ILO ➔ CALLAO ➔ MARCONA)
 const getRouteName = (r: any): string => {
     if (r.pol_port && r.pod_port && r.pol_port !== r.pod_port) {
         return `${r.pol_port} ➔ ${r.pod_port}`;
@@ -67,8 +43,8 @@ const getRouteName = (r: any): string => {
     const code = String(r.voyage_code || '').toUpperCase();
 
     if (stopsStr.includes('CALLAO') || code.includes('CALLAO')) {
+        if (stopsStr.includes('MARCONA') || code.includes('MARCONA')) return 'ILO ➔ CALLAO ➔ MARCONA';
         if (stopsStr.includes('MATARANI') || code.includes('MATARANI')) return 'CALLAO ➔ MATARANI';
-        if (stopsStr.includes('MARCONA') || code.includes('MARCONA')) return 'CALLAO ➔ MARCONA';
         return 'CALLAO ➔ ILO';
     }
 
@@ -92,6 +68,63 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
     const [filterClient, setFilterClient] = useState<string>('ALL');
     const [filterRoute, setFilterRoute] = useState<string>('ALL');
     const [filterVessel, setFilterVessel] = useState<string>('ALL');
+    const [vesselsMaster, setVesselsMaster] = useState<any[]>([]);
+
+    // CARGAR MATRIZ DE FLOTA (tabla vessels de Supabase) PARA CONECTAR EL color_hex OFICIAL
+    useEffect(() => {
+        ForecastService.getVessels()
+            .then(data => {
+                if (Array.isArray(data)) setVesselsMaster(data);
+            })
+            .catch(err => console.error("Error al cargar la Matriz de Flota (vessels):", err));
+    }, []);
+
+    // MAPA DINÁMICO DE COLORES CONECTADO A color_hex DE LA TABLA vessels
+    const vesselColorMap = useMemo(() => {
+        const map: Record<string, string> = {
+            'TABLONES': '#DC2626', // Rojo de Matriz de Flota
+            'MOQUEGUA': '#16A34A', // Verde de Matriz de Flota
+            'CONCON TRADER': '#475569',
+            'HUEMUL': '#4F46E5'
+        };
+
+        vesselsMaster.forEach(v => {
+            if (v.vessel_id && v.color_hex) {
+                map[v.vessel_id.toUpperCase()] = v.color_hex;
+            }
+            if (v.name && v.color_hex) {
+                map[v.name.toUpperCase()] = v.color_hex;
+            }
+        });
+
+        return map;
+    }, [vesselsMaster]);
+
+    const getHexColor = (name: string, type: GroupBy, monthKey?: string) => {
+        if (type === 'vessel') {
+            const upper = name.toUpperCase();
+            for (const [vId, hex] of Object.entries(vesselColorMap)) {
+                if (upper.includes(vId)) return hex;
+            }
+        }
+        if (type === 'petral' && monthKey && MONTH_COLOR_MAP[monthKey]) {
+            return MONTH_COLOR_MAP[monthKey];
+        }
+        if (type === 'petral') return '#0089CF';
+        if (type === 'client') {
+            if (name.includes('SPCC')) return '#0369A1';
+            if (name.includes('NEXA')) return '#7C3AED';
+            return '#1E3A8A';
+        }
+        if (type === 'route') {
+            if (name.includes('MATARANI')) return '#06B6D4';
+            if (name.includes('MARCONA')) return '#A855F7';
+            if (name.includes('MEJILLONES')) return '#D946EF';
+            if (name.includes('CALLAO')) return '#3B82F6';
+            return '#334155';
+        }
+        return '#2563EB';
+    };
 
     // Eje Primario
     const [primaryMetric, setPrimaryMetric] = useState<PlotMetric>('net_profit_usd');
@@ -213,14 +246,16 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
         }
     };
 
+    // OBTENER VALOR DE MÉTRICA DE LA BASE DE DATOS SUPABASE CONSOLIDADAS
     const getMetricValue = (r: any, m: PlotMetric) => {
         if (m === 'none') return 0;
+
         if (m === 'net_profit_usd') return Number(r.net_profit_usd) || 0;
         if (m === 'tce_usd_day') return Number(r.tce_usd_day) || 0;
         if (m === 'gross_revenue_usd') return Number(r.gross_revenue_usd) || 0;
         if (m === 'cargo_quantity_mt') return Number(r.cargo_quantity_mt) || 0;
         if (m === 'port_costs_usd') {
-            const p = r.details?.port_expenses?.total_port_cost_usd || (r.details?.port_expenses?.total_agency_usd || 0);
+            const p = r.details?.port_expenses?.total_agency_usd || (r.details?.port_expenses?.total_port_cost_usd || 0);
             return Number(p);
         }
         if (m === 'bunker_costs_usd') {
@@ -332,24 +367,26 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                     return 0;
                 });
 
-                // Si se pide porcentaje en Eje Secundario, calcular el total de la serie
-                const totalSeriesSum = rawValues.reduce((sum, v) => sum + v, 0);
-
                 const dataArr = rawValues.map((val, idx) => {
                     const r = sortedFilteredData[idx];
                     const mKey = getVoyageMonthKey(r);
 
                     let calcValue = val;
 
-                    // LÓGICA DE SUMA ACUMULADA PROGRESIVA (RUNNING TOTAL) PARA EL EJE SECUNDARIO
+                    // 1. LÓGICA DE SUMA ACUMULADA PROGRESIVA (RUNNING TOTAL)
                     if (yAxisIndex === 1 && isSecondaryCumulativeSeries) {
                         runningTotal += val;
                         calcValue = runningTotal;
                     }
 
-                    // LÓGICA DE PORCENTAJE (SHARE %)
-                    if (yAxisIndex === 1 && isSecondaryPercentage && totalSeriesSum > 0) {
-                        calcValue = Number(((calcValue / totalSeriesSum) * 100).toFixed(1));
+                    // 2. LÓGICA FINANCIERA DE PORCENTAJE SOBRE GROSS REVENUE COMBINADO (RENTABILIDAD % REAL DE CADA VIAJE)
+                    if (yAxisIndex === 1 && isSecondaryPercentage) {
+                        const totalGrossRev = getMetricValue(r, 'gross_revenue_usd');
+                        if (totalGrossRev > 0) {
+                            calcValue = Number(((calcValue / totalGrossRev) * 100).toFixed(1));
+                        } else {
+                            calcValue = 0;
+                        }
                     }
 
                     return {
@@ -363,7 +400,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                 const cColor = getHexColor(sKey, groupBy);
 
                 return {
-                    name: `${sKey} ${yAxisIndex === 0 ? '(Pri)' : '(Sec' + (isSecondaryCumulativeSeries ? ' Acum)' : ')')}`,
+                    name: `${sKey} ${yAxisIndex === 0 ? '(Pri)' : '(Sec' + (isSecondaryPercentage ? ' % GrossRev)' : isSecondaryCumulativeSeries ? ' Acum)' : ')')}`,
                     type: isBar ? 'bar' : 'line',
                     yAxisIndex: yAxisIndex,
                     smooth: graphType === 'line',
@@ -382,8 +419,9 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                         position: labelPos === 'none' ? undefined : labelPos,
                         formatter: (params: any) => {
                             const valStr = typeof params.data === 'object' ? params.data.value : params.value;
-                            if (!valStr || valStr === 0) return '';
+                            if (valStr === undefined || valStr === null) return '';
                             if (yAxisIndex === 1 && isSecondaryPercentage) return `${valStr}%`;
+                            if (valStr === 0) return '';
                             return `$${(valStr / 1000).toFixed(0)}k`;
                         },
                         fontSize: 9,
@@ -409,6 +447,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                     const cleanCode = getCleanVoyageCode(r);
                     const mKey = getVoyageMonthKey(r);
                     const mColor = MONTH_COLOR_MAP[mKey] || '#0284C7';
+                    const fullGross = getMetricValue(r, 'gross_revenue_usd');
 
                     let html = `<div style="font-weight:bold;margin-bottom:4px;border-bottom:1px solid #cbd5e1;padding-bottom:2px;font-size:12px;">
                         <span style="color:${mColor};font-weight:900;">${cleanCode}</span> (${r.client_name}) — ${rName}
@@ -416,9 +455,9 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
 
                     params.forEach(p => {
                         const valStr = typeof p.data === 'object' ? p.data.value : p.value;
-                        if (valStr !== undefined && valStr !== 0) {
+                        if (valStr !== undefined && valStr !== null) {
                             const isPct = p.seriesName.includes('(Sec') && isSecondaryPercentage;
-                            const formattedVal = isPct ? `${valStr}%` : `$${valStr.toLocaleString()}`;
+                            const formattedVal = isPct ? `${valStr}% (sobre $${fullGross.toLocaleString()} Gross Rev)` : `$${valStr.toLocaleString()}`;
                             html += `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;margin-top:2px;">
                                 <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${p.color};"></span>
                                 <span style="color:#475569;">${p.seriesName}:</span>
@@ -475,7 +514,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                 },
                 {
                     type: 'value',
-                    name: secondaryMetric !== 'none' ? `${getMetricLabel(secondaryMetric)}${isSecondaryCumulativeSeries ? ' (Acum)' : ''}` : '',
+                    name: secondaryMetric !== 'none' ? `${getMetricLabel(secondaryMetric)}${isSecondaryPercentage ? ' (% Gross Rev)' : isSecondaryCumulativeSeries ? ' (Acum)' : ''}` : '',
                     nameTextStyle: { fontWeight: 'bold', fontSize: 11, color: '#059669' },
                     show: secondaryMetric !== 'none',
                     axisLabel: { 
@@ -489,7 +528,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             ],
             series: [...priSeries, ...secSeries]
         };
-    }, [sortedFilteredData, xAxisVoyageData, xAxisMonthLabelsSecondRow, groupBy, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor, isSecondaryCumulativeSeries, isSecondaryPercentage]);
+    }, [sortedFilteredData, xAxisVoyageData, xAxisMonthLabelsSecondRow, groupBy, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor, isSecondaryCumulativeSeries, isSecondaryPercentage, vesselColorMap]);
 
     // RENDERIZADOR DE SELECTOR DE FILTRO DE ANCHO CONTROLADO (SIN DESCUADRAR EL SIDEBAR DE 240PX)
     const renderFilterDropdown = (
@@ -749,9 +788,9 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                                 <input type="checkbox" className="w-3 h-3 cursor-pointer" checked={isSecondaryCumulativeSeries} onChange={(e) => setIsSecondaryCumulativeSeries(e.target.checked)} />
                                 <span className="text-[11px] font-medium text-slate-700">Acumular por serie</span>
                             </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
+                            <label className="flex items-center gap-2 cursor-pointer" title="Calcula la Rentabilidad Real % (Métrica / Gross Revenue Total)">
                                 <input type="checkbox" className="w-3 h-3 cursor-pointer" checked={isSecondaryPercentage} onChange={(e) => setIsSecondaryPercentage(e.target.checked)} />
-                                <span className="text-[11px] font-medium text-slate-700">Mostrar en % (Share)</span>
+                                <span className="text-[11px] font-medium text-slate-700">Mostrar en % (vs Gross Rev)</span>
                             </label>
                         </div>
                         
