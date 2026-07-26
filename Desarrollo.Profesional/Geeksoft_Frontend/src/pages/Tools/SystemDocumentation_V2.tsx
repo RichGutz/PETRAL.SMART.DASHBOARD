@@ -293,7 +293,6 @@ export const SystemDocumentation_V2: React.FC = () => {
                         </p>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs mb-6">
-                            {/* TAB 1 */}
                             <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-2">
                                 <div>
                                     <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 inline-block mb-1">TAB 1</span>
@@ -309,7 +308,6 @@ export const SystemDocumentation_V2: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* TAB 2 */}
                             <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-2">
                                 <div>
                                     <span className="text-[10px] font-black uppercase text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 inline-block mb-1">TAB 2</span>
@@ -325,7 +323,6 @@ export const SystemDocumentation_V2: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* TAB 3 */}
                             <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-2">
                                 <div>
                                     <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block mb-1">TAB 3</span>
@@ -397,7 +394,7 @@ export const SystemDocumentation_V2: React.FC = () => {
         },
 
         // ─────────────────────────────────────────────────────────────────────────
-        // ── 2. BURBUJA HERRAMIENTAS & MOTORES ──
+        // ── 2. BURBUJA HERRAMIENTAS & MOTORES (EXPLICACIÓN BOTÓN POR BOTÓN) ──
         // ─────────────────────────────────────────────────────────────────────────
         {
             id: 'h1',
@@ -405,17 +402,56 @@ export const SystemDocumentation_V2: React.FC = () => {
             categoryGroup: 'HERRAMIENTAS & MOTORES',
             chapterNum: 12,
             title: 'Multicotizador Multirutas',
-            subtitle: 'Simulación comercial de itinerarios Spot en tiempo real y optimización de flete',
+            subtitle: 'Simulación comercial Spot en tiempo real, cálculo TCE y guía de botones UI',
             icon: <ShoppingCart size={16} />,
             badge: 'Herramienta Comercial',
-            keywords: ['multicotizador', 'spot', 'simulacion', 'itinerarios', 'flete'],
+            keywords: ['multicotizador', 'spot', 'simulacion', 'itinerarios', 'flete', 'botones', 'ui'],
             content: (
                 <div className="space-y-6">
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">12.1 Cotizador Spot en Tiempo Real</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed">
-                            Simula opciones de viaje comparando combinaciones de buques, puertos y cantidades. Calcula automáticamente el flete objetivo TCE Target (USD/día).
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">12.1 Flujo Operativo del Multicotizador Spot</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                            El <strong>Multicotizador Multirutas</strong> permite simular alternativas de viaje combinando buques de la flota, puertos de origen y destino, toneladas de carga y velocidad operativa.
                         </p>
+
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">12.2 Guía de Botones e Interfaz de Usuario (UI)</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-blue-700 flex items-center gap-1.5">
+                                    <span>⚡</span> Botón "Simular Itinerario / Calcular Flete"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Ejecuta el motor de viajes calculando días navegando ($T_{ballast} + T_{laden}$), días en muelle ($Q_{op} + 4.0\text{h}$), consumo total de búnker (IFO/MDO) y costos portuarios para obtener el Flete de Equilibrio y el TCE Target ($USD/\text{día}$).
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-purple-700 flex items-center gap-1.5">
+                                    <span>🎛️</span> Selector "Modo de Gastos Portuarios"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Permite alternar entre el <strong>Modelo Estático</strong> (costos estáticos fijos DB), <strong>Matriz Compleja P×Q</strong> (cálculo dinámico con Overtime) y <strong>Bandas Tarifarias</strong>.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-emerald-700 flex items-center gap-1.5">
+                                    <span>💾</span> Botón "Guardar Cotización Spot"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Almacena la simulación activa en la base de datos `routes_quotes`, asignando un número de proforma comercial para seguimiento del área de fletamento.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span>📄</span> Botón "Exportar PDF / Excel"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Genera el documento membretado oficial de cotización comercial con el desglose de flete por TM, demurrage y condiciones laytime para enviar al cliente.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )
@@ -426,17 +462,56 @@ export const SystemDocumentation_V2: React.FC = () => {
             categoryGroup: 'HERRAMIENTAS & MOTORES',
             chapterNum: 13,
             title: 'Matriz Financiera (Voyage Ledger P&L)',
-            subtitle: 'Consolidación financiera por viaje, NVR y estado de resultados neto',
+            subtitle: 'Consolidación financiera por viaje NVR, cierre de estado de resultados y guía de botones UI',
             icon: <BarChart3 size={16} />,
             badge: 'Herramienta Financiera',
-            keywords: ['matriz financiera', 'dashboard', 'pnl', 'ledger', 'nvr', 'utilidad'],
+            keywords: ['matriz financiera', 'dashboard', 'pnl', 'ledger', 'nvr', 'utilidad', 'botones', 'ui'],
             content: (
                 <div className="space-y-6">
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">13.1 Estado de Resultados del Viaje (Voyage P&amp;L)</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed">
-                            Consolida los ingresos brutos por flete y deduce ordenadamente: Gastos Portuarios, Combustibles Navegando/Puerto, Comisiones y Gastos Operativos de la Nave.
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">13.1 Libro Contable de Viaje (Voyage Ledger P&amp;L)</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                            La <strong>Matriz Financiera</strong> consolida los ingresos brutos por flete y deduce ordenadamente todos los desembolsos de la nave para obtener la Utilidad Neta Real por viaje (NVR).
                         </p>
+
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">13.2 Guía de Botones e Interfaz de Usuario (UI)</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-blue-700 flex items-center gap-1.5">
+                                    <span>➕</span> Botón "Nuevo Asiento de Viaje (NVR)"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Abre la ventana para crear un nuevo viaje operativo, asociando el buque, la ruta contratada, el volumen cargado en MT y la tarifa de flete pactada.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-emerald-700 flex items-center gap-1.5">
+                                    <span>🔒</span> Botón "Cerrar Viaje / Conciliar Ledger"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Bloquea la edición del viaje y compara los costos estimados de búnker y agenciamiento frente a las facturas reales liquidadas para determinar la Utilidad Neta final.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-purple-700 flex items-center gap-1.5">
+                                    <span>🔍</span> Botón "Ver Desglose de Gastos P×Q"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Despliega la auditoría detallada ítem por ítem del viaje: practicaje, remolcaje, consumo de combustible en lastre vs cargado, y comisiones comerciales.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span>📊</span> Botón "Exportar Libro Financiero (Excel)"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Descarga el estado de resultados consolidado de la flota en formato Excel formateado para la gerencia financiera.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )
@@ -447,17 +522,56 @@ export const SystemDocumentation_V2: React.FC = () => {
             categoryGroup: 'HERRAMIENTAS & MOTORES',
             chapterNum: 14,
             title: 'Análisis Gráfico',
-            subtitle: 'Visualización estadística de indicadores navieros y tendencias de mercado',
+            subtitle: 'Visualización estadística de indicadores navieros y guía de botones UI',
             icon: <LineChart size={16} />,
             badge: 'Herramienta Analítica',
-            keywords: ['analisis grafico', 'tendencias', 'indicadores', 'flete'],
+            keywords: ['analisis grafico', 'tendencias', 'indicadores', 'flete', 'botones', 'ui'],
             content: (
                 <div className="space-y-6">
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">14.1 Inteligencia Visual Naviera</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed">
-                            Gráficas de evolución tarifaria por puerto, comparativa de consumos por buque e historial de fletes pactados por cliente.
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">14.1 Inteligencia Visual Naviera</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                            Permite evaluar visualmente el comportamiento histórico de las tarifas portuarias, el rendimiento de consumo de combustibles por nave y la evolución del rendimiento diario TCE.
                         </p>
+
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">14.2 Guía de Botones e Interfaz de Usuario (UI)</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-blue-700 flex items-center gap-1.5">
+                                    <span>📅</span> Selector "Horizonte Temporal"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Filtra la serie de datos para mostrar tendencias a nivel Mensual, Trimestral o Anual.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-purple-700 flex items-center gap-1.5">
+                                    <span>📊</span> Selector de Métrica (TCE / Búnker / Tarifas)
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Cambia el indicador evaluado en las gráficas entre Rendimiento Diario ($USD/\text{día}$), Consumo MDO/IFO y Desembolsos Portuarios por Escala.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-emerald-700 flex items-center gap-1.5">
+                                    <span>📈</span> Botón "Alternar Tipo de Gráfico"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Modifica la visualización entre diagramas de Barras Comparativas, Líneas de Tendencia Continua o Gráficos de Área Acumulada.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span>📷</span> Botón "Exportar Gráfica (PNG / SVG)"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Descarga la imagen vectorial o de alta resolución para incluirla en los reportes de directorio.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )
@@ -468,17 +582,56 @@ export const SystemDocumentation_V2: React.FC = () => {
             categoryGroup: 'HERRAMIENTAS & MOTORES',
             chapterNum: 15,
             title: 'Spaghetti Map',
-            subtitle: 'Trazado cartográfico de rutas marítimas y densidades de tráfico',
+            subtitle: 'Trazado cartográfico de rutas marítimas y guía de botones UI',
             icon: <Map size={16} />,
             badge: 'Herramienta Geográfica',
-            keywords: ['spaghetti map', 'rutas', 'mapas', 'densidad', 'costa oeste'],
+            keywords: ['spaghetti map', 'rutas', 'mapas', 'densidad', 'costa oeste', 'botones', 'ui'],
             content: (
                 <div className="space-y-6">
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">15.1 Mapeo Cartográfico de Navegación</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed">
-                            Visualización de líneas de navegación náutica entre puertos mineros e industriales de la Costa Oeste de Sudamérica.
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">15.1 Mapeo Cartográfico de Navegación Náutica</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                            Visualización en mapa geográfico interactivo de las líneas de navegación entre los puertos mineros e industriales de Perú y Chile.
                         </p>
+
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">15.2 Guía de Botones e Interfaz de Usuario (UI)</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-blue-700 flex items-center gap-1.5">
+                                    <span>🏢</span> Botón "Filtro de Rutas por Cliente (SPCC / NEXA)"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Muestra u oculta los trazos de navegación asociados a las cargas exclusivas de SPCC o Nexa Resources.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-purple-700 flex items-center gap-1.5">
+                                    <span>🗺️</span> Conmutador de Capas (Satélite vs Marítimo OSM)
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Alterna la representación cartográfica entre mapa satelital de alta resolución y capa hidrográfica náutica OpenStreetMap.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-emerald-700 flex items-center gap-1.5">
+                                    <span>📏</span> Herramienta "Medir Distancia Náutica (NM)"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Permite hacer clic sobre el mapa para trazar waypoints náuticos y calcular la distancia total en Millas Náuticas.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span>🎯</span> Botón "Recentrar Costa Oeste"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Restablece el enfoque y nivel de zoom para centrar el área de operaciones Callao-Matarani-Ilo-Mejillones.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )
@@ -489,17 +642,56 @@ export const SystemDocumentation_V2: React.FC = () => {
             categoryGroup: 'HERRAMIENTAS & MOTORES',
             chapterNum: 16,
             title: 'Auditoría Final',
-            subtitle: 'Suite de auditoría P×Q y validación de liquidaciones con la Experta Sandra',
+            subtitle: 'Generador de Actas de Auditoría P×Q, firmas PETRAL / Sandra y guía de botones UI',
             icon: <Scale size={16} />,
             badge: 'Herramienta Auditoría',
-            keywords: ['auditoria final', 'audit-final', 'sandra', 'experta', 'proformas'],
+            keywords: ['auditoria final', 'audit-final', 'sandra', 'experta', 'proformas', 'acta', 'pdf', 'botones', 'ui'],
             content: (
                 <div className="space-y-6">
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">16.1 Modulo de Auditoría Final P×Q</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed">
-                            Generación de Actas de Auditoría con recargos OT trazables e integración de firmas PETRAL / Sandra.
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">16.1 Módulo de Actas y Liquidaciones de Auditoría</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                            La **Auditoría Final** es la herramienta oficial para contrastar las proformas portuarias liquidadas contra los tarifarios normados de cada puerto, generando el acta membretada oficial firmada por PETRAL y la Experta Sandra.
                         </p>
+
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">16.2 Guía de Botones e Interfaz de Usuario (UI)</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-blue-700 flex items-center gap-1.5">
+                                    <span>⚓</span> Selector "Seleccionar Buque &amp; Puerto"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Carga la liquidación oficial de la nave (ej. <em>B/T Moquegua en Callao</em>) trayendo todos los rubros de practicaje, remolcaje, lanchas y agenciamiento.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-red-700 flex items-center gap-1.5">
+                                    <span>⚡</span> Interruptor "Regla 6 Overtime (+25%)"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Activa o desactiva la aplicación del recargo de Overtime en practicaje y remolques de salida para zarpes fuera de horario hábil.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-emerald-700 flex items-center gap-1.5">
+                                    <span>📑</span> Botón "Generar Acta de Auditoría (A4 Flex)"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Construye el documento PDF A4 de 2 buques por hoja con firmas en 2 columnas (PETRAL vs V°B° Experta Sandra) y caja `.obs-box` flex-fill hasta el pie de página.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span>✅</span> Botón "Aprobar Liquidación / Sellar V°B°"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Asigna el estado de "AUDITADO OK" a la proforma en la base de datos y congela los montos para el cierre contable del Voyage Ledger.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )
@@ -510,17 +702,56 @@ export const SystemDocumentation_V2: React.FC = () => {
             categoryGroup: 'HERRAMIENTAS & MOTORES',
             chapterNum: 17,
             title: 'Flowchart del Sistema',
-            subtitle: 'Diagramas de arquitectura, flujogramas de procesos e interacciones',
+            subtitle: 'Diagramas de arquitectura, flujogramas de procesos e interacciones Nivel 1 a 5 y guía de botones UI',
             icon: <FileCode size={16} />,
             badge: 'Herramienta Visual',
-            keywords: ['flowchart', 'flujograma', 'arquitectura', 'svg', 'pdf'],
+            keywords: ['flowchart', 'flujograma', 'arquitectura', 'svg', 'pdf', 'botones', 'ui'],
             content: (
                 <div className="space-y-6">
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">17.1 Flujogramas Integrales de Ecosistema</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed">
-                            Visualización descargable en SVG/PDF de los 5 niveles del sistema (Maestros $\rightarrow$ Spot Engine $\rightarrow$ P×Q $\rightarrow$ Ledger $\rightarrow$ Auditoría).
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">17.1 Flujogramas Integrales de la Arquitectura</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                            El **Flowchart del Sistema** contiene la representación gráfica vectorial de los 5 niveles de procesamiento (Maestros $\rightarrow$ Spot Engine $\rightarrow$ P×Q $\rightarrow$ Ledger $\rightarrow$ Auditoría).
                         </p>
+
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">17.2 Guía de Botones e Interfaz de Usuario (UI)</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-blue-700 flex items-center gap-1.5">
+                                    <span>🔀</span> Selector "Nivel de Diagrama (Nivel 1 a 5)"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Navega entre las distintas capas: Nivel 1 (Ingreso Maestros), Nivel 2 (Spot), Nivel 3 (P×Q), Nivel 4 (Ledger) y Nivel 5 (Auditoría Final).
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-purple-700 flex items-center gap-1.5">
+                                    <span>📥</span> Botón "Descargar Flowchart (SVG / PDF)"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Exporta el diagrama en formato vectorial SVG o PDF de alta calidad para anexos de manuales operacionales.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-emerald-700 flex items-center gap-1.5">
+                                    <span>🔍</span> Botón "Zoom Interactivo / Pantalla Completa"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Amplía el lienzo del flujograma permitiendo realizar pan y zoom dinámico para revisar cada nodo del sistema.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span>🔄</span> Botón "Restablecer Vista"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Vuelve a la escala original 100% del diagrama de flujo.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )
@@ -531,17 +762,56 @@ export const SystemDocumentation_V2: React.FC = () => {
             categoryGroup: 'HERRAMIENTAS & MOTORES',
             chapterNum: 18,
             title: 'Documentación del Sistema',
-            subtitle: 'Manual interactivo de usuario, arquitectura técnica y reglas de negocio',
+            subtitle: 'Manual interactivo de usuario, arquitectura técnica, buscador inteligente y guía de botones UI',
             icon: <BookOpenIcon size={16} />,
             badge: 'Herramienta Documental',
-            keywords: ['documentacion', 'manual', 'ayuda', 'reglas'],
+            keywords: ['documentacion', 'manual', 'ayuda', 'reglas', 'botones', 'ui', 'buscador'],
             content: (
                 <div className="space-y-6">
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">18.1 Portal Integrado de Documentación</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed">
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">18.1 Portal Integrado de Documentación Docs-as-Code</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed mb-4">
                             Módulo interactivo que consolida la totalidad de maestros, herramientas y motores del sistema PETRAL SHIPPING.SOFT V2.5.
                         </p>
+
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">18.2 Guía de Botones e Interfaz de Usuario (UI)</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-blue-700 flex items-center gap-1.5">
+                                    <span>🔍</span> Campo "Buscador Inteligente de Módulos"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Filtra en tiempo real los 18 capítulos por títulos, subtítulos, categorías o palabras clave (ej. <em>Flota, Callao, Regla 6, Búnker, SPCC</em>).
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-purple-700 flex items-center gap-1.5">
+                                    <span>🗂️</span> Acordeón "DATOS MAESTROS" (Colapsable)
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Despliega o contrae verticalmente el bloque de los 11 maestros organizados en sus 4 categorías oficiales.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-emerald-700 flex items-center gap-1.5">
+                                    <span>🛠️</span> Acordeón "HERRAMIENTAS &amp; MOTORES" (Colapsable)
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Despliega o contrae verticalmente la lista de los 7 módulos de herramientas operacionales del software.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span>📥</span> Botón "Descargar PDF Membretado"
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Abre el cuadro de impresión para descargar el manual editorial oficial con logo membretado de Naviera Petral.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )
