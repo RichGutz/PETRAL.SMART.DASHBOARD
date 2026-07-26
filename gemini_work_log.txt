@@ -40,3 +40,4 @@ Fecha: 2026-07-26 12:31
   ‚Ä¢ 3Ô∏è‚É£ Alerta `‚ö†Ô∏è NO EST√Å EN LA TABLA` si la matriz est√°tica no posee la fila en Supabase (Strict Zero Fallbacks).
   ‚Ä¢ 4Ô∏è‚É£ Logos en Base64 Inline Data URIs e √≠tems PassThrough resaltados en AMARILLO.
 2026-07-26 16:23:59 - [DOCS & UI] ConsolidaciÛn integral de la documentaciÛn del sistema PETRAL V2.5 (11 Maestros en 4 categorÌas, 7 Herramientas explicadas botÛn por botÛn, 3 Tabs de Gastos Portuarios, 4.0h fijas escala, Callao PxQ, SPCC & NEXA clientes activos, men˙s colapsables verticalmente y botÛn Nueva PestaÒa en MasterTemplate_V2).
+[2026-07-26] Commit: HTA.GRAFICA.LIQUIDAC.50.percent finalizado y subido a Git origin main.
