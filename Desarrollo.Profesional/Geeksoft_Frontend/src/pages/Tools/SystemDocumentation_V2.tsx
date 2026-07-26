@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Download, Search, ChevronRight, Anchor, Compass, Database, Building2, FileText, MapPin, Receipt, Coins, Scale, Zap, Layers } from 'lucide-react';
+import { Download, Search, ChevronRight, ChevronDown, Anchor, Compass, Database, Building2, FileText, MapPin, Receipt, Coins, Scale, Zap, Layers, ShoppingCart, BarChart3, LineChart, Map, FileCode } from 'lucide-react';
 import logoPetral from '../../assets/Logo.Petral.png';
 
 interface DocChapter {
     id: string;
+    sectionType: 'MAESTROS' | 'HERRAMIENTAS';
     categoryGroup: string;
     chapterNum: number;
     title: string;
@@ -18,10 +19,17 @@ export const SystemDocumentation_V2: React.FC = () => {
     const [activeChapterId, setActiveChapterId] = useState<string>('c1');
     const [searchQuery, setSearchQuery] = useState<string>('');
 
+    // Estados de colapso de las dos burbujas principales
+    const [isMaestrosOpen, setIsMaestrosOpen] = useState<boolean>(true);
+    const [isHerramientasOpen, setIsHerramientasOpen] = useState<boolean>(true);
+
     const chapters: DocChapter[] = [
-        // ── 1. MAESTROS FÍSICOS ──
+        // ─────────────────────────────────────────────────────────────────────────
+        // ── 1. BURBUJA DATOS MAESTROS ──
+        // ─────────────────────────────────────────────────────────────────────────
         {
             id: 'c1',
+            sectionType: 'MAESTROS',
             categoryGroup: 'MAESTROS FÍSICOS',
             chapterNum: 1,
             title: 'Maestro de Flota',
@@ -61,6 +69,7 @@ export const SystemDocumentation_V2: React.FC = () => {
         },
         {
             id: 'c2',
+            sectionType: 'MAESTROS',
             categoryGroup: 'MAESTROS FÍSICOS',
             chapterNum: 2,
             title: 'Maestro de Puertos y Terminales',
@@ -95,6 +104,7 @@ export const SystemDocumentation_V2: React.FC = () => {
         },
         {
             id: 'c3',
+            sectionType: 'MAESTROS',
             categoryGroup: 'MAESTROS FÍSICOS',
             chapterNum: 3,
             title: 'Maestro de Distancias',
@@ -113,10 +123,9 @@ export const SystemDocumentation_V2: React.FC = () => {
                 </div>
             )
         },
-
-        // ── 2. MAESTROS COMERCIALES ──
         {
             id: 'c4',
+            sectionType: 'MAESTROS',
             categoryGroup: 'MAESTROS COMERCIALES',
             chapterNum: 4,
             title: 'Maestro de Clientes',
@@ -137,6 +146,7 @@ export const SystemDocumentation_V2: React.FC = () => {
         },
         {
             id: 'c5',
+            sectionType: 'MAESTROS',
             categoryGroup: 'MAESTROS COMERCIALES',
             chapterNum: 5,
             title: 'Maestro de Contratos',
@@ -157,6 +167,7 @@ export const SystemDocumentation_V2: React.FC = () => {
         },
         {
             id: 'c6',
+            sectionType: 'MAESTROS',
             categoryGroup: 'MAESTROS COMERCIALES',
             chapterNum: 6,
             title: 'Maestro de Rutas',
@@ -177,6 +188,7 @@ export const SystemDocumentation_V2: React.FC = () => {
         },
         {
             id: 'c7',
+            sectionType: 'MAESTROS',
             categoryGroup: 'MAESTROS COMERCIALES',
             chapterNum: 7,
             title: 'Maestro de Cotizaciones',
@@ -195,10 +207,9 @@ export const SystemDocumentation_V2: React.FC = () => {
                 </div>
             )
         },
-
-        // ── 3. MAESTROS DE COSTOS ──
         {
             id: 'c8',
+            sectionType: 'MAESTROS',
             categoryGroup: 'MAESTROS DE COSTOS',
             chapterNum: 8,
             title: 'Maestro de Tarifas Portuarias',
@@ -219,6 +230,7 @@ export const SystemDocumentation_V2: React.FC = () => {
         },
         {
             id: 'c9',
+            sectionType: 'MAESTROS',
             categoryGroup: 'MAESTROS DE COSTOS',
             chapterNum: 9,
             title: 'Maestro de Gastos Portuarios',
@@ -256,10 +268,9 @@ export const SystemDocumentation_V2: React.FC = () => {
                 </div>
             )
         },
-
-        // ── 4. MERCADO & ORIGINACIÓN ──
         {
             id: 'c10',
+            sectionType: 'MAESTROS',
             categoryGroup: 'MERCADO & ORIGINACIÓN',
             chapterNum: 10,
             title: 'Maestro de Búnker',
@@ -283,6 +294,7 @@ export const SystemDocumentation_V2: React.FC = () => {
         },
         {
             id: 'c11',
+            sectionType: 'MAESTROS',
             categoryGroup: 'MERCADO & ORIGINACIÓN',
             chapterNum: 11,
             title: 'Maestro de Originación',
@@ -300,11 +312,161 @@ export const SystemDocumentation_V2: React.FC = () => {
                     </div>
                 </div>
             )
+        },
+
+        // ─────────────────────────────────────────────────────────────────────────
+        // ── 2. BURBUJA HERRAMIENTAS & MOTORES ──
+        // ─────────────────────────────────────────────────────────────────────────
+        {
+            id: 'h1',
+            sectionType: 'HERRAMIENTAS',
+            categoryGroup: 'HERRAMIENTAS & MOTORES',
+            chapterNum: 12,
+            title: 'Multicotizador Multirutas',
+            subtitle: 'Simulación comercial de itinerarios Spot en tiempo real y optimización de flete',
+            icon: <ShoppingCart size={16} />,
+            badge: 'Herramienta Comercial',
+            keywords: ['multicotizador', 'spot', 'simulacion', 'itinerarios', 'flete'],
+            content: (
+                <div className="space-y-6">
+                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">12.1 Cotizador Spot en Tiempo Real</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                            Simula opciones de viaje comparando combinaciones de buques, puertos y cantidades. Calcula automáticamente el flete objetivo TCE Target (USD/día).
+                        </p>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'h2',
+            sectionType: 'HERRAMIENTAS',
+            categoryGroup: 'HERRAMIENTAS & MOTORES',
+            chapterNum: 13,
+            title: 'Matriz Financiera (Voyage Ledger P&L)',
+            subtitle: 'Consolidación financiera por viaje, NVR y estado de resultados neto',
+            icon: <BarChart3 size={16} />,
+            badge: 'Herramienta Financiera',
+            keywords: ['matriz financiera', 'dashboard', 'pnl', 'ledger', 'nvr', 'utilidad'],
+            content: (
+                <div className="space-y-6">
+                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">13.1 Estado de Resultados del Viaje (Voyage P&amp;L)</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                            Consolida los ingresos brutos por flete y deduce ordenadamente: Gastos Portuarios, Combustibles Navegando/Puerto, Comisiones y Gastos Operativos de la Nave.
+                        </p>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'h3',
+            sectionType: 'HERRAMIENTAS',
+            categoryGroup: 'HERRAMIENTAS & MOTORES',
+            chapterNum: 14,
+            title: 'Análisis Gráfico',
+            subtitle: 'Visualización estadística de indicadores navieros y tendencias de mercado',
+            icon: <LineChart size={16} />,
+            badge: 'Herramienta Analítica',
+            keywords: ['analisis grafico', 'tendencias', 'indicadores', 'flete'],
+            content: (
+                <div className="space-y-6">
+                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">14.1 Inteligencia Visual Naviera</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                            Gráficas de evolución tarifaria por puerto, comparativa de consumos por buque e historial de fletes pactados por cliente.
+                        </p>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'h4',
+            sectionType: 'HERRAMIENTAS',
+            categoryGroup: 'HERRAMIENTAS & MOTORES',
+            chapterNum: 15,
+            title: 'Spaghetti Map',
+            subtitle: 'Trazado cartográfico de rutas marítimas y densidades de tráfico',
+            icon: <Map size={16} />,
+            badge: 'Herramienta Geográfica',
+            keywords: ['spaghetti map', 'rutas', 'mapas', 'densidad', 'costa oeste'],
+            content: (
+                <div className="space-y-6">
+                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">15.1 Mapeo Cartográfico de Navegación</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                            Visualización de líneas de navegación náutica entre puertos mineros e industriales de la Costa Oeste de Sudamérica.
+                        </p>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'h5',
+            sectionType: 'HERRAMIENTAS',
+            categoryGroup: 'HERRAMIENTAS & MOTORES',
+            chapterNum: 16,
+            title: 'Auditoría Final',
+            subtitle: 'Suite de auditoría P×Q y validación de liquidaciones con la Experta Sandra',
+            icon: <Scale size={16} />,
+            badge: 'Herramienta Auditoría',
+            keywords: ['auditoria final', 'audit-final', 'sandra', 'experta', 'proformas'],
+            content: (
+                <div className="space-y-6">
+                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">16.1 Modulo de Auditoría Final P×Q</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                            Generación de Actas de Auditoría con recargos OT trazables e integración de firmas PETRAL / Sandra.
+                        </p>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'h6',
+            sectionType: 'HERRAMIENTAS',
+            categoryGroup: 'HERRAMIENTAS & MOTORES',
+            chapterNum: 17,
+            title: 'Flowchart del Sistema',
+            subtitle: 'Diagramas de arquitectura, flujogramas de procesos e interacciones',
+            icon: <FileCode size={16} />,
+            badge: 'Herramienta Visual',
+            keywords: ['flowchart', 'flujograma', 'arquitectura', 'svg', 'pdf'],
+            content: (
+                <div className="space-y-6">
+                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">17.1 Flujogramas Integrales de Ecosistema</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                            Visualización descargable en SVG/PDF de los 5 niveles del sistema (Maestros $\rightarrow$ Spot Engine $\rightarrow$ P×Q $\rightarrow$ Ledger $\rightarrow$ Auditoría).
+                        </p>
+                    </div>
+                </div>
+            )
+        },
+        {
+            id: 'h7',
+            sectionType: 'HERRAMIENTAS',
+            categoryGroup: 'HERRAMIENTAS & MOTORES',
+            chapterNum: 18,
+            title: 'Documentación del Sistema',
+            subtitle: 'Manual interactivo de usuario, arquitectura técnica y reglas de negocio',
+            icon: <BookOpenIcon size={16} />,
+            badge: 'Herramienta Documental',
+            keywords: ['documentacion', 'manual', 'ayuda', 'reglas'],
+            content: (
+                <div className="space-y-6">
+                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">18.1 Portal Integrado de Documentación</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                            Módulo interactivo que consolida la totalidad de maestros, herramientas y motores del sistema PETRAL SHIPPING.SOFT V2.5.
+                        </p>
+                    </div>
+                </div>
+            )
         }
     ];
 
-    // Agrupación de capítulos por categoría exacta de Datos Maestros
-    const categories = ['MAESTROS FÍSICOS', 'MAESTROS COMERCIALES', 'MAESTROS DE COSTOS', 'MERCADO & ORIGINACIÓN'];
+    const categoriesMaestros = ['MAESTROS FÍSICOS', 'MAESTROS COMERCIALES', 'MAESTROS DE COSTOS', 'MERCADO & ORIGINACIÓN'];
 
     // Filtrado de capítulos por buscador
     const filteredChapters = useMemo(() => {
@@ -333,8 +495,8 @@ export const SystemDocumentation_V2: React.FC = () => {
                     <img src={logoPetral} alt="Naviera Petral" className="h-10 object-contain" />
                     <div className="h-8 border-l border-slate-200 hidden md:block"></div>
                     <div>
-                        <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">MANUAL DE DATOS MAESTROS &amp; SISTEMA</h2>
-                        <span className="text-xs text-slate-500 font-bold tracking-wider uppercase block">PETRAL SHIPPING.SOFT V2.5 PRO • RELEASE 2026</span>
+                        <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">MANUAL INTEGRAL DEL SISTEMA</h2>
+                        <span className="text-xs text-slate-500 font-bold tracking-wider uppercase block">PETRAL SHIPPING.SOFT V2.5 PRO • DATOS MAESTROS &amp; HERRAMIENTAS</span>
                     </div>
                 </div>
 
@@ -346,7 +508,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Buscar maestro (ej. Flota, Gastos, Búnker)..."
+                            placeholder="Buscar maestro o herramienta..."
                             className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                         />
                     </div>
@@ -368,64 +530,119 @@ export const SystemDocumentation_V2: React.FC = () => {
             {/* ── CONTENEDOR PRINCIPAL ESTILO LIBRO EDITORIAL ── */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full min-w-0">
 
-                {/* NAVEGACIÓN LATERAL POR CATEGORÍAS EXACTAS DE DATOS MAESTROS */}
-                <div className="lg:col-span-4 w-full min-w-0 bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-4 print:hidden">
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-1">
-                        DATOS MAESTROS ({filteredChapters.length} de 11)
+                {/* NAVEGACIÓN LATERAL: 2 BURBUJAS COLAPSABLES (MAESTROS + HERRAMIENTAS) */}
+                <div className="lg:col-span-4 w-full min-w-0 space-y-4 print:hidden">
+
+                    {/* ── BURBUJA 1: DATOS MAESTROS (COLAPSABLE) ── */}
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all">
+                        <button
+                            onClick={() => setIsMaestrosOpen(!isMaestrosOpen)}
+                            className="w-full bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-200 text-left hover:bg-slate-100 transition-colors cursor-pointer"
+                        >
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm">🗂️</span>
+                                <span className="text-xs font-black text-slate-800 uppercase tracking-wide">DATOS MAESTROS</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono font-bold">11 Módulos</span>
+                                {isMaestrosOpen ? <ChevronDown size={16} className="text-slate-500" /> : <ChevronRight size={16} className="text-slate-500" />}
+                            </div>
+                        </button>
+
+                        {isMaestrosOpen && (
+                            <div className="p-3 space-y-3 max-h-[480px] overflow-y-auto scrollbar-thin">
+                                {categoriesMaestros.map(cat => {
+                                    const catChapters = filteredChapters.filter(c => c.sectionType === 'MAESTROS' && c.categoryGroup === cat);
+                                    if (catChapters.length === 0) return null;
+
+                                    const catIcon = cat.includes('FÍSICOS') ? '🏗️'
+                                                  : cat.includes('COMERCIALES') ? '💼'
+                                                  : cat.includes('COSTOS') ? '💰'
+                                                  : '⛽';
+
+                                    return (
+                                        <div key={cat} className="space-y-1">
+                                            <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-1 flex items-center gap-1.5">
+                                                <span>{catIcon}</span>
+                                                <span>{cat}</span>
+                                            </div>
+                                            <div className="pl-2 flex flex-col gap-0.5 border-l-2 border-slate-100 ml-1.5">
+                                                {catChapters.map(ch => {
+                                                    const isActive = ch.id === activeChapterId;
+                                                    return (
+                                                        <button
+                                                            key={ch.id}
+                                                            onClick={() => setActiveChapterId(ch.id)}
+                                                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
+                                                                isActive 
+                                                                    ? 'bg-blue-600 text-white shadow-sm' 
+                                                                    : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
+                                                            }`}
+                                                        >
+                                                            <div className="flex items-center gap-2 truncate min-w-0">
+                                                                <span className={isActive ? 'text-white' : 'text-slate-400'}>{ch.icon}</span>
+                                                                <span className="truncate">{ch.chapterNum}. {ch.title}</span>
+                                                            </div>
+                                                            <ChevronRight size={14} className={isActive ? 'text-white' : 'text-slate-300'} />
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
 
-                    {filteredChapters.length === 0 ? (
-                        <div className="p-4 text-center text-xs text-slate-400 italic">No se encontraron maestros para "{searchQuery}"</div>
-                    ) : (
-                        <div className="space-y-4 max-h-[640px] overflow-y-auto pr-1 scrollbar-thin">
-                            {categories.map(cat => {
-                                const catChapters = filteredChapters.filter(c => c.categoryGroup === cat);
-                                if (catChapters.length === 0) return null;
+                    {/* ── BURBUJA 2: HERRAMIENTAS & MOTORES (COLAPSABLE) ── */}
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all">
+                        <button
+                            onClick={() => setIsHerramientasOpen(!isHerramientasOpen)}
+                            className="w-full bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-200 text-left hover:bg-slate-100 transition-colors cursor-pointer"
+                        >
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm">🛠️</span>
+                                <span className="text-xs font-black text-slate-800 uppercase tracking-wide">HERRAMIENTAS &amp; MOTORES</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono font-bold">7 Módulos</span>
+                                {isHerramientasOpen ? <ChevronDown size={16} className="text-slate-500" /> : <ChevronRight size={16} className="text-slate-500" />}
+                            </div>
+                        </button>
 
-                                const catIcon = cat.includes('FÍSICOS') ? '🏗️'
-                                              : cat.includes('COMERCIALES') ? '💼'
-                                              : cat.includes('COSTOS') ? '💰'
-                                              : '⛽';
+                        {isHerramientasOpen && (
+                            <div className="p-3 space-y-1 max-h-[380px] overflow-y-auto scrollbar-thin">
+                                {filteredChapters.filter(c => c.sectionType === 'HERRAMIENTAS').map(ch => {
+                                    const isActive = ch.id === activeChapterId;
+                                    return (
+                                        <button
+                                            key={ch.id}
+                                            onClick={() => setActiveChapterId(ch.id)}
+                                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
+                                                isActive 
+                                                    ? 'bg-blue-600 text-white shadow-sm' 
+                                                    : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-2 truncate min-w-0">
+                                                <span className={isActive ? 'text-white' : 'text-slate-400'}>{ch.icon}</span>
+                                                <span className="truncate">{ch.chapterNum}. {ch.title}</span>
+                                            </div>
+                                            <ChevronRight size={14} className={isActive ? 'text-white' : 'text-slate-300'} />
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
 
-                                return (
-                                    <div key={cat} className="space-y-1">
-                                        <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-1 flex items-center gap-1.5">
-                                            <span>{catIcon}</span>
-                                            <span>{cat}</span>
-                                        </div>
-                                        <div className="pl-2 flex flex-col gap-1 border-l-2 border-slate-100 ml-1.5">
-                                            {catChapters.map(ch => {
-                                                const isActive = ch.id === activeChapterId;
-                                                return (
-                                                    <button
-                                                        key={ch.id}
-                                                        onClick={() => setActiveChapterId(ch.id)}
-                                                        className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
-                                                            isActive 
-                                                                ? 'bg-blue-600 text-white shadow-sm' 
-                                                                : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
-                                                        }`}
-                                                    >
-                                                        <div className="flex items-center gap-2 truncate min-w-0">
-                                                            <span className={isActive ? 'text-white' : 'text-slate-400'}>{ch.icon}</span>
-                                                            <span className="truncate">{ch.chapterNum}. {ch.title}</span>
-                                                        </div>
-                                                        <ChevronRight size={14} className={isActive ? 'text-white' : 'text-slate-300'} />
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
                 </div>
 
-                {/* VISTA DEL MAESTRO SELECCIONADO */}
+                {/* VISTA DEL MÓDULO SELECCIONADO */}
                 <div className="lg:col-span-8 w-full min-w-0 bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6 print:w-full print:p-0 print:border-none">
 
-                    {/* ENCABEZADO DEL MAESTRO */}
+                    {/* ENCABEZADO DEL MÓDULO */}
                     <div className="border-b border-slate-200 pb-4 flex items-center justify-between">
                         <div>
                             <span className="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 px-2.5 py-1 rounded border border-blue-200 uppercase">
@@ -436,7 +653,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* CONTENIDO TÉCNICO DEL MAESTRO */}
+                    {/* CONTENIDO TÉCNICO DEL MÓDULO */}
                     <div className="min-h-[300px]">
                         {currentChapter.content}
                     </div>
@@ -454,3 +671,11 @@ export const SystemDocumentation_V2: React.FC = () => {
         </div>
     );
 };
+
+// Helper icon component
+const BookOpenIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+    </svg>
+);
