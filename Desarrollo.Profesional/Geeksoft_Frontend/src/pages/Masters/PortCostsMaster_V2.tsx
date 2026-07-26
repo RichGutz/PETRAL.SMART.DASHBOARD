@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
-import { Anchor, Save, Clock, Ship } from 'lucide-react';
+import { Anchor, Save, Ship, Clock } from 'lucide-react';
 import { DynamicAuditViewer } from '../../components/Masters/DynamicAuditViewer';
 import { BandasResumenViewer } from '../../components/Masters/BandasResumenViewer';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
@@ -101,8 +101,9 @@ export const PortCostsMaster_V2: React.FC = () => {
             });
             setCostsState(newState);
             
-            if (portsData?.length > 0 && !activePortId) {
-                setActivePortId(portsData[0].port_id);
+            // SELECCIÓN AUTOMÁTICA DEL PRIMER PUERTO AL CARGAR
+            if (sortedPorts?.length > 0) {
+                setActivePortId(sortedPorts[0].port_id);
             }
         } catch (error) {
             console.error('Error al cargar maestro de costos portuarios:', error);
@@ -225,32 +226,21 @@ export const PortCostsMaster_V2: React.FC = () => {
     const uniqueCountries = Array.from(new Set(ports.map(p => (p.country || "PE").toUpperCase())));
     const portsForCountry = ports.filter(p => (p.country || "PE").toUpperCase() === activeCountry);
 
+    // AUTO-SELECCIÓN DEL PRIMER PUERTO DEL PAÍS AL CAMBIAR DE PESTAÑA DE PAÍS
     const handleCountryClick = (countryCode: string) => {
-        const firstPort = ports.find(p => (p.country || "PE").toUpperCase() === countryCode);
-        if (firstPort) {
-            setActivePortId(firstPort.port_id);
+        const firstPortOfCountry = ports.find(p => (p.country || "PE").toUpperCase() === countryCode);
+        if (firstPortOfCountry) {
+            setActivePortId(firstPortOfCountry.port_id);
         }
     };
 
-    // Un puerto está configurado si tiene al menos un valor > 0 en costsState
-    const isPortConfigured = (portId: string): boolean => {
-        const pNorm = (portId || '').toUpperCase().replace(/[\s_-]+/g, '');
-        for (const pKey of Object.keys(costsState)) {
-            const kNorm = pKey.toUpperCase().replace(/[\s_-]+/g, '');
-            if (kNorm === pNorm || kNorm.includes(pNorm) || pNorm.includes(kNorm)) {
-                const portData = costsState[pKey];
-                for (const vKey of Object.keys(portData || {})) {
-                    const d = portData[vKey];
-                    if (d && typeof d === 'object') {
-                        const totalQ = (d.CARGA?.MAIN || 0) + (d.CARGA?.loading_master || 0) + (d.CARGA?.other || 0)
-                                     + (d.DESCARGA?.MAIN || 0) + (d.DESCARGA?.loading_master || 0) + (d.DESCARGA?.other || 0);
-                        if (totalQ > 0) return true;
-                    }
-                }
-            }
+    // GARANTIZAR PUERTO SELECCIONADO SIEMPRE DE FORMA AUTO-CORRECTIVA
+    const effectiveActivePortId = useMemo(() => {
+        if (portsForCountry.some(p => p.port_id === activePortId)) {
+            return activePortId;
         }
-        return false;
-    };
+        return portsForCountry[0]?.port_id || activePortId || ports[0]?.port_id || '';
+    }, [activePortId, portsForCountry, ports]);
 
     const exportData = useMemo(() => {
         const rows: any[] = [];
@@ -410,7 +400,6 @@ export const PortCostsMaster_V2: React.FC = () => {
                         </div>
                     ) : (
 
-
                         <div className="flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                             
                             {/* Nivel 1: TABS DE PAÍSES */}
@@ -443,14 +432,14 @@ export const PortCostsMaster_V2: React.FC = () => {
                                 })}
                             </div>
 
-                            {/* Nivel 2: TABS DE PUERTOS */}
+                            {/* Nivel 2: TABS DE PUERTOS (AUTOSELECCIONADOS) */}
                             <div className="flex overflow-x-auto border-b border-slate-200 bg-slate-50 scrollbar-none">
                                 {portsForCountry.map((p) => (
                                     <button
                                         key={p.port_id}
                                         onClick={() => setActivePortId(p.port_id)}
                                         className={`px-6 py-2.5 font-black text-[11px] uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap flex items-center gap-2 ${
-                                            activePortId === p.port_id
+                                            effectiveActivePortId === p.port_id
                                                 ? 'border-slate-800 text-slate-800 bg-white'
                                                 : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                                         }`}
@@ -461,28 +450,9 @@ export const PortCostsMaster_V2: React.FC = () => {
                                 ))}
                             </div>
 
-                            {/* Contenido (Cards de Buques) */}
+                            {/* Contenido (Cards de Buques para todos los puertos) */}
                             <div className="p-6 bg-slate-50/50 min-h-[400px]">
-                                {activePortId && !isPortConfigured(activePortId) ? (
-                                    // Puerto sin data Q configurada
-                                    <div className="flex flex-col items-center justify-center py-16 gap-4 text-slate-400">
-                                        <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
-                                            <Anchor size={28} className="text-slate-300" />
-                                        </div>
-                                        <div className="text-center">
-                                            <div className="font-black text-slate-500 text-base uppercase tracking-wide">
-                                                {currentPort?.port_name || activePortId}
-                                            </div>
-                                            <div className="text-sm text-slate-400 mt-1 font-semibold">
-                                                Terminal sin data configurada
-                                            </div>
-                                            <div className="text-xs text-slate-300 mt-2 max-w-xs">
-                                                Este puerto no tiene tarifas Q ingresadas en el Motor Geeksoft Engine.
-                                                Los puertos configurados son: Callao, Marcona, Ilo, Matarani, Mejillones y Barquito.
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : activePortId ? (
+                                {effectiveActivePortId ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                         {vessels.map(v => {
                                             const getVesselData = (portId: string, vesselId: string) => {
@@ -502,7 +472,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                 return null;
                                             };
 
-                                            const vData = getVesselData(activePortId, v.vessel_id) || {
+                                            const vData = getVesselData(effectiveActivePortId, v.vessel_id) || {
                                                 CARGA: { MAIN: 0, loading_master: 0, other: 0 },
                                                 DESCARGA: { MAIN: 0, loading_master: 0, other: 0 },
                                                 updated_at: null,
@@ -528,127 +498,127 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                             <h3 className="font-black text-slate-800 text-sm leading-tight uppercase">
                                                                 {v.vessel_name || v.vessel_id}
                                                             </h3>
-                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ID: {v.vessel_id}</span>
+                                                            <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1 mt-0.5">
+                                                                <Clock size={10} /> {formattedDate}
+                                                            </span>
                                                         </div>
                                                     </div>
 
-                                                    {/* Inputs de Operación */}
-                                                    <div className="flex flex-col gap-4 text-[11px]">
-                                                        {/* Sección Carga */}
-                                                        <div className="flex flex-col gap-2">
-                                                            <span className="text-xs font-black text-blue-700 uppercase border-b border-blue-100 pb-0.5">Carga</span>
-                                                            
-                                                            <div className="flex items-center justify-between gap-2 pl-1">
-                                                                <label className="font-bold text-slate-500 uppercase">Gastos Portuarios</label>
-                                                                <input 
-                                                                    type="text"
-                                                                    value={focusedInput === `${v.vessel_id}-CARGA-MAIN` ? (vData.CARGA?.MAIN ?? '') : formatCostValue(vData.CARGA?.MAIN)}
-                                                                    onFocus={() => setFocusedInput(`${v.vessel_id}-CARGA-MAIN`)}
-                                                                    onBlur={() => setFocusedInput(null)}
-                                                                    onChange={(e) => handleCostChange(activePortId, v.vessel_id, 'CARGA', 'MAIN', e.target.value)}
-                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
-                                                                    placeholder="0.00"
-                                                                />
-                                                            </div>
-                                                            <div className="flex items-center justify-between gap-2 pl-1">
-                                                                <label className="font-bold text-slate-500 uppercase">Loading Master</label>
-                                                                <input 
-                                                                    type="text"
-                                                                    value={focusedInput === `${v.vessel_id}-CARGA-loading_master` ? (vData.CARGA?.loading_master ?? '') : formatCostValue(vData.CARGA?.loading_master)}
-                                                                    onFocus={() => setFocusedInput(`${v.vessel_id}-CARGA-loading_master`)}
-                                                                    onBlur={() => setFocusedInput(null)}
-                                                                    onChange={(e) => handleCostChange(activePortId, v.vessel_id, 'CARGA', 'loading_master', e.target.value)}
-                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
-                                                                    placeholder="0.00"
-                                                                />
-                                                            </div>
-                                                            <div className="flex items-center justify-between gap-2 pl-1">
-                                                                <label className="font-bold text-slate-500 uppercase">Otros Costos</label>
-                                                                <input 
-                                                                    type="text"
-                                                                    value={focusedInput === `${v.vessel_id}-CARGA-other` ? (vData.CARGA?.other ?? '') : formatCostValue(vData.CARGA?.other)}
-                                                                    onFocus={() => setFocusedInput(`${v.vessel_id}-CARGA-other`)}
-                                                                    onBlur={() => setFocusedInput(null)}
-                                                                    onChange={(e) => handleCostChange(activePortId, v.vessel_id, 'CARGA', 'other', e.target.value)}
-                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
-                                                                    placeholder="0.00"
-                                                                />
-                                                            </div>
-                                                        </div>
+                                                    {/* Formulario Carga / Descarga */}
+                                                    <div className="flex flex-col gap-4 flex-1">
                                                         
-                                                        {/* Sección Descarga */}
-                                                        <div className="flex flex-col gap-2">
-                                                            <span className="text-xs font-black text-amber-700 uppercase border-b border-amber-100 pb-0.5">Descarga</span>
-                                                            
-                                                            <div className="flex items-center justify-between gap-2 pl-1">
-                                                                <label className="font-bold text-slate-500 uppercase">Gastos Portuarios</label>
-                                                                <input 
-                                                                    type="text"
-                                                                    value={focusedInput === `${v.vessel_id}-DESCARGA-MAIN` ? (vData.DESCARGA?.MAIN ?? '') : formatCostValue(vData.DESCARGA?.MAIN)}
-                                                                    onFocus={() => setFocusedInput(`${v.vessel_id}-DESCARGA-MAIN`)}
-                                                                    onBlur={() => setFocusedInput(null)}
-                                                                    onChange={(e) => handleCostChange(activePortId, v.vessel_id, 'DESCARGA', 'MAIN', e.target.value)}
-                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
-                                                                    placeholder="0.00"
-                                                                />
+                                                        {/* Operación CARGA */}
+                                                        <div className="flex flex-col gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                                                            <div className="text-[11px] font-black text-blue-700 uppercase tracking-wider flex items-center justify-between">
+                                                                <span>Carga</span>
+                                                                <span className="text-[10px] text-slate-400 font-bold">
+                                                                    Total: ${( (vData.CARGA?.MAIN || 0) + (vData.CARGA?.loading_master || 0) + (vData.CARGA?.other || 0) ).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                                                </span>
                                                             </div>
-                                                            <div className="flex items-center justify-between gap-2 pl-1">
-                                                                <label className="font-bold text-slate-500 uppercase">Loading Master</label>
-                                                                <input 
-                                                                    type="text"
-                                                                    value={focusedInput === `${v.vessel_id}-DESCARGA-loading_master` ? (vData.DESCARGA?.loading_master ?? '') : formatCostValue(vData.DESCARGA?.loading_master)}
-                                                                    onFocus={() => setFocusedInput(`${v.vessel_id}-DESCARGA-loading_master`)}
-                                                                    onBlur={() => setFocusedInput(null)}
-                                                                    onChange={(e) => handleCostChange(activePortId, v.vessel_id, 'DESCARGA', 'loading_master', e.target.value)}
-                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
-                                                                    placeholder="0.00"
-                                                                />
-                                                            </div>
-                                                            <div className="flex items-center justify-between gap-2 pl-1">
-                                                                <label className="font-bold text-slate-500 uppercase">Otros Costos</label>
-                                                                <input 
-                                                                    type="text"
-                                                                    value={focusedInput === `${v.vessel_id}-DESCARGA-other` ? (vData.DESCARGA?.other ?? '') : formatCostValue(vData.DESCARGA?.other)}
-                                                                    onFocus={() => setFocusedInput(`${v.vessel_id}-DESCARGA-other`)}
-                                                                    onBlur={() => setFocusedInput(null)}
-                                                                    onChange={(e) => handleCostChange(activePortId, v.vessel_id, 'DESCARGA', 'other', e.target.value)}
-                                                                    className="w-24 text-right font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-xs font-mono"
-                                                                    placeholder="0.00"
-                                                                />
+                                                            <div className="grid grid-cols-3 gap-2">
+                                                                <div className="flex flex-col gap-1">
+                                                                    <label className="text-[9px] font-bold text-slate-500 uppercase">Agencia</label>
+                                                                    <input 
+                                                                        type="text"
+                                                                        value={focusedInput === `${effectiveActivePortId}-${v.vessel_id}-CARGA-MAIN` ? (vData.CARGA?.MAIN ?? '') : formatCostValue(vData.CARGA?.MAIN)}
+                                                                        onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-CARGA-MAIN`)}
+                                                                        onBlur={() => setFocusedInput(null)}
+                                                                        onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'CARGA', 'MAIN', e.target.value)}
+                                                                        className="w-full text-xs font-bold px-2 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
+                                                                        placeholder="0.00"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <label className="text-[9px] font-bold text-slate-500 uppercase">Load Master</label>
+                                                                    <input 
+                                                                        type="text"
+                                                                        value={focusedInput === `${effectiveActivePortId}-${v.vessel_id}-CARGA-lm` ? (vData.CARGA?.loading_master ?? '') : formatCostValue(vData.CARGA?.loading_master)}
+                                                                        onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-CARGA-lm`)}
+                                                                        onBlur={() => setFocusedInput(null)}
+                                                                        onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'CARGA', 'loading_master', e.target.value)}
+                                                                        className="w-full text-xs font-bold px-2 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
+                                                                        placeholder="0.00"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <label className="text-[9px] font-bold text-slate-500 uppercase">Otros</label>
+                                                                    <input 
+                                                                        type="text"
+                                                                        value={focusedInput === `${effectiveActivePortId}-${v.vessel_id}-CARGA-other` ? (vData.CARGA?.other ?? '') : formatCostValue(vData.CARGA?.other)}
+                                                                        onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-CARGA-other`)}
+                                                                        onBlur={() => setFocusedInput(null)}
+                                                                        onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'CARGA', 'other', e.target.value)}
+                                                                        className="w-full text-xs font-bold px-2 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
+                                                                        placeholder="0.00"
+                                                                    />
+                                                                </div>
                                                             </div>
                                                         </div>
+
+                                                        {/* Operación DESCARGA */}
+                                                        <div className="flex flex-col gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                                                            <div className="text-[11px] font-black text-emerald-700 uppercase tracking-wider flex items-center justify-between">
+                                                                <span>Descarga</span>
+                                                                <span className="text-[10px] text-slate-400 font-bold">
+                                                                    Total: ${( (vData.DESCARGA?.MAIN || 0) + (vData.DESCARGA?.loading_master || 0) + (vData.DESCARGA?.other || 0) ).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                                                </span>
+                                                            </div>
+                                                            <div className="grid grid-cols-3 gap-2">
+                                                                <div className="flex flex-col gap-1">
+                                                                    <label className="text-[9px] font-bold text-slate-500 uppercase">Agencia</label>
+                                                                    <input 
+                                                                        type="text"
+                                                                        value={focusedInput === `${effectiveActivePortId}-${v.vessel_id}-DESCARGA-MAIN` ? (vData.DESCARGA?.MAIN ?? '') : formatCostValue(vData.DESCARGA?.MAIN)}
+                                                                        onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-DESCARGA-MAIN`)}
+                                                                        onBlur={() => setFocusedInput(null)}
+                                                                        onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'DESCARGA', 'MAIN', e.target.value)}
+                                                                        className="w-full text-xs font-bold px-2 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
+                                                                        placeholder="0.00"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <label className="text-[9px] font-bold text-slate-500 uppercase">Load Master</label>
+                                                                    <input 
+                                                                        type="text"
+                                                                        value={focusedInput === `${effectiveActivePortId}-${v.vessel_id}-DESCARGA-lm` ? (vData.DESCARGA?.loading_master ?? '') : formatCostValue(vData.DESCARGA?.loading_master)}
+                                                                        onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-DESCARGA-lm`)}
+                                                                        onBlur={() => setFocusedInput(null)}
+                                                                        onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'DESCARGA', 'loading_master', e.target.value)}
+                                                                        className="w-full text-xs font-bold px-2 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
+                                                                        placeholder="0.00"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <label className="text-[9px] font-bold text-slate-500 uppercase">Otros</label>
+                                                                    <input 
+                                                                        type="text"
+                                                                        value={focusedInput === `${effectiveActivePortId}-${v.vessel_id}-DESCARGA-other` ? (vData.DESCARGA?.other ?? '') : formatCostValue(vData.DESCARGA?.other)}
+                                                                        onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-DESCARGA-other`)}
+                                                                        onBlur={() => setFocusedInput(null)}
+                                                                        onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'DESCARGA', 'other', e.target.value)}
+                                                                        className="w-full text-xs font-bold px-2 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
+                                                                        placeholder="0.00"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
                                                     </div>
 
-                                                    {/* Panel de Auditoría / Modificación */}
-                                                    <div className="mt-4 pt-3 border-t border-slate-100">
-                                                        <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex flex-col gap-1.5">
-                                                            <div className="flex justify-between items-center text-[10px]">
-                                                                <span className="font-bold text-slate-500 uppercase">Actualizado por:</span>
-                                                                <span className="font-black text-slate-700 bg-white px-2 py-0.5 rounded shadow-sm border border-slate-200">
-                                                                    {vData.updated_by || 'SISTEMA'}
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex justify-between items-center text-[10px]">
-                                                                <span className="font-bold text-slate-500 uppercase">Fecha Act.:</span>
-                                                                <span className="font-black text-slate-700 bg-white px-2 py-0.5 rounded shadow-sm border border-slate-200 flex items-center gap-1">
-                                                                    <Clock size={10} className={vData.updated_at ? "text-amber-500" : "text-slate-300"} />
-                                                                    {formattedDate}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
                                                 </div>
                                             );
                                         })}
                                     </div>
                                 ) : (
-                                    <div className="flex-1 flex items-center justify-center text-slate-400 font-semibold p-12">
+                                    <div className="flex items-center justify-center py-12 text-slate-400 font-bold">
                                         Seleccione un Puerto para ver la configuración de buques.
                                     </div>
                                 )}
                             </div>
+
                         </div>
                     )}
+
                 </div>
             )}
         </MasterTemplate>

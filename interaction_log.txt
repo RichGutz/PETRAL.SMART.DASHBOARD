@@ -1,4 +1,7 @@
-[2026-07-26 18:50:30] - Actualización de Especificación Técnica Commercial Forecast
-- Actualización integral del documento 'Especificacion.Commercial.Forecast.md' en Obsidian.1/DashBoardPetral/01_Arquitectura_y_Especificaciones.
-- Documentación del estándar de los 31 viajes auditados de la flota ($3,342,537.00 USD), mapeo cronológico ENE-JUN 26, Join The Dots en ECharts, sidebar fijo a 240px, popovers holgados a 320px.
-- Definición formal del Modo STATIC ($0.00 estricto sin fallbacks) y Modo MATRIX (Promedio entre Escenario Alto y Bajo del Modelo Matriz Compleja).
+[2026-07-26 18:53:15] - Implementación de Modos STATIC ($0.00 Estricto sin fallbacks) y MATRIX (Promedio Alto/Bajo Matriz Compleja)
+- Actualización del motor backend en forecast_service.py:
+  1. Modo STATIC: Consulta estricta a port_cost_static por nave (con normalización universal). Si no existe tarifa estática, retorna $0.00 USD estricto sin fallbacks a naves DEFAULT ni valores aproximados.
+  2. Modo MATRIX: Evaluación del Escenario Alto (is_casino=True) y Escenario Bajo (is_casino=False) con el motor dinámico PxQ, asignando como costo portuario oficial el promedio matemático: (Alto + Bajo) / 2.
+- Verificación autónoma en terminal con scratch/verify_static_vs_matrix_mode.py (100% SUCCESS).
+- Compilación limpia de TypeScript en Frontend (npm run build).
+- Integración y push al repositorio oficial de GitHub origin main (commit aefb280).
