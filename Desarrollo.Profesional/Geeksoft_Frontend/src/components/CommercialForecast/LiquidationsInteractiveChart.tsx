@@ -30,6 +30,20 @@ const getHexColor = (name: string, type: GroupBy) => {
     return '#2563EB';
 };
 
+// FORMATO CORTO ESTANDARIZADO EN MAYÚSCULA V. (V.045 o V.768)
+const getCleanVoyageCode = (r: any): string => {
+    const raw = String(r.voyage_code || '').toUpperCase();
+    const vName = String(r.vessel_name || '').toUpperCase();
+    const matches = raw.match(/\d+/);
+    if (!matches) return raw;
+    const num = parseInt(matches[0], 10);
+
+    if (vName.includes('TABLONES') || num <= 60) {
+        return `V.${String(num).padStart(3, '0')}`;
+    }
+    return `V.${num}`;
+};
+
 // EXTRACTOR DE RUTA REAL NAVEGADA
 const getRouteName = (r: any): string => {
     if (r.pol_port && r.pod_port && r.pol_port !== r.pod_port) {
@@ -149,7 +163,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
         return '2026-06';                     // Jun 26: V.775, V.776, V.777
     };
 
-    // Ordenar viajes cronológicamente
+    // ORDENAR VIAJES ESTRICTAMENTE POR MES CRONOLÓGICO (2026-01 A 2026-06)
     const sortedFilteredData = useMemo(() => {
         const filtered = liquidations.filter(r => {
             if (filterClient !== 'ALL' && r.client_name !== filterClient) return false;
@@ -160,6 +174,11 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
         });
 
         return filtered.sort((a, b) => {
+            const mKeyA = getVoyageMonthKey(a);
+            const mKeyB = getVoyageMonthKey(b);
+            if (mKeyA !== mKeyB) {
+                return mKeyA.localeCompare(mKeyB);
+            }
             const codeA = a.voyage_code || '';
             const codeB = b.voyage_code || '';
             return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
@@ -200,12 +219,12 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
         return 0;
     };
 
-    // EJE X NIVEL 1 (PEGADO A LAS BARRAS): ETIQUETAS DE CADA VIAJE EN VERTICAL PARALELA (rotate: 90°)
+    // EJE X NIVEL 1 (PEGADO A LAS BARRAS): ETIQUETAS ESTANDARIZADAS CON "V." (V.045 o V.768) EN VERTICAL PARALELA (rotate: 90°)
     const xAxisVoyageLabels = useMemo(() => {
-        return sortedFilteredData.map(r => `${r.voyage_code}`);
+        return sortedFilteredData.map(r => getCleanVoyageCode(r));
     }, [sortedFilteredData]);
 
-    // EJE X NIVEL 2 (DEBAJO DE LAS ETIQUETAS VERTICALES): RÓTULOS DE MESES (Ene 26 - Jun 26) AL PIE
+    // EJE X NIVEL 2 (DEBAJO DE LAS ETIQUETAS VERTICALES): RÓTULOS CONTINUOS DE LOS 6 MESES (ENE 26 A JUN 26) AL PIE
     const xAxisMonthLabelsSecondRow = useMemo(() => {
         const monthNames: Record<string, string> = {
             '2026-01': 'ENE 26',
@@ -216,24 +235,24 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             '2026-06': 'JUN 26'
         };
 
-        const lastMonthSeen: Record<string, number> = {};
-        
-        return sortedFilteredData.map((r, i) => {
-            const mKey = getVoyageMonthKey(r);
-            if (!lastMonthSeen[mKey]) {
-                lastMonthSeen[mKey] = i;
+        const monthKeysArr = sortedFilteredData.map((r) => getVoyageMonthKey(r));
+        const labelsResult = new Array(monthKeysArr.length).fill('');
+
+        const uniqueMonths = Array.from(new Set(monthKeysArr));
+
+        uniqueMonths.forEach(mKey => {
+            const indices: number[] = [];
+            monthKeysArr.forEach((mk, idx) => {
+                if (mk === mKey) indices.push(idx);
+            });
+
+            if (indices.length > 0) {
+                const midPos = indices[Math.floor(indices.length / 2)];
+                labelsResult[midPos] = monthNames[mKey] || mKey;
             }
-            return mKey;
-        }).map((mKey, i, arr) => {
-            const firstIndex = arr.indexOf(mKey);
-            const count = arr.filter(k => k === mKey).length;
-            const centerIndex = firstIndex + Math.floor(count / 2);
-            
-            if (i === centerIndex) {
-                return monthNames[mKey] || mKey;
-            }
-            return '';
         });
+
+        return labelsResult;
     }, [sortedFilteredData]);
 
     const options = useMemo(() => {
@@ -318,8 +337,9 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                     const index = params[0].dataIndex;
                     const r = sortedFilteredData[index];
                     const rName = getRouteName(r);
+                    const cleanCode = getCleanVoyageCode(r);
                     let html = `<div style="font-weight:bold;margin-bottom:4px;border-bottom:1px solid #cbd5e1;padding-bottom:2px;font-size:12px;">
-                        ${r.voyage_code} (${r.client_name}) — ${rName}
+                        ${cleanCode} (${r.client_name}) — ${rName}
                     </div>`;
 
                     params.forEach(p => {
@@ -349,27 +369,31 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                     position: 'bottom',
                     data: xAxisVoyageLabels,
                     axisPointer: { type: 'shadow' },
-                    axisTick: { alignWithLabel: true },
+                    axisTick: { alignWithLabel: true, length: 6 },
+                    axisLine: { lineStyle: { color: '#64748B', width: 1.5 } },
                     axisLabel: { 
                         interval: 0, 
                         rotate: 90, // ETIQUETAS DE VIAJE EN TEXTO VERTICAL TOTALMENTE PARALELO
                         fontWeight: 'bold', 
-                        fontSize: 10, 
-                        color: '#1E293B',
-                        margin: 8
+                        fontSize: 11, 
+                        fontFamily: 'Inter, system-ui, sans-serif',
+                        color: '#0F172A',
+                        margin: 10,
+                        formatter: (val: string) => val.split('').join(' ') // ESPACIADO AIREADO Y LEGIBLE ENTRE CARACTERES
                     }
                 },
                 {
                     type: 'category',
                     position: 'bottom',
-                    offset: 65, // POSICIONADO AL PIE DEBAJO DE LAS ETIQUETAS VERTICALES DE LOS VIAJES
+                    offset: 55, // POSICIONADO AL PIE DEBAJO DE LAS ETIQUETAS CORTAS DE LOS VIAJES
                     data: xAxisMonthLabelsSecondRow,
-                    axisLine: { show: true, lineStyle: { color: '#CBD5E1', width: 2 } },
-                    axisTick: { show: true, length: 12 },
+                    axisLine: { show: true, lineStyle: { color: '#0284C7', width: 2 } },
+                    axisTick: { show: false }, // APAGADO PARA NO REPETIR MARCAS EN CADA VIAJE
                     axisLabel: { 
                         interval: 0, 
                         fontWeight: '900', 
                         fontSize: 11, 
+                        fontFamily: 'Inter, system-ui, sans-serif',
                         color: '#0284C7' 
                     }
                 }
