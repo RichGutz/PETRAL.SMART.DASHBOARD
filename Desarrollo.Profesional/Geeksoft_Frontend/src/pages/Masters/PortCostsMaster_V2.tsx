@@ -4,6 +4,7 @@ import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { Anchor, Save, Clock, Ship } from 'lucide-react';
 import { DynamicAuditViewer } from '../../components/Masters/DynamicAuditViewer';
+import { BandasResumenViewer } from '../../components/Masters/BandasResumenViewer';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
 import { useAuth } from '../../context/AuthContext';
@@ -34,7 +35,7 @@ export const PortCostsMaster_V2: React.FC = () => {
     const [saving, setSaving] = useState(false);
     
     // Configuración Inicial
-    const [mode, setMode] = useState<'static' | 'matrix'>('static');
+    const [mode, setMode] = useState<'static' | 'matrix' | 'bandas'>('static');
     
     // Maestros
     const [ports, setPorts] = useState<any[]>([]);
@@ -354,6 +355,12 @@ export const PortCostsMaster_V2: React.FC = () => {
                             >
                                 Modelo Matriz Compleja
                             </button>
+                            <button 
+                                onClick={() => setMode('bandas')}
+                                className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${mode === 'bandas' ? 'bg-white text-emerald-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                📊 Bandas Tarifarias
+                            </button>
                         </div>
 
                         <div className="flex items-center gap-4">
@@ -393,7 +400,11 @@ export const PortCostsMaster_V2: React.FC = () => {
                         </div>
                     </div>
 
-                    {mode === 'matrix' ? (
+                    {mode === 'bandas' ? (
+                        <div className="w-full">
+                            <BandasResumenViewer />
+                        </div>
+                    ) : mode === 'matrix' ? (
                         <div className="w-full flex-1 min-h-[720px]">
                             <DynamicAuditViewer />
                         </div>
