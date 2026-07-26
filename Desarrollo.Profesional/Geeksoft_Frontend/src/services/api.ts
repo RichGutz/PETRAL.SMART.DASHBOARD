@@ -54,6 +54,14 @@ export const ForecastService = {
         const response = await api.get('/forecast/clients');
         return response.data;
     },
+    getVoyageLiquidations: async () => {
+        try {
+            const response = await api.get('/forecast/voyage_liquidations');
+            return response.data;
+        } catch {
+            return [];
+        }
+    },
     calculateSpot: async (payload: any) => {
         const response = await api.post('/forecast/spot/calculate', payload);
         return response.data;
