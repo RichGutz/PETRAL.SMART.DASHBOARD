@@ -30,6 +30,36 @@ const getHexColor = (name: string, type: GroupBy) => {
     return '#2563EB';
 };
 
+// EXTRACTOR DE RUTA REAL NAVEGADA
+const getRouteName = (r: any): string => {
+    if (r.pol_port && r.pod_port && r.pol_port !== r.pod_port) {
+        return `${r.pol_port} ➔ ${r.pod_port}`;
+    }
+
+    const stopsStr = JSON.stringify(r.stops || []).toUpperCase();
+    const code = String(r.voyage_code || '').toUpperCase();
+
+    if (stopsStr.includes('CALLAO') || code.includes('CALLAO')) {
+        if (stopsStr.includes('MATARANI') || code.includes('MATARANI')) return 'CALLAO ➔ MATARANI';
+        if (stopsStr.includes('MARCONA') || code.includes('MARCONA')) return 'CALLAO ➔ MARCONA';
+        return 'CALLAO ➔ ILO';
+    }
+
+    if (stopsStr.includes('MEJILLONES') || code.includes('MEJILLONES') || code.includes('TERQUIM')) {
+        return 'ILO ➔ MEJILLONES';
+    }
+
+    if (stopsStr.includes('MARCONA') || code.includes('MARCONA')) {
+        return 'ILO ➔ MARCONA';
+    }
+
+    if (stopsStr.includes('MATARANI') || code.includes('MATARANI')) {
+        return 'ILO ➔ MATARANI';
+    }
+
+    return `${r.pol_port || 'ILO'} ➔ ${r.pod_port || 'MARCONA'}`;
+};
+
 export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChartProps> = ({ liquidations }) => {
     const [groupBy, setGroupBy] = useState<GroupBy>('vessel');
     const [filterClient, setFilterClient] = useState<string>('ALL');
@@ -38,7 +68,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
 
     // Eje Primario
     const [primaryMetric, setPrimaryMetric] = useState<PlotMetric>('net_profit_usd');
-    const [primaryGraphType, setPrimaryGraphType] = useState<'bar_stack' | 'bar_group' | 'line' | 'line_straight'>('bar_stack');
+    const [primaryGraphType, setPrimaryGraphType] = useState<'bar_stack' | 'bar_group' | 'line' | 'line_straight'>('bar_group');
 
     // Eje Secundario
     const [secondaryMetric, setSecondaryMetric] = useState<PlotMetric>('tce_usd_day');
@@ -75,6 +105,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
         return () => document.removeEventListener('click', handleOutsideClick);
     }, []);
 
+    // Opciones para los selectores de filtros (Rutas Reales Extraídas)
     const filterOptions = useMemo(() => {
         const clients = new Set<string>();
         const routes = new Set<string>();
@@ -82,7 +113,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
 
         liquidations.forEach(r => {
             if (r.client_name) clients.add(r.client_name);
-            const rt = `${r.pol_port} -> ${r.pod_port}`;
+            const rt = getRouteName(r);
             routes.add(rt);
             if (r.vessel_name) vessels.add(r.vessel_name);
         });
@@ -93,8 +124,6 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             vessels: Array.from(vessels).sort()
         };
     }, [liquidations]);
-
-    const monthsAxisKeys = ['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06'];
 
     const getVoyageMonthKey = (r: any): string => {
         const code = String(r.voyage_code || '').toUpperCase();
@@ -124,7 +153,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
     const sortedFilteredData = useMemo(() => {
         const filtered = liquidations.filter(r => {
             if (filterClient !== 'ALL' && r.client_name !== filterClient) return false;
-            const rt = `${r.pol_port} -> ${r.pod_port}`;
+            const rt = getRouteName(r);
             if (filterRoute !== 'ALL' && rt !== filterRoute) return false;
             if (filterVessel !== 'ALL' && r.vessel_name !== filterVessel) return false;
             return true;
@@ -171,191 +200,55 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
         return 0;
     };
 
-    // DETERMINAR SI MOSTRAR EJE X POR MESES (bar_stack) O POR VIAJES UNO AL LADO DEL OTRO (bar_group)
-    const isGroupGranularVoyages = primaryGraphType === 'bar_group' || primaryGraphType.includes('line');
+    // EJE X NIVEL 1 (PEGADO A LAS BARRAS): ETIQUETAS DE CADA VIAJE EN VERTICAL PARALELA (rotate: 90°)
+    const xAxisVoyageLabels = useMemo(() => {
+        return sortedFilteredData.map(r => `${r.voyage_code}`);
+    }, [sortedFilteredData]);
 
-    const xAxisLabels = useMemo(() => {
-        if (isGroupGranularVoyages) {
-            // Eje X mostrando CADA VIAJE INDIVIDUAL UNO AL LADO DEL OTRO
-            return sortedFilteredData.map(r => `${r.voyage_code}`);
-        }
-        // Eje X por MESES DEL AÑO (Ene 26 - Jun 26)
-        return ['Ene 26', 'Feb 26', 'Mar 26', 'Abr 26', 'May 26', 'Jun 26'];
-    }, [isGroupGranularVoyages, sortedFilteredData]);
+    // EJE X NIVEL 2 (DEBAJO DE LAS ETIQUETAS VERTICALES): RÓTULOS DE MESES (Ene 26 - Jun 26) AL PIE
+    const xAxisMonthLabelsSecondRow = useMemo(() => {
+        const monthNames: Record<string, string> = {
+            '2026-01': 'ENE 26',
+            '2026-02': 'FEB 26',
+            '2026-03': 'MAR 26',
+            '2026-04': 'ABR 26',
+            '2026-05': 'MAY 26',
+            '2026-06': 'JUN 26'
+        };
+
+        const lastMonthSeen: Record<string, number> = {};
+        
+        return sortedFilteredData.map((r, i) => {
+            const mKey = getVoyageMonthKey(r);
+            if (!lastMonthSeen[mKey]) {
+                lastMonthSeen[mKey] = i;
+            }
+            return mKey;
+        }).map((mKey, i, arr) => {
+            const firstIndex = arr.indexOf(mKey);
+            const count = arr.filter(k => k === mKey).length;
+            const centerIndex = firstIndex + Math.floor(count / 2);
+            
+            if (i === centerIndex) {
+                return monthNames[mKey] || mKey;
+            }
+            return '';
+        });
+    }, [sortedFilteredData]);
 
     const options = useMemo(() => {
         if (sortedFilteredData.length === 0) return {};
 
-        if (isGroupGranularVoyages) {
-            // ── MODO 1: VIAJES INDIVIDUALES UNO AL LADO DEL OTRO (bar_group / line) ──
-            const seriesGroupMap: Record<string, number[]> = {};
+        const seriesGroupMap: Record<string, number[]> = {};
 
-            sortedFilteredData.forEach((r) => {
-                let sKey = r.vessel_name;
-                if (groupBy === 'petral') sKey = 'PETRAL';
-                if (groupBy === 'route') sKey = `${r.pol_port} -> ${r.pod_port}`;
-                if (groupBy === 'client') sKey = r.client_name;
-
-                if (!seriesGroupMap[sKey]) {
-                    seriesGroupMap[sKey] = new Array(sortedFilteredData.length).fill(0);
-                }
-            });
-
-            const buildSeriesList = (metric: PlotMetric, graphType: string, yAxisIndex: number) => {
-                if (metric === 'none') return [];
-
-                const labelPos = yAxisIndex === 0 ? primaryLabelPos : secondaryLabelPos;
-                const labelColor = yAxisIndex === 0 ? primaryLabelColor : secondaryLabelColor;
-                const isBar = graphType.includes('bar');
-
-                const seriesKeys = Object.keys(seriesGroupMap);
-
-                return seriesKeys.map(sKey => {
-                    const dataArr = sortedFilteredData.map(r => {
-                        let rKey = r.vessel_name;
-                        if (groupBy === 'petral') rKey = 'PETRAL';
-                        if (groupBy === 'route') rKey = `${r.pol_port} -> ${r.pod_port}`;
-                        if (groupBy === 'client') rKey = r.client_name;
-
-                        if (rKey === sKey) {
-                            return Math.round(getMetricValue(r, metric));
-                        }
-                        return 0;
-                    });
-
-                    const cColor = getHexColor(sKey, groupBy);
-
-                    return {
-                        name: `${sKey} ${yAxisIndex === 0 ? '(Pri)' : '(Sec)'}`,
-                        type: isBar ? 'bar' : 'line',
-                        yAxisIndex: yAxisIndex,
-                        smooth: graphType === 'line',
-                        symbol: graphType.includes('line') ? 'circle' : undefined,
-                        symbolSize: graphType.includes('line') ? 7 : undefined,
-                        barMaxWidth: 35,
-                        barGap: '10%',
-                        data: dataArr,
-                        itemStyle: { 
-                            borderRadius: isBar ? [3, 3, 0, 0] : undefined, 
-                            color: cColor 
-                        },
-                        lineStyle: graphType.includes('line') ? { width: 3, type: yAxisIndex === 1 ? 'dashed' : 'solid' } : undefined,
-                        label: {
-                            show: labelPos !== 'none',
-                            position: labelPos === 'none' ? undefined : labelPos,
-                            formatter: (params: any) => {
-                                if (params.value === 0) return '';
-                                return `$${(params.value / 1000).toFixed(0)}k`;
-                            },
-                            fontSize: 9,
-                            fontWeight: 'bold',
-                            color: labelColor
-                        }
-                    };
-                });
-            };
-
-            const priSeries = buildSeriesList(primaryMetric, primaryGraphType, 0);
-            const secSeries = buildSeriesList(secondaryMetric, secondaryGraphType, 1);
-
-            return {
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: { type: 'cross', crossStyle: { color: '#94A3B8' } },
-                    formatter: (params: any[]) => {
-                        if (!params || params.length === 0) return '';
-                        const index = params[0].dataIndex;
-                        const r = sortedFilteredData[index];
-                        let html = `<div style="font-weight:bold;margin-bottom:4px;border-bottom:1px solid #cbd5e1;padding-bottom:2px;font-size:12px;">
-                            ${r.voyage_code} (${r.client_name}) — ${r.pol_port} ➔ ${r.pod_port}
-                        </div>`;
-
-                        params.forEach(p => {
-                            if (p.value !== 0) {
-                                html += `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;margin-top:2px;">
-                                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${p.color};"></span>
-                                    <span style="color:#475569;">${p.seriesName}:</span>
-                                    <span style="font-weight:bold;color:#0F172A;">$${p.value.toLocaleString()}</span>
-                                </div>`;
-                            }
-                        });
-
-                        if (r.tce_usd_day) {
-                            html += `<div style="margin-top:4px;font-size:10px;color:#0284C7;font-weight:bold;">⚡ TCE Real: $${Math.round(r.tce_usd_day).toLocaleString()} / día</div>`;
-                        }
-
-                        return html;
-                    }
-                },
-                legend: { top: 0, type: 'scroll', textStyle: { fontSize: 11, fontWeight: 'bold', color: '#334155' } },
-                grid: { left: '3%', right: '4%', bottom: '12%', top: '12%', containLabel: true },
-                xAxis: [{
-                    type: 'category',
-                    name: 'Viajes Reales (Uno al Lado del Otro)',
-                    nameLocation: 'middle',
-                    nameGap: 32,
-                    nameTextStyle: { fontWeight: 'bold', fontSize: 11, color: '#475569' },
-                    data: xAxisLabels,
-                    axisPointer: { type: 'shadow' },
-                    axisLabel: { interval: 0, rotate: 30, fontWeight: 'bold', fontSize: 10, color: '#1E293B' }
-                }],
-                yAxis: [
-                    {
-                        type: 'value',
-                        name: getMetricLabel(primaryMetric),
-                        nameTextStyle: { fontWeight: 'bold', fontSize: 11, color: '#0284C7' },
-                        axisLabel: { formatter: (val: number) => `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}` },
-                        splitLine: { lineStyle: { type: 'dashed', color: '#E2E8F0' } }
-                    },
-                    {
-                        type: 'value',
-                        name: secondaryMetric !== 'none' ? getMetricLabel(secondaryMetric) : '',
-                        nameTextStyle: { fontWeight: 'bold', fontSize: 11, color: '#059669' },
-                        show: secondaryMetric !== 'none',
-                        axisLabel: { formatter: (val: number) => `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}` },
-                        splitLine: { show: false }
-                    }
-                ],
-                series: [...priSeries, ...secSeries]
-            };
-        }
-
-        // ── MODO 2: BARRAS APILADAS POR MESES (bar_stack) ──
-        const seriesGroupMap: Record<string, Record<string, { totalVal: number; count: number; voyages: string[] }>> = {};
-
-        filteredData.forEach((r) => {
+        sortedFilteredData.forEach((r) => {
             let sKey = r.vessel_name;
             if (groupBy === 'petral') sKey = 'PETRAL';
-            if (groupBy === 'route') sKey = `${r.pol_port} -> ${r.pod_port}`;
+            if (groupBy === 'route') sKey = getRouteName(r);
             if (groupBy === 'client') sKey = r.client_name;
 
-            const mKey = getVoyageMonthKey(r);
-
-            if (!seriesGroupMap[sKey]) seriesGroupMap[sKey] = {};
-            monthsAxisKeys.forEach(m => {
-                if (!seriesGroupMap[sKey][m]) {
-                    seriesGroupMap[sKey][m] = { totalVal: 0, count: 0, voyages: [] };
-                }
-            });
-
-            seriesGroupMap[sKey][mKey].count += 1;
-            const vCode = r.voyage_code ? r.voyage_code : '';
-            if (vCode && !seriesGroupMap[sKey][mKey].voyages.includes(vCode)) {
-                seriesGroupMap[sKey][mKey].voyages.push(vCode);
-            }
-        });
-
-        filteredData.forEach((r) => {
-            let sKey = r.vessel_name;
-            if (groupBy === 'petral') sKey = 'PETRAL';
-            if (groupBy === 'route') sKey = `${r.pol_port} -> ${r.pod_port}`;
-            if (groupBy === 'client') sKey = r.client_name;
-
-            const mKey = getVoyageMonthKey(r);
-
-            if (seriesGroupMap[sKey] && seriesGroupMap[sKey][mKey]) {
-                const pVal = getMetricValue(r, primaryMetric);
-                seriesGroupMap[sKey][mKey].totalVal += pVal;
+            if (!seriesGroupMap[sKey]) {
+                seriesGroupMap[sKey] = new Array(sortedFilteredData.length).fill(0);
             }
         });
 
@@ -364,54 +257,48 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
 
             const labelPos = yAxisIndex === 0 ? primaryLabelPos : secondaryLabelPos;
             const labelColor = yAxisIndex === 0 ? primaryLabelColor : secondaryLabelColor;
+            const isBar = graphType.includes('bar');
 
             const seriesKeys = Object.keys(seriesGroupMap);
 
             return seriesKeys.map(sKey => {
-                let runningVal = 0;
+                const dataArr = sortedFilteredData.map(r => {
+                    let rKey = r.vessel_name;
+                    if (groupBy === 'petral') rKey = 'PETRAL';
+                    if (groupBy === 'route') rKey = getRouteName(r);
+                    if (groupBy === 'client') rKey = r.client_name;
 
-                const dataArr = monthsAxisKeys.map(mKey => {
-                    const cell = seriesGroupMap[sKey]?.[mKey];
-                    if (!cell || cell.count === 0) {
-                        return { value: 0, voyagesStr: '' };
+                    if (rKey === sKey) {
+                        return Math.round(getMetricValue(r, metric));
                     }
-
-                    let val = Math.round(cell.totalVal);
-                    if (metric === 'tce_usd_day' || metric === 'yield_flete') {
-                        val = Math.round(cell.totalVal / cell.count);
-                    }
-
-                    runningVal += val;
-                    const finalVal = (yAxisIndex === 1 && isSecondaryCumulativeSeries) ? runningVal : val;
-                    const voyagesStr = cell.voyages.join(', ');
-
-                    return {
-                        value: finalVal,
-                        voyagesStr: voyagesStr
-                    };
+                    return 0;
                 });
 
                 const cColor = getHexColor(sKey, groupBy);
 
                 return {
                     name: `${sKey} ${yAxisIndex === 0 ? '(Pri)' : '(Sec)'}`,
-                    type: 'bar',
-                    stack: `total_${yAxisIndex}`,
+                    type: isBar ? 'bar' : 'line',
                     yAxisIndex: yAxisIndex,
-                    barMaxWidth: 45,
+                    smooth: graphType === 'line',
+                    symbol: graphType.includes('line') ? 'circle' : undefined,
+                    symbolSize: graphType.includes('line') ? 7 : undefined,
+                    barMaxWidth: 35,
+                    barGap: '10%',
                     data: dataArr,
                     itemStyle: { 
-                        borderRadius: [2, 2, 0, 0], 
+                        borderRadius: isBar ? [3, 3, 0, 0] : undefined, 
                         color: cColor 
                     },
+                    lineStyle: graphType.includes('line') ? { width: 3, type: yAxisIndex === 1 ? 'dashed' : 'solid' } : undefined,
                     label: {
                         show: labelPos !== 'none',
                         position: labelPos === 'none' ? undefined : labelPos,
                         formatter: (params: any) => {
-                            if (!params.data || params.data.value === 0) return '';
-                            return `$${(params.data.value / 1000).toFixed(0)}k`;
+                            if (params.value === 0) return '';
+                            return `$${(params.value / 1000).toFixed(0)}k`;
                         },
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight: 'bold',
                         color: labelColor
                     }
@@ -428,43 +315,65 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                 axisPointer: { type: 'cross', crossStyle: { color: '#94A3B8' } },
                 formatter: (params: any[]) => {
                     if (!params || params.length === 0) return '';
-                    const mName = params[0].name;
-                    let html = `<div style="font-weight:bold;margin-bottom:6px;border-bottom:1px solid #cbd5e1;padding-bottom:4px;font-size:12px;color:#0F172A;">
-                        📅 Período: ${mName}
+                    const index = params[0].dataIndex;
+                    const r = sortedFilteredData[index];
+                    const rName = getRouteName(r);
+                    let html = `<div style="font-weight:bold;margin-bottom:4px;border-bottom:1px solid #cbd5e1;padding-bottom:2px;font-size:12px;">
+                        ${r.voyage_code} (${r.client_name}) — ${rName}
                     </div>`;
 
                     params.forEach(p => {
-                        if (p.value !== 0 && p.data) {
-                            const valStr = typeof p.data === 'object' ? p.data.value : p.value;
-                            const vStr = p.data?.voyagesStr ? `<br/><span style="color:#0284C7;font-weight:bold;font-size:10px;padding-left:14px;">Viajes: ${p.data.voyagesStr}</span>` : '';
-                            html += `<div style="margin-top:4px;">
-                                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;">
-                                    <div>
-                                        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${p.color};"></span>
-                                        <span style="color:#475569;font-weight:bold;">${p.seriesName}:</span>
-                                    </div>
-                                    <span style="font-weight:extrabold;color:#0F172A;">$${valStr.toLocaleString()}</span>
-                                </div>
-                                ${vStr}
+                        if (p.value !== 0) {
+                            html += `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;margin-top:2px;">
+                                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${p.color};"></span>
+                                <span style="color:#475569;">${p.seriesName}:</span>
+                                <span style="font-weight:bold;color:#0F172A;">$${p.value.toLocaleString()}</span>
                             </div>`;
                         }
                     });
+
+                    if (r.tce_usd_day) {
+                        html += `<div style="margin-top:4px;font-size:10px;color:#0284C7;font-weight:bold;">⚡ TCE Real: $${Math.round(r.tce_usd_day).toLocaleString()} / día</div>`;
+                    }
 
                     return html;
                 }
             },
             legend: { top: 0, type: 'scroll', textStyle: { fontSize: 11, fontWeight: 'bold', color: '#334155' } },
-            grid: { left: '3%', right: '4%', bottom: '8%', top: '12%', containLabel: true },
-            xAxis: [{
-                type: 'category',
-                name: 'Meses del Año (Eje X)',
-                nameLocation: 'middle',
-                nameGap: 28,
-                nameTextStyle: { fontWeight: 'bold', fontSize: 11, color: '#475569' },
-                data: xAxisLabels,
-                axisPointer: { type: 'shadow' },
-                axisLabel: { interval: 0, fontWeight: 'bold', fontSize: 11, color: '#1E293B' }
-            }],
+            grid: { left: '3%', right: '4%', bottom: '16%', top: '12%', containLabel: true },
+            
+            // EJE X DE 2 NIVELES INVERTIDO (Nivel 1: Viajes Verticals, Nivel 2: Meses al Pie)
+            xAxis: [
+                {
+                    type: 'category',
+                    position: 'bottom',
+                    data: xAxisVoyageLabels,
+                    axisPointer: { type: 'shadow' },
+                    axisTick: { alignWithLabel: true },
+                    axisLabel: { 
+                        interval: 0, 
+                        rotate: 90, // ETIQUETAS DE VIAJE EN TEXTO VERTICAL TOTALMENTE PARALELO
+                        fontWeight: 'bold', 
+                        fontSize: 10, 
+                        color: '#1E293B',
+                        margin: 8
+                    }
+                },
+                {
+                    type: 'category',
+                    position: 'bottom',
+                    offset: 65, // POSICIONADO AL PIE DEBAJO DE LAS ETIQUETAS VERTICALES DE LOS VIAJES
+                    data: xAxisMonthLabelsSecondRow,
+                    axisLine: { show: true, lineStyle: { color: '#CBD5E1', width: 2 } },
+                    axisTick: { show: true, length: 12 },
+                    axisLabel: { 
+                        interval: 0, 
+                        fontWeight: '900', 
+                        fontSize: 11, 
+                        color: '#0284C7' 
+                    }
+                }
+            ],
             yAxis: [
                 {
                     type: 'value',
@@ -484,8 +393,9 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             ],
             series: [...priSeries, ...secSeries]
         };
-    }, [sortedFilteredData, isGroupGranularVoyages, xAxisLabels, groupBy, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
+    }, [sortedFilteredData, xAxisVoyageLabels, xAxisMonthLabelsSecondRow, groupBy, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
 
+    // RENDERIZADOR DE SELECTOR DE FILTRO DE ANCHO CONTROLADO (SIN DESCUADRAR EL SIDEBAR DE 240PX)
     const renderFilterDropdown = (
         selectedVal: string, 
         onSelect: (val: string) => void, 
@@ -495,7 +405,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
         title: string
     ) => {
         return (
-            <div className="relative flex-1" onClick={(e) => e.stopPropagation()}>
+            <div className="relative flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
                 <button 
                     onClick={() => {
                         setIsClientFilterOpen(false);
@@ -505,14 +415,14 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                         setIsSecOpen(false);
                         setIsOpen(!isOpen);
                     }}
-                    className="w-full flex items-center justify-between gap-1 px-2 py-1.5 text-xs bg-white border border-slate-200 rounded hover:border-slate-350 focus:outline-none transition-all cursor-pointer text-slate-700 font-bold"
+                    className="w-full flex items-center justify-between gap-1 px-2 py-1.5 text-xs bg-white border border-slate-200 rounded hover:border-slate-350 focus:outline-none transition-all cursor-pointer text-slate-700 font-bold overflow-hidden"
                 >
-                    <span className="truncate">{selectedVal === 'ALL' ? 'Todos' : selectedVal}</span>
+                    <span className="truncate block max-w-[115px]">{selectedVal === 'ALL' ? 'Todos' : selectedVal}</span>
                     <span className="text-[8px] text-slate-400 shrink-0">{isOpen ? '▲' : '▼'}</span>
                 </button>
 
                 {isOpen && (
-                    <div className="absolute left-[130px] top-1/2 -translate-y-1/2 bg-white border border-slate-200 rounded-lg shadow-xl z-50 w-[240px] max-h-[220px] overflow-y-auto p-1.5 flex flex-col gap-0.5 animate-in fade-in slide-in-from-left-2 duration-150">
+                    <div className="absolute left-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 w-[230px] max-h-[220px] overflow-y-auto p-1.5 flex flex-col gap-0.5 animate-in fade-in slide-in-from-top-1 duration-150">
                         <div className="px-2 py-1 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
                             <span>Filtrar {title}</span>
                             <button onClick={() => setIsOpen(false)} className="text-[10px] text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer">✕</button>
@@ -542,6 +452,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                                         ? 'bg-blue-50 border-blue-200 font-bold text-blue-900' 
                                         : 'border-transparent hover:bg-slate-50 font-medium text-slate-600'
                                 }`}
+                                title={opt}
                             >
                                 {opt}
                             </button>
@@ -678,7 +589,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                                 <button 
                                     onClick={() => setPrimaryGraphType('bar_stack')}
                                     className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'bar_stack' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100'}`}
-                                    title="Barras Stack (Por Meses)"
+                                    title="Barras Stack"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18h18"/><rect x="7" y="13" width="10" height="4" rx="1"/><rect x="7" y="7" width="10" height="4" rx="1"/></svg>
                                 </button>
