@@ -476,12 +476,14 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                         >
                                             <span className="text-sm">🗺️</span> Flowchart del Sistema
                                         </button>
+                                        {/* [HIDDEN FROM UI]
                                         <button 
                                             onClick={() => navigate('/static-vs-dynamic-port-cost')}
                                             className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'static-vs-dynamic-port-cost' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                                         >
                                             <span className="text-sm">⚖️</span> Static vs Dynamic Port Cost
                                         </button>
+                                        */}
                                         <button 
                                             onClick={() => navigate('/system-documentation')}
                                             className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'system-documentation' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}

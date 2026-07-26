@@ -13,7 +13,7 @@ import { AuditEngine_V2 } from './pages/Tools/AuditEngine_V2';
 import { AuditFinal_V2 } from './pages/Tools/AuditFinal_V2';
 import { MultiCotizador_V2 } from './pages/Tools/MultiCotizador_V2';
 import { SystemFlowchartViewer_V2 } from './pages/Tools/SystemFlowchartViewer_V2';
-import { StaticVsDynamicPortCost } from './pages/Tools/StaticVsDynamicPortCost_V2';
+// [HIDDEN FROM UI] import { StaticVsDynamicPortCost } from './pages/Tools/StaticVsDynamicPortCost_V2';
 import { SystemDocumentation_V2 } from './pages/Tools/SystemDocumentation_V2';
 
 
@@ -91,7 +91,7 @@ function App_V2() {
               <Route path="/port-tariffs" element={<ProtectedRoute module="maestro_costos_agencia"><PortTariffsMaster /></ProtectedRoute>} />
               <Route path="/sources-sinks" element={<ProtectedRoute module="maestro_rutas"><SourcesSinksMaster_V2 /></ProtectedRoute>} />
               <Route path="/bunker-prices" element={<ProtectedRoute module="maestro_bunker"><BunkerMaster /></ProtectedRoute>} />
-              <Route path="/static-vs-dynamic-port-cost" element={<ProtectedRoute><StaticVsDynamicPortCost /></ProtectedRoute>} />
+              {/* [HIDDEN FROM UI] <Route path="/static-vs-dynamic-port-cost" element={<ProtectedRoute><StaticVsDynamicPortCost /></ProtectedRoute>} /> */}
               
               {/* Herramientas Protegidas (Ribbon via ToolsLayout) */}
               <Route element={<ProtectedRoute><ToolsLayout_V2 /></ProtectedRoute>}>
