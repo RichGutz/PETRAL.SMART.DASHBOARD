@@ -242,7 +242,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             return {
                 value: code,
                 textStyle: {
-                    color: mColor, // CADA ETIQUETA ADOPTA EL COLOR EXCLUSIVO DE SU MES
+                    color: mColor,
                     fontWeight: 'bold',
                     fontSize: 11,
                     fontFamily: 'Inter, system-ui, sans-serif'
@@ -279,7 +279,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                 labelsResult[midPos] = {
                     value: monthNames[mKey] || mKey,
                     textStyle: {
-                        color: mColor, // EL NOMBRE DEL MES SE RENDERIZA CON SU COLOR DEDICADO
+                        color: mColor,
                         fontWeight: '900',
                         fontSize: 12,
                         fontFamily: 'Inter, system-ui, sans-serif'
@@ -317,29 +317,53 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             const seriesKeys = Object.keys(seriesGroupMap);
 
             return seriesKeys.map(sKey => {
-                const dataArr = sortedFilteredData.map(r => {
+                let runningTotal = 0;
+
+                // Extraer arreglo raw
+                const rawValues = sortedFilteredData.map(r => {
                     let rKey = r.vessel_name;
                     if (groupBy === 'petral') rKey = 'PETRAL';
                     if (groupBy === 'route') rKey = getRouteName(r);
                     if (groupBy === 'client') rKey = r.client_name;
 
+                    if (rKey === sKey) {
+                        return Math.round(getMetricValue(r, metric));
+                    }
+                    return 0;
+                });
+
+                // Si se pide porcentaje en Eje Secundario, calcular el total de la serie
+                const totalSeriesSum = rawValues.reduce((sum, v) => sum + v, 0);
+
+                const dataArr = rawValues.map((val, idx) => {
+                    const r = sortedFilteredData[idx];
                     const mKey = getVoyageMonthKey(r);
 
-                    if (rKey === sKey) {
-                        return {
-                            value: Math.round(getMetricValue(r, metric)),
-                            itemStyle: {
-                                color: getHexColor(sKey, groupBy, mKey)
-                            }
-                        };
+                    let calcValue = val;
+
+                    // LÓGICA DE SUMA ACUMULADA PROGRESIVA (RUNNING TOTAL) PARA EL EJE SECUNDARIO
+                    if (yAxisIndex === 1 && isSecondaryCumulativeSeries) {
+                        runningTotal += val;
+                        calcValue = runningTotal;
                     }
-                    return { value: 0 };
+
+                    // LÓGICA DE PORCENTAJE (SHARE %)
+                    if (yAxisIndex === 1 && isSecondaryPercentage && totalSeriesSum > 0) {
+                        calcValue = Number(((calcValue / totalSeriesSum) * 100).toFixed(1));
+                    }
+
+                    return {
+                        value: calcValue,
+                        itemStyle: {
+                            color: getHexColor(sKey, groupBy, mKey)
+                        }
+                    };
                 });
 
                 const cColor = getHexColor(sKey, groupBy);
 
                 return {
-                    name: `${sKey} ${yAxisIndex === 0 ? '(Pri)' : '(Sec)'}`,
+                    name: `${sKey} ${yAxisIndex === 0 ? '(Pri)' : '(Sec' + (isSecondaryCumulativeSeries ? ' Acum)' : ')')}`,
                     type: isBar ? 'bar' : 'line',
                     yAxisIndex: yAxisIndex,
                     smooth: graphType === 'line',
@@ -357,8 +381,10 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                         show: labelPos !== 'none',
                         position: labelPos === 'none' ? undefined : labelPos,
                         formatter: (params: any) => {
-                            if (!params.value || params.value === 0) return '';
-                            return `$${(params.value / 1000).toFixed(0)}k`;
+                            const valStr = typeof params.data === 'object' ? params.data.value : params.value;
+                            if (!valStr || valStr === 0) return '';
+                            if (yAxisIndex === 1 && isSecondaryPercentage) return `${valStr}%`;
+                            return `$${(valStr / 1000).toFixed(0)}k`;
                         },
                         fontSize: 9,
                         fontWeight: 'bold',
@@ -390,11 +416,13 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
 
                     params.forEach(p => {
                         const valStr = typeof p.data === 'object' ? p.data.value : p.value;
-                        if (valStr && valStr !== 0) {
+                        if (valStr !== undefined && valStr !== 0) {
+                            const isPct = p.seriesName.includes('(Sec') && isSecondaryPercentage;
+                            const formattedVal = isPct ? `${valStr}%` : `$${valStr.toLocaleString()}`;
                             html += `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;margin-top:2px;">
                                 <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${p.color};"></span>
                                 <span style="color:#475569;">${p.seriesName}:</span>
-                                <span style="font-weight:bold;color:#0F172A;">$${valStr.toLocaleString()}</span>
+                                <span style="font-weight:bold;color:#0F172A;">${formattedVal}</span>
                             </div>`;
                         }
                     });
@@ -409,7 +437,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             legend: { top: 0, type: 'scroll', textStyle: { fontSize: 11, fontWeight: 'bold', color: '#334155' } },
             grid: { left: '3%', right: '4%', bottom: '16%', top: '12%', containLabel: true },
             
-            // EJE X DE 2 NIVELES CON CÓDIGO CROMÁTICO POR MES (Nivel 1: Viajes del Color de su Mes, Nivel 2: Rótulo del Mes de su Color)
+            // EJE X DE 2 NIVELES CON CÓDIGO CROMÁTICO POR MES
             xAxis: [
                 {
                     type: 'category',
@@ -420,15 +448,15 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                     axisLine: { lineStyle: { color: '#64748B', width: 1.5 } },
                     axisLabel: { 
                         interval: 0, 
-                        rotate: 90, // ETIQUETAS EN TEXTO VERTICAL 90° CON CÓDIGO CROMÁTICO DE SU MES
+                        rotate: 90, 
                         margin: 10,
-                        formatter: (val: string) => val.split('').join(' ') // ESPACIADO AIREADO ENTRE CARACTERES
+                        formatter: (val: string) => val.split('').join(' ')
                     }
                 },
                 {
                     type: 'category',
                     position: 'bottom',
-                    offset: 50, // POSICIONADO AL PIE CON SU RESPECTIVO COLOR MES
+                    offset: 50, 
                     data: xAxisMonthLabelsSecondRow,
                     axisLine: { show: true, lineStyle: { color: '#CBD5E1', width: 1.5 } },
                     axisTick: { show: false },
@@ -447,16 +475,21 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                 },
                 {
                     type: 'value',
-                    name: secondaryMetric !== 'none' ? getMetricLabel(secondaryMetric) : '',
+                    name: secondaryMetric !== 'none' ? `${getMetricLabel(secondaryMetric)}${isSecondaryCumulativeSeries ? ' (Acum)' : ''}` : '',
                     nameTextStyle: { fontWeight: 'bold', fontSize: 11, color: '#059669' },
                     show: secondaryMetric !== 'none',
-                    axisLabel: { formatter: (val: number) => `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}` },
+                    axisLabel: { 
+                        formatter: (val: number) => {
+                            if (isSecondaryPercentage) return `${val}%`;
+                            return `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}`;
+                        }
+                    },
                     splitLine: { show: false }
                 }
             ],
             series: [...priSeries, ...secSeries]
         };
-    }, [sortedFilteredData, xAxisVoyageData, xAxisMonthLabelsSecondRow, groupBy, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
+    }, [sortedFilteredData, xAxisVoyageData, xAxisMonthLabelsSecondRow, groupBy, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor, isSecondaryCumulativeSeries, isSecondaryPercentage]);
 
     // RENDERIZADOR DE SELECTOR DE FILTRO DE ANCHO CONTROLADO (SIN DESCUADRAR EL SIDEBAR DE 240PX)
     const renderFilterDropdown = (

@@ -41,3 +41,4 @@ Fecha: 2026-07-26 12:31
   â€¢ 4ï¸âƒ£ Logos en Base64 Inline Data URIs e Ã­tems PassThrough resaltados en AMARILLO.
 2026-07-26 16:23:59 - [DOCS & UI] Consolidación integral de la documentación del sistema PETRAL V2.5 (11 Maestros en 4 categorías, 7 Herramientas explicadas botón por botón, 3 Tabs de Gastos Portuarios, 4.0h fijas escala, Callao PxQ, SPCC & NEXA clientes activos, menús colapsables verticalmente y botón Nueva Pestaña en MasterTemplate_V2).
 [2026-07-26] Commit: HTA.GRAFICA.LIQUIDAC.50.percent finalizado y subido a Git origin main.
+[2026-07-26] Documentacion Obsidian.ETL completada y subida a Git origin main.

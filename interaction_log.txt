@@ -69,3 +69,4 @@ Fecha: 2026-07-26
 - Resultado: ✅ 100% de Trazabilidad y Cobertura P x Q Auditada.
 ================================================================================
 [2026-07-26] Commit realizado: HTA.GRAFICA.LIQUIDAC.50.percent. Herramienta de Analisis Grafico de Liquidaciones estandarizada con codigo de colores por mes Ene-Jun y etiquetas V.
+[2026-07-26] Documentacion actualizada en Obsidian.ETL vault: Manual_Procedimiento_ETL_Liquidaciones.md y Circuito_Visualizacion_Grafica_Liquidaciones.md
