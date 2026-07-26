@@ -314,15 +314,20 @@ export const DynamicAuditViewer: React.FC<CallaoAuditViewerProps> = ({
         const isLoad = type === 'LOAD';
         const isMin = level === 'MIN';
 
+        const portCode = isLoad ? activeRouteInfo.loadPort : activeRouteInfo.dischargePort;
         const portName = isLoad ? activeRouteInfo.loadName : activeRouteInfo.dischargeName;
         const rate = isLoad ? loadRate : dischargeRate;
         const qOp = cargoTons / rate;
         const qFijo = isLoad ? qFijoLoad : qFijoDischarge;
         const totalHours = qOp + qFijo;
+        const tugsIn = isLoad ? tugsInLoad : tugsInDischarge;
+        const tugsOut = isLoad ? tugsOutLoad : tugsOutDischarge;
+        const isNational = isLoad ? isNationalLoad : isNationalDischarge;
 
-        const baseAudit = isLoad ? auditLoad : auditDischarge;
-        const multiplier = isMin ? 1.0 : 1.30;
-        const finalTotal = baseAudit.total * multiplier;
+        // CLAVE: MIN siempre isCasino=false, MAX siempre isCasino=true
+        const scenarioItems = computePortItems(portCode, vessel, totalHours, isNational, tugsIn, tugsOut, !isMin);
+        const scenarioTotal = scenarioItems.reduce((sum, i) => sum + i.cost, 0);
+        const finalTotal = scenarioTotal;
 
         const titleBadge = isMin
             ? '[NIVEL BAJO - HORARIO ORDINARIO]'
@@ -333,19 +338,19 @@ export const DynamicAuditViewer: React.FC<CallaoAuditViewerProps> = ({
             : `Atraque: Domingo 07:00 hrs (Dominical) ➔ Desatraque: ${isLoad ? 'Lunes (Feriado) 14:00 hrs' : 'Lunes (Feriado) 01:36 hrs'} (${totalHours.toFixed(1)} Horas en Muelle)\n  • RÉGIMEN HORARIO:      100% Recargo Nocturno / Dominical / Feriado (+25% a +50% Overtime & Regla Casino)`;
 
         const renderCategoryBlock = (catKey: string, catTitle: string) => {
-            const catItems = baseAudit.items.filter(i => i.category === catKey);
-            const catSubtotal = catItems.reduce((sum, i) => sum + (i.cost * multiplier), 0);
+            const catItems = scenarioItems.filter(i => i.category === catKey);
+            const catSubtotal = catItems.reduce((sum, i) => sum + i.cost, 0);
             const itemsRows = catItems.map((item) => {
                 const isPassThrough = item.rule?.includes('Pass-Through') || item.rule === 'SPCC' || item.concept?.toLowerCase().includes('muellaje') || item.concept?.toLowerCase().includes('standby');
                 const rowStyle = isPassThrough ? 'background-color: #fef08a; font-weight: bold;' : '';
                 return `
                 <tr style="${rowStyle}">
-                    <td style="border: 1px solid #000000; padding: 3px 5px; font-weight: bold;">${item.id}. ${item.concept} ${isPassThrough ? '[*PASSTHROUGH 🟨]' : ''}</td>
+                    <td style="border: 1px solid #000000; padding: 3px 5px; font-weight: bold;">${item.id}. ${item.concept} ${isPassThrough ? '[🟨]' : ''}</td>
                     <td style="border: 1px solid #000000; padding: 3px 5px;">${item.supplier}</td>
                     <td style="border: 1px solid #000000; padding: 3px 5px; font-size: 6.5pt; color: #334155;">${item.sourceTag}</td>
-                    <td style="border: 1px solid #000000; padding: 3px 5px; font-family: 'Courier New', monospace;">${item.formula} ${!isMin ? 'x 1.30 OT' : ''}</td>
+                    <td style="border: 1px solid #000000; padding: 3px 5px; font-family: 'Courier New', monospace;">${item.formula}</td>
                     <td style="border: 1px solid #000000; padding: 3px 5px; text-align: center;">${isMin ? 'Ordinario' : 'Overtime'}</td>
-                    <td style="border: 1px solid #000000; padding: 3px 5px; text-align: right; font-weight: bold; font-family: 'Courier New', monospace;">$${(item.cost * multiplier).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style="border: 1px solid #000000; padding: 3px 5px; text-align: right; font-weight: bold; font-family: 'Courier New', monospace;">$${item.cost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>
             `}).join('');
 
@@ -450,10 +455,10 @@ export const DynamicAuditViewer: React.FC<CallaoAuditViewerProps> = ({
             <div class="box-container" style="background-color: #fafafa; margin-top: 3px;">
                 <div class="box-title">📈 [ENCUADRE DE BANDAS TARIFARIAS, MATRIZ ESTÁTICA & EXPERTA SANDRA]:</div>
                 <pre style="font-family: 'Courier New', Courier, monospace; font-size: 6.2pt; margin: 0; white-space: pre-wrap; line-height: 1.2;">
-  • ESCENARIO OPTIMISTA (MÍNIMO - HÁBIL):    $${baseAudit.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD (100% Horario de Oficina sin Overtime)
-  • LIQUIDACIÓN EXPERTA SANDRA (EXCEL):      $${baseAudit.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD [ALOJADO CON 100% DE PRECISIÓN EN EL EXTREMO MÍNIMO]
-  • MATRIZ COSTO FIJO ESTÁTICO (SUPABASE DB): $${baseAudit.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
-  • ESCENARIO PESIMISTA (MÁXIMO - OVERTIME):  $${(baseAudit.total * 1.30).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD (Con Recargo Overtime/Casino +30%)
+  • ESCENARIO OPTIMISTA (MÍNIMO - HÁBIL):    $${isMin ? finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : computePortItems(portCode, vessel, totalHours, isNational, tugsIn, tugsOut, false).reduce((s,i)=>s+i.cost,0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD (100% Horario de Oficina sin Overtime)
+  • LIQUIDACIÓN EXPERTA SANDRA (EXCEL):      [VER ARCHIVO EXCEL / PROFORMA OFICIAL ADJUNTA]
+  • MATRIZ COSTO FIJO ESTÁTICO (SUPABASE DB): [CONSULTAR DB port_cost_static sub_op=MAIN]
+  • ESCENARIO PESIMISTA (MÁXIMO - OVERTIME):  $${!isMin ? finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : computePortItems(portCode, vessel, totalHours, isNational, tugsIn, tugsOut, true).reduce((s,i)=>s+i.cost,0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD (Con Recargo Overtime/Casino)
                 </pre>
             </div>
 
