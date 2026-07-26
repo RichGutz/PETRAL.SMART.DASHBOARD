@@ -507,7 +507,7 @@ export const SystemDocumentation_V2: React.FC = () => {
     };
 
     return (
-        <div className="p-6 space-y-6 w-full max-w-[1400px] mx-auto pb-12 print:p-0 print:m-0">
+        <div className="p-6 space-y-6 w-full max-w-full mx-auto pb-12 print:p-0 print:m-0">
 
             {/* ── CABECERA EJECUTIVA CON LOGOS CORPORATIVOS & BUSCADOR ── */}
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 w-full print:shadow-none print:border-b-2 print:border-slate-800">
