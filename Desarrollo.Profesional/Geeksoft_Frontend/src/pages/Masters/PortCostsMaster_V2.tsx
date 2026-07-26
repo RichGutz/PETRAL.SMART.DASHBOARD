@@ -6,6 +6,7 @@ import { Anchor, Save, Clock, Ship } from 'lucide-react';
 import { CallaoAuditViewer } from '../../components/Masters/CallaoAuditViewer';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
+import { useAuth } from '../../context/AuthContext';
 
 
 // Helper para obtener código ISO de 2 letras y nombre limpio de país
@@ -29,6 +30,7 @@ const normalizeVesselKey = (vId: string) => {
 
 export const PortCostsMaster_V2: React.FC = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     
@@ -129,12 +131,13 @@ export const PortCostsMaster_V2: React.FC = () => {
         const cleanValue = value.replace(/,/g, '');
         const numValue = parseFloat(cleanValue) || 0;
         const vKey = normalizeVesselKey(vesselId);
+        const upperPortId = (portId || '').toUpperCase().trim();
 
         setCostsState((prev: any) => {
             const next = { ...prev };
-            if (!next[portId]) next[portId] = {};
-            if (!next[portId][vKey]) {
-                next[portId][vKey] = {
+            if (!next[upperPortId]) next[upperPortId] = {};
+            if (!next[upperPortId][vKey]) {
+                next[upperPortId][vKey] = {
                     CARGA: { MAIN: 0, loading_master: 0, other: 0 },
                     DESCARGA: { MAIN: 0, loading_master: 0, other: 0 },
                     updated_at: null,
@@ -142,10 +145,10 @@ export const PortCostsMaster_V2: React.FC = () => {
                     raw_vessel_id: vesselId
                 };
             }
-            if (!next[portId][vKey][operation]) {
-                next[portId][vKey][operation] = { MAIN: 0, loading_master: 0, other: 0 };
+            if (!next[upperPortId][vKey][operation]) {
+                next[upperPortId][vKey][operation] = { MAIN: 0, loading_master: 0, other: 0 };
             }
-            next[portId][vKey][operation][subOp] = numValue;
+            next[upperPortId][vKey][operation][subOp] = numValue;
             return next;
         });
     };
@@ -154,36 +157,50 @@ export const PortCostsMaster_V2: React.FC = () => {
         try {
             setSaving(true);
             const payload: any[] = [];
+            const seenKeys = new Set<string>();
             
             Object.keys(costsState).forEach(portId => {
+                const cleanPortId = (portId || '').toUpperCase().trim();
+                if (!cleanPortId) return;
+
                 Object.keys(costsState[portId]).forEach(vKey => {
                     const costData = costsState[portId][vKey];
                     const targetVesselId = costData.raw_vessel_id || vKey;
+                    if (!targetVesselId) return;
                     
+                    const currentUser = user?.full_name || user?.email || 'USUARIO';
                     const subOps = ['MAIN', 'loading_master', 'other'];
                     subOps.forEach(subOp => {
                         const cargaVal = costData.CARGA?.[subOp] ?? 0;
                         const descargaVal = costData.DESCARGA?.[subOp] ?? 0;
                         
-                        payload.push({
-                            client_id: 'PETRAL',
-                            port_id: portId,
-                            operation_type: 'CARGA',
-                            vessel_id: targetVesselId,
-                            sub_operation_type: subOp,
-                            cost: cargaVal,
-                            updated_by: 'USUARIO'
-                        });
+                        const cargaKey = `${cleanPortId}|CARGA|${targetVesselId}|${subOp}`;
+                        if (!seenKeys.has(cargaKey)) {
+                            seenKeys.add(cargaKey);
+                            payload.push({
+                                client_id: 'PETRAL',
+                                port_id: cleanPortId,
+                                operation_type: 'CARGA',
+                                vessel_id: targetVesselId,
+                                sub_operation_type: subOp,
+                                cost: cargaVal,
+                                updated_by: currentUser
+                            });
+                        }
                         
-                        payload.push({
-                            client_id: 'PETRAL',
-                            port_id: portId,
-                            operation_type: 'DESCARGA',
-                            vessel_id: targetVesselId,
-                            sub_operation_type: subOp,
-                            cost: descargaVal,
-                            updated_by: 'USUARIO'
-                        });
+                        const descargaKey = `${cleanPortId}|DESCARGA|${targetVesselId}|${subOp}`;
+                        if (!seenKeys.has(descargaKey)) {
+                            seenKeys.add(descargaKey);
+                            payload.push({
+                                client_id: 'PETRAL',
+                                port_id: cleanPortId,
+                                operation_type: 'DESCARGA',
+                                vessel_id: targetVesselId,
+                                sub_operation_type: subOp,
+                                cost: descargaVal,
+                                updated_by: currentUser
+                            });
+                        }
                     });
                 });
             });
@@ -455,15 +472,16 @@ export const PortCostsMaster_V2: React.FC = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                         {vessels.map(v => {
                                             const getVesselData = (portId: string, vesselId: string) => {
-                                                const pNorm = (portId || '').toUpperCase().replace(/[\s_-]+/g, '');
+                                                const upperPort = (portId || '').toUpperCase().trim();
                                                 const vKey = normalizeVesselKey(vesselId);
-
+                                                if (costsState[upperPort] && costsState[upperPort][vKey]) {
+                                                    return costsState[upperPort][vKey];
+                                                }
+                                                const pNorm = upperPort.replace(/[\s_-]+/g, '');
                                                 for (const pKey of Object.keys(costsState)) {
-                                                    const kNorm = pKey.toUpperCase().replace(/[\s_-]+/g, '');
-                                                    if (kNorm === pNorm || kNorm.includes(pNorm) || pNorm.includes(kNorm)) {
-                                                        const portObj = costsState[pKey];
-                                                        if (portObj && portObj[vKey]) {
-                                                            return portObj[vKey];
+                                                    if (pKey.toUpperCase().replace(/[\s_-]+/g, '') === pNorm) {
+                                                        if (costsState[pKey] && costsState[pKey][vKey]) {
+                                                            return costsState[pKey][vKey];
                                                         }
                                                     }
                                                 }

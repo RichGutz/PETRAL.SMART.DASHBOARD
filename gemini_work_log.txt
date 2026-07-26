@@ -24,3 +24,10 @@ Fecha: 2026-07-22 21:53
 - Se normalizó el matching de buques (normalizeVesselKey) conectando directamente las 46 filas de Supabase.
 - Se creó y ejecutó la Suite Autónoma de QC (run_qc_static_vs_dynamic.py) pasando 19/19 comparativas reales válidas.
 - Se actualizaron las especificaciones en Obsidian (Static_vs_Dynamic_Port_Cost.md y Plan.QC.Loop.Static.vs.Dynamic.Port.Cost.md).
+
+Fecha: 2026-07-26 10:06
+
+- Diagnóstico y Solución del error de guardado en Carga para el Puerto de Callao (y matriz de costos estática):
+  - Causa Raíz: El endpoint POST /api/v1/forecast/port_costs_static en forecast.py enviaba un campo 'client_id' (inexistente en la tabla de Supabase port_cost_static, error PGRST204) e ignoraba 'terminal_id' (columna requerida NOT NULL que forma parte de la clave primaria compuesta port_id, terminal_id, operation_type, vessel_id).
+  - Corrección backend: Actualizado PortCostStaticUpdateItem en forecast_models.py y mapeo de payload en forecast.py para incluir terminal_id ('GENERAL' por defecto) y excluir client_id.
+  - Verificación empírica en DB: Ejecutado test de persistencia scratch/test_api_save_port_costs.py. Las filas de CARGA para Callao (MOQUEGUA, TABLONES, HUEMUL, CONCON_TRADER) fueron sembradas y guardadas exitosamente, incrementando de 4 a 8 registros activos en Supabase.

@@ -1019,17 +1019,30 @@ def save_port_costs_static(items: List[PortCostStaticUpdateItem]):
         payload = []
         for item in items:
             payload.append({
+                'client_id': item.client_id,
                 'port_id': item.port_id,
-                'terminal_id': getattr(item, 'terminal_id', None) or 'GENERAL',
                 'operation_type': item.operation_type,
                 'vessel_id': item.vessel_id,
                 'cost': item.cost,
                 'sub_operation_type': item.sub_operation_type or 'MAIN',
                 'updated_at': now_str,
-                'updated_by': item.updated_by or 'USUARIO'
+                'updated_by': item.updated_by
             })
         sb.table('port_cost_static').upsert(payload).execute()
         return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+from backend.models.forecast_models import SourceSinkUpdateItem
+
+@router.get('/sources_sinks')
+def get_sources_sinks():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table('sources_sinks').select('*').execute()
+        return res.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1175,6 +1188,42 @@ def delete_terminal(terminal_id: str, port_id: str):
         from backend.database import get_supabase
         sb = get_supabase()
         sb.table('terminals').delete().eq('terminal_id', terminal_id).eq('port_id', port_id).execute()
+        return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+from backend.models.forecast_models import PortCostStaticUpdateItem
+
+@router.get('/port_costs_static')
+def get_port_costs_static():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table('port_cost_static').select('*').execute()
+        return res.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post('/port_costs_static')
+def save_port_costs_static(items: List[PortCostStaticUpdateItem]):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        from datetime import datetime
+        now_str = datetime.utcnow().isoformat()
+        payload = []
+        for item in items:
+            payload.append({
+                'client_id': item.client_id,
+                'port_id': item.port_id,
+                'operation_type': item.operation_type,
+                'vessel_id': item.vessel_id,
+                'cost': item.cost,
+                'sub_operation_type': item.sub_operation_type or 'MAIN',
+                'updated_at': now_str,
+                'updated_by': item.updated_by
+            })
+        sb.table('port_cost_static').upsert(payload).execute()
         return {'status': 'success'}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -160,14 +160,13 @@ class TerminalUpdate(BaseModel):
     unmooring_time_hrs: float = 0.0
 
 class PortCostStaticUpdateItem(BaseModel):
-    client_id: Optional[str] = 'PETRAL'
-    terminal_id: Optional[str] = 'GENERAL'
+    client_id: str
     port_id: str
     operation_type: str
     vessel_id: str
     cost: float
     sub_operation_type: Optional[str] = 'MAIN'
-    updated_by: Optional[str] = 'ADMIN'
+    updated_by: str = 'ADMIN'
 
 
 class SourceSinkUpdateItem(BaseModel):

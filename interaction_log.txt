@@ -48,3 +48,15 @@ Fecha: 2026-07-22
 - Se normalizó el matching de buques (normalizeVesselKey) conectando directamente las 46 filas de Supabase.
 - Se creó y ejecutó la Suite Autónoma de QC (run_qc_static_vs_dynamic.py) pasando 19/19 comparativas reales válidas.
 - Se actualizaron las especificaciones en Obsidian (Static_vs_Dynamic_Port_Cost.md y Plan.QC.Loop.Static.vs.Dynamic.Port.Cost.md).
+
+================================================================================
+INTERACTION LOG - PETRAL SMART DASHBOARD
+Fecha: 2026-07-26
+================================================================================
+- Tarea: Resolución de Error de Conexión / Guardado en Puerto de Callao (Operación CARGA).
+- Diagnóstico: Error PostgREST PGRST204 por inclusión de campo inexistente 'client_id' y omisión de 'terminal_id' (Primary Key NOT NULL) en endpoint /port_costs_static.
+- Archivos modificados:
+  - forecast_models.py (Respaldo en forecast_models_V1.py)
+  - forecast.py (Respaldo en forecast_V1.py)
+- Resultado: Guardado en CARGA y DESCARGA 100% funcional. Callao actualizado con 8 filas activas en Supabase DB.
+================================================================================
