@@ -1,8 +1,5 @@
-[2026-07-26 18:22:00] - Auditoría y Sincronización Masiva del B/T Tablones (15/15 Viajes)
-- Transcripción y lectura directa celda por celda del Resumen B/T Tablones enviado por el usuario.
-- Validación de 15 viajes auditados (v.038 a v.052) del B/T Tablones.
-- Utilidad Total Consolidada B/T Tablones: $1,378,990.00 USD.
-- UTILIDAD TOTAL FLOTA COMBINADA (31 Viajes Auditados): $1,963,547.00 (Moquegua) + $1,378,990.00 (Tablones) = $3,342,537.00 USD.
-- Sincronización masiva REST API celda por celda en Supabase DB 'voyage_liquidations' (15 de 15 registros exitosos - Status 200).
-- Respaldo de PNGs en Obsidian.Maestro.Costos.Portuarios/PNGs y Exceles.Petral/PORT.COSTS.PATRICIA.
-- Verificación limpia de compilación TypeScript e integración en repositorio Git origin main (commit 9101d8b).
+[2026-07-26 18:24:30] - Resolución del renderizado multi-mes de la Herramienta de Análisis Gráfico de Liquidaciones
+- Identificación de causa raíz: Propiedad 'voyage_date' genérica ("2026-01-15") colapsaba los 31 viajes en el mes de Enero 2026.
+- Actualización de lógica en LiquidationsInteractiveChart.tsx: Clasificación cronológica robusta basada en la secuencia del código de viaje (v.038 a v.052 para B/T Tablones y V.761 a V.777 para B/T Moquegua).
+- Verificación de renderizado de los 31 viajes repartidos de forma proporcional en el calendario ENE 26, FEB 26, MAR 26, ABR 26, MAY 26 y JUN 26.
+- Compilación limpia verificada en terminal (npm run build) e integración en repositorio Git origin main (commit 32015ce).

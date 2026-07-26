@@ -535,7 +535,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
         };
     }, [sortedFilteredData, xAxisVoyageData, xAxisMonthLabelsSecondRow, groupBy, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor, isSecondaryCumulativeSeries, isSecondaryPercentage, vesselColorMap]);
 
-    // RENDERIZADOR DE SELECTOR DE FILTRO DE ANCHO CONTROLADO (SIN DESCUADRAR EL SIDEBAR DE 240PX)
+    // RENDERIZADOR DE SELECTOR DE FILTRO CON DESPLEGABLE AMPLIO HOLGADO (W-[320PX] Z-[9999])
     const renderFilterDropdown = (
         selectedVal: string, 
         onSelect: (val: string) => void, 
@@ -544,6 +544,8 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
         setIsOpen: (open: boolean) => void,
         title: string
     ) => {
+        const displayLabel = selectedVal === 'ALL' ? 'Todos' : selectedVal;
+
         return (
             <div className="relative flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
                 <button 
@@ -555,30 +557,32 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                         setIsSecOpen(false);
                         setIsOpen(!isOpen);
                     }}
-                    className="w-full flex items-center justify-between gap-1 px-2 py-1.5 text-xs bg-white border border-slate-200 rounded hover:border-slate-350 focus:outline-none transition-all cursor-pointer text-slate-700 font-bold overflow-hidden"
+                    className="w-full h-8 flex items-center justify-between gap-1 px-2 text-[11px] bg-white border border-slate-200 rounded hover:border-blue-400 focus:outline-none transition-all cursor-pointer text-slate-700 font-bold overflow-hidden shadow-sm"
+                    title={displayLabel}
                 >
-                    <span className="truncate block max-w-[115px]">{selectedVal === 'ALL' ? 'Todos' : selectedVal}</span>
-                    <span className="text-[8px] text-slate-400 shrink-0">{isOpen ? '▲' : '▼'}</span>
+                    <span className="truncate block flex-1 text-left">{displayLabel}</span>
+                    <span className="text-[8px] text-slate-400 shrink-0 ml-0.5">{isOpen ? '▲' : '▼'}</span>
                 </button>
 
                 {isOpen && (
-                    <div className="absolute left-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 w-[230px] max-h-[220px] overflow-y-auto p-1.5 flex flex-col gap-0.5 animate-in fade-in slide-in-from-top-1 duration-150">
-                        <div className="px-2 py-1 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
-                            <span>Filtrar {title}</span>
-                            <button onClick={() => setIsOpen(false)} className="text-[10px] text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer">✕</button>
+                    <div className="absolute left-0 top-full mt-1 bg-white border border-slate-300 rounded-xl shadow-2xl z-[9999] w-[320px] max-h-[360px] overflow-y-auto p-2 flex flex-col gap-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                        <div className="px-2 py-1 border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-blue-600 mb-1 flex items-center justify-between bg-slate-50 rounded">
+                            <span>Seleccionar {title}</span>
+                            <button onClick={() => setIsOpen(false)} className="text-[11px] text-slate-400 hover:text-slate-700 focus:outline-none cursor-pointer">✕</button>
                         </div>
                         <button
                             onClick={() => {
                                 onSelect('ALL');
                                 setIsOpen(false);
                             }}
-                            className={`text-left text-[11px] p-1.5 rounded transition-all cursor-pointer border ${
+                            className={`text-left text-xs p-2 rounded-lg transition-all cursor-pointer border flex items-center justify-between ${
                                 selectedVal === 'ALL' 
-                                    ? 'bg-blue-50 border-blue-200 font-bold text-blue-900' 
-                                    : 'border-transparent hover:bg-slate-50 font-medium text-slate-600'
+                                    ? 'bg-blue-600 border-blue-600 font-bold text-white shadow-sm' 
+                                    : 'border-transparent hover:bg-slate-100 font-medium text-slate-700'
                             }`}
                         >
-                            Todos
+                            <span>Todos los {title}s</span>
+                            {selectedVal === 'ALL' && <span className="text-xs">✓</span>}
                         </button>
                         {optionsList.map((opt) => (
                             <button
@@ -587,14 +591,15 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                                     onSelect(opt);
                                     setIsOpen(false);
                                 }}
-                                className={`text-left text-[11px] p-1.5 rounded transition-all cursor-pointer border truncate ${
+                                className={`text-left text-xs p-2 rounded-lg transition-all cursor-pointer border flex items-center justify-between gap-2 ${
                                     opt === selectedVal 
-                                        ? 'bg-blue-50 border-blue-200 font-bold text-blue-900' 
-                                        : 'border-transparent hover:bg-slate-50 font-medium text-slate-600'
+                                        ? 'bg-blue-600 border-blue-600 font-bold text-white shadow-sm' 
+                                        : 'border-slate-100 hover:bg-slate-100 font-semibold text-slate-800'
                                 }`}
                                 title={opt}
                             >
-                                {opt}
+                                <span className="truncate">{opt}</span>
+                                {opt === selectedVal && <span className="text-xs shrink-0">✓</span>}
                             </button>
                         ))}
                     </div>
@@ -643,22 +648,22 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                 </button>
 
                 {isOpen && (
-                    <div className="absolute left-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 w-[240px] p-1 flex flex-col gap-0.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div className="absolute left-0 top-full mt-1 bg-white border border-slate-300 rounded-xl shadow-2xl z-[9999] w-[300px] p-2 flex flex-col gap-1 animate-in fade-in slide-in-from-top-1 duration-150">
                         {metricOptionsList.map(opt => (
                             <button
                                 key={opt.value}
                                 onClick={() => { onSelect(opt.value); setIsOpen(false); }}
-                                className={`text-left p-1.5 flex flex-col gap-0.5 rounded hover:bg-slate-50 transition-all cursor-pointer border ${
+                                className={`text-left p-2 flex flex-col gap-0.5 rounded-lg hover:bg-slate-100 transition-all cursor-pointer border ${
                                     selectedVal === opt.value 
-                                        ? (colorClass === 'blue' ? 'bg-blue-50 border-blue-200' : 'bg-emerald-50 border-emerald-200') 
+                                        ? (colorClass === 'blue' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-emerald-600 border-emerald-600 text-white') 
                                         : 'border-transparent'
                                 }`}
                             >
-                                <div className="flex items-center gap-1.5">
+                                <div className="flex items-center gap-2">
                                     <span className="text-sm shrink-0">{opt.icon}</span>
-                                    <span className="text-[11px] font-bold text-slate-800">{opt.label}</span>
+                                    <span className={`text-xs font-bold ${selectedVal === opt.value ? 'text-white' : 'text-slate-800'}`}>{opt.label}</span>
                                 </div>
-                                <span className="text-[9px] text-slate-400 pl-5">{opt.desc}</span>
+                                <span className={`text-[10px] pl-6 ${selectedVal === opt.value ? 'text-blue-100' : 'text-slate-400'}`}>{opt.desc}</span>
                             </button>
                         ))}
                     </div>
@@ -670,15 +675,15 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
     return (
         <div className="w-full bg-white pt-4 pb-6 px-6 shadow-sm rounded-b-lg flex flex-row gap-6 items-stretch min-h-[calc(100vh-220px)]">
             
-            {/* SIDEBAR IZQUIERDO DE CONTROLES (ANCHO FIX W-[240PX]) */}
-            <div className="flex flex-col gap-3 shrink-0 w-[240px]">
+            {/* SIDEBAR IZQUIERDO DE CONTROLES (ANCHO FIX W-[240PX] RIGIDO SIN DEFORMAR EL GRÁFICO) */}
+            <div className="flex flex-col gap-3 shrink-0 w-[240px] max-w-[240px]">
                 
                 {/* 1. BLOQUE DE FILTROS (SLATE) */}
-                <div className="flex bg-white rounded-lg border border-slate-200 shadow-sm">
+                <div className="flex bg-white rounded-lg border border-slate-200 shadow-sm w-full overflow-visible">
                     <div className="bg-slate-700 w-7 flex items-center justify-center shrink-0 rounded-l-lg">
                         <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Filtros</span>
                     </div>
-                    <div className="flex-1 p-2 flex flex-col gap-2 bg-slate-50/50 rounded-r-lg relative">
+                    <div className="flex-1 p-2 flex flex-col gap-2 bg-slate-50/50 rounded-r-lg min-w-0 relative">
                         <button 
                             onClick={() => setGroupBy('petral')} 
                             className={`w-full h-8 flex items-center justify-center text-center px-2 text-[12px] font-extrabold rounded-md transition-colors cursor-pointer ${
@@ -690,24 +695,24 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                         <div className="h-px w-full bg-slate-200 my-0.5"></div>
                         
                         {/* Cliente */}
-                        <div className="flex items-center gap-1">
-                            <button onClick={() => setGroupBy('client')} className={`w-[75px] shrink-0 h-8 flex items-center justify-center text-[11px] font-bold rounded-md transition-colors cursor-pointer ${groupBy === 'client' || filterClient !== 'ALL' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                        <div className="flex items-center gap-1 w-full min-w-0">
+                            <button onClick={() => setGroupBy('client')} className={`w-[65px] shrink-0 h-8 flex items-center justify-center text-[11px] font-bold rounded-md transition-colors cursor-pointer ${groupBy === 'client' || filterClient !== 'ALL' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
                                 Cliente
                             </button>
                             {renderFilterDropdown(filterClient, setFilterClient, filterOptions.clients, isClientFilterOpen, setIsClientFilterOpen, 'Cliente')}
                         </div>
 
                         {/* Ruta */}
-                        <div className="flex items-center gap-1">
-                            <button onClick={() => setGroupBy('route')} className={`w-[75px] shrink-0 h-8 flex items-center justify-center text-[11px] font-bold rounded-md transition-colors cursor-pointer ${groupBy === 'route' || filterRoute !== 'ALL' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                        <div className="flex items-center gap-1 w-full min-w-0">
+                            <button onClick={() => setGroupBy('route')} className={`w-[65px] shrink-0 h-8 flex items-center justify-center text-[11px] font-bold rounded-md transition-colors cursor-pointer ${groupBy === 'route' || filterRoute !== 'ALL' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
                                 Ruta
                             </button>
                             {renderFilterDropdown(filterRoute, setFilterRoute, filterOptions.routes, isRouteFilterOpen, setIsRouteFilterOpen, 'Ruta')}
                         </div>
 
                         {/* Buque */}
-                        <div className="flex items-center gap-1">
-                            <button onClick={() => setGroupBy('vessel')} className={`w-[75px] shrink-0 h-8 flex items-center justify-center text-[11px] font-bold rounded-md transition-colors cursor-pointer ${groupBy === 'vessel' || filterVessel !== 'ALL' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                        <div className="flex items-center gap-1 w-full min-w-0">
+                            <button onClick={() => setGroupBy('vessel')} className={`w-[65px] shrink-0 h-8 flex items-center justify-center text-[11px] font-bold rounded-md transition-colors cursor-pointer ${groupBy === 'vessel' || filterVessel !== 'ALL' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
                                 Buque
                             </button>
                             {renderFilterDropdown(filterVessel, setFilterVessel, filterOptions.vessels, isVesselFilterOpen, setIsVesselFilterOpen, 'Buque')}
@@ -716,11 +721,11 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                 </div>
 
                 {/* 2. BLOQUE EJE PRIMARIO (AZUL) */}
-                <div className="flex bg-white rounded-lg border border-blue-200 shadow-sm">
+                <div className="flex bg-white rounded-lg border border-blue-200 shadow-sm w-full overflow-visible">
                     <div className="bg-blue-600 w-7 flex items-center justify-center shrink-0 rounded-l-lg">
                         <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Eje Primario</span>
                     </div>
-                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-blue-50/30 rounded-r-lg relative">
+                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-blue-50/30 rounded-r-lg min-w-0 relative">
                         {renderCustomDropdown(primaryMetric, setPrimaryMetric, isPriOpen, setIsPriOpen, 'blue')}
 
                         <div className="flex flex-row gap-4 pt-2 border-t border-blue-200/40 mt-1">
@@ -757,7 +762,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                             </div>
 
                             {/* Control de Etiquetas */}
-                            <div className="flex-1 flex flex-col gap-1">
+                            <div className="flex-1 flex flex-col gap-1 min-w-0">
                                 <button
                                     onClick={() => setPrimaryLabelColor(primaryLabelColor === '#ffffff' ? '#000000' : '#ffffff')}
                                     className={`w-full text-center py-1 text-[10px] font-extrabold rounded border transition-colors shadow-sm cursor-pointer ${primaryLabelColor === '#ffffff' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-800 border-slate-200'}`}
@@ -781,21 +786,21 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                 </div>
 
                 {/* 3. BLOQUE EJE SECUNDARIO (VERDE/EMERALD) */}
-                <div className="flex bg-white rounded-lg border border-emerald-200 shadow-sm">
+                <div className="flex bg-white rounded-lg border border-emerald-200 shadow-sm w-full overflow-visible">
                     <div className="bg-emerald-600 w-7 flex items-center justify-center shrink-0 rounded-l-lg">
                         <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Eje Secundario</span>
                     </div>
-                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-emerald-50/30 rounded-r-lg relative">
+                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-emerald-50/30 rounded-r-lg min-w-0 relative">
                         {renderCustomDropdown(secondaryMetric, setSecondaryMetric, isSecOpen, setIsSecOpen, 'emerald')}
 
                         <div className="flex flex-col gap-1.5 mt-1 border-t border-slate-200/50 pt-2">
                             <label className="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" className="w-3 h-3 cursor-pointer" checked={isSecondaryCumulativeSeries} onChange={(e) => setIsSecondaryCumulativeSeries(e.target.checked)} />
-                                <span className="text-[11px] font-medium text-slate-700">Acumular por serie</span>
+                                <input type="checkbox" className="w-3 h-3 cursor-pointer shrink-0" checked={isSecondaryCumulativeSeries} onChange={(e) => setIsSecondaryCumulativeSeries(e.target.checked)} />
+                                <span className="text-[11px] font-medium text-slate-700 truncate">Acumular por serie</span>
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer" title="Calcula la Rentabilidad Real % (Métrica / Gross Revenue Total)">
-                                <input type="checkbox" className="w-3 h-3 cursor-pointer" checked={isSecondaryPercentage} onChange={(e) => setIsSecondaryPercentage(e.target.checked)} />
-                                <span className="text-[11px] font-medium text-slate-700">Mostrar en % (vs Gross Rev)</span>
+                                <input type="checkbox" className="w-3 h-3 cursor-pointer shrink-0" checked={isSecondaryPercentage} onChange={(e) => setIsSecondaryPercentage(e.target.checked)} />
+                                <span className="text-[11px] font-medium text-slate-700 truncate">Mostrar en % (vs Gross Rev)</span>
                             </label>
                         </div>
                         
@@ -826,7 +831,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                             </div>
 
                             {/* Control de Etiquetas Secundario */}
-                            <div className="flex-1 flex flex-col gap-1">
+                            <div className="flex-1 flex flex-col gap-1 min-w-0">
                                 <button
                                     onClick={() => setSecondaryLabelColor(secondaryLabelColor === '#ffffff' ? '#000000' : '#ffffff')}
                                     className={`w-full text-center py-1 text-[10px] font-extrabold rounded border transition-colors shadow-sm cursor-pointer ${secondaryLabelColor === '#ffffff' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-800 border-slate-200'}`}
@@ -852,7 +857,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             </div>
 
             {/* CONTENEDOR DEL GRÁFICO (COLUMNA DERECHA FLEX-1 MIN-H-[650PX]) */}
-            <div className="flex-1 flex flex-col min-h-[650px] bg-white rounded-lg border border-slate-200 p-2 shadow-sm">
+            <div className="flex-1 min-w-0 flex flex-col min-h-[650px] bg-white rounded-lg border border-slate-200 p-2 shadow-sm">
                 <ReactECharts 
                     option={options} 
                     style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} 
