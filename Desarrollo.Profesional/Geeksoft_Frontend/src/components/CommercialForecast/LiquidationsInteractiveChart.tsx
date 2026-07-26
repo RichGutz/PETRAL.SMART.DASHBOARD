@@ -359,47 +359,51 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             return seriesKeys.map(sKey => {
                 let runningTotal = 0;
 
-                // Extraer arreglo raw
-                const rawValues = sortedFilteredData.map(r => {
+                const dataArr = sortedFilteredData.map((r) => {
                     let rKey = r.vessel_name;
                     if (groupBy === 'petral') rKey = 'PETRAL';
                     if (groupBy === 'route') rKey = getRouteName(r);
                     if (groupBy === 'client') rKey = r.client_name;
 
-                    if (rKey === sKey) {
-                        return Math.round(getMetricValue(r, metric));
-                    }
-                    return 0;
-                });
-
-                const dataArr = rawValues.map((val, idx) => {
-                    const r = sortedFilteredData[idx];
                     const mKey = getVoyageMonthKey(r);
 
-                    let calcValue = val;
+                    // SI EL VIAJE PERTENECE A ESTA SERIE / BARCO
+                    if (rKey === sKey) {
+                        const val = Math.round(getMetricValue(r, metric));
+                        let calcValue = val;
 
-                    // 1. LÓGICA DE SUMA ACUMULADA PROGRESIVA (RUNNING TOTAL)
-                    if (yAxisIndex === 1 && isSecondaryCumulativeSeries) {
-                        runningTotal += val;
-                        calcValue = runningTotal;
+                        // 1. LÓGICA DE SUMA ACUMULADA PROGRESIVA (RUNNING TOTAL)
+                        if (yAxisIndex === 1 && isSecondaryCumulativeSeries) {
+                            runningTotal += val;
+                            calcValue = runningTotal;
+                        }
+
+                        // 2. LÓGICA FINANCIERA DE PORCENTAJE SOBRE GROSS REVENUE COMBINADO (RENTABILIDAD % REAL DE CADA VIAJE)
+                        if (yAxisIndex === 1 && isSecondaryPercentage) {
+                            const totalGrossRev = getMetricValue(r, 'gross_revenue_usd');
+                            if (totalGrossRev > 0) {
+                                calcValue = Number(((calcValue / totalGrossRev) * 100).toFixed(1));
+                            } else {
+                                calcValue = 0;
+                            }
+                        }
+
+                        return {
+                            value: calcValue,
+                            itemStyle: {
+                                color: getHexColor(sKey, groupBy, mKey)
+                            }
+                        };
                     }
 
-                    // 2. LÓGICA FINANCIERA DE PORCENTAJE SOBRE GROSS REVENUE COMBINADO (RENTABILIDAD % REAL DE CADA VIAJE)
-                    if (yAxisIndex === 1 && isSecondaryPercentage) {
-                        const totalGrossRev = getMetricValue(r, 'gross_revenue_usd');
-                        if (totalGrossRev > 0) {
-                            calcValue = Number(((calcValue / totalGrossRev) * 100).toFixed(1));
-                        } else {
-                            calcValue = 0;
-                        }
+                    // SI EL BARCO / SERIE NO PARTICIPÓ EN ESTE VIAJE:
+                    // PARA BARRAS RETURN 0; PARA LÍNEAS RETURN null (JOIN THE DOTS)
+                    if (isBar) {
+                        return { value: 0, itemStyle: { color: 'transparent' } };
                     }
 
-                    return {
-                        value: calcValue,
-                        itemStyle: {
-                            color: getHexColor(sKey, groupBy, mKey)
-                        }
-                    };
+                    // JOIN THE DOTS: DEVOLVER null PARA UNIR EL ÚLTIMO DATO REAL SIN CAER A CERO
+                    return null;
                 });
 
                 const cColor = getHexColor(sKey, groupBy);
@@ -409,6 +413,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                     type: isBar ? 'bar' : 'line',
                     yAxisIndex: yAxisIndex,
                     smooth: graphType === 'line',
+                    connectNulls: true, // JOIN THE DOTS: UNIR PUNTOS REALES IGNORANDO VIAJES VACÍOS
                     symbol: graphType.includes('line') ? 'circle' : undefined,
                     symbolSize: graphType.includes('line') ? 7 : undefined,
                     barMaxWidth: 35,
@@ -423,7 +428,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                         show: labelPos !== 'none',
                         position: labelPos === 'none' ? undefined : labelPos,
                         formatter: (params: any) => {
-                            const valStr = typeof params.data === 'object' ? params.data.value : params.value;
+                            const valStr = typeof params.data === 'object' ? params.data?.value : params.value;
                             if (valStr === undefined || valStr === null) return '';
                             if (yAxisIndex === 1 && isSecondaryPercentage) return `${valStr}%`;
                             if (valStr === 0) return '';
@@ -459,7 +464,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                     </div>`;
 
                     params.forEach(p => {
-                        const valStr = typeof p.data === 'object' ? p.data.value : p.value;
+                        const valStr = typeof p.data === 'object' ? p.data?.value : p.value;
                         if (valStr !== undefined && valStr !== null) {
                             const isPct = p.seriesName.includes('(Sec') && isSecondaryPercentage;
                             const formattedVal = isPct ? `${valStr}% (sobre $${fullGross.toLocaleString()} Gross Rev)` : `$${valStr.toLocaleString()}`;

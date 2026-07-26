@@ -1,5 +1,5 @@
-[2026-07-26 18:24:30] - Resolución del renderizado multi-mes de la Herramienta de Análisis Gráfico de Liquidaciones
-- Identificación de causa raíz: Propiedad 'voyage_date' genérica ("2026-01-15") colapsaba los 31 viajes en el mes de Enero 2026.
-- Actualización de lógica en LiquidationsInteractiveChart.tsx: Clasificación cronológica robusta basada en la secuencia del código de viaje (v.038 a v.052 para B/T Tablones y V.761 a V.777 para B/T Moquegua).
-- Verificación de renderizado de los 31 viajes repartidos de forma proporcional en el calendario ENE 26, FEB 26, MAR 26, ABR 26, MAY 26 y JUN 26.
-- Compilación limpia verificada en terminal (npm run build) e integración en repositorio Git origin main (commit 32015ce).
+[2026-07-26 18:30:50] - Ajuste Visual de Desplegables de Filtro Amplios (320px)
+- Corrección de maquetación CSS en LiquidationsInteractiveChart.tsx: Eliminación de recortes y encogimiento en popovers desplegables.
+- Implementación de menú flotante independiente de 320px de ancho y alto de hasta 360px con nivel de capa z-[9999] y sombras profundas shadow-2xl.
+- Verificación de lectura completa de rutas largas (ej. 'ILO ➔ MEJILLONES ➔ TERQUIM') sin afectar el sidebar fijo de 240px ni el contenedor del gráfico.
+- Compilación limpia verificada en terminal (npm run build) e integración en repositorio Git origin main (commit f696ca4).
