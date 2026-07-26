@@ -33,32 +33,29 @@ const getCleanVoyageCode = (r: any): string => {
     return `V.${num}`;
 };
 
-// EXTRACTOR DE RUTA REAL NAVEGADA (SOPORTE MULTITRAMO ILO ➔ CALLAO ➔ MARCONA)
+// EXTRACTOR DE RUTA REAL NAVEGADA (SOPORTE MULTITERMINAL Y MULTITRAMO MEJILLONES / TERQUIM / CALLAO / MARCONA)
 const getRouteName = (r: any): string => {
+    const code = String(r.voyage_code || '').toUpperCase();
+    const stopsStr = JSON.stringify(r.stops || []).toUpperCase();
+    const detailsStr = JSON.stringify(r.details || []).toUpperCase();
+    const combinedStr = `${code} ${stopsStr} ${detailsStr}`;
+
+    if (combinedStr.includes('TERQUIM') || combinedStr.includes('765') || combinedStr.includes('767')) {
+        return 'ILO ➔ MEJILLONES ➔ TERQUIM';
+    }
+
+    if (combinedStr.includes('CALLAO') && combinedStr.includes('MARCONA')) {
+        return 'ILO ➔ CALLAO ➔ MARCONA';
+    }
+
     if (r.pol_port && r.pod_port && r.pol_port !== r.pod_port) {
         return `${r.pol_port} ➔ ${r.pod_port}`;
     }
 
-    const stopsStr = JSON.stringify(r.stops || []).toUpperCase();
-    const code = String(r.voyage_code || '').toUpperCase();
-
-    if (stopsStr.includes('CALLAO') || code.includes('CALLAO')) {
-        if (stopsStr.includes('MARCONA') || code.includes('MARCONA')) return 'ILO ➔ CALLAO ➔ MARCONA';
-        if (stopsStr.includes('MATARANI') || code.includes('MATARANI')) return 'CALLAO ➔ MATARANI';
-        return 'CALLAO ➔ ILO';
-    }
-
-    if (stopsStr.includes('MEJILLONES') || code.includes('MEJILLONES') || code.includes('TERQUIM')) {
-        return 'ILO ➔ MEJILLONES';
-    }
-
-    if (stopsStr.includes('MARCONA') || code.includes('MARCONA')) {
-        return 'ILO ➔ MARCONA';
-    }
-
-    if (stopsStr.includes('MATARANI') || code.includes('MATARANI')) {
-        return 'ILO ➔ MATARANI';
-    }
+    if (combinedStr.includes('MEJILLONES')) return 'ILO ➔ MEJILLONES';
+    if (combinedStr.includes('MATARANI')) return 'ILO ➔ MATARANI';
+    if (combinedStr.includes('MARCONA')) return 'ILO ➔ MARCONA';
+    if (combinedStr.includes('CALLAO')) return 'CALLAO ➔ ILO';
 
     return `${r.pol_port || 'ILO'} ➔ ${r.pod_port || 'MARCONA'}`;
 };
@@ -117,6 +114,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             return '#1E3A8A';
         }
         if (type === 'route') {
+            if (name.includes('TERQUIM')) return '#EC4899';
             if (name.includes('MATARANI')) return '#06B6D4';
             if (name.includes('MARCONA')) return '#A855F7';
             if (name.includes('MEJILLONES')) return '#D946EF';
