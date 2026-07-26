@@ -123,7 +123,7 @@ export const BandasResumenViewer: React.FC = () => {
           </table>
           <!-- Box observaciones ancho completo -->
           <div style="font-weight:bold;font-size:6.5pt;margin-bottom:2px;">OBSERVACIONES &amp; FEEDBACK EXPERTA SANDRA:</div>
-          <div style="border:1.5px solid #000;height:48px;background:#fafafa;width:100%;"></div>
+          <div class="obs-box"></div>
         </div>`;
 
         const leyendaBlock = `
@@ -195,7 +195,7 @@ export const BandasResumenViewer: React.FC = () => {
             const isLast = i + 2 >= vessels.length;
             const content = pair.map(v => renderVesselHtml(v)).join('');
             const pageBreak = isLast ? '' : '<div style="page-break-after:always;"></div>';
-            pages.push(`<div>${pageHeader}${content}${leyendaBlock}${signaturesBlock}</div>${pageBreak}`);
+            pages.push(`<div class="page-wrap">${pageHeader}${content}${leyendaBlock}${signaturesBlock}</div>${pageBreak}`);
         }
 
         return `<!DOCTYPE html>
@@ -203,7 +203,9 @@ export const BandasResumenViewer: React.FC = () => {
 <style>
   @page{size:A4 portrait;margin:0;}
   @media print{@page{size:A4 portrait;margin:0;}html,body{margin:0;padding:0;}}
-  body{font-family:'Courier New',Courier,monospace;color:#000;background:#fff;font-size:7pt;line-height:1.3;margin:0;padding:8mm 10mm 7mm 10mm;box-sizing:border-box;}
+  body{font-family:'Courier New',Courier,monospace;color:#000;background:#fff;font-size:7pt;line-height:1.3;margin:0;padding:8mm 10mm 7mm 10mm;box-sizing:border-box;display:flex;flex-direction:column;}
+  .page-wrap{display:flex;flex-direction:column;flex:1;}
+  .obs-box{flex:1;min-height:48px;border:1.5px solid #000;background:#fafafa;width:100%;}
 </style></head><body>
 ${pages.join('')}
 </body></html>`;

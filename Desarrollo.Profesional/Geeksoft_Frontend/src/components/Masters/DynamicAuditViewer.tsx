@@ -399,7 +399,9 @@ export const DynamicAuditViewer: React.FC<CallaoAuditViewerProps> = ({
                     html, body { margin: 0; padding: 0; }
                     .page-break { page-break-before: always; break-before: page; }
                 }
-                body { font-family: 'Courier New', Courier, monospace; color: #000000; background-color: #ffffff; font-size: 6.2pt; line-height: 1.15; margin: 0; padding: 12mm 10mm 8mm 10mm; box-sizing: border-box; }
+                body { font-family: 'Courier New', Courier, monospace; color: #000000; background-color: #ffffff; font-size: 6.2pt; line-height: 1.15; margin: 0; padding: 12mm 10mm 8mm 10mm; box-sizing: border-box; display: flex; flex-direction: column; min-height: 100vh; }
+                .signatures { margin-top: 6px; border-top: 1.5px solid #000000; padding-top: 4px; display: flex; flex-direction: column; flex: 1; }
+                .obs-box { flex: 1; min-height: 48px; border: 1.5px solid #000000; background-color: #fafafa; width: 100%; }
 
                 table { width: 100%; border-collapse: collapse; }
                 .header-table { border-bottom: 2px solid #000000; margin-bottom: 5px; }
@@ -491,7 +493,7 @@ export const DynamicAuditViewer: React.FC<CallaoAuditViewerProps> = ({
                     </tr>
                 </table>
                 <div style="font-weight: bold; font-size: 6.5pt; margin-bottom: 2px;">OBSERVACIONES &amp; FEEDBACK EXPERTA SANDRA:</div>
-                <div style="border: 1.5px solid #000000; height: 48px; background-color: #fafafa; width: 100%;"></div>
+                <div class="obs-box"></div>
             </div>
         </body>
         </html>
