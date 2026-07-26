@@ -1,4 +1,4 @@
-[2026-07-26 18:42:40] - Commit Oficial PRE.MATRIX.DUAL.PORT.COSTS
-- Consolidación y respaldo de la sincronización celda por celda de los 31 viajes auditados de la flota (B/T Moquegua y B/T Tablones).
-- Verificación del gráfico interactivo con visualización fluida de los 6 meses de 2026, selector de desplegables holgado de 320px y comportamiento 'Join The Dots' con 'connectNulls: true'.
-- Commit en repositorio Git origin main con la etiqueta 'PRE.MATRIX.DUAL.PORT.COSTS'.
+[2026-07-26 18:50:30] - Actualización de Especificación Técnica Commercial Forecast
+- Actualización integral del documento 'Especificacion.Commercial.Forecast.md' en Obsidian.1/DashBoardPetral/01_Arquitectura_y_Especificaciones.
+- Documentación del estándar de los 31 viajes auditados de la flota ($3,342,537.00 USD), mapeo cronológico ENE-JUN 26, Join The Dots en ECharts, sidebar fijo a 240px, popovers holgados a 320px.
+- Definición formal del Modo STATIC ($0.00 estricto sin fallbacks) y Modo MATRIX (Promedio entre Escenario Alto y Bajo del Modelo Matriz Compleja).

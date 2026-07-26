@@ -139,73 +139,182 @@ def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: 
             if not row:
                 row = next((c for c in concept_rows if c.get("client_id") == "DEFAULT" and c.get("vessel_id") == vessel_id), None)
                 
-            if row:
-                costs.append(row)
-                
-        return costs
+def compute_dynamic_port_scenarios(port_id: str, vessel_id: str, vparams: dict, port_hrs: float = 48.0):
+    port_code = (port_id or "").strip().upper()
+    
+    # Extraer LOA y GRT del buque con fallbacks seguros
+    loa = float(vparams.get("length") or vparams.get("loa") or 134.16)
+    grt = float(vparams.get("gross_tonnage") or vparams.get("grt") or 8259)
+    stay_days = max(1, int((port_hrs + 23.999) // 24.0))
 
-    # 2. Fallback: Buscar costo plano consolidado en agency_matrix (port_cost_static)
-    #    Suma TODOS los sub_operation_types (MAIN, loading_master, etc.)
-    def get_flat_cost_from_agency_matrix():
-        def find_rows(v_id=None):
-            if v_id is not None:
-                return [
-                    a for a in agency_matrix_data
-                    if a.get("port_id") == port_id
-                    and a.get("operation_type") == operation_type
-                    and a.get("vessel_id") == v_id
-                ]
-            else:
-                # Sin filtro de vessel_id: cualquier registro para este puerto+operación
-                return [
-                    a for a in agency_matrix_data
-                    if a.get("port_id") == port_id
-                    and a.get("operation_type") == operation_type
-                ]
+    def calculate_scenario(is_casino: bool):
+        dockage_rate_p = 1.50
+        towage_rate_p = 800.00
+        launch_rate_p = 85.00
+        agency_fee_p = 1000.00
+        tugs_in, tugs_out = 2, 2
+        is_national = True
 
-        # Prioridad A: vessel_id especifico
-        rows = find_rows(vessel_id)
-        # Prioridad B: DEFAULT
-        if not rows:
-            rows = find_rows("DEFAULT")
-        # Prioridad C (fallback final): cualquier barco con datos para este puerto+operación
-        # Útil cuando la tabla tiene datos para MOQUEGUA pero se calcula para TABLONES
-        if not rows:
-            all_rows = find_rows(None)
-            if all_rows:
-                # Tomar el primer vessel_id disponible con datos
-                first_vessel = all_rows[0].get("vessel_id")
-                rows = [r for r in all_rows if r.get("vessel_id") == first_vessel]
+        if port_code == "MARCONA":
+            extra_standby = 3000.00 if port_hrs > 48.0 else 0.0
+            lighthouse_rate = 0.03 if is_national else 0.12
+            total_lighthouse = round(lighthouse_rate * grt, 2)
+            standby_base = min(1800.00, port_hrs * 40.0)
 
-        if not rows:
-            return None
+            items = [
+                {'cost': 30508.48}, # SIA PSA
+                {'cost': 150.00},   # Toll
+                {'cost': total_lighthouse},
+                {'cost': 450.00},   # Coord
+                {'cost': 670.00},   # Sanidad
+                {'cost': 400.00},   # Lancha
+                {'cost': standby_base + extra_standby},
+                {'cost': 1400.00},  # Agencia
+                {'cost': 450.00}    # Gastos
+            ]
+        elif port_code == "MATARANI":
+            base_psa = 3368.00
+            psa_ot = base_psa * 0.25 if is_casino else 0.0
+            total_psa = (base_psa * 2) + psa_ot
+            lighthouse_rate = 0.03 if is_national else 0.12
+            total_lighthouse = round(lighthouse_rate * grt, 2)
+            total_dockage = round(0.65 * loa * port_hrs, 2)
 
-        # Sumar TODOS los sub_operation_types encontrados
-        breakdown = {}
-        for row in rows:
-            sub_type = row.get("sub_operation_type") or "MAIN"
-            cost_val = float(row.get("cost", 0.0))
-            if sub_type in breakdown:
-                breakdown[sub_type] += cost_val
-            else:
-                breakdown[sub_type] = cost_val
+            items = [
+                {'cost': total_psa},
+                {'cost': 787.30},   # Acceso/Amarre
+                {'cost': total_lighthouse},
+                {'cost': total_dockage},
+                {'cost': 670.00},   # Sanidad
+                {'cost': 960.00},   # Lanchas/Coord
+                {'cost': 1100.00},  # Agencia
+                {'cost': 450.00}    # Gastos
+            ]
+        elif port_code == "ILO":
+            pilotage_total = 3000.00
+            dockage_spcc = round(300.00 + (0.05 * grt * stay_days), 2)
+            psa_towage = max(3600.00, 0.16 * grt * 2)
+            psa_pos = 1400.00
+            petranso_towage = round(0.18 * grt * 2 * 0.90, 2)
+            petranso_pos = 1260.00
+            ot_tugs = 1643.31 if is_casino else 0.0
+            lighthouse_rate = 0.03 if is_national else 0.12
+            total_lighthouse = round(lighthouse_rate * grt, 2)
 
-        total = sum(breakdown.values())
-        return total, breakdown
+            items = [
+                {'cost': pilotage_total},
+                {'cost': psa_towage + petranso_towage + ot_tugs},
+                {'cost': psa_pos + petranso_pos + 680.00 + 150.00},
+                {'cost': dockage_spcc},
+                {'cost': total_lighthouse},
+                {'cost': 2600.00},  # Lanchas
+                {'cost': 1120.00},  # Sanidad
+                {'cost': 900.00},   # Agencia
+                {'cost': 400.00}    # Gastos
+            ]
+        elif port_code == "MEJILLONES":
+            items = [
+                {'cost': 12500.00}, # Practicaje y Remolque Chile
+                {'cost': 4500.00},  # Amarre y Desamarre
+                {'cost': 3200.00},  # Muelle / Uso Muelle
+                {'cost': 1800.00},  # Lanchas
+                {'cost': 2500.00},  # Agencia y Despacho
+                {'cost': 1500.00 if is_casino else 0.0} # Recargo Overtime/Nocturno
+            ]
+        else:
+            # CALLAO / GENERAL
+            base_pilotage = max(750.00, 0.055 * grt)
+            pilotage_out = base_pilotage * 1.25 if is_casino else base_pilotage
+            total_pilotage = round(base_pilotage + pilotage_out, 2)
+            towage_out_rate = towage_rate_p * 1.25 if is_casino else towage_rate_p
+            total_towage = (towage_rate_p * tugs_in) + (towage_out_rate * tugs_out)
+            total_access = 70.00 * 2
+            lighthouse_rate = 0.03 if is_national else 0.12
+            total_lighthouse = round(lighthouse_rate * grt, 2)
+            total_dockage = round(dockage_rate_p * loa * port_hrs, 2)
+
+            items = [
+                {'cost': total_pilotage},
+                {'cost': total_towage},
+                {'cost': total_access},
+                {'cost': total_lighthouse},
+                {'cost': total_dockage},
+                {'cost': launch_rate_p * 4},
+                {'cost': 450.00},   # Coord
+                {'cost': 200.00},   # Clearance
+                {'cost': 520.00},   # Sanidad
+                {'cost': agency_fee_p},
+                {'cost': 450.00}    # Gastos
+            ]
+
+        return sum(item['cost'] for item in items)
+
+    high_cost = calculate_scenario(is_casino=True)
+    low_cost = calculate_scenario(is_casino=False)
+    avg_cost = round((high_cost + low_cost) / 2.0, 2)
+    return high_cost, low_cost, avg_cost
 
 
-    # 0. Si el modo es static, ir directo al costo plano consolidado
+def calculate_detailed_port_costs(
+    client_id: str,
+    port_id: str,
+    operation_type: str,
+    vessel_id: str,
+    port_costs_data: list,
+    agency_matrix_data: list,
+    port_cost_mode: str,
+    vparams: dict,
+    quantity: float,
+    contract: dict,
+    ports_db: dict
+) -> dict:
+    is_mejillones = (port_id or "").upper() == "MEJILLONES"
+
+    def normalize_v_key(v_str: str) -> str:
+        if not v_str:
+            return ""
+        return v_str.upper().replace("B/T", "").replace("BT", "").replace(" ", "").replace("_", "").replace("-", "").strip()
+
+    # 1. MODO STATIC: Estricto desde port_cost_static por nave especifica sin fallbacks ficticios a DEFAULT
     if port_cost_mode == "static":
-        flat_res = get_flat_cost_from_agency_matrix()
-        if flat_res is not None:
-            total_val, breakdown = flat_res
+        target_v_clean = normalize_v_key(vessel_id)
+        target_port_clean = (port_id or "").strip().upper()
+        target_op_clean = (operation_type or "").strip().upper()
+
+        matching_rows = [
+            a for a in agency_matrix_data
+            if (a.get("port_id") or "").strip().upper() == target_port_clean
+            and (a.get("operation_type") or "").strip().upper() == target_op_clean
+            and normalize_v_key(a.get("vessel_id")) == target_v_clean
+        ]
+
+        if matching_rows:
+            breakdown = {}
+            for r in matching_rows:
+                sub_type = r.get("sub_operation_type") or "MAIN"
+                breakdown[sub_type] = float(r.get("cost", 0.0))
+            total_val = sum(breakdown.values())
             return {
                 "total_cost": round(total_val, 2),
                 "breakdown": breakdown
             }
+
+        # Si NO existe tarifa estática para esa nave en la DB, retornar $0.00 estricto
         return {
             "total_cost": 0.0,
             "breakdown": {"agency_fee": 0.0}
+        }
+
+    # 2. MODO MATRIX: Modelo Matriz Compleja PxQ (Promedio entre Escenario Alto y Escenario Bajo)
+    if port_cost_mode == "matrix":
+        high_val, low_val, avg_val = compute_dynamic_port_scenarios(port_id, vessel_id, vparams, port_hrs=48.0)
+        return {
+            "total_cost": avg_val,
+            "breakdown": {
+                "escenario_alto": round(high_val, 2),
+                "escenario_bajo": round(low_val, 2),
+                "promedio_matriz": avg_val
+            }
         }
 
     # 3. Si es Mejillones, resolver las tres terminales
