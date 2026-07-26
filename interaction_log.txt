@@ -1,8 +1,8 @@
-[2026-07-26 18:19:30] - Auditoría y Sincronización Masiva de los 16 Viajes de la Planilla Maestra
-- Transcripción y lectura directa celda por celda de la Planilla Maestra Oficial de Liquidaciones de la Flota enviada por el usuario.
-- Validación de 16 viajes auditados (V.761 a V.777) de B/T Moquegua con clientes SPCC y NEXA.
-- Confirmación de la columna oficial 'P/L / Gross Revenue' (Margen de Rentabilidad Neta % por viaje).
-- Suma Total de Utilidades de la Flota en la Planilla: $1,963,547.00 USD.
-- Sincronización masiva REST API celda por celda en Supabase DB 'voyage_liquidations' (16 de 16 registros exitosos - Status 200).
+[2026-07-26 18:22:00] - Auditoría y Sincronización Masiva del B/T Tablones (15/15 Viajes)
+- Transcripción y lectura directa celda por celda del Resumen B/T Tablones enviado por el usuario.
+- Validación de 15 viajes auditados (v.038 a v.052) del B/T Tablones.
+- Utilidad Total Consolidada B/T Tablones: $1,378,990.00 USD.
+- UTILIDAD TOTAL FLOTA COMBINADA (31 Viajes Auditados): $1,963,547.00 (Moquegua) + $1,378,990.00 (Tablones) = $3,342,537.00 USD.
+- Sincronización masiva REST API celda por celda en Supabase DB 'voyage_liquidations' (15 de 15 registros exitosos - Status 200).
 - Respaldo de PNGs en Obsidian.Maestro.Costos.Portuarios/PNGs y Exceles.Petral/PORT.COSTS.PATRICIA.
-- Verificación limpia de compilación TypeScript e integración en repositorio Git origin main (commit 20dc7e2).
+- Verificación limpia de compilación TypeScript e integración en repositorio Git origin main (commit 9101d8b).

@@ -183,28 +183,35 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
         };
     }, [liquidations]);
 
+    // MAPEO ROBUSTO Y DIRECTO DE MESES SEGÚN CÓDIGO DE VIAJE CRONOLÓGICO (2026-01 A 2026-06)
     const getVoyageMonthKey = (r: any): string => {
         const code = String(r.voyage_code || '').toUpperCase();
         const vName = String(r.vessel_name || '').toUpperCase();
-        const vNum = parseInt(code.replace(/\D/g, '')) || 0;
+
+        const matches = code.match(/\d+/);
+        const vNum = matches ? parseInt(matches[0], 10) : 0;
 
         // B/T TABLONES (v.038 a v.052)
-        if (vName.includes('TABLONES') || code.includes('TABLONES') || (vNum >= 38 && vNum <= 52)) {
+        if (vName.includes('TABLONES') || (vNum >= 38 && vNum <= 60)) {
             if (vNum <= 40) return '2026-01'; // Ene 26: v.038, v.039, v.040
             if (vNum <= 43) return '2026-02'; // Feb 26: v.041, v.042, v.043
-            if (vNum <= 45) return '2026-03'; // Mar 26: v.044 NEXA, v.045
+            if (vNum <= 45) return '2026-03'; // Mar 26: v.044, v.045
             if (vNum <= 47) return '2026-04'; // Abr 26: v.046, v.047
             if (vNum <= 50) return '2026-05'; // May 26: v.048, v.049, v.050
             return '2026-06';                 // Jun 26: v.051, v.052
         }
 
         // B/T MOQUEGUA (V.761 a V.777)
-        if (vNum <= 762) return '2026-01';     // Ene 26: V.761, V.762
-        if (vNum <= 765) return '2026-02';     // Feb 26: V.763 NEXA, V.764, V.765
-        if (vNum <= 768) return '2026-03';     // Mar 26: V.766, V.767, V.768
-        if (vNum <= 771) return '2026-04';     // Abr 26: V.769, V.770, V.771
-        if (vNum <= 774) return '2026-05';     // May 26: V.772, V.773, V.774 NEXA
-        return '2026-06';                     // Jun 26: V.775, V.776, V.777
+        if (vName.includes('MOQUEGUA') || vNum >= 700) {
+            if (vNum <= 762) return '2026-01';     // Ene 26: V.761, V.762
+            if (vNum <= 765) return '2026-02';     // Feb 26: V.763, V.764, V.765
+            if (vNum <= 768) return '2026-03';     // Mar 26: V.766, V.767, V.768
+            if (vNum <= 771) return '2026-04';     // Abr 26: V.769, V.770, V.771
+            if (vNum <= 774) return '2026-05';     // May 26: V.772, V.773, V.774
+            return '2026-06';                     // Jun 26: V.775, V.777
+        }
+
+        return '2026-01';
     };
 
     // ORDENAR VIAJES ESTRICTAMENTE POR MES CRONOLÓGICO (2026-01 A 2026-06)
