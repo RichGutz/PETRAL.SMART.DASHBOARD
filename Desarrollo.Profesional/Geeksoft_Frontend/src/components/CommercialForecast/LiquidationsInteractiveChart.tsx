@@ -8,7 +8,20 @@ interface LiquidationsInteractiveChartProps {
 type GroupBy = 'vessel' | 'route' | 'client' | 'petral';
 type PlotMetric = 'net_profit_usd' | 'tce_usd_day' | 'gross_revenue_usd' | 'cargo_quantity_mt' | 'port_costs_usd' | 'bunker_costs_usd' | 'yield_flete' | 'total_duration_days' | 'none';
 
-const getHexColor = (name: string, type: GroupBy) => {
+// PALETA DE COLORES ELEGANTES Y EXCLUSIVOS POR CADA UNO DE LOS 6 MESES
+const MONTH_COLOR_MAP: Record<string, string> = {
+    '2026-01': '#2563EB', // ENE 26: Azul Cobalto
+    '2026-02': '#7C3AED', // FEB 26: Púrpura Imperial
+    '2026-03': '#06B6D4', // MAR 26: Cian Turquesa
+    '2026-04': '#059669', // ABR 26: Verde Esmeralda
+    '2026-05': '#D97706', // MAY 26: Ámbar Cálido
+    '2026-06': '#DB2777'  // JUN 26: Magenta Rosé
+};
+
+const getHexColor = (name: string, type: GroupBy, monthKey?: string) => {
+    if (type === 'petral' && monthKey && MONTH_COLOR_MAP[monthKey]) {
+        return MONTH_COLOR_MAP[monthKey];
+    }
     if (type === 'petral') return '#0089CF';
     if (type === 'client') {
         if (name.includes('SPCC')) return '#0369A1';
@@ -219,12 +232,26 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
         return 0;
     };
 
-    // EJE X NIVEL 1 (PEGADO A LAS BARRAS): ETIQUETAS ESTANDARIZADAS CON "V." (V.045 o V.768) EN VERTICAL PARALELA (rotate: 90°)
-    const xAxisVoyageLabels = useMemo(() => {
-        return sortedFilteredData.map(r => getCleanVoyageCode(r));
+    // EJE X NIVEL 1: ETIQUETAS DE CADA VIAJE CON SU COLOR DEDICADO DE MES
+    const xAxisVoyageData = useMemo(() => {
+        return sortedFilteredData.map(r => {
+            const mKey = getVoyageMonthKey(r);
+            const mColor = MONTH_COLOR_MAP[mKey] || '#1E293B';
+            const code = getCleanVoyageCode(r);
+
+            return {
+                value: code,
+                textStyle: {
+                    color: mColor, // CADA ETIQUETA ADOPTA EL COLOR EXCLUSIVO DE SU MES
+                    fontWeight: 'bold',
+                    fontSize: 11,
+                    fontFamily: 'Inter, system-ui, sans-serif'
+                }
+            };
+        });
     }, [sortedFilteredData]);
 
-    // EJE X NIVEL 2 (DEBAJO DE LAS ETIQUETAS VERTICALES): RÓTULOS CONTINUOS DE LOS 6 MESES (ENE 26 A JUN 26) AL PIE
+    // EJE X NIVEL 2: RÓTULOS DE LOS MESES CON SU COLOR DEDICADO CORRESPONDIENTE
     const xAxisMonthLabelsSecondRow = useMemo(() => {
         const monthNames: Record<string, string> = {
             '2026-01': 'ENE 26',
@@ -236,7 +263,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
         };
 
         const monthKeysArr = sortedFilteredData.map((r) => getVoyageMonthKey(r));
-        const labelsResult = new Array(monthKeysArr.length).fill('');
+        const labelsResult: any[] = new Array(monthKeysArr.length).fill({ value: '' });
 
         const uniqueMonths = Array.from(new Set(monthKeysArr));
 
@@ -248,7 +275,16 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
 
             if (indices.length > 0) {
                 const midPos = indices[Math.floor(indices.length / 2)];
-                labelsResult[midPos] = monthNames[mKey] || mKey;
+                const mColor = MONTH_COLOR_MAP[mKey] || '#0284C7';
+                labelsResult[midPos] = {
+                    value: monthNames[mKey] || mKey,
+                    textStyle: {
+                        color: mColor, // EL NOMBRE DEL MES SE RENDERIZA CON SU COLOR DEDICADO
+                        fontWeight: '900',
+                        fontSize: 12,
+                        fontFamily: 'Inter, system-ui, sans-serif'
+                    }
+                };
             }
         });
 
@@ -287,10 +323,17 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                     if (groupBy === 'route') rKey = getRouteName(r);
                     if (groupBy === 'client') rKey = r.client_name;
 
+                    const mKey = getVoyageMonthKey(r);
+
                     if (rKey === sKey) {
-                        return Math.round(getMetricValue(r, metric));
+                        return {
+                            value: Math.round(getMetricValue(r, metric)),
+                            itemStyle: {
+                                color: getHexColor(sKey, groupBy, mKey)
+                            }
+                        };
                     }
-                    return 0;
+                    return { value: 0 };
                 });
 
                 const cColor = getHexColor(sKey, groupBy);
@@ -314,7 +357,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                         show: labelPos !== 'none',
                         position: labelPos === 'none' ? undefined : labelPos,
                         formatter: (params: any) => {
-                            if (params.value === 0) return '';
+                            if (!params.value || params.value === 0) return '';
                             return `$${(params.value / 1000).toFixed(0)}k`;
                         },
                         fontSize: 9,
@@ -338,16 +381,20 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                     const r = sortedFilteredData[index];
                     const rName = getRouteName(r);
                     const cleanCode = getCleanVoyageCode(r);
+                    const mKey = getVoyageMonthKey(r);
+                    const mColor = MONTH_COLOR_MAP[mKey] || '#0284C7';
+
                     let html = `<div style="font-weight:bold;margin-bottom:4px;border-bottom:1px solid #cbd5e1;padding-bottom:2px;font-size:12px;">
-                        ${cleanCode} (${r.client_name}) — ${rName}
+                        <span style="color:${mColor};font-weight:900;">${cleanCode}</span> (${r.client_name}) — ${rName}
                     </div>`;
 
                     params.forEach(p => {
-                        if (p.value !== 0) {
+                        const valStr = typeof p.data === 'object' ? p.data.value : p.value;
+                        if (valStr && valStr !== 0) {
                             html += `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;margin-top:2px;">
                                 <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${p.color};"></span>
                                 <span style="color:#475569;">${p.seriesName}:</span>
-                                <span style="font-weight:bold;color:#0F172A;">$${p.value.toLocaleString()}</span>
+                                <span style="font-weight:bold;color:#0F172A;">$${valStr.toLocaleString()}</span>
                             </div>`;
                         }
                     });
@@ -362,39 +409,31 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             legend: { top: 0, type: 'scroll', textStyle: { fontSize: 11, fontWeight: 'bold', color: '#334155' } },
             grid: { left: '3%', right: '4%', bottom: '16%', top: '12%', containLabel: true },
             
-            // EJE X DE 2 NIVELES INVERTIDO (Nivel 1: Viajes Verticals, Nivel 2: Meses al Pie)
+            // EJE X DE 2 NIVELES CON CÓDIGO CROMÁTICO POR MES (Nivel 1: Viajes del Color de su Mes, Nivel 2: Rótulo del Mes de su Color)
             xAxis: [
                 {
                     type: 'category',
                     position: 'bottom',
-                    data: xAxisVoyageLabels,
+                    data: xAxisVoyageData,
                     axisPointer: { type: 'shadow' },
                     axisTick: { alignWithLabel: true, length: 6 },
                     axisLine: { lineStyle: { color: '#64748B', width: 1.5 } },
                     axisLabel: { 
                         interval: 0, 
-                        rotate: 90, // ETIQUETAS DE VIAJE EN TEXTO VERTICAL TOTALMENTE PARALELO
-                        fontWeight: 'bold', 
-                        fontSize: 11, 
-                        fontFamily: 'Inter, system-ui, sans-serif',
-                        color: '#0F172A',
+                        rotate: 90, // ETIQUETAS EN TEXTO VERTICAL 90° CON CÓDIGO CROMÁTICO DE SU MES
                         margin: 10,
-                        formatter: (val: string) => val.split('').join(' ') // ESPACIADO AIREADO Y LEGIBLE ENTRE CARACTERES
+                        formatter: (val: string) => val.split('').join(' ') // ESPACIADO AIREADO ENTRE CARACTERES
                     }
                 },
                 {
                     type: 'category',
                     position: 'bottom',
-                    offset: 55, // POSICIONADO AL PIE DEBAJO DE LAS ETIQUETAS CORTAS DE LOS VIAJES
+                    offset: 50, // POSICIONADO AL PIE CON SU RESPECTIVO COLOR MES
                     data: xAxisMonthLabelsSecondRow,
-                    axisLine: { show: true, lineStyle: { color: '#0284C7', width: 2 } },
-                    axisTick: { show: false }, // APAGADO PARA NO REPETIR MARCAS EN CADA VIAJE
+                    axisLine: { show: true, lineStyle: { color: '#CBD5E1', width: 1.5 } },
+                    axisTick: { show: false },
                     axisLabel: { 
-                        interval: 0, 
-                        fontWeight: '900', 
-                        fontSize: 11, 
-                        fontFamily: 'Inter, system-ui, sans-serif',
-                        color: '#0284C7' 
+                        interval: 0
                     }
                 }
             ],
@@ -417,7 +456,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             ],
             series: [...priSeries, ...secSeries]
         };
-    }, [sortedFilteredData, xAxisVoyageLabels, xAxisMonthLabelsSecondRow, groupBy, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
+    }, [sortedFilteredData, xAxisVoyageData, xAxisMonthLabelsSecondRow, groupBy, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
 
     // RENDERIZADOR DE SELECTOR DE FILTRO DE ANCHO CONTROLADO (SIN DESCUADRAR EL SIDEBAR DE 240PX)
     const renderFilterDropdown = (
