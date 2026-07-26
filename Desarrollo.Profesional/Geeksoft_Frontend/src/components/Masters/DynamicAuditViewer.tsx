@@ -396,9 +396,10 @@ export const DynamicAuditViewer: React.FC<CallaoAuditViewerProps> = ({
                 @page { size: A4 portrait; margin: 0; }
                 @media print {
                     @page { size: A4 portrait; margin: 0; }
-                    html, body { height: 277mm; margin: 0; padding: 0; }
+                    html, body { margin: 0; padding: 0; }
                 }
-                body { font-family: 'Courier New', Courier, monospace; color: #000000; background-color: #ffffff; font-size: 6.2pt; line-height: 1.15; padding: 8mm 16.5mm 8mm 16.5mm; box-sizing: border-box; display: flex; flex-direction: column; height: 277mm; }
+                body { font-family: 'Courier New', Courier, monospace; color: #000000; background-color: #ffffff; font-size: 6.2pt; line-height: 1.15; }
+                .page-wrap { height: 277mm; padding: 8mm 16.5mm 8mm 16.5mm; box-sizing: border-box; display: flex; flex-direction: column; }
                 .signatures { margin-top: 6px; border-top: 1.5px solid #000000; padding-top: 4px; display: flex; flex-direction: column; flex: 1; min-height: 0; }
                 .obs-box { flex: 1; min-height: 50px; border: 1.5px solid #000000; background-color: #fafafa; width: 100%; box-sizing: border-box; }
 
@@ -414,6 +415,7 @@ export const DynamicAuditViewer: React.FC<CallaoAuditViewerProps> = ({
             </style>
         </head>
         <body>
+          <div class="page-wrap">
             <table class="header-table">
                 <tr>
                     <td style="width: 25%; text-align: left; vertical-align: middle;">
@@ -493,6 +495,7 @@ export const DynamicAuditViewer: React.FC<CallaoAuditViewerProps> = ({
                 <div style="font-weight: bold; font-size: 6.5pt; margin-bottom: 2px;">OBSERVACIONES &amp; FEEDBACK EXPERTA SANDRA:</div>
                 <div class="obs-box"></div>
             </div>
+          </div>
         </body>
         </html>
         `;
