@@ -39,3 +39,4 @@ Fecha: 2026-07-26 12:31
   • 2️⃣ Cuadro Comparativo Obligatorio de 4 Métricas al pie de TODOS los PDFs (Mínimo Optimista, Excel Experta Sandra, Matriz Fija Estática Supabase DB, Máximo Pesimista).
   • 3️⃣ Alerta `⚠️ NO ESTÁ EN LA TABLA` si la matriz estática no posee la fila en Supabase (Strict Zero Fallbacks).
   • 4️⃣ Logos en Base64 Inline Data URIs e ítems PassThrough resaltados en AMARILLO.
+2026-07-26 16:23:59 - [DOCS & UI] Consolidaci�n integral de la documentaci�n del sistema PETRAL V2.5 (11 Maestros en 4 categor�as, 7 Herramientas explicadas bot�n por bot�n, 3 Tabs de Gastos Portuarios, 4.0h fijas escala, Callao PxQ, SPCC & NEXA clientes activos, men�s colapsables verticalmente y bot�n Nueva Pesta�a en MasterTemplate_V2).

@@ -1,139 +1,125 @@
-# 📘 MANUAL DE USUARIO & ARQUITECTURA TÉCNICA
-## PETRAL SHIPPING.SOFT V2.5
-### Plataforma Integral de Inteligencia Comercial, Tarifación P×Q, Búker Polinómico & Voyage Ledger P&L
+# MANUAL Y DOCUMENTACIÓN INTEGRAL DEL SISTEMA PETRAL SHIPPING.SOFT V2.5 PRO
+
+> **NAVIERA PETRAL S.A.**  
+> *Plataforma Comercial, Operativa y de Auditoría de Costos Portuarios (Costa Oeste PE / CL)*  
+> **Última Actualización:** 2026-07-26  
 
 ---
 
-> **Empresa:** Naviera Petral S.A.  
-> **Sistema:** PETRAL SMART DASHBOARD / SHIPPING.SOFT  
-> **Versión:** 2.5 PRO (Release Julio 2026)  
-> **Confidencialidad:** Documento Interno de Alta Gerencia & Operaciones  
-> **Generado:** 25 de Julio de 2026  
+## 1. VISIÓN GENERAL Y ARQUITECTURA DEL ECOSISTEMA
+
+PETRAL SHIPPING.SOFT V2.5 es una plataforma web integral diseñada para la simulación comercial Spot, gestión de contratos marco COA, tarificación dinámica $P \times Q$, contabilidad de viajes (Voyage Ledger P&L) y auditoría de gastos portuarios.
+
+### Principios Fundamentales del Sistema:
+1. **Regla de Sin Fallbacks ("NO HAY"):** Si un dato o tarifa no existe en la base de datos Supabase, el sistema no inventa valores ni usa fallbacks genéricos. Muestra explícitamente `NO HAY`.
+2. **Homologación MDO/MGO:** En todo el software PETRAL, las siglas **MGO** (Marine Gas Oil / Diesel Marino) equivalen y se registran unificadamente bajo el estándar **MDO**.
+3. **Regla 6 QC Overtime (+25%):** En zarpes u operaciones fuera de jornada hábil (nocturno, dominical o feriado), el recargo de Overtime (+25%) se aplica individualmente $P_{base} \times 1.25$ sobre practicaje OUT, remolques OUT, lanchas y agenciamiento.
+4. **Layout Fluido & Sidebar Congelado:** La barra lateral navegable está congelada rígidamente a **320px fijos** (`w-[320px] shrink-0`), mientras que la vista principal del módulo ocupa el **100% del ancho disponible de la pantalla (`w-full max-w-full`)**.
 
 ---
 
-## 📖 ÍNDICE DE CAPÍTULOS DE LA DOCUMENTACIÓN
+## 2. DATOS MAESTROS (11 MÓDULOS EN 4 CATEGORÍAS)
 
-1. [Capítulo 1 — Visión General & Arquitectura del Sistema](#capítulo-1--visión-general--arquitectura-del-sistema)
-2. [Capítulo 2 — Maestro de Flota & Especificaciones de Buques](#capítulo-2--maestro-de-flota--especificaciones-de-buques)
-3. [Capítulo 3 — Maestro de Puertos, Terminales & Gastos Portuarios](#capítulo-3--maestro-de-puertos-terminales--gastos-portuarios)
-4. [Capítulo 4 — Maestro de Distancias & Rutas Comerciales](#capítulo-4--maestro-de-distancias--rutas-comerciales)
-5. [Capítulo 5 — Maestro de Clientes & Contratos COA](#capítulo-5--maestro-de-clientes--contratos-coa)
-6. [Capítulo 6 — Maestro de Búnker & Motor Polinómico BAF](#capítulo-6--maestro-de-búnker--motor-polinómico-baf)
-7. [Capítulo 7 — Maestro de Originación (Sources & Sinks)](#capítulo-7--maestro-de-originación-sources--sinks)
-8. [Capítulo 8 — Multicotizador Multirutas Spot (Engine P×Q)](#capítulo-8--multicotizador-multirutas-spot-engine-p-q)
-9. [Capítulo 9 — Matriz Financiera & Voyage Ledger P&L](#capítulo-9--matriz-financiera--voyage-ledger-p-l)
-10. [Capítulo 10 — Auditoría Static vs Dynamic Port Cost](#capítulo-10--auditoría-static-vs-dynamic-port-cost)
+El menú de **DATOS MAESTROS** organiza el catálogo oficial del sistema en 4 bloques funcionales:
 
----
+```
+DATOS MAESTROS
+├── 🏗️ MAESTROS FÍSICOS
+│   ├── 🚢 Maestro de Flota
+│   ├── ⚓ Maestro de Puertos y Terminales
+│   └── ✏️ Maestro de Distancias
+├── 💼 MAESTROS COMERCIALES
+│   ├── 🏢 Maestro de Clientes
+│   ├── 📜 Maestro de Contratos
+│   ├── 📍 Maestro de Rutas
+│   └── 📑 Maestro de Cotizaciones
+├── 💰 MAESTROS DE COSTOS
+│   ├── 🏷️ Maestro de Tarifas Portuarias
+│   └── 🧮 Maestro de Gastos Portuarios
+└── ⛽ MERCADO & ORIGINACIÓN
+    ├── ⛽ Maestro de Búnker
+    └── ⚙️ Maestro de Originación
+```
 
-## Capítulo 1 — Visión General & Arquitectura del Sistema
+### 2.1 🏗️ MAESTROS FÍSICOS
+* **Maestro de Flota (`/vessels`):** Reglas constructivas de la nave (LOA, GRT/TRB, DWT, Calados Summer/Tropical) y matriz de consumos de búnker IFO 380, VLSFO y Diesel MDO en las 3 fases operativas: Navegando (Lastre/Cargado), Operando en Muelle y Espera/Fondeo.
+* **Maestro de Puertos y Terminales (`/ports`):** Directorio de terminales de Perú y Chile (Callao APM/Multiboyas, Matarani Tisur, Ilo SPCC/Enapu, Marcona, Mejillones). Regula la variable **Q (Cantidad)** de permanencia:
+  $$\text{Horas Muelle } Q_{total} = \frac{\text{Carga MT}}{\text{Ritmo MT/h}} + 4.0\text{ horas fijas (Amarre/Desamarre + Conexiado/Desconexiado)}$$
+  * **Matriz Callao:** Evalúa Practicaje ($Q_{TRB}$), Remolcaje ($2\text{ IN} / 2\text{ OUT}$ por HP/TRB), Muellaje a la Nave (LOA y $Q_{total}$ horas), Muellaje a la Carga ($Q_{MT}$), Tasas DICAPI/APN, Sanidad Marítima y Overtime (+25%).
+* **Maestro de Distancias (`/routes`):** Matriz distancial oficial en Millas Náuticas ($NM$) entre puertos de originación y destino para el cálculo de días navegando.
 
-### 1.1 Objetivo de la Plataforma
-**PETRAL SHIPPING.SOFT** es una plataforma tecnológica de vanguardia diseñada específicamente para la gestión naviera de buques tanque (ej. *B/T Moquegua*, *B/T Tablones*, *Concon Trader*, *Huemul*). Permite simular, cotizar, ejecutar y auditar el margen de operación neto ($P\&L$) de cada viaje de transporte marítimo de hidrocarburos y carga líquida/a granel.
+### 2.2 💼 MAESTROS COMERCIALES
+* **Maestro de Clientes (`/clients`):** Registro corporativo exclusivo de los 2 clientes comerciales activos con contrato marco de Naviera Petral:
+  1. **Southern Perú Copper Corporation (SPCC)**
+  2. **Nexa Resources Peru S.A.A. (NEXA)**
+* **Maestro de Contratos (`/contracts`):** Términos marco COA (Flete base USD/MT, horas Laytime permitidas, tasa de Demurrage USD/día y fórmulas de indexación BAF).
+* **Maestro de Rutas (`/spot-routes`):** Parejas Origen-Destino físicas activas vinculadas a clientes en `routes_clients` (ej. *SPCC Ilo - Callao*, *Nexa Cajamarquilla*).
+* **Maestro de Cotizaciones (`/quotes`):** Registro histórico de proformas comercial Spot emitidas a prospectos en `routes_quotes`.
 
-### 1.2 Estructura Modular en 5 Niveles
-1. **Nivel 1: Datos Maestros Básicos** (Flota, Puertos, Distancias, Clientes, Contratos, Búnker, Originación).
-2. **Nivel 2: Motor Polinómico BAF & Tarifación P×Q** (Indexación por combustibles y reglas dinámicas por rubro).
-3. **Nivel 3: Cotizador Comercial Multirutas Spot** (Simulación en tiempo real de alternativas de flete).
-4. **Nivel 4: Matriz Financiera & Voyage Ledger P&L** (Consolidación financiera de ingresos, bunker, port costs, comisiones y resultado neto por viaje).
-5. **Nivel 5: Suite de Auditoría & Flujogramas** (Static vs Dynamic Port Cost, Auditoría Dual y Diagramas de Arquitectura).
+### 2.3 💰 MAESTROS DE COSTOS
+* **Maestro de Tarifas Portuarias (`/port-tariffs`):** Catálogo de tarifas unitarias por proveedor y servicio.
+* **Maestro de Gastos Portuarios (`/port-costs` - Los 3 Tabs Operativos):**
+  * **Tab 1 — Modelo Estático:** Matriz de costos fijos estáticos ($USD) por puerto y buque, desagregada por rubros de faena: Costo Principal (`MAIN`), Loading Master / Supervisión (`loading_master`) y Otros Gastos (`other`).
+  * **Tab 2 — Matriz Compleja:** Estructura tarifaria dinámica avanzada con reglas condicionales $P \times Q$ por proveedor.
+  * **Tab 3 — Bandas Tarifarias:** Tablero de auditoría de toda la flota que verifica el encuadre del costo fijo de DB contra el rango de tolerancia hábil **MIN** vs pesimista con Overtime (+25%) **MAX**. Muestra los estados: ✅ `EN BANDA`, ❌ `SOBRE MAX`, o `NO HAY`.
 
----
-
-## Capítulo 2 — Maestro de Flota & Especificaciones de Buques
-
-### 2.1 Especificaciones Técnicas Registradas
-El **Maestro de Flota** administra los datos constructivos, operativos y de consumo de las embarcaciones de la compañía:
-- **DWT (Deadweight Tonnage):** Capacidad de carga bruta en toneladas métricas.
-- **Draft / Calado (m):** Calado máximo en verano y restricciones operativas.
-- **Velocidad de Navegación (Kts):** Velocidad en lastre (Ballast) y cargado (Laden).
-- **Consumo de Búnker (MT/día):**
-  - Consumo Navegando IFO 380 VLSFO (Laden / Ballast).
-  - Consumo Navegando MDO Diesel (MGO).
-  - Consumo en Puerto Operando Carga/Descarga (Auxiliares y Calderas).
-  - Consumo en Puerto Inactivo (Idle).
-
----
-
-## Capítulo 3 — Maestro de Puertos, Terminales & Gastos Portuarios
-
-### 3.1 Gestión de Gastos Estáticos y Dinámicos
-Administra las tarifas y costos asociados a las escalas portuarias en el litoral peruano e internacional (ej. Callao, Matarani, Ilo, San Juan de Marcona, Mejillones, Quintero, Guayaquil):
-- **Costo Estático Fijo ($/operación):** Tarifa plana presupuestada por escala de agenciamiento.
-- **Matriz de Gastos Dinámicos (Motor P×Q):**
-  - Practicaje (Pilots)
-  - Remolque (Tugboats)
-  - Uso de Muelle (Port Dues / Wharfage)
-  - Amarradores y Lanchas (Mooring & Launch)
-  - Agenciamiento Marítimo (Agency Fee)
+### 2.4 ⛽ MERCADO & ORIGINACIÓN
+* **Maestro de Búnker (`/bunker-prices`):** Matriz de precios de combustible IFO 380, VLSFO y Diesel MDO, aplicando estrictamente la regla **MGO = MDO**.
+* **Maestro de Originación (`/sources-sinks`):** Oferta y demanda de carga (Sources & Sinks) por puerto, empresa y producto en TM/año.
 
 ---
 
-## Capítulo 4 — Maestro de Distancias & Rutas Comerciales
+## 3. HERRAMIENTAS & MOTORES (7 MÓDULOS - GUÍA BOTÓN POR BOTÓN)
 
-### 4.1 Matriz de Distancias Marítimas (Nautical Miles)
-Calcula con exactitud la distancia en millas náuticas (NM) entre los puertos de origen y destino, determinando automáticamente los días de navegación:
-$$\text{Días de Navegación} = \frac{\text{Distancia (NM)}}{\text{Velocidad (Kts)} \times 24}$$
+### 3.1 ⛴️ Multicotizador Multirutas (`/multicotizador`)
+* **⚡ Botón "Simular Itinerario / Calcular Flete":** Ejecuta el motor Spot calculando días navegando ($T_{ballast} + T_{laden}$), días en muelle ($Q_{op} + 4.0\text{h}$), consumo de búnker IFO/MDO y gastos portuarios para obtener el Flete de Equilibrio y el TCE Target ($USD/\text{día}$).
+* **🎛️ Selector "Modo de Gastos Portuarios":** Alterna entre Modelo Estático (costo fijo DB), Matriz Compleja $P \times Q$ (dinámica OT) y Bandas Tarifarias.
+* **💾 Botón "Guardar Cotización Spot":** Registra la simulación en `routes_quotes` con código de proforma comercial.
+* **📄 Botón "Exportar PDF / Excel":** Genera el informe proforma membretado oficial para envío al cliente.
 
----
+### 3.2 📊 Matriz Financiera - Voyage Ledger P&L (`/dashboard`)
+* **➕ Botón "Nuevo Asiento de Viaje (NVR)":** Abre la ventana para registrar un nuevo viaje asignando buque, ruta, toneladas e ingresos por flete.
+* **🔒 Botón "Cerrar Viaje / Conciliar Ledger":** Bloquea la edición del viaje y concilia los costos estimados de búnker y agenciamiento frente a las facturas reales liquidadas, determinando la Utilidad Neta Real.
+* **🔍 Botón "Ver Desglose de Gastos P×Q":** Despliega la auditoría ítem por ítem del viaje (practicaje, remolques, búnker en lastre/cargado y comisiones).
+* **📊 Botón "Exportar Libro Financiero (Excel)":** Descarga el estado de resultados consolidado de la flota para la gerencia financiera.
 
-## Capítulo 5 — Maestro de Clientes & Contratos COA
+### 3.3 📈 Análisis Gráfico (`/graphic-analysis`)
+* **📅 Selector "Horizonte Temporal":** Filtra la serie temporal a nivel Mensual, Trimestral o Anual.
+* **📊 Selector de Métrica (TCE / Búnker / Tarifas):** Cambia el indicador visualizado entre Rendimiento Diario ($USD/\text{día}$), Consumo MDO/IFO y Desembolsos Portuarios.
+* **📈 Botón "Alternar Tipo de Gráfico":** Modifica la visualización entre Barras Comparativas, Líneas de Tendencia Continua y Área Acumulada.
+* **📷 Botón "Exportar Gráfica (PNG / SVG)":** Descarga la imagen vectorial de alta resolución.
 
-### 5.1 Gestión Contractual por Tiers
-Almacena las condiciones pactadas en los Contratos de Afletamiento (COA):
-- **Laytime / Tasas de Carga y Descarga (MT/día).**
-- **Comisiones de Dirección y Brokerage (%).**
-- **Demurrage / Despacho ($/día).**
-- **Tiers de Tarifas por Tramo de Tonelaje ($/MT).**
+### 3.4 🗺️ Spaghetti Map (`/spaghetti-map`)
+* **🏢 Botón "Filtro por Cliente (SPCC / NEXA)":** Muestra u oculta las rutas marítimas asignadas a cada cliente.
+* **🗺️ Conmutador de Capas (Satélite vs Marítimo OSM):** Alterna entre capa satelital de alta resolución e hidrográfica náutica OpenStreetMap.
+* **📏 Herramienta "Medir Distancia Náutica (NM)":** Permite hacer clic sobre el mapa para calcular distancias náuticas entre coordenadas.
+* **🎯 Botón "Recentrar Costa Oeste":** Enfoca la vista sobre la Costa Oeste de Sudamérica (Callao-Matarani-Ilo-Mejillones).
 
----
+### 3.5 ⚖️ Auditoría Final (`/audit-final`)
+* **⚓ Selector "Seleccionar Buque & Puerto":** Carga la liquidación oficial de la nave trayendo todos los rubros portuarios.
+* **⚡ Interruptor "Regla 6 Overtime (+25%)":** Activa o desactiva el recargo en practicaje y remolcaje OUT para zarpes nocturnos/dominicales.
+* **📑 Botón "Generar Acta de Auditoría (A4 Flex)":** Construye el PDF A4 membretado de 2 buques por hoja con firmas en 2 columnas (PETRAL vs V°B° Experta Sandra) y caja `.obs-box` flex-fill hasta el pie de página.
+* **✅ Botón "Aprobar Liquidación / Sellar V°B°":** Asigna el estado de "AUDITADO OK" en la base de datos y congela los montos.
 
-## Capítulo 6 — Maestro de Búnker & Motor Polinómico BAF
+### 3.6 🗺️ Flowchart del Sistema (`/system-flowchart`)
+* **🔀 Selector "Nivel de Diagrama (1 a 5)":** Navega entre los 5 niveles de arquitectura (Nivel 1 Maestros $\rightarrow$ Nivel 2 Spot $\rightarrow$ Nivel 3 P×Q $\rightarrow$ Nivel 4 Ledger $\rightarrow$ Nivel 5 Auditoría).
+* **📥 Botón "Descargar Flowchart (SVG / PDF)":** Exporta el flujograma vectorial oficial para manuales operacionales.
+* **🔍 Botón "Zoom Interactivo / Pantalla Completa":** Amplía el lienzo del flujograma permitiendo explorar dinámicamente cada nodo.
 
-### 6.1 Fórmula Polinómica Contractual (B/T Moquegua)
-El ajuste de combustible (BAF) indexa el flete de acuerdo a la variación de mercado entre el periodo base $N-1$ y el periodo actual $N$:
-
-$$fa = 1 + \frac{(\text{IFO}_N \times 38.40 + \text{MDO}_N \times 9.50) - (\text{IFO}_{N-1} \times 38.40 + \text{MDO}_{N-1} \times 9.50)}{\text{IFO}_{N-1} \times 38.40 + \text{MDO}_{N-1} \times 9.50}$$
-
-- **Nuevo BAF ($/PMT):** $\text{BAF Inicial} \times fa$
-- **Delta Net ($\Delta$ USD/PMT):** $\text{Nuevo BAF} - \text{BAF Inicial}$
-- **Tarifa Final Ajustada por Tramo:** $\text{Tarifa Base Tramo} + \Delta \text{ BAF}$
-
----
-
-## Capítulo 7 — Maestro de Originación (Sources & Sinks)
-
-### 7.1 Mapeo de Flujos Logísticos
-Administra los puntos de producción (Refinerías, Terminales de Almacenamiento) y puntos de consumo de hidrocarburos en el Pacífico Sur.
-
----
-
-## Capítulo 8 — Multicotizador Multirutas Spot (Engine P×Q)
-
-### 8.1 Simulación Comercial en Tiempo Real
-Permite cotizar múltiples alternativas de viaje simultáneamente, evaluando:
-- Flete Base y Flete Ajustado por BAF.
-- Días Totales de Ciclo (Navegación + Laytime en Puertos + Maneuvers).
-- Consumo Total de Búnker en USD.
-- Gastos Portuarios Totales (Estáticos vs Dinámicos P×Q).
-- Margen Neto por Viaje ($P\&L$).
-- TCE (Time Charter Equivalent) en USD/día.
+### 3.7 📚 Documentación del Sistema (`/system-documentation`)
+* **🔍 Campo "Buscador Inteligente de Módulos":** Filtra los 18 capítulos por títulos, subtítulos o palabras clave en tiempo real.
+* **🗂️ Acordeón "DATOS MAESTROS" (Colapsable):** Despliega o contrae verticalmente la lista de los 11 maestros.
+* **🛠️ Acordeón "HERRAMIENTAS & MOTORES" (Colapsable):** Despliega o contrae verticalmente los 7 módulos de herramientas.
+* **📥 Botón "Descargar PDF Membretado":** Abre el cuadro de impresión para descargar el manual editorial oficial con logo de Naviera Petral.
 
 ---
 
-## Capítulo 9 — Matriz Financiera & Voyage Ledger P&L
+## 4. MEJORAS GLOBALES DE UI Y TEMPLATE (`MasterTemplate_V2.tsx`)
 
-### 9.1 Consolidación Contable y Financiera
-El **Voyage Ledger** consolida el estado de pérdidas y ganancias de la flota:
-$$\text{Resultado Neto del Viaje} = \text{Ingresos Flete} - (\text{Comisiones} + \text{Costo Búnker} + \text{Costos Portuarios})$$
-
----
-
-## Capítulo 10 — Auditoría Static vs Dynamic Port Cost
-
-### 10.1 Control de Calibración Presupuestal
-Compara el costo estático contractual fijado con el promedio de costos dinámicos por puerto/terminal, generando semáforos de alerta:
-- 🟢 **ALIGNED:** Desviación $< 5\%$
-- 🟡 **MODERATE:** Desviación $5\% - 15\%$
-- 🔴 **CRITICAL:** Desviación $> 15\%$
+1. **Menús Colapsables Verticalmente en todo el Software:**
+   - La barra lateral navegable en cualquier pantalla del software cuenta con acordeones colapsables para los bloques **DATOS MAESTROS** y **HERRAMIENTAS**, con botones de flecha interactivos (`ChevronDown` / `ChevronRight`).
+2. **Botón "Nueva Pestaña":**
+   - El botón de la cabecera superior del software permite abrir cualquier módulo en una pestaña independiente del navegador (`window.open(location.href, '_blank')`).
+3. **Layout de Ancho Fluido & Sidebar Congelado:**
+   - La barra lateral navegable está congelada rígidamente a **320px fijos** (`w-[320px] min-w-[320px] max-w-[320px] shrink-0`), garantizando que jamás se mueva o cambie de tamaño al hacer clic en distintos módulos.
+   - El panel contenedor principal ocupa el **100% de todo el ancho disponible de la pantalla (`w-full max-w-full`)**, aprovechando por completo monitores 1080p, 2K o ultrawide.
