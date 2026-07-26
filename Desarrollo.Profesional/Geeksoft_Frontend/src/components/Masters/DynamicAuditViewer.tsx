@@ -474,20 +474,24 @@ export const DynamicAuditViewer: React.FC<CallaoAuditViewerProps> = ({
                 </pre>
             </div>
 
+
             <div class="signatures" style="margin-top: 6px; border-top: 1.5px solid #000000; padding-top: 4px;">
-                <table style="width: 100%; border: none; font-size: 6.5pt;">
+                <table style="width: 100%; border: none; font-size: 6.5pt; margin-bottom: 4px;">
                     <tr>
-                        <td style="width: 50%; vertical-align: top; padding-right: 10px;">
+                        <td style="width: 50%; vertical-align: top; padding-right: 12px;">
                             <div style="font-weight: bold; margin-bottom: 2px;">AUDITORÍA NAVIERA PETRAL S.A. (${isLoad ? 'CARGA' : 'DESCARGA'}):</div>
-                            <div style="border-bottom: 1px dashed #000000; height: 28px; margin-bottom: 2px;"></div>
-                            <span style="font-size: 6pt; color: #475569;">Firma Responsable Auditoría Engine</span>
+                            <div style="border-bottom: 1px dashed #000000; height: 24px; margin-bottom: 2px;"></div>
+                            <span style="font-size: 6pt; color: #475569;">Firma Responsable Auditoría Engine — Geeksoft</span>
                         </td>
-                        <td style="width: 50%; vertical-align: top; padding-left: 10px;">
-                            <div style="font-weight: bold; margin-bottom: 2px;">V°B° & FEEDBACK EXPERTA SANDRA:</div>
-                            <div style="border: 1.5px solid #000000; height: 50px; background-color: #fafafa;"></div>
+                        <td style="width: 50%; vertical-align: top; padding-left: 12px;">
+                            <div style="font-weight: bold; margin-bottom: 2px;">V°B° EXPERTA SANDRA — LIQUIDACIÓN OFICIAL:</div>
+                            <div style="border-bottom: 1px dashed #000000; height: 24px; margin-bottom: 2px;"></div>
+                            <span style="font-size: 6pt; color: #475569;">Firma y Nombre — Experta Sandra</span>
                         </td>
                     </tr>
                 </table>
+                <div style="font-weight: bold; font-size: 6.5pt; margin-bottom: 2px;">OBSERVACIONES &amp; FEEDBACK EXPERTA SANDRA:</div>
+                <div style="border: 1.5px solid #000000; height: 48px; background-color: #fafafa; width: 100%;"></div>
             </div>
         </body>
         </html>
