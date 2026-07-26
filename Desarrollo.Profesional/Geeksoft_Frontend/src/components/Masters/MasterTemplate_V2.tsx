@@ -60,6 +60,9 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [modalError, setModalError] = useState('');
+    const [modalSuccess, setModalSuccess] = useState('');
+    const [modalLoading, setModalLoading] = useState(false);
 
     const handleNewWindow = () => {
         window.open(window.location.href, '_blank');
