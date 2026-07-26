@@ -52,7 +52,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
     const [isPriOpen, setIsPriOpen] = useState<boolean>(false);
     const [isSecOpen, setIsSecOpen] = useState<boolean>(false);
 
-    // Labels
+    // Labels limpios arriba por defecto
     const [primaryLabelPos, setPrimaryLabelPos] = useState<'inside' | 'top' | 'none'>('top');
     const [primaryLabelColor, setPrimaryLabelColor] = useState<'#ffffff' | '#000000'>('#000000');
     const [secondaryLabelPos, setSecondaryLabelPos] = useState<'inside' | 'top' | 'none'>('none');
@@ -94,7 +94,33 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
         };
     }, [liquidations]);
 
-    // Ordenar data de viajes por fecha cronológica para el Eje X
+    const monthsAxisKeys = ['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06'];
+
+    const getVoyageMonthKey = (r: any): string => {
+        const code = String(r.voyage_code || '').toUpperCase();
+        const vName = String(r.vessel_name || '').toUpperCase();
+        const vNum = parseInt(code.replace(/\D/g, '')) || 0;
+
+        // B/T TABLONES (v.038 a v.052)
+        if (vName.includes('TABLONES') || code.includes('TABLONES') || (vNum >= 38 && vNum <= 52)) {
+            if (vNum <= 40) return '2026-01'; // Ene 26: v.038, v.039, v.040
+            if (vNum <= 43) return '2026-02'; // Feb 26: v.041, v.042, v.043
+            if (vNum <= 45) return '2026-03'; // Mar 26: v.044 NEXA, v.045
+            if (vNum <= 47) return '2026-04'; // Abr 26: v.046, v.047
+            if (vNum <= 50) return '2026-05'; // May 26: v.048, v.049, v.050
+            return '2026-06';                 // Jun 26: v.051, v.052
+        }
+
+        // B/T MOQUEGUA (V.761 a V.777)
+        if (vNum <= 762) return '2026-01';     // Ene 26: V.761, V.762
+        if (vNum <= 765) return '2026-02';     // Feb 26: V.763 NEXA, V.764, V.765
+        if (vNum <= 768) return '2026-03';     // Mar 26: V.766, V.767, V.768
+        if (vNum <= 771) return '2026-04';     // Abr 26: V.769, V.770, V.771
+        if (vNum <= 774) return '2026-05';     // May 26: V.772, V.773, V.774 NEXA
+        return '2026-06';                     // Jun 26: V.775, V.776, V.777
+    };
+
+    // Ordenar viajes cronológicamente
     const sortedFilteredData = useMemo(() => {
         const filtered = liquidations.filter(r => {
             if (filterClient !== 'ALL' && r.client_name !== filterClient) return false;
@@ -145,23 +171,191 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
         return 0;
     };
 
+    // DETERMINAR SI MOSTRAR EJE X POR MESES (bar_stack) O POR VIAJES UNO AL LADO DEL OTRO (bar_group)
+    const isGroupGranularVoyages = primaryGraphType === 'bar_group' || primaryGraphType.includes('line');
+
     const xAxisLabels = useMemo(() => {
-        return sortedFilteredData.map(r => `${r.voyage_code}`);
-    }, [sortedFilteredData]);
+        if (isGroupGranularVoyages) {
+            // Eje X mostrando CADA VIAJE INDIVIDUAL UNO AL LADO DEL OTRO
+            return sortedFilteredData.map(r => `${r.voyage_code}`);
+        }
+        // Eje X por MESES DEL AÑO (Ene 26 - Jun 26)
+        return ['Ene 26', 'Feb 26', 'Mar 26', 'Abr 26', 'May 26', 'Jun 26'];
+    }, [isGroupGranularVoyages, sortedFilteredData]);
 
     const options = useMemo(() => {
         if (sortedFilteredData.length === 0) return {};
 
-        const seriesGroupMap: Record<string, number[]> = {};
+        if (isGroupGranularVoyages) {
+            // ── MODO 1: VIAJES INDIVIDUALES UNO AL LADO DEL OTRO (bar_group / line) ──
+            const seriesGroupMap: Record<string, number[]> = {};
 
-        sortedFilteredData.forEach((r) => {
+            sortedFilteredData.forEach((r) => {
+                let sKey = r.vessel_name;
+                if (groupBy === 'petral') sKey = 'PETRAL';
+                if (groupBy === 'route') sKey = `${r.pol_port} -> ${r.pod_port}`;
+                if (groupBy === 'client') sKey = r.client_name;
+
+                if (!seriesGroupMap[sKey]) {
+                    seriesGroupMap[sKey] = new Array(sortedFilteredData.length).fill(0);
+                }
+            });
+
+            const buildSeriesList = (metric: PlotMetric, graphType: string, yAxisIndex: number) => {
+                if (metric === 'none') return [];
+
+                const labelPos = yAxisIndex === 0 ? primaryLabelPos : secondaryLabelPos;
+                const labelColor = yAxisIndex === 0 ? primaryLabelColor : secondaryLabelColor;
+                const isBar = graphType.includes('bar');
+
+                const seriesKeys = Object.keys(seriesGroupMap);
+
+                return seriesKeys.map(sKey => {
+                    const dataArr = sortedFilteredData.map(r => {
+                        let rKey = r.vessel_name;
+                        if (groupBy === 'petral') rKey = 'PETRAL';
+                        if (groupBy === 'route') rKey = `${r.pol_port} -> ${r.pod_port}`;
+                        if (groupBy === 'client') rKey = r.client_name;
+
+                        if (rKey === sKey) {
+                            return Math.round(getMetricValue(r, metric));
+                        }
+                        return 0;
+                    });
+
+                    const cColor = getHexColor(sKey, groupBy);
+
+                    return {
+                        name: `${sKey} ${yAxisIndex === 0 ? '(Pri)' : '(Sec)'}`,
+                        type: isBar ? 'bar' : 'line',
+                        yAxisIndex: yAxisIndex,
+                        smooth: graphType === 'line',
+                        symbol: graphType.includes('line') ? 'circle' : undefined,
+                        symbolSize: graphType.includes('line') ? 7 : undefined,
+                        barMaxWidth: 35,
+                        barGap: '10%',
+                        data: dataArr,
+                        itemStyle: { 
+                            borderRadius: isBar ? [3, 3, 0, 0] : undefined, 
+                            color: cColor 
+                        },
+                        lineStyle: graphType.includes('line') ? { width: 3, type: yAxisIndex === 1 ? 'dashed' : 'solid' } : undefined,
+                        label: {
+                            show: labelPos !== 'none',
+                            position: labelPos === 'none' ? undefined : labelPos,
+                            formatter: (params: any) => {
+                                if (params.value === 0) return '';
+                                return `$${(params.value / 1000).toFixed(0)}k`;
+                            },
+                            fontSize: 9,
+                            fontWeight: 'bold',
+                            color: labelColor
+                        }
+                    };
+                });
+            };
+
+            const priSeries = buildSeriesList(primaryMetric, primaryGraphType, 0);
+            const secSeries = buildSeriesList(secondaryMetric, secondaryGraphType, 1);
+
+            return {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'cross', crossStyle: { color: '#94A3B8' } },
+                    formatter: (params: any[]) => {
+                        if (!params || params.length === 0) return '';
+                        const index = params[0].dataIndex;
+                        const r = sortedFilteredData[index];
+                        let html = `<div style="font-weight:bold;margin-bottom:4px;border-bottom:1px solid #cbd5e1;padding-bottom:2px;font-size:12px;">
+                            ${r.voyage_code} (${r.client_name}) — ${r.pol_port} ➔ ${r.pod_port}
+                        </div>`;
+
+                        params.forEach(p => {
+                            if (p.value !== 0) {
+                                html += `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;margin-top:2px;">
+                                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${p.color};"></span>
+                                    <span style="color:#475569;">${p.seriesName}:</span>
+                                    <span style="font-weight:bold;color:#0F172A;">$${p.value.toLocaleString()}</span>
+                                </div>`;
+                            }
+                        });
+
+                        if (r.tce_usd_day) {
+                            html += `<div style="margin-top:4px;font-size:10px;color:#0284C7;font-weight:bold;">⚡ TCE Real: $${Math.round(r.tce_usd_day).toLocaleString()} / día</div>`;
+                        }
+
+                        return html;
+                    }
+                },
+                legend: { top: 0, type: 'scroll', textStyle: { fontSize: 11, fontWeight: 'bold', color: '#334155' } },
+                grid: { left: '3%', right: '4%', bottom: '12%', top: '12%', containLabel: true },
+                xAxis: [{
+                    type: 'category',
+                    name: 'Viajes Reales (Uno al Lado del Otro)',
+                    nameLocation: 'middle',
+                    nameGap: 32,
+                    nameTextStyle: { fontWeight: 'bold', fontSize: 11, color: '#475569' },
+                    data: xAxisLabels,
+                    axisPointer: { type: 'shadow' },
+                    axisLabel: { interval: 0, rotate: 30, fontWeight: 'bold', fontSize: 10, color: '#1E293B' }
+                }],
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: getMetricLabel(primaryMetric),
+                        nameTextStyle: { fontWeight: 'bold', fontSize: 11, color: '#0284C7' },
+                        axisLabel: { formatter: (val: number) => `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}` },
+                        splitLine: { lineStyle: { type: 'dashed', color: '#E2E8F0' } }
+                    },
+                    {
+                        type: 'value',
+                        name: secondaryMetric !== 'none' ? getMetricLabel(secondaryMetric) : '',
+                        nameTextStyle: { fontWeight: 'bold', fontSize: 11, color: '#059669' },
+                        show: secondaryMetric !== 'none',
+                        axisLabel: { formatter: (val: number) => `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}` },
+                        splitLine: { show: false }
+                    }
+                ],
+                series: [...priSeries, ...secSeries]
+            };
+        }
+
+        // ── MODO 2: BARRAS APILADAS POR MESES (bar_stack) ──
+        const seriesGroupMap: Record<string, Record<string, { totalVal: number; count: number; voyages: string[] }>> = {};
+
+        filteredData.forEach((r) => {
             let sKey = r.vessel_name;
             if (groupBy === 'petral') sKey = 'PETRAL';
             if (groupBy === 'route') sKey = `${r.pol_port} -> ${r.pod_port}`;
             if (groupBy === 'client') sKey = r.client_name;
 
-            if (!seriesGroupMap[sKey]) {
-                seriesGroupMap[sKey] = new Array(sortedFilteredData.length).fill(0);
+            const mKey = getVoyageMonthKey(r);
+
+            if (!seriesGroupMap[sKey]) seriesGroupMap[sKey] = {};
+            monthsAxisKeys.forEach(m => {
+                if (!seriesGroupMap[sKey][m]) {
+                    seriesGroupMap[sKey][m] = { totalVal: 0, count: 0, voyages: [] };
+                }
+            });
+
+            seriesGroupMap[sKey][mKey].count += 1;
+            const vCode = r.voyage_code ? r.voyage_code : '';
+            if (vCode && !seriesGroupMap[sKey][mKey].voyages.includes(vCode)) {
+                seriesGroupMap[sKey][mKey].voyages.push(vCode);
+            }
+        });
+
+        filteredData.forEach((r) => {
+            let sKey = r.vessel_name;
+            if (groupBy === 'petral') sKey = 'PETRAL';
+            if (groupBy === 'route') sKey = `${r.pol_port} -> ${r.pod_port}`;
+            if (groupBy === 'client') sKey = r.client_name;
+
+            const mKey = getVoyageMonthKey(r);
+
+            if (seriesGroupMap[sKey] && seriesGroupMap[sKey][mKey]) {
+                const pVal = getMetricValue(r, primaryMetric);
+                seriesGroupMap[sKey][mKey].totalVal += pVal;
             }
         });
 
@@ -170,53 +364,54 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
 
             const labelPos = yAxisIndex === 0 ? primaryLabelPos : secondaryLabelPos;
             const labelColor = yAxisIndex === 0 ? primaryLabelColor : secondaryLabelColor;
-            const isBar = graphType.includes('bar');
-            const isStack = graphType === 'bar_stack' || (yAxisIndex === 1 && graphType === 'bar');
 
             const seriesKeys = Object.keys(seriesGroupMap);
 
             return seriesKeys.map(sKey => {
                 let runningVal = 0;
-                const dataArr = sortedFilteredData.map(r => {
-                    let rKey = r.vessel_name;
-                    if (groupBy === 'petral') rKey = 'PETRAL';
-                    if (groupBy === 'route') rKey = `${r.pol_port} -> ${r.pod_port}`;
-                    if (groupBy === 'client') rKey = r.client_name;
 
-                    const val = (rKey === sKey) ? Math.round(getMetricValue(r, metric)) : 0;
-                    runningVal += val;
-
-                    if (yAxisIndex === 1 && isSecondaryCumulativeSeries) {
-                        return runningVal;
+                const dataArr = monthsAxisKeys.map(mKey => {
+                    const cell = seriesGroupMap[sKey]?.[mKey];
+                    if (!cell || cell.count === 0) {
+                        return { value: 0, voyagesStr: '' };
                     }
-                    return val;
+
+                    let val = Math.round(cell.totalVal);
+                    if (metric === 'tce_usd_day' || metric === 'yield_flete') {
+                        val = Math.round(cell.totalVal / cell.count);
+                    }
+
+                    runningVal += val;
+                    const finalVal = (yAxisIndex === 1 && isSecondaryCumulativeSeries) ? runningVal : val;
+                    const voyagesStr = cell.voyages.join(', ');
+
+                    return {
+                        value: finalVal,
+                        voyagesStr: voyagesStr
+                    };
                 });
 
                 const cColor = getHexColor(sKey, groupBy);
 
                 return {
                     name: `${sKey} ${yAxisIndex === 0 ? '(Pri)' : '(Sec)'}`,
-                    type: isBar ? 'bar' : 'line',
-                    stack: isStack ? `total_${yAxisIndex}` : undefined,
+                    type: 'bar',
+                    stack: `total_${yAxisIndex}`,
                     yAxisIndex: yAxisIndex,
-                    smooth: graphType === 'line',
-                    symbol: graphType.includes('line') ? 'circle' : undefined,
-                    symbolSize: graphType.includes('line') ? 7 : undefined,
-                    barMaxWidth: isBar ? 40 : undefined,
+                    barMaxWidth: 45,
                     data: dataArr,
                     itemStyle: { 
-                        borderRadius: isBar ? [2, 2, 0, 0] : undefined, 
+                        borderRadius: [2, 2, 0, 0], 
                         color: cColor 
                     },
-                    lineStyle: graphType.includes('line') ? { width: 3, type: yAxisIndex === 1 ? 'dashed' : 'solid' } : undefined,
                     label: {
                         show: labelPos !== 'none',
                         position: labelPos === 'none' ? undefined : labelPos,
                         formatter: (params: any) => {
-                            if (params.value === 0) return '';
-                            return `$${(params.value / 1000).toFixed(1)}k`;
+                            if (!params.data || params.data.value === 0) return '';
+                            return `$${(params.data.value / 1000).toFixed(0)}k`;
                         },
-                        fontSize: 9,
+                        fontSize: 10,
                         fontWeight: 'bold',
                         color: labelColor
                     }
@@ -233,51 +428,49 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                 axisPointer: { type: 'cross', crossStyle: { color: '#94A3B8' } },
                 formatter: (params: any[]) => {
                     if (!params || params.length === 0) return '';
-                    const index = params[0].dataIndex;
-                    const r = sortedFilteredData[index];
-                    let html = `<div style="font-weight:bold;margin-bottom:4px;border-bottom:1px solid #cbd5e1;padding-bottom:2px;font-size:12px;">
-                        ${r.voyage_code} (${r.client_name}) — ${r.pol_port} ➔ ${r.pod_port}
+                    const mName = params[0].name;
+                    let html = `<div style="font-weight:bold;margin-bottom:6px;border-bottom:1px solid #cbd5e1;padding-bottom:4px;font-size:12px;color:#0F172A;">
+                        📅 Período: ${mName}
                     </div>`;
 
                     params.forEach(p => {
-                        if (p.value !== 0) {
-                            html += `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;margin-top:2px;">
-                                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${p.color};"></span>
-                                <span style="color:#475569;">${p.seriesName}:</span>
-                                <span style="font-weight:bold;color:#0F172A;">$${p.value.toLocaleString()}</span>
+                        if (p.value !== 0 && p.data) {
+                            const valStr = typeof p.data === 'object' ? p.data.value : p.value;
+                            const vStr = p.data?.voyagesStr ? `<br/><span style="color:#0284C7;font-weight:bold;font-size:10px;padding-left:14px;">Viajes: ${p.data.voyagesStr}</span>` : '';
+                            html += `<div style="margin-top:4px;">
+                                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;">
+                                    <div>
+                                        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${p.color};"></span>
+                                        <span style="color:#475569;font-weight:bold;">${p.seriesName}:</span>
+                                    </div>
+                                    <span style="font-weight:extrabold;color:#0F172A;">$${valStr.toLocaleString()}</span>
+                                </div>
+                                ${vStr}
                             </div>`;
                         }
                     });
 
-                    if (r.tce_usd_day) {
-                        html += `<div style="margin-top:4px;font-size:10px;color:#0284C7;font-weight:bold;">⚡ TCE Real: $${Math.round(r.tce_usd_day).toLocaleString()} / día</div>`;
-                    }
-
                     return html;
                 }
             },
-            legend: {
-                top: 0,
-                type: 'scroll',
-                textStyle: { fontSize: 11, fontWeight: 'bold', color: '#334155' }
-            },
-            grid: { left: '3%', right: '4%', bottom: '10%', top: '12%', containLabel: true },
-            xAxis: [
-                {
-                    type: 'category',
-                    data: xAxisLabels,
-                    axisPointer: { type: 'shadow' },
-                    axisLabel: { interval: 0, rotate: 30, fontWeight: 'bold', fontSize: 10, color: '#1E293B' }
-                }
-            ],
+            legend: { top: 0, type: 'scroll', textStyle: { fontSize: 11, fontWeight: 'bold', color: '#334155' } },
+            grid: { left: '3%', right: '4%', bottom: '8%', top: '12%', containLabel: true },
+            xAxis: [{
+                type: 'category',
+                name: 'Meses del Año (Eje X)',
+                nameLocation: 'middle',
+                nameGap: 28,
+                nameTextStyle: { fontWeight: 'bold', fontSize: 11, color: '#475569' },
+                data: xAxisLabels,
+                axisPointer: { type: 'shadow' },
+                axisLabel: { interval: 0, fontWeight: 'bold', fontSize: 11, color: '#1E293B' }
+            }],
             yAxis: [
                 {
                     type: 'value',
                     name: getMetricLabel(primaryMetric),
                     nameTextStyle: { fontWeight: 'bold', fontSize: 11, color: '#0284C7' },
-                    axisLabel: { 
-                        formatter: (val: number) => `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}`
-                    },
+                    axisLabel: { formatter: (val: number) => `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}` },
                     splitLine: { lineStyle: { type: 'dashed', color: '#E2E8F0' } }
                 },
                 {
@@ -285,15 +478,13 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                     name: secondaryMetric !== 'none' ? getMetricLabel(secondaryMetric) : '',
                     nameTextStyle: { fontWeight: 'bold', fontSize: 11, color: '#059669' },
                     show: secondaryMetric !== 'none',
-                    axisLabel: { 
-                        formatter: (val: number) => `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}`
-                    },
+                    axisLabel: { formatter: (val: number) => `$${val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val}` },
                     splitLine: { show: false }
                 }
             ],
             series: [...priSeries, ...secSeries]
         };
-    }, [sortedFilteredData, xAxisLabels, groupBy, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
+    }, [sortedFilteredData, isGroupGranularVoyages, xAxisLabels, groupBy, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
 
     const renderFilterDropdown = (
         selectedVal: string, 
@@ -487,14 +678,14 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                                 <button 
                                     onClick={() => setPrimaryGraphType('bar_stack')}
                                     className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'bar_stack' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100'}`}
-                                    title="Barras Stack"
+                                    title="Barras Stack (Por Meses)"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18h18"/><rect x="7" y="13" width="10" height="4" rx="1"/><rect x="7" y="7" width="10" height="4" rx="1"/></svg>
                                 </button>
                                 <button 
                                     onClick={() => setPrimaryGraphType('bar_group')}
                                     className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'bar_group' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100'}`}
-                                    title="Barras Adjuntas"
+                                    title="Barras Adjuntas (Viaje por Viaje uno al lado del otro)"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 3v18h18"/><path d="M7 17v-6"/><path d="M11 17V9"/><path d="M15 17v-4"/><path d="M19 17V5"/></svg>
                                 </button>
