@@ -1,7 +1,9 @@
-[2026-07-26 18:11:00] - Auditoría y Consolidación Contable Oficial del Viaje V.764
-- Transcripción y lectura directa de la Planilla Oficial de Liquidación recibida en PNG.
-- Confirmación de Operación Multi-tramo SPCC en B/T Moquegua: Tramo 764-A (Ilo -> Callao, 3,456.47 MT, $159,827.17 USD) + Tramo 764 (Ilo -> Marcona, 10,003.92 MT, $249,897.85 USD).
-- Cifras Auditadas Consolidadas: Tonelaje = 13,460.39 MT, Gross Revenue = $409,725.02 USD, Port Expenses = $60,388.15 USD, Bunker Expenses = $47,294.40 USD, TCE Real = $39,836 / día, Net Profit Real (P/L) = +$203,475.00 USD, Margen de Rentabilidad Neta = 49.66%.
+[2026-07-26 18:12:30] - Auditoría de Viajes Multi-Terminal Mejillones (V.765 y V.767)
+- Transcripción y lectura directa de la Planilla Oficial recibida en PNG.
+- Confirmación de Operaciones Multi-terminal SPCC en B/T Moquegua con descarga doble en Mejillones Terminal General y Mejillones Terquim:
+  * V.765: Tonelaje = 13,487.47 MT, Gross Revenue = $267,591.35 USD, Costo Portuario Carga (Ilo) = $17,955.00, Costo Portuario Descarga (Mejillones $37,831 + Terquim $66,020 = $103,851.00 USD), Costo Portuario Total = $121,806.00 USD, TCE = $20,934 / día, Net Profit (P/L) = +$48,835.00 USD (Margen: 18.25%).
+  * V.767: Tonelaje = 13,461.98 MT, Gross Revenue = $267,145.16 USD, Costo Portuario Carga (Ilo) = $18,569.00, Costo Portuario Descarga (Mejillones $40,593 + Terquim $30,813 = $71,406.00 USD), Costo Portuario Total = $89,975.00 USD, TCE = $26,055 / día, Net Profit (P/L) = +$80,290.00 USD (Margen: 30.05%).
 - Actualización directa mediante REST API en la tabla DB Supabase 'voyage_liquidations' (Status 200 Success).
+- Implementación de etiquetado automático 'ILO ➔ MEJILLONES ➔ TERQUIM' en LiquidationsInteractiveChart.tsx.
 - Respaldo de PNGs en Obsidian.Maestro.Costos.Portuarios/PNGs y Exceles.Petral/PORT.COSTS.PATRICIA.
-- Verificación limpia de compilación TypeScript e integración en repositorio Git origin main (commit ae09e2f).
+- Verificación limpia de compilación TypeScript e integración en repositorio Git origin main (commit 9cb87c9).
