@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { Download, Search, ChevronRight, Layers, Anchor, Compass, Database, Zap, Scale, ShoppingCart, BarChart3, CheckCircle2, Info } from 'lucide-react';
 import logoPetral from '../../assets/Logo.Petral.png';
 
@@ -336,119 +335,113 @@ export const SystemDocumentation_V2: React.FC = () => {
     };
 
     return (
-        <MasterTemplate
-            title="Documentación del Sistema"
-            subtitle="Manual Oficial de Usuario & Arquitectura Técnica — PETRAL SHIPPING.SOFT V2.5"
-            activeTab="system-documentation"
-        >
-            <div className="space-y-6 max-w-full mx-auto pb-12 print:p-0 print:m-0">
+        <div className="p-6 space-y-6 max-w-full mx-auto pb-12 print:p-0 print:m-0">
 
-                {/* ── CABECERA EJECUTIVA CON LOGOS CORPORATIVOS & BUSCADOR ── */}
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 print:shadow-none print:border-b-2 print:border-slate-800">
-                    <div className="flex items-center gap-4">
-                        <img src={logoPetral} alt="Naviera Petral" className="h-10 object-contain" />
-                        <div className="h-8 border-l border-slate-200 hidden md:block"></div>
-                        <div>
-                            <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">MANUAL DE ARQUITECTURA &amp; USUARIO</h2>
-                            <span className="text-xs text-slate-500 font-bold tracking-wider uppercase block">PETRAL SHIPPING.SOFT V2.5 PRO • RELEASE 2026</span>
-                        </div>
-                    </div>
-
-                    {/* Buscador inteligente */}
-                    <div className="flex items-center gap-3 w-full md:w-auto print:hidden">
-                        <div className="relative flex-1 md:w-64">
-                            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Buscar (ej. Overtime, APM, MDO, BAF)..."
-                                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                            />
-                        </div>
-                        <button 
-                            onClick={handlePrintSection}
-                            className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2.5 rounded-lg flex items-center gap-2 transition-all shadow-sm cursor-pointer whitespace-nowrap"
-                            title="Descargar o Imprimir Documento Membretado"
-                        >
-                            <Download size={15} /> Descargar PDF
-                        </button>
-                    </div>
-
-                    <div className="hidden print:block text-right text-[10px] font-mono text-slate-500">
-                        <div>Naviera Petral S.A.</div>
-                        <div>Fecha: {new Date().toLocaleDateString('es-PE')}</div>
+            {/* ── CABECERA EJECUTIVA CON LOGOS CORPORATIVOS & BUSCADOR ── */}
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 print:shadow-none print:border-b-2 print:border-slate-800">
+                <div className="flex items-center gap-4">
+                    <img src={logoPetral} alt="Naviera Petral" className="h-10 object-contain" />
+                    <div className="h-8 border-l border-slate-200 hidden md:block"></div>
+                    <div>
+                        <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">MANUAL DE ARQUITECTURA &amp; USUARIO</h2>
+                        <span className="text-xs text-slate-500 font-bold tracking-wider uppercase block">PETRAL SHIPPING.SOFT V2.5 PRO • RELEASE 2026</span>
                     </div>
                 </div>
 
-                {/* ── CONTENEDOR PRINCIPAL ESTILO LIBRO EDITORIAL ── */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-                    {/* NAVEGACIÓN LATERAL DE CAPÍTULOS */}
-                    <div className="lg:col-span-4 bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-2 print:hidden">
-                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-2 mb-2 flex items-center justify-between">
-                            <span>Tabla de Contenidos</span>
-                            <span>{filteredChapters.length} de {chapters.length} Capítulos</span>
-                        </div>
-
-                        {filteredChapters.length === 0 ? (
-                            <div className="p-4 text-center text-xs text-slate-400 italic">No se encontraron capítulos para "{searchQuery}"</div>
-                        ) : (
-                            <nav className="flex flex-col gap-1 max-h-[600px] overflow-y-auto pr-1 scrollbar-thin">
-                                {filteredChapters.map(ch => {
-                                    const isActive = ch.id === activeChapterId;
-                                    return (
-                                        <button
-                                            key={ch.id}
-                                            onClick={() => setActiveChapterId(ch.id)}
-                                            className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
-                                                isActive 
-                                                    ? 'bg-blue-600 text-white shadow-sm' 
-                                                    : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
-                                            }`}
-                                        >
-                                            <div className="flex items-center gap-2.5">
-                                                <span className={isActive ? 'text-white' : 'text-slate-400'}>{ch.icon}</span>
-                                                <span>{ch.chapterNum}. {ch.title}</span>
-                                            </div>
-                                            <ChevronRight size={14} className={isActive ? 'text-white' : 'text-slate-300'} />
-                                        </button>
-                                    );
-                                })}
-                            </nav>
-                        )}
+                {/* Buscador inteligente */}
+                <div className="flex items-center gap-3 w-full md:w-auto print:hidden">
+                    <div className="relative flex-1 md:w-64">
+                        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Buscar (ej. Overtime, APM, MDO, BAF)..."
+                            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        />
                     </div>
-
-                    {/* VISTA DEL CAPÍTULO EDITORIAL */}
-                    <div className="lg:col-span-8 bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6 print:w-full print:p-0 print:border-none">
-
-                        {/* ENCABEZADO DEL CAPÍTULO */}
-                        <div className="border-b border-slate-200 pb-4 flex items-center justify-between">
-                            <div>
-                                <span className="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 px-2.5 py-1 rounded border border-blue-200 uppercase">
-                                    {currentChapter.badge}
-                                </span>
-                                <h3 className="text-xl font-black text-slate-900 tracking-tight mt-2">{currentChapter.title}</h3>
-                                <p className="text-xs text-slate-500 font-medium">{currentChapter.subtitle}</p>
-                            </div>
-                        </div>
-
-                        {/* CONTENIDO TÉCNICO DEL CAPÍTULO */}
-                        <div className="min-h-[300px]">
-                            {currentChapter.content}
-                        </div>
-
-                        {/* PIE DE PÁGINA EDITORIAL OFICIAL */}
-                        <div className="border-t border-slate-200 pt-4 flex items-center justify-between text-[10px] font-mono text-slate-400">
-                            <div>SHIPPING.SOFT v2.5 • NAVIERA PETRAL S.A.</div>
-                            <div>Confidencial • Copia Registrada</div>
-                            <div>{new Date().toLocaleDateString('es-PE')}</div>
-                        </div>
-
-                    </div>
+                    <button 
+                        onClick={handlePrintSection}
+                        className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2.5 rounded-lg flex items-center gap-2 transition-all shadow-sm cursor-pointer whitespace-nowrap"
+                        title="Descargar o Imprimir Documento Membretado"
+                    >
+                        <Download size={15} /> Descargar PDF
+                    </button>
                 </div>
 
+                <div className="hidden print:block text-right text-[10px] font-mono text-slate-500">
+                    <div>Naviera Petral S.A.</div>
+                    <div>Fecha: {new Date().toLocaleDateString('es-PE')}</div>
+                </div>
             </div>
-        </MasterTemplate>
+
+            {/* ── CONTENEDOR PRINCIPAL ESTILO LIBRO EDITORIAL ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+                {/* NAVEGACIÓN LATERAL DE CAPÍTULOS */}
+                <div className="lg:col-span-4 bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-2 print:hidden">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-2 mb-2 flex items-center justify-between">
+                        <span>Tabla de Contenidos</span>
+                        <span>{filteredChapters.length} de {chapters.length} Capítulos</span>
+                    </div>
+
+                    {filteredChapters.length === 0 ? (
+                        <div className="p-4 text-center text-xs text-slate-400 italic">No se encontraron capítulos para "{searchQuery}"</div>
+                    ) : (
+                        <nav className="flex flex-col gap-1 max-h-[600px] overflow-y-auto pr-1 scrollbar-thin">
+                            {filteredChapters.map(ch => {
+                                const isActive = ch.id === activeChapterId;
+                                return (
+                                    <button
+                                        key={ch.id}
+                                        onClick={() => setActiveChapterId(ch.id)}
+                                        className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
+                                            isActive 
+                                                ? 'bg-blue-600 text-white shadow-sm' 
+                                                : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-2.5">
+                                            <span className={isActive ? 'text-white' : 'text-slate-400'}>{ch.icon}</span>
+                                            <span>{ch.chapterNum}. {ch.title}</span>
+                                        </div>
+                                        <ChevronRight size={14} className={isActive ? 'text-white' : 'text-slate-300'} />
+                                    </button>
+                                );
+                            })}
+                        </nav>
+                    )}
+                </div>
+
+                {/* VISTA DEL CAPÍTULO EDITORIAL */}
+                <div className="lg:col-span-8 bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6 print:w-full print:p-0 print:border-none">
+
+                    {/* ENCABEZADO DEL CAPÍTULO */}
+                    <div className="border-b border-slate-200 pb-4 flex items-center justify-between">
+                        <div>
+                            <span className="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 px-2.5 py-1 rounded border border-blue-200 uppercase">
+                                {currentChapter.badge}
+                            </span>
+                            <h3 className="text-xl font-black text-slate-900 tracking-tight mt-2">{currentChapter.title}</h3>
+                            <p className="text-xs text-slate-500 font-medium">{currentChapter.subtitle}</p>
+                        </div>
+                    </div>
+
+                    {/* CONTENIDO TÉCNICO DEL CAPÍTULO */}
+                    <div className="min-h-[300px]">
+                        {currentChapter.content}
+                    </div>
+
+                    {/* PIE DE PÁGINA EDITORIAL OFICIAL */}
+                    <div className="border-t border-slate-200 pt-4 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                        <div>SHIPPING.SOFT v2.5 • NAVIERA PETRAL S.A.</div>
+                        <div>Confidencial • Copia Registrada</div>
+                        <div>{new Date().toLocaleDateString('es-PE')}</div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
     );
 };
