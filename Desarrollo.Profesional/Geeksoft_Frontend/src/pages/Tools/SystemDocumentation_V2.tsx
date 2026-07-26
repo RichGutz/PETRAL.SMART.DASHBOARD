@@ -496,7 +496,7 @@ export const SystemDocumentation_V2: React.FC = () => {
 
                             <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
                                 <div className="font-bold text-purple-700 flex items-center gap-1.5">
-                                    <span>🔍</span> Botón "Ver Desglose de Gastos P×Q"
+                                    <span>🔍</span> Botón "Ver Desglose de Gastos PxQ"
                                 </div>
                                 <p className="text-slate-600 text-[11px]">
                                     Despliega la auditoría detallada ítem por ítem del viaje: practicaje, remolcaje, consumo de combustible en lastre vs cargado, y comisiones comerciales.
@@ -550,7 +550,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                                     <span>📊</span> Selector de Métrica (TCE / Búnker / Tarifas)
                                 </div>
                                 <p className="text-slate-600 text-[11px]">
-                                    Cambia el indicador evaluado en las gráficas entre Rendimiento Diario ($USD/\text{día}$), Consumo MDO/IFO y Desembolsos Portuarios por Escala.
+                                    Cambia el indicador evaluado en las gráficas entre Rendimiento Diario (USD/día), Consumo MDO/IFO y Desembolsos Portuarios por Escala.
                                 </p>
                             </div>
 
@@ -711,7 +711,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
                         <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">17.1 Flujogramas Integrales de la Arquitectura</h4>
                         <p className="text-xs text-slate-600 leading-relaxed mb-4">
-                            El **Flowchart del Sistema** contiene la representación gráfica vectorial de los 5 niveles de procesamiento (Maestros $\rightarrow$ Spot Engine $\rightarrow$ P×Q $\rightarrow$ Ledger $\rightarrow$ Auditoría).
+                            El <strong>Flowchart del Sistema</strong> contiene la representación gráfica vectorial de los 5 niveles de procesamiento (Maestros &rarr; Spot Engine &rarr; P×Q &rarr; Ledger &rarr; Auditoría).
                         </p>
 
                         <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">17.2 Guía de Botones e Interfaz de Usuario (UI)</h4>
