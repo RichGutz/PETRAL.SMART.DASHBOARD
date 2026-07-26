@@ -204,7 +204,7 @@ export const BandasResumenViewer: React.FC = () => {
   @page{size:A4 portrait;margin:0;}
   @media print{@page{size:A4 portrait;margin:0;}html,body{margin:0;padding:0;}}
   body{font-family:'Courier New',Courier,monospace;color:#000;background:#fff;font-size:7pt;line-height:1.3;margin:0;padding:0;}
-  .page-wrap{height:277mm;padding:8mm 15mm 8mm 15mm;box-sizing:border-box;display:flex;flex-direction:column;}
+  .page-wrap{height:277mm;padding:8mm 16.5mm 8mm 16.5mm;box-sizing:border-box;display:flex;flex-direction:column;}
   .signatures{margin-top:6px;border-top:1.5px solid #000;padding-top:4px;display:flex;flex-direction:column;flex:1;min-height:0;}
   .obs-box{flex:1;min-height:50px;border:1.5px solid #000;background:#fafafa;width:100%;box-sizing:border-box;}
 </style></head><body>

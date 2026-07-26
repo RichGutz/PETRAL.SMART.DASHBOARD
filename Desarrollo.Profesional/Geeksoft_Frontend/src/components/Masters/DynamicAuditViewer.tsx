@@ -399,7 +399,7 @@ export const DynamicAuditViewer: React.FC<CallaoAuditViewerProps> = ({
                     html, body { margin: 0; padding: 0; }
                     .page-break { page-break-before: always; break-before: page; }
                 }
-                body { font-family: 'Courier New', Courier, monospace; color: #000000; background-color: #ffffff; font-size: 6.2pt; line-height: 1.15; margin: 0; padding: 12mm 15mm 8mm 15mm; box-sizing: border-box; }
+                body { font-family: 'Courier New', Courier, monospace; color: #000000; background-color: #ffffff; font-size: 6.2pt; line-height: 1.15; margin: 0; padding: 12mm 16.5mm 8mm 16.5mm; box-sizing: border-box; }
 
                 table { width: 100%; border-collapse: collapse; }
                 .header-table { border-bottom: 2px solid #000000; margin-bottom: 5px; }
