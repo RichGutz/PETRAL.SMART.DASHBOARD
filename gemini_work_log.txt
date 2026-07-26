@@ -31,3 +31,11 @@ Fecha: 2026-07-26 10:06
   - Causa Raíz: El endpoint POST /api/v1/forecast/port_costs_static en forecast.py enviaba un campo 'client_id' (inexistente en la tabla de Supabase port_cost_static, error PGRST204) e ignoraba 'terminal_id' (columna requerida NOT NULL que forma parte de la clave primaria compuesta port_id, terminal_id, operation_type, vessel_id).
   - Corrección backend: Actualizado PortCostStaticUpdateItem en forecast_models.py y mapeo de payload en forecast.py para incluir terminal_id ('GENERAL' por defecto) y excluir client_id.
   - Verificación empírica en DB: Ejecutado test de persistencia scratch/test_api_save_port_costs.py. Las filas de CARGA para Callao (MOQUEGUA, TABLONES, HUEMUL, CONCON_TRADER) fueron sembradas y guardadas exitosamente, incrementando de 4 a 8 registros activos en Supabase.
+
+Fecha: 2026-07-26 12:31
+
+- Actualización Protocolo Maestro QC Loop (`00_Metodologia_QC_Loop_Costos_Portuarios.md`):
+  • 1️⃣ Consumo Dinámico Obligatorio de Parámetros Q desde la UI (`vessel_terminal_operations` DB).
+  • 2️⃣ Cuadro Comparativo Obligatorio de 4 Métricas al pie de TODOS los PDFs (Mínimo Optimista, Excel Experta Sandra, Matriz Fija Estática Supabase DB, Máximo Pesimista).
+  • 3️⃣ Alerta `⚠️ NO ESTÁ EN LA TABLA` si la matriz estática no posee la fila en Supabase (Strict Zero Fallbacks).
+  • 4️⃣ Logos en Base64 Inline Data URIs e ítems PassThrough resaltados en AMARILLO.

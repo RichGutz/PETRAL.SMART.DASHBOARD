@@ -40,8 +40,6 @@ Fecha: 2026-07-22
 - Resultado: ✅ Matriz financiera y Acta PDF re-generadas incorporando ambas piernas para SPCC y NEXA con 100% éxito.
 ================================================================================
 
-
-
 [2026-07-25 16:46:44] Cierre de Sesión - Módulo Static vs Dynamic Port Cost & QC
 - Se exportó e importó computePortItems directamente desde CallaoAuditViewer.tsx sin duplicación.
 - Se eliminaron todos los fallbacks sintéticos e inventos.
@@ -53,10 +51,20 @@ Fecha: 2026-07-22
 INTERACTION LOG - PETRAL SMART DASHBOARD
 Fecha: 2026-07-26
 ================================================================================
-- Tarea: Resolución de Error de Conexión / Guardado en Puerto de Callao (Operación CARGA).
-- Diagnóstico: Error PostgREST PGRST204 por inclusión de campo inexistente 'client_id' y omisión de 'terminal_id' (Primary Key NOT NULL) en endpoint /port_costs_static.
-- Archivos modificados:
-  - forecast_models.py (Respaldo en forecast_models_V1.py)
-  - forecast.py (Respaldo en forecast_V1.py)
-- Resultado: Guardado en CARGA y DESCARGA 100% funcional. Callao actualizado con 8 filas activas en Supabase DB.
+- Tarea: Auditoría Ítem por Ítem de Costos Portuarios (Perú y Chile).
+- Capturas Respaldadas:
+  • `media__1785083609579.png` (Callao Comunicaciones $200.00)
+  • `media__1785083724784.png` (PassThrough Refacturable Southern)
+  • `media__1785083986991.png` (Ilo Dual Tugboats PSA/Petranso + Mínimo $1,800)
+  • `media__1785084323078.png` (Ilo Matriz Overtime PSA 15%/25% vs Petranso 25%)
+  • `media__1785084371039.png` (Ilo General & Agency Expenses)
+  • `media__1785084547692.png` (Marcona Shifting Package $30,508.48)
+  • `media__1785084715696.png` (Marcona Lighthouse Dues Extranjero $0.12)
+  • `media__1785085265861.png` (Mejillones Lanchas Overtime +50%)
+  • `media__1785085401382.png` (Interacid Launch Clearances $0.00)
+- Archivos Modificados:
+  • `run_qc_port_costs_master.py` (Script de Ejecución Terminal con Zero Fallbacks)
+  • `Loop.QC.Callao.md`, `Loop.QC.Matarani.md`, `Loop.QC.Ilo.md`, `Loop.QC.Marcona.md`
+  • `Loop.QC.Mejillones_TPM.md`, `Loop.QC.Mejillones_Interacid.md`, `Loop.QC.Mejillones_Terquim.md`
+- Resultado: ✅ 100% de Trazabilidad y Cobertura P x Q Auditada.
 ================================================================================
