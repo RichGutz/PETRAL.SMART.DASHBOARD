@@ -421,7 +421,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                                     <span>⚡</span> Botón "Simular Itinerario / Calcular Flete"
                                 </div>
                                 <p className="text-slate-600 text-[11px]">
-                                    Ejecuta el motor de viajes calculando días navegando ($T_{ballast} + T_{laden}$), días en muelle ($Q_{op} + 4.0\text{h}$), consumo total de búnker (IFO/MDO) y costos portuarios para obtener el Flete de Equilibrio y el TCE Target ($USD/\text{día}$).
+                                    Ejecuta el motor de viajes calculando días navegando (días en lastre más cargado), días en muelle (horas operativas más 4.0 horas fijas), consumo total de búnker (IFO/MDO) y costos portuarios para obtener el Flete de Equilibrio y el TCE Target (USD por día).
                                 </p>
                             </div>
 
