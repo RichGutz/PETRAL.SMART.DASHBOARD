@@ -279,36 +279,72 @@ export const SystemDocumentation_V2: React.FC = () => {
             sectionType: 'MAESTROS',
             categoryGroup: 'MAESTROS DE COSTOS',
             chapterNum: 9,
-            title: 'Maestro de Gastos Portuarios',
-            subtitle: 'Encuadre MIN (Hábil) vs MAX (OT) vs FIJO DB y metodología QC Regla 6 Overtime (+25%)',
+            title: 'Maestro de Gastos Portuarios (Los 3 Tabs Operativos)',
+            subtitle: 'Modelo Estático, Modelo Matriz Compleja y Tablero de Bandas Tarifarias (Toda la Flota)',
             icon: <Scale size={16} />,
             badge: 'Maestro de Costos',
-            keywords: ['gastos portuarios', 'bandas', 'regla 6', 'overtime', 'min', 'max', 'fijo db', 'sandra', 'no hay'],
+            keywords: ['gastos portuarios', 'bandas', 'regla 6', 'overtime', 'min', 'max', 'fijo db', 'sandra', 'no hay', 'modelo estatico', 'matriz compleja'],
             content: (
                 <div className="space-y-6">
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">9.1 Matriz de Bandas Tarifarias Toda la Flota</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed mb-3">
-                            Consolida en el tab <strong>📊 Bandas Tarifarias</strong> la evaluación dinámica de todas las naves contra el costo fijo registrado en la tabla `port_cost_static`:
+                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">9.1 Los 3 Tabs del Maestro de Gastos Portuarios</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                            El <strong>Maestro de Gastos Portuarios</strong> estructura la evaluación de proformas mediante 3 pestañas especializadas de análisis y configuración:
                         </p>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono mb-4">
-                            <div className="bg-green-50 text-green-900 p-3 rounded-lg border border-green-200">
-                                <span className="font-bold block mb-1 font-sans">✅ EN BANDA</span>
-                                <span className="text-[10px] font-sans">FIJO DB dentro del rango de tolerancia [MIN, MAX].</span>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs mb-6">
+                            {/* TAB 1 */}
+                            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-2">
+                                <div>
+                                    <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 inline-block mb-1">TAB 1</span>
+                                    <h5 className="font-bold text-slate-900 text-sm">📄 Modelo Estático</h5>
+                                    <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                                        Matriz de costos estáticos fijos ($USD) por puerto y buque, desagregada por rubros de faena:
+                                    </p>
+                                    <ul className="list-disc pl-4 text-[11px] text-slate-600 space-y-0.5 mt-2 font-mono">
+                                        <li>Costo Principal (MAIN)</li>
+                                        <li>Loading Master (LM)</li>
+                                        <li>Otros Gastos / Tasas</li>
+                                    </ul>
+                                </div>
                             </div>
-                            <div className="bg-red-50 text-red-900 p-3 rounded-lg border border-red-200">
-                                <span className="font-bold block mb-1 font-sans">❌ SOBRE MAX</span>
-                                <span className="text-[10px] font-sans">FIJO DB supera el recargo de Overtime pesimista (+25%).</span>
+
+                            {/* TAB 2 */}
+                            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-2">
+                                <div>
+                                    <span className="text-[10px] font-black uppercase text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 inline-block mb-1">TAB 2</span>
+                                    <h5 className="font-bold text-slate-900 text-sm">🧩 Matriz Compleja</h5>
+                                    <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                                        Estructura tarifaria dinámica avanzada con reglas $P \times Q$ desagregadas por proveedor:
+                                    </p>
+                                    <ul className="list-disc pl-4 text-[11px] text-slate-600 space-y-0.5 mt-2 font-mono">
+                                        <li>Practicaje Entrante/Saliente</li>
+                                        <li>Remolcaje por TRB / HP</li>
+                                        <li>Muellaje Nave / Carga</li>
+                                    </ul>
+                                </div>
                             </div>
-                            <div className="bg-slate-100 text-slate-700 p-3 rounded-lg border border-slate-300">
-                                <span className="font-bold block mb-1 font-sans">NO HAY</span>
-                                <span className="text-[10px] font-sans">Sin registro previo en DB para ese buque/puerto (sin fallbacks).</span>
+
+                            {/* TAB 3 */}
+                            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-2">
+                                <div>
+                                    <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block mb-1">TAB 3</span>
+                                    <h5 className="font-bold text-slate-900 text-sm">📊 Bandas Tarifarias</h5>
+                                    <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                                        Auditoría en tiempo real de toda la flota verificando tolerancia MIN (hábil) vs MAX (OT +25%):
+                                    </p>
+                                    <ul className="list-disc pl-4 text-[11px] text-slate-600 space-y-0.5 mt-2 font-mono">
+                                        <li>✅ EN BANDA</li>
+                                        <li>❌ SOBRE MAX</li>
+                                        <li>NO HAY (sin datos)</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
 
                         <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-2">9.2 Regla 6 de Auditoría QC (Overtime +25% trazable P×Q)</h4>
                         <p className="text-xs text-slate-600 leading-relaxed">
-                            En escenarios de zarpe pesimista (nocturno/dominical/feriado), el recargo de Overtime (+25%) se aplica individualmente P_base × 1.25 sobre practicaje OUT, remolques OUT, lanchas y agencia, sin usar multiplicadores flat globales.
+                            En escenarios de zarpe pesimista (nocturno, dominical o feriado), la Regla 6 aplica el recargo de Overtime (+25%) directamente P_base × 1.25 sobre practicaje OUT, remolques OUT, lanchas y agencia marítima, permitiendo conciliar cada factura contra el tarifario oficial del puerto.
                         </p>
                     </div>
                 </div>
