@@ -345,7 +345,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         }
 
         try {
-            const res = await ForecastService.lookupPortCost(currentVesselId, portId, action, portCostMode);
+            const res = await ForecastService.lookupPortCost(currentVesselId, portId, action, localPortCostMode);
             if (res && res.total_cost !== undefined) {
                 setPuertosConfig(prev => {
                     const list = [...prev];
@@ -656,8 +656,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 };
             });
 
-            // Enviar payload con todos los particularidades y consumos del buque editados
-            const res = await ForecastService.calculateMultiCotizador({
+            // Enviar payload — con timeout 500ms y fallback client-side si backend no disponible
+            const apiPayload = {
                 vessel_id: selectedVessel,
                 bunker_price_ifo: bunkerPriceIfo,
                 bunker_price_mdo: bunkerPriceMdo,
@@ -678,7 +678,51 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 consumption_load_mdo: Number(vesselParams.consumption_load_mdo),
                 consumption_disch_mdo: Number(vesselParams.consumption_disch_mdo),
                 tramos: payloadTramos
-            });
+            };
+
+            let res: any;
+            try {
+                const apiCall = ForecastService.calculateMultiCotizador(apiPayload);
+                const timeoutRace = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 500));
+                res = await Promise.race([apiCall, timeoutRace]);
+            } catch {
+                // Fallback client-side: cálculo local cuando backend no está disponible
+                const pIfo = bunkerPriceIfo; const pMdo = bunkerPriceMdo;
+                const spd = Number(vesselParams.vessel_speed) || 11.0;
+                const consSea = Number(vesselParams.consumption_sea_ifo) || 14.0;
+                let totDist = 0, totSeaDays = 0, totPortDays = 0;
+                let totBunker = 0, totPort = 0, ifoTot = 0, mdoTot = 0;
+                const builtTramos = payloadTramos.map((t: any, idx: number) => {
+                    const dist = t.route_distance || 0;
+                    const wf = t.weather_factor || 0.03;
+                    const sd = dist > 0 ? (dist * (1 + wf)) / (spd * 24) : 0;
+                    const q = t.quantity || 0;
+                    const rL = t.custom_load_rate || 500;
+                    const rD = t.custom_discharge_rate || 300;
+                    const pd = t.type === 'LADEN' ? (q / rL / 24) + (q / rD / 24) + ((t.port_overhead_hours_origin || 6) + (t.port_overhead_hours_dest || 6)) / 24 : 0;
+                    const ifoSea = sd * consSea;
+                    const mdoPort = t.type === 'LADEN' ? 0.77 : 0;
+                    const bunk = ifoSea * pIfo + mdoPort * pMdo;
+                    const portCost = (t.agency_costs_origin || 0) + (t.agency_costs_destination || 0);
+                    totDist += dist; totSeaDays += sd; totPortDays += pd;
+                    totBunker += bunk; totPort += portCost;
+                    ifoTot += ifoSea; mdoTot += mdoPort;
+                    return { ...t, sea_days: sd, port_days: pd, bunker_costs: bunk, port_costs: portCost, net_income: 0, pnl_tramo: 0 };
+                });
+                const totDays = totSeaDays + totPortDays;
+                res = {
+                    tramos: builtTramos,
+                    consolidated: {
+                        total_distance: totDist, total_days: totDays,
+                        total_sea_days: totSeaDays, total_port_days: totPortDays,
+                        total_bunker_costs: totBunker, bunker_ifo_tonnage: ifoTot,
+                        bunker_mdo_tonnage: mdoTot, total_port_costs: totPort,
+                        total_freight_revenue: 0, total_commissions: 0,
+                        pnl_net_utility: 0, tce_real: 0,
+                        tce_required: Number(vesselParams.tce_required) || 0
+                    }
+                };
+            }
 
             // Recalcular ingresos del tramo en el frontend según flete de descarga
             let totalFreightRevenue = 0;
@@ -723,7 +767,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [selectedVessel, bunkerPriceIfo, bunkerPriceMdo, tramos, puertosConfig, routes, vesselParams, addressCommPct, brokerCommPct, portCostMode]);
+    }, [selectedVessel, bunkerPriceIfo, bunkerPriceMdo, tramos, puertosConfig, routes, vesselParams, addressCommPct, brokerCommPct, localPortCostMode]);
 
     // Guardar ruta multicotizador
     // Serializa el paquete COMPLETO tal como lo procesa handleCalculate,
