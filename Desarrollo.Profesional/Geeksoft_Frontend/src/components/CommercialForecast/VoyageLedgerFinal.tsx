@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Label } from "../ui/label";
-import { Printer, RefreshCw } from "lucide-react";
+import { Printer, RefreshCw, Filter, FileText } from "lucide-react";
 import { ForecastService } from '../../services/api';
 
 export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }> = ({ portCostMode = 'static' }) => {
@@ -143,7 +143,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
         return sorted.length > 0 ? sorted : defaultMasterRoutes;
     }, [selectedClientId, routes]);
 
-    // Motor de cálculo de simulación instantánea client-side de ultra alto rendimiento
+    // Motor de cálculo de simulación instantánea client-side
     const computeInstantSimulation = (route: any, mode: 'static' | 'matrix') => {
         const PORT_COSTS_MASTER: Record<string, number> = mode === 'static' ? {
             "CALLAO": 31327.99,
@@ -236,7 +236,6 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             for (const route of routesToProcess) {
                 let simRes: any = null;
                 
-                // Intento de llamada con timeout de 300ms para no bloquear la pantalla en "Procesando..."
                 try {
                     if (route.legs_data?.tramos) {
                         const tramos = JSON.parse(JSON.stringify(route.legs_data.tramos));
@@ -247,11 +246,11 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
                             port_cost_mode: localPortCostMode
                         };
                         const apiPromise = ForecastService.calculateMultiCotizador(payload);
-                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout Backend")), 300));
+                        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout Backend")), 250));
                         simRes = await Promise.race([apiPromise, timeoutPromise]);
                     }
                 } catch {
-                    // Fallback instantaneo sin bloquear la pantalla
+                    // Fallback instantáneo client-side
                 }
 
                 if (!simRes || !simRes.consolidated) {
@@ -415,17 +414,22 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
     return (
         <div className="flex flex-col gap-4 w-full max-w-full">
             
-            {/* Control Ribbon Superior */}
-            <div className="bg-slate-900 text-white p-4 rounded-xl shadow-md flex items-center justify-between flex-wrap gap-4">
+            {/* Control Ribbon Superior (Diseño Sobrio Blanco Corporativo UI Original) */}
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-4 flex-wrap">
                     
+                    <div className="flex items-center gap-2 pr-3 border-r border-slate-200">
+                        <FileText size={20} className="text-blue-600" />
+                        <span className="text-xs font-black uppercase text-slate-800 tracking-wide">Filtros de Auditoría</span>
+                    </div>
+
                     {/* Selector de Cliente */}
                     <div className="flex flex-col gap-1">
-                        <Label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Cliente / Cuenta</Label>
+                        <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Cliente / Cuenta</Label>
                         <select
                             value={selectedClientId}
                             onChange={(e) => setSelectedClientId(e.target.value)}
-                            className="bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded-lg border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="bg-slate-50 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             {availableClients.map(c => (
                                 <option key={c} value={c}>{c}</option>
@@ -435,11 +439,11 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
 
                     {/* Selector de Buque */}
                     <div className="flex flex-col gap-1">
-                        <Label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Buque Asignado</Label>
+                        <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Buque Asignado</Label>
                         <select
                             value={selectedVesselId}
                             onChange={(e) => setSelectedVesselId(e.target.value)}
-                            className="bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded-lg border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="bg-slate-50 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             {vessels.map(v => (
                                 <option key={v.vessel_id || v.id} value={v.vessel_id || v.id}>
@@ -451,11 +455,11 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
 
                     {/* Selector de Matriz Estática / Dinámica */}
                     <div className="flex flex-col gap-1">
-                        <Label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Matriz Gastos Puerto</Label>
+                        <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Matriz Gastos Puerto</Label>
                         <select
                             value={localPortCostMode}
                             onChange={(e) => setLocalPortCostMode(e.target.value as 'static' | 'matrix')}
-                            className="bg-slate-800 text-emerald-400 text-xs font-black px-3 py-2 rounded-lg border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            className="bg-slate-50 text-emerald-700 text-xs font-black px-3 py-1.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         >
                             <option value="static">Estática (Master Fijo)</option>
                             <option value="matrix">Dinámica (PxQ Compleja)</option>
@@ -468,16 +472,16 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
                     <button
                         onClick={handleCalculateConsolidated}
                         disabled={simulating}
-                        className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg border border-slate-700 flex items-center gap-2 transition-all cursor-pointer"
+                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-300 flex items-center gap-2 transition-all cursor-pointer"
                     >
-                        <RefreshCw size={14} className={simulating ? "animate-spin text-blue-400" : ""} />
+                        <RefreshCw size={14} className={simulating ? "animate-spin text-blue-600" : ""} />
                         <span>{simulating ? "Simulando..." : "Recalcular"}</span>
                     </button>
 
                     <button
                         onClick={() => handlePrintPdf(printableHtml)}
                         disabled={simulating || !printableHtml}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg shadow flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
                     >
                         <Printer size={15} />
                         <span>Imprimir Reporte PDF</span>
@@ -485,7 +489,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
                 </div>
             </div>
 
-            {/* Visor PDF / HTML Report en Pantalla (Diseño UI 100% Intacto) */}
+            {/* Visor PDF / HTML Report en Pantalla (Tu UI Blanca Corporativa Original) */}
             <div className="flex flex-col bg-slate-200 p-4 rounded-xl border border-slate-300 shadow-inner min-h-[600px]">
                 {loading || simulating ? (
                     <div className="flex flex-col items-center justify-center h-96 bg-white rounded-lg border border-slate-300 space-y-3">
