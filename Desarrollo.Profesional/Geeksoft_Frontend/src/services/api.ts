@@ -64,14 +64,13 @@ export const ForecastService = {
             // Fallback a Supabase REST API directo
         }
         try {
-            const supabaseUrl = "https://hjjxooxcpvlvbaxgifbn.supabase.co/rest/v1/voyage_liquidations?select=*&order=voyage_code.asc";
+            const supabaseUrl = "https://hjjxooxcpvlvbaxgifbn.supabase.co/rest/v1/voyage_liquidations?select=*";
             const serviceKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqanhvb3hjcHZsdmJheGdpZmJuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjI1MDk0NCwiZXhwIjoyMDk3ODI2OTQ0fQ.i8KkZtLSDEqaNo15NH3easZV6vhHIbqoYD7ps4pkOMc";
             const resp = await axios.get(supabaseUrl, {
                 headers: {
                     'apikey': serviceKey,
                     'Authorization': `Bearer ${serviceKey}`
-                },
-                timeout: 10000
+                }
             });
             return resp.data || [];
         } catch (err) {
