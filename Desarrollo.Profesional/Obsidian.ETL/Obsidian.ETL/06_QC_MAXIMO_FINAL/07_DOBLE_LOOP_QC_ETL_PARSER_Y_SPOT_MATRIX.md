@@ -151,3 +151,10 @@ Inmediatamente antes del renglón de Costo OPEX, tanto el Forecast como la Ejecu
 - `• Permanencia en Puerto (Est / Real): XX.XX d (XX.X hrs)`
 - `(-) Costo OPEX Buque (XX.XXd x $15,000.00): -$XXX,XXX.XX`
 
+### E. 🚨 Regla Invariable de Suma Vertical Estricta de Gastos Portuarios (Descarte de Fallbacks y Retorno a PNG/Excel)
+$$\text{Puerto Carga Real (POL)} + \text{Puerto Descarga 1 Real (POD 1)} + \text{Puerto Descarga 2 Real (POD 2)} = \text{Total Gastos Puerto Reales}$$
+
+1. **Cuadre Obligatorio al Centavo ($0.00)**: La suma vertical exacta de las 3 escalas (POL + POD 1 + POD 2) debe ser idéntica al renglón `Total Gastos Puerto Reales`.
+2. **Prohibición Absoluta de Fallbacks Porcentuales**: Queda estrictamente prohibido usar porcentajes aproximados (ej. 35% / 35% / 30%) para dividir el costo total. Queda desaprobado cualquier reporte donde la suma de los rubros individuales diferir del total.
+3. **Criterio de Rechazo Automático QC y Retorno a PNG/Mapeo**: Si la suma de las escalas no coincide exactamente con el total, el sistema o script de QC debe marcar **FALLO DE VALIDACIÓN** y retornar inmediatamente al parseo directo de las celdas del Excel / imágenes PNG respaldadas.
+

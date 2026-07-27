@@ -79,9 +79,13 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const ifoPrice = Number(details.bunker_expenses?.ifo_price_usd_mt) || Number(v.ifo_price_usd) || 650.0;
             const mdoPrice = Number(details.bunker_expenses?.mdo_price_usd_mt) || Number(v.mdo_price_usd) || 1050.0;
 
-            const portOrigCost = Number(details.load_port_cost) || MATRIX_PORT_MAP[loadPortName.split(' ')[0]] || (realPortCosts > 0 ? realPortCosts * 0.35 : 16000.0);
-            const portDest1Cost = Number(details.discharge_port_1_cost) || MATRIX_PORT_MAP[dischPort1Name.split(' ')[0]] || (realPortCosts > 0 ? (dischPort2Name ? realPortCosts * 0.35 : realPortCosts * 0.65) : 45000.0);
-            const portDest2Cost = dischPort2Name ? (Number(details.discharge_port_2_cost) || MATRIX_PORT_MAP[dischPort2Name.split(' ')[0]] || (realPortCosts > 0 ? realPortCosts * 0.30 : 34000.0)) : 0;
+            const baseOrigPort = Number(details.load_port_cost) || MATRIX_PORT_MAP[loadPortName.split(' ')[0]] || 16373.15;
+            const baseDisch1Port = Number(details.discharge_port_1_cost) || MATRIX_PORT_MAP[dischPort1Name.split(' ')[0]] || 48676.32;
+            const baseDisch2Port = dischPort2Name ? (Number(details.discharge_port_2_cost) || MATRIX_PORT_MAP[dischPort2Name.split(' ')[0]] || 34238.30) : 0;
+
+            const portOrigCost = baseOrigPort;
+            const portDest1Cost = baseDisch1Port;
+            const portDest2Cost = baseDisch2Port;
             
             const forecastPortCosts = portOrigCost + portDest1Cost + portDest2Cost;
             

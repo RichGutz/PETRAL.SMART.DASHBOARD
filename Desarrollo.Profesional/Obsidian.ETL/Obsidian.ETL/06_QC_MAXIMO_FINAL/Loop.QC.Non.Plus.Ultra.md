@@ -132,4 +132,7 @@ Durante la evaluación de los 31 viajes simulados y ejecutados:
    - Se evalúa cada parcela dividida entre su respectivo ritmo de descarga ($350\text{ MT/h}$) más $6.0\text{h}$ de maniobra por escala, eliminando constantes artificiales (ej. $6.0\text{d}$ hardcoded).
 4. **Indentación Fina en PDF**:
    - Se despliegan las horas y días de mar y puerto indentados previo al renglón del Costo OPEX en el comparativo side-by-side.
+5. **Auditoría de Suma Vertical Estricta de Gastos de Puerto**:
+   - La suma de los costos individuales por escala (POL + POD 1 + POD 2) debe ser idéntica al centavo ($0.00$) con el `Total Gastos Puerto Reales`.
+   - Queda prohibido cualquier prorrateo o porcentaje aproximado de fallback. Si la suma vertical no coincide exactamente con el total del operador, la prueba de QC marca **ERROR DE CONCILIACIÓN** y regresa obligatoriamente al re-parseo directo de las celdas del Excel / capturas PNG.
 
