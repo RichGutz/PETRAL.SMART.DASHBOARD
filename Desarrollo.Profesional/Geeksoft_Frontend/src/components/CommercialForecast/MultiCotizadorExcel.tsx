@@ -31,6 +31,7 @@ interface PuertoConfig {
 
 export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' }> = ({ portCostMode = 'static' }) => {
     const context = useForecastContext_V2();
+    const [localPortCostMode, setLocalPortCostMode] = useState<'static' | 'matrix'>(portCostMode || 'static');
     const [activeMainTab, setActiveMainTab] = useState<'estimator' | 'audit'>('estimator');
     const [vessels, setVessels] = useState<any[]>([]);
     const [selectedVessel, setSelectedVessel] = useState('');
@@ -660,7 +661,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 vessel_id: selectedVessel,
                 bunker_price_ifo: bunkerPriceIfo,
                 bunker_price_mdo: bunkerPriceMdo,
-                port_cost_mode: portCostMode,
+                port_cost_mode: localPortCostMode,
                 vessel_speed: Number(vesselParams.vessel_speed) || undefined,
                 grt: Number(vesselParams.grt) || undefined,
                 dwt: Number(vesselParams.dwt) || undefined,
@@ -1996,6 +1997,29 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     </div>
 
                     <div className="flex items-center gap-3">
+                        {/* Selector Dinámico Dual de Gastos Portuarios: STATIC vs MATRIX */}
+                        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded h-7 border border-slate-300">
+                            <span className="text-[9.5px] font-black text-slate-500 uppercase px-1">Costos Puerto:</span>
+                            <button
+                                onClick={() => setLocalPortCostMode('static')}
+                                className={`px-2 h-6 text-[9.5px] font-black rounded transition-all cursor-pointer ${
+                                    localPortCostMode === 'static' ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                                title="Modo Estático: Tarifa de port_cost_static ($0.00 estricto si falta)"
+                            >
+                                STATIC
+                            </button>
+                            <button
+                                onClick={() => setLocalPortCostMode('matrix')}
+                                className={`px-2 h-6 text-[9.5px] font-black rounded transition-all cursor-pointer ${
+                                    localPortCostMode === 'matrix' ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                                title="Modo Matriz Compleja: Promedio entre Escenario Alto y Bajo"
+                            >
+                                MATRIX
+                            </button>
+                        </div>
+
                         {/* Botón de dos posiciones elegantes no-excluyentes */}
                         <div className="flex bg-slate-200/70 p-0.5 rounded h-7 shadow-inner items-center">
                             <button

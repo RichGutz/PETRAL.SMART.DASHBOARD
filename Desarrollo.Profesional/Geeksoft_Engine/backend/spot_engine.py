@@ -254,6 +254,8 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
     """
     vessel = payload.get("vessel_params", {})
     tramos = payload.get("tramos", [])
+    port_cost_mode = payload.get("port_cost_mode", "static")
+    client_id = payload.get("client_id", "PETRAL")
     
     vessel_id_val = payload.get("vessel_id") or vessel.get("vessel_id") or vessel.get("id")
     if vessel_id_val and (not vessel or not vessel.get("consumption_sea_ifo")):
@@ -419,7 +421,64 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         bunker_costs = bunker_costs_normal + delay_loading_cost + delay_disch_cost
         
         net_income = Q * F
-        port_costs = float(leg_inputs.get("agency_costs_origin", 0)) + float(leg_inputs.get("agency_costs_destination", 0))
+        
+        # Resolución Dinámica Dual (STATIC vs MATRIX) para costos de puerto del tramo cargado
+        cost_orig = leg_inputs.get("agency_costs_origin")
+        cost_dest = leg_inputs.get("agency_costs_destination")
+
+        if cost_orig is None or float(cost_orig) == 0.0:
+            port_matrix_data, agency_data, ports_map = [], [], {}
+            try:
+                from backend.services.forecast_service import get_cached_masters
+                from backend.database import get_supabase
+                sb = get_supabase()
+                masters = get_cached_masters(sb)
+                port_matrix_data = masters.get("port_costs_matrix", [])
+                agency_data = masters.get("agency_matrix", [])
+                ports_map = masters.get("ports", {})
+            except Exception:
+                pass
+
+            try:
+                from backend.services.forecast_service import calculate_detailed_port_costs
+                orig_id = leg_inputs.get("origin_port_id") or ""
+                v_id = vessel_id_val or "MOQUEGUA"
+                res_orig = calculate_detailed_port_costs(
+                    client_id, orig_id, "CARGA", v_id,
+                    port_matrix_data, agency_data,
+                    port_cost_mode, vessel, Q, {}, ports_map
+                )
+                cost_orig = res_orig["total_cost"]
+            except Exception:
+                cost_orig = float(cost_orig or 0)
+
+        if cost_dest is None or float(cost_dest) == 0.0:
+            port_matrix_data, agency_data, ports_map = [], [], {}
+            try:
+                from backend.services.forecast_service import get_cached_masters
+                from backend.database import get_supabase
+                sb = get_supabase()
+                masters = get_cached_masters(sb)
+                port_matrix_data = masters.get("port_costs_matrix", [])
+                agency_data = masters.get("agency_matrix", [])
+                ports_map = masters.get("ports", {})
+            except Exception:
+                pass
+
+            try:
+                from backend.services.forecast_service import calculate_detailed_port_costs
+                dest_id = leg_inputs.get("destination_port_id") or ""
+                v_id = vessel_id_val or "MOQUEGUA"
+                res_dest = calculate_detailed_port_costs(
+                    client_id, dest_id, "DESCARGA", v_id,
+                    port_matrix_data, agency_data,
+                    port_cost_mode, vessel, Q, {}, ports_map
+                )
+                cost_dest = res_dest["total_cost"]
+            except Exception:
+                cost_dest = float(cost_dest or 0)
+
+        port_costs = float(cost_orig) + float(cost_dest)
         
         delay_loading_audit = {
             "formula": "Tons IFO = (delay_load / 24) * cons_idle<br/>"
@@ -510,10 +569,14 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
             res["type"] = "BALLAST"
         else:
             res = process_laden_leg(tr)
-            # En tramos LADEN, asignamos costos de agencia de Carga en Origen y Descarga en Destino
-            res["agency_costs_origin"] = c_orig
-            res["agency_costs_destination"] = c_dest
-            res["port_costs"] = c_orig + c_dest
+            # En tramos LADEN, si el leg calculó gastos dinámicos, usarlos; de lo contrario respetar overrides
+            calc_port_cost = float(res.get("port_costs", 0))
+            if calc_port_cost > 0 and (c_orig == 0 and c_dest == 0):
+                pass
+            else:
+                res["agency_costs_origin"] = c_orig
+                res["agency_costs_destination"] = c_dest
+                res["port_costs"] = c_orig + c_dest
             res["net_income"] = float(tr.get("quantity", 0)) * float(tr.get("freight_rate", 0))
             res["pnl_tramo"] = res["net_income"] - res["bunker_costs"] - res["port_costs"]
             res["type"] = "LADEN"
