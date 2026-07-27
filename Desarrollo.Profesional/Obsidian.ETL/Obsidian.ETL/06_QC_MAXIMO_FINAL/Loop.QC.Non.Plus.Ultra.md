@@ -30,7 +30,16 @@ El **Loop QC Non Plus Ultra** actúa como la prueba de auditoría definitiva del
 
 ---
 
-## 3. 🛡️ Criterios de Aceptación y Tolerancias de Convergencia
+## 3. 🚨 Regla de Auditoría Activa: Detección de "Pendiente Re-ETL Excel" & Notificación de Captura
+
+Durante la ejecución de las auditorías en el visor PDF e iframe:
+1. **Inspección Automática de Alertas**: Se audita si algún viaje presenta el aviso **`Pendiente Re-ETL Excel`** en Gastos de Puerto o Búnker.
+2. **Notificación al Usuario**: Si un viaje carece de datos reales de celdas en Supabase DB, la herramienta notifica de inmediato señalando el código exacto del viaje (ej: `v.045`, `V.764`) y solicita explícitamente al usuario la captura de pantalla del Excel maestro correspondiente.
+3. **Mapeo e Integración en Obsidian**: La captura recibida se copia a los directorios locales (`RULE[png_local_storage]`) y sus coordenadas de celdas se registran en `MAPEO_CELDAS_EXCEL_Y_MULTILEG_ETL.md` para actualizar Supabase de forma inmediata.
+
+---
+
+## 4. 🛡️ Criterios de Aceptación y Tolerancias de Convergencia
 
 Cada uno de los 31 viajes simulados en el Multicotizador Spot con costos dinámicos de puerto (modo `MATRIX`) se evalúa según los siguientes umbrales de tolerancia de auditoría:
 
@@ -44,7 +53,7 @@ Cada uno de los 31 viajes simulados en el Multicotizador Spot con costos dinámi
 
 ---
 
-## 4. 📊 Matriz de Comparativa de los 31 Viajes Auditados (Flota PETRAL)
+## 5. 📊 Matriz de Comparativa de los 31 Viajes Auditados (Flota PETRAL)
 
 | ID Viaje | Buque | Origen | Destino | Real Net (USD) | Multicotizador Matrix (USD) | Desviación (%) | Estado QC |
 | :--- | :--- | :--- | :--- | :-: | :-: | :-: | :-: |
@@ -82,7 +91,7 @@ Cada uno de los 31 viajes simulados en el Multicotizador Spot con costos dinámi
 
 ---
 
-## 5. 📈 Resumen Estadístico de Convergencia
+## 6. 📈 Resumen Estadístico de Convergencia
 
 - **Total de Viajes Auditados**: **31 / 31** (100% de cobertura de la flota).
 - **Utilidad Neta Real Total**: **`$3,342,539.00 USD`**
@@ -91,8 +100,9 @@ Cada uno de los 31 viajes simulados en el Multicotizador Spot con costos dinámi
 
 ---
 
-## 6. 📂 Protocolo de Entregables Locales y Doble Loop
+## 7. 📂 Protocolo de Entregables Locales y Doble Loop
 
+- **Mapeo de Celdas y Capturas PNG**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.ETL\MAPEO_CELDAS_EXCEL_Y_MULTILEG_ETL.md`
 - **Documento del Doble Loop**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.ETL\Obsidian.ETL\06_QC_MAXIMO_FINAL\07_DOBLE_LOOP_QC_ETL_PARSER_Y_SPOT_MATRIX.md`
 - **Script de QC Autónomo**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine\run_qc_loop_non_plus_ultra.py`
 - **Nota de Obsidian**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.ETL\Obsidian.ETL\06_QC_MAXIMO_FINAL\Loop.QC.Non.Plus.Ultra.md`

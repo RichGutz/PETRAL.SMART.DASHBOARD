@@ -1,9 +1,6 @@
-[2026-07-27 01:17:15] - Ejecución del LOOP 1 Re-ETL Scraper sobre los 31 Viajes en Supabase DB
-- Actualización de etl_parser_liquidations.py fijando las reglas de extracción celda por celda de los Exceles de liquidaciones:
-  * Single Leg: Port Costs N15, Bunker Costs N16, Net Profit Q20.
-  * Multileg 2 PODs: Total Agency C48, Bunkers S48, Total Freight Income H23 / N14, Net Profit Q20.
-- Ejecución limpia de push_to_supabase.py con upsert masivo on_conflict=voyage_code:
-  "EXITO TOTAL: Se upsertaron los 31 viajes correctamente en Supabase!"
-- Erradicación del mensaje "Pendiente Re-ETL Excel", poblando los montos reales exactos en la base de datos.
-- Verificación limpia de TypeScript / Vite en 3.99s (npm run build).
+[2026-07-27 01:18:55] - Incorporación de Regla de Detección Re-ETL y Auditoría 100% Saneada en Supabase
+- Actualización de Loop.QC.Non.Plus.Ultra.md formalizando la regla de detección activa del aviso "Pendiente Re-ETL Excel" y solicitud de capturas de pantalla al usuario.
+- Auditoría directa en terminal sobre los 31 registros de Supabase DB:
+  * Total de viajes auditados: 31 / 31.
+  * Total de viajes pendientes de Re-ETL: 0 (CERO pendientes, 100% saneado).
 - Publicación y sincronización en repositorio Git origin main.
