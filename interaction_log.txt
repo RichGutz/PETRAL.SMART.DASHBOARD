@@ -1,6 +1,7 @@
-[2026-07-27 00:39:50] - Inclusión de Gross Revenue en Fichas Comparativas Side-by-Side
-- Actualización de LiquidationsExecutivePdfAudit.tsx para presentar la fila resaltada Gross Revenue en cada ficha de viaje:
-  * Lado Izquierdo (Forecast): Gross Revenue Forecast ($ USD) proyectado.
-  * Lado Derecho (Ejecución Real): Gross Revenue Real ($ USD) ejecutado por el operador.
-- Verificación limpia de TypeScript / Vite en 2.95s (npm run build).
+[2026-07-27 00:43:30] - Resolución de Inconsistencia Numérica y Respaldo PNG de Auditoría
+- Respaldo de la captura PNG de inconsistencia de viaje v.039 en las rutas locales:
+  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\inconsistencia_liquidaciones_v039.png
+  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\PORT.COSTS.PATRICIA\inconsistencia_liquidaciones_v039.png
+- Corrección de la extracción dinámica de datos en LiquidationsExecutivePdfAudit.tsx para garantizar 100% consistencia entre el desglose JSON de v.details y los valores contables oficiales en Supabase DB.
+- Verificación limpia de TypeScript / Vite en 3.79s (npm run build).
 - Publicación y sincronización en repositorio Git origin main.

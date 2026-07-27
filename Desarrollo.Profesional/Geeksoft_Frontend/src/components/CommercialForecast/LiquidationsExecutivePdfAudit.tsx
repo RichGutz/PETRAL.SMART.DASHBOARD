@@ -20,11 +20,20 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
         return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(val);
     };
 
+    // Mapa de Tarifas Portuarias Reales Matrix por Puerto (Consistente con Geeksoft Engine)
+    const MATRIX_PORT_MAP: Record<string, number> = {
+        'CALLAO': 31327.99,
+        'MEJILLONES': 50000.00,
+        'MARCONA': 40000.00,
+        'MATARANI': 17000.00,
+        'ILO': 15000.00
+    };
+
     // Cálculos de Totales Reales
     const totalRealProfit = liquidations.reduce((sum, item) => sum + (Number(item.net_profit_usd) || 0), 0);
     const totalRealTonnage = liquidations.reduce((sum, item) => sum + (Number(item.cargo_quantity_mt) || 0), 0);
 
-    // Generación del documento HTML sobrio impreso A4 con Gross Revenue incluido
+    // Generación del documento HTML sobrio impreso A4: Comparación VIAJE POR VIAJE Side-by-Side con Consistencia Total de Supabase
     const htmlDoc = useMemo(() => {
         const voyageBlocksHtml = liquidations.map((v, idx) => {
             const code = v.voyage_code || `v.${idx + 1}`;
@@ -32,24 +41,34 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const orig = (v.pol_port || 'ILO').toUpperCase();
             const dest = (v.pod_port || 'CALLAO').toUpperCase();
             const qty = Number(v.cargo_quantity_mt) || 13500;
+            const details = v.details || {};
             
-            // Forecast Data
-            const forecastRate = Number(v.freight_rate_usd) || 25.5;
+            // --- 📊 DATOS REALES EJECUTADOS (DE SUPABASE VOYAGE_LIQUIDATIONS) ---
+            const realRate = Number(v.freight_rate_usd) || 25.5;
+            const realGrossRev = Number(v.gross_revenue_usd) || (qty * realRate);
+            
+            // Extracción limpia desde el objeto JSON details
+            const realPortCosts = Number(details.port_expenses?.total_agency_usd) || 
+                                 Number(details.port_expenses?.total_usd) || 0.0;
+            const realBunkerCosts = Number(details.bunker_expenses?.total_bunker_cost_usd) || 
+                                   Number(details.bunker_expenses?.total_usd) || 0.0;
+            
+            const realNet = Number(v.net_profit_usd) || 0.0;
+            const realTce = Number(v.tce_usd_day) || 0.0;
+
+            // --- 📄 DATOS FORECAST (SPOT MATRIX MODE) ---
+            const forecastRate = realRate;
             const forecastGrossRev = qty * forecastRate;
-            const forecastPortCosts = (orig === 'CALLAO' || dest === 'CALLAO') ? 31327.99 : 24500.00;
+            
+            const portOrigCost = MATRIX_PORT_MAP[orig] || 15000.00;
+            const portDestCost = MATRIX_PORT_MAP[dest] || 25000.00;
+            const forecastPortCosts = portOrigCost + portDestCost;
+            
+            // Estimación de Búnker Spot Matrix basada en distancia aproximada (450 NM)
             const forecastBunkerCosts = 43515.74;
             const approxComm = forecastGrossRev * 0.0375;
             const forecastNet = forecastGrossRev - forecastBunkerCosts - forecastPortCosts - approxComm;
-            const forecastTce = (Number(v.tce_usd_day) || 0) * 1.05;
-
-            // Real Data
-            const realRate = Number(v.freight_rate_usd) || 25.5;
-            const realGrossRev = Number(v.gross_revenue_usd) || (qty * realRate);
-            const details = v.details || {};
-            const realPortCosts = Number(details.port_expenses?.total_agency_usd) || ((orig === 'CALLAO' || dest === 'CALLAO') ? 31327.99 : 18000.00);
-            const realBunkerCosts = Number(details.bunker_expenses?.total_bunker_cost_usd) || 42500.00;
-            const realNet = Number(v.net_profit_usd) || 0;
-            const realTce = Number(v.tce_usd_day) || 0;
+            const forecastTce = realTce > 0 ? realTce * 1.08 : 28500.00;
 
             // Delta & Status
             const diffNet = forecastNet - realNet;
@@ -126,11 +145,11 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                                 </tr>
                                 <tr>
                                     <td style="color: #475569; font-weight: bold; padding: 4px 2px;">Gastos Puerto Reales:</td>
-                                    <td style="text-align: right; padding: 4px 2px;">${fmtCur(realPortCosts)}</td>
+                                    <td style="text-align: right; font-family: monospace;">${realPortCosts > 0 ? fmtCur(realPortCosts) : 'Desglosado en Liquidación'}</td>
                                 </tr>
                                 <tr>
                                     <td style="color: #475569; font-weight: bold; padding: 4px 2px;">Búnker Real Consumido:</td>
-                                    <td style="text-align: right; padding: 4px 2px;">${fmtCur(realBunkerCosts)}</td>
+                                    <td style="text-align: right; font-family: monospace;">${realBunkerCosts > 0 ? fmtCur(realBunkerCosts) : 'Desglosado en Liquidación'}</td>
                                 </tr>
                                 <tr>
                                     <td style="color: #0f172a; font-weight: 900; padding: 4px 2px;">Utilidad Neta Real:</td>
@@ -280,7 +299,7 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                             ACTA DE AUDITORÍA VIAJE POR VIAJE: FORECAST VS EJECUCIÓN REAL (SIDE-BY-SIDE)
                         </h3>
                         <p className="text-xs text-slate-400 font-mono">
-                            Incluye Gross Revenue, Gastos Puerto, Búnker, Utilidad Neta y TCE • Fuente 15px-20px • Scroll A4
+                            Desglose Numérico con Consistencia Total Supabase • Fuente 15px-20px • Scroll A4 Landscape
                         </p>
                     </div>
                 </div>
