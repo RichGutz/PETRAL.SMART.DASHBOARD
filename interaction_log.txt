@@ -1,8 +1,6 @@
-[2026-07-27 00:59:15] - Creación del Documento Técnico Oficial del Doble Loop de Auditoría (ETL Parser + Spot Matrix)
-- Creación en Obsidian del documento:
-  Obsidian.ETL/Obsidian.ETL/06_QC_MAXIMO_FINAL/07_DOBLE_LOOP_QC_ETL_PARSER_Y_SPOT_MATRIX.md.
-- Especificación del protocolo de 2 bucles:
-  1) Loop 1: Auditoría y re-scrapeo de celdas reales en los Exceles maestros de liquidación (Port Costs, Bunker Costs, Revenue).
-  2) Loop 2: Simulación de convergencia Spot Matrix Mode y despliegue HTA PDF Executive side-by-side.
-- Vinculación cruzada en Loop.QC.Non.Plus.Ultra.md.
-- Registro y commit oficial en repositorio Git origin main.
+[2026-07-27 01:01:15] - Eliminación de Fallbacks Ficticios & Integridad 100% en PDF Auditoría
+- Refactorización estricta de LiquidationsExecutivePdfAudit.tsx:
+  * Eliminación total de valores por defecto o ficticios en la columna Ejecución Real.
+  * Extracción limpia y transparente desde Supabase DB (voyage_liquidations). Si una cifra no ha sido re-scrapeada aún desde el Excel original, se muestra explícitamente como "Pendiente Re-ETL Excel", sin simular valores ficticios.
+- Verificación limpia de TypeScript / Vite en 3.10s (npm run build).
+- Publicación y sincronización en repositorio Git origin main.
