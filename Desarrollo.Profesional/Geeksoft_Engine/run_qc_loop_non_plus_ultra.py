@@ -20,6 +20,14 @@ def run_non_plus_ultra_qc():
     print("🔄 SCRIPT AUTÓNOMO QC NON PLUS ULTRA: AUDITORÍA DE CONVERGENCIA & CAZADOR DE NÚMEROS REDONDOS FICTICIOS")
     print("=" * 125)
 
+    png_dir = r'C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.ETL\Obsidian.ETL\07_PNGs_31_VIAJES_ENE_JUN_26'
+    print(f"\n🖼️  0. AUDITORÍA PREVIA DE RESÚMENES PNG LOCALES (`{os.path.basename(png_dir)}`)")
+    print("-" * 125)
+    
+    png_files = os.listdir(png_dir) if os.path.exists(png_dir) else []
+    png_map = {f.upper(): os.path.join(png_dir, f) for f in png_files if f.endswith('.png')}
+    print(f"   ✅ Se encontraron {len(png_map)} capturas PNG de resúmenes de barcos en inventario local.")
+
     sb = get_supabase()
 
     # 1. Consultar los 31 viajes auditados en Supabase DB
@@ -34,13 +42,14 @@ def run_non_plus_ultra_qc():
         sys.exit(1)
 
     print("\n" + "-" * 125)
-    print(f"{'CÓDIGO':<16} | {'BUQUE':<12} | {'PORT REAL':<12} | {'BUNKER REAL':<12} | {'REAL NET (USD)':<14} | {'MATRIX NET (USD)':<14} | {'DESV (%)':<9} | {'ESTADO QC':<12}")
+    print(f"{'CÓDIGO':<16} | {'BUQUE':<12} | {'PNG LOCAL':<10} | {'PORT REAL':<12} | {'BUNKER REAL':<12} | {'REAL NET (USD)':<14} | {'MATRIX NET (USD)':<14} | {'ESTADO QC':<12}")
     print("-" * 125)
 
     real_nets = []
     sim_nets = []
     passed_count = 0
     round_numbers_flagged = 0
+    png_matched_count = 0
 
     for idx, v in enumerate(voyages, 1):
         v_code = v.get("voyage_code") or f"v.{idx:03d}"
@@ -55,6 +64,16 @@ def run_non_plus_ultra_qc():
         details = v.get("details") or {}
         real_port = float(details.get("port_expenses", {}).get("total_agency_usd") or 0.0)
         real_bunker = float(details.get("bunker_expenses", {}).get("total_bunker_cost_usd") or 0.0)
+
+        # Mapeo de imagen PNG local previa
+        # Extraer número de viaje ej: v.038 -> V38.png, V.764-A -> V764.png, V.775 -> V775.png
+        digits_only = "".join(filter(str.isdigit, v_code))
+        clean_num = str(int(digits_only)) if digits_only else ""
+        expected_png_key = f"V{clean_num}.PNG"
+        has_png = expected_png_key in png_map
+        png_status = f"✅ V{clean_num}.png" if has_png else "❌ FALTA"
+        if has_png:
+            png_matched_count += 1
 
         # Chequeo Cazador de Números Redondos / Planos Artificiales (ej: 30000.0, 50000.0)
         is_round_port = (real_port > 0 and real_port % 1000 == 0)
@@ -136,7 +155,7 @@ def run_non_plus_ultra_qc():
         else:
             status = "⚠️ WARN"
 
-        print(f"{v_code:<16} | {v_vessel:<12} | ${real_port:>10,.2f} | ${real_bunker:>10,.2f} | ${real_net:>12,.2f} | ${matrix_net:>12,.2f} | {desv_pct:>8.1f}% | {status:<12}")
+        print(f"{v_code:<16} | {v_vessel:<12} | {png_status:<10} | ${real_port:>10,.2f} | ${real_bunker:>10,.2f} | ${real_net:>12,.2f} | ${matrix_net:>12,.2f} | {status:<12}")
 
     # Calcular Coeficiente de Determinación R²
     n = len(real_nets)
@@ -149,8 +168,9 @@ def run_non_plus_ultra_qc():
     r2_val = r_val ** 2
 
     print("=" * 125)
-    print(f"📊 RESUMEN DE CONVERGENCIA CON AUDITORÍA DE SUB-COMPONENTES & CAZADOR DE PLANOS:")
+    print(f"📊 RESUMEN DE CONVERGENCIA CON AUDITORÍA DE SUB-COMPONENTES & RESÚMENES PNG:")
     print(f"   • Total de Viajes Auditados         : {n} / 31")
+    print(f"   • Capturas PNG Enlazadas           : {png_matched_count} / {n} ({ (png_matched_count/n)*100:.1f}%)")
     print(f"   • Viajes Conforme (PASS)            : {passed_count} / {n} ({ (passed_count/n)*100:.1f}%)")
     print(f"   • Números Planos/Ficticios Flagged  : {round_numbers_flagged}")
     print(f"   • Utilidad Neta Real Total Flota    : ${sum(real_nets):,.2f} USD")

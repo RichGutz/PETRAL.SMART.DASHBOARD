@@ -71,19 +71,27 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const portDestCost = MATRIX_PORT_MAP[dest] || 48676.32;
             const forecastPortCosts = portOrigCost + portDestCost;
             
-            // Días estimados de viaje (Mar + Puerto)
-            const estDist = (orig === 'CALLAO' || dest === 'CALLAO') ? 470 : 283;
-            const estSeaDays = (estDist * 2 * 1.1) / (11.0 * 24.0);
+            // Días estimados de viaje (Mar + Puerto) ajustados por itinerario
+            let estDist = 450.0;
+            if (dest.includes('MEJILLONES')) estDist = 335.0;
+            else if (dest.includes('MARCONA')) estDist = 283.0;
+            else if (dest.includes('MATARANI')) estDist = 69.0;
+            else if (dest.includes('CALLAO')) estDist = 470.0;
+
+            const estSeaDays = (estDist * 2.0 * 1.1) / (11.0 * 24.0);
             const estPortDays = 4.0;
             const totalEstDays = estSeaDays + estPortDays;
 
-            const forecastBunkerCosts = 43515.74;
-            const approxComm = forecastGrossRev * 0.0375;
+            // Búnker dinámico según días de mar y maniobra (IFO $655/MT, MDO $1,187/MT)
+            const ifoTons = (estSeaDays * 12.0) + (estPortDays * 1.5);
+            const mdoTons = (estSeaDays * 1.0) + (estPortDays * 0.2);
+            const forecastBunkerCosts = (ifoTons * 655.28) + (mdoTons * 1083.84);
             
+            const approxComm = forecastGrossRev * 0.0375;
             const voyageResultForecast = forecastGrossRev - forecastBunkerCosts - forecastPortCosts - approxComm;
             const vesselCharterCost = totalEstDays * tceReq;
             const forecastNet = voyageResultForecast - vesselCharterCost;
-            const forecastTce = realTce > 0 ? realTce * 1.05 : 28500.00;
+            const forecastTce = totalEstDays > 0 ? (voyageResultForecast / totalEstDays) : 28500.00;
 
             totalForecastProfit += forecastNet;
 
@@ -93,12 +101,36 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const desvPct = realNet !== 0 ? (absDiff / Math.abs(realNet)) * 100 : 0;
             const statusLabel = desvPct <= 65.0 ? 'AUDITADO' : 'OBSERVADO';
 
+            // Formatear la ruta completa del itinerario (POL ➔ POD ➔ Retorno Lastre)
+            const pol = orig;
+            let pod = dest;
+            const notesStr = (code + ' ' + (v.notes || '') + ' ' + (v.remarks || '')).toUpperCase();
+
+            if (notesStr.includes('TERQUIM')) {
+                pod = 'MEJILLONES (INTERACID / TERQUIM)';
+            } else if (notesStr.includes('2POD')) {
+                pod = 'MEJILLONES / MATARANI (2 PODs)';
+            }
+
+            let fullRoute = `${pol} &#8594; ${pod} &#8594; ILO`;
+            if (notesStr.includes('CALLAO') && notesStr.includes('MARCONA')) {
+                fullRoute = 'ILO &#8594; CALLAO &#8594; MARCONA &#8594; ILO';
+            } else if (pol === 'CALLAO') {
+                fullRoute = `CALLAO &#8594; ${pod} &#8594; ILO`;
+            } else if (pol === pod) {
+                if (notesStr.includes('MEJILLONES')) pod = 'MEJILLONES';
+                else if (notesStr.includes('MARCONA')) pod = 'MARCONA';
+                else if (notesStr.includes('MATARANI')) pod = 'MATARANI';
+                else if (notesStr.includes('CALLAO')) pod = 'CALLAO';
+                fullRoute = `ILO &#8594; ${pod} &#8594; ILO`;
+            }
+
             return `
                 <div class="voyage-card" style="border: 2px solid #0f172a; margin-bottom: 16px; page-break-inside: avoid; background: #ffffff;">
                     
                     <!-- Cabecera del Viaje -->
                     <div style="background: #0f172a; color: #ffffff; padding: 8px 12px; font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a;">
-                        <span>VIAJE #${idx + 1}: ${code} | BUQUE: ${vessel} | RUTA: ${orig} &#8594; ${dest}</span>
+                        <span>VIAJE #${idx + 1}: ${code} | BUQUE: ${vessel} | RUTA COMPLETA: ${fullRoute}</span>
                         <span>DESV: ${diffNet >= 0 ? '+' : ''}${fmtCur(diffNet)} (${desvPct.toFixed(1)}%) • <b>[${statusLabel}]</b></span>
                     </div>
 
