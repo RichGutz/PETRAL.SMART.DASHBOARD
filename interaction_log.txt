@@ -1,5 +1,4 @@
-[2026-07-26 18:58:50] - Activación Completa de Cards para Todos los Puertos en Matriz Estática
-- Eliminación de la restricción 'isPortConfigured' en PortCostsMaster_V2.tsx que bloqueaba puertos sin data inicial.
-- Habilitación de cards de buques para la totalidad de puertos en Supabase DB (incluyendo Manta EC, Bayóvar, Salaverry, Pisco, etc.).
-- Implementación de auto-selección de puerto activo ('effectiveActivePortId') al entrar y al alternar entre pestañas de países (Perú, Ecuador, Chile), evitando pantallas neutras.
-- Verificación limpia de compilación TypeScript (npm run build) e integración en repositorio Git origin main (commit 1de3661).
+[2026-07-26 19:05:25] - Commit Oficial PRE.DUAL.COST.EN.MULTICOTIZADOR
+- Consolidación y respaldo de la plantilla de descarga Excel de costos estáticos y la activación de cards para todos los puertos.
+- Definición aprobada del plan para integrar la resolución de costos portuarios STATIC ($0.00 estricto sin fallbacks) y MATRIX (Promedio Alto/Bajo Matriz Compleja) en el Multicotizador (Estimador Spot Multileg).
+- Commit en repositorio Git origin main con la etiqueta 'PRE.DUAL.COST.EN.MULTICOTIZADOR'.
