@@ -1,10 +1,7 @@
-[2026-07-27 01:11:00] - Documentación de la Matriz Multileg (2 PODs) en Obsidian.ETL
-- Respaldo de la captura de pantalla del viaje V.764 Multileg (2 PODs) en las rutas locales:
-  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\mapa_excel_2_pod_multileg.png
-  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\PORT.COSTS.PATRICIA\mapa_excel_2_pod_multileg.png
-- Actualización de 07_DOBLE_LOOP_QC_ETL_PARSER_Y_SPOT_MATRIX.md definiendo las coordenadas para viajes multileg:
-  * Total Freight Income: Celda H23 / N14 ($403,725 USD)
-  * Total Agency US$ (Gastos Puerto): Celda C48 ($60,388 USD)
-  * Bunkers US$ (Consumo Búnker): Celda S48 ($47,294 USD)
-  * P/L (Utilidad Neta Real): Celda Q20 ($203,475 USD)
+[2026-07-27 01:11:50] - Creación del Documento Maestro MAPEO_CELDAS_EXCEL_Y_MULTILEG_ETL.md en Obsidian.ETL
+- Creación de MAPEO_CELDAS_EXCEL_Y_MULTILEG_ETL.md en Desarrollo.Profesional/Obsidian.ETL.
+- Incrustación de las capturas de pantalla PNG de respaldo:
+  * Single Leg (mapa_celdas_excel_liquidaciones.png).
+  * Multileg 2 PODs (mapa_excel_2_pod_multileg.png).
+- Documentación de las matrices de celdas y algoritmo de extracción Python con openpyxl.
 - Publicación y sincronización en repositorio Git origin main.
