@@ -90,7 +90,38 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             else if (dischPort1Name.includes('CALLAO')) estDist = 470.0;
 
             const estSeaDays = (estDist * 2.0 * 1.1) / (11.0 * 24.0);
-            const estPortDays = dischPort2Name ? 6.0 : 4.0;
+
+            // --- CÁLCULO PxQ DINÁMICO DE TIEMPO EN PUERTO Y MAR LEYENDO PARCELAS EXACTAS DE ITINERARIO ---
+            const totalCargoMT = qty > 0 ? qty : 13500;
+            const isMultiPod = Boolean(dischPort2Name);
+            const itinerary = details.itinerary || [];
+            
+            // Extraer parcelas negativas de descarga del itinerario real
+            const dischargeItems = itinerary.filter((i: any) => Number(i.quantity_mt) < 0);
+            
+            let disch1CargoMT = totalCargoMT;
+            let disch2CargoMT = 0;
+
+            if (isMultiPod) {
+                if (dischargeItems.length >= 2) {
+                    disch1CargoMT = Math.abs(Number(dischargeItems[0].quantity_mt)) || (totalCargoMT * 0.5);
+                    disch2CargoMT = Math.abs(Number(dischargeItems[1].quantity_mt)) || (totalCargoMT - disch1CargoMT);
+                } else {
+                    disch1CargoMT = totalCargoMT * 0.5;
+                    disch2CargoMT = totalCargoMT * 0.5;
+                }
+            }
+
+            const loadRate = 500.0; // MT/hr
+            const dischRate = 350.0; // MT/hr
+            const maneuverHrsPerStop = 6.0; // hrs
+
+            const loadPortHrs = (totalCargoMT / loadRate) + maneuverHrsPerStop;
+            const disch1PortHrs = (disch1CargoMT / dischRate) + maneuverHrsPerStop;
+            const disch2PortHrs = isMultiPod ? ((disch2CargoMT / dischRate) + maneuverHrsPerStop) : 0;
+
+            const totalPortHrsEst = loadPortHrs + disch1PortHrs + disch2PortHrs;
+            const estPortDays = totalPortHrsEst / 24.0;
             const totalEstDays = estSeaDays + estPortDays;
 
             // Búnker dinámico según días de mar y maniobra (IFO $655/MT, MDO $1,187/MT)
@@ -99,7 +130,6 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const forecastBunkerCosts = (ifoTons * 655.28) + (mdoTons * 1083.84);
             
             const forecastOpexCost = totalEstDays * tceReq;
-            const forecastOpexDays = totalEstDays;
             const forecastNet = forecastGrossRev - forecastPortCosts - forecastBunkerCosts - forecastOpexCost;
             const forecastTce = totalEstDays > 0 ? ((forecastGrossRev - forecastPortCosts - forecastBunkerCosts) / totalEstDays) : 28500.00;
 
@@ -117,7 +147,9 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const realDisch2Cost = dischPort2Name ? (Number(details.discharge_port_2_cost) || (realPortCosts > 0 ? realPortCosts * 0.30 : 0)) : 0;
 
             const realOpexCost = realGrossRev - realPortCosts - realBunkerCosts - realNet;
-            const realOpexDays = tceReq > 0 ? (realOpexCost / tceReq) : totalEstDays;
+            const realOpexDays = details.real_duration_days || (tceReq > 0 ? (realOpexCost / tceReq) : totalEstDays);
+            const realSeaDays = details.real_sea_days || estSeaDays;
+            const realPortDays = details.real_port_days || Math.max(0.1, realOpexDays - realSeaDays);
 
             return `
                 <div class="voyage-card" style="border: 2px solid #0f172a; margin-bottom: 16px; page-break-inside: avoid; background: #ffffff;">
@@ -173,8 +205,19 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                                     <td style="color: #475569; font-weight: bold; padding: 3px 2px;">Búnker Estimado (IFO/MDO):</td>
                                     <td style="text-align: right; padding: 3px 2px;">${fmtCur(forecastBunkerCosts)}</td>
                                 </tr>
+
+                                <!-- INDENTACIÓN DE TIEMPOS FORECAST -->
+                                <tr style="background: #fdf2f8;">
+                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">• Navegación en Mar Est:</td>
+                                    <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 13.5px;">${estSeaDays.toFixed(2)}d (${(estSeaDays * 24).toFixed(1)}h)</td>
+                                </tr>
+                                <tr style="background: #fdf2f8;">
+                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">• Permanencia en Puerto Est:</td>
+                                    <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 13.5px;">${estPortDays.toFixed(2)}d (${(estPortDays * 24).toFixed(1)}h)</td>
+                                </tr>
+
                                 <tr style="background: #fee2e2;">
-                                    <td style="color: #991b1b; font-weight: 900; padding: 3px 2px;">(-) Costo OPEX (${forecastOpexDays.toFixed(1)}d x ${fmtCur(tceReq)}):</td>
+                                    <td style="color: #991b1b; font-weight: 900; padding: 3px 2px;">(-) Costo OPEX (${totalEstDays.toFixed(2)}d x ${fmtCur(tceReq)}):</td>
                                     <td style="text-align: right; font-weight: 900; color: #991b1b; padding: 3px 2px;">-${fmtCur(forecastOpexCost)}</td>
                                 </tr>
                                 <tr style="background: #f8fafc; border-top: 1.5px solid #0f172a;">
@@ -230,8 +273,19 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                                     <td style="color: #475569; font-weight: bold; padding: 3px 2px;">Búnker Real Consumido:</td>
                                     <td style="text-align: right;">${realBunkerCosts > 0 ? fmtCur(realBunkerCosts) : 'Pendiente Re-ETL Excel'}</td>
                                 </tr>
+
+                                <!-- INDENTACIÓN DE TIEMPOS REALES -->
+                                <tr style="background: #fdf2f8;">
+                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">• Navegación en Mar Real:</td>
+                                    <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 13.5px;">${realSeaDays.toFixed(2)}d (${(realSeaDays * 24).toFixed(1)}h)</td>
+                                </tr>
+                                <tr style="background: #fdf2f8;">
+                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">• Permanencia en Puerto Real:</td>
+                                    <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 13.5px;">${realPortDays.toFixed(2)}d (${(realPortDays * 24).toFixed(1)}h)</td>
+                                </tr>
+
                                 <tr style="background: #fee2e2;">
-                                    <td style="color: #991b1b; font-weight: 900; padding: 3px 2px;">(-) Costo OPEX Real (${realOpexDays.toFixed(1)}d x ${fmtCur(tceReq)}):</td>
+                                    <td style="color: #991b1b; font-weight: 900; padding: 3px 2px;">(-) Costo OPEX Real (${realOpexDays.toFixed(2)}d x ${fmtCur(tceReq)}):</td>
                                     <td style="text-align: right; font-weight: 900; color: #991b1b; padding: 3px 2px;">-${fmtCur(realOpexCost)}</td>
                                 </tr>
                                 <tr style="background: #f8fafc; border-top: 1.5px solid #0f172a;">

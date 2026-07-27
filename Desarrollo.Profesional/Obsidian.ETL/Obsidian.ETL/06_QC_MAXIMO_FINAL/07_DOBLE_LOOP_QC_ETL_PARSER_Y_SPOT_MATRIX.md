@@ -119,3 +119,35 @@ El **Doble Loop de Auditoría** corrige de raíz esta desviación estableciendo 
      - `Costo Puerto Descarga 1 (POD 1)`
      - `Costo Puerto Descarga 2 (POD 2)` (si aplica)
      - `Total Gastos Portuarios`
+
+---
+
+## 7. ⚖️ Protocolo Estricto de Rutas Multipiernas (2PODs) y Parcelación P×Q de Tiempos
+
+### A. Inventario de los 7 Viajes Multipiernas (22.6% de la Flota)
+De los 31 viajes auditados, existen 7 viajes especiales multipiernas con parcelas divididas de carga y múltiples descargas:
+1. `V.774 NEXA Marcona` (`B/T Moquegua`): `ILO ➔ CALLAO NEXA ➔ MATARANI ➔ ILO`
+2. `v.044 NEXA` (`B/T Tablones`): `ILO ➔ CALLAO ➔ MATARANI ➔ ILO`
+3. `V.763 NEXA Marcona` (`B/T Moquegua`): `ILO ➔ CALLAO NEXA ➔ SAN JUAN DE MARCONA ➔ ILO`
+4. `v.043 2POD` (`B/T Tablones`): `ILO ➔ MEJILLONES TPM ➔ MEJILLONES TERQUIM ➔ ILO`
+5. `V.764-A / V.764` (`B/T Moquegua`): `ILO ➔ CALLAO V.764-A ➔ SAN JUAN DE MARCONA ➔ ILO`
+6. `V.765 Mejillones y Terquim` (`B/T Moquegua`): `ILO ➔ MEJILLONES ➔ MEJILLONES TERQUIM ➔ ILO`
+7. `V.767 Mejillones y Terquim` (`B/T Moquegua`): `ILO ➔ MEJILLONES ➔ MEJILLONES TERQUIM ➔ ILO`
+
+### B. Regla Invariable de Balance de Carga por Parcela
+$$\sum Q_{\text{descargas}} = Q_{\text{carga total}}$$
+En cada viaje de 2PODs, la cantidad descargada en el Puerto 1 más la cantidad descargada en el Puerto 2 debe ser igual a la tonelada total embarcada en el puerto de origen. Queda prohibido asignar el 100% de la carga a ambos puertos de descarga por separado.
+
+### C. Cálculo P×Q Dinámico de Estadía en Puerto
+$$\text{Tiempo Descarga 1 (h)} = \frac{Q_{\text{POD 1}}}{\text{Ritmo Descarga (MT/h)}} + 6\text{h maniobra}$$
+$$\text{Tiempo Descarga 2 (h)} = \frac{Q_{\text{POD 2}}}{\text{Ritmo Descarga (MT/h)}} + 6\text{h maniobra}$$
+$$\text{Tiempo Carga POL (h)} = \frac{Q_{\text{POL}}}{\text{Ritmo Carga (MT/h)}} + 6\text{h maniobra}$$
+
+$$\text{Tiempo Total Puerto Estimado (Días)} = \frac{\text{Tiempo Carga (h)} + \text{Tiempo Descarga 1 (h)} + \text{Tiempo Descarga 2 (h)}}{24.0}$$
+
+### D. Indentación Obligatoria de Tiempos en el Reporte PDF
+Inmediatamente antes del renglón de Costo OPEX, tanto el Forecast como la Ejecución Real deben mostrar las filas indentadas de tiempo en días y horas:
+- `• Navegación en Mar (Est / Real): XX.XX d (XX.X hrs)`
+- `• Permanencia en Puerto (Est / Real): XX.XX d (XX.X hrs)`
+- `(-) Costo OPEX Buque (XX.XXd x $15,000.00): -$XXX,XXX.XX`
+

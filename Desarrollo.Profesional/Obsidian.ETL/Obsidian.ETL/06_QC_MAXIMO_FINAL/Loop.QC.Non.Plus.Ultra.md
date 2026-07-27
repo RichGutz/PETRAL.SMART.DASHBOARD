@@ -113,3 +113,23 @@ Durante la evaluación de los 31 viajes simulados y ejecutados:
 - **Script de QC Autónomo**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine\run_qc_loop_non_plus_ultra.py`
 - **Nota de Obsidian**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.ETL\Obsidian.ETL\06_QC_MAXIMO_FINAL\Loop.QC.Non.Plus.Ultra.md`
 - **Transcripción de Voz**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\audio_transcrip\LOOP.QC.NON.PLUS.ULTRA.ogg_whisper.txt`
+
+---
+
+## 9. 🛡️ Protocolo de Auditoría de Rutas Multipiernas (2PODs) y Parcelas P×Q
+
+1. **7 Viajes Especiales Identificados**:
+   - `V.774 NEXA Marcona` (`ILO ➔ CALLAO NEXA ➔ MATARANI ➔ ILO`)
+   - `v.044 NEXA` (`ILO ➔ CALLAO ➔ MATARANI ➔ ILO`)
+   - `V.763 NEXA Marcona` (`ILO ➔ CALLAO NEXA ➔ MARCONA ➔ ILO`)
+   - `v.043 2POD` (`ILO ➔ MEJILLONES TPM ➔ MEJILLONES TERQUIM ➔ ILO`)
+   - `V.764-A / V.764` (`ILO ➔ CALLAO ➔ MARCONA ➔ ILO`)
+   - `V.765` (`ILO ➔ MEJILLONES ➔ TERQUIM ➔ ILO`)
+   - `V.767` (`ILO ➔ MEJILLONES ➔ TERQUIM ➔ ILO`)
+2. **Auditoría de Parcelación de Carga**:
+   - Se valida en `details.itinerary` que las descargas por puerto sumen exactamente la carga total del origen ($\sum Q_{\text{descargas}} = Q_{\text{carga}}$).
+3. **Cálculo de Tiempos P×Q en Puerto**:
+   - Se evalúa cada parcela dividida entre su respectivo ritmo de descarga ($350\text{ MT/h}$) más $6.0\text{h}$ de maniobra por escala, eliminando constantes artificiales (ej. $6.0\text{d}$ hardcoded).
+4. **Indentación Fina en PDF**:
+   - Se despliegan las horas y días de mar y puerto indentados previo al renglón del Costo OPEX en el comparativo side-by-side.
+
