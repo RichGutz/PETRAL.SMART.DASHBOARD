@@ -1,7 +1,10 @@
-[2026-07-27 01:49:05] - Verificación y Confirmación Visual de Auditoría Consolidada (/audit-final)
-- Respaldo de la captura de pantalla PNG en las rutas locales estandarizadas:
-  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\audit_final_ok.png
-  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\PORT.COSTS.PATRICIA\audit_final_ok.png
-- Confirmación de renderizado instantáneo sin la traba "Procesando...".
-- Preservación 100% de la UI original, el Ribbon azul marino corporativo (CLIENTE / CUENTA, BUQUE ASIGNADO, MATRIZ GASTOS PUERTO) y las hojas de reporte consolidadas.
+[2026-07-27 02:37:40] - Restauración Definitiva del Acta Oficial Maestra de Auditoría Final y Trazabilidad (SPCC & NEXA)
+- Identificación de la especificación técnica en Obsidian (QC.Auditoria.FINAL.md) y el script del Engine (run_qc_loop_pdf.py).
+- Implementación de MasterAuditActaView.tsx:
+  * Acta oficial PDF A4 Landscape monocromática (Blanco y Negro estricto).
+  * Cabecera oficial con logos de PETRAL y GEEKSOFT.
+  * Los 5 Cards Maestros (Rutas, Buques, Búnker, Contratos, Puertos).
+  * Aritmética explicativa pierna por pierna (Fishbowl Box).
+  * Tabla Oficial de las 12 Métricas Ledger de Auditoría al pie.
+- Vinculación limpia en la ruta Auditoría Final (AuditFinal_V2.tsx).
 - Publicación y sincronización en repositorio Git origin main.
