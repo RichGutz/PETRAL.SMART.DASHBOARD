@@ -1656,7 +1656,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         const net_income = c.total_freight_revenue || 0;
         const pnl_net = c.pnl_net_utility || 0;
         const tce_real = c.tce_real || 0;
-        const tce_req = Number(vesselParams.tce_required) || 13000.0;
+        const tce_req = Number(vesselParams.tce_required) || Number((vessels.find((v: any) => v.vessel_id === selectedVessel) as any)?.tce_required) || 0;
         const pl_vs_req = pnl_net - (tot_days * tce_req);
         const p_ifo = bunkerPriceIfo;
         const p_mdo = bunkerPriceMdo;
