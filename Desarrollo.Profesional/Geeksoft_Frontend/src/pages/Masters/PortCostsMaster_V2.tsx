@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
-import { Anchor, Save, Ship, Clock } from 'lucide-react';
+import { Anchor, Save, Ship, Clock, FileSpreadsheet } from 'lucide-react';
 import { DynamicAuditViewer } from '../../components/Masters/DynamicAuditViewer';
 import { BandasResumenViewer } from '../../components/Masters/BandasResumenViewer';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
@@ -39,9 +39,6 @@ export const PortCostsMaster_V2: React.FC = () => {
     
     // Maestros
     const [ports, setPorts] = useState<any[]>([]);
-    const [_rawClients, setRawClients] = useState<any[]>([]);
-    const [filterActivo, setFilterActivo] = useState(true);
-    const [filterProspecto, setFilterProspecto] = useState(false);
     const [vessels, setVessels] = useState<any[]>([]);
     
     // Estado de costos: costsState[portId][vesselKey][operation][subOp]
@@ -59,9 +56,8 @@ export const PortCostsMaster_V2: React.FC = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [portsData, clientsData, vesselsData, staticCostsData] = await Promise.all([
+            const [portsData, vesselsData, staticCostsData] = await Promise.all([
                 ForecastService.getPorts(),
-                ForecastService.getClientsMaster(),
                 ForecastService.getVessels(),
                 ForecastService.getPortCostsStatic()
             ]);
@@ -73,7 +69,6 @@ export const PortCostsMaster_V2: React.FC = () => {
             });
 
             setPorts(sortedPorts);
-            setRawClients(clientsData || []);
             setVessels(vesselsData || []);
             
             const newState: any = {};
@@ -115,22 +110,6 @@ export const PortCostsMaster_V2: React.FC = () => {
     useEffect(() => {
         fetchData();
     }, []);
-
-    const toggleActivo = () => {
-        setFilterActivo(true);
-        setFilterProspecto(false);
-    };
-
-    const toggleProspecto = () => {
-        setFilterProspecto(true);
-        setFilterActivo(false);
-    };
-
-    // Suppress unused variable warnings for filter state
-    void filterActivo;
-    void filterProspecto;
-    void toggleActivo;
-    void toggleProspecto;
 
     const handleCostChange = (portId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA', subOp: string, value: string) => {
         const cleanValue = value.replace(/,/g, '');
@@ -242,61 +221,77 @@ export const PortCostsMaster_V2: React.FC = () => {
         return portsForCountry[0]?.port_id || activePortId || ports[0]?.port_id || '';
     }, [activePortId, portsForCountry, ports]);
 
+    // EXPORTADOR COMPLETO DE PLANTILLA EXCEL PARA TODOS LOS PUERTOS Y BUQUES
     const exportData = useMemo(() => {
         const rows: any[] = [];
-        Object.keys(costsState).forEach(portId => {
-            const portObj = ports.find(p => p.port_id === portId);
-            const portName = portObj ? portObj.port_name : portId;
+        
+        // Iterar sobre TODOS los puertos del catálogo maestro
+        ports.forEach(portObj => {
+            const portId = portObj.port_id;
+            const portName = portObj.port_name || portId;
+            const portCountry = (portObj.country || 'PE').toUpperCase();
 
-            Object.keys(costsState[portId] || {}).forEach(vKey => {
-                const data = costsState[portId][vKey];
-                const vesselId = data.raw_vessel_id || vKey;
-                const vesselObj = vessels.find(v => normalizeVesselKey(v.vessel_id) === vKey || v.vessel_id === vesselId);
-                const vesselName = vesselObj ? vesselObj.vessel_name : vesselId;
+            // Iterar sobre TODOS los buques de la flota
+            vessels.forEach(vesselObj => {
+                const vesselId = vesselObj.vessel_id;
+                const vesselName = vesselObj.vessel_name || vesselId;
+                const vKey = normalizeVesselKey(vesselId);
 
-                // CARGA
+                // Extraer datos del estado o inicializar en ceros para la plantilla
+                const data = (costsState[portId] && costsState[portId][vKey]) 
+                    ? costsState[portId][vKey]
+                    : { CARGA: { MAIN: 0, loading_master: 0, other: 0 }, DESCARGA: { MAIN: 0, loading_master: 0, other: 0 } };
+
+                // Fila Operación CARGA
                 const cMain = data.CARGA?.MAIN || 0;
                 const cLm = data.CARGA?.loading_master || 0;
                 const cOther = data.CARGA?.other || 0;
                 const cTotal = cMain + cLm + cOther;
-                if (cTotal > 0) {
-                    rows.push({
-                        port_name: portName,
-                        client_name: 'PETRAL',
-                        vessel_name: vesselName,
-                        operation: 'Carga',
-                        main_cost: cMain,
-                        lm_cost: cLm,
-                        other_cost: cOther,
-                        total_cost: cTotal
-                    });
-                }
 
-                // DESCARGA
+                rows.push({
+                    country: portCountry,
+                    port_id: portId,
+                    port_name: portName,
+                    client_name: 'PETRAL',
+                    vessel_id: vesselId,
+                    vessel_name: vesselName,
+                    operation: 'Carga',
+                    main_cost: cMain,
+                    lm_cost: cLm,
+                    other_cost: cOther,
+                    total_cost: cTotal
+                });
+
+                // Fila Operación DESCARGA
                 const dMain = data.DESCARGA?.MAIN || 0;
                 const dLm = data.DESCARGA?.loading_master || 0;
                 const dOther = data.DESCARGA?.other || 0;
                 const dTotal = dMain + dLm + dOther;
-                if (dTotal > 0) {
-                    rows.push({
-                        port_name: portName,
-                        client_name: 'PETRAL',
-                        vessel_name: vesselName,
-                        operation: 'Descarga',
-                        main_cost: dMain,
-                        lm_cost: dLm,
-                        other_cost: dOther,
-                        total_cost: dTotal
-                    });
-                }
+
+                rows.push({
+                    country: portCountry,
+                    port_id: portId,
+                    port_name: portName,
+                    client_name: 'PETRAL',
+                    vessel_id: vesselId,
+                    vessel_name: vesselName,
+                    operation: 'Descarga',
+                    main_cost: dMain,
+                    lm_cost: dLm,
+                    other_cost: dOther,
+                    total_cost: dTotal
+                });
             });
         });
+
         return rows;
     }, [costsState, ports, vessels]);
 
     const exportColumns: ExportColumn[] = [
+        { header: 'País', key: 'country', type: 'string' },
+        { header: 'ID Puerto', key: 'port_id', type: 'string' },
         { header: 'Puerto', key: 'port_name', type: 'string' },
-        { header: 'Cliente', key: 'client_name', type: 'string' },
+        { header: 'ID Buque', key: 'vessel_id', type: 'string' },
         { header: 'Buque', key: 'vessel_name', type: 'string' },
         { header: 'Operación', key: 'operation', type: 'string' },
         { header: 'Costo Agencia (USD)', key: 'main_cost', type: 'currency' },
@@ -306,7 +301,7 @@ export const PortCostsMaster_V2: React.FC = () => {
     ];
 
     const handleExportExcel = () => {
-        exportMasterToExcel('Maestro de Costos de Puerto', exportColumns, exportData);
+        exportMasterToExcel('Plantilla_Maestro_Costos_Estaticos_PETRAL', exportColumns, exportData);
     };
 
     const handleExportPDF = () => {
@@ -353,31 +348,24 @@ export const PortCostsMaster_V2: React.FC = () => {
                             </button>
                         </div>
 
-                        <div className="flex items-center gap-4">
-                            {/* Selector elegante de Activos / Prospectos */}
-                            <div className="flex items-center gap-2 select-none">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Clientes:</span>
-                                <div className="flex bg-slate-100 p-0.5 rounded-lg h-8 shadow-inner items-center border border-slate-200">
-                                    <button
-                                        onClick={toggleActivo}
-                                        className={`px-3 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${filterActivo ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'}`}
-                                    >
-                                        Activos
-                                    </button>
-                                    <button
-                                        onClick={toggleProspecto}
-                                        className={`px-3 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${filterProspecto ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'}`}
-                                    >
-                                        Prospectos
-                                    </button>
-                                </div>
-                            </div>
-                            
+                        <div className="flex items-center gap-3">
+                            {/* BOTÓN EJECUTIVO DE DESCARGA DE PLANTILLA EXCEL (REEMPLAZA EL SELECTOR INERTE ACTIVOS/PROSPECTOS) */}
+                            {mode === 'static' && (
+                                <button
+                                    onClick={handleExportExcel}
+                                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-lg shadow-sm transition-all flex items-center gap-2 cursor-pointer border border-emerald-500"
+                                    title="Descargar matriz completa de costos estáticos en Excel para edición y carga"
+                                >
+                                    <FileSpreadsheet size={16} />
+                                    <span>Descargar Plantilla Excel</span>
+                                </button>
+                            )}
+
                             {mode === 'static' && (
                                 <button 
                                     onClick={handleSaveGlobal}
                                     disabled={saving}
-                                    className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 transition-colors font-bold text-sm flex items-center gap-2 disabled:opacity-50 mt-4 sm:mt-0"
+                                    className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 transition-colors font-bold text-sm flex items-center gap-2 disabled:opacity-50"
                                 >
                                     {saving ? (
                                         <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>

@@ -1,7 +1,5 @@
-[2026-07-26 18:53:15] - Implementación de Modos STATIC ($0.00 Estricto sin fallbacks) y MATRIX (Promedio Alto/Bajo Matriz Compleja)
-- Actualización del motor backend en forecast_service.py:
-  1. Modo STATIC: Consulta estricta a port_cost_static por nave (con normalización universal). Si no existe tarifa estática, retorna $0.00 USD estricto sin fallbacks a naves DEFAULT ni valores aproximados.
-  2. Modo MATRIX: Evaluación del Escenario Alto (is_casino=True) y Escenario Bajo (is_casino=False) con el motor dinámico PxQ, asignando como costo portuario oficial el promedio matemático: (Alto + Bajo) / 2.
-- Verificación autónoma en terminal con scratch/verify_static_vs_matrix_mode.py (100% SUCCESS).
-- Compilación limpia de TypeScript en Frontend (npm run build).
-- Integración y push al repositorio oficial de GitHub origin main (commit aefb280).
+[2026-07-26 18:58:50] - Activación Completa de Cards para Todos los Puertos en Matriz Estática
+- Eliminación de la restricción 'isPortConfigured' en PortCostsMaster_V2.tsx que bloqueaba puertos sin data inicial.
+- Habilitación de cards de buques para la totalidad de puertos en Supabase DB (incluyendo Manta EC, Bayóvar, Salaverry, Pisco, etc.).
+- Implementación de auto-selección de puerto activo ('effectiveActivePortId') al entrar y al alternar entre pestañas de países (Perú, Ecuador, Chile), evitando pantallas neutras.
+- Verificación limpia de compilación TypeScript (npm run build) e integración en repositorio Git origin main (commit 1de3661).
