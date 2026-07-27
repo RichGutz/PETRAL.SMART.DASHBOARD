@@ -183,7 +183,10 @@ erDiagram
 * `tugboats_in` *(INT)* → Remolcadores obligatorios de ingreso.
 * `tugboats_out` *(INT)* → Remolcadores obligatorios de salida.
 
-> ⚠️ **Regla de Visualización $Q$**: Si para un terminal no se han ingresado datos de consumo ni existe motor configurado, la celda se renderizará **100% EN BLANCO (`""`)** sin mostrar valores dummy o ceros falsos.
+> 🚨 **REGLA DE ORO ARQUITECTURAL INTOCABLE (MOTOR P×Q PROMEDIADO & GASTOS PORTUARIOS DINÁMICOS)**:
+> 1. **Grilla de 10 Variables $Q$ Obligatorias**: La tabla `vessel_terminal_operations` y el componente `VesselTerminalMatrix.tsx` **DEBEN MANTENER Y MOSTRAR SIEMPRE LAS 10 VARIABLES $Q$ OPERATIVAS COMPLETAS** (Carga y Descarga) para **TODOS** los puertos (Callao, Ilo, San Juan de Marcona, Matarani, Mejillones, Barquito) sin filtrados ni ocultamientos arbitrarios.
+> 2. **Alimentación del Motor $P \times Q$**: El motor $P \times Q$ promediado (`port_engines/core.py`) evalúa 4 escenarios simultáneos (Carga Mínima/Máxima y Descarga Mínima/Máxima). Si se eliminan u ocultan ritmos o tiempos de Carga o Descarga en cualquier puerto, la proforma dinámica de gastos portuarios falla por variables ausentes o división entre cero.
+> 3. **Desacoplamiento Estricto de Gastos**: En la vista de la Matriz Operativa de Puertos y Terminales **NUNCA** se deben renderizar conceptos tarifarios ni categorías de costo (`shifting`, `general_port`, `agency`). Esta vista es 100% exclusiva para las 10 variables $Q$ físicas de Estadía y Rendimiento.
 
 ---
 
