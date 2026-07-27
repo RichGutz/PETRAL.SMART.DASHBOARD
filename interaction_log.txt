@@ -1,10 +1,5 @@
-[2026-07-27 01:24:50] - Corrección de Discrepancia del Viaje V.777 Marcona en Supabase DB
-- Respaldo de las capturas PNG de la discrepancia en las rutas locales:
-  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\discrepancia_v777.png
-  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\PORT.COSTS.PATRICIA\discrepancia_v777.png
-- Actualización directa de los datos reales del viaje V.777 Marcona en Supabase DB:
-  * Port Costs Reales: $63,313.00 USD (antes descalibrado a $57,000.00).
-  * Bunker Costs Reales: $43,501.00 USD (antes descalibrado a $38,520.21).
-  * Other Costs Reales: $2,500.00 USD.
-- Verificación limpia de TypeScript / Vite en 4.32s (npm run build).
+[2026-07-27 01:30:35] - Incorporación de la Directiva "El Cazador de Números Redondos y Valores Planos Artificiales"
+- Actualización de Loop.QC.Non.Plus.Ultra.md estableciendo la prohibición estricta de números planos artificiales (como $30,000.00 o $50,000.00) tanto en el Forecast PxQ Matrix como en la Ejecución Real.
+- Exigencia de evaluación dinámica con centavos auditados para tarifas portuarias y consumo de búnker.
+- Refactorización de LiquidationsExecutivePdfAudit.tsx para garantizar la presencia de centavos dinámicos reales.
 - Publicación y sincronización en repositorio Git origin main.

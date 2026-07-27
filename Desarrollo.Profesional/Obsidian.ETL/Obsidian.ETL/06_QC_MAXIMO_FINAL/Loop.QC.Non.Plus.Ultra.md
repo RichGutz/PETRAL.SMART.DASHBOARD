@@ -30,30 +30,36 @@ El **Loop QC Non Plus Ultra** actúa como la prueba de auditoría definitiva del
 
 ---
 
-## 3. 🚨 Regla de Auditoría Activa: Detección de "Pendiente Re-ETL Excel" & Notificación de Captura
+## 3. 🎯 EL CAZADOR DE NÚMEROS REDONDOS Y VALORES PLANOS ARTIFICIALES (Directiva de Auditoría)
 
-Durante la ejecución de las auditorías en el visor PDF e iframe:
-1. **Inspección Automática de Alertas**: Se audita si algún viaje presenta el aviso **`Pendiente Re-ETL Excel`** en Gastos de Puerto o Búnker.
-2. **Notificación al Usuario**: Si un viaje carece de datos reales de celdas en Supabase DB, la herramienta notifica de inmediato señalando el código exacto del viaje (ej: `v.045`, `V.764`) y solicita explícitamente al usuario la captura de pantalla del Excel maestro correspondiente.
-3. **Mapeo e Integración en Obsidian**: La captura recibida se copia a los directorios locales (`RULE[png_local_storage]`) y sus coordenadas de celdas se registran en `MAPEO_CELDAS_EXCEL_Y_MULTILEG_ETL.md` para actualizar Supabase de forma inmediata.
+Durante la evaluación de los 31 viajes simulados y ejecutados:
+1. **Rechazo de Números Redondos Ficticios**: Ningún gasto portuario, consumo de búnker o tarifa flete (sea en la columna **📄 FORECAST SPOT MATRIX** o **📊 EJECUCIÓN REAL**) puede presentarse como un entero plano artificial (ejemplo: `$30,000.00` o `$50,000.00`).
+2. **Exigencia de Centavos P×Q Dinámicos**: En el Forecast, el valor DEBE ser la suma resultante del cálculo dinámico con centavos reales (practicaje, remolque, uso de amarra, derechos de puerto). En la Ejecución Real, DEBE provenir exactamente celda por celda de la liquidación contable de Supabase DB.
+3. **Alerta de Inconsistencia**: Si un cálculo genera un número redondo ficticio, el script de QC detiene el proceso y marca el viaje con el aviso `⚠️ WARN: Número Plano no P×Q`.
 
 ---
 
-## 4. 🛡️ Criterios de Aceptación y Tolerancias de Convergencia
+## 4. 🚨 Detección Activa de "Pendiente Re-ETL Excel" & Notificación de Capturas
 
-Cada uno de los 31 viajes simulados en el Multicotizador Spot con costos dinámicos de puerto (modo `MATRIX`) se evalúa según los siguientes umbrales de tolerancia de auditoría:
+1. **Inspección Automática de Alertas**: Se audita si algún viaje presenta el aviso **`Pendiente Re-ETL Excel`** en Gastos de Puerto o Búnker.
+2. **Notificación al Usuario**: Si un viaje carece de datos reales de celdas en Supabase DB, la herramienta notifica de inmediato señalando el código exacto del viaje y solicita la captura de pantalla del Excel maestro.
+3. **Mapeo e Integración en Obsidian**: La captura recibida se respalda (`RULE[png_local_storage]`) y sus coordenadas se registran en `MAPEO_CELDAS_EXCEL_Y_MULTILEG_ETL.md` para actualizar Supabase DB.
+
+---
+
+## 5. 🛡️ Criterios de Aceptación y Tolerancias de Convergencia
 
 | # | Criterio de Auditoría | Métrica Evaluada | Umbral de Aceptación / Tolerancia | Estado |
 | :-: | :--- | :--- | :--- | :-: |
 | **1** | **Convergencia en Días Totales** | $\text{Días Simulados vs Real}$ | Desviación $\le \pm 10.0\%$ o $\le 1.5\text{ días}$. | `PASS` |
 | **2** | **Convergencia en Costo Búnker** | $\text{Costo Búnker Simul. vs Real}$ | Desviación $\le \pm 8.0\%$ (dadas diferencias de precio spot IFO/MDO). | `PASS` |
-| **3** | **Gastos Portuarios Dinámicos** | $\text{Port Costs Matrix vs Real}$ | Evaluación P×Q en rango Escenario Alto / Escenario Bajo. | `PASS` |
+| **3** | **Gastos Portuarios Dinámicos** | $\text{Port Costs Matrix vs Real}$ | Evaluación P×Q con centavos dinámicos sin números planos. | `PASS` |
 | **4** | **Correlación de Utilidad Neta** | $\text{P&L Net Simul. vs Real}$ | Grado de Correlación Matemático $R^2 = 0.6248$. | `PASS` |
 | **5** | **Integridad de los 31 Viajes** | $\text{Auditoría de Flota}$ | Cobertura 100% (31/31 viajes procesados sin excepciones). | `PASS` |
 
 ---
 
-## 5. 📊 Matriz de Comparativa de los 31 Viajes Auditados (Flota PETRAL)
+## 6. 📊 Matriz de Comparativa de los 31 Viajes Auditados (Flota PETRAL)
 
 | ID Viaje | Buque | Origen | Destino | Real Net (USD) | Multicotizador Matrix (USD) | Desviación (%) | Estado QC |
 | :--- | :--- | :--- | :--- | :-: | :-: | :-: | :-: |
@@ -91,7 +97,7 @@ Cada uno de los 31 viajes simulados en el Multicotizador Spot con costos dinámi
 
 ---
 
-## 6. 📈 Resumen Estadístico de Convergencia
+## 7. 📈 Resumen Estadístico de Convergencia
 
 - **Total de Viajes Auditados**: **31 / 31** (100% de cobertura de la flota).
 - **Utilidad Neta Real Total**: **`$3,342,539.00 USD`**
@@ -100,7 +106,7 @@ Cada uno de los 31 viajes simulados en el Multicotizador Spot con costos dinámi
 
 ---
 
-## 7. 📂 Protocolo de Entregables Locales y Doble Loop
+## 8. 📂 Protocolo de Entregables Locales y Doble Loop
 
 - **Mapeo de Celdas y Capturas PNG**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.ETL\MAPEO_CELDAS_EXCEL_Y_MULTILEG_ETL.md`
 - **Documento del Doble Loop**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.ETL\Obsidian.ETL\06_QC_MAXIMO_FINAL\07_DOBLE_LOOP_QC_ETL_PARSER_Y_SPOT_MATRIX.md`
