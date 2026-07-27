@@ -1,8 +1,8 @@
-[2026-07-27 00:27:15] - Creación de la Herramienta Independiente Auditoría PDF Liquidaciones
-- Creación de la página dedicada src/pages/Tools/LiquidationsAuditPdf_V2.tsx.
-- Creación del componente de previsualización y exportación PDF src/components/CommercialForecast/LiquidationsExecutivePdfAudit.tsx (con logos oficials PETRAL / GEEKSOFT, métricas de los 31 viajes auditados y botón de impresión A4 Landscape).
-- Inyección del nuevo botón '📄 Auditoría PDF Liquidaciones' en el Menú de Navegación Lateral (Sidebar en MasterTemplate_V2.tsx) ubicado exactamente debajo de '📊 Análisis Gráfico Liquidaciones'.
-- Registro de la ruta protegida /liquidations-pdf-audit en App_V2.tsx.
-- Restauración limpia de LiquidationsGraphicAnalysis_V2.tsx a su estado original sin modificar sus gráficos.
-- Compilación de TypeScript y Vite exitosa en 3.50s (npm run build).
-- Registro y commit en repositorio Git origin main.
+[2026-07-27 00:29:45] - Corrección de Diseño Visual: Visor PDF Sobrio con Scroll A4 Landscape
+- Rediseño de LiquidationsExecutivePdfAudit.tsx para emular la arquitectura exacta del Maestro de Gastos Portuarios Dinámico:
+  * Contenedor de hoja física A4 montada sobre lienzo gris con scroll vertical (max-h-[82vh] overflow-y-auto shadow-2xl).
+  * Renderizado mediante iframe estandarizado con srcDoc.
+  * Estética 100% sobria en Blanco y Negro / Grises en tipografía monoespaciada de consola, eliminando colores brillantes y badges.
+  * Logos corporativos PETRAL (izquierda) y GEEKSOFT (derecha) en cabecera ejecutiva.
+- Verificación con compilación limpia en 2.95s (npm run build).
+- Registro y commit oficial en GitHub origin main.
