@@ -470,6 +470,12 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                                 <span className="text-sm">📊</span> Análisis Gráfico Liquidaciones
                                             </button>
                                             <button 
+                                                onClick={() => navigate('/liquidations-pdf-audit')}
+                                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'liquidations-pdf-audit' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                            >
+                                                <span className="text-sm">📄</span> Auditoría PDF Liquidaciones
+                                            </button>
+                                            <button 
                                                 onClick={() => navigate('/spaghetti-map')}
                                                 className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'spaghetti-map' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                                             >

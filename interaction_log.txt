@@ -1,8 +1,8 @@
-[2026-07-27 00:17:25] - Culminación de la Prueba Final: Loop QC Non Plus Ultra de 31 Viajes Reales
-- Transcripción automatizada con Whisper de LOOP.QC.NON.PLUS.ULTRA.ogg.
-- Creación del documento oficial de auditoría en Obsidian:
-  Obsidian.ETL/Obsidian.ETL/06_QC_MAXIMO_FINAL/Loop.QC.Non.Plus.Ultra.md.
-- Implementación y ejecución del script autónomo de QC en terminal:
-  Geeksoft_Engine/run_qc_loop_non_plus_ultra.py.
-- Evaluación masiva de los 31 viajes auditados de la flota ($3,342,539.00 USD) contrastando la liquidación real contra la simulación Spot en modo MATRIX (Matriz Compleja PxQ), alcanzando una correlación R² = 0.6248.
-- Registro y commit oficial en GitHub origin main.
+[2026-07-27 00:27:15] - Creación de la Herramienta Independiente Auditoría PDF Liquidaciones
+- Creación de la página dedicada src/pages/Tools/LiquidationsAuditPdf_V2.tsx.
+- Creación del componente de previsualización y exportación PDF src/components/CommercialForecast/LiquidationsExecutivePdfAudit.tsx (con logos oficials PETRAL / GEEKSOFT, métricas de los 31 viajes auditados y botón de impresión A4 Landscape).
+- Inyección del nuevo botón '📄 Auditoría PDF Liquidaciones' en el Menú de Navegación Lateral (Sidebar en MasterTemplate_V2.tsx) ubicado exactamente debajo de '📊 Análisis Gráfico Liquidaciones'.
+- Registro de la ruta protegida /liquidations-pdf-audit en App_V2.tsx.
+- Restauración limpia de LiquidationsGraphicAnalysis_V2.tsx a su estado original sin modificar sus gráficos.
+- Compilación de TypeScript y Vite exitosa en 3.50s (npm run build).
+- Registro y commit en repositorio Git origin main.

@@ -8,6 +8,7 @@ import { ToolsLayout_V2 } from './layouts/ToolsLayout_V2';
 import { FinancialMatrix_V2 } from './pages/Tools/FinancialMatrix_V2';
 import { GraphicAnalysis_V2 } from './pages/Tools/GraphicAnalysis_V2';
 import { LiquidationsGraphicAnalysis_V2 } from './pages/Tools/LiquidationsGraphicAnalysis_V2';
+import { LiquidationsAuditPdf_V2 } from './pages/Tools/LiquidationsAuditPdf_V2';
 import { SpaghettiMap_V2 } from './pages/Tools/SpaghettiMap_V2';
 import { AuditLedger_V2 } from './pages/Tools/AuditLedger_V2';
 import { AuditEngine_V2 } from './pages/Tools/AuditEngine_V2';
@@ -100,6 +101,7 @@ function App_V2() {
                   <Route path="/dashboard" element={<ProtectedRoute module="matriz_financiera"><FinancialMatrix_V2 /></ProtectedRoute>} />
                   <Route path="/graphic-analysis" element={<ProtectedRoute module="matriz_financiera"><GraphicAnalysis_V2 /></ProtectedRoute>} />
                   <Route path="/liquidations-graphic-analysis" element={<ProtectedRoute module="matriz_financiera"><LiquidationsGraphicAnalysis_V2 /></ProtectedRoute>} />
+                  <Route path="/liquidations-pdf-audit" element={<ProtectedRoute module="matriz_financiera"><LiquidationsAuditPdf_V2 /></ProtectedRoute>} />
                   <Route path="/spaghetti-map" element={<ProtectedRoute module="matriz_financiera"><SpaghettiMap_V2 /></ProtectedRoute>} />
                   <Route path="/audit-ledger" element={<ProtectedRoute module="matriz_financiera"><AuditLedger_V2 /></ProtectedRoute>} />
                   <Route path="/audit-engine" element={<ProtectedRoute module="matriz_financiera"><AuditEngine_V2 /></ProtectedRoute>} />
