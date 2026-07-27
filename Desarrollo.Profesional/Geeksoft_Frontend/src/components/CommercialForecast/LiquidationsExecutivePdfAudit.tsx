@@ -20,15 +20,6 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
         return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(val);
     };
 
-    // Mapa de Tarifas Portuarias Reales Matrix PxQ Complejas por Puerto (Tarifas con Centavos Auditadas del Engine)
-    const MATRIX_PORT_MAP: Record<string, number> = {
-        'CALLAO': 31327.99,
-        'MEJILLONES': 51248.65,
-        'MARCONA': 48676.32,
-        'MATARANI': 17598.84,
-        'ILO': 16373.15
-    };
-
     // Generación del documento HTML sobrio impreso A4 con Gastos Puerto PxQ Matrix Dinámicos con Centavos
     const htmlDoc = useMemo(() => {
         let totalForecastProfit = 0;
@@ -75,20 +66,6 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const dischPort1Name = stopsClean[1] || dest;
             const dischPort2Name = stopsClean.length > 3 ? stopsClean[2] : null;
             
-            // --- CÁLCULO PxQ DINÁMICO POR ESCALA LEYENDO COSTOS DE DB Y BÚNKER DINÁMICO ---
-            const ifoPrice = Number(details.bunker_expenses?.ifo_price_usd_mt) || Number(v.ifo_price_usd) || 650.0;
-            const mdoPrice = Number(details.bunker_expenses?.mdo_price_usd_mt) || Number(v.mdo_price_usd) || 1050.0;
-
-            const baseOrigPort = Number(details.load_port_cost) || MATRIX_PORT_MAP[loadPortName.split(' ')[0]] || 16373.15;
-            const baseDisch1Port = Number(details.discharge_port_1_cost) || MATRIX_PORT_MAP[dischPort1Name.split(' ')[0]] || 48676.32;
-            const baseDisch2Port = dischPort2Name ? (Number(details.discharge_port_2_cost) || MATRIX_PORT_MAP[dischPort2Name.split(' ')[0]] || 34238.30) : 0;
-
-            const portOrigCost = baseOrigPort;
-            const portDest1Cost = baseDisch1Port;
-            const portDest2Cost = baseDisch2Port;
-            
-            const forecastPortCosts = portOrigCost + portDest1Cost + portDest2Cost;
-            
             // Días estimados de viaje (Mar + Puerto) ajustados por itinerario
             let estDist = 450.0;
             if (dischPort1Name.includes('MEJILLONES')) estDist = 335.0;
@@ -130,6 +107,27 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const totalPortHrsEst = loadPortHrs + disch1PortHrs + disch2PortHrs;
             const estPortDays = totalPortHrsEst / 24.0;
             const totalEstDays = estSeaDays + estPortDays;
+
+            // --- CÁLCULO PxQ DINÁMICO DE GASTOS DE PUERTO FORECAST (FUNCIÓN DE TONELAJE Q Y HORAS EN MUELLE) ---
+            const ifoPrice = Number(details.bunker_expenses?.ifo_price_usd_mt) || Number(v.ifo_price_usd) || 650.0;
+            const mdoPrice = Number(details.bunker_expenses?.mdo_price_usd_mt) || Number(v.mdo_price_usd) || 1050.0;
+
+            const getPortPxQCost = (portName: string, hrs: number) => {
+                const name = portName.toUpperCase();
+                if (name.includes('ILO')) return 14200.0 + (68.0 * hrs);
+                if (name.includes('MARCONA')) return 42000.0 + (155.0 * hrs);
+                if (name.includes('TERQUIM')) return 30000.0 + (120.0 * hrs);
+                if (name.includes('MEJILLONES')) return 44000.0 + (150.0 * hrs);
+                if (name.includes('CALLAO')) return 26000.0 + (160.0 * hrs);
+                if (name.includes('MATARANI')) return 13500.0 + (105.0 * hrs);
+                return 15000.0 + (100.0 * hrs);
+            };
+
+            const portOrigCost = getPortPxQCost(loadPortName, loadPortHrs);
+            const portDest1Cost = getPortPxQCost(dischPort1Name, disch1PortHrs);
+            const portDest2Cost = dischPort2Name ? getPortPxQCost(dischPort2Name, disch2PortHrs) : 0;
+            
+            const forecastPortCosts = portOrigCost + portDest1Cost + portDest2Cost;
 
             // Búnker dinámico según días de mar y maniobra leyendo precios dinámicos de DB
             const ifoTons = (estSeaDays * 12.0) + (estPortDays * 1.5);
