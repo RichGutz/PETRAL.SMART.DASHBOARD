@@ -1,6 +1,10 @@
-[2026-07-27 01:07:55] - Incorporación de la Matriz de Coordenadas de Celdas Excel en Obsidian.ETL
-- Respaldo de la captura de pantalla de coordenadas del Excel en las rutas locales:
-  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\mapa_celdas_excel_liquidaciones.png
-  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\PORT.COSTS.PATRICIA\mapa_celdas_excel_liquidaciones.png
-- Actualización de 07_DOBLE_LOOP_QC_ETL_PARSER_Y_SPOT_MATRIX.md fijando las celdas N14:N18 y Q14:Q20 de la hoja Results (Port Costs N15, Bunker Costs N16, TCE Req Q18, P/L Net Q20).
+[2026-07-27 01:11:00] - Documentación de la Matriz Multileg (2 PODs) en Obsidian.ETL
+- Respaldo de la captura de pantalla del viaje V.764 Multileg (2 PODs) en las rutas locales:
+  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\mapa_excel_2_pod_multileg.png
+  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\PORT.COSTS.PATRICIA\mapa_excel_2_pod_multileg.png
+- Actualización de 07_DOBLE_LOOP_QC_ETL_PARSER_Y_SPOT_MATRIX.md definiendo las coordenadas para viajes multileg:
+  * Total Freight Income: Celda H23 / N14 ($403,725 USD)
+  * Total Agency US$ (Gastos Puerto): Celda C48 ($60,388 USD)
+  * Bunkers US$ (Consumo Búnker): Celda S48 ($47,294 USD)
+  * P/L (Utilidad Neta Real): Celda Q20 ($203,475 USD)
 - Publicación y sincronización en repositorio Git origin main.

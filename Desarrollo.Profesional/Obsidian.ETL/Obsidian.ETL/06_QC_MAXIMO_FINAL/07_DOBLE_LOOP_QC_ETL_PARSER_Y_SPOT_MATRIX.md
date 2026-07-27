@@ -24,10 +24,9 @@ El **Doble Loop de Auditoría** corrige de raíz esta desviación estableciendo 
 
 ---
 
-## 2. 🗺️ Matriz Exacta de Celdas y Coordenadas del Excel Maestro (Operador Naviero)
+## 2. 🗺️ Matriz Exacta de Celdas y Coordenadas del Excel Maestro (Single Leg & Multileg 2 PODs)
 
-Gracias al mapeo directo de la plantilla oficial de liquidación, se han fijado las coordenadas de extracción para el parser de `Obsidian.ETL`:
-
+### A. Plantilla Estándar (Single Leg)
 | Concepto Financiero / Operativo | Columna Excel | Fila | Tipo de Dato | Coordenada / Ejemplo (`v.045`) |
 | :--- | :---: | :---: | :---: | :---: |
 | **Income (Gross Revenue)** | `N` | `14` | USD Float | `$241,783.00 USD` |
@@ -44,18 +43,32 @@ Gracias al mapeo directo de la plantilla oficial de liquidación, se han fijado 
 
 ---
 
+### B. Plantilla Multileg con 2 Puertos de Descarga (Ejemplo `V.764 MOQUEGUA`: ILO → CALLAO → MARCONA)
+| Concepto Financiero / Operativo | Columna | Fila / Celda | Coordenada / Regla del Parser ETL | Ejemplo `V.764` |
+| :--- | :---: | :---: | :--- | :---: |
+| **Total Freight Income US$** | `H` | `23` | Celda roja de consolidación de múltiples cargas | **`$403,725.00 USD`** |
+| **Income (Gross Revenue)** | `N` | `14` | Resumen superior de ingresos | `$409,725.00 USD` |
+| **Total Agency US$ (Gastos Puerto)** | `C` | **`48`** | Suma de agenciamientos (Ilo $16,373 + Callao $10,863 + Marcona $33,146) | **`$60,388.00 USD`** |
+| **Bunkers US$ (Consumo Búnker)** | `S` | **`48`** | Suma total de consumo búnker multileg | **`$47,294.00 USD`** |
+| **Duration (d) Multileg** | `Q` | `14` | Días totales navegados y de estadía | `7.58 días` |
+| **TCE Realizado Multileg** | `Q` | `17` | TCE ejecutado de la expedición multileg | **`$39,836.00 /día`** |
+| **TCE Req. (TCE Requerido)** | `Q` | **`18`** | Costo base del buque `MOQUEGUA` | **`$13,000.00 /día`** |
+| **P/L (Utilidad Neta Real)** | `Q` | **`20`** | Celda amarilla de Utilidad Neta Real acumulada | **`$203,475.00 USD`** |
+
+---
+
 ## 3. 🔁 Diagrama de Flujo del Doble Loop
 
 ```
   ┌────────────────────────────────────────────────────────────────────────────────────────┐
   │                                    EXCELES MAESTROS                                    │
-  │                  Liquidaciones de Operadores (Exceles.Petral / Flota)                │
+  │            Liquidaciones Single Leg & Multileg 2 PODs (Exceles.Petral / Flota)         │
   └───────────────────────────────────────────┬────────────────────────────────────────────┘
                                               │
                                               ▼
   ┌────────────────────────────────────────────────────────────────────────────────────────┐
   │  🔄 LOOP 1: AUDITORÍA & CORRECCIÓN DEL ETL PARSER / SCRAPER (`Obsidian.ETL`)           │
-  │  • Extraer celdas exactas N15 ($34,674.67), N16 ($30,913.56), Q18 ($15,000) y Q20.     │
+  │  • Extraer celdas C48 (Puerto Multileg), S48 (Búnker Multileg), N15, N16, Q18 y Q20.   │
   │  • Actualizar la base de datos Supabase `voyage_liquidations` con 100% de fidelidad.    │
   └───────────────────────────────────────────┬────────────────────────────────────────────┘
                                               │
@@ -65,7 +78,7 @@ Gracias al mapeo directo de la plantilla oficial de liquidación, se han fijado 
   │  • Ejecutar `spot_engine.py` para los 31 viajes usando el modelo P×Q dinámico.          │
   │  • Desplegar en la herramienta "Auditoría PDF Liquidaciones" la comparativa side-by-side│
   │    con 0% de descuadres contables y total transparencia.                                │
-  └────────────────────────────────────────────────────────────────────────────────────────┘
+  └───────────────────────────────────────────┴────────────────────────────────────────────┘
 ```
 
 ---
@@ -73,8 +86,9 @@ Gracias al mapeo directo de la plantilla oficial de liquidación, se han fijado 
 ## 4. 🛡️ Protocolo Operativo del Loop 1 (ETL Re-Parser)
 
 1. **Auditoría de Coordenadas de Celdas (`Obsidian.ETL / 03_Motor_ETL_y_Parser`)**:
-   - Ajustar el script en Python/Pandas (`openpyxl` / `xlrd`) para leer las celdas `N14:N18` y `Q14:Q20` de la hoja `Results`.
-2. **Validación de Ecuación Financiera**:
+   - Para **Single Leg**: Leer `N14:N18` y `Q14:Q20` de la hoja `Results`.
+   - Para **Multileg (2 PODs)**: Evaluando si la tabla `Voyage Program` tiene > 2 escalas de descarga, extraer las celdas `C48` (`Total Agency US$`), `S48` (`Bunkers US$`), `H23` (`Total Freight Income`) y `Q20` (`P/L`).
+2. **Validación de Ecuación Financiera Multileg**:
    $$\text{P/L (Q20)} = \text{Voyage Result (N18)} - (\text{Duration Q14} \times \text{TCE Req Q18})$$
 3. **Re-Sincronización de Supabase DB**:
    - Ejecutar la actualización en `voyage_liquidations` sobre la columna `details` y columnas nativas `gross_revenue_usd`, `net_profit_usd`, `tce_req_usd_day`.
