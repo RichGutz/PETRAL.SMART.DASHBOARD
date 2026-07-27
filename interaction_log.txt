@@ -1,8 +1,6 @@
-[2026-07-27 01:03:20] - Inclusión del Cuadro Resumen Ejecutivo al Pie del PDF de Auditoría
-- Actualización de LiquidationsExecutivePdfAudit.tsx incorporando el bloque inferior de consolidación de flota:
-  * Suma Total Utilidad Neta Real (Liquidaciones DB).
-  * Suma Total Utilidad Neta Pronosticada (Spot Matrix Mode).
-  * Variación Neta Acumulada Flota ($ USD / %).
-  * Coeficiente de Determinación Predictivo R² = 0.6248 (Poder Predictivo Sólido).
-- Verificación limpia de TypeScript / Vite en 3.55s (npm run build).
+[2026-07-27 01:07:55] - Incorporación de la Matriz de Coordenadas de Celdas Excel en Obsidian.ETL
+- Respaldo de la captura de pantalla de coordenadas del Excel en las rutas locales:
+  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\mapa_celdas_excel_liquidaciones.png
+  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\PORT.COSTS.PATRICIA\mapa_celdas_excel_liquidaciones.png
+- Actualización de 07_DOBLE_LOOP_QC_ETL_PARSER_Y_SPOT_MATRIX.md fijando las celdas N14:N18 y Q14:Q20 de la hoja Results (Port Costs N15, Bunker Costs N16, TCE Req Q18, P/L Net Q20).
 - Publicación y sincronización en repositorio Git origin main.

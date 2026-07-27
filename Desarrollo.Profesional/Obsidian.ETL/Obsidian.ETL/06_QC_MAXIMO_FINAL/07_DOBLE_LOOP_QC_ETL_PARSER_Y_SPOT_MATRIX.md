@@ -16,7 +16,7 @@ Por ejemplo, en el **Viaje `v.045` (`B/T TABLONES ILO → MATARANI`)**:
   - `Port Costs`: **`$34,674.67 USD`**
   - `Bunker Costs`: **`$30,913.56 USD`**
   - `Gross Revenue`: **`$241,783.00 USD`**
-  - `Utilidad Neta Real`: **`$90,121.00 USD`**
+  - `Utilidad Neta Real (P/L)`: **`$90,121.00 USD`**
 - **Error del Primer Scrapeo ETL**:
   - Leyó montos provisionales por defecto (`$18,000.00` y `$42,500.00`) en lugar de extraer las celdas finales de la liquidación del barco.
 
@@ -24,7 +24,27 @@ El **Doble Loop de Auditoría** corrige de raíz esta desviación estableciendo 
 
 ---
 
-## 2. 🔁 Diagrama de Flujo del Doble Loop
+## 2. 🗺️ Matriz Exacta de Celdas y Coordenadas del Excel Maestro (Operador Naviero)
+
+Gracias al mapeo directo de la plantilla oficial de liquidación, se han fijado las coordenadas de extracción para el parser de `Obsidian.ETL`:
+
+| Concepto Financiero / Operativo | Columna Excel | Fila | Tipo de Dato | Coordenada / Ejemplo (`v.045`) |
+| :--- | :---: | :---: | :---: | :---: |
+| **Income (Gross Revenue)** | `N` | `14` | USD Float | `$241,783.00 USD` |
+| **Port Costs (Gastos de Puerto)** | `N` | **`15`** | USD Float | **`$34,674.67 USD`** |
+| **Bunker Costs (Costo Búnker)** | `N` | **`16`** | USD Float | **`$30,913.56 USD`** |
+| **Other Costs (Otros Gastos)** | `N` | `17` | USD Float | `$0.00 USD` |
+| **Voyage Result (US$)** | `N` | `18` | USD Float | `$176,194.00 USD` |
+| **Duration (d) - Días Totales** | `Q` | `14` | Float | `5.74 días` |
+| **Sea Days (Días de Mar)** | `Q` | `15` | Float | `2.208 días` |
+| **Port/Idle Days (Días de Puerto)** | `Q` | `16` | Float | `3.530 días` |
+| **TCE Realizado (US$/d)** | `Q` | `17` | USD Float | `$30,705.00 /día` |
+| **TCE Req. (TCE Requerido)** | `Q` | **`18`** | USD Float | **`$15,000.00 /día`** |
+| **P/L (Utilidad Neta Real US$)** | `Q` | **`20`** | USD Float | **`$90,121.00 USD`** |
+
+---
+
+## 3. 🔁 Diagrama de Flujo del Doble Loop
 
 ```
   ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -35,7 +55,7 @@ El **Doble Loop de Auditoría** corrige de raíz esta desviación estableciendo 
                                               ▼
   ┌────────────────────────────────────────────────────────────────────────────────────────┐
   │  🔄 LOOP 1: AUDITORÍA & CORRECCIÓN DEL ETL PARSER / SCRAPER (`Obsidian.ETL`)           │
-  │  • Re-procesar las celdas reales de Port Costs ($34,674.67) y Bunker Costs ($30,913.56) │
+  │  • Extraer celdas exactas N15 ($34,674.67), N16 ($30,913.56), Q18 ($15,000) y Q20.     │
   │  • Actualizar la base de datos Supabase `voyage_liquidations` con 100% de fidelidad.    │
   └───────────────────────────────────────────┬────────────────────────────────────────────┘
                                               │
@@ -50,18 +70,18 @@ El **Doble Loop de Auditoría** corrige de raíz esta desviación estableciendo 
 
 ---
 
-## 3. 🛡️ Protocolo Operativo del Loop 1 (ETL Re-Parser)
+## 4. 🛡️ Protocolo Operativo del Loop 1 (ETL Re-Parser)
 
 1. **Auditoría de Coordenadas de Celdas (`Obsidian.ETL / 03_Motor_ETL_y_Parser`)**:
-   - Ajustar el script en Python/Pandas para buscar de forma exacta los encabezados `Port Costs` y `Bunker Costs` en el resumen final de la hoja del barco.
+   - Ajustar el script en Python/Pandas (`openpyxl` / `xlrd`) para leer las celdas `N14:N18` y `Q14:Q20` de la hoja `Results`.
 2. **Validación de Ecuación Financiera**:
-   $$\text{Utilidad Neta Real} = \text{Gross Revenue} - \text{Port Costs} - \text{Bunker Costs} - \text{Comisiones} - (\text{Días} \times \text{TCE Requerido})$$
+   $$\text{P/L (Q20)} = \text{Voyage Result (N18)} - (\text{Duration Q14} \times \text{TCE Req Q18})$$
 3. **Re-Sincronización de Supabase DB**:
-   - Ejecutar la actualización en `voyage_liquidations` sobre la columna `details` (asegurando `details.port_expenses.total_agency_usd = 34674.67` y `details.bunker_expenses.total_bunker_cost_usd = 30913.56`).
+   - Ejecutar la actualización en `voyage_liquidations` sobre la columna `details` y columnas nativas `gross_revenue_usd`, `net_profit_usd`, `tce_req_usd_day`.
 
 ---
 
-## 4. 🛡️ Protocolo Operativo del Loop 2 (Spot Matrix & PDF HTA)
+## 5. 🛡️ Protocolo Operativo del Loop 2 (Spot Matrix & PDF HTA)
 
 1. **Simulación del Motor Spot Matrix Mode**:
    - Ejecutar `run_qc_loop_non_plus_ultra.py` consumiendo los registros saneados de Supabase.
