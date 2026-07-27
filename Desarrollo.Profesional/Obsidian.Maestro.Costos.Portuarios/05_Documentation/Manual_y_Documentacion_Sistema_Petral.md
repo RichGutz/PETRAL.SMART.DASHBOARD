@@ -2,7 +2,7 @@
 
 > **NAVIERA PETRAL S.A.**  
 > *Plataforma Comercial, Operativa y de Auditoría de Costos Portuarios (Costa Oeste PE / CL)*  
-> **Última Actualización:** 2026-07-26 | **Estado:** 97% READY — Commit `b47cd5e`
+> **Última Actualización:** 2026-07-27 | **Estado:** 99% READY — Commit `1c1eed7`
 
 ---
 
@@ -14,8 +14,10 @@ PETRAL SHIPPING.SOFT V2.5 es una plataforma web integral diseñada para la simul
 1. **Regla de Sin Fallbacks ("NO HAY"):** Si un dato o tarifa no existe en la base de datos Supabase, el sistema no inventa valores ni usa fallbacks genéricos. Muestra explícitamente `NO HAY`.
 2. **Homologación MDO/MGO:** En todo el software PETRAL, las siglas **MGO** (Marine Gas Oil / Diesel Marino) equivalen y se registran unificadamente bajo el estándar **MDO**.
 3. **Regla 6 QC Overtime (+25%):** En zarpes u operaciones fuera de jornada hábil (nocturno, dominical o feriado), el recargo de Overtime (+25%) se aplica individualmente $P_{base} \times 1.25$ sobre practicaje OUT, remolques OUT, lanchas y agenciamiento.
-4. **Layout Fluido & Sidebar Congelado:** La barra lateral navegable está congelada rígidamente a **320px fijos** (`w-[320px] shrink-0`), mientras que la vista principal del módulo ocupa el **100% del ancho disponible de la pantalla (`w-full max-w-full`)**.
-5. **Arquitectura Offline-First (Fallback Client-Side):** Todos los motores de cálculo (Multicotizador y Auditoría Final) operan con un `Promise.race` de 300–500ms contra el backend Python. Si el backend no está disponible, el cálculo se realiza íntegramente en el frontend con las mismas fórmulas oficiales. El usuario **nunca ve una pantalla en blanco**.
+4. **Lectura 100% Dinámica de Itinerarios y Parcelación P×Q:** En rutas simples y multipiernas (2PODs), queda terminantemente prohibido hardcodear cadenas estáticas o días de puerto fijos. Las escalas se leen dinámicamente desde `details.itinerary`, respetando la regla $\sum Q_{\text{descargas}} = Q_{\text{carga total}}$.
+5. **Ecuación Contable Lineal de 4 Componentes:** En el reporte de auditoría side-by-side:
+   $$\text{Gross Revenue} - \text{Gastos Puerto} - \text{Costo Búnker} - \text{Costo OPEX (Días } \times \text{ TCE Req)} = \text{Utilidad Neta}$$
+6. **Layout Fluido & Sidebar Congelado:** La barra lateral navegable está congelada rígidamente a **320px fijos** (`w-[320px] shrink-0`), mientras que la vista principal del módulo ocupa el **100% del ancho disponible de la pantalla (`w-full max-w-full`)**.
 
 ---
 
