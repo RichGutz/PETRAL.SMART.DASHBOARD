@@ -24,7 +24,7 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
     const totalRealProfit = liquidations.reduce((sum, item) => sum + (Number(item.net_profit_usd) || 0), 0);
     const totalRealTonnage = liquidations.reduce((sum, item) => sum + (Number(item.cargo_quantity_mt) || 0), 0);
 
-    // Generación del documento HTML sobrio impreso A4: FUENTE AL DOBLE DE TAMAÑO (15px/16px/20px)
+    // Generación del documento HTML sobrio impreso A4 con Gross Revenue incluido
     const htmlDoc = useMemo(() => {
         const voyageBlocksHtml = liquidations.map((v, idx) => {
             const code = v.voyage_code || `v.${idx + 1}`;
@@ -35,15 +35,16 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             
             // Forecast Data
             const forecastRate = Number(v.freight_rate_usd) || 25.5;
+            const forecastGrossRev = qty * forecastRate;
             const forecastPortCosts = (orig === 'CALLAO' || dest === 'CALLAO') ? 31327.99 : 24500.00;
             const forecastBunkerCosts = 43515.74;
-            const grossRevForecast = qty * forecastRate;
-            const approxComm = grossRevForecast * 0.0375;
-            const forecastNet = grossRevForecast - forecastBunkerCosts - forecastPortCosts - approxComm;
+            const approxComm = forecastGrossRev * 0.0375;
+            const forecastNet = forecastGrossRev - forecastBunkerCosts - forecastPortCosts - approxComm;
             const forecastTce = (Number(v.tce_usd_day) || 0) * 1.05;
 
             // Real Data
             const realRate = Number(v.freight_rate_usd) || 25.5;
+            const realGrossRev = Number(v.gross_revenue_usd) || (qty * realRate);
             const details = v.details || {};
             const realPortCosts = Number(details.port_expenses?.total_agency_usd) || ((orig === 'CALLAO' || dest === 'CALLAO') ? 31327.99 : 18000.00);
             const realBunkerCosts = Number(details.bunker_expenses?.total_bunker_cost_usd) || 42500.00;
@@ -59,7 +60,7 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             return `
                 <div className="voyage-card" style="border: 2px solid #0f172a; margin-bottom: 16px; page-break-inside: avoid; background: #ffffff;">
                     
-                    <!-- Cabecera del Viaje con fuente al doble (16px) -->
+                    <!-- Cabecera del Viaje con fuente de 16px -->
                     <div style="background: #0f172a; color: #ffffff; padding: 8px 12px; font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a;">
                         <span>VIAJE #${idx + 1}: ${code} | BUQUE: ${vessel} | RUTA: ${orig} &#8594; ${dest}</span>
                         <span>DESV: ${diffNet >= 0 ? '+' : ''}${fmtCur(diffNet)} (${desvPct.toFixed(1)}%) • <b>[${statusLabel}]</b></span>
@@ -81,6 +82,10 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                                 <tr>
                                     <td style="color: #475569; font-weight: bold; padding: 4px 2px;">Tarifa Flete Proyectada:</td>
                                     <td style="text-align: right; padding: 4px 2px;">$${forecastRate.toFixed(2)} /MT</td>
+                                </tr>
+                                <tr style="background: #f1f5f9;">
+                                    <td style="color: #0f172a; font-weight: 900; padding: 4px 2px;">Gross Revenue Forecast:</td>
+                                    <td style="text-align: right; font-weight: 900; color: #0f172a; padding: 4px 2px;">${fmtCur(forecastGrossRev)}</td>
                                 </tr>
                                 <tr>
                                     <td style="color: #475569; font-weight: bold; padding: 4px 2px;">Gastos Puerto PxQ Matrix:</td>
@@ -114,6 +119,10 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                                 <tr>
                                     <td style="color: #475569; font-weight: bold; padding: 4px 2px;">Tarifa Flete Real:</td>
                                     <td style="text-align: right; padding: 4px 2px;">$${realRate.toFixed(2)} /MT</td>
+                                </tr>
+                                <tr style="background: #f1f5f9;">
+                                    <td style="color: #0f172a; font-weight: 900; padding: 4px 2px;">Gross Revenue Real:</td>
+                                    <td style="text-align: right; font-weight: 900; color: #0f172a; padding: 4px 2px;">${fmtCur(realGrossRev)}</td>
                                 </tr>
                                 <tr>
                                     <td style="color: #475569; font-weight: bold; padding: 4px 2px;">Gastos Puerto Reales:</td>
@@ -214,7 +223,7 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                         <img src="${logoGeeksoft}" alt="GEEKSOFT" style="height: 48px; object-fit: contain;" />
                     </div>
 
-                    {/* Ficha Resumen de KPIs con Fuente al Doble */}
+                    {/* Ficha Resumen de KPIs */}
                     <div class="kpi-container">
                         <div class="kpi-card">
                             <div class="kpi-title">Flota Auditada</div>
@@ -271,7 +280,7 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                             ACTA DE AUDITORÍA VIAJE POR VIAJE: FORECAST VS EJECUCIÓN REAL (SIDE-BY-SIDE)
                         </h3>
                         <p className="text-xs text-slate-400 font-mono">
-                            Fuente Aumentada al Doble (15px-20px) • Scroll A4 Landscape • Impresión de Alta Legibilidad
+                            Incluye Gross Revenue, Gastos Puerto, Búnker, Utilidad Neta y TCE • Fuente 15px-20px • Scroll A4
                         </p>
                     </div>
                 </div>

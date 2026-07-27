@@ -1,8 +1,6 @@
-[2026-07-27 00:37:50] - Incremento al Doble del Tamaño de Fuente en Documento PDF de Auditoría
-- Aumento generalizado del tamaño de letra en LiquidationsExecutivePdfAudit.tsx para alta legibilidad en pantalla e impresión:
-  * Títulos Principales y Logos: 20px (antes 11px).
-  * Cabecera de Fichas por Viaje: 16px (antes 8.5px).
-  * Tablas Side-by-Side (Forecast vs Real): 14.5px - 15.5px (antes 7.5px).
-  * Tarjetas de KPIs: 18px (antes 10px).
-- Verificación con compilación limpia en 3.06s (npm run build).
+[2026-07-27 00:39:50] - Inclusión de Gross Revenue en Fichas Comparativas Side-by-Side
+- Actualización de LiquidationsExecutivePdfAudit.tsx para presentar la fila resaltada Gross Revenue en cada ficha de viaje:
+  * Lado Izquierdo (Forecast): Gross Revenue Forecast ($ USD) proyectado.
+  * Lado Derecho (Ejecución Real): Gross Revenue Real ($ USD) ejecutado por el operador.
+- Verificación limpia de TypeScript / Vite en 2.95s (npm run build).
 - Publicación y sincronización en repositorio Git origin main.
