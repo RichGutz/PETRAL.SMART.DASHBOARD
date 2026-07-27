@@ -59,7 +59,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
         });
     }, []);
 
-    // Clientes fijos seg├║n regla de negocio
+    // Clientes fijos según regla de negocio
     const availableClients = ["SPCC", "NEXA", "PROSPECTOS"];
 
     // Rutas filtradas y ordenadas (SPCC primero)
@@ -139,46 +139,45 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
                     port_cost_mode: localPortCostMode
                 };
 
-                // Intento con timeout 300ms — fallback instantáneo si backend no está disponible
+                // Timeout 300ms — fallback client-side si backend no disponible
                 let res: any = null;
                 try {
                     const apiCall = ForecastService.calculateMultiCotizador(payload);
                     const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 300));
                     res = await Promise.race([apiCall, timeout]);
                 } catch {
-                    // Fallback client-side: replicar la estructura exacta que devuelve el backend
                     const ladenT = tramos.find((t: any) => t.type === 'LADEN') || tramos[0];
                     const Q = ladenT?.quantity || 13500;
                     const F = ladenT?.freight_rate || 25.50;
                     const rL = 500, rD = 345, wf = 0.03, spd = 11.0;
-                    let seaDaysTot = 0, portDaysTot = 0, bunkerTot = 0, portCostsTot = 0, incomeTot = 0, distTot = 0;
                     const pIfo = 895.14, pMdo = 1460.30;
-                    let ifoTonTot = 0, mdoTonTot = 0;
+                    let seaDaysTot = 0, portDaysTot = 0, bunkerTot = 0, portCostsTot = 0;
+                    let incomeTot = 0, distTot = 0, ifoTonTot = 0, mdoTonTot = 0;
                     const builtTramos = tramos.map((t: any) => {
                         const dist = t.distance || t.route_distance || 300;
                         const sd = (dist * (1 + wf)) / (spd * 24);
                         const pd = t.type === 'LADEN' ? (Q / rL / 24) + (Q / rD / 24) + 1.24 : 0;
-                        const ifoSea = sd * 14.0; const mdoPort = t.type === 'LADEN' ? 0.77 : 0;
+                        const ifoSea = sd * 14.0;
+                        const mdoPort = t.type === 'LADEN' ? 0.77 : 0;
                         const bunkCost = ifoSea * pIfo + mdoPort * pMdo;
                         const inc = t.type === 'LADEN' ? Q * F : 0;
-                        const aOrig = t.agency_costs_origin || 0;
-                        const aDest = t.agency_costs_destination || 0;
                         seaDaysTot += sd; portDaysTot += pd; bunkerTot += bunkCost;
-                        portCostsTot += aOrig + aDest; incomeTot += inc; distTot += dist;
+                        portCostsTot += (t.agency_costs_origin || 0) + (t.agency_costs_destination || 0);
+                        incomeTot += inc; distTot += dist;
                         ifoTonTot += ifoSea; mdoTonTot += mdoPort;
                         return { ...t, distance: dist, sea_days: sd, port_days: pd, bunker_costs: bunkCost, net_income: inc, weather_factor: wf, actual_load_rate: rL, actual_discharge_rate: rD };
                     });
                     const totDays = seaDaysTot + portDaysTot;
                     const tceReq = (selectedVessel as any)?.tce_required || 13000;
                     const voyRes = incomeTot - bunkerTot - portCostsTot;
-                    const pnl = voyRes;
                     res = {
                         consolidated: {
-                            total_distance: distTot, total_days: totDays, total_sea_days: seaDaysTot,
-                            total_port_days: portDaysTot, total_bunker_costs: bunkerTot,
-                            bunker_ifo_tonnage: ifoTonTot, bunker_mdo_tonnage: mdoTonTot,
-                            total_port_costs: portCostsTot, total_freight_revenue: incomeTot,
-                            pnl_net_utility: pnl, tce_real: totDays > 0 ? voyRes / totDays : 0,
+                            total_distance: distTot, total_days: totDays,
+                            total_sea_days: seaDaysTot, total_port_days: portDaysTot,
+                            total_bunker_costs: bunkerTot, bunker_ifo_tonnage: ifoTonTot,
+                            bunker_mdo_tonnage: mdoTonTot, total_port_costs: portCostsTot,
+                            total_freight_revenue: incomeTot, pnl_net_utility: voyRes,
+                            tce_real: totDays > 0 ? voyRes / totDays : 0,
                             tce_required: tceReq, total_commissions: 0
                         },
                         tramos: builtTramos,
@@ -202,7 +201,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
         }
     };
 
-    // Ejecutar la simulaci├│n autom├íticamente cuando cambia el cliente, buque o matriz
+    // Ejecutar la simulación automáticamente cuando cambia el cliente, buque o matriz
     useEffect(() => {
         if (selectedClientId && selectedVesselId && filteredRoutes.length > 0) {
             handleCalculateConsolidated();
@@ -256,7 +255,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             const cOrig = ladenLeg.agency_costs_origin || 31327.99;
             const cDest = ladenLeg.agency_costs_destination || 40000.00;
 
-            const trayectoStr = tramos.map((t: any) => t.origin_port_id).join(" Ô×ö ") + " Ô×ö " + (tramos[tramos.length - 1]?.destination_port_id || "");
+            const trayectoStr = tramos.map((t: any) => t.origin_port_id).join(" ➔ ") + " ➔ " + (tramos[tramos.length - 1]?.destination_port_id || "");
 
             let piernasStr = '';
             tramos.forEach((tr: any, legIdx: number) => {
@@ -268,9 +267,9 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
                 const bunkSeaIfo = seaD * 14.0;
                 const bunkSeaCost = bunkSeaIfo * pIfo;
 
-                piernasStr += `  Ôöé   ÔÇó PIERNA #${legIdx + 1} [${tr.type}]: ${tr.origin_port_id} Ô×ö ${tr.destination_port_id} | Distancia: ${distP.toFixed(1)} NM\n`;
-                piernasStr += `  Ôöé       ­ƒîè D├¡as de Mar (${seaD.toFixed(2)}d): [${distP.toFixed(1)} NM ├ù (1 + ${(wf * 100).toFixed(1)}% WF)] / [11.0 kts ├ù 24h] = ${seaD.toFixed(2)} D├¡as\n`;
-                piernasStr += `  Ôöé          Ôå│ B├║nker Mar: ${seaD.toFixed(2)}d ├ù 14.0 t/d IFO ├ù $${pIfo.toFixed(2)} = $${bunkSeaCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
+                piernasStr += `  │   • PIERNA #${legIdx + 1} [${tr.type}]: ${tr.origin_port_id} ➔ ${tr.destination_port_id} | Distancia: ${distP.toFixed(1)} NM\n`;
+                piernasStr += `  │       🌊 Días de Mar (${seaD.toFixed(2)}d): [${distP.toFixed(1)} NM × (1 + ${(wf * 100).toFixed(1)}% WF)] / [11.0 kts × 24h] = ${seaD.toFixed(2)} Días\n`;
+                piernasStr += `  │          ↳ Búnker Mar: ${seaD.toFixed(2)}d × 14.0 t/d IFO × $${pIfo.toFixed(2)} = $${bunkSeaCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
 
                 if (isLaden) {
                     const legQ = 13500;
@@ -278,16 +277,16 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
                     const dischD = (legQ / rD) / 24;
                     const idleD = Math.max(0, portD - loadD - dischD);
                     const bunkPortCost = (tr.bunker_costs || 0) - bunkSeaCost;
-                    piernasStr += `  Ôöé       ÔÜô D├¡as de Puerto (${portD.toFixed(2)}d): Carga (${legQ}t/${rL}t/h = ${loadD.toFixed(2)}d) + Descarga (${legQ}t/${rD}t/h = ${dischD.toFixed(2)}d) + Overheads (${idleD.toFixed(2)}d) = ${portD.toFixed(2)} D├¡as\n`;
-                    piernasStr += `  Ôöé          Ôå│ B├║nker Puerto: $${bunkPortCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
-                    piernasStr += `  Ôöé       ­ƒöÑ B├║nker Total Pierna:  $${(tr.bunker_costs || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
-                    piernasStr += `  Ôöé       ­ƒÜó Agencia Carga (${tr.origin_port_id}):    $${cOrig.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
-                    piernasStr += `  Ôöé       ­ƒÜó Agencia Descarga (${tr.destination_port_id}): $${cDest.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
-                    piernasStr += `  Ôöé       ­ƒÆÁ Ingreso Flete Leg:     $${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
+                    piernasStr += `  │       ⚓ Días de Puerto (${portD.toFixed(2)}d): Carga (${legQ}t/${rL}t/h = ${loadD.toFixed(2)}d) + Descarga (${legQ}t/${rD}t/h = ${dischD.toFixed(2)}d) + Overheads (${idleD.toFixed(2)}d) = ${portD.toFixed(2)} Días\n`;
+                    piernasStr += `  │          ↳ Búnker Puerto: $${bunkPortCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
+                    piernasStr += `  │       🔥 Búnker Total Pierna:  $${(tr.bunker_costs || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
+                    piernasStr += `  │       🚢 Agencia Carga (${tr.origin_port_id}):    $${cOrig.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
+                    piernasStr += `  │       🚢 Agencia Descarga (${tr.destination_port_id}): $${cDest.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
+                    piernasStr += `  │       💵 Ingreso Flete Leg:     $${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
                 } else {
-                    piernasStr += `  Ôöé       ÔÜô D├¡as de Puerto: 0.00 D├¡as (Pierna en Lastre)\n`;
-                    piernasStr += `  Ôöé       ­ƒöÑ B├║nker Total Pierna: $${(tr.bunker_costs || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
-                    piernasStr += `  Ôöé       ­ƒÜó Agencia Puerto:      $0.00 USD (Lastre)\n`;
+                    piernasStr += `  │       ⚓ Días de Puerto: 0.00 Días (Pierna en Lastre)\n`;
+                    piernasStr += `  │       🔥 Búnker Total Pierna: $${(tr.bunker_costs || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD\n`;
+                    piernasStr += `  │       🚢 Agencia Puerto:      $0.00 USD (Lastre)\n`;
                 }
             });
 
@@ -307,8 +306,8 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
                             <img src="/Logo.Petral.png" style="height: 30px; width: auto;" alt="PETRAL LOGO" />
                         </td>
                         <td style="width: 50%; text-align: center; vertical-align: middle; border: none; padding: 0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 9.5pt; color: #000000;">
-                            PETRAL SMART DASHBOARD ÔÇó MOTOR SPOT GEEKSOFT ENGINE<br/>
-                            <span style="font-size: 7.5pt; font-weight: normal;">ACTA OFICIAL DE AUDITOR├ìA Y TRAZABILIDAD (${selectedClientId})</span>
+                            PETRAL SMART DASHBOARD • MOTOR SPOT GEEKSOFT ENGINE<br/>
+                            <span style="font-size: 7.5pt; font-weight: normal;">ACTA OFICIAL DE AUDITORÍA Y TRAZABILIDAD (${selectedClientId})</span>
                         </td>
                         <td style="width: 25%; text-align: right; vertical-align: middle; border: none; padding: 0;">
                             <img src="/Logo.Geeksoft.png" style="height: 49px; width: auto;" alt="GEEKSOFT LOGO" />
@@ -316,35 +315,35 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
                     </tr>
                 </table>
                 <pre style="font-family: 'Courier New', Courier, monospace; font-size: 6.8pt; line-height: 1.2; color: #000000; margin: 0; white-space: pre;">
-­ƒÜó AUDITANDO RUTA: ${routeName} (${tramos.length} Piernas)
-ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
-­ƒôï [INPUTS Y VARIABLES DE ORIGEN DE C├üLCULO - CARDS MAESTROS]:
-  ÔÇó CARD 1 (RUTAS):                 Itinerario: ${trayectoStr} | Dist. Total: ${totDist.toFixed(1)} NM | Weather Factor: 3.0% (0.03)
-  ÔÇó CARD 2 (BUQUES):                Vessel: ${selectedVesselId} | Speed: 11.0 kts | Cons. Sea IFO: 14.0 t/d | Cons. Idle IFO: 2.4 t/d | TCE Requerido: $${tceRequired.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}/d
-  ÔÇó CARD 3 (B├ÜNKER):                Precio IFO: $895.14/t | Precio MDO: $1,460.30/t | Consumo Est.: ${ifoTon.toFixed(2)} t IFO / ${mdoTon.toFixed(2)} t MDO | BAF Baseline: $430.00/t
-  ÔÇó CARD 4 (CONTRATOS & COMERCIAL): Cliente: ${selectedClientId} | Q: 13,500 MT | Freight Base: $${F.toFixed(2)}/MT | Ritmo Carga: ${rL} T/h | Ritmo Desc: ${rD} T/h | Comisiones: Address 0.0% / Broker 0.0%
-  ÔÇó CARD 5 (PUERTOS & AGENCIA):     Agencia Carga (${origP}): $${cOrig.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD | Agencia Descarga (${destP}): $${cDest.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD | Total Port Costs: $${portCosts.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD
-ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-  ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-  Ôöé ­ƒôì RESUMEN CONSOLIDADO: Distancia ${totDist.toFixed(1)} NM | D├¡as Totales ${totDays.toFixed(2)}d (${seaDays.toFixed(2)}d Mar + ${portDays.toFixed(2)}d Puerto)
-  Ôöé Ôø¢ B├║nker Total:  $${bunkerCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD (${ifoTon.toFixed(2)} t IFO | ${mdoTon.toFixed(2)} t MDO)
-  Ôöé ÔÜô Puerto Total:  $${portCosts.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD
-  Ôöé ­ƒÆ░ Ingreso Flete: $${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD | PnL Neto: $${pnlNet.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD | TCE: $${tceReal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD/D├¡a
-  Ôö£ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-  Ôöé ­ƒöì ARITM├ëTICA EXPLICATIVA Y ORIGEN DE LOS D├ìAS (MAR VS PUERTO):
-${piernasStr}  ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+🚢 AUDITANDO RUTA: ${routeName} (${tramos.length} Piernas)
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+📋 [INPUTS Y VARIABLES DE ORIGEN DE CÁLCULO - CARDS MAESTROS]:
+  • CARD 1 (RUTAS):                 Itinerario: ${trayectoStr} | Dist. Total: ${totDist.toFixed(1)} NM | Weather Factor: 3.0% (0.03)
+  • CARD 2 (BUQUES):                Vessel: ${selectedVesselId} | Speed: 11.0 kts | Cons. Sea IFO: 14.0 t/d | Cons. Idle IFO: 2.4 t/d | TCE Requerido: $${tceRequired.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}/d
+  • CARD 3 (BÚNKER):                Precio IFO: $895.14/t | Precio MDO: $1,460.30/t | Consumo Est.: ${ifoTon.toFixed(2)} t IFO / ${mdoTon.toFixed(2)} t MDO | BAF Baseline: $430.00/t
+  • CARD 4 (CONTRATOS & COMERCIAL): Cliente: ${selectedClientId} | Q: 13,500 MT | Freight Base: $${F.toFixed(2)}/MT | Ritmo Carga: ${rL} T/h | Ritmo Desc: ${rD} T/h | Comisiones: Address 0.0% / Broker 0.0%
+  • CARD 5 (PUERTOS & AGENCIA):     Agencia Carga (${origP}): $${cOrig.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD | Agencia Descarga (${destP}): $${cDest.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD | Total Port Costs: $${portCosts.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  │ 📍 RESUMEN CONSOLIDADO: Distancia ${totDist.toFixed(1)} NM | Días Totales ${totDays.toFixed(2)}d (${seaDays.toFixed(2)}d Mar + ${portDays.toFixed(2)}d Puerto)
+  │ ⛽ Búnker Total:  $${bunkerCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD (${ifoTon.toFixed(2)} t IFO | ${mdoTon.toFixed(2)} t MDO)
+  │ ⚓ Puerto Total:  $${portCosts.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD
+  │ 💰 Ingreso Flete: $${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD | PnL Neto: $${pnlNet.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD | TCE: $${tceReal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD/Día
+  ├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  │ 🔍 ARITMÉTICA EXPLICATIVA Y ORIGEN DE LOS DÍAS (MAR VS PUERTO):
+${piernasStr}  └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 </pre>
 
                 <div style="margin-top: 6px; font-family: 'Courier New', monospace;">
                     <div style="font-weight: bold; font-size: 7.5pt; margin-bottom: 3px; color: #000000;">
-                        ­ƒôè [TABLA OFICIAL DE AUDITOR├ìA LEDGER ÔÇö 12 M├ëTRICAS REPLICADAS DE LA UI]:
+                        📊 [TABLA OFICIAL DE AUDITORÍA LEDGER — 12 MÉTRICAS REPLICADAS DE LA UI]:
                     </div>
                     <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; table-layout: fixed; font-family: 'Courier New', monospace; font-size: 6.8pt; line-height: 1.25;">
                         <thead>
                             <tr style="background-color: #f2f2f2; border-bottom: 1.5px solid #000000;">
-                                <th style="width: 25%; border: 1px solid #000000; padding: 3px 5px; text-align: left; font-weight: bold;">├ìTEM / M├ëTRICA OFICIAL</th>
-                                <th style="width: 32%; border: 1px solid #000000; padding: 3px 5px; text-align: left; font-weight: bold;">F├ôRMULA APLICADA</th>
-                                <th style="width: 28%; border: 1px solid #000000; padding: 3px 5px; text-align: left; font-weight: bold;">C├üLCULO SUSTITUIDO NUM├ëRICO</th>
+                                <th style="width: 25%; border: 1px solid #000000; padding: 3px 5px; text-align: left; font-weight: bold;">ÍTEM / MÉTRICA OFICIAL</th>
+                                <th style="width: 32%; border: 1px solid #000000; padding: 3px 5px; text-align: left; font-weight: bold;">FÓRMULA APLICADA</th>
+                                <th style="width: 28%; border: 1px solid #000000; padding: 3px 5px; text-align: left; font-weight: bold;">CÁLCULO SUSTITUIDO NUMÉRICO</th>
                                 <th style="width: 15%; border: 1px solid #000000; padding: 3px 5px; text-align: right; font-weight: bold;">GEEKSOFT ENGINE</th>
                             </tr>
                         </thead>
@@ -362,39 +361,39 @@ ${piernasStr}  ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö�
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">${rD} T/h</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">3. D├¡as de Puerto (port_days)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">3. Días de Puerto (port_days)</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">(Q/act_load)/24 + (Q/act_disch)/24 + idle</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">Load(${(Q/rL/24).toFixed(2)}d) + Disch(${(Q/rD/24).toFixed(2)}d) + Overheads</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">${portDays.toFixed(2)} D├¡as</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">${portDays.toFixed(2)} Días</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">4. D├¡as de Mar (sea_days)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">4. Días de Mar (sea_days)</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">Sum((dist_leg * (1 + WF)) / (speed * 24))</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">${seaDaysCalcStr}</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">${seaDays.toFixed(2)} D├¡as</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">${seaDays.toFixed(2)} Días</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">5. D├¡as de Viaje (tot_dur)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">5. Días de Viaje (tot_dur)</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">sea_days + port_days</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">${seaDays.toFixed(2)}d Mar + ${portDays.toFixed(2)}d Puerto</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">${totDays.toFixed(2)} D├¡as</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">${totDays.toFixed(2)} Días</td>
                             </tr>
                             <tr>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">6. Income (income)</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">Sum(Q_leg * F_leg)</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">13,500 MT ├ù $${F.toFixed(2)} USD/MT</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">13,500 MT × $${F.toFixed(2)} USD/MT</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                             </tr>
                             <tr>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">7. Comisiones (commissions)</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">income * (addr_comm + bkr_comm)</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} ├ù 0.00%</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} × 0.00%</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$0.00</td>
                             </tr>
                             <tr>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">8. Costo Bunker (bunker)</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">bunker_sea + bunker_port</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">${ifoTon.toFixed(2)}t IFO ├ù $895.14 + ${mdoTon.toFixed(2)}t MDO ├ù $1460.30</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">${ifoTon.toFixed(2)}t IFO × $895.14 + ${mdoTon.toFixed(2)}t MDO × $1460.30</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${bunkerCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                             </tr>
                             <tr>
@@ -412,8 +411,8 @@ ${piernasStr}  ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö�
                             <tr>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">11. TCE Diario (tce_real)</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">voyage_result / tot_dur</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${pnlNet.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} / ${totDays.toFixed(2)} D├¡as</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${tceReal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}/d├¡a</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${pnlNet.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} / ${totDays.toFixed(2)} Días</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${tceReal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}/día</td>
                             </tr>
                             <tr>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">12. P/L (pl_vs_req)</td>
@@ -425,7 +424,7 @@ ${piernasStr}  ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö�
                     </table>
                 </div>
 
-                <!-- Pie de Firma, Aprobaci├│n e Inputs de Auditor├¡a Ledger -->
+                <!-- Pie de Firma, Aprobación e Inputs de Auditoría Ledger -->
                 <div style="margin-top: 10px; padding-top: 6px; border-top: 1.5px solid #000000; font-family: 'Courier New', monospace; font-size: 7.2pt; page-break-inside: avoid;">
                     <table style="width: 100%; border-collapse: collapse; border: none;">
                         <tr>
@@ -447,16 +446,16 @@ ${piernasStr}  ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö�
                                         <div style="border-bottom: 1px dashed #000000; flex: 1; height: 14px;"></div>
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                                        <span style="font-weight: bold; white-space: nowrap; color: #000000;">Fecha Validaci├│n:</span>
+                                        <span style="font-weight: bold; white-space: nowrap; color: #000000;">Fecha Validación:</span>
                                         <div style="border-bottom: 1px dashed #000000; flex: 1; height: 12px;"></div>
                                     </div>
                                 </div>
                             </td>
 
-                            <!-- Panel Derecho: Comentarios y Justificaci├│n de Auditor├¡a -->
+                            <!-- Panel Derecho: Comentarios y Justificación de Auditoría -->
                             <td style="width: 50%; vertical-align: top; padding-left: 15px;">
                                 <div style="display: flex; flex-direction: column;">
-                                    <span style="font-weight: bold; color: #000000; margin-bottom: 3px;">Comentarios / Justificaci├│n de Auditor├¡a Ledger:</span>
+                                    <span style="font-weight: bold; color: #000000; margin-bottom: 3px;">Comentarios / Justificación de Auditoría Ledger:</span>
                                     <div style="border: 1px solid #000000; height: 56px; background-color: #fafafa; padding: 4px; box-sizing: border-box;"></div>
                                 </div>
                             </td>
@@ -472,7 +471,7 @@ ${piernasStr}  ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö�
         <html lang="es">
         <head>
         <meta charset="UTF-8">
-        <title>Acta Oficial de Auditor├¡a Consolidada - PETRAL</title>
+        <title>Acta Oficial de Auditoría Consolidada - PETRAL</title>
         <style>
             @page { size: A4 landscape; margin: 5mm; }
             body { font-family: 'Courier New', Courier, monospace; background-color: #ffffff; color: #000000; font-size: 6.8pt; line-height: 1.2; margin: 0; padding: 6px; }
@@ -487,7 +486,7 @@ ${piernasStr}  ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö�
         `;
     };
 
-    if (loading) return <div className="p-8 text-center text-slate-500 font-semibold animate-pulse">Cargando Auditor├¡a Final...</div>;
+    if (loading) return <div className="p-8 text-center text-slate-500 font-semibold animate-pulse">Cargando Auditoría Final...</div>;
 
     const htmlDoc = generateConsolidatedHtml();
 
@@ -497,8 +496,8 @@ ${piernasStr}  ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö�
             <div className="flex gap-4 items-center justify-between bg-slate-50 border border-slate-200 text-slate-800 p-3 rounded-md shadow-sm">
                 <div className="flex items-center gap-4 flex-wrap">
                     <div className="flex items-center gap-2">
-                        <span className="text-xl">ÔÜû´©Å</span>
-                        <h2 className="text-sm font-bold text-slate-800 tracking-tight">Acta de Auditor├¡a Final</h2>
+                        <span className="text-xl">⚖️</span>
+                        <h2 className="text-sm font-bold text-slate-800 tracking-tight">Acta de Auditoría Final</h2>
                     </div>
 
                     {/* 1. Cliente */}
@@ -537,8 +536,8 @@ ${piernasStr}  ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö�
                             onChange={(e) => setLocalPortCostMode(e.target.value as "static" | "matrix")}
                             className="h-8 px-3 bg-white border border-slate-300 rounded text-xs font-bold text-amber-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-600 cursor-pointer"
                         >
-                            <option value="static">Est├ítica (Master)</option>
-                            <option value="matrix">Din├ímica (JSONB)</option>
+                            <option value="static">Estática (Master)</option>
+                            <option value="matrix">Dinámica (JSONB)</option>
                         </select>
                     </div>
                 </div>
@@ -569,7 +568,7 @@ ${piernasStr}  ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö�
                     />
                 ) : (
                     <div className="flex items-center justify-center h-full text-slate-400 font-semibold text-sm">
-                        Procesando documento PDF de Auditor├¡a Consolidada...
+                        Procesando documento PDF de Auditoría Consolidada...
                     </div>
                 )}
             </div>
