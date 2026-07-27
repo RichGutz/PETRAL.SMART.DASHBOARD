@@ -1,7 +1,8 @@
-[2026-07-27 00:37:00] - Rediseño de Auditoría PDF Viaje por Viaje Side-by-Side (Forecast vs Real)
-- Reestructuración completa de LiquidationsExecutivePdfAudit.tsx para generar fichas/bloques comparativos sobrios e individuales por cada uno de los 31 viajes auditados:
-  * Cabecera del Viaje: Código, Buque, Ruta y Desviación Neta ($ / %) con Badge de Estado.
-  * Lado Izquierdo (Forecast Spot Matrix): Tonelaje, Tarifa Flete Proyectada, Gastos Puerto PxQ Matrix, Búnker Estimado, Utilidad Net Forecast y TCE Forecast.
-  * Lado Derecho (Ejecución Real): Tonelaje Real, Tarifa Flete Real, Gastos Puerto Reales, Búnker Real Consumido, Utilidad Net Real y TCE Realizado.
-- Verificación limpia de TypeScript / Vite en 2.97s (npm run build).
+[2026-07-27 00:37:50] - Incremento al Doble del Tamaño de Fuente en Documento PDF de Auditoría
+- Aumento generalizado del tamaño de letra en LiquidationsExecutivePdfAudit.tsx para alta legibilidad en pantalla e impresión:
+  * Títulos Principales y Logos: 20px (antes 11px).
+  * Cabecera de Fichas por Viaje: 16px (antes 8.5px).
+  * Tablas Side-by-Side (Forecast vs Real): 14.5px - 15.5px (antes 7.5px).
+  * Tarjetas de KPIs: 18px (antes 10px).
+- Verificación con compilación limpia en 3.06s (npm run build).
 - Publicación y sincronización en repositorio Git origin main.

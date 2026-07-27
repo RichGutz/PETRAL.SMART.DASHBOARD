@@ -24,7 +24,7 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
     const totalRealProfit = liquidations.reduce((sum, item) => sum + (Number(item.net_profit_usd) || 0), 0);
     const totalRealTonnage = liquidations.reduce((sum, item) => sum + (Number(item.cargo_quantity_mt) || 0), 0);
 
-    // Generación del documento HTML sobrio impreso A4: Comparación VIAJE POR VIAJE Side-by-Side
+    // Generación del documento HTML sobrio impreso A4: FUENTE AL DOBLE DE TAMAÑO (15px/16px/20px)
     const htmlDoc = useMemo(() => {
         const voyageBlocksHtml = liquidations.map((v, idx) => {
             const code = v.voyage_code || `v.${idx + 1}`;
@@ -57,79 +57,79 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const statusLabel = desvPct <= 65.0 ? 'AUDITADO' : 'OBSERVADO';
 
             return `
-                <div className="voyage-card" style="border: 1.5px solid #0f172a; margin-bottom: 10px; page-break-inside: avoid; background: #ffffff;">
+                <div className="voyage-card" style="border: 2px solid #0f172a; margin-bottom: 16px; page-break-inside: avoid; background: #ffffff;">
                     
-                    <!-- Cabecera del Viaje -->
-                    <div style="background: #0f172a; color: #ffffff; padding: 4px 8px; font-weight: 900; font-size: 8.5px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #0f172a;">
+                    <!-- Cabecera del Viaje con fuente al doble (16px) -->
+                    <div style="background: #0f172a; color: #ffffff; padding: 8px 12px; font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a;">
                         <span>VIAJE #${idx + 1}: ${code} | BUQUE: ${vessel} | RUTA: ${orig} &#8594; ${dest}</span>
-                        <span>DESVIACIÓN NET: ${diffNet >= 0 ? '+' : ''}${fmtCur(diffNet)} (${desvPct.toFixed(1)}%) • <b style="color:#ffffff;">[${statusLabel}]</b></span>
+                        <span>DESV: ${diffNet >= 0 ? '+' : ''}${fmtCur(diffNet)} (${desvPct.toFixed(1)}%) • <b>[${statusLabel}]</b></span>
                     </div>
 
                     <!-- Grilla Side-by-Side: Forecast a la Izquierda vs Real a la Derecha -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
                         
                         <!-- Lado Izquierdo: Forecast -->
-                        <div style="padding: 6px; border-right: 1px solid #0f172a; background: #fafafa;">
-                            <div style="font-weight: 900; font-size: 7.5px; text-transform: uppercase; color: #334155; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; margin-bottom: 4px;">
+                        <div style="padding: 10px; border-right: 2px solid #0f172a; background: #fafafa;">
+                            <div style="font-weight: 900; font-size: 15px; text-transform: uppercase; color: #334155; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 8px;">
                                 📄 FORECAST (SPOT MATRIX MODE)
                             </div>
-                            <table style="width: 100%; border-collapse: collapse; font-size: 7.5px;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 14.5px;">
                                 <tr>
-                                    <td style="color: #475569; width: 45%; font-weight: bold;">Carga Transportada:</td>
-                                    <td style="text-align: right; font-weight: bold;">${fmtNum(qty)} MT</td>
+                                    <td style="color: #475569; width: 45%; font-weight: bold; padding: 4px 2px;">Carga Transportada:</td>
+                                    <td style="text-align: right; font-weight: bold; padding: 4px 2px;">${fmtNum(qty)} MT</td>
                                 </tr>
                                 <tr>
-                                    <td style="color: #475569; font-weight: bold;">Tarifa Flete Proyectada:</td>
-                                    <td style="text-align: right;">$${forecastRate.toFixed(2)} /MT</td>
+                                    <td style="color: #475569; font-weight: bold; padding: 4px 2px;">Tarifa Flete Proyectada:</td>
+                                    <td style="text-align: right; padding: 4px 2px;">$${forecastRate.toFixed(2)} /MT</td>
                                 </tr>
                                 <tr>
-                                    <td style="color: #475569; font-weight: bold;">Gastos Puerto PxQ Matrix:</td>
-                                    <td style="text-align: right;">${fmtCur(forecastPortCosts)}</td>
+                                    <td style="color: #475569; font-weight: bold; padding: 4px 2px;">Gastos Puerto PxQ Matrix:</td>
+                                    <td style="text-align: right; padding: 4px 2px;">${fmtCur(forecastPortCosts)}</td>
                                 </tr>
                                 <tr>
-                                    <td style="color: #475569; font-weight: bold;">Búnker Estimado (IFO/MDO):</td>
-                                    <td style="text-align: right;">${fmtCur(forecastBunkerCosts)}</td>
+                                    <td style="color: #475569; font-weight: bold; padding: 4px 2px;">Búnker Estimado (IFO/MDO):</td>
+                                    <td style="text-align: right; padding: 4px 2px;">${fmtCur(forecastBunkerCosts)}</td>
                                 </tr>
                                 <tr>
-                                    <td style="color: #0f172a; font-weight: 900;">Utilidad Neta Forecast:</td>
-                                    <td style="text-align: right; font-weight: 900; color: #0f172a;">${fmtCur(forecastNet)}</td>
+                                    <td style="color: #0f172a; font-weight: 900; padding: 4px 2px;">Utilidad Neta Forecast:</td>
+                                    <td style="text-align: right; font-weight: 900; color: #0f172a; padding: 4px 2px; font-size: 15.5px;">${fmtCur(forecastNet)}</td>
                                 </tr>
                                 <tr>
-                                    <td style="color: #475569; font-weight: bold;">TCE Forecast:</td>
-                                    <td style="text-align: right;">$${forecastTce.toLocaleString('en-US', {maximumFractionDigits:0})}/día</td>
+                                    <td style="color: #475569; font-weight: bold; padding: 4px 2px;">TCE Forecast:</td>
+                                    <td style="text-align: right; padding: 4px 2px;">$${forecastTce.toLocaleString('en-US', {maximumFractionDigits:0})}/día</td>
                                 </tr>
                             </table>
                         </div>
 
                         <!-- Lado Derecho: Ejecución Real -->
-                        <div style="padding: 6px; background: #ffffff;">
-                            <div style="font-weight: 900; font-size: 7.5px; text-transform: uppercase; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; margin-bottom: 4px;">
+                        <div style="padding: 10px; background: #ffffff;">
+                            <div style="font-weight: 900; font-size: 15px; text-transform: uppercase; color: #0f172a; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 8px;">
                                 📊 EJECUCIÓN REAL (LIQUIDACIÓN OPERADOR)
                             </div>
-                            <table style="width: 100%; border-collapse: collapse; font-size: 7.5px;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 14.5px;">
                                 <tr>
-                                    <td style="color: #475569; width: 45%; font-weight: bold;">Carga Realizada:</td>
-                                    <td style="text-align: right; font-weight: bold;">${fmtNum(qty)} MT</td>
+                                    <td style="color: #475569; width: 45%; font-weight: bold; padding: 4px 2px;">Carga Realizada:</td>
+                                    <td style="text-align: right; font-weight: bold; padding: 4px 2px;">${fmtNum(qty)} MT</td>
                                 </tr>
                                 <tr>
-                                    <td style="color: #475569; font-weight: bold;">Tarifa Flete Real:</td>
-                                    <td style="text-align: right;">$${realRate.toFixed(2)} /MT</td>
+                                    <td style="color: #475569; font-weight: bold; padding: 4px 2px;">Tarifa Flete Real:</td>
+                                    <td style="text-align: right; padding: 4px 2px;">$${realRate.toFixed(2)} /MT</td>
                                 </tr>
                                 <tr>
-                                    <td style="color: #475569; font-weight: bold;">Gastos Puerto Reales:</td>
-                                    <td style="text-align: right;">${fmtCur(realPortCosts)}</td>
+                                    <td style="color: #475569; font-weight: bold; padding: 4px 2px;">Gastos Puerto Reales:</td>
+                                    <td style="text-align: right; padding: 4px 2px;">${fmtCur(realPortCosts)}</td>
                                 </tr>
                                 <tr>
-                                    <td style="color: #475569; font-weight: bold;">Búnker Real Consumido:</td>
-                                    <td style="text-align: right;">${fmtCur(realBunkerCosts)}</td>
+                                    <td style="color: #475569; font-weight: bold; padding: 4px 2px;">Búnker Real Consumido:</td>
+                                    <td style="text-align: right; padding: 4px 2px;">${fmtCur(realBunkerCosts)}</td>
                                 </tr>
                                 <tr>
-                                    <td style="color: #0f172a; font-weight: 900;">Utilidad Neta Real:</td>
-                                    <td style="text-align: right; font-weight: 900; color: #0f172a;">${fmtCur(realNet)}</td>
+                                    <td style="color: #0f172a; font-weight: 900; padding: 4px 2px;">Utilidad Neta Real:</td>
+                                    <td style="text-align: right; font-weight: 900; color: #0f172a; padding: 4px 2px; font-size: 15.5px;">${fmtCur(realNet)}</td>
                                 </tr>
                                 <tr>
-                                    <td style="color: #475569; font-weight: bold;">TCE Realizado:</td>
-                                    <td style="text-align: right;">$${realTce.toLocaleString('en-US', {maximumFractionDigits:0})}/día</td>
+                                    <td style="color: #475569; font-weight: bold; padding: 4px 2px;">TCE Realizado:</td>
+                                    <td style="text-align: right; padding: 4px 2px;">$${realTce.toLocaleString('en-US', {maximumFractionDigits:0})}/día</td>
                                 </tr>
                             </table>
                         </div>
@@ -147,13 +147,13 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                 <meta charset="UTF-8">
                 <title>ACTA OFICIAL DE AUDITORÍA COMPARATIVA VIAJE POR VIAJE - PETRAL SMART DASHBOARD</title>
                 <style>
-                    @page { size: letter landscape; margin: 5mm; }
+                    @page { size: letter landscape; margin: 6mm; }
                     body { 
                         font-family: 'Courier New', Courier, monospace; 
-                        font-size: 8px; 
+                        font-size: 15px; 
                         color: #0f172a; 
                         margin: 0; 
-                        padding: 8px; 
+                        padding: 12px; 
                         background: #ffffff; 
                     }
                     .paper-container {
@@ -164,40 +164,40 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                         display: flex; 
                         justify-content: space-between; 
                         align-items: center; 
-                        border-bottom: 2px solid #0f172a; 
-                        padding-bottom: 4px; 
-                        margin-bottom: 8px; 
+                        border-bottom: 3px solid #0f172a; 
+                        padding-bottom: 8px; 
+                        margin-bottom: 12px; 
                     }
                     .header-title { text-align: center; }
-                    .header-title h1 { font-size: 11px; margin: 0; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; }
-                    .header-title span { font-size: 8px; color: #334155; font-weight: 700; text-transform: uppercase; }
+                    .header-title h1 { font-size: 20px; margin: 0; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; }
+                    .header-title span { font-size: 14px; color: #334155; font-weight: 800; text-transform: uppercase; }
                     
                     .kpi-container { 
                         display: grid; 
                         grid-template-columns: repeat(4, 1fr); 
-                        gap: 6px; 
-                        margin-bottom: 8px; 
+                        gap: 10px; 
+                        margin-bottom: 14px; 
                     }
                     .kpi-card { 
-                        border: 1px solid #0f172a; 
-                        padding: 5px; 
+                        border: 2px solid #0f172a; 
+                        padding: 8px; 
                         background: #f8fafc; 
                         text-align: center; 
                     }
-                    .kpi-title { font-size: 7px; font-weight: 900; color: #475569; text-transform: uppercase; }
-                    .kpi-value { font-size: 10px; font-weight: 900; color: #0f172a; margin-top: 1px; }
+                    .kpi-title { font-size: 13px; font-weight: 900; color: #475569; text-transform: uppercase; }
+                    .kpi-value { font-size: 18px; font-weight: 900; color: #0f172a; margin-top: 3px; }
 
-                    td { padding: 3px 4px; font-family: 'Courier New', Courier, monospace; }
+                    td { padding: 4px 6px; font-family: 'Courier New', Courier, monospace; }
                     
                     .footer-bar { 
-                        border-top: 1.5px solid #0f172a; 
-                        padding-top: 4px; 
-                        font-size: 7px; 
+                        border-top: 2px solid #0f172a; 
+                        padding-top: 8px; 
+                        font-size: 13px; 
                         color: #334155; 
                         display: flex; 
                         justify-content: space-between; 
-                        font-weight: 700; 
-                        margin-top: 10px;
+                        font-weight: 800; 
+                        margin-top: 14px;
                     }
                 </style>
             </head>
@@ -206,15 +206,15 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                     
                     {/* Cabecera Corporativa */}
                     <div class="header-bar">
-                        <img src="${logoPetral}" alt="PETRAL" style="height: 30px; object-fit: contain;" />
+                        <img src="${logoPetral}" alt="PETRAL" style="height: 48px; object-fit: contain;" />
                         <div class="header-title">
                             <h1>ACTA DE AUDITORÍA VIAJE POR VIAJE: FORECAST VS EJECUCIÓN REAL</h1>
                             <span>PETRAL SMART DASHBOARD • GEEKSOFT ENGINE AUDIT V2</span>
                         </div>
-                        <img src="${logoGeeksoft}" alt="GEEKSOFT" style="height: 30px; object-fit: contain;" />
+                        <img src="${logoGeeksoft}" alt="GEEKSOFT" style="height: 48px; object-fit: contain;" />
                     </div>
 
-                    {/* Ficha Resumen de KPIs */}
+                    {/* Ficha Resumen de KPIs con Fuente al Doble */}
                     <div class="kpi-container">
                         <div class="kpi-card">
                             <div class="kpi-title">Flota Auditada</div>
@@ -265,34 +265,34 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             {/* Barra de Herramienta Superior Sobria */}
             <div className="bg-slate-900 text-white p-3 rounded-xl shadow-sm flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                    <FileText size={18} className="text-slate-300" />
+                    <FileText size={20} className="text-slate-300" />
                     <div>
-                        <h3 className="text-xs font-black uppercase tracking-wider text-slate-100">
+                        <h3 className="text-sm font-black uppercase tracking-wider text-slate-100">
                             ACTA DE AUDITORÍA VIAJE POR VIAJE: FORECAST VS EJECUCIÓN REAL (SIDE-BY-SIDE)
                         </h3>
-                        <p className="text-[10px] text-slate-400 font-mono">
-                            Fichas Sobrias por Viaje • Forecast (Izquierda) vs Ejecución Real (Derecha) • Scroll A4 Landscape
+                        <p className="text-xs text-slate-400 font-mono">
+                            Fuente Aumentada al Doble (15px-20px) • Scroll A4 Landscape • Impresión de Alta Legibilidad
                         </p>
                     </div>
                 </div>
 
                 <button
                     onClick={handlePrintPdf}
-                    className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-mono font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-2 cursor-pointer border border-slate-700 shrink-0"
+                    className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white font-mono font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-2 cursor-pointer border border-slate-700 shrink-0"
                     title="Imprimir Acta Oficial a PDF A4 Landscape"
                 >
-                    <Printer size={14} />
+                    <Printer size={16} />
                     <span>Imprimir Acta PDF</span>
                 </button>
             </div>
 
             {/* Visor PDF con Scroll en Pantalla (Misma arquitectura del Maestro Gastos Portuarios Dinámico) */}
-            <div className="flex flex-col bg-slate-200 p-4 rounded-xl border border-slate-300 shadow-inner max-h-[82vh] overflow-y-auto">
-                <div className="bg-white shadow-2xl rounded border border-slate-400 p-2 min-h-[700px]">
+            <div className="flex flex-col bg-slate-200 p-4 rounded-xl border border-slate-300 shadow-inner max-h-[85vh] overflow-y-auto">
+                <div className="bg-white shadow-2xl rounded border border-slate-400 p-3 min-h-[850px]">
                     <iframe
                         title="Visor PDF Auditoria Liquidaciones"
                         srcDoc={htmlDoc}
-                        className="w-full min-h-[720px] h-full border-none bg-white"
+                        className="w-full min-h-[850px] h-full border-none bg-white"
                     />
                 </div>
             </div>
