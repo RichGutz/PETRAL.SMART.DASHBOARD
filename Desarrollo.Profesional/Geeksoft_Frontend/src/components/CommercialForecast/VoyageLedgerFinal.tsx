@@ -473,8 +473,8 @@ ${piernasStr}  └────────────────────�
         <meta charset="UTF-8">
         <title>Acta Oficial de Auditoría Consolidada - PETRAL</title>
         <style>
-            @page { size: A4 landscape; margin: 5mm; }
-            body { font-family: 'Courier New', Courier, monospace; background-color: #ffffff; color: #000000; font-size: 6.8pt; line-height: 1.2; margin: 0; padding: 6px; }
+            @page { size: A4 landscape; margin: 0mm; }
+            body { font-family: 'Courier New', Courier, monospace; background-color: #ffffff; color: #000000; font-size: 6.8pt; line-height: 1.2; margin: 0; padding: 5mm; }
             .page-route { page-break-after: always; break-after: page; box-sizing: border-box; }
             .page-route:last-child { page-break-after: avoid; break-after: avoid; }
         </style>
