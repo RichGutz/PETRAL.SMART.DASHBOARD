@@ -1,7 +1,8 @@
-[2026-07-27 00:43:30] - Resolución de Inconsistencia Numérica y Respaldo PNG de Auditoría
-- Respaldo de la captura PNG de inconsistencia de viaje v.039 en las rutas locales:
-  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\inconsistencia_liquidaciones_v039.png
-  * C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\PORT.COSTS.PATRICIA\inconsistencia_liquidaciones_v039.png
-- Corrección de la extracción dinámica de datos en LiquidationsExecutivePdfAudit.tsx para garantizar 100% consistencia entre el desglose JSON de v.details y los valores contables oficiales en Supabase DB.
-- Verificación limpia de TypeScript / Vite en 3.79s (npm run build).
+[2026-07-27 00:49:20] - Actualización de Fórmula Financiera Oficial de Utilidad Neta en PDF Auditoría
+- Aplicación de la ecuación financiera oficial de PETRAL en LiquidationsExecutivePdfAudit.tsx:
+  * Voyage Result = Gross Revenue - Gastos Puerto PxQ - Búnker Estimado - Comisiones.
+  * Costo OPEX/Time Charter Buque = Días Totales de Viaje x TCE Requerido ($13,000.00 USD/día).
+  * Utilidad Neta Forecast (P/L Net) = Voyage Result - (Días Totales x TCE Requerido).
+- Descuento visible en rojo sobrio de la fila (-) Costo OPEX (Días x TCE Requerido) tanto en el Forecast como en la Ejecución Real.
+- Verificación limpia de TypeScript / Vite en 3.14s (npm run build).
 - Publicación y sincronización en repositorio Git origin main.
