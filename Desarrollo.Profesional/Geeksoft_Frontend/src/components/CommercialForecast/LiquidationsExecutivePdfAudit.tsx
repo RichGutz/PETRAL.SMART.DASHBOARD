@@ -59,7 +59,7 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const forecastGrossRev = (qty > 0 ? qty : 13500) * forecastRate;
             
             // --- RUTA Y ESCALAS 100% DINÁMICAS (IDENTIFICACIÓN POR PARCELAS CARGA + Y DESCARGA -) ---
-            const stopsClean: string[] = details.stops_clean || v.stops || [orig, dest, 'ILO'];
+            const stopsClean: string[] = details.stops_clean || v.stops || [orig || 'ILO', dest || 'MARCONA', 'ILO'];
             const fullRoute = details.full_route_str || stopsClean.join(' &#8594; ');
             const itinerary = details.itinerary || [];
             
@@ -67,16 +67,17 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const loadItems = itinerary.filter((i: any) => Number(i.quantity_mt) > 0);
             const dischargeItems = itinerary.filter((i: any) => Number(i.quantity_mt) < 0);
 
-            const loadPortName = loadItems.length > 0 ? loadItems[0].port_name : (stopsClean[0] || orig);
-            const dischPort1Name = dischargeItems.length > 0 ? dischargeItems[0].port_name : (stopsClean[1] || dest);
-            const dischPort2Name = dischargeItems.length > 1 ? dischargeItems[1].port_name : null;
+            const loadPortName = (loadItems.length > 0 && loadItems[0].port_name) ? String(loadItems[0].port_name) : String(stopsClean[0] || orig || 'ILO');
+            const dischPort1Name = (dischargeItems.length > 0 && dischargeItems[0].port_name) ? String(dischargeItems[0].port_name) : String(stopsClean[1] || dest || 'MARCONA');
+            const dischPort2Name = (dischargeItems.length > 1 && dischargeItems[1].port_name) ? String(dischargeItems[1].port_name) : null;
             
             // Días estimados de viaje (Mar + Puerto) ajustados por itinerario
             let estDist = 450.0;
-            if (dischPort1Name.includes('MEJILLONES')) estDist = 335.0;
-            else if (dischPort1Name.includes('MARCONA')) estDist = 283.0;
-            else if (dischPort1Name.includes('MATARANI')) estDist = 69.0;
-            else if (dischPort1Name.includes('CALLAO')) estDist = 470.0;
+            const safeDisch1 = dischPort1Name.toUpperCase();
+            if (safeDisch1.includes('MEJILLONES')) estDist = 335.0;
+            else if (safeDisch1.includes('MARCONA')) estDist = 283.0;
+            else if (safeDisch1.includes('MATARANI')) estDist = 69.0;
+            else if (safeDisch1.includes('CALLAO')) estDist = 470.0;
 
             const estSeaDays = (estDist * 2.0 * 1.1) / (11.0 * 24.0);
 
@@ -113,8 +114,8 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const ifoPrice = Number(details.bunker_expenses?.ifo_price_usd_mt) || Number(v.ifo_price_usd) || 650.0;
             const mdoPrice = Number(details.bunker_expenses?.mdo_price_usd_mt) || Number(v.mdo_price_usd) || 1050.0;
 
-            const getPortPxQCost = (portName: string, hrs: number) => {
-                const name = portName.toUpperCase();
+            const getPortPxQCost = (portName: any, hrs: number) => {
+                const name = String(portName || '').toUpperCase();
                 if (name.includes('ILO')) return 14200.0 + (68.0 * hrs);
                 if (name.includes('MARCONA')) return 42000.0 + (155.0 * hrs);
                 if (name.includes('TERQUIM')) return 30000.0 + (120.0 * hrs);
