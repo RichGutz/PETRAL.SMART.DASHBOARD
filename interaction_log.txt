@@ -1,6 +1,7 @@
-[2026-07-27 00:34:50] - Implementación de Diseño Paralelo en 2 Bloques: Forecast (Izquierda) vs Ejecución Real (Derecha)
-- Rediseño de la hoja de auditoría PDF para estructurarse en 2 bloques paralelos perfectamente alineados lado a lado:
-  * Bloque Izquierdo: 📄 FORECAST / PRONÓSTICO (SPOT MATRIX MODE) con Flete, Puertos PxQ, Búnker Estimado, Utilidad Net Forecast y TCE Forecast.
-  * Bloque Derecho: 📊 EJECUCIÓN REAL (LIQUIDACIÓN OPERADORES) con Flete Real, Puertos Reales, Búnker Real, Utilidad Net Real y TCE Real.
-- Verificación con compilación limpia en 3.26s (npm run build).
+[2026-07-27 00:37:00] - Rediseño de Auditoría PDF Viaje por Viaje Side-by-Side (Forecast vs Real)
+- Reestructuración completa de LiquidationsExecutivePdfAudit.tsx para generar fichas/bloques comparativos sobrios e individuales por cada uno de los 31 viajes auditados:
+  * Cabecera del Viaje: Código, Buque, Ruta y Desviación Neta ($ / %) con Badge de Estado.
+  * Lado Izquierdo (Forecast Spot Matrix): Tonelaje, Tarifa Flete Proyectada, Gastos Puerto PxQ Matrix, Búnker Estimado, Utilidad Net Forecast y TCE Forecast.
+  * Lado Derecho (Ejecución Real): Tonelaje Real, Tarifa Flete Real, Gastos Puerto Reales, Búnker Real Consumido, Utilidad Net Real y TCE Realizado.
+- Verificación limpia de TypeScript / Vite en 2.97s (npm run build).
 - Publicación y sincronización en repositorio Git origin main.
