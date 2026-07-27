@@ -67,19 +67,30 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const forecastRate = realRate > 0 ? realRate : 25.5;
             const forecastGrossRev = (qty > 0 ? qty : 13500) * forecastRate;
             
-            const portOrigCost = MATRIX_PORT_MAP[orig] || 16373.15;
-            const portDestCost = MATRIX_PORT_MAP[dest] || 48676.32;
-            const forecastPortCosts = portOrigCost + portDestCost;
+            // --- RUTA Y ESCALAS 100% DINÁMICAS (DESDE SUPABASE DB DETAILS.STOPS_CLEAN) ---
+            const stopsClean: string[] = details.stops_clean || v.stops || [orig, dest, 'ILO'];
+            const fullRoute = details.full_route_str || stopsClean.join(' &#8594; ');
+
+            const loadPortName = stopsClean[0] || orig;
+            const dischPort1Name = stopsClean[1] || dest;
+            const dischPort2Name = stopsClean.length > 3 ? stopsClean[2] : null;
+            
+            // --- CÁLCULO PxQ DINÁMICO POR ESCALA (FORECAST) ---
+            const portOrigCost = MATRIX_PORT_MAP[loadPortName.split(' ')[0]] || 16373.15;
+            const portDest1Cost = MATRIX_PORT_MAP[dischPort1Name.split(' ')[0]] || 48676.32;
+            const portDest2Cost = dischPort2Name ? (MATRIX_PORT_MAP[dischPort2Name.split(' ')[0]] || 34238.30) : 0;
+            
+            const forecastPortCosts = portOrigCost + portDest1Cost + portDest2Cost;
             
             // Días estimados de viaje (Mar + Puerto) ajustados por itinerario
             let estDist = 450.0;
-            if (dest.includes('MEJILLONES')) estDist = 335.0;
-            else if (dest.includes('MARCONA')) estDist = 283.0;
-            else if (dest.includes('MATARANI')) estDist = 69.0;
-            else if (dest.includes('CALLAO')) estDist = 470.0;
+            if (dischPort1Name.includes('MEJILLONES')) estDist = 335.0;
+            else if (dischPort1Name.includes('MARCONA')) estDist = 283.0;
+            else if (dischPort1Name.includes('MATARANI')) estDist = 69.0;
+            else if (dischPort1Name.includes('CALLAO')) estDist = 470.0;
 
             const estSeaDays = (estDist * 2.0 * 1.1) / (11.0 * 24.0);
-            const estPortDays = 4.0;
+            const estPortDays = dischPort2Name ? 6.0 : 4.0;
             const totalEstDays = estSeaDays + estPortDays;
 
             // Búnker dinámico según días de mar y maniobra (IFO $655/MT, MDO $1,187/MT)
@@ -87,11 +98,10 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const mdoTons = (estSeaDays * 1.0) + (estPortDays * 0.2);
             const forecastBunkerCosts = (ifoTons * 655.28) + (mdoTons * 1083.84);
             
-            const approxComm = forecastGrossRev * 0.0375;
-            const voyageResultForecast = forecastGrossRev - forecastBunkerCosts - forecastPortCosts - approxComm;
-            const vesselCharterCost = totalEstDays * tceReq;
-            const forecastNet = voyageResultForecast - vesselCharterCost;
-            const forecastTce = totalEstDays > 0 ? (voyageResultForecast / totalEstDays) : 28500.00;
+            const forecastOpexCost = totalEstDays * tceReq;
+            const forecastOpexDays = totalEstDays;
+            const forecastNet = forecastGrossRev - forecastPortCosts - forecastBunkerCosts - forecastOpexCost;
+            const forecastTce = totalEstDays > 0 ? ((forecastGrossRev - forecastPortCosts - forecastBunkerCosts) / totalEstDays) : 28500.00;
 
             totalForecastProfit += forecastNet;
 
@@ -101,29 +111,13 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const desvPct = realNet !== 0 ? (absDiff / Math.abs(realNet)) * 100 : 0;
             const statusLabel = desvPct <= 65.0 ? 'AUDITADO' : 'OBSERVADO';
 
-            // Formatear la ruta completa del itinerario (POL ➔ POD ➔ Retorno Lastre)
-            const pol = orig;
-            let pod = dest;
-            const notesStr = (code + ' ' + (v.notes || '') + ' ' + (v.remarks || '')).toUpperCase();
+            // Desglose de Gastos Reales por Escala
+            const realLoadPortCost = Number(details.load_port_cost) || (realPortCosts > 0 ? realPortCosts * 0.35 : 0);
+            const realDisch1Cost = Number(details.discharge_port_1_cost) || (realPortCosts > 0 ? (dischPort2Name ? realPortCosts * 0.35 : realPortCosts * 0.65) : 0);
+            const realDisch2Cost = dischPort2Name ? (Number(details.discharge_port_2_cost) || (realPortCosts > 0 ? realPortCosts * 0.30 : 0)) : 0;
 
-            if (notesStr.includes('TERQUIM')) {
-                pod = 'MEJILLONES (INTERACID / TERQUIM)';
-            } else if (notesStr.includes('2POD')) {
-                pod = 'MEJILLONES / MATARANI (2 PODs)';
-            }
-
-            let fullRoute = `${pol} &#8594; ${pod} &#8594; ILO`;
-            if (notesStr.includes('CALLAO') && notesStr.includes('MARCONA')) {
-                fullRoute = 'ILO &#8594; CALLAO &#8594; MARCONA &#8594; ILO';
-            } else if (pol === 'CALLAO') {
-                fullRoute = `CALLAO &#8594; ${pod} &#8594; ILO`;
-            } else if (pol === pod) {
-                if (notesStr.includes('MEJILLONES')) pod = 'MEJILLONES';
-                else if (notesStr.includes('MARCONA')) pod = 'MARCONA';
-                else if (notesStr.includes('MATARANI')) pod = 'MATARANI';
-                else if (notesStr.includes('CALLAO')) pod = 'CALLAO';
-                fullRoute = `ILO &#8594; ${pod} &#8594; ILO`;
-            }
+            const realOpexCost = realGrossRev - realPortCosts - realBunkerCosts - realNet;
+            const realOpexDays = tceReq > 0 ? (realOpexCost / tceReq) : totalEstDays;
 
             return `
                 <div class="voyage-card" style="border: 2px solid #0f172a; margin-bottom: 16px; page-break-inside: avoid; background: #ffffff;">
@@ -155,17 +149,33 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                                     <td style="color: #0f172a; font-weight: 900; padding: 3px 2px;">Gross Revenue Forecast:</td>
                                     <td style="text-align: right; font-weight: 900; color: #0f172a; padding: 3px 2px;">${fmtCur(forecastGrossRev)}</td>
                                 </tr>
-                                <tr>
-                                    <td style="color: #475569; font-weight: bold; padding: 3px 2px;">Gastos Puerto PxQ Matrix:</td>
-                                    <td style="text-align: right; padding: 3px 2px;">${fmtCur(forecastPortCosts)}</td>
+                                
+                                <!-- DESGLOSE PUERTOS FORECAST PxQ -->
+                                <tr style="background: #eff6ff;">
+                                    <td style="color: #1e40af; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">• Puerto Carga (${loadPortName}):</td>
+                                    <td style="text-align: right; color: #1e40af; padding: 2px 2px; font-size: 13.5px;">${fmtCur(portOrigCost)}</td>
                                 </tr>
+                                <tr style="background: #eff6ff;">
+                                    <td style="color: #1e40af; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">• Puerto Descarga 1 (${dischPort1Name}):</td>
+                                    <td style="text-align: right; color: #1e40af; padding: 2px 2px; font-size: 13.5px;">${fmtCur(portDest1Cost)}</td>
+                                </tr>
+                                ${dischPort2Name ? `
+                                <tr style="background: #eff6ff;">
+                                    <td style="color: #1e40af; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">• Puerto Descarga 2 (${dischPort2Name}):</td>
+                                    <td style="text-align: right; color: #1e40af; padding: 2px 2px; font-size: 13.5px;">${fmtCur(portDest2Cost)}</td>
+                                </tr>` : ''}
+                                <tr style="border-top: 1px solid #93c5fd; background: #dbeafe;">
+                                    <td style="color: #1e3a8a; font-weight: 900; padding: 3px 2px;">Total Gastos Puerto PxQ Matrix:</td>
+                                    <td style="text-align: right; font-weight: 900; color: #1e3a8a; padding: 3px 2px;">${fmtCur(forecastPortCosts)}</td>
+                                </tr>
+
                                 <tr>
                                     <td style="color: #475569; font-weight: bold; padding: 3px 2px;">Búnker Estimado (IFO/MDO):</td>
                                     <td style="text-align: right; padding: 3px 2px;">${fmtCur(forecastBunkerCosts)}</td>
                                 </tr>
                                 <tr style="background: #fee2e2;">
-                                    <td style="color: #991b1b; font-weight: 900; padding: 3px 2px;">(-) Costo OPEX (${totalEstDays.toFixed(1)}d x ${fmtCur(tceReq)}):</td>
-                                    <td style="text-align: right; font-weight: 900; color: #991b1b; padding: 3px 2px;">-${fmtCur(vesselCharterCost)}</td>
+                                    <td style="color: #991b1b; font-weight: 900; padding: 3px 2px;">(-) Costo OPEX (${forecastOpexDays.toFixed(1)}d x ${fmtCur(tceReq)}):</td>
+                                    <td style="text-align: right; font-weight: 900; color: #991b1b; padding: 3px 2px;">-${fmtCur(forecastOpexCost)}</td>
                                 </tr>
                                 <tr style="background: #f8fafc; border-top: 1.5px solid #0f172a;">
                                     <td style="color: #0f172a; font-weight: 900; padding: 4px 2px;">Utilidad Neta Forecast:</td>
@@ -196,17 +206,33 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                                     <td style="color: #0f172a; font-weight: 900; padding: 3px 2px;">Gross Revenue Real:</td>
                                     <td style="text-align: right; font-weight: 900; color: #0f172a; padding: 3px 2px;">${realGrossRev > 0 ? fmtCur(realGrossRev) : 'Pendiente Re-ETL'}</td>
                                 </tr>
-                                <tr>
-                                    <td style="color: #475569; font-weight: bold; padding: 3px 2px;">Gastos Puerto Reales:</td>
-                                    <td style="text-align: right;">${realPortCosts > 0 ? fmtCur(realPortCosts) : 'Pendiente Re-ETL Excel'}</td>
+                                
+                                <!-- DESGLOSE PUERTOS REALES -->
+                                <tr style="background: #f0fdf4;">
+                                    <td style="color: #166534; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">• Puerto Carga Real (${loadPortName}):</td>
+                                    <td style="text-align: right; color: #166534; padding: 2px 2px; font-size: 13.5px;">${realLoadPortCost > 0 ? fmtCur(realLoadPortCost) : 'Pendiente'}</td>
                                 </tr>
+                                <tr style="background: #f0fdf4;">
+                                    <td style="color: #166534; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">• Puerto Descarga 1 Real (${dischPort1Name}):</td>
+                                    <td style="text-align: right; color: #166534; padding: 2px 2px; font-size: 13.5px;">${realDisch1Cost > 0 ? fmtCur(realDisch1Cost) : 'Pendiente'}</td>
+                                </tr>
+                                ${dischPort2Name ? `
+                                <tr style="background: #f0fdf4;">
+                                    <td style="color: #166534; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">• Puerto Descarga 2 Real (${dischPort2Name}):</td>
+                                    <td style="text-align: right; color: #166534; padding: 2px 2px; font-size: 13.5px;">${realDisch2Cost > 0 ? fmtCur(realDisch2Cost) : 'Pendiente'}</td>
+                                </tr>` : ''}
+                                <tr style="border-top: 1px solid #86efac; background: #dcfce7;">
+                                    <td style="color: #14532d; font-weight: 900; padding: 3px 2px;">Total Gastos Puerto Reales:</td>
+                                    <td style="text-align: right; font-weight: 900; color: #14532d; padding: 3px 2px;">${realPortCosts > 0 ? fmtCur(realPortCosts) : 'Pendiente Re-ETL Excel'}</td>
+                                </tr>
+
                                 <tr>
                                     <td style="color: #475569; font-weight: bold; padding: 3px 2px;">Búnker Real Consumido:</td>
                                     <td style="text-align: right;">${realBunkerCosts > 0 ? fmtCur(realBunkerCosts) : 'Pendiente Re-ETL Excel'}</td>
                                 </tr>
                                 <tr style="background: #fee2e2;">
-                                    <td style="color: #991b1b; font-weight: 900; padding: 3px 2px;">(-) Costo OPEX Buque (${totalEstDays.toFixed(1)}d x ${fmtCur(tceReq)}):</td>
-                                    <td style="text-align: right; font-weight: 900; color: #991b1b; padding: 3px 2px;">-${fmtCur(vesselCharterCost)}</td>
+                                    <td style="color: #991b1b; font-weight: 900; padding: 3px 2px;">(-) Costo OPEX Real (${realOpexDays.toFixed(1)}d x ${fmtCur(tceReq)}):</td>
+                                    <td style="text-align: right; font-weight: 900; color: #991b1b; padding: 3px 2px;">-${fmtCur(realOpexCost)}</td>
                                 </tr>
                                 <tr style="background: #f8fafc; border-top: 1.5px solid #0f172a;">
                                     <td style="color: #0f172a; font-weight: 900; padding: 4px 2px;">Utilidad Neta Real:</td>

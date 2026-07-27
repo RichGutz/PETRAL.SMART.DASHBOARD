@@ -83,17 +83,48 @@ def run_non_plus_ultra_qc():
             round_numbers_flagged += 1
 
         # Distancia ajustada por itinerario real
-        dist_laden = 450.0
-        if "MEJILLONES" in dest_port:
-            dist_laden = 335.0
-        elif "MARCONA" in dest_port:
-            dist_laden = 283.0
-        elif "MATARANI" in dest_port:
-            dist_laden = 69.0
-        elif "CALLAO" in dest_port:
-            dist_laden = 470.0
+        stops_clean = details.get("stops_clean") or v.get("stops") or [orig_port, dest_port, "ILO"]
+        
+        # Mapa de distancias entre puertos (Millas Naúticas NM)
+        DIST_MAP = {
+            ('ILO', 'MEJILLONES'): 335.0,
+            ('ILO', 'MARCONA'): 283.0,
+            ('ILO', 'MATARANI'): 69.0,
+            ('ILO', 'CALLAO'): 470.0,
+            ('CALLAO', 'MATARANI'): 470.0,
+            ('CALLAO', 'MARCONA'): 230.0,
+            ('MATARANI', 'ILO'): 69.0,
+            ('MARCONA', 'ILO'): 283.0,
+            ('MEJILLONES', 'ILO'): 335.0,
+        }
 
-        # Construir itinerario con tramo de Lastre (BALLAST) de retorno a ILO
+        def get_dist(p1, p2):
+            k1 = (p1.split()[0].upper(), p2.split()[0].upper())
+            if k1 in DIST_MAP: return DIST_MAP[k1]
+            return 300.0
+
+        # Construir tramos dinámicos 100% basados en las escalas reales de la base de datos
+        tramos = []
+        for i in range(len(stops_clean) - 1):
+            p_from = stops_clean[i]
+            p_to = stops_clean[i+1]
+            d_nm = get_dist(p_from, p_to)
+            
+            is_last = (i == len(stops_clean) - 2)
+            t_type = "BALLAST" if is_last and "ILO" in p_to.upper() and i > 0 else "LADEN"
+            q_val = cargo_qty if t_type == "LADEN" else 0
+            f_val = freight_rate if t_type == "LADEN" and i == 0 else 0
+
+            tramos.append({
+                "type": t_type,
+                "origin_port_id": p_from.split()[0].upper(),
+                "destination_port_id": p_to.split()[0].upper(),
+                "quantity": q_val,
+                "freight_rate": f_val,
+                "route_distance": d_nm
+            })
+
+        # Construir itinerario completo
         payload = {
             "vessel_id": v_vessel,
             "port_cost_mode": "matrix",
@@ -106,24 +137,7 @@ def run_non_plus_ultra_qc():
                 "consumption_sea_mdo": 1.0,
                 "consumption_idle_mdo": 0.2
             },
-            "tramos": [
-                {
-                    "type": "LADEN",
-                    "origin_port_id": orig_port,
-                    "destination_port_id": dest_port,
-                    "quantity": cargo_qty,
-                    "freight_rate": freight_rate,
-                    "route_distance": dist_laden
-                },
-                {
-                    "type": "BALLAST",
-                    "origin_port_id": dest_port,
-                    "destination_port_id": "ILO",
-                    "quantity": 0,
-                    "freight_rate": 0,
-                    "route_distance": dist_laden
-                }
-            ]
+            "tramos": tramos
         }
 
         # Ejecutar simulación matemática Spot Matrix

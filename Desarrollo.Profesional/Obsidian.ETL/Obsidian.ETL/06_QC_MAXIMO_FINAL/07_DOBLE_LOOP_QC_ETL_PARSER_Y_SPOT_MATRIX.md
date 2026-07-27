@@ -92,6 +92,7 @@ El **Doble Loop de Auditoría** corrige de raíz esta desviación estableciendo 
    $$\text{P/L (Q20)} = \text{Voyage Result (N18)} - (\text{Duration Q14} \times \text{TCE Req Q18})$$
 3. **Re-Sincronización de Supabase DB**:
    - Ejecutar la actualización en `voyage_liquidations` sobre la columna `details` y columnas nativas `gross_revenue_usd`, `net_profit_usd`, `tce_req_usd_day`.
+   - **Prohibición de Cadenas Hardcoded**: Queda terminantemente prohibido hardcodear rutas estáticas (ej. `ILO -> ILO -> ILO`). La ruta y las escalas se leen 100% dinámicamente desde `details.itinerary`.
 
 ---
 
@@ -99,7 +100,22 @@ El **Doble Loop de Auditoría** corrige de raíz esta desviación estableciendo 
 
 1. **Simulación del Motor Spot Matrix Mode**:
    - Ejecutar `run_qc_loop_non_plus_ultra.py` consumiendo los registros saneados de Supabase.
+   - Extraer cada escala de la rotación para evaluar el costo $P \times Q$ real de cada tramo (Carga + Descarga 1 + Descarga 2 si aplica).
 2. **Renderizado en la Herramienta "Auditoría PDF Liquidaciones"**:
    - Desplegar viaje por viaje las fichas side-by-side en formato sobrio impreso `A4 Landscape` con fuente de **$15\text{px} - 20\text{px}$** y scroll en pantalla.
+   - Desglosar explícitamente en ambos lados (Forecast PxQ y Ejecución Real) las filas independientes por cada escala (Carga, Descarga 1, Descarga 2).
 3. **Impresión & Acta de Junta Directiva**:
    - Generación de reportes limpios con los logos corporativos de **PETRAL** (izquierda) y **GEEKSOFT** (derecha).
+
+---
+
+## 6. 🚨 Regla de Oro de Extracción Dinámica y Apertura de Gastos Portuarios
+
+1. **Lectura Dinámica de Itinerarios (`details.itinerary`)**:
+   - Los puertos de origen, descarga intermedia y retorno a lastre deben construirse dinámicamente concatenando las escalas de `details.itinerary` con el conector `➔` (ej: `ILO ➔ MEJILLONES ➔ ILO`, `ILO ➔ MEJILLONES TPM ➔ MEJILLONES TERQUIM ➔ ILO`, `CALLAO ➔ MATARANI ➔ ILO`).
+2. **Desglose Abierto de Gastos de Puerto**:
+   - Tanto el modelo predictivo ($P \times Q$) como el reporte de auditoría real deben mostrar las filas desagregadas por cada puerto:
+     - `Costo Puerto Carga (POL)`
+     - `Costo Puerto Descarga 1 (POD 1)`
+     - `Costo Puerto Descarga 2 (POD 2)` (si aplica)
+     - `Total Gastos Portuarios`
