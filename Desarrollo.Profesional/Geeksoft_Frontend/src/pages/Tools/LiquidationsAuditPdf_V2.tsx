@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { LiquidationsExecutivePdfAudit } from '../../components/CommercialForecast/LiquidationsExecutivePdfAudit';
-import { ForecastService } from '../../services/api';
 import { FileCheck2, Loader2, Database } from 'lucide-react';
 
 export const LiquidationsAuditPdf_V2: React.FC = () => {
@@ -9,20 +8,51 @@ export const LiquidationsAuditPdf_V2: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchLiquidations = async () => {
+        let isMounted = true;
+
+        const fetchLiquidationsDirect = async () => {
             try {
                 setLoading(true);
-                const data = await ForecastService.getVoyageLiquidations();
-                setLiquidations(data || []);
-            } catch (err) {
-                console.error("Error al cargar liquidaciones reales para reporte PDF:", err);
-                setError("No se pudieron cargar los datos de liquidaciones reales desde Supabase.");
+                const supabaseUrl = "https://hjjxooxcpvlvbaxgifbn.supabase.co/rest/v1/voyage_liquidations?select=*&order=voyage_code.asc";
+                const serviceKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqanhvb3hjcHZsdmJheGdpZmJuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjI1MDk0NCwiZXhwIjoyMDk3ODI2OTQ0fQ.i8KkZtLSDEqaNo15NH3easZV6vhHIbqoYD7ps4pkOMc";
+                
+                const res = await fetch(supabaseUrl, {
+                    headers: {
+                        'apikey': serviceKey,
+                        'Authorization': `Bearer ${serviceKey}`
+                    }
+                });
+
+                if (!res.ok) {
+                    throw new Error(`HTTP Error ${res.status}`);
+                }
+
+                const data = await res.json();
+                
+                if (isMounted) {
+                    if (Array.isArray(data) && data.length > 0) {
+                        setLiquidations(data);
+                    } else {
+                        setError("No se encontraron registros de liquidaciones en la base de datos.");
+                    }
+                }
+            } catch (err: any) {
+                console.error("Error directo al cargar liquidaciones desde Supabase REST:", err);
+                if (isMounted) {
+                    setError("No se pudieron cargar los datos de liquidaciones reales desde Supabase.");
+                }
             } finally {
-                setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
         };
 
-        fetchLiquidations();
+        fetchLiquidationsDirect();
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     return (

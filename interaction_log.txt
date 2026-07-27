@@ -1,8 +1,5 @@
-[2026-07-27 01:37:15] - Corrección de la Herramienta Auditoría Final PDF (Iframe Render & API Supabase)
-- Diagnóstico del error de traba ("Procesando..."):
-  * Existencia de comentarios sintácticos JSX `{/* ... */}` dentro del template string HTML en LiquidationsExecutivePdfAudit.tsx.
-  * Remoción total de comentarios JSX dentro del HTML del iframe, reemplazándolos por HTML estándar `<!-- ... -->`.
-- Optimización en api.ts:
-  * Agregado de ordenación explícita `order=voyage_code.asc` para Supabase REST API en `getVoyageLiquidations`.
-- Verificación limpia de TypeScript / Vite en 3.02s (npm run build).
+[2026-07-27 01:43:15] - Restauración Invariable desde Git del Componente Auditoría Final (VoyageLedgerFinal.tsx)
+- Recuperación del commit 92d18d9 ("OK.HTA.AUDITORIA"):
+  * Restablecimiento exacto de la maquetación visual, colores sobrios sin fondos oscuros y estructura original del reporte PDF.
+- Verificación limpia de TypeScript / Vite en 3.15s (npm run build).
 - Publicación y sincronización en repositorio Git origin main.

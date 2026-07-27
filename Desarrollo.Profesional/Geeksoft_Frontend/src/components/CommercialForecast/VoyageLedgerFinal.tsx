@@ -3,17 +3,7 @@ import { Label } from "../ui/label";
 import { Printer, RefreshCw } from "lucide-react";
 import { ForecastService } from '../../services/api';
 
-interface VoyageLedgerFinalProps {
-    portCostMode?: 'static' | 'matrix';
-    initialClientId?: string;
-    initialVesselId?: string;
-}
-
-export const VoyageLedgerFinal: React.FC<VoyageLedgerFinalProps> = ({ 
-    portCostMode = 'static',
-    initialClientId,
-    initialVesselId = "MOQUEGUA"
-}) => {
+export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }> = ({ portCostMode = 'static' }) => {
     const [localPortCostMode, setLocalPortCostMode] = useState<'static' | 'matrix'>(portCostMode);
     useEffect(() => { setLocalPortCostMode(portCostMode); }, [portCostMode]);
 
@@ -25,9 +15,8 @@ export const VoyageLedgerFinal: React.FC<VoyageLedgerFinalProps> = ({
     const [vessels, setVessels] = useState<any[]>([]);
     
     // Selections
-    const [selectedClientId, setSelectedClientId] = useState<string>(initialClientId || "SPCC");
-    const [selectedVesselId, setSelectedVesselId] = useState<string>(initialVesselId || "MOQUEGUA");
-
+    const [selectedClientId, setSelectedClientId] = useState<string>("SPCC");
+    const [selectedVesselId, setSelectedVesselId] = useState<string>("MOQUEGUA");
 
     const [consolidatedResults, setConsolidatedResults] = useState<any[]>([]);
 
