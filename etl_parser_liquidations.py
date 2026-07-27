@@ -26,7 +26,7 @@ def parse_jn_sheet(wb, sheet_name):
     cargo_charterer = ws.cell(row=15, column=2).value or 'SPCC'
     freight_rate = float(ws.cell(row=15, column=3).value or 0)
     qty_mt = float(ws.cell(row=15, column=5).value or 0)
-    gross_rev = float(ws.cell(row=15, column=7).value or 0)
+    gross_rev = float(ws.cell(row=15, column=7).value or ws.cell(row=14, column=14).value or 0)
     if gross_rev == 0 and qty_mt > 0 and freight_rate > 0:
         gross_rev = qty_mt * freight_rate
 
@@ -57,14 +57,15 @@ def parse_jn_sheet(wb, sheet_name):
         pol_port = stops[0]
         pod_port = stops[-1]
 
-    # Port & Bunker Expenses
-    agency_cost = float(ws.cell(row=48, column=4).value or 0)
-    bunker_cost = float(ws.cell(row=48, column=19).value or 0)
+    # Port & Bunker Expenses (Lectura exacta N15/N16 + C48/S48)
+    agency_cost = float(ws.cell(row=15, column=14).value or ws.cell(row=48, column=3).value or ws.cell(row=48, column=4).value or 0)
+    bunker_cost = float(ws.cell(row=16, column=14).value or ws.cell(row=48, column=19).value or 0)
 
     # Consumption & Duration (Estimates)
-    sea_days = float(ws.cell(row=5, column=19).value or 0) if ws.max_column >= 19 else 0
-    tce_usd = float(ws.cell(row=17, column=17).value or 0) if ws.max_column >= 17 else 0
-    net_profit = float(ws.cell(row=20, column=17).value or 0) if ws.max_column >= 17 else 0
+    sea_days = float(ws.cell(row=5, column=19).value or ws.cell(row=15, column=17).value or 0)
+    tce_usd = float(ws.cell(row=17, column=17).value or 0)
+    tce_req = float(ws.cell(row=18, column=17).value or 13000.0)
+    net_profit = float(ws.cell(row=20, column=17).value or 0)
 
     client_name = 'NEXA' if 'NEXA' in str(cargo_charterer).upper() or 'NEXA' in sheet_name.upper() else 'SPCC'
 
@@ -103,7 +104,7 @@ def parse_jn_sheet(wb, sheet_name):
         "freight_rate_usd": freight_rate,
         "gross_revenue_usd": gross_rev,
         "tce_usd_day": tce_usd,
-        "tce_req_usd_day": 13000.0,
+        "tce_req_usd_day": tce_req,
         "pcm_usd": gross_rev - bunker_cost - agency_cost,
         "net_profit_usd": net_profit if net_profit != 0 else (gross_rev - bunker_cost - agency_cost),
         "details": json.dumps(details)
@@ -122,7 +123,9 @@ def parse_mec_sheet(wb, sheet_name):
     cargo_charterer = ws.cell(row=15, column=2).value or 'SPCC'
     freight_rate = float(ws.cell(row=15, column=3).value or 0)
     qty_mt = float(ws.cell(row=15, column=5).value or 0)
-    gross_rev = float(ws.cell(row=15, column=7).value or 0)
+    gross_rev = float(ws.cell(row=23, column=8).value or ws.cell(row=14, column=14).value or ws.cell(row=15, column=7).value or 0)
+    if gross_rev == 0 and qty_mt > 0 and freight_rate > 0:
+        gross_rev = qty_mt * freight_rate
 
     # KPIs block on right (Cols 14-20)
     tce_usd = float(ws.cell(row=17, column=17).value or 0)
@@ -163,9 +166,9 @@ def parse_mec_sheet(wb, sheet_name):
         pol_port = stops[0]
         pod_port = stops[-1]
 
-    # Port & Bunker Expenses
-    agency_cost = float(ws.cell(row=48, column=4).value or 0)
-    bunker_cost = float(ws.cell(row=48, column=19).value or 0)
+    # Port & Bunker Expenses (Lectura exacta N15/N16 + C48/S48)
+    agency_cost = float(ws.cell(row=15, column=14).value or ws.cell(row=48, column=3).value or ws.cell(row=48, column=4).value or 0)
+    bunker_cost = float(ws.cell(row=16, column=14).value or ws.cell(row=48, column=19).value or 0)
 
     client_name = 'NEXA' if 'NEXA' in str(cargo_charterer).upper() or 'NEXA' in sheet_name.upper() else 'SPCC'
 
@@ -209,49 +212,3 @@ def parse_mec_sheet(wb, sheet_name):
         "net_profit_usd": pnl_val if pnl_val != 0 else (gross_rev - bunker_cost - agency_cost),
         "details": json.dumps(details)
     }
-
-def main():
-    records = []
-    
-    print("Leyendo JN (B/T Tablones)...")
-    wb_jn = openpyxl.load_workbook(file_jn, data_only=True)
-    for sh in wb_jn.sheetnames:
-        if sh != 'RESUMEN' and ('v.' in sh.lower() or 'tablones' in sh.lower()):
-            try:
-                rec = parse_jn_sheet(wb_jn, sh)
-                if rec:
-                    records.append(rec)
-            except Exception as e:
-                print(f"Error procesando sheet {sh} JN: {e}")
-
-    print("Leyendo MEC (B/T Moquegua)...")
-    wb_mec = openpyxl.load_workbook(file_mec, data_only=True)
-    for sh in wb_mec.sheetnames:
-        if 'resumen' not in sh.lower() and ('v.' in sh.lower() or 'moquegua' in sh.lower() or 'matarani' in sh.lower()):
-            try:
-                rec = parse_mec_sheet(wb_mec, sh)
-                if rec:
-                    records.append(rec)
-            except Exception as e:
-                print(f"Error procesando sheet {sh} MEC: {e}")
-
-    print(f"\nExito! Se parsearon {len(records)} viajes de liquidacion real.")
-    
-    # Escribir SQL insert script de respaldo
-    sql_file = r'C:\Users\rguti\PETRAL.SMART.DASHBOARD\Documentos.Petral\insert_voyage_liquidations.sql'
-    with open(sql_file, 'w', encoding='utf-8') as f:
-        f.write("-- INSERTS DE EJECUCIÓN REAL (JN & MEC)\n\n")
-        for r in records:
-            stops_escaped = r['stops'].replace("'", "''")
-            details_escaped = r['details'].replace("'", "''")
-            vcode = r['voyage_code'].replace("'", "''")
-            pol = r['pol_port'].replace("'", "''")
-            pod = r['pod_port'].replace("'", "''")
-            
-            sql = f"""INSERT INTO voyage_liquidations (voyage_code, vessel_name, client_name, voyage_date, pol_port, pod_port, stops, operator, cargo_quantity_mt, freight_rate_usd, gross_revenue_usd, tce_usd_day, tce_req_usd_day, pcm_usd, net_profit_usd, details) VALUES ('{vcode}', '{r['vessel_name']}', '{r['client_name']}', '{r['voyage_date']}', '{pol}', '{pod}', '{stops_escaped}'::jsonb, '{r['operator']}', {r['cargo_quantity_mt']}, {r['freight_rate_usd']}, {r['gross_revenue_usd']}, {r['tce_usd_day']}, {r['tce_req_usd_day']}, {r['pcm_usd']}, {r['net_profit_usd']}, '{details_escaped}'::jsonb) ON CONFLICT (voyage_code) DO UPDATE SET gross_revenue_usd = EXCLUDED.gross_revenue_usd, net_profit_usd = EXCLUDED.net_profit_usd, details = EXCLUDED.details;\n"""
-            f.write(sql)
-            
-    print(f"Script SQL generado exitosamente en: {sql_file}")
-
-if __name__ == '__main__':
-    main()

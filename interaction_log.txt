@@ -1,7 +1,9 @@
-[2026-07-27 01:11:50] - Creación del Documento Maestro MAPEO_CELDAS_EXCEL_Y_MULTILEG_ETL.md en Obsidian.ETL
-- Creación de MAPEO_CELDAS_EXCEL_Y_MULTILEG_ETL.md en Desarrollo.Profesional/Obsidian.ETL.
-- Incrustación de las capturas de pantalla PNG de respaldo:
-  * Single Leg (mapa_celdas_excel_liquidaciones.png).
-  * Multileg 2 PODs (mapa_excel_2_pod_multileg.png).
-- Documentación de las matrices de celdas y algoritmo de extracción Python con openpyxl.
+[2026-07-27 01:17:15] - Ejecución del LOOP 1 Re-ETL Scraper sobre los 31 Viajes en Supabase DB
+- Actualización de etl_parser_liquidations.py fijando las reglas de extracción celda por celda de los Exceles de liquidaciones:
+  * Single Leg: Port Costs N15, Bunker Costs N16, Net Profit Q20.
+  * Multileg 2 PODs: Total Agency C48, Bunkers S48, Total Freight Income H23 / N14, Net Profit Q20.
+- Ejecución limpia de push_to_supabase.py con upsert masivo on_conflict=voyage_code:
+  "EXITO TOTAL: Se upsertaron los 31 viajes correctamente en Supabase!"
+- Erradicación del mensaje "Pendiente Re-ETL Excel", poblando los montos reales exactos en la base de datos.
+- Verificación limpia de TypeScript / Vite en 3.99s (npm run build).
 - Publicación y sincronización en repositorio Git origin main.
