@@ -29,7 +29,7 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
         'ILO': 16373.15
     };
 
-    // Generación del documento HTML sobrio impreso A4 con Gastos Puerto PxQ Matrix Dinámicos con Centavos (0% Números Planos Ficticios)
+    // Generación del documento HTML sobrio impreso A4 con Gastos Puerto PxQ Matrix Dinámicos con Centavos
     const htmlDoc = useMemo(() => {
         let totalForecastProfit = 0;
         let totalRealProfit = 0;
@@ -43,7 +43,7 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const qty = Number(v.cargo_quantity_mt) || 0;
             const details = v.details || {};
             
-            // --- 📊 DATOS REALES EJECUTADOS (LECTURA 100% ESTRICTA DESDE SUPABASE VOYAGE_LIQUIDATIONS) ---
+            // --- DATOS REALES EJECUTADOS (LECTURA 100% ESTRICTA DESDE SUPABASE VOYAGE_LIQUIDATIONS) ---
             const realRate = Number(v.freight_rate_usd) || 0.0;
             const realGrossRev = Number(v.gross_revenue_usd) || 0.0;
             
@@ -63,7 +63,7 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             totalRealProfit += realNet;
             totalRealTonnage += qty;
 
-            // --- 📄 DATOS FORECAST (SPOT MATRIX MODE CON CÁLCULO PxQ CENTAVOS DINÁMICO REAL) ---
+            // --- DATOS FORECAST (SPOT MATRIX MODE CON CÁLCULO PxQ CENTAVOS DINÁMICO REAL) ---
             const forecastRate = realRate > 0 ? realRate : 25.5;
             const forecastGrossRev = (qty > 0 ? qty : 13500) * forecastRate;
             
@@ -94,7 +94,7 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const statusLabel = desvPct <= 65.0 ? 'AUDITADO' : 'OBSERVADO';
 
             return `
-                <div className="voyage-card" style="border: 2px solid #0f172a; margin-bottom: 16px; page-break-inside: avoid; background: #ffffff;">
+                <div class="voyage-card" style="border: 2px solid #0f172a; margin-bottom: 16px; page-break-inside: avoid; background: #ffffff;">
                     
                     <!-- Cabecera del Viaje -->
                     <div style="background: #0f172a; color: #ffffff; padding: 8px 12px; font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a;">
@@ -270,7 +270,7 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             <body>
                 <div class="paper-container">
                     
-                    {/* Cabecera Corporativa */}
+                    <!-- Cabecera Corporativa -->
                     <div class="header-bar">
                         <img src="${logoPetral}" alt="PETRAL" style="height: 48px; object-fit: contain;" />
                         <div class="header-title">
@@ -280,7 +280,7 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                         <img src="${logoGeeksoft}" alt="GEEKSOFT" style="height: 48px; object-fit: contain;" />
                     </div>
 
-                    {/* Ficha Resumen de KPIs Superior */}
+                    <!-- Ficha Resumen de KPIs Superior -->
                     <div class="kpi-container">
                         <div class="kpi-card">
                             <div class="kpi-title">Flota Auditada</div>
@@ -300,10 +300,10 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                         </div>
                     </div>
 
-                    {/* LISTA DE FICHAS DE VIAJE COMPARATIVAS SIDE-BY-SIDE */}
+                    <!-- LISTA DE FICHAS DE VIAJE COMPARATIVAS SIDE-BY-SIDE -->
                     ${voyageBlocksHtml}
 
-                    {/* CUADRO RESUMEN EJECUTIVO CONSOLIDADO AL PIE DEL PDF */}
+                    <!-- CUADRO RESUMEN EJECUTIVO CONSOLIDADO AL PIE DEL PDF -->
                     <div class="summary-box">
                         <div style="font-size: 16px; font-weight: 900; color: #0f172a; text-transform: uppercase; border-bottom: 2px solid #0f172a; padding-bottom: 6px; margin-bottom: 10px;">
                             📊 RESUMEN EJECUTIVO DE CONSOLIDACIÓN DE FLOTA & PODER PREDICTIVO R²

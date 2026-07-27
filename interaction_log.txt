@@ -1,7 +1,8 @@
-[2026-07-27 01:32:30] - Ejecución del Script Autónomo run_qc_loop_non_plus_ultra.py con las Nuevas Reglas
-- Prueba de fuego de auditoría sobre los 31 viajes de la flota PETRAL:
-  * Cobertura Total: 31 / 31 viajes procesados (100%).
-  * Números Planos/Ficticios Flagged: 0 (CERO números planos en Port Costs o Búnker).
-  * Viaje V.777 Marcona: Port Costs $63,313.00, Bunker Costs $43,501.00, Real Net $140,977.14 -> Estado QC: ✅ PASS.
-- Auditoría tripartita ejecutada limpiamente en terminal Python sin errores.
+[2026-07-27 01:37:15] - Corrección de la Herramienta Auditoría Final PDF (Iframe Render & API Supabase)
+- Diagnóstico del error de traba ("Procesando..."):
+  * Existencia de comentarios sintácticos JSX `{/* ... */}` dentro del template string HTML en LiquidationsExecutivePdfAudit.tsx.
+  * Remoción total de comentarios JSX dentro del HTML del iframe, reemplazándolos por HTML estándar `<!-- ... -->`.
+- Optimización en api.ts:
+  * Agregado de ordenación explícita `order=voyage_code.asc` para Supabase REST API en `getVoyageLiquidations`.
+- Verificación limpia de TypeScript / Vite en 3.02s (npm run build).
 - Publicación y sincronización en repositorio Git origin main.
