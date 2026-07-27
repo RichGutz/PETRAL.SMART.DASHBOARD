@@ -20,6 +20,22 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
         return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(val);
     };
 
+    const fmtDateTime = (dtStr: string) => {
+        if (!dtStr || !dtStr.includes('-')) return 'Programado 12:00 hrs';
+        try {
+            const parts = dtStr.trim().split(' ');
+            const dateParts = parts[0].split('-');
+            const timeStr = parts.length > 1 ? parts[1] : '12:00';
+            const day = dateParts[2] || '01';
+            const monthNum = parseInt(dateParts[1] || '06', 10);
+            const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+            const monthName = months[monthNum - 1] || 'Jun';
+            return `${day}/${monthName} ${timeStr} hrs`;
+        } catch (e) {
+            return dtStr;
+        }
+    };
+
     // Generación del documento HTML sobrio impreso A4 con Gastos Puerto PxQ Matrix Dinámicos con Centavos
     const htmlDoc = useMemo(() => {
         let totalForecastProfit = 0;
@@ -269,13 +285,25 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                                     <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 12.5px;">${(loadPortHrs/24.0).toFixed(2)}d (${loadPortHrs.toFixed(1)}h)</td>
                                 </tr>
                                 <tr style="background: #fdf2f8;">
+                                    <td style="color: #6b21a8; font-weight: bold; padding: 1px 2px; font-size: 11.5px; padding-left: 28px;">📅 Fecha/Hora Arribo (${loadPortName}):</td>
+                                    <td style="text-align: right; color: #6b21a8; font-weight: bold; padding: 1px 2px; font-size: 11.5px;">${fmtDateTime(loadDateTime)}</td>
+                                </tr>
+                                <tr style="background: #fdf2f8;">
                                     <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 16px;">└─ Puerto Descarga 1 Est (${dischPort1Name}):</td>
                                     <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 12.5px;">${(disch1PortHrs/24.0).toFixed(2)}d (${disch1PortHrs.toFixed(1)}h)</td>
+                                </tr>
+                                <tr style="background: #fdf2f8;">
+                                    <td style="color: #6b21a8; font-weight: bold; padding: 1px 2px; font-size: 11.5px; padding-left: 28px;">📅 Fecha/Hora Arribo (${dischPort1Name}):</td>
+                                    <td style="text-align: right; color: #6b21a8; font-weight: bold; padding: 1px 2px; font-size: 11.5px;">${fmtDateTime(disch1DateTime)}</td>
                                 </tr>
                                 ${dischPort2Name ? `
                                 <tr style="background: #fdf2f8;">
                                     <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 16px;">└─ Puerto Descarga 2 Est (${dischPort2Name}):</td>
                                     <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 12.5px;">${(disch2PortHrs/24.0).toFixed(2)}d (${disch2PortHrs.toFixed(1)}h)</td>
+                                </tr>
+                                <tr style="background: #fdf2f8;">
+                                    <td style="color: #6b21a8; font-weight: bold; padding: 1px 2px; font-size: 11.5px; padding-left: 28px;">📅 Fecha/Hora Arribo (${dischPort2Name}):</td>
+                                    <td style="text-align: right; color: #6b21a8; font-weight: bold; padding: 1px 2px; font-size: 11.5px;">${fmtDateTime(disch2DateTime)}</td>
                                 </tr>` : ''}
                                 <tr style="background: #fbcfe8; border-top: 1px solid #f472b6;">
                                     <td style="color: #831843; font-weight: 900; padding: 3px 2px;">Total Permanencia en Puerto Est:</td>
@@ -354,13 +382,25 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                                     <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 12.5px;">${(realPortDays * (loadPortHrs / totalPortHrsEst)).toFixed(2)}d (${(realPortDays * 24 * (loadPortHrs / totalPortHrsEst)).toFixed(1)}h)</td>
                                 </tr>
                                 <tr style="background: #fdf2f8;">
+                                    <td style="color: #6b21a8; font-weight: bold; padding: 1px 2px; font-size: 11.5px; padding-left: 28px;">📅 Fecha/Hora Arribo (${loadPortName}):</td>
+                                    <td style="text-align: right; color: #6b21a8; font-weight: bold; padding: 1px 2px; font-size: 11.5px;">${fmtDateTime(loadDateTime)}</td>
+                                </tr>
+                                <tr style="background: #fdf2f8;">
                                     <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 16px;">└─ Puerto Descarga 1 Real (${dischPort1Name}):</td>
                                     <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 12.5px;">${(realPortDays * (disch1PortHrs / totalPortHrsEst)).toFixed(2)}d (${(realPortDays * 24 * (disch1PortHrs / totalPortHrsEst)).toFixed(1)}h)</td>
+                                </tr>
+                                <tr style="background: #fdf2f8;">
+                                    <td style="color: #6b21a8; font-weight: bold; padding: 1px 2px; font-size: 11.5px; padding-left: 28px;">📅 Fecha/Hora Arribo (${dischPort1Name}):</td>
+                                    <td style="text-align: right; color: #6b21a8; font-weight: bold; padding: 1px 2px; font-size: 11.5px;">${fmtDateTime(disch1DateTime)}</td>
                                 </tr>
                                 ${dischPort2Name ? `
                                 <tr style="background: #fdf2f8;">
                                     <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 16px;">└─ Puerto Descarga 2 Real (${dischPort2Name}):</td>
                                     <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 12.5px;">${(realPortDays * (disch2PortHrs / totalPortHrsEst)).toFixed(2)}d (${(realPortDays * 24 * (disch2PortHrs / totalPortHrsEst)).toFixed(1)}h)</td>
+                                </tr>
+                                <tr style="background: #fdf2f8;">
+                                    <td style="color: #6b21a8; font-weight: bold; padding: 1px 2px; font-size: 11.5px; padding-left: 28px;">📅 Fecha/Hora Arribo (${dischPort2Name}):</td>
+                                    <td style="text-align: right; color: #6b21a8; font-weight: bold; padding: 1px 2px; font-size: 11.5px;">${fmtDateTime(disch2DateTime)}</td>
                                 </tr>` : ''}
                                 <tr style="background: #fbcfe8; border-top: 1px solid #f472b6;">
                                     <td style="color: #831843; font-weight: 900; padding: 3px 2px;">Total Permanencia en Puerto Real:</td>
