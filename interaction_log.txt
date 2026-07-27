@@ -1,10 +1,6 @@
-[2026-07-27 00:32:00] - Actualización de Matriz Comparativa Completa Ejecución Real vs Forecast
-- Inyección en la tabla sobria del documento PDF de las columnas detalladas de comparación para cada uno de los 31 viajes:
-  * Tarifa de Flete ($/MT): Real vs Forecast.
-  * Gastos de Puerto ($ USD): Real (Liquidación Operador) vs Forecast (Matriz Dinámica PxQ).
-  * Búnker Total ($ USD): Real vs Forecast.
-  * Utilidad Neta ($ USD): Real vs Forecast.
-  * TCE Realizado ($/día): Real vs Forecast.
-  * Desviación Neta (%) y Estado de Auditoría.
-- Verificación limpia de TypeScript / Vite en 2.90s (npm run build).
+[2026-07-27 00:34:50] - Implementación de Diseño Paralelo en 2 Bloques: Forecast (Izquierda) vs Ejecución Real (Derecha)
+- Rediseño de la hoja de auditoría PDF para estructurarse en 2 bloques paralelos perfectamente alineados lado a lado:
+  * Bloque Izquierdo: 📄 FORECAST / PRONÓSTICO (SPOT MATRIX MODE) con Flete, Puertos PxQ, Búnker Estimado, Utilidad Net Forecast y TCE Forecast.
+  * Bloque Derecho: 📊 EJECUCIÓN REAL (LIQUIDACIÓN OPERADORES) con Flete Real, Puertos Reales, Búnker Real, Utilidad Net Real y TCE Real.
+- Verificación con compilación limpia en 3.26s (npm run build).
 - Publicación y sincronización en repositorio Git origin main.
