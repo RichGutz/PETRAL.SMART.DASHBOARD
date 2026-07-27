@@ -260,17 +260,21 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                                     <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">• Navegación en Mar Est:</td>
                                     <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 13.5px;">${estSeaDays.toFixed(2)}d (${(estSeaDays * 24).toFixed(1)}h)</td>
                                 </tr>
+                                <tr style="background: #fdf2f8; border-top: 1px dashed #f472b6;">
+                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">• Permanencia en Puerto Est:</td>
+                                    <td style="text-align: right; color: #831843; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">${estPortDays.toFixed(2)}d (${totalPortHrsEst.toFixed(1)}h)</td>
+                                </tr>
                                 <tr style="background: #fdf2f8;">
-                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 12px;">└─ Puerto Carga Est (${loadPortName}):</td>
+                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 16px;">└─ Puerto Carga Est (${loadPortName}):</td>
                                     <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 12.5px;">${(loadPortHrs/24.0).toFixed(2)}d (${loadPortHrs.toFixed(1)}h)</td>
                                 </tr>
                                 <tr style="background: #fdf2f8;">
-                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 12px;">└─ Puerto Descarga 1 Est (${dischPort1Name}):</td>
+                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 16px;">└─ Puerto Descarga 1 Est (${dischPort1Name}):</td>
                                     <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 12.5px;">${(disch1PortHrs/24.0).toFixed(2)}d (${disch1PortHrs.toFixed(1)}h)</td>
                                 </tr>
                                 ${dischPort2Name ? `
                                 <tr style="background: #fdf2f8;">
-                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 12px;">└─ Puerto Descarga 2 Est (${dischPort2Name}):</td>
+                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 16px;">└─ Puerto Descarga 2 Est (${dischPort2Name}):</td>
                                     <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 12.5px;">${(disch2PortHrs/24.0).toFixed(2)}d (${disch2PortHrs.toFixed(1)}h)</td>
                                 </tr>` : ''}
                                 <tr style="background: #fbcfe8; border-top: 1px solid #f472b6;">
@@ -341,17 +345,21 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                                     <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">• Navegación en Mar Real:</td>
                                     <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 13.5px;">${realSeaDays.toFixed(2)}d (${(realSeaDays * 24).toFixed(1)}h)</td>
                                 </tr>
+                                <tr style="background: #fdf2f8; border-top: 1px dashed #f472b6;">
+                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">• Permanencia en Puerto Real:</td>
+                                    <td style="text-align: right; color: #831843; font-weight: bold; padding: 2px 2px; font-size: 13.5px;">${realPortDays.toFixed(2)}d (${(realPortDays * 24).toFixed(1)}h)</td>
+                                </tr>
                                 <tr style="background: #fdf2f8;">
-                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 12px;">└─ Puerto Carga Real (${loadPortName}):</td>
+                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 16px;">└─ Puerto Carga Real (${loadPortName}):</td>
                                     <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 12.5px;">${(realPortDays * (loadPortHrs / totalPortHrsEst)).toFixed(2)}d (${(realPortDays * 24 * (loadPortHrs / totalPortHrsEst)).toFixed(1)}h)</td>
                                 </tr>
                                 <tr style="background: #fdf2f8;">
-                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 12px;">└─ Puerto Descarga 1 Real (${dischPort1Name}):</td>
+                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 16px;">└─ Puerto Descarga 1 Real (${dischPort1Name}):</td>
                                     <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 12.5px;">${(realPortDays * (disch1PortHrs / totalPortHrsEst)).toFixed(2)}d (${(realPortDays * 24 * (disch1PortHrs / totalPortHrsEst)).toFixed(1)}h)</td>
                                 </tr>
                                 ${dischPort2Name ? `
                                 <tr style="background: #fdf2f8;">
-                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 12px;">└─ Puerto Descarga 2 Real (${dischPort2Name}):</td>
+                                    <td style="color: #831843; font-weight: bold; padding: 2px 2px; font-size: 12.5px; padding-left: 16px;">└─ Puerto Descarga 2 Real (${dischPort2Name}):</td>
                                     <td style="text-align: right; color: #831843; padding: 2px 2px; font-size: 12.5px;">${(realPortDays * (disch2PortHrs / totalPortHrsEst)).toFixed(2)}d (${(realPortDays * 24 * (disch2PortHrs / totalPortHrsEst)).toFixed(1)}h)</td>
                                 </tr>` : ''}
                                 <tr style="background: #fbcfe8; border-top: 1px solid #f472b6;">
