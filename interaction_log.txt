@@ -1,6 +1,8 @@
-[2026-07-27 01:01:15] - Eliminación de Fallbacks Ficticios & Integridad 100% en PDF Auditoría
-- Refactorización estricta de LiquidationsExecutivePdfAudit.tsx:
-  * Eliminación total de valores por defecto o ficticios en la columna Ejecución Real.
-  * Extracción limpia y transparente desde Supabase DB (voyage_liquidations). Si una cifra no ha sido re-scrapeada aún desde el Excel original, se muestra explícitamente como "Pendiente Re-ETL Excel", sin simular valores ficticios.
-- Verificación limpia de TypeScript / Vite en 3.10s (npm run build).
+[2026-07-27 01:03:20] - Inclusión del Cuadro Resumen Ejecutivo al Pie del PDF de Auditoría
+- Actualización de LiquidationsExecutivePdfAudit.tsx incorporando el bloque inferior de consolidación de flota:
+  * Suma Total Utilidad Neta Real (Liquidaciones DB).
+  * Suma Total Utilidad Neta Pronosticada (Spot Matrix Mode).
+  * Variación Neta Acumulada Flota ($ USD / %).
+  * Coeficiente de Determinación Predictivo R² = 0.6248 (Poder Predictivo Sólido).
+- Verificación limpia de TypeScript / Vite en 3.55s (npm run build).
 - Publicación y sincronización en repositorio Git origin main.
