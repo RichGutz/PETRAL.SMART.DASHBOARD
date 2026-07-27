@@ -83,7 +83,7 @@ export const MasterAuditActaView: React.FC = () => {
 
         routesData.forEach((route, idx) => {
             const { name, num_legs, client_name, vessel, c, tramos } = route;
-            const trayecto_str = " ➔ ".join([tramos[0].origin_port_id, tramos[0].destination_port_id, tramos[tramos.length - 1].destination_port_id]);
+            const trayecto_str = [tramos[0].origin_port_id, tramos[0].destination_port_id, tramos[tramos.length - 1].destination_port_id].join(" ➔ ");
             const W = 140;
 
             let ascii_txt = `🚢 AUDITANDO RUTA #${idx+1}: ${name} (${num_legs} Piernas)\n`;

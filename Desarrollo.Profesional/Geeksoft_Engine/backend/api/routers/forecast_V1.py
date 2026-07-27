@@ -601,9 +601,12 @@ def delete_spot_route(spot_id: str, is_prospect: bool = False):
 def get_vessels():
     try:
         from backend.database import get_supabase
+        from backend.services.forecast_service import get_cached_masters
         sb = get_supabase()
-        res = sb.table("vessels").select("*").order("display_order").execute()
-        return res.data
+        masters = get_cached_masters(sb)
+        vessels = masters.get("vessels", [])
+        vessels_sorted = sorted(vessels, key=lambda x: x.get("display_order") or 999)
+        return vessels_sorted
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -637,13 +640,15 @@ def get_ports(year: int = 2026):
 def get_routes_master():
     try:
         from backend.database import get_supabase
+        from backend.services.forecast_service import get_cached_masters
         sb = get_supabase()
+        masters = get_cached_masters(sb)
         
-        clients_res = sb.table("routes_clients").select("*").execute()
-        prospects_res = sb.table("routes_quotes").select("*").execute()
+        clients_data = masters.get("routes_clients", [])
+        prospects_data = masters.get("routes_quotes", [])
         
         routes = []
-        for r in (clients_res.data or []):
+        for r in (clients_data or []):
             name = (r.get("name") or "").strip().upper()
             client_group = "SPCC" if name.startswith("SPCC") else ("NEXA" if name.startswith("NEXA") else "NEXA")
             route_id = r.get("client_route_id") or r.get("route_id") or r.get("name")
@@ -654,7 +659,7 @@ def get_routes_master():
                 "_id": route_id
             })
             
-        for r in (prospects_res.data or []):
+        for r in (prospects_data or []):
             route_id = r.get("prospect_route_id") or r.get("route_id") or r.get("name")
             routes.append({
                 **r,
@@ -1402,6 +1407,30 @@ def delete_port_cost_rule(rule_id: str):
         sb = get_supabase()
         sb.table('port_costs_matrix').delete().eq('rule_id', rule_id).execute()
         return {'status': 'success'}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/masters/contracts")
+def get_contracts_master():
+    try:
+        from backend.database import get_supabase
+        from backend.services.forecast_service import get_cached_masters
+        sb = get_supabase()
+        masters = get_cached_masters(sb)
+        
+        contracts = [dict(c) for c in masters.get("contracts", [])]
+        tariffs = masters.get("contract_tariffs", [])
+        
+        # Combine tariffs into contracts
+        for c in contracts:
+            c["tariffs"] = [
+                t for t in tariffs 
+                if t.get("contract_id") == c.get("contract_id") 
+                and t.get("origin_port_id") == c.get("origin_port_id") 
+                and t.get("destination_port_id") == c.get("destination_port_id")
+            ]
+            
+        return contracts
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

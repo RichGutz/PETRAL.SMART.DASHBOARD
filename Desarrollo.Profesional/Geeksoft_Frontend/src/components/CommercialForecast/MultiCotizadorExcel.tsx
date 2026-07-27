@@ -692,7 +692,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 const consSea = Number(vesselParams.consumption_sea_ifo) || 14.0;
                 let totDist = 0, totSeaDays = 0, totPortDays = 0;
                 let totBunker = 0, totPort = 0, ifoTot = 0, mdoTot = 0;
-                const builtTramos = payloadTramos.map((t: any, idx: number) => {
+                const builtTramos = payloadTramos.map((t: any) => {
                     const dist = t.route_distance || 0;
                     const wf = t.weather_factor || 0.03;
                     const sd = dist > 0 ? (dist * (1 + wf)) / (spd * 24) : 0;

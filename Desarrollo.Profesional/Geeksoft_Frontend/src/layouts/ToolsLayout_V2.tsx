@@ -13,6 +13,7 @@ export const ToolsLayout_V2: React.FC = () => {
     let activeTab = 'financial-matrix';
     if (location.pathname.includes('/multicotizador')) activeTab = 'multicotizador';
     else if (location.pathname.includes('/dashboard')) activeTab = 'financial-matrix';
+    else if (location.pathname.includes('/liquidations-pdf-audit')) activeTab = 'liquidations-pdf-audit';
     else if (location.pathname.includes('/liquidations-graphic-analysis')) activeTab = 'liquidations-graphic-analysis';
     else if (location.pathname.includes('/graphic-analysis')) activeTab = 'graphic-analysis';
     else if (location.pathname.includes('/spaghetti-map')) activeTab = 'spaghetti-map';
@@ -28,8 +29,9 @@ export const ToolsLayout_V2: React.FC = () => {
         <MasterTemplate title="Herramientas" subtitle="Análisis y Proyección" activeTab={activeTab}>
             
             <div className="flex-1 flex flex-col gap-6 print:gap-0 print:m-0 h-full">
-                {/* 1. Builder Bar (Shared across all tools) */}
-                <div className="print:hidden">
+                {/* 1. Builder Bar (Shared across interactive modeling tools) */}
+                {activeTab !== 'liquidations-pdf-audit' && activeTab !== 'system-documentation' && activeTab !== 'system-flowchart' && (
+                    <div className="print:hidden">
                     <ForecastBuilder 
                         currentStartDate={context.startDate}
                         currentEndDate={context.endDate}
@@ -101,6 +103,7 @@ export const ToolsLayout_V2: React.FC = () => {
                         }
                     />
                 </div>
+                )}
 
                 {/* 2. Outlet renders the specific tool (Grid, Chart, Map) */}
                 <Outlet />

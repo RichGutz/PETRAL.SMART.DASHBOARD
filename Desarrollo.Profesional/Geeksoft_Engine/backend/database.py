@@ -22,15 +22,16 @@ def get_supabase() -> Client:
     return _supabase_client
 
 def get_db_connection():
+    import urllib.parse
     db_uri = os.getenv("SUPABASE_DB_URI")
     db_password = os.getenv("SUPABASE_DB_PASSWORD")
     
     if not db_uri or not db_password:
         raise ValueError("Faltan credenciales SUPABASE_DB_URI o SUPABASE_DB_PASSWORD en el archivo .env")
         
-    # Reemplazar la contraseña en la URI si contiene el placeholder [PASSWORD]
+    encoded_password = urllib.parse.quote_plus(db_password)
     if "[PASSWORD]" in db_uri:
-        db_uri = db_uri.replace("[PASSWORD]", db_password)
+        db_uri = db_uri.replace("[PASSWORD]", encoded_password)
         
     return psycopg2.connect(db_uri)
 

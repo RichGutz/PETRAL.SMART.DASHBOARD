@@ -5,10 +5,12 @@ from backend.database import get_supabase
 from backend.engine import calculate_voyage_pnl, calculate_baf_adjusted_rate
 from backend.engine_universal import calculate_voyage_pnl_universal, calculate_baf_adjusted_rate_universal
 
+from concurrent.futures import ThreadPoolExecutor
+
 # --- MEMORY CACHE FOR MASTER DATA ---
 _masters_cache = {}
 _cache_time = 0.0
-CACHE_TTL = 30.0  # 30 seconds TTL
+CACHE_TTL = 3600.0  # 1 hora TTL para respuesta instantánea desde memoria RAM
 
 def clear_forecast_cache():
     global _masters_cache, _cache_time
@@ -19,19 +21,22 @@ def get_cached_masters(supabase) -> Dict[str, Any]:
     global _masters_cache, _cache_time
     now = time.time()
     if not _masters_cache or (now - _cache_time) > CACHE_TTL:
-        _masters_cache = {
-            "vessels": safe_fetch(supabase, "vessels"),
-            "distances": safe_fetch(supabase, "distances"),
-            "routes_clients": safe_fetch(supabase, "routes_clients"),
-            "routes_quotes": safe_fetch(supabase, "routes_quotes"),
-            "bunker_prices": safe_fetch(supabase, "bunker_prices"),
-            "ports": safe_fetch(supabase, "ports"),
-            "contracts": safe_fetch(supabase, "contracts"),
-            "contract_tariffs": safe_fetch(supabase, "contract_tariffs"),
-            "port_costs_matrix": safe_fetch(supabase, "port_costs_matrix"),
-            "port_cost_static": safe_fetch(supabase, "port_cost_static"),
-            "vessel_terminal_operations": safe_fetch(supabase, "vessel_terminal_operations")
-        }
+        tables = [
+            "vessels", "distances", "routes_clients", "routes_quotes",
+            "bunker_prices", "ports", "contracts", "contract_tariffs",
+            "port_costs_matrix", "port_cost_static", "vessel_terminal_operations"
+        ]
+        with ThreadPoolExecutor(max_workers=11) as executor:
+            future_to_table = {executor.submit(safe_fetch, supabase, t): t for t in tables}
+            new_cache = {}
+            for future in future_to_table:
+                t = future_to_table[future]
+                try:
+                    new_cache[t] = future.result()
+                except Exception as e:
+                    print(f"Warning: Error al cargar tabla {t} en paralelo: {e}")
+                    new_cache[t] = []
+        _masters_cache = new_cache
         _cache_time = now
     return _masters_cache
 
