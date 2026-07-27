@@ -1,8 +1,8 @@
-[2026-07-27 00:49:20] - Actualización de Fórmula Financiera Oficial de Utilidad Neta en PDF Auditoría
-- Aplicación de la ecuación financiera oficial de PETRAL en LiquidationsExecutivePdfAudit.tsx:
-  * Voyage Result = Gross Revenue - Gastos Puerto PxQ - Búnker Estimado - Comisiones.
-  * Costo OPEX/Time Charter Buque = Días Totales de Viaje x TCE Requerido ($13,000.00 USD/día).
-  * Utilidad Neta Forecast (P/L Net) = Voyage Result - (Días Totales x TCE Requerido).
-- Descuento visible en rojo sobrio de la fila (-) Costo OPEX (Días x TCE Requerido) tanto en el Forecast como en la Ejecución Real.
-- Verificación limpia de TypeScript / Vite en 3.14s (npm run build).
-- Publicación y sincronización en repositorio Git origin main.
+[2026-07-27 00:59:15] - Creación del Documento Técnico Oficial del Doble Loop de Auditoría (ETL Parser + Spot Matrix)
+- Creación en Obsidian del documento:
+  Obsidian.ETL/Obsidian.ETL/06_QC_MAXIMO_FINAL/07_DOBLE_LOOP_QC_ETL_PARSER_Y_SPOT_MATRIX.md.
+- Especificación del protocolo de 2 bucles:
+  1) Loop 1: Auditoría y re-scrapeo de celdas reales en los Exceles maestros de liquidación (Port Costs, Bunker Costs, Revenue).
+  2) Loop 2: Simulación de convergencia Spot Matrix Mode y despliegue HTA PDF Executive side-by-side.
+- Vinculación cruzada en Loop.QC.Non.Plus.Ultra.md.
+- Registro y commit oficial en repositorio Git origin main.

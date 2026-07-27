@@ -91,8 +91,9 @@ Cada uno de los 31 viajes simulados en el Multicotizador Spot con costos dinámi
 
 ---
 
-## 6. 📂 Protocolo de Entregables Locales
+## 6. 📂 Protocolo de Entregables Locales y Doble Loop
 
+- **Documento del Doble Loop**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.ETL\Obsidian.ETL\06_QC_MAXIMO_FINAL\07_DOBLE_LOOP_QC_ETL_PARSER_Y_SPOT_MATRIX.md`
 - **Script de QC Autónomo**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine\run_qc_loop_non_plus_ultra.py`
 - **Nota de Obsidian**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.ETL\Obsidian.ETL\06_QC_MAXIMO_FINAL\Loop.QC.Non.Plus.Ultra.md`
 - **Transcripción de Voz**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\audio_transcrip\LOOP.QC.NON.PLUS.ULTRA.ogg_whisper.txt`
