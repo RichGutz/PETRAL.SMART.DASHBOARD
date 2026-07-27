@@ -58,13 +58,18 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const forecastRate = realRate > 0 ? realRate : 25.5;
             const forecastGrossRev = (qty > 0 ? qty : 13500) * forecastRate;
             
-            // --- RUTA Y ESCALAS 100% DINÁMICAS (DESDE SUPABASE DB DETAILS.STOPS_CLEAN) ---
+            // --- RUTA Y ESCALAS 100% DINÁMICAS (IDENTIFICACIÓN POR PARCELAS CARGA + Y DESCARGA -) ---
             const stopsClean: string[] = details.stops_clean || v.stops || [orig, dest, 'ILO'];
             const fullRoute = details.full_route_str || stopsClean.join(' &#8594; ');
+            const itinerary = details.itinerary || [];
+            
+            // Extraer parcelas positivas de carga y negativas de descarga del itinerario real
+            const loadItems = itinerary.filter((i: any) => Number(i.quantity_mt) > 0);
+            const dischargeItems = itinerary.filter((i: any) => Number(i.quantity_mt) < 0);
 
-            const loadPortName = stopsClean[0] || orig;
-            const dischPort1Name = stopsClean[1] || dest;
-            const dischPort2Name = stopsClean.length > 3 ? stopsClean[2] : null;
+            const loadPortName = loadItems.length > 0 ? loadItems[0].port_name : (stopsClean[0] || orig);
+            const dischPort1Name = dischargeItems.length > 0 ? dischargeItems[0].port_name : (stopsClean[1] || dest);
+            const dischPort2Name = dischargeItems.length > 1 ? dischargeItems[1].port_name : null;
             
             // Días estimados de viaje (Mar + Puerto) ajustados por itinerario
             let estDist = 450.0;
@@ -78,10 +83,6 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             // --- CÁLCULO PxQ DINÁMICO DE TIEMPO EN PUERTO Y MAR LEYENDO PARCELAS EXACTAS DE ITINERARIO ---
             const totalCargoMT = qty > 0 ? qty : 13500;
             const isMultiPod = Boolean(dischPort2Name);
-            const itinerary = details.itinerary || [];
-            
-            // Extraer parcelas negativas de descarga del itinerario real
-            const dischargeItems = itinerary.filter((i: any) => Number(i.quantity_mt) < 0);
             
             let disch1CargoMT = totalCargoMT;
             let disch2CargoMT = 0;
