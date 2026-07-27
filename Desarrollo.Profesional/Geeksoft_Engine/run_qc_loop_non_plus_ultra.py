@@ -16,23 +16,24 @@ def run_full_qc_loop():
     res = sb.table("voyage_liquidations").select("*").order("id").execute()
     voyages = res.data or []
 
-    print("=" * 155)
+    print("=" * 170)
     print("🛡️ EJECUCIÓN DEL LOOP DE QC NON PLUS ULTRA EN LOS 31 VIAJES DE LA FLOTA PETRAL")
-    print("=" * 155)
+    print("=" * 170)
 
     total_audited = len(voyages)
     passed_count = 0
     failed_count = 0
     failures = []
 
-    print(f"{'#':<3} | {'VIAJE CÓDIGO':<28} | {'BUQUE':<14} | {'PUERTO SUMA':<14} | {'TIEMPOS SUMA':<14} | {'POL/POD (+/-)':<16} | {'POL/POD NAME MATCH':<18} | {'ECUACIÓN 4 COMP':<14} | {'ESTADO QC'}")
-    print("-" * 155)
+    print(f"{'#':<3} | {'VIAJE CÓDIGO':<28} | {'BUQUE':<14} | {'PUERTO SUMA':<14} | {'TIEMPOS SUMA':<14} | {'POL/POD (+/-)':<16} | {'2POD COMPLETENESS':<18} | {'ECUACIÓN 4 COMP':<14} | {'ESTADO QC'}")
+    print("-" * 170)
 
     for idx, v in enumerate(voyages, 1):
         code = v.get("voyage_code", "")
         vessel = v.get("vessel_name", "")
         details = v.get("details") or {}
         itin = details.get("itinerary") or []
+        stops = details.get("stops_clean") or []
         
         # 1. Validación Suma Vertical de Gastos de Puerto
         tot_port = float(details.get("port_expenses", {}).get("total_agency_usd", 0) or v.get("total_agency_usd", 0) or 0)
@@ -76,16 +77,12 @@ def run_full_qc_loop():
         else:
             pol_pod_sign_ok = True
 
-        # 4. Validación Nombre Exacto de Puerto POL/POD Match (Verificar que puertos de lastre Q=0 no reciban costos)
-        pol_name_match_ok = True
-        if len(itin) > 0:
-            zero_qty_ports = [i.get("port_name", "") for i in itin if float(i.get("quantity_mt", 0)) == 0]
-            # Si un puerto tiene Q=0, su asignación no puede desplazar el POL de Q>0
-            if "V.763" in code:
-                # V.763 POL DEBE SER CALLAO Y POD DEBE SER MARCONA
-                actual_pol = load_items[0].get("port_name", "") if load_items else ""
-                actual_pod = discharge_items[0].get("port_name", "") if discharge_items else ""
-                pol_name_match_ok = ("CALLAO" in actual_pol.upper()) and ("MARCONA" in actual_pod.upper())
+        # 4. Validación 2POD Completeness (Verificar que si el viaje tiene 2PODs en stops_clean, pod2_cost > 0)
+        is_2pod_route = len(stops) >= 4 and stops[2].upper() != stops[0].upper()
+        if is_2pod_route:
+            pod2_completeness_ok = (pod2_cost > 0) and (abs((load_cost + pod1_cost + pod2_cost) - tot_port) < 0.05)
+        else:
+            pod2_completeness_ok = True
 
         # 5. Ecuación Financiera de 4 Componentes
         gross = float(v.get("gross_revenue_usd") or 0)
@@ -97,7 +94,7 @@ def run_full_qc_loop():
         diff_net = abs(calc_net - round(net, 2))
         eq_ok = diff_net < 1.00
 
-        is_passed = port_sum_ok and time_sum_ok and pol_pod_sign_ok and pol_name_match_ok and eq_ok
+        is_passed = port_sum_ok and time_sum_ok and pol_pod_sign_ok and pod2_completeness_ok and eq_ok
 
         if is_passed:
             passed_count += 1
@@ -110,25 +107,25 @@ def run_full_qc_loop():
                 "port_ok": port_sum_ok,
                 "time_ok": time_sum_ok,
                 "pol_pod_ok": pol_pod_sign_ok,
-                "pol_name_ok": pol_name_match_ok,
+                "2pod_ok": pod2_completeness_ok,
                 "eq_ok": eq_ok
             })
 
-        print(f"{idx:<3} | {code:<28} | {vessel:<14} | {'✅ .00' if port_sum_ok else '❌ DIFF':<14} | {'✅ .00' if time_sum_ok else '❌ DIFF':<14} | {'✅ VALID (+/-)' if pol_pod_sign_ok else '❌ INVALID':<16} | {'✅ MATCH OK' if pol_name_match_ok else '❌ MISMATCH':<18} | {'✅ .00' if eq_ok else '❌ DIFF':<14} | {status_str}")
+        print(f"{idx:<3} | {code:<28} | {vessel:<14} | {'✅ .00' if port_sum_ok else '❌ DIFF':<14} | {'✅ .00' if time_sum_ok else '❌ DIFF':<14} | {'✅ VALID (+/-)' if pol_pod_sign_ok else '❌ INVALID':<16} | {'✅ 2POD OK' if pod2_completeness_ok else '❌ MISSING POD2':<18} | {'✅ .00' if eq_ok else '❌ DIFF':<14} | {status_str}")
 
-    print("=" * 155)
+    print("=" * 170)
     print(f"📊 RESUMEN FINAL AUDITORÍA DE LOOPS QC:")
     print(f"   Total Viajes Auditados: {total_audited}")
     print(f"   Viajes 100% Correctos (PASS): {passed_count} / {total_audited} ({(passed_count/total_audited)*100:.1f}%)")
     print(f"   Viajes con Descalces (FAIL):  {failed_count} / {total_audited}")
-    print("=" * 155)
+    print("=" * 170)
 
     if failures:
         print("\n🚨 DETALLE DE ERRORES DETECTADOS EN EL LOOP:")
         for f in failures:
             print(f"  • {f['code']}")
     else:
-        print("\n🎉 ¡TODOS LOS 31 VIAJES PASARON EL CONTROL DE CALIDAD Y MATCH DE PUERTOS POL/POD (+/-) 100% SIN ERRORES!")
+        print("\n🎉 ¡TODOS LOS 31 VIAJES PASARON LA AUDITORÍA 2POD COMPLETENESS Y TIEMPOS 100% SIN ERRORES!")
 
 if __name__ == "__main__":
     run_full_qc_loop()

@@ -69,7 +69,9 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
 
             const loadPortName = (loadItems.length > 0 && loadItems[0].port_name) ? String(loadItems[0].port_name) : String(stopsClean[0] || orig || 'ILO');
             const dischPort1Name = (dischargeItems.length > 0 && dischargeItems[0].port_name) ? String(dischargeItems[0].port_name) : String(stopsClean[1] || dest || 'MARCONA');
-            const dischPort2Name = (dischargeItems.length > 1 && dischargeItems[1].port_name) ? String(dischargeItems[1].port_name) : null;
+            const dischPort2Name = (dischargeItems.length > 1 && dischargeItems[1].port_name) 
+                ? String(dischargeItems[1].port_name) 
+                : ((stopsClean.length >= 4 && stopsClean[2] && String(stopsClean[2]).toUpperCase() !== String(stopsClean[0]).toUpperCase()) ? String(stopsClean[2]) : null);
             
             // Días estimados de viaje (Mar + Puerto) ajustados por itinerario
             let estDist = 450.0;
