@@ -62,8 +62,8 @@ export const ContractsMaster: React.FC = () => {
     };
 
     const [bunkerPrices, setBunkerPrices] = useState<{ ifo: number; mdo: number; date: string }>({
-        ifo: 655.28,
-        mdo: 1083.84,
+        ifo: 0,
+        mdo: 0,
         date: 'N/A'
     });
 
@@ -88,9 +88,11 @@ export const ContractsMaster: React.FC = () => {
                     const latestDate = sorted[0]?.date || 'N/A';
                     const ifoRow = sorted.find(b => b.fuel_type === 'IFO');
                     const mdoRow = sorted.find(b => b.fuel_type === 'MDO');
+                    const liveIfo = ifoRow ? Number(ifoRow.market_price_usd) || 0 : 0;
+                    const liveMdo = mdoRow ? Number(mdoRow.market_price_usd) || 0 : 0;
                     setBunkerPrices({
-                        ifo: ifoRow ? Number(ifoRow.market_price_usd) || 655.28 : 655.28,
-                        mdo: mdoRow ? Number(mdoRow.market_price_usd) || 1083.84 : 1083.84,
+                        ifo: liveIfo,
+                        mdo: liveMdo,
                         date: latestDate
                     });
                 }
@@ -333,8 +335,8 @@ export const ContractsMaster: React.FC = () => {
     const bafData = useMemo(() => {
         if (!selectedRoute) return null;
 
-        const baseIfo = Number(selectedRoute.bunker_baseline_price_ifo) || 655.28;
-        const baseMdo = Number(selectedRoute.bunker_baseline_price_mdo) || 1083.84;
+        const baseIfo = Number(selectedRoute.bunker_baseline_price_ifo) || bunkerPrices.ifo;
+        const baseMdo = Number(selectedRoute.bunker_baseline_price_mdo) || bunkerPrices.mdo;
         const initialBaf = Number((selectedRoute as any).bunker_baseline_baf_initial) || 2.86;
 
         const coeffIfo = 38.40;
@@ -728,7 +730,7 @@ export const ContractsMaster: React.FC = () => {
                                                                  <label className="block text-[9px] font-bold text-slate-500 mb-1 uppercase">Baseline IFO ($/mt)</label>
                                                                  <input 
                                                                      type="number" step="0.01"
-                                                                     value={selectedRoute.bunker_baseline_price_ifo || 655.28}
+                                                                     value={selectedRoute.bunker_baseline_price_ifo ?? bunkerPrices.ifo}
                                                                      onFocus={(e) => e.target.select()}
                                                                      onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_ifo', e.target.value === '' ? 0 : parseFloat(e.target.value))}
                                                                      className="w-full text-xs border border-slate-300 rounded p-1.5 font-mono"
@@ -738,7 +740,7 @@ export const ContractsMaster: React.FC = () => {
                                                                  <label className="block text-[9px] font-bold text-slate-500 mb-1 uppercase">Baseline MDO ($/mt)</label>
                                                                  <input 
                                                                      type="number" step="0.01"
-                                                                     value={selectedRoute.bunker_baseline_price_mdo || 1083.84}
+                                                                     value={selectedRoute.bunker_baseline_price_mdo ?? bunkerPrices.mdo}
                                                                      onFocus={(e) => e.target.select()}
                                                                      onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_mdo', e.target.value === '' ? 0 : parseFloat(e.target.value))}
                                                                      className="w-full text-xs border border-slate-300 rounded p-1.5 font-mono"
