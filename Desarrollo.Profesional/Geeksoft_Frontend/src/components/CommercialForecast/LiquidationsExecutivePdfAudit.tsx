@@ -112,24 +112,64 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const estPortDays = totalPortHrsEst / 24.0;
             const totalEstDays = estSeaDays + estPortDays;
 
-            // --- CÁLCULO PxQ DINÁMICO DE GASTOS DE PUERTO FORECAST (FUNCIÓN DE TONELAJE Q Y HORAS EN MUELLE) ---
+            // --- CÁLCULO PxQ DINÁMICO DE GASTOS DE PUERTO FORECAST (EN FUNCIÓN DE TONELAJE Q, HORAS Y FECHA/HORA DE MANIOBRA) ---
             const ifoPrice = Number(details.bunker_expenses?.ifo_price_usd_mt) || Number(v.ifo_price_usd) || 650.0;
             const mdoPrice = Number(details.bunker_expenses?.mdo_price_usd_mt) || Number(v.mdo_price_usd) || 1050.0;
 
-            const getPortPxQCost = (portName: any, hrs: number) => {
+            const loadDateTime = (loadItems.length > 0 && loadItems[0].arrival_datetime) 
+                ? String(loadItems[0].arrival_datetime) 
+                : (itinerary.length > 1 && itinerary[1].arrival_datetime ? String(itinerary[1].arrival_datetime) : '');
+
+            const disch1DateTime = (dischargeItems.length > 0 && dischargeItems[0].arrival_datetime) 
+                ? String(dischargeItems[0].arrival_datetime) 
+                : (itinerary.length > 2 && itinerary[2].arrival_datetime ? String(itinerary[2].arrival_datetime) : '');
+
+            const disch2DateTime = (dischargeItems.length > 1 && dischargeItems[1].arrival_datetime) 
+                ? String(dischargeItems[1].arrival_datetime) 
+                : (itinerary.length > 3 && itinerary[3].arrival_datetime ? String(itinerary[3].arrival_datetime) : '');
+
+            const getPortPxQCost = (portName: any, hrs: number, arrivalDateTimeStr?: string) => {
                 const name = String(portName || '').toUpperCase();
-                if (name.includes('ILO')) return 14200.0 + (68.0 * hrs);
-                if (name.includes('MARCONA')) return 42000.0 + (155.0 * hrs);
-                if (name.includes('TERQUIM')) return 30000.0 + (120.0 * hrs);
-                if (name.includes('MEJILLONES')) return 44000.0 + (150.0 * hrs);
-                if (name.includes('CALLAO')) return 26000.0 + (160.0 * hrs);
-                if (name.includes('MATARANI')) return 13500.0 + (105.0 * hrs);
-                return 15000.0 + (100.0 * hrs);
+                let arrHour = 12; // Horario diurno base (12:00 PM)
+                let isSunday = false;
+                let maneuverHrs = 6.0; // Duración de maniobras de practicaje, remolcaje y amarre
+                
+                if (arrivalDateTimeStr && arrivalDateTimeStr.includes(':')) {
+                    try {
+                        const parts = arrivalDateTimeStr.trim().split(' ');
+                        if (parts.length >= 2) {
+                            const timeParts = parts[1].split(':');
+                            arrHour = parseInt(timeParts[0], 10);
+                        }
+                        const dateObj = new Date(arrivalDateTimeStr);
+                        if (!isNaN(dateObj.getTime())) {
+                            isSunday = (dateObj.getDay() === 0);
+                        }
+                    } catch (e) {
+                        arrHour = 12;
+                    }
+                }
+                
+                // --- REGLA DEL CASINO: HORA TÉRMINO DE MANIOBRA = (HORA ARRIBO + TIEMPO MANIOBRAS) % 24 ---
+                const endManeuverHour = Math.floor(arrHour + maneuverHrs) % 24;
+                
+                // Si la HORA DE TÉRMINO de la maniobra entra en el rango 18:00 a 08:00 hrs, aplica sobretiempo nocturno (+25%)
+                const isOvertime = (endManeuverHour < 8 || endManeuverHour >= 18);
+                const otMult = isOvertime ? 1.25 : 1.0;
+                const holMult = isSunday ? 1.50 : 1.0; // Recargo dominical / feriado (+50%)
+
+                if (name.includes('ILO')) return (14200.0 * otMult * holMult) + (68.0 * hrs);
+                if (name.includes('MARCONA')) return (42000.0 * otMult * holMult) + (155.0 * hrs);
+                if (name.includes('TERQUIM')) return (30000.0 * otMult * holMult) + (120.0 * hrs);
+                if (name.includes('MEJILLONES')) return (44000.0 * otMult * holMult) + (150.0 * hrs);
+                if (name.includes('CALLAO')) return (26000.0 * otMult * holMult) + (160.0 * hrs);
+                if (name.includes('MATARANI')) return (13500.0 * otMult * holMult) + (105.0 * hrs);
+                return (15000.0 * otMult * holMult) + (100.0 * hrs);
             };
 
-            const portOrigCost = getPortPxQCost(loadPortName, loadPortHrs);
-            const portDest1Cost = getPortPxQCost(dischPort1Name, disch1PortHrs);
-            const portDest2Cost = dischPort2Name ? getPortPxQCost(dischPort2Name, disch2PortHrs) : 0;
+            const portOrigCost = getPortPxQCost(loadPortName, loadPortHrs, loadDateTime);
+            const portDest1Cost = getPortPxQCost(dischPort1Name, disch1PortHrs, disch1DateTime);
+            const portDest2Cost = dischPort2Name ? getPortPxQCost(dischPort2Name, disch2PortHrs, disch2DateTime) : 0;
             
             const forecastPortCosts = portOrigCost + portDest1Cost + portDest2Cost;
 
