@@ -75,10 +75,13 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const dischPort1Name = stopsClean[1] || dest;
             const dischPort2Name = stopsClean.length > 3 ? stopsClean[2] : null;
             
-            // --- CÁLCULO PxQ DINÁMICO POR ESCALA (FORECAST) ---
-            const portOrigCost = MATRIX_PORT_MAP[loadPortName.split(' ')[0]] || 16373.15;
-            const portDest1Cost = MATRIX_PORT_MAP[dischPort1Name.split(' ')[0]] || 48676.32;
-            const portDest2Cost = dischPort2Name ? (MATRIX_PORT_MAP[dischPort2Name.split(' ')[0]] || 34238.30) : 0;
+            // --- CÁLCULO PxQ DINÁMICO POR ESCALA LEYENDO COSTOS DE DB Y BÚNKER DINÁMICO ---
+            const ifoPrice = Number(details.bunker_expenses?.ifo_price_usd_mt) || Number(v.ifo_price_usd) || 650.0;
+            const mdoPrice = Number(details.bunker_expenses?.mdo_price_usd_mt) || Number(v.mdo_price_usd) || 1050.0;
+
+            const portOrigCost = Number(details.load_port_cost) || MATRIX_PORT_MAP[loadPortName.split(' ')[0]] || (realPortCosts > 0 ? realPortCosts * 0.35 : 16000.0);
+            const portDest1Cost = Number(details.discharge_port_1_cost) || MATRIX_PORT_MAP[dischPort1Name.split(' ')[0]] || (realPortCosts > 0 ? (dischPort2Name ? realPortCosts * 0.35 : realPortCosts * 0.65) : 45000.0);
+            const portDest2Cost = dischPort2Name ? (Number(details.discharge_port_2_cost) || MATRIX_PORT_MAP[dischPort2Name.split(' ')[0]] || (realPortCosts > 0 ? realPortCosts * 0.30 : 34000.0)) : 0;
             
             const forecastPortCosts = portOrigCost + portDest1Cost + portDest2Cost;
             
@@ -124,10 +127,10 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const estPortDays = totalPortHrsEst / 24.0;
             const totalEstDays = estSeaDays + estPortDays;
 
-            // Búnker dinámico según días de mar y maniobra (IFO $655/MT, MDO $1,187/MT)
+            // Búnker dinámico según días de mar y maniobra leyendo precios dinámicos de DB
             const ifoTons = (estSeaDays * 12.0) + (estPortDays * 1.5);
             const mdoTons = (estSeaDays * 1.0) + (estPortDays * 0.2);
-            const forecastBunkerCosts = (ifoTons * 655.28) + (mdoTons * 1083.84);
+            const forecastBunkerCosts = (ifoTons * ifoPrice) + (mdoTons * mdoPrice);
             
             const forecastOpexCost = totalEstDays * tceReq;
             const forecastNet = forecastGrossRev - forecastPortCosts - forecastBunkerCosts - forecastOpexCost;
