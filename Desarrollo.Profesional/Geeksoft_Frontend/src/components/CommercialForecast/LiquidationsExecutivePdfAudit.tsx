@@ -654,35 +654,34 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
     const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
     const handlePrintPdf = () => {
-        // IMPORTANTE: combinedHtml es un documento DISTINTO al del iframe srcDoc.
-        // DynamicAuditViewer usa este mismo patron (wrapper diferente) y funciona sin Sharing Violation.
-        // Si pasamos htmlDoc directamente, Chrome reutiliza el mismo temp file del iframe -> conflicto.
-        const combinedHtml = `<!DOCTYPE html>
+        // Extraemos el contenido del body y los estilos de htmlDoc para construir
+        // un documento nuevo válido — evita HTML inválido anidado y conflicto
+        // de temp files con el iframe srcDoc (causa del Sharing Violation).
+        const bodyContent = htmlDoc
+            .replace(/^[\s\S]*?<body[^>]*>/i, '')
+            .replace(/<\/body>[\s\S]*$/i, '');
+        const headStyles = (htmlDoc.match(/<style[\s\S]*?<\/style>/gi) || []).join('\n');
+
+        const printHtml = `<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Acta Auditoria Liquidaciones PETRAL</title>
-    <style>
-        @page { size: A4 landscape; margin: 0; }
-        @media print {
-            @page { size: A4 landscape; margin: 0; }
-            html, body { margin: 0; padding: 0; }
-        }
-        body { margin: 0; padding: 0; background: #fff; }
-    </style>
+<meta charset="UTF-8">
+<title>Acta Auditoria Liquidaciones PETRAL</title>
+${headStyles}
 </head>
-<body style="margin:0;padding:0;">
-${htmlDoc}
+<body>
+${bodyContent}
 </body>
 </html>`;
+
         const printWin = window.open('', '_blank');
         if (printWin) {
-            printWin.document.write(combinedHtml);
+            printWin.document.write(printHtml);
             printWin.document.close();
             printWin.focus();
             setTimeout(() => printWin.print(), 400);
         } else {
-            alert('No se pudo abrir la ventana de impresion. Por favor habilite las ventanas emergentes (popups).');
+            alert('No se pudo abrir la ventana de impresion. Habilite las ventanas emergentes (popups).');
         }
     };
 
