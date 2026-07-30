@@ -653,35 +653,45 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
 
     const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
-    const handlePrintPdf = () => {
-        // Extraemos el contenido del body y los estilos de htmlDoc para construir
-        // un documento nuevo válido — evita HTML inválido anidado y conflicto
-        // de temp files con el iframe srcDoc (causa del Sharing Violation).
-        const bodyContent = htmlDoc
-            .replace(/^[\s\S]*?<body[^>]*>/i, '')
-            .replace(/<\/body>[\s\S]*$/i, '');
-        const headStyles = (htmlDoc.match(/<style[\s\S]*?<\/style>/gi) || []).join('\n');
+    const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
 
-        const printHtml = `<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Acta Auditoria Liquidaciones PETRAL</title>
-${headStyles}
-</head>
-<body>
-${bodyContent}
-</body>
-</html>`;
+    const handlePrintPdf = async () => {
+        // Generamos el PDF en el backend (weasyprint) para evitar el
+        // Sharing Violation de Windows que ocurre con PDFs grandes via print dialog.
+        setIsGeneratingPdf(true);
+        try {
+            const bodyContent = htmlDoc
+                .replace(/^[\s\S]*?<body[^>]*>/i, '')
+                .replace(/<\/body>[\s\S]*$/i, '');
+            const headStyles = (htmlDoc.match(/<style[\s\S]*?<\/style>/gi) || []).join('\n');
+            const printHtml = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">${headStyles}</head><body>${bodyContent}</body></html>`;
 
-        const printWin = window.open('', '_blank');
-        if (printWin) {
-            printWin.document.write(printHtml);
-            printWin.document.close();
-            printWin.focus();
-            setTimeout(() => printWin.print(), 400);
-        } else {
-            alert('No se pudo abrir la ventana de impresion. Habilite las ventanas emergentes (popups).');
+            const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            const response = await fetch(`${apiBase}/api/v1/utils/generate-pdf`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ html: printHtml, filename: 'acta_auditoria_liquidaciones.pdf' }),
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.detail || `Error ${response.status}`);
+            }
+
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'acta_auditoria_liquidaciones.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
+        } catch (error: any) {
+            console.error('Error generando PDF:', error);
+            alert(`Error al generar PDF: ${error.message}\nVerifica que el servidor backend esté activo.`);
+        } finally {
+            setIsGeneratingPdf(false);
         }
     };
 
@@ -703,11 +713,12 @@ ${bodyContent}
 
                 <button
                     onClick={handlePrintPdf}
-                    className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white font-mono font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-2 cursor-pointer border border-slate-700 shrink-0"
-                    title="Imprimir Acta Oficial a PDF A4 Landscape"
+                    disabled={isGeneratingPdf}
+                    className="px-5 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-60 disabled:cursor-wait text-white font-mono font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-2 cursor-pointer border border-slate-700 shrink-0"
+                    title="Genera y descarga el Acta como PDF via servidor (sin Sharing Violation)"
                 >
                     <Printer size={16} />
-                    <span>Imprimir Acta PDF</span>
+                    <span>{isGeneratingPdf ? 'Generando PDF...' : 'Descargar Acta PDF'}</span>
                 </button>
             </div>
 
