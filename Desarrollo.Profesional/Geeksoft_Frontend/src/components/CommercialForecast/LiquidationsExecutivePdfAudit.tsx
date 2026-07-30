@@ -654,14 +654,35 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
     const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
     const handlePrintPdf = () => {
+        // IMPORTANTE: combinedHtml es un documento DISTINTO al del iframe srcDoc.
+        // DynamicAuditViewer usa este mismo patron (wrapper diferente) y funciona sin Sharing Violation.
+        // Si pasamos htmlDoc directamente, Chrome reutiliza el mismo temp file del iframe -> conflicto.
+        const combinedHtml = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Acta Auditoria Liquidaciones PETRAL</title>
+    <style>
+        @page { size: A4 landscape; margin: 0; }
+        @media print {
+            @page { size: A4 landscape; margin: 0; }
+            html, body { margin: 0; padding: 0; }
+        }
+        body { margin: 0; padding: 0; background: #fff; }
+    </style>
+</head>
+<body style="margin:0;padding:0;">
+${htmlDoc}
+</body>
+</html>`;
         const printWin = window.open('', '_blank');
         if (printWin) {
-            printWin.document.write(htmlDoc);
+            printWin.document.write(combinedHtml);
             printWin.document.close();
             printWin.focus();
             setTimeout(() => printWin.print(), 400);
         } else {
-            alert('No se pudo abrir la ventana de impresión. Por favor habilite las ventanas emergentes (popups).');
+            alert('No se pudo abrir la ventana de impresion. Por favor habilite las ventanas emergentes (popups).');
         }
     };
 
