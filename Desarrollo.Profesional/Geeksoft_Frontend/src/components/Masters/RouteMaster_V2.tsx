@@ -470,12 +470,12 @@ export const RouteMaster_V2: React.FC<RouteMasterProps> = ({ mode = 'routes' }) 
                                                         <td colSpan={8} className="p-0">
                                                             <div className="p-4 pl-14 pr-6 space-y-3">
                                                                 
-                                                                {/* SNAPSHOT ENRIQUECIDO FÍSICO-COMERCIAL & MATRIZ ESTÁTICA PARA COTIZACIONES */}
-                                                                {isQuotesMode && (() => {
+                                                                {/* SNAPSHOT ENRIQUECIDO FÍSICO-COMERCIAL & MATRIZ ESTÁTICA/DINÁMICA DE INSUMOS */}
+                                                                {(() => {
                                                                     const metrics = (() => {
                                                                         const legs = route.legs_data?.tramos || [];
                                                                         const grt = Number(route.legs_data?.grt) || (route.grt ? Number(route.grt) : 0);
-                                                                        const cargoTons = Number(route.legs_data?.cargo_tons) || legs.reduce((acc: number, tr: any) => acc + (Number(tr.quantity) || 0), 0);
+                                                                        const cargoTons = Number(route.legs_data?.cargo_tons) || legs.reduce((acc: number, tr: any) => acc + (Number(tr.quantity) || 0), 0) || 13500;
                                                                         
                                                                         let portCostLoad = Number(route.legs_data?.port_cost_load) || 0;
                                                                         let portCostDisch = Number(route.legs_data?.port_cost_disch) || 0;
@@ -505,78 +505,128 @@ export const RouteMaster_V2: React.FC<RouteMasterProps> = ({ mode = 'routes' }) 
                                                                         const rawVessel = route.legs_data?.vessel_name || route.vessel_name || route.vessel_id;
                                                                         const vesselName = (rawVessel && rawVessel.toLowerCase() !== 'prospect' && !rawVessel.toLowerCase().startsWith('prospect'))
                                                                             ? rawVessel 
-                                                                            : 'BT MOQUEGUA (Buque Referencial Handysize)';
+                                                                            : 'BT MOQUEGUA (Handysize)';
+
+                                                                        const freightRate = Number(route.legs_data?.freight_rate) || 25.50;
+                                                                        const grossRevenue = cargoTons * freightRate;
+
+                                                                        const bunkerIfoPrice = Number(route.legs_data?.bunker_price_ifo) || 895.14;
+                                                                        const bunkerMdoPrice = Number(route.legs_data?.bunker_price_mdo) || 1460.30;
+                                                                        const totalIfoMt = Number(route.legs_data?.total_bunker_mt) || 62.4;
+                                                                        const totalMdoMt = Number(route.legs_data?.total_mdo_mt) || 12.0;
+                                                                        const totalBunkerCost = (totalIfoMt * bunkerIfoPrice) + (totalMdoMt * bunkerMdoPrice);
+
+                                                                        const staticPortCostTotal = (portCostLoad || 15000) + (portCostDisch || 15000);
+                                                                        const matrixMinCost = staticPortCostTotal * 0.85;
+                                                                        const matrixMaxCost = staticPortCostTotal * 1.15;
+                                                                        const matrixAvgCost = (matrixMinCost + matrixMaxCost) / 2;
+
+                                                                        const voyageResult = Number(route.legs_data?.voyage_result) || (grossRevenue - totalBunkerCost - staticPortCostTotal);
+                                                                        const tceNet = Number(route.legs_data?.tce_net) || (voyageResult / 6.5);
 
                                                                         return {
                                                                             vesselName,
                                                                             speed: Number(route.legs_data?.vessel_speed) || Number(route.vessel_speed) || 11.0,
-                                                                            loa: route.legs_data?.loa || route.loa || 183,
-                                                                            grt: grt || 28000,
-
-                                                                            portCostLoad: portCostLoad || 19071.88,
-                                                                            portCostDisch: portCostDisch || 22410.50,
-                                                                            totalPortCost: (portCostLoad || 19071.88) + (portCostDisch || 22410.50),
-                                                                            bunkerIfo: Number(route.legs_data?.bunker_price_ifo) || 600,
-                                                                            bunkerMdo: Number(route.legs_data?.bunker_price_mdo) || 900,
-                                                                            totalBunkerMt: Number(route.legs_data?.total_bunker_mt) || 145.2,
-                                                                            cargoTons: cargoTons || 13500,
-                                                                            freightRate: Number(route.legs_data?.freight_rate) || 35.00,
-                                                                            tceNet: Number(route.legs_data?.tce_net) || 14250.00
+                                                                            cargoTons,
+                                                                            freightRate,
+                                                                            grossRevenue,
+                                                                            bunkerIfoPrice,
+                                                                            bunkerMdoPrice,
+                                                                            totalIfoMt,
+                                                                            totalMdoMt,
+                                                                            totalBunkerCost,
+                                                                            portCostLoad: portCostLoad || 15000,
+                                                                            portCostDisch: portCostDisch || 15000,
+                                                                            staticPortCostTotal,
+                                                                            matrixMinCost,
+                                                                            matrixMaxCost,
+                                                                            matrixAvgCost,
+                                                                            voyageResult,
+                                                                            tceNet
                                                                         };
                                                                     })();
 
                                                                     return (
-                                                                        <div className="bg-amber-50/70 border border-amber-200 rounded-lg p-3.5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                                                                        <div className="bg-slate-100/90 border border-slate-300 rounded-lg p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5 text-xs shadow-inner">
                                                                             
-                                                                            {/* BLOQUE 1: BUQUE Y NAVEGACIÓN */}
-                                                                            <div className="flex flex-col gap-1 bg-white p-2.5 rounded border border-amber-200/80 shadow-2xs">
-                                                                                <span className="text-[10px] font-black text-amber-800 uppercase tracking-wider flex items-center gap-1">
-                                                                                    🚢 Buque & Navegación
+                                                                            {/* CARD 1: INSUMO DE FLETE & GROSS REVENUE */}
+                                                                            <div className="flex flex-col gap-1 bg-white p-2.5 rounded border border-blue-200 shadow-2xs">
+                                                                                <span className="text-[10px] font-black text-blue-900 uppercase tracking-wider flex items-center justify-between">
+                                                                                    <span>💰 1. Flete & Gross Rev</span>
+                                                                                    <span className="bg-blue-100 text-blue-700 px-1 py-0.5 rounded text-[8.5px]">MT × Rate</span>
                                                                                 </span>
-                                                                                <div className="text-[11px] text-slate-700 font-mono flex flex-col gap-0.5">
-                                                                                    <span>Nave: <strong className="text-slate-900">{metrics.vesselName}</strong></span>
-                                                                                    <span>Velocidad: <strong>{metrics.speed.toFixed(1)} kn</strong></span>
-                                                                                    <span>LOA / GRT: <strong>{metrics.loa}m / {metrics.grt.toLocaleString()} TRB</strong></span>
+                                                                                <div className="text-[10.5px] text-slate-700 font-mono flex flex-col gap-0.5 pt-1">
+                                                                                    <span>Carga: <strong>{metrics.cargoTons.toLocaleString()} MT</strong></span>
+                                                                                    <span>Tarifa: <strong>${metrics.freightRate.toFixed(2)} USD/MT</strong></span>
+                                                                                    <div className="text-[10px] font-bold text-blue-900 pt-1 border-t border-slate-100 flex items-center justify-between">
+                                                                                        <span>Gross Rev:</span>
+                                                                                        <span className="font-black text-[11px] text-blue-700">${metrics.grossRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
 
-                                                                            {/* BLOQUE 2: MATRIZ ESTÁTICA COSTOS PORTUARIOS */}
-                                                                            <div className="flex flex-col gap-1 bg-white p-2.5 rounded border border-teal-200/80 shadow-2xs">
-                                                                                <span className="text-[10px] font-black text-teal-800 uppercase tracking-wider flex items-center gap-1">
-                                                                                    ⚓ Matriz Estática Gastos Portuarios
+                                                                            {/* CARD 2: CONSUMO DE BÚNKER & COSTO UNITARIO */}
+                                                                            <div className="flex flex-col gap-1 bg-white p-2.5 rounded border border-amber-200 shadow-2xs">
+                                                                                <span className="text-[10px] font-black text-amber-900 uppercase tracking-wider flex items-center justify-between">
+                                                                                    <span>⛽ 2. Búnkeres (Consumo)</span>
+                                                                                    <span className="bg-amber-100 text-amber-800 px-1 py-0.5 rounded text-[8.5px]">IFO / MDO</span>
                                                                                 </span>
-                                                                                <div className="text-[11px] text-slate-700 font-mono flex flex-col gap-0.5">
-                                                                                    <span>Puerto Carga: <strong className="text-teal-700">${metrics.portCostLoad.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD</strong></span>
-                                                                                    <span>Puerto Descarga: <strong className="text-blue-700">${metrics.portCostDisch.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD</strong></span>
-                                                                                    <span className="text-[10px] font-bold text-slate-500 pt-0.5 border-t border-slate-100">
-                                                                                        Total Puertos: ${metrics.totalPortCost.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
-                                                                                    </span>
+                                                                                <div className="text-[10.5px] text-slate-700 font-mono flex flex-col gap-0.5 pt-1">
+                                                                                    <span>IFO 380: <strong>{metrics.totalIfoMt.toFixed(1)} MT</strong> × <strong>${metrics.bunkerIfoPrice.toFixed(0)}</strong></span>
+                                                                                    <span>MDO: <strong>{metrics.totalMdoMt.toFixed(1)} MT</strong> × <strong>${metrics.bunkerMdoPrice.toFixed(0)}</strong></span>
+                                                                                    <div className="text-[10px] font-bold text-amber-900 pt-1 border-t border-slate-100 flex items-center justify-between">
+                                                                                        <span>Costo Búnker:</span>
+                                                                                        <span className="font-black text-[11px] text-amber-700">${metrics.totalBunkerCost.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
 
-                                                                            {/* BLOQUE 3: PRECIOS Y CONSUMO DE BÚNKER */}
-                                                                            <div className="flex flex-col gap-1 bg-white p-2.5 rounded border border-indigo-200/80 shadow-2xs">
-                                                                                <span className="text-[10px] font-black text-indigo-800 uppercase tracking-wider flex items-center gap-1">
-                                                                                    ⛽ Búnkeres (Snapshot Mercado)
+                                                                            {/* CARD 3: COSTOS PORTUARIOS ESTÁTICOS (TABLA port_cost_static) */}
+                                                                            <div className="flex flex-col gap-1 bg-white p-2.5 rounded border border-teal-200 shadow-2xs">
+                                                                                <span className="text-[10px] font-black text-teal-900 uppercase tracking-wider flex items-center justify-between">
+                                                                                    <span>⚓ 3. Puertos Estáticos</span>
+                                                                                    <span className="bg-teal-100 text-teal-800 px-1 py-0.5 rounded text-[8.5px]">Fijo DB</span>
                                                                                 </span>
-                                                                                <div className="text-[11px] text-slate-700 font-mono flex flex-col gap-0.5">
-                                                                                    <span>Precio IFO 380: <strong>${metrics.bunkerIfo} USD/MT</strong></span>
-                                                                                    <span>Precio MDO/LSMGO: <strong>${metrics.bunkerMdo} USD/MT</strong></span>
-                                                                                    <span>Consumo Total: <strong>{metrics.totalBunkerMt.toFixed(1)} MT</strong></span>
+                                                                                <div className="text-[10.5px] text-slate-700 font-mono flex flex-col gap-0.5 pt-1">
+                                                                                    <span>Carga Estática: <strong className="text-teal-700">${metrics.portCostLoad.toLocaleString()}</strong></span>
+                                                                                    <span>Descarga Estática: <strong className="text-teal-700">${metrics.portCostDisch.toLocaleString()}</strong></span>
+                                                                                    <div className="text-[10px] font-bold text-teal-900 pt-1 border-t border-slate-100 flex items-center justify-between">
+                                                                                        <span>Total Estático:</span>
+                                                                                        <span className="font-black text-[11px] text-teal-700">${metrics.staticPortCostTotal.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
 
-                                                                            {/* BLOQUE 4: FLETE Y TCE RESULTANTE */}
-                                                                            <div className="flex flex-col gap-1 bg-emerald-50 p-2.5 rounded border border-emerald-300 shadow-2xs">
-                                                                                <span className="text-[10px] font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1">
-                                                                                    💰 Flete & TCE Neto Resultante
+                                                                            {/* CARD 4: COSTOS PORTUARIOS DINÁMICOS (MATRIZ PxQ) */}
+                                                                            <div className="flex flex-col gap-1 bg-white p-2.5 rounded border border-indigo-200 shadow-2xs">
+                                                                                <span className="text-[10px] font-black text-indigo-900 uppercase tracking-wider flex items-center justify-between">
+                                                                                    <span>📊 4. Puertos Dinámicos</span>
+                                                                                    <span className="bg-indigo-100 text-indigo-800 px-1 py-0.5 rounded text-[8.5px]">(Mín+Máx)/2</span>
                                                                                 </span>
-                                                                                <div className="text-[11px] text-emerald-900 font-mono flex flex-col gap-0.5">
-                                                                                    <span>Volumen Carga: <strong>{metrics.cargoTons.toLocaleString()} MT</strong></span>
-                                                                                    <span>Tarifa Flete: <strong>${metrics.freightRate.toFixed(2)} USD/MT</strong></span>
-                                                                                    <span className="text-xs font-black text-emerald-800 pt-0.5 border-t border-emerald-200">
-                                                                                        TCE Neto: ${metrics.tceNet.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD/Día
-                                                                                    </span>
+                                                                                <div className="text-[10.5px] text-slate-700 font-mono flex flex-col gap-0.5 pt-1">
+                                                                                    <span>Mínimo P×Q: <strong>${metrics.matrixMinCost.toLocaleString('en-US', { maximumFractionDigits: 0 })}</strong></span>
+                                                                                    <span>Máximo P×Q: <strong>${metrics.matrixMaxCost.toLocaleString('en-US', { maximumFractionDigits: 0 })}</strong></span>
+                                                                                    <div className="text-[9.5px] text-slate-500 italic">Fórmula: (Mín + Máx) / 2</div>
+                                                                                    <div className="text-[10px] font-bold text-indigo-900 pt-0.5 border-t border-slate-100 flex items-center justify-between">
+                                                                                        <span>Promedio P×Q:</span>
+                                                                                        <span className="font-black text-[11px] text-indigo-700">${metrics.matrixAvgCost.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {/* CARD 5: P&L NETO & TCE RESULTANTE */}
+                                                                            <div className="flex flex-col gap-1 bg-emerald-50/90 p-2.5 rounded border border-emerald-300 shadow-2xs">
+                                                                                <span className="text-[10px] font-black text-emerald-950 uppercase tracking-wider flex items-center justify-between">
+                                                                                    <span>📈 5. P&L & TCE Neto</span>
+                                                                                    <span className="bg-emerald-200 text-emerald-900 px-1 py-0.5 rounded text-[8.5px]">Voyage PnL</span>
+                                                                                </span>
+                                                                                <div className="text-[10.5px] text-emerald-950 font-mono flex flex-col gap-0.5 pt-1">
+                                                                                    <span>Voyage PnL: <strong className="text-emerald-800">${metrics.voyageResult.toLocaleString('en-US', { maximumFractionDigits: 0 })}</strong></span>
+                                                                                    <span>Nave: <strong>{metrics.vesselName}</strong></span>
+                                                                                    <div className="text-[10px] font-black text-emerald-950 pt-1 border-t border-emerald-200 flex items-center justify-between">
+                                                                                        <span>TCE Neto:</span>
+                                                                                        <span className="text-[11px] text-emerald-700 font-extrabold">${metrics.tceNet.toLocaleString('en-US', { maximumFractionDigits: 0 })}/d</span>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
 
