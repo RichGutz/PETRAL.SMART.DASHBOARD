@@ -640,30 +640,30 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                         orig_port = tr.get("origin_port_id")
                         dest_port = tr.get("destination_port_id")
 
-                        # Costo de puerto origen: respetar override grabado; recalcular solo si es 0
-                        if float(tr.get("agency_costs_origin", 0)) == 0.0:
-                            if orig_port and tr.get("origin_action", "NONE") != "NONE":
-                                tr["agency_costs_origin"] = calculate_detailed_port_costs(
-                                    client, orig_port, "CARGA", vessel,
-                                    port_costs_data, agency_matrix_data, request.port_cost_mode,
-                                    vparams, float(tr.get("quantity", 0)), contract, ports_db
-                                )["total_cost"]
+                        # Recalcular costos de puerto origen y destino según request.port_cost_mode
+                        if orig_port and tr.get("origin_action", "NONE") != "NONE":
+                            tr["agency_costs_origin"] = calculate_detailed_port_costs(
+                                client, orig_port, "CARGA", vessel,
+                                port_costs_data, agency_matrix_data, request.port_cost_mode,
+                                vparams, float(tr.get("quantity", 0)), contract, ports_db
+                            )["total_cost"]
 
-                        # Costo de puerto destino: respetar override grabado; recalcular solo si es 0
-                        if float(tr.get("agency_costs_destination", 0)) == 0.0:
-                            if dest_port and tr.get("destination_action", "NONE") != "NONE":
-                                tr["agency_costs_destination"] = calculate_detailed_port_costs(
-                                    client, dest_port, "DESCARGA", vessel,
-                                    port_costs_data, agency_matrix_data, request.port_cost_mode,
-                                    vparams, float(tr.get("quantity", 0)), contract, ports_db
-                                )["total_cost"]
+                        if dest_port and tr.get("destination_action", "NONE") != "NONE":
+                            tr["agency_costs_destination"] = calculate_detailed_port_costs(
+                                client, dest_port, "DESCARGA", vessel,
+                                port_costs_data, agency_matrix_data, request.port_cost_mode,
+                                vparams, float(tr.get("quantity", 0)), contract, ports_db
+                            )["total_cost"]
 
                 # --- YIELD PONDERADO: tarifa representativa para la Matriz ---
                 yield_flete = (total_laden_revenue / total_laden_qty) if total_laden_qty > 0 else 0.0
 
                 payload = {
                     "vessel_params": vparams,
-                    "tramos": tramos_copy
+                    "tramos": tramos_copy,
+                    "port_cost_mode": request.port_cost_mode,
+                    "client_id": client,
+                    "vessel_id": vessel
                 }
 
                 from backend.spot_engine import calculate_multicotizador_simulation

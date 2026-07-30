@@ -434,7 +434,7 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
                 sb = get_supabase()
                 masters = get_cached_masters(sb)
                 port_matrix_data = masters.get("port_costs_matrix", [])
-                agency_data = masters.get("agency_matrix", [])
+                agency_data = masters.get("port_cost_static", masters.get("agency_matrix", []))
                 ports_map = masters.get("ports", {})
             except Exception:
                 pass
@@ -460,7 +460,7 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
                 sb = get_supabase()
                 masters = get_cached_masters(sb)
                 port_matrix_data = masters.get("port_costs_matrix", [])
-                agency_data = masters.get("agency_matrix", [])
+                agency_data = masters.get("port_cost_static", masters.get("agency_matrix", []))
                 ports_map = masters.get("ports", {})
             except Exception:
                 pass

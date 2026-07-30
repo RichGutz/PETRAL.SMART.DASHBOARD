@@ -255,14 +255,12 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
         await runSimulationWith(projectionLines, startDate, endDate);
     };
 
-    // NOTA: portCostMode fue eliminado de las dependencias para evitar disparos dobles.
-    // El valor siempre se lee fresco desde portCostModeRef.current dentro de runSimulationWith.
-    // Para forzar recálculo al cambiar portCostMode, usar el botón Recalcular manual.
+    // Reactividad automática ante cambios en projectionLines, fechas o portCostMode
     useEffect(() => {
         if (projectionLines.length > 0) {
             runSimulationWith(projectionLines, startDate, endDate);
         }
-    }, [projectionLines.length, startDate, endDate]);
+    }, [projectionLines.length, startDate, endDate, portCostMode]);
 
     const handleAddLine = (newLine: any) => {
         setIsDirty(true);

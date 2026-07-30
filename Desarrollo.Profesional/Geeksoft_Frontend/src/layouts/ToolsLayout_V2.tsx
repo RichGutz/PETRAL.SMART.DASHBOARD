@@ -54,6 +54,7 @@ export const ToolsLayout_V2: React.FC = () => {
                         showDemurrageDays={context.showDemurrageDays}
                         onDemurrageDaysChange={context.setDemurrageDays}
                         onShowDemurrageDaysChange={context.handleSetShowDemurrageDays}
+                        portCostMode={context.portCostMode}
                         onPortCostModeChange={context.setPortCostMode}
                         bottomRightContent={
                             <>
