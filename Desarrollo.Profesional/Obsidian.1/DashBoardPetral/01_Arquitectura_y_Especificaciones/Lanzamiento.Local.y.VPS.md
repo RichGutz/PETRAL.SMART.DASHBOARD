@@ -1,4 +1,4 @@
-
+C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.1\DashBoardPetral\01_Arquitectura_y_Especificaciones\Lanzamiento.Local.y.VPS.md
 ## ⚡ QUICK COMMANDS — LANZAMIENTO LOCAL
 
 ### 🖥️ Terminal 1 — Backend (Uvicorn)
