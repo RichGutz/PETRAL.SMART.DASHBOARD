@@ -666,8 +666,8 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             const headStyles = (htmlDoc.match(/<style[\s\S]*?<\/style>/gi) || []).join('\n');
             const printHtml = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">${headStyles}</head><body>${bodyContent}</body></html>`;
 
-            const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-            const response = await fetch(`${apiBase}/api/v1/utils/generate-pdf`, {
+            const apiBase = import.meta.env.VITE_API_URL || '/api/v1';
+            const response = await fetch(`${apiBase}/utils/generate-pdf`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ html: printHtml, filename: 'acta_auditoria_liquidaciones.pdf' }),
