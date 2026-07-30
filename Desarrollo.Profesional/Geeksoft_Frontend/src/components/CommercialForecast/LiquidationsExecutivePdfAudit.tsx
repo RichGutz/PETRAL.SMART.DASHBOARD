@@ -654,15 +654,15 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
     const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
     const handlePrintPdf = () => {
-        const printWin = window.open('', '_blank');
-        if (printWin) {
-            printWin.document.write(htmlDoc);
-            printWin.document.close();
-            printWin.focus();
-            setTimeout(() => printWin.print(), 400);
-        } else {
-            alert('No se pudo abrir la ventana de impresión. Por favor habilite las ventanas emergentes (popups).');
+        const blob = new Blob([htmlDoc], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const win = window.open(url, '_blank');
+        if (!win) {
+            alert('No se pudo abrir la ventana. Por favor habilite las ventanas emergentes (popups).');
         }
+        // No llamamos print() automáticamente para evitar Sharing Violation en Windows.
+        // El usuario presiona Ctrl+P en la pestaña nueva para generar el PDF.
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
     };
 
     return (
@@ -684,10 +684,10 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                 <button
                     onClick={handlePrintPdf}
                     className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white font-mono font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-2 cursor-pointer border border-slate-700 shrink-0"
-                    title="Imprimir Acta Oficial a PDF A4 Landscape"
+                    title="Abre el Acta en una pestaña nueva. Luego presiona Ctrl+P para guardar como PDF (evita Sharing Violation en Windows)"
                 >
                     <Printer size={16} />
-                    <span>Imprimir Acta PDF</span>
+                    <span>Abrir Acta → Ctrl+P</span>
                 </button>
             </div>
 
