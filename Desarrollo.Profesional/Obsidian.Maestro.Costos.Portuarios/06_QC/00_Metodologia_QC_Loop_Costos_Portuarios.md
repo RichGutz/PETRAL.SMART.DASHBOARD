@@ -31,10 +31,14 @@ Ninguna IA o programador debe alterar esta lógica ni asumir valores por defecto
   4. **Escenario Pesimista (Máximo - Overtime)**: Nuestro cálculo dinámico con recargos de zarpe nocturno, domingos y festivos (+15%, +25%, +50%).
 
 ### 3️⃣ Desglose Explícito IN vs. OUT con Criterio Operativo (Practicaje & Remolcaje IN / OUT)
-- Las maniobras de **Practicaje**, **Remolcaje**, **Lanchas** y **Acceso** se desglosan obligatoriamente en 2 filas independientes en los PDFs:
-  - `Maniobra IN (Atraque / Ingreso)`: $P_{\text{IN}} \times Q_{\text{IN}}$
-  - `Maniobra OUT (Desatraque / Salida)`: $P_{\text{OUT}} \times Q_{\text{OUT}}$
-- Aísla con precisión qué maniobra ocurre en horario ordinario vs. la que cae en horario extraordinario/overtime.
+- Las maniobras de **Practicaje**, **Remolcaje**, **Lanchas** y **Acceso** se desglosan obligatoriamente en 2 filas independientes tanto en la UI de Tarifas (`/port-tariffs`) como en los PDFs de auditoría:
+  - `Maniobra IN (Atraque / Ingreso)`: $P_{\text{IN}} \times Q_{\text{IN}}$ (Horario Hábil Ordinario)
+  - `Maniobra OUT (Desatraque / Salida)`: $P_{\text{OUT}} \times Q_{\text{OUT}}$ (Horario Extraordinario / Overtime Casino +25%)
+- **Regla Invariable de Apertura**: Si una tarifa de puerto está sujeta a recargo por horario o diferencia de maniobra (entrada vs salida), la tarifa DEBE ABRIRSE obligatoriamente en 2 conceptos independientes.
+- **Protocolo de Badges Visuales en la UI (`/port-tariffs`)**:
+  - `[IN / Atraque]` (Azul): Maniobra de ingreso en horario ordinario.
+  - `[OUT / Zarpe]` (Naranja): Maniobra de salida sujeta a recargo de zarpe.
+  - `[🌙 Overtime Elegible]` (Morado): Conceptos sujetos a recargos nocturnos o festivos (+25% / +50%).
 
 ### 6️⃣ Regla de QC Exhaustivo del Escenario FULL OT (Pesimista — Overnight / Dominical / Feriado)
 

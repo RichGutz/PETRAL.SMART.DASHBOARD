@@ -654,11 +654,14 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
     const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
     const handlePrintPdf = () => {
-        if (iframeRef.current && iframeRef.current.contentWindow) {
-            iframeRef.current.contentWindow.focus();
-            iframeRef.current.contentWindow.print();
+        const printWin = window.open('', '_blank');
+        if (printWin) {
+            printWin.document.write(htmlDoc);
+            printWin.document.close();
+            printWin.focus();
+            setTimeout(() => printWin.print(), 400);
         } else {
-            alert('El visor PDF aún se está cargando, por favor intente en un segundo.');
+            alert('No se pudo abrir la ventana de impresión. Por favor habilite las ventanas emergentes (popups).');
         }
     };
 

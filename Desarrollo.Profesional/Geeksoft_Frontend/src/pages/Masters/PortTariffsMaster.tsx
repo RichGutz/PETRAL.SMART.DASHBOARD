@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { Save, Anchor, Edit2, X } from 'lucide-react';
@@ -160,12 +160,35 @@ export const PortTariffsMaster: React.FC = () => {
         }
     }, [activePortId, availableTerminals, activeTerminalId]);
 
-    const activeTerminalRules = rules.filter(r => 
-        r.port_id === activePortId && 
-        (r.terminal === activeTerminalId || r.terminal === 'GENERAL' || activeTerminalId === 'GENERAL') && 
-        !r.isDeleted &&
-        (Boolean(r.sub_item_name) || Number(r.rate_usd) > 0)
-    );
+    const activeTerminalRules = useMemo(() => {
+        const portRules = rules.filter(r => 
+            r.port_id === activePortId && 
+            !r.isDeleted &&
+            (Boolean(r.sub_item_name) || Number(r.rate_usd) > 0)
+        );
+
+        const hasSpecificTerminalRules = activeTerminalId !== 'GENERAL' && portRules.some(r => r.terminal === activeTerminalId);
+        const uniqueMap = new Map<string, PortCostRule>();
+
+        portRules.forEach(r => {
+            if (hasSpecificTerminalRules && r.terminal !== activeTerminalId && r.terminal !== 'GENERAL') {
+                return;
+            }
+
+            const key = `${r.concept_id}_${(r.sub_item_name || '').trim().toLowerCase()}`;
+
+            if (!uniqueMap.has(key)) {
+                uniqueMap.set(key, r);
+            } else {
+                const existing = uniqueMap.get(key)!;
+                if (r.terminal === activeTerminalId && existing.terminal !== activeTerminalId) {
+                    uniqueMap.set(key, r);
+                }
+            }
+        });
+
+        return Array.from(uniqueMap.values());
+    }, [rules, activePortId, activeTerminalId]);
 
     // --- MODAL LOGIC ---
     const handleOpenEditModal = (rule: PortCostRule) => {
@@ -445,17 +468,36 @@ export const PortTariffsMaster: React.FC = () => {
                                                                 )}
                                                             </td>
                                                             <td className="p-3.5 text-center">
-                                                                <div className="flex justify-center gap-2">
-                                                                    {rule.allow_pass_through && (
-                                                                        <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-md border border-amber-200" title="Pass Through (Cobrado al cliente)">PT</span>
-                                                                    )}
-                                                                    {rule.is_optional && (
-                                                                        <span className="px-2 py-0.5 bg-purple-100 text-purple-800 text-[10px] font-bold rounded-md border border-purple-200" title="Opcional">OPC</span>
-                                                                    )}
-                                                                    {!rule.allow_pass_through && !rule.is_optional && (
-                                                                        <span className="text-slate-300">-</span>
-                                                                    )}
-                                                                </div>
+                                                                {(() => {
+                                                                    const cid = (rule.concept_id || '').toLowerCase();
+                                                                    const sname = (rule.sub_item_name || '').toLowerCase();
+                                                                    const isIn = cid.endsWith('_in') || sname.includes(' atraque') || sname.includes(' (in)') || sname.includes('ingreso');
+                                                                    const isOut = cid.endsWith('_out') || sname.includes(' zarpe') || sname.includes(' (out)') || sname.includes('salida');
+                                                                    const isOt = cid.includes('overtime') || sname.includes('overtime') || sname.includes('casino');
+
+                                                                    return (
+                                                                        <div className="flex flex-wrap justify-center gap-1">
+                                                                            {isIn && (
+                                                                                <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold rounded border border-blue-200" title="Maniobra IN (Atraque)">IN</span>
+                                                                            )}
+                                                                            {isOut && (
+                                                                                <span className="px-1.5 py-0.5 bg-orange-100 text-orange-800 text-[10px] font-bold rounded border border-orange-200" title="Maniobra OUT (Zarpe)">OUT</span>
+                                                                            )}
+                                                                            {isOt && (
+                                                                                <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-800 text-[10px] font-bold rounded border border-indigo-200" title="Recargo Overtime / Casino">🌙 OT</span>
+                                                                            )}
+                                                                            {rule.allow_pass_through && (
+                                                                                <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded border border-amber-200" title="Pass Through (Cobrado al cliente)">PT</span>
+                                                                            )}
+                                                                            {rule.is_optional && (
+                                                                                <span className="px-1.5 py-0.5 bg-purple-100 text-purple-800 text-[10px] font-bold rounded border border-purple-200" title="Opcional">OPC</span>
+                                                                            )}
+                                                                            {!isIn && !isOut && !isOt && !rule.allow_pass_through && !rule.is_optional && (
+                                                                                <span className="text-slate-300">-</span>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })()}
                                                             </td>
                                                             <td className="p-3.5 text-center">
                                                                 <button onClick={() => handleOpenEditModal(rule)} className="text-slate-400 hover:text-indigo-600 transition-colors p-1" title="Editar Regla">

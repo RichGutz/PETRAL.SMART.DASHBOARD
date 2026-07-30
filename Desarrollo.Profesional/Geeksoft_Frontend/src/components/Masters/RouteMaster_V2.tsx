@@ -349,6 +349,18 @@ export const RouteMaster_V2: React.FC<RouteMasterProps> = ({ mode = 'routes' }) 
 
     const handlePrintFromViewer = () => {
         const iframe = document.getElementById('quote-pdf-viewer') as HTMLIFrameElement | null;
+        const docHtml = iframe?.contentDocument?.documentElement?.outerHTML || 
+                        (iframe?.srcdoc ?? '');
+        if (docHtml && docHtml.length > 100) {
+            const printWin = window.open('', '_blank');
+            if (printWin) {
+                printWin.document.write(docHtml);
+                printWin.document.close();
+                printWin.focus();
+                setTimeout(() => printWin.print(), 400);
+                return;
+            }
+        }
         if (iframe && iframe.contentWindow) {
             iframe.contentWindow.focus();
             iframe.contentWindow.print();
