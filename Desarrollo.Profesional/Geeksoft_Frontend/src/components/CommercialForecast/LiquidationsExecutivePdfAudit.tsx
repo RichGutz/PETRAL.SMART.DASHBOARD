@@ -416,7 +416,7 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
                         </div>
                         <div style="padding: 8px; background: #ffffff; width: 100%; box-sizing: border-box; overflow: hidden;">
                             <div style="font-weight: 900; font-size: 14px; text-transform: uppercase; color: #0f172a; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 6px;">
-                                📊 EJECUCIÓN REAL (LIQUIDACIÓN OPERADOR - SUPABASE DB)
+                                📊 EJECUCIÓN REAL (LIQUIDACIÓN OPERADOR)
                             </div>
                             <table style="width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12.5px;">
                                 <tr>
@@ -651,15 +651,15 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
         `;
     }, [liquidations]);
 
+    const iframeRef = React.useRef<HTMLIFrameElement>(null);
+
     const handlePrintPdf = () => {
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) return alert('Por favor, permita las ventanas emergentes para generar el PDF.');
-        
-        printWindow.document.write(htmlDoc);
-        printWindow.document.close();
-        printWindow.onload = () => {
-            printWindow.print();
-        };
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+            iframeRef.current.contentWindow.focus();
+            iframeRef.current.contentWindow.print();
+        } else {
+            alert('El visor PDF aún se está cargando, por favor intente en un segundo.');
+        }
     };
 
     return (
@@ -691,6 +691,7 @@ export const LiquidationsExecutivePdfAudit: React.FC<LiquidationsExecutivePdfAud
             <div className="flex flex-col bg-slate-200 p-4 rounded-xl border border-slate-300 shadow-inner max-h-[85vh] overflow-y-auto">
                 <div className="bg-white shadow-2xl rounded border border-slate-400 p-3 min-h-[700px] w-full aspect-[1.414/1]">
                     <iframe
+                        ref={iframeRef}
                         title="Visor PDF Auditoria Liquidaciones"
                         srcDoc={htmlDoc}
                         className="w-full min-h-[700px] h-full border-none bg-white"
