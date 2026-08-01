@@ -158,3 +158,16 @@ $$\text{Puerto Carga Real (POL)} + \text{Puerto Descarga 1 Real (POD 1)} + \text
 2. **Prohibición Absoluta de Fallbacks Porcentuales**: Queda estrictamente prohibido usar porcentajes aproximados (ej. 35% / 35% / 30%) para dividir el costo total. Queda desaprobado cualquier reporte donde la suma de los rubros individuales diferir del total.
 3. **Criterio de Rechazo Automático QC y Retorno a PNG/Mapeo**: Si la suma de las escalas no coincide exactamente con el total, el sistema o script de QC debe marcar **FALLO DE VALIDACIÓN** y retornar inmediatamente al parseo directo de las celdas del Excel / imágenes PNG respaldadas.
 
+---
+
+## 6. 🏆 RESULTADOS DE AUDITORÍA Y CERTIFICACIÓN QC (2026-07-31)
+
+### A. Certificación de Ingesta Pass-Through Dockage
+Se verificó y certificó la ingesta de las celdas `B15:B22` e `I15:I22` (`freight_income_items`) y total `I23` (`Total Freight Income`) sobre los nuevos archivos `PASS.THROUGH.xlsx`. 
+
+### B. Matriz de Conteo Estricto de la Flota (31 Viajes Reales)
+- **B/T Tablones:** 15 viajes reales (`v.038` a `v.052`).
+- **B/T Moquegua:** 16 viajes reales (`V.761` a `V.777`).
+- **Estado de Supabase DB:** 31 registros cargados (100% validados contra 0 fallos de consistencia).
+
+

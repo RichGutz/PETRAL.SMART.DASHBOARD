@@ -67,10 +67,15 @@ CREATE INDEX IF NOT EXISTS idx_voyage_liq_details ON voyage_liquidations USING g
     "quantity_mt": 13500.25,
     "unit": "MT",
     "gross_revenue_usd": 330756.10,
+    "total_freight_income_usd": 330756.10,
+    "freight_income_items": [
+      { "concept": "Flete Base", "amount_usd": 324517.66 },
+      { "concept": "Muellaje Callao (Refacturación Pass-through)", "amount_usd": 6238.44 }
+    ],
     "commissions_usd": 0.00,
-    "net_freight_usd": 330756.10,
-    "demurrage_usd": 0.00
+    "net_freight_usd": 330756.10
   },
+
   "consumption_and_duration": {
     "daily_rates": {
       "sea_rate": { "ifo_mt_day": 14.0, "mdo_mt_day": 0.0 },

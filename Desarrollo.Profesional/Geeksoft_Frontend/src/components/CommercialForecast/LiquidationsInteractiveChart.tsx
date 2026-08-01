@@ -35,6 +35,10 @@ const getCleanVoyageCode = (r: any): string => {
 
 // EXTRACTOR DE RUTA REAL NAVEGADA (SOPORTE MULTITERMINAL Y MULTITRAMO MEJILLONES / TERQUIM / CALLAO / MARCONA)
 const getRouteName = (r: any): string => {
+    if (r.pol_port && r.pod_port && r.pol_port !== r.pod_port) {
+        return `${r.pol_port} ➔ ${r.pod_port}`;
+    }
+
     const code = String(r.voyage_code || '').toUpperCase();
     const stopsStr = JSON.stringify(r.stops || []).toUpperCase();
     const detailsStr = JSON.stringify(r.details || []).toUpperCase();
@@ -48,10 +52,6 @@ const getRouteName = (r: any): string => {
         return 'ILO ➔ CALLAO ➔ MARCONA';
     }
 
-    if (r.pol_port && r.pod_port && r.pol_port !== r.pod_port) {
-        return `${r.pol_port} ➔ ${r.pod_port}`;
-    }
-
     if (combinedStr.includes('MEJILLONES')) return 'ILO ➔ MEJILLONES';
     if (combinedStr.includes('MATARANI')) return 'ILO ➔ MATARANI';
     if (combinedStr.includes('MARCONA')) return 'ILO ➔ MARCONA';
@@ -59,6 +59,7 @@ const getRouteName = (r: any): string => {
 
     return `${r.pol_port || 'ILO'} ➔ ${r.pod_port || 'MARCONA'}`;
 };
+
 
 export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChartProps> = ({ liquidations }) => {
     const [groupBy, setGroupBy] = useState<GroupBy>('vessel');

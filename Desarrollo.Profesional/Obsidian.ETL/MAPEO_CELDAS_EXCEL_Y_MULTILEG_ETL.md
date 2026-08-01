@@ -1,91 +1,60 @@
-# 📑 MAPEO MAESTRO DE CELDAS EXCEL Y ALGORITMO MULTILEG (ETL PARSER)
+# 📑 MAPEO MAESTRO DE CELDAS EXCEL Y ALGORITMO MULTILEG (ETL PARSER PASS-THROUGH)
 
 > **Ubicación del Módulo ETL**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.ETL`  
-> **Imágenes de Respaldo**: 
-> - `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\mapa_celdas_excel_liquidaciones.png`  
-> - `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\mapa_excel_2_pod_multileg.png`  
+> **Archivos de Origen**:  
+> - `VC Tablones 2026.PASS.THROUGH.xlsx`  
+> - `MOQUEGUA - Voyage calculation viajes Enero a Junio  2026  - 31.07.2026.PASS.THROUGH.xlsx`  
 
 ---
 
-## 1. 🖼️ Captura 1: Mapeo de Celdas en Plantilla Estándar (Single Leg - Viaje `v.045`)
+## 1. 🖼️ Mapeo de Celdas de Ingresos (Freight Income Breakdown)
 
-![Mapa de Celdas Excel Single Leg](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Maestro.Costos.Portuarios/PNGs/mapa_celdas_excel_liquidaciones.png)
+En los archivos `PASS.THROUGH.xlsx`, el bloque de Ingresos comprende el rango **`B15:B22`** (Conceptos) e **`I15:I22`** (Montos USD positivos/negativos), consolidando en la celda **`I23`** (`Total Freight Income`).
 
-### 📊 Matriz de Coordenadas Single Leg
-| Concepto Financiero / Operativo | Columna | Fila | Tipo de Dato | Coordenada / Ejemplo (`v.045`) |
-| :--- | :---: | :---: | :---: | :---: |
-| **Income (Gross Revenue)** | `N` | `14` | USD Float | `$241,783.00 USD` |
-| **Port Costs (Gastos de Puerto)** | `N` | **`15`** | USD Float | **`$34,674.67 USD`** |
-| **Bunker Costs (Costo Búnker)** | `N` | **`16`** | USD Float | **`$30,913.56 USD`** |
-| **Other Costs (Otros Gastos)** | `N` | `17` | USD Float | `$0.00 USD` |
-| **Voyage Result (US$)** | `N` | `18` | USD Float | `$176,194.00 USD` |
-| **Duration (d) - Días Totales** | `Q` | `14` | Float | `5.74 días` |
-| **Sea Days (Días de Mar)** | `Q` | `15` | Float | `2.208 días` |
-| **Port/Idle Days (Días de Puerto)** | `Q` | `16` | Float | `3.530 días` |
-| **TCE Realizado (US$/d)** | `Q` | `17` | USD Float | `$30,705.00 /día` |
-| **TCE Req. (TCE Requerido)** | `Q` | **`18`** | USD Float | **`$15,000.00 /día`** |
-| **P/L (Utilidad Neta Real US$)** | `Q` | **`20`** | USD Float | **`$90,121.00 USD`** |
+### 📊 Matriz de Coordenadas de Ingresos y Gastos
+| Concepto Financiero / Operativo | Columna | Fila / Celda | Tipo de Dato | Descripción / Regla de Extracción |
+| :--- | :---: | :---: | :---: | :--- |
+| **Conceptos de Ingreso (Freight Items)** | `B` | `15:22` | Texto String | Nombres de conceptos (Flete Base, Muellaje Refacturado/Pass-through, Shifting, Paridad de Flete, etc.) |
+| **Montos por Concepto** | `I` | `15:22` | USD Float | Valores en Dólares ($USD$). Pueden ser positivos (fletes/reembolsos) o negativos (descuentos/penalidades) |
+| **Total Freight Income (Gross Revenue)** | `I` | **`23`** | USD Float | Suma consolidada de los items de ingreso (`I15:I22`) |
+| **Port Costs (Gastos de Puerto)** | `N` / `C` | `15` / `48` | USD Float | Suma acumulada de agenciamiento/practicaje |
+| **Bunker Costs (Costo Búnker)** | `N` / `S` | `16` / `48` | USD Float | Consumo acumulado de combustible |
+| **TCE Realizado (US$/d)** | `Q` | `17` | USD Float | TCE ejecutado del viaje |
+| **TCE Req. (TCE Requerido)** | `Q` | `18` | USD Float | Costo diario de la nave ($13,000 / $15,000 USD/día) |
+| **P/L (Utilidad Neta Real US$)** | `Q` | `20` | USD Float | Utilidad Neta Real considerando el recupero de Pass-Through Dockage |
 
 ---
 
-## 2. 🖼️ Captura 2: Mapeo de Celdas en Plantilla Multileg con 2 PODs (Viaje `V.764 MOQUEGUA`)
-
-![Mapa de Celdas Excel Multileg 2 PODs](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Maestro.Costos.Portuarios/PNGs/mapa_excel_2_pod_multileg.png)
-
-### 📊 Matriz de Coordenadas Multileg (2 Puertos de Descarga)
-| Concepto Financiero / Operativo | Columna | Fila / Celda | Regla del Parser ETL | Ejemplo `V.764 MOQUEGUA` |
-| :--- | :---: | :---: | :--- | :---: |
-| **Total Freight Income US$** | `H` | `23` | Celda roja de consolidación de múltiples fletes de descarga | **`$403,725.00 USD`** |
-| **Income (Gross Revenue)** | `N` | `14` | Resumen superior de ingresos | `$409,725.00 USD` |
-| **Total Agency US$ (Gastos Puerto)** | `C` | **`48`** | Suma acumulada de agenciamientos (`ILO` $16,373 + `CALLAO` $10,863 + `MARCONA` $33,146) | **`$60,388.00 USD`** |
-| **Bunkers US$ (Consumo Búnker)** | `S` | **`48`** | Suma total de consumo de búnker en las 3 piernas navegadas | **`$47,294.00 USD`** |
-| **Duration (d) Multileg** | `Q` | `14` | Días totales navegados y de estadía | `7.58 días` |
-| **Sea Days (Días de Mar)** | `Q` | `15` | Suma de días de navegación | `4.10 días` |
-| **Port/Idle Days (Días de Puerto)** | `Q` | `16` | Suma de estadías en puertos de carga y descarga | `3.48 días` |
-| **TCE Realizado Multileg** | `Q` | `17` | TCE ejecutado de la expedición multileg | **`$39,836.00 /día`** |
-| **TCE Req. (TCE Requerido)** | `Q` | **`18`** | Costo base diario del buque (`MOQUEGUA`) | **`$13,000.00 /día`** |
-| **P/L (Utilidad Neta Real)** | `Q` | **`20`** | Celda amarilla de Utilidad Neta Real acumulada | **`$203,475.00 USD`** |
-
----
-
-## 3. ⚙️ Algoritmo Extractor Python para `Obsidian.ETL` (`openpyxl`)
+## 2. ⚙️ Algoritmo Extractor Python (`etl_parser_liquidations.py`)
 
 ```python
-def extract_voyage_liquidation_data(sheet):
+def extract_voyage_liquidation_data(ws):
     """
-    Algoritmo unificado de extracción de celdas para Single Leg y Multileg 2 PODs.
+    Algoritmo unificado de extracción con desglose granular de Freight Income (B15:B22 / I15:I22 / I23)
     """
-    # 1. Detección de Multileg (Chequeo de celda C48 o múltiples filas de descarga en C29:C33)
-    is_multileg = sheet['C48'].value is not None and str(sheet['C48'].value).strip() != ""
-    
-    if is_multileg:
-        # Extracción Multileg
-        port_costs = float(sheet['C48'].value or 0.0)
-        bunker_costs = float(sheet['S48'].value or 0.0)
-        gross_revenue = float(sheet['H23'].value or sheet['N14'].value or 0.0)
-    else:
-        # Extracción Single Leg
-        port_costs = float(sheet['N15'].value or 0.0)
-        bunker_costs = float(sheet['N16'].value or 0.0)
-        gross_revenue = float(sheet['N14'].value or 0.0)
+    freight_income_items = []
+    for r in range(15, 23):
+        concept = ws.cell(row=r, column=2).value
+        val = ws.cell(row=r, column=9).value
+        if concept and str(concept).strip() and val is not None:
+            try:
+                freight_income_items.append({
+                    "concept": str(concept).strip(),
+                    "amount_usd": float(val)
+                })
+            except (ValueError, TypeError):
+                pass
 
-    # Métricas Comunes de la Sección Results
-    duration_days = float(sheet['Q14'].value or 0.0)
-    sea_days = float(sheet['Q15'].value or 0.0)
-    port_days = float(sheet['Q16'].value or 0.0)
-    tce_real = float(sheet['Q17'].value or 0.0)
-    tce_req = float(sheet['Q18'].value or 13000.0)
-    net_profit = float(sheet['Q20'].value or 0.0)
+    gross_revenue = float(ws.cell(row=23, column=9).value or ws.cell(row=15, column=7).value or 0.0)
+    agency_cost = float(ws.cell(row=15, column=14).value or ws.cell(row=48, column=3).value or 0.0)
+    bunker_cost = float(ws.cell(row=16, column=14).value or ws.cell(row=48, column=19).value or 0.0)
 
     return {
         "gross_revenue_usd": gross_revenue,
-        "port_costs_usd": port_costs,
-        "bunker_costs_usd": bunker_costs,
-        "duration_days": duration_days,
-        "sea_days": sea_days,
-        "port_days": port_days,
-        "tce_usd_day": tce_real,
-        "tce_req_usd_day": tce_req,
-        "net_profit_usd": net_profit
+        "freight_income_items": freight_income_items,
+        "port_costs_usd": agency_cost,
+        "bunker_costs_usd": bunker_cost,
+        "pcm_usd": gross_revenue - bunker_cost - agency_cost
     }
 ```
+
