@@ -16,15 +16,21 @@
 
 La **Matriz Financiera (`/dashboard`)** es el tablero comercial principal de PETRAL. Presenta la grilla financiera consolidada para el programa anual/semestral de 31 viajes.
 
-### 📌 Jerarquía Financiera por Fila de Viaje:
-1. **Viajes** (Identificador de viaje / cliente / buque).
-2. **Toneladas ($Q$)** (Volumen transportado en MT).
-3. **Gross Revenue** ($Q \times Flete$).
-4. **Comisiones** (Deducción por Address Commission + Brokerage Fee).
-5. **Net Freight** ($\text{Gross Revenue} - \text{Comisiones}$).
-6. **Port Costs** (Costos portuarios origen/destino en modo `STATIC` o `MATRIX`).
-7. **Bunker Costs** (Gasto total IFO + MDO).
-8. **Voyage Result** (Resultado Operativo Neto: $\text{Net Freight} - \text{Port Costs} - \text{Bunker Costs}$).
+### 📌 Jerarquía Financiera y 14 Métricas Simétricas por Fila de Viaje (Espejo Auditoría Final):
+1. **Distancia (MN)** (`distancia_total`): Distancia náutica total acumulada por viaje.
+2. **Carga Transportada (MT)** (`carga_unit`): Volumen de carga transportada ($Q$).
+3. **Flete Base (USD/MT)** (`flete_unit`): Tarifa base de flete contractual.
+4. **Flete Bruto (USD)** (`gross_income_unit`): $Q \times \text{Flete Base}$.
+5. **Comisiones (USD)** (`total_commissions_unit`): Deducción comercial por Address Commission + Broker Fee ($\text{Flete Bruto} \times \frac{\% \text{Addr} + \% \text{Broker}}{100}$).
+6. **Flete Neto (USD)** (`net_income_unit`): $\text{Flete Bruto} - \text{Comisiones}$.
+7. **Días de Mar** (`sea_days_unit`): Días navegando en mar con Weather Factor.
+8. **Días de Puerto** (`port_days_unit`): Días de Carga + Descarga + Overheads/Espera en Puerto.
+9. **Duración Total (Días)** (`total_duration_unit`): $\text{Días de Mar} + \text{Días de Puerto}$.
+10. **Port Costs (USD)** (`total_port_costs_unit`): Costos portuarios origen/destino (Agencias en modo `STATIC` o `MATRIX`).
+11. **Bunker Costs (USD)** (`total_bunker_costs_unit`): Costo total de combustible consumido (IFO + MDO/MGO).
+12. **Voyage Result (USD)** (`voyage_result_unit`): Utilidad Operativa Neta ($\text{Flete Neto} - \text{Port Costs} - \text{Bunker Costs}$).
+13. **TCE Real (USD/Día)** (`tce_real_unit`): Rendimiento diario del buque ($\frac{\text{Voyage Result}}{\text{Duración Total}}$).
+14. **P/L Neto vs Requerido (USD)** (`pl_vs_required_unit`): Resultado Neto Final ajustado por costo de flota ($\text{Voyage Result} - (\text{Duración Total} \times \text{TCE Requerido})$).
 
 ---
 

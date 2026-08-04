@@ -91,8 +91,38 @@ def parse_jn_sheet(wb, sheet_name):
         pod_port = "MEJILLONES"
 
 
-    # Port & Bunker Expenses (Lectura exacta N15/N16 + C48/S48)
-    agency_cost = float(ws.cell(row=15, column=14).value or ws.cell(row=48, column=3).value or ws.cell(row=48, column=4).value or 0)
+    # Port & Bunker Expenses (Lectura exacta N15/N16 + C48/S48 y filas 41-47)
+    agency_breakdown = []
+    pol_cost = 0.0
+    pod1_cost = 0.0
+    pod2_cost = 0.0
+
+    for r in range(41, 48):
+        p_name = ws.cell(row=r, column=2).value
+        val = ws.cell(row=r, column=4).value
+        if p_name and str(p_name).strip() and str(p_name).strip().upper() not in ['PORT', 'AGENCY']:
+            p_clean = str(p_name).strip().upper()
+            if 'TOTAL' not in p_clean and val is not None:
+                try:
+                    amt = float(val)
+                    if amt > 0:
+                        role = "POD"
+                        if any(pol_name in p_clean or p_clean in pol_name for pol_name in pols):
+                            role = "POL"
+                        agency_breakdown.append({"port": p_clean, "cost_usd": amt, "role": role})
+                except (ValueError, TypeError):
+                    pass
+
+    for item in agency_breakdown:
+        if item["role"] == "POL" and pol_cost == 0.0:
+            pol_cost = item["cost_usd"]
+        elif pod1_cost == 0.0:
+            pod1_cost = item["cost_usd"]
+        else:
+            pod2_cost += item["cost_usd"]
+
+    tot_agency_calc = sum(item["cost_usd"] for item in agency_breakdown)
+    agency_cost = tot_agency_calc if tot_agency_calc > 0 else float(ws.cell(row=15, column=14).value or ws.cell(row=48, column=3).value or ws.cell(row=48, column=4).value or 0)
     bunker_cost = float(ws.cell(row=16, column=14).value or ws.cell(row=48, column=19).value or 0)
 
     # Consumption & Duration (Estimates)
@@ -120,12 +150,17 @@ def parse_jn_sheet(wb, sheet_name):
         },
         "itinerary": itinerary,
         "port_expenses": {
-            "total_agency_usd": agency_cost
+            "total_agency_usd": agency_cost,
+            "pol_cost_usd": pol_cost,
+            "pod1_cost_usd": pod1_cost,
+            "pod2_cost_usd": pod2_cost,
+            "agency_breakdown": agency_breakdown
         },
         "bunker_expenses": {
             "total_bunker_cost_usd": bunker_cost
         }
     }
+
 
     clean_vcode = sheet_name.replace(' (2)', '').replace('(2)', '').strip()
     return {
@@ -238,8 +273,38 @@ def parse_mec_sheet(wb, sheet_name):
         pod_port = "MARCONA"
 
 
-    # Port & Bunker Expenses (Lectura exacta N15/N16 + C48/S48)
-    agency_cost = float(ws.cell(row=15, column=14).value or ws.cell(row=48, column=3).value or ws.cell(row=48, column=4).value or 0)
+    # Port & Bunker Expenses (Lectura exacta N15/N16 + C48/S48 y filas 41-47)
+    agency_breakdown = []
+    pol_cost = 0.0
+    pod1_cost = 0.0
+    pod2_cost = 0.0
+
+    for r in range(41, 48):
+        p_name = ws.cell(row=r, column=2).value
+        val = ws.cell(row=r, column=4).value
+        if p_name and str(p_name).strip() and str(p_name).strip().upper() not in ['PORT', 'AGENCY']:
+            p_clean = str(p_name).strip().upper()
+            if 'TOTAL' not in p_clean and val is not None:
+                try:
+                    amt = float(val)
+                    if amt > 0:
+                        role = "POD"
+                        if any(pol_name in p_clean or p_clean in pol_name for pol_name in pols):
+                            role = "POL"
+                        agency_breakdown.append({"port": p_clean, "cost_usd": amt, "role": role})
+                except (ValueError, TypeError):
+                    pass
+
+    for item in agency_breakdown:
+        if item["role"] == "POL" and pol_cost == 0.0:
+            pol_cost = item["cost_usd"]
+        elif pod1_cost == 0.0:
+            pod1_cost = item["cost_usd"]
+        else:
+            pod2_cost += item["cost_usd"]
+
+    tot_agency_calc = sum(item["cost_usd"] for item in agency_breakdown)
+    agency_cost = tot_agency_calc if tot_agency_calc > 0 else float(ws.cell(row=15, column=14).value or ws.cell(row=48, column=3).value or ws.cell(row=48, column=4).value or 0)
     bunker_cost = float(ws.cell(row=16, column=14).value or ws.cell(row=48, column=19).value or 0)
 
     client_name = 'NEXA' if 'NEXA' in str(cargo_charterer).upper() or 'NEXA' in sheet_name.upper() else 'SPCC'
@@ -261,12 +326,17 @@ def parse_mec_sheet(wb, sheet_name):
         },
         "itinerary": itinerary,
         "port_expenses": {
-            "total_agency_usd": agency_cost
+            "total_agency_usd": agency_cost,
+            "pol_cost_usd": pol_cost,
+            "pod1_cost_usd": pod1_cost,
+            "pod2_cost_usd": pod2_cost,
+            "agency_breakdown": agency_breakdown
         },
         "bunker_expenses": {
             "total_bunker_cost_usd": bunker_cost
         }
     }
+
 
     clean_vcode = sheet_name.replace(' (2)', '').replace('(2)', '').strip()
     return {

@@ -71,6 +71,8 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
     
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
     const [expandedDemurrages, setExpandedDemurrages] = useState<Record<string, boolean>>({});
+    const [expandedGrossRevenue, setExpandedGrossRevenue] = useState<Record<string, boolean>>({});
+    const [expandedTce, setExpandedTce] = useState<Record<string, boolean>>({});
     const [collapsedSubtotals, setCollapsedSubtotals] = useState<Record<string, boolean>>({});
     const [groupOrder, setGroupOrder] = useState<('client' | 'route' | 'vessel')[]>(['client', 'route', 'vessel']);
 
@@ -80,6 +82,20 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             [next[idx1], next[idx2]] = [next[idx2], next[idx1]];
             return next;
         });
+    };
+
+    const toggleGrossRevenue = (rowKey: string) => {
+        setExpandedGrossRevenue(prev => ({
+            ...prev,
+            [rowKey]: !prev[rowKey]
+        }));
+    };
+
+    const toggleTce = (rowKey: string) => {
+        setExpandedTce(prev => ({
+            ...prev,
+            [rowKey]: !prev[rowKey]
+        }));
     };
     
     // Sort orders
@@ -273,7 +289,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
                     const rowKey = `${client}-${route}-${vessel}`;
                     const isExpanded = !!expandedRows[rowKey];
-                    const numSubRows = isExpanded ? 14 : 0;
+                    const numSubRows = isExpanded ? 24 : 0;
                     const isDemurrageExcluded = excludedDemurrages.includes(rowKey);
                     const isDemurrageVisible = showDemurrage && demurragePct !== '' && !isDemurrageExcluded;
                     const isDemurrageDaysVisible = showDemurrageDays && demurrageDays !== '' && !isDemurrageExcluded;
@@ -281,13 +297,25 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     const isDemurrageExpanded = !!expandedDemurrages[rowKey];
                     const demurrageRowsCount = (isDemurrageVisible || isDemurrageDaysVisible) ? (isDemurrageExpanded ? 3 : 1) : 0;
                     
-                    const vesselRowSpan = 6 + numSubRows + demurrageRowsCount;
-                    
-                    level1RowSpanRef.value += vesselRowSpan;
-                    level2RowSpanRef.value += vesselRowSpan;
+                    const trips = months.map(m => {
+                        const line = projectionLines.find(p => 
+                            p.client_id === client && 
+                            `${p.origin_port_id}-${p.destination_port_id}` === route && 
+                            p.vessel_id === vessel && 
+                            p.month_index === m
+                        );
+                        return line ? (line.monthly_frequency || 0) : 0;
+                    });
+
+                    const activeIfoPrice = months.map(m => monthData[m]?.["price_ifo_unit"] || monthData[m]?.["p_ifo"]).find(v => typeof v === 'number' && v > 0) || 450;
+                    const activeMdoPrice = months.map(m => monthData[m]?.["price_mdo_unit"] || monthData[m]?.["p_mdo"]).find(v => typeof v === 'number' && v > 0) || 800;
 
                     const getMonthlyValues = (metricKey: string) => {
-                        return months.map(m => {
+                        return months.map((m, idx) => {
+                            const tripCount = trips[idx] || 0;
+                            if (tripCount <= 0) {
+                                return undefined;
+                            }
                             let val = monthData[m]?.[metricKey];
                             if (val === undefined || val === null || val === 0) {
                                 if (metricKey === "distancia_total") val = monthData[m]?.["total_distance"] || monthData[m]?.["distancia"];
@@ -298,30 +326,35 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 if (metricKey === "bunker_mdo_tonnage_unit") val = monthData[m]?.["bunker_mdo_tonnage"] || monthData[m]?.["mdo_tons"];
                                 if (metricKey === "total_port_costs_unit") val = monthData[m]?.["total_port_costs"] || monthData[m]?.["port_costs"];
                                 if (metricKey === "total_bunker_costs_unit") val = monthData[m]?.["total_bunker_costs"] || monthData[m]?.["bunker_costs"];
+                                if (metricKey === "gross_income_unit") val = monthData[m]?.["gross_income"] || (monthData[m]?.["carga_unit"] && monthData[m]?.["flete_unit"] ? monthData[m]?.["carga_unit"] * monthData[m]?.["flete_unit"] : undefined);
+                                if (metricKey === "address_comm_pct") val = monthData[m]?.["address_comm_pct"];
+                                if (metricKey === "broker_comm_pct") val = monthData[m]?.["broker_comm_pct"];
+                                if (metricKey === "total_commissions_unit") val = monthData[m]?.["total_commissions"];
+                                if (metricKey === "price_ifo_unit") val = monthData[m]?.["price_ifo_unit"] || monthData[m]?.["p_ifo"] || activeIfoPrice;
+                                if (metricKey === "bunker_ifo_cost_unit") val = monthData[m]?.["bunker_ifo_cost_unit"] || (monthData[m]?.["bunker_ifo_tonnage_unit"] ? monthData[m]?.["bunker_ifo_tonnage_unit"] * (monthData[m]?.["price_ifo_unit"] || activeIfoPrice) : undefined);
+                                if (metricKey === "price_mdo_unit") val = monthData[m]?.["price_mdo_unit"] || monthData[m]?.["p_mdo"] || activeMdoPrice;
+                                if (metricKey === "bunker_mdo_cost_unit") val = monthData[m]?.["bunker_mdo_cost_unit"] || (monthData[m]?.["bunker_mdo_tonnage_unit"] ? monthData[m]?.["bunker_mdo_tonnage_unit"] * (monthData[m]?.["price_mdo_unit"] || activeMdoPrice) : undefined);
+                                if (metricKey === "voyage_result_unit") val = monthData[m]?.["voyage_result"] || monthData[m]?.["voyage_result_unit"];
                                 if (metricKey === "tce_real_unit") val = monthData[m]?.["tce_real"] || monthData[m]?.["tce"];
-                                if (metricKey === "pl_vs_required_unit") val = monthData[m]?.["pl_vs_required"] || monthData[m]?.["pl_neto"];
+                                if (metricKey === "tce_required_unit") val = monthData[m]?.["tce_required_unit"] || monthData[m]?.["tce_required"] || 13000;
+                                if (metricKey === "tce_cost_total_unit") val = monthData[m]?.["tce_cost_total_unit"] || (monthData[m]?.["total_duration_unit"] ? monthData[m]?.["total_duration_unit"] * (monthData[m]?.["tce_required_unit"] || 13000) : undefined);
+                                if (metricKey === "flete_unit") val = monthData[m]?.["flete_unit"] || monthData[m]?.["freight_rate"];
+                                if (metricKey === "pl_vs_required_unit") val = monthData[m]?.["pl_vs_required_unit"] || monthData[m]?.["pl_vs_required"] || monthData[m]?.["pl_neto"];
                             }
-                            return val || 0;
+                            return val;
                         });
                     };
 
-                    const trips = months.map(m => {
-                        const line = projectionLines.find(p => 
-                            p.client_id === client && 
-                            `${p.origin_port_id}-${p.destination_port_id}` === route && 
-                            p.vessel_id === vessel && 
-                            p.month_index === m
-                        );
-                        return line ? line.monthly_frequency : 0;
-                    });
-                    
-                    const revenues = getMonthlyValues("net_income");
+                    const grossRevenues = getMonthlyValues("gross_income");
+                    const commissions = getMonthlyValues("total_commissions");
+                    const netRevenues = getMonthlyValues("net_income");
                     const portCosts = getMonthlyValues("total_port_costs");
                     const bunker = getMonthlyValues("total_bunker_costs");
                     const voyageResult = getMonthlyValues("voyage_result");
                     const plVsRequired = getMonthlyValues("pl_vs_required");
+                    const tceCostTotal = months.map((_, i) => voyageResult[i] - plVsRequired[i]);
 
-                    revenues.forEach((v, i) => level1GrossRevenue[i] += v);
+                    grossRevenues.forEach((v, i) => level1GrossRevenue[i] += v);
                     portCosts.forEach((v, i) => level1PortCosts[i] += v);
                     bunker.forEach((v, i) => level1BunkerCosts[i] += v);
                     voyageResult.forEach((v, i) => level1VoyageResult[i] += v);
@@ -345,7 +378,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
                     let demurrageArr = new Array(months.length).fill(0);
                     if (isDemurrageVisible) {
-                        demurrageArr = revenues.map((r, i) => r * (demurragePctArray[i] / 100));
+                        demurrageArr = netRevenues.map((r, i) => r * (demurragePctArray[i] / 100));
                         demurrageArr.forEach((v, i) => level1Demurrage[i] += v);
                     } else if (isDemurrageDaysVisible) {
                         demurrageArr = trips.map((t, i) => t * demurrageDaysArray[i] * (vesselDemurrageRate[i] || 20000));
@@ -356,33 +389,44 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     const tonsTotal = months.map((_, i) => unitCargos[i] * trips[i]);
                     tonsTotal.forEach((v, i) => level1TonsTotal[i] += v);
 
-                    const calcPct = (arr: number[]) => arr.map((v, i) => revenues[i] ? (v / revenues[i]) * 100 : 0);
+                    const calcPct = (arr: number[]) => arr.map((v, i) => grossRevenues[i] ? (v / grossRevenues[i]) * 100 : 0);
                     const calcTotalPct = (totalVal: number, totalRev: number) => totalRev ? (totalVal / totalRev) * 100 : 0;
 
                     const metrics: any[] = [
                         { name: "Viajes (freq)", values: trips, total: sum(trips), pct: null, totalPct: null, isCurrency: false, isTotal: false, isExpandable: true, rowKey, isExpanded },
                         { name: "Toneladas", values: tonsTotal, total: sum(tonsTotal), pct: null, totalPct: null, isCurrency: false, isTotal: false },
-                        { name: "Gross Revenue", values: revenues, total: sum(revenues), pct: revenues.map(r => r ? 100 : 0), totalPct: sum(revenues) ? 100 : 0, isCurrency: true, isTotal: false },
-                        { name: "Port Costs", values: portCosts, total: sum(portCosts), pct: calcPct(portCosts), totalPct: calcTotalPct(sum(portCosts), sum(revenues)), isCurrency: true, isTotal: false },
-                        { name: "Bunker Costs", values: bunker, total: sum(bunker), pct: calcPct(bunker), totalPct: calcTotalPct(sum(bunker), sum(revenues)), isCurrency: true, isTotal: false },
-                        { name: "P/L", values: plVsRequired, total: sum(plVsRequired), pct: calcPct(plVsRequired), totalPct: calcTotalPct(sum(plVsRequired), sum(revenues)), isCurrency: true, isTotal: true }
+                        { name: "Gross Revenue", values: grossRevenues, total: sum(grossRevenues), pct: grossRevenues.map(r => r ? 100 : 0), totalPct: sum(grossRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
+                        { name: "Comisiones", values: commissions, total: sum(commissions), pct: calcPct(commissions), totalPct: calcTotalPct(sum(commissions), sum(grossRevenues)), isCurrency: true, isTotal: false },
+                        { name: "Net Freight", values: netRevenues, total: sum(netRevenues), pct: calcPct(netRevenues), totalPct: calcTotalPct(sum(netRevenues), sum(grossRevenues)), isCurrency: true, isTotal: false },
+                        { name: "Port Costs", values: portCosts, total: sum(portCosts), pct: calcPct(portCosts), totalPct: calcTotalPct(sum(portCosts), sum(grossRevenues)), isCurrency: true, isTotal: false },
+                        { name: "Bunker Costs", values: bunker, total: sum(bunker), pct: calcPct(bunker), totalPct: calcTotalPct(sum(bunker), sum(grossRevenues)), isCurrency: true, isTotal: false },
+                        { name: "Voyage Result", values: voyageResult, total: sum(voyageResult), pct: calcPct(voyageResult), totalPct: calcTotalPct(sum(voyageResult), sum(grossRevenues)), isCurrency: true, isTotal: false },
+                        { name: "TCE x días", values: tceCostTotal, total: sum(tceCostTotal), pct: calcPct(tceCostTotal), totalPct: calcTotalPct(sum(tceCostTotal), sum(grossRevenues)), isCurrency: true, isTotal: false },
+                        { name: "P/L", values: plVsRequired, total: sum(plVsRequired), pct: calcPct(plVsRequired), totalPct: calcTotalPct(sum(plVsRequired), sum(grossRevenues)), isCurrency: true, isTotal: true }
                     ];
 
                     if (isDemurrageVisible || isDemurrageDaysVisible) {
-                        metrics.push({ name: "Demurrage", values: demurrageArr, total: sum(demurrageArr), pct: calcPct(demurrageArr), totalPct: calcTotalPct(sum(demurrageArr), sum(revenues)), isCurrency: true, isTotal: false, isExpandableDemurrage: true, rowKey, isExpanded: isDemurrageExpanded });
+                        metrics.push({ name: "Demurrage", values: demurrageArr, total: sum(demurrageArr), pct: calcPct(demurrageArr), totalPct: calcTotalPct(sum(demurrageArr), sum(grossRevenues)), isCurrency: true, isTotal: false, isExpandableDemurrage: true, rowKey, isExpanded: isDemurrageExpanded });
                     }
 
-                    metrics.forEach((metric, index) => {
-                        result.push({
-                            col1: isFirstLevel1Row && isFirstLevel2Row && index === 0 ? { type: groupOrder[0], name: level1Name, rowSpanRef: level1RowSpanRef } : null,
-                            col2: isFirstLevel2Row && index === 0 ? { type: groupOrder[1], name: level2Name, rowSpanRef: level2RowSpanRef } : null,
-                            col3: index === 0 ? { type: groupOrder[2], name: level3Name, rowSpan: vesselRowSpan } : null,
-                            clientName: client,
-                            routeName: route,
-                            vesselName: vessel,
-                            metric: metric,
-                            isSubRow: false
-                        });
+                    const vesselRowSpan = metrics.length + numSubRows + (demurrageRowsCount > 0 && (isDemurrageVisible || isDemurrageDaysVisible) ? (isDemurrageExpanded ? 2 : 0) : 0);
+                    
+                    level1RowSpanRef.value += vesselRowSpan;
+                    level2RowSpanRef.value += vesselRowSpan;
+
+                        metrics.forEach((metric, index) => {
+                            result.push({
+                                col1: isFirstLevel1Row && isFirstLevel2Row && index === 0 ? { type: groupOrder[0], name: level1Name, rowSpanRef: level1RowSpanRef } : null,
+                                col2: isFirstLevel2Row && index === 0 ? { type: groupOrder[1], name: level2Name, rowSpanRef: level2RowSpanRef } : null,
+                                col3: index === 0 ? { type: groupOrder[2], name: level3Name, rowSpan: vesselRowSpan } : null,
+                                clientName: client,
+                                routeName: route,
+                                vesselName: vessel,
+                                metric: metric,
+                                isSubRow: false
+                            });
+
+
 
                         if (metric.name === "Demurrage" && isDemurrageExpanded) {
                             if (isDemurrageVisible) {
@@ -438,38 +482,34 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
                         if (metric.isExpandable && isExpanded) {
                             const subMetricsData = [
-                                { name: "Distancia (MN)", key: "distancia_total", curr: false },
-                                { name: "Carga Transportada (MT)", key: "carga_unit", curr: false },
-                                { name: "Flete (USD/MT)", key: "flete_unit", curr: true },
-                                { name: "Gross Revenue (USD)", key: "net_income_unit", curr: true },
-                                { name: "Sea Days", key: "sea_days_unit", curr: false },
-                                { name: "Port/Idle Days", key: "port_days_unit", curr: false },
-                                { name: "Duración Total (Días)", key: "total_duration_unit", curr: false },
-                                { name: "Bunker IFO (MT)", key: "bunker_ifo_tonnage_unit", curr: false },
-                                { name: "Bunker MDO (MT)", key: "bunker_mdo_tonnage_unit", curr: false },
-                                { name: "Port Costs (USD)", key: "total_port_costs_unit", curr: true },
-                                { name: "Bunker Costs (USD)", key: "total_bunker_costs_unit", curr: true },
-                                { name: "TCE (USD/Día)", key: "tce_real_unit", curr: true },
-                                { name: "PCM (USD)", key: "pcm_projected", curr: true },
-                                { name: "P/L Neto (USD)", key: "pl_vs_required_unit", curr: true }
+                                { name: "↳ Distancia (MN)", key: "distancia_total", curr: false, isPct: false },
+                                { name: "↳ Carga Transportada Q (MT)", key: "carga_unit", curr: false, isPct: false },
+                                { name: "↳ Tarifa Flete Base P (USD/MT)", key: "flete_unit", curr: true, isPct: false },
+                                { name: "↳ Ingreso Bruto de Flete (USD)", key: "gross_income_unit", curr: true, isPct: false },
+                                { name: "↳ Comisión Address (%)", key: "address_comm_pct", curr: false, isPct: true },
+                                { name: "↳ Comisión Broker (%)", key: "broker_comm_pct", curr: false, isPct: true },
+                                { name: "↳ Comisiones Totales (USD)", key: "total_commissions_unit", curr: true, isPct: false },
+                                { name: "↳ Flete Neto (USD)", key: "net_income_unit", curr: true, isPct: false },
+                                { name: "↳ Días de Mar", key: "sea_days_unit", curr: false, isPct: false },
+                                { name: "↳ Días de Puerto", key: "port_days_unit", curr: false, isPct: false },
+                                { name: "↳ Duración Total (Días)", key: "total_duration_unit", curr: false, isPct: false },
+                                { name: "↳ Precio IFO (USD/MT)", key: "price_ifo_unit", curr: true, isPct: false },
+                                { name: "↳ Consumo Bunker IFO (MT)", key: "bunker_ifo_tonnage_unit", curr: false, isPct: false },
+                                { name: "↳ Costo IFO (USD)", key: "bunker_ifo_cost_unit", curr: true, isPct: false },
+                                { name: "↳ Precio MDO (USD/MT)", key: "price_mdo_unit", curr: true, isPct: false },
+                                { name: "↳ Consumo Bunker MDO (MT)", key: "bunker_mdo_tonnage_unit", curr: false, isPct: false },
+                                { name: "↳ Costo MDO (USD)", key: "bunker_mdo_cost_unit", curr: true, isPct: false },
+                                { name: "↳ Costos de Puerto (USD)", key: "total_port_costs_unit", curr: true, isPct: false },
+                                { name: "↳ Costos de Combustible Total (USD)", key: "total_bunker_costs_unit", curr: true, isPct: false },
+                                { name: "↳ Resultado del Viaje / Voyage Result (USD)", key: "voyage_result_unit", curr: true, isPct: false },
+                                { name: "↳ TCE Real (USD/Día)", key: "tce_real_unit", curr: true, isPct: false },
+                                { name: "↳ TCE Requerido del Buque (USD/Día)", key: "tce_required_unit", curr: true, isPct: false },
+                                { name: "↳ Costo TCE x Días (USD)", key: "tce_cost_total_unit", curr: true, isPct: false },
+                                { name: "↳ P/L Neto Auditable (USD)", key: "pl_vs_required_unit", curr: true, isPct: false }
                             ];
                             
                             subMetricsData.forEach(sub => {
                                 let vals = getMonthlyValues(sub.key as string);
-                                if (sub.name === "Flete (USD/MT)") {
-                                    vals = months.map((m, mIdx) => {
-                                        const line = projectionLines.find(p => 
-                                            p.client_id === client && 
-                                            `${p.origin_port_id}-${p.destination_port_id}` === route && 
-                                            p.vessel_id === vessel && 
-                                            p.month_index === m
-                                        );
-                                        if (line && line.custom_tariff !== undefined) {
-                                            return line.custom_tariff;
-                                        }
-                                        return vals[mIdx];
-                                    });
-                                }
 
                                 result.push({
                                     col1: null, col2: null, col3: null,
@@ -481,6 +521,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                         pct: null,
                                         totalPct: null,
                                         isCurrency: sub.curr,
+                                        isPct: sub.isPct,
                                         isTotal: false,
                                         isSubRowMetric: true
                                     },
@@ -493,7 +534,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     months.forEach((_, i) => {
                         globalTrips[i] += trips[i] || 0;
                         globalTons[i] += tonsTotal[i] || 0;
-                        globalRevenues[i] += revenues[i] || 0;
+                        globalRevenues[i] += grossRevenues[i] || 0;
                         globalPortCosts[i] += portCosts[i] || 0;
                         globalBunkerCosts[i] += bunker[i] || 0;
                         globalVoyageResult[i] += voyageResult[i] || 0;
@@ -655,20 +696,20 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         }
 
         return result;
-    }, [data, months, projectionLines, expandedRows, clientOrder, routeOrder, vesselOrder, collapsedSubtotals, isGlobalTotalCollapsed, isGlobalAcumCollapsed, demurragePct, showDemurrage, demurrageDays, showDemurrageDays, customDemurrageDays, expandedDemurrages, excludedDemurrages, customDemurrages, groupOrder, hiddenClients, hiddenRoutes, hiddenVessels, showSubtotals, showAccumulatedTotal]);
+    }, [data, months, projectionLines, expandedRows, expandedGrossRevenue, expandedTce, clientOrder, routeOrder, vesselOrder, collapsedSubtotals, isGlobalTotalCollapsed, isGlobalAcumCollapsed, demurragePct, showDemurrage, demurrageDays, showDemurrageDays, customDemurrageDays, expandedDemurrages, excludedDemurrages, customDemurrages, groupOrder, hiddenClients, hiddenRoutes, hiddenVessels, showSubtotals, showAccumulatedTotal]);
 
-    const formatCurrency = (val: number) => {
-        if (val === 0) return "-";
+    const formatCurrency = (val: number | undefined | null) => {
+        if (val === 0 || val === undefined || val === null || isNaN(val)) return "-";
         return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(val);
     };
 
-    const formatYield = (val: number) => {
-        if (val === 0) return "-";
+    const formatYield = (val: number | undefined | null) => {
+        if (val === 0 || val === undefined || val === null || isNaN(val)) return "-";
         return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
     };
 
-    const formatNumber = (val: number) => {
-        if (val === 0) return "-";
+    const formatNumber = (val: number | undefined | null) => {
+        if (val === 0 || val === undefined || val === null || isNaN(val)) return "-";
         return new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(val);
     };
 
@@ -801,13 +842,22 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 </td>
                             )}
                             <td 
+                                onClick={(e) => {
+                                    if (row.metric.isExpandableGrossRevenue) {
+                                        e.stopPropagation();
+                                        toggleGrossRevenue(row.metric.rowKey);
+                                    } else if (row.metric.isExpandableTce) {
+                                        e.stopPropagation();
+                                        toggleTce(row.metric.rowKey);
+                                    }
+                                }}
                                 onContextMenu={(e) => {
                                     if (row.metric.isExpandableDemurrage) {
                                         e.preventDefault();
                                         setContextMenu({ x: e.clientX, y: e.clientY, type: 'demurrage', client: row.clientName, route: row.routeName, vessel: row.vesselName, rowKey: row.metric.rowKey });
                                     }
                                 }}
-                                className={`py-1 px-2 border border-slate-200 ${row.isSubRow ? (row.metric.isCategoryHeader ? 'pl-6 text-xs text-slate-800 font-bold uppercase tracking-wider bg-slate-100/50' : 'pl-10 text-xs text-slate-500') : 'font-medium text-slate-700'} ${row.metric.isExpandableDemurrage ? 'cursor-context-menu bg-amber-50' : ''}`}
+                                className={`py-1 px-2 border border-slate-200 ${row.isSubRow ? (row.metric.isCategoryHeader ? 'pl-6 text-xs text-slate-800 font-bold uppercase tracking-wider bg-slate-100/50' : 'pl-10 text-xs text-slate-500') : 'font-medium text-slate-700'} ${row.metric.isExpandableDemurrage ? 'cursor-context-menu bg-amber-50' : ''} ${(row.metric.isExpandableGrossRevenue || row.metric.isExpandableTce) ? 'cursor-pointer hover:bg-slate-100/80 transition-colors' : ''}`}
                             >
                                 {row.metric.isExpandable ? (
                                     <button 
@@ -816,6 +866,26 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                     >
                                         {row.metric.isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                                         {row.metric.name}
+                                    </button>
+                                ) : row.metric.isExpandableGrossRevenue ? (
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); toggleGrossRevenue(row.metric.rowKey); }}
+                                        className="flex items-center gap-1 text-emerald-700 hover:text-emerald-900 focus:outline-none transition-colors font-bold w-full text-left cursor-pointer"
+                                        title="Ver desglose auditable P x Q"
+                                    >
+                                        {row.metric.isExpanded ? <ChevronDown className="h-4 w-4 text-emerald-600 flex-shrink-0" /> : <ChevronRight className="h-4 w-4 text-emerald-600 flex-shrink-0" />}
+                                        <span>{row.metric.name}</span>
+                                        <span className="text-[9px] text-emerald-700 bg-emerald-100/80 px-1 py-0.2 rounded border border-emerald-300 ml-1 font-mono">P×Q</span>
+                                    </button>
+                                ) : row.metric.isExpandableTce ? (
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); toggleTce(row.metric.rowKey); }}
+                                        className="flex items-center gap-1 text-blue-700 hover:text-blue-900 focus:outline-none transition-colors font-bold w-full text-left cursor-pointer"
+                                        title="Ver desglose auditable TCE x días"
+                                    >
+                                        {row.metric.isExpanded ? <ChevronDown className="h-4 w-4 text-blue-600 flex-shrink-0" /> : <ChevronRight className="h-4 w-4 text-blue-600 flex-shrink-0" />}
+                                        <span>{row.metric.name}</span>
+                                        <span className="text-[9px] text-blue-700 bg-blue-100/80 px-1 py-0.2 rounded border border-blue-300 ml-1 font-mono">Días×TCE</span>
                                     </button>
                                 ) : row.metric.isExpandableDemurrage ? (
                                     <button 
@@ -931,13 +1001,15 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                         </span>
                                                     ) : (
                                                         <span className="font-medium">
-                                                            {row.metric.name === "Yield (USD/MT)" || row.metric.name === "Yield Flete (USD/MT)" || row.metric.name === "Flete (USD/MT)" ? formatYield(v) : formatCurrency(v)}
+                                                            {(row.metric.name.includes("Flete") || row.metric.name.includes("Yield") || row.metric.name.includes("Tarifa")) ? formatYield(v) : formatCurrency(v)}
                                                         </span>
                                                     )}
                                                 </div>
-                                            ) : (
-                                                <span className="font-medium text-slate-700">{formatNumber(v)}</span>
-                                            )
+                                             ) : row.metric.isPct ? (
+                                                 <span className="font-medium text-slate-700">{v != null && v !== 0 ? `${Number(v).toFixed(1)}%` : '-'}</span>
+                                             ) : (
+                                                 <span className="font-medium text-slate-700">{formatNumber(v)}</span>
+                                             )
                                         )
                                     )}
                                 </td>
@@ -950,7 +1022,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                         .map((m, i) => ({ m, i }))
                                         .filter(({ m }) => !hiddenMonths.includes(m))
                                         .map(({ i }) => i);
-                                    const isYieldMetric = row.metric.name === "Yield (USD/MT)" || row.metric.name === "Yield Flete (USD/MT)" || row.metric.name === "Flete (USD/MT)";
+                                    const isYieldMetric = row.metric.name.includes("Flete") || row.metric.name.includes("Yield") || row.metric.name.includes("Tarifa");
                                     const visibleValues = visibleIndices.map(i => row.metric.values[i] ?? 0).filter(v => v !== null);
                                     const isAccumMetric = row.metric.globalType === 'accum';
                                     const visibleTotal = isAccumMetric

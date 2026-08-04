@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 # --- MEMORY CACHE FOR MASTER DATA ---
 _masters_cache = {}
 _cache_time = 0.0
-CACHE_TTL = 3600.0  # 1 hora TTL para respuesta instantánea desde memoria RAM
+CACHE_TTL = 5.0  # 5 segundos TTL para forzar lectura fresca de Supabase
 
 def clear_forecast_cache():
     global _masters_cache, _cache_time
@@ -509,58 +509,61 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         # 4. Buscar Tarifa en contract_tariffs según quantity (cache pre-cargado)
         # NOTA: Tras migración 20260624000008, contract_tariffs ya NO tiene client_id/destination_port_id.
         #       Ahora se filtra por contract_id obtenido del contrato padre.
-        freight_rate = 0
-        
-        if getattr(line, 'custom_tariff', None) is not None:
-            freight_rate = line.custom_tariff
-        else:
-            matching_tariffs = []
+        contract_tariff_val = 0
+        matching_tariffs = []
 
-            # PRIORIDAD 1: Buscar por contract_id + ruta (estructura nueva con FK compuesta)
-            if contract:
-                contract_id_val = contract.get("contract_id")
-                if contract_id_val:
-                    matching_tariffs = [
-                        t for t in tariffs_data
-                        if str(t.get("contract_id", "")) == str(contract_id_val)
-                        and t.get("origin_port_id") == line.origin_port_id
-                        and t.get("destination_port_id") == line.destination_port_id
-                    ]
-
-            # PRIORIDAD 2: Fallback legacy — client_id + destination_port_id (antes de la migración)
-            # También actúa como safety net si contract_id no está en tariffs aún
-            if not matching_tariffs:
+        if contract:
+            contract_id_val = contract.get("contract_id")
+            if contract_id_val:
                 matching_tariffs = [
                     t for t in tariffs_data
-                    if t.get("client_id") == client
-                    and t.get("destination_port_id") == line.destination_port_id
+                    if str(t.get("contract_id", "")) == str(contract_id_val)
+                    and (not t.get("origin_port_id") or t.get("origin_port_id") == line.origin_port_id)
+                    and (not t.get("destination_port_id") or t.get("destination_port_id") == line.destination_port_id)
                 ]
 
-            if matching_tariffs:
-                # Ordenar brackets por tonelaje mínimo para iterar en orden ascendente
-                matching_tariffs = sorted(matching_tariffs, key=lambda x: x.get("min_tonnage", 0))
+        if not matching_tariffs:
+            matching_tariffs = [
+                t for t in tariffs_data
+                if t.get("client_id") == client
+                and t.get("destination_port_id") == line.destination_port_id
+            ]
 
-                # Buscar bracket exacto: min_tonnage <= quantity <= max_tonnage
+        if matching_tariffs:
+            matching_tariffs = sorted(matching_tariffs, key=lambda x: x.get("min_tonnage", 0))
+            for tariff in matching_tariffs:
+                if tariff.get("min_tonnage", 0) <= line.quantity <= tariff.get("max_tonnage", 999999):
+                    contract_tariff_val = float(tariff.get("freight_rate", 0))
+                    break
+            if contract_tariff_val == 0:
                 for tariff in matching_tariffs:
-                    if tariff.get("min_tonnage", 0) <= line.quantity <= tariff.get("max_tonnage", 999999):
-                        freight_rate = tariff.get("freight_rate", 0)
+                    if line.quantity <= tariff.get("max_tonnage", 999999):
+                        contract_tariff_val = float(tariff.get("freight_rate", 0))
                         break
+            if contract_tariff_val == 0:
+                highest_bracket = max(matching_tariffs, key=lambda x: x.get("max_tonnage", 0))
+                contract_tariff_val = float(highest_bracket.get("freight_rate", 0))
 
-                # Si cae en un gap entre brackets (ej: 13,550 entre 13,500 y 13,600)
-                # tomar el primer bracket cuyo max_tonnage supere la cantidad
-                if freight_rate == 0:
-                    for tariff in matching_tariffs:
-                        if line.quantity <= tariff.get("max_tonnage", 999999):
-                            freight_rate = tariff.get("freight_rate", 0)
-                            break
-
-                # Último recurso: bracket con mayor tonelaje máximo (excede el rango superior)
-                if freight_rate == 0:
-                    highest_bracket = max(matching_tariffs, key=lambda x: x.get("max_tonnage", 0))
-                    freight_rate = highest_bracket.get("freight_rate", 0)
+        if contract_tariff_val > 0:
+            freight_rate = contract_tariff_val
+        elif getattr(line, 'custom_tariff', None) is not None:
+            freight_rate = float(line.custom_tariff)
+        else:
+            freight_rate = 0
         
-        p_ifo = line.forecast_bunker_price_ifo if line.forecast_bunker_price_ifo else bunker_db.get("IFO", 450)
-        p_mdo = line.forecast_bunker_price_mdo if line.forecast_bunker_price_mdo else bunker_db.get("MDO", 800)
+        if contract and contract.get("bunker_baseline_price_ifo") and float(contract.get("bunker_baseline_price_ifo")) > 0:
+            p_ifo = float(contract.get("bunker_baseline_price_ifo"))
+        elif line.forecast_bunker_price_ifo:
+            p_ifo = float(line.forecast_bunker_price_ifo)
+        else:
+            p_ifo = float(bunker_db.get("IFO", 450))
+
+        if contract and contract.get("bunker_baseline_price_mdo") and float(contract.get("bunker_baseline_price_mdo")) > 0:
+            p_mdo = float(contract.get("bunker_baseline_price_mdo"))
+        elif line.forecast_bunker_price_mdo:
+            p_mdo = float(line.forecast_bunker_price_mdo)
+        else:
+            p_mdo = float(bunker_db.get("MDO", 800))
         
         is_spot_route = (line.origin_port_id == "SPOT")
         spot_route = None
@@ -627,12 +630,17 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 total_laden_qty = 0.0
                 total_laden_revenue = 0.0
                 for tr in tramos_copy:
+                    tr["bunker_price_ifo"] = final_p_ifo
+                    tr["bunker_price_mdo"] = final_p_mdo
                     tipo = tr.get("type", "").upper()
                     if tipo == "LADEN":
-                        # Respetar freight_rate grabado por tramo (cotización multi-descarga)
-                        # Solo sobreescribir si el usuario pasó custom_tariff en la línea del forecast
-                        if line.custom_tariff is not None:
+                        # PRIORIDAD ABSOLUTA: Tarifa contractual de Supabase
+                        if contract_tariff_val > 0:
+                            tr["freight_rate"] = float(contract_tariff_val)
+                        elif line.custom_tariff is not None:
                             tr["freight_rate"] = float(line.custom_tariff)
+                        elif freight_rate > 0:
+                            tr["freight_rate"] = float(freight_rate)
                         # Acumular para yield ponderado
                         total_laden_qty += float(tr.get("quantity", 0))
                         total_laden_revenue += float(tr.get("quantity", 0)) * float(tr.get("freight_rate", 0))
@@ -682,14 +690,18 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 tce_real = (pnl_after_comm / total_days) if total_days > 0 else 0
 
                 unit_result = {
-                    "net_income": gross_revenue,
+                    "gross_income": round(gross_revenue, 2),
+                    "gross_income_unit": round(gross_revenue, 2),
                     "total_commissions": round(total_commissions, 2),
-                    "net_revenue_after_comm": round(net_revenue, 2),
+                    "net_income": round(net_revenue, 2),
                     "total_port_costs": consolidated.get("total_port_costs", 0),
                     "total_bunker_costs": consolidated.get("total_bunker_costs", 0),
                     "voyage_result": round(pnl_after_comm, 2),
                     "pl_vs_required": round(pnl_after_comm - (total_days * tce_req), 2),
                     "tce_real": round(tce_real, 2),
+                    "tce_required_unit": tce_req,
+                    "flete_unit": yield_flete if yield_flete > 0 else freight_rate,
+                    "carga_unit": total_laden_qty if total_laden_qty > 0 else line.quantity,
                     "total_duration": total_days,
                     "total_distance": consolidated.get("total_distance", 0),
                     "sea_days": consolidated.get("total_sea_days", 0),
@@ -847,6 +859,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         monthly_result = {
             "freq": freq,
             "vessel_demurrage_rate": float(contract.get("demurrage_rates", {}).get(vessel, 0.0)) if contract and isinstance(contract.get("demurrage_rates"), dict) else 0.0,
+            "gross_income": unit_result.get("gross_income", inputs["quantity"] * inputs["freight_rate"]) * freq,
+            "total_commissions": unit_result.get("total_commissions", 0.0) * freq,
             "net_income": unit_result["net_income"] * freq,
             "total_port_costs": unit_result["total_port_costs"] * freq,
             "total_bunker_costs": unit_result["total_bunker_costs"] * freq,
@@ -858,15 +872,26 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "distancia_total": unit_result.get("total_distance", inputs.get("route_distance")),
             "carga_unit": inputs["quantity"],
             "flete_unit": inputs["freight_rate"],
+            "gross_income_unit": unit_result.get("gross_income", inputs["quantity"] * inputs["freight_rate"]),
+            "address_comm_pct": inputs.get("address_commission", 0.0),
+            "broker_comm_pct": inputs.get("broker_commission", 0.0),
+            "total_commissions_unit": unit_result.get("total_commissions", 0.0),
             "net_income_unit": unit_result["net_income"],
             "sea_days_unit": unit_result["sea_days"],
             "port_days_unit": unit_result["port_days"],
             "total_duration_unit": unit_result["total_duration"],
+            "price_ifo_unit": float(p_ifo),
             "bunker_ifo_tonnage_unit": unit_result["bunker_ifo_tonnage"],
+            "bunker_ifo_cost_unit": float(unit_result["bunker_ifo_tonnage"] * p_ifo),
+            "price_mdo_unit": float(p_mdo),
             "bunker_mdo_tonnage_unit": unit_result["bunker_mdo_tonnage"],
+            "bunker_mdo_cost_unit": float(unit_result["bunker_mdo_tonnage"] * p_mdo),
             "total_bunker_costs_unit": unit_result["total_bunker_costs"],
             "total_port_costs_unit": unit_result["total_port_costs"],
+            "voyage_result_unit": unit_result["voyage_result"],
             "tce_real_unit": unit_result["tce_real"],
+            "tce_required_unit": float(v_data.get("tce_required", 13000.0)),
+            "tce_cost_total_unit": float(unit_result["total_duration"] * float(v_data.get("tce_required", 13000.0))),
             "pcm_projected": unit_result["pcm_projected"],
             "pl_vs_required_unit": unit_result["pl_vs_required"],
             "actual_load_rate": unit_result.get("actual_load_rate", 0.0),
@@ -900,8 +925,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
 
 def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any]:
     supabase = get_supabase()
-    
-    # Pre-cargar maestros usando el cache global
+    clear_forecast_cache()
     masters = get_cached_masters(supabase)
     
     vessels_data = masters["vessels"]
@@ -956,47 +980,63 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                 None
             )
         
-        freight_rate = 0
-        if getattr(line, 'custom_tariff', None) is not None:
-            freight_rate = line.custom_tariff
-        else:
-            matching_tariffs = []
-            if contract:
-                contract_id_val = contract.get("contract_id")
-                if contract_id_val:
-                    matching_tariffs = [
-                        t for t in tariffs_data
-                        if str(t.get("contract_id", "")) == str(contract_id_val)
-                        and t.get("origin_port_id") == line.origin_port_id
-                        and t.get("destination_port_id") == line.destination_port_id
-                    ]
+        contract_tariff_val = 0
+        matching_tariffs = []
 
-            if not matching_tariffs:
+        if contract:
+            contract_id_val = contract.get("contract_id")
+            if contract_id_val:
                 matching_tariffs = [
                     t for t in tariffs_data
-                    if t.get("client_id") == client
-                    and t.get("destination_port_id") == line.destination_port_id
+                    if str(t.get("contract_id", "")) == str(contract_id_val)
+                    and (not t.get("origin_port_id") or t.get("origin_port_id") == line.origin_port_id)
+                    and (not t.get("destination_port_id") or t.get("destination_port_id") == line.destination_port_id)
                 ]
 
-            if matching_tariffs:
-                matching_tariffs = sorted(matching_tariffs, key=lambda x: x.get("min_tonnage", 0))
+        if not matching_tariffs:
+            matching_tariffs = [
+                t for t in tariffs_data
+                if t.get("client_id") == client
+                and t.get("destination_port_id") == line.destination_port_id
+            ]
+
+        if matching_tariffs:
+            matching_tariffs = sorted(matching_tariffs, key=lambda x: float(x.get("min_tonnage", 0)))
+            for tariff in matching_tariffs:
+                min_t = float(tariff.get("min_tonnage", 0))
+                max_t = float(tariff.get("max_tonnage", 999999))
+                if min_t <= float(line.quantity) <= max_t:
+                    contract_tariff_val = float(tariff.get("freight_rate", 0))
+                    break
+            if contract_tariff_val == 0:
                 for tariff in matching_tariffs:
-                    if tariff.get("min_tonnage", 0) <= line.quantity <= tariff.get("max_tonnage", 999999):
-                        freight_rate = tariff.get("freight_rate", 0)
+                    if float(line.quantity) <= float(tariff.get("max_tonnage", 999999)):
+                        contract_tariff_val = float(tariff.get("freight_rate", 0))
                         break
+            if contract_tariff_val == 0:
+                highest_bracket = max(matching_tariffs, key=lambda x: float(x.get("max_tonnage", 0)))
+                contract_tariff_val = float(highest_bracket.get("freight_rate", 0))
 
-                if freight_rate == 0:
-                    for tariff in matching_tariffs:
-                        if line.quantity <= tariff.get("max_tonnage", 999999):
-                            freight_rate = tariff.get("freight_rate", 0)
-                            break
-
-                if freight_rate == 0:
-                    highest_bracket = max(matching_tariffs, key=lambda x: x.get("max_tonnage", 0))
-                    freight_rate = highest_bracket.get("freight_rate", 0)
+        if contract_tariff_val > 0:
+            freight_rate = contract_tariff_val
+        elif getattr(line, 'custom_tariff', None) is not None:
+            freight_rate = float(line.custom_tariff)
+        else:
+            freight_rate = 0
         
-        p_ifo = line.forecast_bunker_price_ifo if line.forecast_bunker_price_ifo else bunker_db.get("IFO", 450)
-        p_mdo = line.forecast_bunker_price_mdo if line.forecast_bunker_price_mdo else bunker_db.get("MDO", 800)
+        if contract and contract.get("bunker_baseline_price_ifo") and float(contract.get("bunker_baseline_price_ifo")) > 0:
+            p_ifo = float(contract.get("bunker_baseline_price_ifo"))
+        elif line.forecast_bunker_price_ifo:
+            p_ifo = float(line.forecast_bunker_price_ifo)
+        else:
+            p_ifo = float(bunker_db.get("IFO", 450))
+
+        if contract and contract.get("bunker_baseline_price_mdo") and float(contract.get("bunker_baseline_price_mdo")) > 0:
+            p_mdo = float(contract.get("bunker_baseline_price_mdo"))
+        elif line.forecast_bunker_price_mdo:
+            p_mdo = float(line.forecast_bunker_price_mdo)
+        else:
+            p_mdo = float(bunker_db.get("MDO", 800))
         
         is_spot_route = (line.origin_port_id == "SPOT")
         spot_route = None
@@ -1053,10 +1093,16 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                 total_laden_qty = 0.0
                 total_laden_revenue = 0.0
                 for tr in tramos_copy:
+                    tr["bunker_price_ifo"] = final_p_ifo
+                    tr["bunker_price_mdo"] = final_p_mdo
                     tipo = tr.get("type", "").upper()
                     if tipo == "LADEN":
-                        if line.custom_tariff is not None:
+                        if contract_tariff_val > 0:
+                            tr["freight_rate"] = float(contract_tariff_val)
+                        elif line.custom_tariff is not None:
                             tr["freight_rate"] = float(line.custom_tariff)
+                        elif freight_rate > 0:
+                            tr["freight_rate"] = float(freight_rate)
                         total_laden_qty += float(tr.get("quantity", 0))
                         total_laden_revenue += float(tr.get("quantity", 0)) * float(tr.get("freight_rate", 0))
                         orig_port = tr.get("origin_port_id")
@@ -1254,6 +1300,8 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             "freq": freq,
             "vessel_demurrage_rate": float(contract.get("demurrage_rates", {}).get(vessel, 0.0)) if contract and isinstance(contract.get("demurrage_rates"), dict) else 0.0,
             "net_income": unit_result["net_income"] * freq,
+            "gross_income": unit_result.get("gross_income", inputs["quantity"] * inputs["freight_rate"]) * freq,
+            "total_commissions": unit_result.get("total_commissions", 0.0) * freq,
             "total_port_costs": unit_result["total_port_costs"] * freq,
             "total_bunker_costs": unit_result["total_bunker_costs"] * freq,
             "voyage_result": unit_result["voyage_result"] * freq,
@@ -1263,15 +1311,26 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             "distancia_total": unit_result.get("total_distance", inputs.get("route_distance")),
             "carga_unit": inputs["quantity"],
             "flete_unit": inputs["freight_rate"],
+            "gross_income_unit": unit_result.get("gross_income", inputs["quantity"] * inputs["freight_rate"]),
+            "address_comm_pct": inputs.get("address_commission", 0.0),
+            "broker_comm_pct": inputs.get("broker_commission", 0.0),
+            "total_commissions_unit": unit_result.get("total_commissions", 0.0),
             "net_income_unit": unit_result["net_income"],
             "sea_days_unit": unit_result["sea_days"],
             "port_days_unit": unit_result["port_days"],
             "total_duration_unit": unit_result["total_duration"],
+            "price_ifo_unit": float(p_ifo),
             "bunker_ifo_tonnage_unit": unit_result["bunker_ifo_tonnage"],
+            "bunker_ifo_cost_unit": float(unit_result["bunker_ifo_tonnage"] * p_ifo),
+            "price_mdo_unit": float(p_mdo),
             "bunker_mdo_tonnage_unit": unit_result["bunker_mdo_tonnage"],
+            "bunker_mdo_cost_unit": float(unit_result["bunker_mdo_tonnage"] * p_mdo),
             "total_bunker_costs_unit": unit_result["total_bunker_costs"],
             "total_port_costs_unit": unit_result["total_port_costs"],
+            "voyage_result_unit": unit_result["voyage_result"],
             "tce_real_unit": unit_result["tce_real"],
+            "tce_required_unit": float(v_data.get("tce_required", 13000.0)),
+            "tce_cost_total_unit": float(unit_result["total_duration"] * float(v_data.get("tce_required", 13000.0))),
             "pcm_projected": unit_result["pcm_projected"],
             "pl_vs_required_unit": unit_result["pl_vs_required"],
             "actual_load_rate": unit_result.get("actual_load_rate", 0.0),

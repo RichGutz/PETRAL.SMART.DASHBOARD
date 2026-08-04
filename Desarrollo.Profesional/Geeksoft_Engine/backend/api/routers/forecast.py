@@ -730,6 +730,8 @@ def save_routes(payload: List[RouteUpdate]):
             sb.table("ports").insert(ports_to_insert).execute()
             
         res = sb.table("distances").upsert(data_to_upsert).execute()
+        from backend.services.forecast_service import clear_forecast_cache
+        clear_forecast_cache()
         return {"status": "success", "data": res.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

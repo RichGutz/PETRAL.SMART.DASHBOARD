@@ -355,6 +355,67 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             const labelColor = yAxisIndex === 0 ? primaryLabelColor : secondaryLabelColor;
             const isBar = graphType.includes('bar');
 
+            // CASO ESPECIAL: APILAMIENTO DE PORT COSTS POR ESCALA (POL vs POD 1 vs POD 2) EN BARRAS
+            if (metric === 'port_costs_usd' && isBar) {
+                const polData = sortedFilteredData.map(r => Math.round(Number(r.details?.port_expenses?.pol_cost_usd || 0)));
+                const pod1Data = sortedFilteredData.map(r => Math.round(Number(r.details?.port_expenses?.pod1_cost_usd || 0)));
+                const pod2Data = sortedFilteredData.map(r => Math.round(Number(r.details?.port_expenses?.pod2_cost_usd || 0)));
+
+                return [
+                    {
+                        name: `Port Cost Carga (POL) ${yAxisIndex === 0 ? '(Pri)' : '(Sec)'}`,
+                        type: 'bar',
+                        stack: 'port_costs_stack',
+                        yAxisIndex: yAxisIndex,
+                        barMaxWidth: 35,
+                        itemStyle: { color: '#0284C7' },
+                        label: labelPos !== 'none' ? {
+                            show: true,
+                            position: labelPos === 'top' ? 'inside' : labelPos,
+                            color: labelColor,
+                            fontSize: 9,
+                            fontWeight: 'bold',
+                            formatter: (p: any) => p.value > 0 ? `$${p.value.toLocaleString()}` : ''
+                        } : { show: false },
+                        data: polData
+                    },
+                    {
+                        name: `Port Cost Descarga 1 (POD 1) ${yAxisIndex === 0 ? '(Pri)' : '(Sec)'}`,
+                        type: 'bar',
+                        stack: 'port_costs_stack',
+                        yAxisIndex: yAxisIndex,
+                        barMaxWidth: 35,
+                        itemStyle: { color: '#7C3AED' },
+                        label: labelPos !== 'none' ? {
+                            show: true,
+                            position: labelPos === 'top' ? 'inside' : labelPos,
+                            color: labelColor,
+                            fontSize: 9,
+                            fontWeight: 'bold',
+                            formatter: (p: any) => p.value > 0 ? `$${p.value.toLocaleString()}` : ''
+                        } : { show: false },
+                        data: pod1Data
+                    },
+                    {
+                        name: `Port Cost Descarga 2 (POD 2) ${yAxisIndex === 0 ? '(Pri)' : '(Sec)'}`,
+                        type: 'bar',
+                        stack: 'port_costs_stack',
+                        yAxisIndex: yAxisIndex,
+                        barMaxWidth: 35,
+                        itemStyle: { color: '#EC4899' },
+                        label: labelPos !== 'none' ? {
+                            show: true,
+                            position: 'top',
+                            color: labelColor,
+                            fontSize: 9,
+                            fontWeight: 'bold',
+                            formatter: (p: any) => p.value > 0 ? `$${p.value.toLocaleString()}` : ''
+                        } : { show: false },
+                        data: pod2Data
+                    }
+                ];
+            }
+
             const seriesKeys = Object.keys(seriesGroupMap);
 
             return seriesKeys.map(sKey => {
@@ -368,18 +429,15 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
 
                     const mKey = getVoyageMonthKey(r);
 
-                    // SI EL VIAJE PERTENECE A ESTA SERIE / BARCO
                     if (rKey === sKey) {
                         const val = Math.round(getMetricValue(r, metric));
                         let calcValue = val;
 
-                        // 1. LÓGICA DE SUMA ACUMULADA PROGRESIVA (RUNNING TOTAL)
                         if (yAxisIndex === 1 && isSecondaryCumulativeSeries) {
                             runningTotal += val;
                             calcValue = runningTotal;
                         }
 
-                        // 2. LÓGICA FINANCIERA DE PORCENTAJE SOBRE GROSS REVENUE COMBINADO (RENTABILIDAD % REAL DE CADA VIAJE)
                         if (yAxisIndex === 1 && isSecondaryPercentage) {
                             const totalGrossRev = getMetricValue(r, 'gross_revenue_usd');
                             if (totalGrossRev > 0) {
@@ -397,13 +455,10 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                         };
                     }
 
-                    // SI EL BARCO / SERIE NO PARTICIPÓ EN ESTE VIAJE:
-                    // PARA BARRAS RETURN 0; PARA LÍNEAS RETURN null (JOIN THE DOTS)
                     if (isBar) {
                         return { value: 0, itemStyle: { color: 'transparent' } };
                     }
 
-                    // JOIN THE DOTS: DEVOLVER null PARA UNIR EL ÚLTIMO DATO REAL SIN CAER A CERO
                     return null;
                 });
 
@@ -414,7 +469,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                     type: isBar ? 'bar' : 'line',
                     yAxisIndex: yAxisIndex,
                     smooth: graphType === 'line',
-                    connectNulls: true, // JOIN THE DOTS: UNIR PUNTOS REALES IGNORANDO VIAJES VACÍOS
+                    connectNulls: true,
                     symbol: graphType.includes('line') ? 'circle' : undefined,
                     symbolSize: graphType.includes('line') ? 7 : undefined,
                     barMaxWidth: 35,
@@ -477,6 +532,19 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                         }
                     });
 
+                    if (r.details?.port_expenses?.agency_breakdown) {
+                        const bd = r.details.port_expenses.agency_breakdown;
+                        html += `<div style="margin-top:4px;padding-top:4px;border-top:1px dashed #cbd5e1;font-size:10.5px;color:#334155;">
+                            <b>⚓ Port Costs por Escala:</b>`;
+                        bd.forEach((b: any) => {
+                            html += `<div style="display:flex;justify-content:space-between;gap:8px;margin-top:1px;">
+                                <span>• ${b.port} (${b.role || 'PUERTO'}):</span>
+                                <span style="font-weight:bold;">$${Math.round(b.cost_usd || 0).toLocaleString()}</span>
+                            </div>`;
+                        });
+                        html += `</div>`;
+                    }
+
                     if (r.tce_usd_day) {
                         html += `<div style="margin-top:4px;font-size:10px;color:#0284C7;font-weight:bold;">⚡ TCE Real: $${Math.round(r.tce_usd_day).toLocaleString()} / día</div>`;
                     }
@@ -484,6 +552,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                     return html;
                 }
             },
+
             legend: { top: 0, type: 'scroll', textStyle: { fontSize: 11, fontWeight: 'bold', color: '#334155' } },
             grid: { left: '3%', right: '4%', bottom: '16%', top: '12%', containLabel: true },
             

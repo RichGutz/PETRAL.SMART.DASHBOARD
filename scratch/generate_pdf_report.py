@@ -100,11 +100,12 @@ table_data = [[
     Paragraph("<b>NAVE</b>", th_style),
     Paragraph("<b>VIAJE</b>", th_style),
     Paragraph("<b>CLIENTE</b>", th_style),
-    Paragraph("<b>RUTA</b>", th_style),
+    Paragraph("<b>RUTA (POL → POD)</b>", th_style),
     Paragraph("<b>INGRESO TOTAL (I23)</b>", th_style),
-    Paragraph("<b>ITEMS DE INGRESO (PASS-THROUGH / FLETE)</b>", th_style),
-    Paragraph("<b>GASTOS PUERTO</b>", th_style),
-    Paragraph("<b>COSTO BÚNKER</b>", th_style),
+    Paragraph("<b>CARGA (POL)</b>", th_style),
+    Paragraph("<b>DESCARGA (POD)</b>", th_style),
+    Paragraph("<b>TOTAL PUERTO</b>", th_style),
+    Paragraph("<b>BÚNKER</b>", th_style),
     Paragraph("<b>PROFIT REAL (P/L)</b>", th_style),
     Paragraph("<b>TCE ($/DÍA)</b>", th_style)
 ]]
@@ -117,11 +118,11 @@ for idx, r in enumerate(data, 1):
     gross = r['gross_revenue_usd']
     
     details = r.get('details', {})
-    income_info = details.get('income', {})
-    items = income_info.get('freight_income_items', [])
-    items_str = ", ".join([f"{it['concept']}: ${it['amount_usd']:,.0f}" for it in items]) if items else "Flete Base"
+    port_exp = details.get('port_expenses', {})
+    pol_cost = port_exp.get('pol_cost_usd', 0.0)
+    pod_cost = (port_exp.get('pod1_cost_usd', 0.0) + port_exp.get('pod2_cost_usd', 0.0))
+    port_cost = port_exp.get('total_agency_usd', 0.0)
     
-    port_cost = details.get('port_expenses', {}).get('total_agency_usd', 0.0)
     bunker_cost = details.get('bunker_expenses', {}).get('total_bunker_cost_usd', 0.0)
     pnl = r['net_profit_usd']
     tce = r['tce_usd_day']
@@ -129,8 +130,9 @@ for idx, r in enumerate(data, 1):
     vessel_cell = Paragraph(f"<b>{vessel}</b>", td_bold_style)
     vcode_cell = Paragraph(f"<b>{vcode}</b>", td_bold_style)
     gross_cell = Paragraph(f"${gross:,.2f}", td_bold_style)
-    items_cell = Paragraph(items_str, td_style)
-    port_cell = Paragraph(f"${port_cost:,.2f}", td_style)
+    pol_cell = Paragraph(f"${pol_cost:,.2f}", td_style)
+    pod_cell = Paragraph(f"${pod_cost:,.2f}", td_style)
+    port_cell = Paragraph(f"${port_cost:,.2f}", td_bold_style)
     bunker_cell = Paragraph(f"${bunker_cost:,.2f}", td_style)
     pnl_cell = Paragraph(f"<b>${pnl:,.2f}</b>", td_green_style)
     tce_cell = Paragraph(f"<b>${tce:,.2f}</b>", td_bold_style)
@@ -142,7 +144,8 @@ for idx, r in enumerate(data, 1):
         Paragraph(client, td_style),
         Paragraph(route, td_style),
         gross_cell,
-        items_cell,
+        pol_cell,
+        pod_cell,
         port_cell,
         bunker_cell,
         pnl_cell,
@@ -150,7 +153,8 @@ for idx, r in enumerate(data, 1):
     ]
     table_data.append(row)
 
-col_widths = [0.25*inch, 0.75*inch, 0.95*inch, 0.55*inch, 0.95*inch, 0.95*inch, 2.3*inch, 0.85*inch, 0.85*inch, 0.9*inch, 0.85*inch]
+col_widths = [0.25*inch, 0.75*inch, 0.95*inch, 0.55*inch, 1.8*inch, 0.95*inch, 0.85*inch, 0.85*inch, 0.85*inch, 0.85*inch, 0.9*inch, 0.85*inch]
+
 
 t = Table(table_data, colWidths=col_widths, repeatRows=1)
 
