@@ -236,6 +236,32 @@ export const CommercialForecast: React.FC = () => {
         });
     };
 
+    const handleBunkerPriceChange = (client_id: string, route_key: string, vessel_id: string, month_index: string, fuelType: 'ifo' | 'mdo', newPrice: number) => {
+        setProjectionLines(prev => {
+            const parts = route_key.split('-');
+            const origin_port_id = parts[0];
+            const destination_port_id = parts[1];
+
+            const firstMatchIndex = prev.findIndex(p => 
+                p.month_index === month_index && 
+                p.vessel_id === vessel_id &&
+                p.origin_port_id === origin_port_id &&
+                p.destination_port_id === destination_port_id &&
+                p.client_id === client_id
+            );
+
+            if (firstMatchIndex >= 0) {
+                const updatedLine = { 
+                    ...prev[firstMatchIndex], 
+                    ...(fuelType === 'ifo' ? { forecast_bunker_price_ifo: newPrice } : { forecast_bunker_price_mdo: newPrice })
+                };
+                const filtered = prev.filter((_, idx) => idx !== firstMatchIndex);
+                return [updatedLine, ...filtered];
+            }
+            return prev;
+        });
+    };
+
     const handleDeleteNode = (type: 'client' | 'route' | 'vessel', client_id: string, route_key?: string, vessel_id?: string) => {
         setProjectionLines(prev => prev.filter(p => {
             if (type === 'client') return p.client_id !== client_id;
@@ -552,7 +578,7 @@ export const CommercialForecast: React.FC = () => {
                 {/* 2. Custom Grid (1:1 with Mockup) */}
                 {activeTab === 'grid' && (
                     <section className="flex flex-col gap-2 relative animate-in fade-in slide-in-from-bottom-2 duration-300 mt-2">
-                        <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} onTariffChange={handleTariffChange} onDeleteNode={handleDeleteNode} displayMode={displayMode} demurragePct={demurragePct} showDemurrage={showDemurrage} excludedDemurrages={excludedDemurrages} customDemurrages={customDemurrages} onExcludeDemurrage={setExcludedDemurrages} onCustomDemurrageChange={setCustomDemurrages} demurrageDays={demurrageDays} showDemurrageDays={showDemurrageDays} customDemurrageDays={customDemurrageDays} onCustomDemurrageDaysChange={setCustomDemurrageDays} spotRoutes={spotRoutes} />
+                        <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} onTariffChange={handleTariffChange} onBunkerPriceChange={handleBunkerPriceChange} onDeleteNode={handleDeleteNode} displayMode={displayMode} demurragePct={demurragePct} showDemurrage={showDemurrage} excludedDemurrages={excludedDemurrages} customDemurrages={customDemurrages} onExcludeDemurrage={setExcludedDemurrages} onCustomDemurrageChange={setCustomDemurrages} demurrageDays={demurrageDays} showDemurrageDays={showDemurrageDays} customDemurrageDays={customDemurrageDays} onCustomDemurrageDaysChange={setCustomDemurrageDays} spotRoutes={spotRoutes} />
                     </section>
                 )}
                 

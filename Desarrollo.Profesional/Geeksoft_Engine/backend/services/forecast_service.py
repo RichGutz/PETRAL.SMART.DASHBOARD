@@ -1026,17 +1026,17 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
         
         if contract and contract.get("bunker_baseline_price_ifo") and float(contract.get("bunker_baseline_price_ifo")) > 0:
             p_ifo = float(contract.get("bunker_baseline_price_ifo"))
-        elif line.forecast_bunker_price_ifo:
+        elif getattr(line, 'forecast_bunker_price_ifo', None) is not None and float(line.forecast_bunker_price_ifo) > 0:
             p_ifo = float(line.forecast_bunker_price_ifo)
         else:
-            p_ifo = float(bunker_db.get("IFO", 450))
+            p_ifo = 0.0
 
         if contract and contract.get("bunker_baseline_price_mdo") and float(contract.get("bunker_baseline_price_mdo")) > 0:
             p_mdo = float(contract.get("bunker_baseline_price_mdo"))
-        elif line.forecast_bunker_price_mdo:
+        elif getattr(line, 'forecast_bunker_price_mdo', None) is not None and float(line.forecast_bunker_price_mdo) > 0:
             p_mdo = float(line.forecast_bunker_price_mdo)
         else:
-            p_mdo = float(bunker_db.get("MDO", 800))
+            p_mdo = 0.0
         
         is_spot_route = (line.origin_port_id == "SPOT")
         spot_route = None

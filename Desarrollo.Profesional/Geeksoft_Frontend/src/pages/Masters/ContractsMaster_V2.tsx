@@ -105,6 +105,16 @@ export const ContractsMaster: React.FC = () => {
         loadData();
     }, []);
 
+    // Ordenar catálogo completo de puertos (Norte a Sur / alfabético)
+    const sortedPorts = useMemo(() => {
+        return [...(ports || [])].sort((a, b) => {
+            const latA = a.lat !== undefined && a.lat !== null ? parseFloat(a.lat) : 0;
+            const latB = b.lat !== undefined && b.lat !== null ? parseFloat(b.lat) : 0;
+            if (latA !== 0 || latB !== 0) return latB - latA;
+            return (a.port_id || '').localeCompare(b.port_id || '');
+        });
+    }, [ports]);
+
     useEffect(() => {
         // En contratos solo mostramos clientes activos
         const activeClients = rawClients.filter(c => c.is_active !== false);
@@ -112,8 +122,11 @@ export const ContractsMaster: React.FC = () => {
     }, [rawClients]);
 
     const activeClientIds = useMemo(() => {
-        const ids = new Set(contracts.map(c => c.client_id));
-        const filteredIds = Array.from(ids).filter(cid => clients.some(c => c.client_id === cid));
+        const ids = new Set([
+            ...contracts.map(c => c.client_id),
+            ...clients.map(c => c.client_id)
+        ]);
+        const filteredIds = Array.from(ids).filter(cid => cid && clients.some(c => c.client_id === cid));
         return filteredIds;
     }, [contracts, clients]);
 
@@ -529,11 +542,11 @@ export const ContractsMaster: React.FC = () => {
                                                                     <select 
                                                                         value={selectedRoute.origin_port_id}
                                                                         onChange={(e) => handleChange(selectedRouteKey!, 'origin_port_id', e.target.value)}
-                                                                        className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
+                                                                        className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white font-semibold text-slate-700"
                                                                     >
                                                                         <option value="">Seleccione Puerto...</option>
-                                                                        {ports.map(p => (
-                                                                            <option key={p.port_id} value={p.port_id}>{p.port_name} ({p.country})</option>
+                                                                        {sortedPorts.map(p => (
+                                                                            <option key={p.port_id} value={p.port_id}>{p.port_name} ({p.country || 'PE'})</option>
                                                                         ))}
                                                                     </select>
                                                                 </div>
@@ -542,11 +555,11 @@ export const ContractsMaster: React.FC = () => {
                                                                     <select 
                                                                         value={selectedRoute.destination_port_id}
                                                                         onChange={(e) => handleChange(selectedRouteKey!, 'destination_port_id', e.target.value)}
-                                                                        className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
+                                                                        className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white font-semibold text-slate-700"
                                                                     >
                                                                         <option value="">Seleccione Puerto...</option>
-                                                                        {ports.map(p => (
-                                                                            <option key={p.port_id} value={p.port_id}>{p.port_name} ({p.country})</option>
+                                                                        {sortedPorts.map(p => (
+                                                                            <option key={p.port_id} value={p.port_id}>{p.port_name} ({p.country || 'PE'})</option>
                                                                         ))}
                                                                     </select>
                                                                 </div>

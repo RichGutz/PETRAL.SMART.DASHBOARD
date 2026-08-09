@@ -1,10 +1,38 @@
-[2026-07-27 02:37:40] - Restauración Definitiva del Acta Oficial Maestra de Auditoría Final y Trazabilidad (SPCC & NEXA)
-- Identificación de la especificación técnica en Obsidian (QC.Auditoria.FINAL.md) y el script del Engine (run_qc_loop_pdf.py).
-- Implementación de MasterAuditActaView.tsx:
-  * Acta oficial PDF A4 Landscape monocromática (Blanco y Negro estricto).
-  * Cabecera oficial con logos de PETRAL y GEEKSOFT.
-  * Los 5 Cards Maestros (Rutas, Buques, Búnker, Contratos, Puertos).
-  * Aritmética explicativa pierna por pierna (Fishbowl Box).
-  * Tabla Oficial de las 12 Métricas Ledger de Auditoría al pie.
-- Vinculación limpia en la ruta Auditoría Final (AuditFinal_V2.tsx).
-- Publicación y sincronización en repositorio Git origin main.
+================================================================================
+REGISTRO DE SESIÓN: 2026-08-04
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Modulo Auditoria Final Dual (/audit-final) & VoyageLedgerFinal.tsx:
+   - Incorporación de dos ventanas editables de entrada de precios de combustible (Bunker IFO y Bunker MDO) en la barra superior de controles.
+   - Aplicación de la jerarquía estricta de resolución de búnker:
+     * 1.º Prioridad: Tarifa estipulada en Contrato (cargada dinámicamente desde Supabase via ForecastService.getContractsMaster()). Para SPCC, se pre-cargan automáticamente las tarifas del contrato ($450.00 IFO / $800.00 MDO).
+     * 2.º Prioridad: Precios imputados por el usuario en las ventanas editables.
+     * 3.º Prioridad: Evaluación en $0.00 (sin fallbacks de mercado).
+   - Recálculo dinámico en tiempo real y actualización del PDF de auditoría al editar cualquier precio.
+
+2. Loop QC de Convergencia de PnL y Bunker (Matriz Financiera vs Auditoría Final):
+   - Creación y ejecución del script scratch/test_pnl_qc_loop.py.
+   - Evaluación comparativa en 11 combinaciones de cliente, buque y ruta.
+   - Resultado: Convergencia matemática perfecta del 100% (Delta = $0.00 USD) en Flete Neto, Costos de Puerto, Costos de Bunker, PnL Neto y TCE Real ($/día).
+
+3. Maestro de Contratos (ContractsMaster_V2.tsx):
+   - Homologación del catálogo completo de los 12 puertos de la Costa Oeste de Sudamérica (Manta, Talara, Bayovar, Salaverry, Callao, Pisco Pluspetrol, Marcona, Matarani, Mollendo Monte Azul, Ilo, Mejillones, Barquito) ordenados geográficamente de Norte a Sur.
+   - Habilitación de todos los clientes activos del Maestro de Clientes.
+   - Actualización dinámica en tiempo real del título de las pestañas/etiquetas de rutas (ORIGEN -> DESTINO) al seleccionar los puertos en los desplegables.
+
+4. Despliegue a Producción VPS:
+   - Build de producción Vite/React completado con éxito (npm run build).
+   - Despliegue de Backend (deploy_engine_vps.py) y Frontend (deploy_forecast_kickoff.py) a https://forecast.geeksoft.tech.
+
+5. Documentación Obsidian AS-BUILT:
+   - Actualizados los expedientes AS_BUILT_Herramienta_02_Matriz_Financiera_Dashboard.md, AS_BUILT_Herramienta_09_Auditoria_Final_Dual.md y AS_BUILT_Maestro_04_Contratos_ContractsMaster.md.
+================================================================================
+REGISTRO DE SESIÓN: 2026-08-09
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Commit de Estado de Proyecto:
+   - Commit registrado bajo el tag: PRE.WALKTHROUGH.10.08.26.AM.
+   - Resguardo de modificaciones en frontend, backend, documentación AS-BUILT y archivos PNG de auditoría.
+================================================================================

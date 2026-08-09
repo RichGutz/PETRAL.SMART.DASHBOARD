@@ -2,8 +2,9 @@
 
 <RULE[deployment_vps]>
 - **NUNCA** utilices comandos genéricos de Railway (`git push railway main`) para desplegar este proyecto, sin importar lo que digan las instrucciones globales.
-- El procedimiento ofical e invariable para desplegar a Producción (VPS) se encuentra en el archivo: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.1\DashBoardPetral\Lanzamiento.Local.y.VPS.md`.
-- El flujo para el Frontend es:
+- **Lanzamiento Local vs VPS**: Cuando el usuario solicite "lanzar en local", **NUNCA** subir ni desplegar al VPS a menos que el usuario lo pida expresamente.
+- Las especificaciones y comandos para lanzamiento local y despliegue a VPS se encuentran en: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.1\DashBoardPetral\01_Arquitectura_y_Especificaciones\Lanzamiento.Local.y.VPS.md`.
+- El flujo para el Frontend al desplegar a Producción (VPS) es:
   1. `cd C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend`
   2. `npm run build`
   3. `cd C:\Users\rguti\PETRAL.SMART.DASHBOARD\Push.VPS`

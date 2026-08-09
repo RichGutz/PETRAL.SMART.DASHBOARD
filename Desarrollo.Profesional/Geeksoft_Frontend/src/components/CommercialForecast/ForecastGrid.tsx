@@ -44,6 +44,7 @@ interface ForecastGridProps {
     projectionLines: any[];
     onFrequencyChange?: (client_id: string, route_key: string, vessel_id: string, month_index: string, newFrequency: number) => void;
     onTariffChange?: (client_id: string, route_key: string, vessel_id: string, month_index: string, newTariff: number) => void;
+    onBunkerPriceChange?: (client_id: string, route_key: string, vessel_id: string, month_index: string, fuelType: 'ifo' | 'mdo', newPrice: number) => void;
     onDeleteNode?: (type: 'client'|'route'|'vessel', client_id: string, route_key?: string, vessel_id?: string) => void;
     displayMode: 'usd' | 'pct';
     demurragePct?: string;
@@ -60,7 +61,7 @@ interface ForecastGridProps {
 }
 
 export const ForecastGrid: React.FC<ForecastGridProps> = ({ 
-    data, months, projectionLines, onFrequencyChange, onTariffChange, onDeleteNode, displayMode, 
+    data, months, projectionLines, onFrequencyChange, onTariffChange, onBunkerPriceChange, onDeleteNode, displayMode, 
     demurragePct = '', showDemurrage = false,
     excludedDemurrages = [], customDemurrages = {}, onExcludeDemurrage, onCustomDemurrageChange,
     demurrageDays = '', showDemurrageDays = false,
@@ -307,8 +308,8 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         return line ? (line.monthly_frequency || 0) : 0;
                     });
 
-                    const activeIfoPrice = months.map(m => monthData[m]?.["price_ifo_unit"] || monthData[m]?.["p_ifo"]).find(v => typeof v === 'number' && v > 0) || 450;
-                    const activeMdoPrice = months.map(m => monthData[m]?.["price_mdo_unit"] || monthData[m]?.["p_mdo"]).find(v => typeof v === 'number' && v > 0) || 800;
+                    const activeIfoPrice = months.map(m => monthData[m]?.["price_ifo_unit"] || monthData[m]?.["p_ifo"]).find(v => typeof v === 'number' && v > 0) || 0;
+                    const activeMdoPrice = months.map(m => monthData[m]?.["price_mdo_unit"] || monthData[m]?.["p_mdo"]).find(v => typeof v === 'number' && v > 0) || 0;
 
                     const getMonthlyValues = (metricKey: string) => {
                         return months.map((m, idx) => {
@@ -330,10 +331,10 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 if (metricKey === "address_comm_pct") val = monthData[m]?.["address_comm_pct"];
                                 if (metricKey === "broker_comm_pct") val = monthData[m]?.["broker_comm_pct"];
                                 if (metricKey === "total_commissions_unit") val = monthData[m]?.["total_commissions"];
-                                if (metricKey === "price_ifo_unit") val = monthData[m]?.["price_ifo_unit"] || monthData[m]?.["p_ifo"] || activeIfoPrice;
-                                if (metricKey === "bunker_ifo_cost_unit") val = monthData[m]?.["bunker_ifo_cost_unit"] || (monthData[m]?.["bunker_ifo_tonnage_unit"] ? monthData[m]?.["bunker_ifo_tonnage_unit"] * (monthData[m]?.["price_ifo_unit"] || activeIfoPrice) : undefined);
-                                if (metricKey === "price_mdo_unit") val = monthData[m]?.["price_mdo_unit"] || monthData[m]?.["p_mdo"] || activeMdoPrice;
-                                if (metricKey === "bunker_mdo_cost_unit") val = monthData[m]?.["bunker_mdo_cost_unit"] || (monthData[m]?.["bunker_mdo_tonnage_unit"] ? monthData[m]?.["bunker_mdo_tonnage_unit"] * (monthData[m]?.["price_mdo_unit"] || activeMdoPrice) : undefined);
+                                if (metricKey === "price_ifo_unit") val = monthData[m]?.["price_ifo_unit"] || monthData[m]?.["p_ifo"] || activeIfoPrice || 0;
+                                if (metricKey === "bunker_ifo_cost_unit") val = monthData[m]?.["bunker_ifo_cost_unit"] || (monthData[m]?.["bunker_ifo_tonnage_unit"] ? monthData[m]?.["bunker_ifo_tonnage_unit"] * (monthData[m]?.["price_ifo_unit"] || activeIfoPrice || 0) : undefined);
+                                if (metricKey === "price_mdo_unit") val = monthData[m]?.["price_mdo_unit"] || monthData[m]?.["p_mdo"] || activeMdoPrice || 0;
+                                if (metricKey === "bunker_mdo_cost_unit") val = monthData[m]?.["bunker_mdo_cost_unit"] || (monthData[m]?.["bunker_mdo_tonnage_unit"] ? monthData[m]?.["bunker_mdo_tonnage_unit"] * (monthData[m]?.["price_mdo_unit"] || activeMdoPrice || 0) : undefined);
                                 if (metricKey === "voyage_result_unit") val = monthData[m]?.["voyage_result"] || monthData[m]?.["voyage_result_unit"];
                                 if (metricKey === "tce_real_unit") val = monthData[m]?.["tce_real"] || monthData[m]?.["tce"];
                                 if (metricKey === "tce_required_unit") val = monthData[m]?.["tce_required_unit"] || monthData[m]?.["tce_required"] || 13000;
@@ -972,6 +973,20 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                     onFrequencyChange && onFrequencyChange(row.clientName, row.routeName, row.vesselName, months[origColIdx], val);
                                                 }}
                                                 className="w-14 p-1 text-center block mx-auto text-xs font-bold border border-slate-200 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white"
+                                            />
+                                        ) : (row.metric.name.includes("Precio IFO") || row.metric.name.includes("Precio MDO")) && !row.isClientSubtotal && !row.isGlobalTotal ? (
+                                            <input 
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={v || ''}
+                                                placeholder="0.00"
+                                                onChange={(e) => {
+                                                    const val = parseFloat(e.target.value) || 0;
+                                                    const fuelType = row.metric.name.includes("IFO") ? 'ifo' : 'mdo';
+                                                    onBunkerPriceChange && onBunkerPriceChange(row.clientName, row.routeName, row.vesselName, months[origColIdx], fuelType, val);
+                                                }}
+                                                className="w-16 p-1 text-right text-xs font-bold border border-amber-300 rounded focus:border-amber-500 focus:ring-1 focus:ring-amber-500 bg-amber-50/60 text-amber-900"
                                             />
                                         ) : row.metric.name === "Flete (USD/MT)" && (() => {
                                             const ports = row.routeName.split('-');

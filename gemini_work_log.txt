@@ -1,44 +1,16 @@
-=== REGISTRO DE TRABAJO GEMINI ===
-Fecha: 2026-07-25 10:08
-
-- Culminado al 100% el Motor P×Q Promediado y Visor 2×2 de 4 PDFs en CallaoAuditViewer.tsx:
-  - Eliminados todos los pickers editables de fecha/hora para la vista de proforma/forecast.
-  - Grilla uniforme de 6 tarjetas Q del mismo tamaño (1. Ritmo, 2. Q_op, 3. Q_fijo con desglose explícito de Atraque 1.5h + Inspección 1.0h + Desamarre 1.5h, 4. Perm. Total, 5. Remolques, 6. LOA/GRT).
-  - 4 PDFs en 2 Columnas Lado a Lado con cronogramas realistas (Escenario Mínimo Lunes 7am Office Hours vs Escenario Máximo Domingo/Feriado Overtime).
-  - Documentación en Obsidian actualizada en `Obsidian.Maestro.Costos.Portuarios/03_Arquitectura_y_Motores/Motor.PxQ.Promediado.md`.
-
-Fecha: 2026-07-22 21:53
-
-- Culminado al 100% el sembrado y conexión en Supabase de la red portuaria completa de Perú (Callao, Matarani, Marcona, Ilo).
-- UI de PortTariffsMaster.tsx 100% limpia a ancho completo con sub-cabeceras A, B y C, proveedores explícitos y fórmulas explicativas al lado.
-- Estandarización de tabla limpia sin filas basura para puertos vacíos (Talara).
-- Documentación completa creada en Obsidian:
-  - Plan.Implementacion.Maestro.Costos.Portuarios.md (Hoja de ruta exacta para mañana)
-  - Modelo.ER.Motor.Costos.Portuarios.md
-  - motores.calculo.complejo.md
-  - hta.auditoria.md
-
-[2026-07-25 16:46:44] Cierre de Sesión - Módulo Static vs Dynamic Port Cost & QC
-- Se exportó e importó computePortItems directamente desde CallaoAuditViewer.tsx sin duplicación.
-- Se eliminaron todos los fallbacks sintéticos e inventos.
-- Se normalizó el matching de buques (normalizeVesselKey) conectando directamente las 46 filas de Supabase.
-- Se creó y ejecutó la Suite Autónoma de QC (run_qc_static_vs_dynamic.py) pasando 19/19 comparativas reales válidas.
-- Se actualizaron las especificaciones en Obsidian (Static_vs_Dynamic_Port_Cost.md y Plan.QC.Loop.Static.vs.Dynamic.Port.Cost.md).
-
-Fecha: 2026-07-26 10:06
-
-- Diagnóstico y Solución del error de guardado en Carga para el Puerto de Callao (y matriz de costos estática):
-  - Causa Raíz: El endpoint POST /api/v1/forecast/port_costs_static en forecast.py enviaba un campo 'client_id' (inexistente en la tabla de Supabase port_cost_static, error PGRST204) e ignoraba 'terminal_id' (columna requerida NOT NULL que forma parte de la clave primaria compuesta port_id, terminal_id, operation_type, vessel_id).
-  - Corrección backend: Actualizado PortCostStaticUpdateItem en forecast_models.py y mapeo de payload en forecast.py para incluir terminal_id ('GENERAL' por defecto) y excluir client_id.
-  - Verificación empírica en DB: Ejecutado test de persistencia scratch/test_api_save_port_costs.py. Las filas de CARGA para Callao (MOQUEGUA, TABLONES, HUEMUL, CONCON_TRADER) fueron sembradas y guardadas exitosamente, incrementando de 4 a 8 registros activos en Supabase.
-
-Fecha: 2026-07-26 12:31
-
-- Actualización Protocolo Maestro QC Loop (`00_Metodologia_QC_Loop_Costos_Portuarios.md`):
-  • 1️⃣ Consumo Dinámico Obligatorio de Parámetros Q desde la UI (`vessel_terminal_operations` DB).
-  • 2️⃣ Cuadro Comparativo Obligatorio de 4 Métricas al pie de TODOS los PDFs (Mínimo Optimista, Excel Experta Sandra, Matriz Fija Estática Supabase DB, Máximo Pesimista).
-  • 3️⃣ Alerta `⚠️ NO ESTÁ EN LA TABLA` si la matriz estática no posee la fila en Supabase (Strict Zero Fallbacks).
-  • 4️⃣ Logos en Base64 Inline Data URIs e ítems PassThrough resaltados en AMARILLO.
-2026-07-26 16:23:59 - [DOCS & UI] Consolidaci�n integral de la documentaci�n del sistema PETRAL V2.5 (11 Maestros en 4 categor�as, 7 Herramientas explicadas bot�n por bot�n, 3 Tabs de Gastos Portuarios, 4.0h fijas escala, Callao PxQ, SPCC & NEXA clientes activos, men�s colapsables verticalmente y bot�n Nueva Pesta�a en MasterTemplate_V2).
-[2026-07-26] Commit: HTA.GRAFICA.LIQUIDAC.50.percent finalizado y subido a Git origin main.
-[2026-07-26] Documentacion Obsidian.ETL completada y subida a Git origin main.
+================================================================================
+GEMINI WORK LOG: 2026-08-04
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Backend tests: pytest backend/tests/test_voyage_ledger.py (100% PASS)
+- Frontend TypeCheck: npx tsc --noEmit (0 ERRORS)
+- Loop QC PnL & Bunker Script: scratch/test_pnl_qc_loop.py (100% CONVERGENCE, Delta = $0.00 USD)
+- VPS Deployment Status: LIVE at https://forecast.geeksoft.tech
+================================================================================
+GEMINI WORK LOG: 2026-08-09
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Commit Tag: PRE.WALKTHROUGH.10.08.26.AM
+- Frontend & Backend: Cambios de auditoría dual, precios de bunker dinámicos y homologación MDO/MGO respaldados.
+- Documentation AS-BUILT: Actualización de documentación en Obsidian.
+================================================================================

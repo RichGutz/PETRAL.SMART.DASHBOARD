@@ -13,10 +13,13 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
     // Data masters
     const [routes, setRoutes] = useState<any[]>([]);
     const [vessels, setVessels] = useState<any[]>([]);
+    const [contracts, setContracts] = useState<any[]>([]);
     
     // Selections
     const [selectedClientId, setSelectedClientId] = useState<string>("SPCC");
     const [selectedVesselId, setSelectedVesselId] = useState<string>("MOQUEGUA");
+    const [bunkerPriceIfo, setBunkerPriceIfo] = useState<number>(450.0);
+    const [bunkerPriceMdo, setBunkerPriceMdo] = useState<number>(800.0);
 
     const [consolidatedResults, setConsolidatedResults] = useState<any[]>([]);
 
@@ -32,7 +35,8 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             ForecastService.getRoutesMaster().catch(() => []),
             ForecastService.getSpotVoyages().catch(() => []),
             ForecastService.getVessels().catch(() => []),
-        ]).then(([masterRoutes, spotVoyages, v]) => {
+            ForecastService.getContractsMaster().catch(() => []),
+        ]).then(([masterRoutes, spotVoyages, v, cData]) => {
             const allRoutes = [...(masterRoutes || []), ...(spotVoyages || [])];
             const routeMap = new Map();
             allRoutes.forEach((r: any, i: number) => {
@@ -46,6 +50,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
 
             const mergedVessels = (v && v.length > 0) ? v : defaultVessels;
             setVessels(mergedVessels);
+            setContracts(cData || []);
 
             if (mergedVessels.length > 0 && !selectedVesselId) {
                 setSelectedVesselId(mergedVessels[0].vessel_id);
@@ -58,6 +63,25 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             setLoading(false);
         });
     }, []);
+
+    // Sincronizar precios base de bunker según el contrato del cliente seleccionado
+    useEffect(() => {
+        if (!selectedClientId) return;
+        const cleanClient = selectedClientId.trim().toUpperCase();
+        const clientContracts = (contracts || []).filter((c: any) => (c.client_id || "").trim().toUpperCase() === cleanClient);
+        if (clientContracts.length > 0) {
+            const contract = clientContracts[0];
+            const ifoVal = contract.bunker_baseline_price_ifo ? parseFloat(contract.bunker_baseline_price_ifo) : 450.0;
+            const mdoVal = contract.bunker_baseline_price_mdo ? parseFloat(contract.bunker_baseline_price_mdo) : 800.0;
+            setBunkerPriceIfo(ifoVal > 0 ? ifoVal : 450.0);
+            setBunkerPriceMdo(mdoVal > 0 ? mdoVal : 800.0);
+        } else {
+            if (cleanClient === "SPCC" || cleanClient === "NEXA") {
+                setBunkerPriceIfo(450.0);
+                setBunkerPriceMdo(800.0);
+            }
+        }
+    }, [selectedClientId, contracts]);
 
     // Clientes fijos según regla de negocio
     const availableClients = ["SPCC", "NEXA", "PROSPECTOS"];
@@ -109,9 +133,21 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
                 if (!route.legs_data || !route.legs_data.tramos) continue;
                 const tramos = JSON.parse(JSON.stringify(route.legs_data.tramos));
                 
+                // Jerarquía de Resolución: 1º Contrato -> 2º Usuario -> 3º 0.0
+                const contractIfo = route.contract?.bunker_baseline_price_ifo || route.bunker_baseline_price_ifo;
+                const contractMdo = route.contract?.bunker_baseline_price_mdo || route.bunker_baseline_price_mdo;
+                
+                const activeIfo = (contractIfo && parseFloat(contractIfo) > 0)
+                    ? parseFloat(contractIfo)
+                    : (bunkerPriceIfo > 0 ? bunkerPriceIfo : 0.0);
+                    
+                const activeMdo = (contractMdo && parseFloat(contractMdo) > 0)
+                    ? parseFloat(contractMdo)
+                    : (bunkerPriceMdo > 0 ? bunkerPriceMdo : 0.0);
+
                 for (let i = 0; i < tramos.length; i++) {
-                    tramos[i].bunker_price_ifo = 895.14;
-                    tramos[i].bunker_price_mdo = 1460.30;
+                    tramos[i].bunker_price_ifo = activeIfo;
+                    tramos[i].bunker_price_mdo = activeMdo;
                     tramos[i].vessel_speed = 11.0;
                     const origP = tramos[i].origin_port_id || "ILO";
                     const destP = tramos[i].destination_port_id || "ILO";
@@ -150,7 +186,8 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
                     const Q = ladenT?.quantity || 13500;
                     const F = ladenT?.freight_rate || 25.50;
                     const rL = 500, rD = 345, wf = 0.03, spd = 11.0;
-                    const pIfo = 895.14, pMdo = 1460.30;
+                    const pIfo = activeIfo;
+                    const pMdo = activeMdo;
                     let seaDaysTot = 0, portDaysTot = 0, bunkerTot = 0, portCostsTot = 0;
                     let incomeTot = 0, distTot = 0, ifoTonTot = 0, mdoTonTot = 0;
                     const builtTramos = tramos.map((t: any) => {
@@ -201,12 +238,12 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
         }
     };
 
-    // Ejecutar la simulación automáticamente cuando cambia el cliente, buque o matriz
+    // Ejecutar la simulación automáticamente cuando cambia el cliente, buque, matriz o precios imputados de bunker
     useEffect(() => {
         if (selectedClientId && selectedVesselId && filteredRoutes.length > 0) {
             handleCalculateConsolidated();
         }
-    }, [selectedClientId, selectedVesselId, localPortCostMode, filteredRoutes.length]);
+    }, [selectedClientId, selectedVesselId, localPortCostMode, bunkerPriceIfo, bunkerPriceMdo, filteredRoutes.length]);
 
     const handlePrintPdf = (htmlContent: string) => {
         const printWindow = window.open('', '_blank');
@@ -243,7 +280,11 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
             // P/L correcto: voyage_result - (tot_days * tce_required)
             const plVsReq = pnlNet - (totDays * tceRequired);
 
-            const pIfo = 895.14;
+            const contractIfo = item.routeObj?.contract?.bunker_baseline_price_ifo || item.routeObj?.bunker_baseline_price_ifo;
+            const contractMdo = item.routeObj?.contract?.bunker_baseline_price_mdo || item.routeObj?.bunker_baseline_price_mdo;
+
+            const pIfo = (contractIfo && parseFloat(contractIfo) > 0) ? parseFloat(contractIfo) : (bunkerPriceIfo > 0 ? bunkerPriceIfo : 0.0);
+            const pMdo = (contractMdo && parseFloat(contractMdo) > 0) ? parseFloat(contractMdo) : (bunkerPriceMdo > 0 ? bunkerPriceMdo : 0.0);
 
             const ladenLeg = tramos.find((t: any) => t.type === 'LADEN') || tramos[0] || {};
             const Q = 13500;
@@ -320,7 +361,7 @@ export const VoyageLedgerFinal: React.FC<{ portCostMode?: 'static' | 'matrix' }>
 📋 [INPUTS Y VARIABLES DE ORIGEN DE CÁLCULO - CARDS MAESTROS]:
   • CARD 1 (RUTAS):                 Itinerario: ${trayectoStr} | Dist. Total: ${totDist.toFixed(1)} NM | Weather Factor: 3.0% (0.03)
   • CARD 2 (BUQUES):                Vessel: ${selectedVesselId} | Speed: 11.0 kts | Cons. Sea IFO: 14.0 t/d | Cons. Idle IFO: 2.4 t/d | TCE Requerido: $${tceRequired.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}/d
-  • CARD 3 (BÚNKER):                Precio IFO: $895.14/t | Precio MDO: $1,460.30/t | Consumo Est.: ${ifoTon.toFixed(2)} t IFO / ${mdoTon.toFixed(2)} t MDO | BAF Baseline: $430.00/t
+  • CARD 3 (BÚNKER):                Precio IFO: $${pIfo.toFixed(2)}/t | Precio MDO: $${pMdo.toFixed(2)}/t | Consumo Est.: ${ifoTon.toFixed(2)} t IFO / ${mdoTon.toFixed(2)} t MDO | BAF Baseline: $430.00/t
   • CARD 4 (CONTRATOS & COMERCIAL): Cliente: ${selectedClientId} | Q: 13,500 MT | Freight Base: $${F.toFixed(2)}/MT | Ritmo Carga: ${rL} T/h | Ritmo Desc: ${rD} T/h | Comisiones: Address 0.0% / Broker 0.0%
   • CARD 5 (PUERTOS & AGENCIA):     Agencia Carga (${origP}): $${cOrig.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD | Agencia Descarga (${destP}): $${cDest.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD | Total Port Costs: $${portCosts.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} USD
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -350,13 +391,13 @@ ${piernasStr}  └────────────────────�
                         <tbody>
                             <tr>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">1. Ritmo Carga (act_load)</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">contract_load_rate</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">contract load rate</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">${rL} T/h</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">${rL} T/h</td>
                             </tr>
                             <tr>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">2. Ritmo Descarga (act_disch)</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">contract_discharge_rate</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">contract discharge rate</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">${rD} T/h</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">${rD} T/h</td>
                             </tr>
@@ -393,7 +434,7 @@ ${piernasStr}  └────────────────────�
                             <tr>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">8. Costo Bunker (bunker)</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">bunker_sea + bunker_port</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">${ifoTon.toFixed(2)}t IFO × $895.14 + ${mdoTon.toFixed(2)}t MDO × $1460.30</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">${ifoTon.toFixed(2)}t IFO × $${pIfo.toFixed(2)} + ${mdoTon.toFixed(2)}t MDO × $${pMdo.toFixed(2)}</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${bunkerCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                             </tr>
                             <tr>
@@ -539,6 +580,38 @@ ${piernasStr}  └────────────────────�
                             <option value="static">Estática (Master)</option>
                             <option value="matrix">Dinámica (JSONB)</option>
                         </select>
+                    </div>
+
+                    {/* 4. Bunker IFO (USD/MT) — EDITABLE POR USUARIO */}
+                    <div className="flex items-center gap-1.5">
+                        <Label className="text-xs font-bold text-slate-600">Bunker IFO:</Label>
+                        <div className="relative flex items-center">
+                            <span className="absolute left-2 text-xs font-bold text-amber-600">$</span>
+                            <input 
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={bunkerPriceIfo || ''}
+                                onChange={(e) => setBunkerPriceIfo(parseFloat(e.target.value) || 0)}
+                                className="h-8 w-20 pl-5 pr-1 bg-amber-50/80 border border-amber-300 rounded text-xs font-bold text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"
+                            />
+                        </div>
+                    </div>
+
+                    {/* 5. Bunker MDO (USD/MT) — EDITABLE POR USUARIO */}
+                    <div className="flex items-center gap-1.5">
+                        <Label className="text-xs font-bold text-slate-600">Bunker MDO:</Label>
+                        <div className="relative flex items-center">
+                            <span className="absolute left-2 text-xs font-bold text-amber-600">$</span>
+                            <input 
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={bunkerPriceMdo || ''}
+                                onChange={(e) => setBunkerPriceMdo(parseFloat(e.target.value) || 0)}
+                                className="h-8 w-20 pl-5 pr-1 bg-amber-50/80 border border-amber-300 rounded text-xs font-bold text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"
+                            />
+                        </div>
                     </div>
                 </div>
 

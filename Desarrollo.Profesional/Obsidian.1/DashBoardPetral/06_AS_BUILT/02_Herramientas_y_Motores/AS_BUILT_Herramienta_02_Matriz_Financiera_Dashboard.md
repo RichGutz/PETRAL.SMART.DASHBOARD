@@ -41,10 +41,29 @@ La **Matriz Financiera (`/dashboard`)** es el tablero comercial principal de PET
 
 ---
 
-## 📥 Inyección de Dependencias
-- [[AS_BUILT_Maestro_01_Buques_VesselsMaster]] — Consumos del buque.
-- [[AS_BUILT_Maestro_04_Contratos_ContractsMaster]] — Comisiones comerciales.
-- [[AS_BUILT_Maestro_09_Precios_Bunker_BunkerMaster]] — Precios de combustible.
+## 📥 Inyección de Dependencias y Jerarquía de Precios Bunker
+- [[AS_BUILT_Maestro_01_Buques_VesselsMaster]] — Consumos de combustible del buque (IFO y MDO).
+- [[AS_BUILT_Maestro_04_Contratos_ContractsMaster]] — Comisiones comerciales y precios base contractuales de bunker (`bunker_baseline_price_ifo` / `bunker_baseline_price_mdo`).
+- [[AS_BUILT_Maestro_09_Precios_Bunker_BunkerMaster]] — Precios de combustible en catálogo maestro.
+
+### ⛽ Regla de Resolución de Precios de Combustible (IFO / MDO):
+Los precios unitarios de combustible para la Matriz Financiera provienen **EXCLUSIVAMENTE** de dos fuentes (sin fallbacks de mercado ni valores por defecto):
+1. **1º Prioridad (Contrato)**: `contract.bunker_baseline_price_ifo` / `contract.bunker_baseline_price_mdo` (si el contrato especifica un precio base estipulado).
+2. **2º Prioridad (Edición Manual en Grilla / Fila)**: `line.forecast_bunker_price_ifo` / `line.forecast_bunker_price_mdo` (modificable directamente en la matriz en las filas **`↳ Precio IFO (USD/MT)`** y **`↳ Precio MDO (USD/MT)`**).
+*Si no existe precio en el contrato ni edición manual por el usuario, el precio se evalúa en $0.00.*
+
+---
+
+## 🔄 3. Protocolo de Control de Calidad y Convergencia Integral (Loop QC PnL & Bunker)
+El motor de la Matriz Financiera se valida contra el motor de la Auditoría Final Dual (`/audit-final`) mediante el script `test_pnl_qc_loop.py`. 
+- **Resultado del Test de Aceptación**: Convergencia matemática al 100% (Delta = **$0.00 USD**) en las 5 líneas financieras clave:
+  - Ingreso Bruto por Flete (`net_income`)
+  - Costos Portuarios Totales (`total_port_costs`)
+  - Costos de Combustible Totales (`total_bunker_costs`)
+  - **PnL Neto / Resultado de Viaje (`voyage_result`)**
+  - **TCE Real USD/Día (`tce_real`)**
+
+---
 
 ## 📤 Consumidores en el Sistema
 - [[AS_BUILT_Herramienta_03_Analisis_Grafico_Commercial]] — Alimentación de gráficos.

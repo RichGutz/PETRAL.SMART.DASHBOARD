@@ -40,6 +40,14 @@ CREATE TABLE contracts (
 
 ---
 
+## 🛠️ 3. UX y Navegación Dinámica de Rutas (`ContractsMaster_V2.tsx`)
+
+- **Catálogo Homologado de 12 Puertos**: Los desplegables de `Puerto Origen` y `Puerto Destino` están sincronizados con la Costa Oeste de Sudamérica y ordenados geográficamente de Norte a Sur (Manta, Talara, Bayovar, Salaverry, Callao, Pisco Pluspetrol, Marcona, Matarani, Mollendo Monte Azul, Ilo, Mejillones, Barquito).
+- **Habilitación de Clientes Activos**: Permite configurar contratos para cualquier cliente activo del Maestro de Clientes (`rawClients`).
+- **Actualización Dinámica de Pestañas en Tiempo Real**: Al seleccionar el Origen y Destino en una ruta nueva o existente, la etiqueta superior refresca instantáneamente su nombre oficial con la nomenclatura `ORIGEN → DESTINO` (ej: **`TALARA → MANTA`**).
+
+---
+
 ## 📤 Consumidores en el Sistema
 - [[AS_BUILT_Herramienta_02_Matriz_Financiera_Dashboard]] — Deducción de comisiones comerciales (`Address` + `Broker`) en Net Freight.
 - [[AS_BUILT_Herramienta_07_Auditoria_Ledger_VoyageLedger]] — Recálculo de flete ajustado por BAF.
