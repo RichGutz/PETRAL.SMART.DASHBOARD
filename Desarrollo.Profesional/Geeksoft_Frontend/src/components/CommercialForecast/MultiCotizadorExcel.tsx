@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ForecastService } from '../../services/api';
-import { Plus, Trash2, Save, FolderOpen, X } from 'lucide-react';
+import { Save, FolderOpen, X } from 'lucide-react';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 import logoPetral from '../../assets/Logo.Petral.png';
 import logoGeeksoft from '../../assets/Logo.Geeksoft.png';
@@ -42,6 +42,23 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     const [filterActivo, setFilterActivo] = useState(true);
     const [filterProspecto, setFilterProspecto] = useState(false);
     const [selectedClient, setSelectedClient] = useState('');
+
+    // Helpers de Formato con Separadores de Miles para Q (MT) y Costo Pto
+    const fmtThousandSep = (val: number | string | undefined | null): string => {
+        if (val === undefined || val === null || val === '') return '';
+        const raw = String(val).replace(/,/g, '');
+        const num = Number(raw);
+        if (isNaN(num)) return String(val);
+        return num.toLocaleString('en-US');
+    };
+
+    const fmtCurrencySep = (val: number | string | undefined | null): string => {
+        if (val === undefined || val === null || val === '') return '';
+        const raw = String(val).replace(/[^0-9.]/g, '');
+        const num = Number(raw);
+        if (isNaN(num)) return String(val);
+        return '$' + Math.round(num).toLocaleString('en-US');
+    };
 
     // Comisiones
     const [addressCommPct, setAddressCommPct] = useState<number>(0);
@@ -1983,7 +2000,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     };
 
     return (
-        <div className="bg-[#f3f4f6] text-[13px] text-slate-800 flex-1 flex flex-col min-h-0 w-full p-2 font-sans">
+        <div className="bg-[#f3f4f6] text-[13px] text-slate-800 flex-1 flex flex-col min-h-0 w-full p-2 font-sans overflow-y-auto">
             {/* TABS PRINCIPALES (no-print) */}
             <div className="flex gap-1 mb-2 no-print shrink-0">
                 <button
@@ -2009,126 +2026,115 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
             </div>
 
             {activeMainTab === 'estimator' ? (
-                <div className="flex-1 flex flex-col min-h-0 w-full">
+                <div className="flex-1 flex flex-col min-h-0 w-full overflow-y-auto">
                     {/* 1. RIBBON SUPERIOR DE DOS FILAS: ACCIONES Y FACT SHEET */}
                     <div className="bg-white border border-slate-300 rounded shadow-sm p-2 mb-2 flex flex-col gap-2 select-none flex-shrink-0">
                 
-                {/* FILA 1: CABECERA Y ACCIONES DE PERSISTENCIA */}
-                <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
-                    {/* Sección Título y Selector de Cliente */}
+                {/* FILA 1: UNIFICADA TOTAL DE CONTROLES (UNA SOLA FILA HORIZONTAL) */}
+                <div className="flex items-center justify-between bg-slate-50 p-2 rounded border border-slate-200 flex-wrap gap-2">
+                    {/* Título & Badge */}
                     <div className="flex items-center gap-2">
-                        <span className="text-base font-extrabold tracking-tight text-slate-900 font-sans uppercase">
-                            MultiCotizador Spot
+                        <span className="text-sm font-black tracking-tight text-slate-900 font-sans uppercase">
+                            MultiCotizador
                         </span>
                         {loadedRouteName && (
-                            <span className="text-[11px] font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                            <span className="text-[10px] font-mono font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
                                 📌 {loadedRouteName}
                             </span>
                         )}
-                        <div className="flex items-center gap-1.5 ml-2">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cliente:</span>
-                            <select
-                                value={selectedClient}
-                                onChange={(e) => setSelectedClient(e.target.value)}
-                                className="h-7 border border-slate-300 rounded px-2 text-xs font-bold text-slate-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans shadow-sm"
-                            >
-                                <option value="">Seleccione cliente...</option>
-                                {clients.map(c => (
-                                    <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
-                        </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        {/* Selector Dinámico Dual de Gastos Portuarios: STATIC vs MATRIX */}
-                        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded h-7 border border-slate-300">
-                            <span className="text-[9.5px] font-black text-slate-500 uppercase px-1">Costos Puerto:</span>
-                            <button
-                                onClick={() => setLocalPortCostMode('static')}
-                                className={`px-2 h-6 text-[9.5px] font-black rounded transition-all cursor-pointer ${
-                                    localPortCostMode === 'static' ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'
-                                }`}
-                                title="Modo Estático: Tarifa de port_cost_static ($0.00 estricto si falta)"
-                            >
-                                STATIC
-                            </button>
-                            <button
-                                onClick={() => setLocalPortCostMode('matrix')}
-                                className={`px-2 h-6 text-[9.5px] font-black rounded transition-all cursor-pointer ${
-                                    localPortCostMode === 'matrix' ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'
-                                }`}
-                                title="Modo Matriz Compleja: Promedio entre Escenario Alto y Bajo"
-                            >
-                                MATRIX
-                            </button>
-                        </div>
-
-                        {/* Botón de dos posiciones elegantes no-excluyentes */}
-                        <div className="flex bg-slate-200/70 p-0.5 rounded h-7 shadow-inner items-center">
+                    {/* 1. SELECCIONAR CLIENTE */}
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] font-black uppercase text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 tracking-wide">
+                            1. SELECCIONAR CLIENTE
+                        </span>
+                        <div className="flex bg-slate-200/70 p-0.5 rounded h-6.5 shadow-inner items-center">
                             <button
                                 onClick={toggleActivo}
-                                className={`px-2 h-6 text-[9.5px] font-black rounded transition-all cursor-pointer ${filterActivo ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'}`}
+                                className={`px-2 h-5.5 text-[9.5px] font-black rounded transition-all cursor-pointer ${filterActivo ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                             >
                                 Activos
                             </button>
                             <button
                                 onClick={toggleProspecto}
-                                className={`px-2 h-6 text-[9.5px] font-black rounded transition-all cursor-pointer ${filterProspecto ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'}`}
+                                className={`px-2 h-5.5 text-[9.5px] font-black rounded transition-all cursor-pointer ${filterProspecto ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                             >
                                 Prospectos
                             </button>
                         </div>
+                        <select
+                            value={selectedClient}
+                            onChange={(e) => setSelectedClient(e.target.value)}
+                            className="h-6.5 border border-slate-300 rounded px-1.5 text-xs font-bold text-slate-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans shadow-sm min-w-[140px]"
+                        >
+                            <option value="">Seleccione cliente...</option>
+                            {clients.map(c => (
+                                <option key={c} value={c}>{c}</option>
+                            ))}
+                        </select>
+                    </div>
 
-                        {/* Botones de Control de Tramos */}
-                        <div className="flex gap-1">
-                            <button
-                                onClick={handleAddTramo}
-                                className="h-7 text-[11px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
-                            >
-                                <Plus size={10} /> Add Leg
-                            </button>
-                            <button
-                                onClick={handleRemoveLastTramo}
-                                disabled={tramos.length <= 1}
-                                className="h-7 text-[11px] font-bold rounded px-2 bg-slate-150 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-40 shadow-sm"
-                            >
-                                <Trash2 size={10} /> Delete Leg
-                            </button>
-                        </div>
+                    {/* 2. CARGAR RUTA */}
+                    <button
+                        onClick={handleLoadClick}
+                        className="h-6.5 text-[11px] font-black uppercase text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded px-2.5 transition-colors cursor-pointer flex items-center gap-1 shadow-sm tracking-wide"
+                        title="Cargar Ruta predeterminada desde la tabla de rutas"
+                    >
+                        <FolderOpen size={12} className="text-blue-600" />
+                        2. CARGAR RUTA
+                    </button>
 
+                    {/* 3. CARGAR COTIZACIÓN */}
+                    <button
+                        onClick={handleLoadClick}
+                        className="h-6.5 text-[11px] font-black uppercase text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded px-2.5 transition-colors cursor-pointer flex items-center gap-1 shadow-sm tracking-wide"
+                        title="Cargar Cotización guardada"
+                    >
+                        <FolderOpen size={12} className="text-blue-600" />
+                        3. CARGAR COTIZACIÓN
+                    </button>
 
-                        {/* Botones de Persistencia */}
-                        <div className="flex gap-1 border-l border-slate-200 pl-3">
-                            <button
-                                onClick={() => {
-                                    const suggested = getSuggestedRouteName(selectedClient);
-                                    setRouteName(suggested);
-                                    setShowSaveModal(true);
-                                }}
-                                className="h-7 text-[11px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
-                            >
-                                <Save size={10} /> Save
-                            </button>
-                            <button
-                                onClick={handleLoadClick}
-                                className="h-7 text-[11px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
-                            >
-                                <FolderOpen size={10} /> Load
-                            </button>
-                            <button
-                                onClick={handlePrintPDF}
-                                className="h-7 text-[11px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
-                            >
-                                🖨️ Export PDF
-                            </button>
-                            <button
-                                onClick={handleOpenExportModal}
-                                className="h-7 text-[11px] font-bold rounded px-2 bg-emerald-600 hover:bg-emerald-750 text-white border border-emerald-700 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
-                            >
-                                📦 Export to Matrix
-                            </button>
-                        </div>
+                    {/* 4. SELECCIONAR BUQUE */}
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] font-black uppercase text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 tracking-wide">
+                            4. SELECCIONAR BUQUE
+                        </span>
+                        <select
+                            value={selectedVessel}
+                            onChange={(e) => handleVesselChange(e.target.value)}
+                            className="h-6.5 bg-white border border-slate-300 rounded px-1.5 text-xs font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans shadow-sm min-w-[160px]"
+                        >
+                            <option value="">⚓ [SELECCIONE BUQUE]</option>
+                            {vessels.map(v => (
+                                <option key={v.vessel_id} value={v.vessel_id}>{v.vessel_name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* 5. COSTOS PUERTO */}
+                    <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded h-6.5 border border-slate-300">
+                        <span className="text-[10px] font-black text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 uppercase tracking-wide">
+                            5. COSTOS PUERTO:
+                        </span>
+                        <button
+                            onClick={() => setLocalPortCostMode('static')}
+                            className={`px-1.5 h-5 text-[9px] font-black rounded transition-all cursor-pointer ${
+                                localPortCostMode === 'static' ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'
+                            }`}
+                            title="Modo Estático: Tarifa de port_cost_static ($0.00 estricto si falta)"
+                        >
+                            STATIC
+                        </button>
+                        <button
+                            onClick={() => setLocalPortCostMode('matrix')}
+                            className={`px-1.5 h-5 text-[9px] font-black rounded transition-all cursor-pointer ${
+                                localPortCostMode === 'matrix' ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'
+                            }`}
+                            title="Modo Matriz Compleja: Promedio entre Escenario Alto y Bajo"
+                        >
+                            MATRIX
+                        </button>
                     </div>
                 </div>
 
@@ -2137,7 +2143,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     <table className="w-full border-collapse border border-slate-250 bg-white font-mono text-[11px] table-fixed">
                         <thead>
                             <tr className="bg-slate-100 border-b border-slate-250 font-sans text-[9.5px] text-slate-500 font-bold uppercase tracking-wider h-7">
-                                <th className="border-r border-slate-200 text-left pl-2" style={{ width: '11%' }}>Vessel</th>
+                                <th className="border-r border-slate-200 text-left pl-1.5 font-extrabold uppercase text-[9.5px] text-slate-700 truncate" style={{ width: '8.5%' }} title={`Buque: ${selectedVessel || 'SELECCIONAR'}`}>
+                                    VESSEL: {selectedVessel ? (vessels.find(v => v.vessel_id === selectedVessel)?.vessel_name || selectedVessel) : 'SELECCIONAR'}
+                                </th>
                                 <th className="border-r border-slate-200 text-right pr-2" style={{ width: '5%' }}>GRT (t)</th>
                                 <th className="border-r border-slate-200 text-right pr-2" style={{ width: '6.5%' }}>DWT (t)</th>
                                 <th className="border-r border-slate-200 text-right pr-2" style={{ width: '6.5%' }}>DWCC (t)</th>
@@ -2151,23 +2159,47 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Load (t/d)</th>
                                 <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Disch (t/d)</th>
                                 <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>IFO ($/T)</th>
-                                <th className="text-center" style={{ width: '7.5%' }}>MDO ($/T)</th>
+                                <th className="text-center" style={{ width: '8%' }}>MDO ($/T)</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr className="border-b border-slate-200 h-8">
-                                {/* Buque Selector */}
-                                <td className="border-r border-slate-200 p-0 text-left align-middle" rowSpan={2}>
-                                    <select
-                                        value={selectedVessel}
-                                        onChange={(e) => handleVesselChange(e.target.value)}
-                                        className="w-[96%] mx-[2%] h-[26px] bg-white border border-slate-300 rounded px-1 text-[11.5px] font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans"
-                                    >
-                                        <option value="">⚓ [SELECCIONE BUQUE]</option>
-                                        {vessels.map(v => (
-                                            <option key={v.vessel_id} value={v.vessel_id}>{v.vessel_name}</option>
-                                        ))}
-                                    </select>
+                            <tr className="border-b border-slate-200 h-14">
+                                {/* Buque con Foto Oficial de Flota (Fondo Blanco Limpio sin Marcos ni Textos Repetidos) */}
+                                <td className="border-r border-slate-200 p-0.5 text-center align-middle bg-white" rowSpan={2}>
+                                    {(() => {
+                                        if (!selectedVessel || selectedVessel.trim() === '') {
+                                            return (
+                                                <div className="w-full h-full flex flex-col items-center justify-center p-1 text-slate-400 select-none bg-white font-sans font-bold text-[10px] uppercase">
+                                                    Seleccionar buque
+                                                </div>
+                                            );
+                                        }
+
+                                        const vObj = vessels.find(v => v.vessel_id === selectedVessel);
+                                        let photoSrc = vObj?.image_url;
+                                        if (!photoSrc || photoSrc.trim() === '') {
+                                            const vid = (selectedVessel || vObj?.vessel_id || '').toUpperCase();
+                                            const vname = (vObj?.vessel_name || '').toUpperCase();
+                                            if (vid.includes('MOQUEGUA') || vname.includes('MOQUEGUA')) {
+                                                photoSrc = '/moquegua_1.jpg';
+                                            } else if (vid.includes('TABLONES') || vname.includes('TABLONES') || vid.includes('CONCON') || vname.includes('CONCON')) {
+                                                photoSrc = '/tablones.jpeg';
+                                            } else {
+                                                photoSrc = '/moquegua_1.jpg';
+                                            }
+                                        }
+
+                                        return (
+                                            <div className="w-full h-full flex items-center justify-center p-0.5 bg-white">
+                                                <img
+                                                    src={photoSrc}
+                                                    alt={vObj?.vessel_name || selectedVessel}
+                                                    className="w-full h-12 object-contain bg-white rounded"
+                                                    title={`Buque Oficial: ${vObj?.vessel_name || selectedVessel}`}
+                                                />
+                                            </div>
+                                        );
+                                    })()}
                                 </td>
                                 
                                 {/* Particularidades */}
@@ -2346,7 +2378,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
             </div>
 
             {/* 2. PORT ROTATION TABLE (MAIN ESTIMATION REJILLA) */}
-            <div className="flex-1 overflow-auto border border-slate-300 rounded bg-white shadow-sm min-h-0 flex flex-col mb-2">
+            <div className="overflow-x-auto border border-slate-300 rounded bg-white shadow-sm flex flex-col mb-3">
                 <table className="w-full border-collapse text-[12px] font-mono table-fixed select-text">
                     
                     {/* Ancho de columnas - Suma 100% de forma perfecta y balanceada */}
@@ -2373,7 +2405,26 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
  
                     <thead>
                         <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-300 h-8 select-none font-sans text-[10.5px] uppercase tracking-wider">
-                            <th className="border-r border-slate-300 text-center">Leg</th>
+                            <th className="border-r border-slate-300 text-center p-0.5">
+                                <div className="flex items-center justify-center gap-0.5">
+                                    <span className="font-black text-[10.5px] text-slate-800 uppercase">LEG</span>
+                                    <button
+                                        onClick={handleAddTramo}
+                                        className="w-4 h-4 rounded bg-blue-600 hover:bg-blue-700 text-white font-black text-[11px] flex items-center justify-center shadow-sm cursor-pointer"
+                                        title="Agregar Tramo (+)"
+                                    >
+                                        +
+                                    </button>
+                                    <button
+                                        onClick={handleRemoveLastTramo}
+                                        disabled={tramos.length <= 1}
+                                        className="w-4 h-4 rounded bg-red-600 hover:bg-red-700 text-white font-black text-[11px] flex items-center justify-center shadow-sm disabled:opacity-30 cursor-pointer"
+                                        title="Borrar Tramo (-)"
+                                    >
+                                        -
+                                    </button>
+                                </div>
+                            </th>
                             <th className="border-r border-slate-300 text-center">Tipo</th>
                             <th className="border-r border-slate-300 text-left pl-2">Puerto</th>
                             <th className="border-r border-slate-300 text-right pr-2">Dist (NM)</th>
@@ -2490,10 +2541,15 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             <td className="border-r border-slate-200 p-0 text-right">
                                 {puertosConfig[0].action === 'CARGAR' ? (
                                     <input
-                                        type="number"
-                                        placeholder="Q"
-                                        value={puertosConfig[0].quantity ?? ''}
-                                        onChange={(e) => updatePuertoConfigField(0, 'quantity', e.target.value)}
+                                        type="text"
+                                        placeholder="Q (MT)"
+                                        value={puertosConfig[0].quantity !== '' && puertosConfig[0].quantity !== undefined ? fmtThousandSep(puertosConfig[0].quantity) : ''}
+                                        onChange={(e) => {
+                                            const raw = e.target.value.replace(/,/g, '');
+                                            if (/^\d*\.?\d*$/.test(raw)) {
+                                                updatePuertoConfigField(0, 'quantity', raw);
+                                            }
+                                        }}
                                         className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
                                     />
                                 ) : (
@@ -2517,14 +2573,20 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                              <td className="border-r border-slate-200 p-0 text-right">
                                 {puertosConfig[0].action !== 'NONE' ? (
                                     <input
-                                        type="number" value={puertosConfig[0].manual_port_cost ?? ''}
-                                        onChange={(e) => updatePuertoConfigField(0, 'manual_port_cost', e.target.value)}
+                                        type="text"
+                                        value={puertosConfig[0].manual_port_cost !== '' && puertosConfig[0].manual_port_cost !== undefined ? fmtThousandSep(puertosConfig[0].manual_port_cost) : ''}
+                                        onChange={(e) => {
+                                            const raw = e.target.value.replace(/[^0-9.]/g, '');
+                                            if (/^\d*\.?\d*$/.test(raw)) {
+                                                updatePuertoConfigField(0, 'manual_port_cost', raw);
+                                            }
+                                        }}
                                         className={`w-full h-full bg-white border-0 px-1.5 text-right font-mono text-xs focus:outline-none ${
                                             puertosConfig[0].manual_port_cost !== '' && puertosConfig[0].manual_port_cost !== undefined
                                                 ? 'text-blue-800 font-extrabold bg-blue-50/20'
                                                 : 'text-slate-500 font-medium'
                                         }`}
-                                        placeholder={result?.tramos?.[0]?.agency_costs_origin ? String(result.tramos[0].agency_costs_origin) : ''}
+                                        placeholder={result?.tramos?.[0]?.agency_costs_origin ? fmtCurrencySep(result.tramos[0].agency_costs_origin) : ''}
                                     />
                                 ) : (
                                     <span className="text-slate-350 select-none pr-2">—</span>
@@ -2697,10 +2759,15 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     <td className="border-r border-slate-200 p-0 text-right">
                                         {puertosConfig[idx + 1].action !== 'NONE' ? (
                                             <input
-                                                type="number"
-                                                placeholder="Q"
-                                                value={puertosConfig[idx + 1].quantity ?? ''}
-                                                onChange={(e) => updatePuertoConfigField(idx + 1, 'quantity', e.target.value)}
+                                                type="text"
+                                                placeholder="Q (MT)"
+                                                value={puertosConfig[idx + 1].quantity !== '' && puertosConfig[idx + 1].quantity !== undefined ? fmtThousandSep(puertosConfig[idx + 1].quantity) : ''}
+                                                onChange={(e) => {
+                                                    const raw = e.target.value.replace(/,/g, '');
+                                                    if (/^\d*\.?\d*$/.test(raw)) {
+                                                        updatePuertoConfigField(idx + 1, 'quantity', raw);
+                                                    }
+                                                }}
                                                 className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs"
                                             />
                                         ) : (
@@ -2728,15 +2795,20 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     <td className="border-r border-slate-200 p-0 text-right">
                                         {puertosConfig[idx + 1].action !== 'NONE' ? (
                                             <input
-                                                type="number"
-                                                value={puertosConfig[idx + 1].manual_port_cost ?? ''}
-                                                onChange={(e) => updatePuertoConfigField(idx + 1, 'manual_port_cost', e.target.value)}
+                                                type="text"
+                                                value={puertosConfig[idx + 1].manual_port_cost !== '' && puertosConfig[idx + 1].manual_port_cost !== undefined ? fmtThousandSep(puertosConfig[idx + 1].manual_port_cost) : ''}
+                                                onChange={(e) => {
+                                                    const raw = e.target.value.replace(/[^0-9.]/g, '');
+                                                    if (/^\d*\.?\d*$/.test(raw)) {
+                                                        updatePuertoConfigField(idx + 1, 'manual_port_cost', raw);
+                                                    }
+                                                }}
                                                 className={`w-full h-full bg-white border-0 px-1.5 text-right font-mono text-xs focus:outline-none ${
                                                     puertosConfig[idx + 1].manual_port_cost !== '' && puertosConfig[idx + 1].manual_port_cost !== undefined
                                                         ? 'text-blue-800 font-extrabold bg-blue-50/20'
                                                         : 'text-slate-500 font-medium'
                                                 }`}
-                                                placeholder={trResult?.agency_costs_destination ? String(trResult.agency_costs_destination) : ''}
+                                                placeholder={trResult?.agency_costs_destination ? fmtCurrencySep(trResult.agency_costs_destination) : ''}
                                             />
                                         ) : (
                                             <span className="text-slate-350 select-none pr-2">—</span>
@@ -3139,7 +3211,46 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                         </table>
                     </div>
                 </div>
+                </div>
 
+                {/* 6. GRABAR Y EXPORTAR (FUERA DEL GRID - 100% ANCHO COMPLETO UNIFICADO EN 1 SOLA FILA) */}
+                <div className="bg-white border border-slate-300 rounded shadow-sm p-2 mt-3 select-none flex-shrink-0 w-full">
+                    <div className="flex items-center justify-between bg-slate-50 p-2 rounded border border-slate-200 flex-nowrap whitespace-nowrap gap-2 w-full">
+                        {/* Título / Badge 6 */}
+                        <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-[11px] font-black uppercase text-blue-700 bg-blue-50 px-2.5 py-1 rounded border border-blue-200 tracking-wide whitespace-nowrap">
+                                6. GRABAR Y EXPORTAR
+                            </span>
+                        </div>
+
+                        {/* Los 3 Botones en 1 Sola Fila Horizontal */}
+                        <div className="flex items-center gap-3 flex-nowrap whitespace-nowrap shrink-0">
+                            <button
+                                onClick={() => {
+                                    const suggested = getSuggestedRouteName(selectedClient);
+                                    setRouteName(suggested);
+                                    setShowSaveModal(true);
+                                }}
+                                className="h-7 text-xs font-black uppercase tracking-wider rounded px-3.5 bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm whitespace-nowrap"
+                            >
+                                <Save size={14} /> 💾 Grabar Cotización
+                            </button>
+
+                            <button
+                                onClick={handleOpenExportModal}
+                                className="h-7 text-xs font-black uppercase tracking-wider rounded px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm whitespace-nowrap"
+                            >
+                                <FolderOpen size={14} /> 📊 Exportar a Matrix
+                            </button>
+
+                            <button
+                                onClick={handlePrintPDF}
+                                className="h-7 text-xs font-bold rounded px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm whitespace-nowrap"
+                            >
+                                🖨️ Export PDF
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 </div>
             ) : (

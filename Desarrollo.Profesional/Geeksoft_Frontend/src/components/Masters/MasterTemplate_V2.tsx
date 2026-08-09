@@ -557,7 +557,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
 
 
                 {/* Contenido Principal */}
-                <main className="flex-1 flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm p-6 min-w-0 overflow-hidden">
+                <main className="flex-1 flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm p-6 min-w-0 overflow-y-auto">
                     {children}
                 </main>
 

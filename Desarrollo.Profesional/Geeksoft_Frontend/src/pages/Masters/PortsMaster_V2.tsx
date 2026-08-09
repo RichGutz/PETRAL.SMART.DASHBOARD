@@ -260,13 +260,41 @@ export const PortsMaster_V2: React.FC = () => {
                         
                         {/* Editor flotante de nuevo puerto */}
                         {editingPortId === 'NUEVO' && (
-                            <div className="bg-white border-2 border-blue-400 p-4 rounded-xl shadow-md flex gap-4 items-center flex-wrap">
-                                <input placeholder="ID Corto (Ej. CALLAO)" className="border p-2 rounded text-sm uppercase font-bold" value={editPortData.port_id} onChange={e=>setEditPortData({...editPortData, port_id: e.target.value})} />
-                                <input placeholder="Nombre Completo" className="border p-2 rounded text-sm flex-1 min-w-[200px]" value={editPortData.port_name} onChange={e=>setEditPortData({...editPortData, port_name: e.target.value})} />
-                                <input type="number" placeholder="Latitud" className="border p-2 rounded text-sm w-24" value={editPortData.lat} onChange={e=>setEditPortData({...editPortData, lat: e.target.value})} />
-                                <input type="number" placeholder="Longitud" className="border p-2 rounded text-sm w-24" value={editPortData.lon} onChange={e=>setEditPortData({...editPortData, lon: e.target.value})} />
-                                <button onClick={()=>setEditingPortId(null)} className="px-4 py-2 bg-slate-200 rounded font-bold text-sm">Cancelar</button>
-                                <button onClick={handleSavePort} disabled={isSaving} className="px-4 py-2 bg-blue-600 text-white rounded font-bold text-sm">Guardar Puerto</button>
+                            <div className="bg-white border-2 border-blue-500 p-5 rounded-xl shadow-lg flex flex-col gap-3">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                    <span className="text-xs font-black uppercase text-blue-700 tracking-wider flex items-center gap-1.5">
+                                        <Plus size={14} /> Registrar Nuevo Puerto
+                                    </span>
+                                    <span className="text-[11px] font-semibold text-slate-400">
+                                        Formato Coordenadas: Google Maps (Decimales)
+                                    </span>
+                                </div>
+                                <div className="flex gap-4 items-end flex-wrap">
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[10px] font-black uppercase text-slate-500">ID Corto</label>
+                                        <input placeholder="Ej. CALLAO" className="border border-slate-300 p-2 rounded-lg text-sm uppercase font-bold focus:ring-2 focus:ring-blue-500 outline-none w-36" value={editPortData.port_id} onChange={e=>setEditPortData({...editPortData, port_id: e.target.value})} />
+                                    </div>
+                                    <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
+                                        <label className="text-[10px] font-black uppercase text-slate-500">Nombre Completo del Puerto</label>
+                                        <input placeholder="Ej. Puerto del Callao" className="border border-slate-300 p-2 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none" value={editPortData.port_name} onChange={e=>setEditPortData({...editPortData, port_name: e.target.value})} />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+                                            <MapPin size={10} className="text-blue-500" /> Latitud (Google Maps)
+                                        </label>
+                                        <input type="number" step="any" placeholder="-12.046374" className="border border-slate-300 p-2 rounded-lg text-sm w-36 font-semibold focus:ring-2 focus:ring-blue-500 outline-none" value={editPortData.lat} onChange={e=>setEditPortData({...editPortData, lat: e.target.value})} />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+                                            <MapPin size={10} className="text-blue-500" /> Longitud (Google Maps)
+                                        </label>
+                                        <input type="number" step="any" placeholder="-77.042793" className="border border-slate-300 p-2 rounded-lg text-sm w-36 font-semibold focus:ring-2 focus:ring-blue-500 outline-none" value={editPortData.lon} onChange={e=>setEditPortData({...editPortData, lon: e.target.value})} />
+                                    </div>
+                                    <div className="flex items-center gap-2 ml-auto pt-2">
+                                        <button onClick={()=>setEditingPortId(null)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-bold text-xs transition-colors">Cancelar</button>
+                                        <button onClick={handleSavePort} disabled={isSaving} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs transition-colors shadow-sm">{isSaving ? 'Guardando...' : 'Guardar Puerto'}</button>
+                                    </div>
+                                </div>
                             </div>
                         )}
 
@@ -298,13 +326,41 @@ export const PortsMaster_V2: React.FC = () => {
                                 
                                 {/* Si se está editando este puerto existente */}
                                 {editingPortId === currentPort.port_id && (
-                                    <div className="bg-blue-50 border-2 border-blue-400 p-4 rounded-xl shadow-md flex gap-4 items-center flex-wrap">
-                                        <input disabled className="border p-2 rounded text-sm uppercase font-bold bg-slate-100 text-slate-400" value={editPortData.port_id} />
-                                        <input placeholder="Nombre Completo" className="border p-2 rounded text-sm flex-1 min-w-[200px]" value={editPortData.port_name} onChange={e=>setEditPortData({...editPortData, port_name: e.target.value})} />
-                                        <input type="number" placeholder="Latitud" className="border p-2 rounded text-sm w-24" value={editPortData.lat} onChange={e=>setEditPortData({...editPortData, lat: e.target.value})} />
-                                        <input type="number" placeholder="Longitud" className="border p-2 rounded text-sm w-24" value={editPortData.lon} onChange={e=>setEditPortData({...editPortData, lon: e.target.value})} />
-                                        <button onClick={()=>setEditingPortId(null)} className="px-4 py-2 bg-slate-200 rounded font-bold text-sm hover:bg-slate-300">Cancelar</button>
-                                        <button onClick={handleSavePort} disabled={isSaving} className="px-4 py-2 bg-blue-600 text-white rounded font-bold text-sm hover:bg-blue-700">Guardar Puerto</button>
+                                    <div className="bg-blue-50 border-2 border-blue-400 p-5 rounded-xl shadow-lg flex flex-col gap-3">
+                                        <div className="flex items-center justify-between border-b border-blue-200/60 pb-2">
+                                            <span className="text-xs font-black uppercase text-blue-800 tracking-wider flex items-center gap-1.5">
+                                                <Edit3 size={14} /> Editar Datos de Puerto
+                                            </span>
+                                            <span className="text-[11px] font-semibold text-slate-500">
+                                                Formato Coordenadas: Google Maps (Decimales)
+                                            </span>
+                                        </div>
+                                        <div className="flex gap-4 items-end flex-wrap">
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] font-black uppercase text-slate-500">ID Corto</label>
+                                                <input disabled className="border border-slate-200 p-2 rounded-lg text-sm uppercase font-bold bg-slate-100 text-slate-400 w-36" value={editPortData.port_id} />
+                                            </div>
+                                            <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
+                                                <label className="text-[10px] font-black uppercase text-slate-500">Nombre Completo del Puerto</label>
+                                                <input placeholder="Ej. Puerto del Callao" className="border border-slate-300 p-2 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none bg-white" value={editPortData.port_name} onChange={e=>setEditPortData({...editPortData, port_name: e.target.value})} />
+                                            </div>
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+                                                    <MapPin size={10} className="text-blue-500" /> Latitud (Google Maps)
+                                                </label>
+                                                <input type="number" step="any" placeholder="-12.046374" className="border border-slate-300 p-2 rounded-lg text-sm w-36 font-semibold focus:ring-2 focus:ring-blue-500 outline-none bg-white" value={editPortData.lat} onChange={e=>setEditPortData({...editPortData, lat: e.target.value})} />
+                                            </div>
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+                                                    <MapPin size={10} className="text-blue-500" /> Longitud (Google Maps)
+                                                </label>
+                                                <input type="number" step="any" placeholder="-77.042793" className="border border-slate-300 p-2 rounded-lg text-sm w-36 font-semibold focus:ring-2 focus:ring-blue-500 outline-none bg-white" value={editPortData.lon} onChange={e=>setEditPortData({...editPortData, lon: e.target.value})} />
+                                            </div>
+                                            <div className="flex items-center gap-2 ml-auto pt-2">
+                                                <button onClick={()=>setEditingPortId(null)} className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold text-xs transition-colors">Cancelar</button>
+                                                <button onClick={handleSavePort} disabled={isSaving} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs transition-colors shadow-sm">{isSaving ? 'Guardando...' : 'Guardar Puerto'}</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
 

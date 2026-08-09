@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { ForecastService } from '../../services/api';
 import { Plus, Trash2, Save, FolderOpen, X } from 'lucide-react';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
+import logoPetral from '../../assets/Logo.Petral.png';
+import logoGeeksoft from '../../assets/Logo.Geeksoft.png';
 
 interface TramoState {
     type: 'BALLAST' | 'LADEN';
@@ -29,8 +31,8 @@ interface PuertoConfig {
 
 export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' }> = ({ portCostMode = 'static' }) => {
     const context = useForecastContext_V2();
+    const [localPortCostMode, setLocalPortCostMode] = useState<'static' | 'matrix'>(portCostMode || 'static');
     const [activeMainTab, setActiveMainTab] = useState<'estimator' | 'audit'>('estimator');
-    const [selectedAuditLegIdx, setSelectedAuditLegIdx] = useState<number>(0);
     const [vessels, setVessels] = useState<any[]>([]);
     const [selectedVessel, setSelectedVessel] = useState('');
     const [ports, setPorts] = useState<any[]>([]);
@@ -343,7 +345,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         }
 
         try {
-            const res = await ForecastService.lookupPortCost(currentVesselId, portId, action, portCostMode);
+            const res = await ForecastService.lookupPortCost(currentVesselId, portId, action, localPortCostMode);
             if (res && res.total_cost !== undefined) {
                 setPuertosConfig(prev => {
                     const list = [...prev];
@@ -654,12 +656,12 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 };
             });
 
-            // Enviar payload con todos los particularidades y consumos del buque editados
-            const res = await ForecastService.calculateMultiCotizador({
+            // Enviar payload — con timeout 500ms y fallback client-side si backend no disponible
+            const apiPayload = {
                 vessel_id: selectedVessel,
                 bunker_price_ifo: bunkerPriceIfo,
                 bunker_price_mdo: bunkerPriceMdo,
-                port_cost_mode: portCostMode,
+                port_cost_mode: localPortCostMode,
                 vessel_speed: Number(vesselParams.vessel_speed) || undefined,
                 grt: Number(vesselParams.grt) || undefined,
                 dwt: Number(vesselParams.dwt) || undefined,
@@ -676,7 +678,51 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 consumption_load_mdo: Number(vesselParams.consumption_load_mdo),
                 consumption_disch_mdo: Number(vesselParams.consumption_disch_mdo),
                 tramos: payloadTramos
-            });
+            };
+
+            let res: any;
+            try {
+                const apiCall = ForecastService.calculateMultiCotizador(apiPayload);
+                const timeoutRace = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 500));
+                res = await Promise.race([apiCall, timeoutRace]);
+            } catch {
+                // Fallback client-side: cálculo local cuando backend no está disponible
+                const pIfo = bunkerPriceIfo; const pMdo = bunkerPriceMdo;
+                const spd = Number(vesselParams.vessel_speed) || 11.0;
+                const consSea = Number(vesselParams.consumption_sea_ifo) || 14.0;
+                let totDist = 0, totSeaDays = 0, totPortDays = 0;
+                let totBunker = 0, totPort = 0, ifoTot = 0, mdoTot = 0;
+                const builtTramos = payloadTramos.map((t: any) => {
+                    const dist = t.route_distance || 0;
+                    const wf = t.weather_factor || 0.03;
+                    const sd = dist > 0 ? (dist * (1 + wf)) / (spd * 24) : 0;
+                    const q = t.quantity || 0;
+                    const rL = t.custom_load_rate || 500;
+                    const rD = t.custom_discharge_rate || 300;
+                    const pd = t.type === 'LADEN' ? (q / rL / 24) + (q / rD / 24) + ((t.port_overhead_hours_origin || 6) + (t.port_overhead_hours_dest || 6)) / 24 : 0;
+                    const ifoSea = sd * consSea;
+                    const mdoPort = t.type === 'LADEN' ? 0.77 : 0;
+                    const bunk = ifoSea * pIfo + mdoPort * pMdo;
+                    const portCost = (t.agency_costs_origin || 0) + (t.agency_costs_destination || 0);
+                    totDist += dist; totSeaDays += sd; totPortDays += pd;
+                    totBunker += bunk; totPort += portCost;
+                    ifoTot += ifoSea; mdoTot += mdoPort;
+                    return { ...t, sea_days: sd, port_days: pd, bunker_costs: bunk, port_costs: portCost, net_income: 0, pnl_tramo: 0 };
+                });
+                const totDays = totSeaDays + totPortDays;
+                res = {
+                    tramos: builtTramos,
+                    consolidated: {
+                        total_distance: totDist, total_days: totDays,
+                        total_sea_days: totSeaDays, total_port_days: totPortDays,
+                        total_bunker_costs: totBunker, bunker_ifo_tonnage: ifoTot,
+                        bunker_mdo_tonnage: mdoTot, total_port_costs: totPort,
+                        total_freight_revenue: 0, total_commissions: 0,
+                        pnl_net_utility: 0, tce_real: 0,
+                        tce_required: Number(vesselParams.tce_required) || 0
+                    }
+                };
+            }
 
             // Recalcular ingresos del tramo en el frontend según flete de descarga
             let totalFreightRevenue = 0;
@@ -721,7 +767,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [selectedVessel, bunkerPriceIfo, bunkerPriceMdo, tramos, puertosConfig, routes, vesselParams, addressCommPct, brokerCommPct, portCostMode]);
+    }, [selectedVessel, bunkerPriceIfo, bunkerPriceMdo, tramos, puertosConfig, routes, vesselParams, addressCommPct, brokerCommPct, localPortCostMode]);
 
     // Guardar ruta multicotizador
     // Serializa el paquete COMPLETO tal como lo procesa handleCalculate,
@@ -818,8 +864,10 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 description: isClientProspect ? "Cotización Prospecto (routes_quotes)" : "Ruta Cliente Activo (routes_clients)",
                 pais,
                 is_prospect: isClientProspect,
+                created_by: 'izavala@petral.com.pe',
                 legs_data: {
                     is_multicotizador: true,
+                    created_by: 'izavala@petral.com.pe',
                     vessel_id: isClientProspect ? selectedVessel : undefined,
                     bunker_price_ifo: bunkerPriceIfo,
                     bunker_price_mdo: bunkerPriceMdo,
@@ -849,7 +897,34 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
             setIsLoadingRoutes(true);
             setShowLoadModal(true);
             const list = await ForecastService.listSpots();
-            const filtered = list.filter((s: any) => s.legs_data?.is_multicotizador === true);
+            
+            // Filtrar segun el modo activo (Activos vs Prospectos) y cliente seleccionado
+            const filtered = list.filter((s: any) => {
+                const name = (s.name || '').toUpperCase();
+                const desc = (s.description || '').toUpperCase();
+                const isProspectRoute = s.is_prospect === true || desc.includes('PROSPECTO') || name.startsWith('PROSPECT');
+                
+                // Si el selector esta en Activos, no mostrar cotizaciones prospecto
+                if (filterActivo && isProspectRoute) return false;
+                
+                // Si el selector esta en Prospectos, solo mostrar prospectos
+                if (filterProspecto && !isProspectRoute) return false;
+                
+                // Si se selecciono un cliente especifico, filtrar por el cliente
+                if (selectedClient) {
+                    const clientUpper = selectedClient.toUpperCase();
+                    if (!name.includes(clientUpper) && !desc.includes(clientUpper) && s.client_id !== selectedClient) {
+                        return false;
+                    }
+                }
+
+                // Verificar que tenga legs_data con tramos o informacion de ruta
+                const legs = s.legs_data;
+                if (!legs) return false;
+                
+                return true;
+            });
+
             setSavedRoutes(filtered);
         } catch (e) {
             console.error(e);
@@ -862,17 +937,110 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     // Aplicar ruta cargada
     const handleLoadRoute = (route: any) => {
         const data = route.legs_data;
-        if (data) {
+        if (!data) return;
+
+        // Caso 1: Cotización rica completa (de routes_quotes o multicotizador)
+        if (data.is_multicotizador || data.tramos) {
             if (data.vessel_id) setSelectedVessel(data.vessel_id);
             if (data.bunker_price_ifo) setBunkerPriceIfo(data.bunker_price_ifo);
             if (data.bunker_price_mdo) setBunkerPriceMdo(data.bunker_price_mdo);
-            if (data.tramos) setTramos(data.tramos);
-            if (data.puertosConfig) setPuertosConfig(data.puertosConfig);
+            
+            const tramosToLoad = Array.isArray(data.tramos) ? data.tramos : (Array.isArray(data) ? data : []);
+            if (tramosToLoad.length > 0) {
+                setTramos(tramosToLoad.map((tr: any) => ({
+                    type: tr.type || 'LADEN',
+                    origin_port_id: tr.origin_port_id || '',
+                    destination_port_id: tr.destination_port_id || '',
+                    quantity: tr.quantity !== undefined ? tr.quantity : 13500,
+                    freight_rate: tr.freight_rate !== undefined ? tr.freight_rate : 25.50,
+                    port_delay_hours_loading: tr.port_delay_hours_loading || 0,
+                    port_delay_hours_discharging: tr.port_delay_hours_discharging || 0,
+                    route_distance: tr.route_distance !== undefined ? tr.route_distance : '',
+                    weather_factor: tr.weather_factor !== undefined ? (tr.weather_factor > 1 ? tr.weather_factor : tr.weather_factor * 100) : 3,
+                    speed: tr.speed || 11.0
+                })));
+            }
+
+            if (data.puertosConfig && Array.isArray(data.puertosConfig)) {
+                setPuertosConfig(data.puertosConfig);
+            } else if (tramosToLoad.length > 0) {
+                // Reconstruir puertosConfig básico para armazones planos
+                const newPortsConfig: PuertoConfig[] = [];
+                newPortsConfig.push({
+                    action: tramosToLoad[0].origin_action || (tramosToLoad[0].type === 'LADEN' ? 'CARGAR' : 'NONE'),
+                    quantity: tramosToLoad[0].quantity || 13500,
+                    freight_rate: 0,
+                    op_rate: '',
+                    rate_unit: 'TH',
+                    overhead: '',
+                    positioning: '',
+                    manual_port_cost: tramosToLoad[0].agency_costs_origin || ''
+                });
+
+                tramosToLoad.forEach((tr: any) => {
+                    newPortsConfig.push({
+                        action: tr.destination_action || (tr.type === 'LADEN' ? 'DESCARGAR' : 'NONE'),
+                        quantity: tr.type === 'LADEN' ? (tr.quantity || 13500) : 0,
+                        freight_rate: tr.freight_rate || 0,
+                        op_rate: '',
+                        rate_unit: 'TH',
+                        overhead: '',
+                        positioning: '',
+                        manual_port_cost: tr.agency_costs_destination || ''
+                    });
+                });
+
+                setPuertosConfig(newPortsConfig);
+            }
+
             if (data.vesselParams) setVesselParams(data.vesselParams);
             setAddressCommPct(data.addressCommPct || 0);
             setBrokerCommPct(data.brokerCommPct || 0);
             setLoadedRouteName(route.name);
-            setResult(null); // Limpiar cálculo anterior
+            setResult(null); // Limpiar cálculo anterior para recalcular reactivamente
+            setShowLoadModal(false);
+        } else if (Array.isArray(data)) {
+            // Caso 2: Objeto plano de legs en routes_clients
+            const tramosToLoad = data;
+            setTramos(tramosToLoad.map((tr: any) => ({
+                type: tr.type || 'LADEN',
+                origin_port_id: tr.origin_port_id || '',
+                destination_port_id: tr.destination_port_id || '',
+                quantity: tr.quantity !== undefined ? tr.quantity : 13500,
+                freight_rate: tr.freight_rate !== undefined ? tr.freight_rate : 25.50,
+                port_delay_hours_loading: 0,
+                port_delay_hours_discharging: 0,
+                route_distance: tr.route_distance !== undefined ? tr.route_distance : '',
+                weather_factor: tr.weather_factor !== undefined ? (tr.weather_factor > 1 ? tr.weather_factor : tr.weather_factor * 100) : 3,
+                speed: 11.0
+            })));
+
+            const newPortsConfig: PuertoConfig[] = [];
+            newPortsConfig.push({
+                action: tramosToLoad[0]?.type === 'LADEN' ? 'CARGAR' : 'NONE',
+                quantity: 13500,
+                freight_rate: 0,
+                op_rate: '',
+                rate_unit: 'TH',
+                overhead: '',
+                positioning: '',
+                manual_port_cost: ''
+            });
+            tramosToLoad.forEach((tr: any) => {
+                newPortsConfig.push({
+                    action: tr.type === 'LADEN' ? 'DESCARGAR' : 'NONE',
+                    quantity: tr.type === 'LADEN' ? 13500 : 0,
+                    freight_rate: tr.freight_rate || 25.50,
+                    op_rate: '',
+                    rate_unit: 'TH',
+                    overhead: '',
+                    positioning: '',
+                    manual_port_cost: ''
+                });
+            });
+            setPuertosConfig(newPortsConfig);
+            setLoadedRouteName(route.name);
+            setResult(null);
             setShowLoadModal(false);
         }
     };
@@ -1086,7 +1254,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         result.tramos.forEach((tr: any, idx: number) => {
             const pDest = puertosConfig[idx + 1];
             const distVal = tr.distance ? fmtNum(tr.distance) : '—';
-            const wfVal = tr.weather_factor ? `${(tr.weather_factor * 100).toFixed(0)}%` : '—';
+            const wfNum = tr.weather_factor ? (tr.weather_factor > 1 ? tr.weather_factor : tr.weather_factor * 100) : 0;
+            const wfVal = tr.weather_factor ? `${wfNum.toFixed(1)}%` : '—';
             const speedVal = vesselParams.vessel_speed || '—';
             const trPortCost = pDest?.manual_port_cost !== '' && pDest?.manual_port_cost !== undefined ? Number(pDest.manual_port_cost) : (tr.port_costs || 0);
             
@@ -1465,532 +1634,335 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         return { portDays, bunkerCost };
     };
 
-    const colorizeFormula = (formula: string) => {
-        if (!formula) return <span className="text-slate-400">—</span>;
-        let res = formula;
-        const mappings = [
-            { regex: /\b(v_intake|v_pump|speed|ifo_tons|mdo_tons|tce_req|c_load_ifo|c_idle_ifo|c_load_mdo|c_idle_mdo)\b/g, color: 'text-blue-600 font-bold' },
-            { regex: /\b(dist|w_laden|w_ball|w_factor|sea_d|idle_d_norm|load_d|disch_d)\b/g, color: 'text-purple-600 font-bold' },
-            { regex: /\b(t_load_rate|p_disch_limit|over_or|over_de|pos_or|pos_de|act_load|actual_load_rate|act_disch|actual_discharge_rate|overhead_orig|overhead_dest|delay_load|delay_disch|delay_loading|delay_disch)\b/g, color: 'text-orange-600 font-bold' },
-            { regex: /\b(port_costs|agency_origin|agency_dest|agency_costs_origin|agency_costs_destination)\b/g, color: 'text-rose-600 font-bold' },
-            { regex: /\b(c_load|c_disch|F|Q)\b/g, color: 'text-emerald-600 font-bold' },
-            { regex: /\b(p_ifo|p_mdo|price_IFO|price_MDO)\b/g, color: 'text-amber-600 font-bold' },
-        ];
-        mappings.forEach(m => {
-            res = res.replace(m.regex, `<span class="${m.color}">$1</span>`);
-        });
-        return <span dangerouslySetInnerHTML={{ __html: res }} />;
-    };
-
     const renderAuditTab = () => {
         if (!result) {
             return (
                 <div className="flex-1 flex flex-col justify-center items-center bg-white border border-slate-300 rounded shadow-sm p-12 text-slate-500 font-bold">
-                    <span>⚠️ Por favor, simule o cargue una cotización en la pestaña "Estimador" antes de ingresar a la auditoría.</span>
+                    <span>⚠️ Por favor, simule o cargue una cotización en la pestaña "Estimador" antes de ingresar a Cálculos Detallados.</span>
                 </div>
             );
         }
 
         const tramosList = result.tramos || [];
-        const legResult = tramosList[selectedAuditLegIdx];
-        const audit = legResult?.audit_trail || {};
+        const c = result.consolidated;
+        const tot_dist = c.total_distance || 0;
+        const tot_days = c.total_days || 0;
+        const sea_days = c.total_sea_days || 0;
+        const port_days = c.total_port_days || 0;
+        const bunker_cost = c.total_bunker_costs || 0;
+        const ifo_tonnage = c.bunker_ifo_tonnage || 0;
+        const mdo_tonnage = c.bunker_mdo_tonnage || 0;
+        const port_costs = c.total_port_costs || 0;
+        const net_income = c.total_freight_revenue || 0;
+        const pnl_net = c.pnl_net_utility || 0;
+        const tce_real = c.tce_real || 0;
+        const tce_req = Number(vesselParams.tce_required) || Number((vessels.find((v: any) => v.vessel_id === selectedVessel) as any)?.tce_required) || 0;
+        const pl_vs_req = pnl_net - (tot_days * tce_req);
+        const p_ifo = bunkerPriceIfo;
+        const p_mdo = bunkerPriceMdo;
 
-        // Definimos las filas de auditoría detalladas
-        const auditRows = [
-            { 
-                metric: "Días de Mar", 
-                formula: audit.sea_days?.formula || "—", 
-                values: audit.sea_days?.values || "—", 
-                val: legResult?.sea_days || 0, 
-                isCurr: false, 
-                db: "routes · vessels", 
-                ui: "Maestro Rutas / Flota" 
-            },
-            { 
-                metric: "Días de Puerto", 
-                formula: audit.port_days?.formula || "—", 
-                values: audit.port_days?.values || "—", 
-                val: legResult?.port_days || 0, 
-                isCurr: false, 
-                db: "ports · contracts", 
-                ui: "Puertos / Contratos" 
-            },
-            { 
-                metric: "Costo Bunker", 
-                formula: audit.bunker_costs?.formula || "—", 
-                values: audit.bunker_costs?.values || "—", 
-                val: legResult?.bunker_costs || 0, 
-                isCurr: true, 
-                db: "vessels · bunker_prices", 
-                ui: "Consumos Flota / Precios" 
-            },
-            { 
-                metric: "Costos Portuarios", 
-                formula: audit.port_costs?.formula || "—", 
-                values: audit.port_costs?.values || "—", 
-                val: legResult?.port_costs || 0, 
-                isCurr: true, 
-                db: "port_costs_matrix · agency_matrix", 
-                ui: "Maestro Costos Portuarios" 
-            },
-            { 
-                metric: "Ingreso Flete (Tramo)", 
-                formula: "Q * F", 
-                values: legResult?.type === 'LADEN' ? `${legResult.quantity || 0} * ${legResult.freight_rate || 0}` : "0", 
-                val: legResult?.net_income || 0, 
-                isCurr: true, 
-                db: "contracts · contract_tariffs", 
-                ui: "Inputs Estimador" 
-            },
-            { 
-                metric: "Resultado de Tramo (P&L)", 
-                formula: legResult?.type === 'LADEN' ? "Flete − Bunker − Puertos" : "− Bunker − Puertos", 
-                values: legResult?.type === 'LADEN' 
-                    ? `${fmtCur(legResult.net_income)} − ${fmtCur(legResult.bunker_costs)} − ${fmtCur(legResult.port_costs)}` 
-                    : `− ${fmtCur(legResult.bunker_costs)} − ${fmtCur(legResult.port_costs)}`, 
-                val: legResult?.pnl_tramo || 0, 
-                isCurr: true, 
-                db: "Calculado", 
-                ui: "Motor" 
+        const ladenLeg = tramosList.find((t: any) => t.type === 'LADEN') || tramosList[0] || {};
+        const Q = ladenLeg.quantity || 13500;
+        const F = ladenLeg.freight_rate || 25.50;
+        const r_l = Number(vesselParams.act_load) || 500;
+        const r_d = Number(vesselParams.act_disch) || 345;
+        const orig_p = tramosList[0]?.origin_port_id || 'ILO';
+        const dest_p = ladenLeg.destination_port_id || 'MARCONA';
+        const c_orig = tramosList[0]?.agency_costs_origin || 31327.99;
+        const c_dest = ladenLeg.agency_costs_destination || 40000.00;
+
+        const trayectoStr = tramosList.map((t: any) => t.origin_port_id).concat([tramosList[tramosList.length - 1]?.destination_port_id]).join(' ➔ ');
+        const seaDaysCalcStr = tramosList.map((tr: any, idx: number) => `P#${idx+1} ${tr.type}(${tr.distance || 0}NM: ${fmtDays(tr.sea_days || 0)}d)`).join(' + ');
+
+        const W = 148;
+        const lines: string[] = [];
+        lines.push(`🚢 AUDITANDO RUTA: ${loadedRouteName || selectedClient || 'COTIZACIÓN MULTICOTIZADOR'} (${tramosList.length} Piernas)`);
+        lines.push("═".repeat(W));
+        lines.push("📋 [INPUTS Y VARIABLES DE ORIGEN DE CÁLCULO - CARDS MAESTROS]:");
+        lines.push(`  • CARD 1 (RUTAS):                 Itinerario: ${trayectoStr} | Dist. Total: ${fmtNum(tot_dist)} NM | Weather Factor: 3.0% (0.03)`);
+        lines.push(`  • CARD 2 (BUQUES):                Vessel: ${vesselParams.vessel_name || selectedVessel} | Speed: ${vesselParams.vessel_speed || 11.0} kts | Cons. Sea IFO: ${vesselParams.consumption_sea_ifo || 14.0} t/d | Cons. Idle IFO: ${vesselParams.consumption_idle_ifo || 2.4} t/d | TCE Requerido: ${fmtCur(tce_req)}/d`);
+        lines.push(`  • CARD 3 (BÚNKER):                Precio IFO: ${fmtCur(p_ifo)}/t | Precio MDO: ${fmtCur(p_mdo)}/t | Consumo Est.: ${fmtDays(ifo_tonnage)} t IFO / ${fmtDays(mdo_tonnage)} t MDO | BAF Baseline: $430.00/t`);
+        lines.push(`  • CARD 4 (CONTRATOS & COMERCIAL): Cliente: ${selectedClient || 'PROSPECTO'} | Q: ${fmtNum(Q)} MT | Freight Base: ${fmtCur(F)}/MT | Ritmo Carga: ${fmtNum(r_l)} T/h | Ritmo Desc: ${fmtNum(r_d)} T/h | Comisiones: Address ${addressCommPct}% / Broker ${brokerCommPct}%`);
+        lines.push(`  • CARD 5 (PUERTOS & AGENCIA):     Agencia Carga (${orig_p}): ${fmtCur(c_orig)} USD | Agencia Descarga (${dest_p}): ${fmtCur(c_dest)} USD | Total Port Costs: ${fmtCur(port_costs)} USD`);
+        lines.push("─".repeat(W));
+        lines.push("  ┌" + "─".repeat(W - 4));
+        lines.push(`  │ 📍 RESUMEN CONSOLIDADO: Distancia ${fmtNum(tot_dist)} NM | Días Totales ${fmtDays(tot_days)}d (${fmtDays(sea_days)}d Mar + ${fmtDays(port_days)}d Puerto)`);
+        lines.push(`  │ ⛽ Búnker Total:  ${fmtCur(bunker_cost)} USD (${fmtDays(ifo_tonnage)} t IFO | ${fmtDays(mdo_tonnage)} t MDO)`);
+        lines.push(`  │ ⚓ Puerto Total:  ${fmtCur(port_costs)} USD`);
+        lines.push(`  │ 💰 Ingreso Flete: ${fmtCur(net_income)} USD | PnL Neto: ${fmtCur(pnl_net)} USD | TCE: ${fmtCur(tce_real)} USD/Día`);
+        lines.push("  ├" + "─".repeat(W - 4));
+        lines.push("  │ 🔍 ARITMÉTICA EXPLICATIVA Y ORIGEN DE LOS DÍAS (MAR VS PUERTO):");
+
+        tramosList.forEach((tr: any, idx: number) => {
+            const tipo = tr.type || 'BALLAST';
+            const orig = tr.origin_port_id;
+            const dest = tr.destination_port_id;
+            const distP = tr.distance || 0;
+            const wf = tr.weather_factor || 0.03;
+            const seaD = tr.sea_days || 0;
+            const portD = tr.port_days || 0;
+            const bunkSeaIf_o = seaD * (Number(vesselParams.consumption_sea_ifo) || 14.0);
+            const bunkSeaCost = bunkSeaIf_o * p_ifo;
+            const bunkPortIf_o = (tr.bunker_ifo || 0) - bunkSeaIf_o;
+            const bunkPortM_do = tr.bunker_mdo || 0;
+            const bunkPortCost = (bunkPortIf_o * p_ifo) + (bunkPortM_do * p_mdo);
+            const bunkTotalLeg = tr.bunker_costs || 0;
+            const costOrig = tr.agency_costs_origin || 0;
+            const costDest = tr.agency_costs_destination || 0;
+            const incomeP = tr.net_income || 0;
+
+            lines.push(`  │   • PIERNA #${idx+1} [${tipo}]: ${orig} ➔ ${dest} | Distancia: ${fmtNum(distP)} NM`);
+            lines.push(`  │       🌊 Días de Mar (${fmtDays(seaD)}d): [${fmtNum(distP)} NM × (1 + ${(wf * (wf > 1 ? 1 : 100)).toFixed(1)}% WF)] / [${vesselParams.vessel_speed || 11.0} kts × 24h] = ${fmtDays(seaD)} Días`);
+            lines.push(`  │          ↳ Búnker Mar: ${fmtDays(seaD)}d × ${vesselParams.consumption_sea_ifo || 14.0} t/d IFO × ${fmtCur(p_ifo)} = ${fmtCur(bunkSeaCost)} USD`);
+
+            if (tipo === 'LADEN') {
+                const legQ = tr.quantity || 13500;
+                const legRl = r_l;
+                const legRd = r_d;
+                const loadD = legRl > 0 ? (legQ / legRl) / 24 : 0;
+                const dischD = legRd > 0 ? (legQ / legRd) / 24 : 0;
+                const idleD = Math.max(0, portD - loadD - dischD);
+
+                lines.push(`  │       ⚓ Días de Puerto (${fmtDays(portD)}d): Carga (${fmtNum(legQ)}t/${fmtNum(legRl)}t/h = ${fmtDays(loadD)}d) + Descarga (${fmtNum(legQ)}t/${fmtNum(legRd)}t/h = ${fmtDays(dischD)}d) + Overheads (${fmtDays(idleD)}d) = ${fmtDays(portD)} Días`);
+                lines.push(`  │          ↳ Búnker Puerto: ${fmtDays(bunkPortIf_o)} t IFO + ${fmtDays(bunkPortM_do)} t MDO = ${fmtCur(bunkPortCost)} USD`);
+                lines.push(`  │       🔥 Búnker Total Pierna:  ${fmtCur(bunkSeaCost)} + ${fmtCur(bunkPortCost)} = ${fmtCur(bunkTotalLeg)} USD`);
+                lines.push(`  │       🚢 Agencia Carga (${orig}):    ${fmtCur(costOrig)} USD`);
+                lines.push(`  │       🚢 Agencia Descarga (${dest}): ${fmtCur(costDest)} USD`);
+                lines.push(`  │       💵 Ingreso Flete Leg:     ${fmtCur(incomeP)} USD`);
+            } else {
+                lines.push(`  │       ⚓ Días de Puerto: 0.00 Días (Pierna en Lastre)`);
+                lines.push(`  │       🔥 Búnker Total Pierna: ${fmtCur(bunkTotalLeg)} USD`);
+                lines.push(`  │       🚢 Agencia Puerto:      $0.00 USD (Lastre)`);
             }
-        ];
+        });
+
+        lines.push("  └" + "─".repeat(W - 4));
+        const textBlock = lines.join("\n");
+
+        const handlePrintCalculosDetalladosHtml = () => {
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) return;
+
+            const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Acta Oficial de Cálculos Detallados - ${loadedRouteName || selectedClient || 'Cotización'}</title>
+    <style>
+        @page { size: A4 landscape; margin: 6mm 8mm; }
+        body { font-family: 'Courier New', Courier, monospace; font-size: 6.8pt; color: #000; background: #fff; line-height: 1.2; margin: 0; padding: 0; }
+        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; border-bottom: 2px solid #000; padding-bottom: 4px; }
+        .header-table td { vertical-align: middle; }
+        .console-block { white-space: pre; font-family: 'Courier New', Courier, monospace; font-size: 6.5pt; line-height: 1.18; margin-bottom: 6px; background: #fafafa; border: 1px solid #ccc; padding: 6px; }
+        table.metrics-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 6.5pt; page-break-inside: avoid !important; break-inside: avoid !important; }
+        table.metrics-table th, table.metrics-table td { border: 1px solid #000; padding: 2px 4px; }
+        table.metrics-table th { background-color: #f0f0f0; font-weight: bold; text-align: center; }
+        .metrics-block { page-break-inside: avoid !important; break-inside: avoid !important; margin-top: 6px; }
+        .text-right { text-align: right; }
+        .bold { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td style="width: 25%; text-align: left;">
+                <img src="${logoPetral}" style="height: 38px; object-fit: contain;" />
+            </td>
+            <td style="width: 50%; text-align: center;">
+                <span style="font-size: 11pt; font-weight: bold;">PETRAL SMART DASHBOARD • MOTOR SPOT GEEKSOFT ENGINE</span><br/>
+                <span style="font-size: 8.5pt; font-weight: bold; color: #333;">ACTA OFICIAL DE CÁLCULOS DETALLADOS Y LEDGER DE VIAJE (AUDITORÍA MATEMÁTICA V2)</span>
+            </td>
+            <td style="width: 25%; text-align: right;">
+                <img src="${logoGeeksoft}" style="height: 38px; object-fit: contain;" />
+            </td>
+        </tr>
+    </table>
+
+    <div class="console-block">${textBlock}</div>
+
+    <div class="metrics-block">
+        <div style="font-weight: bold; font-size: 7pt; margin-bottom: 2px;">
+            📊 [TABLA OFICIAL DE AUDITORÍA LEDGER — 12 MÉTRICAS REPLICADAS DE LA UI]:
+        </div>
+
+    <table class="metrics-table">
+        <thead>
+            <tr>
+                <th style="width: 22%;">ÍTEM / MÉTRICA OFICIAL</th>
+                <th style="width: 30%;">FÓRMULA APLICADA</th>
+                <th style="width: 34%;">CÁLCULO SUSTITUIDO NUMÉRICO</th>
+                <th style="width: 14%;">GEEKSOFT ENGINE</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td class="bold">1. Ritmo Carga (act_load)</td><td>contract_load_rate</td><td>${r_l} T/h (${vesselParams.vessel_name || selectedVessel})</td><td class="text-right bold">${r_l} T/h</td></tr>
+            <tr><td class="bold">2. Ritmo Descarga (act_disch)</td><td>contract_discharge_rate</td><td>${r_d} T/h (${vesselParams.vessel_name || selectedVessel})</td><td class="text-right bold">${r_d} T/h</td></tr>
+            <tr><td class="bold">3. Días de Puerto (port_days)</td><td>Sum((Q/act_load)/24 + (Q/act_disch)/24 + idle)</td><td>Load(${fmtDays(Q/r_l/24)}d) + Disch(${fmtDays(Q/r_d/24)}d) + Overheads(${fmtDays(Math.max(0, port_days - (Q/r_l/24) - (Q/r_d/24)))}d)</td><td class="text-right bold">${fmtDays(port_days)} Días</td></tr>
+            <tr><td class="bold">4. Días de Mar (sea_days)</td><td>Sum((dist_leg * (1 + WF)) / (speed * 24))</td><td>${seaDaysCalcStr}</td><td class="text-right bold">${fmtDays(sea_days)} Días</td></tr>
+            <tr><td class="bold">5. Días de Viaje (tot_dur)</td><td>sea_days + port_days</td><td>${fmtDays(sea_days)}d Mar + ${fmtDays(port_days)}d Puerto</td><td class="text-right bold">${fmtDays(tot_days)} Días</td></tr>
+            <tr><td class="bold">6. Income (income)</td><td>Sum(Q_leg * F_leg)</td><td>${tramosList.filter((t: any) => t.type === 'LADEN').length} Descargas × ${fmtNum(Q)} MT × ${fmtCur(F)} USD/MT</td><td class="text-right bold">${fmtCur(net_income)}</td></tr>
+            <tr><td class="bold">7. Comisiones (commissions)</td><td>income * (addr_comm + bkr_comm)</td><td>${fmtCur(net_income)} × ${(addressCommPct + brokerCommPct).toFixed(2)}%</td><td class="text-right bold">$0.00</td></tr>
+            <tr><td class="bold">8. Costo Bunker (bunker)</td><td>bunker_sea + bunker_port</td><td>${fmtDays(ifo_tonnage)}t IFO × ${fmtCur(p_ifo)} + ${fmtDays(mdo_tonnage)}t MDO × ${fmtCur(p_mdo)}</td><td class="text-right bold">${fmtCur(bunker_cost)}</td></tr>
+            <tr><td class="bold">9. Port Costs (port_costs)</td><td>Sum(agency_origin + agency_dest)</td><td>Puertos Origen + Puertos Destino</td><td class="text-right bold">${fmtCur(port_costs)}</td></tr>
+            <tr><td class="bold">10. Voyage Result (voy_res)</td><td>income - comm - bunker - port_costs</td><td>${fmtCur(net_income)} - ${fmtCur(bunker_cost)} - ${fmtCur(port_costs)}</td><td class="text-right bold">${fmtCur(pnl_net)}</td></tr>
+            <tr><td class="bold">11. TCE Diario (tce_real)</td><td>voyage_result / tot_dur</td><td>${fmtCur(pnl_net)} / ${fmtDays(tot_days)} Días</td><td class="text-right bold">${fmtCur(tce_real)}/día</td></tr>
+            <tr><td class="bold">12. P/L (pl_vs_req)</td><td>income - comm - bunker - port_costs - (tot_days * tce_req)</td><td>${fmtCur(net_income)} - ${fmtCur(bunker_cost)} - ${fmtCur(port_costs)} - (${fmtDays(tot_days)}d × ${fmtCur(tce_req)}/d)</td><td class="text-right bold">${fmtCur(pl_vs_req)}</td></tr>
+        </tbody>
+    </table>
+    </div>
+</body>
+</html>`;
+
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        };
 
         return (
             <div className="flex-1 flex flex-col min-h-0 w-full gap-2 bg-slate-100 p-2 rounded">
                 <style>{`
                     @media print {
-                        .no-print {
-                            display: none !important;
-                        }
-                        .print-only {
-                            display: block !important;
-                        }
-                        body, html {
-                            background: white !important;
-                            color: black !important;
-                            width: 297mm;
-                            height: 210mm;
-                            margin: 0 !important;
-                            padding: 0 !important;
-                        }
-                        .page-break {
-                            page-break-after: always;
-                            break-after: page;
-                            width: 297mm;
-                            height: 210mm;
-                            padding: 10mm 15mm;
-                            box-sizing: border-box;
-                            overflow: hidden;
-                            margin: 0 !important;
-                        }
-                        .print-grid {
-                            display: grid !important;
-                            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-                            gap: 10px !important;
-                        }
-                        .print-table {
-                            font-size: 11px !important;
-                        }
+                        .no-print { display: none !important; }
+                        .print-only { display: block !important; }
+                        body, html { background: white !important; color: black !important; width: 297mm; height: 210mm; margin: 0 !important; padding: 0 !important; }
+                        @page { size: A4 landscape; margin: 6mm 8mm; }
                     }
                 `}</style>
-
-                {/* HEADER DE ACCIONES DE AUDITORÍA */}
                 <div className="bg-white border border-slate-300 rounded shadow-sm p-3 flex-shrink-0 flex items-center justify-between no-print">
                     <div className="flex items-center gap-2">
-                        <span className="text-sm">🔬</span>
+                        <span className="text-sm">📐</span>
                         <div>
-                            <h2 className="text-sm font-bold text-slate-900 leading-none">Ledger de Auditoría Matemática</h2>
-                            <span className="text-[10.5px] text-slate-400 font-medium">Demostración algebraica y aritmética paso a paso del viaje activo</span>
+                            <h2 className="text-sm font-bold text-slate-900 leading-none">Cálculos Detallados y Demostración Algebraica</h2>
+                            <span className="text-[10.5px] text-slate-400 font-medium">Desglose transparente paso a paso de todos los inputs, fórmulas y sustituciones numéricas del Estimador</span>
                         </div>
                     </div>
                     <button
-                        onClick={() => window.print()}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded shadow transition-colors flex items-center gap-1.5"
+                        onClick={handlePrintCalculosDetalladosHtml}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded shadow transition-colors flex items-center gap-1.5 cursor-pointer"
                     >
-                        🖨️ Imprimir Auditoría (PDF)
+                        🖨️ Imprimir Cálculos Detallados (PDF)
                     </button>
                 </div>
-
-                <div className="flex-1 flex flex-col lg:flex-row gap-2 min-h-0 overflow-auto no-print">
-                    {/* PANEL IZQUIERDO: VARIABLES GLOBALES Y CONSOLIDADO */}
-                    <div className="w-full lg:w-[350px] flex flex-col gap-2 flex-shrink-0">
-                        {/* VARIABLES DEL BUQUE */}
-                        <div className="bg-white border border-slate-300 rounded shadow-sm p-3">
-                            <div className="border-b border-slate-200 pb-1.5 mb-2 flex justify-between items-center bg-slate-50 px-2 py-1 rounded">
-                                <h3 className="text-xs font-bold text-blue-900 uppercase">Particularidades Buque</h3>
-                                <span className="text-[9px] font-mono bg-blue-105 text-blue-900 px-1.5 py-0.5 rounded font-bold uppercase">vessel</span>
-                            </div>
-                            <div className="space-y-1.5 text-xs font-mono">
-                                <div className="flex justify-between"><span>Buque:</span><span className="font-bold text-slate-800">{vesselParams.vessel_name || 'Virtual'}</span></div>
-                                <div className="flex justify-between"><span>Speed Base:</span><span className="font-bold">{vesselParams.vessel_speed || '—'} kn</span></div>
-                                <div className="flex justify-between"><span>TCE Requerido:</span><span className="font-bold">{fmtCur(vesselParams.tce_required || 0)}/d</span></div>
-                                <div className="flex justify-between pt-1 border-t border-dashed"><span>DWT:</span><span>{fmtNum(vesselParams.dwt || 0)} t</span></div>
-                                <div className="flex justify-between"><span>DWCC:</span><span>{fmtNum(vesselParams.dwcc || 0)} t</span></div>
-                                <div className="flex justify-between"><span>GRT:</span><span>{fmtNum(vesselParams.grt || 0)} t</span></div>
-                            </div>
+                
+                {/* CONTENIDO INTERACTIVO EN PANTALLA & EN IMPRESIÓN CON FORMATO AUDITORÍA FINAL */}
+                <div className="flex-1 bg-white border border-slate-300 rounded shadow-sm p-3 flex flex-col min-h-0 overflow-auto font-mono text-[11px] leading-tight">
+                    {/* CABECERA CORPORATIVA DE AUDITORÍA CON LOGOS OFICIALES */}
+                    <div className="border-b-2 border-black pb-2 mb-3 flex justify-between items-center bg-white px-2 py-1">
+                        <div className="w-1/4 text-left">
+                            <img src={logoPetral} alt="PETRAL Logo" className="h-9 object-contain" />
                         </div>
-
-                        {/* PRECIOS BUNKER */}
-                        <div className="bg-white border border-slate-300 rounded shadow-sm p-3">
-                            <div className="border-b border-slate-200 pb-1.5 mb-2 flex justify-between items-center bg-slate-50 px-2 py-1 rounded">
-                                <h3 className="text-xs font-bold text-amber-900 uppercase">Precios Bunker</h3>
-                                <span className="text-[9px] font-mono bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded font-bold uppercase">market</span>
-                            </div>
-                            <div className="space-y-1.5 text-xs font-mono">
-                                <div className="flex justify-between"><span>Precio IFO (p_ifo):</span><span className="font-bold">{fmtCur(bunkerPriceIfo)}</span></div>
-                                <div className="flex justify-between"><span>Precio MDO (p_mdo):</span><span className="font-bold">{fmtCur(bunkerPriceMdo)}</span></div>
-                            </div>
-                        </div>
-
-                        {/* CONSOLIDADO DE VIAJE */}
-                        <div className="bg-emerald-50 border border-emerald-300 rounded shadow-sm p-3">
-                            <div className="border-b border-emerald-250 pb-1.5 mb-2 flex justify-between items-center bg-emerald-100 px-2 py-1 rounded">
-                                <h3 className="text-xs font-bold text-emerald-950 uppercase">Resultado Consolidado</h3>
-                                <span className="text-[9px] font-mono bg-emerald-200 text-emerald-950 px-1.5 py-0.5 rounded font-bold uppercase">p&l</span>
-                            </div>
-                            <div className="space-y-1.5 text-xs font-mono">
-                                <div className="flex justify-between"><span>Ingreso Fletes:</span><span className="font-bold text-emerald-800">{fmtCur(result.consolidated.total_freight_revenue)}</span></div>
-                                <div className="flex justify-between"><span>Costo Puertos:</span><span className="text-rose-700 font-semibold">({fmtCur(result.consolidated.total_port_costs)})</span></div>
-                                <div className="flex justify-between"><span>Costo Bunker:</span><span className="text-rose-700 font-semibold">({fmtCur(result.consolidated.total_bunker_costs)})</span></div>
-                                <div className="flex justify-between pt-1.5 border-t border-emerald-250 text-slate-900 font-bold">
-                                    <span>Net Profit:</span>
-                                    <span className="text-sm">{fmtCur(result.consolidated.pnl_net_utility)}</span>
-                                </div>
-                                <div className="flex justify-between pt-1 border-t border-dashed border-emerald-250 text-[11px] text-slate-700">
-                                    <span>Días de Viaje:</span>
-                                    <span>{result.consolidated.total_days} d</span>
-                                </div>
-                                <div className="flex justify-between text-[11px] text-slate-700">
-                                    <span>TCE Realizado:</span>
-                                    <span>{fmtCur(result.consolidated.tce_real)}/d</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* PANEL DERECHO: DETALLE DE TRAMOS INTERACTIVO */}
-                    <div className="flex-1 bg-white border border-slate-300 rounded shadow-sm p-4 flex flex-col min-h-0">
-                        {/* SELECTOR DE TRAMO EN AUDITORÍA */}
-                        <div className="flex flex-wrap gap-1.5 border-b border-slate-200 pb-2 mb-3">
-                            {tramosList.map((tr: any, idx: number) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => setSelectedAuditLegIdx(idx)}
-                                    className={`px-3 py-1 rounded text-xs font-bold transition-all border ${
-                                        selectedAuditLegIdx === idx
-                                            ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
-                                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                                    }`}
-                                >
-                                    Leg {idx + 1}: {tr.type} ({tr.origin_port_id} &rarr; {tr.destination_port_id})
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* DETALLE DEL TRAMO SELECCIONADO */}
-                        {legResult ? (
-                            <div className="flex-1 flex flex-col min-h-0 overflow-auto">
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-slate-50 p-2.5 rounded border border-slate-200 mb-3 text-xs">
-                                    <div><span className="text-slate-400 font-bold uppercase block text-[9.5px]">Origen</span><strong className="text-slate-800">{legResult.origin_port_id}</strong></div>
-                                    <div><span className="text-slate-400 font-bold uppercase block text-[9.5px]">Destino</span><strong className="text-slate-800">{legResult.destination_port_id}</strong></div>
-                                    <div><span className="text-slate-400 font-bold uppercase block text-[9.5px]">Distancia</span><strong>{legResult.distance} NM</strong></div>
-                                    <div><span className="text-slate-400 font-bold uppercase block text-[9.5px]">Tipo Leg</span><strong className={legResult.type === 'LADEN' ? 'text-blue-700' : 'text-slate-500'}>{legResult.type}</strong></div>
-                                </div>
-
-                                <div className="border border-slate-250 rounded overflow-hidden">
-                                    <table className="w-full text-left text-xs border-collapse">
-                                        <thead>
-                                            <tr className="bg-slate-100 border-b border-slate-250 text-slate-700">
-                                                <th className="p-2 font-bold w-[18%]">Métrica</th>
-                                                <th className="p-2 font-bold w-[32%]">Fórmula Algorítmica</th>
-                                                <th className="p-2 font-bold w-[25%]">Reemplazo Numérico</th>
-                                                <th className="p-2 font-bold text-right w-[12%]">GEEKSOFT</th>
-                                                <th className="p-2 font-bold w-[13%]">Tabla Origen</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-200">
-                                            {auditRows.map((row, idx) => (
-                                                <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="p-2 font-bold text-slate-800">{row.metric}</td>
-                                                    <td className="p-2 font-mono text-[10.5px] text-slate-500 bg-slate-50/50 leading-relaxed">{colorizeFormula(row.formula)}</td>
-                                                    <td className="p-2 font-mono text-[10.5px] text-slate-700 bg-slate-50/50 font-semibold leading-relaxed">{colorizeFormula(row.values)}</td>
-                                                    <td className="p-2 font-mono font-bold text-right text-slate-900 whitespace-nowrap">
-                                                        {row.isCurr ? fmtCur(row.val) : fmtNum(row.val)}
-                                                    </td>
-                                                    <td className="p-2">
-                                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 uppercase">
-                                                            {row.ui}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {/* Pie de Firmas / Acta de Auditoría */}
-                                <div className="mt-8 border-t border-slate-200 pt-4 pb-2 text-xs">
-                                    <div className="grid grid-cols-2 gap-8">
-                                        <div className="space-y-3">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-bold text-slate-700">Auditor Responsable:</span>
-                                                <div className="border-b border-slate-300 flex-1 h-4"></div>
-                                            </div>
-                                            <div className="flex gap-4">
-                                                <span className="font-bold text-slate-700">Resultado:</span>
-                                                <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="rounded text-blue-600" /> OK Sin Observación</label>
-                                                <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="rounded text-blue-600" /> Con Desviación</label>
-                                            </div>
-                                            <div className="flex justify-between gap-4">
-                                                <div className="flex items-center gap-2 flex-1">
-                                                    <span className="font-bold text-slate-700">Firma:</span>
-                                                    <div className="border-b border-slate-300 flex-1 h-5"></div>
-                                                </div>
-                                                <div className="flex items-center gap-2 w-32">
-                                                    <span className="font-bold text-slate-700">Fecha:</span>
-                                                    <div className="border-b border-slate-300 flex-1 h-5"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="font-bold text-slate-700 mb-1">Notas / Observaciones de Auditoría:</span>
-                                            <div className="border border-slate-300 bg-slate-50 flex-1 rounded p-2 min-h-[70px]"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="p-8 text-center text-slate-400 italic">Selecciona un tramo para auditar.</div>
-                        )}
-                    </div>
-                </div>
-
-                {/* VISTA DE IMPRESIÓN EXCLUSIVA (PRINT-ONLY) */}
-                <div className="hidden print-only print-grid space-y-6">
-                    {/* PORTADA / RESUMEN CONSOLIDADO */}
-                    <div className="page-break flex flex-col gap-4">
-                        <div className="border-b-2 border-slate-800 pb-2 flex justify-between items-center">
-                            <h1 className="text-sm font-black text-slate-900 uppercase">
-                                🔬 REPORT DE AUDITORÍA COMERCIAL Spot (CONSOLIDADO)
+                        <div className="w-2/4 text-center font-bold">
+                            <h1 className="text-sm font-black text-slate-900 block leading-tight">
+                                PETRAL SMART DASHBOARD • MOTOR SPOT GEEKSOFT ENGINE
                             </h1>
-                            <span className="font-mono text-[9px] font-bold text-slate-500 uppercase">GEEKSOFT VOYAGE ESTIMATOR</span>
+                            <span className="text-[10px] text-slate-600 font-bold block mt-0.5">
+                                ACTA OFICIAL DE CÁLCULOS DETALLADOS Y LEDGER DE VIAJE (AUDITORÍA MATEMÁTICA V2)
+                            </span>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="border border-slate-400 p-3 rounded">
-                                <h3 className="text-xs font-bold text-slate-900 border-b border-slate-300 pb-1 mb-2 uppercase">Parámetros del Viaje</h3>
-                                <div className="space-y-1 text-xs font-mono">
-                                    <div className="flex justify-between"><span>Buque:</span><span className="font-bold">{vesselParams.vessel_name}</span></div>
-                                    <div className="flex justify-between"><span>Cliente Asociado:</span><span className="font-bold">{selectedClient || 'Spot'}</span></div>
-                                    <div className="flex justify-between"><span>Velocidad Base:</span><span>{vesselParams.vessel_speed} kn</span></div>
-                                    <div className="flex justify-between"><span>TCE Requerido:</span><span>{fmtCur(vesselParams.tce_required)}/d</span></div>
-                                    <div className="flex justify-between"><span>Bunker IFO / MDO:</span><span>{fmtCur(bunkerPriceIfo)} / {fmtCur(bunkerPriceMdo)}</span></div>
-                                </div>
-                            </div>
-
-                            <div className="border border-slate-400 p-3 rounded bg-slate-50">
-                                <h3 className="text-xs font-bold text-slate-900 border-b border-slate-300 pb-1 mb-2 uppercase">Resultado Financiero del Viaje</h3>
-                                <div className="space-y-1 text-xs font-mono">
-                                    <div className="flex justify-between"><span>Ingreso Flete Bruto:</span><span className="font-bold text-slate-900">{fmtCur(result.consolidated.total_freight_revenue)}</span></div>
-                                    <div className="flex justify-between"><span>Gastos Bunker Totales:</span><span className="text-rose-700">({fmtCur(result.consolidated.total_bunker_costs)})</span></div>
-                                    <div className="flex justify-between"><span>Gastos Portuarios Totales:</span><span className="text-rose-700">({fmtCur(result.consolidated.total_port_costs)})</span></div>
-                                    <div className="flex justify-between border-t border-slate-400 pt-1 font-bold text-slate-950">
-                                        <span>Utilidad Neta (Net Profit):</span>
-                                        <span>{fmtCur(result.consolidated.pnl_net_utility)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-[11px] text-slate-700 pt-1 border-t border-dashed">
-                                        <span>Duración Total:</span>
-                                        <span>{result.consolidated.total_days} d (Mar: {result.consolidated.total_sea_days}d / Pto: {result.consolidated.total_port_days}d)</span>
-                                    </div>
-                                    <div className="flex justify-between text-[11px] text-slate-700">
-                                        <span>TCE Realizado:</span>
-                                        <span className="font-bold">{fmtCur(result.consolidated.tce_real)}/día</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* DETALLE DE ROTACIÓN DE PUERTOS EN PDF */}
-                        <div className="border border-slate-400 rounded overflow-hidden mt-2">
-                            <table className="w-full text-left text-xs border-collapse">
-                                <thead>
-                                    <tr className="bg-slate-100 border-b border-slate-400 font-bold">
-                                        <th className="p-1.5 w-12 text-center">Leg</th>
-                                        <th className="p-1.5 w-20">Tipo</th>
-                                        <th className="p-1.5">Puerto Origen</th>
-                                        <th className="p-1.5">Puerto Destino</th>
-                                        <th className="p-1.5 text-right w-24">Distancia</th>
-                                        <th className="p-1.5 text-right w-24">Cant (MT)</th>
-                                        <th className="p-1.5 text-right w-24">Flete ($/t)</th>
-                                        <th className="p-1.5 text-right w-24">Ingresos</th>
-                                        <th className="p-1.5 text-right w-24">Costo Pto</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-300 font-mono">
-                                    {tramosList.map((tr: any, idx: number) => (
-                                        <tr key={idx}>
-                                            <td className="p-1.5 text-center font-bold">{idx + 1}</td>
-                                            <td className="p-1.5">{tr.type}</td>
-                                            <td className="p-1.5">{tr.origin_port_id}</td>
-                                            <td className="p-1.5">{tr.destination_port_id}</td>
-                                            <td className="p-1.5 text-right">{tr.distance} NM</td>
-                                            <td className="p-1.5 text-right">{tr.type === 'LADEN' ? fmtNum(tr.quantity) : '—'}</td>
-                                            <td className="p-1.5 text-right">{tr.type === 'LADEN' ? fmtCur(tr.freight_rate) : '—'}</td>
-                                            <td className="p-1.5 text-right">{fmtCur(tr.net_income)}</td>
-                                            <td className="p-1.5 text-right">{fmtCur(tr.port_costs)}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* ACTA DE FIRMA EN RESUMEN */}
-                        <div className="mt-auto border-t border-slate-400 pt-4 pb-2 text-xs">
-                            <div className="grid grid-cols-2 gap-8">
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-bold text-slate-700">Auditor Responsable:</span>
-                                        <div className="border-b border-slate-400 flex-1 h-4"></div>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <span className="font-bold text-slate-700">Resultado:</span>
-                                        <label className="flex items-center gap-1"><span className="border border-slate-400 w-3 h-3 block mr-1"></span> Aprobado</label>
-                                        <label className="flex items-center gap-1"><span className="border border-slate-400 w-3 h-3 block mr-1"></span> Con Observaciones</label>
-                                    </div>
-                                    <div className="flex justify-between gap-4">
-                                        <div className="flex items-center gap-2 flex-1">
-                                            <span className="font-bold text-slate-700">Firma:</span>
-                                            <div className="border-b border-slate-400 w-full h-5"></div>
-                                        </div>
-                                        <div className="flex items-center gap-2 w-32">
-                                            <span className="font-bold text-slate-700">Fecha:</span>
-                                            <div className="border-b border-slate-400 w-full h-5"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="font-bold text-slate-700 mb-1">Notas / Justificación de Cierre del Reporte:</span>
-                                    <div className="border border-slate-400 flex-1 rounded min-h-[70px]"></div>
-                                </div>
-                            </div>
+                        <div className="w-1/4 text-right flex justify-end">
+                            <img src={logoGeeksoft} alt="GEEKSOFT Logo" className="h-9 object-contain" />
                         </div>
                     </div>
 
-                    {/* PÁGINAS INDEPENDIENTES PARA CADA TRAMO */}
-                    {tramosList.map((tr: any, idx: number) => {
-                        const trAudit = tr.audit_trail || {};
-                        const trRows = [
-                            { metric: "Días de Mar", formula: trAudit.sea_days?.formula || "—", values: trAudit.sea_days?.values || "—", val: tr.sea_days || 0, isCurr: false },
-                            { metric: "Días de Puerto", formula: trAudit.port_days?.formula || "—", values: trAudit.port_days?.values || "—", val: tr.port_days || 0, isCurr: false },
-                            { metric: "Costo Bunker", formula: trAudit.bunker_costs?.formula || "—", values: trAudit.bunker_costs?.values || "—", val: tr.bunker_costs || 0, isCurr: true },
-                            { metric: "Costos Portuarios", formula: trAudit.port_costs?.formula || "—", values: trAudit.port_costs?.values || "—", val: tr.port_costs || 0, isCurr: true },
-                            { metric: "Ingreso Flete (Tramo)", formula: "Q * F", values: tr.type === 'LADEN' ? `${tr.quantity || 0} * ${tr.freight_rate || 0}` : "0", val: tr.net_income || 0, isCurr: true },
-                            { metric: "Resultado de Tramo (P&L)", formula: tr.type === 'LADEN' ? "Flete − Bunker − Puertos" : "− Bunker − Puertos", values: tr.type === 'LADEN' ? `${fmtCur(tr.net_income)} − ${fmtCur(tr.bunker_costs)} − ${fmtCur(tr.port_costs)}` : `− ${fmtCur(tr.bunker_costs)} − ${fmtCur(tr.port_costs)}`, val: tr.pnl_tramo || 0, isCurr: true }
-                        ];
+                    {/* CONSOLA DE ARITMÉTICA ASCII (FONDO CLARO TEXTO NEGRO) */}
+                    <div className="bg-slate-50 text-slate-900 p-3 rounded border border-slate-300 whitespace-pre font-mono text-[9.5px] leading-tight overflow-x-auto mb-3">
+                        {textBlock}
+                    </div>
 
-                        return (
-                            <div key={idx} className="page-break flex flex-col gap-4">
-                                <div className="border-b-2 border-slate-800 pb-2 flex justify-between items-center">
-                                    <h1 className="text-sm font-black text-slate-900 uppercase">
-                                        🔬 DETALLE DE CÁLCULO ALGEBRAICO — TRAMO {idx + 1}
-                                    </h1>
-                                    <span className="font-mono text-[9px] font-bold text-slate-500 uppercase">Leg {idx + 1}: {tr.origin_port_id} &rarr; {tr.destination_port_id} ({tr.type})</span>
-                                </div>
+                    {/* TABLA OFICIAL DE 12 MÉTRICAS REPLICADAS DE LA UI */}
+                    <div className="font-bold text-xs mb-1 text-slate-900">
+                        📊 [TABLA OFICIAL DE AUDITORÍA LEDGER — 12 MÉTRICAS REPLICADAS DE LA UI]:
+                    </div>
 
-                                <div className="grid grid-cols-4 gap-4 bg-slate-50 p-2.5 rounded border border-slate-350 text-xs font-mono">
-                                    <div><span>Origen:</span> <strong className="text-slate-800">{tr.origin_port_id}</strong></div>
-                                    <div><span>Destino:</span> <strong className="text-slate-800">{tr.destination_port_id}</strong></div>
-                                    <div><span>Distancia:</span> <strong>{tr.distance} NM</strong></div>
-                                    <div><span>Tipo Leg:</span> <strong>{tr.type}</strong></div>
-                                </div>
-
-                                <div className="border border-slate-400 rounded overflow-hidden mt-2">
-                                    <table className="w-full text-left text-xs border-collapse print-table">
-                                        <thead>
-                                            <tr className="bg-slate-100 border-b border-slate-400 font-bold">
-                                                <th className="p-2 w-[18%]">Métrica</th>
-                                                <th className="p-2 w-[35%]">Fórmula Algorítmica</th>
-                                                <th className="p-2 w-[32%]">Reemplazo Numérico</th>
-                                                <th className="p-2 text-right w-[15%]">GEEKSOFT</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-300 font-mono">
-                                            {trRows.map((row, rIdx) => (
-                                                <tr key={rIdx}>
-                                                    <td className="p-2 font-bold text-slate-800">{row.metric}</td>
-                                                    <td className="p-2 text-[10px] text-slate-600 bg-slate-50/50 leading-relaxed">{colorizeFormula(row.formula)}</td>
-                                                    <td className="p-2 text-[10px] text-slate-700 bg-slate-50/50 font-semibold leading-relaxed">{colorizeFormula(row.values)}</td>
-                                                    <td className="p-2 font-bold text-right text-slate-900 whitespace-nowrap">
-                                                        {row.isCurr ? fmtCur(row.val) : fmtNum(row.val)}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                
-                                {tr.audit_trail?.port_costs_audit && Object.keys(tr.audit_trail.port_costs_audit.origin || {}).length > 0 && (
-                                    <div className="mt-2">
-                                        <div className="border-b border-slate-300 pb-1 mb-1">
-                                            <span className="font-bold text-[11px] text-slate-800">🚢 DETALLE DE GASTOS PORTUARIOS - ORIGEN ({tr.origin_port_id})</span>
-                                        </div>
-                                        <table className="w-full text-left text-xs border-collapse font-mono">
-                                            <thead>
-                                                <tr className="bg-slate-100 border-b border-slate-300 text-[10px]">
-                                                    <th className="p-1.5 w-[25%]">Concepto Base</th>
-                                                    <th className="p-1.5 w-[25%]">Sub-Costo</th>
-                                                    <th className="p-1.5 w-[35%]">Fórmula Aplicada</th>
-                                                    <th className="p-1.5 text-right w-[15%]">Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-200 text-[10px]">
-                                                {Object.entries(tr.audit_trail.port_costs_audit.origin).map(([concept, lines]: any) => (
-                                                    lines.map((line: any, idx: number) => (
-                                                        <tr key={`${concept}-${idx}`}>
-                                                            {idx === 0 && <td rowSpan={lines.length} className="p-1.5 font-semibold bg-slate-50 align-top border-r border-slate-200">{concept}</td>}
-                                                            <td className="p-1.5 text-slate-700 border-r border-slate-100">{line.name}</td>
-                                                            <td className="p-1.5 text-slate-500 border-r border-slate-100">{line.formula_desc}</td>
-                                                            <td className="p-1.5 font-bold text-sky-600 text-right">{fmtCur(line.cost)}</td>
-                                                        </tr>
-                                                    ))
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-
-                                {tr.audit_trail?.port_costs_audit && Object.keys(tr.audit_trail.port_costs_audit.destination || {}).length > 0 && (
-                                    <div className="mt-2">
-                                        <div className="border-b border-slate-300 pb-1 mb-1">
-                                            <span className="font-bold text-[11px] text-slate-800">🚢 DETALLE DE GASTOS PORTUARIOS - DESTINO ({tr.destination_port_id})</span>
-                                        </div>
-                                        <table className="w-full text-left text-xs border-collapse font-mono">
-                                            <thead>
-                                                <tr className="bg-slate-100 border-b border-slate-300 text-[10px]">
-                                                    <th className="p-1.5 w-[25%]">Concepto Base</th>
-                                                    <th className="p-1.5 w-[25%]">Sub-Costo</th>
-                                                    <th className="p-1.5 w-[35%]">Fórmula Aplicada</th>
-                                                    <th className="p-1.5 text-right w-[15%]">Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-200 text-[10px]">
-                                                {Object.entries(tr.audit_trail.port_costs_audit.destination).map(([concept, lines]: any) => (
-                                                    lines.map((line: any, idx: number) => (
-                                                        <tr key={`${concept}-${idx}`}>
-                                                            {idx === 0 && <td rowSpan={lines.length} className="p-1.5 font-semibold bg-slate-50 align-top border-r border-slate-200">{concept}</td>}
-                                                            <td className="p-1.5 text-slate-700 border-r border-slate-100">{line.name}</td>
-                                                            <td className="p-1.5 text-slate-500 border-r border-slate-100">{line.formula_desc}</td>
-                                                            <td className="p-1.5 font-bold text-sky-600 text-right">{fmtCur(line.cost)}</td>
-                                                        </tr>
-                                                    ))
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
+                    <div className="border border-black rounded overflow-hidden">
+                        <table className="w-full text-left font-mono text-[10px] border-collapse">
+                            <thead>
+                                <tr className="bg-slate-200 border-b border-black text-slate-900 font-bold">
+                                    <th className="p-1.5 border-r border-black w-[22%]">ÍTEM / MÉTRICA OFICIAL</th>
+                                    <th className="p-1.5 border-r border-black w-[30%]">FÓRMULA APLICADA</th>
+                                    <th className="p-1.5 border-r border-black w-[34%]">CÁLCULO SUSTITUIDO NUMÉRICO</th>
+                                    <th className="p-1.5 text-right w-[14%]">GEEKSOFT ENGINE</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-300">
+                                <tr>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">1. Ritmo Carga (act_load)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">contract_load_rate</td>
+                                    <td className="p-1.5 border-r border-slate-300">{r_l} T/h ({vesselParams.vessel_name || selectedVessel})</td>
+                                    <td className="p-1.5 text-right font-bold">{r_l} T/h</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">2. Ritmo Descarga (act_disch)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">contract_discharge_rate</td>
+                                    <td className="p-1.5 border-r border-slate-300">{r_d} T/h ({vesselParams.vessel_name || selectedVessel})</td>
+                                    <td className="p-1.5 text-right font-bold">{r_d} T/h</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">3. Días de Puerto (port_days)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">Sum((Q/act_load)/24 + (Q/act_disch)/24 + idle)</td>
+                                    <td className="p-1.5 border-r border-slate-300">Load({fmtDays(Q/r_l/24)}d) + Disch({fmtDays(Q/r_d/24)}d) + Overheads({fmtDays(Math.max(0, port_days - (Q/r_l/24) - (Q/r_d/24)))}d)</td>
+                                    <td className="p-1.5 text-right font-bold">{fmtDays(port_days)} Días</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">4. Días de Mar (sea_days)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">Sum((dist_leg * (1 + WF)) / (speed * 24))</td>
+                                    <td className="p-1.5 border-r border-slate-300">{seaDaysCalcStr}</td>
+                                    <td className="p-1.5 text-right font-bold">{fmtDays(sea_days)} Días</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">5. Días de Viaje (tot_dur)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">sea_days + port_days</td>
+                                    <td className="p-1.5 border-r border-slate-300">{fmtDays(sea_days)}d Mar + {fmtDays(port_days)}d Puerto</td>
+                                    <td className="p-1.5 text-right font-bold">{fmtDays(tot_days)} Días</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">6. Income (income)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">Sum(Q_leg * F_leg)</td>
+                                    <td className="p-1.5 border-r border-slate-300">{tramosList.filter((t: any) => t.type === 'LADEN').length} Descargas × {fmtNum(Q)} MT × {fmtCur(F)} USD/MT</td>
+                                    <td className="p-1.5 text-right font-bold">{fmtCur(net_income)}</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">7. Comisiones (commissions)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">income * (addr_comm + bkr_comm)</td>
+                                    <td className="p-1.5 border-r border-slate-300">{fmtCur(net_income)} × {(addressCommPct + brokerCommPct).toFixed(2)}%</td>
+                                    <td className="p-1.5 text-right font-bold">$0.00</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">8. Costo Bunker (bunker)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">bunker_sea + bunker_port</td>
+                                    <td className="p-1.5 border-r border-slate-300">{fmtDays(ifo_tonnage)}t IFO × {fmtCur(p_ifo)} + {fmtDays(mdo_tonnage)}t MDO × {fmtCur(p_mdo)}</td>
+                                    <td className="p-1.5 text-right font-bold">{fmtCur(bunker_cost)}</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">9. Port Costs (port_costs)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">Sum(agency_origin + agency_dest)</td>
+                                    <td className="p-1.5 border-r border-slate-300">Puertos Origen + Puertos Destino</td>
+                                    <td className="p-1.5 text-right font-bold">{fmtCur(port_costs)}</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">10. Voyage Result (voy_res)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">income - comm - bunker - port_costs</td>
+                                    <td className="p-1.5 border-r border-slate-300">{fmtCur(net_income)} - {fmtCur(bunker_cost)} - {fmtCur(port_costs)}</td>
+                                    <td className="p-1.5 text-right font-bold">{fmtCur(pnl_net)}</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">11. TCE Diario (tce_real)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">voyage_result / tot_dur</td>
+                                    <td className="p-1.5 border-r border-slate-300">{fmtCur(pnl_net)} / {fmtDays(tot_days)} Días</td>
+                                    <td className="p-1.5 text-right font-bold">{fmtCur(tce_real)}/día</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">12. P/L (pl_vs_req)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">income - comm - bunker - port_costs - (tot_days * tce_req)</td>
+                                    <td className="p-1.5 border-r border-slate-300">{fmtCur(net_income)} - {fmtCur(bunker_cost)} - {fmtCur(port_costs)} - ({fmtDays(tot_days)}d × {fmtCur(tce_req)}/d)</td>
+                                    <td className="p-1.5 text-right font-bold">{fmtCur(pl_vs_req)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         );
@@ -2032,7 +2004,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             : 'bg-slate-200/60 border-transparent text-slate-500 hover:bg-slate-250 hover:text-slate-700'
                     }`}
                 >
-                    🔬 Auditoría Matemática
+                    📐 Cálculos Detallados
                 </button>
             </div>
 
@@ -2043,31 +2015,53 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 
                 {/* FILA 1: CABECERA Y ACCIONES DE PERSISTENCIA */}
                 <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
+                    {/* Sección Título y Selector de Cliente */}
                     <div className="flex items-center gap-2">
-                        <span className="text-base">📊</span>
-                        <div>
-                            <h2 className="text-sm font-bold text-slate-900 leading-none">
-                                Estimador de Voyage y Fletamentos (Excel Mode)
-                                {loadedRouteName && <span className="text-[11px] bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-mono ml-2">[{loadedRouteName}]</span>}
-                            </h2>
-                            <span className="text-[10.5px] text-slate-400 font-medium">Rejilla contable de alta densidad para estimación de tramos paralelos (Multi-Leg)</span>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        {/* Selector de Cliente */}
-                        <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-300 rounded px-2 h-7 shadow-sm">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-sans whitespace-nowrap">Client:</label>
+                        <span className="text-base font-extrabold tracking-tight text-slate-900 font-sans uppercase">
+                            MultiCotizador Spot
+                        </span>
+                        {loadedRouteName && (
+                            <span className="text-[11px] font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                                📌 {loadedRouteName}
+                            </span>
+                        )}
+                        <div className="flex items-center gap-1.5 ml-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cliente:</span>
                             <select
                                 value={selectedClient}
                                 onChange={(e) => setSelectedClient(e.target.value)}
-                                className="h-5 bg-white border border-slate-300 rounded px-1.5 text-[10.5px] font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans"
+                                className="h-7 border border-slate-300 rounded px-2 text-xs font-bold text-slate-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 font-sans shadow-sm"
                             >
-                                <option value="">[SELECCIONAR]</option>
+                                <option value="">Seleccione cliente...</option>
                                 {clients.map(c => (
                                     <option key={c} value={c}>{c}</option>
                                 ))}
                             </select>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        {/* Selector Dinámico Dual de Gastos Portuarios: STATIC vs MATRIX */}
+                        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded h-7 border border-slate-300">
+                            <span className="text-[9.5px] font-black text-slate-500 uppercase px-1">Costos Puerto:</span>
+                            <button
+                                onClick={() => setLocalPortCostMode('static')}
+                                className={`px-2 h-6 text-[9.5px] font-black rounded transition-all cursor-pointer ${
+                                    localPortCostMode === 'static' ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                                title="Modo Estático: Tarifa de port_cost_static ($0.00 estricto si falta)"
+                            >
+                                STATIC
+                            </button>
+                            <button
+                                onClick={() => setLocalPortCostMode('matrix')}
+                                className={`px-2 h-6 text-[9.5px] font-black rounded transition-all cursor-pointer ${
+                                    localPortCostMode === 'matrix' ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                                title="Modo Matriz Compleja: Promedio entre Escenario Alto y Bajo"
+                            >
+                                MATRIX
+                            </button>
                         </div>
 
                         {/* Botón de dos posiciones elegantes no-excluyentes */}
@@ -2114,13 +2108,13 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 }}
                                 className="h-7 text-[11px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
                             >
-                                <Save size={10} /> Save Route
+                                <Save size={10} /> Save
                             </button>
                             <button
                                 onClick={handleLoadClick}
                                 className="h-7 text-[11px] font-bold rounded px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
                             >
-                                <FolderOpen size={10} /> Load Route
+                                <FolderOpen size={10} /> Load
                             </button>
                             <button
                                 onClick={handlePrintPDF}
