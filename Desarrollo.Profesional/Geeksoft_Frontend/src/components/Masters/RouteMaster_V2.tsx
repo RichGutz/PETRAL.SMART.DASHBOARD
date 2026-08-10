@@ -35,10 +35,18 @@ export const RouteMaster_V2: React.FC<RouteMasterProps> = ({ mode = 'routes' }) 
     }, []);
 
     const filteredRoutes = useMemo(() => {
+        const isProspectQuote = (r: any) => {
+            if (r.table_source === 'routes_quotes' || r.is_prospect === true || r.is_quote === true) return true;
+            const name = (r.name || '').toLowerCase();
+            const desc = (r.description || '').toLowerCase();
+            if (name.startsWith('prospect') || desc.includes('prospecto') || desc.includes('routes_quotes')) return true;
+            return false;
+        };
+
         if (isQuotesMode) {
-            return routes.filter(r => r.name && r.name.toLowerCase().startsWith('prospect'));
+            return routes.filter(r => isProspectQuote(r));
         }
-        return routes.filter(r => !r.name || !r.name.toLowerCase().startsWith('prospect'));
+        return routes.filter(r => !isProspectQuote(r));
     }, [routes, isQuotesMode]);
 
     const toggleRow = (routeId: string) => {

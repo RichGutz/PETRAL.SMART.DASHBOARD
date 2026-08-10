@@ -948,7 +948,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
             const filtered = list.filter((s: any) => {
                 const name = (s.name || '').toUpperCase();
                 const desc = (s.description || '').toUpperCase();
-                const isProspectRoute = s.is_prospect === true || desc.includes('PROSPECTO') || name.startsWith('PROSPECT');
+                const isProspectRoute = s.table_source === 'routes_quotes' || s.is_prospect === true || s.is_quote === true || desc.includes('PROSPECTO') || desc.includes('ROUTES_QUOTES') || name.startsWith('PROSPECT');
                 
                 // Si el selector esta en Activos, no mostrar cotizaciones prospecto
                 if (filterActivo && isProspectRoute) return false;

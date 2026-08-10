@@ -739,7 +739,16 @@ def list_spot_voyages():
         from backend.database import get_supabase
         sb = get_supabase()
         res_clients = sb.table("routes_clients").select("*, spot_id:route_id").order("created_at", desc=True).execute().data or []
+        for r in res_clients:
+            r["is_prospect"] = False
+            r["is_quote"] = False
+            r["table_source"] = "routes_clients"
+
         res_prospects = sb.table("routes_quotes").select("*").order("created_at", desc=True).execute().data or []
+        for r in res_prospects:
+            r["is_prospect"] = True
+            r["is_quote"] = True
+            r["table_source"] = "routes_quotes"
         
         # Combine list
         all_routes = res_clients + res_prospects
