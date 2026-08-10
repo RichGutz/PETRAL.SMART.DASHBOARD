@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ForecastService } from '../../services/api';
 import { Save, FolderOpen, X } from 'lucide-react';
-import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 import logoPetral from '../../assets/Logo.Petral.png';
 import logoGeeksoft from '../../assets/Logo.Geeksoft.png';
 
@@ -30,7 +29,6 @@ interface PuertoConfig {
 }
 
 export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' }> = ({ portCostMode = 'static' }) => {
-    const context = useForecastContext_V2();
     const [localPortCostMode, setLocalPortCostMode] = useState<'static' | 'matrix'>(portCostMode || 'static');
     const [activeMainTab, setActiveMainTab] = useState<'estimator' | 'audit'>('estimator');
     const [vessels, setVessels] = useState<any[]>([]);
@@ -138,15 +136,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     const [loadedRouteName, setLoadedRouteName] = useState<string | null>(null);
 
     // Exportación a la Matriz Financiera (Forecast)
-    const [showExportModal, setShowExportModal] = useState(false);
-    const [exportClient, setExportClient] = useState('');
-    const [exportMonth, setExportMonth] = useState('');
-    const [exportMode, setExportMode] = useState<'active' | 'new'>('active');
-    const [exportNewScenarioName, setExportNewScenarioName] = useState('');
-    const [exportCloneActive, setExportCloneActive] = useState(true);
-    const [exportCustomRouteName, setExportCustomRouteName] = useState('');
-    const [exportClientsList, setExportClientsList] = useState<string[]>([]);
-    const [isExporting, setIsExporting] = useState(false);
+
 
     // Resolver info de ruta
     const getAutoRouteInfo = (origin: string, destination: string, type: 'LADEN' | 'BALLAST') => {
@@ -1114,188 +1104,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         return `${clientPrefix}${cleanPorts.join('.')}`;
     };
 
-    const handleOpenExportModal = async () => {
-        if (!result) {
-            return alert('Por favor, ejecute la simulación en el estimador antes de exportar.');
-        }
-        if (!selectedVessel) {
-            return alert('Por favor, seleccione un buque en el estimador antes de exportar.');
-        }
-        
-        setIsExporting(false);
-        try {
-            setExportClientsList(clients);
-            
-            const initialClient = selectedClient || clients[0] || '';
-            setExportClient(initialClient);
-            
-            const initialMonth = context.dynamicMonths[0] || '';
-            setExportMonth(initialMonth);
-            
-            if (context.currentForecastId) {
-                setExportMode('active');
-            } else {
-                setExportMode('new');
-            }
-            
-            const suggested = getSuggestedRouteName(initialClient);
-            setExportCustomRouteName(suggested);
-            
-            setExportNewScenarioName('');
-            setExportCloneActive(true);
-            setShowExportModal(true);
-        } catch (e) {
-            console.error(e);
-            alert("Error al inicializar los datos de exportación");
-        }
-    };
 
-    useEffect(() => {
-        if (showExportModal) {
-            const suggested = getSuggestedRouteName(exportClient);
-            setExportCustomRouteName(suggested);
-        }
-    }, [exportClient, selectedVessel, tramos, showExportModal]);
-
-    const handleConfirmExport = async () => {
-        if (!exportCustomRouteName) {
-            return alert("Ingrese un nombre para la ruta");
-        }
-        if (exportMode === 'new' && !exportNewScenarioName) {
-            return alert("Ingrese un nombre para el nuevo escenario");
-        }
-        
-        setIsExporting(true);
-        try {
-            const tramosLaden = tramos.filter(t => t.type === 'LADEN');
-            const lastLadenDest = tramosLaden[tramosLaden.length - 1]?.destination_port_id || '';
-            const isChile = ['MEJILLONES', 'BARQUITO'].includes(lastLadenDest);
-            const pais = isChile ? 'Chile' : 'Peru';
-
-            const tramosEnriquecidos = tramos.map((tr, idx) => {
-                const pOrig = puertosConfig[idx];
-                const pDest = puertosConfig[idx + 1];
-                
-                const customLoad = pDest?.action === 'CARGAR' && pDest?.op_rate ? Number(pDest.op_rate) : 0.0;
-                const customDisch = pDest?.action === 'DESCARGAR' && pDest?.op_rate ? Number(pDest.op_rate) : 0.0;
-                
-                const overheadOrig = pOrig?.overhead !== '' && pOrig?.overhead !== undefined ? Number(pOrig.overhead) : 6.0;
-                const overheadDest = pDest?.overhead !== '' && pDest?.overhead !== undefined ? Number(pDest.overhead) : 6.0;
-                const posCarga = pOrig?.positioning !== '' && pOrig?.positioning !== undefined ? Number(pOrig.positioning) : 0.0;
-                const posDescarga = pDest?.positioning !== '' && pDest?.positioning !== undefined ? Number(pDest.positioning) : 0.0;
-                
-                const overridePortCostOrig = pOrig?.manual_port_cost !== '' && pOrig?.manual_port_cost !== undefined ? Number(pOrig.manual_port_cost) : 0.0;
-                const overridePortCostDest = pDest?.manual_port_cost !== '' && pDest?.manual_port_cost !== undefined ? Number(pDest.manual_port_cost) : 0.0;
-
-                return {
-                    origin_port_id: tr.origin_port_id,
-                    destination_port_id: tr.destination_port_id,
-                    type: tr.type,
-                    quantity: Number(tr.quantity) || 0,
-                    freight_rate: Number(tr.freight_rate) || 0,
-                    route_distance: Number(tr.route_distance) || 0,
-                    weather_factor: (Number(tr.weather_factor) || 0) / 100,
-                    speed: Number(tr.speed) || Number(vesselParams.vessel_speed) || 11.0,
-                    origin_action: pOrig?.action || 'NONE',
-                    destination_action: pDest?.action || 'NONE',
-                    custom_load_rate: customLoad,
-                    custom_discharge_rate: customDisch,
-                    rate_unit_origin: pOrig?.rate_unit || 'TH',
-                    rate_unit_destination: pDest?.rate_unit || 'TH',
-                    port_overhead_hours_origin: overheadOrig,
-                    port_overhead_hours_dest: overheadDest,
-                    positioning_carga_hrs: posCarga,
-                    positioning_descarga_hrs: posDescarga,
-                    port_delay_hours_loading: Number(tr.port_delay_hours_loading) || 0,
-                    port_delay_hours_discharging: Number(tr.port_delay_hours_discharging) || 0,
-                    agency_costs_origin: overridePortCostOrig,
-                    agency_costs_destination: overridePortCostDest,
-                };
-            });
-
-            const spotPayload = {
-                name: exportCustomRouteName,
-                description: "Ruta de Multicotizador",
-                pais,
-                legs_data: {
-                    is_multicotizador: true,
-                    vessel_id: selectedVessel,
-                    bunker_price_ifo: bunkerPriceIfo,
-                    bunker_price_mdo: bunkerPriceMdo,
-                    tramos: tramosEnriquecidos,
-                    puertosConfig,
-                    vesselParams,
-                    addressCommPct,
-                    brokerCommPct
-                }
-            };
-            
-            await ForecastService.saveSpot(spotPayload);
-
-            const totalQuantity = tramosLaden.reduce((acc, tr) => acc + (Number(tr.quantity) || 0), 0);
-            const totalRevenue = tramosLaden.reduce((acc, tr) => acc + (Number(tr.quantity) || 0) * (Number(tr.freight_rate) || 0), 0);
-            const yieldFlete = totalQuantity > 0 ? (totalRevenue / totalQuantity) : 0;
-
-            const newLine = {
-                month_index: exportMonth,
-                client_id: exportClient,
-                origin_port_id: 'SPOT',
-                destination_port_id: exportCustomRouteName,
-                vessel_id: selectedVessel,
-                quantity: totalQuantity,
-                monthly_frequency: 1,
-                forecast_bunker_price_ifo: null,
-                forecast_bunker_price_mdo: null,
-                custom_tariff: yieldFlete > 0 ? Number(yieldFlete.toFixed(2)) : null
-            };
-
-            let targetForecastId = context.currentForecastId;
-            let targetForecastName = context.forecastName;
-            let targetLines: any[] = [];
-
-            if (exportMode === 'new') {
-                targetLines = exportCloneActive ? [...context.projectionLines, newLine] : [newLine];
-                targetForecastName = exportNewScenarioName;
-                targetForecastId = null;
-            } else {
-                const existingIndex = context.projectionLines.findIndex(p => 
-                    p.month_index === exportMonth && 
-                    p.vessel_id === selectedVessel &&
-                    p.destination_port_id === exportCustomRouteName &&
-                    p.client_id === exportClient
-                );
-
-                if (existingIndex >= 0) {
-                    const clone = [...context.projectionLines];
-                    clone[existingIndex] = newLine;
-                    targetLines = clone;
-                } else {
-                    targetLines = [...context.projectionLines, newLine];
-                }
-            }
-
-            const forecastPayload = {
-                id: targetForecastId,
-                name: targetForecastName,
-                user_id: context.userId,
-                start_date: context.startDate,
-                end_date: context.endDate,
-                projection_lines: targetLines
-            };
-
-            const resultForecast = await ForecastService.saveForecast(forecastPayload);
-            await context.handleLoadSelected(resultForecast.id);
-
-            alert("Viaje exportado exitosamente a la Matriz Financiera");
-            setShowExportModal(false);
-        } catch (e: any) {
-            console.error(e);
-            const msg = e?.response?.data?.detail || e?.message || "Error desconocido";
-            alert(`Error al exportar: ${msg}`);
-        } finally {
-            setIsExporting(false);
-        }
-    };
 
     const handlePrintPDF = () => {
         if (!result) return alert('Por favor, ejecute o espere a que calcule la simulación antes de exportar.');
@@ -3283,7 +3092,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             </span>
                         </div>
 
-                        {/* Los 3 Botones en 1 Sola Fila Horizontal */}
+                        {/* Los 2 Botones en 1 Sola Fila Horizontal */}
                         <div className="flex items-center gap-3 flex-nowrap whitespace-nowrap shrink-0">
                             <button
                                 onClick={() => {
@@ -3293,14 +3102,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 }}
                                 className="h-7 text-xs font-black uppercase tracking-wider rounded px-3.5 bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm whitespace-nowrap"
                             >
-                                <Save size={14} /> 💾 Grabar Cotización
-                            </button>
-
-                            <button
-                                onClick={handleOpenExportModal}
-                                className="h-7 text-xs font-black uppercase tracking-wider rounded px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm whitespace-nowrap"
-                            >
-                                <FolderOpen size={14} /> 📊 Exportar a Matrix
+                                <Save size={14} /> 💾 Grabar
                             </button>
 
                             <button
@@ -3385,142 +3187,6 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 className="h-7 font-semibold rounded px-3 bg-white text-slate-700 border border-slate-300 shadow-sm hover:bg-slate-50 cursor-pointer"
                             >
                                 Cerrar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-            {showExportModal && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 font-sans">
-                    <div className="bg-white p-6 rounded-xl w-[420px] shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-                        <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-                            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                                <span>📦 Exportar a Matriz Financiera</span>
-                            </h3>
-                            <button onClick={() => setShowExportModal(false)} className="text-slate-400 hover:text-slate-650 cursor-pointer">
-                                <X size={18} />
-                            </button>
-                        </div>
-
-                        <div className="flex flex-col gap-4 text-sm text-slate-700 mb-6">
-                            {/* 1. Cliente */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">1. Cliente</label>
-                                <select
-                                    value={exportClient}
-                                    onChange={(e) => setExportClient(e.target.value)}
-                                    className="w-full border border-slate-300 rounded px-2.5 py-1.5 text-sm bg-white focus:outline-none focus:border-indigo-500 shadow-sm"
-                                >
-                                    {exportClientsList.map(c => (
-                                        <option key={c} value={c}>{c}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* 2. Mes de la Proyección */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">2. Mes Proyectado</label>
-                                <select
-                                    value={exportMonth}
-                                    onChange={(e) => setExportMonth(e.target.value)}
-                                    className="w-full border border-slate-300 rounded px-2.5 py-1.5 text-sm bg-white focus:outline-none focus:border-indigo-500 shadow-sm"
-                                >
-                                    {context.dynamicMonths.map(m => {
-                                        const [y, mm] = m.split('-');
-                                        const date = new Date(parseInt(y), parseInt(mm) - 1);
-                                        const monthLabel = date.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
-                                        return (
-                                            <option key={m} value={m}>
-                                                {monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}
-                                            </option>
-                                        );
-                                    })}
-                                </select>
-                            </div>
-
-                            {/* 3. Nombre de la Ruta */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">3. Nombre de Ruta (SPOT)</label>
-                                <input
-                                    type="text"
-                                    value={exportCustomRouteName}
-                                    onChange={(e) => setExportCustomRouteName(e.target.value)}
-                                    placeholder="Ej: SPCC.ILO.MATARANI (MOQUEGUA)"
-                                    className="w-full border border-slate-300 rounded px-2.5 py-1.5 text-sm focus:outline-none focus:border-indigo-500 shadow-sm"
-                                />
-                            </div>
-
-                            {/* 4. Escenario Destino */}
-                            <div className="flex flex-col gap-2 border-t border-slate-100 pt-3">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">4. Escenario Destino</label>
-                                
-                                <div className="flex flex-col gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                    <label className="flex items-center gap-2 font-medium cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="exportMode"
-                                            value="active"
-                                            disabled={!context.currentForecastId}
-                                            checked={exportMode === 'active'}
-                                            onChange={() => setExportMode('active')}
-                                            className="text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:opacity-50"
-                                        />
-                                        <span className={!context.currentForecastId ? 'opacity-50 text-slate-400' : 'text-slate-700'}>
-                                            Actualizar escenario activo {context.forecastName ? `("${context.forecastName}")` : ''}
-                                        </span>
-                                    </label>
-
-                                    <label className="flex items-center gap-2 font-medium cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="exportMode"
-                                            value="new"
-                                            checked={exportMode === 'new'}
-                                            onChange={() => setExportMode('new')}
-                                            className="text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                                        />
-                                        <span className="text-slate-700">Crear un nuevo escenario</span>
-                                    </label>
-
-                                    {exportMode === 'new' && (
-                                        <div className="flex flex-col gap-2.5 pl-5 mt-1 animate-in fade-in slide-in-from-top-1 duration-150">
-                                            <input
-                                                type="text"
-                                                value={exportNewScenarioName}
-                                                onChange={(e) => setExportNewScenarioName(e.target.value)}
-                                                placeholder="Nombre del nuevo escenario"
-                                                className="w-full border border-slate-300 bg-white rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-indigo-500 shadow-sm"
-                                            />
-                                            {context.currentForecastId && (
-                                                <label className="flex items-center gap-2 text-xs text-slate-500 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={exportCloneActive}
-                                                        onChange={(e) => setExportCloneActive(e.target.checked)}
-                                                        className="rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                                                    />
-                                                    <span>Clonar líneas de proyección del escenario activo</span>
-                                                </label>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end gap-2 text-sm border-t border-slate-100 pt-3">
-                            <button
-                                onClick={() => setShowExportModal(false)}
-                                className="h-8 font-semibold rounded px-4 bg-white text-slate-700 border border-slate-300 shadow-sm hover:bg-slate-50 cursor-pointer"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleConfirmExport}
-                                disabled={isExporting}
-                                className="h-8 font-semibold rounded px-4 bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700 shadow-sm cursor-pointer disabled:opacity-50 flex items-center justify-center min-w-[100px]"
-                            >
-                                {isExporting ? "Exportando..." : "Confirmar"}
                             </button>
                         </div>
                     </div>

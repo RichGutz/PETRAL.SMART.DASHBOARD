@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronRight, ChevronLeft, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
+import { ForecastService } from '../../services/api';
 import './ForecastGrid.css';
 
 const getClientColor = (name: string) => {
@@ -57,7 +58,6 @@ interface ForecastGridProps {
     demurrageDays?: string;
     customDemurrageDays?: Record<string, Record<number, string>>;
     onCustomDemurrageDaysChange?: React.Dispatch<React.SetStateAction<Record<string, Record<number, string>>>>;
-    spotRoutes?: any[];
 }
 
 export const ForecastGrid: React.FC<ForecastGridProps> = ({ 
@@ -65,10 +65,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
     demurragePct = '', showDemurrage = false,
     excludedDemurrages = [], customDemurrages = {}, onExcludeDemurrage, onCustomDemurrageChange,
     demurrageDays = '', showDemurrageDays = false,
-    customDemurrageDays = {}, onCustomDemurrageDaysChange,
-    spotRoutes = []
+    customDemurrageDays = {}, onCustomDemurrageDaysChange
 }) => {
-    const { hiddenClients, hiddenRoutes, hiddenVessels, hiddenMonths, showSubtotals, showAccumulatedTotal } = useForecastContext_V2();
+    const { hiddenClients, hiddenRoutes, hiddenVessels, hiddenMonths, showSubtotals, showAccumulatedTotal, setProjectionLines } = useForecastContext_V2();
     
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
     const [expandedDemurrages, setExpandedDemurrages] = useState<Record<string, boolean>>({});
@@ -76,6 +75,33 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
     const [expandedTce, setExpandedTce] = useState<Record<string, boolean>>({});
     const [collapsedSubtotals, setCollapsedSubtotals] = useState<Record<string, boolean>>({});
     const [groupOrder, setGroupOrder] = useState<('client' | 'route' | 'vessel')[]>(['client', 'route', 'vessel']);
+
+    const [vesselsList, setVesselsList] = useState<any[]>([]);
+
+    useEffect(() => {
+        ForecastService.getVessels().then(vList => {
+            setVesselsList(vList || []);
+        }).catch(err => console.error("Error loading vessels in ForecastGrid:", err));
+    }, []);
+
+    const handleVesselChange = (clientName: string, routeName: string, oldVesselName: string, newVesselId: string) => {
+        const ports = routeName.split('-');
+        if (ports.length < 2) return;
+        const origin_port_id = ports[0];
+        const destination_port_id = ports[1];
+
+        setProjectionLines(prev => {
+            return prev.map(p => {
+                if (p.client_id === clientName && 
+                    p.origin_port_id === origin_port_id && 
+                    p.destination_port_id === destination_port_id && 
+                    p.vessel_id === oldVesselName) {
+                    return { ...p, vessel_id: newVesselId };
+                }
+                return p;
+            });
+        });
+    };
 
     const handleGroupOrderSwap = (idx1: number, idx2: number) => {
         setGroupOrder(prev => {
@@ -803,7 +829,24 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                         <button onClick={() => handleMove(row.col1.type, row.clientName, row.routeName, row.vesselName, 'down')} className="text-slate-300 hover:text-white"><ChevronDown size={14} /></button>
                                     </div>
                                     )}
-                                    <div className={`vertical-text mx-auto px-2 ${row.isGlobalTotal ? 'text-lg tracking-wider transform rotate-0 writing-mode-unset flex items-center justify-center h-full' : ''}`} style={row.isGlobalTotal ? { writingMode: 'unset', transform: 'none' } : {}}>{row.col1.name}</div>
+                                    {row.col1.type === 'vessel' && !row.isGlobalTotal ? (
+                                        <div className="flex items-center justify-center w-full h-full p-0.5">
+                                            <select
+                                                value={row.col1.name}
+                                                onChange={(e) => handleVesselChange(row.clientName, row.routeName, row.col1.name, e.target.value)}
+                                                className="bg-transparent text-white font-extrabold text-[10px] text-center border-0 focus:outline-none focus:ring-0 cursor-pointer w-full py-2"
+                                                style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', WebkitAppearance: 'none' }}
+                                            >
+                                                {vesselsList.map(v => (
+                                                    <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-[10px]">
+                                                        {v.vessel_id}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    ) : (
+                                        <div className={`vertical-text mx-auto px-2 ${row.isGlobalTotal ? 'text-lg tracking-wider transform rotate-0 writing-mode-unset flex items-center justify-center h-full' : ''}`} style={row.isGlobalTotal ? { writingMode: 'unset', transform: 'none' } : {}}>{row.col1.name}</div>
+                                    )}
                                 </td>
                             )}
                             {row.col2 && (
@@ -821,7 +864,24 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                             <button onClick={() => handleMove(row.col2.type, row.clientName, row.routeName, row.vesselName, 'down')} className="text-slate-400 hover:text-white"><ChevronDown size={14} /></button>
                                         </div>
                                     )}
-                                    <div className="vertical-text mx-auto px-2">{row.col2.name}</div>
+                                    {row.col2.type === 'vessel' && !row.col2.isSubtotal ? (
+                                        <div className="flex items-center justify-center w-full h-full p-0.5">
+                                            <select
+                                                value={row.col2.name}
+                                                onChange={(e) => handleVesselChange(row.clientName, row.routeName, row.col2.name, e.target.value)}
+                                                className="bg-transparent text-white font-extrabold text-[10px] text-center border-0 focus:outline-none focus:ring-0 cursor-pointer w-full py-2"
+                                                style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', WebkitAppearance: 'none' }}
+                                            >
+                                                {vesselsList.map(v => (
+                                                    <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-[10px]">
+                                                        {v.vessel_id}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    ) : (
+                                        <div className="vertical-text mx-auto px-2">{row.col2.name}</div>
+                                    )}
                                 </td>
                             )}
                             {row.col3 && (
@@ -839,7 +899,27 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                             <button onClick={() => handleMove(row.col3.type, row.clientName, row.routeName, row.vesselName, 'down')} className="text-slate-400 hover:text-petral-blue"><ChevronDown size={14} /></button>
                                         </div>
                                     )}
-                                    <div className="vertical-text mx-auto px-2">{row.col3.name}</div>
+                                    {row.col3.type === 'vessel' && !row.col3.isSubtotal ? (
+                                        <div className="w-full h-full flex items-center justify-center relative min-h-[60px]">
+                                            <div className="vertical-text mx-auto px-2 pointer-events-none text-white">
+                                                {row.col3.name}
+                                            </div>
+                                            <select
+                                                value={row.col3.name}
+                                                onChange={(e) => handleVesselChange(row.clientName, row.routeName, row.col3.name, e.target.value)}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
+                                            >
+                                                {vesselsList.map(v => (
+                                                    <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-[10px]">
+                                                        {v.vessel_id}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    ) : (
+                                        <div className="vertical-text mx-auto px-2">{row.col3.name}</div>
+                                    )}
                                 </td>
                             )}
                             <td 
@@ -988,19 +1068,12 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                 }}
                                                 className="w-16 p-1 text-right text-xs font-bold border border-amber-300 rounded focus:border-amber-500 focus:ring-1 focus:ring-amber-500 bg-amber-50/60 text-amber-900"
                                             />
-                                        ) : row.metric.name === "Flete (USD/MT)" && (() => {
-                                            const ports = row.routeName.split('-');
-                                            if (ports.length < 2) return false;
-                                            const routeWithPoints = `${ports[0]}.${ports[1]}.${ports[0]}`;
-                                            const key = `${row.clientName.toUpperCase()}.${routeWithPoints.toUpperCase()}.${row.vesselName.toUpperCase()}`;
-                                            const isComplexRoute = spotRoutes.some(s => (s.name || "").toUpperCase() === key);
-                                            return row.clientName.startsWith("SPOT") || row.clientName.startsWith("NEXA") || isComplexRoute;
-                                        })() && !row.isClientSubtotal && !row.isGlobalTotal ? (
+                                        ) : (row.metric.name === "Flete (USD/MT)" || row.metric.name.includes("Tarifa Flete Base P")) && !row.isClientSubtotal && !row.isGlobalTotal ? (
                                             <input 
                                                 type="number"
                                                 min="0"
                                                 step="0.01"
-                                                value={v}
+                                                value={v || ''}
                                                 onChange={(e) => {
                                                     const val = parseFloat(e.target.value) || 0;
                                                     onTariffChange && onTariffChange(row.clientName, row.routeName, row.vesselName, months[origColIdx], val);

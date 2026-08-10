@@ -36,3 +36,27 @@ TAREAS Y MODIFICACIONES REALIZADAS:
    - Commit registrado bajo el tag: PRE.WALKTHROUGH.10.08.26.AM.
    - Resguardo de modificaciones en frontend, backend, documentación AS-BUILT y archivos PNG de auditoría.
 ================================================================================
+REGISTRO DE SESIÓN: 2026-08-10
+================================================================================
+TAREAS Y MODIFICACIONES REALIZADAS:
+
+1. Integración Nativa de Cotizaciones en Matriz Financiera:
+   - Se unificó el listado de clientes combinando los clientes estándar con aquellos provenientes de cotizaciones en routes_quotes (identificados por prefijo).
+   - Se habilitó la selección directa de cotizaciones con el prefijo "QUOTE:" en el desplegable de rutas.
+   - Propagación de quote_id al payload de las líneas de proyección.
+
+2. Soporte de Buque Comodín (Wildcard Vessel):
+   - Integración de selectores dinámicos en la columna vessel del Grid de la matriz financiera, permitiendo reasignar el buque en tiempo real con escritura vertical integrada.
+   - Implementación en backend de la sobreescritura de vesselParams en caso de cambio de nave para recalcular tramos multicotizador dinámicamente con las especificaciones del nuevo buque.
+
+3. Limpieza y Despliegue Local:
+   - Eliminación del botón y modal obsoletos de exportación a matriz.
+   - Compilación exitosa en local (npm run build) con cero errores.
+
+4. Habilitación General de Edición de Fletes y Estilo de Buque:
+   - Activada la edición de la fila agrupada 'Flete (USD/MT)' y la subfila '↳ Tarifa Flete Base P (USD/MT)' en el desglose de viajes para cualquier cliente o prospecto.
+   - Vinculado el selector de la columna Buque a la clase '.vertical-text' e inline CSS para heredar tipografía (tamaño, tipo, peso) y centrado perfecto vertical y horizontal eliminando paddings nativos del navegador.
+
+5. Actualización de Documentación:
+   - Modificado el manual integral `Manual_y_Documentacion_Sistema_Petral.md` en Obsidian para incorporar los detalles de la carga de cotizaciones, buque comodín y tarifas editables en la Matriz Financiera, eliminando duplicaciones de texto anteriores.
+================================================================================

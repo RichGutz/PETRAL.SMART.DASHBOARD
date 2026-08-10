@@ -12,6 +12,7 @@ class ProjectionLine(BaseModel):
     forecast_bunker_price_ifo: Optional[float] = Field(None, description="Precio proyectado de IFO (What-if)")
     forecast_bunker_price_mdo: Optional[float] = Field(None, description="Precio proyectado de MDO (What-if)")
     custom_tariff: Optional[float] = Field(None, description="Tarifa manual comercial (sobrescribe contrato)")
+    quote_id: Optional[int] = Field(None, description="ID de la cotización original (spot_id)")
 
 class ForecastRequest(BaseModel):
     start_date: str = Field(..., description="Fecha de inicio, ej. '2026-07-01'")

@@ -71,9 +71,15 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     const [availableClients, setAvailableClients] = useState<string[]>(['SPCC', 'NEXA', 'SPOT']);
     const [spotRoutes, setSpotRoutes] = useState<any[]>([]);
 
-    // Identificar si la ruta seleccionada es una ruta multicotizador compleja
+    // Identificar si la ruta seleccionada es una ruta de cotización o ruta multicotizador compleja
     const matchedSpot = useMemo(() => {
         if (!client || !route) return null;
+        if (route.startsWith('QUOTE:')) {
+            const parts = route.split(':');
+            const spotId = parseInt(parts[1]);
+            return spotRoutes.find(s => s.spot_id === spotId) || null;
+        }
+
         const ports = route.split('-');
         if (ports.length < 2) return null;
         const orig = ports[0].toUpperCase();
@@ -92,54 +98,59 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
             return firstOrig === orig && lastDest === dest;
         });
-    }, [client, route, vessel, spotRoutes]);
+    }, [client, route, spotRoutes]);
 
     const isComplexRoute = useMemo(() => {
         return matchedSpot?.legs_data?.is_multicotizador === true;
     }, [matchedSpot]);
 
-    // Filtrar las rutas disponibles comercialmente para el cliente activo
+    // Filtrar las rutas disponibles comercialmente y cotizaciones para el cliente activo
     const clientRoutes = useMemo(() => {
         if (!client) return [];
         const cleanClient = client.trim().toUpperCase();
-        const routesMap = new Map<string, string>();
+        const routesList: Array<{ key: string; label: string; isQuote?: boolean }> = [];
 
-        if (cleanClient === 'SPCC') {
-            routesMap.set('ILO-MATARANI', 'ILO-MATARANI');
-            routesMap.set('ILO-MARCONA', 'ILO-MARCONA');
-            routesMap.set('ILO-MEJILLONES', 'ILO-MEJILLONES');
+        // 1. Rutas fijas para clientes estándar
+        if (cleanClient === 'SPOT') {
+            routesList.push({ key: 'CALLAO-MEJILLONES', label: 'CALLAO - MEJILLONES' });
+            routesList.push({ key: 'ILO-MATARANI', label: 'ILO - MATARANI' });
+            routesList.push({ key: 'ILO-MEJILLONES', label: 'ILO - MEJILLONES' });
         }
 
+        // 2. Cotizaciones (routes_quotes) para este cliente (ej: Cerro Verde - Matarani a Ilo)
         spotRoutes.forEach(s => {
             const name = (s.name || "").trim().toUpperCase();
-            if (name.startsWith(`${cleanClient}.`) || name.startsWith(`${cleanClient}_`)) {
+            // Extraer por punto '.' o por guion '-' para obtener el nombre del cliente/prospecto
+            let qClient = name;
+            if (name.includes('.')) {
+                qClient = name.split('.')[0].trim();
+            } else if (name.includes('-')) {
+                qClient = name.split('-')[0].trim();
+            }
+
+            if (qClient === cleanClient) {
                 const tramos = s.legs_data?.tramos || [];
                 const laden = tramos.filter((t: any) => t.type?.toUpperCase() === 'LADEN');
+                let key = '';
                 if (laden.length > 0) {
                     const orig = laden[0].origin_port_id;
                     const dest = laden[laden.length - 1].destination_port_id;
-                    const key = `${orig}-${dest}`;
-                    routesMap.set(key, key);
+                    key = `QUOTE:${s.spot_id}:${orig}-${dest}`;
                 } else if (s.origin_port_id && s.destination_port_id) {
-                    const key = `${s.origin_port_id}-${s.destination_port_id}`;
-                    routesMap.set(key, key);
+                    key = `QUOTE:${s.spot_id}:${s.origin_port_id}-${s.destination_port_id}`;
+                } else {
+                    key = `QUOTE:${s.spot_id}:UNK-UNK`;
                 }
+
+                routesList.push({
+                    key,
+                    label: s.name, // "Cerro Verde - Matarani a Callao"
+                    isQuote: true
+                });
             }
         });
 
-        if (routesMap.size === 0) {
-            if (cleanClient === 'NEXA') {
-                routesMap.set('CALLAO-MEJILLONES', 'CALLAO-MEJILLONES');
-                routesMap.set('CALLAO-MATARANI', 'CALLAO-MATARANI');
-                routesMap.set('CALLAO-MARCONA', 'CALLAO-MARCONA');
-            } else if (cleanClient.startsWith('SPOT')) {
-                routesMap.set('CALLAO-MEJILLONES', 'CALLAO-MEJILLONES');
-                routesMap.set('ILO-MATARANI', 'ILO-MATARANI');
-                routesMap.set('ILO-MEJILLONES', 'ILO-MEJILLONES');
-            }
-        }
-
-        return Array.from(routesMap.values());
+        return routesList;
     }, [client, spotRoutes]);
 
     // Lógica reactiva para autocompletar buque, cantidad y flete (yield) si es ruta compleja
@@ -170,6 +181,13 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
             if (yieldFlete > 0) {
                 setCustomTariff(yieldFlete.toFixed(2));
             }
+        } else {
+            // Si NO es ruta de cotización compleja (es ruta fija de contrato), limpiamos override de flete y naves
+            if (route && !route.startsWith('QUOTE:')) {
+                setCustomTariff('');
+                setVessel('');
+                setQuantity('');
+            }
         }
     }, [isComplexRoute, matchedSpot, client, route]);
 
@@ -182,18 +200,26 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
     useEffect(() => {
         import('../../services/api').then(({ ForecastService }) => {
+            // Cargar clientes dinámicamente extrayéndolos de las rutas de contratos y cotizaciones (primer token antes del punto)
+            ForecastService.getRoutesMaster().then(routesList => {
+                const clientNames = (routesList || []).map((r: any) => {
+                    const name = r.name || "";
+                    const firstPart = name.split('.')[0] || "";
+                    return firstPart.trim().toUpperCase();
+                }).filter((name: string) => name && name !== 'SPOT');
+
+                // Asegurar SPCC y NEXA por defecto, ordenar alfabéticamente
+                const uniqueClients = Array.from(new Set(['SPCC', 'NEXA', ...clientNames]));
+                uniqueClients.sort();
+                setAvailableClients(uniqueClients);
+            }).catch(err => {
+                console.error("Failed to load routes master for clients:", err);
+                setAvailableClients(['SPCC', 'NEXA']);
+            });
+
             ForecastService.listSpots().then(spotRoutes => {
                 setSpotRoutes(spotRoutes || []);
-                // Clientes dinámicos derivados de rutas multicotizador guardadas
-                const filtered = (spotRoutes || []).filter((s: any) => s.legs_data?.is_multicotizador === true);
-                const dynamicClientIds: string[] = filtered.map((s: any) => {
-                    const parts = (s.name || "").split('.');
-                    return parts.length > 1 ? parts[0].toUpperCase() : "";
-                }).filter(Boolean);
-                
-                const allClients = Array.from(new Set([...dynamicClientIds]));
-                setAvailableClients(allClients);
-            }).catch(err => console.error("Failed to fetch spot routes and clients:", err));
+            }).catch(err => console.error("Failed to fetch spot routes:", err));
         });
     }, []);
 
@@ -238,15 +264,31 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         const finalClient = client === 'SPOT' ? `SPOT-${spotSuffix.trim().toUpperCase()}` : client;
 
         selectedMonths.forEach(mIdx => {
+            let origin_port_id = '';
+            let destination_port_id = '';
+            let quote_id: number | undefined = undefined;
+
+            if (route.startsWith('QUOTE:')) {
+                const parts = route.split(':');
+                quote_id = parseInt(parts[1]);
+                const ports = parts[2].split('-');
+                origin_port_id = ports[0];
+                destination_port_id = ports[1];
+            } else {
+                origin_port_id = route.split('-')[0];
+                destination_port_id = route.split('-')[1];
+            }
+
             onAddLine({
                 month_index: mIdx,
                 client_id: finalClient,
-                origin_port_id: route.split('-')[0],
-                destination_port_id: route.split('-')[1],
+                origin_port_id,
+                destination_port_id,
                 vessel_id: vessel,
                 quantity: parseInt(quantity),
                 monthly_frequency: parseInt(frequency),
-                custom_tariff: customTariff ? parseFloat(customTariff) : undefined
+                custom_tariff: customTariff ? parseFloat(customTariff) : undefined,
+                quote_id
             });
         });
     };
@@ -412,16 +454,19 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 {clientRoutes.length === 0 ? (
                                     <SelectItem value="" disabled>No hay rutas para {client}</SelectItem>
                                 ) : (
-                                    clientRoutes.map(rVal => {
-                                        const color = rVal.includes('MATARANI') ? '#06B6D4' :
-                                                      rVal.includes('MARCONA') ? '#A855F7' :
-                                                      rVal.includes('MEJILLONES') ? '#D946EF' :
-                                                      rVal.includes('CALLAO') ? '#F59E0B' : '#64748B';
+                                    clientRoutes.map(rObj => {
+                                        const key = rObj.key;
+                                        const label = rObj.label;
+                                        const isQuote = rObj.isQuote;
+                                        const color = label.includes('MATARANI') ? '#06B6D4' :
+                                                      label.includes('MARCONA') ? '#A855F7' :
+                                                      label.includes('MEJILLONES') ? '#D946EF' :
+                                                      label.includes('CALLAO') ? '#F59E0B' : '#64748B';
                                         return (
-                                            <SelectItem key={rVal} value={rVal}>
+                                            <SelectItem key={key} value={key}>
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }}></div>
-                                                    {rVal.replace('-', ' - ')}
+                                                    {isQuote ? `💬 ${label}` : label.replace('-', ' - ')}
                                                 </div>
                                             </SelectItem>
                                         );

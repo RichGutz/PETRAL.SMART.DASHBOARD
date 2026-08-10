@@ -14,3 +14,13 @@ CONCURRENCY & QC SUMMARY:
 - Frontend & Backend: Cambios de auditoría dual, precios de bunker dinámicos y homologación MDO/MGO respaldados.
 - Documentation AS-BUILT: Actualización de documentación en Obsidian.
 ================================================================================
+GEMINI WORK LOG: 2026-08-10
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Refactorización de Matriz Financiera para soporte nativo de cotizaciones y buque comodín.
+- Compilación de producción: npm run build (100% SUCCESS)
+- Integración de quote_id en ProjectionLine model y forecast_service de backend.
+- Habilitación de la edición de la subfila '↳ Tarifa Flete Base P (USD/MT)' en el desglose de viajes para todos los clientes y rutas.
+- Vinculación del selector de Buque a la clase '.vertical-text' e inline css para heredar tamaño y peso tipografico del padre con alineacion centrada vertical y horizontal (`textAlignLast: 'center'`, padding 0, etc.).
+- Actualización de manual técnico en Obsidian (`Manual_y_Documentacion_Sistema_Petral.md`) documentando todas las integraciones de la Matriz Financiera.
+================================================================================

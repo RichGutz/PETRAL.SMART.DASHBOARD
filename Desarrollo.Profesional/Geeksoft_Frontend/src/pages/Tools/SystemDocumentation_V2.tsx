@@ -471,22 +471,40 @@ export const SystemDocumentation_V2: React.FC = () => {
                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
                         <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">13.1 Libro Contable de Viaje (Voyage Ledger P&amp;L)</h4>
                         <p className="text-xs text-slate-600 leading-relaxed mb-4">
-                            La <strong>Matriz Financiera</strong> consolida los ingresos brutos por flete y deduce ordenadamente todos los desembolsos de la nave para obtener la Utilidad Neta Real por viaje (NVR).
+                            La <strong>Matriz Financiera</strong> consolida los ingresos brutos por flete y deduce ordenadamente todos los desembolsos de la nave para obtener la Utilidad Neta Real por viaje (NVR). Soporta de forma nativa la integración de cotizaciones comerciales y la reasignación de buques comodín desde la interfaz.
                         </p>
 
                         <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-3">13.2 Guía de Botones e Interfaz de Usuario (UI)</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1 col-span-1 md:col-span-2">
                                 <div className="font-bold text-blue-700 flex items-center gap-1.5">
-                                    <span>➕</span> Botón "Nuevo Asiento de Viaje (NVR)"
+                                    <span>💬</span> Carga de Cotizaciones Comerciales en Asiento NVR
                                 </div>
                                 <p className="text-slate-600 text-[11px]">
-                                    Abre la ventana para crear un nuevo viaje operativo, asociando el buque, la ruta contratada, el volumen cargado en MT y la tarifa de flete pactada.
+                                    Al crear un asiento de proyección en la matriz, el selector de rutas agrupa dinámicamente tanto las rutas COA fijas como las cotizaciones Spot guardadas en la base de datos (identificables por el prefijo <code>QUOTE:spot_id</code> y el emoji <code>💬</code>), vinculando automáticamente el ID de cotización para cálculo.
                                 </p>
                             </div>
 
                             <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
                                 <div className="font-bold text-emerald-700 flex items-center gap-1.5">
+                                    <span>🚢</span> Selector de Buque Comodín (Centrado Select-Div)
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Permite reasignar la nave en caliente desde la celda de la columna <strong>Buque</strong> en el Grid. Utiliza una técnica de capa select invisible sobre un div visible para conservar el centrado vertical/horizontal perfecto y la misma fuente de la grilla. El cambio dispara una re-simulación en backend con los consumos y velocidades del nuevo buque.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-amber-700 flex items-center gap-1.5">
+                                    <span>✏️</span> Edición General de Tarifa Flete Base P
+                                </div>
+                                <p className="text-slate-600 text-[11px]">
+                                    Habilita la edición directa de la tarifa mensual mediante inputs en la fila agrupada <strong>Flete (USD/MT)</strong> y en la fila interna de desglose <strong>↳ Tarifa Flete Base P (USD/MT)</strong> para cualquier cliente o prospecto, gatillando el recálculo dinámico instantáneo de ingresos.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                                <div className="font-bold text-indigo-700 flex items-center gap-1.5">
                                     <span>🔒</span> Botón "Cerrar Viaje / Conciliar Ledger"
                                 </div>
                                 <p className="text-slate-600 text-[11px]">
@@ -503,7 +521,7 @@ export const SystemDocumentation_V2: React.FC = () => {
                                 </p>
                             </div>
 
-                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
+                            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1 col-span-1 md:col-span-2">
                                 <div className="font-bold text-slate-800 flex items-center gap-1.5">
                                     <span>📊</span> Botón "Exportar Libro Financiero (Excel)"
                                 </div>

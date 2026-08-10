@@ -76,8 +76,7 @@ export const CommercialForecast: React.FC = () => {
         excludedDemurrages, setExcludedDemurrages,
         customDemurrages, setCustomDemurrages,
         customDemurrageDays, setCustomDemurrageDays,
-        handleManualRecalculate,
-        spotRoutes
+        handleManualRecalculate
     } = useForecastContext_V2();
 
     // Derive months from horizon without JS Date timezone shifts
@@ -578,7 +577,7 @@ export const CommercialForecast: React.FC = () => {
                 {/* 2. Custom Grid (1:1 with Mockup) */}
                 {activeTab === 'grid' && (
                     <section className="flex flex-col gap-2 relative animate-in fade-in slide-in-from-bottom-2 duration-300 mt-2">
-                        <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} onTariffChange={handleTariffChange} onBunkerPriceChange={handleBunkerPriceChange} onDeleteNode={handleDeleteNode} displayMode={displayMode} demurragePct={demurragePct} showDemurrage={showDemurrage} excludedDemurrages={excludedDemurrages} customDemurrages={customDemurrages} onExcludeDemurrage={setExcludedDemurrages} onCustomDemurrageChange={setCustomDemurrages} demurrageDays={demurrageDays} showDemurrageDays={showDemurrageDays} customDemurrageDays={customDemurrageDays} onCustomDemurrageDaysChange={setCustomDemurrageDays} spotRoutes={spotRoutes} />
+                        <ForecastGrid data={data} months={dynamicMonths} projectionLines={projectionLines} onFrequencyChange={handleFrequencyChange} onTariffChange={handleTariffChange} onBunkerPriceChange={handleBunkerPriceChange} onDeleteNode={handleDeleteNode} displayMode={displayMode} demurragePct={demurragePct} showDemurrage={showDemurrage} excludedDemurrages={excludedDemurrages} customDemurrages={customDemurrages} onExcludeDemurrage={setExcludedDemurrages} onCustomDemurrageChange={setCustomDemurrages} demurrageDays={demurrageDays} showDemurrageDays={showDemurrageDays} customDemurrageDays={customDemurrageDays} onCustomDemurrageDaysChange={setCustomDemurrageDays} />
                     </section>
                 )}
                 

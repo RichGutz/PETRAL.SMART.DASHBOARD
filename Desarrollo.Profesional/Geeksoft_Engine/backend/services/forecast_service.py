@@ -565,37 +565,49 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         else:
             p_mdo = float(bunker_db.get("MDO", 800))
         
-        is_spot_route = (line.origin_port_id == "SPOT")
+        # Determinar si es una ruta spot o cotización
+        quote_id = getattr(line, 'quote_id', None)
+        is_spot_route = (line.origin_port_id == "SPOT") or (quote_id is not None)
         spot_route = None
         spot_id = None
         
-        if is_spot_route:
-            spot_id = line.destination_port_id
-            spot_route = next((s for s in routes_master_data if s.get("route_id") == spot_id or s.get("name") == spot_id or s.get("client_route_id") == spot_id or s.get("prospect_route_id") == spot_id), {})
-        else:
-            lookup_key = f"{client.upper()}.{line.origin_port_id.upper()}.{line.destination_port_id.upper()}.{line.origin_port_id.upper()}.{vessel.upper()}"
-            spot_route = next((s for s in routes_master_data if s.get("name", "").upper() == lookup_key), None)
-            
-            if not spot_route:
-                for s in routes_master_data:
-                    s_name = (s.get("name") or "").upper()
-                    if not s_name.startswith(f"{client.upper()}."):
-                        continue
-                    tramos_list = s.get("legs_data", {}).get("tramos", [])
-                    laden_tramos = [t for t in tramos_list if t.get("type", "").upper() == "LADEN"]
-                    if laden_tramos:
-                        first_o = (laden_tramos[0].get("origin_port_id") or "").upper()
-                        last_d = (laden_tramos[-1].get("destination_port_id") or "").upper()
-                        if last_d == line.destination_port_id.upper() or (first_o == line.origin_port_id.upper() and last_d == line.destination_port_id.upper()):
-                            spot_route = s
-                            break
-
+        if quote_id is not None:
+            # Buscar directamente por spot_id en el maestro de cotizaciones
+            spot_route = next((s for s in routes_prospects_data if s and (s.get("spot_id") == quote_id or s.get("id") == quote_id)), None)
             if spot_route:
                 is_spot_route = True
-                spot_id = spot_route.get("route_id") or spot_route.get("client_route_id") or spot_route.get("prospect_route_id") or spot_route.get("name")
+                spot_id = quote_id
+        
+        if not spot_route:
+            if (line.origin_port_id == "SPOT"):
+                spot_id = line.destination_port_id
+                spot_route = next((s for s in routes_master_data if s and (s.get("route_id") == spot_id or s.get("name") == spot_id or s.get("client_route_id") == spot_id or s.get("prospect_route_id") == spot_id)), {})
+            else:
+                lookup_key = f"{client.upper()}.{line.origin_port_id.upper()}.{line.destination_port_id.upper()}.{line.origin_port_id.upper()}.{vessel.upper()}"
+                spot_route = next((s for s in routes_master_data if s and (s.get("name", "").upper() == lookup_key)), None)
+                
+                if not spot_route:
+                    for s in routes_master_data:
+                        if not s:
+                            continue
+                        s_name = (s.get("name") or "").upper()
+                        if not s_name.startswith(f"{client.upper()}."):
+                            continue
+                        tramos_list = (s.get("legs_data") or {}).get("tramos", [])
+                        laden_tramos = [t for t in tramos_list if t and t.get("type", "").upper() == "LADEN"]
+                        if laden_tramos:
+                            first_o = (laden_tramos[0].get("origin_port_id") or "").upper()
+                            last_d = (laden_tramos[-1].get("destination_port_id") or "").upper()
+                            if last_d == line.destination_port_id.upper() or (first_o == line.origin_port_id.upper() and last_d == line.destination_port_id.upper()):
+                                spot_route = s
+                                break
+
+                if spot_route:
+                    is_spot_route = True
+                    spot_id = spot_route.get("route_id") or spot_route.get("client_route_id") or spot_route.get("prospect_route_id") or spot_route.get("name")
         
         if is_spot_route and spot_route:
-            legs_data = spot_route.get("legs_data", {})
+            legs_data = spot_route.get("legs_data") or {}
             
             import copy
             tce_req = v_data.get("tce_required", 0)
@@ -607,17 +619,25 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 # Los tramos ya vienen enriquecidos desde handleSaveRoute (Fase 1).
                 # Política: respetar los datos grabados y solo recalcular lo que falte.
                 tramos_copy = copy.deepcopy(legs_data.get("tramos", []))
-
-                # --- VESSEL PARAMS: usar los del legs_data si existen (buque personalizado) ---
-                saved_vparams = legs_data.get("vesselParams", {})
-                vparams = copy.deepcopy(v_data)
-                if saved_vparams:
-                    for k, v in saved_vparams.items():
-                        if v is not None and v != "":
-                            vparams[k] = v
-                            if k.startswith("bunker_consumption_"):
-                                short_k = k.replace("bunker_consumption_", "consumption_")
-                                vparams[short_k] = v
+ 
+                # --- VESSEL PARAMS: usar los de la nave seleccionada en la matriz (BUQUE COMODÍN) ---
+                # Si el usuario cambió la nave en la grilla del Forecast (vessel != nave original de la cotización),
+                # ignoramos saved_vparams y usamos v_data (nueva nave).
+                original_vessel_id = legs_data.get("vessel_id") or legs_data.get("vesselParams", {}).get("vessel_id", "")
+                if vessel and original_vessel_id and vessel.upper() != original_vessel_id.upper():
+                    # El usuario cambió la nave -> Usar especificaciones de la nueva nave (v_data)
+                    vparams = copy.deepcopy(v_data)
+                else:
+                    # Usar buque original/guardado con sus custom params si los hay
+                    saved_vparams = legs_data.get("vesselParams", {})
+                    vparams = copy.deepcopy(v_data)
+                    if saved_vparams:
+                        for k, v in saved_vparams.items():
+                            if v is not None and v != "":
+                                vparams[k] = v
+                                if k.startswith("bunker_consumption_"):
+                                    short_k = k.replace("bunker_consumption_", "consumption_")
+                                    vparams[short_k] = v
 
                 # --- BUNKER: usar precios dinámicos de la simulación ---
                 final_p_ifo = p_ifo
