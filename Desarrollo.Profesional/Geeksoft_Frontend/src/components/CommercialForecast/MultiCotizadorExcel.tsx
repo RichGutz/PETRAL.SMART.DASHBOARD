@@ -647,8 +647,28 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     posDescarga = pDest.positioning !== '' ? Number(pDest.positioning) : undefined;
                 }
 
-                let overridePortCostOrig = pOrig && pOrig.manual_port_cost !== '' && pOrig.manual_port_cost !== undefined ? Number(pOrig.manual_port_cost) : 0.0;
-                let overridePortCostDest = pDest && pDest.manual_port_cost !== '' && pDest.manual_port_cost !== undefined ? Number(pDest.manual_port_cost) : 0.0;
+                // Regla Limpia: Solo hay costo de puerto cuando la acción es CARGAR o DESCARGAR.
+                // Cada puerto de la rotación (0..N) se cobra 1 sola vez en la recalada.
+                let overridePortCostOrig = 0.00001;
+                let overridePortCostDest = 0.00001;
+
+                // Puerto 0: Se asigna únicamente al origen del Tramo 0
+                if (idx === 0 && pOrig && pOrig.action !== 'NONE') {
+                    if (pOrig.manual_port_cost !== '' && pOrig.manual_port_cost !== undefined) {
+                        overridePortCostOrig = Number(pOrig.manual_port_cost);
+                    } else {
+                        overridePortCostOrig = 0.0;
+                    }
+                }
+
+                // Puertos 1..N: Se asignan como destino de cada Tramo idx
+                if (pDest && pDest.action !== 'NONE') {
+                    if (pDest.manual_port_cost !== '' && pDest.manual_port_cost !== undefined) {
+                        overridePortCostDest = Number(pDest.manual_port_cost);
+                    } else {
+                        overridePortCostDest = 0.0;
+                    }
+                }
 
                 return {
                     origin_port_id: tr.origin_port_id,
@@ -835,9 +855,28 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     posDescarga = pDest.positioning !== '' ? Number(pDest.positioning) : (Number(getAutoPortPositioning(tr.destination_port_id, 'DESCARGAR')) || 0);
                 }
 
-                // Costos de puerto manuales (override)
-                const overridePortCostOrig = pOrig && pOrig.manual_port_cost !== '' && pOrig.manual_port_cost !== undefined ? Number(pOrig.manual_port_cost) : 0.0;
-                const overridePortCostDest = pDest && pDest.manual_port_cost !== '' && pDest.manual_port_cost !== undefined ? Number(pDest.manual_port_cost) : 0.0;
+                // Regla Limpia: Solo hay costo de puerto cuando la acción es CARGAR o DESCARGAR.
+                // Cada puerto de la rotación (0..N) se cobra 1 sola vez en la recalada.
+                let overridePortCostOrig = 0.00001;
+                let overridePortCostDest = 0.00001;
+
+                // Puerto 0: Se asigna únicamente al origen del Tramo 0
+                if (idx === 0 && pOrig && pOrig.action !== 'NONE') {
+                    if (pOrig.manual_port_cost !== '' && pOrig.manual_port_cost !== undefined) {
+                        overridePortCostOrig = Number(pOrig.manual_port_cost);
+                    } else {
+                        overridePortCostOrig = 0.0;
+                    }
+                }
+
+                // Puertos 1..N: Se asignan como destino de cada Tramo idx
+                if (pDest && pDest.action !== 'NONE') {
+                    if (pDest.manual_port_cost !== '' && pDest.manual_port_cost !== undefined) {
+                        overridePortCostDest = Number(pDest.manual_port_cost);
+                    } else {
+                        overridePortCostDest = 0.0;
+                    }
+                }
 
                 return {
                     // Identificadores del tramo
@@ -2570,27 +2609,23 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     <span className="text-slate-350 select-none pr-2">—</span>
                                 )}
                             </td>
-                             <td className="border-r border-slate-200 p-0 text-right">
-                                {puertosConfig[0].action !== 'NONE' ? (
-                                    <input
-                                        type="text"
-                                        value={puertosConfig[0].manual_port_cost !== '' && puertosConfig[0].manual_port_cost !== undefined ? fmtThousandSep(puertosConfig[0].manual_port_cost) : ''}
-                                        onChange={(e) => {
-                                            const raw = e.target.value.replace(/[^0-9.]/g, '');
-                                            if (/^\d*\.?\d*$/.test(raw)) {
-                                                updatePuertoConfigField(0, 'manual_port_cost', raw);
-                                            }
-                                        }}
-                                        className={`w-full h-full bg-white border-0 px-1.5 text-right font-mono text-xs focus:outline-none ${
-                                            puertosConfig[0].manual_port_cost !== '' && puertosConfig[0].manual_port_cost !== undefined
-                                                ? 'text-blue-800 font-extrabold bg-blue-50/20'
-                                                : 'text-slate-500 font-medium'
-                                        }`}
-                                        placeholder={result?.tramos?.[0]?.agency_costs_origin ? fmtCurrencySep(result.tramos[0].agency_costs_origin) : ''}
-                                    />
-                                ) : (
-                                    <span className="text-slate-350 select-none pr-2">—</span>
-                                )}
+                            <td className="border-r border-slate-200 p-0 text-right">
+                                <input
+                                    type="text"
+                                    value={puertosConfig[0].manual_port_cost !== '' && puertosConfig[0].manual_port_cost !== undefined ? fmtThousandSep(puertosConfig[0].manual_port_cost) : ''}
+                                    onChange={(e) => {
+                                        const raw = e.target.value.replace(/[^0-9.]/g, '');
+                                        if (/^\d*\.?\d*$/.test(raw)) {
+                                            updatePuertoConfigField(0, 'manual_port_cost', raw);
+                                        }
+                                    }}
+                                    className={`w-full h-full bg-white border-0 px-1.5 text-right font-mono text-xs focus:outline-none ${
+                                        puertosConfig[0].manual_port_cost !== '' && puertosConfig[0].manual_port_cost !== undefined
+                                            ? 'text-blue-800 font-extrabold bg-blue-50/20'
+                                            : 'text-slate-500 font-medium'
+                                    }`}
+                                    placeholder={puertosConfig[0].action === 'NONE' ? '$0' : (result?.tramos?.[0]?.agency_costs_origin ? fmtCurrencySep(result.tramos[0].agency_costs_origin) : '$0')}
+                                />
                             </td>
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
@@ -3145,64 +3180,89 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 {/* Financial Result (Voyage Result) */}
                 <div className="bg-emerald-50 border-2 border-emerald-500/30 rounded p-2 shadow-sm flex flex-col justify-between">
                     <div>
-                        <h3 className="text-[11.5px] font-black text-emerald-800 uppercase tracking-wide border-b border-emerald-200 pb-1 mb-1.5 flex items-center gap-1 font-sans">
-                            <span>💹</span> Financial Voyage Result (P/L)
+                        <h3 className="text-[11.5px] font-black text-emerald-800 uppercase tracking-wide border-b border-emerald-200 pb-1 mb-1.5 flex items-center justify-between font-sans">
+                            <span className="flex items-center gap-1"><span>💹</span> Financial Voyage Result</span>
+                            <span className="text-[10px] font-mono text-emerald-700 bg-emerald-100/70 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">P/L & TCE</span>
                         </h3>
                         <table className="w-full border-collapse text-xs font-mono">
                             <tbody>
-                                {/* P/L — Utilidad Nominal */}
-                                <tr className="border-b-2 border-emerald-300">
-                                    <td className="py-1 pl-1.5 text-emerald-900 font-sans text-[11px] font-black uppercase tracking-wide">Utilidad Nominal (P/L)</td>
-                                    <td className={`text-right py-1 pr-1.5 font-black text-xl ${result ? ((result.consolidated.pnl_net_utility - (result.consolidated.tce_required * result.consolidated.total_days)) >= 0 ? 'text-emerald-700' : 'text-rose-600') : 'text-slate-400'}`}>
-                                        {result ? fmtCur(result.consolidated.pnl_net_utility - (result.consolidated.tce_required * result.consolidated.total_days)) : '$0'}
-                                    </td>
-                                </tr>
-                                <tr className="border-b border-emerald-100/40">
-                                    <td className="py-0.5 pl-1.5 text-slate-600">Revenue (Fletes)</td>
-                                    <td className="text-right py-0.5 pr-1.5 font-bold text-slate-800">
+                                {/* BLOQUE 1: INGRESOS Y EGRESOS DEL VIAJE */}
+                                <tr className="border-b border-emerald-100/60">
+                                    <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">Revenue (Fletes)</td>
+                                    <td className="text-right py-0.5 pr-1 font-bold text-slate-800">
                                         {result ? fmtCur(result.consolidated.total_freight_revenue || 0) : '$0'}
                                     </td>
                                 </tr>
-                                <tr className="border-b border-emerald-100/40">
-                                    <td className="py-0.5 pl-1.5 text-slate-600">Expenses (Bunker + Puertos)</td>
-                                    <td className="text-right py-0.5 pr-1.5 font-bold text-slate-800">
-                                        {result ? fmtCur((result.consolidated.total_bunker_costs || 0) + (result.consolidated.total_port_costs || 0)) : '$0'}
+                                <tr className="border-b border-emerald-100/60">
+                                    <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">(-) Bunker Total</td>
+                                    <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
+                                        {result ? `-${fmtCur(result.consolidated.total_bunker_costs || 0)}` : '$0'}
                                     </td>
                                 </tr>
-                                <tr className="border-b border-emerald-100/40">
-                                    <td className="py-0.5 pl-1.5 text-slate-500">Voyage Result (Net Profit)</td>
-                                    <td className={`text-right py-0.5 pr-1.5 font-bold text-base ${result?.consolidated.pnl_net_utility >= 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                                <tr className="border-b border-emerald-100/60">
+                                    <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">(-) Gastos de Puerto Total</td>
+                                    <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
+                                        {result ? `-${fmtCur(result.consolidated.total_port_costs || 0)}` : '$0'}
+                                    </td>
+                                </tr>
+                                {result?.consolidated?.total_commissions > 0 && (
+                                    <tr className="border-b border-emerald-100/60">
+                                        <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">(-) Comisiones de Viaje</td>
+                                        <td className="text-right py-0.5 pr-1 text-rose-600 font-medium">
+                                            -{fmtCur(result.consolidated.total_commissions)}
+                                        </td>
+                                    </tr>
+                                )}
+                                {/* VOYAGE RESULT (METRICA 10 DE AUDITORIA) */}
+                                <tr className="bg-emerald-100/50 font-bold border-t border-b border-emerald-300">
+                                    <td className="py-1 pl-1 text-emerald-950 font-sans text-[11px] font-black uppercase">Voyage Result</td>
+                                    <td className={`text-right py-1 pr-1 font-black text-sm ${result?.consolidated.pnl_net_utility >= 0 ? 'text-emerald-800' : 'text-rose-600'}`}>
                                         {result ? fmtCur(result.consolidated.pnl_net_utility || 0) : '$0'}
                                     </td>
                                 </tr>
-                                <tr className="border-b border-emerald-100/40">
-                                    <td className="py-0.5 pl-1.5 text-slate-600">Días Totales del Viaje</td>
-                                    <td className="text-right py-0.5 pr-1.5 font-bold text-slate-800">
-                                        {result ? fmtDays(result.consolidated.total_days || 0) : '0.00'} d
+
+                                {/* BLOQUE 2: TIEMPO & TCE DIARIO */}
+                                <tr className="border-b border-emerald-100/60 pt-1">
+                                    <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                        Días Totales del Viaje
+                                    </td>
+                                    <td className="text-right py-0.5 pr-1 font-bold text-slate-800">
+                                        {result ? `${fmtDays(result.consolidated.total_days || 0)} d` : '0.00 d'}
                                     </td>
                                 </tr>
-                                {/* TCE Realizado */}
-                                <tr className="border-b border-emerald-100/40">
-                                    <td className="py-0.5 pl-1.5 text-slate-600 font-sans text-[10.5px] uppercase">TCE Realizado</td>
-                                    <td className="text-right py-0.5 pr-1.5 font-bold text-slate-800">
+                                <tr className="border-b border-emerald-100/60">
+                                    <td className="py-0.5 pl-1 text-slate-700 font-sans text-[10.5px] uppercase font-bold">TCE Realizado</td>
+                                    <td className="text-right py-0.5 pr-1 font-bold text-slate-900">
                                         {result ? `${fmtCur(result.consolidated.tce_real || 0)}/d` : '$0/d'}
                                     </td>
                                 </tr>
-                                {/* TCE Requerido */}
-                                <tr className="border-b border-emerald-100/40">
-                                    <td className="py-0.5 pl-1.5 text-slate-600 font-sans text-[10.5px] uppercase">TCE Requerido</td>
-                                    <td className="text-right py-0.5 pr-1.5 font-bold text-slate-800">
+                                <tr className="border-b border-emerald-100/60">
+                                    <td className="py-0.5 pl-1 text-slate-500 font-sans text-[10.5px] uppercase">TCE Requerido</td>
+                                    <td className="text-right py-0.5 pr-1 text-slate-600 font-medium">
                                         {result ? `${fmtCur(result.consolidated.tce_required || 0)}/d` : '$0/d'}
                                     </td>
                                 </tr>
-                                {/* Diferencia */}
+                                {/* Diferencia TCE */}
                                 {result && (() => {
-                                    const diff = result.consolidated.tce_real - result.consolidated.tce_required;
+                                    const diff = (result.consolidated.tce_real || 0) - (result.consolidated.tce_required || 0);
                                     return (
-                                        <tr className="font-bold border-t border-emerald-250">
-                                            <td className="py-0.5 pl-1.5 text-slate-650 font-sans text-[10.5px] uppercase">Diferencia (+/-)</td>
-                                            <td className={`text-right py-0.5 pr-1.5 font-black text-base ${diff >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                                        <tr className="border-b border-emerald-200">
+                                            <td className="py-0.5 pl-1 text-slate-700 font-sans text-[10.5px] uppercase font-bold">Diferencia TCE (+/-)</td>
+                                            <td className={`text-right py-0.5 pr-1 font-black text-xs ${diff >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
                                                 {diff >= 0 ? '+' : ''}{fmtCur(diff)}/d
+                                            </td>
+                                        </tr>
+                                    );
+                                })()}
+
+                                {/* BLOQUE 3: UTILIDAD NOMINAL FINAL (METRICA 12 DE AUDITORIA) */}
+                                {result && (() => {
+                                    const plVsReq = result.consolidated.pnl_net_utility - (result.consolidated.tce_required * result.consolidated.total_days);
+                                    return (
+                                        <tr className="bg-emerald-200/40 border-t-2 border-emerald-400 font-bold">
+                                            <td className="py-1 pl-1 text-emerald-950 font-sans text-[11px] font-black uppercase tracking-tight">Utilidad Nominal (P/L)</td>
+                                            <td className={`text-right py-1 pr-1 font-black text-lg ${plVsReq >= 0 ? 'text-emerald-800' : 'text-rose-600'}`}>
+                                                {fmtCur(plVsReq)}
                                             </td>
                                         </tr>
                                     );
