@@ -2121,7 +2121,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             </tr>
                         </thead>
                         <tbody>
-                            <tr className="border-b border-slate-200 h-14">
+                            <tr className="border-b border-slate-200 h-8">
                                 {/* Buque con Foto Oficial de Flota (Fondo Blanco Limpio sin Marcos ni Textos Repetidos) */}
                                 <td className="border-r border-slate-200 p-0.5 text-center align-middle bg-white" rowSpan={2}>
                                     {(() => {
@@ -3230,15 +3230,17 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 </td>
                                             </tr>
 
-                                            {/* 7. Comisiones */}
-                                            <tr className="border-b border-emerald-100/60">
-                                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
-                                                    (-) Comisiones ({(addressCommPct + brokerCommPct).toFixed(2).replace(/\.00$/, '')}%)
-                                                </td>
-                                                <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
-                                                    -{fmtCur(totalCommUsd)}
-                                                </td>
-                                            </tr>
+                                            {/* 7. Comisiones (Solo si hay comisión > 0%) */}
+                                            {(totalCommUsd > 0 || (addressCommPct + brokerCommPct) > 0) && (
+                                                <tr className="border-b border-emerald-100/60">
+                                                    <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                                        (-) Comisiones ({(addressCommPct + brokerCommPct).toFixed(2).replace(/\.00$/, '')}%)
+                                                    </td>
+                                                    <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
+                                                        -{fmtCur(totalCommUsd)}
+                                                    </td>
+                                                </tr>
+                                            )}
 
                                             {/* VOYAGE RESULT / P&L (SUMA MATEMÁTICA EXACTA FILAS 1 A 7: Revenue - Hire - Bunker - Ports - Comm) */}
                                             {(() => {
