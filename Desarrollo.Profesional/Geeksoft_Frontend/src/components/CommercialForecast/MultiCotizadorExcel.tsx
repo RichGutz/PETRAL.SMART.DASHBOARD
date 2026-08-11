@@ -65,7 +65,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     // Precios de bunker configurables (Séptimo Ajuste: IFO $967.26 / MDO $1,528.26)
     const [bunkerPriceIfo, setBunkerPriceIfo] = useState<number>(967.26);
     const [bunkerPriceMdo, setBunkerPriceMdo] = useState<number>(1528.26);
-    const [bunkerDate, setBunkerDate] = useState<string>('2026-07-02');
+    const [, setBunkerDate] = useState<string>('2026-07-02');
     const [contractsMaster, setContractsMaster] = useState<any[]>([]);
 
     // Particularidades y consumos del buque editable
@@ -2116,8 +2116,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Idle (t/d)</th>
                                 <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Load (t/d)</th>
                                 <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Disch (t/d)</th>
-                                <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>IFO ($/T)</th>
-                                <th className="text-center" style={{ width: '8%' }}>MDO ($/T)</th>
+                                <th className="border-r border-slate-200 text-center bg-red-50 text-red-800 font-bold" style={{ width: '7.5%' }}>PRECIO ($/T)</th>
+                                <th className="text-center bg-slate-50 font-bold" style={{ width: '9.5%' }}>FUENTE</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2262,24 +2262,18 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     />
                                 </td>
 
-                                {/* Precios Bunker (Fila IFO) */}
-                                <td className="border-r border-slate-200 p-0 text-center align-middle bg-red-600">
+                                 {/* Precio IFO & Fuente */}
+                                <td className="border-r border-slate-200 p-0 text-center align-middle bg-red-600 h-8">
                                     <input
                                         type="number"
                                         step="0.01"
                                         value={bunkerPriceIfo}
                                         onChange={(e) => setBunkerPriceIfo(Number(e.target.value))}
-                                        className="w-full h-8 bg-red-600 border-0 p-0 text-center text-xs font-mono font-black text-white focus:outline-none focus:ring-1 focus:ring-red-400 align-middle"
+                                        className="w-full h-8 bg-red-600 border-0 p-0 text-center text-xs font-mono font-black text-white focus:outline-none focus:ring-1 focus:ring-red-400 align-middle [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     />
                                 </td>
-                                <td className="p-0 text-center align-middle bg-red-600">
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={bunkerPriceMdo}
-                                        onChange={(e) => setBunkerPriceMdo(Number(e.target.value))}
-                                        className="w-full h-8 bg-red-600 border-0 p-0 text-center text-xs font-mono font-black text-white focus:outline-none focus:ring-1 focus:ring-red-400 align-middle"
-                                    />
+                                <td className="text-center bg-slate-50 font-sans font-bold text-[10px] text-slate-700 select-none align-middle font-mono h-8">
+                                    Maestro de Contratos
                                 </td>
                             </tr>
                             
@@ -2322,12 +2316,18 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         className="w-full h-full min-h-[26px] bg-white border-0 p-0 text-center text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
                                     />
                                 </td>
-                                {/* Fechas de Bunker en fila MDO con estilo gris */}
-                                <td className="border-r border-slate-200 text-center bg-slate-100 font-sans font-bold text-[9.5px] text-slate-500 select-none align-middle font-mono">
-                                    {bunkerDate}
+                                {/* Precio MDO & Fuente */}
+                                <td className="border-r border-slate-200 p-0 text-center align-middle bg-red-600 h-8">
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={bunkerPriceMdo}
+                                        onChange={(e) => setBunkerPriceMdo(Number(e.target.value))}
+                                        className="w-full h-8 bg-red-600 border-0 p-0 text-center text-xs font-mono font-black text-white focus:outline-none focus:ring-1 focus:ring-red-400 align-middle [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    />
                                 </td>
-                                <td className="text-center bg-slate-100 font-sans font-bold text-[9.5px] text-slate-500 select-none align-middle font-mono">
-                                    {bunkerDate}
+                                <td className="text-center bg-slate-50 font-sans font-bold text-[10px] text-slate-700 select-none align-middle font-mono h-8">
+                                    Maestro de Contratos
                                 </td>
                             </tr>
                         </tbody>
@@ -2941,20 +2941,54 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         if (result.tramos[0].destination_port_id) destPort = result.tramos[0].destination_port_id;
                                     }
 
+                                    const chileanPorts = ['MEJILLONES', 'BARQUITO', 'PATILLOS', 'ARICA', 'SAN ANTONIO', 'VALPARAISO', 'QUINTERO'];
+                                    const isOrigChile = chileanPorts.includes((origPort || '').toUpperCase());
+                                    const isDestChile = chileanPorts.includes((destPort || '').toUpperCase());
+
+                                    let origBase = costPOL;
+                                    let origLM = 0;
+                                    if (isOrigChile && costPOL >= 2500) {
+                                        origBase = costPOL - 2500;
+                                        origLM = 2500;
+                                    }
+
+                                    let destBase = costPOD;
+                                    let destLM = 0;
+                                    if (isDestChile && costPOD >= 2500) {
+                                        destBase = costPOD - 2500;
+                                        destLM = 2500;
+                                    }
+
                                     return (
                                         <>
                                             <tr className="border-b border-slate-100">
                                                 <td className="py-1 pl-1.5 text-slate-650 font-bold">POL ({origPort})</td>
                                                 <td className="text-right py-1 pr-1.5 font-bold">
-                                                    {result ? fmtCur(costPOL) : '$0'}
+                                                    {result ? fmtCur(origBase) : '$0'}
                                                 </td>
                                             </tr>
+                                            {origLM > 0 && (
+                                                <tr className="border-b border-slate-100 bg-amber-50/60">
+                                                    <td className="py-0.5 pl-3.5 text-amber-900 font-bold text-[10px]">↳ Loading Master (Chile)</td>
+                                                    <td className="text-right py-0.5 pr-1.5 font-bold text-amber-900 text-[10px]">
+                                                        {fmtCur(origLM)}
+                                                    </td>
+                                                </tr>
+                                            )}
                                             <tr className="border-b border-slate-100">
                                                 <td className="py-1 pl-1.5 text-slate-650 font-bold">POD ({destPort})</td>
                                                 <td className="text-right py-1 pr-1.5 font-bold">
-                                                    {result ? fmtCur(costPOD) : '$0'}
+                                                    {result ? fmtCur(destBase) : '$0'}
                                                 </td>
                                             </tr>
+                                            {destLM > 0 && (
+                                                <tr className="border-b border-slate-100 bg-amber-50/60">
+                                                    <td className="py-0.5 pl-3.5 text-amber-900 font-bold text-[10px]">↳ Loading Master (Chile)</td>
+                                                    <td className="text-right py-0.5 pr-1.5 font-bold text-amber-900 text-[10px]">
+                                                        {fmtCur(destLM)}
+                                                    </td>
+                                                </tr>
+                                            )}
                                             <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
                                                 <td className="py-1.5 pl-1.5 font-sans text-[10.5px] uppercase">Total Port Costs</td>
                                                 <td className="text-right py-1.5 pr-1.5">
