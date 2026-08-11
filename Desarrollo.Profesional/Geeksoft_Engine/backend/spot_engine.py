@@ -274,8 +274,8 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
     speed = float(vessel.get("vessel_speed") or vessel.get("speed") or 11.0)
     tce_req = float(vessel.get("tce_required") or 0)
     
-    p_ifo = float(vessel.get("bunker_price_ifo") or vessel.get("p_ifo") or 895.14)
-    p_mdo = float(vessel.get("bunker_price_mdo") or vessel.get("p_mdo") or 1460.30)
+    p_ifo = float(vessel.get("bunker_price_ifo") or vessel.get("p_ifo") or 0.0)
+    p_mdo = float(vessel.get("bunker_price_mdo") or vessel.get("p_mdo") or 0.0)
     
     c_sea_ifo = float(vessel.get("consumption_sea_ifo") or vessel.get("bunker_consumption_sea_ifo") or 0)
     c_idle_ifo = float(vessel.get("consumption_idle_ifo") or vessel.get("bunker_consumption_idle_ifo") or 0)
