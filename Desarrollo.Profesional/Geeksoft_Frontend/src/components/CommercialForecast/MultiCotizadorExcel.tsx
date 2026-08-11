@@ -452,6 +452,19 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         });
     };
 
+    // Auto-poblar costos estáticos de puerto reactivamente al cambiar buque, tramos o modo (STATIC vs MATRIX)
+    useEffect(() => {
+        if (!selectedVessel || tramos.length === 0) return;
+        puertosConfig.forEach((p, idx) => {
+            if (p.action !== 'NONE') {
+                const portId = idx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[idx - 1]?.destination_port_id || '');
+                if (portId) {
+                    autoFillPortCost(idx, portId, p.action, selectedVessel);
+                }
+            }
+        });
+    }, [selectedVessel, localPortCostMode, tramos[0]?.origin_port_id, tramos[0]?.destination_port_id]);
+
     // Propagar cambios en el Fact Sheet del buque
     const handleVesselParamChange = (field: string, val: any) => {
         setVesselParams((prev: any) => ({
