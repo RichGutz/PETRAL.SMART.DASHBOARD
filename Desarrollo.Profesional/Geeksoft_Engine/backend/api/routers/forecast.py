@@ -553,7 +553,8 @@ def lookup_port_cost(
         
         o_type = 'CARGA' if operation.upper() == 'CARGAR' else 'DESCARGA'
         cost_res = calculate_detailed_port_costs(
-            client_id, port_id, o_type, vessel_id, port_costs_data, agency_matrix_data, port_cost_mode
+            client_id, port_id, o_type, vessel_id, port_costs_data, agency_matrix_data, port_cost_mode,
+            vparams={}, quantity=13500.0, contract={}, ports_db={}
         )
         return cost_res
     except Exception as e:
