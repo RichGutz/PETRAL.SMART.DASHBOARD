@@ -1094,12 +1094,14 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 })));
             }
 
+            const targetVessel = data.vessel_id || selectedVessel || 'MOQUEGUA';
+            let loadedPortsConfig: PuertoConfig[] = [];
+
             if (data.puertosConfig && Array.isArray(data.puertosConfig)) {
-                setPuertosConfig(data.puertosConfig);
+                loadedPortsConfig = data.puertosConfig;
             } else if (tramosToLoad.length > 0) {
                 // Reconstruir puertosConfig básico para armazones planos
-                const newPortsConfig: PuertoConfig[] = [];
-                newPortsConfig.push({
+                loadedPortsConfig.push({
                     action: tramosToLoad[0].origin_action || (tramosToLoad[0].type === 'LADEN' ? 'CARGAR' : 'NONE'),
                     quantity: tramosToLoad[0].quantity || 13500,
                     freight_rate: 0,
@@ -1107,11 +1109,11 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     rate_unit: 'TH',
                     overhead: '',
                     positioning: '',
-                    manual_port_cost: tramosToLoad[0].agency_costs_origin || ''
+                    manual_port_cost: ''
                 });
 
                 tramosToLoad.forEach((tr: any) => {
-                    newPortsConfig.push({
+                    loadedPortsConfig.push({
                         action: tr.destination_action || (tr.type === 'LADEN' ? 'DESCARGAR' : 'NONE'),
                         quantity: tr.type === 'LADEN' ? (tr.quantity || 13500) : 0,
                         freight_rate: tr.freight_rate || 0,
@@ -1119,12 +1121,22 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                         rate_unit: 'TH',
                         overhead: '',
                         positioning: '',
-                        manual_port_cost: tr.agency_costs_destination || ''
+                        manual_port_cost: ''
                     });
                 });
-
-                setPuertosConfig(newPortsConfig);
             }
+
+            setPuertosConfig(loadedPortsConfig);
+
+            // Refrescar inmediatamente los costos estáticos de puerto en caliente desde la base de datos
+            loadedPortsConfig.forEach((p: PuertoConfig, idx: number) => {
+                if (p.action !== 'NONE') {
+                    const portId = idx === 0 ? (tramosToLoad[0]?.origin_port_id || '') : (tramosToLoad[idx - 1]?.destination_port_id || '');
+                    if (portId) {
+                        autoFillPortCost(idx, portId, p.action, targetVessel);
+                    }
+                }
+            });
 
             if (data.vesselParams) setVesselParams(data.vesselParams);
             setAddressCommPct(data.addressCommPct || 0);
