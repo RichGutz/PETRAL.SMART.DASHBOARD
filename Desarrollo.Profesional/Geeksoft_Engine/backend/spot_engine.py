@@ -371,11 +371,14 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         v_intake = float(vessel.get("vessel_max_load_intake_limit", 0))
         t_load_rate = float(leg_inputs.get("max_terminal_load_rate", 0))
         
+        v_act_load = float(vessel.get("act_load") or vessel.get("vessel_max_load_intake_limit") or 500)
+        v_act_disch = float(vessel.get("act_disch") or vessel.get("vessel_pump_discharge_rate") or 300)
+        
         if custom_l_rate > 0:
             actual_load_rate = custom_l_rate
         else:
-            valid_load_rates = [x for x in (c_load, v_intake, t_load_rate) if x > 0]
-            actual_load_rate = min(valid_load_rates) if valid_load_rates else 0
+            valid_load_rates = [x for x in (c_load, v_intake, t_load_rate, v_act_load) if x > 0]
+            actual_load_rate = min(valid_load_rates) if valid_load_rates else 500.0
         
         c_disch = float(leg_inputs.get("contract_agreed_discharge_rate") or 0)
         v_pump = float(vessel.get("vessel_pump_discharge_rate", 0))
@@ -384,8 +387,8 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         if custom_d_rate > 0:
             actual_discharge_rate = custom_d_rate
         else:
-            valid_disch_rates = [x for x in (c_disch, v_pump, t_disch_limit) if x > 0]
-            actual_discharge_rate = min(valid_disch_rates) if valid_disch_rates else 0
+            valid_disch_rates = [x for x in (c_disch, v_pump, t_disch_limit, v_act_disch) if x > 0]
+            actual_discharge_rate = min(valid_disch_rates) if valid_disch_rates else 300.0
         
         sea_days = (dist * (1 + w_factor)) / (speed * 24) if speed > 0 else 0
         
@@ -605,7 +608,10 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
     tot_port_costs = sum(t["port_costs"] for t in processed_tramos)
     tot_freight_revenue = sum(t["net_income"] for t in processed_tramos)
     
-    pnl_net_utility = tot_freight_revenue - tot_port_costs - tot_bunker_costs
+    addr_comm_pct = float(payload.get("address_commission_pct") or vessel.get("address_commission_pct") or 0.0)
+    bkr_comm_pct = float(payload.get("broker_commission_pct") or vessel.get("broker_commission_pct") or 0.0)
+    tot_comm_usd = tot_freight_revenue * ((addr_comm_pct + bkr_comm_pct) / 100)
+    pnl_net_utility = tot_freight_revenue - tot_port_costs - tot_bunker_costs - tot_comm_usd
     tce_real = pnl_net_utility / tot_days if tot_days > 0 else 0
     # P/L correcto: voyage_result - (total_days * tce_required)
     pl_vs_req = pnl_net_utility - (tot_days * tce_req)
@@ -622,6 +628,9 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
             "total_bunker_costs": round(tot_bunker_costs, 2),
             "total_port_costs": round(tot_port_costs, 2),
             "total_freight_revenue": round(tot_freight_revenue, 2),
+            "address_commission_pct": addr_comm_pct,
+            "broker_commission_pct": bkr_comm_pct,
+            "total_commissions": round(tot_comm_usd, 2),
             "pnl_net_utility": round(pnl_net_utility, 2),
             "tce_real": round(tce_real, 2),
             "tce_required": round(tce_req, 2),
