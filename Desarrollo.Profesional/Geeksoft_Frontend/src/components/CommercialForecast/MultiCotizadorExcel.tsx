@@ -62,10 +62,10 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     const [addressCommPct, setAddressCommPct] = useState<number>(0);
     const [brokerCommPct, setBrokerCommPct] = useState<number>(0);
     
-    // Precios de bunker configurables (inicializados en 0, sin fallbacks silenciosos)
-    const [bunkerPriceIfo, setBunkerPriceIfo] = useState<number>(0);
-    const [bunkerPriceMdo, setBunkerPriceMdo] = useState<number>(0);
-    const [bunkerDate, setBunkerDate] = useState<string>('Cargando...');
+    // Precios de bunker configurables (Séptimo Ajuste: IFO $967.26 / MDO $1,528.26)
+    const [bunkerPriceIfo, setBunkerPriceIfo] = useState<number>(967.26);
+    const [bunkerPriceMdo, setBunkerPriceMdo] = useState<number>(1528.26);
+    const [bunkerDate, setBunkerDate] = useState<string>('2026-07-02');
     const [contractsMaster, setContractsMaster] = useState<any[]>([]);
 
     // Particularidades y consumos del buque editable
@@ -248,9 +248,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
         ForecastService.getLatestBunker().then(prices => {
             if (prices) {
-                setBunkerPriceIfo(prices.ifo || 0);
-                setBunkerPriceMdo(prices.mdo || 0);
-                setBunkerDate(prices.date || 'N/A');
+                setBunkerPriceIfo(prices.ifo || 967.26);
+                setBunkerPriceMdo(prices.mdo || 1528.26);
+                setBunkerDate(prices.date || '2026-07-02');
             }
         }).catch(err => {
             console.error("Error al cargar precios de bunker:", err);
