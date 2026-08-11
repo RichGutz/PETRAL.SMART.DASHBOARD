@@ -3077,7 +3077,6 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     const totalCommUsd = result?.consolidated?.total_commissions || (addressCommUsd + brokerCommUsd);
                                     const hasComm = (addressCommPct > 0 || brokerCommPct > 0 || totalCommUsd > 0);
 
-                                    const pnlNet = result?.consolidated?.pnl_net_utility || 0;
                                     const tceReal = result?.consolidated?.tce_real || 0;
                                     const tceDiff = tceReal - tceReq;
 
@@ -3093,7 +3092,17 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 </td>
                                             </tr>
 
-                                            {/* 2. Bunker IFO */}
+                                            {/* 2. Hire (JUSTO DEBAJO DE REVENUE) */}
+                                            <tr className="border-b border-emerald-100/60">
+                                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                                    (-) Hire ({fmtCur(tceReq)}/d × {fmtDays(totalDays)} d)
+                                                </td>
+                                                <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
+                                                    -{fmtCur(hireUsd)}
+                                                </td>
+                                            </tr>
+
+                                            {/* 3. Bunker IFO */}
                                             <tr className="border-b border-emerald-100/60">
                                                 <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
                                                     (-) Bunker IFO ({fmtNum(ifoTons)} T × {fmtCur(bunkerPriceIfo)}/T)
@@ -3103,7 +3112,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 </td>
                                             </tr>
 
-                                            {/* 3. Bunker MDO */}
+                                            {/* 4. Bunker MDO */}
                                             <tr className="border-b border-emerald-100/60">
                                                 <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
                                                     (-) Bunker MDO ({fmtNum(mdoTons)} T × {fmtCur(bunkerPriceMdo)}/T)
@@ -3113,7 +3122,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 </td>
                                             </tr>
 
-                                            {/* 4. Port Costs POL */}
+                                            {/* 5. Port Costs POL */}
                                             <tr className="border-b border-emerald-100/60">
                                                 <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
                                                     (-) Port Costs POL ({origPort})
@@ -3123,7 +3132,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 </td>
                                             </tr>
 
-                                            {/* 5. Port Costs POD */}
+                                            {/* 6. Port Costs POD */}
                                             <tr className="border-b border-emerald-100/60">
                                                 <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
                                                     (-) Port Costs POD ({destPort})
@@ -3133,7 +3142,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 </td>
                                             </tr>
 
-                                            {/* 6. Comisiones (Solo si > 0%) */}
+                                            {/* 7. Comisiones (Solo si > 0%) */}
                                             {hasComm && (
                                                 <tr className="border-b border-emerald-100/60">
                                                     <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
@@ -3145,35 +3154,20 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 </tr>
                                             )}
 
-                                            {/* VOYAGE RESULT / P&L (SUMA MATEMÁTICA EXACTA FILAS 1 A 6) */}
-                                            <tr className="bg-emerald-100/60 font-bold border-t-2 border-b-2 border-emerald-400">
-                                                <td className="py-1 pl-1 text-emerald-950 font-sans text-[11px] font-black uppercase">
-                                                    VOYAGE RESULT / P&L
-                                                </td>
-                                                <td className={`text-right py-1 pr-1 font-black text-sm ${pnlNet >= 0 ? 'text-emerald-800' : 'text-rose-600'}`}>
-                                                    {fmtCur(pnlNet)}
-                                                </td>
-                                            </tr>
-
-                                            {/* 7. Hire (Costo de Tiempo sobre TCE Requerido) */}
-                                            <tr className="border-b border-emerald-100/60 pt-1 bg-slate-50/50">
-                                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
-                                                    (-) Hire ({fmtCur(tceReq)}/d × {fmtDays(totalDays)} d)
-                                                </td>
-                                                <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
-                                                    -{fmtCur(hireUsd)}
-                                                </td>
-                                            </tr>
-
-                                            {/* UTILIDAD NETA SOBRE HIRE */}
-                                            <tr className="bg-slate-100/80 font-bold border-b border-slate-300">
-                                                <td className="py-0.5 pl-1 text-slate-800 font-sans text-[10px] uppercase font-bold">
-                                                    Utilidad Neta vs Hire
-                                                </td>
-                                                <td className={`text-right py-0.5 pr-1 font-bold text-xs ${pnlNet - hireUsd >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
-                                                    {fmtCur(pnlNet - hireUsd)}
-                                                </td>
-                                            </tr>
+                                            {/* VOYAGE RESULT / P&L (SUMA MATEMÁTICA EXACTA FILAS 1 A 7: Revenue - Hire - Bunker - Ports - Comm) */}
+                                            {(() => {
+                                                const voyageResultPnl = revenue - hireUsd - ifoUsd - mdoUsd - costPOL - costPOD - totalCommUsd;
+                                                return (
+                                                    <tr className="bg-emerald-100/60 font-bold border-t-2 border-b-2 border-emerald-400">
+                                                        <td className="py-1 pl-1 text-emerald-950 font-sans text-[11px] font-black uppercase">
+                                                            VOYAGE RESULT / P&L
+                                                        </td>
+                                                        <td className={`text-right py-1 pr-1 font-black text-sm ${voyageResultPnl >= 0 ? 'text-emerald-800' : 'text-rose-600'}`}>
+                                                            {fmtCur(voyageResultPnl)}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })()}
 
                                             {/* BLOQUE INFERIOR DE KPIS TCE */}
                                             <tr className="border-b border-emerald-100/60 pt-1">
