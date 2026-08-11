@@ -79,6 +79,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         tce_required: '',
         length: '',
         beam: '',
+        draft_m: '',
         consumption_sea_ifo: '',
         consumption_idle_ifo: '',
         consumption_load_ifo: '',
@@ -355,6 +356,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 tce_required: v.tce_required ?? 0,
                 length: v.length ?? 0,
                 beam: v.beam ?? 0,
+                draft_m: v.draft_m !== null && v.draft_m !== undefined ? Number(v.draft_m).toFixed(1) : (v.draft !== null && v.draft !== undefined ? Number(v.draft).toFixed(1) : '8.2'),
                 consumption_sea_ifo: v.consumption_sea_ifo ?? v.bunker_consumption_sea_ifo ?? 14.0,
                 consumption_idle_ifo: v.consumption_idle_ifo ?? v.bunker_consumption_idle_ifo ?? v.consumption_port_ifo ?? 2.4,
                 consumption_load_ifo: v.consumption_load_ifo ?? v.bunker_consumption_load_ifo ?? v.consumption_port_ifo ?? 2.4,
@@ -2104,20 +2106,21 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 <th className="border-r border-slate-200 text-left pl-1.5 font-extrabold uppercase text-[9.5px] text-slate-700 truncate" style={{ width: '8.5%' }} title={`Buque: ${selectedVessel || 'SELECCIONAR'}`}>
                                     VESSEL: {selectedVessel ? (vessels.find(v => v.vessel_id === selectedVessel)?.vessel_name || selectedVessel) : 'SELECCIONAR'}
                                 </th>
-                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '5%' }}>GRT (t)</th>
-                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '6.5%' }}>DWT (t)</th>
-                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '6.5%' }}>DWCC (t)</th>
-                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '5%' }}>Speed (kn)</th>
-                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '7%' }}>TCE Req ($/d)</th>
-                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '5%' }}>LOA (m)</th>
-                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '5%' }}>Beam (m)</th>
-                                <th className="border-r border-slate-200 text-center bg-slate-50 text-[9px]" style={{ width: '4%' }}>Fuel</th>
-                                <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Sea (t/d)</th>
-                                <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Idle (t/d)</th>
-                                <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Load (t/d)</th>
-                                <th className="border-r border-slate-200 text-center" style={{ width: '6.5%' }}>Disch (t/d)</th>
+                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '4.5%' }}>GRT (t)</th>
+                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '6%' }}>DWT (t)</th>
+                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '6%' }}>DWCC (t)</th>
+                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '4.5%' }}>Speed (kn)</th>
+                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '6.5%' }}>TCE Req ($/d)</th>
+                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '4.5%' }}>LOA (m)</th>
+                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '4.5%' }}>Beam (m)</th>
+                                <th className="border-r border-slate-200 text-right pr-2" style={{ width: '4.5%' }}>Calado (m)</th>
+                                <th className="border-r border-slate-200 text-center bg-slate-50 text-[9px]" style={{ width: '3.5%' }}>Fuel</th>
+                                <th className="border-r border-slate-200 text-center" style={{ width: '6%' }}>Sea (t/d)</th>
+                                <th className="border-r border-slate-200 text-center" style={{ width: '6%' }}>Idle (t/d)</th>
+                                <th className="border-r border-slate-200 text-center" style={{ width: '6%' }}>Load (t/d)</th>
+                                <th className="border-r border-slate-200 text-center" style={{ width: '6%' }}>Disch (t/d)</th>
                                 <th className="border-r border-slate-200 text-center bg-red-50 text-red-800 font-bold" style={{ width: '7.5%' }}>PRECIO ($/T)</th>
-                                <th className="text-center bg-slate-50 font-bold" style={{ width: '9.5%' }}>FUENTE</th>
+                                <th className="text-center bg-slate-50 font-bold" style={{ width: '9%' }}>FUENTE</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2160,28 +2163,28 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     })()}
                                 </td>
                                 
-                                {/* Particularidades */}
+                                {/* Particularidades con Separadores de Miles */}
                                 <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
                                     <input
-                                        type="number"
-                                        value={vesselParams.grt ?? ''}
-                                        onChange={(e) => handleVesselParamChange('grt', e.target.value)}
+                                        type="text"
+                                        value={fmtThousandSep(vesselParams.grt)}
+                                        onChange={(e) => handleVesselParamChange('grt', e.target.value.replace(/,/g, ''))}
                                         className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
                                     <input
-                                        type="number"
-                                        value={vesselParams.dwt ?? ''}
-                                        onChange={(e) => handleVesselParamChange('dwt', e.target.value)}
+                                        type="text"
+                                        value={fmtThousandSep(vesselParams.dwt)}
+                                        onChange={(e) => handleVesselParamChange('dwt', e.target.value.replace(/,/g, ''))}
                                         className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
                                     <input
-                                        type="number"
-                                        value={vesselParams.dwcc ?? ''}
-                                        onChange={(e) => handleVesselParamChange('dwcc', e.target.value)}
+                                        type="text"
+                                        value={fmtThousandSep(vesselParams.dwcc)}
+                                        onChange={(e) => handleVesselParamChange('dwcc', e.target.value.replace(/,/g, ''))}
                                         className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     />
                                 </td>
@@ -2196,9 +2199,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
                                     <input
-                                        type="number"
-                                        value={vesselParams.tce_required ?? ''}
-                                        onChange={(e) => handleVesselParamChange('tce_required', e.target.value)}
+                                        type="text"
+                                        value={fmtThousandSep(vesselParams.tce_required)}
+                                        onChange={(e) => handleVesselParamChange('tce_required', e.target.value.replace(/,/g, ''))}
                                         className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     />
                                 </td>
@@ -2220,6 +2223,16 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         onChange={(e) => handleVesselParamChange('beam', e.target.value)}
                                         className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                                         placeholder="Beam"
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-right align-middle" rowSpan={2}>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={vesselParams.draft_m ?? ''}
+                                        onChange={(e) => handleVesselParamChange('draft_m', e.target.value)}
+                                        className="w-full h-8 bg-white border-0 p-0 pr-2 text-right font-mono font-bold text-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        placeholder="Calado"
                                     />
                                 </td>
 
