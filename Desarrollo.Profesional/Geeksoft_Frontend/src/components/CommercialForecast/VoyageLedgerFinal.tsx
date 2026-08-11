@@ -424,43 +424,61 @@ ${piernasStr}  └────────────────────�
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">7. Comisiones (commissions)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold; color: #9f1239;">7. (-) Hire (Equiv. TCE Requerido)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">tce_required * tot_dur</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${tceRequired.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}/d × ${totDays.toFixed(2)}d</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold; color: #9f1239;">-$${(tceRequired * totDays).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold; color: #9f1239;">8. (-) Bunker IFO</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">tons_ifo * p_ifo</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">${ifoTon.toFixed(2)}t IFO × $${pIfo.toFixed(2)}/t</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold; color: #9f1239;">-$${(ifoTon * pIfo).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold; color: #9f1239;">9. (-) Bunker MDO</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">tons_mdo * p_mdo</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">${mdoTon.toFixed(2)}t MDO × $${pMdo.toFixed(2)}/t</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold; color: #9f1239;">-$${(mdoTon * pMdo).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold; color: #9f1239;">10. (-) Port Costs POL (${origP || 'POL'})</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">agency_costs_origin</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">Puerto Origen Carga</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold; color: #9f1239;">-$${cOrig.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold; color: #9f1239;">11. (-) Port Costs POD (${destP || 'POD'})</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">agency_costs_destination</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">Puerto Destino Descarga</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold; color: #9f1239;">-$${cDest.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold; color: #9f1239;">12. (-) Comisiones (commissions)</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">income * (addr_comm + bkr_comm)</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} × ${((c.address_commission_pct || 0) + (c.broker_commission_pct || 0)).toFixed(2)}%</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${(c.total_commissions || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold; color: #9f1239;">-$${(c.total_commissions || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                            </tr>
+                            <tr style="background-color: #e6fffa;">
+                                <td style="border: 1.5px solid #000000; padding: 3px 5px; font-weight: bold; color: #166534;">13. VOYAGE RESULT / P&L (Utilidad vs Hire)</td>
+                                <td style="border: 1.5px solid #000000; padding: 3px 5px; font-weight: bold;">income - hire - bunker - ports - comm</td>
+                                <td style="border: 1.5px solid #000000; padding: 3px 5px;">$${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} - $${(tceRequired * totDays).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} - $${bunkerCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} - $${portCosts.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                                <td style="border: 1.5px solid #000000; padding: 3px 5px; text-align: right; font-weight: bold; color: #166534; font-size: 7.5pt;">$${(netIncome - (tceRequired * totDays) - bunkerCost - portCosts - (c.total_commissions || 0)).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">8. Costo Bunker (bunker)</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">bunker_sea + bunker_port</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">${ifoTon.toFixed(2)}t IFO × $${pIfo.toFixed(2)} + ${mdoTon.toFixed(2)}t MDO × $${pMdo.toFixed(2)}</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${bunkerCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                            </tr>
-                            <tr>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">9. Port Costs (port_costs)</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">Sum(agency_origin + agency_dest)</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${cOrig.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} (Carga) + $${cDest.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} (Descarga)</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${portCosts.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                            </tr>
-                            <tr>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">10. Voyage Result (P&L)</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">income - comm - bunker - port_costs</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${netIncome.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} - $${bunkerCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} - $${portCosts.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${pnlNet.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                            </tr>
-                            <tr>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">11. TCE Realizado (tce_real)</td>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">voyage_result / tot_dur</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">• TCE Realizado (tce_real)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px;">(income - bunker - ports - comm) / tot_dur</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${pnlNet.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} / ${totDays.toFixed(2)} Días</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${tceReal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}/día</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">12. TCE Requerido (tce_req)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">• TCE Requerido (tce_req)</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">vessel_tce_required</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${tceRequired.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}/d</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">$${tceRequired.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}/día</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">13. Diferencia TCE (+/-)</td>
+                                <td style="border: 1px solid #000000; padding: 2.5px 5px; font-weight: bold;">• Diferencia TCE (+/-)</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">tce_real - tce_req</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px;">$${tceReal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}/d - $${tceRequired.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}/d</td>
                                 <td style="border: 1px solid #000000; padding: 2.5px 5px; text-align: right; font-weight: bold;">${tceReal - tceRequired >= 0 ? '+' : ''}$${(tceReal - tceRequired).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}/día</td>
