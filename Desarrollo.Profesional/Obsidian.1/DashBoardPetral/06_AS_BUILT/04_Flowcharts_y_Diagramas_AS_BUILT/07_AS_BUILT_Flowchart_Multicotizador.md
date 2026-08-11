@@ -32,5 +32,6 @@ graph TD
 ---
 
 ## 🔗 Enlaces Relacionados
+- [[07_01_AS_BUILT_QC_Loop_Multicotizador]] — Nota Hija: Loop de Control de Calidad Automatizado & Auditoría Dual (UI vs PDF).
 - [[AS_BUILT_Herramienta_01_Multicotizador_Spot]] — Documentación de la herramienta UI.
 - [[AS_BUILT_Maestro_02_Rutas_RuteadorSpot_RouteMaster]] — Llave de rutas.
