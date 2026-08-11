@@ -1757,12 +1757,12 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
             <tr><td class="bold">4. Días de Mar (sea_days)</td><td>Sum((dist_leg * (1 + WF)) / (speed * 24))</td><td>${seaDaysCalcStr}</td><td class="text-right bold">${fmtDays(sea_days)} Días</td></tr>
             <tr><td class="bold">5. Días de Viaje (tot_dur)</td><td>sea_days + port_days</td><td>${fmtDays(sea_days)}d Mar + ${fmtDays(port_days)}d Puerto</td><td class="text-right bold">${fmtDays(tot_days)} Días</td></tr>
             <tr><td class="bold">6. Income (income)</td><td>Sum(Q_leg * F_leg)</td><td>${tramosList.filter((t: any) => t.type === 'LADEN').length} Descargas × ${fmtNum(Q)} MT × ${fmtCur(F)} USD/MT</td><td class="text-right bold">${fmtCur(net_income)}</td></tr>
-            <tr><td class="bold">7. Comisiones (commissions)</td><td>income * (addr_comm + bkr_comm)</td><td>${fmtCur(net_income)} × ${(addressCommPct + brokerCommPct).toFixed(2)}%</td><td class="text-right bold">${fmtCur(comm_total)}</td></tr>
-            <tr><td class="bold">8. Costo Bunker (bunker)</td><td>bunker_sea + bunker_port</td><td>${fmtDays(ifo_tonnage)}t IFO × ${fmtCur(p_ifo)} + ${fmtDays(mdo_tonnage)}t MDO × ${fmtCur(p_mdo)}</td><td class="text-right bold">${fmtCur(bunker_cost)}</td></tr>
-            <tr><td class="bold">9. Port Costs (port_costs)</td><td>Sum(agency_origin + agency_dest)</td><td>Puertos Origen + Puertos Destino</td><td class="text-right bold">${fmtCur(port_costs)}</td></tr>
-            <tr><td class="bold">10. Voyage Result (P&L)</td><td>income - comm - bunker - port_costs</td><td>${fmtCur(net_income)} - ${comm_total > 0 ? fmtCur(comm_total) + ' - ' : ''}${fmtCur(bunker_cost)} - ${fmtCur(port_costs)}</td><td class="text-right bold">${fmtCur(pnl_net)}</td></tr>
-            <tr><td class="bold">11. TCE Realizado (tce_real)</td><td>voyage_result / tot_dur</td><td>${fmtCur(pnl_net)} / ${fmtDays(tot_days)} Días</td><td class="text-right bold">${fmtCur(tce_real)}/día</td></tr>
-            <tr><td class="bold">12. TCE Requerido (tce_req)</td><td>vessel_tce_required</td><td>${vesselParams.vessel_name || selectedVessel} (${fmtCur(tce_req)}/d)</td><td class="text-right bold">${fmtCur(tce_req)}/día</td></tr>
+            <tr><td class="bold">7. (-) Hire (tce_req * tot_dur)</td><td>tce_req * total_days</td><td>${fmtCur(tce_req)}/d × ${fmtDays(tot_days)} Días</td><td class="text-right bold">-${fmtCur(tce_req * tot_days)}</td></tr>
+            <tr><td class="bold">8. (-) Costo Bunker (bunker)</td><td>bunker_sea + bunker_port</td><td>${fmtDays(ifo_tonnage)}t IFO × ${fmtCur(p_ifo)} + ${fmtDays(mdo_tonnage)}t MDO × ${fmtCur(p_mdo)}</td><td class="text-right bold">-${fmtCur(bunker_cost)}</td></tr>
+            <tr><td class="bold">9. (-) Port Costs (port_costs)</td><td>Sum(agency_origin + agency_dest)</td><td>Puertos Origen + Puertos Destino (${fmtCur(c_orig)} + ${fmtCur(c_dest)})</td><td class="text-right bold">-${fmtCur(port_costs)}</td></tr>
+            <tr><td class="bold">10. (-) Comisiones (commissions)</td><td>income * (addr_comm + bkr_comm)</td><td>${fmtCur(net_income)} × ${(addressCommPct + brokerCommPct).toFixed(2)}%</td><td class="text-right bold">-${fmtCur(comm_total)}</td></tr>
+            <tr><td class="bold">11. Voyage Result / P&L (Utilidad Neta)</td><td>income - hire - bunker - port_costs - comm</td><td>${fmtCur(net_income)} - ${fmtCur(tce_req * tot_days)} - ${fmtCur(bunker_cost)} - ${fmtCur(port_costs)} - ${fmtCur(comm_total)}</td><td class="text-right bold">${fmtCur(net_income - (tce_req * tot_days) - bunker_cost - port_costs - comm_total)}</td></tr>
+            <tr><td class="bold">12. TCE Realizado (tce_real)</td><td>pnl_bruto / tot_dur</td><td>${fmtCur(pnl_net)} / ${fmtDays(tot_days)} Días</td><td class="text-right bold">${fmtCur(tce_real)}/día</td></tr>
             <tr><td class="bold">13. Diferencia TCE (+/-)</td><td>tce_real - tce_req</td><td>${fmtCur(tce_real)}/d - ${fmtCur(tce_req)}/d</td><td class="text-right bold">${tce_diff >= 0 ? '+' : ''}${fmtCur(tce_diff)}/día</td></tr>
         </tbody>
     </table>
@@ -1882,40 +1882,40 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     <td className="p-1.5 text-right font-bold">{fmtCur(net_income)}</td>
                                 </tr>
                                 <tr>
-                                    <td className="p-1.5 font-bold border-r border-slate-300">7. Comisiones (commissions)</td>
-                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">income * (addr_comm + bkr_comm)</td>
-                                    <td className="p-1.5 border-r border-slate-300">{fmtCur(net_income)} × ${(addressCommPct + brokerCommPct).toFixed(2)}%</td>
-                                    <td className="p-1.5 text-right font-bold">{fmtCur(comm_total)}</td>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">7. (-) Hire (tce_req * tot_dur)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">tce_req * total_days</td>
+                                    <td className="p-1.5 border-r border-slate-300">{fmtCur(tce_req)}/d × {fmtDays(tot_days)} Días</td>
+                                    <td className="p-1.5 text-right font-bold">-{fmtCur(tce_req * tot_days)}</td>
                                 </tr>
                                 <tr>
-                                    <td className="p-1.5 font-bold border-r border-slate-300">8. Costo Bunker (bunker)</td>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">8. (-) Costo Bunker (bunker)</td>
                                     <td className="p-1.5 border-r border-slate-300 text-slate-600">bunker_sea + bunker_port</td>
                                     <td className="p-1.5 border-r border-slate-300">{fmtDays(ifo_tonnage)}t IFO × {fmtCur(p_ifo)} + {fmtDays(mdo_tonnage)}t MDO × {fmtCur(p_mdo)}</td>
-                                    <td className="p-1.5 text-right font-bold">{fmtCur(bunker_cost)}</td>
+                                    <td className="p-1.5 text-right font-bold">-{fmtCur(bunker_cost)}</td>
                                 </tr>
                                 <tr>
-                                    <td className="p-1.5 font-bold border-r border-slate-300">9. Port Costs (port_costs)</td>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">9. (-) Port Costs (port_costs)</td>
                                     <td className="p-1.5 border-r border-slate-300 text-slate-600">Sum(agency_origin + agency_dest)</td>
-                                    <td className="p-1.5 border-r border-slate-300">Puertos Origen + Puertos Destino</td>
-                                    <td className="p-1.5 text-right font-bold">{fmtCur(port_costs)}</td>
+                                    <td className="p-1.5 border-r border-slate-300">Puertos Origen + Puertos Destino ({fmtCur(c_orig)} + {fmtCur(c_dest)})</td>
+                                    <td className="p-1.5 text-right font-bold">-{fmtCur(port_costs)}</td>
                                 </tr>
                                 <tr>
-                                    <td className="p-1.5 font-bold border-r border-slate-300">10. Voyage Result (P&L)</td>
-                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">income - comm - bunker - port_costs</td>
-                                    <td className="p-1.5 border-r border-slate-300">{fmtCur(net_income)} - {comm_total > 0 ? fmtCur(comm_total) + ' - ' : ''}{fmtCur(bunker_cost)} - {fmtCur(port_costs)}</td>
-                                    <td className="p-1.5 text-right font-bold">{fmtCur(pnl_net)}</td>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">10. (-) Comisiones (commissions)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">income * (addr_comm + bkr_comm)</td>
+                                    <td className="p-1.5 border-r border-slate-300">{fmtCur(net_income)} × ${(addressCommPct + brokerCommPct).toFixed(2)}%</td>
+                                    <td className="p-1.5 text-right font-bold">-{fmtCur(comm_total)}</td>
                                 </tr>
                                 <tr>
-                                    <td className="p-1.5 font-bold border-r border-slate-300">11. TCE Realizado (tce_real)</td>
-                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">voyage_result / tot_dur</td>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">11. Voyage Result / P&L (Utilidad Neta)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">income - hire - bunker - port_costs - comm</td>
+                                    <td className="p-1.5 border-r border-slate-300">{fmtCur(net_income)} - {fmtCur(tce_req * tot_days)} - {fmtCur(bunker_cost)} - {fmtCur(port_costs)} - {fmtCur(comm_total)}</td>
+                                    <td className="p-1.5 text-right font-bold">{fmtCur(net_income - (tce_req * tot_days) - bunker_cost - port_costs - comm_total)}</td>
+                                </tr>
+                                <tr>
+                                    <td className="p-1.5 font-bold border-r border-slate-300">12. TCE Realizado (tce_real)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">pnl_bruto / tot_dur</td>
                                     <td className="p-1.5 border-r border-slate-300">{fmtCur(pnl_net)} / {fmtDays(tot_days)} Días</td>
                                     <td className="p-1.5 text-right font-bold">{fmtCur(tce_real)}/día</td>
-                                </tr>
-                                <tr>
-                                    <td className="p-1.5 font-bold border-r border-slate-300">12. TCE Requerido (tce_req)</td>
-                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">vessel_tce_required</td>
-                                    <td className="p-1.5 border-r border-slate-300">{vesselParams.vessel_name || selectedVessel} ({fmtCur(tce_req)}/d)</td>
-                                    <td className="p-1.5 text-right font-bold">{fmtCur(tce_req)}/día</td>
                                 </tr>
                                 <tr>
                                     <td className="p-1.5 font-bold border-r border-slate-300">13. Diferencia TCE (+/-)</td>
