@@ -314,6 +314,16 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         }
     }, [selectedClient, contractsMaster, tramos, bunkerPriceIfo, bunkerPriceMdo, puertosConfig]);
 
+    // Recalcular simulación automáticamente cuando cambia el cliente, buque, tramos o precios de bunker
+    useEffect(() => {
+        if (selectedVessel && tramos.length > 0) {
+            const timer = setTimeout(() => {
+                handleCalculate();
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [selectedClient, selectedVessel, bunkerPriceIfo, bunkerPriceMdo, addressCommPct, brokerCommPct, JSON.stringify(tramos), JSON.stringify(puertosConfig)]);
+
     const toggleActivo = () => {
         setFilterActivo(true);
         setFilterProspecto(false);
@@ -753,14 +763,18 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
             let res: any;
             try {
-                const apiCall = ForecastService.calculateMultiCotizador(apiPayload);
-                const timeoutRace = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 500));
-                res = await Promise.race([apiCall, timeoutRace]);
+                res = await ForecastService.calculateMultiCotizador(apiPayload);
             } catch {
-                // Fallback client-side: cálculo local cuando backend no está disponible
+                // Fallback client-side: cálculo local exacto cuando backend no está disponible
                 const pIfo = bunkerPriceIfo; const pMdo = bunkerPriceMdo;
                 const spd = Number(vesselParams.vessel_speed) || 11.0;
-                const consSea = Number(vesselParams.consumption_sea_ifo) || 14.0;
+                const consSeaIf = Number(vesselParams.consumption_sea_ifo) || 14.0;
+                const consIdleIf = Number(vesselParams.consumption_idle_ifo) || 2.4;
+                const consLoadIf = Number(vesselParams.consumption_load_ifo) || 2.4;
+                const consDischIf = Number(vesselParams.consumption_disch_ifo) || 3.6;
+                const consLoadMd = Number(vesselParams.consumption_load_mdo) || 0.5;
+                const consDischMd = Number(vesselParams.consumption_disch_mdo) || 0.5;
+
                 let totDist = 0, totSeaDays = 0, totPortDays = 0;
                 let totBunker = 0, totPort = 0, ifoTot = 0, mdoTot = 0;
                 const builtTramos = payloadTramos.map((t: any) => {
@@ -770,15 +784,24 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     const q = t.quantity || 0;
                     const rL = t.custom_load_rate || 500;
                     const rD = t.custom_discharge_rate || 300;
-                    const pd = t.type === 'LADEN' ? (q / rL / 24) + (q / rD / 24) + ((t.port_overhead_hours_origin || 6) + (t.port_overhead_hours_dest || 6)) / 24 : 0;
-                    const ifoSea = sd * consSea;
-                    const mdoPort = t.type === 'LADEN' ? 0.77 : 0;
-                    const bunk = ifoSea * pIfo + mdoPort * pMdo;
+                    
+                    const loadD = t.type === 'LADEN' ? (q / rL / 24) : 0;
+                    const dischD = t.type === 'LADEN' ? (q / rD / 24) : 0;
+                    const idleD = t.type === 'LADEN' ? ((t.port_overhead_hours_origin || 6) + (t.port_overhead_hours_dest || 6)) / 24 : 0;
+                    const pd = loadD + dischD + idleD;
+
+                    const ifoSea = sd * consSeaIf;
+                    const ifoPort = t.type === 'LADEN' ? (loadD * consLoadIf) + (dischD * consDischIf) + (idleD * consIdleIf) : 0;
+                    const ifoLeg = ifoSea + ifoPort;
+
+                    const mdoPort = t.type === 'LADEN' ? (loadD * consLoadMd) + (dischD * consDischMd) : 0;
+                    const bunk = (ifoLeg * pIfo) + (mdoPort * pMdo);
                     const portCost = (t.agency_costs_origin || 0) + (t.agency_costs_destination || 0);
+
                     totDist += dist; totSeaDays += sd; totPortDays += pd;
                     totBunker += bunk; totPort += portCost;
-                    ifoTot += ifoSea; mdoTot += mdoPort;
-                    return { ...t, sea_days: sd, port_days: pd, bunker_costs: bunk, port_costs: portCost, net_income: 0, pnl_tramo: 0 };
+                    ifoTot += ifoLeg; mdoTot += mdoPort;
+                    return { ...t, sea_days: sd, port_days: pd, bunker_ifo: ifoLeg, bunker_mdo: mdoPort, bunker_costs: bunk, port_costs: portCost, net_income: 0, pnl_tramo: 0 };
                 });
                 const totDays = totSeaDays + totPortDays;
                 res = {
