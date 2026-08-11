@@ -88,9 +88,9 @@ export const RouteMaster_V2: React.FC<RouteMasterProps> = ({ mode = 'routes' }) 
         const grt          = Number(ld.grt) || 28000;
         const loa          = Number(ld.loa) || 183.0;
         const Q            = Number(ld.cargo_tons) || 13500;
-        const F            = Number(ld.freight_rate) || 25.50;
-        const pIfo         = Number(ld.bunker_price_ifo) || 895.14;
-        const pMdo         = Number(ld.bunker_price_mdo) || 1460.30;
+        const F            = Number(ld.freight_rate) || 0;
+        const pIfo         = Number(ld.bunker_price_ifo) || 0;
+        const pMdo         = Number(ld.bunker_price_mdo) || 0;
         const consSeaIfo   = 14.0;  // t/día en navegación (Handysize estándar)
         const consPortIfo  = 2.4;   // t/día en puerto idle
         const addrComm     = Number(ld.addressCommPct) || 0.0;
@@ -527,11 +527,11 @@ export const RouteMaster_V2: React.FC<RouteMasterProps> = ({ mode = 'routes' }) 
                                                                             ? rawVessel 
                                                                             : 'BT MOQUEGUA (Handysize)';
 
-                                                                        const freightRate = Number(route.legs_data?.freight_rate) || 25.50;
+                                                                        const freightRate = Number(route.legs_data?.freight_rate) || 0;
                                                                         const grossRevenue = cargoTons * freightRate;
 
-                                                                        const bunkerIfoPrice = Number(route.legs_data?.bunker_price_ifo) || 895.14;
-                                                                        const bunkerMdoPrice = Number(route.legs_data?.bunker_price_mdo) || 1460.30;
+                                                                        const bunkerIfoPrice = Number(route.legs_data?.bunker_price_ifo) || 0;
+                                                                        const bunkerMdoPrice = Number(route.legs_data?.bunker_price_mdo) || 0;
                                                                         const totalIfoMt = Number(route.legs_data?.total_bunker_mt) || 62.4;
                                                                         const totalMdoMt = Number(route.legs_data?.total_mdo_mt) || 12.0;
                                                                         const totalBunkerCost = (totalIfoMt * bunkerIfoPrice) + (totalMdoMt * bunkerMdoPrice);
@@ -711,8 +711,8 @@ export const RouteMaster_V2: React.FC<RouteMasterProps> = ({ mode = 'routes' }) 
                                                                     // Todos los valores vienen de la foto guardada en legs_data
                                                                     const ld = route.legs_data || {};
                                                                     const cargoTons   = Number(ld.cargo_tons) || 13500;
-                                                                    const freightRate = Number(ld.freight_rate) || 25.50;
-                                                                    const pIfo        = Number(ld.bunker_price_ifo) || 895.14;
+                                                                    const freightRate = Number(ld.freight_rate) || 0;
+                                                                    const pIfo        = Number(ld.bunker_price_ifo) || 0;
                                                                     const portCostLoad= Number(ld.port_cost_load) || 0;
                                                                     const portCostDisch= Number(ld.port_cost_disch) || 0;
                                                                     const tceNet      = Number(ld.tce_net) || 0;

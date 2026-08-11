@@ -333,9 +333,9 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
         bp_latest = get_latest_bunker_prices()
         if bp_latest:
             if vessel_params.get("bunker_price_ifo") is None or float(vessel_params.get("bunker_price_ifo") or 0) <= 0:
-                vessel_params["bunker_price_ifo"] = float(bp_latest.get("bunker_price_ifo", 895.14))
+                vessel_params["bunker_price_ifo"] = float(bp_latest.get("bunker_price_ifo", 0.0))
             if vessel_params.get("bunker_price_mdo") is None or float(vessel_params.get("bunker_price_mdo") or 0) <= 0:
-                vessel_params["bunker_price_mdo"] = float(bp_latest.get("bunker_price_mdo", 1460.30))
+                vessel_params["bunker_price_mdo"] = float(bp_latest.get("bunker_price_mdo", 0.0))
 
         if request.bunker_price_ifo is not None and request.bunker_price_ifo > 0:
             vessel_params["bunker_price_ifo"] = request.bunker_price_ifo

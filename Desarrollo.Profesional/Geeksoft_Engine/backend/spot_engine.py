@@ -24,9 +24,9 @@ def calculate_spot_multileg(payload: dict) -> dict:
     c_load_mdo = float(vessel.get("consumption_load_mdo") or 0)
     c_disch_mdo = float(vessel.get("consumption_disch_mdo") or 0)
     
-    # Defaults de precio si no vienen (evitar que sea 0)
-    p_ifo = float(vessel.get("bunker_price_ifo") or 600)
-    p_mdo = float(vessel.get("bunker_price_mdo") or 900)
+    # Cero fallbacks por defecto: si no vienen definidos, se mantiene 0.0
+    p_ifo = float(vessel.get("bunker_price_ifo") or 0.0)
+    p_mdo = float(vessel.get("bunker_price_mdo") or 0.0)
 
     # --- FORMATTING HELPERS ---
     def fmt(val): return f"{val:,.0f}" if val > 0 else "0"
