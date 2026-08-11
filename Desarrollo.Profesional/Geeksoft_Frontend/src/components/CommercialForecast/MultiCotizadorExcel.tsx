@@ -277,7 +277,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         }
     }, [rawClients, filterActivo, filterProspecto, selectedClient]);
 
-    // Autocompletar búnker y tarifas desde el Maestro de Contratos dinámicamente
+    // Autocompletar búnker, comisiones y tarifas desde el Maestro de Contratos dinámicamente
     useEffect(() => {
         if (contractsMaster.length > 0 && tramos.length > 0) {
             const ladenLeg = tramos.find(t => t.type === 'LADEN') || tramos[0];
@@ -287,17 +287,24 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
             const matched = contractsMaster.find((c: any) => 
                 (!selectedClient || (c.client_id || '').toUpperCase() === selectedClient.toUpperCase()) &&
-                (c.destination_port_id || '').toUpperCase() === (destPort || '').toUpperCase() &&
+                (!destPort || !c.destination_port_id || (c.destination_port_id || '').toUpperCase() === (destPort || '').toUpperCase()) &&
                 (!origPort || !c.origin_port_id || (c.origin_port_id || '').toUpperCase() === origPort.toUpperCase())
             );
 
             if (matched) {
-                if (matched.bunker_baseline_price_ifo > 0 && bunkerPriceIfo === 0) {
+                if (matched.bunker_baseline_price_ifo > 0) {
                     setBunkerPriceIfo(Number(matched.bunker_baseline_price_ifo));
                 }
-                if (matched.bunker_baseline_price_mdo > 0 && bunkerPriceMdo === 0) {
+                if (matched.bunker_baseline_price_mdo > 0) {
                     setBunkerPriceMdo(Number(matched.bunker_baseline_price_mdo));
                 }
+                if (matched.address_commission !== undefined) {
+                    setAddressCommPct(Number(matched.address_commission || 0));
+                }
+                if (matched.broker_commission !== undefined) {
+                    setBrokerCommPct(Number(matched.broker_commission || 0));
+                }
+
                 const tariffs = matched.tariffs || matched.contract_tariffs || [];
                 const matchedTariff = tariffs.find((t: any) => 
                     Q >= (Number(t.min_tonnage) || 0) && Q <= (Number(t.max_tonnage) || 999999)
@@ -312,7 +319,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 }
             }
         }
-    }, [selectedClient, contractsMaster, tramos, bunkerPriceIfo, bunkerPriceMdo, puertosConfig]);
+    }, [selectedClient, contractsMaster, tramos]);
 
     // Recalcular simulación automáticamente cuando cambia el cliente, buque, tramos o precios de bunker
     useEffect(() => {
@@ -2838,8 +2845,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     <td className="text-right py-1 pr-1.5">
                                         {result ? fmtNum((result.consolidated.bunker_ifo_tonnage || 0) + (result.consolidated.bunker_mdo_tonnage || 0)) : '0.0'}
                                     </td>
-                                    <td className="text-right py-1 pr-1.5">
-                                        {result ? fmtCur(result.consolidated.bunker_costs || 0) : '$0'}
+                                    <td className="text-right py-1 pr-1.5 font-bold">
+                                        {result ? fmtCur(((result.consolidated.bunker_ifo_tonnage || 0) * bunkerPriceIfo) + ((result.consolidated.bunker_mdo_tonnage || 0) * bunkerPriceMdo)) : '$0'}
                                     </td>
                                 </tr>
                             </tbody>
@@ -3098,7 +3105,6 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     const addressCommUsd = revenue * (addressCommPct / 100);
                                     const brokerCommUsd = revenue * (brokerCommPct / 100);
                                     const totalCommUsd = result?.consolidated?.total_commissions || (addressCommUsd + brokerCommUsd);
-                                    const hasComm = (addressCommPct > 0 || brokerCommPct > 0 || totalCommUsd > 0);
 
                                     const tceReal = result?.consolidated?.tce_real || 0;
                                     const tceDiff = tceReal - tceReq;
@@ -3165,17 +3171,15 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 </td>
                                             </tr>
 
-                                            {/* 7. Comisiones (Solo si > 0%) */}
-                                            {hasComm && (
-                                                <tr className="border-b border-emerald-100/60">
-                                                    <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
-                                                        (-) Comisiones ({addressCommPct + brokerCommPct}%)
-                                                    </td>
-                                                    <td className="text-right py-0.5 pr-1 text-rose-600 font-medium">
-                                                        -{fmtCur(totalCommUsd)}
-                                                    </td>
-                                                </tr>
-                                            )}
+                                            {/* 7. Comisiones */}
+                                            <tr className="border-b border-emerald-100/60">
+                                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                                    (-) Comisiones ({(addressCommPct + brokerCommPct).toFixed(2).replace(/\.00$/, '')}%)
+                                                </td>
+                                                <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
+                                                    -{fmtCur(totalCommUsd)}
+                                                </td>
+                                            </tr>
 
                                             {/* VOYAGE RESULT / P&L (SUMA MATEMÁTICA EXACTA FILAS 1 A 7: Revenue - Hire - Bunker - Ports - Comm) */}
                                             {(() => {
