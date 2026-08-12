@@ -770,6 +770,7 @@ def list_spot_voyages():
 def save_vessel(request: dict):
     try:
         from backend.database import get_supabase
+        from backend.services.forecast_service import clear_forecast_cache
         sb = get_supabase()
         # Supabase upsert requires the primary key (vessel_id)
         if "vessel_id" not in request:
@@ -785,14 +786,13 @@ def save_vessel(request: dict):
             if field in request and request[field] is not None:
                 try:
                     request[field] = float(request[field])
-                except ValueError:
+                except (ValueError, TypeError):
                     request[field] = 0.0
 
         res = sb.table("vessels").upsert(request).execute()
         
-        if not res.data:
-            # Upsert in supabase returns data if successful by default for python client, but sometimes we just check it doesn't throw.
-            pass
+        # Invalidar cache para que el próximo GET /vessels traiga datos frescos de Supabase
+        clear_forecast_cache()
             
         return {"status": "success", "vessel_id": request["vessel_id"]}
     except Exception as e:

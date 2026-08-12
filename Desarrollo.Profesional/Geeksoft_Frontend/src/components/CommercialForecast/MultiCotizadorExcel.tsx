@@ -1606,7 +1606,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     };
 
     const fmtCur = (val: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
-    const fmtNum = (val: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(val);
+    const fmtNum = (val: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 }).format(val);
     const fmtDays = (val: number) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
 
     const calculatedTramosList = getCalculatedTramos();
