@@ -2388,11 +2388,10 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 {/* Precio IFO & Conmutador Lista de Validación FUENTE */}
                                 <td className="border-r border-slate-200 p-0 text-center align-middle bg-red-600 h-8">
                                     <input
-                                        type="number"
-                                        step="0.01"
-                                        value={bunkerPriceIfo}
-                                        onChange={(e) => handleIfoInputChange(Number(e.target.value))}
-                                        className="w-full h-8 bg-red-600 border-0 p-0 text-center text-xs font-mono font-black text-white focus:outline-none focus:ring-1 focus:ring-red-400 align-middle [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        type="text"
+                                        value={fmtThousandSep(bunkerPriceIfo)}
+                                        onChange={(e) => { const raw = Number(e.target.value.replace(/,/g, '')); if (!isNaN(raw)) handleIfoInputChange(raw); }}
+                                        className="w-full h-8 bg-red-600 border-0 p-0 text-center text-xs font-mono font-black text-white focus:outline-none focus:ring-1 focus:ring-red-400 align-middle"
                                     />
                                 </td>
                                 <td className="p-1 text-center align-middle bg-slate-50 font-mono h-16" rowSpan={2}>
@@ -2460,11 +2459,10 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 {/* Precio MDO */}
                                 <td className="border-r border-slate-200 p-0 text-center align-middle bg-red-600 h-8">
                                     <input
-                                        type="number"
-                                        step="0.01"
-                                        value={bunkerPriceMdo}
-                                        onChange={(e) => handleMdoInputChange(Number(e.target.value))}
-                                        className="w-full h-8 bg-red-600 border-0 p-0 text-center text-xs font-mono font-black text-white focus:outline-none focus:ring-1 focus:ring-red-400 align-middle [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        type="text"
+                                        value={fmtThousandSep(bunkerPriceMdo)}
+                                        onChange={(e) => { const raw = Number(e.target.value.replace(/,/g, '')); if (!isNaN(raw)) handleMdoInputChange(raw); }}
+                                        className="w-full h-8 bg-red-600 border-0 p-0 text-center text-xs font-mono font-black text-white focus:outline-none focus:ring-1 focus:ring-red-400 align-middle"
                                     />
                                 </td>
                             </tr>
