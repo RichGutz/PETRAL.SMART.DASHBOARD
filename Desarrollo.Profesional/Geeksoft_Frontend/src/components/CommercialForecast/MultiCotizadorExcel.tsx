@@ -761,6 +761,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
             // Enviar payload — con timeout 500ms y fallback client-side si backend no disponible
             const apiPayload = {
+                client_id: selectedClient || 'SPCC',
                 vessel_id: selectedVessel,
                 bunker_price_ifo: bunkerPriceIfo,
                 bunker_price_mdo: bunkerPriceMdo,
@@ -869,6 +870,70 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         } catch (e) {
             console.error("Error al simular:", e);
         }
+    };
+
+    // Helper dinámico para agrupar y catalogar puertos activos por OP.DEST (CARGAR / DESCARGAR)
+    const getDynamicPortCostItems = () => {
+        const items: Array<{
+            port_id: string;
+            action: string;
+            label: string;
+            cost: number;
+            role: 'POL' | 'POD' | 'PORT';
+        }> = [];
+
+        puertosConfig.forEach((p, idx) => {
+            const portId = idx === 0 
+                ? (tramos[0]?.origin_port_id || '') 
+                : (tramos[idx - 1]?.destination_port_id || '');
+
+            if (!portId) return;
+
+            let cost = 0;
+            if (result?.tramos && result.tramos.length > 0) {
+                if (idx === 0) {
+                    cost = result.tramos[0]?.agency_costs_origin || 0;
+                } else {
+                    cost = result.tramos[idx - 1]?.agency_costs_destination || 0;
+                }
+            } else {
+                cost = p.manual_port_cost ? Number(p.manual_port_cost) : 0;
+            }
+
+            const action = p.action;
+            let roleTag = 'PORT';
+            let role: 'POL' | 'POD' | 'PORT' = 'PORT';
+
+            if (action === 'CARGAR') {
+                role = 'POL';
+                roleTag = 'POL';
+            } else if (action === 'DESCARGAR') {
+                role = 'POD';
+                roleTag = 'POD';
+            } else {
+                if (cost <= 0) return;
+                roleTag = 'PUERTO';
+            }
+
+            items.push({
+                port_id: portId,
+                action,
+                label: `${roleTag} (${portId})`,
+                cost,
+                role
+            });
+        });
+
+        if (items.length === 0 && tramos.length > 0) {
+            const oPort = tramos[0]?.origin_port_id || 'POL';
+            const dPort = tramos[0]?.destination_port_id || 'POD';
+            const cPOL = result?.tramos?.[0]?.agency_costs_origin || 0;
+            const cPOD = result?.tramos?.[0]?.agency_costs_destination || 0;
+            items.push({ port_id: oPort, action: 'CARGAR', label: `POL (${oPort})`, cost: cPOL, role: 'POL' });
+            items.push({ port_id: dPort, action: 'DESCARGAR', label: `POD (${dPort})`, cost: cPOD, role: 'POD' });
+        }
+
+        return items;
     };
 
     // Recalculo Automatico Reactivo (Estilo Excel)
@@ -2941,71 +3006,43 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             </thead>
                             <tbody>
                                 {(() => {
-                                    let costPOL = 0;
-                                    let costPOD = 0;
-                                    let origPort = tramos[0]?.origin_port_id || 'POL';
-                                    let destPort = tramos[0]?.destination_port_id || 'POD';
-                                    let totalPortCosts = result?.consolidated?.total_port_costs || 0;
-                                    
-                                    if (result?.tramos && result.tramos.length > 0) {
-                                        costPOL = result.tramos[0].agency_costs_origin || 0;
-                                        costPOD = result.tramos[0].agency_costs_destination || 0;
-                                        if (result.tramos[0].origin_port_id) origPort = result.tramos[0].origin_port_id;
-                                        if (result.tramos[0].destination_port_id) destPort = result.tramos[0].destination_port_id;
-                                    }
-
+                                    const portItems = getDynamicPortCostItems();
+                                    const totalPortCosts = result?.consolidated?.total_port_costs ?? portItems.reduce((sum, item) => sum + item.cost, 0);
                                     const chileanPorts = ['MEJILLONES', 'BARQUITO', 'PATILLOS', 'ARICA', 'SAN ANTONIO', 'VALPARAISO', 'QUINTERO'];
-                                    const isOrigChile = chileanPorts.includes((origPort || '').toUpperCase());
-                                    const isDestChile = chileanPorts.includes((destPort || '').toUpperCase());
-
-                                    let origBase = costPOL;
-                                    let origLM = 0;
-                                    if (isOrigChile && costPOL >= 2500) {
-                                        origBase = costPOL - 2500;
-                                        origLM = 2500;
-                                    }
-
-                                    let destBase = costPOD;
-                                    let destLM = 0;
-                                    if (isDestChile && costPOD >= 2500) {
-                                        destBase = costPOD - 2500;
-                                        destLM = 2500;
-                                    }
 
                                     return (
                                         <>
-                                            <tr className="border-b border-slate-100">
-                                                <td className="py-1 pl-1.5 text-slate-650 font-bold">POL ({origPort})</td>
-                                                <td className="text-right py-1 pr-1.5 font-bold">
-                                                    {result ? fmtCur(origBase) : '$0'}
-                                                </td>
-                                            </tr>
-                                            {origLM > 0 && (
-                                                <tr className="border-b border-slate-100 bg-amber-50/60">
-                                                    <td className="py-0.5 pl-3.5 text-amber-900 font-bold text-[10px]">↳ Loading Master (Chile)</td>
-                                                    <td className="text-right py-0.5 pr-1.5 font-bold text-amber-900 text-[10px]">
-                                                        {fmtCur(origLM)}
-                                                    </td>
-                                                </tr>
-                                            )}
-                                            <tr className="border-b border-slate-100">
-                                                <td className="py-1 pl-1.5 text-slate-650 font-bold">POD ({destPort})</td>
-                                                <td className="text-right py-1 pr-1.5 font-bold">
-                                                    {result ? fmtCur(destBase) : '$0'}
-                                                </td>
-                                            </tr>
-                                            {destLM > 0 && (
-                                                <tr className="border-b border-slate-100 bg-amber-50/60">
-                                                    <td className="py-0.5 pl-3.5 text-amber-900 font-bold text-[10px]">↳ Loading Master (Chile)</td>
-                                                    <td className="text-right py-0.5 pr-1.5 font-bold text-amber-900 text-[10px]">
-                                                        {fmtCur(destLM)}
-                                                    </td>
-                                                </tr>
-                                            )}
+                                            {portItems.map((item, idx) => {
+                                                const isChile = chileanPorts.includes((item.port_id || '').toUpperCase());
+                                                let baseCost = item.cost;
+                                                let lmCost = 0;
+                                                if (isChile && item.cost >= 2500) {
+                                                    baseCost = item.cost - 2500;
+                                                    lmCost = 2500;
+                                                }
+                                                return (
+                                                    <React.Fragment key={idx}>
+                                                        <tr className="border-b border-slate-100">
+                                                            <td className="py-1 pl-1.5 text-slate-650 font-bold">{item.label}</td>
+                                                            <td className="text-right py-1 pr-1.5 font-bold">
+                                                                {result || item.cost > 0 ? fmtCur(baseCost) : '$0'}
+                                                            </td>
+                                                        </tr>
+                                                        {lmCost > 0 && (
+                                                            <tr className="border-b border-slate-100 bg-amber-50/60">
+                                                                <td className="py-0.5 pl-3.5 text-amber-900 font-bold text-[10px]">↳ Loading Master (Chile)</td>
+                                                                <td className="text-right py-0.5 pr-1.5 font-bold text-amber-900 text-[10px]">
+                                                                    {fmtCur(lmCost)}
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </React.Fragment>
+                                                );
+                                            })}
                                             <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
                                                 <td className="py-1.5 pl-1.5 font-sans text-[10.5px] uppercase">Total Port Costs</td>
                                                 <td className="text-right py-1.5 pr-1.5">
-                                                    {result ? fmtCur(totalPortCosts) : '$0'}
+                                                    {result || totalPortCosts > 0 ? fmtCur(totalPortCosts) : '$0'}
                                                 </td>
                                             </tr>
                                         </>
@@ -3162,16 +3199,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     const ifoUsd = ifoTons * bunkerPriceIfo;
                                     const mdoUsd = mdoTons * bunkerPriceMdo;
 
-                                    let costPOL = 0;
-                                    let costPOD = 0;
-                                    let origPort = tramos[0]?.origin_port_id || 'POL';
-                                    let destPort = tramos[0]?.destination_port_id || 'POD';
-                                    if (result?.tramos && result.tramos.length > 0) {
-                                        costPOL = result.tramos[0].agency_costs_origin || 0;
-                                        costPOD = result.tramos[0].agency_costs_destination || 0;
-                                        if (result.tramos[0].origin_port_id) origPort = result.tramos[0].origin_port_id;
-                                        if (result.tramos[0].destination_port_id) destPort = result.tramos[0].destination_port_id;
-                                    }
+                                    const portItems = getDynamicPortCostItems();
+                                    const totalPortCosts = result?.consolidated?.total_port_costs ?? portItems.reduce((sum, item) => sum + item.cost, 0);
 
                                     const revenue = result?.consolidated?.total_freight_revenue || (Q * F);
                                     const addressCommUsd = revenue * (addressCommPct / 100);
@@ -3223,27 +3252,19 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 </td>
                                             </tr>
 
-                                            {/* 5. Port Costs POL */}
-                                            <tr className="border-b border-emerald-100/60">
-                                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
-                                                    (-) Port Costs POL ({origPort})
-                                                </td>
-                                                <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
-                                                    -{fmtCur(costPOL)}
-                                                </td>
-                                            </tr>
+                                            {/* 5. Port Costs dinámicos */}
+                                            {portItems.map((item, idx) => (
+                                                <tr key={idx} className="border-b border-emerald-100/60">
+                                                    <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                                        (-) Port Costs {item.label}
+                                                    </td>
+                                                    <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
+                                                        -{fmtCur(item.cost)}
+                                                    </td>
+                                                </tr>
+                                            ))}
 
-                                            {/* 6. Port Costs POD */}
-                                            <tr className="border-b border-emerald-100/60">
-                                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
-                                                    (-) Port Costs POD ({destPort})
-                                                </td>
-                                                <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
-                                                    -{fmtCur(costPOD)}
-                                                </td>
-                                            </tr>
-
-                                            {/* 7. Comisiones (Solo si hay comisión > 0%) */}
+                                            {/* 6. Comisiones (Solo si hay comisión > 0%) */}
                                             {(totalCommUsd > 0 || (addressCommPct + brokerCommPct) > 0) && (
                                                 <tr className="border-b border-emerald-100/60">
                                                     <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
@@ -3257,7 +3278,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
                                             {/* VOYAGE RESULT / P&L (SUMA MATEMÁTICA EXACTA FILAS 1 A 7: Revenue - Hire - Bunker - Ports - Comm) */}
                                             {(() => {
-                                                const voyageResultPnl = revenue - hireUsd - ifoUsd - mdoUsd - costPOL - costPOD - totalCommUsd;
+                                                const voyageResultPnl = revenue - hireUsd - ifoUsd - mdoUsd - totalPortCosts - totalCommUsd;
                                                 return (
                                                     <tr className="bg-emerald-100/60 font-bold border-t-2 border-b-2 border-emerald-400">
                                                         <td className="py-1 pl-1 text-emerald-950 font-sans text-[11px] font-black uppercase">

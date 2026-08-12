@@ -442,7 +442,7 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
                 tr_dict["port_max_discharge_limit"] = float(dest_port_info.get("max_disch_rate", 0))
             
             # Costos portuarios
-            client_id = 'SPCC'
+            client_id = request.client_id or 'SPCC'
             
             # Costo origen según acción del origen
             if tr.origin_action == 'NONE':

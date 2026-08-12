@@ -80,6 +80,7 @@ class MultiCotizadorTramo(BaseModel):
 
 
 class MultiCotizadorRequest(BaseModel):
+    client_id: Optional[str] = "SPCC"
     vessel_id: str
     tramos: List[MultiCotizadorTramo]
     bunker_price_ifo: Optional[float] = None
