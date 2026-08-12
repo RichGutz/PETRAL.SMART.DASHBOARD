@@ -563,12 +563,12 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         if tipo == "BALLAST":
             res = process_ballast_leg(tr)
             res["net_income"] = 0.0
-            res["port_costs"] = 0.0
-            res["agency_costs_origin"] = 0.0
-            res["agency_costs_destination"] = 0.0
-            res["agency_costs_origin_details"] = {"total_cost": 0.0, "breakdown": {}, "method": "NONE"}
-            res["agency_costs_destination_details"] = {"total_cost": 0.0, "breakdown": {}, "method": "NONE"}
-            res["pnl_tramo"] = -res["bunker_costs"]
+            res["agency_costs_origin"] = c_orig
+            res["agency_costs_destination"] = c_dest
+            res["port_costs"] = c_orig + c_dest
+            res["agency_costs_origin_details"] = tr.get("agency_costs_origin_details", {"total_cost": c_orig, "breakdown": {}, "method": "STATIC"})
+            res["agency_costs_destination_details"] = tr.get("agency_costs_destination_details", {"total_cost": c_dest, "breakdown": {}, "method": "STATIC"})
+            res["pnl_tramo"] = -res["bunker_costs"] - res["port_costs"]
             res["type"] = "BALLAST"
         else:
             res = process_laden_leg(tr)
