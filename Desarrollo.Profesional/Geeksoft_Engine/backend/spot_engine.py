@@ -43,11 +43,16 @@ def calculate_spot_multileg(payload: dict) -> dict:
         dist = float(leg_inputs.get("route_distance", 0))
         w_factor = float(leg_inputs.get("weather_factor", 0))
         
-        sea_days = (dist * (1 + w_factor)) / (speed * 24) if speed > 0 else 0
-        port_days = 0
+        overhead_orig = float(leg_inputs.get("port_overhead_hours_origin") or 0)
+        overhead_dest = float(leg_inputs.get("port_overhead_hours_dest") or 0)
+        pos_carga = float(leg_inputs.get("positioning_carga_hrs") or 0)
+        pos_descarga = float(leg_inputs.get("positioning_descarga_hrs") or 0)
         
-        ifo_tons = sea_days * c_sea_ifo
-        mdo_tons = sea_days * c_sea_mdo
+        sea_days = (dist * (1 + w_factor)) / (speed * 24) if speed > 0 else 0
+        port_days = (overhead_orig + overhead_dest + pos_carga + pos_descarga) / 24
+        
+        ifo_tons = (sea_days * c_sea_ifo) + (port_days * c_idle_ifo)
+        mdo_tons = (sea_days * c_sea_mdo) + (port_days * c_idle_mdo)
         bunker_costs = (ifo_tons * p_ifo) + (mdo_tons * p_mdo)
         
         audit_trail = {
@@ -56,13 +61,13 @@ def calculate_spot_multileg(payload: dict) -> dict:
                 "values": f"({rc(fmt(dist))} * (1+{rc(fmt_dec(w_factor))})) / ({vc(fmt_dec(speed))} * 24) = {vc(fmt_dec(sea_days))}"
             },
             "port_days": {
-                "formula": "N/A (Ballast)",
-                "values": "0"
+                "formula": "(overhead + posic) / 24",
+                "values": f"{vc(fmt_dec(port_days))}"
             },
             "bunker_costs": {
-                "formula": "Tons IFO = sea_days * cons_sea<br/>Tons MDO = sea_days * cons_sea<br/>Cost = (Tons IFO * p_IFO) + (Tons MDO * p_MDO)",
-                "values": f"IFO: {vc(fmt_dec(sea_days))} * {c_sea_ifo} = {vc(fmt_dec(ifo_tons))} t<br/>"
-                          f"MDO: {vc(fmt_dec(sea_days))} * {c_sea_mdo} = {vc(fmt_dec(mdo_tons))} t<br/>"
+                "formula": "Tons IFO = (sea_days * cons_sea) + (port_days * cons_idle)<br/>Tons MDO = (sea_days * cons_sea) + (port_days * cons_idle)<br/>Cost = (Tons IFO * p_IFO) + (Tons MDO * p_MDO)",
+                "values": f"IFO: {vc(fmt_dec(ifo_tons))} t<br/>"
+                          f"MDO: {vc(fmt_dec(mdo_tons))} t<br/>"
                           f"Costo: ({vc(fmt_dec(ifo_tons))} * {fmt_dec(p_ifo)}) + ({vc(fmt_dec(mdo_tons))} * {fmt_dec(p_mdo)}) = {ec(fmt_dec(bunker_costs))}"
             },
             "port_costs": {
@@ -302,11 +307,16 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         dist = float(leg_inputs.get("route_distance", 0))
         w_factor = float(leg_inputs.get("weather_factor", 0))
         
-        sea_days = (dist * (1 + w_factor)) / (speed * 24) if speed > 0 else 0
-        port_days = 0
+        overhead_orig = float(leg_inputs.get("port_overhead_hours_origin") or 0)
+        overhead_dest = float(leg_inputs.get("port_overhead_hours_dest") or 0)
+        pos_carga = float(leg_inputs.get("positioning_carga_hrs") or 0)
+        pos_descarga = float(leg_inputs.get("positioning_descarga_hrs") or 0)
         
-        ifo_tons = sea_days * c_sea_ifo
-        mdo_tons = sea_days * c_sea_mdo
+        sea_days = (dist * (1 + w_factor)) / (speed * 24) if speed > 0 else 0
+        port_days = (overhead_orig + overhead_dest + pos_carga + pos_descarga) / 24
+        
+        ifo_tons = (sea_days * c_sea_ifo) + (port_days * c_idle_ifo)
+        mdo_tons = (sea_days * c_sea_mdo) + (port_days * c_idle_mdo)
         bunker_costs = (ifo_tons * p_ifo) + (mdo_tons * p_mdo)
         
         audit_trail = {
@@ -315,13 +325,13 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
                 "values": f"({rc(fmt(dist))} * (1+{rc(fmt_dec(w_factor))})) / ({vc(fmt_dec(speed))} * 24) = {vc(fmt_dec(sea_days))}"
             },
             "port_days": {
-                "formula": "N/A (Ballast)",
-                "values": "0"
+                "formula": "(overhead + posic) / 24",
+                "values": f"{vc(fmt_dec(port_days))}"
             },
             "bunker_costs": {
-                "formula": "Tons IFO = sea_days * cons_sea<br/>Tons MDO = sea_days * cons_sea<br/>Cost = (Tons IFO * p_IFO) + (Tons MDO * p_MDO)",
-                "values": f"IFO: {vc(fmt_dec(sea_days))} * {c_sea_ifo} = {vc(fmt_dec(ifo_tons))} t<br/>"
-                          f"MDO: {vc(fmt_dec(sea_days))} * {c_sea_mdo} = {vc(fmt_dec(mdo_tons))} t<br/>"
+                "formula": "Tons IFO = (sea_days * cons_sea) + (port_days * cons_idle)<br/>Tons MDO = (sea_days * cons_sea) + (port_days * cons_idle)<br/>Cost = (Tons IFO * p_IFO) + (Tons MDO * p_MDO)",
+                "values": f"IFO: {vc(fmt_dec(ifo_tons))} t<br/>"
+                          f"MDO: {vc(fmt_dec(mdo_tons))} t<br/>"
                           f"Costo: ({vc(fmt_dec(ifo_tons))} * {fmt_dec(p_ifo)}) + ({vc(fmt_dec(mdo_tons))} * {fmt_dec(p_mdo)}) = {ec(fmt_dec(bunker_costs))}"
             },
             "port_costs": {
@@ -397,10 +407,11 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         total_overhead_dest = overhead_dest + delay_discharging + pos_descarga
         
         idle_days_normal = (overhead_orig + overhead_dest + pos_carga + pos_descarga) / 24
+        idle_days_bunker = (overhead_orig + overhead_dest) / 24
         idle_days = idle_days_normal + (delay_loading / 24) + (delay_discharging / 24)
         
-        load_days = (Q / actual_load_rate) / 24 if actual_load_rate > 0 else 0
-        disch_days = (Q / actual_discharge_rate) / 24 if actual_discharge_rate > 0 else 0
+        load_days = (Q / actual_load_rate) / 24 if (custom_l_rate > 0 and actual_load_rate > 0) else 0
+        disch_days = (Q / actual_discharge_rate) / 24 if (custom_d_rate > 0 and actual_discharge_rate > 0) else 0
         port_days = load_days + disch_days + idle_days
         
         # Calcular consumos de bunker de demoras por separado
@@ -414,8 +425,8 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
 
         # Consumo de tránsito/operaciones normales (usando la navegación real de esta pierna)
         tot_sea_d = sea_days
-        ifo_tons_normal = (tot_sea_d * c_sea_ifo) + (idle_days_normal * c_idle_ifo) + (load_days * c_load_ifo) + (disch_days * c_disch_ifo)
-        mdo_tons_normal = (tot_sea_d * c_sea_mdo) + (idle_days_normal * c_idle_mdo) + (load_days * c_load_mdo) + (disch_days * c_disch_mdo)
+        ifo_tons_normal = (tot_sea_d * c_sea_ifo) + (idle_days_bunker * c_idle_ifo) + (load_days * c_load_ifo) + (disch_days * c_disch_ifo)
+        mdo_tons_normal = (tot_sea_d * c_sea_mdo) + (idle_days_bunker * c_idle_mdo) + (load_days * c_load_mdo) + (disch_days * c_disch_mdo)
         bunker_costs_normal = (ifo_tons_normal * p_ifo) + (mdo_tons_normal * p_mdo)
 
         # Consumo consolidado final para el PnL global
