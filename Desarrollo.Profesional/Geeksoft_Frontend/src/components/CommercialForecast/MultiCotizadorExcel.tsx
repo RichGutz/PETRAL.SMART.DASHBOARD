@@ -1759,9 +1759,14 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         lines.push(`AUDITANDO RUTA: ${loadedRouteName || selectedClient || 'COTIZACIÓN MULTICOTIZADOR'} (${tramosList.length} Piernas)`);
         lines.push("═".repeat(W));
         lines.push("📋 [INPUTS Y VARIABLES DE ORIGEN DE CÁLCULO - CARDS MAESTROS]:");
+        const bunkerSourceLabel = 
+            bunkerSource === 'MAESTRO_CONTRATOS' ? 'MAESTRO CONTRATOS' :
+            bunkerSource === 'MAESTRO_BUNKER' ? 'MAESTRO BÚNKER' :
+            bunkerSource === 'COTIZACION' ? 'COTIZACIÓN' : 'SOBREESCRITURA';
+
         lines.push(`  • CARD 1 (RUTAS):                 Itinerario: ${trayectoStr} | Dist. Total: ${fmtNum(tot_dist)} NM | Weather Factor: 3.0% (0.03)`);
         lines.push(`  • CARD 2 (BUQUES):                Vessel: ${vesselParams.vessel_name || selectedVessel} | Speed: ${vesselParams.vessel_speed || 11.0} kts | Cons. Sea IFO: ${vesselParams.consumption_sea_ifo || 14.0} t/d | Cons. Idle IFO: ${vesselParams.consumption_idle_ifo || 2.4} t/d | TCE Requerido: ${fmtCur(tce_req)}/d`);
-        lines.push(`  • CARD 3 (BÚNKER):                Precio IFO: ${fmtCur(p_ifo)}/t | Precio MDO: ${fmtCur(p_mdo)}/t | Consumo Est.: ${fmtDays(ifo_tonnage)} t IFO / ${fmtDays(mdo_tonnage)} t MDO | BAF Baseline: $430.00/t`);
+        lines.push(`  • CARD 3 (BÚNKER):                Precio IFO: ${fmtCur(p_ifo)}/t | Precio MDO: ${fmtCur(p_mdo)}/t | Consumo Est.: ${fmtDays(ifo_tonnage)} t IFO / ${fmtDays(mdo_tonnage)} t MDO | BAF Baseline: $430.00/t | Fuente: [${bunkerSourceLabel}]`);
         lines.push(`  • CARD 4 (CONTRATOS & COMERCIAL): Cliente: ${selectedClient || 'PROSPECTO'} | Q: ${fmtNum(Q)} MT | Freight Base: ${fmtCur(F)}/MT | Ritmo Carga: ${fmtNum(r_l)} T/h | Ritmo Desc: ${fmtNum(r_d)} T/h | Comisiones: Address ${addressCommPct}% / Broker ${brokerCommPct}%`);
         lines.push(`  • CARD 5 (PUERTOS & AGENCIA):     Agencia Carga (${orig_p}): ${fmtCur(c_orig)} USD | Agencia Descarga (${dest_p}): ${fmtCur(c_dest)} USD | Total Port Costs: ${fmtCur(port_costs)} USD`);
         lines.push("─".repeat(W));
@@ -1817,7 +1822,12 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         });
 
         lines.push("  └" + "─".repeat(W - 4));
-        const textBlock = lines.join("\n");
+        const textBlockHtml = lines.map(line => {
+            if (line.includes('CARD 3 (BÚNKER)')) {
+                return line.replace(/Fuente: \[(.*?)\]/, 'Fuente: <span style="color: #dc2626; font-weight: bold;">[$1]</span>');
+            }
+            return line;
+        }).join("\n");
 
         const handlePrintCalculosDetalladosHtml = () => {
             const printWindow = window.open('', '_blank');
@@ -1858,7 +1868,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         </tr>
     </table>
 
-    <div class="console-block">${textBlock}</div>
+    <div class="console-block">${textBlockHtml}</div>
 
     <div class="metrics-block">
         <div style="font-weight: bold; font-size: 7pt; margin-bottom: 2px;">
@@ -1949,8 +1959,18 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     </div>
 
                     {/* CONSOLA DE ARITMÉTICA ASCII (FONDO CLARO TEXTO NEGRO) */}
-                    <div className="bg-slate-50 text-slate-900 p-3 rounded border border-slate-300 whitespace-pre font-mono text-[9.5px] leading-tight overflow-x-auto mb-3">
-                        {textBlock}
+                    <div className="bg-slate-50 text-slate-900 p-3 rounded border border-slate-300 font-mono text-[9.5px] leading-tight overflow-x-auto mb-3">
+                        {lines.map((line, i) => {
+                            if (line.includes('CARD 3 (BÚNKER)')) {
+                                const [prefix, fuentePart] = line.split('Fuente: ');
+                                return (
+                                    <div key={i} className="whitespace-pre">
+                                        {prefix}Fuente: <span className="text-red-600 font-bold">{fuentePart}</span>
+                                    </div>
+                                );
+                            }
+                            return <div key={i} className="whitespace-pre">{line}</div>;
+                        })}
                     </div>
 
                     {/* TABLA OFICIAL DE 13 MÉTRICAS REPLICADAS DE LA UI */}
