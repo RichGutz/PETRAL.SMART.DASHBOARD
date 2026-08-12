@@ -451,7 +451,7 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
             else:
                 o_type = 'CARGA' if tr.origin_action == 'CARGAR' else 'DESCARGA'
                 orig_cost_res = calculate_detailed_port_costs(
-                    client_id, tr.origin_port_id, o_type, request.vessel_id, port_costs_data, agency_matrix_data, request.port_cost_mode
+                    client_id, tr.origin_port_id, o_type, request.vessel_id, port_costs_data, agency_matrix_data, request.port_cost_mode, vessel_params, tr.quantity, contract, ports_db
                 )
                 if tr.agency_costs_origin > 0.0:
                     db_total = orig_cost_res.get("total_cost", 0.0)
@@ -489,7 +489,7 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
             else:
                 d_type = 'CARGA' if tr.destination_action == 'CARGAR' else 'DESCARGA'
                 dest_cost_res = calculate_detailed_port_costs(
-                    client_id, tr.destination_port_id, d_type, request.vessel_id, port_costs_data, agency_matrix_data, request.port_cost_mode
+                    client_id, tr.destination_port_id, d_type, request.vessel_id, port_costs_data, agency_matrix_data, request.port_cost_mode, vessel_params, tr.quantity, contract, ports_db
                 )
                 if tr.agency_costs_destination > 0.0:
                     db_total = dest_cost_res.get("total_cost", 0.0)
@@ -528,6 +528,12 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
         }
         
         result = calculate_multicotizador_simulation(payload)
+        b_src = request.bunker_source or "MAESTRO_CONTRATOS"
+        if isinstance(result, dict):
+            if "consolidated" in result and isinstance(result["consolidated"], dict):
+                result["consolidated"]["bunker_source"] = b_src
+            if "raw_inputs" in result and isinstance(result["raw_inputs"], dict):
+                result["raw_inputs"]["bunker_source"] = b_src
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

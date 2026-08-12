@@ -101,6 +101,7 @@ class MultiCotizadorRequest(BaseModel):
     consumption_load_mdo: Optional[float] = None
     consumption_disch_mdo: Optional[float] = None
     port_cost_mode: Optional[str] = Field("static", description="Modo de costo puerto: 'static' o 'matrix'")
+    bunker_source: Optional[str] = Field("MAESTRO_CONTRATOS", description="Fuente de precios de bunker: 'MAESTRO_CONTRATOS', 'COTIZACION', 'MAESTRO_BUNKER' o 'SOBREESCRITURA'")
 
 
 class ClientMaster(BaseModel):

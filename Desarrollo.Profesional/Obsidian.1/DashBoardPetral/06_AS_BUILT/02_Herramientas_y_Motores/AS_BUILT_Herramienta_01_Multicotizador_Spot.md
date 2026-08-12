@@ -185,6 +185,67 @@ PUBLICADA EN: https://forecast.geeksoft.tech
 
 ---
 
+## 📌 4. Diagnóstico y Plan de Corrección: Integración Dinámica de Búnker Spot
+
+### 4.1 Lista de Hallazgos y Diagnóstico
+
+| # | Hallazgo | Diagnóstico Técnico | Impacto |
+|---|----------|---------------------|---------|
+| **1** | **Fallback incompleto en `MAESTRO_CONTRATOS`** | Cuando un cliente/contrato no define precio base (`bunker_baseline_price_ifo` / `mdo` = 0), el frontend mantiene congelados los precios default `$967.26 / $1,528.26` en lugar de hacer fallback automático al precio vigente de `bunker_prices`. | Muestra precios obsoletos de búnker cuando el contrato no estipula base. |
+| **2** | **Disparo Reactivo al Conmutar Selector `FUENTE`** | Al cambiar el selector de FUENTE (`MAESTRO_BUNKER`, `MAESTRO_CONTRATOS`, `SOBREESCRITURA`), los valores cambian en el estado local pero no disparan inmediatamente la recalculación del API (`POST /multicotizador/calculate`). | Grilla P&L desfasada hasta que el usuario fuerce otro evento. |
+| **3** | **Dependencia de Precios Iniciales Hardcodeados** | El estado de `bunkerPriceIfo` y `bunkerPriceMdo` inicia con defaults hardcodeados (`967.26`, `1528.26`) antes de que `ForecastService.getLatestBunker()` resuelva la promesa asíncrona. | Breve ventana donde la simulación usa precios desactualizados si se autoejecuta. |
+| **4** | **Trazabilidad en PDF de Cotización** | El reporte PDF exportado muestra `Bunker Total ($)` pero no indica la fuente del precio utilizada (`MAESTRO_BUNKER` vs `MAESTRO_CONTRATOS` vs `SOBREESCRITURA`) ni la fecha del precio. | Falta de auditoría comercial en cotizaciones enviadas a clientes. |
+| **5** | **Homologación MGO ➔ MDO en Labels PDF/UI** | Ocasionalmente se usa la etiqueta MGO sin la aclaración explícita del estándar PETRAL (MGO $\equiv$ MDO). | Incumplimiento de la regla de homologación unificada. |
+| **6** | **Formato Numérico sin Separador de Miles en Precios Búnker** | Los campos/celdas de `PRECIO ($/T)` (IFO/MDO) muestran los valores como texto sin formato (ej: `1100`, `1528.26`). | Dificultad de lectura en grilla comercial y reportes visuales. |
+| **7** | **Etiqueta de Columna `OVERHEAD (H)` Desactualizada** | El encabezado de columna en la grilla del Multicotizador figura como `OVERHEAD (H)`. | Inconsistencia terminológica con la nomenclatura contractual `Time to Count (H)`. |
+| **8** | **Mismatch en Días Puerto por Omisión de Posicionamiento (`posic`)** | El modelo Excel calcula `Total Hrs = (TM/Ritmo) + Time to Count + Posic` ($27 + 6 + 1 = 34\text{h} \rightarrow 1.42\text{d}$ en CALLAO, totalizando $3.07\text{d}$), mientras la UI omitía la $1\text{h}$ de `posic`, resultando desfasada en $3.03\text{d}$. | Desfase de $0.04\text{d}$ en días de puerto, búnker e impacto directo en TCE Real. |
+| **9** | **Incoherencia en la Fila 'TOTAL ESTIMADO' de Días Puerto (`3.03` vs `3.07`/`3.08`)** | La grilla individual de tramos muestra `1.42 d` (Callao) y `1.66 d` (Matarani), pero la fila de 'TOTAL ESTIMADO' al pie de la tabla muestra **`3.03 d`**, rompiendo la suma visible de las filas ($1.42 + 1.66 = 3.08\text{d}$). | Inconsistencia de auditoría interna visible en la grilla comercial del Multicotizador. |
+| **10** | **Presencia Fantasma de MDO (`1.3 t`) en Buques Mono-Fuel (`TABLONES`)** | El buque `TABLONES` tiene consumos de MDO en $0.0\text{ t/d}$ para todas las fases. Sin embargo, el motor inyectaba $1.3\text{ t}$ ($1.27\text{ t}$) de MDO por usar fallbacks arbitrarios durante overheads. | Imputación indebida de combustible en barcos mono-fuel que no consumen MDO. |
+| **11** | **Sensibilidad de Precisión Decimal en Tonelajes de Búnker** | Redondear prematuramente los tonelajes de búnker a 1 decimal (ej: `71.6 t` vs `71.554 t`) genera diferencias de hasta $\$110\text{ USD}$ en el costo total de combustible ($\$78,760\text{ USD}$ vs $\$78,709\text{ USD}$). | Mismatch en la convergencia exacta de búnker frente al Excel del usuario. |
+
+---
+
+### 4.2 Plan de Acción y Corrección
+
+#### Fase 1: Fix de Reactividad, Formato, Mismatch Math y Labels UI en Frontend (`MultiCotizadorExcel.tsx`)
+1. **Sincronización Total de Días Puerto (`1.42d + 1.66d = 3.07d/3.08d`):** Corregir la celda 'TOTAL ESTIMADO' de Días Puerto en el pie de la tabla para que lea la suma acumulada de los tramos individuales incluyendo las horas de `posic`.
+2. **Fórmula de Días de Puerto con Posicionamiento (`posic`):** Actualizar la fórmula de cálculo de días de puerto a:
+   $$\text{Días Puerto} = \frac{(\text{TM} / \text{Ritmo}) + \text{Time to Count (H)} + \text{Posic (H)}}{24}$$
+   *Para CALLAO ($13,500 / 500 + 6 + 1 = 34\text{h} \rightarrow 1.416667\text{d}$), logrando la suma exacta de $3.072917\text{ días}$.*
+3. **Renombrar Encabezado `OVERHEAD (H)` ➔ `Time to Count (H)`:** Cambiar el label visual del encabezado de columna en `MultiCotizadorExcel.tsx` a `Time to Count (H)`.
+4. **Separador de Miles en Precios `PRECIO ($/T)`:** Aplicar formateador `toLocaleString('en-US')` / `fmtThousandSep` a los campos de entrada e inputs de IFO y MDO (ej. `$1,100.00` y `$1,528.26`).
+5. **Fallback Automático a `latestBunkerPrices`:** En el `useEffect` de resolución de contratos, si `cIfo == 0` o `cMdo == 0`, forzar la asignación automática desde `latestBunkerPrices` (`bunker_prices`).
+6. **Disparo de Recálculo Inmediato:** Agregar `bunkerPriceIfo`, `bunkerPriceMdo` y `bunkerSource` al arreglo de dependencias del `useEffect` de simulación reactiva, garantizando que todo cambio de fuente o precio recalcule el P&L al instante.
+7. **Inicialización Asíncrona Limpia:** Esperar a la resolución de `getLatestBunker()` antes de habilitar el primer disparo automático del motor.
+
+#### Fase 2: Robustecimiento en Backend API (`forecast.py` / `spot_engine.py`)
+1. **Eliminación de MDO Fantasma en Buques Mono-Fuel:** En `spot_engine.py`, si todos los consumos MDO del buque son `0.0`, forzar de forma estricta `tot_mdo_tons = 0.000` y `mdo_cost = $0.00`, anulando cualquier fallback arbitrario.
+2. **Alta Precisión Decimal en Tonelaje y Costos de Búnker:** Mantener flotante de 64 bits sin redondeos prematuros en el motor Python, aplicando redondeo únicamente a 3 decimales en tonelaje (`71.554 MT`) y a 2 decimales en moneda (`$78,708.93 USD`).
+3. **Validación de Integridad:** Verificar que `POST /multicotizador/calculate` valide la coherencia de los precios recibidos con el maestro `bunker_prices` vigente si la fuente solicitada es `MAESTRO_BUNKER`.
+4. **Homologación Estándar MGO/MDO:** Confirmar que todos los nodos de respuesta etiqueten adecuadamente MDO (cubriendo MGO).
+
+#### Fase 3: Trazabilidad y Auditoría en Exportación PDF (`MultiCotizadorExcel.tsx`)
+1. **Header de Auditoría de Búnker en PDF:** Agregar en la sección de P&L del PDF exportado:
+   - Fuente utilizada: `[MAESTRO BÚNKER | MAESTRO CONTRATOS | SOBREESCRITURA]`
+   - Cotizaciones aplicadas: `IFO 180: $XXX.XX USD/MT | MDO: $YYY.YY USD/MT (Fecha: YYYY-MM-DD)`
+
+---
+
+### 4.3 Protocolo Metodológico de Ejecución Iterativa (Loop Atómico por Cambio)
+
+1. **Paso 0 — Commit de Seguridad Baseline:** Realizar un `git commit` / `git push` del estado actual para asegurar el punto de restauración seguro inicial.
+2. **Paso 1 — Ejecución del Cambio Individual:** Aplicar **un solo cambio a la vez** de la lista (comenzando por el Cambio #1).
+3. **Paso 2 — Verificación Local en Terminal:** Probar el cambio localmente en la consola (build/scripts) y mostrar el resultado (éxito/error) en pantalla.
+4. **Paso 3 — Despliegue al VPS:** Desplegar a Producción (VPS Hostinger) ejecutando:
+   - `npm run build` en `Geeksoft_Frontend`
+   - `python deploy_forecast_kickoff.py` en `Push.VPS`
+5. **Paso 4 — Validación del Usuario & Control de Versiones:**
+   - **Si el usuario confirma "TODO OK":** Realizar nuevo `git commit` / `git push` y avanzar al siguiente cambio.
+   - **Si el usuario indica "SALIÓ MAL":** Rollback inmediato al último commit seguro (`git reset --hard`).
+6. **Loop Iterativo:** Repetir este proceso estrictamente hasta procesar todos los hallazgos.
+
+---
+
 ## 📤 Consumidores en el Sistema
 - [[AS_BUILT_Herramienta_02_Matriz_Financiera_Dashboard]] — Envío de simulaciones a la grilla comercial.
 
@@ -197,3 +258,4 @@ PUBLICADA EN: https://forecast.geeksoft.tech
 - **Modelo Pydantic:** `Geeksoft_Engine/backend/models/forecast_models.py` → `MultiCotizadorRequest`
 - **Componente React:** `Geeksoft_Frontend/src/components/CommercialForecast/MultiCotizadorExcel.tsx`
 - **Documentación histórica:** [[multicotizador]] (Maestros y Módulos)
+

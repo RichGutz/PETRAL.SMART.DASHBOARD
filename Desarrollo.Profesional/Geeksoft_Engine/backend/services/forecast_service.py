@@ -51,20 +51,24 @@ def safe_fetch(supabase, table_name):
 def get_latest_bunker_prices() -> Dict[str, Any]:
     try:
         supabase = get_supabase()
-        res = supabase.table("bunker_prices").select("*").order("quote_date", desc=True).limit(1).execute()
+        res = supabase.table("bunker_prices").select("*").execute()
         if res.data and len(res.data) > 0:
-            row = res.data[0]
+            ifo_row = next((r for r in res.data if r.get("fuel_type") == "IFO"), None)
+            mdo_row = next((r for r in res.data if r.get("fuel_type") == "MDO"), None)
+            ifo_p = float(ifo_row.get("market_price_usd") or ifo_row.get("ifo_price") or 967.26) if ifo_row else 967.26
+            mdo_p = float(mdo_row.get("market_price_usd") or mdo_row.get("mdo_price") or 1528.26) if mdo_row else 1528.26
+            dt = ifo_row.get("date") if ifo_row else "2026-07-02"
             return {
-                "bunker_price_ifo": float(row.get("ifo_price") or row.get("price_ifo") or row.get("bunker_price_ifo") or 895.14),
-                "bunker_price_mdo": float(row.get("mdo_price") or row.get("price_mdo") or row.get("bunker_price_mdo") or 1460.30),
-                "quote_date": row.get("quote_date", "2026-06-26")
+                "bunker_price_ifo": ifo_p,
+                "bunker_price_mdo": mdo_p,
+                "quote_date": dt
             }
     except Exception as e:
         print(f"Warning: Error fetching latest bunker prices: {e}")
     return {
-        "bunker_price_ifo": 895.14,
-        "bunker_price_mdo": 1460.30,
-        "quote_date": "2026-06-26"
+        "bunker_price_ifo": 967.26,
+        "bunker_price_mdo": 1528.26,
+        "quote_date": "2026-07-02"
     }
 
 def calculate_detailed_port_costs(client_id: str, port_id: str, operation_type: str, vessel_id: str, port_costs_data: list, agency_matrix_data: list, port_cost_mode: str = "static", v_data: dict = None, quantity: float = 0.0, contract: dict = None, ports_db: dict = None) -> dict:

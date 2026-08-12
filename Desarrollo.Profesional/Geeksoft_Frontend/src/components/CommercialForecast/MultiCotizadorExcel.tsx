@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ForecastService } from '../../services/api';
-import { Save, FolderOpen, X } from 'lucide-react';
+import { Save, FolderOpen, X, ChevronDown } from 'lucide-react';
 import logoPetral from '../../assets/Logo.Petral.png';
 import logoGeeksoft from '../../assets/Logo.Geeksoft.png';
 
@@ -66,7 +66,45 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     const [bunkerPriceIfo, setBunkerPriceIfo] = useState<number>(967.26);
     const [bunkerPriceMdo, setBunkerPriceMdo] = useState<number>(1528.26);
     const [, setBunkerDate] = useState<string>('2026-07-02');
+    const [bunkerSource, setBunkerSource] = useState<'MAESTRO_CONTRATOS' | 'COTIZACION' | 'MAESTRO_BUNKER' | 'SOBREESCRITURA'>('MAESTRO_CONTRATOS');
+    const [latestBunkerPrices, setLatestBunkerPrices] = useState<{ ifo: number; mdo: number }>({ ifo: 967.26, mdo: 1528.26 });
+    const [snapshotBunkerPrices, setSnapshotBunkerPrices] = useState<{ ifo: number; mdo: number } | null>(null);
+    const [contractBunkerPrices, setContractBunkerPrices] = useState<{ ifo: number; mdo: number } | null>(null);
     const [contractsMaster, setContractsMaster] = useState<any[]>([]);
+
+    // Manejador de cambio manual en la lista de validación FUENTE
+    const handleBunkerSourceChange = (newSource: string) => {
+        const src = newSource as 'MAESTRO_CONTRATOS' | 'COTIZACION' | 'MAESTRO_BUNKER' | 'SOBREESCRITURA';
+        setBunkerSource(src);
+        if (src === 'MAESTRO_CONTRATOS') {
+            if (contractBunkerPrices && contractBunkerPrices.ifo > 0) {
+                setBunkerPriceIfo(contractBunkerPrices.ifo);
+                setBunkerPriceMdo(contractBunkerPrices.mdo);
+            } else {
+                setBunkerPriceIfo(latestBunkerPrices.ifo);
+                setBunkerPriceMdo(latestBunkerPrices.mdo);
+            }
+        } else if (src === 'COTIZACION') {
+            if (snapshotBunkerPrices && snapshotBunkerPrices.ifo > 0) {
+                setBunkerPriceIfo(snapshotBunkerPrices.ifo);
+                setBunkerPriceMdo(snapshotBunkerPrices.mdo);
+            }
+        } else if (src === 'MAESTRO_BUNKER') {
+            setBunkerPriceIfo(latestBunkerPrices.ifo);
+            setBunkerPriceMdo(latestBunkerPrices.mdo);
+        }
+    };
+
+    // Manejadores de tipeo manual que conmutan automáticamente a SOBREESCRITURA
+    const handleIfoInputChange = (val: number) => {
+        setBunkerPriceIfo(val);
+        setBunkerSource('SOBREESCRITURA');
+    };
+
+    const handleMdoInputChange = (val: number) => {
+        setBunkerPriceMdo(val);
+        setBunkerSource('SOBREESCRITURA');
+    };
 
     // Particularidades y consumos del buque editable
     const [vesselParams, setVesselParams] = useState<any>({
@@ -249,8 +287,13 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
         ForecastService.getLatestBunker().then(prices => {
             if (prices) {
-                setBunkerPriceIfo(prices.ifo || 967.26);
-                setBunkerPriceMdo(prices.mdo || 1528.26);
+                const ifoVal = prices.ifo || 967.26;
+                const mdoVal = prices.mdo || 1528.26;
+                setLatestBunkerPrices({ ifo: ifoVal, mdo: mdoVal });
+                if (bunkerSource === 'MAESTRO_BUNKER') {
+                    setBunkerPriceIfo(ifoVal);
+                    setBunkerPriceMdo(mdoVal);
+                }
                 setBunkerDate(prices.date || '2026-07-02');
             }
         }).catch(err => {
@@ -293,11 +336,13 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
             );
 
             if (matched) {
-                if (matched.bunker_baseline_price_ifo > 0) {
-                    setBunkerPriceIfo(Number(matched.bunker_baseline_price_ifo));
-                }
-                if (matched.bunker_baseline_price_mdo > 0) {
-                    setBunkerPriceMdo(Number(matched.bunker_baseline_price_mdo));
+                const cIfo = Number(matched.bunker_baseline_price_ifo || 0);
+                const cMdo = Number(matched.bunker_baseline_price_mdo || 0);
+                setContractBunkerPrices({ ifo: cIfo, mdo: cMdo });
+
+                if (bunkerSource === 'MAESTRO_CONTRATOS') {
+                    if (cIfo > 0) setBunkerPriceIfo(cIfo);
+                    if (cMdo > 0) setBunkerPriceMdo(cMdo);
                 }
                 if (matched.address_commission !== undefined) {
                     setAddressCommPct(Number(matched.address_commission || 0));
@@ -2340,18 +2385,36 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     />
                                 </td>
 
-                                 {/* Precio IFO & Fuente */}
+                                {/* Precio IFO & Conmutador Lista de Validación FUENTE */}
                                 <td className="border-r border-slate-200 p-0 text-center align-middle bg-red-600 h-8">
                                     <input
                                         type="number"
                                         step="0.01"
                                         value={bunkerPriceIfo}
-                                        onChange={(e) => setBunkerPriceIfo(Number(e.target.value))}
+                                        onChange={(e) => handleIfoInputChange(Number(e.target.value))}
                                         className="w-full h-8 bg-red-600 border-0 p-0 text-center text-xs font-mono font-black text-white focus:outline-none focus:ring-1 focus:ring-red-400 align-middle [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     />
                                 </td>
-                                <td className="text-center bg-slate-50 font-sans font-bold text-[10px] text-slate-700 select-none align-middle font-mono h-8">
-                                    Maestro de Contratos
+                                <td className="p-1 text-center align-middle bg-slate-50 font-mono h-16" rowSpan={2}>
+                                    <div className="relative w-full h-full flex flex-col justify-center items-center px-1">
+                                        <select
+                                            value={bunkerSource}
+                                            onChange={(e) => handleBunkerSourceChange(e.target.value)}
+                                            className={`w-full h-8 px-1.5 pr-6 border rounded text-[9.5px] font-extrabold cursor-pointer appearance-none text-center transition-all shadow-sm focus:outline-none focus:ring-1 ${
+                                                bunkerSource === 'MAESTRO_CONTRATOS' ? 'bg-blue-50 text-blue-900 border-blue-300 focus:ring-blue-500' :
+                                                bunkerSource === 'COTIZACION' ? 'bg-purple-50 text-purple-900 border-purple-300 focus:ring-purple-500' :
+                                                bunkerSource === 'MAESTRO_BUNKER' ? 'bg-emerald-50 text-emerald-900 border-emerald-300 focus:ring-emerald-500' :
+                                                'bg-amber-100 text-amber-950 border-amber-400 font-black focus:ring-amber-500'
+                                            }`}
+                                            title="Lista de Validación Excel: Seleccionar Fuente de Precios de Búnker"
+                                        >
+                                            <option value="MAESTRO_CONTRATOS">📜 Maestro de Contratos</option>
+                                            <option value="COTIZACION">📸 Cotización Guardada</option>
+                                            <option value="MAESTRO_BUNKER">⚓ Maestro Búnker (Última Factura)</option>
+                                            <option value="SOBREESCRITURA">✏️ Sobreescritura</option>
+                                        </select>
+                                        <ChevronDown size={13} className="absolute right-2 pointer-events-none text-slate-600 font-bold" />
+                                    </div>
                                 </td>
                             </tr>
                             
@@ -2394,18 +2457,15 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         className="w-full h-full min-h-[26px] bg-white border-0 p-0 text-center text-[11px] font-mono text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 align-middle"
                                     />
                                 </td>
-                                {/* Precio MDO & Fuente */}
+                                {/* Precio MDO */}
                                 <td className="border-r border-slate-200 p-0 text-center align-middle bg-red-600 h-8">
                                     <input
                                         type="number"
                                         step="0.01"
                                         value={bunkerPriceMdo}
-                                        onChange={(e) => setBunkerPriceMdo(Number(e.target.value))}
+                                        onChange={(e) => handleMdoInputChange(Number(e.target.value))}
                                         className="w-full h-8 bg-red-600 border-0 p-0 text-center text-xs font-mono font-black text-white focus:outline-none focus:ring-1 focus:ring-red-400 align-middle [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     />
-                                </td>
-                                <td className="text-center bg-slate-50 font-sans font-bold text-[10px] text-slate-700 select-none align-middle font-mono h-8">
-                                    Maestro de Contratos
                                 </td>
                             </tr>
                         </tbody>
