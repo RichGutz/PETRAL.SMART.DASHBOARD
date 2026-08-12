@@ -212,3 +212,20 @@ A continuación se define la formulación oficial estricta para las 13 filas del
 
 1. **Investigacion Previa Obligatoria:** Antes de escribir una sola linea de codigo en cada punto, investigar y documentar la causa raiz exacta (origen en Supabase backend/frontend).
 2. **Modularizacion Frontend:** Crear src/services/multicotizadorService.ts para desacoplar todas las consultas Supabase (vessels, contracts, distances, ports, port_costs_matrix, bunker_prices) del componente React MultiCotizadorExcel.tsx.
+
+
+## 🔒 COMMIT DE SEGURIDAD BASELINE ESTABLECIDO
+- Commit oficial: PRE.MODULARIZACION.MULTICOTIZADOR (Hash: b90e5c8)
+
+## 🌳 ARQUITECTURA WORK TREE MODULARIZADO
+Geeksoft_Frontend/src/
+├── services/
+│   └── multicotizadorService.ts        <-- Capa de Servicios: Consultas Supabase (vessels, contracts, distances, ports, port_costs_matrix, bunker_prices)
+├── components/CommercialForecast/
+│   ├── MultiCotizadorExcel.tsx         <-- Componente Principal Layout (Tab Switcher + Grid Excel)
+│   ├── MultiCotizadorTabs/
+│   │   ├── EstimadorSpotTab.tsx        <-- Tab 1: Vista Tabla Excel Estandar
+│   │   ├── CalculosDetalladosTab.tsx   <-- Tab 2: Vista Formateada PDF / Audit Trail 13 Filas
+│   │   └── AuditoriaRawJsonTab.tsx     <-- Tab 3: Vista Inspector JSON Raw (Pretty-print + Copiar JSON)
+│   └── types/
+│       └── multicotizadorTypes.ts      <-- Types TypeScript

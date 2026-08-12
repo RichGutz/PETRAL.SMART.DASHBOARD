@@ -30,7 +30,8 @@ interface PuertoConfig {
 
 export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' }> = ({ portCostMode = 'static' }) => {
     const [localPortCostMode, setLocalPortCostMode] = useState<'static' | 'matrix'>(portCostMode || 'static');
-    const [activeMainTab, setActiveMainTab] = useState<'estimator' | 'audit'>('estimator');
+    const [activeMainTab, setActiveMainTab] = useState<'estimator' | 'audit' | 'raw_json'>('estimator');
+    const [jsonCopied, setJsonCopied] = useState(false);
     const [vessels, setVessels] = useState<any[]>([]);
     const [selectedVessel, setSelectedVessel] = useState('');
     const [ports, setPorts] = useState<any[]>([]);
@@ -2089,6 +2090,81 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         return qty >= 0 ? qty : 0;
     };
 
+    const buildRawJsonPayload = () => {
+        const portCostItems = getDynamicPortCostItems();
+        return {
+            timestamp: new Date().toISOString(),
+            vessel_selected: selectedVessel,
+            vessel_params: vesselParams,
+            bunker_prices: {
+                ifo: bunkerPriceIfo,
+                mdo: bunkerPriceMdo,
+                source: bunkerSource,
+                contracts_master_prices: contractBunkerPrices
+            },
+            commissions: {
+                address_pct: addressCommPct,
+                broker_pct: brokerCommPct
+            },
+            puertos_config: puertosConfig,
+            tramos_inputs: tramos,
+            dynamic_port_cost_items: portCostItems,
+            engine_result: result,
+            calculator_trace_13_metrics: result ? {
+                "1_act_load": `${vesselParams.act_load || '500'} T/h`,
+                "2_act_disch": `${vesselParams.act_disch || '300'} T/h`,
+                "3_port_days": result.consolidated?.total_port_days,
+                "4_sea_days": result.consolidated?.total_sea_days,
+                "5_tot_dur": (result.consolidated?.total_sea_days || 0) + (result.consolidated?.total_port_days || 0),
+                "6_income": result.consolidated?.total_freight_revenue,
+                "7_hire_req": (vesselParams.tce_required || 15000) * ((result.consolidated?.total_sea_days || 0) + (result.consolidated?.total_port_days || 0)),
+                "8_bunker": result.consolidated?.total_bunker_costs,
+                "9_port_costs": result.consolidated?.total_port_costs,
+                "10_commissions": result.consolidated?.total_commissions || 0,
+                "11_pnl_net_utility": result.consolidated?.pnl_net_utility,
+                "12_tce_real": result.consolidated?.tce_real,
+                "13_tce_diff": (result.consolidated?.tce_real || 0) - (vesselParams.tce_required || 15000)
+            } : null
+        };
+    };
+
+    const renderRawJsonTab = () => {
+        const rawPayload = buildRawJsonPayload();
+        const jsonString = JSON.stringify(rawPayload, null, 2);
+
+        const handleCopyJson = () => {
+            navigator.clipboard.writeText(jsonString);
+            setJsonCopied(true);
+            setTimeout(() => setJsonCopied(false), 3000);
+        };
+
+        return (
+            <div className="flex-1 flex flex-col min-h-0 w-full bg-slate-900 text-slate-100 p-3 rounded shadow font-mono text-xs overflow-hidden">
+                <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-700 no-print shrink-0">
+                    <div className="flex items-center gap-2">
+                        <span className="text-emerald-400 font-bold text-sm">🧩 INSPECTOR RAW (JSON) — SPOT ENGINE AUDIT TRAIL</span>
+                        <span className="text-[11px] text-slate-400 font-medium">
+                            (Réplica textual en caracteres ASCII para inspección, copia y diagnóstico sin depender de PDF/Imágenes)
+                        </span>
+                    </div>
+                    <button
+                        onClick={handleCopyJson}
+                        className={`font-bold text-xs px-4 py-1.5 rounded shadow transition-all flex items-center gap-1.5 cursor-pointer ${
+                            jsonCopied
+                                ? 'bg-emerald-500 text-white'
+                                : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                        }`}
+                    >
+                        {jsonCopied ? '✅ ¡JSON Copiado al Portapapeles!' : '📋 Copiar JSON al Portapapeles'}
+                    </button>
+                </div>
+                <pre className="flex-1 overflow-auto bg-slate-950 p-4 rounded border border-slate-800 text-emerald-400 text-[11px] leading-relaxed select-all font-mono">
+                    {jsonString}
+                </pre>
+            </div>
+        );
+    };
+
     return (
         <div className="bg-[#f3f4f6] text-[13px] text-slate-800 flex-1 flex flex-col min-h-0 w-full p-2 font-sans overflow-y-auto">
             {/* TABS PRINCIPALES (no-print) */}
@@ -2112,6 +2188,16 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     }`}
                 >
                     📐 Cálculos Detallados
+                </button>
+                <button
+                    onClick={() => setActiveMainTab('raw_json')}
+                    className={`px-4 py-1.5 rounded-t-lg font-bold text-xs transition-colors flex items-center gap-1.5 border border-b-0 ${
+                        activeMainTab === 'raw_json'
+                            ? 'bg-white border-slate-300 text-emerald-600 shadow-sm font-black'
+                            : 'bg-slate-200/60 border-transparent text-slate-500 hover:bg-slate-250 hover:text-slate-700'
+                    }`}
+                >
+                    🧩 Auditoría Raw (JSON)
                 </button>
             </div>
 
@@ -3436,8 +3522,10 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     </div>
                 </div>
                 </div>
-            ) : (
+            ) : activeMainTab === 'audit' ? (
                 renderAuditTab()
+            ) : (
+                renderRawJsonTab()
             )}
 
             {/* MODALES DE PERSISTENCIA */}
