@@ -2167,6 +2167,16 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
     return (
         <div className="bg-[#f3f4f6] text-[13px] text-slate-800 flex-1 flex flex-col min-h-0 w-full p-2 font-sans overflow-y-auto">
+            <style>{`
+                input[type=number]::-webkit-inner-spin-button,
+                input[type=number]::-webkit-outer-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                }
+                input[type=number] {
+                    -moz-appearance: textfield;
+                }
+            `}</style>
             {/* TABS PRINCIPALES (no-print) */}
             <div className="flex gap-1 mb-2 no-print shrink-0">
                 <button
