@@ -2477,7 +2477,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     
                     {/* Ancho de columnas - Suma 100% de forma perfecta y balanceada */}
                     <colgroup>
-                        <col style={{ width: '2.5%' }} /> {/* Leg */}
+                        <col style={{ width: '4.1%' }} /> {/* Leg  (+1.6% de Ritmo) */}
                         <col style={{ width: '4%' }} />   {/* Tipo */}
                         <col style={{ width: '11%' }} />  {/* Puerto */}
                         <col style={{ width: '4.5%' }} /> {/* Distancia (NM) */}
@@ -2485,11 +2485,11 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                         <col style={{ width: '4%' }} />   {/* Vel (kn) */}
                         <col style={{ width: '4.5%' }} /> {/* Días Mar */}
                         <col style={{ width: '4.5%' }} /> {/* Días Puerto */}
-                        <col style={{ width: '5.5%' }} /> {/* Overhead (h) */}
+                        <col style={{ width: '6.9%' }} /> {/* Time to Count (+1.4% de Q) */}
                         <col style={{ width: '5%' }} />   {/* Posic (h) */}
                         <col style={{ width: '6.5%' }} /> {/* Op. Dest */}
-                        <col style={{ width: '8%' }} />   {/* Ritmo Op (C/D) */}
-                        <col style={{ width: '7%' }} />   {/* Q (MT) */}
+                        <col style={{ width: '6.4%' }} /> {/* Ritmo Op (C/D) -20% */}
+                        <col style={{ width: '5.6%' }} /> {/* Q (MT) -20% */}
                         <col style={{ width: '7%' }} />   {/* F ($/t) */}
                         <col style={{ width: '7%' }} />   {/* Costo Puerto */}
                         <col style={{ width: '6.5%' }} /> {/* Flete Calculado */}
