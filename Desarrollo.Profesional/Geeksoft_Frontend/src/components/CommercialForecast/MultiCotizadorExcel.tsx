@@ -68,7 +68,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     const [, setBunkerDate] = useState<string>('2026-07-02');
     const [bunkerSource, setBunkerSource] = useState<'MAESTRO_CONTRATOS' | 'COTIZACION' | 'MAESTRO_BUNKER' | 'SOBREESCRITURA'>('MAESTRO_CONTRATOS');
     const [latestBunkerPrices, setLatestBunkerPrices] = useState<{ ifo: number; mdo: number }>({ ifo: 967.26, mdo: 1528.26 });
-    const [snapshotBunkerPrices, setSnapshotBunkerPrices] = useState<{ ifo: number; mdo: number } | null>(null);
+    const [snapshotBunkerPrices, _setSnapshotBunkerPrices] = useState<{ ifo: number; mdo: number } | null>(null);
     const [contractBunkerPrices, setContractBunkerPrices] = useState<{ ifo: number; mdo: number } | null>(null);
     const [contractsMaster, setContractsMaster] = useState<any[]>([]);
 
@@ -2528,7 +2528,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             <th className="border-r border-slate-300 text-right pr-2">Vel (kn)</th>
                             <th className="border-r border-slate-300 text-right pr-2">Días Mar</th>
                             <th className="border-r border-slate-300 text-right pr-2">Días Pto</th>
-                            <th className="border-r border-slate-300 text-right pr-2">Overhead (h)</th>
+                            <th className="border-r border-slate-300 text-right pr-2">Time to Count (H)</th>
                             <th className="border-r border-slate-300 text-right pr-2">Posic (h)</th>
                             <th className="border-r border-slate-300 text-center">Op. Dest</th>
                             <th className="border-r border-slate-300 text-right pr-2">Ritmo (C/D)</th>
