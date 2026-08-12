@@ -63,12 +63,12 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     const [addressCommPct, setAddressCommPct] = useState<number>(0);
     const [brokerCommPct, setBrokerCommPct] = useState<number>(0);
     
-    // Precios de bunker configurables (Séptimo Ajuste: IFO $967.26 / MDO $1,528.26)
-    const [bunkerPriceIfo, setBunkerPriceIfo] = useState<number>(967.26);
-    const [bunkerPriceMdo, setBunkerPriceMdo] = useState<number>(1528.26);
-    const [, setBunkerDate] = useState<string>('2026-07-02');
+    // Precios de bunker configurables (Cero fallbacks por defecto: 0.0)
+    const [bunkerPriceIfo, setBunkerPriceIfo] = useState<number>(0.0);
+    const [bunkerPriceMdo, setBunkerPriceMdo] = useState<number>(0.0);
+    const [, setBunkerDate] = useState<string>('');
     const [bunkerSource, setBunkerSource] = useState<'MAESTRO_CONTRATOS' | 'COTIZACION' | 'MAESTRO_BUNKER' | 'SOBREESCRITURA'>('MAESTRO_CONTRATOS');
-    const [latestBunkerPrices, setLatestBunkerPrices] = useState<{ ifo: number; mdo: number }>({ ifo: 967.26, mdo: 1528.26 });
+    const [latestBunkerPrices, setLatestBunkerPrices] = useState<{ ifo: number; mdo: number }>({ ifo: 0.0, mdo: 0.0 });
     const [snapshotBunkerPrices, _setSnapshotBunkerPrices] = useState<{ ifo: number; mdo: number } | null>(null);
     const [contractBunkerPrices, setContractBunkerPrices] = useState<{ ifo: number; mdo: number } | null>(null);
     const [contractsMaster, setContractsMaster] = useState<any[]>([]);
@@ -82,8 +82,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 setBunkerPriceIfo(contractBunkerPrices.ifo);
                 setBunkerPriceMdo(contractBunkerPrices.mdo);
             } else {
-                setBunkerPriceIfo(latestBunkerPrices.ifo);
-                setBunkerPriceMdo(latestBunkerPrices.mdo);
+                setBunkerPriceIfo(0.0);
+                setBunkerPriceMdo(0.0);
             }
         } else if (src === 'COTIZACION') {
             if (snapshotBunkerPrices && snapshotBunkerPrices.ifo > 0) {
@@ -254,8 +254,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 consumption_idle_mdo: 0,
                 consumption_load_mdo: 0,
                 consumption_disch_mdo: 0,
-                act_load: 500,
-                act_disch: 300
+                act_load: 0,
+                act_disch: 0
             };
             const extended = [...data, customVessel];
             setVessels(extended);
@@ -288,8 +288,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
         ForecastService.getLatestBunker().then(prices => {
             if (prices) {
-                const ifoVal = prices.ifo || 967.26;
-                const mdoVal = prices.mdo || 1528.26;
+                const ifoVal = prices.ifo || 0.0;
+                const mdoVal = prices.mdo || 0.0;
                 setLatestBunkerPrices({ ifo: ifoVal, mdo: mdoVal });
                 if (bunkerSource === 'MAESTRO_BUNKER') {
                     setBunkerPriceIfo(ifoVal);
