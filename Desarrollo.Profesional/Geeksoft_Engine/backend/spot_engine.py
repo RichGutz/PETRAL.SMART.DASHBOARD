@@ -95,8 +95,8 @@ def calculate_spot_multileg(payload: dict) -> dict:
         Q = float(leg_inputs.get("quantity", 0))
         F = float(leg_inputs.get("freight_rate", 0))
         
-        overhead_orig = float(leg_inputs.get("port_overhead_hours_origin", 6))
-        overhead_dest = float(leg_inputs.get("port_overhead_hours_dest", 6))
+        overhead_orig = float(leg_inputs.get("port_overhead_hours_origin") or 0)
+        overhead_dest = float(leg_inputs.get("port_overhead_hours_dest") or 0)
         
         delay_loading = float(leg_inputs.get("port_delay_hours_loading") or 0)
         delay_discharging = float(leg_inputs.get("port_delay_hours_discharging") or 0)
@@ -360,10 +360,10 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         F = float(leg_inputs.get("freight_rate", 0))
         
         overhead_orig = leg_inputs.get("port_overhead_hours_origin")
-        overhead_orig = float(overhead_orig) if overhead_orig is not None else 6.0
+        overhead_orig = float(overhead_orig) if overhead_orig is not None else 0.0
         
         overhead_dest = leg_inputs.get("port_overhead_hours_dest")
-        overhead_dest = float(overhead_dest) if overhead_dest is not None else 6.0
+        overhead_dest = float(overhead_dest) if overhead_dest is not None else 0.0
         
         pos_carga = leg_inputs.get("positioning_carga_hrs")
         pos_carga = float(pos_carga) if pos_carga is not None else 0.0
@@ -381,14 +381,14 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         v_intake = float(vessel.get("vessel_max_load_intake_limit", 0))
         t_load_rate = float(leg_inputs.get("max_terminal_load_rate", 0))
         
-        v_act_load = float(vessel.get("act_load") or vessel.get("vessel_max_load_intake_limit") or 500)
-        v_act_disch = float(vessel.get("act_disch") or vessel.get("vessel_pump_discharge_rate") or 300)
+        v_act_load = float(vessel.get("act_load") or vessel.get("vessel_max_load_intake_limit") or 0)
+        v_act_disch = float(vessel.get("act_disch") or vessel.get("vessel_pump_discharge_rate") or 0)
         
         if custom_l_rate > 0:
             actual_load_rate = custom_l_rate
         else:
             valid_load_rates = [x for x in (c_load, v_intake, t_load_rate, v_act_load) if x > 0]
-            actual_load_rate = min(valid_load_rates) if valid_load_rates else 500.0
+            actual_load_rate = min(valid_load_rates) if valid_load_rates else 0.0
         
         c_disch = float(leg_inputs.get("contract_agreed_discharge_rate") or 0)
         v_pump = float(vessel.get("vessel_pump_discharge_rate", 0))
@@ -398,7 +398,7 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
             actual_discharge_rate = custom_d_rate
         else:
             valid_disch_rates = [x for x in (c_disch, v_pump, t_disch_limit, v_act_disch) if x > 0]
-            actual_discharge_rate = min(valid_disch_rates) if valid_disch_rates else 300.0
+            actual_discharge_rate = min(valid_disch_rates) if valid_disch_rates else 0.0
         
         sea_days = (dist * (1 + w_factor)) / (speed * 24) if speed > 0 else 0
         
@@ -410,8 +410,8 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         idle_days_bunker = (overhead_orig + overhead_dest) / 24
         idle_days = idle_days_normal + (delay_loading / 24) + (delay_discharging / 24)
         
-        load_days = (Q / actual_load_rate) / 24 if (custom_l_rate > 0 and actual_load_rate > 0) else 0
-        disch_days = (Q / actual_discharge_rate) / 24 if (custom_d_rate > 0 and actual_discharge_rate > 0) else 0
+        load_days = (Q / actual_load_rate) / 24 if actual_load_rate > 0 else 0.0
+        disch_days = (Q / actual_discharge_rate) / 24 if actual_discharge_rate > 0 else 0.0
         port_days = load_days + disch_days + idle_days
         
         # Calcular consumos de bunker de demoras por separado
