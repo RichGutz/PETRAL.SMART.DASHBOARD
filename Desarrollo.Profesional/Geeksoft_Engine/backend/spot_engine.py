@@ -535,7 +535,7 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
                           f"Costo: ({vc(fmt_dec(ifo_tons_total))} * {fmt_dec(p_ifo)}) + ({vc(fmt_dec(mdo_tons_total))} * {fmt_dec(p_mdo)}) = {ec(fmt_dec(bunker_costs_total))}"
             },
             "port_costs": {
-                "formula": "agency_origin + agency_dest",
+                "formula": "Sum(port_cost_i) = agency_origin + agency_dest",
                 "values": f"{oc(fmt_dec(leg_inputs.get('agency_costs_origin', 0)))} + {oc(fmt_dec(leg_inputs.get('agency_costs_destination', 0)))} = {ec(fmt_dec(port_costs))}"
             }
         }
