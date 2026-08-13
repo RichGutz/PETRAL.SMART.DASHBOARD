@@ -3039,9 +3039,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             );
                         })}
 
-                        {/* Fila de Totales Generales (Estilo Excel) */}
-                        <tr className="bg-slate-100 border-t-2 border-double border-slate-400 h-8 select-none font-bold text-slate-700 text-xs">
-                            <td colSpan={3} className="border-r border-slate-200 text-left pl-3 font-sans text-[10.5px] uppercase tracking-wide">Total Estimado</td>
+                        {/* Fila 1 de Totales: Total Estimado (Motor Python) */}
+                        <tr className="bg-slate-100 border-t-2 border-slate-300 h-8 select-none font-bold text-slate-700 text-xs">
+                            <td colSpan={3} className="border-r border-slate-200 text-left pl-3 font-sans text-[10.5px] uppercase tracking-wide text-blue-900 bg-blue-50/40">Total Estimado (Motor)</td>
                             <td className="border-r border-slate-200 text-right pr-2">
                                 {result ? fmtNum(result.tramos.reduce((s: any, t: any) => s + (t.distance || 0), 0)) : '0'}
                             </td>
@@ -3076,6 +3076,46 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             </td>
                             <td className="text-right pr-2 text-slate-400">—</td>
                         </tr>
+
+                        {/* Fila 2 de Totales: Total Aritmético (Suma Σ Visibles) */}
+                        {(() => {
+                            const sumDistance = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.distance || 0), 0) : 0;
+                            const sumSeaDays = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.sea_days || 0), 0) : 0;
+                            const sumPortDays = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.port_days || 0), 0) : 0;
+                            const sumPortCosts = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.port_costs || 0), 0) : 0;
+                            const sumFreightIncome = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.net_income || 0), 0) : 0;
+                            const sumBunkerCosts = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.bunker_costs || 0), 0) : 0;
+
+                            const motorSeaDays = result?.consolidated?.total_sea_days || 0;
+                            const motorPortDays = result?.consolidated?.total_port_days || 0;
+                            const diffSeaDays = Math.abs(sumSeaDays - motorSeaDays);
+                            const diffPortDays = Math.abs(sumPortDays - motorPortDays);
+
+                            return (
+                                <tr className="bg-slate-200/80 border-b-2 border-double border-slate-400 h-8 select-none font-bold text-slate-800 text-xs">
+                                    <td colSpan={3} className="border-r border-slate-200 text-left pl-3 font-sans text-[10.5px] uppercase tracking-wide text-slate-900 bg-slate-250">Total Aritmético (Σ)</td>
+                                    <td className="border-r border-slate-200 text-right pr-2 font-mono">{fmtNum(sumDistance)}</td>
+                                    <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
+                                    <td className={`border-r border-slate-200 text-right pr-2 font-mono ${diffSeaDays > 0.01 ? 'bg-amber-100 text-amber-900 font-black' : ''}`} title={diffSeaDays > 0.01 ? `Diferencia de ${fmtDays(diffSeaDays)}d vs Motor` : "Suma idéntica al Motor"}>
+                                        {fmtDays(sumSeaDays)}
+                                    </td>
+                                    <td className={`border-r border-slate-200 text-right pr-2 font-mono ${diffPortDays > 0.01 ? 'bg-amber-100 text-amber-900 font-black' : ''}`} title={diffPortDays > 0.01 ? `Diferencia de ${fmtDays(diffPortDays)}d vs Motor` : "Suma idéntica al Motor"}>
+                                        {fmtDays(sumPortDays)}
+                                    </td>
+                                    <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-slate-200 text-right pr-2 font-mono">{fmtNum(totalDescargas)}</td>
+                                    <td className="border-r border-slate-200 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-slate-200 text-right pr-2 font-mono">{fmtCur(sumPortCosts)}</td>
+                                    <td className="border-r border-slate-200 text-right pr-2 font-mono">{fmtCur(sumFreightIncome)}</td>
+                                    <td className="border-r border-slate-200 text-right pr-2 font-mono">{fmtCur(sumBunkerCosts)}</td>
+                                    <td className="text-right pr-2 text-slate-400">—</td>
+                                </tr>
+                            );
+                        })()}
 
                     </tbody>
                 </table>
@@ -3135,7 +3175,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 <summary className="text-[10.5px] font-bold text-slate-500 hover:text-slate-800 outline-none select-none">
                                     Rastro de Auditoría Bunker (Fórmula & Toneladas)
                                 </summary>
-                                <div className="mt-1.5 space-y-1.5 text-[10.5px] font-mono text-slate-700 bg-white border border-slate-100 rounded p-1.5 max-h-36 overflow-y-auto">
+                                <div className="mt-1.5 space-y-1.5 text-[10.5px] font-mono text-slate-700 bg-white border border-slate-100 rounded p-1.5">
                                     {result.tramos.map((tr: any, i: number) => (
                                         <div key={i} className="border-b border-slate-100 pb-1.5 last:border-0 last:pb-0">
                                             <div className="font-sans font-bold text-slate-800 text-[11px] mb-0.5">
@@ -3231,7 +3271,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 <summary className="text-[10.5px] font-bold text-slate-500 hover:text-slate-800 outline-none select-none">
                                     Rastro de Auditoría Port Costs (Matriz / Fallback)
                                 </summary>
-                                <div className="mt-1.5 space-y-1.5 text-[10.5px] font-mono text-slate-700 bg-white border border-slate-100 rounded p-1.5 max-h-36 overflow-y-auto">
+                                <div className="mt-1.5 space-y-1.5 text-[10.5px] font-mono text-slate-700 bg-white border border-slate-100 rounded p-1.5">
                                     {result.tramos.map((tr: any, i: number) => {
                                         const origDet = tr.agency_costs_origin_details;
                                         const destDet = tr.agency_costs_destination_details;
