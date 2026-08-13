@@ -170,7 +170,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     const [refacturarMuellajeMap, setRefacturarMuellajeMap] = useState<Record<number, boolean>>({});
     const [commentsText, setCommentsText] = useState<string>('');
     const [demurrageRate, setDemurrageRate] = useState<number>(0);
-    const [demurrageDays, setDemurrageDays] = useState<number>(0);
+    const [demurrageDays] = useState<number>(0);
 
 
     // Persistencia de Rutas
@@ -3232,223 +3232,242 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 </table>
             </div>
 
-            {/* 3. RESUMEN FINANCIERO Y OPERATIVO INFERIOR (4 COLUMNAS PARALELAS Y GRID RESTRUCTURADO) */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 flex-shrink-0">
+            {/* 3. RESUMEN FINANCIERO Y OPERATIVO INFERIOR (ESTRUCTURA DE SIMETRÍA Y ALTURA FLEXIBLE) */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-stretch flex-shrink-0">
                 
-                {/* COLUMNA 1: BUNKER EXPENSES */}
-                <div className="col-span-1 bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
-                    <div>
-                        <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans">
-                            Bunker Expenses (Combustible)
-                        </h3>
-                        <table className="w-full border-collapse text-xs font-mono">
-                            <thead>
-                                <tr className="bg-slate-50 border-b border-slate-200 font-sans text-[10.5px] text-slate-500 font-bold">
-                                    <th className="text-left py-0.5 pl-1.5">Fuel</th>
-                                    <th className="text-right py-0.5 pr-1.5">Tonnage (T)</th>
-                                    <th className="text-right py-0.5 pr-1.5">Expense (USD)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr className="border-b border-slate-100">
-                                    <td className="py-1 pl-1.5 text-slate-650 font-bold">IFO (Heavy Fuel)</td>
-                                    <td className="text-right py-1 pr-1.5 font-bold">
-                                        {result ? fmtNum(result.consolidated.bunker_ifo_tonnage || 0) : '0.0'}
-                                    </td>
-                                    <td className="text-right py-1 pr-1.5 font-bold">
-                                        {result ? fmtCur((result.consolidated.bunker_ifo_tonnage || 0) * bunkerPriceIfo) : '$0'}
-                                    </td>
-                                </tr>
-                                <tr className="border-b border-slate-100">
-                                    <td className="py-1 pl-1.5 text-slate-650 font-bold">MDO (Diesel)</td>
-                                    <td className="text-right py-1 pr-1.5 font-bold">
-                                        {result ? fmtNum(result.consolidated.bunker_mdo_tonnage || 0) : '0.0'}
-                                    </td>
-                                    <td className="text-right py-1 pr-1.5 font-bold">
-                                        {result ? fmtCur((result.consolidated.bunker_mdo_tonnage || 0) * bunkerPriceMdo) : '$0'}
-                                    </td>
-                                </tr>
-                                <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
-                                    <td className="py-1 pl-1.5 font-sans text-[10.5px] uppercase">Total Fuel</td>
-                                    <td className="text-right py-1 pr-1.5">
-                                        {result ? fmtNum((result.consolidated.bunker_ifo_tonnage || 0) + (result.consolidated.bunker_mdo_tonnage || 0)) : '0.0'}
-                                    </td>
-                                    <td className="text-right py-1 pr-1.5 font-bold">
-                                        {result ? fmtCur(((result.consolidated.bunker_ifo_tonnage || 0) * bunkerPriceIfo) + ((result.consolidated.bunker_mdo_tonnage || 0) * bunkerPriceMdo)) : '$0'}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {/* COLUMNA 2: PORT COSTS */}
-                <div className="col-span-1 bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
-                    <div>
-                        <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans">
-                            Port Costs (Gastos de Puerto)
-                        </h3>
-                        <table className="w-full border-collapse text-xs font-mono">
-                            <thead>
-                                <tr className="bg-slate-50 border-b border-slate-200 font-sans text-[10.5px] text-slate-500 font-bold">
-                                    <th className="text-left py-0.5 pl-1.5">Expense Concept</th>
-                                    <th className="text-right py-0.5 pr-1.5">Costo (USD)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {(() => {
-                                    const portItems = getDynamicPortCostItems();
-                                    const totalPortCosts = result?.consolidated?.total_port_costs ?? portItems.reduce((sum, item) => sum + item.cost, 0);
-                                    const chileanPorts = ['MEJILLONES', 'BARQUITO', 'PATILLOS', 'ARICA', 'SAN ANTONIO', 'VALPARAISO', 'QUINTERO'];
-
-                                    return (
-                                        <>
-                                            {portItems.map((item, idx) => {
-                                                const isChile = chileanPorts.includes((item.port_id || '').toUpperCase());
-                                                let baseCost = item.cost;
-                                                let lmCost = 0;
-                                                if (isChile && item.cost >= 2500) {
-                                                    baseCost = item.cost - 2500;
-                                                    lmCost = 2500;
-                                                }
-                                                return (
-                                                    <React.Fragment key={idx}>
-                                                        <tr className="border-b border-slate-100">
-                                                            <td className="py-1 pl-1.5 text-slate-650 font-bold">{item.label}</td>
-                                                            <td className="text-right py-1 pr-1.5 font-bold">
-                                                                {result || item.cost > 0 ? fmtCur(baseCost) : '$0'}
-                                                            </td>
-                                                        </tr>
-                                                        {lmCost > 0 && (
-                                                            <tr className="border-b border-slate-100 bg-amber-50/60">
-                                                                <td className="py-0.5 pl-3.5 text-amber-900 font-bold text-[10px]">↳ Loading Master (Chile)</td>
-                                                                <td className="text-right py-0.5 pr-1.5 font-bold text-amber-900 text-[10px]">
-                                                                    {fmtCur(lmCost)}
-                                                                </td>
-                                                            </tr>
-                                                        )}
-                                                    </React.Fragment>
-                                                );
-                                            })}
-                                            <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
-                                                <td className="py-1.5 pl-1.5 font-sans text-[10.5px] uppercase">Total Port Costs</td>
-                                                <td className="text-right py-1.5 pr-1.5">
-                                                    {result || totalPortCosts > 0 ? fmtCur(totalPortCosts) : '$0'}
-                                                </td>
-                                            </tr>
-                                        </>
-                                    );
-                                })()}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {/* COLUMNA 3: COMISIONES & DEMURRAGE */}
-                <div className="col-span-1 flex flex-col gap-2">
-                    {/* Comisiones */}
-                    <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
-                        <div>
-                            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1 flex items-center justify-between font-sans">
-                                <span>Comisiones de Viaje</span>
-                            </h3>
-                            <div className="flex flex-col gap-1.5">
-                                <div className="flex justify-between items-center text-xs font-sans">
-                                    <span className="font-semibold text-slate-600 text-[11px]">Address Comm (%)</span>
-                                    <div className="flex items-center gap-1">
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            max="100"
-                                            value={addressCommPct}
-                                            onChange={(e) => setAddressCommPct(Math.max(0, parseFloat(e.target.value) || 0))}
-                                            className="w-12 h-6 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                        />
-                                        <span className="font-bold text-slate-500 text-xs">%</span>
-                                    </div>
-                                </div>
-                                
-                                <div className="flex justify-between items-center text-xs font-sans">
-                                    <span className="font-semibold text-slate-600 text-[11px]">Broker Comm (%)</span>
-                                    <div className="flex items-center gap-1">
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            max="100"
-                                            value={brokerCommPct}
-                                            onChange={(e) => setBrokerCommPct(Math.max(0, parseFloat(e.target.value) || 0))}
-                                            className="w-12 h-6 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                        />
-                                        <span className="font-bold text-slate-500 text-xs">%</span>
-                                    </div>
-                                </div>
-
-                                <table className="w-full border-collapse border-t border-slate-100 mt-0.5 text-xs font-mono">
+                {/* SECCIÓN IZQUIERDA (COLUMNAS 1, 2 Y 3 EN FLEX VERTICAL PARA COINCIDIR ALTURA) */}
+                <div className="col-span-1 md:col-span-3 flex flex-col gap-3">
+                    
+                    {/* FILA SUPERIOR: BUNKER (COL 1), PORT COSTS (COL 2), COMISIONES (COL 3) */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        
+                        {/* 1. Bunker Expenses */}
+                        <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans">
+                                    Bunker Expenses (Combustible)
+                                </h3>
+                                <table className="w-full border-collapse text-xs font-mono">
+                                    <thead>
+                                        <tr className="bg-slate-50 border-b border-slate-200 font-sans text-[10.5px] text-slate-500 font-bold">
+                                            <th className="text-left py-0.5 pl-1.5">Fuel</th>
+                                            <th className="text-right py-0.5 pr-1.5">Tonnage (T)</th>
+                                            <th className="text-right py-0.5 pr-1.5">Expense (USD)</th>
+                                        </tr>
+                                    </thead>
                                     <tbody>
                                         <tr className="border-b border-slate-100">
-                                            <td className="py-0.5 pl-1 text-slate-500 text-[10.5px]">Address (USD)</td>
-                                            <td className="text-right py-0.5 pr-1 font-bold">
-                                                {result ? fmtCur(result.consolidated.total_freight_revenue * (addressCommPct / 100)) : '$0'}
+                                            <td className="py-1 pl-1.5 text-slate-650 font-bold">IFO (Heavy Fuel)</td>
+                                            <td className="text-right py-1 pr-1.5 font-bold">
+                                                {result ? fmtNum(result.consolidated.bunker_ifo_tonnage || 0) : '0.0'}
+                                            </td>
+                                            <td className="text-right py-1 pr-1.5 font-bold">
+                                                {result ? fmtCur((result.consolidated.bunker_ifo_tonnage || 0) * bunkerPriceIfo) : '$0'}
                                             </td>
                                         </tr>
                                         <tr className="border-b border-slate-100">
-                                            <td className="py-0.5 pl-1 text-slate-500 text-[10.5px]">Broker (USD)</td>
-                                            <td className="text-right py-0.5 pr-1 font-bold">
-                                                {result ? fmtCur(result.consolidated.total_freight_revenue * (brokerCommPct / 100)) : '$0'}
+                                            <td className="py-1 pl-1.5 text-slate-650 font-bold">MDO (Diesel)</td>
+                                            <td className="text-right py-1 pr-1.5 font-bold">
+                                                {result ? fmtNum(result.consolidated.bunker_mdo_tonnage || 0) : '0.0'}
+                                            </td>
+                                            <td className="text-right py-1 pr-1.5 font-bold">
+                                                {result ? fmtCur((result.consolidated.bunker_mdo_tonnage || 0) * bunkerPriceMdo) : '$0'}
                                             </td>
                                         </tr>
                                         <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
-                                            <td className="py-0.5 pl-1 font-sans text-[10px] uppercase">Total Comm</td>
-                                            <td className="text-right py-0.5 pr-1 text-rose-600 font-bold">
-                                                {result ? `-${fmtCur(result.consolidated.total_commissions || 0)}` : '$0'}
+                                            <td className="py-1 pl-1.5 font-sans text-[10.5px] uppercase">Total Fuel</td>
+                                            <td className="text-right py-1 pr-1.5">
+                                                {result ? fmtNum((result.consolidated.bunker_ifo_tonnage || 0) + (result.consolidated.bunker_mdo_tonnage || 0)) : '0.0'}
+                                            </td>
+                                            <td className="text-right py-1 pr-1.5 font-bold">
+                                                {result ? fmtCur(((result.consolidated.bunker_ifo_tonnage || 0) * bunkerPriceIfo) + ((result.consolidated.bunker_mdo_tonnage || 0) * bunkerPriceMdo)) : '$0'}
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Card DEMURRAGE */}
-                    <div className="bg-white border border-slate-350 rounded p-2 shadow-sm">
-                        <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1 flex items-center justify-between font-sans">
-                            <span>Demurrage (Estadías)</span>
-                            <span className="text-[9.5px] font-mono text-slate-400">$ / día</span>
-                        </h3>
-                        <div className="flex flex-col gap-1 text-xs font-sans">
-                            <div className="flex justify-between items-center">
-                                <span className="font-semibold text-slate-600 text-[10.5px]">Rate ($/día)</span>
-                                <input
-                                    type="number"
-                                    value={demurrageRate || ''}
-                                    onChange={(e) => setDemurrageRate(parseFloat(e.target.value) || 0)}
-                                    placeholder="15,000"
-                                    className="w-20 h-6 text-right font-mono font-bold bg-white border border-slate-300 rounded px-1 focus:outline-none focus:ring-1 focus:ring-amber-500 text-xs"
-                                />
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="font-semibold text-slate-600 text-[10.5px]">Días</span>
-                                <input
-                                    type="number"
-                                    step="0.1"
-                                    value={demurrageDays || ''}
-                                    onChange={(e) => setDemurrageDays(parseFloat(e.target.value) || 0)}
-                                    placeholder="0.0"
-                                    className="w-20 h-6 text-right font-mono font-bold bg-white border border-slate-300 rounded px-1 focus:outline-none focus:ring-1 focus:ring-amber-500 text-xs"
-                                />
-                            </div>
-                            <div className="flex justify-between items-center pt-1 border-t border-slate-100 font-bold">
-                                <span className="text-slate-700 text-[10.5px]">Total Demurrage</span>
-                                <span className="font-mono text-amber-700">{fmtCur(demurrageRate * demurrageDays)}</span>
+                        {/* 2. Port Costs */}
+                        <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans">
+                                    Port Costs (Gastos de Puerto)
+                                </h3>
+                                <table className="w-full border-collapse text-xs font-mono">
+                                    <thead>
+                                        <tr className="bg-slate-50 border-b border-slate-200 font-sans text-[10.5px] text-slate-500 font-bold">
+                                            <th className="text-left py-0.5 pl-1.5">Expense Concept</th>
+                                            <th className="text-right py-0.5 pr-1.5">Costo (USD)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(() => {
+                                            const portItems = getDynamicPortCostItems();
+                                            const totalPortCosts = result?.consolidated?.total_port_costs ?? portItems.reduce((sum, item) => sum + item.cost, 0);
+                                            const chileanPorts = ['MEJILLONES', 'BARQUITO', 'PATILLOS', 'ARICA', 'SAN ANTONIO', 'VALPARAISO', 'QUINTERO'];
+
+                                            return (
+                                                <>
+                                                    {portItems.map((item, idx) => {
+                                                        const isChile = chileanPorts.includes((item.port_id || '').toUpperCase());
+                                                        let baseCost = item.cost;
+                                                        let lmCost = 0;
+                                                        if (isChile && item.cost >= 2500) {
+                                                            baseCost = item.cost - 2500;
+                                                            lmCost = 2500;
+                                                        }
+                                                        return (
+                                                            <React.Fragment key={idx}>
+                                                                <tr className="border-b border-slate-100">
+                                                                    <td className="py-1 pl-1.5 text-slate-650 font-bold">{item.label}</td>
+                                                                    <td className="text-right py-1 pr-1.5 font-bold">
+                                                                        {result || item.cost > 0 ? fmtCur(baseCost) : '$0'}
+                                                                    </td>
+                                                                </tr>
+                                                                {lmCost > 0 && (
+                                                                    <tr className="border-b border-slate-100 bg-amber-50/60">
+                                                                        <td className="py-0.5 pl-3.5 text-amber-900 font-bold text-[10px]">↳ Loading Master (Chile)</td>
+                                                                        <td className="text-right py-0.5 pr-1.5 font-bold text-amber-900 text-[10px]">
+                                                                            {fmtCur(lmCost)}
+                                                                        </td>
+                                                                    </tr>
+                                                                )}
+                                                            </React.Fragment>
+                                                        );
+                                                    })}
+                                                    <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
+                                                        <td className="py-1.5 pl-1.5 font-sans text-[10.5px] uppercase">Total Port Costs</td>
+                                                        <td className="text-right py-1.5 pr-1.5">
+                                                            {result || totalPortCosts > 0 ? fmtCur(totalPortCosts) : '$0'}
+                                                        </td>
+                                                    </tr>
+                                                </>
+                                            );
+                                        })()}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
+
+                        {/* 3. Comisiones de Viaje */}
+                        <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1 flex items-center justify-between font-sans">
+                                    <span>Comisiones de Viaje</span>
+                                </h3>
+                                <div className="flex flex-col gap-1.5">
+                                    <div className="flex justify-between items-center text-xs font-sans">
+                                        <span className="font-semibold text-slate-600 text-[11px]">Address Comm (%)</span>
+                                        <div className="flex items-center gap-1">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                max="100"
+                                                value={addressCommPct}
+                                                onChange={(e) => setAddressCommPct(Math.max(0, parseFloat(e.target.value) || 0))}
+                                                className="w-12 h-6 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                            />
+                                            <span className="font-bold text-slate-500 text-xs">%</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex justify-between items-center text-xs font-sans">
+                                        <span className="font-semibold text-slate-600 text-[11px]">Broker Comm (%)</span>
+                                        <div className="flex items-center gap-1">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                max="100"
+                                                value={brokerCommPct}
+                                                onChange={(e) => setBrokerCommPct(Math.max(0, parseFloat(e.target.value) || 0))}
+                                                className="w-12 h-6 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                            />
+                                            <span className="font-bold text-slate-500 text-xs">%</span>
+                                        </div>
+                                    </div>
+
+                                    <table className="w-full border-collapse border-t border-slate-100 mt-0.5 text-xs font-mono">
+                                        <tbody>
+                                            <tr className="border-b border-slate-100">
+                                                <td className="py-0.5 pl-1 text-slate-500 text-[10.5px]">Address (USD)</td>
+                                                <td className="text-right py-0.5 pr-1 font-bold">
+                                                    {result ? fmtCur(result.consolidated.total_freight_revenue * (addressCommPct / 100)) : '$0'}
+                                                </td>
+                                            </tr>
+                                            <tr className="border-b border-slate-100">
+                                                <td className="py-0.5 pl-1 text-slate-500 text-[10.5px]">Broker (USD)</td>
+                                                <td className="text-right py-0.5 pr-1 font-bold">
+                                                    {result ? fmtCur(result.consolidated.total_freight_revenue * (brokerCommPct / 100)) : '$0'}
+                                                </td>
+                                            </tr>
+                                            <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
+                                                <td className="py-0.5 pl-1 font-sans text-[10px] uppercase">Total Comm</td>
+                                                <td className="text-right py-0.5 pr-1 text-rose-600 font-bold">
+                                                    {result ? `-${fmtCur(result.consolidated.total_commissions || 0)}` : '$0'}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
+
+                    {/* FILA INFERIOR: COMMENTS (COL 1 Y 2) + DEMURRAGE (COL 3) - FLEX GROW PARA IGUALAR ALTURA */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-1 items-stretch">
+                        
+                        {/* COMMENTS (Ocupa Columna 1 y Columna 2 -> col-span-2) */}
+                        <div className="col-span-1 md:col-span-2 bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col flex-1 h-full">
+                            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans flex items-center justify-between">
+                                <span>Comments (Observaciones del Viaje)</span>
+                                <span className="text-[9.5px] font-mono text-slate-400 font-normal">Notas comerciales</span>
+                            </h3>
+                            <textarea
+                                value={commentsText}
+                                onChange={(e) => setCommentsText(e.target.value)}
+                                placeholder="Ingrese comentarios u observaciones de la cotización..."
+                                className="w-full flex-1 p-2 text-xs font-sans bg-slate-50 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700 resize-none min-h-[60px]"
+                            />
+                        </div>
+
+                        {/* DEMURRAGE (Ocupa Columna 3 -> col-span-1 | Solo Rate $/día) */}
+                        <div className="col-span-1 bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between flex-1 h-full">
+                            <div>
+                                <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 flex items-center justify-between font-sans">
+                                    <span>Demurrage (Estadías)</span>
+                                    <span className="text-[9.5px] font-mono text-slate-400">$ / día</span>
+                                </h3>
+                                <div className="flex flex-col gap-2 text-xs font-sans pt-1">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-semibold text-slate-600 text-[11px]">Rate ($/día)</span>
+                                        <div className="flex items-center gap-1">
+                                            <input
+                                                type="number"
+                                                value={demurrageRate || ''}
+                                                onChange={(e) => setDemurrageRate(parseFloat(e.target.value) || 0)}
+                                                placeholder="15,000"
+                                                className="w-24 h-7 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                            />
+                                            <span className="font-mono text-xs text-slate-400">$</span>
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 italic pt-1 border-t border-slate-100">
+                                        * Días de estadía se integran al jalar el payload desde Matriz Financiera.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
                 </div>
 
-                {/* COLUMNA 4: FINANCIAL VOYAGE RESULT */}
-                <div className="col-span-1 bg-emerald-50 border-2 border-emerald-500/30 rounded p-2 shadow-sm flex flex-col justify-between">
+                {/* COLUMNA 4: FINANCIAL VOYAGE RESULT (PANEL LATERAL DERECHO) */}
+                <div className="col-span-1 bg-emerald-50 border-2 border-emerald-500/30 rounded p-2 shadow-sm flex flex-col justify-between h-full">
                     <div>
                         <h3 className="text-[11.5px] font-black text-emerald-800 uppercase tracking-wide border-b border-emerald-200 pb-1 mb-1.5 flex items-center justify-between font-sans">
                             <span>FINANCIAL VOYAGE RESULT</span>
@@ -3604,20 +3623,6 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             </tbody>
                         </table>
                     </div>
-                </div>
-
-                {/* Card COMBINADO COMMENTS (Fila 2: Celda Ancha abarcando Columna 1 y Columna 2) */}
-                <div className="col-span-1 md:col-span-2 bg-white border border-slate-350 rounded p-2 shadow-sm">
-                    <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans flex items-center justify-between">
-                        <span>Comments (Observaciones del Viaje)</span>
-                        <span className="text-[9.5px] font-mono text-slate-400 font-normal">Notas comerciales</span>
-                    </h3>
-                    <textarea
-                        value={commentsText}
-                        onChange={(e) => setCommentsText(e.target.value)}
-                        placeholder="Ingrese comentarios u observaciones de la cotización..."
-                        className="w-full h-20 p-2 text-xs font-sans bg-slate-50 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700 resize-none"
-                    />
                 </div>
 
             </div>
