@@ -62,6 +62,17 @@ A continuación se documenta la lista detallada de errores arquitectónicos y fa
 
 ---
 
+### ❌ Error #6: Anulación de Tiempos de Puerto en Tramos `BALLAST` con `OP.DEST = CARGAR` (Caso Callao)
+* **Falla:** Cuando el tramo de navegación era en lastre (`BALLAST`), `spot_engine.py` en `process_ballast_leg` forzaba `port_days = 0.00d`, ignorando que en el puerto de destino (Callao) la columna `OP.DEST` decía `CARGAR`, lo que descartó las 6h de Time to Count, 1h de Posicionamiento y 27h de Carga (34 horas / 1.42d en total), reduciendo erróneamente los días totales de puerto de `3.07d` a `2.78d`.
+* **Causa Raíz:** Condicionar la evaluación de permanencia en puerto al tipo de pierna (`BALLAST` vs `LADEN`) en lugar de calcular la operación del puerto de destino según `OP.DEST`.
+* **Solución Aplicada:** Se refactorizaron `process_ballast_leg` y `process_laden_leg` en `backend/spot_engine.py`. Cada tramo compute de forma estricta las operaciones de su puerto de destino (`destination_port_id`):
+  - **Callao (Tramo 1, `BALLAST`, `OP.DEST = CARGAR`):** Overhead 6h + Posic 1h + Carga 27h = $34\text{h} / 24 = \mathbf{1.4167\text{d}}$ (**1.42d**).
+  - **Matarani (Tramo 2, `LADEN`, `OP.DEST = DESCARGAR`):** Overhead 6h + Posic 0h + Descarga 33.75h = $39.75\text{h} / 24 = \mathbf{1.6562\text{d}}$ (**1.66d**).
+  - **Ilo (Tramo 3, `BALLAST`, `OP.DEST = NONE`):** $\mathbf{0.0000\text{d}}$ (**0.00d**).
+  - **Consolidado Global:** Días Puerto = $\mathbf{3.0729\text{d}}$ (**3.07d**) | Días Mar = $\mathbf{4.0576\text{d}}$ (**4.06d**) | Duración Total = $\mathbf{7.1305\text{d}}$ (**7.13d**).
+
+---
+
 ## 🏛️ 3. Jerarquía Estricta de Asignación de Overheads (Time to Count)
 
 Para evitar malentendidos sobre cómo se auto-completan los campos de Time to Count en la UI:

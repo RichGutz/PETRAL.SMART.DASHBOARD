@@ -2714,7 +2714,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         type="number"
                                         value={puertosConfig[0].overhead ?? ''}
                                         onChange={(e) => updatePuertoConfigField(0, 'overhead', e.target.value)}
-                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
+                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         placeholder={result?.tramos?.[0]?.port_overhead_hours_origin !== undefined ? String(result.tramos[0].port_overhead_hours_origin) : '0.0'}
                                     />
                                 ) : (
@@ -2729,7 +2729,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         type="number"
                                         value={puertosConfig[0].positioning ?? ''}
                                         onChange={(e) => updatePuertoConfigField(0, 'positioning', e.target.value)}
-                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
+                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         placeholder={result?.tramos?.[0]?.positioning_carga_hrs !== undefined ? String(result.tramos[0].positioning_carga_hrs) : '0.0'}
                                     />
                                 ) : (
@@ -2924,7 +2924,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 type="number"
                                                 value={puertosConfig[idx + 1].overhead ?? ''}
                                                 onChange={(e) => updatePuertoConfigField(idx + 1, 'overhead', e.target.value)}
-                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
+                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                 placeholder={trResult?.port_overhead_hours_dest !== undefined ? String(trResult.port_overhead_hours_dest) : '0.0'}
                                             />
                                         ) : (
@@ -2939,7 +2939,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 type="number"
                                                 value={puertosConfig[idx + 1].positioning ?? ''}
                                                 onChange={(e) => updatePuertoConfigField(idx + 1, 'positioning', e.target.value)}
-                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
+                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                 placeholder={puertosConfig[idx + 1].action === 'CARGAR' ? String(trResult?.positioning_carga_hrs ?? '0.0') : String(trResult?.positioning_descarga_hrs ?? '0.0')}
                                             />
                                         ) : (

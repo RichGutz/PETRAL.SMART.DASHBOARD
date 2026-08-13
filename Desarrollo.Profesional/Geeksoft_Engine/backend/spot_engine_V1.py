@@ -310,28 +310,11 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         delay_load = float(leg_inputs.get("port_delay_hours_loading") or 0)
         delay_disch = float(leg_inputs.get("port_delay_hours_discharging") or 0)
         
-        overhead_dest = float(leg_inputs.get("port_overhead_hours_dest") or 0)
-        pos_carga = float(leg_inputs.get("positioning_carga_hrs") or 0)
-        pos_descarga = float(leg_inputs.get("positioning_descarga_hrs") or 0)
-        
-        dest_action = leg_inputs.get("destination_action", "NONE")
-        load_days = 0.0
-        disch_days = 0.0
-
-        if dest_action == "CARGAR" or pos_carga > 0:
-            Q_load = float(leg_inputs.get("destination_quantity") or leg_inputs.get("quantity") or leg_inputs.get("desc_tons") or 0)
-            if Q_load == 0:
-                Q_load = float(vessel.get("dwcc") or vessel.get("dwt") or 13500)
-            c_load = float(leg_inputs.get("custom_load_rate") or leg_inputs.get("contract_agreed_load_rate") or vessel.get("act_load") or 0)
-            if c_load > 0:
-                load_days = (Q_load / c_load) / 24.0
-        
         sea_days = (dist * (1 + w_factor)) / (speed * 24) if speed > 0 else 0
-        idle_days = (overhead_dest + pos_carga + pos_descarga + delay_load + delay_disch) / 24.0
-        port_days = idle_days + load_days + disch_days
+        port_days = (delay_load + delay_disch) / 24.0
         
-        ifo_tons = (sea_days * c_sea_ifo) + (idle_days * c_idle_ifo) + (load_days * c_load_ifo) + (disch_days * c_disch_ifo)
-        mdo_tons = (sea_days * c_sea_mdo) + (idle_days * c_idle_mdo) + (load_days * c_load_mdo) + (disch_days * c_disch_mdo)
+        ifo_tons = (sea_days * c_sea_ifo) + (port_days * c_idle_ifo)
+        mdo_tons = (sea_days * c_sea_mdo) + (port_days * c_idle_mdo)
         bunker_costs = (ifo_tons * p_ifo) + (mdo_tons * p_mdo)
         
         audit_trail = {
@@ -340,7 +323,7 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
                 "values": f"({rc(fmt(dist))} * (1+{rc(fmt_dec(w_factor))})) / ({vc(fmt_dec(speed))} * 24) = {vc(fmt_dec(sea_days))}"
             },
             "port_days": {
-                "formula": "((Q/act_load + over_de + pos_carga + delay_load)) / 24" if load_days > 0 else "(overhead + posic) / 24",
+                "formula": "(overhead + posic) / 24",
                 "values": f"{vc(fmt_dec(port_days))}"
             },
             "bunker_costs": {
@@ -374,23 +357,40 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         Q = float(leg_inputs.get("quantity", 0))
         F = float(leg_inputs.get("freight_rate", 0))
         
-        dest_action = leg_inputs.get("destination_action", "NONE")
-
+        overhead_orig = leg_inputs.get("port_overhead_hours_origin")
+        overhead_orig = float(overhead_orig) if overhead_orig is not None else 0.0
+        
         overhead_dest = leg_inputs.get("port_overhead_hours_dest")
-        overhead_dest = float(overhead_dest) if (overhead_dest is not None and dest_action != "NONE") else 0.0
+        overhead_dest = float(overhead_dest) if overhead_dest is not None else 0.0
+        
+        pos_carga = leg_inputs.get("positioning_carga_hrs")
+        pos_carga = float(pos_carga) if pos_carga is not None else 0.0
         
         pos_descarga = leg_inputs.get("positioning_descarga_hrs")
-        pos_descarga = float(pos_descarga) if (pos_descarga is not None and dest_action == "DESCARGAR") else 0.0
+        pos_descarga = float(pos_descarga) if pos_descarga is not None else 0.0
         
         delay_loading = float(leg_inputs.get("port_delay_hours_loading") or 0)
         delay_discharging = float(leg_inputs.get("port_delay_hours_discharging") or 0)
         
+        custom_l_rate = float(leg_inputs.get("custom_load_rate") or 0)
         custom_d_rate = float(leg_inputs.get("custom_discharge_rate") or 0)
 
+        c_load = float(leg_inputs.get("contract_agreed_load_rate") or 0)
+        v_intake = float(vessel.get("vessel_max_load_intake_limit", 0))
+        t_load_rate = float(leg_inputs.get("max_terminal_load_rate", 0))
+        
+        v_act_load = float(vessel.get("act_load") or vessel.get("vessel_max_load_intake_limit") or 0)
+        v_act_disch = float(vessel.get("act_disch") or vessel.get("vessel_pump_discharge_rate") or 0)
+        
+        if custom_l_rate > 0:
+            actual_load_rate = custom_l_rate
+        else:
+            valid_load_rates = [x for x in (c_load, v_intake, t_load_rate, v_act_load) if x > 0]
+            actual_load_rate = min(valid_load_rates) if valid_load_rates else 0.0
+        
         c_disch = float(leg_inputs.get("contract_agreed_discharge_rate") or 0)
         v_pump = float(vessel.get("vessel_pump_discharge_rate", 0))
         t_disch_limit = float(leg_inputs.get("port_max_discharge_limit", 0))
-        v_act_disch = float(vessel.get("act_disch") or vessel.get("vessel_pump_discharge_rate") or 0)
         
         if custom_d_rate > 0:
             actual_discharge_rate = custom_d_rate
@@ -400,13 +400,17 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         
         sea_days = (dist * (1 + w_factor)) / (speed * 24) if speed > 0 else 0
         
+        # Sumar demoras adicionales y posicionamientos a los overheads normales
+        total_overhead_origin = overhead_orig + delay_loading + pos_carga
         total_overhead_dest = overhead_dest + delay_discharging + pos_descarga
-        idle_days_normal = (overhead_dest + pos_descarga) / 24.0
-        idle_days = idle_days_normal + (delay_discharging / 24.0)
         
-        load_days = 0.0
-        disch_days = (Q / actual_discharge_rate) / 24.0 if (actual_discharge_rate > 0 and dest_action == "DESCARGAR") else 0.0
-        port_days = disch_days + idle_days
+        idle_days_normal = (overhead_orig + overhead_dest + pos_carga + pos_descarga) / 24
+        idle_days_bunker = idle_days_normal
+        idle_days = idle_days_normal + (delay_loading / 24) + (delay_discharging / 24)
+        
+        load_days = (Q / actual_load_rate) / 24 if actual_load_rate > 0 else 0.0
+        disch_days = (Q / actual_discharge_rate) / 24 if actual_discharge_rate > 0 else 0.0
+        port_days = load_days + disch_days + idle_days
         
         # Calcular consumos de bunker de demoras por separado
         delay_loading_ifo = (delay_loading / 24) * c_idle_ifo
@@ -419,8 +423,8 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
 
         # Consumo de tránsito/operaciones normales (usando la navegación real de esta pierna)
         tot_sea_d = sea_days
-        ifo_tons_normal = (tot_sea_d * c_sea_ifo) + (idle_days_normal * c_idle_ifo) + (load_days * c_load_ifo) + (disch_days * c_disch_ifo)
-        mdo_tons_normal = (tot_sea_d * c_sea_mdo) + (idle_days_normal * c_idle_mdo) + (load_days * c_load_mdo) + (disch_days * c_disch_mdo)
+        ifo_tons_normal = (tot_sea_d * c_sea_ifo) + (idle_days_bunker * c_idle_ifo) + (load_days * c_load_ifo) + (disch_days * c_disch_ifo)
+        mdo_tons_normal = (tot_sea_d * c_sea_mdo) + (idle_days_bunker * c_idle_mdo) + (load_days * c_load_mdo) + (disch_days * c_disch_mdo)
         bunker_costs_normal = (ifo_tons_normal * p_ifo) + (mdo_tons_normal * p_mdo)
 
         # Consumo consolidado final para el PnL global
@@ -517,8 +521,8 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
                 "values": f"({rc(fmt(dist))} * (1+{rc(fmt_dec(w_factor))})) / ({vc(fmt_dec(speed))} * 24) = {vc(fmt_dec(sea_days))}"
             },
             "port_days": {
-                "formula": "(Q/act_disch + over_de + pos_de + delay_disch) / 24",
-                "values": f"({oc(fmt(Q))}/{vc(fmt(actual_discharge_rate))} + {oc(fmt_dec(overhead_dest))} + {oc(fmt_dec(pos_descarga))} + {oc(fmt_dec(delay_discharging))}) / 24 = {vc(fmt_dec(port_days))}"
+                "formula": "((Q/act_load + over_or + pos_or + delay_load) + (Q/act_disch + over_de + pos_de + delay_disch)) / 24",
+                "values": f"(({oc(fmt(Q))}/{vc(fmt(actual_load_rate))} + {oc(fmt_dec(overhead_orig))} + {oc(fmt_dec(pos_carga))} + {oc(fmt_dec(delay_loading))}) + ({oc(fmt(Q))}/{vc(fmt(actual_discharge_rate))} + {oc(fmt_dec(overhead_dest))} + {oc(fmt_dec(pos_descarga))} + {oc(fmt_dec(delay_discharging))})) / 24 = {vc(fmt_dec(port_days))}"
             },
             "bunker_costs": {
                 "formula": "Tons IFO = (sea_d * cons_sea) + (idle_d_norm * cons_idle) + (load_d * cons_load) + (disch_d * cons_disch)<br/>"
