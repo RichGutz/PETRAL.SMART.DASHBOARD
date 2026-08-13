@@ -733,14 +733,26 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 const pOrig = puertosConfig[idx];
                 const pDest = puertosConfig[idx + 1];
 
-                if (pOrig && pOrig.action === 'CARGAR' && pOrig.op_rate !== '') {
+                if (pDest && pDest.action === 'CARGAR' && pDest.op_rate !== '') {
+                    const val = Number(pDest.op_rate);
+                    customLoad = pDest.rate_unit === 'TH' ? val : val / 24;
+                } else if (pOrig && pOrig.action === 'CARGAR' && pOrig.op_rate !== '') {
                     const val = Number(pOrig.op_rate);
-                    // Backend espera T/h. TH -> as-is; TD -> dividir por 24 para convertir a T/h
                     customLoad = pOrig.rate_unit === 'TH' ? val : val / 24;
                 }
+
                 if (pDest && pDest.action === 'DESCARGAR' && pDest.op_rate !== '') {
                     const val = Number(pDest.op_rate);
                     customDisch = pDest.rate_unit === 'TH' ? val : val / 24;
+                }
+
+                // Cantidad efectuada en la recalada de destino
+                let destQuantity = Number(tr.quantity) || 0;
+                if (pDest && pDest.action !== 'NONE' && pDest.quantity !== '' && pDest.quantity !== undefined) {
+                    const pQty = Number(pDest.quantity);
+                    if (pQty > 0) {
+                        destQuantity = pQty;
+                    }
                 }
 
                 // Regla Elegante Regida por OP.DEST (Columna Operación en Destino):
@@ -798,7 +810,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     origin_port_id: tr.origin_port_id,
                     destination_port_id: tr.destination_port_id,
                     type: tr.type,
-                    quantity: Number(tr.quantity) || 0,
+                    quantity: destQuantity,
+                    destination_quantity: destQuantity,
                     freight_rate: Number(tr.freight_rate),
                     port_delay_hours_loading: Number(tr.port_delay_hours_loading),
                     port_delay_hours_discharging: Number(tr.port_delay_hours_discharging),
