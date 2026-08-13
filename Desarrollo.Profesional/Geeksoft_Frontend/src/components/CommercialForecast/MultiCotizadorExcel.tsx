@@ -2863,17 +2863,16 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
                             {/* Sub-celda 1: Cifra Muellaje (Izquierda - Blanco/Vacío hasta calcular) */}
                             <td className="border-r border-slate-200 text-right pr-1.5 font-mono font-bold text-xs bg-slate-50/70">
-                                {puertosConfig[0].action !== 'NONE' ? (
-                                    result?.tramos?.[0]?.muellaje_cost_origin ? (
+                                {(() => {
+                                    if (puertosConfig[0].action === 'NONE') return <span className="text-slate-350 select-none pr-1">—</span>;
+                                    const mVal = result?.tramos?.[0]?.muellaje_cost_origin || result?.tramos?.[0]?.agency_costs_origin_details?.breakdown?.muellaje || 0;
+                                    if (!mVal) return <span></span>;
+                                    return (
                                         <span className={refacturarMuellajeMap[0] !== false ? 'text-blue-900' : 'text-slate-400 line-through'}>
-                                            {fmtCur(result.tramos[0].muellaje_cost_origin)}
+                                            {fmtCur(mVal)}
                                         </span>
-                                    ) : (
-                                        <span></span>
-                                    )
-                                ) : (
-                                    <span className="text-slate-350 select-none pr-1">—</span>
-                                )}
+                                    );
+                                })()}
                             </td>
                             {/* Sub-celda 2: Checkbox Refacturar (Derecha) */}
                             <td className="text-center p-0 bg-slate-50/70">

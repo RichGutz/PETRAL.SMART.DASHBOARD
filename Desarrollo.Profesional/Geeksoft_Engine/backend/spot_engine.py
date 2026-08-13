@@ -598,7 +598,19 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         res["contract_agreed_load_rate"] = tr.get("contract_agreed_load_rate")
         res["contract_agreed_discharge_rate"] = tr.get("contract_agreed_discharge_rate")
         res["agency_costs_origin_details"] = tr.get("agency_costs_origin_details")
-        res["agency_costs_destination_details"] = tr.get("agency_costs_destination_details"); [res.setdefault(k, v) for k, v in tr.items()]
+        res["agency_costs_destination_details"] = tr.get("agency_costs_destination_details")
+        [res.setdefault(k, v) for k, v in tr.items()]
+
+        orig_det = tr.get("agency_costs_origin_details") or {}
+        dest_det = tr.get("agency_costs_destination_details") or {}
+        orig_bk = orig_det.get("breakdown") if isinstance(orig_det, dict) else {}
+        dest_bk = dest_det.get("breakdown") if isinstance(dest_det, dict) else {}
+
+        m_orig = float(tr.get("muellaje_cost_origin") or (orig_bk.get("muellaje") if isinstance(orig_bk, dict) else 0) or 0)
+        m_dest = float(tr.get("muellaje_cost_dest") or (dest_bk.get("muellaje") if isinstance(dest_bk, dict) else 0) or 0)
+        res["muellaje_cost_origin"] = m_orig
+        res["muellaje_cost_dest"] = m_dest
+
         processed_tramos.append(res)
         if orig: visited_ports.add(orig)
         if dest: visited_ports.add(dest)
@@ -629,9 +641,9 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
 
     # Refacturación de Muellaje acumulada
     tot_refacturacion_muellaje = 0.0
-    for tr_m in tramos:
+    for tr_m in processed_tramos:
         if tr_m.get("refacturar_muellaje", True):
-            tot_refacturacion_muellaje += float(tr_m.get("muellaje_cost_dest", 0) or tr_m.get("muellaje_cost_origin", 0) or tr_m.get("muellaje_cost", 0))
+            tot_refacturacion_muellaje += float(tr_m.get("muellaje_cost_dest", 0)) + float(tr_m.get("muellaje_cost_origin", 0))
 
     pnl_net_utility = tot_freight_revenue - tot_port_costs - tot_bunker_costs - tot_comm_usd
     tce_real = pnl_net_utility / tot_days if tot_days > 0 else 0
