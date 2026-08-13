@@ -2876,7 +2876,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             </td>
                             {/* Sub-celda 2: Checkbox Refacturar (Derecha - Centrado) */}
                             <td className="border-r border-slate-300 text-center p-0 bg-slate-50/40">
-                                {puertosConfig[0].action !== 'NONE' ? (
+                                {puertosConfig[0].action !== 'NONE' && (result?.tramos?.[0]?.muellaje_cost_origin || result?.tramos?.[0]?.agency_costs_origin_details?.breakdown?.muellaje || 0) > 0 ? (
                                     <input
                                         type="checkbox"
                                         checked={refacturarMuellajeMap[0] ?? true}
@@ -3131,7 +3131,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                       </td>
                                       {/* Sub-celda 2: Checkbox Refacturar (Derecha - Centrado) */}
                                       <td className="border-r border-slate-300 text-center p-0 bg-slate-50/40">
-                                          {puertosConfig[idx + 1].action !== 'NONE' ? (
+                                          {puertosConfig[idx + 1].action !== 'NONE' && (trResult?.muellaje_cost_dest || trResult?.agency_costs_destination_details?.breakdown?.muellaje || 0) > 0 ? (
                                               <input
                                                   type="checkbox"
                                                   checked={refacturarMuellajeMap[idx + 1] ?? true}
