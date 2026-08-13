@@ -2,7 +2,7 @@
 
 **Fecha de Congelación Funcional:** 13 de Agosto de 2026  
 **Estado de la Funcionalidad:** 100% Validada en Producción VPS (`https://forecast.geeksoft.tech/multicotizador`) y convergencia 0.000000 contra Excel PETRAL.  
-**Objetivo de la Refactorización:** Reducir el componente monolítico `MultiCotizadorExcel.tsx` de **3,819 líneas a ~500 líneas**, despiezando la lógica comercial en micro-servicios proveedores y subcomponentes visuales aislados *a prueba de balas*.
+**Objetivo de la Refactorización:** Reducir el componente monolítico `MultiCotizadorExcel.tsx` de **3,819 líneas a ~500 líneas**, despiezando la lógica comercial en micro-servicios proveedores, el servicio de grabado/persistencia y subcomponentes visuales aislados *a prueba de balas*.
 
 ---
 
@@ -36,7 +36,7 @@ Antes de modificar una sola línea de código, se ha verificado e inventariado l
 
 ## 🗺️ 2. Flujograma de Arquitectura en Cascada Vertical (Top-to-Bottom)
 
-El siguiente flujo representa la arquitectura objetivo donde el componente de UI únicamente consume servicios puros de provisión de datos:
+El siguiente flujo representa la arquitectura objetivo donde el componente de UI únicamente consume servicios puros de provisión de datos y persistencia:
 
 ```mermaid
 flowchart TD
@@ -46,25 +46,30 @@ flowchart TD
         DB_Ports[("⚓ ports / routes\n(Distancias NM)")]
         DB_PortCosts[("💰 port_cost_static\n(Agencias & Muellaje)")]
         DB_Bunker[("🛢️ bunker_prices / contracts\n(Precios IFO/MDO)")]
+        DB_SavedQuotes[("📁 routes_quotes / routes_clients\n(Cotizaciones Guardadas)")]
     end
 
-    subgraph L2 ["NIVEL 2: PROVEEDORES DE DATOS (Frontend Services)"]
+    subgraph L2 ["NIVEL 2: PROVEEDORES DE DATOS & GRABADO (Frontend Services)"]
         direction LR
         S_Vessel["⚙️ vesselProviderService\n(Specs & Consumos)"]
         S_Bunker["⚙️ bunkerProviderService\n(Precios Búnker)"]
         S_Route["⚙️ routeDistancesService\n(Distancias & Clima)"]
         S_Port["⚙️ portCostsRatesService\n(Ritmos & Muellaje $33k)"]
+        S_Storage["💾 multicotizadorStorageService\n(Grabar / Cargar / Versionar)"]
     end
 
     subgraph L3 ["NIVEL 3: INTERFAZ DE USUARIO (MultiCotizadorExcel.tsx ~500 L)"]
         UI_FactSheet["📋 Fact Sheet Buque"]
         UI_Grid["📑 Grilla Tabular Spreadsheet Live"]
         UI_MuellajeCell["⚖️ Celda Dual Muellaje [Monto | [x]]"]
+        UI_SaveModal["💾 Modal Guardar / Cargar"]
         UI_FactSheet --> UI_Grid --> UI_MuellajeCell
+        UI_Grid --> UI_SaveModal
     end
 
-    subgraph L4 ["NIVEL 4: MOTOR DE CÁLCULO BACKEND (spot_engine.py)"]
-        API_Endpoint["📡 Router HTTP API\n/forecast/multicotizador/calculate"]
+    subgraph L4 ["NIVEL 4: MOTOR DE CÁLCULO & PERSISTENCIA BACKEND"]
+        API_Endpoint["📡 Router HTTP API Calculate\n/forecast/multicotizador/calculate"]
+        API_SaveEndpoint["📡 Router HTTP API Save\n/forecast/spot/save"]
         Engine_Sim["🧮 calculate_multicotizador_simulation()"]
         Engine_PnL["💰 Consolidado PnL & Refacturación Muellaje"]
         API_Endpoint --> Engine_Sim --> Engine_PnL
@@ -87,13 +92,18 @@ flowchart TD
     DB_Ports --> S_Route
     DB_PortCosts --> S_Port
     DB_Bunker --> S_Bunker
+    DB_SavedQuotes --> S_Storage
 
     S_Vessel --> UI_FactSheet
     S_Bunker --> UI_Grid
     S_Route --> UI_Grid
     S_Port --> UI_MuellajeCell
+    S_Storage --> UI_SaveModal
 
     UI_MuellajeCell -->|"Payload JSON Tramos"| API_Endpoint
+    UI_SaveModal --> S_Storage
+    S_Storage -->|"Save / Load JSON"| API_SaveEndpoint
+
     Engine_PnL --> Card_Bunker
     Engine_PnL --> Card_PortCosts
     Engine_PnL --> Card_Financials
@@ -104,23 +114,29 @@ flowchart TD
 
 ## 📐 3. Plan de Despiece Modular Paso a Paso
 
-### 🚀 FASE 1: Creación del Directorio de Servicios Proveedores
+### 🚀 FASE 1: Creación del Directorio de Servicios Proveedores y Persistencia
 Crear la estructura física en `Geeksoft_Frontend/src/services/providers/`:
-- `bunkerProviderService.ts`: Lógica pura de resolución de combustibles.
-- `vesselProviderService.ts`: Lógica pura de extracción de specs y consumos del buque.
-- `routeDistancesService.ts`: Lógica pura de distancias NM y factores de clima.
-- `portCostsRatesService.ts`: Lógica pura de ritmos, overheads y autocompletado de muellaje ($33,333).
+1. `bunkerProviderService.ts`: Lógica pura de resolución de combustibles.
+2. `vesselProviderService.ts`: Lógica pura de extracción de specs y consumos del buque.
+3. `routeDistancesService.ts`: Lógica pura de distancias NM y factores de clima.
+4. `portCostsRatesService.ts`: Lógica pura de ritmos, overheads y autocompletado de muellaje ($33,333).
+5. **`multicotizadorStorageService.ts`** *(¡NUEVO SERVICIO DE GRABADO!)*:
+   - `saveMulticotizadorQuote()`: Empaqueta y guarda la cotización enriquecida en Supabase DB (`/forecast/spot/save`).
+   - `listMulticotizadorQuotes()`: Lista y filtra cotizaciones guardadas por cliente activo / prospecto.
+   - `loadMulticotizadorQuote()`: Carga y desempaca tramos, `puertosConfig` y parámetros en la grilla UI.
+   - `deleteMulticotizadorQuote()`: Elimina o archiva cotizaciones.
 
 ### 🎨 FASE 2: Creación de Subcomponentes Visuales UI
 Crear la estructura física en `Geeksoft_Frontend/src/components/CommercialForecast/multicotizador/`:
 - `VesselFactSheetHeader.tsx`: Cabecera editable del buque (~150 líneas).
 - `SpreadsheetTramosGrid.tsx`: Tabla interactiva con celda dual de muellaje (~350 líneas).
 - `FinancialResultCards.tsx`: Tarjetas de resumen Búnker, Port Costs y Result (~300 líneas).
+- `SaveLoadQuoteModals.tsx`: Modales para guardar y cargar cotizaciones (~180 líneas).
 - `pdfExportTemplate.ts`: Plantilla aislada de impresión PDF (~300 líneas).
 
 ### 🧩 FASE 3: Reensamblaje del Componente Principal `MultiCotizadorExcel.tsx`
 - Reducir el componente principal a **~500 líneas**.
-- Toda interacción de usuario delegará en los servicios de la Fase 1 y renderizará los componentes de la Fase 2.
+- Toda interacción de usuario delegará en los 5 servicios de la Fase 1 y renderizará los componentes de la Fase 2.
 
 ---
 
@@ -134,8 +150,9 @@ python Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador\scripts\ru
 ### Criterios de Aprobación Obligatorios:
 1. **Delta Cuantitativo:** 0.000000 desviación en fletes, búnker, port costs y TCE real contra el Excel oficial PETRAL.
 2. **Prueba Vértice D (Anti-Goles Mejillones):** Verificación de unicidad en la refacturación de muellaje ($33,333.00).
-3. **Build TypeScript Limpio:** `npm run build` con código de salida 0.
-4. **Despliegue VPS Automático:** Ejecución mediante `python deploy_forecast_kickoff.py`.
+3. **Prueba Persistencia (Save / Load):** Guardar una cotización simulada y recargarla verificando 100% de paridad.
+4. **Build TypeScript Limpio:** `npm run build` con código de salida 0.
+5. **Despliegue VPS Automático:** Ejecución mediante `python deploy_forecast_kickoff.py`.
 
 ---
 
