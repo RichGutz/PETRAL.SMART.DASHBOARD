@@ -2669,8 +2669,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                         <col style={{ width: '7%' }} />   {/* F ($/t) */}
                         <col style={{ width: '7%' }} />   {/* Costo Puerto */}
                         <col style={{ width: '6%' }} />   {/* Flete Calculado */}
-                        <col style={{ width: '6.5%' }} /> {/* Costo Bunker */}
-                        <col style={{ width: '5.5%' }} /> {/* Muellaje Cifra */}
+                        <col style={{ width: '6%' }} />   {/* Costo Bunker */}
+                        <col style={{ width: '4.5%' }} /> {/* Muellaje Cifra */}
                         <col style={{ width: '3%' }} />   {/* Muellaje Checkbox */}
                     </colgroup>
  
@@ -2861,17 +2861,21 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             </td>
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
-                            {/* Sub-celda 1: Cifra Muellaje (Solo si hay CARGA/DESCARGA) */}
+                            {/* Sub-celda 1: Cifra Muellaje (Izquierda - Blanco/Vacío hasta calcular) */}
                             <td className="border-r border-slate-200 text-right pr-1.5 font-mono font-bold text-xs bg-slate-50/70">
                                 {puertosConfig[0].action !== 'NONE' ? (
-                                    <span className={refacturarMuellajeMap[0] !== false ? 'text-blue-900' : 'text-slate-400 line-through'}>
-                                        {result?.tramos?.[0]?.muellaje_cost_origin ? fmtCur(result.tramos[0].muellaje_cost_origin) : '$0'}
-                                    </span>
+                                    result?.tramos?.[0]?.muellaje_cost_origin ? (
+                                        <span className={refacturarMuellajeMap[0] !== false ? 'text-blue-900' : 'text-slate-400 line-through'}>
+                                            {fmtCur(result.tramos[0].muellaje_cost_origin)}
+                                        </span>
+                                    ) : (
+                                        <span></span>
+                                    )
                                 ) : (
                                     <span className="text-slate-350 select-none pr-1">—</span>
                                 )}
                             </td>
-                            {/* Sub-celda 2: Checkbox Refacturar */}
+                            {/* Sub-celda 2: Checkbox Refacturar (Derecha) */}
                             <td className="text-center p-0 bg-slate-50/70">
                                 {puertosConfig[0].action !== 'NONE' ? (
                                     <input
@@ -3162,6 +3166,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             <td className="border-r border-blue-200 text-right pr-2 font-mono text-blue-900">
                                 {result ? fmtCur(result.consolidated.total_bunker_costs || 0) : '$0'}
                             </td>
+                            <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
                             <td className="text-right pr-2 text-slate-400">—</td>
                         </tr>
 
@@ -3208,6 +3213,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtCur(sumPortCosts)}</td>
                                         <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtCur(sumFreightIncome)}</td>
                                         <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtCur(sumBunkerCosts)}</td>
+                                        <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
                                         <td className="text-right pr-2 text-slate-400">—</td>
                                     </tr>
 
@@ -3238,6 +3244,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         <td className="border-r border-slate-300 text-right pr-2 font-mono">
                                             {Math.abs(diffBunkerCosts) > 0.5 ? `${diffBunkerCosts > 0 ? '+' : ''}${fmtCur(diffBunkerCosts)}` : '$0'}
                                         </td>
+                                        <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
                                         <td className="text-right pr-2 text-slate-400">—</td>
                                     </tr>
                                 </>
