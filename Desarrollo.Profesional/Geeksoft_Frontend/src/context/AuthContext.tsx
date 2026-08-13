@@ -54,6 +54,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.error("Error al cargar la sesión persistida:", e);
                 logout();
             }
+        } else if (import.meta.env.DEV) {
+            // Auto-login automático en entorno local de desarrollo
+            const devUser: User = {
+                id: 'dev-admin',
+                email: 'izavala@petral.com.pe',
+                full_name: 'Iosef Zavala (Local Dev)',
+                role: 'ADMIN'
+            };
+            const devPerms: UserPermissions = {
+                multicotizador_spot: 'Editor',
+                matriz_financiera: 'Editor',
+                maestro_buques: 'Editor',
+                maestro_rutas: 'Editor',
+                maestro_puertos: 'Editor',
+                maestro_contratos: 'Editor',
+                maestro_tarifas: 'Editor',
+                maestro_costos_agencia: 'Editor',
+                maestro_bunker: 'Editor'
+            };
+            setUser(devUser);
+            setPermissions(devPerms);
+            localStorage.setItem('petral_session', 'authenticated');
+            localStorage.setItem('petral_user', JSON.stringify(devUser));
+            localStorage.setItem('petral_permissions', JSON.stringify(devPerms));
         }
         setLoading(false);
     }, []);
