@@ -737,34 +737,27 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     customDisch = pDest.rate_unit === 'TH' ? val : val / 24;
                 }
 
-                // Asignación estricta de Overhead (Time to Count) y Posicionamiento:
-                // Las horas de Time to Count y Maniobras pertenecen a las operaciones del tramo de carga (LADEN).
-                // En tramos en lastre (BALLAST), son 0.0 salvo que el usuario ingrese un valor explícito.
-                const isLaden = tr.type === 'LADEN';
+                // Regla Elegante Regida por OP.DEST (Columna Operación en Destino):
+                // Cada fila i representa la llegada al puerto pDest (puertosConfig[idx + 1]).
+                // OP.DEST (pDest.action) es la FUENTE ÚNICA DE VERDAD de la operación en esa recalada.
+                const opDest = pDest?.action || 'NONE';
 
                 let overheadOrig = 0.0;
                 let overheadDest = 0.0;
-                if (isLaden) {
-                    if (pOrig && pOrig.action !== 'NONE' && pOrig.overhead !== '') {
-                        overheadOrig = Number(pOrig.overhead);
-                    }
-                    if (pDest && pDest.action !== 'NONE' && pDest.overhead !== '') {
-                        overheadDest = Number(pDest.overhead);
-                    }
-                }
-
                 let posCarga = 0.0;
                 let posDescarga = 0.0;
-                if (isLaden) {
-                    if (pOrig && pOrig.action === 'CARGAR' && pOrig.positioning !== '') {
-                        posCarga = Number(pOrig.positioning);
-                    } else if (pDest && pDest.action === 'CARGAR' && pDest.positioning !== '') {
-                        posCarga = Number(pDest.positioning);
+
+                if (opDest !== 'NONE') {
+                    if (pDest?.overhead !== '' && pDest?.overhead !== undefined) {
+                        overheadDest = Number(pDest.overhead);
                     }
-                    if (pOrig && pOrig.action === 'DESCARGAR' && pOrig.positioning !== '') {
-                        posDescarga = Number(pOrig.positioning);
-                    } else if (pDest && pDest.action === 'DESCARGAR' && pDest.positioning !== '') {
-                        posDescarga = Number(pDest.positioning);
+                    if (pDest?.positioning !== '' && pDest?.positioning !== undefined) {
+                        const pVal = Number(pDest.positioning);
+                        if (opDest === 'CARGAR') {
+                            posCarga = pVal;
+                        } else if (opDest === 'DESCARGAR') {
+                            posDescarga = pVal;
+                        }
                     }
                 }
 
