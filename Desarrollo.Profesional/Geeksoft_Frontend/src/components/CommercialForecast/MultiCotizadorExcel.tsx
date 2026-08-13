@@ -1983,10 +1983,11 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                         <table className="w-full text-left font-mono text-[10px] border-collapse">
                             <thead>
                                 <tr className="bg-slate-200 border-b border-black text-slate-900 font-bold">
-                                    <th className="p-1.5 border-r border-black w-[22%]">ÍTEM / MÉTRICA OFICIAL</th>
-                                    <th className="p-1.5 border-r border-black w-[30%]">FÓRMULA APLICADA</th>
-                                    <th className="p-1.5 border-r border-black w-[34%]">CÁLCULO SUSTITUIDO NUMÉRICO</th>
-                                    <th className="p-1.5 text-right w-[14%]">GEEKSOFT ENGINE</th>
+                                    <th className="p-1.5 border-r border-black w-[20%]">ÍTEM / MÉTRICA OFICIAL</th>
+                                    <th className="p-1.5 border-r border-black w-[22%]">FÓRMULA APLICADA</th>
+                                    <th className="p-1.5 border-r border-black w-[26%]">CÁLCULO SUSTITUIDO NUMÉRICO</th>
+                                    <th className="p-1.5 border-r border-black text-right w-[14%]">GEEKSOFT ENGINE</th>
+                                    <th className="p-1.5 text-left w-[18%]">FUENTE DE DATOS</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-300">
@@ -1994,79 +1995,92 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     <td className="p-1.5 font-bold border-r border-slate-300">1. Ritmo Carga (act_load)</td>
                                     <td className="p-1.5 border-r border-slate-300 text-slate-600">contract_load_rate</td>
                                     <td className="p-1.5 border-r border-slate-300">{r_l} T/h ({vesselParams.vessel_name || selectedVessel})</td>
-                                    <td className="p-1.5 text-right font-bold">{r_l} T/h</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-right font-bold">{r_l} T/h</td>
+                                    <td className="p-1.5 text-slate-700 font-bold">[UI Override / Contratos]</td>
                                 </tr>
                                 <tr>
                                     <td className="p-1.5 font-bold border-r border-slate-300">2. Ritmo Descarga (act_disch)</td>
                                     <td className="p-1.5 border-r border-slate-300 text-slate-600">contract_discharge_rate</td>
                                     <td className="p-1.5 border-r border-slate-300">{r_d} T/h ({vesselParams.vessel_name || selectedVessel})</td>
-                                    <td className="p-1.5 text-right font-bold">{r_d} T/h</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-right font-bold">{r_d} T/h</td>
+                                    <td className="p-1.5 text-slate-700 font-bold">[UI Override / Contratos]</td>
                                 </tr>
                                 <tr>
                                     <td className="p-1.5 font-bold border-r border-slate-300">3. Días de Puerto (port_days)</td>
-                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">Sum((Q/act_load)/24 + (Q/act_disch)/24 + idle)</td>
-                                    <td className="p-1.5 border-r border-slate-300">Load({fmtDays(Q/r_l/24)}d) + Disch({fmtDays(Q/r_d/24)}d) + Overheads({fmtDays(Math.max(0, port_days - (Q/r_l/24) - (Q/r_d/24)))}d)</td>
-                                    <td className="p-1.5 text-right font-bold">{fmtDays(port_days)} Días</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">Sum((Q/act_load)/24 + (Q/act_disch)/24 + time_to_count)</td>
+                                    <td className="p-1.5 border-r border-slate-300">Load({fmtDays(Q/r_l/24)}d) + Disch({fmtDays(Q/r_d/24)}d) + TimeToCount({fmtDays(Math.max(0, port_days - (Q/r_l/24) - (Q/r_d/24)))}d)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-right font-bold">{fmtDays(port_days)} Días</td>
+                                    <td className="p-1.5 text-slate-700 font-bold">[Cálculo Matriz Operativa]</td>
                                 </tr>
                                 <tr>
                                     <td className="p-1.5 font-bold border-r border-slate-300">4. Días de Mar (sea_days)</td>
                                     <td className="p-1.5 border-r border-slate-300 text-slate-600">Sum((dist_leg * (1 + WF)) / (speed * 24))</td>
                                     <td className="p-1.5 border-r border-slate-300">{seaDaysCalcStr}</td>
-                                    <td className="p-1.5 text-right font-bold">{fmtDays(sea_days)} Días</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-right font-bold">{fmtDays(sea_days)} Días</td>
+                                    <td className="p-1.5 text-slate-700 font-bold">[Maestro Distancias (distances)]</td>
                                 </tr>
                                 <tr>
                                     <td className="p-1.5 font-bold border-r border-slate-300">5. Días de Viaje (tot_dur)</td>
                                     <td className="p-1.5 border-r border-slate-300 text-slate-600">sea_days + port_days</td>
                                     <td className="p-1.5 border-r border-slate-300">{fmtDays(sea_days)}d Mar + {fmtDays(port_days)}d Puerto</td>
-                                    <td className="p-1.5 text-right font-bold">{fmtDays(tot_days)} Días</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-right font-bold">{fmtDays(tot_days)} Días</td>
+                                    <td className="p-1.5 text-slate-700 font-bold">[Suma Días Mar + Puerto]</td>
                                 </tr>
                                 <tr>
                                     <td className="p-1.5 font-bold border-r border-slate-300">6. Income (income)</td>
                                     <td className="p-1.5 border-r border-slate-300 text-slate-600">Sum(Q_leg * F_leg)</td>
                                     <td className="p-1.5 border-r border-slate-300">{tramosList.filter((t: any) => t.type === 'LADEN').length} Descargas × {fmtNum(Q)} MT × {fmtCur(F)} USD/MT</td>
-                                    <td className="p-1.5 text-right font-bold">{fmtCur(net_income)}</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-right font-bold">{fmtCur(net_income)}</td>
+                                    <td className="p-1.5 text-slate-700 font-bold">[Rejilla Flete UI (Q × F)]</td>
                                 </tr>
                                 <tr>
                                     <td className="p-1.5 font-bold border-r border-slate-300">7. (-) Hire (tce_req * tot_dur)</td>
                                     <td className="p-1.5 border-r border-slate-300 text-slate-600">tce_req * total_days</td>
                                     <td className="p-1.5 border-r border-slate-300">{fmtCur(tce_req)}/d × {fmtDays(tot_days)} Días</td>
-                                    <td className="p-1.5 text-right font-bold">-{fmtCur(tce_req * tot_days)}</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-right font-bold">-{fmtCur(tce_req * tot_days)}</td>
+                                    <td className="p-1.5 text-slate-700 font-bold">[Maestro Buques (tce_required)]</td>
                                 </tr>
                                 <tr>
                                     <td className="p-1.5 font-bold border-r border-slate-300">8. (-) Costo Bunker (bunker)</td>
                                     <td className="p-1.5 border-r border-slate-300 text-slate-600">bunker_sea + bunker_port</td>
                                     <td className="p-1.5 border-r border-slate-300">{fmtDays(ifo_tonnage)}t IFO × {fmtCur(p_ifo)} + {fmtDays(mdo_tonnage)}t MDO × {fmtCur(p_mdo)}</td>
-                                    <td className="p-1.5 text-right font-bold">-{fmtCur(bunker_cost)}</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-right font-bold">-{fmtCur(bunker_cost)}</td>
+                                    <td className="p-1.5 text-slate-700 font-bold">[{bunkerSource}]</td>
                                 </tr>
                                 <tr>
                                     <td className="p-1.5 font-bold border-r border-slate-300">9. (-) Port Costs (port_costs)</td>
-                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">Sum(agency_origin + agency_dest)</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-slate-600">Sum(port_cost_i) N-puertos</td>
                                     <td className="p-1.5 border-r border-slate-300">Puertos Origen + Puertos Destino ({fmtCur(c_orig)} + {fmtCur(c_dest)})</td>
-                                    <td className="p-1.5 text-right font-bold">-{fmtCur(port_costs)}</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-right font-bold">-{fmtCur(port_costs)}</td>
+                                    <td className="p-1.5 text-slate-700 font-bold">[Matriz Port Costs Supabase / UI]</td>
                                 </tr>
                                 <tr>
                                     <td className="p-1.5 font-bold border-r border-slate-300">10. (-) Comisiones (commissions)</td>
                                     <td className="p-1.5 border-r border-slate-300 text-slate-600">income * (addr_comm + bkr_comm)</td>
                                     <td className="p-1.5 border-r border-slate-300">{fmtCur(net_income)} × ${(addressCommPct + brokerCommPct).toFixed(2)}%</td>
-                                    <td className="p-1.5 text-right font-bold">-{fmtCur(comm_total)}</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-right font-bold">-{fmtCur(comm_total)}</td>
+                                    <td className="p-1.5 text-slate-700 font-bold">[Fact Sheet Buque]</td>
                                 </tr>
                                 <tr>
                                     <td className="p-1.5 font-bold border-r border-slate-300">11. Voyage Result / P&L (Utilidad Neta)</td>
                                     <td className="p-1.5 border-r border-slate-300 text-slate-600">income - hire - bunker - port_costs - comm</td>
                                     <td className="p-1.5 border-r border-slate-300">{fmtCur(net_income)} - {fmtCur(tce_req * tot_days)} - {fmtCur(bunker_cost)} - {fmtCur(port_costs)} - {fmtCur(comm_total)}</td>
-                                    <td className="p-1.5 text-right font-bold">{fmtCur(net_income - (tce_req * tot_days) - bunker_cost - port_costs - comm_total)}</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-right font-bold">{fmtCur(net_income - (tce_req * tot_days) - bunker_cost - port_costs - comm_total)}</td>
+                                    <td className="p-1.5 text-slate-700 font-bold">[Ecuación PnL Net Utility]</td>
                                 </tr>
                                 <tr>
                                     <td className="p-1.5 font-bold border-r border-slate-300">12. TCE Realizado (tce_real)</td>
                                     <td className="p-1.5 border-r border-slate-300 text-slate-600">pnl_bruto / tot_dur</td>
                                     <td className="p-1.5 border-r border-slate-300">{fmtCur(pnl_net)} / {fmtDays(tot_days)} Días</td>
-                                    <td className="p-1.5 text-right font-bold">{fmtCur(tce_real)}/día</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-right font-bold">{fmtCur(tce_real)}/día</td>
+                                    <td className="p-1.5 text-slate-700 font-bold">[Ecuación TCE Realizado]</td>
                                 </tr>
                                 <tr>
                                     <td className="p-1.5 font-bold border-r border-slate-300">13. Diferencia TCE (+/-)</td>
                                     <td className="p-1.5 border-r border-slate-300 text-slate-600">tce_real - tce_req</td>
                                     <td className="p-1.5 border-r border-slate-300">{fmtCur(tce_real)}/d - {fmtCur(tce_req)}/d</td>
-                                    <td className="p-1.5 text-right font-bold">{tce_diff >= 0 ? '+' : ''}${fmtCur(tce_diff)}/día</td>
+                                    <td className="p-1.5 border-r border-slate-300 text-right font-bold">{tce_diff >= 0 ? '+' : ''}${fmtCur(tce_diff)}/día</td>
+                                    <td className="p-1.5 text-slate-700 font-bold">[Ecuación Variación P/L]</td>
                                 </tr>
                             </tbody>
                         </table>
