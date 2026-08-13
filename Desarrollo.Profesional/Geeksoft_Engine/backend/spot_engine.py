@@ -61,7 +61,7 @@ def calculate_spot_multileg(payload: dict) -> dict:
                 "values": f"({rc(fmt(dist))} * (1+{rc(fmt_dec(w_factor))})) / ({vc(fmt_dec(speed))} * 24) = {vc(fmt_dec(sea_days))}"
             },
             "port_days": {
-                "formula": "(overhead + posic) / 24",
+                "formula": "(time_to_count + posic) / 24",
                 "values": f"{vc(fmt_dec(port_days))}"
             },
             "bunker_costs": {
