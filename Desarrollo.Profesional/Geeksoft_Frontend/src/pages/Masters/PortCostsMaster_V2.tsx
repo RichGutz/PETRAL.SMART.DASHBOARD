@@ -82,8 +82,8 @@ export const PortCostsMaster_V2: React.FC = () => {
                 if (!newState[portId]) newState[portId] = {};
                 if (!newState[portId][vKey]) {
                     newState[portId][vKey] = {
-                        CARGA: { MAIN: 0, loading_master: 0, other: 0 },
-                        DESCARGA: { MAIN: 0, loading_master: 0, other: 0 },
+                        CARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
+                        DESCARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
                         updated_at: row.updated_at || null,
                         updated_by: row.updated_by || null,
                         raw_vessel_id: rawVesselId
@@ -122,8 +122,8 @@ export const PortCostsMaster_V2: React.FC = () => {
             if (!next[upperPortId]) next[upperPortId] = {};
             if (!next[upperPortId][vKey]) {
                 next[upperPortId][vKey] = {
-                    CARGA: { MAIN: 0, loading_master: 0, other: 0 },
-                    DESCARGA: { MAIN: 0, loading_master: 0, other: 0 },
+                    CARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
+                    DESCARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
                     updated_at: null,
                     updated_by: null,
                     raw_vessel_id: vesselId
@@ -153,7 +153,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                     if (!targetVesselId) return;
                     
                     const currentUser = user?.full_name || user?.email || 'USUARIO';
-                    const subOps = ['MAIN', 'loading_master', 'other'];
+                    const subOps = ['MAIN', 'loading_master', 'muellaje', 'other'];
                     subOps.forEach(subOp => {
                         const cargaVal = costData.CARGA?.[subOp] ?? 0;
                         const descargaVal = costData.DESCARGA?.[subOp] ?? 0;
@@ -240,13 +240,14 @@ export const PortCostsMaster_V2: React.FC = () => {
                 // Extraer datos del estado o inicializar en ceros para la plantilla
                 const data = (costsState[portId] && costsState[portId][vKey]) 
                     ? costsState[portId][vKey]
-                    : { CARGA: { MAIN: 0, loading_master: 0, other: 0 }, DESCARGA: { MAIN: 0, loading_master: 0, other: 0 } };
+                    : { CARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 }, DESCARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 } };
 
                 // Fila Operación CARGA
                 const cMain = data.CARGA?.MAIN || 0;
                 const cLm = data.CARGA?.loading_master || 0;
+                const cMuellaje = data.CARGA?.muellaje || 0;
                 const cOther = data.CARGA?.other || 0;
-                const cTotal = cMain + cLm + cOther;
+                const cTotal = cMain + cLm + cMuellaje + cOther;
 
                 rows.push({
                     country: portCountry,
@@ -258,6 +259,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                     operation: 'Carga',
                     main_cost: cMain,
                     lm_cost: cLm,
+                    muellaje_cost: cMuellaje,
                     other_cost: cOther,
                     total_cost: cTotal
                 });
@@ -265,8 +267,9 @@ export const PortCostsMaster_V2: React.FC = () => {
                 // Fila Operación DESCARGA
                 const dMain = data.DESCARGA?.MAIN || 0;
                 const dLm = data.DESCARGA?.loading_master || 0;
+                const dMuellaje = data.DESCARGA?.muellaje || 0;
                 const dOther = data.DESCARGA?.other || 0;
-                const dTotal = dMain + dLm + dOther;
+                const dTotal = dMain + dLm + dMuellaje + dOther;
 
                 rows.push({
                     country: portCountry,
@@ -278,6 +281,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                     operation: 'Descarga',
                     main_cost: dMain,
                     lm_cost: dLm,
+                    muellaje_cost: dMuellaje,
                     other_cost: dOther,
                     total_cost: dTotal
                 });
@@ -296,6 +300,7 @@ export const PortCostsMaster_V2: React.FC = () => {
         { header: 'Operación', key: 'operation', type: 'string' },
         { header: 'Costo Agencia (USD)', key: 'main_cost', type: 'currency' },
         { header: 'Loading Master (USD)', key: 'lm_cost', type: 'currency' },
+        { header: 'Muellaje (USD)', key: 'muellaje_cost', type: 'currency' },
         { header: 'Otros Costos (USD)', key: 'other_cost', type: 'currency' },
         { header: 'Costo Total (USD)', key: 'total_cost', type: 'currency' }
     ];
@@ -461,8 +466,8 @@ export const PortCostsMaster_V2: React.FC = () => {
                                             };
 
                                             const vData = getVesselData(effectiveActivePortId, v.vessel_id) || {
-                                                CARGA: { MAIN: 0, loading_master: 0, other: 0 },
-                                                DESCARGA: { MAIN: 0, loading_master: 0, other: 0 },
+                                                CARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
+                                                DESCARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
                                                 updated_at: null,
                                                 updated_by: null
                                             };
@@ -500,10 +505,10 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                             <div className="text-[11px] font-black text-blue-700 uppercase tracking-wider flex items-center justify-between">
                                                                 <span>Carga</span>
                                                                 <span className="text-[10px] text-slate-400 font-bold">
-                                                                    Total: ${( (vData.CARGA?.MAIN || 0) + (vData.CARGA?.loading_master || 0) + (vData.CARGA?.other || 0) ).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                                                    Total: ${( (vData.CARGA?.MAIN || 0) + (vData.CARGA?.loading_master || 0) + (vData.CARGA?.muellaje || 0) + (vData.CARGA?.other || 0) ).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                                                 </span>
                                                             </div>
-                                                            <div className="grid grid-cols-3 gap-2">
+                                                            <div className="grid grid-cols-4 gap-1.5">
                                                                 <div className="flex flex-col gap-1">
                                                                     <label className="text-[9px] font-bold text-slate-500 uppercase">Agencia</label>
                                                                     <input 
@@ -512,7 +517,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                         onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-CARGA-MAIN`)}
                                                                         onBlur={() => setFocusedInput(null)}
                                                                         onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'CARGA', 'MAIN', e.target.value)}
-                                                                        className="w-full text-xs font-bold px-2 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
+                                                                        className="w-full text-xs font-bold px-1.5 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
                                                                         placeholder="0.00"
                                                                     />
                                                                 </div>
@@ -524,7 +529,19 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                         onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-CARGA-lm`)}
                                                                         onBlur={() => setFocusedInput(null)}
                                                                         onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'CARGA', 'loading_master', e.target.value)}
-                                                                        className="w-full text-xs font-bold px-2 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
+                                                                        className="w-full text-xs font-bold px-1.5 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
+                                                                        placeholder="0.00"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <label className="text-[9px] font-bold text-blue-800 uppercase">Muellaje</label>
+                                                                    <input 
+                                                                        type="text"
+                                                                        value={focusedInput === `${effectiveActivePortId}-${v.vessel_id}-CARGA-muellaje` ? (vData.CARGA?.muellaje ?? '') : formatCostValue(vData.CARGA?.muellaje)}
+                                                                        onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-CARGA-muellaje`)}
+                                                                        onBlur={() => setFocusedInput(null)}
+                                                                        onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'CARGA', 'muellaje', e.target.value)}
+                                                                        className="w-full text-xs font-bold px-1.5 py-1 bg-blue-50/50 border border-blue-200 rounded focus:border-blue-500 focus:outline-none text-blue-900 text-right"
                                                                         placeholder="0.00"
                                                                     />
                                                                 </div>
@@ -536,7 +553,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                         onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-CARGA-other`)}
                                                                         onBlur={() => setFocusedInput(null)}
                                                                         onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'CARGA', 'other', e.target.value)}
-                                                                        className="w-full text-xs font-bold px-2 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
+                                                                        className="w-full text-xs font-bold px-1.5 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
                                                                         placeholder="0.00"
                                                                     />
                                                                 </div>
@@ -548,10 +565,10 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                             <div className="text-[11px] font-black text-emerald-700 uppercase tracking-wider flex items-center justify-between">
                                                                 <span>Descarga</span>
                                                                 <span className="text-[10px] text-slate-400 font-bold">
-                                                                    Total: ${( (vData.DESCARGA?.MAIN || 0) + (vData.DESCARGA?.loading_master || 0) + (vData.DESCARGA?.other || 0) ).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                                                    Total: ${( (vData.DESCARGA?.MAIN || 0) + (vData.DESCARGA?.loading_master || 0) + (vData.DESCARGA?.muellaje || 0) + (vData.DESCARGA?.other || 0) ).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                                                 </span>
                                                             </div>
-                                                            <div className="grid grid-cols-3 gap-2">
+                                                            <div className="grid grid-cols-4 gap-1.5">
                                                                 <div className="flex flex-col gap-1">
                                                                     <label className="text-[9px] font-bold text-slate-500 uppercase">Agencia</label>
                                                                     <input 
@@ -560,7 +577,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                         onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-DESCARGA-MAIN`)}
                                                                         onBlur={() => setFocusedInput(null)}
                                                                         onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'DESCARGA', 'MAIN', e.target.value)}
-                                                                        className="w-full text-xs font-bold px-2 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
+                                                                        className="w-full text-xs font-bold px-1.5 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
                                                                         placeholder="0.00"
                                                                     />
                                                                 </div>
@@ -572,7 +589,19 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                         onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-DESCARGA-lm`)}
                                                                         onBlur={() => setFocusedInput(null)}
                                                                         onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'DESCARGA', 'loading_master', e.target.value)}
-                                                                        className="w-full text-xs font-bold px-2 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
+                                                                        className="w-full text-xs font-bold px-1.5 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
+                                                                        placeholder="0.00"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <label className="text-[9px] font-bold text-emerald-800 uppercase">Muellaje</label>
+                                                                    <input 
+                                                                        type="text"
+                                                                        value={focusedInput === `${effectiveActivePortId}-${v.vessel_id}-DESCARGA-muellaje` ? (vData.DESCARGA?.muellaje ?? '') : formatCostValue(vData.DESCARGA?.muellaje)}
+                                                                        onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-DESCARGA-muellaje`)}
+                                                                        onBlur={() => setFocusedInput(null)}
+                                                                        onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'DESCARGA', 'muellaje', e.target.value)}
+                                                                        className="w-full text-xs font-bold px-1.5 py-1 bg-emerald-50/50 border border-emerald-200 rounded focus:border-emerald-500 focus:outline-none text-emerald-900 text-right"
                                                                         placeholder="0.00"
                                                                     />
                                                                 </div>
@@ -584,7 +613,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                         onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-DESCARGA-other`)}
                                                                         onBlur={() => setFocusedInput(null)}
                                                                         onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'DESCARGA', 'other', e.target.value)}
-                                                                        className="w-full text-xs font-bold px-2 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
+                                                                        className="w-full text-xs font-bold px-1.5 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
                                                                         placeholder="0.00"
                                                                     />
                                                                 </div>
