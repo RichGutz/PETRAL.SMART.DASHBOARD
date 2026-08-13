@@ -430,10 +430,10 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
             pos_c = tr_dict.get("positioning_carga_hrs")
             pos_d = tr_dict.get("positioning_descarga_hrs")
 
-            tr_dict["port_overhead_hours_origin"] = float(po_or) if (po_or is not None and float(po_or) > 0) else time_load_hrs
-            tr_dict["port_overhead_hours_dest"] = float(po_de) if (po_de is not None and float(po_de) > 0) else time_disch_hrs
-            tr_dict["positioning_carga_hrs"] = float(pos_c) if (pos_c is not None and float(pos_c) > 0) else manuever_load_hrs
-            tr_dict["positioning_descarga_hrs"] = float(pos_d) if (pos_d is not None and float(pos_d) > 0) else manuever_disch_hrs
+            tr_dict["port_overhead_hours_origin"] = float(po_or) if po_or is not None else time_load_hrs
+            tr_dict["port_overhead_hours_dest"] = float(po_de) if po_de is not None else time_disch_hrs
+            tr_dict["positioning_carga_hrs"] = float(pos_c) if pos_c is not None else manuever_load_hrs
+            tr_dict["positioning_descarga_hrs"] = float(pos_d) if pos_d is not None else manuever_disch_hrs
             
             if contract:
                 tr_dict["contract_agreed_load_rate"] = load_rate_contract

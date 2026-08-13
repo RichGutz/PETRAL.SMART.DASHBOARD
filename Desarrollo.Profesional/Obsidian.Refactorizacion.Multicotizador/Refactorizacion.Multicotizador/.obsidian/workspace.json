@@ -1,30 +1,34 @@
 {
   "main": {
-    "id": "97f4ac43db8c3aa0",
+    "id": "13152b996e2323bd",
     "type": "split",
     "children": [
       {
-        "id": "426cffc1c9fb6928",
+        "id": "1f7344da5fd0c621",
         "type": "tabs",
         "children": [
           {
-            "id": "be02541d6fe951c2",
+            "id": "c071bdd9d00c2375",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "Bienvenido.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "Nueva pestaña"
+              "title": "Bienvenido"
             }
           }
         ]
       },
       {
-        "id": "4516fd417b1789af",
+        "id": "b9b5e1c800fa3338",
         "type": "tabs",
         "children": [
           {
-            "id": "efae6ecf7229e0f7",
+            "id": "eb6a16ab77fff22e",
             "type": "leaf",
             "state": {
               "type": "graph",
@@ -39,15 +43,15 @@
     "direction": "vertical"
   },
   "left": {
-    "id": "971eab8570eb3ad3",
+    "id": "a49a21de656c8b80",
     "type": "split",
     "children": [
       {
-        "id": "330e779b9a88f1be",
+        "id": "510148718b650f25",
         "type": "tabs",
         "children": [
           {
-            "id": "8a270807a6cd2367",
+            "id": "1a8ff3a798a02dc2",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -62,7 +66,7 @@
             }
           },
           {
-            "id": "f562d4f82ef5693e",
+            "id": "1705d998dafc5cfe",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -79,11 +83,14 @@
             }
           },
           {
-            "id": "444e8685dd693c65",
+            "id": "5ed9d190a3dfb6fc",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
-              "state": {},
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
               "icon": "lucide-bookmark",
               "title": "Marcadores"
             }
@@ -95,19 +102,20 @@
     "width": 300
   },
   "right": {
-    "id": "6caccf84fc1f7e5b",
+    "id": "212769e564606581",
     "type": "split",
     "children": [
       {
-        "id": "fec9b3237f57c419",
+        "id": "365c45b84b06c655",
         "type": "tabs",
         "children": [
           {
-            "id": "8a51307bd282bcdb",
+            "id": "069667b8f67359e6",
             "type": "leaf",
             "state": {
               "type": "backlink",
               "state": {
+                "file": "Bienvenido.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -121,11 +129,12 @@
             }
           },
           {
-            "id": "8c01b22c89f28dad",
+            "id": "d048ccc0559d79bc",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "Bienvenido.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -134,7 +143,7 @@
             }
           },
           {
-            "id": "ba4ebf336a450e87",
+            "id": "12b68ff7232f11d3",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -149,7 +158,7 @@
             }
           },
           {
-            "id": "ae8e527ffc4658be",
+            "id": "7e32eb7bd0763fe3",
             "type": "leaf",
             "state": {
               "type": "all-properties",
@@ -163,11 +172,12 @@
             }
           },
           {
-            "id": "7a64e10ee0346e2b",
+            "id": "46ca2cf180029260",
             "type": "leaf",
             "state": {
               "type": "outline",
               "state": {
+                "file": "Bienvenido.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -194,21 +204,8 @@
       "bases:Crear nueva base": false
     }
   },
-  "active": "be02541d6fe951c2",
+  "active": "c071bdd9d00c2375",
   "lastOpenFiles": [
-    "02_Analisis_Exceles_Liquidacion/01_Analisis_Granular_JN_y_MEC.md",
-    "05_Integracion_Matriz_Financiera/00_Comparativo_Forecast_vs_Real.md",
-    "05_Integracion_Matriz_Financiera",
-    "04_Base_de_Datos_Ejecucion_Real/00_Esquema_Tabla_Ejecucion_Real.md",
-    "04_Base_de_Datos_Ejecucion_Real",
-    "03_Motor_ETL_y_Parser/00_Arquitectura_Parser_Excel_Real.md",
-    "03_Motor_ETL_y_Parser",
-    "02_Analisis_Exceles_Liquidacion/00_Estructura_Excel_Moquegua_y_Tablones.md",
-    "02_Analisis_Exceles_Liquidacion",
-    "01_Transcripciones_y_Requerimientos/01_Transcripcion_Audio_ETL_Oficial.md",
-    "01_Transcripciones_y_Requerimientos",
-    "00_Overview/00_Objetivo_y_Flujo_ETL.md",
-    "00_Overview",
     "Bienvenido.md"
   ]
 }
