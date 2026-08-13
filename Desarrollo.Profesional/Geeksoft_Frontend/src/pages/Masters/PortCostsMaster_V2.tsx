@@ -525,8 +525,8 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                     <label className="text-[9px] font-bold text-slate-500 uppercase">Load Master</label>
                                                                     <input 
                                                                         type="text"
-                                                                        value={focusedInput === `${effectiveActivePortId}-${v.vessel_id}-CARGA-lm` ? (vData.CARGA?.loading_master ?? '') : formatCostValue(vData.CARGA?.loading_master)}
-                                                                        onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-CARGA-lm`)}
+                                                                        value={focusedInput === `${effectiveActivePortId}-${v.vessel_id}-CARGA-loading_master` ? (vData.CARGA?.loading_master ?? '') : formatCostValue(vData.CARGA?.loading_master)}
+                                                                        onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-CARGA-loading_master`)}
                                                                         onBlur={() => setFocusedInput(null)}
                                                                         onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'CARGA', 'loading_master', e.target.value)}
                                                                         className="w-full text-xs font-bold px-1.5 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
@@ -585,8 +585,8 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                     <label className="text-[9px] font-bold text-slate-500 uppercase">Load Master</label>
                                                                     <input 
                                                                         type="text"
-                                                                        value={focusedInput === `${effectiveActivePortId}-${v.vessel_id}-DESCARGA-lm` ? (vData.DESCARGA?.loading_master ?? '') : formatCostValue(vData.DESCARGA?.loading_master)}
-                                                                        onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-DESCARGA-lm`)}
+                                                                        value={focusedInput === `${effectiveActivePortId}-${v.vessel_id}-DESCARGA-loading_master` ? (vData.DESCARGA?.loading_master ?? '') : formatCostValue(vData.DESCARGA?.loading_master)}
+                                                                        onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-DESCARGA-loading_master`)}
                                                                         onBlur={() => setFocusedInput(null)}
                                                                         onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'DESCARGA', 'loading_master', e.target.value)}
                                                                         className="w-full text-xs font-bold px-1.5 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
