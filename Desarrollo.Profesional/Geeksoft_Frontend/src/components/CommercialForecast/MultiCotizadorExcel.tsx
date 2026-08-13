@@ -3608,16 +3608,35 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                             </tr>
 
                                             {/* 5. Port Costs dinámicos */}
-                                            {portItems.map((item, idx) => (
-                                                <tr key={idx} className="border-b border-emerald-100/60">
-                                                    <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
-                                                        (-) Port Costs {item.label}
-                                                    </td>
-                                                    <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
-                                                        -{fmtCur(item.cost)}
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {portItems.map((item, idx) => {
+                                                const trForPort = result?.tramos?.[idx === 0 ? 0 : idx - 1];
+                                                const mValPort = (item.role === 'POL' || idx === 0)
+                                                    ? (result?.tramos?.[0]?.muellaje_cost_origin || result?.tramos?.[0]?.agency_costs_origin_details?.breakdown?.muellaje || 0)
+                                                    : (trForPort?.muellaje_cost_dest || trForPort?.agency_costs_destination_details?.breakdown?.muellaje || 0);
+
+                                                return (
+                                                    <React.Fragment key={idx}>
+                                                        <tr className="border-b border-emerald-100/60">
+                                                            <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                                                (-) Port Costs {item.label}
+                                                            </td>
+                                                            <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
+                                                                -{fmtCur(item.cost)}
+                                                            </td>
+                                                        </tr>
+                                                        {mValPort > 0 && (
+                                                            <tr className="border-b border-emerald-100/60 bg-blue-50/50">
+                                                                <td className="py-0.5 pl-3 text-blue-900 font-sans text-[10px] font-bold">
+                                                                    ↳ Muellaje ({item.port_id})
+                                                                </td>
+                                                                <td className="text-right py-0.5 pr-1 font-bold text-blue-900 text-[10px]">
+                                                                    -{fmtCur(mValPort)}
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </React.Fragment>
+                                                );
+                                            })}
 
                                             {/* 6. Comisiones */}
                                             {(totalCommUsd > 0 || (addressCommPct + brokerCommPct) > 0) && (
