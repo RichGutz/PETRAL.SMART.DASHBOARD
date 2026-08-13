@@ -621,18 +621,6 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
     addr_comm_pct = float(payload.get("address_commission_pct") or vessel.get("address_commission_pct") or 0.0)
     bkr_comm_pct = float(payload.get("broker_commission_pct") or vessel.get("broker_commission_pct") or 0.0)
     tot_comm_usd = tot_freight_revenue * ((addr_comm_pct + bkr_comm_pct) / 100)
-    
-    comments = payload.get("comments") or ""
-    demurrage_rate_pd = float(payload.get("demurrage_rate_pd") or 0.0)
-    demurrage_days = float(payload.get("demurrage_days") or 0.0)
-    demurrage_total = float(payload.get("demurrage_total") or (demurrage_rate_pd * demurrage_days))
-
-    # Refacturación de Muellaje acumulada
-    tot_refacturacion_muellaje = 0.0
-    for tr_m in tramos:
-        if tr_m.get("refacturar_muellaje", True):
-            tot_refacturacion_muellaje += float(tr_m.get("muellaje_cost_dest", 0) or tr_m.get("muellaje_cost_origin", 0) or tr_m.get("muellaje_cost", 0))
-
     pnl_net_utility = tot_freight_revenue - tot_port_costs - tot_bunker_costs - tot_comm_usd
     tce_real = pnl_net_utility / tot_days if tot_days > 0 else 0
     # P/L correcto: voyage_result - (total_days * tce_required)
@@ -656,11 +644,6 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
             "pnl_net_utility": round(pnl_net_utility, 2),
             "tce_real": round(tce_real, 2),
             "tce_required": round(tce_req, 2),
-            "pl_vs_req": round(pl_vs_req, 2),
-            "comments": comments,
-            "demurrage_rate_pd": demurrage_rate_pd,
-            "demurrage_days": demurrage_days,
-            "demurrage_total": round(demurrage_total, 2),
-            "refacturacion_muellaje": round(tot_refacturacion_muellaje, 2)
+            "pl_vs_req": round(pl_vs_req, 2)
         }
     }

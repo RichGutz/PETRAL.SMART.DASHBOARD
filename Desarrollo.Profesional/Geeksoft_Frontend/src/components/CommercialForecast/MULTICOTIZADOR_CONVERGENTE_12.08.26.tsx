@@ -166,12 +166,6 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
     const [result, setResult] = useState<any>(null);
 
-    // Estado para Muellaje, Comentarios y Demurrage
-    const [refacturarMuellajeMap, setRefacturarMuellajeMap] = useState<Record<number, boolean>>({});
-    const [commentsText, setCommentsText] = useState<string>('');
-    const [demurrageRate, setDemurrageRate] = useState<number>(0);
-    const [demurrageDays, setDemurrageDays] = useState<number>(0);
-
 
     // Persistencia de Rutas
     const [showSaveModal, setShowSaveModal] = useState(false);
@@ -832,8 +826,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     positioning_carga_hrs: posCarga,
                     positioning_descarga_hrs: posDescarga,
                     agency_costs_origin: overridePortCostOrig,
-                    agency_costs_destination: overridePortCostDest,
-                    refacturar_muellaje: refacturarMuellajeMap[idx + 1] ?? true
+                    agency_costs_destination: overridePortCostDest
                 };
             });
 
@@ -844,12 +837,6 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 bunker_price_ifo: bunkerPriceIfo,
                 bunker_price_mdo: bunkerPriceMdo,
                 port_cost_mode: localPortCostMode,
-                comments: commentsText,
-                demurrage_rate_pd: demurrageRate,
-                demurrage_days: demurrageDays,
-                demurrage_total: demurrageRate * demurrageDays,
-                address_commission_pct: addressCommPct,
-                broker_commission_pct: brokerCommPct,
                 vessel_speed: Number(vesselParams.vessel_speed) || undefined,
                 grt: Number(vesselParams.grt) || undefined,
                 dwt: Number(vesselParams.dwt) || undefined,
@@ -1393,15 +1380,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     <td style="text-align:right">${pDest?.action === 'NONE' ? '$0' : fmtCur(trPortCost)}</td>
                     <td style="text-align:right">${tr.net_income > 0 ? fmtCur(tr.net_income) : '$0'}</td>
                     <td style="text-align:right">${fmtCur(tr.bunker_costs)}</td>
-                                     {/* Checkbox Muellaje (Refacturable al cliente) */}
-                                     <td className="text-center p-0 bg-slate-50/50">
-                                         <input
-                                             type="checkbox"
-                                             checked={refacturarMuellajeMap[idx + 1] ?? true}
-                                             onChange={(e) => setRefacturarMuellajeMap(prev => ({ ...prev, [idx + 1]: e.target.checked }))}
-                                             className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer accent-blue-600"
-                                             title="Refacturar Muellaje al cliente"
-                                         />
+                    <td style="text-align:right">${fmtNum(getBodegaSaliente(idx + 1))}</td>
                 </tr>
             `;
         });
@@ -2711,7 +2690,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             <th className="border-r border-slate-300 text-right pr-2">Costo Pto</th>
                             <th className="border-r border-slate-300 text-right pr-2">Flete ($)</th>
                             <th className="border-r border-slate-300 text-right pr-2">Bunker ($)</th>
-                            <th className="text-center p-0 font-bold" title="Refacturar Muellaje al Cliente">Muellaje</th>
+                            <th className="text-right pr-2">Bodega (T)</th>
                         </tr>
                     </thead>
  
@@ -2860,14 +2839,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             </td>
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
-                            <td className="text-center p-0 bg-slate-50/70">
-                                <input
-                                    type="checkbox"
-                                    checked={refacturarMuellajeMap[0] ?? true}
-                                    onChange={(e) => setRefacturarMuellajeMap(prev => ({ ...prev, 0: e.target.checked }))}
-                                    className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer accent-blue-600"
-                                    title="Refacturar Muellaje al cliente"
-                                />
+                            <td className="text-right pr-2 font-mono font-bold text-slate-500 bg-slate-50/70 select-none">
+                                {fmtNum(getBodegaSaliente(0))}
                             </td>
                         </tr>
 
@@ -3097,15 +3070,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         {trResult ? fmtCur(trResult.bunker_costs || 0) : '$0'}
                                     </td>
 
-                                     {/* Checkbox Muellaje (Refacturable al cliente) */}
-                                     <td className="text-center p-0 bg-slate-50/50">
-                                         <input
-                                             type="checkbox"
-                                             checked={refacturarMuellajeMap[idx + 1] ?? true}
-                                             onChange={(e) => setRefacturarMuellajeMap(prev => ({ ...prev, [idx + 1]: e.target.checked }))}
-                                             className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer accent-blue-600"
-                                             title="Refacturar Muellaje al cliente"
-                                         />
+                                    {/* Bodega (T) que arrastra el Tramo */}
+                                    <td className="text-right pr-2 font-mono font-bold text-slate-600 bg-slate-50/50 select-none">
+                                        {fmtNum(getBodegaSaliente(idx + 1))}
                                     </td>
                                 </tr>
                             );
@@ -3232,11 +3199,11 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 </table>
             </div>
 
-            {/* 3. RESUMEN FINANCIERO Y OPERATIVO INFERIOR (4 COLUMNAS PARALELAS Y GRID RESTRUCTURADO) */}
+            {/* 3. RESUMEN FINANCIERO Y OPERATIVO INFERIOR (4 COLUMNAS PARALELAS) */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 flex-shrink-0">
                 
-                {/* COLUMNA 1: BUNKER EXPENSES */}
-                <div className="col-span-1 bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
+                {/* Bunker Expenses */}
+                <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
                     <div>
                         <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans">
                             Bunker Expenses (Combustible)
@@ -3279,11 +3246,45 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 </tr>
                             </tbody>
                         </table>
+
+                        {/* Desplegable interactivo para Auditoría de Bunker */}
+                        {result?.tramos && (
+                            <details className="mt-2 border border-slate-250 rounded bg-slate-50 p-1.5 cursor-pointer">
+                                <summary className="text-[10.5px] font-bold text-slate-500 hover:text-slate-800 outline-none select-none">
+                                    Rastro de Auditoría Bunker (Fórmula & Toneladas)
+                                </summary>
+                                <div className="mt-1.5 space-y-1.5 text-[10.5px] font-mono text-slate-700 bg-white border border-slate-100 rounded p-1.5">
+                                    {result.tramos.map((tr: any, i: number) => (
+                                        <div key={i} className="border-b border-slate-100 pb-1.5 last:border-0 last:pb-0">
+                                            <div className="font-sans font-bold text-slate-800 text-[11px] mb-0.5">
+                                                Leg {i + 1} ({tr.origin_port_id} → {tr.destination_port_id}) — {tr.type}
+                                            </div>
+                                            {tr.type === 'LADEN' ? (
+                                                <div className="space-y-0.5 pl-1.5 border-l-2 border-orange-300">
+                                                    <div>• Días: Mar {fmtNum(tr.sea_days)} | Pto {fmtNum(tr.port_days)}</div>
+                                                    <div>• IFO: {fmtNum(tr.bunker_ifo)} t</div>
+                                                    <div className="text-[9.5px] text-slate-450 leading-none">
+                                                        Fórm: ({fmtNum(tr.sea_days)}d * {vesselParams.consumption_sea_ifo}t) + (d_puerto_norm * {vesselParams.consumption_idle_ifo}t) + (d_carga * {vesselParams.consumption_load_ifo}t) + (d_desc * {vesselParams.consumption_disch_ifo}t)
+                                                    </div>
+                                                    <div className="mt-0.5">• MDO: {fmtNum(tr.bunker_mdo)} t</div>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-0.5 pl-1.5 border-l-2 border-blue-300">
+                                                    <div>• Días: Mar {fmtNum(tr.sea_days)} | Pto 0.0</div>
+                                                    <div>• IFO: {fmtNum(tr.bunker_ifo)} t (Sea: {fmtNum(tr.sea_days)}d * {vesselParams.consumption_sea_ifo}t)</div>
+                                                    <div>• MDO: {fmtNum(tr.bunker_mdo)} t (Sea: {fmtNum(tr.sea_days)}d * {vesselParams.consumption_sea_mdo}t)</div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </details>
+                        )}
                     </div>
                 </div>
 
-                {/* COLUMNA 2: PORT COSTS */}
-                <div className="col-span-1 bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
+                {/* Port Costs */}
+                <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
                     <div>
                         <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans">
                             Port Costs (Gastos de Puerto)
@@ -3341,114 +3342,136 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 })()}
                             </tbody>
                         </table>
+
+                        {/* Desplegable interactivo para Auditoría de Port Costs */}
+                        {result?.tramos && (
+                            <details className="mt-2 border border-slate-250 rounded bg-slate-50 p-1.5 cursor-pointer">
+                                <summary className="text-[10.5px] font-bold text-slate-500 hover:text-slate-800 outline-none select-none">
+                                    Rastro de Auditoría Port Costs (Matriz / Fallback)
+                                </summary>
+                                <div className="mt-1.5 space-y-1.5 text-[10.5px] font-mono text-slate-700 bg-white border border-slate-100 rounded p-1.5">
+                                    {result.tramos.map((tr: any, i: number) => {
+                                        const origDet = tr.agency_costs_origin_details;
+                                        const destDet = tr.agency_costs_destination_details;
+                                        return (
+                                            <div key={i} className="border-b border-slate-100 pb-1.5 last:border-0 last:pb-0">
+                                                <div className="font-sans font-bold text-slate-800 text-[11px] mb-0.5">
+                                                    Leg {i + 1} ({tr.origin_port_id} → {tr.destination_port_id})
+                                                </div>
+                                                <div className="space-y-1.5 pl-1.5">
+                                                    {/* Origen */}
+                                                    {origDet && origDet.total_cost > 0 && (
+                                                        <div className="border-l-2 border-indigo-300 pl-1">
+                                                            <span className="font-bold text-slate-650">Origen {tr.origin_port_id}:</span> {fmtCur(origDet.total_cost)}
+                                                            {origDet.breakdown && Object.keys(origDet.breakdown).length > 0 ? (
+                                                                <div className="grid grid-cols-2 gap-x-2 pl-1.5 text-[9.5px] text-slate-450">
+                                                                    {Object.entries(origDet.breakdown).map(([concept, cost]: any) => (
+                                                                        <div key={concept}>{concept}: {fmtCur(cost)}</div>
+                                                                    ))}
+                                                                </div>
+                                                            ) : (
+                                                                <div className="pl-1.5 text-[9.5px] text-slate-400 italic">• Fallback Plano (Agency Matrix)</div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    {/* Destino */}
+                                                    {destDet && destDet.total_cost > 0 && (
+                                                        <div className="border-l-2 border-teal-300 pl-1">
+                                                            <span className="font-bold text-slate-650">Destino {tr.destination_port_id}:</span> {fmtCur(destDet.total_cost)}
+                                                            {destDet.breakdown && Object.keys(destDet.breakdown).length > 0 ? (
+                                                                <div className="grid grid-cols-2 gap-x-2 pl-1.5 text-[9.5px] text-slate-450">
+                                                                    {Object.entries(destDet.breakdown).map(([concept, cost]: any) => (
+                                                                        <div key={concept}>{concept}: {fmtCur(cost)}</div>
+                                                                    ))}
+                                                                </div>
+                                                            ) : (
+                                                                <div className="pl-1.5 text-[9.5px] text-slate-400 italic">• Fallback Plano (Agency Matrix)</div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    {(!origDet || origDet.total_cost === 0) && (!destDet || destDet.total_cost === 0) && (
+                                                        <div className="text-slate-400 italic text-[9.5px] pl-1">• Sin cargos (NONE o visitado)</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </details>
+                        )}
                     </div>
                 </div>
 
-                {/* COLUMNA 3: COMISIONES & DEMURRAGE */}
-                <div className="col-span-1 flex flex-col gap-2">
-                    {/* Comisiones */}
-                    <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
-                        <div>
-                            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1 flex items-center justify-between font-sans">
-                                <span>Comisiones de Viaje</span>
-                            </h3>
-                            <div className="flex flex-col gap-1.5">
-                                <div className="flex justify-between items-center text-xs font-sans">
-                                    <span className="font-semibold text-slate-600 text-[11px]">Address Comm (%)</span>
-                                    <div className="flex items-center gap-1">
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            max="100"
-                                            value={addressCommPct}
-                                            onChange={(e) => setAddressCommPct(Math.max(0, parseFloat(e.target.value) || 0))}
-                                            className="w-12 h-6 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                        />
-                                        <span className="font-bold text-slate-500 text-xs">%</span>
-                                    </div>
-                                </div>
-                                
-                                <div className="flex justify-between items-center text-xs font-sans">
-                                    <span className="font-semibold text-slate-600 text-[11px]">Broker Comm (%)</span>
-                                    <div className="flex items-center gap-1">
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            max="100"
-                                            value={brokerCommPct}
-                                            onChange={(e) => setBrokerCommPct(Math.max(0, parseFloat(e.target.value) || 0))}
-                                            className="w-12 h-6 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                        />
-                                        <span className="font-bold text-slate-500 text-xs">%</span>
-                                    </div>
-                                </div>
-
-                                <table className="w-full border-collapse border-t border-slate-100 mt-0.5 text-xs font-mono">
-                                    <tbody>
-                                        <tr className="border-b border-slate-100">
-                                            <td className="py-0.5 pl-1 text-slate-500 text-[10.5px]">Address (USD)</td>
-                                            <td className="text-right py-0.5 pr-1 font-bold">
-                                                {result ? fmtCur(result.consolidated.total_freight_revenue * (addressCommPct / 100)) : '$0'}
-                                            </td>
-                                        </tr>
-                                        <tr className="border-b border-slate-100">
-                                            <td className="py-0.5 pl-1 text-slate-500 text-[10.5px]">Broker (USD)</td>
-                                            <td className="text-right py-0.5 pr-1 font-bold">
-                                                {result ? fmtCur(result.consolidated.total_freight_revenue * (brokerCommPct / 100)) : '$0'}
-                                            </td>
-                                        </tr>
-                                        <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
-                                            <td className="py-0.5 pl-1 font-sans text-[10px] uppercase">Total Comm</td>
-                                            <td className="text-right py-0.5 pr-1 text-rose-600 font-bold">
-                                                {result ? `-${fmtCur(result.consolidated.total_commissions || 0)}` : '$0'}
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Card DEMURRAGE */}
-                    <div className="bg-white border border-slate-350 rounded p-2 shadow-sm">
-                        <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1 flex items-center justify-between font-sans">
-                            <span>Demurrage (Estadías)</span>
-                            <span className="text-[9.5px] font-mono text-slate-400">$ / día</span>
+                {/* Comisiones (Commercial Rules) */}
+                <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 flex items-center justify-between font-sans">
+                            <span>Comisiones de Viaje</span>
                         </h3>
-                        <div className="flex flex-col gap-1 text-xs font-sans">
-                            <div className="flex justify-between items-center">
-                                <span className="font-semibold text-slate-600 text-[10.5px]">Rate ($/día)</span>
-                                <input
-                                    type="number"
-                                    value={demurrageRate || ''}
-                                    onChange={(e) => setDemurrageRate(parseFloat(e.target.value) || 0)}
-                                    placeholder="15,000"
-                                    className="w-20 h-6 text-right font-mono font-bold bg-white border border-slate-300 rounded px-1 focus:outline-none focus:ring-1 focus:ring-amber-500 text-xs"
-                                />
+                        <div className="flex flex-col gap-2">
+                            {/* Address Comm Input */}
+                            <div className="flex justify-between items-center text-xs font-sans">
+                                <span className="font-semibold text-slate-600">Address Comm (%)</span>
+                                <div className="flex items-center gap-1">
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        max="100"
+                                        value={addressCommPct}
+                                        onChange={(e) => setAddressCommPct(Math.max(0, parseFloat(e.target.value) || 0))}
+                                        className="w-12 h-7 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    />
+                                    <span className="font-bold text-slate-500">%</span>
+                                </div>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="font-semibold text-slate-600 text-[10.5px]">Días</span>
-                                <input
-                                    type="number"
-                                    step="0.1"
-                                    value={demurrageDays || ''}
-                                    onChange={(e) => setDemurrageDays(parseFloat(e.target.value) || 0)}
-                                    placeholder="0.0"
-                                    className="w-20 h-6 text-right font-mono font-bold bg-white border border-slate-300 rounded px-1 focus:outline-none focus:ring-1 focus:ring-amber-500 text-xs"
-                                />
+                            
+                            {/* Broker Comm Input */}
+                            <div className="flex justify-between items-center text-xs font-sans">
+                                <span className="font-semibold text-slate-600">Broker Comm (%)</span>
+                                <div className="flex items-center gap-1">
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        max="100"
+                                        value={brokerCommPct}
+                                        onChange={(e) => setBrokerCommPct(Math.max(0, parseFloat(e.target.value) || 0))}
+                                        className="w-12 h-7 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    />
+                                    <span className="font-bold text-slate-500">%</span>
+                                </div>
                             </div>
-                            <div className="flex justify-between items-center pt-1 border-t border-slate-100 font-bold">
-                                <span className="text-slate-700 text-[10.5px]">Total Demurrage</span>
-                                <span className="font-mono text-amber-700">{fmtCur(demurrageRate * demurrageDays)}</span>
-                            </div>
+
+                            {/* Resumen de Montos en Tabla */}
+                            <table className="w-full border-collapse border-t border-slate-100 mt-1 text-xs font-mono">
+                                <tbody>
+                                    <tr className="border-b border-slate-100">
+                                        <td className="py-1 pl-1 text-slate-500">Address (USD)</td>
+                                        <td className="text-right py-1 pr-1 font-bold">
+                                            {result ? fmtCur(result.consolidated.total_freight_revenue * (addressCommPct / 100)) : '$0'}
+                                        </td>
+                                    </tr>
+                                    <tr className="border-b border-slate-100">
+                                        <td className="py-1 pl-1 text-slate-500">Broker (USD)</td>
+                                        <td className="text-right py-1 pr-1 font-bold">
+                                            {result ? fmtCur(result.consolidated.total_freight_revenue * (brokerCommPct / 100)) : '$0'}
+                                        </td>
+                                    </tr>
+                                    <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
+                                        <td className="py-1 pl-1 font-sans text-[10px] uppercase">Total Comm</td>
+                                        <td className="text-right py-1 pr-1 text-rose-600 font-bold">
+                                            {result ? `-${fmtCur(result.consolidated.total_commissions || 0)}` : '$0'}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
 
-                {/* COLUMNA 4: FINANCIAL VOYAGE RESULT */}
-                <div className="col-span-1 bg-emerald-50 border-2 border-emerald-500/30 rounded p-2 shadow-sm flex flex-col justify-between">
+                {/* Financial Result (Voyage Result) */}
+                <div className="bg-emerald-50 border-2 border-emerald-500/30 rounded p-2 shadow-sm flex flex-col justify-between">
                     <div>
                         <h3 className="text-[11.5px] font-black text-emerald-800 uppercase tracking-wide border-b border-emerald-200 pb-1 mb-1.5 flex items-center justify-between font-sans">
                             <span>FINANCIAL VOYAGE RESULT</span>
@@ -3472,7 +3495,6 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                     const totalPortCosts = result?.consolidated?.total_port_costs ?? portItems.reduce((sum, item) => sum + item.cost, 0);
 
                                     const revenue = result?.consolidated?.total_freight_revenue || (Q * F);
-                                    const refacturacionMuellajeUsd = result?.consolidated?.refacturacion_muellaje || 0;
                                     const addressCommUsd = revenue * (addressCommPct / 100);
                                     const brokerCommUsd = revenue * (brokerCommPct / 100);
                                     const totalCommUsd = result?.consolidated?.total_commissions || (addressCommUsd + brokerCommUsd);
@@ -3492,19 +3514,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 </td>
                                             </tr>
 
-                                            {/* 1.b Refacturación de Muellaje */}
-                                            {refacturacionMuellajeUsd > 0 && (
-                                                <tr className="border-b border-emerald-100/60 bg-emerald-100/30">
-                                                    <td className="py-0.5 pl-1 text-emerald-900 font-sans text-[10.5px] font-bold">
-                                                        (+) Refacturación Muellaje (USD)
-                                                    </td>
-                                                    <td className="text-right py-0.5 pr-1 font-bold text-emerald-800">
-                                                        +{fmtCur(refacturacionMuellajeUsd)}
-                                                    </td>
-                                                </tr>
-                                            )}
-
-                                            {/* 2. Hire */}
+                                            {/* 2. Hire (JUSTO DEBAJO DE REVENUE) */}
                                             <tr className="border-b border-emerald-100/60">
                                                 <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
                                                     (-) Hire ({fmtCur(tceReq)}/d × {fmtDays(totalDays)} d)
@@ -3546,7 +3556,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 </tr>
                                             ))}
 
-                                            {/* 6. Comisiones */}
+                                            {/* 6. Comisiones (Solo si hay comisión > 0%) */}
                                             {(totalCommUsd > 0 || (addressCommPct + brokerCommPct) > 0) && (
                                                 <tr className="border-b border-emerald-100/60">
                                                     <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
@@ -3558,7 +3568,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 </tr>
                                             )}
 
-                                            {/* VOYAGE RESULT / P&L */}
+                                            {/* VOYAGE RESULT / P&L (SUMA MATEMÁTICA EXACTA FILAS 1 A 7: Revenue - Hire - Bunker - Ports - Comm) */}
                                             {(() => {
                                                 const voyageResultPnl = revenue - hireUsd - ifoUsd - mdoUsd - totalPortCosts - totalCommUsd;
                                                 return (
@@ -3605,24 +3615,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                         </table>
                     </div>
                 </div>
-
-                {/* Card COMBINADO COMMENTS (Fila 2: Celda Ancha abarcando Columna 1 y Columna 2) */}
-                <div className="col-span-1 md:col-span-2 bg-white border border-slate-350 rounded p-2 shadow-sm">
-                    <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans flex items-center justify-between">
-                        <span>Comments (Observaciones del Viaje)</span>
-                        <span className="text-[9.5px] font-mono text-slate-400 font-normal">Notas comerciales</span>
-                    </h3>
-                    <textarea
-                        value={commentsText}
-                        onChange={(e) => setCommentsText(e.target.value)}
-                        placeholder="Ingrese comentarios u observaciones de la cotización..."
-                        className="w-full h-20 p-2 text-xs font-sans bg-slate-50 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700 resize-none"
-                    />
                 </div>
 
-            </div>
-            
-            {/* 6. GRABAR Y EXPORTAR (FUERA DEL GRID - 100% ANCHO COMPLETO UNIFICADO EN 1 SOLA FILA) */}
+                {/* 6. GRABAR Y EXPORTAR (FUERA DEL GRID - 100% ANCHO COMPLETO UNIFICADO EN 1 SOLA FILA) */}
                 <div className="bg-white border border-slate-300 rounded shadow-sm p-2 mt-3 select-none flex-shrink-0 w-full">
                     <div className="flex items-center justify-between bg-slate-50 p-2 rounded border border-slate-200 flex-nowrap whitespace-nowrap gap-2 w-full">
                         {/* Título / Badge 6 */}

@@ -77,6 +77,9 @@ class MultiCotizadorTramo(BaseModel):
     custom_discharge_rate: Optional[float] = None
     contract_agreed_load_rate: Optional[float] = None
     contract_agreed_discharge_rate: Optional[float] = None
+    refacturar_muellaje: Optional[bool] = True
+    muellaje_cost_origin: Optional[float] = 0.0
+    muellaje_cost_dest: Optional[float] = 0.0
 
 
 class MultiCotizadorRequest(BaseModel):
@@ -102,6 +105,10 @@ class MultiCotizadorRequest(BaseModel):
     consumption_disch_mdo: Optional[float] = None
     port_cost_mode: Optional[str] = Field("static", description="Modo de costo puerto: 'static' o 'matrix'")
     bunker_source: Optional[str] = Field("MAESTRO_CONTRATOS", description="Fuente de precios de bunker: 'MAESTRO_CONTRATOS', 'COTIZACION', 'MAESTRO_BUNKER' o 'SOBREESCRITURA'")
+    comments: Optional[str] = None
+    demurrage_rate_pd: Optional[float] = 0.0
+    demurrage_days: Optional[float] = 0.0
+    demurrage_total: Optional[float] = 0.0
 
 
 class ClientMaster(BaseModel):
