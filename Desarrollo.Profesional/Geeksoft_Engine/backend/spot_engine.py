@@ -639,11 +639,16 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
     demurrage_days = float(payload.get("demurrage_days") or 0.0)
     demurrage_total = float(payload.get("demurrage_total") or (demurrage_rate_pd * demurrage_days))
 
-    # Refacturación de Muellaje acumulada
+    # Refacturación de Muellaje acumulada (1 sola vez por recalada de puerto)
     tot_refacturacion_muellaje = 0.0
-    for tr_m in processed_tramos:
-        if tr_m.get("refacturar_muellaje", True):
-            tot_refacturacion_muellaje += float(tr_m.get("muellaje_cost_dest", 0)) + float(tr_m.get("muellaje_cost_origin", 0))
+    for idx_m, tr_m in enumerate(processed_tramos):
+        # Puerto Origen (solo en la recalada 0)
+        if idx_m == 0:
+            if tr_m.get("refacturar_muellaje", True) and tr_m.get("origin_action", "NONE") != "NONE":
+                tot_refacturacion_muellaje += float(tr_m.get("muellaje_cost_origin", 0))
+        # Puerto Destino (en cada tramo idx_m)
+        if tr_m.get("refacturar_muellaje", True) and tr_m.get("destination_action", "NONE") != "NONE":
+            tot_refacturacion_muellaje += float(tr_m.get("muellaje_cost_dest", 0))
 
     pnl_net_utility = tot_freight_revenue - tot_port_costs - tot_bunker_costs - tot_comm_usd
     tce_real = pnl_net_utility / tot_days if tot_days > 0 else 0

@@ -230,3 +230,64 @@ def run_triangular_qc_loop():
 
 if __name__ == "__main__":
     run_triangular_qc_loop()
+
+
+# ==========================================================================
+# [VERTICE D] PRUEBA ANTI-GOLES: ROTACION MULTI-TRAMO MEJILLONES ($33,333)
+# ==========================================================================
+print("\n[VERTICE D] Ejecutando Prueba Anti-Goles (Mejillones Multi-tramo)...")
+mejillones_payload = {
+    "client_id": "SPCC",
+    "vessel_id": "TABLONES",
+    "bunker_price_ifo": 967.26,
+    "bunker_price_mdo": 1528.26,
+    "port_cost_mode": "STATIC",
+    "tramos": [
+        {
+            "origin_port_id": "ILO",
+            "destination_port_id": "MEJILLONES",
+            "type": "LADEN",
+            "quantity": 13500,
+            "freight_rate": 30.0,
+            "origin_action": "CARGAR",
+            "destination_action": "DESCARGAR",
+            "refacturar_muellaje": True,
+            "agency_costs_origin": 23000,
+            "agency_costs_destination": 67833,
+            "agency_costs_destination_details": {
+                "total_cost": 67833,
+                "breakdown": {"MAIN": 32000, "loading_master": 2500, "muellaje": 33333, "other": 0}
+            }
+        },
+        {
+            "origin_port_id": "MEJILLONES",
+            "destination_port_id": "ILO",
+            "type": "BALLAST",
+            "origin_action": "DESCARGAR",
+            "destination_action": "NONE",
+            "refacturar_muellaje": True,
+            "agency_costs_origin": 0.00001,
+            "agency_costs_destination": 0,
+            "agency_costs_origin_details": {
+                "total_cost": 0.00001,
+                "breakdown": {"MAIN": -35833, "loading_master": 2500, "muellaje": 33333, "other": 0}
+            }
+        }
+    ]
+}
+
+resp_mej = requests.post(API_URL, json=mejillones_payload)
+assert resp_mej.status_code == 200, f"Error HTTP {resp_mej.status_code}"
+data_mej = resp_mej.json()
+refact_muellaje = data_mej.get("consolidated", {}).get("refacturacion_muellaje", 0)
+
+print(f"   • Refacturación Muellaje Evaluada: ${refact_muellaje:,.2f}")
+if refact_muellaje == 33333.0:
+    print("   • Aserción Unicidad Muellaje: [OK] (Cero Duplicación)")
+else:
+    print(f"   • Aserción Unicidad Muellaje: [FAIL] Esperado $33,333, recibido ${refact_muellaje}")
+    sys.exit(1)
+
+print("\n==========================================================================")
+print("   [OK] TODAS LAS ASERCIONES ANTI-GOLES PASARON SATISFACTORIAMENTE")
+print("==========================================================================\n")
