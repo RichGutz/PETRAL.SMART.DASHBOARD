@@ -1,23 +1,25 @@
 digraph MulticotizadorCascadeV1 {
     rankdir=TB;
     splines=ortho;
-    nodesep=0.4;
-    ranksep=0.5;
+    nodesep=0.5;
+    ranksep=0.6;
     
     node [shape=box, style="filled,rounded", fontname="Arial", fontsize=9];
     edge [fontname="Arial", fontsize=8];
 
     # ==========================================
-    #  NIVEL 1: CAPA DE PERSISTENCIA (DATOS FUENTE)
+    #  NIVEL 1: CAPA DE PERSISTENCIA (FILA HORIZONTAL)
     # ==========================================
     subgraph cluster_lvl1 {
-        label = "NIVEL 1: CAPA DE PERSISTENCIA (Supabase DB)"; 
+        label = "NIVEL 1: CAPA DE PERSISTENCIA & MAESTROS (Supabase DB)"; 
         style="filled"; color="#ECEFF1"; fontcolor="#37474F"; fillcolor="#F5F5F5";
         
-        DB_Vessels [label="🚢 MAESTRO BUQUES (vessels)\nSpecs, DWT, Speed, Consumos Sea/Idle/Load/Disch IFO & MDO", shape=cylinder, fillcolor="#FFE0B2"];
-        DB_Ports [label="⚓ MAESTRO PUERTOS Y RUTAS (ports / routes)\nCoordenadas, Países, Distancias NM, Weather Factor %", shape=cylinder, fillcolor="#B2EBF2"];
-        DB_PortCosts [label="💰 MAESTRO GASTOS PORTUARIOS (port_cost_static)\nAgencia, Loading Master y Muellaje desglosado", shape=cylinder, fillcolor="#B2EBF2", penwidth=2];
-        DB_Bunker [label="🛢️ MAESTRO BÚNKER (bunker_prices / contracts)\nPrecios Mercado & Contrato (IFO 380 / MDO 0.1%)", shape=cylinder, fillcolor="#FFE082"];
+        { rank=same; DB_Vessels; DB_Ports; DB_PortCosts; DB_Bunker; }
+        
+        DB_Vessels [label="🚢 MAESTRO BUQUES (vessels)\nSpecs, DWT, Speed,\nConsumos Sea/Idle/Port IFO & MDO", shape=cylinder, fillcolor="#FFE0B2"];
+        DB_Ports [label="⚓ MAESTRO PUERTOS & RUTAS\nCoordenadas, Países,\nDistancias NM, Weather Factor %", shape=cylinder, fillcolor="#B2EBF2"];
+        DB_PortCosts [label="💰 MAESTRO GASTOS PORTUARIOS\nAgencia, Loading Master y\nMuellaje desglosado (port_cost_static)", shape=cylinder, fillcolor="#B2EBF2", penwidth=2];
+        DB_Bunker [label="🛢️ MAESTRO BÚNKER & CONTRATOS\nPrecios Mercado & Contrato\nIFO 380 / MDO 0.1%", shape=cylinder, fillcolor="#FFE082"];
 
         DB_Vessels -> DB_Ports -> DB_PortCosts -> DB_Bunker [style=invis];
     }
@@ -29,6 +31,8 @@ digraph MulticotizadorCascadeV1 {
         label = "NIVEL 2: PROVEEDORES DE DATOS (Frontend Services)"; 
         style="filled,dashed"; color="#78909C"; fillcolor="#FAFAFA";
         
+        { rank=same; S_Vessel; S_Bunker; S_Route; S_Port; }
+
         S_Vessel [label="⚙️ vesselProviderService\nResuelve specs y consumos del buque", shape=component, fillcolor="#C5CAE9"];
         S_Bunker [label="⚙️ bunkerProviderService\nResuelve precios de combustible según fuente", shape=component, fillcolor="#FFE0B2"];
         S_Route [label="⚙️ routeDistancesService\nResuelve distancias NM y clima por tramo", shape=component, fillcolor="#B2DFDB"];
