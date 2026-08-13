@@ -1,105 +1,89 @@
-# 🔺 PROTOCOLO DE CONTROL DE CALIDAD (QC) TRIANGULAR — UI REACT ↔ BACKEND API ↔ EXCEL PETRAL
+# 03 Protocolo de Control de Calidad QC Triangular (UI ↔ Backend ↔ Excel)
 
-> **Ruta de Control**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador`  
-> **Fecha de Documentación**: 2026-08-12  
-> **Propósito**: Garantizar la convergencia matemática determinística y libre de errores entre las 3 capas del Multicotizador Spot V3.
+> **Documento Oficial de Registro de Errores y Reglas de Verificación de Calidad**  
+> **Ubicación:** `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador\03_Protocolo_de_Control_de_Calidad_QC_Triangular_UI_Backend_Excel.md`
 
 ---
 
-## 1. 🎯 El Principio de Verificación Triangular
+## 📌 1. Principio Fundamental de Verificación
 
-Ninguna prueba de control de calidad (QC) es válida si se prueba una capa aislada. El sistema solo se considera **APROBADO PARA PRODUCCIÓN** cuando los valores numéricos coinciden al 100% en los 3 vértices del triángulo de auditoría:
+Para garantizar que el Multicotizador del **PETRAL SMART DASHBOARD** sea 100% confiable para la toma de decisiones comerciales, el sistema debe cumplir la **Convergencia Triangular de 3 Vértices**:
 
 ```mermaid
 graph TD
-    A["Vértice A:<br/>Excel PETRAL Real (ETL Parser)"] <-->|1. Validación Ecuaciones| B["Vértice B:<br/>Backend FastAPI API Response JSON"]
-    B <-->|2. Rendición Fiel del Payload| C["Vértice C:<br/>UI React Web Renderizada (DOM)"]
-    C <-->|3. Verificación Visual de Pantalla| A
+    A["[Vértice A] Excel PETRAL Oficial<br/>NEXA ILO CALLAO MATARANI ILO.IZ.12.08.26.xlsx"] <--> B["[Vértice B] Backend FastAPI Engine<br/>POST /multicotizador/calculate"]
+    B <--> C["[Vértice C] Frontend React UI<br/>forecast.geeksoft.tech (DOM / State)"]
+    C <--> A
 ```
 
----
-
-## 2. 📋 La Matriz de Tolerancia Cuantitativa (Tolerancia Cero)
-
-Para evitar aproximaciones vagas o fallbacks silenciosos, la auditoría aplica la siguiente tabla estricta de tolerancia:
-
-| Métrica Audita | Expresión Matemática | Tolerancia Permitida | Criterio de Falla |
-|---|---|---|---|
-| **Ingresos Flete ($USD)** | $\sum (Q_{\text{leg}} \cdot F_{\text{leg}})$ | **$\$0.00$ USD** | Cualquier diferencia $> \$0.01$ |
-| **Costos de Puerto ($USD)** | $\sum_{i=0}^{N} \text{agency\_cost}(P_i)$ | **$\$0.00$ USD** | Duplicación de puertos intermedios |
-| **Días de Mar (Sea Days)** | $\frac{\text{dist} \cdot (1 + \text{WF})}{\text{speed} \cdot 24}$ | **$< 0.0001$ Días** | Descalce por redondeo prematuro |
-| **Días de Puerto (Port Days)** | $\sum \left(\frac{Q}{\text{Load} \cdot 24} + \frac{Q}{\text{Disch} \cdot 24} + \frac{\text{TIME TO COUNT}}{24}\right)$ | **$< 0.0001$ Días** | Re-inserción de 6h de contrato en `forecast.py` |
-| **Días Totales de Viaje** | $\text{Sea Days} + \text{Port Days}$ | **$< 0.0001$ Días** | Descalce entre tabla y tarjetas resumen |
-| **Costo Búnker ($USD)** | $\text{IFO}_{\text{tons}} \cdot P_{\text{IFO}} + \text{MDO}_{\text{tons}} \cdot P_{\text{MDO}}$ | **$\$0.00$ USD** | Uso de fallbacks de precios no seleccionados |
-| **Voyage Result / PCM ($USD)** | $\text{Flete} - \text{Puerto} - \text{Búnker} - \text{Comisiones}$ | **$\$0.00$ USD** | Resta incorrecta de Hire antes de PnL |
-| **TCE Realizado ($USD/día)** | $\frac{\text{Voyage Result}}{\text{Días Totales}}$ | **$\$0.00$ USD/día** | División por días desalineados |
+Si **CUALQUIERA** de los 3 vértices arroja un número distinto, **EL SISTEMA ESTÁ EN ESTADO DE FALLA**. No existen descalces "aceptables" ni aproximaciones por redondeo.
 
 ---
 
-## 3. ⚙️ Metodología de Ejecución Automática del QC (Paso a Paso)
+## 🚨 2. Bitácora de Errores Identificados y Corregidos por el Usuario
 
-### PASO 1: Extracción Automática de Referencia (Vértice A)
-- Se ejecuta un script en Python que abre el archivo Excel oficial (ej. `NEXA ILO CALLA MATARANI ILO.IZ.12.08.26.xlsx`) mediante `openpyxl`.
-- Extrae la Matriz Maestra de Valores de Referencia directamente de las celdas asignadas por el ETL (`I23`, `N15`, `N16`, `N18`, `Q14`, `Q15`, `Q16`, `Q17`).
+A continuación se documenta la lista detallada de errores arquitectónicos y fallas metodológicas que el usuario tuvo que señalar y corregir durante el desarrollo del loop de calidad:
 
-### PASO 2: Invocación HTTP Real al Endpoint API (Vértice B)
-- El script emite una solicitud HTTP `POST /multicotizador/calculate` al servidor backend FastAPI.
-- Atravesará obligatoriamente la capa middleware en `forecast.py` y el motor `spot_engine.py`.
-- Captura la estructura JSON retornado por la API (`consolidated` y `tramos`).
-
-### PASO 3: Validación del Renderizado DOM en Frontend (Vértice C)
-- Se compila el bundle estático (`npm run build`).
-- Se verifica que los componentes React de la UI (`MultiCotizadorExcel.tsx`) estén vinculados directamente a `trResult.port_days` y `result.consolidated`, prohibiendo cualquier llamada a funciones auxiliares locales que recalculen datos al vuelo sin pasar por la API.
-
-### PASO 4: Generación del Reporte Triangular de Convergencia
-- Si los 3 vértices muestran una diferencia de $\$0.00$ USD y $0.0000$ días, el cambio se declara **Aprobado para GIT & VPS**.
-- Si existe una diferencia, se detiene el proceso y se emite la trazabilidad exacta de la celda fallida.
+### ❌ Error #1: El Espejismo de Pruebas en Python con Payloads Forzados a Mano
+* **Falla:** El agente ejecutaba scripts Python (`run_triangular_qc_loop.py`) enviando un JSON "limpio" con valores a mano (`'port_overhead_hours_origin': 0.0`), y reportaba *"Convergencia 100%"* a la terminal, mientras la interfaz web real enviaba datos duplicados y mostraba `7.67d` (o `3.61d` PTO).
+* **Causa Raíz:** Se probaba el motor de Python de forma aislada sin usar el mismo constructor de payload que ejecuta el navegador en JavaScript (`puertosConfig` ➔ `tramos_inputs`).
+* **Regla Obligatoria:** **PROHIBIDO** declarar convergencia usando scripts con payloads simulados o forzados. El script de QC debe construir el payload **usando la lógica exacta del Frontend React**.
 
 ---
 
-## 4. 🚫 Reglas Inviolables de QC
-
-1. **PROHIBIDO probar scripts Python aislados**: Un script de Python que le fuerza datos a `spot_engine.py` NO constituye un QC completo porque ignora el comportamiento de `forecast.py` y el renderizado en React.
-2. **PROHIBIDO usar la consola del navegador como prueba**: La verificación debe sustentarse en la respuesta estructurada de la API HTTP y la coincidencia con la celda del Excel PETRAL real.
-3. **PROHIBIDO desplegar al VPS sin pasar la prueba triangular**: Solo se ejecuta `python deploy_forecast_kickoff.py` en `Push.VPS` una vez que la matriz de los 3 vértices muestre convergencia 100%.
+### ❌ Error #2: Duplicación de Horas de Puerto en Tramos en Lastre (`BALLAST`)
+* **Falla:** En una rotación `ILO ➔ CALLAO ➔ MATARANI ➔ ILO`, el motor sumaba las 7h de Callao en el Tramo 0 (`BALLAST`) y otra vez en el Tramo 1 (`LADEN`), y las 6h de Matarani en el Tramo 1 (`LADEN`) y otra vez en el Tramo 2 (`BALLAST`). Esto elevaba los días de puerto de `3.07d` a `3.61d` (86.75 horas totales en lugar de 73.75h).
+* **Causa Raíz:** `spot_engine.py` sumaba overheads y posicionamientos sin importar si el tramo era `BALLAST` o `LADEN`.
+* **Regla Obligatoria:** En tramos en lastre (`BALLAST`), los días operacionales en puerto son **`0.0`** (salvo demoras climáticas o de congestión explícitas `port_delay_hours`). Las horas de Time to Count y maniobras pertenecen únicamente a la recalada comercial.
 
 ---
 
-## 5. 🔁 Algoritmo del Script Automatizado de Bucle de QC (`run_triangular_qc_loop.py`)
+### ❌ Error #3: Violación de la Regla de "Cero Fallbacks No Nulos"
+* **Falla:** El agente insertó un fallback `overheadDest = 6.0` en el código JavaScript cuando la celda venía vacía `""`, disfrazando una omisión de la base de datos y creando engaño visual entre la celda en gris (`placeholder="6.0"`) y el estado real (`""`).
+* **Causa Raíz:** Intentar "adivinar" valores predeterminados en lugar de exigir que la base de datos o el usuario ingresen el valor explícito.
+* **Regla Obligatoria (Golden Rule PETRAL):**
+  > *"Prefiero un cero que me diga 'no sé qué hacer' que un 300 que me diga 'sé lo que estoy haciendo'."*
+  - Si una celda en la UI o en Supabase viene vacía `""`, su valor evaluado debe ser **`0.0` estricto**.
+  - Si un puerto debe tener 6.0h de Time to Count, dicho valor **debe estar grabado explícitamente como `"6"` en la tabla `routes_clients` de Supabase**.
 
-Para ejecutar la verificación continua sin intervención manual, el script automatizado opera en la ruta:
-`C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador\scripts\run_triangular_qc_loop.py`
+---
 
-### ⚙️ Ciclo de Ejecución del Bucle:
-```python
-def run_triangular_qc_loop():
-    # 1. Leer Vértice A (Excel PETRAL Real)
-    excel_ref = load_excel_reference("NEXA ILO CALLA MATARANI ILO.IZ.12.08.26.xlsx")
-    
-    # 2. Invocación HTTP Vértice B (API FastAPI real POST /multicotizador/calculate)
-    api_response = post_multicotizador_simulation(payload_nexa)
-    
-    # 3. Validación de Renderizado Vértice C (DOM Frontend Component Binding)
-    frontend_bundle_ok = verify_frontend_dom_binding()
-    
-    # 4. Matriz de Desviaciones Deltas
-    deltas = {
-        "freight_revenue": abs(api_response["total_freight_revenue"] - excel_ref["gross_revenue"]),
-        "port_costs": abs(api_response["total_port_costs"] - excel_ref["port_costs"]),
-        "sea_days": abs(api_response["total_sea_days"] - excel_ref["sea_days"]),
-        "port_days": abs(api_response["total_port_days"] - excel_ref["port_days"]), # Must be 3.072917
-        "total_days": abs(api_response["total_days"] - excel_ref["total_days"]),   # Must be 7.130492
-        "voyage_result": abs(api_response["voyage_result"] - excel_ref["voyage_result"]),
-        "tce_real": abs(api_response["tce_real"] - excel_ref["tce_real"])
-    }
-    
-    # 5. Evaluación de Bucle
-    has_error = any(diff > 0.0001 for diff in deltas.values())
-    if has_error:
-        print("❌ FAIL: Descalce detectado en la matriz triangular. Deteniendo despliegue.")
-        return False
-    else:
-        print("✅ SUCCESS: CONVERGENCIA TRIANGULAR ABSOLUTA 100% (Delta = 0). Listo para VPS.")
-        return True
-```
+### ❌ Error #4: Descalce Visual entre Celdas de la Grilla y la Fila de Total Estimado
+* **Falla:** Las celdas individuales de la columna `DÍAS PTO` en la grilla web ejecutaban una función local en JavaScript (`getPortDaysAndBunker`) que mostraba `1.42d` y `1.66d`, mientras que la fila de `TOTAL ESTIMADO` al pie de la tabla mostraba `3.03d` (proveniente del servidor).
+* **Causa Raíz:** La grilla renderizaba cálculos locales desfasados en lugar de pintar la respuesta oficial del servidor backend.
+* **Regla Obligatoria:** Cada celda de la grilla de la UI debe conectarse directamente a la propiedad devuelta por el servidor (`trResult.port_days`), garantizando 100% de coherencia visual en pantalla.
 
+---
+
+### ❌ Error #5: Ignorar la Columna `OP.DEST` como Fuente Única de Verdad
+* **Falla:** Intentar adivinar las operaciones portuarias mediante índices de arreglos o tipos de tramo en lugar de obedecer la columna `OP.DEST` de la interfaz.
+* **Causa Raíz:** Ignorar la arquitectura de la grilla diseñada por el usuario.
+* **Regla Obligatoria:** La columna **`OP.DEST`** (`NONE` | `CARGAR` | `DESCARGAR`) es la **Fuente Única de Verdad** de cada fila para determinar si se ejecutan operaciones comerciales y aplican horas de Time to Count y maniobras.
+
+---
+
+## 📐 3. Tabla de Referencia de Valores Exactos (Excel PETRAL)
+
+Para la cotización patrón `NEXA.ILO.CALLAO.MATARANI.ILO (12.08.26)` con buque `TABLONES` (13,500 MT a 500 T/h carga / 400 T/h descarga, IFO $1,100, MDO $1,700):
+
+| Celda Excel | Métrica Oficial | Fórmulas Aplicadas | Valor Exacto |
+| :--- | :--- | :--- | :---: |
+| **`Q15`** | **Días de Mar** | $(514 + 457 + 69) \times 1.03 / (11 \times 24)$ | **`4.057576` d** (`4.06 d`) |
+| **`Q16`** | **Días de Puerto** | $(27\text{h carga} + 33.75\text{h desch} + 6\text{h Callao} + 6\text{h Matarani} + 1\text{h posic}) / 24$ | **`3.072917` d** (`3.07 d` / 73.75h) |
+| **`Q14`** | **Duración Total** | $\text{Días Mar} + \text{Días Puerto}$ | **`7.130492` d** (`7.13 d`) |
+| **`N14`** | **Ingreso Flete Total** | $13,500\text{ MT} \times \$30.00\text{/MT}$ | **`$405,000.00` USD** |
+| **`N15`** | **Costos de Puerto** | $\$17,000\text{ (Callao)} + \$18,000\text{ (Matarani)}$ | **`$35,000.00` USD** |
+| **`N16`** | **Gastos de Búnker** | $\text{Tons IFO} \times 1100 + \text{Tons MDO} \times 1700$ | **`$80,074.48` USD** |
+| **`N18`** | **Voyage Result / PCM** | $\text{Flete} - \text{Puertos} - \text{Búnker}$ | **`$289,925.52` USD** |
+| **`Q17`** | **TCE Realizado** | $\text{Voyage Result} / \text{Duración Total}$ | **`$40,659.96` USD/día** |
+| **`Q20`** | **P/L Net vs Hire** | $\text{Voyage Result} - (\text{TCE Req} \times \text{Duración Total})$ | **`$182,968.14` USD** |
+
+---
+
+## 🛠️ 4. Protocolo Paso a Paso para Ejecutar el Loop QC Re-Validado
+
+1. **Inspección de Base de Datos:** Verificar que la ruta en Supabase contenga todos los valores explícitos (`"overhead": "6"`) y sin celdas vacías no intencionadas.
+2. **Prueba End-to-End de Payload:** Construir el payload usando las funciones exactas de la UI (`getCalculatedTramos` en `MultiCotizadorExcel.tsx`) sin parches manuales.
+3. **Consulta de API en Vivo:** Emitir `POST` a `https://forecast.geeksoft.tech/api/v1/forecast/multicotizador/calculate`.
+4. **Validación de Tolerancia Cero:** Exigir `Delta == 0.000000` en días de viaje y montos financieros respecto al Excel PETRAL.
+5. **Alineación Visual en DOM:** Verificar que el renderizado en pantalla (celdas de tabla + totales + tarjetas) coincida al 100% con los datos retornados por la API.

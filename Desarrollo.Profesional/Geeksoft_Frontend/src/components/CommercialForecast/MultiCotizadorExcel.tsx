@@ -217,8 +217,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     const getAutoPortOverhead = (portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR') => {
         const p = ports.find(x => x.port_id === portId);
         if (p) {
-            if (action === 'CARGAR') return p.time_to_count_carga_hrs ?? 6;
-            if (action === 'DESCARGAR') return p.time_to_count_descarga_hrs ?? 6;
+            if (action === 'CARGAR') return p.time_to_count_carga_hrs ?? 0;
+            if (action === 'DESCARGAR') return p.time_to_count_descarga_hrs ?? 0;
         }
         return '';
     };
@@ -1657,10 +1657,10 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 if (backendOverhead !== undefined) {
                     overheadHrs = backendOverhead;
                 } else {
-                    overheadHrs = Number(getAutoPortOverhead(portId, p.action)) || 6.0;
+                    overheadHrs = Number(getAutoPortOverhead(portId, p.action)) || 0.0;
                 }
             } else {
-                overheadHrs = 6.0;
+                overheadHrs = 0.0;
             }
         }
 
@@ -2709,7 +2709,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         value={puertosConfig[0].overhead ?? ''}
                                         onChange={(e) => updatePuertoConfigField(0, 'overhead', e.target.value)}
                                         className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
-                                        placeholder={result?.tramos?.[0]?.port_overhead_hours_origin !== undefined ? String(result.tramos[0].port_overhead_hours_origin) : '6.0'}
+                                        placeholder={result?.tramos?.[0]?.port_overhead_hours_origin !== undefined ? String(result.tramos[0].port_overhead_hours_origin) : '0.0'}
                                     />
                                 ) : (
                                     <span className="text-slate-350 select-none pr-2">—</span>
@@ -2919,7 +2919,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                 value={puertosConfig[idx + 1].overhead ?? ''}
                                                 onChange={(e) => updatePuertoConfigField(idx + 1, 'overhead', e.target.value)}
                                                 className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
-                                                placeholder={trResult?.port_overhead_hours_dest !== undefined ? String(trResult.port_overhead_hours_dest) : '6.0'}
+                                                placeholder={trResult?.port_overhead_hours_dest !== undefined ? String(trResult.port_overhead_hours_dest) : '0.0'}
                                             />
                                         ) : (
                                             <span className="text-slate-350 select-none pr-2">—</span>
