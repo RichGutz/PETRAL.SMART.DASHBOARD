@@ -851,12 +851,12 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     const wf = t.weather_factor || 0.03;
                     const sd = dist > 0 ? (dist * (1 + wf)) / (spd * 24) : 0;
                     const q = t.quantity || 0;
-                    const rL = t.custom_load_rate || 500;
-                    const rD = t.custom_discharge_rate || 300;
+                    const rL = t.custom_load_rate || 0;
+                    const rD = t.custom_discharge_rate || 0;
                     
-                    const loadD = t.type === 'LADEN' ? (q / rL / 24) : 0;
-                    const dischD = t.type === 'LADEN' ? (q / rD / 24) : 0;
-                    const idleD = t.type === 'LADEN' ? ((t.port_overhead_hours_origin || 6) + (t.port_overhead_hours_dest || 6)) / 24 : 0;
+                    const loadD = (t.type === 'LADEN' && rL > 0) ? (q / rL / 24) : 0;
+                    const dischD = (t.type === 'LADEN' && rD > 0) ? (q / rD / 24) : 0;
+                    const idleD = (t.type === 'LADEN') ? ((t.port_overhead_hours_origin || 0) + (t.port_overhead_hours_dest || 0)) / 24 : 0;
                     const pd = loadD + dischD + idleD;
 
                     const ifoSea = sd * consSeaIf;
@@ -2678,7 +2678,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
                             <td className="border-r border-slate-200 text-right pr-2 font-mono font-bold text-slate-700 bg-slate-50/50 select-none">
-                                {puertosConfig[0].action !== 'NONE' ? fmtDays(getPortDaysAndBunker(0).portDays) : '0.00'}
+                                0.00
                             </td>
                             
                             {/* Overhead */}
