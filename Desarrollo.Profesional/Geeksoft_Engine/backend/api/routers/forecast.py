@@ -400,7 +400,7 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
             orig_port_info = ports_db.get(tr.origin_port_id, {})
             dest_port_info = ports_db.get(tr.destination_port_id, {})
             
-            # Buscar contrato para TIME TO COUNT y posicionamientos filtrando por Cliente y Ruta
+            # Buscar contrato para TIME TO COUNT y posicionamientos filtrando STRICTAMENTE por Cliente y Ruta
             contract = next(
                 (c for c in contracts_db 
                  if c.get("client_id") == request.client_id 
@@ -409,21 +409,16 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
                  and c.get("is_active") is True), 
                 None
             )
-            if not contract:
-                contract = next(
-                    (c for c in contracts_db 
-                     if c.get("client_id") == request.client_id 
-                     and c.get("is_active") is True), 
-                    None
-                )
             
-            # Si el contrato existe, priorizar sus valores sin fallbacks inventados
-            time_load_hrs = float(contract.get("time_to_count_carga_hrs") if contract and contract.get("time_to_count_carga_hrs") is not None else 0.0)
-            time_disch_hrs = float(contract.get("time_to_count_descarga_hrs") if contract and contract.get("time_to_count_descarga_hrs") is not None else 0.0)
-            manuever_load_hrs = float(contract.get("maneuver_carga_hrs") if contract and contract.get("maneuver_carga_hrs") is not None else 0.0)
-            manuever_disch_hrs = float(contract.get("maneuver_descarga_hrs") if contract and contract.get("maneuver_descarga_hrs") is not None else 0.0)
-            load_rate_contract = float(contract.get("load_rate") if contract and contract.get("load_rate") is not None else 0.0)
-            disch_rate_contract = float(contract.get("discharge_rate") if contract and contract.get("discharge_rate") is not None else 0.0)
+            # En tramos BALLAST, por definición marítima no hay laytime de contrato salvo que se ingrese en UI
+            is_ballast = tr.type.upper() == "BALLAST"
+
+            time_load_hrs = float(contract.get("time_to_count_carga_hrs") if (contract and not is_ballast and contract.get("time_to_count_carga_hrs") is not None) else 0.0)
+            time_disch_hrs = float(contract.get("time_to_count_descarga_hrs") if (contract and not is_ballast and contract.get("time_to_count_descarga_hrs") is not None) else 0.0)
+            manuever_load_hrs = float(contract.get("maneuver_carga_hrs") if (contract and not is_ballast and contract.get("maneuver_carga_hrs") is not None) else 0.0)
+            manuever_disch_hrs = float(contract.get("maneuver_descarga_hrs") if (contract and not is_ballast and contract.get("maneuver_descarga_hrs") is not None) else 0.0)
+            load_rate_contract = float(contract.get("load_rate") if (contract and contract.get("load_rate") is not None) else 0.0)
+            disch_rate_contract = float(contract.get("discharge_rate") if (contract and contract.get("discharge_rate") is not None) else 0.0)
 
             po_or = tr_dict.get("port_overhead_hours_origin")
             po_de = tr_dict.get("port_overhead_hours_dest")
@@ -439,8 +434,8 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
                 tr_dict["contract_agreed_load_rate"] = load_rate_contract
                 tr_dict["contract_agreed_discharge_rate"] = disch_rate_contract
             else:
-                tr_dict["contract_agreed_load_rate"] = float(c_lr) if (c_lr is not None and float(c_lr) > 0) else 0.0
-                tr_dict["contract_agreed_discharge_rate"] = float(c_dr) if (c_dr is not None and float(c_dr) > 0) else 0.0
+                tr_dict["contract_agreed_load_rate"] = 0.0
+                tr_dict["contract_agreed_discharge_rate"] = 0.0
 
             # Autocompletar limites físicos para Laden
             if tr.type.upper() == "LADEN":
