@@ -26,6 +26,7 @@ interface PuertoConfig {
     overhead?: string | number;
     positioning?: string | number;
     manual_port_cost?: string | number;
+    muellaje_cost?: number;
 }
 
 export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' }> = ({ portCostMode = 'static' }) => {
@@ -479,6 +480,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     const list = [...prev];
                     if (list[idx]) {
                         list[idx].manual_port_cost = res.total_cost > 0 ? res.total_cost : '';
+                        list[idx].muellaje_cost = res.breakdown?.muellaje || 0;
                     }
                     return list;
                 });
@@ -2865,7 +2867,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             <td className="border-r border-slate-200 text-right pr-2 font-mono font-bold text-[11px] bg-slate-50/40">
                                 {(() => {
                                     if (puertosConfig[0].action === 'NONE') return <span className="text-slate-350 select-none pr-1">—</span>;
-                                    const mVal = result?.tramos?.[0]?.muellaje_cost_origin || result?.tramos?.[0]?.agency_costs_origin_details?.breakdown?.muellaje || 0;
+                                    const mVal = result?.tramos?.[0]?.muellaje_cost_origin || result?.tramos?.[0]?.agency_costs_origin_details?.breakdown?.muellaje || puertosConfig[0]?.muellaje_cost || 0;
                                     if (!mVal) return <span></span>;
                                     return (
                                         <span className={refacturarMuellajeMap[0] !== false ? 'text-blue-900' : 'text-slate-400 line-through'}>
@@ -2876,7 +2878,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             </td>
                             {/* Sub-celda 2: Checkbox Refacturar (Derecha - Centrado) */}
                             <td className="border-r border-slate-300 text-center p-0 bg-slate-50/40">
-                                {puertosConfig[0].action !== 'NONE' && (result?.tramos?.[0]?.muellaje_cost_origin || result?.tramos?.[0]?.agency_costs_origin_details?.breakdown?.muellaje || 0) > 0 ? (
+                                {puertosConfig[0].action !== 'NONE' && (result?.tramos?.[0]?.muellaje_cost_origin || result?.tramos?.[0]?.agency_costs_origin_details?.breakdown?.muellaje || puertosConfig[0]?.muellaje_cost || 0) > 0 ? (
                                     <input
                                         type="checkbox"
                                         checked={refacturarMuellajeMap[0] ?? true}
@@ -3120,7 +3122,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                       <td className="border-r border-slate-200 text-right pr-2 font-mono font-bold text-[11px] bg-slate-50/40">
                                           {(() => {
                                               if (puertosConfig[idx + 1].action === 'NONE') return <span className="text-slate-350 select-none pr-1">—</span>;
-                                              const mVal = trResult?.muellaje_cost_dest || trResult?.agency_costs_destination_details?.breakdown?.muellaje || 0;
+                                              const mVal = trResult?.muellaje_cost_dest || trResult?.agency_costs_destination_details?.breakdown?.muellaje || puertosConfig[idx + 1]?.muellaje_cost || 0;
                                               if (!mVal) return <span></span>;
                                               return (
                                                   <span className={refacturarMuellajeMap[idx + 1] !== false ? 'text-blue-900' : 'text-slate-400 line-through'}>
@@ -3131,7 +3133,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                       </td>
                                       {/* Sub-celda 2: Checkbox Refacturar (Derecha - Centrado) */}
                                       <td className="border-r border-slate-300 text-center p-0 bg-slate-50/40">
-                                          {puertosConfig[idx + 1].action !== 'NONE' && (trResult?.muellaje_cost_dest || trResult?.agency_costs_destination_details?.breakdown?.muellaje || 0) > 0 ? (
+                                          {puertosConfig[idx + 1].action !== 'NONE' && (trResult?.muellaje_cost_dest || trResult?.agency_costs_destination_details?.breakdown?.muellaje || puertosConfig[idx + 1]?.muellaje_cost || 0) > 0 ? (
                                               <input
                                                   type="checkbox"
                                                   checked={refacturarMuellajeMap[idx + 1] ?? true}
