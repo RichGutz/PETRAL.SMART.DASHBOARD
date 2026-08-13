@@ -439,8 +439,8 @@ def calculate_multicotizador(request: MultiCotizadorRequest):
                 tr_dict["contract_agreed_load_rate"] = load_rate_contract
                 tr_dict["contract_agreed_discharge_rate"] = disch_rate_contract
             else:
-                tr_dict["contract_agreed_load_rate"] = float(c_lr) if (c_lr is not None and float(c_lr) > 0) else 500.0
-                tr_dict["contract_agreed_discharge_rate"] = float(c_dr) if (c_dr is not None and float(c_dr) > 0) else 345.0
+                tr_dict["contract_agreed_load_rate"] = float(c_lr) if (c_lr is not None and float(c_lr) > 0) else 0.0
+                tr_dict["contract_agreed_discharge_rate"] = float(c_dr) if (c_dr is not None and float(c_dr) > 0) else 0.0
 
             # Autocompletar limites físicos para Laden
             if tr.type.upper() == "LADEN":
