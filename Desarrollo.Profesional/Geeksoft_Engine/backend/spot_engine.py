@@ -307,13 +307,11 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         dist = float(leg_inputs.get("route_distance", 0))
         w_factor = float(leg_inputs.get("weather_factor", 0))
         
-        overhead_orig = float(leg_inputs.get("port_overhead_hours_origin") or 0)
-        overhead_dest = float(leg_inputs.get("port_overhead_hours_dest") or 0)
-        pos_carga = float(leg_inputs.get("positioning_carga_hrs") or 0)
-        pos_descarga = float(leg_inputs.get("positioning_descarga_hrs") or 0)
+        delay_load = float(leg_inputs.get("port_delay_hours_loading") or 0)
+        delay_disch = float(leg_inputs.get("port_delay_hours_discharging") or 0)
         
         sea_days = (dist * (1 + w_factor)) / (speed * 24) if speed > 0 else 0
-        port_days = (overhead_orig + overhead_dest + pos_carga + pos_descarga) / 24
+        port_days = (delay_load + delay_disch) / 24.0
         
         ifo_tons = (sea_days * c_sea_ifo) + (port_days * c_idle_ifo)
         mdo_tons = (sea_days * c_sea_mdo) + (port_days * c_idle_mdo)
@@ -407,7 +405,7 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         total_overhead_dest = overhead_dest + delay_discharging + pos_descarga
         
         idle_days_normal = (overhead_orig + overhead_dest + pos_carga + pos_descarga) / 24
-        idle_days_bunker = (overhead_orig + overhead_dest) / 24
+        idle_days_bunker = idle_days_normal
         idle_days = idle_days_normal + (delay_loading / 24) + (delay_discharging / 24)
         
         load_days = (Q / actual_load_rate) / 24 if actual_load_rate > 0 else 0.0

@@ -64,7 +64,7 @@ def run_triangular_qc_loop():
                 'origin_port_id': 'ILO', 'destination_port_id': 'CALLAO',
                 'type': 'BALLAST', 'route_distance': 514, 'weather_factor': 0.03, 'speed': 11.0,
                 'origin_action': 'NONE', 'destination_action': 'CARGAR',
-                'custom_load_rate': 500, 'port_overhead_hours_dest': 6.0, 'positioning_descarga_hrs': 1.0,
+                'custom_load_rate': 500, 'port_overhead_hours_dest': 6.0, 'positioning_carga_hrs': 1.0,
                 'agency_costs_origin': 0, 'agency_costs_destination': 17000
             },
             {
@@ -73,13 +73,15 @@ def run_triangular_qc_loop():
                 'origin_action': 'CARGAR', 'destination_action': 'DESCARGAR',
                 'quantity': 13500, 'freight_rate': 30,
                 'custom_load_rate': 500, 'custom_discharge_rate': 400,
-                'port_overhead_hours_origin': 0.0, 'port_overhead_hours_dest': 6.0,
+                'port_overhead_hours_origin': 6.0, 'port_overhead_hours_dest': 6.0,
+                'positioning_carga_hrs': 1.0, 'positioning_descarga_hrs': 0.0,
                 'agency_costs_origin': 17000, 'agency_costs_destination': 18000
             },
             {
                 'origin_port_id': 'MATARANI', 'destination_port_id': 'ILO',
                 'type': 'BALLAST', 'route_distance': 69, 'weather_factor': 0.03, 'speed': 11.0,
                 'origin_action': 'DESCARGAR', 'destination_action': 'NONE',
+                'port_overhead_hours_origin': 6.0, 'port_overhead_hours_dest': 0.0,
                 'agency_costs_origin': 18000, 'agency_costs_destination': 0
             }
         ]
