@@ -2668,9 +2668,10 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                         <col style={{ width: '5.6%' }} /> {/* Q (MT) -20% */}
                         <col style={{ width: '7%' }} />   {/* F ($/t) */}
                         <col style={{ width: '7%' }} />   {/* Costo Puerto */}
-                        <col style={{ width: '6.5%' }} /> {/* Flete Calculado */}
-                        <col style={{ width: '7%' }} />   {/* Costo Bunker */}
-                        <col style={{ width: '7%' }} />   {/* Bodega (T) */}
+                        <col style={{ width: '6%' }} />   {/* Flete Calculado */}
+                        <col style={{ width: '6.5%' }} /> {/* Costo Bunker */}
+                        <col style={{ width: '5.5%' }} /> {/* Muellaje Cifra */}
+                        <col style={{ width: '3%' }} />   {/* Muellaje Checkbox */}
                     </colgroup>
  
                     <thead>
@@ -2711,7 +2712,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             <th className="border-r border-slate-300 text-right pr-2">Costo Pto</th>
                             <th className="border-r border-slate-300 text-right pr-2">Flete ($)</th>
                             <th className="border-r border-slate-300 text-right pr-2">Bunker ($)</th>
-                            <th className="text-center p-0 font-bold" title="Refacturar Muellaje al Cliente">Muellaje</th>
+                            <th colSpan={2} className="text-center p-0 font-bold border-r border-slate-300" title="Muellaje (Cifra y Refacturación)">MUELLAJE</th>
                         </tr>
                     </thead>
  
@@ -2860,19 +2861,29 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             </td>
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
-                            <td className="text-center px-1.5 py-0 bg-slate-50/70">
-                                <div className="flex items-center justify-center gap-1.5 font-mono text-xs">
+                            {/* Sub-celda 1: Cifra Muellaje (Solo si hay CARGA/DESCARGA) */}
+                            <td className="border-r border-slate-200 text-right pr-1.5 font-mono font-bold text-xs bg-slate-50/70">
+                                {puertosConfig[0].action !== 'NONE' ? (
+                                    <span className={refacturarMuellajeMap[0] !== false ? 'text-blue-900' : 'text-slate-400 line-through'}>
+                                        {result?.tramos?.[0]?.muellaje_cost_origin ? fmtCur(result.tramos[0].muellaje_cost_origin) : '$0'}
+                                    </span>
+                                ) : (
+                                    <span className="text-slate-350 select-none pr-1">—</span>
+                                )}
+                            </td>
+                            {/* Sub-celda 2: Checkbox Refacturar */}
+                            <td className="text-center p-0 bg-slate-50/70">
+                                {puertosConfig[0].action !== 'NONE' ? (
                                     <input
                                         type="checkbox"
                                         checked={refacturarMuellajeMap[0] ?? true}
                                         onChange={(e) => setRefacturarMuellajeMap(prev => ({ ...prev, 0: e.target.checked }))}
-                                        className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer accent-blue-600 shrink-0"
+                                        className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer accent-blue-600"
                                         title="Refacturar Muellaje al cliente"
                                     />
-                                    <span className={`font-mono font-bold text-[11px] ${refacturarMuellajeMap[0] !== false ? 'text-blue-900' : 'text-slate-400 line-through'}`}>
-                                        {result?.tramos?.[0]?.muellaje_cost_origin ? fmtCur(result.tramos[0].muellaje_cost_origin) : (puertosConfig[0].action !== 'NONE' ? '$0' : '—')}
-                                    </span>
-                                </div>
+                                ) : (
+                                    <span className="text-slate-350 select-none">—</span>
+                                )}
                             </td>
                         </tr>
 
