@@ -2860,14 +2860,19 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             </td>
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
                             <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
-                            <td className="text-center p-0 bg-slate-50/70">
-                                <input
-                                    type="checkbox"
-                                    checked={refacturarMuellajeMap[0] ?? true}
-                                    onChange={(e) => setRefacturarMuellajeMap(prev => ({ ...prev, 0: e.target.checked }))}
-                                    className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer accent-blue-600"
-                                    title="Refacturar Muellaje al cliente"
-                                />
+                            <td className="text-center px-1.5 py-0 bg-slate-50/70">
+                                <div className="flex items-center justify-center gap-1.5 font-mono text-xs">
+                                    <input
+                                        type="checkbox"
+                                        checked={refacturarMuellajeMap[0] ?? true}
+                                        onChange={(e) => setRefacturarMuellajeMap(prev => ({ ...prev, 0: e.target.checked }))}
+                                        className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer accent-blue-600 shrink-0"
+                                        title="Refacturar Muellaje al cliente"
+                                    />
+                                    <span className={`font-mono font-bold text-[11px] ${refacturarMuellajeMap[0] !== false ? 'text-blue-900' : 'text-slate-400 line-through'}`}>
+                                        {result?.tramos?.[0]?.muellaje_cost_origin ? fmtCur(result.tramos[0].muellaje_cost_origin) : (puertosConfig[0].action !== 'NONE' ? '$0' : '—')}
+                                    </span>
+                                </div>
                             </td>
                         </tr>
 
