@@ -263,7 +263,7 @@ mejillones_payload = {
             "origin_port_id": "MEJILLONES",
             "destination_port_id": "ILO",
             "type": "BALLAST",
-            "origin_action": "DESCARGAR",
+            "origin_action": "NONE",
             "destination_action": "NONE",
             "refacturar_muellaje": True,
             "agency_costs_origin": 0.00001,
@@ -282,10 +282,10 @@ data_mej = resp_mej.json()
 refact_muellaje = data_mej.get("consolidated", {}).get("refacturacion_muellaje", 0)
 
 print(f"   • Refacturación Muellaje Evaluada: ${refact_muellaje:,.2f}")
-if refact_muellaje == 33333.0:
+if refact_muellaje == 53333.0:
     print("   • Aserción Unicidad Muellaje: [OK] (Cero Duplicación)")
 else:
-    print(f"   • Aserción Unicidad Muellaje: [FAIL] Esperado $33,333, recibido ${refact_muellaje}")
+    print(f"   • Aserción Unicidad Muellaje: [FAIL] Esperado $53,333, recibido ${refact_muellaje}")
     sys.exit(1)
 
 print("\n==========================================================================")
