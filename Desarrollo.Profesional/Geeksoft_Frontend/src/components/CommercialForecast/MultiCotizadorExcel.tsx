@@ -215,22 +215,24 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
 
     // Resolver overhead por defecto del puerto
     const getAutoPortOverhead = (portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR') => {
+        if (action === 'NONE') return '';
         const p = ports.find(x => x.port_id === portId);
         if (p) {
-            if (action === 'CARGAR') return p.time_to_count_carga_hrs ?? 0;
-            if (action === 'DESCARGAR') return p.time_to_count_descarga_hrs ?? 0;
+            if (action === 'CARGAR') return p.time_to_count_carga_hrs ?? 6;
+            if (action === 'DESCARGAR') return p.time_to_count_descarga_hrs ?? 6;
         }
-        return '';
+        return 6;
     };
 
     // Resolver posicionamiento por defecto del puerto
     const getAutoPortPositioning = (portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR') => {
+        if (action === 'NONE') return '';
         const p = ports.find(x => x.port_id === portId);
         if (p) {
-            if (action === 'CARGAR') return p.maneuver_carga_hrs ?? 0;
+            if (action === 'CARGAR') return p.maneuver_carga_hrs ?? (portId === 'CALLAO' ? 1 : 0);
             if (action === 'DESCARGAR') return p.maneuver_descarga_hrs ?? 0;
         }
-        return '';
+        return (action === 'CARGAR' && portId === 'CALLAO') ? 1 : 0;
     };
 
     // Cargar Catálogos
@@ -432,17 +434,21 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 };
             }));
 
-            // Autocompletar y actualizar explícitamente los ritmos de puertosConfig basándonos en el buque actual
+            // Autocompletar y actualizar explícitamente ritmos, overheads y posicionamientos de puertosConfig
             setPuertosConfig(prev => prev.map((p, idx) => {
                 if (p.action === 'NONE') return p;
                 const portId = idx === 0 ? (tramos[0]?.origin_port_id || 'MATARANI') : (tramos[idx - 1]?.destination_port_id || '');
                 if (!portId) return p;
                 
-                // Si el ritmo está vacío o nulo, o es el valor Auto por defecto, poblarlo explícitamente
                 const rate = p.op_rate === '' || p.op_rate === undefined ? getAutoPortRate(portId, p.action) : p.op_rate;
+                const autoOv = p.overhead === '' || p.overhead === undefined ? getAutoPortOverhead(portId, p.action) : p.overhead;
+                const autoPos = p.positioning === '' || p.positioning === undefined ? getAutoPortPositioning(portId, p.action) : p.positioning;
+
                 return {
                     ...p,
-                    op_rate: rate
+                    op_rate: rate,
+                    overhead: autoOv !== '' ? String(autoOv) : p.overhead,
+                    positioning: autoPos !== '' ? String(autoPos) : p.positioning
                 };
             }));
         }
