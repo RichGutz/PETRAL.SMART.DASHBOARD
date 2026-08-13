@@ -737,27 +737,35 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     customDisch = pDest.rate_unit === 'TH' ? val : val / 24;
                 }
 
-                // Asignación limpia de Overhead (Time to Count): cada puerto de la rotación aporta sus horas 1 sola vez.
-                let overheadOrig = (idx === 0 && pOrig && pOrig.action !== 'NONE' && pOrig.overhead !== '') 
-                    ? Number(pOrig.overhead) 
-                    : 0.0;
-                
-                let overheadDest = (pDest && pDest.action !== 'NONE' && pDest.overhead !== '') 
-                    ? Number(pDest.overhead) 
-                    : 0.0;
+                // Asignación estricta de Overhead (Time to Count) y Posicionamiento:
+                // Las horas de Time to Count y Maniobras pertenecen a las operaciones del tramo de carga (LADEN).
+                // En tramos en lastre (BALLAST), son 0.0 salvo que el usuario ingrese un valor explícito.
+                const isLaden = tr.type === 'LADEN';
 
-                let posCarga: number | undefined = undefined;
-                if (pOrig && pOrig.action === 'CARGAR') {
-                    posCarga = pOrig.positioning !== '' ? Number(pOrig.positioning) : undefined;
-                } else if (pDest && pDest.action === 'CARGAR') {
-                    posCarga = pDest.positioning !== '' ? Number(pDest.positioning) : undefined;
+                let overheadOrig = 0.0;
+                let overheadDest = 0.0;
+                if (isLaden) {
+                    if (pOrig && pOrig.action !== 'NONE' && pOrig.overhead !== '') {
+                        overheadOrig = Number(pOrig.overhead);
+                    }
+                    if (pDest && pDest.action !== 'NONE' && pDest.overhead !== '') {
+                        overheadDest = Number(pDest.overhead);
+                    }
                 }
 
-                let posDescarga: number | undefined = undefined;
-                if (pOrig && pOrig.action === 'DESCARGAR') {
-                    posDescarga = pOrig.positioning !== '' ? Number(pOrig.positioning) : undefined;
-                } else if (pDest && pDest.action === 'DESCARGAR') {
-                    posDescarga = pDest.positioning !== '' ? Number(pDest.positioning) : undefined;
+                let posCarga = 0.0;
+                let posDescarga = 0.0;
+                if (isLaden) {
+                    if (pOrig && pOrig.action === 'CARGAR' && pOrig.positioning !== '') {
+                        posCarga = Number(pOrig.positioning);
+                    } else if (pDest && pDest.action === 'CARGAR' && pDest.positioning !== '') {
+                        posCarga = Number(pDest.positioning);
+                    }
+                    if (pOrig && pOrig.action === 'DESCARGAR' && pOrig.positioning !== '') {
+                        posDescarga = Number(pOrig.positioning);
+                    } else if (pDest && pDest.action === 'DESCARGAR' && pDest.positioning !== '') {
+                        posDescarga = Number(pDest.positioning);
+                    }
                 }
 
                 // Regla Limpia: Solo hay costo de puerto cuando la acción es CARGAR o DESCARGAR.
