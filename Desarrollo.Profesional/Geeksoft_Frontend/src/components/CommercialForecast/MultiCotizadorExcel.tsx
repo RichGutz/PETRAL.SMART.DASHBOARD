@@ -750,7 +750,11 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 if (opDest !== 'NONE') {
                     if (pDest?.overhead !== '' && pDest?.overhead !== undefined) {
                         overheadDest = Number(pDest.overhead);
+                    } else {
+                        // Fallback natural a 6.0h de Time to Count por defecto del puerto cuando la caja está vacía
+                        overheadDest = 6.0;
                     }
+
                     if (pDest?.positioning !== '' && pDest?.positioning !== undefined) {
                         const pVal = Number(pDest.positioning);
                         if (opDest === 'CARGAR') {
