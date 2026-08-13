@@ -737,13 +737,14 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     customDisch = pDest.rate_unit === 'TH' ? val : val / 24;
                 }
 
-                let overheadOrig = pOrig && pOrig.action !== 'NONE' && pOrig.overhead !== '' 
+                // Asignación limpia de Overhead (Time to Count): cada puerto de la rotación aporta sus horas 1 sola vez.
+                let overheadOrig = (idx === 0 && pOrig && pOrig.action !== 'NONE' && pOrig.overhead !== '') 
                     ? Number(pOrig.overhead) 
-                    : undefined;
+                    : 0.0;
                 
-                let overheadDest = pDest && pDest.action !== 'NONE' && pDest.overhead !== '' 
+                let overheadDest = (pDest && pDest.action !== 'NONE' && pDest.overhead !== '') 
                     ? Number(pDest.overhead) 
-                    : undefined;
+                    : 0.0;
 
                 let posCarga: number | undefined = undefined;
                 if (pOrig && pOrig.action === 'CARGAR') {
