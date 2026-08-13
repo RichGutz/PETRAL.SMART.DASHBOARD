@@ -616,7 +616,12 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
     tot_ifo_tons = sum(t["bunker_ifo"] for t in processed_tramos)
     tot_mdo_tons = sum(t["bunker_mdo"] for t in processed_tramos)
     tot_bunker_costs = sum(t["bunker_costs"] for t in processed_tramos)
-    tot_port_costs = sum(t["port_costs"] for t in processed_tramos)
+    visited_port_costs = []
+    for idx_p, tr_p in enumerate(tramos):
+        if idx_p == 0:
+            visited_port_costs.append(float(tr_p.get("agency_costs_origin", 0)))
+        visited_port_costs.append(float(tr_p.get("agency_costs_destination", 0)))
+    tot_port_costs = sum(visited_port_costs)
     tot_freight_revenue = sum(t["net_income"] for t in processed_tramos)
     
     addr_comm_pct = float(payload.get("address_commission_pct") or vessel.get("address_commission_pct") or 0.0)
