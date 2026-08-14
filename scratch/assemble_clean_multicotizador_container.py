@@ -1,10 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import os
+
+path = r'C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend\src\components\CommercialForecast\MultiCotizadorExcel.tsx'
+
+clean_container_code = """import React, { useState, useEffect } from 'react';
 import { ForecastService } from '../../services/api';
+import { Save, FolderOpen, X, ChevronDown } from 'lucide-react';
 import logoPetral from '../../assets/Logo.Petral.png';
 import logoGeeksoft from '../../assets/Logo.Geeksoft.png';
 
 // Servicios Provistos (Providers)
 import { VesselProviderService } from '../../services/providers/vesselProviderService';
+import { BunkerProviderService } from '../../services/providers/bunkerProviderService';
 import { RouteDistancesService } from '../../services/providers/routeDistancesService';
 import { PortCostsRatesService } from '../../services/providers/portCostsRatesService';
 import { MulticotizadorStorageService } from '../../services/providers/multicotizadorStorageService';
@@ -42,12 +48,9 @@ interface PuertoConfig {
     muellaje_cost?: number;
 }
 
-export interface MultiCotizadorExcelProps {
-    portCostMode?: 'static' | 'matrix';
-}
-
-export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCostMode = 'static' }) => {
+export const MultiCotizadorExcel: React.FC = () => {
     // 1. Estados de Navegación & Pestañas
+    const [activeMainTab, setActiveMainTab] = useState<'calc' | 'audit' | 'json'>('calc');
     const [clientType, setClientType] = useState<'ACTIVOS' | 'PROSPECTOS'>('ACTIVOS');
     const [selectedClient, setSelectedClient] = useState<string>('SPCC');
 
@@ -68,7 +71,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
         consumption_sea_mdo: 0, consumption_idle_mdo: 0, consumption_load_mdo: 0, consumption_disch_mdo: 0
     });
 
-    // 4. Búnker y Fuentes de Precios
+    // 4. Búnker y Fuertes de Precios
     const [bunkerSource, setBunkerSource] = useState<'MAESTRO_CONTRATOS' | 'COTIZACION' | 'MAESTRO_BUNKER' | 'SOBREESCRITURA'>('MAESTRO_CONTRATOS');
     const [bunkerPriceIfo, setBunkerPriceIfo] = useState<number>(0);
     const [bunkerPriceMdo, setBunkerPriceMdo] = useState<number>(0);
@@ -88,9 +91,11 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
     const [demurrageRate, setDemurrageRate] = useState<number>(20000);
     const [commentsText, setCommentsText] = useState<string>('');
     const [refacturarMuellajeMap, setRefacturarMuellajeMap] = useState<Record<number, boolean>>({});
+    const [localPortCostMode, setLocalPortCostMode] = useState<'static' | 'matrix'>('static');
 
     // 7. Resultados & Persistencia Modales
     const [result, setResult] = useState<any>(null);
+    const [isCalculating, setIsCalculating] = useState<boolean>(false);
     const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
     const [showLoadModal, setShowLoadModal] = useState<boolean>(false);
     const [routeName, setRouteName] = useState<string>('');
@@ -211,7 +216,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
                 }
             });
         }
-    }, [selectedClient, selectedVessel, portCostMode, tramos[0]?.origin_port_id, tramos[0]?.destination_port_id, contractsMaster.length]);
+    }, [selectedClient, selectedVessel, localPortCostMode, tramos[0]?.origin_port_id, tramos[0]?.destination_port_id, contractsMaster.length]);
 
     // Manejador de Cambio de Buque
     const handleVesselChange = (vesselId: string) => {
@@ -219,7 +224,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
         if (!vesselId) return;
         const v = vessels.find(x => x.vessel_id === vesselId);
         if (v) {
-            const resolved = VesselProviderService.extractVesselParams(vesselId, vessels);
+            const resolved = VesselProviderService.extractVesselParams(v);
             setVesselParams(resolved);
         }
     };
@@ -230,7 +235,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
 
     const autoFillPortCost = async (idx: number, portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR', vId: string) => {
         if (!vId || !portId || action === 'NONE') return;
-        const res = await PortCostsRatesService.lookupPortCost(vId, portId, action, portCostMode);
+        const res = await PortCostsRatesService.lookupPortCost(vId, portId, action, localPortCostMode);
         if (res.total_cost !== '') {
             setPuertosConfig(prev => {
                 const list = [...prev];
@@ -248,13 +253,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
             const list = [...prev];
             list[index] = { ...list[index], [field]: value };
             if (field === 'origin_port_id' || field === 'destination_port_id' || field === 'type') {
-                const auto = RouteDistancesService.resolveAutoRouteInfo(list[index].origin_port_id, list[index].destination_port_id, list[index].type, routes);
+                const auto = RouteDistancesService.getAutoRouteInfo(list[index].origin_port_id, list[index].destination_port_id, list[index].type, routes);
                 list[index].route_distance = auto.route_distance;
                 list[index].weather_factor = auto.weather_factor;
             }
             if (field === 'destination_port_id' && index < list.length - 1) {
                 list[index + 1].origin_port_id = value;
-                const autoNext = RouteDistancesService.resolveAutoRouteInfo(list[index + 1].origin_port_id, list[index + 1].destination_port_id, list[index + 1].type, routes);
+                const autoNext = RouteDistancesService.getAutoRouteInfo(list[index + 1].origin_port_id, list[index + 1].destination_port_id, list[index + 1].type, routes);
                 list[index + 1].route_distance = autoNext.route_distance;
                 list[index + 1].weather_factor = autoNext.weather_factor;
             }
@@ -362,6 +367,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
     };
 
     const handleCalculate = async () => {
+        setIsCalculating(true);
         try {
             const calculatedTramos = getCalculatedTramos();
             const payloadTramos = calculatedTramos.map((tr, idx) => {
@@ -395,7 +401,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
                 vessel_params: vesselParams,
                 bunker_prices: { ifo: bunkerPriceIfo, mdo: bunkerPriceMdo },
                 bunker_source: bunkerSource,
-                port_cost_mode: portCostMode,
+                port_cost_mode: localPortCostMode,
                 client_id: selectedClient,
                 address_commission_pct: addressCommPct,
                 broker_commission_pct: brokerCommPct,
@@ -403,10 +409,12 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
                 tramos: payloadTramos
             };
 
-            const data = await ForecastService.calculateMultiCotizador(payload);
+            const data = await ForecastService.calculateMulticotizador(payload);
             setResult(data);
         } catch (e) {
             console.error("Error en simulación:", e);
+        } finally {
+            setIsCalculating(false);
         }
     };
 
@@ -427,20 +435,16 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
         if (!routeName.trim()) return;
         setIsSaving(true);
         try {
-            await MulticotizadorStorageService.saveQuote({
-                routeName,
-                selectedClient,
-                filterProspecto: clientType === 'PROSPECTOS',
-                selectedVessel,
-                bunkerPriceIfo,
-                bunkerPriceMdo,
-                tramosEnriquecidos: tramos,
-                puertosConfig,
-                vesselParams,
-                addressCommPct,
-                brokerCommPct,
-                rawClients
-            });
+            const payload = {
+                name: routeName,
+                client_id: selectedClient,
+                vessel_id: selectedVessel,
+                bunker_prices: { ifo: bunkerPriceIfo, mdo: bunkerPriceMdo },
+                tramos,
+                puertos_config: puertosConfig,
+                comments: commentsText
+            };
+            await MulticotizadorStorageService.saveQuote(payload);
             setShowSaveModal(false);
         } catch (e) {
             console.error("Error guardando cotización:", e);
@@ -453,7 +457,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
         setIsLoadingRoutes(true);
         setShowLoadModal(true);
         try {
-            const list = await MulticotizadorRetrieverService.searchSavedQuotes('', true, clientType === 'PROSPECTOS', selectedClient);
+            const list = await MulticotizadorRetrieverService.getQuotes(selectedClient);
             setSavedRoutes(list || []);
         } catch (e) {
             console.error("Error listando cotizaciones:", e);
@@ -464,10 +468,11 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
 
     const handleLoadRoute = (quote: any) => {
         if (!quote) return;
-        const unpacked = MulticotizadorRetrieverService.unpackQuoteData(quote);
-        if (unpacked.tramos && unpacked.tramos.length > 0) setTramos(unpacked.tramos);
-        if (unpacked.puertosConfig && unpacked.puertosConfig.length > 0) setPuertosConfig(unpacked.puertosConfig);
-        if (unpacked.vessel_id) setSelectedVessel(unpacked.vessel_id);
+        const unpacked = MulticotizadorRetrieverService.unpackQuote(quote);
+        if (unpacked.tramos) setTramos(unpacked.tramos);
+        if (unpacked.puertosConfig) setPuertosConfig(unpacked.puertosConfig);
+        if (unpacked.vesselId) setSelectedVessel(unpacked.vesselId);
+        if (unpacked.comments) setCommentsText(unpacked.comments);
         setShowLoadModal(false);
     };
 
@@ -522,7 +527,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
                             onClick={handleListRoutes}
                             className="h-7 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 rounded border border-slate-300 flex items-center gap-1 transition-colors cursor-pointer"
                         >
-                            3. CARGAR COTIZACIÓN
+                            <FolderOpen size={14} /> 3. CARGAR COTIZACIÓN
                         </button>
 
                         <div className="flex items-center gap-1 bg-slate-100 p-1 rounded border border-slate-250">
@@ -573,7 +578,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
                 updatePuertoConfigField={updatePuertoConfigField}
                 setRefacturarMuellajeMap={setRefacturarMuellajeMap}
                 getAutoPortRate={(portId, action) => PortCostsRatesService.resolveAutoPortRate(portId, action, ports)}
-                
+                getAutoPortTimeToCount={(portId, action) => 0}
+                getAutoPortPositioning={(portId, action) => 0}
                 fmtCur={fmtCur}
                 fmtNum={fmtNum}
                 fmtDays={fmtDays}
@@ -624,3 +630,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
         </div>
     );
 };
+"""
+
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(clean_container_code)
+
+print("CLEAN MODULAR CONTAINER MultiCotizadorExcel.tsx WRITTEN SUCCESSFULLY!")

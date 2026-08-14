@@ -1,0 +1,636 @@
+import React from 'react';
+
+export interface SpreadsheetTramosGridProps {
+    tramos: any[];
+    puertosConfig: any[];
+    ports: any[];
+    vessels: any[];
+    selectedVessel: string;
+    result: any;
+    refacturarMuellajeMap: Record<number, boolean>;
+    calculatedTramosList: any[];
+    handleAddTramo: () => void;
+    handleRemoveLastTramo: () => void;
+    updateTramoField: (index: number, field: any, value: any) => void;
+    updatePuertoConfigField: (index: number, field: any, value: any) => void;
+    setRefacturarMuellajeMap: React.Dispatch<React.SetStateAction<Record<number, boolean>>>;
+    getAutoPortRate: (portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR') => number | string;
+    getAutoPortTimeToCount?: (portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR') => number | string;
+    getAutoPortPositioning?: (portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR') => number | string;
+    fmtCur: (val: number | string | undefined | null) => string;
+    fmtNum: (val: number | string | undefined | null) => string;
+    fmtDays: (val: number | string | undefined | null) => string;
+    fmtThousandSep: (val: number | string | undefined | null) => string;
+}
+
+export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
+    tramos,
+    puertosConfig,
+    ports,
+    vessels,
+    selectedVessel,
+    result,
+    refacturarMuellajeMap,
+    calculatedTramosList,
+    handleAddTramo,
+    handleRemoveLastTramo,
+    updateTramoField,
+    updatePuertoConfigField,
+    setRefacturarMuellajeMap,
+    getAutoPortRate,
+    fmtCur,
+    fmtNum,
+    fmtDays,
+    fmtThousandSep
+}) => {
+    // Calculo de balance de toneladas
+    const totalCargas = puertosConfig.reduce((sum, p) => sum + (p.action === 'CARGAR' ? (Number(p.quantity) || 0) : 0), 0);
+    const totalDescargas = puertosConfig.reduce((sum, p) => sum + (p.action === 'DESCARGAR' ? (Number(p.quantity) || 0) : 0), 0);
+    const isBalanced = totalCargas === totalDescargas;
+
+    return (
+        <div className="overflow-x-auto border border-slate-300 rounded bg-white shadow-sm flex flex-col mb-3">
+            <table className="w-full border-collapse text-[12px] font-mono table-fixed select-text">
+                <colgroup>
+                    <col style={{ width: '4.1%' }} />
+                    <col style={{ width: '4%' }} />
+                    <col style={{ width: '11%' }} />
+                    <col style={{ width: '4.5%' }} />
+                    <col style={{ width: '3.5%' }} />
+                    <col style={{ width: '4%' }} />
+                    <col style={{ width: '4.5%' }} />
+                    <col style={{ width: '4.5%' }} />
+                    <col style={{ width: '6.9%' }} />
+                    <col style={{ width: '5%' }} />
+                    <col style={{ width: '6.5%' }} />
+                    <col style={{ width: '6.4%' }} />
+                    <col style={{ width: '5.6%' }} />
+                    <col style={{ width: '7%' }} />
+                    <col style={{ width: '7%' }} />
+                    <col style={{ width: '5.5%' }} />
+                    <col style={{ width: '5.5%' }} />
+                    <col style={{ width: '4.5%' }} />
+                    <col style={{ width: '3.0%' }} />
+                </colgroup>
+
+                <thead>
+                    <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 h-5 select-none font-sans text-[10px] uppercase tracking-wider">
+                        <th rowSpan={2} className="border-r border-slate-300 text-center p-0.5">
+                            <div className="flex items-center justify-center gap-0.5">
+                                <span className="font-black text-[10px] text-slate-800 uppercase">LEG</span>
+                                <button
+                                    onClick={handleAddTramo}
+                                    className="w-4 h-4 rounded bg-blue-600 hover:bg-blue-700 text-white font-black text-[11px] flex items-center justify-center shadow-sm cursor-pointer"
+                                    title="Agregar Tramo (+)"
+                                >
+                                    +
+                                </button>
+                                <button
+                                    onClick={handleRemoveLastTramo}
+                                    disabled={tramos.length <= 1}
+                                    className="w-4 h-4 rounded bg-red-600 hover:bg-red-700 text-white font-black text-[11px] flex items-center justify-center shadow-sm disabled:opacity-30 cursor-pointer"
+                                    title="Borrar Tramo (-)"
+                                >
+                                    -
+                                </button>
+                            </div>
+                        </th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-center">Tipo</th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-left pl-2">Puerto</th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-right pr-2">Dist (NM)</th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-right pr-2">W.F (%)</th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-right pr-2">Vel (kn)</th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-right pr-2">Días Mar</th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-right pr-2">Días Pto</th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-right pr-2">Time to Count (H)</th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-right pr-2">Posic (h)</th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-center">Op. Dest</th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-right pr-2">Ritmo (C/D)</th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-right pr-2">Q (MT)</th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-right pr-2">F ($/t)</th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-right pr-2">Costo Pto</th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-right pr-2">Flete ($)</th>
+                        <th rowSpan={2} className="border-r border-slate-300 text-right pr-2">Bunker ($)</th>
+                        <th colSpan={2} className="border-r border-slate-300 text-center p-0.5 font-black bg-blue-100/80 text-blue-950 border-b border-blue-200" title="Muellaje (Cifra y Refacturación)">MUELLAJE</th>
+                    </tr>
+                    <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-300 h-4 select-none font-sans text-[9px] uppercase tracking-wider">
+                        <th className="border-r border-slate-300 text-right pr-2 bg-slate-100 text-slate-700" title="Monto USD de Muellaje">MUELLAJE</th>
+                        <th className="border-r border-slate-300 text-center bg-blue-50/80 text-blue-900 font-black" title="Refacturar Muellaje al Cliente">RF</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {/* FILA 0: PUERTO ORIGEN INICIAL */}
+                    <tr className="border-b border-slate-200 bg-slate-50/80 h-8 font-bold">
+                        <td className="border-r border-slate-200 text-center text-slate-400 select-none font-sans text-xs">—</td>
+                        <td className="border-r border-slate-200 text-center text-slate-400 select-none font-sans text-xs">—</td>
+                        <td className="border-r border-slate-200 p-0">
+                            <select
+                                value={tramos[0]?.origin_port_id || ''}
+                                onChange={(e) => updateTramoField(0, 'origin_port_id', e.target.value)}
+                                className="w-full h-full bg-white border-0 px-1 font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-600 text-[11.5px] cursor-pointer"
+                            >
+                                <option value="">Seleccione puerto...</option>
+                                {ports.map((p) => (
+                                    <option key={p.port_id} value={p.port_id}>
+                                        {p.port_id}
+                                    </option>
+                                ))}
+                            </select>
+                        </td>
+                        <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
+                        <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
+                        <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
+                        <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
+                        <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
+
+                        {/* Fila 0 Time to Count */}
+                        <td className="border-r border-slate-200 p-0 text-right">
+                            {puertosConfig[0]?.action !== 'NONE' ? (
+                                <input
+                                    type="number"
+                                    value={puertosConfig[0]?.time_to_count ?? ''}
+                                    onChange={(e) => updatePuertoConfigField(0, 'time_to_count', e.target.value)}
+                                    className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    placeholder={result?.tramos?.[0]?.time_to_count_carga_hrs !== undefined ? String(result.tramos[0].time_to_count_carga_hrs) : '0.0'}
+                                />
+                            ) : (
+                                <span className="text-slate-350 select-none pr-2">—</span>
+                            )}
+                        </td>
+
+                        {/* Fila 0 Posic */}
+                        <td className="border-r border-slate-200 p-0 text-right">
+                            {puertosConfig[0]?.action !== 'NONE' ? (
+                                <input
+                                    type="number"
+                                    value={puertosConfig[0]?.positioning ?? ''}
+                                    onChange={(e) => updatePuertoConfigField(0, 'positioning', e.target.value)}
+                                    className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    placeholder={result?.tramos?.[0]?.positioning_carga_hrs !== undefined ? String(result.tramos[0].positioning_carga_hrs) : '0.0'}
+                                />
+                            ) : (
+                                <span className="text-slate-350 select-none pr-2">—</span>
+                            )}
+                        </td>
+
+                        <td className="border-r border-slate-200 p-0 text-center">
+                            <select
+                                value={puertosConfig[0]?.action || 'NONE'}
+                                onChange={(e) => updatePuertoConfigField(0, 'action', e.target.value)}
+                                className="w-[96%] bg-white border border-indigo-200 hover:border-indigo-400 rounded text-[11.5px] font-bold text-indigo-900 focus:outline-none font-sans text-center h-[26px]"
+                            >
+                                <option value="NONE">NONE</option>
+                                <option value="CARGAR">CARGAR</option>
+                                <option value="DESCARGAR">DESCARGAR</option>
+                            </select>
+                        </td>
+
+                        {/* Fila 0 Ritmo Op */}
+                        <td className="border-r border-slate-200 p-0">
+                            {puertosConfig[0]?.action !== 'NONE' ? (
+                                <div className="flex items-center h-full w-full">
+                                    <input
+                                        type="number"
+                                        value={puertosConfig[0]?.op_rate ?? ''}
+                                        onChange={(e) => updatePuertoConfigField(0, 'op_rate', e.target.value)}
+                                        className="w-[60%] h-full bg-white border-0 px-1 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
+                                        placeholder={result?.tramos?.[0]?.contract_agreed_load_rate !== undefined ? String(result.tramos[0].contract_agreed_load_rate) : String(getAutoPortRate(tramos[0]?.origin_port_id || '', puertosConfig[0]?.action) || '500')}
+                                    />
+                                    <select
+                                        value={puertosConfig[0]?.rate_unit || 'TH'}
+                                        onChange={(e) => updatePuertoConfigField(0, 'rate_unit', e.target.value)}
+                                        className="w-[40%] h-[22px] text-[9.5px] bg-slate-50 border border-slate-250 rounded font-sans cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400 pl-0.5 text-slate-500 font-bold mr-1"
+                                    >
+                                        <option value="TD">T/d</option>
+                                        <option value="TH">T/h</option>
+                                    </select>
+                                </div>
+                            ) : (
+                                <div className="text-right pr-2">
+                                    <span className="text-slate-350 select-none">—</span>
+                                </div>
+                            )}
+                        </td>
+
+                        <td className="border-r border-slate-200 p-0 text-right">
+                            {puertosConfig[0]?.action === 'CARGAR' ? (
+                                <input
+                                    type="text"
+                                    placeholder="Q (MT)"
+                                    value={puertosConfig[0]?.quantity !== '' && puertosConfig[0]?.quantity !== undefined ? fmtThousandSep(puertosConfig[0].quantity) : ''}
+                                    onChange={(e) => {
+                                        const raw = e.target.value.replace(/,/g, '');
+                                        if (/^\d*\.?\d*$/.test(raw)) {
+                                            updatePuertoConfigField(0, 'quantity', raw);
+                                        }
+                                    }}
+                                    className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs"
+                                />
+                            ) : (
+                                <span className="text-slate-350 select-none pr-2">—</span>
+                            )}
+                        </td>
+                        <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
+                        <td className="border-r border-slate-200 p-0 text-right">
+                            <input
+                                type="text"
+                                value={puertosConfig[0]?.manual_port_cost !== '' && puertosConfig[0]?.manual_port_cost !== undefined ? fmtThousandSep(puertosConfig[0].manual_port_cost) : ''}
+                                onChange={(e) => {
+                                    const raw = e.target.value.replace(/[^0-9.]/g, '');
+                                    if (/^\d*\.?\d*$/.test(raw)) {
+                                        updatePuertoConfigField(0, 'manual_port_cost', raw);
+                                    }
+                                }}
+                                className={`w-full h-full bg-white border-0 px-1.5 text-right font-mono text-xs focus:outline-none ${
+                                    puertosConfig[0]?.manual_port_cost !== '' && puertosConfig[0]?.manual_port_cost !== undefined
+                                        ? 'text-blue-800 font-extrabold bg-blue-50/20'
+                                        : 'text-slate-500 font-medium'
+                                }`}
+                                placeholder={puertosConfig[0]?.action === 'NONE' ? '$0' : (result?.tramos?.[0]?.agency_costs_origin ? fmtCur(result.tramos[0].agency_costs_origin) : '$0')}
+                            />
+                        </td>
+                        <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
+                        <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
+
+                        <td className="border-r border-slate-200 text-right pr-2 font-mono font-bold text-[11px] bg-slate-50/40">
+                            {(() => {
+                                if (puertosConfig[0]?.action === 'NONE') return <span className="text-slate-350 select-none pr-1">—</span>;
+                                const mVal = result?.tramos?.[0]?.muellaje_cost_origin || result?.tramos?.[0]?.agency_costs_origin_details?.breakdown?.muellaje || puertosConfig[0]?.muellaje_cost || 0;
+                                if (!mVal) return <span></span>;
+                                return (
+                                    <span className={refacturarMuellajeMap[0] !== false ? 'text-blue-900' : 'text-slate-400 line-through'}>
+                                        {fmtCur(mVal)}
+                                    </span>
+                                );
+                            })()}
+                        </td>
+                        <td className="border-r border-slate-300 text-center p-0 bg-slate-50/40">
+                            {puertosConfig[0]?.action !== 'NONE' && (result?.tramos?.[0]?.muellaje_cost_origin || result?.tramos?.[0]?.agency_costs_origin_details?.breakdown?.muellaje || puertosConfig[0]?.muellaje_cost || 0) > 0 ? (
+                                <input
+                                    type="checkbox"
+                                    checked={refacturarMuellajeMap[0] ?? true}
+                                    onChange={(e) => setRefacturarMuellajeMap(prev => ({ ...prev, 0: e.target.checked }))}
+                                    className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer accent-blue-600"
+                                    title="Refacturar Muellaje al cliente"
+                                />
+                            ) : (
+                                <span className="text-slate-350 select-none">—</span>
+                            )}
+                        </td>
+                    </tr>
+
+                    {/* TRAMOS DE NAVEGACIÓN Y PUERTOS DESTINO */}
+                    {tramos.map((tr, idx) => {
+                        const trCalculado = calculatedTramosList[idx] || tr;
+                        const trResult = result?.tramos?.[idx];
+                        const selectedVesselObj = vessels.find(v => v.vessel_id === selectedVessel);
+
+                        return (
+                            <tr key={idx} className="border-b border-slate-200 h-8 hover:bg-slate-50">
+                                <td className="border-r border-slate-200 text-center font-bold text-slate-500 select-none">
+                                    {idx + 1}
+                                </td>
+                                <td className="border-r border-slate-200 text-center font-bold">
+                                    <span className={`text-[11px] px-1 py-0.25 rounded ${trCalculado.type === 'LADEN' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'}`}>
+                                        {trCalculado.type}
+                                    </span>
+                                </td>
+                                <td className="border-r border-slate-200 p-0">
+                                    <select
+                                        value={tr.destination_port_id || ''}
+                                        onChange={(e) => updateTramoField(idx, 'destination_port_id', e.target.value)}
+                                        className="w-full h-full bg-white border-0 px-1 font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-600 text-[11.5px] cursor-pointer"
+                                    >
+                                        <option value="">Seleccione puerto...</option>
+                                        {ports.map((p) => (
+                                            <option key={p.port_id} value={p.port_id}>
+                                                {p.port_id}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-right">
+                                    <input
+                                        type="number"
+                                        value={tr.route_distance ?? ''}
+                                        onChange={(e) => updateTramoField(idx, 'route_distance', e.target.value)}
+                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs"
+                                        placeholder="0"
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-right">
+                                    <input
+                                        type="number"
+                                        step="0.5"
+                                        value={tr.weather_factor ?? ''}
+                                        onChange={(e) => updateTramoField(idx, 'weather_factor', e.target.value)}
+                                        className="w-full h-full bg-white border-0 px-1 text-right font-mono text-slate-600 focus:outline-none text-[11px]"
+                                        placeholder="3.0"
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-right">
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={tr.speed ?? ''}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            updateTramoField(idx, 'speed', val);
+                                            tramos.forEach((_, tIdx) => {
+                                                updateTramoField(tIdx, 'speed', val);
+                                            });
+                                        }}
+                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs"
+                                        placeholder={selectedVesselObj?.vessel_speed !== undefined ? String(selectedVesselObj.vessel_speed) : '11.0'}
+                                    />
+                                </td>
+                                <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
+                                    {trResult ? fmtDays(trResult.sea_days || 0) : '0.00'}
+                                </td>
+                                <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
+                                    {trResult ? fmtDays(trResult.port_days || 0) : '0.00'}
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-right">
+                                    {puertosConfig[idx + 1]?.action !== 'NONE' ? (
+                                        <input
+                                            type="number"
+                                            value={puertosConfig[idx + 1]?.time_to_count ?? ''}
+                                            onChange={(e) => updatePuertoConfigField(idx + 1, 'time_to_count', e.target.value)}
+                                            className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            placeholder={trResult?.time_to_count_descarga_hrs !== undefined ? String(trResult.time_to_count_descarga_hrs) : '0.0'}
+                                        />
+                                    ) : (
+                                        <span className="text-slate-350 select-none pr-2">—</span>
+                                    )}
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-right">
+                                    {puertosConfig[idx + 1]?.action !== 'NONE' ? (
+                                        <input
+                                            type="number"
+                                            value={puertosConfig[idx + 1]?.positioning ?? ''}
+                                            onChange={(e) => updatePuertoConfigField(idx + 1, 'positioning', e.target.value)}
+                                            className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            placeholder={puertosConfig[idx + 1]?.action === 'CARGAR' ? String(trResult?.positioning_carga_hrs ?? '0.0') : String(trResult?.positioning_descarga_hrs ?? '0.0')}
+                                        />
+                                    ) : (
+                                        <span className="text-slate-350 select-none pr-2">—</span>
+                                    )}
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-center">
+                                    <select
+                                        value={puertosConfig[idx + 1]?.action || 'NONE'}
+                                        onChange={(e) => updatePuertoConfigField(idx + 1, 'action', e.target.value)}
+                                        className="w-[96%] bg-white border border-indigo-200 hover:border-indigo-400 rounded text-[11.5px] font-bold text-indigo-900 focus:outline-none font-sans text-center h-[26px]"
+                                    >
+                                        <option value="NONE">NONE</option>
+                                        <option value="CARGAR">CARGAR</option>
+                                        <option value="DESCARGAR">DESCARGAR</option>
+                                    </select>
+                                </td>
+                                <td className="border-r border-slate-200 p-0">
+                                    {puertosConfig[idx + 1]?.action !== 'NONE' ? (
+                                        <div className="flex items-center h-full w-full">
+                                            <input
+                                                type="number"
+                                                value={puertosConfig[idx + 1]?.op_rate ?? ''}
+                                                onChange={(e) => updatePuertoConfigField(idx + 1, 'op_rate', e.target.value)}
+                                                className="w-[60%] h-full bg-white border-0 px-1 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
+                                                placeholder={trResult?.contract_agreed_disch_rate !== undefined ? String(trResult.contract_agreed_disch_rate) : String(getAutoPortRate(tr.destination_port_id, puertosConfig[idx + 1]?.action) || '300')}
+                                            />
+                                            <select
+                                                value={puertosConfig[idx + 1]?.rate_unit || 'TH'}
+                                                onChange={(e) => updatePuertoConfigField(idx + 1, 'rate_unit', e.target.value)}
+                                                className="w-[40%] h-[22px] text-[9.5px] bg-slate-50 border border-slate-250 rounded font-sans cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400 pl-0.5 text-slate-500 font-bold mr-1"
+                                            >
+                                                <option value="TD">T/d</option>
+                                                <option value="TH">T/h</option>
+                                            </select>
+                                        </div>
+                                    ) : (
+                                        <div className="text-right pr-2">
+                                            <span className="text-slate-350 select-none">—</span>
+                                        </div>
+                                    )}
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-right">
+                                    {puertosConfig[idx + 1]?.action !== 'NONE' ? (
+                                        <input
+                                            type="text"
+                                            placeholder="Q (MT)"
+                                            value={puertosConfig[idx + 1]?.quantity !== '' && puertosConfig[idx + 1]?.quantity !== undefined ? fmtThousandSep(puertosConfig[idx + 1].quantity) : ''}
+                                            onChange={(e) => {
+                                                const raw = e.target.value.replace(/,/g, '');
+                                                if (/^\d*\.?\d*$/.test(raw)) {
+                                                    updatePuertoConfigField(idx + 1, 'quantity', raw);
+                                                }
+                                            }}
+                                            className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs"
+                                        />
+                                    ) : (
+                                        <span className="text-slate-350 select-none pr-2">—</span>
+                                    )}
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-right">
+                                    {puertosConfig[idx + 1]?.action === 'DESCARGAR' ? (
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            placeholder="F"
+                                            value={puertosConfig[idx + 1]?.freight_rate ?? ''}
+                                            onChange={(e) => updatePuertoConfigField(idx + 1, 'freight_rate', e.target.value)}
+                                            className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs"
+                                        />
+                                    ) : (
+                                        <span className="text-slate-350 select-none pr-2">—</span>
+                                    )}
+                                </td>
+                                <td className="border-r border-slate-200 p-0 text-right">
+                                    {puertosConfig[idx + 1]?.action !== 'NONE' ? (
+                                        <input
+                                            type="text"
+                                            value={puertosConfig[idx + 1]?.manual_port_cost !== '' && puertosConfig[idx + 1]?.manual_port_cost !== undefined ? fmtThousandSep(puertosConfig[idx + 1].manual_port_cost) : ''}
+                                            onChange={(e) => {
+                                                const raw = e.target.value.replace(/[^0-9.]/g, '');
+                                                if (/^\d*\.?\d*$/.test(raw)) {
+                                                    updatePuertoConfigField(idx + 1, 'manual_port_cost', raw);
+                                                }
+                                            }}
+                                            className={`w-full h-full bg-white border-0 px-1.5 text-right font-mono text-xs focus:outline-none ${
+                                                puertosConfig[idx + 1]?.manual_port_cost !== '' && puertosConfig[idx + 1]?.manual_port_cost !== undefined
+                                                    ? 'text-blue-800 font-extrabold bg-blue-50/20'
+                                                    : 'text-slate-500 font-medium'
+                                            }`}
+                                            placeholder={trResult?.agency_costs_destination ? fmtCur(trResult.agency_costs_destination) : ''}
+                                        />
+                                    ) : (
+                                        <span className="text-slate-350 select-none pr-2">—</span>
+                                    )}
+                                </td>
+
+                                {/* Ingreso de Flete del Tramo (Reactivo Q x F) */}
+                                <td className="border-r border-slate-200 text-right pr-2 text-slate-700 bg-slate-50/50 font-mono font-bold select-none">
+                                    {(() => {
+                                        const calcIncome = puertosConfig[idx + 1]?.action === 'DESCARGAR'
+                                            ? (Number(puertosConfig[idx + 1]?.quantity || 0) * Number(puertosConfig[idx + 1]?.freight_rate || 0))
+                                            : 0;
+                                        const finalIncome = trResult?.net_income ? trResult.net_income : calcIncome;
+                                        return finalIncome > 0 ? fmtCur(finalIncome) : '$0';
+                                    })()}
+                                </td>
+
+                                <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
+                                    {trResult ? fmtCur(trResult.bunker_costs || 0) : '$0'}
+                                </td>
+                                <td className="border-r border-slate-200 text-right pr-2 font-mono font-bold text-[11px] bg-slate-50/40">
+                                    {(() => {
+                                        if (puertosConfig[idx + 1]?.action === 'NONE') return <span className="text-slate-350 select-none pr-1">—</span>;
+                                        const mVal = trResult?.muellaje_cost_dest || trResult?.agency_costs_destination_details?.breakdown?.muellaje || puertosConfig[idx + 1]?.muellaje_cost || 0;
+                                        if (!mVal) return <span></span>;
+                                        return (
+                                            <span className={refacturarMuellajeMap[idx + 1] !== false ? 'text-blue-900' : 'text-slate-400 line-through'}>
+                                                {fmtCur(mVal)}
+                                            </span>
+                                        );
+                                    })()}
+                                </td>
+                                <td className="border-r border-slate-300 text-center p-0 bg-slate-50/40">
+                                    {puertosConfig[idx + 1]?.action !== 'NONE' && (trResult?.muellaje_cost_dest || trResult?.agency_costs_destination_details?.breakdown?.muellaje || puertosConfig[idx + 1]?.muellaje_cost || 0) > 0 ? (
+                                        <input
+                                            type="checkbox"
+                                            checked={refacturarMuellajeMap[idx + 1] ?? true}
+                                            onChange={(e) => setRefacturarMuellajeMap(prev => ({ ...prev, [idx + 1]: e.target.checked }))}
+                                            className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer accent-blue-600"
+                                            title="Refacturar Muellaje al cliente"
+                                        />
+                                    ) : (
+                                        <span className="text-slate-350 select-none">—</span>
+                                    )}
+                                </td>
+                            </tr>
+                        );
+                    })}
+
+                    {/* FILA 1 DE TOTALES: ESTIMADO MOTOR */}
+                    <tr className="bg-blue-100/80 border-b border-blue-300 h-8 select-none font-black text-blue-950 text-xs">
+                        <td colSpan={3} className="border-r border-blue-300 text-left pl-3 font-sans text-[10.5px] uppercase tracking-wide text-blue-950 bg-blue-200/50">📊 TOTAL ESTIMADO (MOTOR)</td>
+                        <td className="border-r border-blue-300 text-right pr-2 font-mono text-blue-900">
+                            {result ? fmtNum(result.tramos.reduce((s: any, t: any) => s + (t.distance || 0), 0)) : '0'}
+                        </td>
+                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
+                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
+                        <td className="border-r border-blue-200 text-right pr-2 font-mono text-blue-900">
+                            {result ? fmtDays(result.consolidated.total_sea_days || 0) : '0.00'}
+                        </td>
+                        <td className="border-r border-blue-200 text-right pr-2 font-mono text-blue-900">
+                            {result ? fmtDays(result.consolidated.total_port_days || 0) : '0.00'}
+                        </td>
+                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
+                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
+                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
+                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
+                        <td className={`border-r border-blue-200 text-right pr-2 font-mono font-bold text-[11px] ${isBalanced ? 'text-emerald-700 bg-emerald-50/20' : 'text-rose-600 bg-rose-50/60'}`} title={isBalanced ? "Carga y descarga balanceadas" : `Desbalance: Carga ${totalCargas.toLocaleString()} MT vs Descarga ${totalDescargas.toLocaleString()} MT`}>
+                            {isBalanced ? (
+                                <span>{totalDescargas > 0 ? fmtNum(totalDescargas) : '—'}</span>
+                            ) : (
+                                <span>⚠️ {fmtNum(totalDescargas)} / {fmtNum(totalCargas)}</span>
+                            )}
+                        </td>
+                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
+                        <td className="border-r border-blue-200 text-right pr-2 font-mono text-blue-900">
+                            {result ? fmtCur(result.consolidated.total_port_costs || 0) : '$0'}
+                        </td>
+                        <td className="border-r border-blue-200 text-right pr-2 font-mono text-blue-900">
+                            {result ? fmtCur(result.consolidated.total_freight_revenue || 0) : '$0'}
+                        </td>
+                        <td className="border-r border-blue-200 text-right pr-2 font-mono text-blue-900">
+                            {result ? fmtCur(result.consolidated.total_bunker_costs || 0) : '$0'}
+                        </td>
+                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
+                        <td className="text-right pr-2 text-slate-400">—</td>
+                    </tr>
+
+                    {/* FILA 2 DE TOTALES: ARITMÉTICO */}
+                    {(() => {
+                        const sumDistance = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.distance || 0), 0) : 0;
+                        const sumSeaDays = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.sea_days || 0), 0) : 0;
+                        const sumPortDays = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.port_days || 0), 0) : 0;
+                        const sumPortCosts = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.port_costs || 0), 0) : 0;
+                        const sumFreightIncome = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.net_income || 0), 0) : tramos.reduce((sum, _, idx) => sum + (puertosConfig[idx + 1]?.action === 'DESCARGAR' ? (Number(puertosConfig[idx + 1]?.quantity || 0) * Number(puertosConfig[idx + 1]?.freight_rate || 0)) : 0), 0);
+                        const sumBunkerCosts = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.bunker_costs || 0), 0) : 0;
+
+                        const motorSeaDays = result?.consolidated?.total_sea_days || 0;
+                        const motorPortDays = result?.consolidated?.total_port_days || 0;
+                        const motorPortCosts = result?.consolidated?.total_port_costs || 0;
+                        const motorBunkerCosts = result?.consolidated?.total_bunker_costs || 0;
+
+                        const diffSeaDays = sumSeaDays - motorSeaDays;
+                        const diffPortDays = sumPortDays - motorPortDays;
+                        const diffPortCosts = sumPortCosts - motorPortCosts;
+                        const diffBunkerCosts = sumBunkerCosts - motorBunkerCosts;
+
+                        const hasAnyDiff = Math.abs(diffSeaDays) > 0.001 || Math.abs(diffPortDays) > 0.001 || Math.abs(diffPortCosts) > 0.5 || Math.abs(diffBunkerCosts) > 0.5;
+
+                        return (
+                            <>
+                                <tr className="bg-amber-100/90 border-b border-amber-300 h-8 select-none font-black text-amber-950 text-xs">
+                                    <td colSpan={3} className="border-r border-amber-300 text-left pl-3 font-sans text-[10.5px] uppercase tracking-wide text-amber-950 bg-amber-200/60">🧮 TOTAL ARITMÉTICO (SUMA Σ)</td>
+                                    <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtNum(sumDistance)}</td>
+                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className={`border-r border-amber-300 text-right pr-2 font-mono ${Math.abs(diffSeaDays) > 0.001 ? 'bg-amber-200 text-amber-950 font-black' : ''}`}>
+                                        {fmtDays(sumSeaDays)}
+                                    </td>
+                                    <td className={`border-r border-amber-300 text-right pr-2 font-mono ${Math.abs(diffPortDays) > 0.001 ? 'bg-amber-200 text-amber-950 font-black' : ''}`}>
+                                        {fmtDays(sumPortDays)}
+                                    </td>
+                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtNum(totalDescargas)}</td>
+                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtCur(sumPortCosts)}</td>
+                                    <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtCur(sumFreightIncome)}</td>
+                                    <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtCur(sumBunkerCosts)}</td>
+                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className="text-right pr-2 text-slate-400">—</td>
+                                </tr>
+
+                                <tr className={`h-7 select-none font-black text-xs ${hasAnyDiff ? 'bg-rose-100 text-rose-950 border-b-2 border-rose-400' : 'bg-emerald-100 text-emerald-950 border-b-2 border-emerald-400'}`}>
+                                    <td colSpan={3} className="border-r border-slate-300 text-left pl-3 font-sans text-[10.5px] uppercase tracking-wide">
+                                        {hasAnyDiff ? '⚠️ DIFERENCIA DETECTADA (Δ)' : '✅ CONVERGENCIA PERFECTA (Δ = 0)'}
+                                    </td>
+                                    <td className="border-r border-slate-300 text-right pr-2 font-mono">—</td>
+                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-slate-300 text-right pr-2 font-mono">
+                                        {Math.abs(diffSeaDays) > 0.001 ? `${diffSeaDays > 0 ? '+' : ''}${fmtDays(diffSeaDays)}d` : '0.00d'}
+                                    </td>
+                                    <td className="border-r border-slate-300 text-right pr-2 font-mono">
+                                        {Math.abs(diffPortDays) > 0.001 ? `${diffPortDays > 0 ? '+' : ''}${fmtDays(diffPortDays)}d` : '0.00d'}
+                                    </td>
+                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-slate-300 text-right pr-2 font-mono">—</td>
+                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className="border-r border-slate-300 text-right pr-2 font-mono">
+                                        {Math.abs(diffPortCosts) > 0.5 ? `${diffPortCosts > 0 ? '+' : ''}${fmtCur(diffPortCosts)}` : '$0'}
+                                    </td>
+                                    <td className="border-r border-slate-300 text-right pr-2 font-mono">—</td>
+                                    <td className="border-r border-slate-300 text-right pr-2 font-mono">
+                                        {Math.abs(diffBunkerCosts) > 0.5 ? `${diffBunkerCosts > 0 ? '+' : ''}${fmtCur(diffBunkerCosts)}` : '$0'}
+                                    </td>
+                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
+                                    <td className="text-right pr-2 text-slate-400">—</td>
+                                </tr>
+                            </>
+                        );
+                    })()}
+                </tbody>
+            </table>
+        </div>
+    );
+};
