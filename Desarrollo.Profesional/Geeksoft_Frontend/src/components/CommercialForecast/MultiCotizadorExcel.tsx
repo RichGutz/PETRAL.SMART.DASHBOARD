@@ -498,39 +498,75 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         const t0 = tramosList[0] || {};
         const polId = (t0.origin_port_id || '').trim().toUpperCase();
         
-        // Fila 0: POL (Origen)
+        // Fila 0: POL (Origen del viaje)
         const polContract = clientContracts.find((c: any) => (c.origin_port_id || '').trim().toUpperCase() === polId) || clientContracts[0];
-        const is0Laden = t0.type === 'LADEN' || tramosList.some(t => t.type === 'LADEN');
-        const action0 = is0Laden ? 'CARGAR' : 'NONE';
+        
+        // Determinar acción de Fila 0 (ILO): Solamente es CARGAR si origin_action es CARGAR o el tramo 0 mismo es LADEN
+        const action0 = (t0.origin_action === 'CARGAR' || (t0.type === 'LADEN' && t0.origin_action !== 'NONE')) ? 'CARGAR' : 'NONE';
+        const is0Loading = action0 === 'CARGAR';
         
         config.push({
             action: action0,
-            time_to_count: action0 === 'NONE' ? 0 : (polContract?.time_to_count_carga_hrs ?? t0.port_delay_hours_loading ?? t0.time_to_count_carga_hrs ?? (clientClean === 'NEXA' ? 12 : clientClean === 'SPCC' ? 6 : 0)),
-            op_rate: action0 === 'NONE' ? 0 : (polContract?.load_rate ?? t0.contract_agreed_load_rate ?? t0.origin_op_rate ?? 500),
+            time_to_count: !is0Loading ? 0 : (polContract?.time_to_count_carga_hrs ?? t0.port_delay_hours_loading ?? t0.time_to_count_carga_hrs ?? (clientClean === 'NEXA' ? 12 : clientClean === 'SPCC' ? 6 : 0)),
+            op_rate: !is0Loading ? 0 : (polContract?.load_rate ?? t0.contract_agreed_load_rate ?? t0.origin_op_rate ?? 800),
             rate_unit: t0.rate_unit_origin || 'TH',
-            quantity: is0Laden ? (t0.quantity || 13500) : 0,
-            freight_rate: t0.freight_rate ?? 0,
-            positioning: action0 === 'NONE' ? 0 : (polContract?.maneuver_carga_hrs ?? t0.positioning_carga_hrs ?? (clientClean === 'NEXA' ? 3 : clientClean === 'SPCC' ? 1 : 0)),
-            manual_port_cost: t0.agency_costs_origin ?? t0.manual_agency_cost_origin ?? ''
+            quantity: is0Loading ? (t0.quantity || 13500) : 0,
+            freight_rate: is0Loading ? (t0.freight_rate ?? 0) : 0,
+            positioning: !is0Loading ? 0 : (polContract?.maneuver_carga_hrs ?? t0.positioning_carga_hrs ?? (clientClean === 'NEXA' ? 3 : clientClean === 'SPCC' ? 1 : 0)),
+            manual_port_cost: !is0Loading ? '' : (t0.agency_costs_origin ?? t0.manual_agency_cost_origin ?? '')
         });
 
-        // Filas 1..N: POD (Destinos)
-        tramosList.forEach((tr: any) => {
+        // Filas 1..N: POD (Destinos de cada tramo)
+        tramosList.forEach((tr: any, idx: number) => {
             const podId = (tr.destination_port_id || '').trim().toUpperCase();
-            const podContract = clientContracts.find((c: any) => (c.destination_port_id || c.destination_port || '').trim().toUpperCase() === podId) || clientContracts[0];
-            const isLaden = tr.type === 'LADEN';
-            const isDischarging = isLaden || (Number(tr.quantity) > 0);
-            const actionN = isDischarging ? 'DESCARGAR' : 'NONE';
+            const podContract = clientContracts.find((c: any) => 
+                (c.origin_port_id || '').trim().toUpperCase() === podId ||
+                (c.destination_port_id || c.destination_port || '').trim().toUpperCase() === podId
+            ) || clientContracts[0];
+
+            const nextTramo = tramosList[idx + 1];
+
+            // Determinar acción del puerto de destino del tramo
+            let actionN: 'NONE' | 'CARGAR' | 'DESCARGAR' = 'NONE';
+            if (tr.destination_action) {
+                actionN = tr.destination_action;
+            } else if (tr.type === 'BALLAST' && nextTramo && nextTramo.type === 'LADEN') {
+                actionN = 'CARGAR';
+            } else if (tr.type === 'LADEN') {
+                actionN = 'DESCARGAR';
+            }
+
+            const isCargar = actionN === 'CARGAR';
+            const isDescargar = actionN === 'DESCARGAR';
+            const hasAction = isCargar || isDescargar;
+
+            let ttc = 0;
+            let opRate = 0;
+            let pos = 0;
+
+            if (isCargar) {
+                ttc = podContract?.time_to_count_carga_hrs ?? tr.port_delay_hours_loading ?? (clientClean === 'NEXA' ? 12 : 6);
+                opRate = podContract?.load_rate ?? tr.contract_agreed_load_rate ?? (clientClean === 'NEXA' ? 800 : 500);
+                pos = podContract?.maneuver_carga_hrs ?? tr.positioning_carga_hrs ?? (clientClean === 'NEXA' ? 3 : 1);
+            } else if (isDescargar) {
+                ttc = podContract?.time_to_count_descarga_hrs ?? tr.port_delay_hours_discharging ?? (clientClean === 'NEXA' ? 12 : 6);
+                opRate = podContract?.discharge_rate ?? tr.contract_agreed_discharge_rate ?? (clientClean === 'NEXA' ? 600 : 500);
+                pos = podContract?.maneuver_descarga_hrs ?? tr.positioning_descarga_hrs ?? (clientClean === 'NEXA' ? 3 : 0);
+            }
+
+            const qVal = hasAction ? (tr.quantity || tr.desc_tons || 13500) : 0;
+            const fVal = isDescargar ? (tr.freight_rate || 30) : (isCargar ? (tr.freight_rate || 0) : 0);
+            const pCost = hasAction ? (tr.agency_costs_destination ?? tr.manual_agency_cost_dest ?? (isCargar ? 17000 : 18000)) : '';
 
             config.push({
                 action: actionN,
-                time_to_count: actionN === 'NONE' ? 0 : (podContract?.time_to_count_descarga_hrs ?? tr.port_delay_hours_discharging ?? tr.time_to_count_descarga_hrs ?? (clientClean === 'NEXA' ? 12 : clientClean === 'SPCC' ? 6 : 0)),
-                op_rate: actionN === 'NONE' ? 0 : (podContract?.discharge_rate ?? tr.contract_agreed_discharge_rate ?? tr.dest_op_rate ?? 500),
+                time_to_count: ttc,
+                op_rate: opRate,
                 rate_unit: tr.rate_unit_destination || 'TH',
-                quantity: isDischarging ? (tr.desc_tons ?? tr.quantity ?? 13500) : 0,
-                freight_rate: isDischarging ? (tr.freight_rate ?? 0) : 0,
-                positioning: actionN === 'NONE' ? 0 : (podContract?.maneuver_descarga_hrs ?? tr.positioning_descarga_hrs ?? (clientClean === 'NEXA' ? 3 : clientClean === 'SPCC' ? 0 : 0)),
-                manual_port_cost: tr.agency_costs_destination ?? tr.manual_agency_cost_dest ?? ''
+                quantity: qVal,
+                freight_rate: fVal,
+                positioning: pos,
+                manual_port_cost: pCost
             });
         });
 
@@ -572,8 +608,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
         if (tramosList.length > 0) {
             setTramos(tramosList);
-            const pConfig = buildPuertosConfigFromTramos(tramosList, selectedClient);
-            setPuertosConfig(pConfig);
+            const resolvedConfig = buildPuertosConfigFromTramos(tramosList, selectedClient);
+            setPuertosConfig(resolvedConfig);
         } else if (r.origin_port_id && r.destination_port_id) {
             const singleTramo = [{
                 type: 'LADEN' as 'LADEN' | 'BALLAST',

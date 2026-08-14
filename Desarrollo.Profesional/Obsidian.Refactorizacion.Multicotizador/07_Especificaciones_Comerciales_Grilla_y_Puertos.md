@@ -162,6 +162,18 @@ A partir de la segunda captura y rastreo profundo de manchas de sangre en el có
 | **2.6** | **`Bunker ($)`** | Celdas mostraban `$37,017`, `$34,395`, `$4,348`, pero Totales mostraban **`$0`** | **`$75,760 USD`** (Suma de celdas tramo) | **Acumulador Búnker Apagado:** Las filas de totales leían `result.total_bunker_costs` que venía sin inicializar, ignorando los montos de la celda. | ✅ RESUELTO |
 | **2.7** | **`Totales & Δ Red`** | Falsa alarma de descalce Δ `+$45,000` | **Suma idéntica = Total Motor (Δ = $0)** | **Falta de Sincronización:** Se utilizaban distintos arreglos origen entre el Motor y la Suma Aritmética. Se logró **Convergencia Perfecta (Δ = 0)**. | ✅ RESUELTO |
 
+### 🕵️‍♂️ 5.3. Tercera Vuelta (Serie 3: Asignación Operativa del Viaje - Pista de Sherlock Holmes)
+
+A partir del hallazgo de Sherlock Holmes sobre el comportamiento marítimo de la ruta **`NEXA.ILO.CALLAO.MATARANI.ILO`** (Posicionamiento `ILO ➔ CALLAO`, Carga en `CALLAO`, Descarga en `MATARANI`, Reposicionamiento `MATARANI ➔ ILO`), se descubrió la causa raíz de la desasignación de operaciones:
+
+| # | Columna Auditada | Valor en Pantalla (Hallazgo Serie 3) | Valor Real BD Supabase | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **3.1** | **`Op. Dest (Fila 0 ILO)`** | **`CARGAR`** (Asignado erróneamente en el Origen inicial) | **`NONE`** (Es el origen del tramo lastre `ILO ➔ CALLAO`) | **Crimen 3.1 (Lógica `some` Forzada):** `buildPuertosConfigFromTramos` evaluaba `tramosList.some(t => t.type === 'LADEN')`, lo cual forzaba `CARGAR` a Fila 0 (ILO) incluso siendo tramo `BALLAST`. | ✅ RESUELTO |
+| **3.2** | **`Op. Dest (Fila 1 CALLAO)`** | **`NONE`** (Omitía la Carga real de la travesía) | **`CARGAR`** (`destination_action = 'CARGAR'` en JSON de Supabase) | **Crimen 3.2 (Ignorar Acción Destino):** La grilla no leía `destination_action` del tramo, por lo que asignaba `NONE` a `CALLAO` por venir de un tramo `BALLAST`. | ✅ RESUELTO |
+| **3.3** | **`Op. Dest (Fila 2 MATARANI)`** | **`DESCARGAR`** | **`DESCARGAR`** (`destination_action = 'DESCARGAR'` en Supabase) | **Correcto:** Puerto destino del tramo `LADEN` `CALLAO ➔ MATARANI`. | ✅ RESUELTO |
+| **3.4** | **`Op. Dest (Fila 3 ILO)`** | **`NONE`** | **`NONE`** (`destination_action = 'NONE'` en Supabase) | **Correcto:** Puerto destino del tramo reposicionamiento `MATARANI ➔ ILO`. | ✅ RESUELTO |
+| **3.5** | **`Combinación de JSON puertosConfig`** | `puertosConfig` estático sobrescribía del todo a `contracts` | **Fusión Inteligente (Merge)** | **Crimen 3.5 (Fusión Ausente):** `handleSelectRoute` leía `puertosConfig` estático viejo sin hacer un merge con los parámetros contractuales en tiempo real de `contracts`. | ✅ RESUELTO |
+
 ---
 
 ## 📄 Archivos Relacionados
