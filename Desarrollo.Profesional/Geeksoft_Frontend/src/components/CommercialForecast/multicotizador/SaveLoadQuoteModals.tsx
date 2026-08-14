@@ -36,12 +36,12 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
 }) => {
     return (
         <>
-            {/* 6. GRABAR Y EXPORTAR EN LA PARTE INFERIOR DE LA PANTALLA */}
+            {/* 5. GRABAR Y EXPORTAR EN LA PARTE INFERIOR DE LA PANTALLA */}
             <div className="bg-white border border-slate-300 rounded shadow-sm p-2 mt-2 select-none flex-shrink-0 w-full">
                 <div className="flex items-center justify-between bg-slate-50 p-2 rounded border border-slate-200 flex-nowrap whitespace-nowrap gap-2 w-full">
                     <div className="flex items-center gap-2 shrink-0">
                         <span className="text-[11px] font-black uppercase text-blue-700 bg-blue-50 px-2.5 py-1 rounded border border-blue-200 tracking-wide whitespace-nowrap">
-                            6. GRABAR Y EXPORTAR
+                            5. GRABAR Y EXPORTAR
                         </span>
                     </div>
 

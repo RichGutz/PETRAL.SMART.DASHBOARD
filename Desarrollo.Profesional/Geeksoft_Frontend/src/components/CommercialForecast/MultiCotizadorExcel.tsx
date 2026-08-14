@@ -45,11 +45,11 @@ export interface MultiCotizadorExcelProps {
     portCostMode?: 'static' | 'matrix';
 }
 
-export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCostMode: initialPortCostMode = 'static' }) => {
+export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     // 1. Estados de Navegación & Pestañas
     const [clientType, setClientType] = useState<'ACTIVOS' | 'PROSPECTOS'>('ACTIVOS');
     const [selectedClient, setSelectedClient] = useState<string>('');
-    const [localPortCostMode, setLocalPortCostMode] = useState<'static' | 'matrix'>(initialPortCostMode);
+    // const [localPortCostMode, setLocalPortCostMode] = useState<'static' | 'matrix'>(initialPortCostMode);
 
     // 2. Estados de Catálogos & Contratos
     const [vessels, setVessels] = useState<any[]>([]);
@@ -128,32 +128,27 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
         return num.toLocaleString('en-US');
     };
 
-    // Carga de Catálogos & Contratos Iniciales
+    // Carga de Catálogos Iniciales (Mapeo a tablas reales BD)
     useEffect(() => {
         const init = async () => {
             try {
-                const [vData, pData, rData, cData] = await Promise.all([
-                    ForecastService.getVessels(),
-                    ForecastService.getPorts(),
-                    ForecastService.getRoutes(),
-                    ForecastService.getClients()
+                const [vData, pData, cData, spotData] = await Promise.all([
+                    ForecastService.getVessels(),       // tabla: vessels
+                    ForecastService.getPorts(),         // tabla: ports
+                    ForecastService.getClients(),       // tabla: clients
+                    ForecastService.getSpotVoyages()    // tabla: routes_clients / routes_quotes
                 ]);
                 setVessels(vData || []);
                 setPorts(pData || []);
-                
-                // Fallback para rutas si rData viene vacio
-                let activeRoutes = rData || [];
-                if (activeRoutes.length === 0) {
-                    try {
-                        const rMaster = await ForecastService.getRoutesMaster();
-                        if (rMaster && rMaster.length > 0) activeRoutes = rMaster;
-                    } catch(err) {}
-                }
-                setRoutes(activeRoutes);
                 setRawClients(cData || []);
-                // setContractsMaster(contractsData || []);
+
+                // Carga exclusiva de rutas desde la tabla routes_clients
+                if (spotData && Array.isArray(spotData)) {
+                    const clientRoutes = spotData.filter((s: any) => s.table_source === 'routes_clients' || s.is_prospect === false);
+                    setRoutes(clientRoutes);
+                }
             } catch (e) {
-                console.error("Error cargando catálogos:", e);
+                console.error("Error cargando catálogos BD:", e);
             }
         };
         init();
@@ -555,26 +550,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
                         </select>
                     </div>
 
-                    {/* PASO 5: COSTOS PUERTO (STATIC / MATRIX) */}
-                    <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded px-2 py-1 shadow-sm shrink-0">
-                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                            5. COSTOS PUERTO:
-                        </span>
-                        <div className="flex rounded bg-slate-100 p-0.5 border border-slate-250">
-                            <button
-                                onClick={() => setLocalPortCostMode('static')}
-                                className={`px-2 py-0.5 text-[9.5px] font-black uppercase rounded cursor-pointer ${localPortCostMode === 'static' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
-                            >
-                                STATIC
-                            </button>
-                            <button
-                                onClick={() => setLocalPortCostMode('matrix')}
-                                className={`px-2 py-0.5 text-[9.5px] font-black uppercase rounded cursor-pointer ${localPortCostMode === 'matrix' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
-                            >
-                                MATRIX
-                            </button>
-                        </div>
-                    </div>
+
 
 
 
