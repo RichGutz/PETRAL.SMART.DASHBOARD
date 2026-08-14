@@ -602,8 +602,8 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
 
                     {/* FILA ÚNICA DE TOTALES (HOUSEKEEPING) */}
                     {(() => {
-                        const sumDistance = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.distance || 0), 0) : tramos.reduce((s, t) => s + (Number(t.route_distance) || 0), 0);
-                        const sumSeaDays = result?.consolidated?.total_sea_days || tramos.reduce((s, _, idx) => {
+                        const sumDistance = tramos.reduce((s, t) => s + (Number(t.route_distance) || 0), 0);
+                        const sumSeaDays = tramos.reduce((s, _, idx) => {
                             const tr = tramos[idx];
                             const selectedVesselObj = vessels.find(v => v.vessel_id === selectedVessel);
                             const distVal = Number(tr.route_distance || 0);
@@ -613,7 +613,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                             return s + (distVal > 0 ? (distVal * (1 + (wfPct / 100))) / (speedVal * 24) : 0);
                         }, 0);
 
-                        const sumPortDays = result?.consolidated?.total_port_days || puertosConfig.reduce((s, p) => {
+                        const sumPortDays = puertosConfig.reduce((s, p) => {
                             if (p.action === 'NONE') return s;
                             const qVal = Number(p.quantity || 0);
                             const rVal = Math.max(1, Number(p.op_rate || 500));

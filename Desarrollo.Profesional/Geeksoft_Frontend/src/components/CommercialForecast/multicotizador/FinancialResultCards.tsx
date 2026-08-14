@@ -91,19 +91,19 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
         liveMdoTons += (calcSeaDays * mdoSeaRatio) + (calcPortDays * mdoIdleRatio);
     });
 
-    const ifoT = (result?.consolidated?.bunker_ifo_tonnage && result.consolidated.bunker_ifo_tonnage > 0) ? result.consolidated.bunker_ifo_tonnage : liveIfoTons;
-    const mdoT = (result?.consolidated?.bunker_mdo_tonnage && result.consolidated.bunker_mdo_tonnage > 0) ? result.consolidated.bunker_mdo_tonnage : liveMdoTons;
+    const ifoT = liveIfoTons;
+    const mdoT = liveMdoTons;
     const ifoCost = ifoT * bunkerPriceIfo;
     const mdoCost = mdoT * bunkerPriceMdo;
     const totalBunkerCost = ifoCost + mdoCost;
 
     // 2. Port Costs Live Sum
     const livePortCostsSum = puertosConfig.reduce((sum, p) => sum + (Number(p.manual_port_cost) || 0), 0);
-    const totalPortCostsVal = (result?.consolidated?.total_port_costs && result.consolidated.total_port_costs > 0) ? result.consolidated.total_port_costs : livePortCostsSum;
+    const totalPortCostsVal = livePortCostsSum;
 
     // 3. Revenue & Refacturación de Muellaje Live
     const liveRevenue = tramos.reduce((sum, _, idx) => sum + (puertosConfig[idx + 1]?.action === 'DESCARGAR' ? (Number(puertosConfig[idx + 1]?.quantity || 0) * Number(puertosConfig[idx + 1]?.freight_rate || 0)) : 0), 0);
-    const revenue = (result?.consolidated?.total_freight_revenue && result.consolidated.total_freight_revenue > 0) ? result.consolidated.total_freight_revenue : liveRevenue;
+    const revenue = liveRevenue;
 
     const liveRefacturacionMuellaje = puertosConfig.reduce((sum, p, i) => {
         if (p.action === 'NONE') return sum;
@@ -112,22 +112,20 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
         }
         return sum;
     }, 0);
-    const refacturacionMuellajeUsd = (result?.consolidated?.refacturacion_muellaje !== undefined && result.consolidated.refacturacion_muellaje > 0) ? result.consolidated.refacturacion_muellaje : liveRefacturacionMuellaje;
+    const refacturacionMuellajeUsd = liveRefacturacionMuellaje;
 
     // 4. Financial Voyage Result Live
-    const totalDays = (result?.consolidated?.total_days && result.consolidated.total_days > 0) ? result.consolidated.total_days : (liveTotalSeaDays + liveTotalPortDays);
-    const tceReq = result?.consolidated?.tce_required || Number(vesselParams?.tce_required) || 15000;
+    const totalDays = liveTotalSeaDays + liveTotalPortDays;
+    const tceReq = Number(vesselParams?.tce_required) || 15000;
     const hireUsd = tceReq * totalDays;
 
     const addressCommUsd = revenue * (addressCommPct / 100);
     const brokerCommUsd = revenue * (brokerCommPct / 100);
-    const totalCommUsd = (result?.consolidated?.total_commissions && result.consolidated.total_commissions > 0) ? result.consolidated.total_commissions : (addressCommUsd + brokerCommUsd);
+    const totalCommUsd = addressCommUsd + brokerCommUsd;
 
-    const liveNetProfit = (revenue + refacturacionMuellajeUsd) - (hireUsd + totalBunkerCost + totalPortCostsVal + totalCommUsd);
-    const pnlVal = (result?.consolidated?.net_profit !== undefined && result?.consolidated?.net_profit !== 0) ? result.consolidated.net_profit : liveNetProfit;
+    const pnlVal = (revenue + refacturacionMuellajeUsd) - (hireUsd + totalBunkerCost + totalPortCostsVal + totalCommUsd);
 
-    const liveTceReal = totalDays > 0 ? (((revenue + refacturacionMuellajeUsd) - (totalBunkerCost + totalPortCostsVal + totalCommUsd)) / totalDays) : 0;
-    const tceReal = (result?.consolidated?.tce_real && result.consolidated.tce_real > 0) ? result.consolidated.tce_real : liveTceReal;
+    const tceReal = totalDays > 0 ? (((revenue + refacturacionMuellajeUsd) - (totalBunkerCost + totalPortCostsVal + totalCommUsd)) / totalDays) : 0;
     const tceDiff = tceReal - tceReq;
 
     return (
