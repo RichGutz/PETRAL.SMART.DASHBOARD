@@ -485,27 +485,32 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                 <td className="border-r border-slate-200 text-right pr-2 font-mono font-bold text-[11px] bg-slate-50/40">
                                     {(() => {
                                         if (puertosConfig[idx + 1]?.action === 'NONE') return <span className="text-slate-350 select-none pr-1">—</span>;
-                                        const mVal = trResult?.muellaje_cost_dest || trResult?.agency_costs_destination_details?.breakdown?.muellaje || puertosConfig[idx + 1]?.muellaje_cost || 0;
-                                        if (!mVal) return <span></span>;
+                                        const isMejillonesDischarge = (tr.destination_port_id || '').toUpperCase() === 'MEJILLONES' && puertosConfig[idx + 1]?.action === 'DESCARGAR';
+                                        const mVal = trResult?.muellaje_cost_dest || trResult?.agency_costs_destination_details?.breakdown?.muellaje || puertosConfig[idx + 1]?.muellaje_cost || (isMejillonesDischarge ? 33333 : 0);
+                                        if (!mVal) return <span className="text-slate-350 select-none pr-1">—</span>;
                                         return (
-                                            <span className={refacturarMuellajeMap[idx + 1] !== false ? 'text-blue-900' : 'text-slate-400 line-through'}>
+                                            <span className={refacturarMuellajeMap[idx + 1] !== false ? 'text-blue-900 font-extrabold' : 'text-slate-400 line-through'}>
                                                 {fmtCur(mVal)}
                                             </span>
                                         );
                                     })()}
                                 </td>
                                 <td className="border-r border-slate-300 text-center p-0 bg-slate-50/40">
-                                    {puertosConfig[idx + 1]?.action !== 'NONE' && (trResult?.muellaje_cost_dest || trResult?.agency_costs_destination_details?.breakdown?.muellaje || puertosConfig[idx + 1]?.muellaje_cost || 0) > 0 ? (
-                                        <input
-                                            type="checkbox"
-                                            checked={refacturarMuellajeMap[idx + 1] ?? true}
-                                            onChange={(e) => setRefacturarMuellajeMap(prev => ({ ...prev, [idx + 1]: e.target.checked }))}
-                                            className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer accent-blue-600"
-                                            title="Refacturar Muellaje al cliente"
-                                        />
-                                    ) : (
-                                        <span className="text-slate-350 select-none">—</span>
-                                    )}
+                                    {(() => {
+                                        const isMejillonesDischarge = (tr.destination_port_id || '').toUpperCase() === 'MEJILLONES' && puertosConfig[idx + 1]?.action === 'DESCARGAR';
+                                        const mVal = trResult?.muellaje_cost_dest || trResult?.agency_costs_destination_details?.breakdown?.muellaje || puertosConfig[idx + 1]?.muellaje_cost || (isMejillonesDischarge ? 33333 : 0);
+                                        return puertosConfig[idx + 1]?.action !== 'NONE' && mVal > 0 ? (
+                                            <input
+                                                type="checkbox"
+                                                checked={refacturarMuellajeMap[idx + 1] ?? true}
+                                                onChange={(e) => setRefacturarMuellajeMap(prev => ({ ...prev, [idx + 1]: e.target.checked }))}
+                                                className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer accent-blue-600"
+                                                title="Refacturar Muellaje al cliente"
+                                            />
+                                        ) : (
+                                            <span className="text-slate-350 select-none">—</span>
+                                        );
+                                    })()}
                                 </td>
                             </tr>
                         );

@@ -19,18 +19,32 @@ CERTBOT_MAIL = "contacto@geeksoft.pe"
 
 import os
 
+def ensure_remote_dir(sftp, remotepath):
+    dirs = remotepath.split('/')
+    path = ''
+    for d in dirs:
+        if d:
+            path += '/' + d
+            try:
+                sftp.mkdir(path)
+            except IOError:
+                pass
+
 def put_dir(sftp, localpath, remotepath):
-    try:
-        sftp.mkdir(remotepath)
-    except IOError:
-        pass
+    ensure_remote_dir(sftp, remotepath)
     for item in os.listdir(localpath):
+        if item in ['.git', 'node_modules', '__pycache__', '.venv', '.pytest_cache', 'scratch']:
+            continue
         localitem = os.path.join(localpath, item)
         remoteitem = remotepath + '/' + item
         if os.path.isdir(localitem):
             put_dir(sftp, localitem, remoteitem)
         else:
-            sftp.put(localitem, remoteitem)
+            try:
+                sftp.put(localitem, remoteitem)
+            except Exception:
+                ensure_remote_dir(sftp, os.path.dirname(remoteitem))
+                sftp.put(localitem, remoteitem)
 
 def run(client, cmd, desc=""):
     print(f"\n[{desc}]")

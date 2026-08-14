@@ -49,8 +49,6 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     // 1. Estados de Navegación & Pestañas
     const [clientType, setClientType] = useState<'ACTIVOS' | 'PROSPECTOS'>('ACTIVOS');
     const [selectedClient, setSelectedClient] = useState<string>('');
-    const [selectedRouteId, setSelectedRouteId] = useState<string>('');
-    const [selectedQuoteId, setSelectedQuoteId] = useState<string>('');
     // const [localPortCostMode, setLocalPortCostMode] = useState<'static' | 'matrix'>(initialPortCostMode);
 
     // 2. Estados de Catálogos, Contratos & Etiquetas UX
@@ -59,6 +57,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     const [routes, setRoutes] = useState<any[]>([]);
     const [rawClients, setRawClients] = useState<any[]>([]);
     const [clients, setClients] = useState<string[]>([]);
+    const [contractsMaster, setContractsMaster] = useState<any[]>([]);
+    const [activeRouteLabel, setActiveRouteLabel] = useState<string>('');
+    const [loadedQuoteLabel, setLoadedQuoteLabel] = useState<string>('');
 
     // 3. Selección de Buque y Fact Sheet
     const [selectedVessel, setSelectedVessel] = useState<string>('');
@@ -100,6 +101,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     const [showLoadModal, setShowLoadModal] = useState<boolean>(false);
     const [routeName, setRouteName] = useState<string>('');
     const [isSaving, setIsSaving] = useState<boolean>(false);
+    const [isLoadingRoutes, setIsLoadingRoutes] = useState<boolean>(false);
     const [savedRoutes, setSavedRoutes] = useState<any[]>([]);
 
     // Formatters Helper
@@ -132,17 +134,15 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     useEffect(() => {
         const init = async () => {
             try {
-                const [vData, pData, cData, spotData, quoteList] = await Promise.all([
+                const [vData, pData, cData, spotData] = await Promise.all([
                     ForecastService.getVessels(),       // tabla: vessels
                     ForecastService.getPorts(),         // tabla: ports
                     ForecastService.getClients(),       // tabla: clients
-                    ForecastService.getSpotVoyages(),   // tabla: routes_clients / routes_quotes
-                    MulticotizadorRetrieverService.searchSavedQuotes('', true, true, '')
+                    ForecastService.getSpotVoyages()    // tabla: routes_clients / routes_quotes
                 ]);
                 setVessels(vData || []);
                 setPorts(pData || []);
                 setRawClients(cData || []);
-                setSavedRoutes(quoteList || []);
 
                 // Carga exclusiva de rutas desde la tabla routes_clients
                 if (spotData && Array.isArray(spotData)) {
@@ -156,45 +156,38 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         init();
     }, []);
 
-    // Filtrado Dinámico e Instantáneo (en memoria) de Clientes (ACTIVOS vs PROSPECTOS)
+    // Filtrado Dinámico de Clientes desde Supabase DB (clients & routes_quotes)
     useEffect(() => {
-        const isProspectMode = clientType === 'PROSPECTOS';
-        let filteredClientNames: string[] = [];
+        const fetchAllClients = async () => {
+            try {
+                let dbClients = rawClients || [];
+                const clientNames: string[] = [];
 
-        if (isProspectMode) {
-            (rawClients || []).forEach((c: any) => {
-                if (c.is_prospect === true || String(c.is_prospect).toLowerCase() === 'true') {
-                    const name = c.client_name || c.client_id || '';
-                    if (name) filteredClientNames.push(name.trim());
+                dbClients.forEach((c: any) => {
+                    const name = typeof c === 'string' ? c : (c.client_name || c.client_id || '');
+                    if (name) clientNames.push(name.trim());
+                });
+
+                // Cargar también clientes guardados en cotizaciones / routes_quotes
+                const spots = await ForecastService.getSpotVoyages();
+                if (spots && Array.isArray(spots)) {
+                    spots.forEach((s: any) => {
+                        const name = (s.client_id || s.name || '').split('.')[0];
+                        if (name && !clientNames.includes(name)) {
+                            clientNames.push(name.trim());
+                        }
+                    });
                 }
-            });
-            (savedRoutes || []).forEach((s: any) => {
-                if (s.table_source === 'routes_quotes' || s.is_prospect === true || s.is_quote === true) {
-                    const name = (s.client_id || s.name || '').split('.')[0];
-                    if (name) filteredClientNames.push(name.trim());
-                }
-            });
-            const uniqueProspects = Array.from(new Set(filteredClientNames.filter(Boolean)));
-            const finalList = uniqueProspects.length > 0 ? uniqueProspects : ['MARCOBRE', 'PRIMAX', 'CODELCO', 'R TRADING', 'CERRO VERDE'];
-            setClients(finalList);
-            if (!finalList.includes(selectedClient)) {
-                setSelectedClient(finalList[0]);
+
+                const uniqueClients = Array.from(new Set(clientNames.filter(Boolean)));
+                setClients(uniqueClients.length > 0 ? uniqueClients : ['SPCC', 'NEXA', 'TRAFIGURA', 'GLENCORE']);
+            } catch (e) {
+                setClients(['SPCC', 'NEXA', 'TRAFIGURA', 'GLENCORE']);
             }
-        } else {
-            (rawClients || []).forEach((c: any) => {
-                if (!c.is_prospect || c.is_prospect === false || String(c.is_prospect).toLowerCase() === 'false') {
-                    const name = c.client_name || c.client_id || '';
-                    if (name) filteredClientNames.push(name.trim());
-                }
-            });
-            const uniqueActivos = Array.from(new Set(filteredClientNames.filter(Boolean)));
-            const finalList = uniqueActivos.length > 0 ? uniqueActivos : ['SPCC', 'NEXA'];
-            setClients(finalList);
-            if (!finalList.includes(selectedClient)) {
-                setSelectedClient(finalList[0]);
-            }
-        }
-    }, [clientType, rawClients, savedRoutes]);
+        };
+
+        fetchAllClients();
+    }, [clientType, rawClients.length]);
 
     // Manejador de Cambio de Buque
     const handleVesselChange = (vesselId: string) => {
@@ -432,108 +425,25 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         }
     };
 
-
-
-    const buildPuertosConfigFromTramos = (tramosList: any[], client: string) => {
-        if (!tramosList || tramosList.length === 0) return [];
-        
-        const defaultTimeToCount = client === 'NEXA' ? 12 : client === 'SPCC' ? 6 : 12;
-        const defaultLoadRate = client === 'NEXA' ? 800 : client === 'SPCC' ? 500 : 500;
-        const defaultDischRate = client === 'NEXA' ? 600 : client === 'SPCC' ? 300 : 300;
-
-        const config: any[] = [];
-
-        const t0 = tramosList[0] || {};
-        config.push({
-            action: t0.type === 'LADEN' ? 'CARGAR' : (tramosList.some(t => t.type === 'LADEN') ? 'CARGAR' : 'NONE'),
-            time_to_count: t0.port_delay_hours_loading ?? t0.time_to_count_carga_hrs ?? defaultTimeToCount,
-            op_rate: t0.contract_agreed_load_rate ?? t0.origin_op_rate ?? defaultLoadRate,
-            rate_unit: t0.rate_unit_origin || 'TH',
-            quantity: t0.quantity ?? 0,
-            freight_rate: t0.freight_rate ?? 0,
-            positioning: t0.positioning_carga_hrs ?? 0,
-            manual_port_cost: t0.agency_costs_origin ?? t0.manual_agency_cost_origin ?? ''
-        });
-
-        tramosList.forEach((tr: any) => {
-            const isLaden = tr.type === 'LADEN';
-            const isDischarging = isLaden || (Number(tr.quantity) > 0);
-            config.push({
-                action: isDischarging ? 'DESCARGAR' : 'NONE',
-                time_to_count: tr.port_delay_hours_discharging ?? tr.time_to_count_descarga_hrs ?? defaultTimeToCount,
-                op_rate: tr.contract_agreed_discharge_rate ?? tr.dest_op_rate ?? defaultDischRate,
-                rate_unit: tr.rate_unit_destination || 'TH',
-                quantity: isDischarging ? (tr.desc_tons ?? tr.quantity ?? 0) : 0,
-                freight_rate: isDischarging ? (tr.freight_rate ?? 0) : 0,
-                positioning: tr.positioning_descarga_hrs ?? 0,
-                manual_port_cost: tr.agency_costs_destination ?? tr.manual_agency_cost_dest ?? ''
-            });
-        });
-
-        return config;
-    };
-
-    const handleSelectRoute = (routeId: string) => {
-        if (!routeId) return;
-        const r = routes.find(x => x.route_id === routeId || x.id === routeId);
-        if (!r) return;
-
-        const legsData = r.legs_data || {};
-        const tramosList = legsData.tramos || [];
-
-        if (tramosList.length > 0) {
-            setTramos(tramosList);
-            const pConfig = (legsData.puertosConfig && legsData.puertosConfig.length > 0)
-                ? legsData.puertosConfig
-                : buildPuertosConfigFromTramos(tramosList, selectedClient);
-            setPuertosConfig(pConfig);
-        } else if (r.origin_port_id && r.destination_port_id) {
-            const singleTramo = [{
-                type: 'LADEN' as 'LADEN' | 'BALLAST',
-                origin_port_id: r.origin_port_id,
-                destination_port_id: r.destination_port_id,
-                quantity: 0,
-                freight_rate: 0,
-                port_delay_hours_loading: selectedClient === 'NEXA' ? 12 : 6,
-                port_delay_hours_discharging: selectedClient === 'NEXA' ? 12 : 6,
-                route_distance: r.route_distance || r.distance || 0,
-                weather_factor: 3.0,
-                speed: 11.0
-            }];
-            setTramos(singleTramo);
-            setPuertosConfig(buildPuertosConfigFromTramos(singleTramo, selectedClient));
+    const handleListRoutes = async () => {
+        setIsLoadingRoutes(true);
+        setShowLoadModal(true);
+        try {
+            const list = await MulticotizadorRetrieverService.searchSavedQuotes('', true, clientType === 'PROSPECTOS', selectedClient);
+            setSavedRoutes(list || []);
+        } catch (e) {
+            console.error("Error listando cotizaciones:", e);
+        } finally {
+            setIsLoadingRoutes(false);
         }
-
-        const ifo = Number(legsData.bunker_price_ifo ?? r.bunker_price_ifo ?? (selectedClient === 'NEXA' ? 450 : selectedClient === 'SPCC' ? 895.14 : 967.26));
-        const mdo = Number(legsData.bunker_price_mdo ?? r.bunker_price_mdo ?? (selectedClient === 'NEXA' ? 800 : selectedClient === 'SPCC' ? 1460.30 : 1528.26));
-
-        if (ifo > 0) setBunkerPriceIfo(ifo);
-        if (mdo > 0) setBunkerPriceMdo(mdo);
-
-        if (legsData.addressCommPct !== undefined) setAddressCommPct(Number(legsData.addressCommPct));
-        if (legsData.brokerCommPct !== undefined) setBrokerCommPct(Number(legsData.brokerCommPct));
-        if (legsData.vessel_id || r.vessel_id) handleVesselChange(legsData.vessel_id || r.vessel_id);
     };
 
     const handleLoadRoute = (quote: any) => {
         if (!quote) return;
         const unpacked = MulticotizadorRetrieverService.unpackQuoteData(quote);
-
-        if (unpacked.tramos && unpacked.tramos.length > 0) {
-            setTramos(unpacked.tramos);
-            const pConfig = (unpacked.puertosConfig && unpacked.puertosConfig.length > 0)
-                ? unpacked.puertosConfig
-                : buildPuertosConfigFromTramos(unpacked.tramos, selectedClient);
-            setPuertosConfig(pConfig);
-        }
-
-        if (unpacked.vessel_id) handleVesselChange(unpacked.vessel_id);
-        if (unpacked.bunker_price_ifo > 0) setBunkerPriceIfo(unpacked.bunker_price_ifo);
-        if (unpacked.bunker_price_mdo > 0) setBunkerPriceMdo(unpacked.bunker_price_mdo);
-        if (unpacked.addressCommPct !== undefined) setAddressCommPct(unpacked.addressCommPct);
-        if (unpacked.brokerCommPct !== undefined) setBrokerCommPct(unpacked.brokerCommPct);
-        if (unpacked.vesselParams) setVesselParams(unpacked.vesselParams);
-
+        if (unpacked.tramos && unpacked.tramos.length > 0) setTramos(unpacked.tramos);
+        if (unpacked.puertosConfig && unpacked.puertosConfig.length > 0) setPuertosConfig(unpacked.puertosConfig);
+        if (unpacked.vessel_id) setSelectedVessel(unpacked.vessel_id);
         setShowLoadModal(false);
     };
 
@@ -557,19 +467,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                         </span>
                         <div className="flex rounded bg-slate-100 p-0.5 border border-slate-250">
                             <button
-                                onClick={() => {
-                                    setClientType('ACTIVOS');
-                                    setSelectedQuoteId('');
-                                }}
+                                onClick={() => setClientType('ACTIVOS')}
                                 className={`px-2 py-0.5 text-[9.5px] font-black uppercase rounded cursor-pointer ${clientType === 'ACTIVOS' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
                             >
                                 Activos
                             </button>
                             <button
-                                onClick={() => {
-                                    setClientType('PROSPECTOS');
-                                    setSelectedRouteId('');
-                                }}
+                                onClick={() => setClientType('PROSPECTOS')}
                                 className={`px-2 py-0.5 text-[9.5px] font-black uppercase rounded cursor-pointer ${clientType === 'PROSPECTOS' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
                             >
                                 Prospectos
@@ -584,58 +488,51 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                         </select>
                     </div>
 
-                    {/* PASO 2: BUSCAR RUTA CLIENTE */}
-                    <div className={`flex items-center gap-1.5 border rounded px-2 py-1 shadow-sm shrink-0 transition-opacity ${clientType === 'PROSPECTOS' ? 'bg-slate-100 border-slate-200 opacity-50' : 'bg-white border-slate-300'}`}>
-                        <span className={`text-[10px] font-black uppercase tracking-wider whitespace-nowrap ${clientType === 'PROSPECTOS' ? 'text-slate-400' : 'text-slate-700'}`}>
-                            2. BUSCAR RUTA CLIENTE
+                    {/* PASO 2: CARGAR RUTA */}
+                    <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded px-2 py-1 shadow-sm shrink-0">
+                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                            2. CARGAR RUTA
                         </span>
                         <select
-                            value={selectedRouteId}
-                            disabled={clientType === 'PROSPECTOS'}
                             onChange={(e) => {
-                                const val = e.target.value;
-                                setSelectedRouteId(val);
-                                handleSelectRoute(val);
+                                const rId = e.target.value;
+                                if (!rId) return;
+                                const r = routes.find(x => x.route_id === rId);
+                                if (r) {
+                                    setTramos([{
+                                        type: 'LADEN',
+                                        origin_port_id: r.origin_port_id,
+                                        destination_port_id: r.destination_port_id,
+                                        quantity: 0,
+                                        freight_rate: 0,
+                                        port_delay_hours_loading: 0,
+                                        port_delay_hours_discharging: 0,
+                                        route_distance: r.route_distance || r.distance || 0,
+                                        weather_factor: 3.0,
+                                        speed: 11.0
+                                    }]);
+                                }
                             }}
-                            className={`h-6 text-[11px] font-extrabold border rounded px-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 ${clientType === 'PROSPECTOS' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-800 border-slate-300 cursor-pointer'}`}
+                            className="h-6 text-[11px] font-extrabold bg-white border border-slate-300 rounded px-1.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[160px]"
                         >
                             <option value="">[SELECCIONAR RUTA]</option>
-                            {routes.map(r => {
-                                const routeLabel = r.name || (r.origin_port_id && r.destination_port_id ? `${r.origin_port_id} ➔ ${r.destination_port_id}` : (r.legs_data?.tramos && r.legs_data.tramos.length > 0 ? r.legs_data.tramos.map((t: any) => t.origin_port_id).concat(r.legs_data.tramos[r.legs_data.tramos.length - 1]?.destination_port_id).join(' ➔ ') : r.route_id));
-                                return (
-                                    <option key={r.route_id || r.id || r.spot_id} value={r.route_id || r.id || r.spot_id}>
-                                        {routeLabel}
-                                    </option>
-                                );
-                            })}
-                        </select>
-                    </div>
-
-                    {/* PASO 3: CARGAR COTIZACION PROSPECTO */}
-                    <div className={`flex items-center gap-1.5 border rounded px-2 py-1 shadow-sm shrink-0 transition-opacity ${clientType === 'ACTIVOS' ? 'bg-slate-100 border-slate-200 opacity-50' : 'bg-white border-slate-300'}`}>
-                        <span className={`text-[10px] font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1 ${clientType === 'ACTIVOS' ? 'text-slate-400' : 'text-slate-700'}`}>
-                            <FolderOpen size={13} className={clientType === 'ACTIVOS' ? 'text-slate-400' : 'text-blue-600'} />
-                            <span>3. CARGAR COTIZACION PROSPECTO</span>
-                        </span>
-                        <select
-                            value={selectedQuoteId}
-                            disabled={clientType === 'ACTIVOS'}
-                            onChange={(e) => {
-                                const qId = e.target.value;
-                                setSelectedQuoteId(qId);
-                                if (!qId) return;
-                                const q = savedRoutes.find(x => (x.route_id || x.spot_id || x.id) === qId);
-                                if (q) handleLoadRoute(q);
-                            }}
-                            className={`h-6 text-[11px] font-extrabold border rounded px-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 ${clientType === 'ACTIVOS' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-800 border-slate-300 cursor-pointer'}`}
-                        >
-                            <option value="">[SELECCIONAR COTIZACIÓN]</option>
-                            {savedRoutes.map(q => (
-                                <option key={q.route_id || q.spot_id || q.id} value={q.route_id || q.spot_id || q.id}>
-                                    {q.name || q.route_id || 'COTIZACIÓN'}
+                            {routes.map(r => (
+                                <option key={r.route_id} value={r.route_id}>
+                                    {r.origin_port_id} ➔ {r.destination_port_id}
                                 </option>
                             ))}
                         </select>
+                    </div>
+
+                    {/* PASO 3: CARGAR COTIZACIÓN */}
+                    <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded px-2 py-1 shadow-sm shrink-0">
+                        <button
+                            onClick={handleListRoutes}
+                            className="h-6 text-[10px] font-black uppercase text-slate-700 hover:text-blue-700 flex items-center gap-1 cursor-pointer tracking-wider"
+                        >
+                            <FolderOpen size={13} className="text-blue-600" />
+                            <span>3. CARGAR COTIZACIÓN</span>
+                        </button>
                     </div>
 
                     {/* PASO 4: SELECCIONAR BUQUE */}
@@ -648,7 +545,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                             onChange={(e) => handleVesselChange(e.target.value)}
                             className="h-6 text-[11px] font-extrabold bg-white border border-slate-300 rounded px-1.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                         >
-                            <option value="">[SELECCIONAR BUQUE]</option>
+                            <option value="">[SELECCIONE BUQUE]</option>
                             {vessels.map(v => (
                                 <option key={v.vessel_id} value={v.vessel_id}>{v.vessel_name || v.vessel_id}</option>
                             ))}
@@ -732,7 +629,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 showLoadModal={showLoadModal}
                 routeName={routeName}
                 isSaving={isSaving}
-                isLoadingRoutes={false}
+                isLoadingRoutes={isLoadingRoutes}
                 savedRoutes={savedRoutes}
                 selectedClient={selectedClient}
                 setShowSaveModal={setShowSaveModal}

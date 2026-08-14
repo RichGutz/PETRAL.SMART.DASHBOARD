@@ -28,8 +28,8 @@ export class MulticotizadorRetrieverService {
      */
     public static async searchSavedQuotes(
         searchQuery: string,
-        _filterActivo: boolean,
-        _filterProspecto: boolean,
+        filterActivo: boolean,
+        filterProspecto: boolean,
         selectedClient: string
     ): Promise<RetrievedQuote[]> {
         const rawSpots = await ForecastService.getSpotVoyages();
@@ -67,13 +67,13 @@ export class MulticotizadorRetrieverService {
         const legsData = quote.legs_data || {};
         return {
             vessel_id: legsData.vessel_id || quote.vessel_id || '',
-            bunker_price_ifo: Number(legsData.bunker_price_ifo ?? legsData.bunker_ifo ?? 0),
-            bunker_price_mdo: Number(legsData.bunker_price_mdo ?? legsData.bunker_mdo ?? 0),
+            bunker_price_ifo: legsData.bunker_price_ifo || 0,
+            bunker_price_mdo: legsData.bunker_price_mdo || 0,
             tramos: legsData.tramos || [],
             puertosConfig: legsData.puertosConfig || [],
             vesselParams: legsData.vesselParams || null,
-            addressCommPct: legsData.addressCommPct !== undefined ? Number(legsData.addressCommPct) : undefined,
-            brokerCommPct: legsData.brokerCommPct !== undefined ? Number(legsData.brokerCommPct) : undefined
+            addressCommPct: legsData.addressCommPct || 0,
+            brokerCommPct: legsData.brokerCommPct || 0
         };
     }
 }

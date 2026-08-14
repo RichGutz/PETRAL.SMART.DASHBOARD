@@ -183,7 +183,40 @@ python Push.VPS\run_qc_loop.py
 
 ---
 
+---
+
+## 🎯 6. Hoja de Ruta de Ajustes Comerciales y Operativos (6 Puntos de Control)
+
+Las siguientes 6 especificaciones han sido integradas al Plan Maestro para su ejecución rigurosa y validada:
+
+1. **Punto 1 — Botón 1 (`PROSPECTOS` en Paso 1):**
+   - **Requerimiento:** Al activar la pestaña **`PROSPECTOS`**, el selector desplegable debe listar únicamente a los clientes prospectos provenientes de la tabla `clients` (`is_prospect = true` -> `MARCOBRE`, `PRIMAX`, `CODELCO`, `R TRADING`, `CERRO VERDE`). Al activar **`ACTIVOS`**, mostrará clientes con contrato vigente (`SPCC`, `NEXA`).
+   - **Criterio de Éxito:** Sincronización dinámica de la lista según el estado de la pestaña sin valores cableados.
+
+2. **Punto 2 — Botón 3 (`3. CARGAR COTIZACIÓN` en Paso 3 como Dropdown `<select>`):**
+   - **Requerimiento:** Rediseñar el Botón 3 convirtiéndolo en un menú desplegable `<select>` **idéntico al Botón 2 ("2. CARGAR RUTA")**.
+   - **Criterio de Éxito:** Mostrar las cotizaciones guardadas en `routes_quotes` en una lista desplegable que desencadene el desempaquetado de la proforma seleccionada.
+
+3. **Punto 3 — Precios de Búnker (IFO / MDO) según la Fuente Seleccionada:**
+   - **Requerimiento:** Conectar el selector de `FUENTE` (`Maestro de Contratos`, `Cotización`, `Maestro Búnker`, `Sobreescritura`) para que actualice los insumos IFO y MDO según la fuente seleccionada y propague los costos en el desglose de viajes.
+   - **Criterio de Éxito:** Coincidencia exacta entre el input de cabecera, la columna `BUNKER ($)` de la grilla y la tarjeta `BUNKER EXPENSES`.
+
+4. **Punto 4 — Time to Count (Delays Carga y Descarga):**
+   - **Requerimiento:** Auto-cargar las horas de Time to Count estipuladas en contrato (`6.0h` para SPCC, `12.0h` para NEXA) en la columna `TIME TO COUNT (H)` en lugar de mostrar `0`.
+   - **Criterio de Éxito:** Inicialización y visualización reactiva de las horas de estadía/delay por puerto.
+
+5. **Punto 5 — Muellaje de Mejillones y Refacturación (`RF`):**
+   - **Requerimiento:** Para el puerto de Mejillones en descarga, auto-cargar el costo de muellaje de **$33,333.00** en la celda dual y marcar automáticamente el estado `RF` (`[x]`).
+   - **Criterio de Éxito:** Asignación automática de la cifra de muellaje y checkbox habilitado al seleccionar Mejillones.
+
+6. **Punto 6 — Costo y Paridad de MDO (Diesel):**
+   - **Requerimiento:** Garantizar la paridad de precio ($/T) y costo total ($) de MDO entre el Fact Sheet, la grilla tabular y la tarjeta `FINANCIAL VOYAGE RESULT` (eliminando sobreescrituras arbitrarias de $1,400/T).
+   - **Criterio de Éxito:** 100% de paridad numérica en los 4 cuadrantes.
+
+---
+
 ### 📄 Documentos Relacionados
 - **Flujograma Python:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.py)
 - **PDF de Arquitectura:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.pdf`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.pdf)
 - **Imagen PNG:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.png`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.png)
+

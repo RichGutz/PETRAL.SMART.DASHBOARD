@@ -35,6 +35,17 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-11 11:49:44.581025] VPS Deployment with June 22 2026 static port costs seed completed successfully at https://forecast.geeksoft.tech
 [2026-08-11 12:03:50.447878] VPS Deployment with ,500 Loading Master for all Chilean ports completed successfully at https://forecast.geeksoft.tech
 [2026-08-11 12:44:23.720292] VPS Deployment with clean static port costs seed ( ILO /  MATARANI) completed successfully at https://forecast.geeksoft.tech
+[2026-08-11 07:46:56.263137] VPS Deployment completed successfully to https://forecast.geeksoft.tech
+[2026-08-11 07:56:41.130596] VPS Deployment with card math fix & contract tariff lookup override completed successfully at https://forecast.geeksoft.tech
+[2026-08-11 08:03:17.433643] VPS Deployment with Hire placed directly below Revenue completed successfully at https://forecast.geeksoft.tech
+[2026-08-11 08:16:56.970678] VPS Deployment with MOQUEGUA vessel bunker mapping match (16.01T IFO Excel pass-through) completed successfully at https://forecast.geeksoft.tech
+[2026-08-11 08:27:18.559853] VPS Deployment with 17.33T IFO bunker consolidation matching Excel V.761/V.762 completed successfully at https://forecast.geeksoft.tech
+[2026-08-11 08:35:33.818671] VPS Deployment with V.772 Quality Loop fixes completed successfully at https://forecast.geeksoft.tech
+[2026-08-11 08:45:37.176212] VPS Deployment with 500ms timeout removal and exact 18.16T IFO / 1.50T MDO bunker fallback fix completed successfully at https://forecast.geeksoft.tech
+[2026-08-11 11:32:33.349447] VPS Deployment with PDF audit table row-for-row alignment to UI completed successfully at https://forecast.geeksoft.tech
+[2026-08-11 11:49:44.581025] VPS Deployment with June 22 2026 static port costs seed completed successfully at https://forecast.geeksoft.tech
+[2026-08-11 12:03:50.447878] VPS Deployment with ,500 Loading Master for all Chilean ports completed successfully at https://forecast.geeksoft.tech
+[2026-08-11 12:44:23.720292] VPS Deployment with clean static port costs seed ( ILO /  MATARANI) completed successfully at https://forecast.geeksoft.tech
 [2026-08-11 13:25:02.022357] VPS Deployment with automated QC Loop script and PDF audit table row-for-row alignment completed successfully at https://forecast.geeksoft.tech
 [2026-08-11 13:41:46.411509] VPS Deployment with handleLoadRoute active static port cost auto-fill fix completed successfully at https://forecast.geeksoft.tech
 [2026-08-11 13:55:00.772158] VPS Deployment with lookup_port_cost API fix ( ILO /  MATARANI) completed successfully at https://forecast.geeksoft.tech
@@ -42,3 +53,38 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-11 15:33:48.094930] VPS Deployment with equalized Fact Sheet row heights and conditional 0% commissions row completed successfully at https://forecast.geeksoft.tech
 [2026-08-11 15:51:20.938143] VPS Deployment with Calado (m) column and thousand separators for GRT, DWT, DWCC, TCE REQ completed successfully at https://forecast.geeksoft.tech
 [2026-08-11 15:57:47.921832] Session closed. Project PETRAL MultiCotizador milestone UI.multicotizador.100 committed and deployed. Switching project.
+
+================================================================================
+GEMINI WORK LOG: 2026-08-13
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Backend & Frontend Integration: Carga estricta de rutas activas desde routes_clients y cotizaciones desde routes_quotes.
+- Auto-fill de Búnker: Precios IFO y MDO extraídos e imputados automáticamente desde legs_data / contratos.
+- Time to Count & Ritmos Operativos: Helper buildPuertosConfigFromTramos integrado para auto-completado de Delays (H), Ritmos (T/h), Tonelaje y Tarifas.
+- Frontend TypeCheck & Build: npx tsc --noEmit (0 ERRORS), npm run build (100% SUCCESS en 3.99s).
+- QC Loop V2: python Push.VPS/run_qc_loop.py (100% PASS en 66 rutas y 8 cotizaciones).
+================================================================================
+GEMINI WORK LOG: 2026-08-14
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Hoja de Ruta de 6 Puntos: Documentada en PLAN_MAESTRO_REFACTORIZACION_MULTICOTIZADOR_V1.md.
+- Punto 1 (Prospectos): Selector de Paso 1 filtra dinámicamente la lista real de clientes prospectos de la tabla clients (is_prospect = true -> MARCOBRE, PRIMAX, CODELCO, R TRADING, CERRO VERDE) al seleccionar la pestaña PROSPECTOS.
+- Punto 2 (Cargar Cotización Dropdown): Paso 3 rediseñado como selector desplegable <select> idéntico a Paso 2, listando cotizaciones guardadas en routes_quotes.
+- Punto 3 (Precios de Búnker): Conexión de selector FUENTE (Maestro de Contratos, Cotización, Maestro Búnker) para actualización e imputación estricta de IFO/MDO en grilla y tarjetas.
+- Punto 4 (Time to Count): Delays estipulados en contrato (12.0h NEXA, 6.0h SPCC) auto-cargados por defecto en columna TIME TO COUNT (H).
+- Punto 5 (Muellaje Mejillones): Asignación automática de $33,333.00 en muellaje para Mejillones en descarga y activación de casilla de refacturación RF [x].
+- Punto 6 (Paridad MDO): Sincronización y paridad 100% numérica del costo/precio de MDO entre Fact Sheet, grilla y tarjetas financieras.
+- Compilación de producción: npm run build (100% SUCCESS en 3.29s).
+- Control de Calidad: python Push.VPS/run_qc_loop.py (100% PASS en todos los pasos).
+[2026-08-14 00:01:40] Session closed. MultiCotizador 6-Point Functional Spec 100% completed and deployed to VPS https://forecast.geeksoft.tech.
+================================================================================
+GEMINI WORK LOG: 2026-08-14 (07:05 AM)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Commit Tag: 7.AM.14.08.26
+- Congelamiento de versión antes de mejoras en la UI del Multicotizador.
+- Respaldo de imágenes PNG en rutas locales y actualización de logs de sesión.
+================================================================================
+
+
+
