@@ -186,6 +186,18 @@ A partir de la auditoría visual de la cuarta escena del crimen y las instruccio
 | **4.2** | **`Costos de Puerto Estáticos`** | `$20,000` harcodeado legacy | **`$16,846.50`** (Callao) / **`$17,105.00`** (Matarani) | **Refresco en Vivo:** Al seleccionar buque (`TABLONES`), se auto-completan los costos fijos reales de `port_cost_static`. | ✅ RESUELTO |
 | **4.3** | **`Filas de Totales (Housekeeping)`** | Existían 3 filas confusas (`Motor`, `Aritmético`, `Δ Red`) | **Fila Única Azul `📊 TOTAL`** | **Simplificación Operativa:** Se eliminaron las 3 filas antiguas y se reemplazaron por una **única hilera azul `📊 TOTAL`** que realiza la suma aritmética pura y directa de todas las columnas visibles superiores. | ✅ RESUELTO |
 
+### ───────────────
+
+### 🕵️‍♂️ 5.5. Quinta Vuelta (Serie 5: Cálculo Marítimo de Días Puerto & Suma Aritmética de Totales)
+
+A partir de la inspección de urgencia previa a la reunión sobre los `Días Pto` de la grilla:
+
+| # | Columna Auditada | Valor en Pantalla (Hallazgo Serie 5) | Valor Real BD Supabase / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **5.1** | **`Días Pto (Tramo 1 Callao)`** | Muestra **`0.04d`** (1 hora) en lugar de `1.42d` | **`1.42d`** ($\frac{\frac{13,500}{500} + 6 + 1}{24} = \frac{34}{24} = 1.42\text{d}$) | **Crimen 5.1 (Lectura de `trResult` desactualizado):** La celda renderizaba `trResult.port_days` backend antiguo (`0.04d`) ignorando el cálculo en vivo de las celdas de la grilla. | ✅ RESUELTO |
+| **5.2** | **`Días Pto (Tramo 2 Matarani)`** | Muestra `1.66d` | **`1.66d`** ($\frac{\frac{13,500}{400} + 6 + 0}{24} = \frac{39.75}{24} = 1.66\text{d}$) | **Cálculo de Descarga:** Correcto a 400 TH ($33.75\text{h} + 6\text{h} = 39.75\text{h} \rightarrow 1.66\text{d}$). | ✅ RESUELTO |
+| **5.3** | **`Días Pto (Fila TOTAL)`** | Muestra **`0.04d`** | **`3.08d`** ($1.42\text{d} + 1.66\text{d} = 3.08\text{d}$) | **Crimen 5.3 (Acumulador Fila TOTAL):** La fila total leía `result.consolidated.total_port_days` (`0.04d`) en vez de sumar aritméticamente la fórmula real de todos los puertos. | ✅ RESUELTO |
+
 ---
 
 ## 📄 Archivos Relacionados

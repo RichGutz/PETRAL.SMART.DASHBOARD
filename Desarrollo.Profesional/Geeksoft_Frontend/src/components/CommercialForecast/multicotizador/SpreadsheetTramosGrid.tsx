@@ -425,10 +425,10 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
-                                    {trResult ? fmtDays(trResult.sea_days || calcSeaDays) : fmtDays(calcSeaDays)}
+                                    {fmtDays(calcSeaDays)}
                                 </td>
                                 <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
-                                    {trResult ? fmtDays(trResult.port_days || calcPortDays) : fmtDays(calcPortDays)}
+                                    {fmtDays(calcPortDays)}
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-right">
                                     {puertosConfig[idx + 1]?.action !== 'NONE' ? (
