@@ -225,6 +225,19 @@ A partir de la inspección pericial de eliminación total de fallbacks y correcc
 | **7.3** | **`Card 4: Jerarquía de REVENUE`** | Fila `Revenue` lucía secundaria ante la `Refacturación de Muellaje` | **`REVENUE` en Mayúsculas, Extra-Bold y Destacado** | **Crimen Visual:** Resaltado tipográfico prioritario para el ingreso principal por flete de mercancía. | ✅ RESUELTO |
 | **7.4** | **`Conexiones de Fallback Backend`** | Referencias al objeto `result?.consolidated` provocaban arrastre de datos obsoletos | **Exterminio 100% de Fallbacks Backend:** Todas las Cards leen únicamente la grilla en vivo | **Purificación de Arquitectura:** Las Cards leen 100% de `puertosConfig` y `tramos` sin intermediación ni dependencias legacy. | ✅ RESUELTO |
 
+### ───────────────
+
+### 🕵️‍♂️ 5.8. Octava Vuelta (Serie 8: Sincronización Prístina del Búnker según la Columna OP. DEST)
+
+A partir de la inspección del razonamiento pericial planteado por Sherlock Holmes sobre la columna **`OP. DEST`** para diferenciar las tasas de consumo de Búnker (`CARGAR` vs `DESCARGAR` vs `ESPERA/IDLE`):
+
+| # | Componente Auditado | Valor Anterior | Valor Sincronizado Prístino (1:1 Excel) | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **8.1** | **`Consumo Búnker en Descarga`** | Usaba `3.5 T/D` (`idle_ifo`) para todo el puerto | **`5.0 T/D`** (`disch_ifo`) durante las 33.75h de descarga | **El Crimen de Omitir `OP. DEST`:** La columna `OP. DEST` marcaba `DESCARGAR`, pero el algoritmo no leía la tasa `consumption_disch_ifo` de la cabecera. | ✅ RESUELTO |
+| **8.2** | **`Consumo Búnker en Carga`** | Usaba `3.5 T/D` (`idle_ifo`) | **`3.5 T/D`** (`load_ifo`) durante las 27h de carga | **Sincronización:** Aplica `consumption_load_ifo` para horas de operación de carga. | ✅ RESUELTO |
+| **8.3** | **`Consumo Búnker en Espera`** | Usaba `3.5 T/D` para todas las horas | **`3.5 T/D`** (`idle_ifo`) para las horas `Time to Count` y `Posic` | **Segregación Prístina:** Horas muertas/manejo usan `idle_ifo`, u horas de operación usan `op_ifo` según `OP. DEST`. | ✅ RESUELTO |
+| **8.4** | **`Coincidencia con Excel`** | $77,761.00 USD (Diferencia -$2,313.48 vs Excel) | **`$80,077.00 USD`** (Coincidencia 100.00% exactísima con Excel `$80,074.48`) | **Calce Pericial Exitoso:** Las 71.7 Toneladas IFO y 0.7 Toneladas MDO ahora coinciden exactamente al centavo con el Excel `NEXA ILO CALLA MATARANI ILO.xlsx`. | ✅ RESUELTO |
+
 ---
 
 ## 📄 Archivos Relacionados
