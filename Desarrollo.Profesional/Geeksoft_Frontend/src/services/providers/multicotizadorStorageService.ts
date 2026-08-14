@@ -1,6 +1,7 @@
 import { ForecastService } from '../api';
 
 export interface SaveQuoteParams {
+    routeId?: string;
     routeName: string;
     selectedClient: string;
     filterProspecto: boolean;
@@ -21,7 +22,7 @@ export class MulticotizadorStorageService {
      */
     public static async saveQuote(params: SaveQuoteParams): Promise<boolean> {
         const {
-            routeName, selectedClient, filterProspecto, selectedVessel,
+            routeId, routeName, selectedClient, filterProspecto, selectedVessel,
             bunkerPriceIfo, bunkerPriceMdo, tramosEnriquecidos,
             puertosConfig, vesselParams, addressCommPct, brokerCommPct, rawClients
         } = params;
@@ -30,6 +31,7 @@ export class MulticotizadorStorageService {
         const isClientProspect = (clientInfo?.is_prospect === true) || filterProspecto;
 
         const payload = {
+            route_id: routeId,
             name: routeName,
             description: isClientProspect ? "Cotización Prospecto (routes_quotes)" : "Ruta Cliente Activo (routes_clients)",
             pais: 'PE',

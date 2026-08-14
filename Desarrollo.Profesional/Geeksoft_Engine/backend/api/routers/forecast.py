@@ -597,7 +597,19 @@ def save_spot_voyage(request: SpotSaveRequest):
         
         target_table = "routes_quotes" if request.is_prospect else "routes_clients"
         
-        # BUSCAR POR COLUMNAS MÚLTIPLES (name, route_id, client_route_id, prospect_route_id, spot_id)
+        # 1. SI VIENE UN route_id ESPECÍFICO (Sobrescritura Directa por Primary Key)
+        if request.route_id:
+            for pk_col in ["route_id", "client_route_id", "prospect_route_id", "spot_id"]:
+                try:
+                    res_check = sb.table(target_table).select("*").eq(pk_col, request.route_id).execute()
+                    if res_check.data and len(res_check.data) > 0:
+                        res = sb.table(target_table).update(payload).eq(pk_col, request.route_id).execute()
+                        clear_forecast_cache()
+                        return {"status": "success", "action": "overwritten_by_id", "spot_id": request.route_id}
+                except Exception:
+                    continue
+
+        # 2. BUSCAR POR COLUMNAS MÚLTIPLES (name, route_id, client_route_id, prospect_route_id, spot_id)
         existing = None
         for col in ["name", "route_id", "client_route_id", "prospect_route_id", "spot_id"]:
             try:
@@ -613,10 +625,13 @@ def save_spot_voyage(request: SpotSaveRequest):
             # Update row in-situ usando la columna coincidente
             res = sb.table(target_table).update(payload).eq(match_col, request.name).execute()
             if not res.data:
-                pk_val = match_row.get("id") or match_row.get("route_id") or match_row.get("spot_id") or match_row.get("client_route_id")
+                pk_val = match_row.get("route_id") or match_row.get("client_route_id") or match_row.get("spot_id") or match_row.get("prospect_route_id") or match_row.get("id")
                 if pk_val:
-                    pk_col = "id" if "id" in match_row else match_col
-                    res = sb.table(target_table).update(payload).eq(pk_col, pk_val).execute()
+                    for pk_col in ["route_id", "client_route_id", "prospect_route_id", "spot_id"]:
+                        try:
+                            res = sb.table(target_table).update(payload).eq(pk_col, pk_val).execute()
+                            if res.data: break
+                        except Exception: continue
             
             spot_id = request.name
             if res.data and len(res.data) > 0:

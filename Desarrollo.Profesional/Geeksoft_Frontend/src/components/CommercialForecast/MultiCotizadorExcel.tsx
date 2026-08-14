@@ -104,6 +104,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     const [routeSuffix, setRouteSuffix] = useState<string>('2026');
     const [saveMode, setSaveMode] = useState<'OVERWRITE' | 'NEW'>('NEW');
     const [loadedRouteName, setLoadedRouteName] = useState<string>('');
+    const [loadedRouteId, setLoadedRouteId] = useState<string>('');
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const [savedRoutes, setSavedRoutes] = useState<any[]>([]);
 
@@ -504,6 +505,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         try {
             const calculatedTramos = getCalculatedTramos();
             await MulticotizadorStorageService.saveQuote({
+                routeId: saveMode === 'OVERWRITE' ? loadedRouteId : undefined,
                 routeName: finalName,
                 selectedClient,
                 filterProspecto: clientType === 'PROSPECTOS',
@@ -597,7 +599,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             }
 
             const qVal = hasAction ? (tr.quantity || tr.desc_tons || 13500) : 0;
-            const fVal = isDescargar ? (tr.freight_rate || 30) : (isCargar ? (tr.freight_rate || 0) : 0);
+            const fVal = (tr.freight_rate !== undefined && tr.freight_rate !== null && tr.freight_rate !== '')
+                ? Number(tr.freight_rate)
+                : (isDescargar ? 30 : 0);
 
             // PURIFICACIÓN DE COSTOS DE PUERTO (CERO FALLBACK 20000 BACKEND LEGACY)
             const rawManualCost = tr.manual_agency_cost_dest ?? tr.manual_port_cost;
@@ -655,6 +659,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         if (!r) return;
 
         setLoadedRouteName(r.name || r.route_id || '');
+        setLoadedRouteId(r.route_id || r.client_route_id || r.prospect_route_id || r.spot_id || r.id || '');
         setBunkerSource('MAESTRO_CONTRATOS');
 
         const legsData = r.legs_data || {};
@@ -662,7 +667,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
         if (tramosList.length > 0) {
             setTramos(tramosList);
-            const resolvedConfig = buildPuertosConfigFromTramos(tramosList, selectedClient);
+            const resolvedConfig = (legsData.puertosConfig && Array.isArray(legsData.puertosConfig) && legsData.puertosConfig.length === tramosList.length + 1)
+                ? legsData.puertosConfig
+                : buildPuertosConfigFromTramos(tramosList, selectedClient);
             setPuertosConfig(resolvedConfig);
         } else if (r.origin_port_id && r.destination_port_id) {
             const singleTramo = [{
@@ -695,6 +702,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     const handleLoadRoute = (quote: any) => {
         if (!quote) return;
         setLoadedRouteName(quote.name || quote.route_id || quote.spot_id || '');
+        setLoadedRouteId(quote.route_id || quote.client_route_id || quote.prospect_route_id || quote.spot_id || quote.id || '');
         setBunkerSource('COTIZACION');
         const unpacked = MulticotizadorRetrieverService.unpackQuoteData(quote);
 

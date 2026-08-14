@@ -43,6 +43,7 @@ class ForecastListResponse(BaseModel):
     updated_at: str
 
 class SpotSaveRequest(BaseModel):
+    route_id: Optional[str] = None
     name: str
     description: Optional[str] = None
     legs_data: Dict[str, Any]
