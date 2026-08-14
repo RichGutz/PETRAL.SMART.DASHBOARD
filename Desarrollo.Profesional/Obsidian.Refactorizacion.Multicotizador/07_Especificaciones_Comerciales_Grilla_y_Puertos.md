@@ -130,19 +130,19 @@ TABLE public.port_cost_static (
 
 ---
 
-## 🕵️‍♂️ 5. Protocolo Pericial de Auditoría Benoit Blanc (Los 7 Crímenes & Discrepancias)
+## 🕵️‍♂️ 5. Protocolo Pericial de Auditoría Benoit Blanc (Matriz Multiserie de Crímenes)
 
-A partir de la inspección visual en la escena del crimen sobre la ruta **`NEXA.ILO.CALLAO.MATARANI.ILO`** (Buque `TABLONES`), se establecen los 7 crímenes periciales detectados contra los metadatos reales de Supabase BD:
+A partir del protocolo pericial del detective Benoit Blanc, estructuramos la matriz acumulativa por series de auditoría (Serie 1: 7 crímenes iniciales resueltos; Serie 2: segunda ronda de hallazgos en desarrollo):
 
-| # | Columna Auditada | Valor en Pantalla (Discrepancia) | Valor Real BD Supabase | Dictamen Pericial / Causa del Crimen |
-| :-: | :--- | :--- | :--- | :--- |
-| **1** | **`W.F (%)`** | **`0.03`** (en todos los tramos) | `3.0%` (`weather_factor_ballast` / `laden` en `distances`) | **Crimen 1 (Formato Porcentual):** Muestra el decimal `0.03` sin formatear a porcentaje `3.0%`. |
-| **2** | **`Time to Count (H)`** | **`0.0 h`** (Tramo 1 `CARGAR` y Tramo 2 `DESCARGAR`) | **`12.0 h`** (`time_to_count_carga_hrs` y `time_to_count_descarga_hrs` en `contracts`) | **Crimen 2 (Delay Omitido):** Leyó el JSON estático `0.0h` en lugar de consultar la columna contractual de `NEXA` en Supabase (`12.0h`). |
-| **3** | **`Posic (h)`** | **`1 h`** (Tramo 1) / **`0 h`** (Tramo 2) | **`3.0 h`** (`maneuver_carga_hrs` y `maneuver_descarga_hrs` en `contracts`) | **Crimen 3 (Maniobra Errónea):** No leyó las horas de posicionamiento contractuales de `NEXA` en Supabase (`3.0h`). |
-| **4** | **`Ritmo (C/D)`** | **`500 TH`** (Tramo 1) / **`400 TH`** (Tramo 2) | **`800 TH`** (Carga) / **`600 TH`** (Descarga) en `contracts` | **Crimen 4 (Ritmo Desactualizado):** La UI leyó del JSON en lugar de consultar `load_rate` (`800 TH`) y `discharge_rate` (`600 TH`) de `NEXA`. |
-| **5** | **`Costo Pto`** | **`$20,000`** (Tramo 1) / **`$20,000`** (Tramo 2) | **`$16,846.50`** (Callao) / **`$17,105.00`** (Matarani) en `port_cost_static` | **Crimen 5 (Valores Redondos Ficticios):** Imputó `$20,000` en lugar de hacer la consulta estricta por `(port_id, operation_type, vessel_id == 'TABLONES')`. |
-| **6** | **`Bunker ($)`** | **`$0`** (en todos los tramos) | **`~$65,447.20 USD`** (4.06 Días Mar $\times$ Consumos IFO $1,100 / MDO $1,700) | **Crimen 6 (Cálculo Apagado):** La celda de la grilla renderizaba `$0` por falta de multiplicación entre consumos del buque, días mar/puerto y precios IFO/MDO. |
-| **7** | **`Costo Pto (Totales)`**| **Motor: `$0` / Aritmético: `$45,000` / Δ = `+$45,000`** | **Suma idéntica al Total Motor** | **Crimen 7 (Descalce en Totales):** La fila "Total Estimado (Motor)" no sincronizaba el acumulado del motor, generando una falsa alarma roja de diferencia. |
+| # | Columna Auditada | Serie 1: Hallazgos (7 Crímenes Resueltos) | Serie 2: Hallazgos (Segunda Ronda) | Valor Esperado BD Supabase | Dictamen Pericial / Causa del Crimen |
+| :-: | :--- | :--- | :--- | :--- | :--- |
+| **1** | **`W.F (%)`** | **Crimen 1:** Muestra `0.03` sin porcentaje | *Pendiente de evaluación* | `3.0%` (`weather_factor_ballast` / `laden` en `distances`) | **Formato Porcentual:** El código renderizaba el decimal bruto en lugar de multiplicar por 100 y formatear a `3.0%`. |
+| **2** | **`Time to Count (H)`** | **Crimen 2:** `0.0 h` en Carga/Descarga | *Pendiente de evaluación* | **`12.0 h`** (`time_to_count_carga_hrs` y `time_to_count_descarga_hrs` en `contracts`) | **Overhead Omitido:** Leyó el JSON estático `0.0h` en lugar de consultar la columna contractual de `NEXA` en Supabase (`12.0h`). |
+| **3** | **`Posic (h)`** | **Crimen 3:** `1.0 h` (Carga) / `0.0 h` (Descarga) | *Pendiente de evaluación* | **`3.0 h`** (`maneuver_carga_hrs` y `maneuver_descarga_hrs` en `contracts`) | **Maniobra Errónea:** Se imputaban valores empaquetados antiguos en lugar de leer las horas de posicionamiento de `NEXA` (`3.0h`). |
+| **4** | **`Ritmo (C/D)`** | **Crimen 4:** `500 TH` (Carga) / `400 TH` (Descarga) | *Pendiente de evaluación* | **`800 TH`** (Carga) / **`600 TH`** (Descarga) en `contracts` | **Ritmo Desactualizado:** La UI leyó del JSON en lugar de consultar los ritmos oficiales `load_rate` y `discharge_rate` de `NEXA`. |
+| **5** | **`Costo Pto`** | **Crimen 5:** `$20,000` estático harcodeado | *Pendiente de evaluación* | **`$16,846.50`** (Callao) / **`$17,105.00`** (Matarani) en `port_cost_static` | **Valores Redondos Ficticios:** Imputó `$20,000` en lugar de hacer la consulta estricta por `(port_id, operation_type, vessel_id == 'TABLONES')`. |
+| **6** | **`Bunker ($)`** | **Crimen 6:** `$0` en todas las celdas | *Pendiente de evaluación* | **`~$65,447.20 USD`** (4.06 Días Mar $\times$ Consumos IFO $1,100 / MDO $1,700) | **Cálculo Apagado:** La celda de la grilla renderizaba `$0` por falta de multiplicación entre consumos del buque, días mar/puerto y precios IFO/MDO. |
+| **7** | **`Costo Pto (Totales)`**| **Crimen 7:** Motor: `$0` / Aritmético: `$45,000` (Δ = `+$45,000`) | *Pendiente de evaluación* | **Suma idéntica al Total Motor** | **Descalce en Totales:** La fila "Total Estimado (Motor)" no acumulaba los gastos estáticos, generando una falsa alarma roja de diferencia. |
 
 ---
 
