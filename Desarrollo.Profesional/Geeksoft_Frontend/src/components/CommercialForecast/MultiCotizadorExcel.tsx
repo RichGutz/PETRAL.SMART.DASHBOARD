@@ -261,7 +261,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
 
     const autoFillPortCost = async (idx: number, portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR', vId: string) => {
         if (!vId || !portId || action === 'NONE') return;
-        const res = await PortCostsRatesService.lookupPortCost(vId, portId, action, localPortCostMode);
+        const res = await PortCostsRatesService.lookupPortCost(vId, portId, action, 'static');
         if (res.total_cost !== '') {
             setPuertosConfig(prev => {
                 const list = [...prev];
@@ -426,7 +426,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
                 vessel_params: vesselParams,
                 bunker_prices: { ifo: bunkerPriceIfo, mdo: bunkerPriceMdo },
                 bunker_source: bunkerSource,
-                port_cost_mode: localPortCostMode,
+                port_cost_mode: 'static',
                 client_id: selectedClient,
                 address_commission_pct: addressCommPct,
                 broker_commission_pct: brokerCommPct,
