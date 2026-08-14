@@ -1,7 +1,7 @@
 import React from 'react';
 
 export interface FinancialResultCardsProps {
-    result: any;
+    result?: any;
     bunkerPriceIfo: number;
     bunkerPriceMdo: number;
     puertosConfig: any[];
@@ -36,7 +36,7 @@ const PORT_THEMES = [
 ];
 
 export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
-    result,
+    result: _result,
     bunkerPriceIfo,
     bunkerPriceMdo,
     puertosConfig,
@@ -194,10 +194,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                                 {portItems.map((item, idx) => {
                                                     const isChile = CHILEAN_PORTS.includes((item.port_id || '').toUpperCase());
                                                     const lmCost = (isChile && item.cost >= 2500) ? 2500 : 0;
-                                                    const trForPort = result?.tramos?.[idx === 0 ? 0 : idx - 1];
-                                                    const mValPort = (item.role === 'POL' || idx === 0)
-                                                        ? (result?.tramos?.[0]?.muellaje_cost_origin || result?.tramos?.[0]?.agency_costs_origin_details?.breakdown?.muellaje || puertosConfig[0]?.muellaje_cost || 0)
-                                                        : (trForPort?.muellaje_cost_dest || trForPort?.agency_costs_destination_details?.breakdown?.muellaje || puertosConfig[idx]?.muellaje_cost || 0);
+                                                    const mValPort = Number(item.muellaje_cost || 0);
                                                     const baseAgencyCost = Math.max(0, item.cost - lmCost - mValPort);
 
                                                     if (baseAgencyCost < 1 && lmCost < 1 && mValPort < 1) return null;
@@ -371,22 +368,22 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                     <table className="w-full border-collapse text-xs font-mono">
                         <tbody>
                             {/* 1. Revenue */}
-                            <tr className="border-b border-emerald-100/60">
-                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                            <tr className="border-b border-emerald-200/80 bg-emerald-100/40">
+                                <td className="py-1 pl-1 text-slate-900 font-sans text-[11px] font-extrabold uppercase">
                                     Revenue ({fmtThousandSep(puertosConfig[2]?.quantity || puertosConfig[1]?.quantity || 13500)} MT × {fmtCur(puertosConfig[2]?.freight_rate || puertosConfig[1]?.freight_rate || 30)}/MT)
                                 </td>
-                                <td className="text-right py-0.5 pr-1 font-bold text-slate-800">
+                                <td className="text-right py-1 pr-1 font-black text-emerald-950 text-xs">
                                     {fmtCur(revenue)}
                                 </td>
                             </tr>
 
                             {/* 1.b Refacturación de Muellaje (al cliente) */}
                             {refacturacionMuellajeUsd > 0 && (
-                                <tr className="border-b border-emerald-100/40 bg-emerald-100/40">
-                                    <td className="py-0.5 pl-2 text-emerald-900 font-sans text-[9.5px] font-bold italic">
+                                <tr className="border-b border-emerald-100/40 bg-emerald-50/60">
+                                    <td className="py-0.5 pl-2 text-emerald-800 font-sans text-[9.5px] font-semibold italic">
                                         (+) Refacturación Muellaje (al cliente)
                                     </td>
-                                    <td className="text-right py-0.5 pr-1 font-mono text-[9.5px] text-emerald-900 font-bold">
+                                    <td className="text-right py-0.5 pr-1 font-mono text-[9.5px] text-emerald-800 font-bold">
                                         +{fmtCur(refacturacionMuellajeUsd)}
                                     </td>
                                 </tr>
@@ -431,10 +428,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                         {portItems.map((item, idx) => {
                                             const isChile = CHILEAN_PORTS.includes((item.port_id || '').toUpperCase());
                                             const lmCost = (isChile && item.cost >= 2500) ? 2500 : 0;
-                                            const trForPort = result?.tramos?.[idx === 0 ? 0 : idx - 1];
-                                            const mValPort = (item.role === 'POL' || idx === 0)
-                                                ? (result?.tramos?.[0]?.muellaje_cost_origin || result?.tramos?.[0]?.agency_costs_origin_details?.breakdown?.muellaje || puertosConfig[0]?.muellaje_cost || 0)
-                                                : (trForPort?.muellaje_cost_dest || trForPort?.agency_costs_destination_details?.breakdown?.muellaje || puertosConfig[idx]?.muellaje_cost || 0);
+                                            const mValPort = Number(item.muellaje_cost || 0);
                                             const baseAgencyCost = Math.max(0, item.cost - lmCost - mValPort);
 
                                             if (baseAgencyCost < 1 && lmCost < 1 && mValPort < 1) return null;

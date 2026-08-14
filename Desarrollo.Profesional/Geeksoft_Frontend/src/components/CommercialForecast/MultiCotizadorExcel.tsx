@@ -391,12 +391,20 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
     const getDynamicPortCostItems = () => {
         const items: any[] = [];
-        puertosConfig.forEach((p, idx) => {
+        puertosConfig.forEach((p, pIdx) => {
             if (p.action !== 'NONE') {
-                const portId = idx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[idx - 1]?.destination_port_id || '');
+                const portId = pIdx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[pIdx - 1]?.destination_port_id || '');
                 if (portId) {
                     const costVal = Number(p.manual_port_cost) || 0;
-                    items.push({ label: `${idx === 0 ? 'POL' : 'POD'} (${portId})`, cost: costVal, port_id: portId, role: idx === 0 ? 'POL' : 'POD' });
+                    const muellajeVal = Number(p.muellaje_cost) || 0;
+                    items.push({
+                        label: `${pIdx === 0 ? 'POL' : 'POD'} (${portId})`,
+                        cost: costVal,
+                        muellaje_cost: muellajeVal,
+                        port_id: portId,
+                        role: pIdx === 0 ? 'POL' : 'POD',
+                        pIndex: pIdx
+                    });
                 }
             }
         });
