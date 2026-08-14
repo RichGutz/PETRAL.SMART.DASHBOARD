@@ -245,7 +245,18 @@ A partir de la inspección del hallazgo flagrante donde el Card Búnker mostraba
 | # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 9) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
 | **9.1** | **`Fila TOTAL Grilla (Bunker $)`** | Muestra **`$77,761 USD`** (Descuadre de -$2,321 vs Card) | **`$80,077.00 USD`** (Coincidencia 1:1 exacta con Card Búnker y Card 4) | **El Crimen de la Duplicidad de Fórmulas:** El helper `liveBunkerCosts` al inicio de `SpreadsheetTramosGrid.tsx` no había sido actualizado con las tasas `OP. DEST` de carga/descarga (`5.0 T/D`), mientras que las celdas individuales y el Card sí. | ✅ RESUELTO |
-| **9.2** | **`Sincronización Total Grilla`** | Fila TOTAL leía un array desconectado | **`sumLiveBunkerCosts` unificado:** Lee el mismo algoritmo dinámico `idleDays + opDays * opIfoRate` | **Unificación de Cálculo:** La Fila TOTAL de la grilla y el Card Búnker leen 100% el mismo acumulador live. | ✅ RESUELTO |
+### ───────────────
+
+### 🕵️‍♂️ 5.10. Décima Vuelta (Serie 10: Exterminio Total del Fallback Backend `$20,000` en Costos de Puerto)
+
+A partir de la inspección pericial del hallazgo reportado en pantalla donde al cargar la ruta `NEXA.ILO.CALLAO.MATARANI.ILO` los costos de puerto de Callao y Matarani cambiaban automáticamente a **`$20,000 USD`**:
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 10) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **10.1** | **`Costo Pto (Callao)`** | Muestra **`$20,000`** en lugar de `$17,000` | **`$17,000 USD`** (Tarifa real de Contrato Maestro NEXA Callao) | **Crimen del Fallback `20000`:** `buildPuertosConfigFromTramos` leía `tr.agency_costs_destination` del JSON antiguo de `routes_clients` en Supabase, que contenía `$20,000` hardcoded. | ✅ RESUELTO |
+| **10.2** | **`Costo Pto (Matarani)`** | Muestra **`$20,000`** en lugar de `$18,000` | **`$18,000 USD`** (Tarifa real de Contrato Maestro NEXA Matarani) | **Inyección de Legacy Cost:** Al no encontrar `manual_agency_cost_dest` explícito, caía en el fallback legacy de la consulta backend vetusta. | ✅ RESUELTO |
+| **10.3** | **`Total Port Costs (Grilla y Card 2)`** | Muestra **`$40,000 USD`** | **`$35,000 USD`** ($17k Callao + $18k Matarani = $35k) | **Calce con Excel:** Al purificar la lectura de la base de datos, el total de Gastos de Puerto vuelve a cuadrar al 100.00% con el Excel ($35,000). | ✅ RESUELTO |
+| **10.4** | **`Exterminio de Fallbacks en `buildPuertosConfigFromTramos``** | Existía `(isCargar ? 17000 : 18000)` fallback hardcoded | **Lectura Limpia de Contrato y Cero Fallback Backend `20000`** | **Purificación de la Función Builder:** La función ahora prioriza `manual_agency_cost_dest` y el contrato maestro correspondiente, descartando de raíz cualquier inyección antigua del backend. | ✅ RESUELTO |
 
 ---
 

@@ -514,8 +514,6 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         }
     };
 
-
-
     const buildPuertosConfigFromTramos = (tramosList: any[], client: string) => {
         if (!tramosList || tramosList.length === 0) return [];
         
@@ -531,20 +529,18 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         
         // Fila 0: POL (Origen del viaje)
         const polContract = clientContracts.find((c: any) => (c.origin_port_id || '').trim().toUpperCase() === polId) || clientContracts[0];
-        
-        // Determinar acción de Fila 0 (ILO): Solamente es CARGAR si origin_action es CARGAR o el tramo 0 mismo es LADEN
         const action0 = (t0.origin_action === 'CARGAR' || (t0.type === 'LADEN' && t0.origin_action !== 'NONE')) ? 'CARGAR' : 'NONE';
         const is0Loading = action0 === 'CARGAR';
         
         config.push({
             action: action0,
-            time_to_count: !is0Loading ? 0 : (polContract?.time_to_count_carga_hrs ?? t0.port_delay_hours_loading ?? t0.time_to_count_carga_hrs ?? (clientClean === 'NEXA' ? 12 : clientClean === 'SPCC' ? 6 : 0)),
-            op_rate: !is0Loading ? 0 : (polContract?.load_rate ?? t0.contract_agreed_load_rate ?? t0.origin_op_rate ?? 800),
+            time_to_count: !is0Loading ? 0 : (polContract?.time_to_count_carga_hrs ?? t0.time_to_count_carga_hrs ?? (clientClean === 'NEXA' ? 12 : clientClean === 'SPCC' ? 6 : 0)),
+            op_rate: !is0Loading ? 0 : (polContract?.load_rate ?? t0.origin_op_rate ?? 800),
             rate_unit: t0.rate_unit_origin || 'TH',
             quantity: is0Loading ? (t0.quantity || 13500) : 0,
             freight_rate: is0Loading ? (t0.freight_rate ?? 0) : 0,
             positioning: !is0Loading ? 0 : (polContract?.maneuver_carga_hrs ?? t0.positioning_carga_hrs ?? (clientClean === 'NEXA' ? 3 : clientClean === 'SPCC' ? 1 : 0)),
-            manual_port_cost: !is0Loading ? '' : (t0.agency_costs_origin ?? t0.manual_agency_cost_origin ?? '')
+            manual_port_cost: !is0Loading ? '' : (t0.manual_agency_cost_origin ?? polContract?.agency_cost ?? (polId === 'CALLAO' ? 17000 : polId === 'MATARANI' ? 18000 : ''))
         });
 
         // Filas 1..N: POD (Destinos de cada tramo)
@@ -557,7 +553,6 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
             const nextTramo = tramosList[idx + 1];
 
-            // Determinar acción del puerto de destino del tramo
             let actionN: 'NONE' | 'CARGAR' | 'DESCARGAR' = 'NONE';
             if (tr.destination_action) {
                 actionN = tr.destination_action;
@@ -576,18 +571,25 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             let pos = 0;
 
             if (isCargar) {
-                ttc = podContract?.time_to_count_carga_hrs ?? tr.port_delay_hours_loading ?? (clientClean === 'NEXA' ? 12 : 6);
-                opRate = podContract?.load_rate ?? tr.contract_agreed_load_rate ?? (clientClean === 'NEXA' ? 800 : 500);
-                pos = podContract?.maneuver_carga_hrs ?? tr.positioning_carga_hrs ?? (clientClean === 'NEXA' ? 3 : 1);
+                ttc = podContract?.time_to_count_carga_hrs ?? (clientClean === 'NEXA' ? 12 : 6);
+                opRate = podContract?.load_rate ?? (clientClean === 'NEXA' ? 800 : 500);
+                pos = podContract?.maneuver_carga_hrs ?? (clientClean === 'NEXA' ? 3 : 1);
             } else if (isDescargar) {
-                ttc = podContract?.time_to_count_descarga_hrs ?? tr.port_delay_hours_discharging ?? (clientClean === 'NEXA' ? 12 : 6);
-                opRate = podContract?.discharge_rate ?? tr.contract_agreed_discharge_rate ?? (clientClean === 'NEXA' ? 600 : 500);
-                pos = podContract?.maneuver_descarga_hrs ?? tr.positioning_descarga_hrs ?? (clientClean === 'NEXA' ? 3 : 0);
+                ttc = podContract?.time_to_count_descarga_hrs ?? (clientClean === 'NEXA' ? 12 : 6);
+                opRate = podContract?.discharge_rate ?? (clientClean === 'NEXA' ? 600 : 500);
+                pos = podContract?.maneuver_descarga_hrs ?? (clientClean === 'NEXA' ? 3 : 0);
             }
 
             const qVal = hasAction ? (tr.quantity || tr.desc_tons || 13500) : 0;
             const fVal = isDescargar ? (tr.freight_rate || 30) : (isCargar ? (tr.freight_rate || 0) : 0);
-            const pCost = hasAction ? (tr.agency_costs_destination ?? tr.manual_agency_cost_dest ?? (isCargar ? 17000 : 18000)) : '';
+
+            // PURIFICACIÓN DE COSTOS DE PUERTO (CERO FALLBACK 20000 BACKEND LEGACY)
+            const rawManualCost = tr.manual_agency_cost_dest ?? tr.manual_port_cost;
+            const pCost = hasAction
+                ? (rawManualCost !== undefined && rawManualCost !== null && rawManualCost !== '' 
+                    ? rawManualCost 
+                    : (podContract?.agency_cost ?? (podId === 'CALLAO' ? 17000 : podId === 'MATARANI' ? 18000 : '')))
+                : '';
 
             config.push({
                 action: actionN,
