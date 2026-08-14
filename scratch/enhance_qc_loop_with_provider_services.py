@@ -1,4 +1,8 @@
-import requests
+import os
+
+path = r'C:\Users\rguti\PETRAL.SMART.DASHBOARD\Push.VPS\run_qc_loop.py'
+
+enhanced_code = """import requests
 import json
 import time
 
@@ -41,9 +45,9 @@ def run_qc():
             print(f"  [FAIL] Ruta #{i+1} tiene puertos nulos: pol={pol}, pod={pod}")
             qc2_routes_pass = False
         else:
-            print(f"  Ruta #{i+1} Válida: {pol} -> {pod} ({r.get('route_distance')} NM)")
+            print(f"  Ruta #{i+1} Válida: {pol} ➔ {pod} ({r.get('route_distance')} NM)")
             
-    print(f"  QC PASO 2 [Tabla routes_clients port_a -> port_b]: -> {'PASS' if qc2_routes_pass else 'FAIL'}\n")
+    print(f"  QC PASO 2 [Tabla routes_clients port_a ➔ port_b]: -> {'PASS' if qc2_routes_pass else 'FAIL'}\n")
 
     # ---------------------------------------------------------
     # QC PASO 3: COTIZACIONES PERSISTIDAS (routes_quotes)
@@ -99,7 +103,7 @@ def run_qc():
         print(f"--- Evaluando Ruta ID: {r_id} ({route.get('name')}) ---")
         tramos_config = route.get('legs_data', {}).get('tramos', [])
         if not tramos_config:
-            print("  [WARN] No legs config found. Skip.\n")
+            print("  [WARN] No legs config found. Skip.\\n")
             continue
             
         payload = {
@@ -148,7 +152,7 @@ def run_qc():
         pnl = cons.get('pnl_net_utility', 0)
         expected_pnl = tot_inc - tot_bunk - tot_port
         
-        print(f"  QC5 [Consolidacion PNL]: -> {'PASS' if abs(expected_pnl - pnl) <= 1 else 'FAIL'}\n")
+        print(f"  QC5 [Consolidacion PNL]: -> {'PASS' if abs(expected_pnl - pnl) <= 1 else 'FAIL'}\\n")
 
     print("=======================================================")
     print("  [EXITO] TODOS LOS SERVICIOS Y TABLAS 100% VALIDADOS")
@@ -156,3 +160,9 @@ def run_qc():
 
 if __name__ == '__main__':
     run_qc()
+"""
+
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(enhanced_code)
+
+print("ENHANCED QC LOOP CREATED SUCCESSFULLY!")

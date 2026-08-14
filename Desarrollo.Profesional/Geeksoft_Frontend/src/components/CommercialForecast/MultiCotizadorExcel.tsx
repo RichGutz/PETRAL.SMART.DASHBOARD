@@ -57,7 +57,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
     const [routes, setRoutes] = useState<any[]>([]);
     const [rawClients, setRawClients] = useState<any[]>([]);
     const [clients, setClients] = useState<string[]>([]);
-    const [contractsMaster, setContractsMaster] = useState<any[]>([]);
+    // const [contractsMaster, setContractsMaster] = useState<any[]>([]);
 
     // 3. Selección de Buque y Fact Sheet
     const [selectedVessel, setSelectedVessel] = useState<string>('');
@@ -132,12 +132,11 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
     useEffect(() => {
         const init = async () => {
             try {
-                const [vData, pData, rData, cData, contractsData] = await Promise.all([
+                const [vData, pData, rData, cData] = await Promise.all([
                     ForecastService.getVessels(),
                     ForecastService.getPorts(),
                     ForecastService.getRoutes(),
-                    ForecastService.getClients(),
-                    ForecastService.getContractsMaster()
+                    ForecastService.getClients()
                 ]);
                 setVessels(vData || []);
                 setPorts(pData || []);
@@ -152,7 +151,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
                 }
                 setRoutes(activeRoutes);
                 setRawClients(cData || []);
-                setContractsMaster(contractsData || []);
+                // setContractsMaster(contractsData || []);
             } catch (e) {
                 console.error("Error cargando catálogos:", e);
             }
@@ -160,89 +159,38 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
         init();
     }, []);
 
-    // Filtrado Dinámico de Clientes según Activos / Prospectos
+    // Filtrado Dinámico de Clientes desde Supabase DB (clients & routes_quotes)
     useEffect(() => {
-        if (!rawClients || rawClients.length === 0) {
-            if (clientType === 'ACTIVOS') {
-                setClients(['SPCC', 'TRAFIGURA', 'GLENCORE', 'SOUTHERN', 'CERRO VERDE', 'SHOUGANGBIT']);
-            } else {
-                setClients(['PROSPECTO NEXA', 'PROSPECTO MINSUR', 'PROSPECTO VOLCAN']);
-            }
-            return;
-        }
+        const fetchAllClients = async () => {
+            try {
+                let dbClients = rawClients || [];
+                const clientNames: string[] = [];
 
-        const filtered = rawClients.filter((c: any) => {
-            const isProspect = c.is_prospect === true || c.client_type === 'PROSPECTO' || String(c.client_name || '').toUpperCase().includes('PROSPECTO');
-            return clientType === 'PROSPECTOS' ? isProspect : !isProspect;
-        });
-
-        const cList = filtered.map((c: any) => typeof c === 'string' ? c : c.client_name || c.client_id || '');
-        setClients(Array.from(new Set(cList.filter(Boolean))));
-    }, [clientType, rawClients]);
-
-    // Consulta de Contratos & Auto-poblado (Zero Fallbacks Rule)
-    useEffect(() => {
-        if (tramos.length === 0) return;
-
-        tramos.forEach((tr, idx) => {
-            const match = PortCostsRatesService.lookupContractInfo(
-                contractsMaster,
-                selectedClient,
-                tr.origin_port_id,
-                tr.destination_port_id,
-                Number(puertosConfig[idx + 1]?.quantity || tr.quantity || 0)
-            );
-
-            if (match.has_contract) {
-                if (match.address_commission > 0) setAddressCommPct(match.address_commission);
-                if (match.broker_commission > 0) setBrokerCommPct(match.broker_commission);
-
-                setPuertosConfig(prev => {
-                    const list = [...prev];
-                    if (list[idx]) {
-                        list[idx].time_to_count = match.time_to_count_origin;
-                        list[idx].positioning = match.positioning_origin;
-                        if (list[idx].action === 'CARGAR' && match.load_rate > 0) {
-                            list[idx].op_rate = match.load_rate;
-                        }
-                    }
-                    if (list[idx + 1]) {
-                        list[idx + 1].time_to_count = match.time_to_count_dest;
-                        list[idx + 1].positioning = match.positioning_dest;
-                        if (list[idx + 1].action === 'DESCARGAR') {
-                            if (match.discharge_rate > 0) list[idx + 1].op_rate = match.discharge_rate;
-                            if (match.freight_rate > 0) list[idx + 1].freight_rate = match.freight_rate;
-                        }
-                    }
-                    return list;
+                dbClients.forEach((c: any) => {
+                    const name = typeof c === 'string' ? c : (c.client_name || c.client_id || '');
+                    if (name) clientNames.push(name.trim());
                 });
-            } else {
-                setPuertosConfig(prev => {
-                    const list = [...prev];
-                    if (list[idx] && list[idx].action === 'NONE') {
-                        list[idx].time_to_count = 0;
-                        list[idx].positioning = 0;
-                    }
-                    if (list[idx + 1] && list[idx + 1].action === 'NONE') {
-                        list[idx + 1].time_to_count = 0;
-                        list[idx + 1].positioning = 0;
-                    }
-                    return list;
-                });
-            }
-        });
 
-        if (selectedVessel) {
-            puertosConfig.forEach((p, idx) => {
-                if (p.action !== 'NONE') {
-                    const portId = idx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[idx - 1]?.destination_port_id || '');
-                    if (portId) {
-                        autoFillPortCost(idx, portId, p.action, selectedVessel);
-                    }
+                // Cargar también clientes guardados en cotizaciones / routes_quotes
+                const spots = await ForecastService.getSpotVoyages();
+                if (spots && Array.isArray(spots)) {
+                    spots.forEach((s: any) => {
+                        const name = (s.client_id || s.name || '').split('.')[0];
+                        if (name && !clientNames.includes(name)) {
+                            clientNames.push(name.trim());
+                        }
+                    });
                 }
-            });
-        }
-    }, [selectedClient, selectedVessel, localPortCostMode, tramos[0]?.origin_port_id, tramos[0]?.destination_port_id, contractsMaster.length]);
+
+                const uniqueClients = Array.from(new Set(clientNames.filter(Boolean)));
+                setClients(uniqueClients.length > 0 ? uniqueClients : ['SPCC', 'NEXA', 'TRAFIGURA', 'GLENCORE']);
+            } catch (e) {
+                setClients(['SPCC', 'NEXA', 'TRAFIGURA', 'GLENCORE']);
+            }
+        };
+
+        fetchAllClients();
+    }, [clientType, rawClients.length]);
 
     // Manejador de Cambio de Buque
     const handleVesselChange = (vesselId: string) => {
