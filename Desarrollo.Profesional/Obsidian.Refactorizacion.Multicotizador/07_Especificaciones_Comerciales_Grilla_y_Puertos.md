@@ -79,6 +79,57 @@ flowchart TD
 
 ---
 
+## 🗄️ 4. Estructura Real y Empírica de Tablas BD en Supabase (PROHIBIDO INVENTAR CAMPOS)
+
+Para garantizar la integridad del sistema y prevenir errores por campos supuestos, a continuación se documentan las columnas **reales recuperadas de la base de datos PostgreSQL en Supabase**:
+
+### 📡 4.1. Tabla `public.distances` (Distancias & Weather Factors)
+```sql
+TABLE public.distances (
+    port_a                 character varying, -- Puerto Origen (POL)
+    port_b                 character varying, -- Puerto Destino (POD)
+    route_distance         numeric,           -- Distancia Marítima en Millas Náuticas (NM)
+    weather_factor_laden   numeric,           -- Weather Factor (%) cuando el tramo es LADEN
+    weather_factor_ballast numeric,           -- Weather Factor (%) cuando el tramo es BALLAST
+    color_hex              character varying, -- Color mapa UI
+    pais                   text               -- País del puerto
+);
+```
+
+### 📑 4.2. Tabla `public.contracts` (Maestro de Contratos Negociados)
+```sql
+TABLE public.contracts (
+    client_id                  character varying, -- ID Cliente ('SPCC', 'NEXA')
+    origin_port_id             character varying, -- Puerto Origen
+    destination_port_id        character varying, -- Puerto Destino
+    time_to_count_carga_hrs    numeric,           -- Time to count (h) para CARGAR (ej: 6.0 SPCC, 12.0 NEXA)
+    maneuver_carga_hrs         numeric,           -- Maniobra/Posicionamiento (h) para CARGAR (ej: 1.0 SPCC, 3.0 NEXA)
+    time_to_count_descarga_hrs numeric,           -- Time to count (h) para DESCARGAR (ej: 6.0 SPCC, 12.0 NEXA)
+    maneuver_descarga_hrs      numeric,           -- Maniobra/Posicionamiento (h) para DESCARGAR (ej: 0.0 SPCC, 3.0 NEXA)
+    load_rate                  double precision,  -- Ritmo Carga (TH)
+    discharge_rate             double precision,  -- Ritmo Descarga (TH)
+    bunker_baseline_price_ifo  double precision,  -- Tarifa IFO base contrato
+    bunker_baseline_price_mdo  numeric,           -- Tarifa MDO base contrato
+    address_commission         numeric,           -- % Comisión Dirección
+    broker_commission          numeric,           -- % Comisión Broker
+    is_active                  boolean            -- Estado activo
+);
+```
+
+### 🏛️ 4.3. Tabla `public.port_cost_static` (Gastos Portuarios Estáticos Oficiales)
+```sql
+TABLE public.port_cost_static (
+    port_id            character varying, -- Puerto ('CALLAO', 'MATARANI', 'ILO', 'MARCONA', 'MEJILLONES')
+    operation_type     character varying, -- Tipo Operación ('CARGA' / 'DESCARGAR')
+    vessel_id          character varying, -- ID Buque ('MOQUEGUA', 'TABLONES', 'HUEMUL', 'CONCON_TRADER')
+    cost               numeric,           -- Costo Fijo Portuario Oficial (USD)
+    sub_operation_type character varying, -- Sub-tipo ('MAIN')
+    terminal_id        character varying  -- Terminal ('GENERAL', 'APM', 'TISUR', 'ENAPU')
+);
+```
+
+---
+
 ## 📄 Archivos Relacionados
 * **Documento UI Cabecera y Búnker:** [`06_Especificaciones_Comerciales_UI_Header_y_Bunker.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/06_Especificaciones_Comerciales_UI_Header_y_Bunker.md)
 * **Documento Modularización previa:** [`04_Modularizacion_Frontend_Servicios_y_Tabs.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/04_Modularizacion_Frontend_Servicios_y_Tabs.md)
