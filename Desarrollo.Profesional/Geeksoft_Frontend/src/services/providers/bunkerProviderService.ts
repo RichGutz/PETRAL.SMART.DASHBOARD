@@ -88,8 +88,8 @@ export class BunkerProviderService {
         let bestContract: any = null;
 
         matchingContracts.forEach((c: any) => {
-            const ifo = Number(c.bunker_price_ifo || c.ifo || 0);
-            const mdo = Number(c.bunker_price_mdo || c.mdo || 0);
+            const ifo = Number(c.bunker_baseline_price_ifo ?? c.bunker_price_ifo ?? c.ifo ?? 0);
+            const mdo = Number(c.bunker_baseline_price_mdo ?? c.bunker_price_mdo ?? c.mdo ?? 0);
             const sum = ifo + mdo;
             if (sum > maxSum) {
                 maxSum = sum;
@@ -98,8 +98,8 @@ export class BunkerProviderService {
         });
 
         if (bestContract) {
-            const bestIfo = Number(bestContract.bunker_price_ifo || bestContract.ifo || spotPrices.ifo);
-            const bestMdo = Number(bestContract.bunker_price_mdo || bestContract.mdo || spotPrices.mdo);
+            const bestIfo = Number(bestContract.bunker_baseline_price_ifo ?? bestContract.bunker_price_ifo ?? bestContract.ifo ?? spotPrices.ifo);
+            const bestMdo = Number(bestContract.bunker_baseline_price_mdo ?? bestContract.bunker_price_mdo ?? bestContract.mdo ?? spotPrices.mdo);
             return { ifo: bestIfo, mdo: bestMdo };
         }
 

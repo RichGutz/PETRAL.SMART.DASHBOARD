@@ -176,30 +176,28 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     contractsList,
                     latestSpotPrices
                 );
-                if (resolved.ifo > 0) setBunkerPriceIfo(resolved.ifo);
-                if (resolved.mdo > 0) setBunkerPriceMdo(resolved.mdo);
+                setBunkerPriceIfo(resolved.ifo > 0 ? resolved.ifo : (latestSpotPrices.ifo || 0));
+                setBunkerPriceMdo(resolved.mdo > 0 ? resolved.mdo : (latestSpotPrices.mdo || 0));
             } else if (bunkerSource === 'COTIZACION') {
                 if (selectedQuoteId && selectedQuoteId !== 'CREAR_COTIZACION') {
                     const q = savedRoutes.find(x => (x.route_id || x.spot_id || x.id) === selectedQuoteId);
                     if (q) {
                         const unpacked = MulticotizadorRetrieverService.unpackQuoteData(q);
-                        if (unpacked.bunker_price_ifo > 0) setBunkerPriceIfo(unpacked.bunker_price_ifo);
-                        if (unpacked.bunker_price_mdo > 0) setBunkerPriceMdo(unpacked.bunker_price_mdo);
+                        setBunkerPriceIfo(unpacked.bunker_price_ifo || latestSpotPrices.ifo || 0);
+                        setBunkerPriceMdo(unpacked.bunker_price_mdo || latestSpotPrices.mdo || 0);
                     }
                 } else {
                     setBunkerPriceIfo(latestSpotPrices.ifo || 0);
                     setBunkerPriceMdo(latestSpotPrices.mdo || 0);
                 }
             } else if (bunkerSource === 'MAESTRO_BUNKER') {
-                if (latestSpotPrices.ifo > 0 || latestSpotPrices.mdo > 0) {
-                    setBunkerPriceIfo(latestSpotPrices.ifo);
-                    setBunkerPriceMdo(latestSpotPrices.mdo);
-                } else {
-                    const latest = await BunkerProviderService.fetchLatestBunkerPrices();
-                    setLatestSpotPrices(latest);
-                    if (latest.ifo > 0) setBunkerPriceIfo(latest.ifo);
-                    if (latest.mdo > 0) setBunkerPriceMdo(latest.mdo);
+                let spot = latestSpotPrices;
+                if (!spot || spot.ifo === 0) {
+                    spot = await BunkerProviderService.fetchLatestBunkerPrices();
+                    setLatestSpotPrices(spot);
                 }
+                setBunkerPriceIfo(spot.ifo || 0);
+                setBunkerPriceMdo(spot.mdo || 0);
             } else if (bunkerSource === 'SOBREESCRITURA') {
                 setBunkerPriceIfo(0);
                 setBunkerPriceMdo(0);
