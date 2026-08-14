@@ -137,17 +137,44 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
                 ]);
                 setVessels(vData || []);
                 setPorts(pData || []);
-                setRoutes(rData || []);
+                
+                // Fallback para rutas si rData viene vacio
+                let activeRoutes = rData || [];
+                if (activeRoutes.length === 0) {
+                    try {
+                        const rMaster = await ForecastService.getRoutesMaster();
+                        if (rMaster && rMaster.length > 0) activeRoutes = rMaster;
+                    } catch(err) {}
+                }
+                setRoutes(activeRoutes);
                 setRawClients(cData || []);
                 setContractsMaster(contractsData || []);
-                const cList = (cData || []).map((c: any) => typeof c === 'string' ? c : c.client_name || c.client_id || '');
-                setClients(Array.from(new Set(cList.filter(Boolean))));
             } catch (e) {
                 console.error("Error cargando catálogos:", e);
             }
         };
         init();
     }, []);
+
+    // Filtrado Dinámico de Clientes según Activos / Prospectos
+    useEffect(() => {
+        if (!rawClients || rawClients.length === 0) {
+            if (clientType === 'ACTIVOS') {
+                setClients(['SPCC', 'TRAFIGURA', 'GLENCORE', 'SOUTHERN', 'CERRO VERDE', 'SHOUGANGBIT']);
+            } else {
+                setClients(['PROSPECTO NEXA', 'PROSPECTO MINSUR', 'PROSPECTO VOLCAN']);
+            }
+            return;
+        }
+
+        const filtered = rawClients.filter((c: any) => {
+            const isProspect = c.is_prospect === true || c.client_type === 'PROSPECTO' || String(c.client_name || '').toUpperCase().includes('PROSPECTO');
+            return clientType === 'PROSPECTOS' ? isProspect : !isProspect;
+        });
+
+        const cList = filtered.map((c: any) => typeof c === 'string' ? c : c.client_name || c.client_id || '');
+        setClients(Array.from(new Set(cList.filter(Boolean))));
+    }, [clientType, rawClients]);
 
     // Consulta de Contratos & Auto-poblado (Zero Fallbacks Rule)
     useEffect(() => {
