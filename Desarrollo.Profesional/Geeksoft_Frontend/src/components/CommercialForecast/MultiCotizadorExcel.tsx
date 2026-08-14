@@ -74,6 +74,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     const [bunkerSource, setBunkerSource] = useState<'MAESTRO_CONTRATOS' | 'COTIZACION' | 'MAESTRO_BUNKER' | 'SOBREESCRITURA'>('MAESTRO_CONTRATOS');
     const [bunkerPriceIfo, setBunkerPriceIfo] = useState<number>(0);
     const [bunkerPriceMdo, setBunkerPriceMdo] = useState<number>(0);
+    const [contractsList, setContractsList] = useState<any[]>([]);
+    const [latestSpotPrices, setLatestSpotPrices] = useState<{ ifo: number; mdo: number }>({ ifo: 0, mdo: 0 });
 
     // 5. Grilla de Tramos & Configuración de Puertos
     const [tramos, setTramos] = useState<TramoState[]>([
@@ -133,17 +135,21 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     useEffect(() => {
         const init = async () => {
             try {
-                const [vData, pData, cData, spotData, quoteList] = await Promise.all([
+                const [vData, pData, cData, spotData, quoteList, contractsData, latestBunker] = await Promise.all([
                     ForecastService.getVessels(),       // tabla: vessels
                     ForecastService.getPorts(),         // tabla: ports
                     ForecastService.getClients(),       // tabla: clients
                     ForecastService.getSpotVoyages(),   // tabla: routes_clients / routes_quotes
-                    MulticotizadorRetrieverService.searchSavedQuotes('', true, true, '')
+                    MulticotizadorRetrieverService.searchSavedQuotes('', true, true, ''),
+                    ForecastService.getContractsMaster(), // tabla: contracts
+                    BunkerProviderService.fetchLatestBunkerPrices() // tabla: bunker_prices
                 ]);
                 setVessels(vData || []);
                 setPorts(pData || []);
                 setRawClients(cData || []);
                 setSavedRoutes(quoteList || []);
+                setContractsList(contractsData || []);
+                setLatestSpotPrices(latestBunker || { ifo: 0, mdo: 0 });
 
                 // Carga exclusiva de rutas desde la tabla routes_clients
                 if (spotData && Array.isArray(spotData)) {
@@ -156,6 +162,52 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         };
         init();
     }, []);
+
+    // Ejecución Reactiva de Búsqueda de Búnker según Fuente y Parámetros
+    useEffect(() => {
+        const executeBunkerLookup = async () => {
+            if (bunkerSource === 'MAESTRO_CONTRATOS') {
+                const destPorts = tramos.map(t => t.destination_port_id).filter(Boolean);
+                const isProspect = clientType === 'PROSPECTOS';
+                const resolved = BunkerProviderService.resolveContractPricesForClient(
+                    selectedClient,
+                    isProspect,
+                    destPorts,
+                    contractsList,
+                    latestSpotPrices
+                );
+                if (resolved.ifo > 0) setBunkerPriceIfo(resolved.ifo);
+                if (resolved.mdo > 0) setBunkerPriceMdo(resolved.mdo);
+            } else if (bunkerSource === 'COTIZACION') {
+                if (selectedQuoteId && selectedQuoteId !== 'CREAR_COTIZACION') {
+                    const q = savedRoutes.find(x => (x.route_id || x.spot_id || x.id) === selectedQuoteId);
+                    if (q) {
+                        const unpacked = MulticotizadorRetrieverService.unpackQuoteData(q);
+                        if (unpacked.bunker_price_ifo > 0) setBunkerPriceIfo(unpacked.bunker_price_ifo);
+                        if (unpacked.bunker_price_mdo > 0) setBunkerPriceMdo(unpacked.bunker_price_mdo);
+                    }
+                } else {
+                    setBunkerPriceIfo(latestSpotPrices.ifo || 0);
+                    setBunkerPriceMdo(latestSpotPrices.mdo || 0);
+                }
+            } else if (bunkerSource === 'MAESTRO_BUNKER') {
+                if (latestSpotPrices.ifo > 0 || latestSpotPrices.mdo > 0) {
+                    setBunkerPriceIfo(latestSpotPrices.ifo);
+                    setBunkerPriceMdo(latestSpotPrices.mdo);
+                } else {
+                    const latest = await BunkerProviderService.fetchLatestBunkerPrices();
+                    setLatestSpotPrices(latest);
+                    if (latest.ifo > 0) setBunkerPriceIfo(latest.ifo);
+                    if (latest.mdo > 0) setBunkerPriceMdo(latest.mdo);
+                }
+            } else if (bunkerSource === 'SOBREESCRITURA') {
+                setBunkerPriceIfo(0);
+                setBunkerPriceMdo(0);
+            }
+        };
+
+        executeBunkerLookup();
+    }, [bunkerSource, selectedClient, clientType, tramos, selectedQuoteId, contractsList, latestSpotPrices]);
 
     // Filtrado Dinámico e Instantáneo (en memoria) de Clientes (ACTIVOS vs PROSPECTOS)
     useEffect(() => {

@@ -125,7 +125,39 @@ flowchart TD
 
 ## 🛢️ 3. Servicio Resolutor de Precios de Búnker (`bunkerProviderService.ts`)
 
-### 🔹 3.1. Flujograma de Decisión para la Fuente de Búnker
+### 🔹 3.1. Tablas Base de Datos y Endpoints Backend
+
+| Fuente de Búnker | Tabla Base de Datos | Endpoint API Backend | Parámetros de Entrada Requeridos |
+| :--- | :--- | :--- | :--- |
+| **`MAESTRO_CONTRATOS`** | `contracts` | `/forecast/masters/contracts` | `selectedClient`, `clientType`, `destinationPorts` de grilla |
+| **`COTIZACION`** | `routes_quotes` | `/forecast/spot/list` | `selectedQuoteId` (proforma JSON) |
+| **`MAESTRO_BUNKER`** | `bunker_prices` | `/forecast/bunker/latest` | `quote_date` más reciente |
+| **`SOBREESCRITURA`** | N/A (Manual) | N/A (Directo UI) | Inputs directos del usuario en el Header |
+
+---
+
+### 🔹 3.2. Especificación de Parámetros y Criterios de Selección
+
+1. **📑 `MAESTRO_CONTRATOS`**:
+   * **Para Clientes ACTIVOS (`SPCC`, `NEXA`)**:
+     * Consulta la tabla `contracts` filtrando por `client_name == selectedClient`.
+     * Coincide los puertos de destino (`destination_port_id`) de los tramos live.
+     * En caso de múltiples contratos o destinos coincidentes, selecciona la fila con la **SUMA MÁS ALTA de `(bunker_price_ifo + bunker_price_mdo)`**.
+   * **Para Clientes PROSPECTOS (`MARCOBRE`, `PRIMAX`, `CODELCO`, etc.)**:
+     * Redirige automáticamente la consulta a la matriz spot de búnker general en la tabla **`bunker_prices`**.
+
+2. **📌 `COTIZACION`**:
+   * Extrae los precios `bunker_price_ifo` y `bunker_price_mdo` pre-guardados dentro del JSON de la proforma seleccionada en el Botón 3 (`routes_quotes`).
+
+3. **🛢️ `MAESTRO_BUNKER`**:
+   * Consulta directamente los precios spot vigentes de mercado en la tabla `bunker_prices` (tarifas más recientes por fecha).
+
+4. **✍️ `SOBREESCRITURA`**:
+   * Resetea las casillas a `$0` (`ifo: 0, mdo: 0`) y habilita la edición manual libre por el usuario.
+
+---
+
+### 🔹 3.3. Flujograma de Decisión para la Fuente de Búnker
 
 ```mermaid
 flowchart TD
@@ -158,36 +190,6 @@ flowchart TD
         Opt4 --> ResetZero["Resetear IFO = $0 / MDO = $0"]
         ResetZero --> ManualInput["Habilitar casillas rojas para digitación manual del usuario"]
     end
-```
-
-### 🔹 3.2. Diagrama Textual en Bloques ASCII
-
-```text
-========================================================================================
-             🎯 MATRIZ COMPLETA DE INTERACCIÓN Y BÚSQUEDA DE BÚNKER
-========================================================================================
-
- 🔘 OPCIÓN 1 EN DESPLEGABLES (CREACIÓN DESDE CERO):
-    ├── Botón 2 (Activos): "➕ CREAR RUTA CLIENTE"
-    │     └── Limpia la grilla a $0 ➔ Búnker busca automáticamente en `bunker_prices` (Matriz Spot).
-    └── Botón 3 (Prospectos): "➕ CREAR COTIZACIÓN PROSPECTO"
-          └── Limpia la grilla a $0 ➔ Búnker busca automáticamente en `bunker_prices` (Matriz Spot).
-
- 🔘 RESOLUCIÓN DE PRECIOS DE BÚNKER (bunkerProviderService):
-    ├── 📑 MAESTRO_CONTRATOS:
-    │     ├── Si Cliente es ACTIVO (SPCC/NEXA) ➔ Busca en tabla `contracts` y toma la tarifa con la
-    │     │                                       SUMA MÁS ALTA de (IFO + MDO) para los destinos.
-    │     └── Si Cliente es PROSPECTO (MARCOBRE, etc.) ➔ Redirige a tabla `bunker_prices` (Spot).
-    │
-    ├── 📌 COTIZACION:
-    │     └── Extrae IFO/MDO pre-guardados en el JSON de la proforma seleccionada en `routes_quotes`.
-    │
-    ├── 🛢️ MAESTRO_BUNKER:
-    │     └── Consulta directamente la tabla `bunker_prices` (Tarifas Spot de mercado).
-    │
-    └── ✍️ SOBREESCRITURA:
-          └── Inicializa casillas en $0 (IFO = $0 / MDO = $0) habilitando edición manual.
-========================================================================================
 ```
 
 ---
