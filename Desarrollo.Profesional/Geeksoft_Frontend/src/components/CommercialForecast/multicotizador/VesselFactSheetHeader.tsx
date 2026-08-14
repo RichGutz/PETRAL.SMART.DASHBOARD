@@ -74,11 +74,11 @@ export const VesselFactSheetHeader: React.FC<VesselFactSheetProps> = ({
                                     Seleccionar buque
                                 </div>
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center p-0.5 bg-white">
+                                <div className="w-full h-full flex items-center justify-center p-0 bg-white overflow-hidden">
                                     <img
                                         src={photoSrc}
                                         alt={vObj?.vessel_name || selectedVessel}
-                                        className="w-full h-12 object-contain bg-white rounded"
+                                        className="w-full h-full min-h-[50px] object-fill bg-white block"
                                         title={`Buque Oficial: ${vObj?.vessel_name || selectedVessel}`}
                                     />
                                 </div>

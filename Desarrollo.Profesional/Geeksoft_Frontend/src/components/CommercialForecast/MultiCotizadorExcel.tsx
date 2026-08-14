@@ -8,6 +8,7 @@ import { RouteDistancesService } from '../../services/providers/routeDistancesSe
 import { PortCostsRatesService } from '../../services/providers/portCostsRatesService';
 import { MulticotizadorStorageService } from '../../services/providers/multicotizadorStorageService';
 import { MulticotizadorRetrieverService } from '../../services/providers/multicotizadorRetrieverService';
+import { BunkerProviderService } from '../../services/providers/bunkerProviderService';
 
 // Subcomponentes Visuales UI (Fase 2)
 import { VesselFactSheetHeader } from './multicotizador/VesselFactSheetHeader';
@@ -473,8 +474,31 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         return config;
     };
 
+    const handleCreateNewGrid = async () => {
+        setTramos([
+            { type: 'BALLAST', origin_port_id: '', destination_port_id: '', quantity: 0, freight_rate: 0, port_delay_hours_loading: 0, port_delay_hours_discharging: 0, route_distance: 0, weather_factor: 3.0, speed: 0 },
+            { type: 'LADEN', origin_port_id: '', destination_port_id: '', quantity: 0, freight_rate: 0, port_delay_hours_loading: 0, port_delay_hours_discharging: 0, route_distance: 0, weather_factor: 3.0, speed: 0 },
+            { type: 'BALLAST', origin_port_id: '', destination_port_id: '', quantity: 0, freight_rate: 0, port_delay_hours_loading: 0, port_delay_hours_discharging: 0, route_distance: 0, weather_factor: 3.0, speed: 0 }
+        ]);
+        setPuertosConfig([
+            { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' },
+            { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' },
+            { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' },
+            { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' }
+        ]);
+
+        const spotBunker = await BunkerProviderService.fetchLatestBunkerPrices();
+        if (spotBunker.ifo > 0) setBunkerPriceIfo(spotBunker.ifo);
+        if (spotBunker.mdo > 0) setBunkerPriceMdo(spotBunker.mdo);
+        setBunkerSource('MAESTRO_BUNKER');
+    };
+
     const handleSelectRoute = (routeId: string) => {
         if (!routeId) return;
+        if (routeId === 'CREAR_RUTA') {
+            handleCreateNewGrid();
+            return;
+        }
         const r = routes.find(x => x.route_id === routeId || x.id === routeId);
         if (!r) return;
 
@@ -600,6 +624,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                             className={`h-6 text-[11px] font-extrabold border rounded px-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 ${clientType === 'PROSPECTOS' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-800 border-slate-300 cursor-pointer'}`}
                         >
                             <option value="">[SELECCIONAR RUTA]</option>
+                            <option value="CREAR_RUTA">➕ CREAR RUTA CLIENTE</option>
                             {routes.map(r => {
                                 const routeLabel = r.name || (r.origin_port_id && r.destination_port_id ? `${r.origin_port_id} ➔ ${r.destination_port_id}` : (r.legs_data?.tramos && r.legs_data.tramos.length > 0 ? r.legs_data.tramos.map((t: any) => t.origin_port_id).concat(r.legs_data.tramos[r.legs_data.tramos.length - 1]?.destination_port_id).join(' ➔ ') : r.route_id));
                                 return (
@@ -624,12 +649,17 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                                 const qId = e.target.value;
                                 setSelectedQuoteId(qId);
                                 if (!qId) return;
+                                if (qId === 'CREAR_COTIZACION') {
+                                    handleCreateNewGrid();
+                                    return;
+                                }
                                 const q = savedRoutes.find(x => (x.route_id || x.spot_id || x.id) === qId);
                                 if (q) handleLoadRoute(q);
                             }}
                             className={`h-6 text-[11px] font-extrabold border rounded px-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 ${clientType === 'ACTIVOS' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-800 border-slate-300 cursor-pointer'}`}
                         >
                             <option value="">[SELECCIONAR COTIZACIÓN]</option>
+                            <option value="CREAR_COTIZACION">➕ CREAR COTIZACIÓN PROSPECTO</option>
                             {savedRoutes.map(q => (
                                 <option key={q.route_id || q.spot_id || q.id} value={q.route_id || q.spot_id || q.id}>
                                     {q.name || q.route_id || 'COTIZACIÓN'}
