@@ -43,7 +43,7 @@ flowchart TD
     subgraph L1 ["NIVEL 1: CAPA DE PERSISTENCIA (Supabase DB)"]
         direction LR
         DB_Vessels[("🚢 vessels\n(Specs & Consumos)")]
-        DB_Ports[("⚓ ports / routes\n(Distancias NM)")]
+        DB_Ports[("⚓ ports / routes_clients\n(port_a ➔ port_b)")]
         DB_PortCosts[("💰 port_cost_static\n(Agencias & Muellaje)")]
         DB_Bunker[("🛢️ bunker_prices / contracts\n(Precios IFO/MDO)")]
         DB_SavedQuotes[("📁 routes_quotes / routes_clients\n(Cotizaciones Guardadas)")]
@@ -53,14 +53,14 @@ flowchart TD
         direction LR
         S_Vessel["⚙️ vesselProviderService\n(Specs & Consumos)"]
         S_Bunker["⚙️ bunkerProviderService\n(Precios Búnker)"]
-        S_Route["⚙️ routeDistancesService\n(Distancias & Clima)"]
-        S_Port["⚙️ portCostsRatesService\n(Ritmos & Muellaje $33k)"]
-        S_Storage["💾 multicotizadorStorageService\n(Grabar / Cargar / Versionar)"]
+        S_Route["⚙️ routeDistancesService\n(port_a ➔ port_b & Clima)"]
+        S_Port["⚙️ portCostsRatesService\n(port_cost_static & Muellaje)"]
+        S_Storage["💾 multicotizadorStorageService\n(routes_quotes / routes_clients)"]
     end
 
     subgraph L3 ["NIVEL 3: INTERFAZ DE USUARIO (MultiCotizadorExcel.tsx ~500 L)"]
-        UI_FactSheet["📋 Fact Sheet Buque"]
-        UI_Grid["📑 Grilla Tabular Spreadsheet Live"]
+        UI_FactSheet["📋 Fact Sheet Buque (Init $0)"]
+        UI_Grid["📑 Grilla Tabular Spreadsheet (Mínimo 3 Legs)"]
         UI_MuellajeCell["⚖️ Celda Dual Muellaje [Monto | [x]]"]
         UI_SaveModal["💾 Modal Guardar / Cargar"]
         UI_FactSheet --> UI_Grid --> UI_MuellajeCell
@@ -77,13 +77,13 @@ flowchart TD
 
     subgraph L5 ["NIVEL 5: RESUMEN FINANCIERO Y TARJETAS AUDITORÍA"]
         Card_Bunker["🛢️ Card Búnker"]
-        Card_PortCosts["🏛️ Card Port Costs (↳ Muellaje)"]
+        Card_PortCosts["🏛️ Card Port Costs (port_cost_static)"]
         Card_Financials["📊 Card Financial Voyage Result (P/L & TCE)"]
         Card_Bunker --> Card_PortCosts --> Card_Financials
     end
 
-    subgraph L6 ["NIVEL 6: BUCLE DE CONTROL DE CALIDAD (QC LOOP)"]
-        QC_Master["🛡️ run_triangular_qc_loop.py\n(Control Triangular Vértices A, B, C, D)"]
+    subgraph L6 ["NIVEL 6: BUCLE DE CONTROL DE CALIDAD (QC LOOP V2)"]
+        QC_Master["🛡️ run_qc_loop.py\n(Control 8 Tablas BD + Simulación Backend)"]
         QC_Pass["✅ CONVERGENCIA ABSOLUTA 100%\n(Delta = 0.000000)"]
         QC_Master --> QC_Pass
     end
@@ -118,11 +118,11 @@ flowchart TD
 Crear la estructura física en `Geeksoft_Frontend/src/services/providers/`:
 1. `bunkerProviderService.ts`: Lógica pura de resolución de combustibles.
 2. `vesselProviderService.ts`: Lógica pura de extracción de specs y consumos del buque.
-3. `routeDistancesService.ts`: Lógica pura de distancias NM y factores de clima.
-4. `portCostsRatesService.ts`: Lógica pura de ritmos, overheads y autocompletado de muellaje ($33,333).
+3. `routeDistancesService.ts`: Lógica pura de distancias NM y factores de clima desde `routes_clients` (`port_a` / `port_b`).
+4. `portCostsRatesService.ts`: Lógica pura de ritmos, overheads y autocompletado de tarifa estática desde `port_cost_static`.
 5. **`multicotizadorStorageService.ts`** *(¡NUEVO SERVICIO DE GRABADO!)*:
    - `saveMulticotizadorQuote()`: Empaqueta y guarda la cotización enriquecida en Supabase DB (`/forecast/spot/save`).
-   - `listMulticotizadorQuotes()`: Lista y filtra cotizaciones guardadas por cliente activo / prospecto.
+   - `listMulticotizadorQuotes()`: Lista y filtra cotizaciones guardadas por cliente activo (`routes_clients`) / prospecto (`routes_quotes`).
    - `loadMulticotizadorQuote()`: Carga y desempaca tramos, `puertosConfig` y parámetros en la grilla UI.
    - `deleteMulticotizadorQuote()`: Elimina o archiva cotizaciones.
 
@@ -140,19 +140,46 @@ Crear la estructura física en `Geeksoft_Frontend/src/components/CommercialForec
 
 ---
 
-## 🛡️ 4. Protocolo de Control de Calidad Anti-Goles (QC Loop)
+## 📋 4. Protocolo Estricto de Datos Reales de Base de Datos (Mapeo BD Verified)
 
-En cada paso de la refactorización se ejecutará el script de auditoría triangular:
+1. **Paso 1: Selector de Cliente (`1. SELECCIONAR CLIENTE`)**
+   - **Pestaña `ACTIVOS`:** Consulta la tabla `clients` de Supabase DB (`["NEXA", "SPCC"]`). Muestra estrictamente los clientes con contratos vigentes en la empresa.
+   - **Pestaña `PROSPECTOS`:** Consulta la tabla `routes_quotes` (cotizaciones comerciales). Si no existen prospectos guardados en ese momento en la BD, muestra el mensaje neutro **`[NO HAY PROSPECTOS REGISTRADOS EN BD]`**, **jamás mezclando clientes activos como NEXA o SPCC**.
+
+2. **Paso 2: Selector de Ruta (`2. CARGAR RUTA`)**
+   - **Tabla BD:** `routes_clients` (`/forecast/routes`).
+   - **Campos Reales:** **`port_a`** *(Origen)* y **`port_b`** *(Destino)*.
+   - **Formato Visual:** Muestra siempre el par exacto **`port_a ➔ port_b`** (`MANTA ➔ TALARA`, `CALLAO ➔ MANTA`, `BAYOVAR ➔ MANTA`, etc.). Cero flechas vacías ` ➔ `.
+
+3. **Paso 3: Cargar Cotización (`📁 3. CARGAR COTIZACIÓN`)**
+   - **Tabla BD:** `routes_quotes` (para Prospectos) y `routes_clients` (para Activos).
+
+4. **Paso 4: Selector de Buque (`4. SELECCIONAR BUQUE`)**
+   - **Tabla BD:** `vessels` (`SANTA SOFIA`, `PETRAL EXPLORER`, `NEOAUTO VOYAGER`).
+   - **Estado Inicial:** Mientras no se seleccione un buque (`[SELECCIONAR BUQUE]`), todos los consumos, Hire diario y PnL permanecen en **`$0` estricto**.
+
+5. **Paso 5: Gastos de Puerto (Fijo Estático)**
+   - Eliminado el conmutador `MATRIX` de la UI. Consulta de tarifas fijada permanentemente a la tabla **`port_cost_static`**.
+
+6. **Grilla Spreadsheet Live:**
+   - La tabla inicializa siempre con el **mínimo reglamentario de 3 piernas/tramos** (Leg 1, Leg 2, Leg 3) y 4 configuraciones de puerto (`tramos.length >= 3`).
+
+---
+
+## 🛡️ 5. Protocolo de Control de Calidad Anti-Goles (QC Loop V2)
+
+En cada paso de la refactorización se ejecutará el script de auditoría triangular ampliado:
 ```bash
-python Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador\scripts\run_triangular_qc_loop.py
+python Push.VPS\run_qc_loop.py
 ```
 
 ### Criterios de Aprobación Obligatorios:
-1. **Delta Cuantitativo:** 0.000000 desviación en fletes, búnker, port costs y TCE real contra el Excel oficial PETRAL.
-2. **Prueba Vértice D (Anti-Goles Mejillones):** Verificación de unicidad en la refacturación de muellaje ($33,333.00).
-3. **Prueba Persistencia (Save / Load):** Guardar una cotización simulada y recargarla verificando 100% de paridad.
-4. **Build TypeScript Limpio:** `npm run build` con código de salida 0.
-5. **Despliegue VPS Automático:** Ejecución mediante `python deploy_forecast_kickoff.py`.
+1. **Auditoría de Servicios BD:** Verificación con respuesta OK (PASS) en los 5 servicios (`clients`, `routes_clients`, `routes_quotes`, `vessels`, `port_cost_static`).
+2. **Delta Cuantitativo:** 0.000000 desviación en fletes, búnker, port costs y TCE real contra el Excel oficial PETRAL.
+3. **Prueba Vértice D (Anti-Goles Mejillones):** Verificación de unicidad en la refacturación de muellaje ($33,333.00).
+4. **Prueba Persistencia (Save / Load):** Guardar una cotización simulada y recargarla verificando 100% de paridad.
+5. **Build TypeScript Limpio:** `npm run build` con código de salida 0.
+6. **Despliegue VPS Automático:** Ejecución mediante `python deploy_forecast_kickoff.py` con invalidación de caché Nginx (`Cache-Control: no-cache`).
 
 ---
 
