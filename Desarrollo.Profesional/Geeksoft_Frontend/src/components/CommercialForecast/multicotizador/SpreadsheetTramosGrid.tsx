@@ -56,6 +56,34 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
 
     const sumPortCosts = puertosConfig.reduce((sum, p) => sum + (Number(p.manual_port_cost) || 0), 0);
 
+    // Array de costos live de búnker por tramo
+    const liveBunkerCosts = tramos.map((tr, idx) => {
+        const selectedVesselObj = vessels.find(v => v.vessel_id === selectedVessel);
+        const distVal = Number(tr.route_distance || 0);
+        const rawWf = Number(tr.weather_factor || 0);
+        const wfPct = rawWf > 1 ? rawWf : (rawWf * 100);
+        const speedVal = Math.max(1, Number(tr.speed || selectedVesselObj?.vessel_speed || vesselParams?.vessel_speed || 11));
+        const calcSeaDays = distVal > 0 ? (distVal * (1 + (wfPct / 100))) / (speedVal * 24) : 0;
+
+        const pCfg = puertosConfig[idx + 1] || {};
+        const qVal = Number(pCfg.quantity || 0);
+        const rVal = Math.max(1, Number(pCfg.op_rate || 500));
+        const tcVal = Number(pCfg.time_to_count || 0);
+        const posVal = Number(pCfg.positioning || 0);
+        const calcPortDays = pCfg.action !== 'NONE' ? (((qVal / rVal) + tcVal + posVal) / 24) : 0;
+
+        const ifoSeaRatio = Number(vesselParams?.consumption_sea_ifo || selectedVesselObj?.consumption_sea_ifo || 14.5);
+        const mdoSeaRatio = Number(vesselParams?.consumption_sea_mdo || selectedVesselObj?.consumption_sea_mdo || 0.1);
+        const ifoIdleRatio = Number(vesselParams?.consumption_idle_ifo || selectedVesselObj?.consumption_idle_ifo || 1.5);
+        const mdoIdleRatio = Number(vesselParams?.consumption_idle_mdo || selectedVesselObj?.consumption_idle_mdo || 0.1);
+
+        const ifoTons = (calcSeaDays * ifoSeaRatio) + (calcPortDays * ifoIdleRatio);
+        const mdoTons = (calcSeaDays * mdoSeaRatio) + (calcPortDays * mdoIdleRatio);
+        return (ifoTons * (bunkerPriceIfo || 0)) + (mdoTons * (bunkerPriceMdo || 0));
+    });
+
+    const sumLiveBunkerCosts = liveBunkerCosts.reduce((a, b) => a + b, 0);
+
     return (
         <div className="overflow-x-auto border border-slate-300 rounded bg-white shadow-sm flex flex-col mb-1">
             <table className="w-full border-collapse text-[12px] font-mono table-fixed select-text">
@@ -609,7 +637,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                             {result ? fmtCur(result.consolidated.total_freight_revenue || 0) : '$0'}
                         </td>
                         <td className="border-r border-blue-200 text-right pr-2 font-mono text-blue-900">
-                            {result ? fmtCur(result.consolidated.total_bunker_costs || 0) : '$0'}
+                            {fmtCur((result?.consolidated?.total_bunker_costs && result.consolidated.total_bunker_costs > 0) ? result.consolidated.total_bunker_costs : sumLiveBunkerCosts)}
                         </td>
                         <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
                         <td className="text-right pr-2 text-slate-400">—</td>
@@ -617,22 +645,22 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
 
                     {/* FILA 2 DE TOTALES: ARITMÉTICO */}
                     {(() => {
-                        const sumDistance = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.distance || 0), 0) : 0;
+                        const sumDistance = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.distance || 0), 0) : tramos.reduce((s, t) => s + (Number(t.route_distance) || 0), 0);
                         const sumSeaDays = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.sea_days || 0), 0) : 0;
                         const sumPortDays = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.port_days || 0), 0) : 0;
-                        const sumPortCosts = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.port_costs || 0), 0) : 0;
+                        const sumPortCostsCalculated = puertosConfig.reduce((sum, p) => sum + (Number(p.manual_port_cost) || 0), 0);
                         const sumFreightIncome = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.net_income || 0), 0) : tramos.reduce((sum, _, idx) => sum + (puertosConfig[idx + 1]?.action === 'DESCARGAR' ? (Number(puertosConfig[idx + 1]?.quantity || 0) * Number(puertosConfig[idx + 1]?.freight_rate || 0)) : 0), 0);
-                        const sumBunkerCosts = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.bunker_costs || 0), 0) : 0;
+                        const sumBunkerCostsCalculated = (result?.consolidated?.total_bunker_costs && result.consolidated.total_bunker_costs > 0) ? result.consolidated.total_bunker_costs : sumLiveBunkerCosts;
 
-                        const motorSeaDays = result?.consolidated?.total_sea_days || 0;
-                        const motorPortDays = result?.consolidated?.total_port_days || 0;
-                        const motorPortCosts = result?.consolidated?.total_port_costs || 0;
-                        const motorBunkerCosts = result?.consolidated?.total_bunker_costs || 0;
+                        const motorSeaDays = result?.consolidated?.total_sea_days || sumSeaDays;
+                        const motorPortDays = result?.consolidated?.total_port_days || sumPortDays;
+                        const motorPortCosts = (result?.consolidated?.total_port_costs && result.consolidated.total_port_costs > 0) ? result.consolidated.total_port_costs : sumPortCostsCalculated;
+                        const motorBunkerCosts = (result?.consolidated?.total_bunker_costs && result.consolidated.total_bunker_costs > 0) ? result.consolidated.total_bunker_costs : sumBunkerCostsCalculated;
 
                         const diffSeaDays = sumSeaDays - motorSeaDays;
                         const diffPortDays = sumPortDays - motorPortDays;
-                        const diffPortCosts = sumPortCosts - motorPortCosts;
-                        const diffBunkerCosts = sumBunkerCosts - motorBunkerCosts;
+                        const diffPortCosts = sumPortCostsCalculated - motorPortCosts;
+                        const diffBunkerCosts = sumBunkerCostsCalculated - motorBunkerCosts;
 
                         const hasAnyDiff = Math.abs(diffSeaDays) > 0.001 || Math.abs(diffPortDays) > 0.001 || Math.abs(diffPortCosts) > 0.5 || Math.abs(diffBunkerCosts) > 0.5;
 
@@ -655,9 +683,9 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                     <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
                                     <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtNum(totalDescargas)}</td>
                                     <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtCur(sumPortCosts)}</td>
+                                    <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtCur(sumPortCostsCalculated)}</td>
                                     <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtCur(sumFreightIncome)}</td>
-                                    <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtCur(sumBunkerCosts)}</td>
+                                    <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtCur(sumBunkerCostsCalculated)}</td>
                                     <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
                                     <td className="text-right pr-2 text-slate-400">—</td>
                                 </tr>

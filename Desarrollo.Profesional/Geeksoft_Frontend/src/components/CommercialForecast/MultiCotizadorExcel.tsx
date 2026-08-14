@@ -572,9 +572,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
         if (tramosList.length > 0) {
             setTramos(tramosList);
-            const pConfig = (legsData.puertosConfig && legsData.puertosConfig.length > 0)
-                ? legsData.puertosConfig
-                : buildPuertosConfigFromTramos(tramosList, selectedClient);
+            const pConfig = buildPuertosConfigFromTramos(tramosList, selectedClient);
             setPuertosConfig(pConfig);
         } else if (r.origin_port_id && r.destination_port_id) {
             const singleTramo = [{
