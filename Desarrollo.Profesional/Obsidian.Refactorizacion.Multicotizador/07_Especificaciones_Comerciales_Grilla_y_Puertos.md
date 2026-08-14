@@ -250,11 +250,23 @@ A partir de la inspección del razonamiento pericial planteado por Sherlock Holm
 * **Si el Paso 1/3 está en `PROSPECTOS` (Cotización Prospecto activa):**  
   El guardado impacta directamente en la tabla Supabase **`routes_quotes`**.
 
+### 🏷️ 6.1.1. Convención Obligatoria de Nomenclatura (Naming Standard)
+Al abrir el modal de diálogo para guardar una ruta o cotización, el nombre debe estructurarse con la fórmula estandarizada:
+
+$$\mathbf{[CLIENTE\_CORTO] . [PUERTO\_1] . [PUERTO\_2] \dots [PUERTO\_N] . [SUFIJO\_PERSONALIZADO]}$$
+
+* **Prefijo Automático (No Modificable por error):**  
+  Generado automáticamente leyendo el cliente corto y la secuencia ordenada de puertos de la grilla (ej: `NEXA.ILO.CALLAO.MATARANI.ILO.`).
+* **Sufijo Personalizado (Input editable del Usuario):**  
+  El cuadro de diálogo del modal muestra un input en donde el usuario ingresa únicamente su sufijo distintivo (ej: `2026`, `PROP.V1`, `FINAL`).
+* **Nombre Guardado Resultante:**  
+  `NEXA.ILO.CALLAO.MATARANI.ILO.2026`
+
 ### 6.2. Opciones de Guardado en Interfaz
 1. **Opción A (Sobrescribir Ruta / Cotización Cargada):**  
    Si la sesión partió de una ruta o cotización cargada desde Supabase, el botón **Sobrescribir** actualiza la fila existente (`update`) con el payload prístino modificado.
 2. **Opción B (Guardar como Nuevo Nombre):**  
-   Permite ingresar un **Nuevo Nombre de Ruta / Cotización** (`insert`) para registrar una nueva entrada independiente sin alterar la plantilla de origen.
+   Permite ingresar un **Nuevo Sufijo / Nombre** (`insert`) para registrar una nueva entrada independiente sin alterar la plantilla de origen.
 
 ### 6.3. Estructura del Payload Prístino (100% de la Interfaz)
 El JSON guardado en `legs_data` / `quote_data` almacena el estado **absoluto y completo** del Multicotizador Excel sin omitir un solo atributo:
