@@ -101,7 +101,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     const [result, setResult] = useState<any>(null);
     const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
     const [showLoadModal, setShowLoadModal] = useState<boolean>(false);
-    const [routeName, setRouteName] = useState<string>('');
+    const [routeSuffix, setRouteSuffix] = useState<string>('2026');
+    const [saveMode, setSaveMode] = useState<'OVERWRITE' | 'NEW'>('NEW');
+    const [loadedRouteName, setLoadedRouteName] = useState<string>('');
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const [savedRoutes, setSavedRoutes] = useState<any[]>([]);
 
@@ -469,16 +471,28 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     }, [selectedVessel, selectedClient, bunkerPriceIfo, bunkerPriceMdo, tramos, puertosConfig, addressCommPct, brokerCommPct, demurrageRate, refacturarMuellajeMap]);
 
     // Persistencia: Guardar y Cargar Cotizaciones
-    const getSuggestedRouteName = (client: string) => {
-        return `${client || 'CLIENTE'}_${tramos[0]?.origin_port_id || 'POL'}_${tramos[tramos.length - 1]?.destination_port_id || 'POD'}`;
+    const getSuggestedRoutePrefix = (client: string) => {
+        const clientClean = (client || 'CLIENTE').trim().toUpperCase();
+        const portsList: string[] = [];
+        if (tramos[0]?.origin_port_id) portsList.push(tramos[0].origin_port_id.trim().toUpperCase());
+        tramos.forEach(tr => {
+            if (tr.destination_port_id) portsList.push(tr.destination_port_id.trim().toUpperCase());
+        });
+        const portsSeq = portsList.length > 0 ? portsList.join('.') : 'RUTA';
+        return `${clientClean}.${portsSeq}.`;
     };
 
     const handleSaveRoute = async () => {
-        if (!routeName.trim()) return;
+        const prefix = getSuggestedRoutePrefix(selectedClient);
+        const finalName = (saveMode === 'OVERWRITE' && loadedRouteName)
+            ? loadedRouteName
+            : `${prefix}${routeSuffix.trim() ? routeSuffix.trim() : '2026'}`;
+
+        if (!finalName.trim()) return;
         setIsSaving(true);
         try {
             await MulticotizadorStorageService.saveQuote({
-                routeName,
+                routeName: finalName,
                 selectedClient,
                 filterProspecto: clientType === 'PROSPECTOS',
                 selectedVessel,
@@ -491,6 +505,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 brokerCommPct,
                 rawClients
             });
+            setLoadedRouteName(finalName);
             setShowSaveModal(false);
         } catch (e) {
             console.error("Error guardando cotización:", e);
@@ -590,6 +605,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     };
 
     const handleCreateNewGrid = async () => {
+        setLoadedRouteName('');
         setTramos([
             { type: 'BALLAST', origin_port_id: '', destination_port_id: '', quantity: 0, freight_rate: 0, port_delay_hours_loading: 0, port_delay_hours_discharging: 0, route_distance: 0, weather_factor: 3.0, speed: 0 },
             { type: 'LADEN', origin_port_id: '', destination_port_id: '', quantity: 0, freight_rate: 0, port_delay_hours_loading: 0, port_delay_hours_discharging: 0, route_distance: 0, weather_factor: 3.0, speed: 0 },
@@ -617,6 +633,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         const r = routes.find(x => x.route_id === routeId || x.id === routeId || x.spot_id === routeId);
         if (!r) return;
 
+        setLoadedRouteName(r.name || r.route_id || '');
         setBunkerSource('MAESTRO_CONTRATOS');
 
         const legsData = r.legs_data || {};
@@ -656,6 +673,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
     const handleLoadRoute = (quote: any) => {
         if (!quote) return;
+        setLoadedRouteName(quote.name || quote.route_id || quote.spot_id || '');
         setBunkerSource('COTIZACION');
         const unpacked = MulticotizadorRetrieverService.unpackQuoteData(quote);
 
@@ -901,18 +919,22 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             <SaveLoadQuoteModals
                 showSaveModal={showSaveModal}
                 showLoadModal={showLoadModal}
-                routeName={routeName}
+                routeSuffix={routeSuffix}
+                saveMode={saveMode}
+                loadedRouteName={loadedRouteName}
+                clientType={clientType}
+                selectedClient={selectedClient}
                 isSaving={isSaving}
                 isLoadingRoutes={false}
                 savedRoutes={savedRoutes}
-                selectedClient={selectedClient}
                 setShowSaveModal={setShowSaveModal}
                 setShowLoadModal={setShowLoadModal}
-                setRouteName={setRouteName}
+                setRouteSuffix={setRouteSuffix}
+                setSaveMode={setSaveMode}
                 handleSaveRoute={handleSaveRoute}
                 handleLoadRoute={handleLoadRoute}
                 handlePrintPDF={handlePrintPDF}
-                getSuggestedRouteName={getSuggestedRouteName}
+                getSuggestedRoutePrefix={getSuggestedRoutePrefix}
             />
         </div>
     );
