@@ -26,3 +26,7 @@
 - En todo el software PETRAL, las siglas **MGO** (Marine Gas Oil / Diesel Marino) que figuran en facturas o cotizaciones equivalen y se registran unificadamente bajo el estándar **MDO**.
 </RULE[bunker_mdo_mgo_homologation]>
 
+<RULE[macro_plan_adherence]>
+- **Alineación con Plan Macro**: Cuando exista un Plan Macro General (documentado en Obsidian o especificaciones), el agente debe razonar en cada paso para NO perder de vista el objetivo global del plan macro. Todo cambio puntual debe alinearse y contribuir directamente a la visión estratégica general del proyecto.
+</RULE[macro_plan_adherence]>
+
