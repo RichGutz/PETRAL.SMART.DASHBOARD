@@ -508,6 +508,10 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             });
             setLoadedRouteName(finalName);
             setShowSaveModal(false);
+            const freshRoutes = await ForecastService.getRoutesMaster();
+            if (freshRoutes && Array.isArray(freshRoutes)) {
+                setRoutes(freshRoutes);
+            }
         } catch (e) {
             console.error("Error guardando cotización:", e);
         } finally {

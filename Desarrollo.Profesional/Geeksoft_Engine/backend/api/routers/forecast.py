@@ -572,8 +572,15 @@ def lookup_port_cost(
 def save_spot_voyage(request: SpotSaveRequest):
     try:
         from backend.database import get_supabase
+        from backend.services.forecast_service import clear_forecast_cache
         sb = get_supabase()
         
+        legs_data = request.legs_data or {}
+        tramos = legs_data.get("tramos", [])
+        orig_port = tramos[0].get("origin_port_id") if (tramos and len(tramos) > 0) else None
+        dest_port = tramos[-1].get("destination_port_id") if (tramos and len(tramos) > 0) else None
+        tot_dist = sum(float(tr.get("route_distance", 0) or 0) for tr in tramos) if tramos else 0
+
         payload = {
             "name": request.name,
             "description": request.description,
@@ -581,26 +588,55 @@ def save_spot_voyage(request: SpotSaveRequest):
             "pais": request.pais,
             "created_by": request.created_by or "izavala@petral.com.pe"
         }
+        if orig_port:
+            payload["origin_port_id"] = orig_port
+        if dest_port:
+            payload["destination_port_id"] = dest_port
+        if tot_dist > 0:
+            payload["route_distance"] = tot_dist
         
         target_table = "routes_quotes" if request.is_prospect else "routes_clients"
         
-        # BUSCAR SI YA EXISTE UNA RUTA O COTIZACIÓN CON EL MISMO NOMBRE
-        existing = sb.table(target_table).select("*").eq("name", request.name).execute()
-        if existing.data and len(existing.data) > 0:
-            # SOBREESCRIBIR / UPDATE LA RUTA EXISTENTE
-            res = sb.table(target_table).update(payload).eq("name", request.name).execute()
+        # BUSCAR POR COLUMNAS MÚLTIPLES (name, route_id, client_route_id, prospect_route_id, spot_id)
+        existing = None
+        for col in ["name", "route_id", "client_route_id", "prospect_route_id", "spot_id"]:
+            try:
+                res_check = sb.table(target_table).select("*").eq(col, request.name).execute()
+                if res_check.data and len(res_check.data) > 0:
+                    existing = (col, res_check.data[0])
+                    break
+            except Exception:
+                continue
+
+        if existing:
+            match_col, match_row = existing
+            # Update row in-situ usando la columna coincidente
+            res = sb.table(target_table).update(payload).eq(match_col, request.name).execute()
             if not res.data:
-                raise Exception(f"Failed to overwrite spot route in {target_table}")
-            spot_id = res.data[0].get("client_route_id") or res.data[0].get("prospect_route_id") or res.data[0].get("route_id") or res.data[0].get("spot_id")
+                pk_val = match_row.get("id") or match_row.get("route_id") or match_row.get("spot_id") or match_row.get("client_route_id")
+                if pk_val:
+                    pk_col = "id" if "id" in match_row else match_col
+                    res = sb.table(target_table).update(payload).eq(pk_col, pk_val).execute()
+            
+            spot_id = request.name
+            if res.data and len(res.data) > 0:
+                spot_id = res.data[0].get("client_route_id") or res.data[0].get("prospect_route_id") or res.data[0].get("route_id") or res.data[0].get("spot_id") or request.name
+            
+            clear_forecast_cache()
             return {"status": "success", "action": "overwritten", "spot_id": spot_id}
         else:
-            # GUARDAR NUEVO / INSERT
+            if target_table == "routes_clients":
+                payload["route_id"] = request.name
+            
             res = sb.table(target_table).insert(payload).execute()
             if not res.data:
                 raise Exception(f"Failed to insert spot route in {target_table}")
-            spot_id = res.data[0].get("client_route_id") or res.data[0].get("prospect_route_id") or res.data[0].get("route_id") or res.data[0].get("spot_id")
+            spot_id = res.data[0].get("client_route_id") or res.data[0].get("prospect_route_id") or res.data[0].get("route_id") or res.data[0].get("spot_id") or request.name
+            
+            clear_forecast_cache()
             return {"status": "success", "action": "created", "spot_id": spot_id}
     except Exception as e:
+        print(f"Error in save_spot_voyage: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/spot/delete/{spot_id}")
