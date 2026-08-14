@@ -79,16 +79,26 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
         const rVal = Math.max(1, Number(pCfg.op_rate || 500));
         const tcVal = Number(pCfg.time_to_count || 0);
         const posVal = Number(pCfg.positioning || 0);
-        const calcPortDays = pCfg.action !== 'NONE' ? (((qVal / rVal) + tcVal + posVal) / 24) : 0;
+
+        const idleDays = pCfg.action !== 'NONE' ? ((tcVal + posVal) / 24) : 0;
+        const opDays = pCfg.action !== 'NONE' ? ((qVal / rVal) / 24) : 0;
+        const calcPortDays = idleDays + opDays;
         liveTotalPortDays += calcPortDays;
 
         const ifoSeaRatio = Number(vesselParams?.consumption_sea_ifo || selectedVesselObj?.consumption_sea_ifo || 14.5);
         const mdoSeaRatio = Number(vesselParams?.consumption_sea_mdo || selectedVesselObj?.consumption_sea_mdo || 0.1);
-        const ifoIdleRatio = Number(vesselParams?.consumption_idle_ifo || selectedVesselObj?.consumption_idle_ifo || 1.5);
+        const ifoIdleRatio = Number(vesselParams?.consumption_idle_ifo || selectedVesselObj?.consumption_idle_ifo || 3.5);
         const mdoIdleRatio = Number(vesselParams?.consumption_idle_mdo || selectedVesselObj?.consumption_idle_mdo || 0.1);
+        const ifoLoadRatio = Number(vesselParams?.consumption_load_ifo || selectedVesselObj?.consumption_load_ifo || ifoIdleRatio);
+        const mdoLoadRatio = Number(vesselParams?.consumption_load_mdo || selectedVesselObj?.consumption_load_mdo || mdoIdleRatio);
+        const ifoDischRatio = Number(vesselParams?.consumption_disch_ifo || selectedVesselObj?.consumption_disch_ifo || 5.0);
+        const mdoDischRatio = Number(vesselParams?.consumption_disch_mdo || selectedVesselObj?.consumption_disch_mdo || mdoIdleRatio);
 
-        liveIfoTons += (calcSeaDays * ifoSeaRatio) + (calcPortDays * ifoIdleRatio);
-        liveMdoTons += (calcSeaDays * mdoSeaRatio) + (calcPortDays * mdoIdleRatio);
+        const opIfoRate = pCfg.action === 'DESCARGAR' ? ifoDischRatio : pCfg.action === 'CARGAR' ? ifoLoadRatio : ifoIdleRatio;
+        const opMdoRate = pCfg.action === 'DESCARGAR' ? mdoDischRatio : pCfg.action === 'CARGAR' ? mdoLoadRatio : mdoIdleRatio;
+
+        liveIfoTons += (calcSeaDays * ifoSeaRatio) + (idleDays * ifoIdleRatio) + (opDays * opIfoRate);
+        liveMdoTons += (calcSeaDays * mdoSeaRatio) + (idleDays * mdoIdleRatio) + (opDays * opMdoRate);
     });
 
     const ifoT = liveIfoTons;
