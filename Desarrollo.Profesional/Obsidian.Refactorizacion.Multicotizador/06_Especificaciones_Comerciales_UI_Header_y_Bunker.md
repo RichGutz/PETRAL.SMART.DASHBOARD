@@ -1,9 +1,57 @@
-# 📑 ESPECIFICACIONES COMERCIALES: LÓGICA UI CABECERA Y RESOLUCIÓN DE BÚNKER (V1.0)
+# 📑 ESPECIFICACIONES COMERCIALES Y VISIÓN GENERAL DEL MULTICOTIZADOR (V1.0)
 
 > **Ubicación de Control:** `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador`  
 > **Fecha de Documentación:** 14 de Agosto de 2026  
 > **Estado:** Especificación Comercial y Lógica de Interfaz Multicotizador  
+> **Fuente de Instrucción Comercial:** Transcripción de Audio `audio_transcrip/logica.general.multicotizador.ogg`  
 > **Servidor VPS:** `https://forecast.geeksoft.tech`
+
+---
+
+## 🎯 0. Visión General y Lógica de Negocio del Multicotizador
+
+El **Multicotizador** es el **corazón de todo el sistema PETRAL**. Su objetivo estratégico abarca dos pilares comerciales fundamentales:
+1. **Gestión y Creación de Nuevas Rutas** (para Clientes Activos).
+2. **Gestión y Creación de Nuevas Cotizaciones / Proformas** (para Clientes Prospectos).
+
+```text
+========================================================================================
+             ❤️ MULTICOTIZADOR: EL CORAZÓN DEL SISTEMA PETRAL
+========================================================================================
+ 🏢 TARGET 1: CLIENTES ACTIVOS (SPCC, NEXA)
+    ├── Tienen negocio/contrato firmado en BD.
+    ├── Generan NUEVAS RUTAS comerciales.
+    └── Búnker base se obtiene del 📑 MAESTRO DE CONTRATOS (contracts).
+
+ 🏭 TARGET 2: CLIENTES PROSPECTOS (MARCOBRE, PRIMAX, CODELCO, R TRADING, CERRO VERDE)
+    ├── Sin contrato firmado en BD (Clientes potenciales).
+    ├── Generan NUEVAS COTIZACIONES / PROFORMAS.
+    └── Búnker base se obtiene del 🛢️ MAESTRO BUNKER GENERAL (bunker_prices - Tarifas Spot).
+========================================================================================
+```
+
+---
+
+### 🔹 0.1. Lógica del Búnker y Reglas de Sobreescritura
+* **Búnker en Contratos (Clientes Activos):** El contrato vigente fija las tarifas de IFO y MDO según el destino negociado.
+* **Búnker Spot (Clientes Prospectos):** Al no tener contrato, se requiere la cotización a precios de mercado más recientes (`bunker_prices`).
+* **Sobreescritura Manual (`SOBREESCRITURA`):** Es una funcionalidad transversal para todas las opciones. Al seleccionar *Sobreescribir*, la interfaz coloca en `$0` ambas casillas (IFO/MDO), permitiendo al usuario ingresar valores proyectados considerando volatilidades a futuro.
+* **Cotizaciones Históricas:** Al cargar una cotización guardada realizada meses atrás, el sistema extrae los precios de búnker guardados en el JSON de la proforma (`routes_quotes`), permitiendo mantener el historial o sobreescribirlos si se desea actualizar al mercado actual.
+
+---
+
+### 🔹 0.2. Buque, Grilla Live de Tramos y Componentes de Costo
+* **Selección del Buque (Fact Sheet Técnico):** Es obligatoria (Paso 4), pues cada buque posee velocidades específicas (knots), capacidades (GRT, DWT, DWCC, Calado) y 4 ratios de consumo de combustible (Navegación en Mar, Espera en Fondeo, Operación de Carga y Operación de Descarga).
+* **Grilla Live — Mínimo de 3 Tramos (Legs):** Por norma comercial, todo viaje cotizado debe ser un **viaje redondo completo** (mínimo 3 filas en la grilla live: Ballast ➔ Laden ➔ Ballast).
+* **Distancias Marítimas (NM):** Se obtienen del Maestro de Distancias. Si no existe registro en el catálogo, se coloca `0` por defecto.
+* **Días de Mar:** Calculados matemáticamente mediante la velocidad del buque y el factor de clima:
+  $$\text{Días Mar} = \frac{\text{Distancia (NM)} \times (1 + \text{Weather Factor} \%)}{\text{Velocidad (knots)} \times 24}$$
+* **Días de Puerto:** Involucran dos variables estipuladas en los contratos para clientes activos: **Time to Count** (horas de demora en puerto) y **Posicionamiento** (horas de maniobra y atracadero).
+* **Tonelaje Estándar:** La cantidad de carga por defecto se fija en **13,500 TM**, correspondiente a la capacidad operativa estándar de los buques PETRAL (ej. Moquegua y Tablones).
+* **Tarifas de Flete ($/MT):** Para clientes activos, provienen del Maestro de Contratos (`contracts`) para el puerto de destino específico.
+* **Gastos Portuarios ($):** Se extraen de la matriz estática de gastos portuarios (`port_cost_static`).
+* **Muellaje (Wharfage):** Concepto de costo *pass-through* que se refactura exactamente a costo al cliente cuando está acordado convencionalmente (ej. en operaciones de descarga en Mejillones).
+* **Tarjetas Financieras Inferiores (Cards):** Son el resultado matemático directo e inmutable derivado de las características del Buque, los parámetros de la Grilla Live y la matriz de Gastos Portuarios.
 
 ---
 
