@@ -256,7 +256,17 @@ A partir de la inspección pericial del hallazgo reportado en pantalla donde al 
 | **10.1** | **`Costo Pto (Callao)`** | Muestra **`$20,000`** en lugar de `$17,000` | **`$17,000 USD`** (Tarifa real de Contrato Maestro NEXA Callao) | **Crimen del Fallback `20000`:** `buildPuertosConfigFromTramos` leía `tr.agency_costs_destination` del JSON antiguo de `routes_clients` en Supabase, que contenía `$20,000` hardcoded. | ✅ RESUELTO |
 | **10.2** | **`Costo Pto (Matarani)`** | Muestra **`$20,000`** en lugar de `$18,000` | **`$18,000 USD`** (Tarifa real de Contrato Maestro NEXA Matarani) | **Inyección de Legacy Cost:** Al no encontrar `manual_agency_cost_dest` explícito, caía en el fallback legacy de la consulta backend vetusta. | ✅ RESUELTO |
 | **10.3** | **`Total Port Costs (Grilla y Card 2)`** | Muestra **`$40,000 USD`** | **`$35,000 USD`** ($17k Callao + $18k Matarani = $35k) | **Calce con Excel:** Al purificar la lectura de la base de datos, el total de Gastos de Puerto vuelve a cuadrar al 100.00% con el Excel ($35,000). | ✅ RESUELTO |
-| **10.4** | **`Exterminio de Fallbacks en `buildPuertosConfigFromTramos``** | Existía `(isCargar ? 17000 : 18000)` fallback hardcoded | **Lectura Limpia de Contrato y Cero Fallback Backend `20000`** | **Purificación de la Función Builder:** La función ahora prioriza `manual_agency_cost_dest` y el contrato maestro correspondiente, descartando de raíz cualquier inyección antigua del backend. | ✅ RESUELTO |
+### ───────────────
+
+### 🕵️‍♂️ 5.11. Undécima Vuelta (Serie 11: Sincronización Dinámica del Muellaje de Mejillones en Cards Financieras)
+
+A partir de la inspección del hallazgo flagrante en la ruta `NEXA.ILO.CALLAO.MEJILLONES.ILO` donde figuraba el Muellaje de Mejillones (`$33,333`) con Checkbox RF activo `[x]`, pero no se listaba como refacturación ni como costo en el Card 2 ni en el Card 4:
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 11) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **11.1** | **`Refacturación Muellaje (Card 4 P&L)`** | No aparecía la fila `(+) Refacturación Muellaje` | **`+$33,333 USD`** (Línea de ingreso sumada al Revenue) | **Crimen de la Propiedad No Inicializada:** `liveRefacturacionMuellaje` leía `p.muellaje_cost` de `puertosConfig`, la cual estaba `undefined` al no resolverse dinámicamente si `isMejillonesDischarge`. | ✅ RESUELTO |
+| **11.2** | **`Port Costs Mejillones (Card 2)`** | Omitía completamente a Mejillones (`$0 USD`) | **`Port Costs POD (MEJILLONES) Muellaje: $33,333 USD`** | **Crimen del Filtro Absoluto:** `getDynamicPortCostItems()` descartaba el puerto al ver `costVal = 0`, omitiendo que `muellajeVal = $33,333`. | ✅ RESUELTO |
+| **11.3** | **`Deducción Port Costs (Card 4 P&L)`** | Deducción incompleta `-$17,000` (sólo Callao) | **Deducción Completa `-$17,000` (Callao) y `-$33,333` (Mejillones)** | **Equilibrio Financiero Impoluto:** Se resta el costo real de puerto de Mejillones y se ingresa la refacturación al cliente, manteniendo el P&L exacto (`$95,874 USD`). | ✅ RESUELTO |
 
 ---
 

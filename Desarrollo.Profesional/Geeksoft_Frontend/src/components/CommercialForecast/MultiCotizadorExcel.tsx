@@ -397,8 +397,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             if (p.action !== 'NONE') {
                 const portId = pIdx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[pIdx - 1]?.destination_port_id || '');
                 if (portId) {
-                    const costVal = Number(p.manual_port_cost) || 0;
-                    const muellajeVal = Number(p.muellaje_cost) || 0;
+                    const isMejillonesDischarge = portId.trim().toUpperCase() === 'MEJILLONES' && p.action === 'DESCARGAR';
+                    const muellajeVal = Number(p.muellaje_cost) || (isMejillonesDischarge ? 33333 : 0);
+                    const costVal = Number(p.manual_port_cost) || (isMejillonesDischarge ? 33333 : 0);
                     items.push({
                         label: `${pIdx === 0 ? 'POL' : 'POD'} (${portId})`,
                         cost: costVal,
@@ -585,11 +586,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
             // PURIFICACIÓN DE COSTOS DE PUERTO (CERO FALLBACK 20000 BACKEND LEGACY)
             const rawManualCost = tr.manual_agency_cost_dest ?? tr.manual_port_cost;
+            const isMejillones = podId === 'MEJILLONES' && isDescargar;
             const pCost = hasAction
                 ? (rawManualCost !== undefined && rawManualCost !== null && rawManualCost !== '' 
                     ? rawManualCost 
-                    : (podContract?.agency_cost ?? (podId === 'CALLAO' ? 17000 : podId === 'MATARANI' ? 18000 : '')))
+                    : (podContract?.agency_cost ?? (podId === 'CALLAO' ? 17000 : podId === 'MATARANI' ? 18000 : (isMejillones ? 33333 : ''))))
                 : '';
+            const mCost = isMejillones ? 33333 : Number(tr.muellaje_cost || 0);
 
             config.push({
                 action: actionN,
@@ -599,7 +602,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 quantity: qVal,
                 freight_rate: fVal,
                 positioning: pos,
-                manual_port_cost: pCost
+                manual_port_cost: pCost,
+                muellaje_cost: mCost
             });
         });
 

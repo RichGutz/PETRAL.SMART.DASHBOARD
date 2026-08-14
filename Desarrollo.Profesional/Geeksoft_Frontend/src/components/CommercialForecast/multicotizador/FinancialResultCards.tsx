@@ -108,7 +108,14 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
     const totalBunkerCost = ifoCost + mdoCost;
 
     // 2. Port Costs Live Sum
-    const livePortCostsSum = puertosConfig.reduce((sum, p) => sum + (Number(p.manual_port_cost) || 0), 0);
+    const livePortCostsSum = puertosConfig.reduce((sum, p, i) => {
+        if (p.action === 'NONE') return sum;
+        const portId = i === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[i - 1]?.destination_port_id || '');
+        const isMejillonesDischarge = (portId || '').trim().toUpperCase() === 'MEJILLONES' && p.action === 'DESCARGAR';
+        const mCost = Number(p.manual_port_cost) || 0;
+        const muellCost = Number(p.muellaje_cost) || (isMejillonesDischarge ? 33333 : 0);
+        return sum + Math.max(mCost, muellCost);
+    }, 0);
     const totalPortCostsVal = livePortCostsSum;
 
     // 3. Revenue & Refacturación de Muellaje Live
@@ -117,8 +124,11 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
 
     const liveRefacturacionMuellaje = puertosConfig.reduce((sum, p, i) => {
         if (p.action === 'NONE') return sum;
-        if (refacturarMuellajeMap[i] !== false && Number(p.muellaje_cost || 0) > 0) {
-            return sum + Number(p.muellaje_cost);
+        const portId = i === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[i - 1]?.destination_port_id || '');
+        const isMejillonesDischarge = (portId || '').trim().toUpperCase() === 'MEJILLONES' && p.action === 'DESCARGAR';
+        const muellCost = Number(p.muellaje_cost) || (isMejillonesDischarge ? 33333 : 0);
+        if (refacturarMuellajeMap[i] !== false && muellCost > 0) {
+            return sum + muellCost;
         }
         return sum;
     }, 0);
