@@ -50,7 +50,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     // 1. Estados de Navegación & Pestañas
     const [clientType, setClientType] = useState<'ACTIVOS' | 'PROSPECTOS'>('ACTIVOS');
     const [selectedClient, setSelectedClient] = useState<string>('');
-    const [selectedRouteId, setSelectedRouteId] = useState<string>('');
+    const [selectedRouteId, setSelectedRouteId] = useState<string>('CREAR_RUTA');
     const [selectedQuoteId, setSelectedQuoteId] = useState<string>('');
     // const [localPortCostMode, setLocalPortCostMode] = useState<'static' | 'matrix'>(initialPortCostMode);
 
@@ -583,6 +583,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                             <button
                                 onClick={() => {
                                     setClientType('ACTIVOS');
+                                    setSelectedRouteId('CREAR_RUTA');
                                     setSelectedQuoteId('');
                                 }}
                                 className={`px-2 py-0.5 text-[9.5px] font-black uppercase rounded cursor-pointer ${clientType === 'ACTIVOS' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
@@ -592,6 +593,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                             <button
                                 onClick={() => {
                                     setClientType('PROSPECTOS');
+                                    setSelectedQuoteId('CREAR_COTIZACION');
                                     setSelectedRouteId('');
                                 }}
                                 className={`px-2 py-0.5 text-[9.5px] font-black uppercase rounded cursor-pointer ${clientType === 'PROSPECTOS' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
@@ -608,10 +610,10 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                         </select>
                     </div>
 
-                    {/* PASO 2: BUSCAR RUTA CLIENTE */}
+                    {/* PASO 2: RUTA CLIENTE */}
                     <div className={`flex items-center gap-1.5 border rounded px-2 py-1 shadow-sm shrink-0 transition-opacity ${clientType === 'PROSPECTOS' ? 'bg-slate-100 border-slate-200 opacity-50' : 'bg-white border-slate-300'}`}>
                         <span className={`text-[10px] font-black uppercase tracking-wider whitespace-nowrap ${clientType === 'PROSPECTOS' ? 'text-slate-400' : 'text-slate-700'}`}>
-                            2. BUSCAR RUTA CLIENTE
+                            2. RUTA CLIENTE
                         </span>
                         <select
                             value={selectedRouteId}
@@ -623,8 +625,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                             }}
                             className={`h-6 text-[11px] font-extrabold border rounded px-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 ${clientType === 'PROSPECTOS' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-800 border-slate-300 cursor-pointer'}`}
                         >
-                            <option value="">[SELECCIONAR RUTA]</option>
-                            <option value="CREAR_RUTA">➕ CREAR RUTA CLIENTE</option>
+                            <option value="CREAR_RUTA">➕ NUEVA RUTA</option>
                             {routes.map(r => {
                                 const routeLabel = r.name || (r.origin_port_id && r.destination_port_id ? `${r.origin_port_id} ➔ ${r.destination_port_id}` : (r.legs_data?.tramos && r.legs_data.tramos.length > 0 ? r.legs_data.tramos.map((t: any) => t.origin_port_id).concat(r.legs_data.tramos[r.legs_data.tramos.length - 1]?.destination_port_id).join(' ➔ ') : r.route_id));
                                 return (
@@ -636,11 +637,11 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                         </select>
                     </div>
 
-                    {/* PASO 3: CARGAR COTIZACION PROSPECTO */}
+                    {/* PASO 3: COTIZACION PROSPECTO */}
                     <div className={`flex items-center gap-1.5 border rounded px-2 py-1 shadow-sm shrink-0 transition-opacity ${clientType === 'ACTIVOS' ? 'bg-slate-100 border-slate-200 opacity-50' : 'bg-white border-slate-300'}`}>
                         <span className={`text-[10px] font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1 ${clientType === 'ACTIVOS' ? 'text-slate-400' : 'text-slate-700'}`}>
                             <FolderOpen size={13} className={clientType === 'ACTIVOS' ? 'text-slate-400' : 'text-blue-600'} />
-                            <span>3. CARGAR COTIZACION PROSPECTO</span>
+                            <span>3. COTIZACION PROSPECTO</span>
                         </span>
                         <select
                             value={selectedQuoteId}
@@ -658,8 +659,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                             }}
                             className={`h-6 text-[11px] font-extrabold border rounded px-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 ${clientType === 'ACTIVOS' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-800 border-slate-300 cursor-pointer'}`}
                         >
-                            <option value="">[SELECCIONAR COTIZACIÓN]</option>
-                            <option value="CREAR_COTIZACION">➕ CREAR COTIZACIÓN PROSPECTO</option>
+                            <option value="CREAR_COTIZACION">➕ NUEVA COTIZACION</option>
                             {savedRoutes.map(q => (
                                 <option key={q.route_id || q.spot_id || q.id} value={q.route_id || q.spot_id || q.id}>
                                     {q.name || q.route_id || 'COTIZACIÓN'}

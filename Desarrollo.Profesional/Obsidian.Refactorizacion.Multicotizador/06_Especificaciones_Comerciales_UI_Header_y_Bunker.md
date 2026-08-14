@@ -61,7 +61,7 @@ La barra de control superior estandariza el flujo comercial top-to-bottom respet
 
 ```text
 +------------------------+--------------------------+----------------------------------+-----------------------+
-| 1. SELECCIONAR CLIENTE | 2. BUSCAR RUTA CLIENTE   | 3. CARGAR COTIZACION PROSPECTO   | 4. SELECCIONAR BUQUE  |
+| 1. SELECCIONAR CLIENTE | 2. RUTA CLIENTE          | 3. COTIZACION PROSPECTO          | 4. SELECCIONAR BUQUE  |
 | [Activos | Prospectos] | (Habilitado en ACTIVOS)  | (Habilitado en PROSPECTOS)       | [SELECCIONAR BUQUE]   |
 +------------------------+--------------------------+----------------------------------+-----------------------+
 ```
@@ -74,19 +74,19 @@ flowchart TD
     Start -->|Clic en PROSPECTOS| ModeProspectos["Pestaña PROSPECTOS Seleccionada\n(MARCOBRE, PRIMAX, CODELCO, etc.)"]
 
     subgraph ActivosFlow ["MODO CLIENTES ACTIVOS"]
-        ModeActivos --> Btn2_On["2. BUSCAR RUTA CLIENTE\n🟢 HABILITADO / ACTIVO"]
-        Btn2_On --> Btn2_Opt1["Opción 1: ➕ CREAR RUTA CLIENTE\n(Reset $0 & Búnker de bunker_prices)"]
+        ModeActivos --> Btn2_On["2. RUTA CLIENTE\n🟢 HABILITADO / ACTIVO"]
+        Btn2_On --> Btn2_Opt1["Opción 1 por Defecto: ➕ NUEVA RUTA\n(Reset $0 & Búnker de bunker_prices)"]
         Btn2_On --> Btn2_OptN["Opción N: Rutas BD (routes_clients)"]
-        ModeActivos --> Btn3_Off["3. CARGAR COTIZACION PROSPECTO\n🔴 DESHABILITADO (Opacidad 50%)"]
-        ModeActivos --> Reset3["🔄 Reset Botón 3 -> [SELECCIONAR COTIZACIÓN]"]
+        ModeActivos --> Btn3_Off["3. COTIZACION PROSPECTO\n🔴 DESHABILITADO (Opacidad 50%)"]
+        ModeActivos --> Reset3["🔄 Reset Botón 3 -> [En blanco / Opción 1]"]
     end
 
     subgraph ProspectosFlow ["MODO CLIENTES PROSPECTOS"]
-        ModeProspectos --> Btn3_On["3. CARGAR COTIZACION PROSPECTO\n🟢 HABILITADO / ACTIVO"]
-        Btn3_On --> Btn3_Opt1["Opción 1: ➕ CREAR COTIZACIÓN PROSPECTO\n(Reset $0 & Búnker de bunker_prices)"]
+        ModeProspectos --> Btn3_On["3. COTIZACION PROSPECTO\n🟢 HABILITADO / ACTIVO"]
+        Btn3_On --> Btn3_Opt1["Opción 1 por Defecto: ➕ NUEVA COTIZACION\n(Reset $0 & Búnker de bunker_prices)"]
         Btn3_On --> Btn3_OptN["Opción N: Cotizaciones BD (routes_quotes)"]
-        ModeProspectos --> Btn2_Off["2. BUSCAR RUTA CLIENTE\n🔴 DESHABILITADO (Opacidad 50%)"]
-        ModeProspectos --> Reset2["🔄 Reset Botón 2 -> [SELECCIONAR RUTA]"]
+        ModeProspectos --> Btn2_Off["2. RUTA CLIENTE\n🔴 DESHABILITADO (Opacidad 50%)"]
+        ModeProspectos --> Reset2["🔄 Reset Botón 2 -> [En blanco / Opción 1]"]
     end
 ```
 
@@ -97,18 +97,18 @@ flowchart TD
    * **Pestaña `PROSPECTOS`:** Filtra dinámicamente el listado de prospectos comerciales (`MARCOBRE`, `PRIMAX`, `CODELCO`, `R TRADING`, `CERRO VERDE`).
    * **Rendimiento Instantáneo (0ms):** El filtrado se ejecuta en memoria sobre el catálogo cacheados en el cliente React sin realizar peticiones de red asíncronas redundantes.
 
-2. **Botón 2 — `2. BUSCAR RUTA CLIENTE` (Clientes Activos)**:
+2. **Botón 2 — `2. RUTA CLIENTE` (Clientes Activos)**:
    * **Condición de Activación:** Se encuentra **habilitado** únicamente cuando el Botón 1 está en **`ACTIVOS`**.
-   * **Primera Opción del Desplegable:** **`➕ CREAR RUTA CLIENTE`**
-     * Al ser seleccionada, resetea la grilla live a estado en limpio ($0 fletes, cantidades en 0, 3 tramos base en blanco).
+   * **Primera Opción por Defecto del Desplegable:** **`➕ NUEVA RUTA`**
+     * Seleccionada automáticamente por defecto al cargar o ingresar a `ACTIVOS`. Resetea la grilla live a estado en limpio ($0 fletes, cantidades en 0, 3 tramos base en blanco).
      * La consulta de búnker se redirige automáticamente a la matriz general spot (**`bunker_prices`**).
    * **Opciones Siguientes:** Muestra el listado de las 66 rutas oficiales registradas en la tabla **`routes_clients`**.
    * **Estilización Flex:** Mantiene un ancho dinámico flexible (sin restricción rígida `max-w-[220px]`), mostrando el nombre completo de la ruta sin truncar.
 
-3. **Botón 3 — `3. CARGAR COTIZACION PROSPECTO` (Clientes Prospectos)**:
+3. **Botón 3 — `3. COTIZACION PROSPECTO` (Clientes Prospectos)**:
    * **Condición de Activación:** Se encuentra **habilitado** únicamente cuando el Botón 1 está en **`PROSPECTOS`**.
-   * **Primera Opción del Desplegable:** **`➕ CREAR COTIZACIÓN PROSPECTO`**
-     * Al ser seleccionada, resetea la grilla live a estado en limpio ($0 fletes, cantidades en 0, 3 tramos base en blanco).
+   * **Primera Opción por Defecto del Desplegable:** **`➕ NUEVA COTIZACION`**
+     * Seleccionada automáticamente por defecto al cargar o ingresar a `PROSPECTOS`. Resetea la grilla live a estado en limpio ($0 fletes, cantidades en 0, 3 tramos base en blanco).
      * La consulta de búnker se redirige automáticamente a la matriz general spot (**`bunker_prices`**).
    * **Opciones Siguientes:** Muestra las proformas y cotizaciones guardadas en la tabla **`routes_quotes`**.
    * **Estilización Flex:** Mantiene un ancho dinámico flexible (sin restricción rígida `max-w-[220px]`), adaptándose al título largo de la cotización.
