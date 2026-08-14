@@ -344,6 +344,16 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             return list;
         });
 
+        if (field === 'freight_rate' && idx > 0) {
+            setTramos(prev => {
+                const updated = [...prev];
+                if (updated[idx - 1]) {
+                    updated[idx - 1] = { ...updated[idx - 1], freight_rate: Number(val) || 0 };
+                }
+                return updated;
+            });
+        }
+
         if (field === 'action') {
             const portId = idx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[idx - 1]?.destination_port_id || '');
             if (portId) {
@@ -492,6 +502,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         if (!finalName.trim()) return;
         setIsSaving(true);
         try {
+            const calculatedTramos = getCalculatedTramos();
             await MulticotizadorStorageService.saveQuote({
                 routeName: finalName,
                 selectedClient,
@@ -499,7 +510,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 selectedVessel,
                 bunkerPriceIfo,
                 bunkerPriceMdo,
-                tramosEnriquecidos: tramos,
+                tramosEnriquecidos: calculatedTramos,
                 puertosConfig,
                 vesselParams,
                 addressCommPct,
