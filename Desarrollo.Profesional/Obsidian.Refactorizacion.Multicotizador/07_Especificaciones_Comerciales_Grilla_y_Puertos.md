@@ -274,8 +274,8 @@ A partir del reporte sobre la falla en la función de **Sobrescribir Ruta / Coti
 
 | # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 12) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
-| **12.1** | **`Endpoint Backend /spot/save`** | Ejecutaba `.insert(payload)` incondicional | **`Upsert / Overwrite Inteligente:`** Consulta `.select("*").eq("name", request.name)`. Si existe fila, ejecuta `.update(payload)`; si no existe, ejecuta `.insert(payload)`. | **El Crimen del Inserter Ciego:** El endpoint FastAPI `/spot/save` ejecutaba únicamente `.insert()`, generando duplicados o fallos por restricción de clave única al sobrescribir. | ⏳ EN REPARACIÓN |
-| **12.2** | **`Sincronización de Tabla Destino`** | No actualizaba el registro activo cargado | **Actualización In-Situ Prístina:** La ruta existente en `routes_clients` o `routes_quotes` actualiza sus campos `legs_data` sin duplicar filas. | **Preservación de Identidad:** La sobrescritura mantiene el ID de la ruta y actualiza 100% de la grilla en vivo. | ⏳ EN REPARACIÓN |
+| **12.1** | **`Endpoint Backend /spot/save`** | Ejecutaba `.insert(payload)` incondicional | **`Upsert / Overwrite Inteligente:`** Consulta `.select("*").eq("name", request.name)`. Si existe fila, ejecuta `.update(payload)`; si no existe, ejecuta `.insert(payload)`. | **El Crimen del Inserter Ciego:** El endpoint FastAPI `/spot/save` ejecutaba únicamente `.insert()`, generando duplicados o fallos por restricción de clave única al sobrescribir. | ✅ RESUELTO |
+| **12.2** | **`Sincronización de Tabla Destino`** | No actualizaba el registro activo cargado | **Actualización In-Situ Prístina:** La ruta existente en `routes_clients` o `routes_quotes` actualiza sus campos `legs_data` sin duplicar filas. | **Preservación de Identidad:** La sobrescritura mantiene el ID de la ruta y actualiza 100% de la grilla en vivo. | ✅ RESUELTO |
 
 ---
 

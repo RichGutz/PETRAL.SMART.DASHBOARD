@@ -583,11 +583,23 @@ def save_spot_voyage(request: SpotSaveRequest):
         }
         
         target_table = "routes_quotes" if request.is_prospect else "routes_clients"
-        res = sb.table(target_table).insert(payload).execute()
-        if not res.data:
-            raise Exception("Failed to save spot route")
-        spot_id = res.data[0].get("client_route_id") or res.data[0].get("prospect_route_id") or res.data[0].get("route_id") or res.data[0].get("spot_id")
-        return {"status": "success", "spot_id": spot_id}
+        
+        # BUSCAR SI YA EXISTE UNA RUTA O COTIZACIÓN CON EL MISMO NOMBRE
+        existing = sb.table(target_table).select("*").eq("name", request.name).execute()
+        if existing.data and len(existing.data) > 0:
+            # SOBREESCRIBIR / UPDATE LA RUTA EXISTENTE
+            res = sb.table(target_table).update(payload).eq("name", request.name).execute()
+            if not res.data:
+                raise Exception(f"Failed to overwrite spot route in {target_table}")
+            spot_id = res.data[0].get("client_route_id") or res.data[0].get("prospect_route_id") or res.data[0].get("route_id") or res.data[0].get("spot_id")
+            return {"status": "success", "action": "overwritten", "spot_id": spot_id}
+        else:
+            # GUARDAR NUEVO / INSERT
+            res = sb.table(target_table).insert(payload).execute()
+            if not res.data:
+                raise Exception(f"Failed to insert spot route in {target_table}")
+            spot_id = res.data[0].get("client_route_id") or res.data[0].get("prospect_route_id") or res.data[0].get("route_id") or res.data[0].get("spot_id")
+            return {"status": "success", "action": "created", "spot_id": spot_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
