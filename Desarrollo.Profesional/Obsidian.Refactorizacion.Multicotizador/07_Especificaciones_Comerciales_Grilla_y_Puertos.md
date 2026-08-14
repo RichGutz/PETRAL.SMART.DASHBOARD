@@ -2,7 +2,7 @@
 
 > **Ubicación de Control:** `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador`  
 > **Fecha de Documentación:** 14 de Agosto de 2026  
-> **Estado:** Especificación Comercial de la Grilla Live Tabular y Configuración de Puertos  
+> **Estado:** Especificación Comercial Completa de la Grilla Live Tabular y Puertos  
 > **Servidor VPS:** `https://forecast.geeksoft.tech`
 
 ---
@@ -23,95 +23,55 @@ La **Grilla Live Tabular** es el motor operativo donde se construye la secuencia
     └── Si Carga a Bordo = 0 ➔ Tipo de Tramo se fija automáticamente en 'BALLAST' (En Lastre).
 
  🔘 TONELAJE ESTÁNDAR OPERATIVO:
-    └── Tonelaje por defecto: 13,500 TM (Capacidad estándar de buques PETRAL: Moquegua / Tablones).
+    └── Tonelaje por defecto: 13,500 MT (Capacidad estándar de buques PETRAL: Moquegua / Tablones).
 ==================================================================================================
 ```
 
 ---
 
-## 📊 2. Especificación Detallada de Columnas y Fórmulas Matemáticas
+## 📊 2. Matriz Completa de Columnas (De Izquierda a Derecha)
 
-### 🔹 2.1. Columnas de Tramo de Navegación
+Below is the exhaustive, column-by-column operational matrix mapping exact database sources (`distances`, `contracts`, `port_cost_static`), input fields, and mathematical formulas:
 
-1. **`TRAMO` (Tipo de Navegación):**
-   * Valida en tiempo real si el buque transporta mineral.
-   * `LADEN`: Buque navegando con carga.
-   * `BALLAST`: Buque navegando en lastre.
-
-2. **`ORIGEN (POL)` y `DESTINO (POD)`:**
-   * Mapeados al catálogo oficial de la tabla `ports`.
-   * El puerto de origen del Tramo $N+1$ se sincroniza automáticamente con el puerto de destino del Tramo $N$.
-
-3. **`DISTANCIA (NM)`:**
-   * Se auto-obtiene del Maestro de Distancias (`routes_clients` / `ports`).
-   * Si no se encuentra coincidencia en el catálogo, se coloca `0` por defecto para edición manual.
-
-4. **`WEATHER FACTOR (%)`:**
-   * Factor de contingencia por condiciones meteorológicas en mar (por defecto: `3.0%`).
-
-5. **`VELOCIDAD (knots)`:**
-   * Se hereda de las especificaciones técnicas del Buque seleccionado en el Paso 4.
-
-6. **`DÍAS MAR`:**
-   * Cálculo matemático de navegación:
-     $$\text{Días Mar} = \frac{\text{Distancia (NM)} \times \left(1 + \frac{\text{Weather Factor \%}}{100}\right)}{\text{Velocidad (knots)} \times 24}$$
-
----
-
-### 🔹 2.2. Columnas de Operación de Puerto
-
-1. **`ACCIÓN` (`NONE`, `CARGAR`, `DESCARGAR`):**
-   * Define la actividad comercial en cada puerto.
-
-2. **`TIME TO COUNT` (Horas de Demora en Puerto):**
-   * Horas acordadas para inicio del cómputo de laancha/atracadero.
-   * Para Clientes ACTIVOS, se jala del Maestro de Contratos (`contracts`), ej. 12.0h para NEXA, 6.0h para SPCC.
-
-3. **`POSICIONAMIENTO` (Horas de Maniobra):**
-   * Tiempo de atracadero y desamarre (pactado en `contracts` para clientes activos).
-
-4. **`RITMO DE OPERACIÓN` (TH - Toneladas/Hora):**
-   * Velocidad de carga o descarga estipulada en contrato.
-
-5. **`DÍAS PUERTO`:**
-   * Cálculo de permanencia en puerto:
-     $$\text{Días Puerto} = \frac{\frac{\text{Cantidad TM}}{\text{Ritmo TH}} + \text{Time to Count (hrs)} + \text{Posicionamiento (hrs)}}{24}$$
+| # | Columna | Función / Descripción Comercial | Origen de Datos / Tipo BD | Fórmula de Cálculo o Regla Comercial Exacta |
+| :-: | :--- | :--- | :--- | :--- |
+| **1** | **`LEG`** | Identificador secuencial del tramo. Incluye botones `[+]` y `[-]` para agregar/quitar tramos. | Control UI (Auto-generado) | Secuencia $1, 2, 3...$ (Mínimo obligatorio de 3 tramos para viajes redondos). |
+| **2** | **`Tipo`** | Clasifica el tramo en **`LADEN`** (Navegando cargado) o **`BALLAST`** (Navegando en lastre/vacío). | Auto-calculado en memoria | Si $\text{Carga a Bordo} > 0 \Rightarrow \text{'LADEN'}$. Si $\text{Carga a Bordo} = 0 \Rightarrow \text{'BALLAST'}$. determina los Weather Factors de la tabla `distances`. |
+| **3** | **`Puerto`** | Puerto de Origen (POL) en Fila 0 y Puertos de Destino (POD) en filas siguientes. | Selección Catálogo (`ports`) | Fila 0 = POL inicial. El Origen del Tramo $N+1$ se sincroniza automáticamente con el Destino del Tramo $N$. |
+| **4** | **`Dist (NM)`** | Distancia marítima del tramo expresada en Millas Náuticas (NM). | Consulta BD: Tabla **`distances`** | Busca por el par ordenado (Puerto Origen `POL` ➔ Puerto Destino `POD`) en la tabla `distances`. |
+| **5** | **`W.F (%)`** | Weather Factor / Margen de contingencia por clima adverso en mar. | Consulta BD: Tabla **`distances`** | **NO ES FIJO 3.0%**. Se lee de `distances`: columna `weather_factor_laden` para `LADEN` y `weather_factor_ballast` para `BALLAST`. |
+| **6** | **`Vel (kn)`** | Velocidad de navegación del buque en nudos (knots). | Auto-completado de Buque | Heredado automáticamente del buque seleccionado en el Paso 4 (ej. `TABLONES = 11.0 kn`). |
+| **7** | **`Días Mar`** | Días totales de navegación efectiva en mar. | Cálculo Matemático | $$\text{Días Mar} = \frac{\text{Distancia (NM)} \times \left(1 + \frac{\text{W.F \%}}{100}\right)}{\text{Velocidad (kn)} \times 24}$$ |
+| **8** | **`Días Pto`** | Días de permanencia operativa en el puerto de destino. | Cálculo Matemático | $$\text{Días Pto} = \frac{\frac{\text{Cantidad (MT)}}{\text{Ritmo (TH)}} + \text{Time to Count (h)} + \text{Posic (h)}}{24}$$ |
+| **9** | **`Time to Count (H)`**| Demora/espera en puerto estipulada en contrato antes del inicio de plancha. | Consulta BD: Tabla **`contracts`** | Leído de `contracts`: `time_to_count_carga_hrs` si `Op. Dest` es `CARGAR`, `time_to_count_descarga_hrs` si es `DESCARGAR`, y `0.0h` si es `NONE`. |
+| **10** | **`Posic (h)`** | Horas de maniobra, atracadero y desamarre en el puerto. | Consulta BD: Tabla **`contracts`** | Leído de `contracts`: `maneuver_carga_hrs` si `Op. Dest` es `CARGAR`, `maneuver_descarga_hrs` si es `DESCARGAR`, y `0.0h` si es `NONE`. |
+| **11** | **`Op. Dest`** | **COLUMNA CLAVE DE CONTROL:** Acción en puerto: **`NONE`**, **`CARGAR`**, **`DESCARGAR`**. | Selector Manual / Lógica Live | Fila 0 = `CARGAR` por defecto. Determina la asignación de `Time to Count` y `Posicionamiento` (si es `NONE`, ambos se fijan en `0.0h`). |
+| **12** | **`Ritmo (C/D)`** | Velocidad de operación en puerto (Toneladas/Hora - TH). | Consulta BD / Defecto 500 TH | Leído de `contracts` (`load_rate` / `discharge_rate`). **Si no existe en contrato, se fija por defecto en 500 TH** tanto para Carga como Descarga. |
+| **13** | **`Q (MT)`** | Cantidad de mineral a cargar o descargar en Toneladas Métricas (MT). | Input Numérico (Editable) | Tonelaje estándar nominal por defecto: **`13,500 MT`** (capacidad estándar PETRAL). |
+| **14** | **`F ($/t)`** | Tarifa de flete unitaria fijada en Dólares por Tonelada ($/MT). | Consulta BD: Tabla **`contracts`** | Clientes ACTIVOS: leída de la matriz de tarifas por rango de toneladas en `contracts`. Prospectos: digitada libremente. |
+| **15** | **`Costo Pto`** | Gastos portuarios totales del puerto en USD. | Consulta BD: **`port_cost_static`** | Consulta estructurada en `port_cost_static` mediante la tupla de 3 llaves: `(port_id, operation_type, vessel_id)`. |
+| **16** | **`Flete ($)`** | Ingreso total bruto generado por la carga del tramo (USD). | Cálculo Matemático | $$\text{Flete Total (\$)} = \text{Cantidad (MT)} \times \text{Flete (\$/t)}$$ |
+| **17** | **`Bunker ($)`** | Costo total de combustible consumido en el tramo (IFO + MDO) en USD. | Cálculo Matemático | $$\text{Bunker (\$)} = (\text{Horas Mar} \times \text{Consumo Sea} + \text{Horas Pto} \times \text{Consumo Op}) \times \text{Precio Búnker (\$/T)}$$ |
+| **18** | **`MUELLAJE`** | Monto en USD por derecho de muellaje (*wharfage*). | Consulta BD: **`port_cost_static`** | Búsqueda estructurada en `port_cost_static` por puerto y buque (ej. **`$33,333.00`** para descarga en Mejillones). |
+| **19** | **`RF`** | Casilla de Refacturación de Muellaje (*pass-through*) al cliente. | Selector Checkbox (`[x]`) | Si está marcado `[x]`, el muellaje se refactura al cliente y no afecta el margen directo PETRAL. |
 
 ---
 
-### 🔹 2.3. Columnas Económicas y de Consumo
-
-1. **`FLETE ($/MT)`:**
-   * Para Clientes ACTIVOS, se obtiene del contrato vigentes en `contracts` para el destino correspondiente.
-   * Flete Total ($) = $\text{Cantidad TM} \times \text{Flete (\$/MT)}$.
-
-2. **`COSTO PUERTO ($)`:**
-   * Tarifa de derechos portuarios obtenida de la matriz estática `port_cost_static`.
-
-3. **`CONSUMO DE BÚNKER (USD)`:**
-   * Combina las horas de mar y puerto con los 4 ratios de consumo del buque (Sea, Idle, Load, Disch):
-     $$\text{Costo IFO} = \left(\text{Días Mar} \times \text{Ratio Sea IFO} + \text{Días Puerto} \times \text{Ratio Op IFO}\right) \times \text{Precio IFO (\$/T)}$$
-     $$\text{Costo MDO} = \left(\text{Días Mar} \times \text{Ratio Sea MDO} + \text{Días Puerto} \times \text{Ratio Op MDO}\right) \times \text{Precio MDO (\$/T)}$$
-
-4. **`MUELLAJE (Wharfage)`:**
-   * Costo *pass-through* refacturado a costo cuando se acuerda convencionalmente con el cliente (ej. descarga en Mejillones).
-
----
-
-## 🔄 3. Diagrama de Flujo de Datos en Grilla Live
+## 🔄 3. Diagrama de Flujo de Datos e Integración de Tablas BD
 
 ```mermaid
 flowchart TD
+    DistBD["📍 Tabla distances\n(distancia, weather_factor_laden, weather_factor_ballast)"] --> GridCalc
+    ContractsBD["📑 Tabla contracts\n(time_to_count_carga/descarga, maneuver_carga/descarga, rates)"] --> GridCalc
+    PortStaticBD["🏛️ Tabla port_cost_static\n(port_id, operation_type, vessel_id -> cost & wharfage)"] --> GridCalc
     SelectVessel["🚢 Buque Seleccionado (Paso 4)\n(Velocidad & Ratios IFO/MDO)"] --> GridCalc
-    SelectClient["🏢 Cliente (Activo vs Prospecto)"] --> GridCalc
-    TramosInput["🛣️ Tramos (POL ➔ POD, Distancia)"] --> GridCalc
 
     subgraph GridCalc ["🧮 MOTOR DE CÁLCULO DE GRILLA LIVE"]
-        GridCalc --> SeaDays["🌊 Días Mar = (Dist * 1.03) / (Vel * 24)"]
-        GridCalc --> PortDays["⚓ Días Puerto = (TM / Ritmo + Delays) / 24"]
-        GridCalc --> BunkerCost["🛢️ Consumo Búnker = (Días * Ratios) * Precio Fuel"]
-        GridCalc --> PortCosts["🏛️ Gastos Portuarios (port_cost_static)"]
-        GridCalc --> FreightRev["💰 Ingreso Flete = TM * Rate ($/MT)"]
+        GridCalc --> OpAction["11. Op. Dest (CARGAR/DESCARGAR/NONE)\nAsigna T.C y Maneuver exactos de contracts"]
+        GridCalc --> SeaDays["7. Días Mar = (Dist * (1 + WF/100)) / (Vel * 24)"]
+        GridCalc --> PortDays["8. Días Puerto = (TM / Ritmo[500 TH] + TC + Posic) / 24"]
+        GridCalc --> BunkerCost["17. Consumo Búnker = (Horas * Ratios) * Precio Fuel"]
+        GridCalc --> PortCosts["15/18. Gastos Portuarios & Muellaje (port_cost_static)"]
     end
 
     GridCalc --> FinalCards["📊 RESULTADOS FINANCIEROS (Cards Inferiores)"]
