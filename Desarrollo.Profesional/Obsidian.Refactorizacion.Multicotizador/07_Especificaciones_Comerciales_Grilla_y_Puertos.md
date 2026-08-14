@@ -212,6 +212,19 @@ A partir de la inspección pericial directa sobre el "Smoking Gun" donde el ases
 | **6.4** | **`Card 4: Voyage Result P&L`** | Revenue: `$405,000`, Gastos: `~$170,000`, pero **`VOYAGE RESULT / P&L: $0`** | **`+$242,936 USD`** ($405,000 + $10k Muellaje - Hire - Búnker - Puertos) | **P&L Apagado:** `VOYAGE RESULT / P&L` leía `result.consolidated.net_profit` en 0. Ahora resta en tiempo real con búnker y puertos sincronizados live. | ✅ RESUELTO |
 | **6.5** | **`Card 4: Refacturación Muellaje`** | Muellaje activado con check `RF` no se sumaba a los ingresos | **`(+) Refacturación Muellaje (+$10,000 USD)`** | **Omitir Refacturación:** Con check `RF` activo en Callao ($5k) y Matarani ($5k), la tarjeta no re-capturaba la refacturación de muellaje como ingreso comercial al cliente. | ✅ RESUELTO |
 
+### ───────────────
+
+### 🕵️‍♂️ 5.7. Séptima Vuelta (Serie 7: Exterminio de Fallbacks Backend & Calce Pericial de los 2 Muellajes)
+
+A partir de la inspección pericial de eliminación total de fallbacks y corrección del desglose de los 2 muellajes en las Cards:
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 7) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **7.1** | **`Card 2: Port Costs Desglose`** | Omitía el Muellaje de Callao (`$5,000`) mostrando solo Matarani (`$5,000`) | **Listados los 2 Muellajes:** `Muellaje (CALLAO): $5,000` y `Muellaje (MATARANI): $5,000` | **Crimen del Índice Desfasado:** `portItems` no incluía `pIndex` ni `muellaje_cost` directo, leyendo `puertosConfig[0]` (ILO = `$0`). | ✅ RESUELTO |
+| **7.2** | **`Card 4: Deducción en P&L`** | Refacturaba 2 muellajes (`+$10,000`), pero deducía solo 1 muellaje (`-$5,000`) | **Deducción de Ambos Muellajes:** Resta `-$5,000` Callao y `-$5,000` Matarani | **Crimen del Desbalance:** Al no desglosear el muellaje de Callao en el loop de puertos, inflando falsamente la ganancia nula. | ✅ RESUELTO |
+| **7.3** | **`Card 4: Jerarquía de REVENUE`** | Fila `Revenue` lucía secundaria ante la `Refacturación de Muellaje` | **`REVENUE` en Mayúsculas, Extra-Bold y Destacado** | **Crimen Visual:** Resaltado tipográfico prioritario para el ingreso principal por flete de mercancía. | ✅ RESUELTO |
+| **7.4** | **`Conexiones de Fallback Backend`** | Referencias al objeto `result?.consolidated` provocaban arrastre de datos obsoletos | **Exterminio 100% de Fallbacks Backend:** Todas las Cards leen únicamente la grilla en vivo | **Purificación de Arquitectura:** Las Cards leen 100% de `puertosConfig` y `tramos` sin intermediación ni dependencias legacy. | ✅ RESUELTO |
+
 ---
 
 ## 📄 Archivos Relacionados
