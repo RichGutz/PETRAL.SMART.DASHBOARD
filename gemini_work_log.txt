@@ -85,6 +85,14 @@ CONCURRENCY & QC SUMMARY:
 - Congelamiento de versión antes de mejoras en la UI del Multicotizador.
 - Respaldo de imágenes PNG en rutas locales y actualización de logs de sesión.
 ================================================================================
-
-
-
+GEMINI WORK LOG: 2026-08-14 (08:18 AM)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Commit Tag: BUNKER.LEVEL2.FILTERED.14.08.26
+- Level 2 Engine: Resolutor reactivo de Precios de Búnker (`bunkerProviderService.ts` & `MultiCotizadorExcel.tsx`).
+- Mapeo de BD: Mapeo de `bunker_baseline_price_ifo` y `bunker_baseline_price_mdo` en tabla `contracts`.
+- Filtrado Estricto: Desplegables 2 (Rutas) y 3 (Cotizaciones) filtrados por cliente seleccionado en Paso 1.
+- Lógica de Sobreescritura: Sobreescritura incondicional al cambiar de fuente en el selector de búnker (`MAESTRO_CONTRATOS` ➔ `MAESTRO_BUNKER` ➔ `SOBREESCRITURA` a $0/$0).
+- Documentación AS-BUILT: Actualizado `06_Especificaciones_Comerciales_UI_Header_y_Bunker.md` y creado `07_Especificaciones_Comerciales_Grilla_y_Puertos.md`.
+- Despliegue VPS: Publicación exitosa en https://forecast.geeksoft.tech (0 errores TS).
+================================================================================
