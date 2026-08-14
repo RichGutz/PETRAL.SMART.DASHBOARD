@@ -99,18 +99,19 @@ flowchart TD
 
 2. **Botón 2 — `2. RUTA CLIENTE` (Clientes Activos)**:
    * **Condición de Activación:** Se encuentra **habilitado** únicamente cuando el Botón 1 está en **`ACTIVOS`**.
+   * **Filtrado Estricto por Cliente:** El desplegable muestra **únicamente las rutas pertenecientes al cliente seleccionado en Botón 1** (`selectedClient`, ej. `SPCC` o `NEXA`), identificadas por el prefijo o `client_id` de la tabla `clients`.
    * **Primera Opción por Defecto del Desplegable:** **`➕ NUEVA RUTA`**
      * Seleccionada automáticamente por defecto al cargar o ingresar a `ACTIVOS`. Resetea la grilla live a estado en limpio ($0 fletes, cantidades en 0, 3 tramos base en blanco).
      * La consulta de búnker se redirige automáticamente a la matriz general spot (**`bunker_prices`**).
-   * **Opciones Siguientes:** Muestra el listado de las 66 rutas oficiales registradas en la tabla **`routes_clients`**.
+   * **Selección de Ruta y Búnker por Defecto:** Al seleccionar una ruta existente, el selector de búnker se establece **por defecto en `📑 Maestro de Contratos`** y consulta la tarifa contractual.
    * **Estilización Flex:** Mantiene un ancho dinámico flexible (sin restricción rígida `max-w-[220px]`), mostrando el nombre completo de la ruta sin truncar.
 
 3. **Botón 3 — `3. COTIZACION PROSPECTO` (Clientes Prospectos)**:
    * **Condición de Activación:** Se encuentra **habilitado** únicamente cuando el Botón 1 está en **`PROSPECTOS`**.
+   * **Filtrado Estricto por Prospecto:** El desplegable muestra **únicamente las cotizaciones pertenecientes al prospecto seleccionado en Botón 1** (`selectedClient`, ej. `MARCOBRE`, `PRIMAX`, etc.), identificadas por el prefijo o `client_id` de la tabla `clients`.
    * **Primera Opción por Defecto del Desplegable:** **`➕ NUEVA COTIZACION`**
      * Seleccionada automáticamente por defecto al cargar o ingresar a `PROSPECTOS`. Resetea la grilla live a estado en limpio ($0 fletes, cantidades en 0, 3 tramos base en blanco).
      * La consulta de búnker se redirige automáticamente a la matriz general spot (**`bunker_prices`**).
-   * **Opciones Siguientes:** Muestra las proformas y cotizaciones guardadas en la tabla **`routes_quotes`**.
    * **Estilización Flex:** Mantiene un ancho dinámico flexible (sin restricción rígida `max-w-[220px]`), adaptándose al título largo de la cotización.
 
 ---
@@ -148,12 +149,14 @@ flowchart TD
 
 2. **📌 `COTIZACION`**:
    * Extrae los precios `bunker_price_ifo` y `bunker_price_mdo` pre-guardados dentro del JSON de la proforma seleccionada en el Botón 3 (`routes_quotes`).
+   * **Invalidez en Rutas de Cliente:** Cuando se está trabajando con una Ruta de cliente activo (Botón 2), esta opción no aplica y se mantiene el `Maestro de Contratos`.
 
 3. **🛢️ `MAESTRO_BUNKER`**:
    * Consulta directamente los precios spot vigentes de mercado en la tabla `bunker_prices` (tarifas más recientes por fecha).
+   * **Permitido desde Rutas:** Si el usuario selecciona una ruta de cliente y cambia la fuente a `Maestro Búnker General`, el sistema sobreescribe las tarifas con los valores spot actuales.
 
 4. **✍️ `SOBREESCRITURA`**:
-   * Resetea las casillas a `$0` (`ifo: 0, mdo: 0`) y habilita la edición manual libre por el usuario.
+   * Resetea **ambas casillas inmediatamente a `$0` (`ifo: 0, mdo: 0`)** y habilita la edición manual libre por el usuario.
 
 ---
 

@@ -554,6 +554,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         const r = routes.find(x => x.route_id === routeId || x.id === routeId);
         if (!r) return;
 
+        setBunkerSource('MAESTRO_CONTRATOS');
+
         const legsData = r.legs_data || {};
         const tramosList = legsData.tramos || [];
 
@@ -593,6 +595,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
     const handleLoadRoute = (quote: any) => {
         if (!quote) return;
+        setBunkerSource('COTIZACION');
         const unpacked = MulticotizadorRetrieverService.unpackQuoteData(quote);
 
         if (unpacked.tramos && unpacked.tramos.length > 0) {
@@ -618,6 +621,20 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     };
 
     const calculatedTramosList = getCalculatedTramos();
+
+    const filteredRoutes = routes.filter(r => {
+        if (!selectedClient) return true;
+        const sClient = selectedClient.trim().toUpperCase();
+        const rClient = (r.client_id || r.client_name || r.name || '').trim().toUpperCase();
+        return rClient === sClient || rClient.includes(sClient) || sClient.includes(rClient);
+    });
+
+    const filteredQuotes = savedRoutes.filter(q => {
+        if (!selectedClient) return true;
+        const sClient = selectedClient.trim().toUpperCase();
+        const qClient = (q.client_id || q.name || '').trim().toUpperCase();
+        return qClient === sClient || qClient.includes(sClient) || sClient.includes(qClient);
+    });
 
     return (
         <div className="w-full min-h-screen bg-white p-2 text-slate-800 font-sans flex flex-col select-text">
@@ -678,7 +695,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                             className={`h-6 text-[11px] font-extrabold border rounded px-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 ${clientType === 'PROSPECTOS' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-800 border-slate-300 cursor-pointer'}`}
                         >
                             <option value="CREAR_RUTA">➕ NUEVA RUTA</option>
-                            {routes.map(r => {
+                            {filteredRoutes.map(r => {
                                 const routeLabel = r.name || (r.origin_port_id && r.destination_port_id ? `${r.origin_port_id} ➔ ${r.destination_port_id}` : (r.legs_data?.tramos && r.legs_data.tramos.length > 0 ? r.legs_data.tramos.map((t: any) => t.origin_port_id).concat(r.legs_data.tramos[r.legs_data.tramos.length - 1]?.destination_port_id).join(' ➔ ') : r.route_id));
                                 return (
                                     <option key={r.route_id || r.id || r.spot_id} value={r.route_id || r.id || r.spot_id}>
@@ -712,7 +729,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                             className={`h-6 text-[11px] font-extrabold border rounded px-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 ${clientType === 'ACTIVOS' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-800 border-slate-300 cursor-pointer'}`}
                         >
                             <option value="CREAR_COTIZACION">➕ NUEVA COTIZACION</option>
-                            {savedRoutes.map(q => (
+                            {filteredQuotes.map(q => (
                                 <option key={q.route_id || q.spot_id || q.id} value={q.route_id || q.spot_id || q.id}>
                                     {q.name || q.route_id || 'COTIZACIÓN'}
                                 </option>
