@@ -6,7 +6,7 @@ def generate_multicotizador_flowchart():
     base_name = "FLUJOGRAMA_Arquitectura_Multicotizador_V1"
     output_dir = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador"
     
-    print(f"Generando Flujograma Integral con Servicio de Grabado: {base_name}...")
+    print(f"Generando Flujograma Integral con Servicio de Carga/Retriever: {base_name}...")
     
     # Path setup para Graphviz en Windows
     potential_paths = [
@@ -48,18 +48,19 @@ def generate_multicotizador_flowchart():
     #  NIVEL 2: SERVICIOS PROVIDERS & PERSISTENCIA (FRONTEND REACT)
     # ==========================================
     subgraph cluster_lvl2 {
-        label = "NIVEL 2: PROVEEDORES DE DATOS & PERSISTENCIA (Frontend Services)"; 
+        label = "NIVEL 2: PROVEEDORES DE DATOS, GRABADO Y RETRIEVER (Frontend Services)"; 
         style="filled,dashed"; color="#78909C"; fillcolor="#FAFAFA";
         
-        { rank=same; S_Vessel; S_Bunker; S_Route; S_Port; S_Storage; }
+        { rank=same; S_Vessel; S_Bunker; S_Route; S_Port; S_Storage; S_Retriever; }
 
         S_Vessel [label="⚙️ vesselProviderService\\nResuelve specs y consumos del buque", shape=component, fillcolor="#C5CAE9"];
         S_Bunker [label="⚙️ bunkerProviderService\\nResuelve precios de combustible según fuente", shape=component, fillcolor="#FFE0B2"];
         S_Route [label="⚙️ routeDistancesService\\nResuelve distancias NM y clima por tramo", shape=component, fillcolor="#B2DFDB"];
         S_Port [label="⚙️ portCostsRatesService\\nResuelve ritmos, overheads y muellaje desglosado", shape=component, fillcolor="#B3E5FC", penwidth=2];
-        S_Storage [label="💾 multicotizadorStorageService\\nGraba, recupera, lista y versiona\\ncotizaciones simuladas (Save/Load)", shape=component, fillcolor="#A5D6A7", penwidth=2];
+        S_Storage [label="💾 multicotizadorStorageService\\nEmpaqueta y graba cotizaciones\\nsimuladas en Supabase DB (/spot/save)", shape=component, fillcolor="#A5D6A7", penwidth=2];
+        S_Retriever [label="🔍 multicotizadorRetrieverService\\nBusca, filtra y desempaqueta rutas/cotizaciones\\nguardadas para inyectar en el Multicotizador", shape=component, fillcolor="#81C784", penwidth=2];
 
-        S_Vessel -> S_Bunker -> S_Route -> S_Port -> S_Storage [style=invis];
+        S_Vessel -> S_Bunker -> S_Route -> S_Port -> S_Storage -> S_Retriever [style=invis];
     }
 
     # ==========================================
@@ -72,7 +73,7 @@ def generate_multicotizador_flowchart():
         UI_FactSheet [label="📋 Fact Sheet del Buque\\n(Parámetros técnicos editables)", shape=folder, fillcolor="#E1BEE7"];
         UI_Grid [label="📑 Grilla Principal Spreadsheet Live\\n(Tramos, Op Dest: Cargar / Descargar / None)", shape=box, fillcolor="white"];
         UI_MuellajeCell [label="⚖️ Celda Dual de Muellaje\\nSub-celda 1: Monto $ USD | Sub-celda 2: Checkbox [x]\\n(Visibilidad estricta si Monto > $0)", shape=box, fillcolor="#BBDEFB", penwidth=2];
-        UI_SaveModal [label="💾 Modal Guardar / Cargar\\n(Botones Save / Load Cotización)", shape=box, fillcolor="#D1C4E9"];
+        UI_SaveModal [label="💾 Modales Save / Load Quote\\n(Guardar y Cargar Cotización en UI)", shape=box, fillcolor="#D1C4E9"];
 
         UI_FactSheet -> UI_Grid -> UI_MuellajeCell;
         UI_Grid -> UI_SaveModal;
@@ -124,21 +125,21 @@ def generate_multicotizador_flowchart():
     #  CONEXIONES VERTICALES DE CASCADA (FLUJO PRINCIPAL)
     # ==========================================
     
-    # 1. DB -> Providers
+    # 1. DB -> Providers & Retriever
     DB_Vessels -> S_Vessel [label=" Specs & Consumos"];
     DB_Ports -> S_Route [label=" Distancias NM"];
     DB_PortCosts -> S_Port [label=" Agencia & Muellaje"];
     DB_Bunker -> S_Bunker [label=" Precios Fuel"];
-    DB_SavedQuotes -> S_Storage [label=" Leer Cotizaciones"];
+    DB_SavedQuotes -> S_Retriever [label=" Query / Search Quotes"];
 
     # 2. Providers -> UI
     S_Vessel -> UI_FactSheet;
     S_Bunker -> UI_Grid;
     S_Route -> UI_Grid;
     S_Port -> UI_MuellajeCell [label=" Autofill Muellaje $33,333"];
-    S_Storage -> UI_SaveModal [label=" Cargar / Versionar"];
+    S_Retriever -> UI_SaveModal [label=" Cargar / Inyectar Estado", color="#2E7D32", penwidth=2];
 
-    # 3. UI -> Engine API & Save API
+    # 3. UI -> Storage Service & Engine API
     UI_MuellajeCell -> API_Endpoint [label=" Payload JSON Tramos", color="#7B1FA2", penwidth=2];
     UI_SaveModal -> S_Storage [label=" Guardar Cotización"];
     S_Storage -> API_SaveEndpoint [label=" /spot/save (Supabase DB)", color="#2E7D32", penwidth=2];

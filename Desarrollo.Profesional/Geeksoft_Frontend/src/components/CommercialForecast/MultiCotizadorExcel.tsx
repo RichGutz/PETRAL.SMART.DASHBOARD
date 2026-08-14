@@ -31,6 +31,14 @@ interface PuertoConfig {
 
 const CHILEAN_PORTS = ['MEJILLONES', 'BARQUITO', 'PATILLOS', 'ARICA', 'SAN ANTONIO', 'VALPARAISO', 'QUINTERO'];
 
+const PORT_THEMES = [
+    { bg: 'bg-emerald-50/60', text: 'text-emerald-950', border: 'border-l-2 border-l-emerald-500' },
+    { bg: 'bg-blue-50/60', text: 'text-blue-950', border: 'border-l-2 border-l-blue-500' },
+    { bg: 'bg-indigo-50/60', text: 'text-indigo-950', border: 'border-l-2 border-l-indigo-500' },
+    { bg: 'bg-amber-50/60', text: 'text-amber-950', border: 'border-l-2 border-l-amber-500' },
+    { bg: 'bg-violet-50/60', text: 'text-violet-950', border: 'border-l-2 border-l-violet-500' },
+];
+
 export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' }> = ({ portCostMode = 'static' }) => {
     const [localPortCostMode, setLocalPortCostMode] = useState<'static' | 'matrix'>(portCostMode || 'static');
     const [activeMainTab, setActiveMainTab] = useState<'estimator' | 'audit' | 'raw_json'>('estimator');
@@ -174,7 +182,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     // Estado para Muellaje, Comentarios y Demurrage
     const [refacturarMuellajeMap, setRefacturarMuellajeMap] = useState<Record<number, boolean>>({ 1: true });
     const [commentsText, setCommentsText] = useState<string>('');
-    const [demurrageRate, setDemurrageRate] = useState<number>(0);
+    const [demurrageRate, setDemurrageRate] = useState<number>(20000);
     const [demurrageDays] = useState<number>(0);
 
 
@@ -1001,7 +1009,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 role = 'POD';
                 roleTag = 'POD';
             } else {
-                if (cost <= 0) return;
+                if (cost < 1) return;
                 roleTag = 'PUERTO';
             }
 
@@ -3368,30 +3376,33 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                             : (trForPort?.muellaje_cost_dest || trForPort?.agency_costs_destination_details?.breakdown?.muellaje || puertosConfig[idx]?.muellaje_cost || 0);
                                                         const baseAgencyCost = Math.max(0, item.cost - lmCost - mValPort);
 
-                                                        if (baseAgencyCost === 0 && lmCost === 0 && mValPort === 0) return null;
+                                                        // STRICT ZERO FILTER: Ocultar puerto completamente si todos sus rubros son < $1
+                                                        if (baseAgencyCost < 1 && lmCost < 1 && mValPort < 1) return null;
+
+                                                        const theme = PORT_THEMES[idx % PORT_THEMES.length];
 
                                                         return (
                                                             <React.Fragment key={idx}>
-                                                                {baseAgencyCost > 0 && (
-                                                                    <tr className="border-b border-slate-100">
-                                                                        <td className="py-1 pl-1.5 text-slate-650 font-bold">Port Costs {item.label}</td>
-                                                                        <td className="text-right py-1 pr-1.5 font-bold">
+                                                                {baseAgencyCost >= 1 && (
+                                                                    <tr className={`border-b border-slate-200/80 ${theme.bg} ${theme.border}`}>
+                                                                        <td className={`py-1 pl-2 font-bold ${theme.text}`}>Port Costs {item.label}</td>
+                                                                        <td className={`text-right py-1 pr-1.5 font-bold ${theme.text}`}>
                                                                             {fmtCur(baseAgencyCost)}
                                                                         </td>
                                                                     </tr>
                                                                 )}
-                                                                {lmCost > 0 && (
-                                                                    <tr className="border-b border-slate-100 bg-amber-50/60">
-                                                                        <td className="py-1 pl-1.5 text-amber-900 font-bold">Loading Master ({item.port_id})</td>
-                                                                        <td className="text-right py-1 pr-1.5 font-bold text-amber-900">
+                                                                {lmCost >= 1 && (
+                                                                    <tr className={`border-b border-slate-200/80 ${theme.bg} ${theme.border}`}>
+                                                                        <td className={`py-1 pl-2 font-bold ${theme.text}`}>Loading Master ({item.port_id})</td>
+                                                                        <td className={`text-right py-1 pr-1.5 font-bold ${theme.text}`}>
                                                                             {fmtCur(lmCost)}
                                                                         </td>
                                                                     </tr>
                                                                 )}
-                                                                {mValPort > 0 && (
-                                                                    <tr className="border-b border-slate-100 bg-blue-50/60">
-                                                                        <td className="py-1 pl-1.5 text-blue-900 font-bold">Muellaje ({item.port_id})</td>
-                                                                        <td className="text-right py-1 pr-1.5 font-bold text-blue-900">
+                                                                {mValPort >= 1 && (
+                                                                    <tr className={`border-b border-slate-200/80 ${theme.bg} ${theme.border}`}>
+                                                                        <td className={`py-1 pl-2 font-bold ${theme.text}`}>Muellaje ({item.port_id})</td>
+                                                                        <td className={`text-right py-1 pr-1.5 font-bold ${theme.text}`}>
                                                                             {fmtCur(mValPort)}
                                                                         </td>
                                                                     </tr>
@@ -3626,36 +3637,39 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                                     : (trForPort?.muellaje_cost_dest || trForPort?.agency_costs_destination_details?.breakdown?.muellaje || puertosConfig[idx]?.muellaje_cost || 0);
                                                 const baseAgencyCost = Math.max(0, item.cost - lmCost - mValPort);
 
-                                                if (baseAgencyCost === 0 && lmCost === 0 && mValPort === 0) return null;
+                                                // STRICT ZERO FILTER: Ocultar puerto completamente si todos sus rubros son < $1
+                                                if (baseAgencyCost < 1 && lmCost < 1 && mValPort < 1) return null;
+
+                                                const theme = PORT_THEMES[idx % PORT_THEMES.length];
 
                                                 return (
                                                     <React.Fragment key={idx}>
-                                                        {baseAgencyCost > 0 && (
-                                                            <tr className="border-b border-emerald-100/60">
-                                                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                                        {baseAgencyCost >= 1 && (
+                                                            <tr className={`border-b border-emerald-100/60 ${theme.bg}`}>
+                                                                <td className={`py-0.5 pl-1.5 font-sans text-[10.5px] font-normal ${theme.text}`}>
                                                                     (-) Port Costs {item.label}
                                                                 </td>
-                                                                <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
+                                                                <td className={`text-right py-0.5 pr-1 font-mono text-[10.5px] font-normal ${theme.text}`}>
                                                                     -{fmtCur(baseAgencyCost)}
                                                                 </td>
                                                             </tr>
                                                         )}
-                                                        {lmCost > 0 && (
-                                                            <tr className="border-b border-emerald-100/60 bg-amber-50/50">
-                                                                <td className="py-0.5 pl-1 text-amber-900 font-sans text-[10.5px] font-bold">
+                                                        {lmCost >= 1 && (
+                                                            <tr className={`border-b border-emerald-100/60 ${theme.bg}`}>
+                                                                <td className={`py-0.5 pl-1.5 font-sans text-[10.5px] font-normal ${theme.text}`}>
                                                                     (-) Loading Master ({item.port_id})
                                                                 </td>
-                                                                <td className="text-right py-0.5 pr-1 font-bold text-amber-900 text-[10.5px]">
+                                                                <td className={`text-right py-0.5 pr-1 font-mono text-[10.5px] font-normal ${theme.text}`}>
                                                                     -{fmtCur(lmCost)}
                                                                 </td>
                                                             </tr>
                                                         )}
-                                                        {mValPort > 0 && (
-                                                            <tr className="border-b border-emerald-100/60 bg-blue-50/50">
-                                                                <td className="py-0.5 pl-1 text-blue-900 font-sans text-[10.5px] font-bold">
+                                                        {mValPort >= 1 && (
+                                                            <tr className={`border-b border-emerald-100/60 ${theme.bg}`}>
+                                                                <td className={`py-0.5 pl-1.5 font-sans text-[10.5px] font-normal ${theme.text}`}>
                                                                     (-) Muellaje ({item.port_id})
                                                                 </td>
-                                                                <td className="text-right py-0.5 pr-1 font-bold text-blue-900 text-[10.5px]">
+                                                                <td className={`text-right py-0.5 pr-1 font-mono text-[10.5px] font-normal ${theme.text}`}>
                                                                     -{fmtCur(mValPort)}
                                                                 </td>
                                                             </tr>
