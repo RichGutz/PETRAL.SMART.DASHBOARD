@@ -200,16 +200,17 @@ A partir de la inspección de urgencia previa a la reunión sobre los `Días Pto
 
 ### ───────────────
 
-### 🕵️‍♂️ 5.6. Sexta Vuelta (Serie 6: El "Smoking Gun" en las Cards Financieras, Búnker y Port Costs)
+### 🕵️‍♂️ 5.6. Sexta Vuelta (Serie 6: El "Smoking Gun" en la Escena del Crimen - Cards Financieras, Búnker & Fila Total)
 
-A partir de la inspección del "Smoking Gun" sobre las 4 Tarjetas Financieras situadas bajo la grilla:
+A partir de la inspección pericial directa sobre el "Smoking Gun" donde el asesino no se había movido de la escena del crimen (la evaluación de cortocircuito `||` hacia la propiedad desactualizada `result?.consolidated` del backend antiguo):
 
-| # | Card Auditada | Valor en Pantalla (Hallazgo Serie 6) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| # | Escena del Crimen / Componente | Valor en Pantalla (Crimen Flagrante) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
-| **6.1** | **`Card 1: Bunker Expenses`** | Muestra `$65,576` (Búnker con días desactualizados) | **`$77,761 USD`** (Sincronizado con la suma en vivo de búnker de la grilla) | **Crimen 6.1 (Lectura de Toneladas Vacías):** Leía `result.consolidated.bunker_tonnage` backend en vez de calcular el búnker live de las distancias/días mar/puerto reales. | ✅ RESUELTO |
-| **6.2** | **`Card 2: Port Costs`** | Muestra Callao `$22,000`, Matarani `$18,000`, Muellaje `$5,000`, pero **`TOTAL PORT COSTS: $0`** | **`$45,000 USD`** (Suma idéntica = `$22,000 + $18,000 + $5,000`) | **Crimen 6.2 (Total Nulo Harcodeado):** `Total Port Costs` leía `result.consolidated.total_port_costs` (que venía en 0) en lugar de sumar las celdas visibles de la tarjeta. | ✅ RESUELTO |
-| **6.3** | **`Card 4: Financial Voyage Result`** | Revenue: `$405,000`, Gastos: `~$170,000`, pero **`VOYAGE RESULT / P&L: $0`** | **`+$177,635 USD`** ($405,000 - Hire - Búnker - Port Costs - Comisiones) | **Crimen 6.3 (P&L Nulo):** `VOYAGE RESULT / P&L` leía `result.consolidated.net_profit` en 0 en lugar de restar los rubros en tiempo real. | ✅ RESUELTO |
-| **6.4** | **`Card 4: Captura de Muellaje`** | Muellaje activado con check `RF` no se sumaba a los ingresos | **`(+) Refacturación de Muellaje`** sumado a Ingresos y restado a Costos | **Crimen 6.4 (Omitir Refacturación):** Si el check `RF` estaba activo, la tarjeta no re-capturaba la refacturación de muellaje como ingreso comercial. | ✅ RESUELTO |
+| **6.1** | **`Grilla Fila TOTAL: Días Pto`** | Muestra **`0.04d`** (Suma visible `1.42d + 1.66d` ignorada) | **`3.08d`** ($1.42\text{d} + 1.66\text{d} = 3.08\text{d}$) | **El Crimen del Cortocircuito:** `sumPortDays = result?.consolidated?.total_port_days || ...` devolvía `0.04` proveniente del JSON legacy backend, bloqueando el cálculo live. | ✅ RESUELTO |
+| **6.2** | **`Card 1: Bunker Expenses`** | Muestra **`$65,576 USD`** (Descuadre de -$12,185 vs Grilla) | **`$77,761 USD`** (Coincidencia exactísima 1:1 con la grilla) | **El Asesino en la Sombra:** La tarjeta leía `result.consolidated.bunker_tonnage` backend desfasado ($59.0\text{ T}$ IFO / $0.4\text{ T}$ MDO) en lugar de las toneladas live de la grilla. | ✅ RESUELTO |
+| **6.3** | **`Card 2: Total Port Costs`** | Callao `$22k`, Matarani `$18k`, Muellaje `$5k`, pero **`TOTAL PORT COSTS: $0`** | **`$45,000 USD`** (Suma exacta `$22,000 + $18,000 + $5,000`) | **Total Nulo Harcodeado:** `Total Port Costs` leía `result.consolidated.total_port_costs` (que venía en 0) en lugar de sumar las celdas visibles de la tarjeta. | ✅ RESUELTO |
+| **6.4** | **`Card 4: Voyage Result P&L`** | Revenue: `$405,000`, Gastos: `~$170,000`, pero **`VOYAGE RESULT / P&L: $0`** | **`+$242,936 USD`** ($405,000 + $10k Muellaje - Hire - Búnker - Puertos) | **P&L Apagado:** `VOYAGE RESULT / P&L` leía `result.consolidated.net_profit` en 0. Ahora resta en tiempo real con búnker y puertos sincronizados live. | ✅ RESUELTO |
+| **6.5** | **`Card 4: Refacturación Muellaje`** | Muellaje activado con check `RF` no se sumaba a los ingresos | **`(+) Refacturación Muellaje (+$10,000 USD)`** | **Omitir Refacturación:** Con check `RF` activo en Callao ($5k) y Matarani ($5k), la tarjeta no re-capturaba la refacturación de muellaje como ingreso comercial al cliente. | ✅ RESUELTO |
 
 ---
 
