@@ -1,1100 +1,616 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
-import { Save, Plus, Trash2, FileText } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
+import { FileText, Calendar, ChevronDown, ChevronRight, Anchor, DollarSign, Ship, CheckCircle2, Layers, RefreshCw } from 'lucide-react';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
-import { useAuth } from '../../context/AuthContext';
 import type { ExportColumn } from '../../lib/masterExport';
 
-interface ContractTariff {
-    min_tonnage: number;
-    max_tonnage: number;
-    freight_rate: number;
-}
-
-interface Contract {
-    contract_id: string;
-    client_id: string;
-    origin_port_id: string;
-    destination_port_id: string;
-    is_active: boolean;
-    valid_from: string | null;
-    valid_to: string | null;
-    load_rate: number;
-    discharge_rate: number;
-    address_commission: number;
-    broker_commission: number;
-    bunker_baseline_price_ifo: number;
-    bunker_baseline_price_mdo: number;
-    baf_rules: string | null;
-    comments: { text: string; date: string; user: string }[];
-    time_to_count_carga_hrs: number;
-    maneuver_carga_hrs: number;
-    time_to_count_descarga_hrs: number;
-    maneuver_descarga_hrs: number;
-    tariffs: ContractTariff[];
-    demurrage_rates: Record<string, number>;
+interface EnrichedRoute {
+    route_id?: string;
+    name: string;
+    description?: string;
+    client_id?: string;
+    is_contract?: boolean;
+    contract_id?: string;
+    table_source?: string;
+    created_at?: string;
+    created_by?: string;
+    valid_from?: string;
+    valid_to?: string;
+    demurrage_rates?: Record<string, number>;
+    demurrage_rate?: number;
+    comments?: Array<{ text: string; date?: string; user?: string }>;
+    legs_data?: {
+        is_multicotizador?: boolean;
+        bunker_price_ifo?: number;
+        bunker_price_mdo?: number;
+        tramos?: any[];
+        puertosConfig?: any[];
+        vesselParams?: any;
+        addressCommPct?: number;
+        brokerCommPct?: number;
+        baf_formula?: string;
+        baf_valid_from?: string;
+        baf_valid_to?: string;
+        baf_ifo_base?: number;
+        baf_mdo_base?: number;
+        tariff_tiers?: any[];
+        demurrage_rates?: Record<string, number>;
+        demurrage_rate?: number;
+        comments?: Array<{ text: string; date?: string; user?: string }>;
+        contract_metadata?: {
+            contract_id?: string;
+            client_id?: string;
+            valid_from?: string;
+            valid_to?: string;
+            validity_years?: number;
+            contract_status?: string;
+            baf_formula?: string;
+            baf_valid_from?: string;
+            baf_valid_to?: string;
+            baf_ifo_base?: number;
+            baf_mdo_base?: number;
+            tariff_tiers?: any[];
+            demurrage_rates?: Record<string, number>;
+            demurrage_rate?: number;
+            comments?: Array<{ text: string; date?: string; user?: string }>;
+        };
+    };
 }
 
 export const ContractsMaster: React.FC = () => {
-    const [contracts, setContracts] = useState<Contract[]>([]);
+    const [allRoutes, setAllRoutes] = useState<EnrichedRoute[]>([]);
     const [clients, setClients] = useState<any[]>([]);
-    const [rawClients, setRawClients] = useState<any[]>([]);
-    const [ports, setPorts] = useState<any[]>([]);
-    const [vessels, setVessels] = useState<any[]>([]);
-    
     const [loading, setLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
-    const [hasChanges, setHasChanges] = useState(false);
-    
-    // Auth context for comments
-    const { user } = useAuth();
-    const [newCommentText, setNewCommentText] = useState('');
-    
-    // UI State for grouping
-    const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-    const [selectedRouteKey, setSelectedRouteKey] = useState<string | null>(null);
 
-    const getRouteKey = (c: Contract) => {
-        // If it's a new unsaved route, it might have empty ports, but contract_id (uuid) makes it unique
-        return `${c.contract_id}|${c.origin_port_id}|${c.destination_port_id}`;
+    // Selecciones de UI
+    const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+    const [openYears, setOpenYears] = useState<Record<string, boolean>>({});
+    const [expandedRouteName, setExpandedRouteName] = useState<string | null>(null);
+
+    // Carga de Datos desde Backend (Supabase / FastAPI)
+    const loadData = async () => {
+        try {
+            setLoading(true);
+            const [routesList, clientsData] = await Promise.all([
+                ForecastService.listSpots(),
+                ForecastService.getClientsMaster()
+            ]);
+            setAllRoutes(routesList || []);
+            setClients(clientsData || []);
+        } catch (err) {
+            console.error("Error cargando maestro de contratos:", err);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const [bunkerPrices, setBunkerPrices] = useState<{ ifo: number; mdo: number; date: string }>({
-        ifo: 0,
-        mdo: 0,
-        date: 'N/A'
-    });
-
     useEffect(() => {
-        const loadData = async () => {
-            try {
-                setLoading(true);
-                const [contractsData, clientsData, portsData, vesselsData, bunkerData] = await Promise.all([
-                    ForecastService.getContractsMaster(),
-                    ForecastService.getClientsMaster(),
-                    ForecastService.getPorts(),
-                    ForecastService.getVessels(),
-                    ForecastService.getBunkerPrices()
-                ]);
-                setContracts(contractsData || []);
-                setRawClients(clientsData || []);
-                setPorts(portsData || []);
-                setVessels(vesselsData || []);
-
-                if (bunkerData && bunkerData.length > 0) {
-                    const sorted = [...bunkerData].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-                    const latestDate = sorted[0]?.date || 'N/A';
-                    const ifoRow = sorted.find(b => b.fuel_type === 'IFO');
-                    const mdoRow = sorted.find(b => b.fuel_type === 'MDO');
-                    const liveIfo = ifoRow ? Number(ifoRow.market_price_usd) || 0 : 0;
-                    const liveMdo = mdoRow ? Number(mdoRow.market_price_usd) || 0 : 0;
-                    setBunkerPrices({
-                        ifo: liveIfo,
-                        mdo: liveMdo,
-                        date: latestDate
-                    });
-                }
-            } catch (err) {
-                console.error("Error loading contracts:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
         loadData();
     }, []);
 
-    // Ordenar catálogo completo de puertos (Norte a Sur / alfabético)
-    const sortedPorts = useMemo(() => {
-        return [...(ports || [])].sort((a, b) => {
-            const latA = a.lat !== undefined && a.lat !== null ? parseFloat(a.lat) : 0;
-            const latB = b.lat !== undefined && b.lat !== null ? parseFloat(b.lat) : 0;
-            if (latA !== 0 || latB !== 0) return latB - latA;
-            return (a.port_id || '').localeCompare(b.port_id || '');
+    // 1. Filtrar solo las rutas contractuales (contracts)
+    const contractRoutesAll = useMemo(() => {
+        return allRoutes.filter(r => r.is_contract === true || r.table_source === 'contracts' || r.legs_data?.contract_metadata?.contract_id);
+    }, [allRoutes]);
+
+    // 2. Clientes Activos que tienen contratos o presencia en catálogo
+    const activeClients = useMemo(() => {
+        const clientSet = new Set<string>();
+        contractRoutesAll.forEach(r => {
+            const cid = r.client_id || r.legs_data?.contract_metadata?.client_id || (r.name.toUpperCase().startsWith("SPCC") ? "SPCC" : "NEXA");
+            if (cid) clientSet.add(cid.toUpperCase());
         });
-    }, [ports]);
+        (clients || []).forEach((c: any) => {
+            const cid = typeof c === 'string' ? c : (c.client_id || c.name || c.id);
+            if (cid && c.is_active !== false) clientSet.add(cid.toString().toUpperCase());
+        });
+        const list = Array.from(clientSet).filter(Boolean);
+        return list.length > 0 ? list : ['NEXA', 'SPCC'];
+    }, [contractRoutesAll, clients]);
 
+    // Auto-seleccionar primer cliente si no hay uno elegido
     useEffect(() => {
-        // En contratos solo mostramos clientes activos
-        const activeClients = rawClients.filter(c => c.is_active !== false);
-        setClients(activeClients);
-    }, [rawClients]);
-
-    const activeClientIds = useMemo(() => {
-        const ids = new Set([
-            ...contracts.map(c => c.client_id),
-            ...clients.map(c => c.client_id)
-        ]);
-        const filteredIds = Array.from(ids).filter(cid => cid && clients.some(c => c.client_id === cid));
-        return filteredIds;
-    }, [contracts, clients]);
-
-    // Set a default selected client if none is selected
-    useEffect(() => {
-        if (!loading && activeClientIds.length > 0 && selectedClientId === null) {
-            setSelectedClientId(activeClientIds[0]);
+        if (!selectedClientId && activeClients.length > 0) {
+            setSelectedClientId(activeClients[0]);
         }
-    }, [loading, activeClientIds, selectedClientId]);
+    }, [activeClients, selectedClientId]);
 
-    const handleAddClientContract = () => {
-        const defaultDemurrage: Record<string, number> = {};
-        vessels.forEach(v => { defaultDemurrage[v.vessel_id] = 20000; });
+    // 3. Filtrar rutas pertenecientes al cliente seleccionado
+    const clientRoutes = useMemo(() => {
+        if (!selectedClientId) return [];
+        const cidUpper = selectedClientId.toUpperCase();
+        return contractRoutesAll.filter(r => {
+            const rCid = (r.client_id || r.legs_data?.contract_metadata?.client_id || (r.name.toUpperCase().startsWith("SPCC") ? "SPCC" : "NEXA")).toUpperCase();
+            const rName = (r.name || '').toUpperCase();
+            return rCid === cidUpper || rName.startsWith(cidUpper);
+        });
+    }, [contractRoutesAll, selectedClientId]);
 
-        const newContract: Contract = {
-            contract_id: uuidv4(),
-            client_id: '', // Starts empty, user picks it
-            origin_port_id: '',
-            destination_port_id: '',
-            is_active: true,
-            valid_from: '',
-            valid_to: '',
-            load_rate: 0,
-            discharge_rate: 0,
-            address_commission: 0,
-            broker_commission: 0,
-            bunker_baseline_price_ifo: 0,
-            bunker_baseline_price_mdo: 0,
-            baf_rules: '',
-            comments: [],
-            time_to_count_carga_hrs: 6,
-            maneuver_carga_hrs: 0,
-            time_to_count_descarga_hrs: 6,
-            maneuver_descarga_hrs: 0,
-            tariffs: [],
-            demurrage_rates: defaultDemurrage
-        };
-        setContracts([...contracts, newContract]);
-        setSelectedClientId('');
-        setSelectedRouteKey(getRouteKey(newContract));
-        setHasChanges(true);
-    };
+    // 4. Agrupar rutas por AÑO DE VIGENCIA (Orden Descendente)
+    const groupedByYear = useMemo(() => {
+        const groups: Record<string, EnrichedRoute[]> = {};
 
-    const handleAddRouteToClient = (clientId: string) => {
-        // Find existing contract_id for this client to share it, or generate new
-        const existingRoute = contracts.find(c => c.client_id === clientId);
-        const sharedContractId = existingRoute ? existingRoute.contract_id : uuidv4();
-        
-        const defaultDemurrage: Record<string, number> = {};
-        vessels.forEach(v => { defaultDemurrage[v.vessel_id] = 20000; });
-
-        const newContract: Contract = {
-            contract_id: sharedContractId,
-            client_id: clientId,
-            origin_port_id: '',
-            destination_port_id: '',
-            is_active: true,
-            valid_from: '',
-            valid_to: '',
-            load_rate: 0,
-            discharge_rate: 0,
-            address_commission: 0,
-            broker_commission: 0,
-            bunker_baseline_price_ifo: 0,
-            bunker_baseline_price_mdo: 0,
-            baf_rules: '',
-            comments: [],
-            time_to_count_carga_hrs: 6,
-            maneuver_carga_hrs: 0,
-            time_to_count_descarga_hrs: 6,
-            maneuver_descarga_hrs: 0,
-            tariffs: [],
-            demurrage_rates: defaultDemurrage
-        };
-        setContracts([...contracts, newContract]);
-        setSelectedRouteKey(getRouteKey(newContract));
-        setHasChanges(true);
-    };
-
-    const handleRemoveContract = (routeKey: string) => {
-        if (confirm('¿Estás seguro de eliminar esta ruta del contrato?')) {
-            const nextContracts = contracts.filter(c => getRouteKey(c) !== routeKey);
-            setContracts(nextContracts);
-            if (selectedRouteKey === routeKey) setSelectedRouteKey(null);
-            
-            // If we deleted the last route for a client, clear selected client
-            const contractToRemove = contracts.find(c => getRouteKey(c) === routeKey);
-            if (contractToRemove) {
-                const remainingRoutesForClient = nextContracts.filter(c => c.client_id === contractToRemove.client_id);
-                if (remainingRoutesForClient.length === 0) {
-                    setSelectedClientId(null);
+        clientRoutes.forEach(route => {
+            let year = '2025';
+            const metaFrom = route.valid_from || route.legs_data?.contract_metadata?.valid_from || route.legs_data?.baf_valid_from;
+            if (metaFrom && metaFrom.length >= 4) {
+                year = metaFrom.substring(0, 4);
+            } else {
+                const nameYearMatch = (route.name || '').match(/\.(20\d{2})\./);
+                if (nameYearMatch) {
+                    year = nameYearMatch[1];
                 }
             }
-            setHasChanges(true);
-        }
-    };
 
-    const handleChange = (routeKey: string, field: keyof Contract, value: any) => {
-        let newRouteKey = routeKey;
-        setContracts(contracts.map(c => {
-            if (getRouteKey(c) === routeKey) {
-                const updated = { ...c, [field]: value };
-                if (field === 'client_id' && c.client_id === selectedClientId) {
-                    setSelectedClientId(value);
-                }
-                newRouteKey = getRouteKey(updated);
-                return updated;
-            }
-            return c;
-        }));
-        if (newRouteKey !== routeKey) {
-            setSelectedRouteKey(newRouteKey);
-        }
-        setHasChanges(true);
-    };
+            if (!groups[year]) groups[year] = [];
+            groups[year].push(route);
+        });
 
-    const handleAddTariff = (routeKey: string) => {
-        setContracts(contracts.map(c => {
-            if (getRouteKey(c) === routeKey) {
-                return {
-                    ...c,
-                    tariffs: [...c.tariffs, { min_tonnage: 0, max_tonnage: 0, freight_rate: 0 }]
-                };
-            }
-            return c;
-        }));
-        setHasChanges(true);
-    };
+        // Ordenar años en orden descendente (más reciente arriba, p. ej. 2027, 2026, 2025)
+        const sortedYears = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+        return { groups, sortedYears };
+    }, [clientRoutes]);
 
-    const handleTariffChange = (routeKey: string, tariffIdx: number, field: keyof ContractTariff, value: number) => {
-        setContracts(contracts.map(c => {
-            if (getRouteKey(c) === routeKey) {
-                const nextTariffs = [...c.tariffs];
-                nextTariffs[tariffIdx] = { ...nextTariffs[tariffIdx], [field]: value };
-                return { ...c, tariffs: nextTariffs };
-            }
-            return c;
-        }));
-        setHasChanges(true);
-    };
-
-    const handleRemoveTariff = (routeKey: string, tariffIdx: number) => {
-        setContracts(contracts.map(c => {
-            if (getRouteKey(c) === routeKey) {
-                const nextTariffs = [...c.tariffs];
-                nextTariffs.splice(tariffIdx, 1);
-                return { ...c, tariffs: nextTariffs };
-            }
-            return c;
-        }));
-        setHasChanges(true);
-    };
-
-    const handleSave = async () => {
-        try {
-            setIsSaving(true);
-            await ForecastService.saveContractsMaster(contracts);
-            setHasChanges(false);
-            alert("Maestro de contratos guardado con éxito.");
-        } catch (err) {
-            console.error("Error saving contracts:", err);
-            alert("Error al guardar contratos.");
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    // Client's routes (contracts in DB)
-    const clientRoutes = contracts.filter(c => c.client_id === selectedClientId);
-    
-    // Auto-select first route if none selected when clicking a client
+    // Inicializar el primer año (más reciente) desplegado
     useEffect(() => {
-        if (selectedClientId && clientRoutes.length > 0) {
-            if (!selectedRouteKey || !clientRoutes.find(c => getRouteKey(c) === selectedRouteKey)) {
-                setSelectedRouteKey(getRouteKey(clientRoutes[0]));
-            }
+        if (groupedByYear.sortedYears.length > 0) {
+            const topYear = groupedByYear.sortedYears[0];
+            setOpenYears(prev => ({ ...prev, [topYear]: true }));
         }
-    }, [selectedClientId, clientRoutes, selectedRouteKey]);
+    }, [groupedByYear.sortedYears]);
 
+    const toggleYear = (year: string) => {
+        setOpenYears(prev => ({ ...prev, [year]: !prev[year] }));
+    };
+
+    const toggleRouteExpansion = (routeName: string) => {
+        setExpandedRouteName(prev => (prev === routeName ? null : routeName));
+    };
+
+    // Funciones de formateo numérico
+    const fmtCur = (v: any) => {
+        const num = Number(v) || 0;
+        return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+    const fmtThousandSep = (v: any) => (Number(v) || 0).toLocaleString('en-US');
+
+    // Exportaciones
     const exportColumns: ExportColumn[] = [
-        { 
-            header: 'Cliente', 
-            key: 'client_id', 
-            type: 'string',
-            render: (val) => {
-                const c = rawClients.find(x => x.client_id === val);
-                return c ? c.client_name : val;
-            }
-        },
-        { header: 'Puerto Origen', key: 'origin_port_id', type: 'string' },
-        { header: 'Puerto Destino', key: 'destination_port_id', type: 'string' },
-        { header: 'Ritmo Carga (MT/Día)', key: 'load_rate', type: 'number' },
-        { header: 'Ritmo Descarga (MT/Día)', key: 'discharge_rate', type: 'number' },
-        { header: 'Comisión Dirección (%)', key: 'address_commission', type: 'percent' },
-        { header: 'Comisión Broker (%)', key: 'broker_commission', type: 'percent' },
-        { header: 'Bunker Base IFO (USD)', key: 'bunker_baseline_price_ifo', type: 'currency' },
-        { 
-            header: 'Bandas Tarifarias', 
-            key: 'tariffs', 
-            type: 'string',
-            render: (val: any) => {
-                if (!val || !Array.isArray(val) || val.length === 0) return 'Sin tarifas';
-                return val.map((t: any) => `${t.min_tonnage.toLocaleString()}-${t.max_tonnage.toLocaleString()} MT: $${t.freight_rate}`).join(' | ');
-            }
-        },
-        { header: 'Activo', key: 'is_active', type: 'boolean' }
+        { header: 'Contrato / Ruta', key: 'name', type: 'string' },
+        { header: 'Cliente', key: 'client_id', type: 'string' },
+        { header: 'Válido Desde', key: 'valid_from', type: 'string' },
+        { header: 'Válido Hasta', key: 'valid_to', type: 'string' },
+        { header: 'Tabla Origen', key: 'table_source', type: 'string' }
     ];
 
-    const handleExportExcel = () => {
-        exportMasterToExcel('Maestro de Contratos', exportColumns, contracts);
-    };
-
-    const handleExportPDF = () => {
-        exportMasterToPDF('Maestro de Contratos', exportColumns, contracts);
-    };
-
-    const selectedRoute = contracts.find(c => getRouteKey(c) === selectedRouteKey);
-
-    const bafData = useMemo(() => {
-        if (!selectedRoute) return null;
-
-        const baseIfo = Number(selectedRoute.bunker_baseline_price_ifo) || bunkerPrices.ifo;
-        const baseMdo = Number(selectedRoute.bunker_baseline_price_mdo) || bunkerPrices.mdo;
-        const initialBaf = Number((selectedRoute as any).bunker_baseline_baf_initial) || 2.86;
-
-        const coeffIfo = 38.40;
-        const coeffMdo = 9.50;
-
-        const costoBase = (baseIfo * coeffIfo) + (baseMdo * coeffMdo);
-        const costoActual = (bunkerPrices.ifo * coeffIfo) + (bunkerPrices.mdo * coeffMdo);
-
-        const factorBaf = costoBase > 0 ? (costoActual / costoBase) : 1.0;
-        const variacionPct = (factorBaf - 1) * 100;
-        const nuevoBaf = initialBaf * factorBaf;
-        const deltaBaf = nuevoBaf - initialBaf;
-        const deltaCostoTotal = costoActual - costoBase;
-
-        return {
-            baseIfo,
-            baseMdo,
-            initialBaf,
-            actualIfo: bunkerPrices.ifo,
-            actualMdo: bunkerPrices.mdo,
-            bunkerDate: bunkerPrices.date,
-            coeffIfo,
-            coeffMdo,
-            costoBase,
-            costoActual,
-            factorBaf,
-            variacionPct,
-            nuevoBaf,
-            deltaBaf,
-            deltaCostoTotal
-        };
-    }, [selectedRoute, bunkerPrices]);
-
-    if (loading) {
-        return (
-            <MasterTemplate title="Maestro de Contratos" activeTab="contracts">
-                <div className="flex justify-center items-center h-64 text-slate-500 font-medium">
-                    Cargando maestro de contratos...
-                </div>
-            </MasterTemplate>
-        );
-    }
-
     return (
-        <MasterTemplate 
-            title="Maestro de Contratos" 
+        <MasterTemplate
+            title="Maestro de Contratos"
             activeTab="contracts"
-            onExportExcel={handleExportExcel}
-            onExportPDF={handleExportPDF}
+            onExportExcel={() => exportMasterToExcel('Maestro_Contratos', exportColumns, clientRoutes)}
+            onExportPDF={() => exportMasterToPDF('Maestro_Contratos', exportColumns, clientRoutes)}
         >
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6 flex flex-col h-[calc(100vh-140px)]">
-                {/* Cabecera / Controles Superiores */}
-                <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between shrink-0">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6 flex flex-col min-h-[calc(100vh-140px)]">
+                
+                {/* CABECERA: TITULO Y SELECCION DE CLIENTES */}
+                <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4 shrink-0">
                     <div className="flex items-center gap-6">
                         <h2 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
                             <FileText size={18} className="text-blue-600" />
-                            Libros de Contrato
+                            Clientes Bajo Contrato
                         </h2>
-                        
+
                         {/* Pestañas Horizontales de Clientes */}
-                        <div className="flex bg-slate-200 p-1 rounded-lg gap-1">
-                            {activeClientIds.map(clientId => {
-                                const isSelected = selectedClientId === clientId;
-                                const clientInfo = clients.find(cl => cl.client_id === clientId);
-                                const clientName = clientInfo?.client_name || clientId || 'Nuevo (Sin Asignar)';
+                        <div className="flex bg-slate-200 p-1 rounded-lg gap-1 overflow-x-auto">
+                            {activeClients.map(cid => {
+                                const isSelected = selectedClientId === cid;
+                                const clientObj = (clients || []).find((c: any) => (typeof c === 'string' ? c : (c.client_id || c.name || c.id)) === cid);
+                                const displayName = (clientObj && typeof clientObj !== 'string') ? (clientObj.client_name || clientObj.name || cid) : cid;
+                                const routeCount = contractRoutesAll.filter(r => {
+                                    const rCid = (r.client_id || r.legs_data?.contract_metadata?.client_id || (r.name.toUpperCase().startsWith("SPCC") ? "SPCC" : "NEXA")).toUpperCase();
+                                    return rCid === cid.toUpperCase() || (r.name || '').toUpperCase().startsWith(cid.toUpperCase());
+                                }).length;
+
                                 return (
                                     <button
-                                        key={clientId}
-                                        onClick={() => setSelectedClientId(clientId)}
-                                        className={`px-4 py-1.5 text-xs font-bold rounded-md transition-colors ${
-                                            isSelected 
-                                                ? 'bg-white text-blue-700 shadow-sm' 
+                                        key={cid}
+                                        onClick={() => setSelectedClientId(cid)}
+                                        className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-2 whitespace-nowrap ${
+                                            isSelected
+                                                ? 'bg-white text-blue-700 shadow-sm'
                                                 : 'text-slate-600 hover:text-slate-800 hover:bg-slate-300'
                                         }`}
                                     >
-                                        {clientName}
+                                        <span>{displayName}</span>
+                                        <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${isSelected ? 'bg-blue-100 text-blue-800' : 'bg-slate-300 text-slate-700'}`}>
+                                            {routeCount}
+                                        </span>
                                     </button>
                                 );
                             })}
-                            
-                            <button 
-                                onClick={handleAddClientContract}
-                                className="flex items-center gap-1 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold px-3 py-1.5 rounded-md transition-colors ml-2"
-                            >
-                                <Plus size={14} /> Nuevo Contrato
-                            </button>
                         </div>
                     </div>
-                    
-                    <button 
-                        onClick={handleSave}
-                        disabled={!hasChanges || isSaving}
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors"
+
+                    <button
+                        onClick={loadData}
+                        className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-300 transition-colors"
                     >
-                        <Save size={14} />
-                        {isSaving ? "Guardando..." : "Guardar Cambios"}
+                        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                        Actualizar
                     </button>
                 </div>
 
-                <div className="flex flex-1 overflow-hidden">
-                    {/* Contenedor Principal (100% de ancho, sin panel lateral) */}
-                    <div className="flex-1 flex flex-col bg-slate-50">
-                        {selectedClientId !== null ? (
-                            <>
-                                {/* Pestañas Horizontales de Rutas */}
-                                <div className="bg-slate-100 border-b border-slate-200 px-6 pt-4 flex gap-2 overflow-x-auto shadow-inner">
-                                    {clientRoutes.map(route => {
-                                        const routeKey = getRouteKey(route);
-                                        const isSelected = selectedRouteKey === routeKey;
-                                        const tabName = (!route.origin_port_id && !route.destination_port_id) 
-                                            ? 'Nueva Ruta' 
-                                            : `${route.origin_port_id} → ${route.destination_port_id}`;
-                                            
-                                        return (
-                                            <button
-                                                key={routeKey}
-                                                onClick={() => setSelectedRouteKey(routeKey)}
-                                                className={`px-5 py-2.5 text-xs font-bold rounded-t-lg transition-colors border border-b-0 flex items-center gap-2 ${
-                                                    isSelected 
-                                                        ? 'bg-white text-blue-700 border-slate-200 relative top-[1px]' 
-                                                        : 'bg-slate-200 text-slate-500 border-transparent hover:bg-slate-300 hover:text-slate-700'
-                                                }`}
-                                            >
-                                                <span className={`w-2 h-2 rounded-full ${route.is_active ? 'bg-green-500' : 'bg-red-400'}`}></span>
-                                                {tabName}
-                                            </button>
-                                        );
-                                    })}
+                {/* CONTENIDO PRINCIPAL: ACORDEON POR AÑO (ORDEN DESCENDENTE) */}
+                <div className="flex-1 p-6 bg-slate-100/60 overflow-y-auto space-y-4">
+                    
+                    {loading ? (
+                        <div className="flex justify-center items-center h-64 text-slate-500 font-medium">
+                            Cargando maestro de contratos y rutas del multicotizador...
+                        </div>
+                    ) : groupedByYear.sortedYears.length === 0 ? (
+                        <div className="bg-white rounded-xl p-8 text-center text-slate-500 border border-slate-200 shadow-sm">
+                            <Layers size={36} className="mx-auto text-slate-300 mb-2" />
+                            <p className="font-semibold text-sm">No hay contratos o rutas registradas para el cliente {selectedClientId}.</p>
+                            <p className="text-xs text-slate-400 mt-1">Crea o guarda rutas desde el Multicotizador asignadas a este cliente para verlas aquí.</p>
+                        </div>
+                    ) : (
+                        groupedByYear.sortedYears.map(year => {
+                            const isOpen = Boolean(openYears[year]);
+                            const routesInYear = groupedByYear.groups[year] || [];
+
+                            return (
+                                <div key={year} className="bg-white rounded-xl border border-slate-250 shadow-sm overflow-hidden transition-all">
+                                    
+                                    {/* CABECERA HORIZONTAL DEL BLOQUE ANUAL (NIVEL 1/2) */}
                                     <button
-                                        onClick={() => handleAddRouteToClient(selectedClientId)}
-                                        className="px-4 py-2 text-xs font-bold rounded-t-lg bg-white/50 text-slate-500 border border-slate-200 border-dashed border-b-0 hover:bg-slate-200 hover:text-blue-600 flex items-center gap-1 transition-colors"
+                                        onClick={() => toggleYear(year)}
+                                        className="w-full bg-slate-800 hover:bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between transition-colors"
                                     >
-                                        <Plus size={12} /> Agregar Ruta a {clients.find(c => c.client_id === selectedClientId)?.client_name || selectedClientId || 'Cliente'}
+                                        <div className="flex items-center gap-3">
+                                            <Calendar size={18} className="text-amber-400" />
+                                            <span className="text-sm font-black uppercase tracking-wider">
+                                                📅 AÑO DE VIGENCIA {year}
+                                            </span>
+                                            <span className="bg-slate-700 text-amber-300 text-xs font-bold px-2.5 py-0.5 rounded-full border border-slate-600">
+                                                {routesInYear.length} {routesInYear.length === 1 ? 'Ruta Registrada' : 'Rutas Registradas'}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-slate-300 text-xs font-semibold">
+                                            <span>{isOpen ? 'Ocultar Año' : 'Desplegar Año'}</span>
+                                            {isOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                                        </div>
                                     </button>
-                                </div>
 
-                                {/* Contenido de la Ruta Seleccionada (Formulario) */}
-                                <div className="flex-1 overflow-auto bg-white p-6 xl:p-8">
-                                    {selectedRoute ? (
-                                        <div className="w-full max-w-none mx-auto space-y-6">
-                                            
-                                            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-4">
-                                                <h3 className="text-base font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
-                                                    Configuración de la Ruta {selectedRoute.origin_port_id && selectedRoute.destination_port_id ? `(${selectedRoute.origin_port_id} - ${selectedRoute.destination_port_id})` : ''}
-                                                </h3>
-                                                <button 
-                                                    onClick={() => handleRemoveContract(selectedRouteKey!)}
-                                                    className="text-xs text-red-600 hover:text-white font-bold px-3 py-1.5 bg-red-50 hover:bg-red-600 rounded-lg transition-colors flex items-center gap-1 border border-red-200 hover:border-red-600"
-                                                >
-                                                    <Trash2 size={14} /> Eliminar Ruta del Contrato
-                                                </button>
-                                            </div>
+                                    {/* CONTENIDO DESPLEGABLE DEL AÑO: LISTADO DE RUTAS (NIVEL 3) */}
+                                    {isOpen && (
+                                        <div className="p-4 space-y-3 bg-slate-50 border-t border-slate-200">
+                                            {routesInYear.map(route => {
+                                                const isExpanded = expandedRouteName === route.name;
+                                                const tramos = route.legs_data?.tramos || [];
+                                                const puertosConfig = route.legs_data?.puertosConfig || [];
+                                                const meta = route.legs_data?.contract_metadata || {};
+                                                
+                                                const validFrom = meta.valid_from || route.legs_data?.baf_valid_from || route.valid_from || '01/01/2026';
+                                                const validTo = meta.valid_to || route.legs_data?.baf_valid_to || route.valid_to || '31/12/2026';
+                                                const isContractActive = (meta.contract_status || 'ACTIVE') === 'ACTIVE';
 
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full items-stretch">
-                                                {/* ================= COLUMNA 1 ================= */}
-                                                <div className="flex flex-col gap-6 h-full">
-                                                    {/* 1. Definición */}
-                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm flex-1">
-                                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-200 pb-2">1. Definición Operativa & Vigencia</h4>
+                                                // Generar secuencia visual de tramos (ej: PEMAR ➔ CLVAP ➔ PEILO)
+                                                const portsList: string[] = [];
+                                                tramos.forEach((tr: any) => {
+                                                    if (tr.origin_port_id && !portsList.includes(tr.origin_port_id)) portsList.push(tr.origin_port_id);
+                                                    if (tr.destination_port_id && !portsList.includes(tr.destination_port_id)) portsList.push(tr.destination_port_id);
+                                                });
+                                                const portsSequence = portsList.length > 0 ? portsList.join(' ➔ ') : 'Ruta Multicotizador';
+
+                                                return (
+                                                    <div key={route.name} className="bg-white rounded-lg border border-slate-300 shadow-sm overflow-hidden">
                                                         
-                                                        <div className="flex flex-col gap-4">
-                                                            <div>
-                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Cliente Asignado</label>
-                                                                <select 
-                                                                    value={selectedRoute.client_id}
-                                                                    onChange={(e) => handleChange(selectedRouteKey!, 'client_id', e.target.value)}
-                                                                    className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white font-semibold text-slate-700"
-                                                                >
-                                                                    <option value="">Seleccione Cliente...</option>
-                                                                    {clients.map(c => (
-                                                                        <option key={c.client_id} value={c.client_id}>{c.client_name} ({c.client_id})</option>
-                                                                    ))}
-                                                                </select>
-                                                            </div>
-                                                            <div className="flex items-center">
-                                                                <label className="flex items-center gap-3 cursor-pointer bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm w-full transition-colors hover:border-blue-300">
-                                                                    <input 
-                                                                        type="checkbox" 
-                                                                        checked={selectedRoute.is_active}
-                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'is_active', e.target.checked)}
-                                                                        className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
-                                                                    />
-                                                                    <span className="text-sm font-bold text-slate-700">Ruta Activa en el Contrato</span>
-                                                                </label>
-                                                            </div>
-                                                            
-                                                            <div className="grid grid-cols-2 gap-3">
+                                                        {/* FILA DE RUTA (NIVEL 3) */}
+                                                        <div 
+                                                            onClick={() => toggleRouteExpansion(route.name)}
+                                                            className="p-4 flex flex-wrap items-center justify-between gap-4 cursor-pointer hover:bg-slate-100/80 transition-colors"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <button className="text-slate-500 hover:text-blue-600">
+                                                                    {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                                                                </button>
                                                                 <div>
-                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Puerto Origen</label>
-                                                                    <select 
-                                                                        value={selectedRoute.origin_port_id}
-                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'origin_port_id', e.target.value)}
-                                                                        className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white font-semibold text-slate-700"
-                                                                    >
-                                                                        <option value="">Seleccione Puerto...</option>
-                                                                        {sortedPorts.map(p => (
-                                                                            <option key={p.port_id} value={p.port_id}>{p.port_name} ({p.country || 'PE'})</option>
-                                                                        ))}
-                                                                    </select>
-                                                                </div>
-                                                                <div>
-                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Puerto Destino</label>
-                                                                    <select 
-                                                                        value={selectedRoute.destination_port_id}
-                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'destination_port_id', e.target.value)}
-                                                                        className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white font-semibold text-slate-700"
-                                                                    >
-                                                                        <option value="">Seleccione Puerto...</option>
-                                                                        {sortedPorts.map(p => (
-                                                                            <option key={p.port_id} value={p.port_id}>{p.port_name} ({p.country || 'PE'})</option>
-                                                                        ))}
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="grid grid-cols-2 gap-3">
-                                                                <div>
-                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Válido Desde</label>
-                                                                    <input 
-                                                                        type="date" 
-                                                                        value={selectedRoute.valid_from || ''}
-                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'valid_from', e.target.value)}
-                                                                        className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
-                                                                    />
-                                                                </div>
-                                                                <div>
-                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Válido Hasta</label>
-                                                                    <input 
-                                                                        type="date" 
-                                                                        value={selectedRoute.valid_to || ''}
-                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'valid_to', e.target.value)}
-                                                                        className="w-full text-sm border border-slate-300 rounded-lg p-2 bg-white"
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </section>
-
-                                                    {/* 4. Comisiones y Recargos */}
-                                                     <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm flex-1">
-                                                         <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-2">4. Comisiones y Recargos</h4>
-                                                         
-                                                         {/* Comisiones Arriba */}
-                                                         <div className="grid grid-cols-2 gap-3 mb-4">
-                                                             <div>
-                                                                 <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Address Comm. (%)</label>
-                                                                 <input 
-                                                                     type="number" step="0.01"
-                                                                     value={selectedRoute.address_commission}
-                                                                     onFocus={(e) => e.target.select()}
-                                                                     onChange={(e) => handleChange(selectedRouteKey!, 'address_commission', e.target.value === '' ? 0 : parseFloat(e.target.value))}
-                                                                     className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                                                 />
-                                                             </div>
-                                                             <div>
-                                                                 <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Broker Comm. (%)</label>
-                                                                 <input 
-                                                                     type="number" step="0.01"
-                                                                     value={selectedRoute.broker_commission}
-                                                                     onFocus={(e) => e.target.select()}
-                                                                     onChange={(e) => handleChange(selectedRouteKey!, 'broker_commission', e.target.value === '' ? 0 : parseFloat(e.target.value))}
-                                                                     className="w-full text-sm border border-slate-300 rounded-lg p-2 font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                                                 />
-                                                             </div>
-                                                         </div>
-
-                                                         {/* Demurrage Abajo */}
-                                                         <div className="border-t border-slate-200 pt-3">
-                                                             <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-3">Demurrage por Buque ($/día)</h5>
-
-                                                             <div className="grid grid-cols-2 gap-3 max-h-[240px] overflow-y-auto pr-1">
-                                                                 {vessels.map(v => {
-                                                                     const currentRate = selectedRoute.demurrage_rates?.[v.vessel_id] !== undefined 
-                                                                         ? selectedRoute.demurrage_rates[v.vessel_id] 
-                                                                         : 20000;
-                                                                     return (
-                                                                         <div key={v.vessel_id}>
-                                                                             <label className="block text-[9px] font-bold text-slate-500 mb-1 uppercase truncate" title={v.vessel_name}>
-                                                                                 {v.vessel_name}
-                                                                             </label>
-                                                                             <input 
-                                                                                 type="number"
-                                                                                 value={currentRate}
-                                                                                 onFocus={(e) => e.target.select()}
-                                                                                 onChange={(e) => {
-                                                                                     const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
-                                                                                     const newRates = { ...(selectedRoute.demurrage_rates || {}) };
-                                                                                     newRates[v.vessel_id] = isNaN(val) ? 0 : val;
-                                                                                     handleChange(selectedRouteKey!, 'demurrage_rates', newRates);
-                                                                                 }}
-                                                                                 className="w-full text-xs border border-slate-300 rounded p-1.5 font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                                                             />
-                                                                         </div>
-                                                                     );
-                                                                 })}
-                                                             </div>
-                                                         </div>
-                                                     </section>
-                                                </div>
-
-                                                {/* ================= COLUMNA 2 ================= */}
-                                                <div className="flex flex-col gap-6 h-full">
-                                                    {/* 2. Operativo & Tiempos */}
-                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-6 shadow-sm flex-1">
-                                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-200 pb-2">2. Operaciones & Tiempos</h4>
-                                                        
-                                                        <div className="space-y-4">
-                                                            <h5 className="text-xs font-black text-blue-800 uppercase tracking-wider bg-blue-100/50 p-2 rounded">Origen</h5>
-                                                            <div className="grid grid-cols-2 gap-3 px-1">
-                                                                <div className="col-span-2">
-                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Load Rate (mt/día)</label>
-                                                                    <input 
-                                                                        type="number" 
-                                                                        value={selectedRoute.load_rate}
-                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'load_rate', parseFloat(e.target.value))}
-                                                                        className="w-full text-sm border border-blue-200 rounded-lg p-2 font-mono bg-blue-50/50 focus:border-blue-400 focus:outline-none"
-                                                                    />
-                                                                </div>
-                                                                <div>
-                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Time to Count</label>
-                                                                    <input 
-                                                                        type="number" 
-                                                                        value={selectedRoute.time_to_count_carga_hrs}
-                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'time_to_count_carga_hrs', parseFloat(e.target.value))}
-                                                                        className="w-full text-sm border border-blue-200 rounded-lg p-2 font-mono bg-blue-50/50 focus:border-blue-400 focus:outline-none"
-                                                                    />
-                                                                </div>
-                                                                <div>
-                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Maneuver (hrs)</label>
-                                                                    <input 
-                                                                        type="number" 
-                                                                        value={selectedRoute.maneuver_carga_hrs}
-                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'maneuver_carga_hrs', parseFloat(e.target.value))}
-                                                                        className="w-full text-sm border border-blue-200 rounded-lg p-2 font-mono bg-blue-50/50 focus:border-blue-400 focus:outline-none"
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="space-y-4 mt-6">
-                                                            <h5 className="text-xs font-black text-amber-800 uppercase tracking-wider bg-amber-100/50 p-2 rounded">Destino</h5>
-                                                            <div className="grid grid-cols-2 gap-3 px-1">
-                                                                <div className="col-span-2">
-                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Discharge Rate (mt/día)</label>
-                                                                    <input 
-                                                                        type="number" 
-                                                                        value={selectedRoute.discharge_rate}
-                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'discharge_rate', parseFloat(e.target.value))}
-                                                                        className="w-full text-sm border border-amber-200 rounded-lg p-2 font-mono bg-amber-50/50 focus:border-amber-400 focus:outline-none"
-                                                                    />
-                                                                </div>
-                                                                <div>
-                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Time to Count</label>
-                                                                    <input 
-                                                                        type="number" 
-                                                                        value={selectedRoute.time_to_count_descarga_hrs}
-                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'time_to_count_descarga_hrs', parseFloat(e.target.value))}
-                                                                        className="w-full text-sm border border-amber-200 rounded-lg p-2 font-mono bg-amber-50/50 focus:border-amber-400 focus:outline-none"
-                                                                    />
-                                                                </div>
-                                                                <div>
-                                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Maneuver (hrs)</label>
-                                                                    <input 
-                                                                        type="number" 
-                                                                        value={selectedRoute.maneuver_descarga_hrs}
-                                                                        onChange={(e) => handleChange(selectedRouteKey!, 'maneuver_descarga_hrs', parseFloat(e.target.value))}
-                                                                        className="w-full text-sm border border-amber-200 rounded-lg p-2 font-mono bg-amber-50/50 focus:border-amber-400 focus:outline-none"
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </section>
-
-                                                    {/* 5. BAF */}
-                                                     <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm flex-1">
-                                                         <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                                                             <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">5. Acuerdos BAF (Bunker Adjustment Factor)</h4>
-                                                             {bafData && (
-                                                                 <span className={`px-2.5 py-0.5 rounded text-[11px] font-black font-mono border ${
-                                                                     bafData.deltaBaf >= 0 
-                                                                         ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                                                                         : 'bg-red-50 text-red-800 border-red-200'
-                                                                 }`}>
-                                                                     Δ BAF: {bafData.deltaBaf >= 0 ? '+' : ''}${bafData.deltaBaf.toFixed(4)}/PMT ({bafData.factorBaf.toFixed(4)}x)
-                                                                 </span>
-                                                             )}
-                                                         </div>
-                                                         
-                                                         <div className="grid grid-cols-3 gap-2">
-                                                             <div>
-                                                                 <label className="block text-[9px] font-bold text-slate-500 mb-1 uppercase">Baseline IFO ($/mt)</label>
-                                                                 <input 
-                                                                     type="number" step="0.01"
-                                                                     value={selectedRoute.bunker_baseline_price_ifo ?? bunkerPrices.ifo}
-                                                                     onFocus={(e) => e.target.select()}
-                                                                     onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_ifo', e.target.value === '' ? 0 : parseFloat(e.target.value))}
-                                                                     className="w-full text-xs border border-slate-300 rounded p-1.5 font-mono"
-                                                                 />
-                                                             </div>
-                                                             <div>
-                                                                 <label className="block text-[9px] font-bold text-slate-500 mb-1 uppercase">Baseline MDO ($/mt)</label>
-                                                                 <input 
-                                                                     type="number" step="0.01"
-                                                                     value={selectedRoute.bunker_baseline_price_mdo ?? bunkerPrices.mdo}
-                                                                     onFocus={(e) => e.target.select()}
-                                                                     onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_price_mdo', e.target.value === '' ? 0 : parseFloat(e.target.value))}
-                                                                     className="w-full text-xs border border-slate-300 rounded p-1.5 font-mono"
-                                                                 />
-                                                             </div>
-                                                             <div>
-                                                                 <label className="block text-[9px] font-bold text-blue-600 mb-1 uppercase">BAF Inicial ($/PMT)</label>
-                                                                 <input 
-                                                                     type="number" step="0.01"
-                                                                     value={(selectedRoute as any).bunker_baseline_baf_initial ?? 2.86}
-                                                                     onFocus={(e) => e.target.select()}
-                                                                     onChange={(e) => handleChange(selectedRouteKey!, 'bunker_baseline_baf_initial' as any, e.target.value === '' ? 0 : parseFloat(e.target.value))}
-                                                                     className="w-full text-xs border border-blue-300 bg-blue-50/50 rounded p-1.5 font-mono font-bold text-blue-900"
-                                                                 />
-                                                             </div>
-                                                         </div>
-
-                                                         {/* Fórmula Polinómica Explicativa */}
-                                                         <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1.5 text-[11px]">
-                                                             <div className="font-bold text-slate-700 uppercase tracking-wide flex items-center justify-between text-[10px]">
-                                                                 <span>Fórmula Polinómica Contractual:</span>
-                                                                 <span className="text-slate-400 font-mono">Consumos: 38.40 IFO / 9.50 MDO</span>
-                                                             </div>
-                                                             <div className="font-mono text-slate-600 bg-slate-50 p-2 rounded border border-slate-100 text-[10px] leading-relaxed">
-                                                                 Δ BAF = (BAF_Inicial × Factor_fa) - BAF_Inicial
-                                                             </div>
-                                                         </div>
-                                                     </section>
-                                                 </div>
-
-                                                {/* ================= COLUMNA 3 ================= */}
-                                                <div className="flex flex-col gap-6 h-full">
-                                                    {/* 3. Tarifas (Tiers) */}
-                                                     <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col flex-1">
-                                                         <div className="flex justify-between items-center border-b border-slate-200 pb-2 mb-4">
-                                                             <h4 className="text-xs font-black text-teal-800 uppercase tracking-wider">3. Tarifas por Tramo & Ajuste BAF</h4>
-                                                             <button 
-                                                                 onClick={() => handleAddTariff(selectedRouteKey!)}
-                                                                 className="text-[10px] bg-teal-50 border border-teal-200 hover:bg-teal-100 font-bold px-3 py-1.5 rounded text-teal-700 flex items-center gap-1 transition-colors shadow-sm cursor-pointer"
-                                                             >
-                                                                 <Plus size={12} /> Añadir
-                                                             </button>
-                                                         </div>
-                                                         
-                                                         <div className="space-y-3 overflow-y-auto pr-1">
-                                                             {selectedRoute.tariffs.map((t, idx) => {
-                                                                 const adjustedFreight = bafData ? (t.freight_rate + bafData.deltaBaf) : t.freight_rate;
-                                                                 return (
-                                                                     <div key={idx} className="flex flex-col gap-2 bg-white p-3 pr-8 rounded-lg border border-slate-200 shadow-sm relative">
-                                                                         <button 
-                                                                             onClick={() => handleRemoveTariff(selectedRouteKey!, idx)}
-                                                                             className="absolute right-1 top-[50%] -translate-y-[50%] p-1.5 text-slate-300 hover:text-red-500 transition-colors bg-white rounded cursor-pointer"
-                                                                             title="Eliminar tarifa"
-                                                                         >
-                                                                             <Trash2 size={14} />
-                                                                         </button>
-                                                                         
-                                                                         <div className="grid grid-cols-4 gap-2">
-                                                                             <div>
-                                                                                 <label className="block text-[9px] font-bold text-slate-400 uppercase">Min (MT)</label>
-                                                                                 <input 
-                                                                                     type="number" 
-                                                                                     value={t.min_tonnage}
-                                                                                     onFocus={(e) => e.target.select()}
-                                                                                     onChange={(e) => handleTariffChange(selectedRouteKey!, idx, 'min_tonnage', parseFloat(e.target.value) || 0)}
-                                                                                     className="w-full text-[11px] border border-slate-300 rounded p-1 font-mono"
-                                                                                 />
-                                                                             </div>
-                                                                             <div>
-                                                                                 <label className="block text-[9px] font-bold text-slate-400 uppercase">Max (MT)</label>
-                                                                                 <input 
-                                                                                     type="number" 
-                                                                                     value={t.max_tonnage}
-                                                                                     onFocus={(e) => e.target.select()}
-                                                                                     onChange={(e) => handleTariffChange(selectedRouteKey!, idx, 'max_tonnage', parseFloat(e.target.value) || 0)}
-                                                                                     className="w-full text-[11px] border border-slate-300 rounded p-1 font-mono"
-                                                                                 />
-                                                                             </div>
-                                                                             <div>
-                                                                                 <label className="block text-[9px] font-bold text-teal-700 uppercase">Flete Base</label>
-                                                                                 <div className="relative">
-                                                                                     <span className="absolute left-1.5 top-1 text-teal-600 font-bold text-[10px]">$</span>
-                                                                                     <input 
-                                                                                         type="number" step="0.01"
-                                                                                         value={t.freight_rate}
-                                                                                         onFocus={(e) => e.target.select()}
-                                                                                         onChange={(e) => handleTariffChange(selectedRouteKey!, idx, 'freight_rate', parseFloat(e.target.value) || 0)}
-                                                                                         className="w-full pl-4 pr-1 py-1 text-[11px] border border-teal-300 bg-teal-50/30 focus:border-teal-500 focus:outline-none rounded font-mono text-teal-900 font-bold"
-                                                                                     />
-                                                                                 </div>
-                                                                             </div>
-                                                                             <div>
-                                                                                 <label className="block text-[9px] font-black text-emerald-700 uppercase">Flete Ajustado BAF</label>
-                                                                                 <div className="bg-emerald-50 border border-emerald-300 rounded p-1 text-[11px] font-mono font-black text-emerald-900 text-right flex items-center justify-between">
-                                                                                     <span className="text-[9px] font-bold text-emerald-600">
-                                                                                         {bafData && bafData.deltaBaf >= 0 ? `+${bafData.deltaBaf.toFixed(2)}` : bafData?.deltaBaf.toFixed(2)}
-                                                                                     </span>
-                                                                                     <span>${adjustedFreight.toFixed(2)}</span>
-                                                                                 </div>
-                                                                             </div>
-                                                                         </div>
-                                                                     </div>
-                                                                 );
-                                                             })}
-                                                             
-                                                             {selectedRoute.tariffs.length === 0 && (
-                                                                 <div className="text-center text-xs text-slate-400 py-6 bg-white rounded-lg border border-dashed border-slate-300 font-medium flex items-center justify-center">
-                                                                     Sin bandas configuradas ($0)
-                                                                 </div>
-                                                             )}
-                                                         </div>
-                                                     </section>
-
-                                                    {/* 6. Comentarios */}
-                                                    <section className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 shadow-sm flex-1 flex flex-col">
-                                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-200 pb-2">6. Comentarios</h4>
-                                                        
-                                                        <div className="flex gap-2 mb-4">
-                                                            <textarea 
-                                                                value={newCommentText}
-                                                                onChange={(e) => setNewCommentText(e.target.value)}
-                                                                placeholder="Escribe un comentario o bitácora..."
-                                                                className="flex-grow text-sm border border-slate-300 rounded-lg p-2 bg-white resize-none"
-                                                                rows={2}
-                                                            />
-                                                            <button 
-                                                                onClick={() => {
-                                                                    if (!newCommentText.trim()) return;
-                                                                    const newComment = {
-                                                                        text: newCommentText.trim(),
-                                                                        date: new Date().toISOString(),
-                                                                        user: user?.full_name || 'Administrador'
-                                                                    };
-                                                                    const existingComments = selectedRoute.comments || [];
-                                                                    handleChange(selectedRouteKey!, 'comments', [newComment, ...existingComments]);
-                                                                    setNewCommentText('');
-                                                                }}
-                                                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1 transition-colors whitespace-nowrap cursor-pointer"
-                                                            >
-                                                                <Plus className="w-4 h-4" /> Agregar
-                                                            </button>
-                                                        </div>
-
-                                                        <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                                                            {(!selectedRoute.comments || selectedRoute.comments.length === 0) ? (
-                                                                <div className="text-center text-slate-400 text-xs py-4 border border-dashed border-slate-300 rounded">
-                                                                    No hay comentarios registrados
-                                                                </div>
-                                                            ) : (
-                                                                selectedRoute.comments.map((c, i) => (
-                                                                    <div key={i} className="bg-white p-3 rounded-lg border border-slate-200 text-sm shadow-sm">
-                                                                        <div className="flex justify-between items-center mb-1">
-                                                                            <span className="font-bold text-slate-700 text-xs">{c.user}</span>
-                                                                            <span className="text-slate-400 text-[10px]">{new Date(c.date).toLocaleString()}</span>
-                                                                        </div>
-                                                                        <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{c.text}</p>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-mono font-bold text-xs text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                                                                            📍 {route.name}
+                                                                        </span>
+                                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${isContractActive ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                                                                            <CheckCircle2 size={10} /> {isContractActive ? 'ACTIVO' : 'INACTIVO'}
+                                                                        </span>
                                                                     </div>
-                                                                ))
-                                                            )}
-                                                        </div>
-                                                    </section>
-                                                </div>
-                                            </div>
-
-                                            {/* ================= SECCIÓN 7: DESGLOSE MATEMÁTICO & AUDITORÍA BAF ================= */}
-                                            {bafData && (
-                                                <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
-                                                    <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-base">📊</span>
-                                                            <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                                                                7. Desglose Matemático & Auditoría del Ajuste BAF (Bunker Adjustment Factor)
-                                                            </h4>
-                                                        </div>
-                                                        <span className="text-[10px] font-mono bg-blue-50 text-blue-700 font-bold px-2.5 py-1 rounded border border-blue-200">
-                                                            Ref. Último Bunker: {bafData.bunkerDate}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                                                        {/* Paso A: Precios Comparativos */}
-                                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
-                                                            <div>
-                                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-2">Paso A: Comparativo de Combustibles ($/MT)</span>
-                                                                <table className="w-full text-xs font-mono">
-                                                                    <thead>
-                                                                        <tr className="border-b border-slate-200 text-left text-[10px] text-slate-500">
-                                                                            <th className="pb-1">Combustible</th>
-                                                                            <th className="pb-1 text-right">Baseline Contrato</th>
-                                                                            <th className="pb-1 text-right">Último Bunker</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody className="divide-y divide-slate-100">
-                                                                        <tr>
-                                                                            <td className="py-1.5 font-bold text-slate-700">IFO 380 VLSFO</td>
-                                                                            <td className="py-1.5 text-right font-bold text-slate-600">${bafData.baseIfo.toFixed(2)}</td>
-                                                                            <td className="py-1.5 text-right font-bold text-blue-600">${bafData.actualIfo.toFixed(2)}</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td className="py-1.5 font-bold text-slate-700">MDO Diesel (MGO)</td>
-                                                                            <td className="py-1.5 text-right font-bold text-slate-600">${bafData.baseMdo.toFixed(2)}</td>
-                                                                            <td className="py-1.5 text-right font-bold text-amber-600">${bafData.actualMdo.toFixed(2)}</td>
-                                                                        </tr>
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
-                                                            <div className="mt-3 text-[10px] text-slate-400 border-t border-slate-200 pt-2 italic">
-                                                                * Coeficientes B/T Moquegua: 38.40 (IFO) / 9.50 (MDO)
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Paso B: Ecuaciones Resueltas */}
-                                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Paso B: Estructura Polinómica Resuelta</span>
-                                                            
-                                                            <div className="text-[11px] font-mono space-y-2">
-                                                                <div className="bg-white p-2 rounded border border-slate-200">
-                                                                    <span className="text-[9px] text-slate-400 uppercase block font-bold">1. Costo Ponderado Base (N-1):</span>
-                                                                    <span className="text-slate-800">(${bafData.baseIfo.toFixed(2)} × 38.40) + (${bafData.baseMdo.toFixed(2)} × 9.50)</span>
-                                                                    <span className="block font-bold text-slate-900 text-right text-xs mt-0.5">= ${bafData.costoBase.toFixed(2)} USD</span>
-                                                                </div>
-
-                                                                <div className="bg-white p-2 rounded border border-slate-200">
-                                                                    <span className="text-[9px] text-slate-400 uppercase block font-bold">2. Costo Ponderado Actual (N):</span>
-                                                                    <span className="text-slate-800">(${bafData.actualIfo.toFixed(2)} × 38.40) + (${bafData.actualMdo.toFixed(2)} × 9.50)</span>
-                                                                    <span className="block font-bold text-blue-700 text-right text-xs mt-0.5">= ${bafData.costoActual.toFixed(2)} USD</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Paso C: Traducción a Tarifa BAF */}
-                                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Paso C: Traducción a Tarifa BAF</span>
-                                                            
-                                                            <div className="text-[11px] font-mono space-y-2">
-                                                                <div className="bg-white p-2 rounded border border-slate-200">
-                                                                    <span className="text-[9px] text-slate-400 uppercase block font-bold">1. Factor BAF (fa):</span>
-                                                                    <span className="text-slate-800">${bafData.costoActual.toFixed(2)} ÷ ${bafData.costoBase.toFixed(2)}</span>
-                                                                    <span className="block font-bold text-emerald-700 text-right text-xs mt-0.5">= {bafData.factorBaf.toFixed(6)}x ({bafData.variacionPct >= 0 ? '+' : ''}{bafData.variacionPct.toFixed(2)}%)</span>
-                                                                </div>
-
-                                                                <div className="bg-white p-2 rounded border border-slate-200">
-                                                                    <span className="text-[9px] text-slate-400 uppercase block font-bold">2. Nuevo BAF vs. Inicial:</span>
-                                                                    <span className="text-slate-800">${bafData.initialBaf.toFixed(2)} × {bafData.factorBaf.toFixed(4)} = ${bafData.nuevoBaf.toFixed(4)}</span>
-                                                                    <span className={`block font-bold text-right text-xs mt-0.5 ${bafData.deltaBaf >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
-                                                                        Δ PMT = {bafData.deltaBaf >= 0 ? '+' : ''}${bafData.deltaBaf.toFixed(4)} USD/PMT
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Paso D: Resumen Ejecutivo */}
-                                                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-5 rounded-xl border border-slate-700 shadow-md flex flex-col justify-between">
-                                                            <div>
-                                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">Paso D: Ajuste a Facturar por Tonelada</span>
-                                                                <div className="flex items-baseline justify-between mt-2">
-                                                                    <span className="text-xs text-slate-300 font-bold">Variación Net Δ BAF:</span>
-                                                                    <span className={`text-xl font-black font-mono ${bafData.deltaBaf >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                                        {bafData.deltaBaf >= 0 ? '+' : ''}${bafData.deltaBaf.toFixed(4)} / MT
-                                                                    </span>
-                                                                </div>
-                                                                <div className="flex items-baseline justify-between mt-1">
-                                                                    <span className="text-xs text-slate-300 font-bold">Factor Multiplicador:</span>
-                                                                    <span className="text-sm font-bold font-mono text-slate-300">
-                                                                        {bafData.factorBaf.toFixed(4)}x
-                                                                    </span>
+                                                                    <div className="text-xs font-semibold text-slate-600 mt-1 flex items-center gap-3">
+                                                                        <span>Secuencia: <strong className="text-slate-800 font-mono">[{portsSequence}]</strong></span>
+                                                                        <span className="text-slate-400">|</span>
+                                                                        <span>Vigencia: <strong className="text-slate-700 font-mono">{validFrom} ➔ {validTo}</strong></span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
 
-                                                            <div className="bg-slate-800/80 p-3 rounded-lg border border-slate-700 text-xs mt-4">
-                                                                <span className="text-[10px] text-slate-400 uppercase block font-bold">Variación Absoluta Total por Viaje:</span>
-                                                                <span className="font-mono font-bold text-white text-sm">
-                                                                    ${bafData.deltaCostoTotal >= 0 ? '+' : ''}${bafData.deltaCostoTotal.toFixed(2)} USD / ciclo
+                                                            <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
+                                                                <span className="bg-slate-100 px-2.5 py-1 rounded border border-slate-200 font-mono text-[11px]">
+                                                                    {tramos.length} Tramos
+                                                                </span>
+                                                                <span className="text-blue-600 font-bold hover:underline">
+                                                                    {isExpanded ? 'Ocultar UI Multicotizador' : 'Ver UI Multicotizador ➔'}
                                                                 </span>
                                                             </div>
                                                         </div>
-                                                    </div>
 
-                                                    {/* Resumen por Tiers */}
-                                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-3">
-                                                            Matriz de Tarifas Finales Ajustadas por Tramo (Tarifa Base + Δ BAF)
-                                                        </span>
+                                                        {/* FICHA EXPANDIDA: UI COMPLETA DEL MULTICOTIZADOR (NIVEL 4) */}
+                                                        {isExpanded && (
+                                                            <div className="p-6 bg-slate-50 border-t border-slate-200 space-y-6">
+                                                                
+                                                                <div className="bg-blue-950 text-white p-3 rounded-lg flex items-center justify-between">
+                                                                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+                                                                        <Ship size={16} className="text-blue-400" />
+                                                                        <span>Ficha Comercial Multicotizador — {route.name}</span>
+                                                                    </div>
+                                                                    <span className="text-[11px] font-mono text-blue-200 bg-blue-900/80 px-2 py-0.5 rounded">
+                                                                        Origen: Supabase DB ({route.table_source || 'contracts'})
+                                                                    </span>
+                                                                </div>
 
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                                                            {selectedRoute.tariffs.map((t, idx) => {
-                                                                const adjPrice = t.freight_rate + bafData.deltaBaf;
-                                                                return (
-                                                                    <div key={idx} className="bg-white p-3 rounded-lg border border-slate-200 shadow-xs flex flex-col justify-between">
+                                                                {/* 1. TRAMOS Y TARIFAS DE FLETE */}
+                                                                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm space-y-3">
+                                                                    <h4 className="text-xs font-black text-slate-700 uppercase tracking-wide flex items-center gap-2 border-b border-slate-200 pb-2">
+                                                                        <Anchor size={14} className="text-blue-600" />
+                                                                        1. Tramos & Tarifas de Flete
+                                                                    </h4>
+                                                                    <div className="overflow-x-auto">
+                                                                        <table className="w-full text-xs font-mono border-collapse">
+                                                                            <thead>
+                                                                                <tr className="bg-slate-100 border-b border-slate-300 font-sans text-slate-600 font-bold">
+                                                                                    <th className="text-left py-1.5 px-2">Tramo</th>
+                                                                                    <th className="text-left py-1.5 px-2">Tipo</th>
+                                                                                    <th className="text-left py-1.5 px-2">Origen ➔ Destino</th>
+                                                                                    <th className="text-right py-1.5 px-2">Cantidad (MT)</th>
+                                                                                    <th className="text-right py-1.5 px-2">Flete ($/MT)</th>
+                                                                                    <th className="text-right py-1.5 px-2">Distancia (NM)</th>
+                                                                                    <th className="text-right py-1.5 px-2">Velocidad (kn)</th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                                {tramos.map((tr: any, idx: number) => (
+                                                                                    <tr key={idx} className="border-b border-slate-200 hover:bg-slate-50">
+                                                                                        <td className="py-1.5 px-2 font-bold text-slate-700">Pierna {idx + 1}</td>
+                                                                                        <td className="py-1.5 px-2 font-sans">
+                                                                                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${tr.type === 'LADEN' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                                                                                                {tr.type || 'LADEN'}
+                                                                                            </span>
+                                                                                        </td>
+                                                                                        <td className="py-1.5 px-2 font-bold text-blue-900">
+                                                                                            {tr.origin_port_id || 'N/A'} ➔ {tr.destination_port_id || 'N/A'}
+                                                                                        </td>
+                                                                                        <td className="py-1.5 px-2 text-right">{fmtThousandSep(tr.quantity)} MT</td>
+                                                                                        <td className="py-1.5 px-2 text-right font-bold text-emerald-700">{fmtCur(tr.freight_rate)}/MT</td>
+                                                                                        <td className="py-1.5 px-2 text-right">{fmtThousandSep(tr.route_distance)} NM</td>
+                                                                                        <td className="py-1.5 px-2 text-right">{tr.speed || 11} kn</td>
+                                                                                    </tr>
+                                                                                ))}
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* 2. MATRIZ DE PUERTOS Y COSTOS PORTUARIOS */}
+                                                                {puertosConfig.length > 0 && (
+                                                                    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm space-y-3">
+                                                                        <h4 className="text-xs font-black text-slate-700 uppercase tracking-wide flex items-center gap-2 border-b border-slate-200 pb-2">
+                                                                            <DollarSign size={14} className="text-emerald-600" />
+                                                                            2. Configuración Operativa & Costos Portuarios por Terminal
+                                                                        </h4>
+                                                                        <div className="overflow-x-auto">
+                                                                            <table className="w-full text-xs font-mono border-collapse">
+                                                                                <thead>
+                                                                                    <tr className="bg-slate-100 border-b border-slate-300 font-sans text-slate-600 font-bold">
+                                                                                        <th className="text-left py-1.5 px-2">Puerto</th>
+                                                                                        <th className="text-left py-1.5 px-2">Operación</th>
+                                                                                        <th className="text-right py-1.5 px-2">Ritmo Op. (TH)</th>
+                                                                                        <th className="text-right py-1.5 px-2">Laytime (Hrs)</th>
+                                                                                        <th className="text-right py-1.5 px-2">Posicionamiento (Hrs)</th>
+                                                                                        <th className="text-right py-1.5 px-2">Costo Puerto Est. (USD)</th>
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody>
+                                                                                    {puertosConfig.map((p: any, idx: number) => {
+                                                                                        if (p.action === 'NONE' && !p.manual_port_cost) return null;
+                                                                                        const portName = idx === 0 
+                                                                                            ? (tramos[0]?.origin_port_id || 'Origen') 
+                                                                                            : (tramos[idx - 1]?.destination_port_id || `Destino ${idx}`);
+
+                                                                                        return (
+                                                                                            <tr key={idx} className="border-b border-slate-200 hover:bg-slate-50">
+                                                                                                <td className="py-1.5 px-2 font-bold text-slate-800">{portName}</td>
+                                                                                                <td className="py-1.5 px-2 font-sans">
+                                                                                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${p.action === 'CARGAR' ? 'bg-blue-100 text-blue-800' : p.action === 'DESCARGAR' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}`}>
+                                                                                                        {p.action || 'NONE'}
+                                                                                                    </span>
+                                                                                                </td>
+                                                                                                <td className="py-1.5 px-2 text-right">{p.op_rate || 0} TH</td>
+                                                                                                <td className="py-1.5 px-2 text-right">{p.time_to_count || 0} hrs</td>
+                                                                                                <td className="py-1.5 px-2 text-right">{p.positioning || 0} hrs</td>
+                                                                                                <td className="py-1.5 px-2 text-right font-bold text-slate-800">{fmtCur(p.manual_port_cost || p.muellaje_cost)}</td>
+                                                                                            </tr>
+                                                                                        );
+                                                                                    })}
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* 3. FILA INFERIOR DE CARDS (COMMENTS, BAF Y DEMURRAGE) */}
+                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                                    
+                                                                    {/* CARD 1: COMMENTS */}
+                                                                    <div className="bg-white border border-slate-300 rounded-lg p-3 shadow-sm flex flex-col justify-between">
                                                                         <div>
-                                                                            <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase border-b border-slate-100 pb-1 mb-2">
-                                                                                <span>Tramo {idx + 1}</span>
-                                                                                <span>{t.min_tonnage.toLocaleString()} - {t.max_tonnage.toLocaleString()} MT</span>
-                                                                            </div>
-                                                                            <div className="flex justify-between items-center text-xs text-slate-600 mb-1 font-mono">
-                                                                                <span>Tarifa Base:</span>
-                                                                                <span className="font-bold">${t.freight_rate.toFixed(2)}/MT</span>
-                                                                            </div>
-                                                                            <div className="flex justify-between items-center text-xs text-slate-600 mb-1 font-mono">
-                                                                                <span>Ajuste Δ BAF:</span>
-                                                                                <span className={`font-bold ${bafData.deltaBaf >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                                                                    {bafData.deltaBaf >= 0 ? '+' : ''}${bafData.deltaBaf.toFixed(2)}/MT
-                                                                                </span>
-                                                                            </div>
-                                                                            <div className="flex justify-between items-center text-xs text-emerald-800 font-mono font-black bg-emerald-50 p-1.5 rounded border border-emerald-200">
-                                                                                <span>Flete Final Ajustado:</span>
-                                                                                <span>${adjPrice.toFixed(2)}/MT</span>
+                                                                            <h5 className="text-[11px] font-bold text-slate-500 uppercase border-b border-slate-200 pb-1 mb-2 font-sans flex items-center justify-between">
+                                                                                <span>Comments (Observaciones)</span>
+                                                                                <span className="text-[9.5px] font-mono text-slate-400">Bitácora</span>
+                                                                            </h5>
+                                                                            {(() => {
+                                                                                const commentList = route.comments || route.legs_data?.comments || route.legs_data?.contract_metadata?.comments;
+                                                                                if (Array.isArray(commentList) && commentList.length > 0) {
+                                                                                    return (
+                                                                                        <div className="space-y-1.5 max-h-[110px] overflow-y-auto pr-1">
+                                                                                            {commentList.map((c: any, cIdx: number) => (
+                                                                                                <div key={cIdx} className="bg-slate-50 p-1.5 rounded border border-slate-200 text-[11px] font-sans">
+                                                                                                    <div className="flex justify-between items-center text-[9.5px] text-slate-500 font-bold mb-0.5">
+                                                                                                        <span>👤 {c.user || 'Sistema'}</span>
+                                                                                                        <span>📅 {c.date || 'Sin fecha'}</span>
+                                                                                                    </div>
+                                                                                                    <p className="text-slate-800 italic">{c.text}</p>
+                                                                                                </div>
+                                                                                            ))}
+                                                                                        </div>
+                                                                                    );
+                                                                                }
+                                                                                return (
+                                                                                    <p className="text-xs text-slate-700 font-sans italic bg-slate-50 p-2 rounded border border-slate-200 min-h-[60px]">
+                                                                                        {route.description || route.legs_data?.contract_metadata?.contract_status || 'Sin observaciones registradas.'}
+                                                                                    </p>
+                                                                                );
+                                                                            })()}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* CARD 2: BAF SIMETRICO */}
+                                                                    <div className="bg-white border border-slate-300 rounded-lg p-3 shadow-sm flex flex-col justify-between">
+                                                                        <div>
+                                                                            <h5 className="text-[11px] font-bold text-slate-500 uppercase border-b border-slate-200 pb-1 mb-2 font-sans flex items-center justify-between">
+                                                                                <span>BAF (Bunker Adjustment Factor)</span>
+                                                                                <span className="text-[9.5px] font-mono text-blue-600 font-bold">Base</span>
+                                                                            </h5>
+                                                                            <div className="space-y-2 text-xs font-mono">
+                                                                                <div>
+                                                                                    <span className="text-[9px] text-slate-500 uppercase block font-bold">Fórmula BAF:</span>
+                                                                                    <div className="bg-slate-50 border border-slate-200 p-1 rounded font-bold text-blue-900 text-[11px]">
+                                                                                        {route.legs_data?.baf_formula || route.legs_data?.contract_metadata?.baf_formula || 'Sin fórmula asignada'}
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div className="grid grid-cols-2 gap-1.5">
+                                                                                    <div>
+                                                                                        <span className="text-[9px] text-slate-500 uppercase block font-bold">Inicio Validez:</span>
+                                                                                        <div className="bg-white border border-slate-200 p-1 rounded font-bold text-slate-800 text-[10.5px]">
+                                                                                            {route.legs_data?.baf_valid_from || validFrom}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <span className="text-[9px] text-slate-500 uppercase block font-bold">Fin Validez:</span>
+                                                                                        <div className="bg-white border border-slate-200 p-1 rounded font-bold text-slate-800 text-[10.5px]">
+                                                                                            {route.legs_data?.baf_valid_to || validTo}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div className="grid grid-cols-2 gap-1.5">
+                                                                                    <div>
+                                                                                        <span className="text-[9px] text-slate-500 uppercase block font-bold">IFO Base ($/T):</span>
+                                                                                        <div className="bg-white border border-slate-200 p-1 rounded font-bold text-slate-800 text-right text-[11px]">
+                                                                                            {fmtCur(route.legs_data?.baf_ifo_base || route.legs_data?.contract_metadata?.baf_ifo_base)}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <span className="text-[9px] text-slate-500 uppercase block font-bold">MDO Base ($/T):</span>
+                                                                                        <div className="bg-white border border-slate-200 p-1 rounded font-bold text-slate-800 text-right text-[11px]">
+                                                                                            {fmtCur(route.legs_data?.baf_mdo_base || route.legs_data?.contract_metadata?.baf_mdo_base)}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                );
-                                                            })}
-                                                            {selectedRoute.tariffs.length === 0 && (
-                                                                <div className="col-span-full text-center text-xs text-slate-400 py-3 italic">
-                                                                    No hay tramos configurados para auditar BAF.
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </section>
-                                            )}
 
-                                            {/* Espaciado final */}
-                                            <div className="h-10"></div>
-                                        </div>
-                                    ) : (
-                                        <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-3">
-                                            <FileText size={48} className="opacity-20" />
-                                            <p className="font-medium text-lg">Selecciona una ruta o crea una nueva.</p>
+                                                                    {/* COLUMNA 3: 2 CARDS SEPARADAS (DEMURRAGE ARRIBA, BANDAS TARIFARIAS ABAJO) */}
+                                                                    <div className="flex flex-col gap-2 justify-between flex-1 h-full">
+                                                                        
+                                                                        {/* CARD 3A: DEMURRAGE (CARD INDEPENDIENTE ARRIBA) */}
+                                                                        <div className="bg-white border border-slate-300 rounded-lg p-3 shadow-sm flex flex-col justify-between">
+                                                                            <h5 className="text-[11px] font-bold text-slate-500 uppercase border-b border-slate-200 pb-1 mb-1.5 font-sans flex items-center justify-between">
+                                                                                <span>Demurrage (Estadías)</span>
+                                                                                <span className="text-[9.5px] font-mono text-slate-400">$ / día</span>
+                                                                            </h5>
+                                                                            {(() => {
+                                                                                const demMap = route.demurrage_rates || route.legs_data?.demurrage_rates || route.legs_data?.contract_metadata?.demurrage_rates;
+                                                                                if (demMap && typeof demMap === 'object' && Object.keys(demMap).length > 0) {
+                                                                                    return (
+                                                                                        <div className="space-y-1 max-h-[80px] overflow-y-auto pr-1">
+                                                                                            {Object.entries(demMap).map(([vesselName, rateVal]) => (
+                                                                                                <div key={vesselName} className="bg-slate-50 px-2 py-1 rounded border border-slate-200 flex justify-between items-center text-xs font-sans">
+                                                                                                    <span className="font-semibold text-slate-700 text-[10.5px]">🚢 {vesselName}:</span>
+                                                                                                    <span className="font-mono font-bold text-amber-700">{fmtCur(rateVal as number)} / día</span>
+                                                                                                </div>
+                                                                                            ))}
+                                                                                        </div>
+                                                                                    );
+                                                                                }
+                                                                                const singleRate = route.demurrage_rate || route.legs_data?.contract_metadata?.demurrage_rate || 20000;
+                                                                                return (
+                                                                                    <div className="bg-slate-50 p-1.5 rounded border border-slate-200 flex justify-between items-center text-xs font-sans">
+                                                                                        <span className="font-semibold text-slate-600">Rate ($/día):</span>
+                                                                                        <span className="font-mono font-bold text-amber-700">{fmtCur(singleRate)} / día</span>
+                                                                                    </div>
+                                                                                );
+                                                                            })()}
+                                                                        </div>
+
+                                                                        {/* CARD 3B: BANDAS TARIFARIAS POR VOLUMEN (CARD INDEPENDIENTE ABAJO) */}
+                                                                        <div className="bg-white border border-slate-300 rounded-lg p-3 shadow-sm flex flex-col justify-between">
+                                                                            <h5 className="text-[10px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1 font-sans flex items-center justify-between">
+                                                                                <span>Bandas Tarifarias por Volumen ($/MT)</span>
+                                                                                <span className="text-[9px] font-mono text-emerald-600 font-bold">4 Bandas</span>
+                                                                            </h5>
+                                                                            <div className="grid grid-cols-4 gap-1 pt-0.5 font-mono">
+                                                                                {(() => {
+                                                                                    const tiers = (route as any).tariff_tiers || route.legs_data?.tariff_tiers || route.legs_data?.contract_metadata?.tariff_tiers || (route as any).contract_tariffs || [];
+                                                                                    return [0, 1, 2, 3].map((idx) => {
+                                                                                        const t = tiers[idx] || {};
+                                                                                        const labelText = t.label || (idx === 0 ? "10k-11.5k" : idx === 1 ? "11.5k-13k" : idx === 2 ? "13k-13.5k" : "13.6k-14.5k");
+                                                                                        const rateVal = t.rate ?? t.freight_rate ?? 0;
+
+                                                                                        return (
+                                                                                            <div key={idx} className="bg-slate-50 border border-slate-200 rounded p-1 text-center">
+                                                                                                <div className="text-[8.5px] font-bold text-slate-600 truncate border-b border-slate-200 pb-0.5 mb-0.5">
+                                                                                                    {labelText}
+                                                                                                </div>
+                                                                                                <div className="text-[10px] font-bold text-emerald-700">
+                                                                                                    {rateVal ? `${fmtCur(rateVal)}/MT` : '$0.00'}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        );
+                                                                                    });
+                                                                                })()}
+                                                                            </div>
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                </div>
+
+                                                            </div>
+                                                        )}
+
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     )}
+
                                 </div>
-                            </>
-                        ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-3">
-                                <FileText size={48} className="opacity-20" />
-                                <p className="font-medium text-lg">Crea un Nuevo Contrato para comenzar.</p>
-                            </div>
-                        )}
-                    </div>
+                            );
+                        })
+                    )}
+
                 </div>
+
             </div>
         </MasterTemplate>
     );

@@ -197,8 +197,45 @@ flowchart TD
 
 ---
 
+## 📊 4. Especificaciones del Step 5 (Validez) y Fila Inferior de Resultados (Cards Inferiores)
+
+### 🔹 4.1. Paso 5: Validez de Cotización (`5. VALIDEZ`)
+* **Calendarios Limpios**: `Inicio:` y `Fin:` en formato fecha nativo `YYYY-MM-DD`.
+* **Sin Relleno Obligatorio ni Selectores Innecesarios**: Eliminados el select de "1 año" y el texto "*OBLIGATORIO".
+* **Validación en Guardado**: Si `validFrom` o `validTo` no están definidos, se detiene la acción de guardar e indica completar las fechas de vigencia.
+
+---
+
+### 🔹 4.2. División de la Fila Inferior en 3 Cards Independientes (Alineación 1:1)
+La fila inferior bajo los resultados comerciales se estructura en 3 columnas iguales (`col-span-1` en `grid-cols-3`):
+
+```text
+┌──────────────────────────────────────┬──────────────────────────────────────┬──────────────────────────────────────┐
+│ COLUMNA 1 (Debajo de Bunker Expenses)│ COLUMNA 2 (Debajo de Port Costs)     │ COLUMNA 3 (Debajo de Comisiones)     │
+│ 💬 COMMENTS (Observaciones)          │ 🧮 BAF (Bunker Adjustment Factor)    │ ⚓ DEMURRAGE & BANDAS TARIFARIAS      │
+└──────────────────────────────────────┴──────────────────────────────────────┴──────────────────────────────────────┘
+```
+
+1. **Card 1 — COMMENTS (Observaciones)**:
+   * Campo de texto editable para agregar observaciones comerciales del viaje o contrato.
+
+2. **Card 2 — BAF (Bunker Adjustment Factor) Simétrica**:
+   * **Fila 1 (Ancho Completo)**: `🧮 Fórmula BAF:` (input limpio, placeholder "Ingrese fórmula...").
+   * **Fila 2 (`grid grid-cols-2`)**: `📅 Inicio Validez` (mitad izquierda) + `📅 Fin Validez` (mitad derecha).
+   * **Fila 3 (`grid grid-cols-2`)**: `IFO Base ($/T)` (mitad izquierda, inicializado en `0`) + `MDO Base ($/T)` (mitad derecha, inicializado en `0`).
+   * **Regla Estricta de Cero Data Dummy**: Prohibido hardcodear fórmulas, fechas o precios ficticios (`550.00`, `720.00`).
+
+3. **Card 3 — DEMURRAGE & BANDAS TARIFARIAS POR VOLUMEN**:
+   * **Mitad Superior**: `Demurrage (Estadías)` con input de `Rate ($/día)` (ej. `$20,000/día`). Purgado el texto de pie de página.
+   * **Mitad Inferior**: `Bandas Tarifarias por Volumen ($/MT)` con **4 Cajas/Boxes en 1 sola fila horizontal** (`grid grid-cols-4`):
+     * **Arriba del Box**: Rango de Tonelaje (ej. `10k-11.5k MT`, `11.5k-13k MT`, `13k-13.5k MT`, `13.6k-14.5k MT`).
+     * **Abajo del Box**: Tarifa de flete en $/MT (ej. `$20.12`, `$19.52`, `$19.01`, `$18.92`).
+
+---
+
 ## 📄 Archivos Relacionados
+* **Documento Especificaciones Grilla & Puertos:** [`07_Especificaciones_Comerciales_Grilla_y_Puertos.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/07_Especificaciones_Comerciales_Grilla_y_Puertos.md)
+* **Documento Refactorización Contratos & Matriz:** [`08_Refactorizacion_triangulo_multicotizador_contratos_matriz.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/08_Refactorizacion_triangulo_multicotizador_contratos_matriz.md)
 * **Documento Modularización previa:** [`04_Modularizacion_Frontend_Servicios_y_Tabs.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/04_Modularizacion_Frontend_Servicios_y_Tabs.md)
 * **Script Flujograma Python:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.py)
-* **Diagrama PNG:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.png`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.png)
-* **Documento PDF:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.pdf`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.pdf)
+

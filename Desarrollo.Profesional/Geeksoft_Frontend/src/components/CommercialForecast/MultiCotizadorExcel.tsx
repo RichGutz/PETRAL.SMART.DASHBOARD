@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ForecastService } from '../../services/api';
-import { FolderOpen } from 'lucide-react';
+import { FolderOpen, Calendar } from 'lucide-react';
 
 // Servicios Provistos (Providers)
 import { VesselProviderService } from '../../services/providers/vesselProviderService';
@@ -52,7 +52,12 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     const [selectedClient, setSelectedClient] = useState<string>('');
     const [selectedRouteId, setSelectedRouteId] = useState<string>('CREAR_RUTA');
     const [selectedQuoteId, setSelectedQuoteId] = useState<string>('');
-    // const [localPortCostMode, setLocalPortCostMode] = useState<'static' | 'matrix'>(initialPortCostMode);
+    
+    // Estados de Vigencia / Validez (Paso 5)
+    const [validFrom, setValidFrom] = useState<string>(new Date().toISOString().split('T')[0]);
+    const [validTo, setValidTo] = useState<string>(
+        new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
+    );
 
     // 2. Estados de Catálogos, Contratos & Etiquetas UX
     const [vessels, setVessels] = useState<any[]>([]);
@@ -90,11 +95,28 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' }
     ]);
 
-    // 6. Comisiones, Demurrage & Refacturación
+    // 6. Comisiones, Demurrage & BAF
     const [addressCommPct, setAddressCommPct] = useState<number>(0);
     const [brokerCommPct, setBrokerCommPct] = useState<number>(0);
     const [demurrageRate, setDemurrageRate] = useState<number>(20000);
     const [commentsText, setCommentsText] = useState<string>('');
+    const [bafFormula, setBafFormula] = useState<string>('');
+    const [bafValidFrom, setBafValidFrom] = useState<string>('');
+    const [bafValidTo, setBafValidTo] = useState<string>('');
+    const [bafIfoBase, setBafIfoBase] = useState<number>(0);
+    const [bafMdoBase, setBafMdoBase] = useState<number>(0);
+    const [tariffTiers, setTariffTiers] = useState<any[]>([
+        { label: '', rate: 0 },
+        { label: '', rate: 0 },
+        { label: '', rate: 0 },
+        { label: '', rate: 0 }
+    ]);
+    const [demurrageRatesMap, setDemurrageRatesMap] = useState<Record<string, number>>({
+        'HUEMUL': 25000,
+        'MOQUEGUA': 25000,
+        'TABLONES': 25000,
+        'CONCON TRADER': 25000
+    });
     const [refacturarMuellajeMap, setRefacturarMuellajeMap] = useState<Record<number, boolean>>({});
 
     // 7. Resultados & Persistencia Modales
@@ -495,6 +517,10 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     };
 
     const handleSaveRoute = async () => {
+        if (!validFrom || !validFrom.trim() || !validTo || !validTo.trim()) {
+            alert("⚠️ Validación Requerida: Debe seleccionar las fechas de Inicio y Fin en el Paso 5 (VALIDEZ) antes de guardar.");
+            return;
+        }
         const prefix = getSuggestedRoutePrefix(selectedClient);
         const finalName = (saveMode === 'OVERWRITE' && loadedRouteName)
             ? loadedRouteName
@@ -517,7 +543,16 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 vesselParams,
                 addressCommPct,
                 brokerCommPct,
-                rawClients
+                rawClients,
+                validFrom,
+                validTo,
+                bafFormula,
+                bafValidFrom,
+                bafValidTo,
+                bafIfoBase,
+                bafMdoBase,
+                tariffTiers,
+                demurrageRatesMap
             });
             setLoadedRouteName(finalName);
             setShowSaveModal(false);
@@ -753,9 +788,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     return (
         <div className="w-full min-h-screen bg-white p-2 text-slate-800 font-sans flex flex-col select-text">
             
-            {/* BARRA UNIFICADA Y ESTANDARIZADA DE PASOS COMERCIALES (1 A 6) - SIN LOGOS NI CONTENEDORES DESIGUALES */}
+            {/* BARRA UNIFICADA Y ESTANDARIZADA DE PASOS COMERCIALES (1 A 5) - SIN SCROLLBAR HORIZONTAL */}
             <div className="bg-slate-50 border border-slate-300 rounded p-1.5 mb-2 select-none flex-shrink-0">
-                <div className="flex items-center justify-between gap-1.5 flex-nowrap overflow-x-auto">
+                <div className="flex items-center justify-between gap-1 flex-wrap">
                     
                     {/* PASO 1: SELECCIONAR CLIENTE */}
                     <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded px-2 py-1 shadow-sm shrink-0">
@@ -872,6 +907,32 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                         </select>
                     </div>
 
+                    {/* PASO 5: VALIDEZ (FECHA INICIO Y FIN) */}
+                    <div className={`flex items-center gap-1.5 bg-white border rounded px-2 py-1 shadow-sm shrink-0 ${!validFrom || !validTo ? 'border-amber-400 bg-amber-50/50' : 'border-slate-300'}`}>
+                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap flex items-center gap-1">
+                            <Calendar size={12} className="text-blue-600" />
+                            <span>5. VALIDEZ</span>
+                        </span>
+                        <div className="flex items-center gap-1">
+                            <label className="text-[9px] font-bold text-slate-500 uppercase">Inicio:</label>
+                            <input
+                                type="date"
+                                value={validFrom}
+                                onChange={(e) => setValidFrom(e.target.value)}
+                                className="h-6 text-[10.5px] font-mono font-bold bg-white border border-slate-300 rounded px-1 text-blue-900 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                            />
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <label className="text-[9px] font-bold text-slate-500 uppercase">Fin:</label>
+                            <input
+                                type="date"
+                                value={validTo}
+                                onChange={(e) => setValidTo(e.target.value)}
+                                className="h-6 text-[10.5px] font-mono font-bold bg-white border border-slate-300 rounded px-1 text-blue-900 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                            />
+                        </div>
+                    </div>
+
 
 
 
@@ -935,11 +996,25 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     brokerCommPct={brokerCommPct}
                     demurrageRate={demurrageRate}
                     commentsText={commentsText}
+                    bafFormula={bafFormula}
+                    bafValidFrom={bafValidFrom}
+                    bafValidTo={bafValidTo}
+                    bafIfoBase={bafIfoBase}
+                    bafMdoBase={bafMdoBase}
+                    tariffTiers={tariffTiers}
+                    demurrageRatesMap={demurrageRatesMap}
                     refacturarMuellajeMap={refacturarMuellajeMap}
                     setAddressCommPct={setAddressCommPct}
                     setBrokerCommPct={setBrokerCommPct}
                     setDemurrageRate={setDemurrageRate}
                     setCommentsText={setCommentsText}
+                    setBafFormula={setBafFormula}
+                    setBafValidFrom={setBafValidFrom}
+                    setBafValidTo={setBafValidTo}
+                    setBafIfoBase={setBafIfoBase}
+                    setBafMdoBase={setBafMdoBase}
+                    setTariffTiers={setTariffTiers}
+                    setDemurrageRatesMap={setDemurrageRatesMap}
                     getDynamicPortCostItems={getDynamicPortCostItems}
                     fmtCur={fmtCur}
                     fmtNum={fmtNum}

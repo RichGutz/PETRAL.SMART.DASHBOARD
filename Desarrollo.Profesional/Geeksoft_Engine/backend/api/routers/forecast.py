@@ -577,8 +577,13 @@ def save_spot_voyage(request: SpotSaveRequest):
         
         legs_data = request.legs_data or {}
         tramos = legs_data.get("tramos", [])
-        orig_port = tramos[0].get("origin_port_id") if (tramos and len(tramos) > 0) else None
-        dest_port = tramos[-1].get("destination_port_id") if (tramos and len(tramos) > 0) else None
+        laden_leg = next((tr for tr in tramos if tr.get("type") == "LADEN"), None)
+        if laden_leg:
+            orig_port = laden_leg.get("origin_port_id")
+            dest_port = laden_leg.get("destination_port_id")
+        else:
+            orig_port = tramos[0].get("origin_port_id") if (tramos and len(tramos) > 0) else None
+            dest_port = tramos[-1].get("destination_port_id") if (tramos and len(tramos) > 0) else None
         tot_dist = sum(float(tr.get("route_distance", 0) or 0) for tr in tramos) if tramos else 0
 
         # PAYLOAD PURIFICADO: JAMÁS INCLUIR route_id TEXTUAL PARA EVITAR ERROR 22P02 UUID EN POSTGRES
@@ -596,14 +601,37 @@ def save_spot_voyage(request: SpotSaveRequest):
         if tot_dist > 0:
             payload["route_distance"] = tot_dist
         
-        target_table = "routes_quotes" if request.is_prospect else "routes_clients"
+        if getattr(request, "is_contract", False):
+            target_table = "contracts"
+            if getattr(request, "contract_id", None):
+                payload["contract_id"] = request.contract_id
+            if getattr(request, "client_id", None):
+                payload["client_id"] = request.client_id
+            payload.pop("route_distance", None)
+            payload.pop("pais", None)
+        elif request.is_prospect:
+            target_table = "routes_quotes"
+        else:
+            target_table = "routes_clients"
         
-        # BUSCAR SI YA EXISTE UN REGISTRO POR SU NOMBRE COMERCIAL (request.name)
-        existing = sb.table(target_table).select("*").eq("name", request.name).execute()
+        # BUSCAR SI YA EXISTE UN REGISTRO EN LA TABLA OBJETIVO
+        if target_table == "contracts" and orig_port and dest_port and payload.get("client_id"):
+            existing = sb.table(target_table).select("*").eq("client_id", payload["client_id"]).eq("origin_port_id", orig_port).eq("destination_port_id", dest_port).execute()
+            if not (existing.data and len(existing.data) > 0):
+                existing = sb.table(target_table).select("*").eq("name", request.name).execute()
+        else:
+            existing = sb.table(target_table).select("*").eq("name", request.name).execute()
 
         if existing.data and len(existing.data) > 0:
-            # SOBREESCRIBIR / UPDATE LA RUTA EXISTENTE POR SU NAME
-            res = sb.table(target_table).update(payload).eq("name", request.name).execute()
+            # SOBREESCRIBIR / UPDATE LA RUTA EXISTENTE
+            row = existing.data[0]
+            if target_table == "contracts" and row.get("id"):
+                res = sb.table(target_table).update(payload).eq("id", row["id"]).execute()
+            elif target_table == "contracts" and row.get("contract_id"):
+                res = sb.table(target_table).update(payload).eq("contract_id", row["contract_id"]).execute()
+            else:
+                res = sb.table(target_table).update(payload).eq("name", request.name).execute()
+
             if not res.data:
                 raise Exception(f"Failed to overwrite spot route in {target_table} for name {request.name}")
             
@@ -690,8 +718,28 @@ def get_routes_master():
         
         clients_data = masters.get("routes_clients", [])
         prospects_data = masters.get("routes_quotes", [])
+        contracts_data = masters.get("contracts", [])
         
         routes = []
+        for r in (contracts_data or []):
+            client_id = r.get("client_id") or "NEXA"
+            orig = r.get("origin_port_id") or "CALLAO"
+            dest = r.get("destination_port_id") or "MATARANI"
+            name = (r.get("name") or f"{client_id}.{orig}.{dest}.{orig}.2025.V1").strip()
+            route_id = name
+            routes.append({
+                **r,
+                "name": name,
+                "route_id": route_id,
+                "contract_id": r.get("contract_id") or r.get("id"),
+                "spot_id": route_id,
+                "table_source": "contracts",
+                "is_prospect": False,
+                "is_contract": True,
+                "client_group": client_id,
+                "_id": route_id
+            })
+
         for r in (clients_data or []):
             name = (r.get("name") or "").strip()
             client_group = "SPCC" if name.upper().startswith("SPCC") else ("NEXA" if name.upper().startswith("NEXA") else "NEXA")
@@ -807,9 +855,18 @@ def list_spot_voyages():
             r["is_prospect"] = True
             r["is_quote"] = True
             r["table_source"] = "routes_quotes"
+
+        res_contracts = sb.table("contracts").select("*").order("created_at", desc=True).execute().data or []
+        for r in res_contracts:
+            r["is_prospect"] = False
+            r["is_quote"] = False
+            r["is_contract"] = True
+            r["table_source"] = "contracts"
+            if "spot_id" not in r:
+                r["spot_id"] = r.get("contract_id") or r.get("name")
         
-        # Combine list
-        all_routes = res_clients + res_prospects
+        # Combine list: 3 tablas homologadas con la misma estructura (routes_clients, routes_quotes, contracts)
+        all_routes = res_clients + res_prospects + res_contracts
         return all_routes
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

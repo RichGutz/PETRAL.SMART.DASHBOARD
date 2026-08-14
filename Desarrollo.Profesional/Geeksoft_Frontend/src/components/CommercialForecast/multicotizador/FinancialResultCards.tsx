@@ -13,11 +13,25 @@ export interface FinancialResultCardsProps {
     brokerCommPct: number;
     demurrageRate: number;
     commentsText: string;
+    bafFormula?: string;
+    bafValidFrom?: string;
+    bafValidTo?: string;
+    bafIfoBase?: number;
+    bafMdoBase?: number;
+    tariffTiers?: Array<{ label?: string; min?: number; max?: number; rate: number }>;
+    demurrageRatesMap?: Record<string, number>;
     refacturarMuellajeMap: Record<number, boolean>;
     setAddressCommPct: (val: number) => void;
     setBrokerCommPct: (val: number) => void;
     setDemurrageRate: (val: number) => void;
     setCommentsText: (val: string) => void;
+    setBafFormula?: (val: string) => void;
+    setBafValidFrom?: (val: string) => void;
+    setBafValidTo?: (val: string) => void;
+    setBafIfoBase?: (val: number) => void;
+    setBafMdoBase?: (val: number) => void;
+    setTariffTiers?: (val: any[]) => void;
+    setDemurrageRatesMap?: (val: Record<string, number>) => void;
     getDynamicPortCostItems: () => any[];
     fmtCur: (val: number | string | undefined | null) => string;
     fmtNum: (val: number | string | undefined | null) => string;
@@ -46,13 +60,27 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
     vesselParams,
     addressCommPct,
     brokerCommPct,
-    demurrageRate,
+    demurrageRate: _demurrageRate,
     commentsText,
+    bafFormula,
+    bafValidFrom,
+    bafValidTo,
+    bafIfoBase,
+    bafMdoBase,
+    tariffTiers,
+    demurrageRatesMap,
     refacturarMuellajeMap,
     setAddressCommPct,
     setBrokerCommPct,
     setDemurrageRate,
     setCommentsText,
+    setBafFormula,
+    setBafValidFrom,
+    setBafValidTo,
+    setBafIfoBase,
+    setBafMdoBase,
+    setTariffTiers,
+    setDemurrageRatesMap,
     getDynamicPortCostItems,
     fmtCur,
     fmtNum,
@@ -85,13 +113,13 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
         const calcPortDays = idleDays + opDays;
         liveTotalPortDays += calcPortDays;
 
-        const ifoSeaRatio = Number(vesselParams?.consumption_sea_ifo || selectedVesselObj?.consumption_sea_ifo || 14.5);
-        const mdoSeaRatio = Number(vesselParams?.consumption_sea_mdo || selectedVesselObj?.consumption_sea_mdo || 0.1);
-        const ifoIdleRatio = Number(vesselParams?.consumption_idle_ifo || selectedVesselObj?.consumption_idle_ifo || 3.5);
-        const mdoIdleRatio = Number(vesselParams?.consumption_idle_mdo || selectedVesselObj?.consumption_idle_mdo || 0.1);
+        const ifoSeaRatio = Number(vesselParams?.consumption_sea_ifo || selectedVesselObj?.consumption_sea_ifo || 0);
+        const mdoSeaRatio = Number(vesselParams?.consumption_sea_mdo || selectedVesselObj?.consumption_sea_mdo || 0);
+        const ifoIdleRatio = Number(vesselParams?.consumption_idle_ifo || selectedVesselObj?.consumption_idle_ifo || 0);
+        const mdoIdleRatio = Number(vesselParams?.consumption_idle_mdo || selectedVesselObj?.consumption_idle_mdo || 0);
         const ifoLoadRatio = Number(vesselParams?.consumption_load_ifo || selectedVesselObj?.consumption_load_ifo || ifoIdleRatio);
         const mdoLoadRatio = Number(vesselParams?.consumption_load_mdo || selectedVesselObj?.consumption_load_mdo || mdoIdleRatio);
-        const ifoDischRatio = Number(vesselParams?.consumption_disch_ifo || selectedVesselObj?.consumption_disch_ifo || 5.0);
+        const ifoDischRatio = Number(vesselParams?.consumption_disch_ifo || selectedVesselObj?.consumption_disch_ifo || 0);
         const mdoDischRatio = Number(vesselParams?.consumption_disch_mdo || selectedVesselObj?.consumption_disch_mdo || mdoIdleRatio);
 
         const opIfoRate = pCfg.action === 'DESCARGAR' ? ifoDischRatio : pCfg.action === 'CARGAR' ? ifoLoadRatio : ifoIdleRatio;
@@ -136,7 +164,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
 
     // 4. Financial Voyage Result Live
     const totalDays = liveTotalSeaDays + liveTotalPortDays;
-    const tceReq = Number(vesselParams?.tce_required) || 15000;
+    const tceReq = Number(vesselParams?.tce_required || 0);
     const hireUsd = tceReq * totalDays;
 
     const addressCommUsd = revenue * (addressCommPct / 100);
@@ -331,12 +359,13 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
 
                 </div>
 
-                {/* FILA INFERIOR: COMMENTS + DEMURRAGE */}
+                {/* FILA INFERIOR: COMMENTS + BAF + DEMURRAGE (3 CARDS ALINEADAS DE 1 COLUMNA) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-1 items-stretch">
                     
-                    <div className="col-span-1 md:col-span-2 bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col flex-1 h-full">
+                    {/* CARD 1: COMMENTS (DEBAJO DE BUNKER) */}
+                    <div className="col-span-1 bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col flex-1 h-full">
                         <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans flex items-center justify-between">
-                            <span>Comments (Observaciones del Viaje)</span>
+                            <span>Comments (Observaciones)</span>
                             <span className="text-[9.5px] font-mono text-slate-400 font-normal">Notas comerciales</span>
                         </h3>
                         <textarea
@@ -347,31 +376,165 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                         />
                     </div>
 
+                    {/* CARD 2: BAF (DEBAJO DE PORT COSTS) */}
                     <div className="col-span-1 bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between flex-1 h-full">
                         <div>
-                            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 flex items-center justify-between font-sans">
-                                <span>Demurrage (Estadías)</span>
-                                <span className="text-[9.5px] font-mono text-slate-400">$ / día</span>
+                            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans flex items-center justify-between">
+                                <span>BAF (Bunker Adjustment Factor)</span>
+                                <span className="text-[9.5px] font-mono text-blue-600 font-bold">Fórmula & Base</span>
                             </h3>
-                            <div className="flex flex-col gap-2 text-xs font-sans pt-1">
-                                <div className="flex justify-between items-center">
-                                    <span className="font-semibold text-slate-600 text-[11px]">Rate ($/día)</span>
-                                    <div className="flex items-center gap-1">
+                            <div className="flex flex-col gap-1.5 text-xs font-sans pt-0.5">
+                                <div>
+                                    <label className="text-[9.5px] font-bold text-slate-500 uppercase block mb-0.5">🧮 Fórmula BAF:</label>
+                                    <input
+                                        type="text"
+                                        value={bafFormula || ''}
+                                        onChange={(e) => setBafFormula && setBafFormula(e.target.value)}
+                                        placeholder="Ingrese fórmula..."
+                                        className="w-full h-6 text-xs font-mono font-semibold bg-slate-50 border border-slate-300 rounded px-1.5 text-blue-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-1.5">
+                                    <div>
+                                        <label className="text-[9px] font-bold text-slate-500 uppercase block mb-0.5 truncate">📅 Inicio Validez:</label>
                                         <input
-                                            type="number"
-                                            value={demurrageRate || ''}
-                                            onChange={(e) => setDemurrageRate(parseFloat(e.target.value) || 0)}
-                                            placeholder="20,000"
-                                            className="w-24 h-7 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                            type="date"
+                                            value={bafValidFrom || ''}
+                                            onChange={(e) => setBafValidFrom && setBafValidFrom(e.target.value)}
+                                            className="w-full h-6 text-[10.5px] font-mono font-bold bg-white border border-slate-300 rounded px-1 text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                                         />
-                                        <span className="font-mono text-xs text-slate-400">$</span>
+                                    </div>
+                                    <div>
+                                        <label className="text-[9px] font-bold text-slate-500 uppercase block mb-0.5 truncate">📅 Fin Validez:</label>
+                                        <input
+                                            type="date"
+                                            value={bafValidTo || ''}
+                                            onChange={(e) => setBafValidTo && setBafValidTo(e.target.value)}
+                                            className="w-full h-6 text-[10.5px] font-mono font-bold bg-white border border-slate-300 rounded px-1 text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                                        />
                                     </div>
                                 </div>
-                                <p className="text-[10px] text-slate-400 italic pt-1 border-t border-slate-100">
-                                    * Días de estadía se integran al jalar el payload desde Matriz Financiera.
-                                </p>
+                                <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                                    <div>
+                                        <label className="text-[9px] font-bold text-slate-500 uppercase block truncate">IFO Base ($/T):</label>
+                                        <input
+                                            type="number"
+                                            value={bafIfoBase || ''}
+                                            onChange={(e) => setBafIfoBase && setBafIfoBase(parseFloat(e.target.value) || 0)}
+                                            placeholder="0"
+                                            className="w-full h-6 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[9px] font-bold text-slate-500 uppercase block truncate">MDO Base ($/T):</label>
+                                        <input
+                                            type="number"
+                                            value={bafMdoBase || ''}
+                                            onChange={(e) => setBafMdoBase && setBafMdoBase(parseFloat(e.target.value) || 0)}
+                                            placeholder="0"
+                                            className="w-full h-6 text-right font-mono font-bold bg-white border border-slate-350 rounded px-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    </div>
+
+                    {/* COLUMNA 3 (DEBAJO DE COMISIONES): 2 CARDS SEPARADAS (DEMURRAGE ARRIBA, BANDAS TARIFARIAS ABAJO) */}
+                    <div className="col-span-1 flex flex-col gap-2 justify-between flex-1 h-full">
+                        
+                        {/* CARD 3A: DEMURRAGE (ESTADÍAS POR BUQUE - CARD INDEPENDIENTE ARRIBA) */}
+                        <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
+                            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1 font-sans flex items-center justify-between">
+                                <span>Demurrage (Estadías por Buque)</span>
+                                <span className="text-[9.5px] font-mono text-amber-600 font-bold">$ / día</span>
+                            </h3>
+                            <div className="grid grid-cols-4 gap-1 pt-0.5">
+                                {(() => {
+                                    const vesselList = (vessels && vessels.length > 0)
+                                        ? vessels.slice(0, 4).map(v => v.vessel_name || v.name || 'BUQUE')
+                                        : ['HUEMUL', 'MOQUEGUA', 'TABLONES', 'CONCON TRADER'];
+                                    
+                                    return vesselList.map((vName, idx) => {
+                                        const currentVal = demurrageRatesMap ? demurrageRatesMap[vName] : (idx === 0 ? 25000 : 25000);
+                                        return (
+                                            <div key={idx} className="bg-slate-50 border border-slate-200 rounded p-1 flex flex-col justify-between text-center">
+                                                <span className="text-[8.5px] font-bold text-slate-600 truncate border-b border-slate-200 pb-0.5 mb-0.5 block">
+                                                    🚢 {vName.split(' ')[0]}
+                                                </span>
+                                                <div className="flex items-center justify-center gap-0.5">
+                                                    <span className="text-[9px] font-bold text-amber-700">$</span>
+                                                    <input
+                                                        type="number"
+                                                        value={currentVal || ''}
+                                                        onChange={(e) => {
+                                                            const val = parseFloat(e.target.value) || 0;
+                                                            if (setDemurrageRatesMap) {
+                                                                setDemurrageRatesMap({
+                                                                    ...(demurrageRatesMap || {}),
+                                                                    [vName]: val
+                                                                });
+                                                            }
+                                                            if (setDemurrageRate && idx === 0) {
+                                                                setDemurrageRate(val);
+                                                            }
+                                                        }}
+                                                        placeholder="25000"
+                                                        className="w-full h-5 text-center font-mono font-bold bg-white border border-slate-300 rounded text-[10px] text-slate-800 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                                    />
+                                                </div>
+                                            </div>
+                                        );
+                                    });
+                                })()}
+                            </div>
+                        </div>
+
+                        {/* CARD 3B: BANDAS TARIFARIAS POR VOLUMEN (CARD INDEPENDIENTE ABAJO - 4 BANDAS EN 1 FILA) */}
+                        <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
+                            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1 font-sans flex items-center justify-between">
+                                <span>Bandas Tarifarias por Volumen ($/MT)</span>
+                                <span className="text-[9px] font-mono text-emerald-600 font-bold">4 Bandas</span>
+                            </h3>
+                            <div className="grid grid-cols-4 gap-1 pt-0.5">
+                                {[0, 1, 2, 3].map((idx) => {
+                                    const tier = (tariffTiers && tariffTiers[idx]) || { label: '', rate: 0 };
+                                    return (
+                                        <div key={idx} className="bg-slate-50 border border-slate-200 rounded p-1 flex flex-col justify-between text-center">
+                                            <input
+                                                type="text"
+                                                value={tier.label || ''}
+                                                onChange={(e) => {
+                                                    if (!setTariffTiers) return;
+                                                    const next = [...(tariffTiers || [{ label: '', rate: 0 }, { label: '', rate: 0 }, { label: '', rate: 0 }, { label: '', rate: 0 }])];
+                                                    next[idx] = { ...next[idx], label: e.target.value };
+                                                    setTariffTiers(next);
+                                                }}
+                                                placeholder={idx === 0 ? "10k-11.5k" : idx === 1 ? "11.5k-13k" : idx === 2 ? "13k-13.5k" : "13.6k-14.5k"}
+                                                className="w-full text-[8.5px] font-bold text-slate-600 bg-transparent text-center focus:outline-none truncate border-b border-slate-200 pb-0.5 mb-0.5"
+                                            />
+                                            <div className="flex items-center justify-center gap-0.5">
+                                                <span className="text-[9px] font-bold text-emerald-700">$</span>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={tier.rate || ''}
+                                                    onChange={(e) => {
+                                                        if (!setTariffTiers) return;
+                                                        const next = [...(tariffTiers || [{ label: '', rate: 0 }, { label: '', rate: 0 }, { label: '', rate: 0 }, { label: '', rate: 0 }])];
+                                                        next[idx] = { ...next[idx], rate: parseFloat(e.target.value) || 0 };
+                                                        setTariffTiers(next);
+                                                    }}
+                                                    placeholder="0.00"
+                                                    className="w-full h-5 text-center font-mono font-bold bg-white border border-slate-300 rounded text-[10px] text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
                     </div>
 
                 </div>
@@ -390,7 +553,11 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                             {/* 1. Revenue */}
                             <tr className="border-b border-emerald-200/80 bg-emerald-100/40">
                                 <td className="py-1 pl-1 text-slate-900 font-sans text-[11px] font-extrabold uppercase">
-                                    Revenue ({fmtThousandSep(puertosConfig[2]?.quantity || puertosConfig[1]?.quantity || 13500)} MT × {fmtCur(puertosConfig[2]?.freight_rate || puertosConfig[1]?.freight_rate || 30)}/MT)
+                                    {(() => {
+                                        const activeQty = Number(puertosConfig.find(p => (p.action === 'DESCARGAR' || p.action === 'CARGAR') && Number(p.quantity) > 0)?.quantity || 0);
+                                        const activeRate = Number(puertosConfig.find(p => (p.action === 'DESCARGAR' || p.action === 'CARGAR') && Number(p.freight_rate) > 0)?.freight_rate || 0);
+                                        return `Revenue (${fmtThousandSep(activeQty)} MT × ${fmtCur(activeRate)}/MT)`;
+                                    })()}
                                 </td>
                                 <td className="text-right py-1 pr-1 font-black text-emerald-950 text-xs">
                                     {fmtCur(revenue)}

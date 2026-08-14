@@ -1,0 +1,67 @@
+[
+  {
+    "name": "SPCC.ILO.MATARANI.ILO.2025.V1",
+    "client": "SPCC",
+    "vessel": "MOQUEGUA",
+    "quantity": 13500,
+    "freight_rate": 19.01,
+    "revenue": 256635.0,
+    "port_costs": 0.0,
+    "bunker_cost": 7290.94,
+    "total_days": 0.0,
+    "pnl": 249344.06,
+    "tce": 0
+  },
+  {
+    "name": "SPCC.ILO.MARCONA.ILO.2025.V1",
+    "client": "SPCC",
+    "vessel": "MOQUEGUA",
+    "quantity": 13500,
+    "freight_rate": 22.82,
+    "revenue": 308070.0,
+    "port_costs": 0.0,
+    "bunker_cost": 29480.77,
+    "total_days": 0.0,
+    "pnl": 278589.23,
+    "tce": 0
+  },
+  {
+    "name": "NEXA.CALLAO.MEJILLONES.CALLAO.2025.V1",
+    "client": "NEXA",
+    "vessel": "MOQUEGUA",
+    "quantity": 13500,
+    "freight_rate": 30.0,
+    "revenue": 405000.0,
+    "port_costs": 0.0,
+    "bunker_cost": 82208.01,
+    "total_days": 0.0,
+    "pnl": 322791.99,
+    "tce": 0
+  },
+  {
+    "name": "NEXA.CALLAO.MATARANI.CALLAO.2027.V1",
+    "client": "NEXA",
+    "vessel": "MOQUEGUA",
+    "quantity": 1100,
+    "freight_rate": 30.0,
+    "revenue": 33000.0,
+    "port_costs": 0.0,
+    "bunker_cost": 54916.17,
+    "total_days": 0.0,
+    "pnl": -21916.17,
+    "tce": 0
+  },
+  {
+    "name": "SPCC.ILO.MEJILLONES.ILO.2025.V1",
+    "client": "SPCC",
+    "vessel": "MOQUEGUA",
+    "quantity": 13500,
+    "freight_rate": 20.87,
+    "revenue": 281745.0,
+    "port_costs": 0.0,
+    "bunker_cost": 35292.39,
+    "total_days": 0.0,
+    "pnl": 246452.61,
+    "tce": 0
+  }
+]

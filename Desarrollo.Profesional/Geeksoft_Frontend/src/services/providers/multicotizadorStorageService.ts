@@ -14,28 +14,48 @@ export interface SaveQuoteParams {
     addressCommPct: number;
     brokerCommPct: number;
     rawClients: any[];
+    isContract?: boolean;
+    contractId?: string;
+    validFrom?: string;
+    validTo?: string;
+    validityYears?: number;
+    contractStatus?: string;
+    bafFormula?: string;
+    bafValidFrom?: string;
+    bafValidTo?: string;
+    bafIfoBase?: number;
+    bafMdoBase?: number;
+    tariffTiers?: any[];
+    demurrageRatesMap?: Record<string, number>;
 }
 
 export class MulticotizadorStorageService {
     /**
-     * Empaqueta y guarda una cotización multicotizador enriquecida en Supabase DB.
+     * Empaqueta y guarda una cotización multicotizador enriquecida en Supabase DB (routes_clients, routes_quotes o contracts).
      */
     public static async saveQuote(params: SaveQuoteParams): Promise<boolean> {
         const {
             routeId, routeName, selectedClient, filterProspecto, selectedVessel,
             bunkerPriceIfo, bunkerPriceMdo, tramosEnriquecidos,
-            puertosConfig, vesselParams, addressCommPct, brokerCommPct, rawClients
+            puertosConfig, vesselParams, addressCommPct, brokerCommPct, rawClients,
+            isContract, contractId, validFrom, validTo, validityYears, contractStatus,
+            bafFormula, bafValidFrom, bafValidTo, bafIfoBase, bafMdoBase, tariffTiers, demurrageRatesMap
         } = params;
 
         const clientInfo = rawClients.find((c: any) => c.client_id === selectedClient);
         const isClientProspect = (clientInfo?.is_prospect === true) || filterProspecto;
 
-        const payload = {
+        const payload: any = {
             route_id: routeId,
             name: routeName,
-            description: isClientProspect ? "Cotización Prospecto (routes_quotes)" : "Ruta Cliente Activo (routes_clients)",
+            description: isContract
+                ? `Contrato Registrado (contracts) - Cliente ${selectedClient}`
+                : (isClientProspect ? "Cotización Prospecto (routes_quotes)" : "Ruta Cliente Activo (routes_clients)"),
             pais: 'PE',
             is_prospect: isClientProspect,
+            is_contract: isContract === true,
+            contract_id: contractId,
+            client_id: selectedClient,
             created_by: 'izavala@petral.com.pe',
             legs_data: {
                 is_multicotizador: true,
@@ -47,7 +67,30 @@ export class MulticotizadorStorageService {
                 puertosConfig,
                 vesselParams: isClientProspect ? vesselParams : undefined,
                 addressCommPct,
-                brokerCommPct
+                brokerCommPct,
+                baf_formula: bafFormula,
+                baf_valid_from: bafValidFrom,
+                baf_valid_to: bafValidTo,
+                baf_ifo_base: bafIfoBase,
+                baf_mdo_base: bafMdoBase,
+                tariff_tiers: tariffTiers,
+                demurrage_rates: demurrageRatesMap,
+                // Toda la complejidad adicional del contrato se almacena en el JSONB legs_data
+                contract_metadata: isContract ? {
+                    contract_id: contractId || `CTR-${selectedClient}-${Date.now()}`,
+                    client_id: selectedClient,
+                    valid_from: validFrom,
+                    valid_to: validTo,
+                    validity_years: validityYears || 1,
+                    contract_status: contractStatus || 'ACTIVE',
+                    baf_formula: bafFormula,
+                    baf_valid_from: bafValidFrom,
+                    baf_valid_to: bafValidTo,
+                    baf_ifo_base: bafIfoBase,
+                    baf_mdo_base: bafMdoBase,
+                    tariff_tiers: tariffTiers,
+                    demurrage_rates: demurrageRatesMap
+                } : undefined
             }
         };
 
@@ -56,7 +99,7 @@ export class MulticotizadorStorageService {
     }
 
     /**
-     * Lista y filtra las rutas guardadas desde la API.
+     * Lista y filtra las rutas guardadas desde la API (routes_clients, routes_quotes y contracts).
      */
     public static async listSavedQuotes(
         filterActivo: boolean,

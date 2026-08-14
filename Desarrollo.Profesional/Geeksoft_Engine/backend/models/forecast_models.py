@@ -49,6 +49,9 @@ class SpotSaveRequest(BaseModel):
     legs_data: Dict[str, Any]
     pais: Optional[str] = "Peru"
     is_prospect: Optional[bool] = False
+    is_contract: Optional[bool] = False
+    contract_id: Optional[str] = None
+    client_id: Optional[str] = None
     created_by: Optional[str] = "izavala@petral.com.pe"
 
 class SpotCalculationRequest(BaseModel):
