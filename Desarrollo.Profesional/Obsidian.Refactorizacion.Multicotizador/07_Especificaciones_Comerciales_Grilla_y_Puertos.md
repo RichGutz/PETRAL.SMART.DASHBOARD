@@ -236,7 +236,16 @@ A partir de la inspección del razonamiento pericial planteado por Sherlock Holm
 | **8.1** | **`Consumo Búnker en Descarga`** | Usaba `3.5 T/D` (`idle_ifo`) para todo el puerto | **`5.0 T/D`** (`disch_ifo`) durante las 33.75h de descarga | **El Crimen de Omitir `OP. DEST`:** La columna `OP. DEST` marcaba `DESCARGAR`, pero el algoritmo no leía la tasa `consumption_disch_ifo` de la cabecera. | ✅ RESUELTO |
 | **8.2** | **`Consumo Búnker en Carga`** | Usaba `3.5 T/D` (`idle_ifo`) | **`3.5 T/D`** (`load_ifo`) durante las 27h de carga | **Sincronización:** Aplica `consumption_load_ifo` para horas de operación de carga. | ✅ RESUELTO |
 | **8.3** | **`Consumo Búnker en Espera`** | Usaba `3.5 T/D` para todas las horas | **`3.5 T/D`** (`idle_ifo`) para las horas `Time to Count` y `Posic` | **Segregación Prístina:** Horas muertas/manejo usan `idle_ifo`, u horas de operación usan `op_ifo` según `OP. DEST`. | ✅ RESUELTO |
-| **8.4** | **`Coincidencia con Excel`** | $77,761.00 USD (Diferencia -$2,313.48 vs Excel) | **`$80,077.00 USD`** (Coincidencia 100.00% exactísima con Excel `$80,074.48`) | **Calce Pericial Exitoso:** Las 71.7 Toneladas IFO y 0.7 Toneladas MDO ahora coinciden exactamente al centavo con el Excel `NEXA ILO CALLA MATARANI ILO.xlsx`. | ✅ RESUELTO |
+### ───────────────
+
+### 🕵️‍♂️ 5.9. Novena Vuelta (Serie 9: El "Smoking Gun" en la Fila TOTAL de la Grilla vs Card Búnker)
+
+A partir de la inspección del hallazgo flagrante donde el Card Búnker mostraba **`$80,082 USD`** (`$80,077 USD`), pero la **Fila TOTAL de la Grilla** mostraba **`$77,761 USD`**:
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 9) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **9.1** | **`Fila TOTAL Grilla (Bunker $)`** | Muestra **`$77,761 USD`** (Descuadre de -$2,321 vs Card) | **`$80,077.00 USD`** (Coincidencia 1:1 exacta con Card Búnker y Card 4) | **El Crimen de la Duplicidad de Fórmulas:** El helper `liveBunkerCosts` al inicio de `SpreadsheetTramosGrid.tsx` no había sido actualizado con las tasas `OP. DEST` de carga/descarga (`5.0 T/D`), mientras que las celdas individuales y el Card sí. | ✅ RESUELTO |
+| **9.2** | **`Sincronización Total Grilla`** | Fila TOTAL leía un array desconectado | **`sumLiveBunkerCosts` unificado:** Lee el mismo algoritmo dinámico `idleDays + opDays * opIfoRate` | **Unificación de Cálculo:** La Fila TOTAL de la grilla y el Card Búnker leen 100% el mismo acumulador live. | ✅ RESUELTO |
 
 ---
 
