@@ -488,35 +488,48 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     const buildPuertosConfigFromTramos = (tramosList: any[], client: string) => {
         if (!tramosList || tramosList.length === 0) return [];
         
-        const defaultTimeToCount = client === 'NEXA' ? 12 : client === 'SPCC' ? 6 : 12;
-        const defaultLoadRate = client === 'NEXA' ? 800 : client === 'SPCC' ? 500 : 500;
-        const defaultDischRate = client === 'NEXA' ? 600 : client === 'SPCC' ? 300 : 300;
+        const clientClean = (client || '').trim().toUpperCase();
+        const clientContracts = (contractsList || []).filter((c: any) => {
+            const cName = (c.client_name || c.client_id || '').trim().toUpperCase();
+            return cName === clientClean || cName.includes(clientClean) || clientClean.includes(cName);
+        });
 
         const config: any[] = [];
-
         const t0 = tramosList[0] || {};
+        const polId = (t0.origin_port_id || '').trim().toUpperCase();
+        
+        // Fila 0: POL (Origen)
+        const polContract = clientContracts.find((c: any) => (c.origin_port_id || '').trim().toUpperCase() === polId) || clientContracts[0];
+        const is0Laden = t0.type === 'LADEN' || tramosList.some(t => t.type === 'LADEN');
+        const action0 = is0Laden ? 'CARGAR' : 'NONE';
+        
         config.push({
-            action: t0.type === 'LADEN' ? 'CARGAR' : (tramosList.some(t => t.type === 'LADEN') ? 'CARGAR' : 'NONE'),
-            time_to_count: t0.port_delay_hours_loading ?? t0.time_to_count_carga_hrs ?? defaultTimeToCount,
-            op_rate: t0.contract_agreed_load_rate ?? t0.origin_op_rate ?? defaultLoadRate,
+            action: action0,
+            time_to_count: action0 === 'NONE' ? 0 : (polContract?.time_to_count_carga_hrs ?? t0.port_delay_hours_loading ?? t0.time_to_count_carga_hrs ?? (clientClean === 'NEXA' ? 12 : clientClean === 'SPCC' ? 6 : 0)),
+            op_rate: action0 === 'NONE' ? 0 : (polContract?.load_rate ?? t0.contract_agreed_load_rate ?? t0.origin_op_rate ?? 500),
             rate_unit: t0.rate_unit_origin || 'TH',
-            quantity: t0.quantity ?? 0,
+            quantity: is0Laden ? (t0.quantity || 13500) : 0,
             freight_rate: t0.freight_rate ?? 0,
-            positioning: t0.positioning_carga_hrs ?? 0,
+            positioning: action0 === 'NONE' ? 0 : (polContract?.maneuver_carga_hrs ?? t0.positioning_carga_hrs ?? (clientClean === 'NEXA' ? 3 : clientClean === 'SPCC' ? 1 : 0)),
             manual_port_cost: t0.agency_costs_origin ?? t0.manual_agency_cost_origin ?? ''
         });
 
+        // Filas 1..N: POD (Destinos)
         tramosList.forEach((tr: any) => {
+            const podId = (tr.destination_port_id || '').trim().toUpperCase();
+            const podContract = clientContracts.find((c: any) => (c.destination_port_id || c.destination_port || '').trim().toUpperCase() === podId) || clientContracts[0];
             const isLaden = tr.type === 'LADEN';
             const isDischarging = isLaden || (Number(tr.quantity) > 0);
+            const actionN = isDischarging ? 'DESCARGAR' : 'NONE';
+
             config.push({
-                action: isDischarging ? 'DESCARGAR' : 'NONE',
-                time_to_count: tr.port_delay_hours_discharging ?? tr.time_to_count_descarga_hrs ?? defaultTimeToCount,
-                op_rate: tr.contract_agreed_discharge_rate ?? tr.dest_op_rate ?? defaultDischRate,
+                action: actionN,
+                time_to_count: actionN === 'NONE' ? 0 : (podContract?.time_to_count_descarga_hrs ?? tr.port_delay_hours_discharging ?? tr.time_to_count_descarga_hrs ?? (clientClean === 'NEXA' ? 12 : clientClean === 'SPCC' ? 6 : 0)),
+                op_rate: actionN === 'NONE' ? 0 : (podContract?.discharge_rate ?? tr.contract_agreed_discharge_rate ?? tr.dest_op_rate ?? 500),
                 rate_unit: tr.rate_unit_destination || 'TH',
-                quantity: isDischarging ? (tr.desc_tons ?? tr.quantity ?? 0) : 0,
+                quantity: isDischarging ? (tr.desc_tons ?? tr.quantity ?? 13500) : 0,
                 freight_rate: isDischarging ? (tr.freight_rate ?? 0) : 0,
-                positioning: tr.positioning_descarga_hrs ?? 0,
+                positioning: actionN === 'NONE' ? 0 : (podContract?.maneuver_descarga_hrs ?? tr.positioning_descarga_hrs ?? (clientClean === 'NEXA' ? 3 : clientClean === 'SPCC' ? 0 : 0)),
                 manual_port_cost: tr.agency_costs_destination ?? tr.manual_agency_cost_dest ?? ''
             });
         });
