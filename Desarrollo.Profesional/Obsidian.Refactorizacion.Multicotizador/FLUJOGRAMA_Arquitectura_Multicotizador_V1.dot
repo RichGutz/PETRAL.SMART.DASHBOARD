@@ -49,7 +49,7 @@ digraph MulticotizadorCascadeV1 {
     #  NIVEL 3: INTERFAZ DE USUARIO (REACT FRONTEND)
     # ==========================================
     subgraph cluster_lvl3 {
-        label = "NIVEL 3: GRILLA Y INTERFAZ DE USUARIO (MultiCotizadorExcel.tsx)"; 
+        label = "NIVEL 3: GRILLA Y INTERFAZ DE USUARIO (MultiCotizadorExcel.tsx - 3883 LOC)"; 
         style="filled"; color="#0284C7"; fontcolor="#F3E5F5";
         
         { rank=same; UI_FactSheet; UI_Grid; UI_MuellajeCell; UI_SaveModal; }
