@@ -2742,7 +2742,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 >
                                     <option value="">Seleccione puerto...</option>
                                     {ports.map(p => (
-                                        <option key={p.port_id} value={p.port_id}>{p.port_id} — {p.port_name}</option>
+                                        <option key={p.port_id} value={p.port_id}>{p.port_id}</option>
                                     ))}
                                 </select>
                             </td>
@@ -2932,7 +2932,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         >
                                             <option value="">Seleccione puerto...</option>
                                             {ports.map(p => (
-                                                <option key={p.port_id} value={p.port_id}>{p.port_id} — {p.port_name}</option>
+                                                <option key={p.port_id} value={p.port_id}>{p.port_id}</option>
                                             ))}
                                         </select>
                                     </td>
