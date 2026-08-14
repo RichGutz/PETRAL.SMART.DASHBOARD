@@ -6,6 +6,9 @@ export interface SpreadsheetTramosGridProps {
     ports: any[];
     vessels: any[];
     selectedVessel: string;
+    bunkerPriceIfo: number;
+    bunkerPriceMdo: number;
+    vesselParams: any;
     result: any;
     refacturarMuellajeMap: Record<number, boolean>;
     calculatedTramosList: any[];
@@ -29,6 +32,9 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     ports,
     vessels,
     selectedVessel,
+    bunkerPriceIfo,
+    bunkerPriceMdo,
+    vesselParams,
     result,
     refacturarMuellajeMap,
     calculatedTramosList,
@@ -47,6 +53,8 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     const totalCargas = puertosConfig.reduce((sum, p) => sum + (p.action === 'CARGAR' ? (Number(p.quantity) || 0) : 0), 0);
     const totalDescargas = puertosConfig.reduce((sum, p) => sum + (p.action === 'DESCARGAR' ? (Number(p.quantity) || 0) : 0), 0);
     const isBalanced = totalCargas === totalDescargas;
+
+    const sumPortCosts = puertosConfig.reduce((sum, p) => sum + (Number(p.manual_port_cost) || 0), 0);
 
     return (
         <div className="overflow-x-auto border border-slate-300 rounded bg-white shadow-sm flex flex-col mb-1">
@@ -159,7 +167,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                             )}
                         </td>
 
-                        {/* Fila 0 Posic */}
+                        {/* Fila 0 Posicionamiento */}
                         <td className="border-r border-slate-200 p-0 text-right">
                             {puertosConfig[0]?.action !== 'NONE' ? (
                                 <input
@@ -174,6 +182,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                             )}
                         </td>
 
+                        {/* Fila 0 Accion */}
                         <td className="border-r border-slate-200 p-0 text-center">
                             <select
                                 value={puertosConfig[0]?.action || 'NONE'}
@@ -231,42 +240,65 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                 <span className="text-slate-350 select-none pr-2">—</span>
                             )}
                         </td>
-                        <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
-                        <td className="border-r border-slate-200 p-0 text-right">
-                            <input
-                                type="text"
-                                value={puertosConfig[0]?.manual_port_cost !== '' && puertosConfig[0]?.manual_port_cost !== undefined ? fmtThousandSep(puertosConfig[0].manual_port_cost) : ''}
-                                onChange={(e) => {
-                                    const raw = e.target.value.replace(/[^0-9.]/g, '');
-                                    if (/^\d*\.?\d*$/.test(raw)) {
-                                        updatePuertoConfigField(0, 'manual_port_cost', raw);
-                                    }
-                                }}
-                                className={`w-full h-full bg-white border-0 px-1.5 text-right font-mono text-xs focus:outline-none ${
-                                    puertosConfig[0]?.manual_port_cost !== '' && puertosConfig[0]?.manual_port_cost !== undefined
-                                        ? 'text-blue-800 font-extrabold bg-blue-50/20'
-                                        : 'text-slate-500 font-medium'
-                                }`}
-                                placeholder={puertosConfig[0]?.action === 'NONE' ? '$0' : (result?.tramos?.[0]?.agency_costs_origin ? fmtCur(result.tramos[0].agency_costs_origin) : '$0')}
-                            />
-                        </td>
-                        <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
-                        <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
 
+                        <td className="border-r border-slate-200 p-0 text-right">
+                            {puertosConfig[0]?.action === 'CARGAR' ? (
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    placeholder="F"
+                                    value={puertosConfig[0]?.freight_rate ?? ''}
+                                    onChange={(e) => updatePuertoConfigField(0, 'freight_rate', e.target.value)}
+                                    className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs"
+                                />
+                            ) : (
+                                <span className="text-slate-350 select-none pr-2">—</span>
+                            )}
+                        </td>
+
+                        <td className="border-r border-slate-200 p-0 text-right">
+                            {puertosConfig[0]?.action !== 'NONE' ? (
+                                <input
+                                    type="text"
+                                    value={puertosConfig[0]?.manual_port_cost !== '' && puertosConfig[0]?.manual_port_cost !== undefined ? fmtThousandSep(puertosConfig[0].manual_port_cost) : ''}
+                                    onChange={(e) => {
+                                        const raw = e.target.value.replace(/[^0-9.]/g, '');
+                                        if (/^\d*\.?\d*$/.test(raw)) {
+                                            updatePuertoConfigField(0, 'manual_port_cost', raw);
+                                        }
+                                    }}
+                                    className={`w-full h-full bg-white border-0 px-1.5 text-right font-mono text-xs focus:outline-none ${
+                                        puertosConfig[0]?.manual_port_cost !== '' && puertosConfig[0]?.manual_port_cost !== undefined
+                                            ? 'text-blue-800 font-extrabold bg-blue-50/20'
+                                            : 'text-slate-500 font-medium'
+                                    }`}
+                                    placeholder={result?.tramos?.[0]?.agency_costs_origin ? fmtCur(result.tramos[0].agency_costs_origin) : ''}
+                                />
+                            ) : (
+                                <span className="text-slate-350 select-none pr-2">—</span>
+                            )}
+                        </td>
+
+                        {/* Fila 0 Flete ($) */}
+                        <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">$0</td>
+
+                        {/* Fila 0 Bunker ($) */}
+                        <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">$0</td>
+
+                        {/* Fila 0 Muellaje */}
                         <td className="border-r border-slate-200 text-right pr-2 font-mono font-bold text-[11px] bg-slate-50/40">
                             {(() => {
-                                if (puertosConfig[0]?.action === 'NONE') return <span className="text-slate-350 select-none pr-1">—</span>;
                                 const mVal = result?.tramos?.[0]?.muellaje_cost_origin || result?.tramos?.[0]?.agency_costs_origin_details?.breakdown?.muellaje || puertosConfig[0]?.muellaje_cost || 0;
-                                if (!mVal) return <span></span>;
+                                if (!mVal || puertosConfig[0]?.action === 'NONE') return <span className="text-slate-350 select-none pr-1">—</span>;
                                 return (
-                                    <span className={refacturarMuellajeMap[0] !== false ? 'text-blue-900' : 'text-slate-400 line-through'}>
+                                    <span className={refacturarMuellajeMap[0] !== false ? 'text-blue-900 font-extrabold' : 'text-slate-400 line-through'}>
                                         {fmtCur(mVal)}
                                     </span>
                                 );
                             })()}
                         </td>
                         <td className="border-r border-slate-300 text-center p-0 bg-slate-50/40">
-                            {puertosConfig[0]?.action !== 'NONE' && (result?.tramos?.[0]?.muellaje_cost_origin || result?.tramos?.[0]?.agency_costs_origin_details?.breakdown?.muellaje || puertosConfig[0]?.muellaje_cost || 0) > 0 ? (
+                            {puertosConfig[0]?.action !== 'NONE' && (result?.tramos?.[0]?.muellaje_cost_origin || puertosConfig[0]?.muellaje_cost) ? (
                                 <input
                                     type="checkbox"
                                     checked={refacturarMuellajeMap[0] ?? true}
@@ -285,6 +317,29 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         const trCalculado = calculatedTramosList[idx] || tr;
                         const trResult = result?.tramos?.[idx];
                         const selectedVesselObj = vessels.find(v => v.vessel_id === selectedVessel);
+
+                        // Cálculo Live de Búnker por Tramo
+                        const distVal = Number(tr.route_distance || 0);
+                        const rawWf = Number(tr.weather_factor || 0);
+                        const wfPct = rawWf > 1 ? rawWf : (rawWf * 100);
+                        const speedVal = Math.max(1, Number(tr.speed || selectedVesselObj?.vessel_speed || vesselParams?.vessel_speed || 11));
+                        const calcSeaDays = distVal > 0 ? (distVal * (1 + (wfPct / 100))) / (speedVal * 24) : 0;
+
+                        const pCfg = puertosConfig[idx + 1] || {};
+                        const qVal = Number(pCfg.quantity || 0);
+                        const rVal = Math.max(1, Number(pCfg.op_rate || 500));
+                        const tcVal = Number(pCfg.time_to_count || 0);
+                        const posVal = Number(pCfg.positioning || 0);
+                        const calcPortDays = pCfg.action !== 'NONE' ? (((qVal / rVal) + tcVal + posVal) / 24) : 0;
+
+                        const ifoSeaRatio = Number(vesselParams?.consumption_sea_ifo || selectedVesselObj?.consumption_sea_ifo || 14.5);
+                        const mdoSeaRatio = Number(vesselParams?.consumption_sea_mdo || selectedVesselObj?.consumption_sea_mdo || 0.1);
+                        const ifoIdleRatio = Number(vesselParams?.consumption_idle_ifo || selectedVesselObj?.consumption_idle_ifo || 1.5);
+                        const mdoIdleRatio = Number(vesselParams?.consumption_idle_mdo || selectedVesselObj?.consumption_idle_mdo || 0.1);
+
+                        const ifoTons = (calcSeaDays * ifoSeaRatio) + (calcPortDays * ifoIdleRatio);
+                        const mdoTons = (calcSeaDays * mdoSeaRatio) + (calcPortDays * mdoIdleRatio);
+                        const liveBunkerCost = (ifoTons * (bunkerPriceIfo || 0)) + (mdoTons * (bunkerPriceMdo || 0));
 
                         return (
                             <tr key={idx} className="border-b border-slate-200 h-8 hover:bg-slate-50">
@@ -323,10 +378,10 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                     <input
                                         type="number"
                                         step="0.5"
-                                        value={tr.weather_factor ?? ''}
+                                        value={tr.weather_factor !== undefined && tr.weather_factor !== null ? (Number(tr.weather_factor) <= 1 ? (Number(tr.weather_factor) * 100).toFixed(1) : String(tr.weather_factor)) : ''}
                                         onChange={(e) => updateTramoField(idx, 'weather_factor', e.target.value)}
                                         className="w-full h-full bg-white border-0 px-1 text-right font-mono text-slate-600 focus:outline-none text-[11px]"
-                                        placeholder="3.0"
+                                        placeholder="0.0"
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-right">
@@ -346,10 +401,10 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                     />
                                 </td>
                                 <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
-                                    {trResult ? fmtDays(trResult.sea_days || 0) : '0.00'}
+                                    {trResult ? fmtDays(trResult.sea_days || calcSeaDays) : fmtDays(calcSeaDays)}
                                 </td>
                                 <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
-                                    {trResult ? fmtDays(trResult.port_days || 0) : '0.00'}
+                                    {trResult ? fmtDays(trResult.port_days || calcPortDays) : fmtDays(calcPortDays)}
                                 </td>
                                 <td className="border-r border-slate-200 p-0 text-right">
                                     {puertosConfig[idx + 1]?.action !== 'NONE' ? (
@@ -396,7 +451,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                                 value={puertosConfig[idx + 1]?.op_rate ?? ''}
                                                 onChange={(e) => updatePuertoConfigField(idx + 1, 'op_rate', e.target.value)}
                                                 className="w-[60%] h-full bg-white border-0 px-1 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
-                                                placeholder={trResult?.contract_agreed_disch_rate !== undefined ? String(trResult.contract_agreed_disch_rate) : String(getAutoPortRate(tr.destination_port_id, puertosConfig[idx + 1]?.action) || '300')}
+                                                placeholder={trResult?.contract_agreed_disch_rate !== undefined ? String(trResult.contract_agreed_disch_rate) : String(getAutoPortRate(tr.destination_port_id, puertosConfig[idx + 1]?.action) || '500')}
                                             />
                                             <select
                                                 value={puertosConfig[idx + 1]?.rate_unit || 'TH'}
@@ -479,9 +534,14 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                     })()}
                                 </td>
 
-                                <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
-                                    {trResult ? fmtCur(trResult.bunker_costs || 0) : '$0'}
+                                {/* Costo Búnker del Tramo (Cálculo Live o Motor) */}
+                                <td className="border-r border-slate-200 text-right pr-2 font-mono font-bold text-slate-800 bg-amber-50/20 select-none">
+                                    {(() => {
+                                        const finalBunker = (trResult?.bunker_costs && trResult.bunker_costs > 0) ? trResult.bunker_costs : liveBunkerCost;
+                                        return finalBunker > 0 ? fmtCur(finalBunker) : '$0';
+                                    })()}
                                 </td>
+
                                 <td className="border-r border-slate-200 text-right pr-2 font-mono font-bold text-[11px] bg-slate-50/40">
                                     {(() => {
                                         if (puertosConfig[idx + 1]?.action === 'NONE') return <span className="text-slate-350 select-none pr-1">—</span>;
@@ -543,7 +603,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         </td>
                         <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
                         <td className="border-r border-blue-200 text-right pr-2 font-mono text-blue-900">
-                            {result ? fmtCur(result.consolidated.total_port_costs || 0) : '$0'}
+                            {fmtCur((result?.consolidated?.total_port_costs && result.consolidated.total_port_costs > 0) ? result.consolidated.total_port_costs : sumPortCosts)}
                         </td>
                         <td className="border-r border-blue-200 text-right pr-2 font-mono text-blue-900">
                             {result ? fmtCur(result.consolidated.total_freight_revenue || 0) : '$0'}

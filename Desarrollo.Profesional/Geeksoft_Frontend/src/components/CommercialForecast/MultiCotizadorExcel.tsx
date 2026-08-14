@@ -802,6 +802,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     ports={ports}
                     vessels={vessels}
                     selectedVessel={selectedVessel}
+                    bunkerPriceIfo={bunkerPriceIfo}
+                    bunkerPriceMdo={bunkerPriceMdo}
+                    vesselParams={vesselParams}
                     result={result}
                     refacturarMuellajeMap={refacturarMuellajeMap}
                     calculatedTramosList={calculatedTramosList}
