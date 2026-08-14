@@ -240,6 +240,105 @@ A partir de la inspección del razonamiento pericial planteado por Sherlock Holm
 
 ---
 
+## 💾 6. Paso 6: Especificaciones Técnicas del Botón GRABAR y Payload Prístino
+
+*(Especificaciones transcritas y validadas desde la instrucción en audio `trabajo.boton.6.ogg`)*
+
+### 6.1. Regla de Enrutamiento de Tabla Destino
+* **Si el Paso 1/2 está en `ACTIVOS` (Ruta Cliente activa):**  
+  El guardado impacta directamente en la tabla Supabase **`routes_clients`**.
+* **Si el Paso 1/3 está en `PROSPECTOS` (Cotización Prospecto activa):**  
+  El guardado impacta directamente en la tabla Supabase **`routes_quotes`**.
+
+### 6.2. Opciones de Guardado en Interfaz
+1. **Opción A (Sobrescribir Ruta / Cotización Cargada):**  
+   Si la sesión partió de una ruta o cotización cargada desde Supabase, el botón **Sobrescribir** actualiza la fila existente (`update`) con el payload prístino modificado.
+2. **Opción B (Guardar como Nuevo Nombre):**  
+   Permite ingresar un **Nuevo Nombre de Ruta / Cotización** (`insert`) para registrar una nueva entrada independiente sin alterar la plantilla de origen.
+
+### 6.3. Estructura del Payload Prístino (100% de la Interfaz)
+El JSON guardado en `legs_data` / `quote_data` almacena el estado **absoluto y completo** del Multicotizador Excel sin omitir un solo atributo:
+
+```json
+{
+  "client_id": "NEXA",
+  "route_id": "NEXA.ILO.CALLAO.MATARANI.ILO",
+  "quote_name": "NEXA.ILO.CALLAO.MATARANI.ILO 2026",
+  "vessel_id": "TABLONES",
+  "bunker_price_ifo": 1100,
+  "bunker_price_mdo": 1700,
+  "bunker_source": "MAESTRO_CONTRATOS",
+  "vessel_params": {
+    "tce_required": 15000,
+    "vessel_speed": 11.0,
+    "consumption_sea_ifo": 14.5,
+    "consumption_sea_mdo": 0.1,
+    "consumption_idle_ifo": 3.5,
+    "consumption_idle_mdo": 0.1,
+    "consumption_load_ifo": 3.5,
+    "consumption_disch_ifo": 5.0
+  },
+  "tramos": [
+    {
+      "leg": 1,
+      "type": "BALLAST",
+      "origin_port_id": "ILO",
+      "destination_port_id": "CALLAO",
+      "quantity": 0,
+      "freight_rate": 0,
+      "route_distance": 514,
+      "weather_factor": 3.0,
+      "speed": 11.0
+    },
+    {
+      "leg": 2,
+      "type": "LADEN",
+      "origin_port_id": "CALLAO",
+      "destination_port_id": "MATARANI",
+      "quantity": 13500,
+      "freight_rate": 30.0,
+      "route_distance": 457,
+      "weather_factor": 3.0,
+      "speed": 11.0
+    },
+    {
+      "leg": 3,
+      "type": "BALLAST",
+      "origin_port_id": "MATARANI",
+      "destination_port_id": "ILO",
+      "quantity": 0,
+      "freight_rate": 0,
+      "route_distance": 69,
+      "weather_factor": 3.0,
+      "speed": 11.0
+    }
+  ],
+  "puertosConfig": [
+    { "action": "NONE", "quantity": 0, "freight_rate": 0, "op_rate": 0, "time_to_count": 0, "positioning": 0, "manual_port_cost": 0, "muellaje_cost": 0 },
+    { "action": "CARGAR", "quantity": 13500, "freight_rate": 0, "op_rate": 500, "time_to_count": 6.0, "positioning": 1.0, "manual_port_cost": 17000, "muellaje_cost": 0 },
+    { "action": "DESCARGAR", "quantity": 13500, "freight_rate": 30.0, "op_rate": 400, "time_to_count": 6.0, "positioning": 0.0, "manual_port_cost": 18000, "muellaje_cost": 0 },
+    { "action": "NONE", "quantity": 0, "freight_rate": 0, "op_rate": 0, "time_to_count": 0, "positioning": 0, "manual_port_cost": 0, "muellaje_cost": 0 }
+  ],
+  "refacturarMuellajeMap": { "1": false, "2": false },
+  "financial_summary": {
+    "addressCommPct": 0,
+    "brokerCommPct": 0,
+    "demurrageRate": 20000,
+    "commentsText": "",
+    "totalDistance": 1040.0,
+    "totalSeaDays": 4.06,
+    "totalPortDays": 3.07,
+    "totalBunkerCost": 80077.0,
+    "totalPortCosts": 35000.0,
+    "totalFreightRevenue": 405000.0,
+    "netProfit": 185281.0,
+    "tceReal": 40984.0
+  }
+}
+```
+
+---
+
 ## 📄 Archivos Relacionados
 * **Documento UI Cabecera y Búnker:** [`06_Especificaciones_Comerciales_UI_Header_y_Bunker.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/06_Especificaciones_Comerciales_UI_Header_y_Bunker.md)
 * **Documento Modularización previa:** [`04_Modularizacion_Frontend_Servicios_y_Tabs.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/04_Modularizacion_Frontend_Servicios_y_Tabs.md)
