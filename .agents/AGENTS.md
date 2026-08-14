@@ -30,3 +30,8 @@
 - **Alineación con Plan Macro**: Cuando exista un Plan Macro General (documentado en Obsidian o especificaciones), el agente debe razonar en cada paso para NO perder de vista el objetivo global del plan macro. Todo cambio puntual debe alinearse y contribuir directamente a la visión estratégica general del proyecto.
 </RULE[macro_plan_adherence]>
 
+<RULE[benoit_blanc_audit_protocol]>
+- **Protocolo Benoit Blanc de Auditoría**: Cada vuelta/ronda de auditoría visual o pericial planteada por el usuario DEBE ser documentada al máximo detalle en una **tabla nueva e independiente** (ej. 5.1 Vuelta 1, 5.2 Vuelta 2, 5.3 Vuelta 3, etc.) dentro del documento Obsidian: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador\07_Especificaciones_Comerciales_Grilla_y_Puertos.md`.
+</RULE[benoit_blanc_audit_protocol]>
+
+
