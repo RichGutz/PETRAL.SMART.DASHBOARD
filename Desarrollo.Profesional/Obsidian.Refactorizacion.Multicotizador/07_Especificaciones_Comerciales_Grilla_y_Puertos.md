@@ -266,7 +266,16 @@ A partir de la inspección del hallazgo flagrante en la ruta `NEXA.ILO.CALLAO.ME
 | :-: | :--- | :--- | :--- | :--- | :-: |
 | **11.1** | **`Refacturación Muellaje (Card 4 P&L)`** | No aparecía la fila `(+) Refacturación Muellaje` | **`+$33,333 USD`** (Línea de ingreso sumada al Revenue) | **Crimen de la Propiedad No Inicializada:** `liveRefacturacionMuellaje` leía `p.muellaje_cost` de `puertosConfig`, la cual estaba `undefined` al no resolverse dinámicamente si `isMejillonesDischarge`. | ✅ RESUELTO |
 | **11.2** | **`Port Costs Mejillones (Card 2)`** | Omitía completamente a Mejillones (`$0 USD`) | **`Port Costs POD (MEJILLONES) Muellaje: $33,333 USD`** | **Crimen del Filtro Absoluto:** `getDynamicPortCostItems()` descartaba el puerto al ver `costVal = 0`, omitiendo que `muellajeVal = $33,333`. | ✅ RESUELTO |
-| **11.3** | **`Deducción Port Costs (Card 4 P&L)`** | Deducción incompleta `-$17,000` (sólo Callao) | **Deducción Completa `-$17,000` (Callao) y `-$33,333` (Mejillones)** | **Equilibrio Financiero Impoluto:** Se resta el costo real de puerto de Mejillones y se ingresa la refacturación al cliente, manteniendo el P&L exacto (`$95,874 USD`). | ✅ RESUELTO |
+### ───────────────
+
+### 🕵️‍♂️ 5.12. Duodécima Vuelta (Serie 12: Diagnóstico e Inspección del Asesinato en la Sobrescritura de Rutas)
+
+A partir del reporte sobre la falla en la función de **Sobrescribir Ruta / Cotización**:
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 12) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **12.1** | **`Endpoint Backend /spot/save`** | Ejecutaba `.insert(payload)` incondicional | **`Upsert / Overwrite Inteligente:`** Consulta `.select("*").eq("name", request.name)`. Si existe fila, ejecuta `.update(payload)`; si no existe, ejecuta `.insert(payload)`. | **El Crimen del Inserter Ciego:** El endpoint FastAPI `/spot/save` ejecutaba únicamente `.insert()`, generando duplicados o fallos por restricción de clave única al sobrescribir. | ⏳ EN REPARACIÓN |
+| **12.2** | **`Sincronización de Tabla Destino`** | No actualizaba el registro activo cargado | **Actualización In-Situ Prístina:** La ruta existente en `routes_clients` o `routes_quotes` actualiza sus campos `legs_data` sin duplicar filas. | **Preservación de Identidad:** La sobrescritura mantiene el ID de la ruta y actualiza 100% de la grilla en vivo. | ⏳ EN REPARACIÓN |
 
 ---
 
