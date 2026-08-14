@@ -562,7 +562,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             handleCreateNewGrid();
             return;
         }
-        const r = routes.find(x => x.route_id === routeId || x.id === routeId);
+        const r = routes.find(x => x.route_id === routeId || x.id === routeId || x.spot_id === routeId);
         if (!r) return;
 
         setBunkerSource('MAESTRO_CONTRATOS');
@@ -633,19 +633,25 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
     const calculatedTramosList = getCalculatedTramos();
 
-    const filteredRoutes = routes.filter(r => {
-        if (!selectedClient) return true;
+    const filteredRoutes = React.useMemo(() => {
+        if (!selectedClient) return routes;
         const sClient = selectedClient.trim().toUpperCase();
-        const rClient = (r.client_id || r.client_name || r.name || '').trim().toUpperCase();
-        return rClient === sClient || rClient.includes(sClient) || sClient.includes(rClient);
-    });
+        const matches = routes.filter(r => {
+            const rName = (r.name || r.route_id || r.client_id || r.client_name || '').trim().toUpperCase();
+            return rName.includes(sClient) || sClient.includes(rName);
+        });
+        return matches.length > 0 ? matches : routes;
+    }, [routes, selectedClient]);
 
-    const filteredQuotes = savedRoutes.filter(q => {
-        if (!selectedClient) return true;
+    const filteredQuotes = React.useMemo(() => {
+        if (!selectedClient) return savedRoutes;
         const sClient = selectedClient.trim().toUpperCase();
-        const qClient = (q.client_id || q.name || '').trim().toUpperCase();
-        return qClient === sClient || qClient.includes(sClient) || sClient.includes(qClient);
-    });
+        const matches = savedRoutes.filter(q => {
+            const qName = (q.name || q.route_id || q.client_id || q.client_name || '').trim().toUpperCase();
+            return qName.includes(sClient) || sClient.includes(qName);
+        });
+        return matches.length > 0 ? matches : savedRoutes;
+    }, [savedRoutes, selectedClient]);
 
     return (
         <div className="w-full min-h-screen bg-white p-2 text-slate-800 font-sans flex flex-col select-text">
