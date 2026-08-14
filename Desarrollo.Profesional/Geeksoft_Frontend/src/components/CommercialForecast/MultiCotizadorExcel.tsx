@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ForecastService } from '../../services/api';
+import { PortCostsRatesService } from '../../services/providers/portCostsRatesService';
 import { Save, FolderOpen, X, ChevronDown } from 'lucide-react';
 import logoPetral from '../../assets/Logo.Petral.png';
 import logoGeeksoft from '../../assets/Logo.Geeksoft.png';
@@ -23,6 +24,7 @@ interface PuertoConfig {
     freight_rate: string | number;
     op_rate: string | number; // Ritmo de operación
     rate_unit?: 'TD' | 'TH'; // Unidad de ritmo: TD (Ton/Día), TH (Ton/Hora)
+    time_to_count?: string | number;
     overhead?: string | number;
     positioning?: string | number;
     manual_port_cost?: string | number;
@@ -122,8 +124,24 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     const [vesselParams, setVesselParams] = useState<any>({});
 
     // Lista de tramos (inicialmente 2 tramos para viaje redondo: LADEN + BALLAST)
-    const [tramos, setTramos] = useState<TramoState[]>([]);
-    const [puertosConfig, setPuertosConfig] = useState<PuertoConfig[]>([]);
+    const [tramos, setTramos] = useState<TramoState[]>([
+        {
+            type: 'LADEN',
+            origin_port_id: '',
+            destination_port_id: '',
+            quantity: 0,
+            freight_rate: 0,
+            port_delay_hours_loading: 0,
+            port_delay_hours_discharging: 0,
+            route_distance: 0,
+            weather_factor: 3.0,
+            speed: 11.0
+        }
+    ]);
+    const [puertosConfig, setPuertosConfig] = useState<PuertoConfig[]>([
+        { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' },
+        { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' }
+    ]);
 
     const [result, setResult] = useState<any>(null);
 
@@ -181,7 +199,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
     };
 
     // Resolver overhead por defecto del puerto
-    const getAutoPortOverhead = (portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR') => {
+    const getAutoPortTimeToCount = (portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR') => {
         if (action === 'NONE') return '';
         const p = ports.find(x => x.port_id === portId);
         if (p) {
@@ -408,13 +426,13 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 if (!portId) return p;
                 
                 const rate = p.op_rate === '' || p.op_rate === undefined ? getAutoPortRate(portId, p.action) : p.op_rate;
-                const autoOv = p.overhead === '' || p.overhead === undefined ? getAutoPortOverhead(portId, p.action) : p.overhead;
+                const autoOv = p.time_to_count === '' || p.time_to_count === undefined ? getAutoPortTimeToCount(portId, p.action) : p.time_to_count;
                 const autoPos = p.positioning === '' || p.positioning === undefined ? getAutoPortPositioning(portId, p.action) : p.positioning;
 
                 return {
                     ...p,
                     op_rate: rate,
-                    overhead: autoOv !== '' ? String(autoOv) : p.overhead,
+                    time_to_count: autoOv !== '' ? String(autoOv) : p.time_to_count,
                     positioning: autoPos !== '' ? String(autoPos) : p.positioning
                 };
             }));
@@ -474,18 +492,72 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         });
     };
 
-    // Auto-poblar costos estáticos de puerto reactivamente al cambiar buque, tramos o modo (STATIC vs MATRIX)
+    // Auto-poblar datos de Contrato y Costos de puerto reactivamente al cambiar Cliente, Ruta o Buque (Cero Fallbacks)
     useEffect(() => {
-        if (!selectedVessel || tramos.length === 0) return;
-        puertosConfig.forEach((p, idx) => {
-            if (p.action !== 'NONE') {
-                const portId = idx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[idx - 1]?.destination_port_id || '');
-                if (portId) {
-                    autoFillPortCost(idx, portId, p.action, selectedVessel);
-                }
+        if (tramos.length === 0) return;
+
+        // Auto-poblar contrato si coincide client_id + tramo
+        tramos.forEach((tr, idx) => {
+            const match = PortCostsRatesService.lookupContractInfo(
+                contractsMaster,
+                selectedClient,
+                tr.origin_port_id,
+                tr.destination_port_id,
+                Number(puertosConfig[idx + 1]?.quantity || tr.quantity || 0)
+            );
+
+            if (match.has_contract) {
+                if (match.address_commission > 0) setAddressCommPct(match.address_commission);
+                if (match.broker_commission > 0) setBrokerCommPct(match.broker_commission);
+
+                setPuertosConfig(prev => {
+                    const list = [...prev];
+                    if (list[idx]) {
+                        list[idx].time_to_count = match.time_to_count_origin;
+                        list[idx].positioning = match.positioning_origin;
+                        if (list[idx].action === 'CARGAR' && match.load_rate > 0) {
+                            list[idx].op_rate = match.load_rate;
+                        }
+                    }
+                    if (list[idx + 1]) {
+                        list[idx + 1].time_to_count = match.time_to_count_dest;
+                        list[idx + 1].positioning = match.positioning_dest;
+                        if (list[idx + 1].action === 'DESCARGAR') {
+                            if (match.discharge_rate > 0) list[idx + 1].op_rate = match.discharge_rate;
+                            if (match.freight_rate > 0) list[idx + 1].freight_rate = match.freight_rate;
+                        }
+                    }
+                    return list;
+                });
+            } else {
+                // SI NO HAY CONTRATO -> COLOCAR CERO EN LOS CAMPOS (CERO FALLBACKS)
+                setPuertosConfig(prev => {
+                    const list = [...prev];
+                    if (list[idx] && list[idx].action === 'NONE') {
+                        list[idx].time_to_count = 0;
+                        list[idx].positioning = 0;
+                    }
+                    if (list[idx + 1] && list[idx + 1].action === 'NONE') {
+                        list[idx + 1].time_to_count = 0;
+                        list[idx + 1].positioning = 0;
+                    }
+                    return list;
+                });
             }
         });
-    }, [selectedVessel, localPortCostMode, tramos[0]?.origin_port_id, tramos[0]?.destination_port_id]);
+
+        // Auto-poblar costos estáticos de puerto
+        if (selectedVessel) {
+            puertosConfig.forEach((p, idx) => {
+                if (p.action !== 'NONE') {
+                    const portId = idx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[idx - 1]?.destination_port_id || '');
+                    if (portId) {
+                        autoFillPortCost(idx, portId, p.action, selectedVessel);
+                    }
+                }
+            });
+        }
+    }, [selectedClient, selectedVessel, localPortCostMode, tramos[0]?.origin_port_id, tramos[0]?.destination_port_id, contractsMaster.length]);
 
     // Propagar cambios en el Fact Sheet del buque
     const handleVesselParamChange = (field: string, val: any) => {
@@ -524,7 +596,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 const newList = [...prevPorts];
                 if (newList[0] && newList[0].action !== 'NONE') {
                     newList[0].op_rate = '';
-                    newList[0].overhead = '';
+                    newList[0].time_to_count = '';
                     newList[0].positioning = '';
                 }
                 return newList;
@@ -540,7 +612,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 const newList = [...prevPorts];
                 if (newList[pIdx] && newList[pIdx].action !== 'NONE') {
                     newList[pIdx].op_rate = '';
-                    newList[pIdx].overhead = '';
+                    newList[pIdx].time_to_count = '';
                     newList[pIdx].positioning = '';
                 }
                 return newList;
@@ -564,11 +636,11 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     list[idx].quantity = '';
                     list[idx].freight_rate = '';
                     list[idx].op_rate = '';
-                    list[idx].overhead = '';
+                    list[idx].time_to_count = '';
                     list[idx].positioning = '';
                 } else {
                     list[idx].op_rate = '';
-                    list[idx].overhead = '';
+                    list[idx].time_to_count = '';
                     list[idx].positioning = '';
                 }
             }
@@ -734,8 +806,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 let posDescarga = 0.0;
 
                 if (opDest !== 'NONE') {
-                    if (pDest?.overhead !== '' && pDest?.overhead !== undefined) {
-                        overheadDest = Number(pDest.overhead);
+                    if (pDest?.time_to_count !== '' && pDest?.time_to_count !== undefined) {
+                        overheadDest = Number(pDest.time_to_count);
                     } else {
                         // CERO FALLBACKS: Si la caja está vacía, es 0.0 estricto. No inventar horas.
                         overheadDest = 0.0;
@@ -789,8 +861,8 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     destination_action: puertosConfig[idx + 1]?.action || 'NONE',
                     custom_load_rate: customLoad,
                     custom_discharge_rate: customDisch,
-                    port_overhead_hours_origin: overheadOrig,
-                    port_overhead_hours_dest: overheadDest,
+                    time_to_count_carga_hrs: overheadOrig,
+                    time_to_count_descarga_hrs: overheadDest,
                     positioning_carga_hrs: posCarga,
                     positioning_descarga_hrs: posDescarga,
                     agency_costs_origin: overridePortCostOrig,
@@ -856,7 +928,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     
                     const loadD = (t.type === 'LADEN' && rL > 0) ? (q / rL / 24) : 0;
                     const dischD = (t.type === 'LADEN' && rD > 0) ? (q / rD / 24) : 0;
-                    const idleD = (t.type === 'LADEN') ? ((t.port_overhead_hours_origin || 0) + (t.port_overhead_hours_dest || 0)) / 24 : 0;
+                    const idleD = (t.type === 'LADEN') ? ((t.time_to_count_carga_hrs || 0) + (t.time_to_count_descarga_hrs || 0)) / 24 : 0;
                     const pd = loadD + dischD + idleD;
 
                     const ifoSea = sd * consSeaIf;
@@ -1023,13 +1095,13 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     customDisch = pDest.rate_unit === 'TH' ? val : val / 24;
                 }
 
-                // Overheads (time to count)
-                const overheadOrig = pOrig && pOrig.action !== 'NONE' && pOrig.overhead !== ''
-                    ? Number(pOrig.overhead)
-                    : Number(getAutoPortOverhead(tr.origin_port_id, pOrig?.action || 'NONE')) || 6.0;
-                const overheadDest = pDest && pDest.action !== 'NONE' && pDest.overhead !== ''
-                    ? Number(pDest.overhead)
-                    : Number(getAutoPortOverhead(tr.destination_port_id, pDest?.action || 'NONE')) || 6.0;
+                // Time to Counts (time_to_count)
+                const overheadOrig = pOrig && pOrig.action !== 'NONE' && pOrig.time_to_count !== ''
+                    ? Number(pOrig.time_to_count)
+                    : Number(getAutoPortTimeToCount(tr.origin_port_id, pOrig?.action || 'NONE')) || 6.0;
+                const overheadDest = pDest && pDest.action !== 'NONE' && pDest.time_to_count !== ''
+                    ? Number(pDest.time_to_count)
+                    : Number(getAutoPortTimeToCount(tr.destination_port_id, pDest?.action || 'NONE')) || 6.0;
 
                 // Posicionamiento (maniobra)
                 let posCarga = 0;
@@ -1087,9 +1159,9 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     custom_discharge_rate: customDisch,
                     rate_unit_origin: pOrig?.rate_unit || 'TH',
                     rate_unit_destination: pDest?.rate_unit || 'TH',
-                    // Overheads (time to count) en horas
-                    port_overhead_hours_origin: overheadOrig,
-                    port_overhead_hours_dest: overheadDest,
+                    // Time to Counts (time_to_count) en horas
+                    time_to_count_carga_hrs: overheadOrig,
+                    time_to_count_descarga_hrs: overheadDest,
                     // Posicionamiento (maniobra) en horas
                     positioning_carga_hrs: posCarga,
                     positioning_descarga_hrs: posDescarga,
@@ -1220,7 +1292,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     freight_rate: 0,
                     op_rate: '',
                     rate_unit: 'TH',
-                    overhead: '',
+                    time_to_count: '',
                     positioning: '',
                     manual_port_cost: ''
                 });
@@ -1232,7 +1304,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                         freight_rate: tr.freight_rate || 0,
                         op_rate: '',
                         rate_unit: 'TH',
-                        overhead: '',
+                        time_to_count: '',
                         positioning: '',
                         manual_port_cost: ''
                     });
@@ -1280,7 +1352,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 freight_rate: 0,
                 op_rate: '',
                 rate_unit: 'TH',
-                overhead: '',
+                time_to_count: '',
                 positioning: '',
                 manual_port_cost: ''
             });
@@ -1291,7 +1363,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     freight_rate: tr.freight_rate || 0,
                     op_rate: '',
                     rate_unit: 'TH',
-                    overhead: '',
+                    time_to_count: '',
                     positioning: '',
                     manual_port_cost: ''
                 });
@@ -1346,7 +1418,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                     <td style="text-align:right">${speedVal}</td>
                     <td style="text-align:right">${fmtDays(tr.sea_days)}</td>
                     <td style="text-align:right">${fmtDays(tr.port_days)}</td>
-                    <td style="text-align:right">${pDest?.overhead || '6.0'}</td>
+                    <td style="text-align:right">${pDest?.time_to_count || '6.0'}</td>
                     <td style="text-align:right">${pDest?.positioning || '0.0'}</td>
                     <td style="text-align:center">${pDest?.action || 'NONE'}</td>
                     <td style="text-align:right">${pDest?.op_rate || 'auto'}</td>
@@ -1382,7 +1454,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 <td style="text-align:right">—</td>
                 <td style="text-align:right">—</td>
                 <td style="text-align:right">${pInit?.action !== 'NONE' ? fmtDays(getPortDaysAndBunker(0).portDays) : '0.00'}</td>
-                <td style="text-align:right">${pInit?.overhead || '6.0'}</td>
+                <td style="text-align:right">${pInit?.time_to_count || '6.0'}</td>
                 <td style="text-align:right">${pInit?.positioning || '0.0'}</td>
                 <td style="text-align:center">${pInit?.action || 'NONE'}</td>
                 <td style="text-align:right">${pInit?.op_rate || 'auto'}</td>
@@ -1466,7 +1538,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                             <th style="width:4%">Vel (KN)</th>
                             <th style="width:5%">Días Mar</th>
                             <th style="width:5%">Días Pto</th>
-                            <th style="width:5%">Overhead (H)</th>
+                            <th style="width:5%">Time to Count (H)</th>
                             <th style="width:5%">Posic (H)</th>
                             <th style="width:5%">Op Dest</th>
                             <th style="width:6%">Ritmo</th>
@@ -1649,17 +1721,17 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         }
         
         // Resolver overhead por defecto del puerto correspondiente
-        let overheadHrs = Number(p.overhead) || 0;
-        if (p.overhead === '' || p.overhead === undefined) {
+        let overheadHrs = Number(p.time_to_count) || 0;
+        if (p.time_to_count === '' || p.time_to_count === undefined) {
             // El puerto inicial (idx = 0) esta en tramos[0].origin_port_id, los siguientes en tramos[idx - 1].destination_port_id
             const portId = idx === 0 ? tramos[0]?.origin_port_id : tramos[idx - 1]?.destination_port_id;
             if (portId) {
                 const trResult = idx === 0 ? result?.tramos?.[0] : result?.tramos?.[idx - 1];
-                const backendOverhead = idx === 0 ? trResult?.port_overhead_hours_origin : trResult?.port_overhead_hours_dest;
-                if (backendOverhead !== undefined) {
-                    overheadHrs = backendOverhead;
+                const backendTimeToCount = idx === 0 ? trResult?.time_to_count_carga_hrs : trResult?.time_to_count_descarga_hrs;
+                if (backendTimeToCount !== undefined) {
+                    overheadHrs = backendTimeToCount;
                 } else {
-                    overheadHrs = Number(getAutoPortOverhead(portId, p.action)) || 0.0;
+                    overheadHrs = Number(getAutoPortTimeToCount(portId, p.action)) || 0.0;
                 }
             } else {
                 overheadHrs = 0.0;
@@ -1817,7 +1889,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                 const dischD = legRd > 0 ? (legQ / legRd) / 24 : 0;
                 const idleD = Math.max(0, portD - loadD - dischD);
 
-                lines.push(`  │       ⚓ Días de Puerto (${fmtDays(portD)}d): Carga (${fmtNum(legQ)}t/${fmtNum(legRl)}t/h = ${fmtDays(loadD)}d) + Descarga (${fmtNum(legQ)}t/${fmtNum(legRd)}t/h = ${fmtDays(dischD)}d) + Overheads (${fmtDays(idleD)}d) = ${fmtDays(portD)} Días`);
+                lines.push(`  │       ⚓ Días de Puerto (${fmtDays(portD)}d): Carga (${fmtNum(legQ)}t/${fmtNum(legRl)}t/h = ${fmtDays(loadD)}d) + Descarga (${fmtNum(legQ)}t/${fmtNum(legRd)}t/h = ${fmtDays(dischD)}d) + Time to Counts (${fmtDays(idleD)}d) = ${fmtDays(portD)} Días`);
                 lines.push(`  │          ↳ Búnker Puerto: ${fmtDays(bunkPortIf_o)} t IFO + ${fmtDays(bunkPortM_do)} t MDO = ${fmtCur(bunkPortCost)} USD`);
                 lines.push(`  │       🔥 Búnker Total Pierna:  ${fmtCur(bunkSeaCost)} + ${fmtCur(bunkPortCost)} = ${fmtCur(bunkTotalLeg)} USD`);
                 lines.push(`  │       🚢 Agencia Carga (${orig}):    ${fmtCur(costOrig)} USD`);
@@ -1896,7 +1968,7 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
         <tbody>
             <tr><td class="bold">1. Ritmo Carga (act_load)</td><td>contract_load_rate</td><td>${r_l} T/h (${vesselParams.vessel_name || selectedVessel})</td><td class="text-right bold">${r_l} T/h</td></tr>
             <tr><td class="bold">2. Ritmo Descarga (act_disch)</td><td>contract_discharge_rate</td><td>${r_d} T/h (${vesselParams.vessel_name || selectedVessel})</td><td class="text-right bold">${r_d} T/h</td></tr>
-            <tr><td class="bold">3. Días de Puerto (port_days)</td><td>Sum((Q/act_load)/24 + (Q/act_disch)/24 + idle)</td><td>Load(${fmtDays(Q/r_l/24)}d) + Disch(${fmtDays(Q/r_d/24)}d) + Overheads(${fmtDays(Math.max(0, port_days - (Q/r_l/24) - (Q/r_d/24)))}d)</td><td class="text-right bold">${fmtDays(port_days)} Días</td></tr>
+            <tr><td class="bold">3. Días de Puerto (port_days)</td><td>Sum((Q/act_load)/24 + (Q/act_disch)/24 + idle)</td><td>Load(${fmtDays(Q/r_l/24)}d) + Disch(${fmtDays(Q/r_d/24)}d) + Time to Counts(${fmtDays(Math.max(0, port_days - (Q/r_l/24) - (Q/r_d/24)))}d)</td><td class="text-right bold">${fmtDays(port_days)} Días</td></tr>
             <tr><td class="bold">4. Días de Mar (sea_days)</td><td>Sum((dist_leg * (1 + WF)) / (speed * 24))</td><td>${seaDaysCalcStr}</td><td class="text-right bold">${fmtDays(sea_days)} Días</td></tr>
             <tr><td class="bold">5. Días de Viaje (tot_dur)</td><td>sea_days + port_days</td><td>${fmtDays(sea_days)}d Mar + ${fmtDays(port_days)}d Puerto</td><td class="text-right bold">${fmtDays(tot_days)} Días</td></tr>
             <tr><td class="bold">6. Income (income)</td><td>Sum(Q_leg * F_leg)</td><td>${tramosList.filter((t: any) => t.type === 'LADEN').length} Descargas × ${fmtNum(Q)} MT × ${fmtCur(F)} USD/MT</td><td class="text-right bold">${fmtCur(net_income)}</td></tr>
@@ -2710,15 +2782,15 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                 0.00
                             </td>
                             
-                            {/* Overhead */}
+                            {/* Time to Count */}
                             <td className="border-r border-slate-200 p-0 text-right">
                                 {puertosConfig[0].action !== 'NONE' ? (
                                     <input
                                         type="number"
-                                        value={puertosConfig[0].overhead ?? ''}
+                                        value={puertosConfig[0].time_to_count ?? ''}
                                         onChange={(e) => updatePuertoConfigField(0, 'overhead', e.target.value)}
                                         className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                        placeholder={result?.tramos?.[0]?.port_overhead_hours_origin !== undefined ? String(result.tramos[0].port_overhead_hours_origin) : '0.0'}
+                                        placeholder={result?.tramos?.[0]?.time_to_count_carga_hrs !== undefined ? String(result.tramos[0].time_to_count_carga_hrs) : '0.0'}
                                     />
                                 ) : (
                                     <span className="text-slate-350 select-none pr-2">—</span>
@@ -2944,15 +3016,15 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         {trResult ? fmtDays(trResult.port_days || 0) : '0.00'}
                                     </td>
                                     
-                                    {/* Overhead */}
+                                    {/* Time to Count */}
                                     <td className="border-r border-slate-200 p-0 text-right">
                                         {puertosConfig[idx + 1].action !== 'NONE' ? (
                                             <input
                                                 type="number"
-                                                value={puertosConfig[idx + 1].overhead ?? ''}
+                                                value={puertosConfig[idx + 1].time_to_count ?? ''}
                                                 onChange={(e) => updatePuertoConfigField(idx + 1, 'overhead', e.target.value)}
                                                 className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                                placeholder={trResult?.port_overhead_hours_dest !== undefined ? String(trResult.port_overhead_hours_dest) : '0.0'}
+                                                placeholder={trResult?.time_to_count_descarga_hrs !== undefined ? String(trResult.time_to_count_descarga_hrs) : '0.0'}
                                             />
                                         ) : (
                                             <span className="text-slate-350 select-none pr-2">—</span>
@@ -3074,9 +3146,15 @@ export const MultiCotizadorExcel: React.FC<{ portCostMode?: 'static' | 'matrix' 
                                         )}
                                     </td>
                                     
-                                    {/* Ingreso de Flete del Tramo */}
-                                    <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
-                                        {trResult ? fmtCur(trResult.net_income || 0) : '$0'}
+                                    {/* Ingreso de Flete del Tramo (Reactivo en Vivo Q × F) */}
+                                    <td className="border-r border-slate-200 text-right pr-2 text-slate-700 bg-slate-50/50 font-mono font-bold select-none">
+                                        {(() => {
+                                            const calcIncome = puertosConfig[idx + 1]?.action === 'DESCARGAR'
+                                                ? (Number(puertosConfig[idx + 1]?.quantity || 0) * Number(puertosConfig[idx + 1]?.freight_rate || 0))
+                                                : 0;
+                                            const finalIncome = trResult?.net_income ? trResult.net_income : calcIncome;
+                                            return finalIncome > 0 ? fmtCur(finalIncome) : '$0';
+                                        })()}
                                     </td>
                                     
                                     {/* Costo Bunker del Tramo (incluye puerto de carga origen en Leg 1, mar, y puerto destino) */}
