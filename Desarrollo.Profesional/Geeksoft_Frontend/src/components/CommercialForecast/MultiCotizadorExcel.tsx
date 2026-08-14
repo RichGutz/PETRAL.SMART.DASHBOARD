@@ -62,7 +62,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
     // 3. Selección de Buque y Fact Sheet
     const [selectedVessel, setSelectedVessel] = useState<string>('');
     const [vesselParams, setVesselParams] = useState<any>({
-        grt: 0, dwt: 0, dwcc: 0, vessel_speed: 11.0, tce_required: 15000,
+        grt: 0, dwt: 0, dwcc: 0, vessel_speed: 0, tce_required: 0,
         length: 0, beam: 0, draft_m: 0,
         consumption_sea_ifo: 0, consumption_idle_ifo: 0, consumption_load_ifo: 0, consumption_disch_ifo: 0,
         consumption_sea_mdo: 0, consumption_idle_mdo: 0, consumption_load_mdo: 0, consumption_disch_mdo: 0
@@ -75,9 +75,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
 
     // 5. Grilla de Tramos & Configuración de Puertos
     const [tramos, setTramos] = useState<TramoState[]>([
-        { type: 'LADEN', origin_port_id: '', destination_port_id: '', quantity: 0, freight_rate: 0, port_delay_hours_loading: 0, port_delay_hours_discharging: 0, route_distance: 0, weather_factor: 3.0, speed: 11.0 }
+        { type: 'BALLAST', origin_port_id: '', destination_port_id: '', quantity: 0, freight_rate: 0, port_delay_hours_loading: 0, port_delay_hours_discharging: 0, route_distance: 0, weather_factor: 3.0, speed: 0 },
+        { type: 'LADEN', origin_port_id: '', destination_port_id: '', quantity: 0, freight_rate: 0, port_delay_hours_loading: 0, port_delay_hours_discharging: 0, route_distance: 0, weather_factor: 3.0, speed: 0 },
+        { type: 'BALLAST', origin_port_id: '', destination_port_id: '', quantity: 0, freight_rate: 0, port_delay_hours_loading: 0, port_delay_hours_discharging: 0, route_distance: 0, weather_factor: 3.0, speed: 0 }
     ]);
     const [puertosConfig, setPuertosConfig] = useState<PuertoConfig[]>([
+        { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' },
+        { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' },
         { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' },
         { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' }
     ]);
@@ -369,7 +373,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
     };
 
     const handleRemoveLastTramo = () => {
-        if (tramos.length <= 1) return;
+        if (tramos.length <= 3) return; // Mínimo 3 piernas obligatorias
         setTramos(prev => prev.slice(0, -1));
         setPuertosConfig(prev => prev.slice(0, -1));
     };
