@@ -198,6 +198,19 @@ A partir de la inspección de urgencia previa a la reunión sobre los `Días Pto
 | **5.2** | **`Días Pto (Tramo 2 Matarani)`** | Muestra `1.66d` | **`1.66d`** ($\frac{\frac{13,500}{400} + 6 + 0}{24} = \frac{39.75}{24} = 1.66\text{d}$) | **Cálculo de Descarga:** Correcto a 400 TH ($33.75\text{h} + 6\text{h} = 39.75\text{h} \rightarrow 1.66\text{d}$). | ✅ RESUELTO |
 | **5.3** | **`Días Pto (Fila TOTAL)`** | Muestra **`0.04d`** | **`3.08d`** ($1.42\text{d} + 1.66\text{d} = 3.08\text{d}$) | **Crimen 5.3 (Acumulador Fila TOTAL):** La fila total leía `result.consolidated.total_port_days` (`0.04d`) en vez de sumar aritméticamente la fórmula real de todos los puertos. | ✅ RESUELTO |
 
+### ───────────────
+
+### 🕵️‍♂️ 5.6. Sexta Vuelta (Serie 6: El "Smoking Gun" en las Cards Financieras, Búnker y Port Costs)
+
+A partir de la inspección del "Smoking Gun" sobre las 4 Tarjetas Financieras situadas bajo la grilla:
+
+| # | Card Auditada | Valor en Pantalla (Hallazgo Serie 6) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **6.1** | **`Card 1: Bunker Expenses`** | Muestra `$65,576` (Búnker con días desactualizados) | **`$77,761 USD`** (Sincronizado con la suma en vivo de búnker de la grilla) | **Crimen 6.1 (Lectura de Toneladas Vacías):** Leía `result.consolidated.bunker_tonnage` backend en vez de calcular el búnker live de las distancias/días mar/puerto reales. | ✅ RESUELTO |
+| **6.2** | **`Card 2: Port Costs`** | Muestra Callao `$22,000`, Matarani `$18,000`, Muellaje `$5,000`, pero **`TOTAL PORT COSTS: $0`** | **`$45,000 USD`** (Suma idéntica = `$22,000 + $18,000 + $5,000`) | **Crimen 6.2 (Total Nulo Harcodeado):** `Total Port Costs` leía `result.consolidated.total_port_costs` (que venía en 0) en lugar de sumar las celdas visibles de la tarjeta. | ✅ RESUELTO |
+| **6.3** | **`Card 4: Financial Voyage Result`** | Revenue: `$405,000`, Gastos: `~$170,000`, pero **`VOYAGE RESULT / P&L: $0`** | **`+$177,635 USD`** ($405,000 - Hire - Búnker - Port Costs - Comisiones) | **Crimen 6.3 (P&L Nulo):** `VOYAGE RESULT / P&L` leía `result.consolidated.net_profit` en 0 en lugar de restar los rubros en tiempo real. | ✅ RESUELTO |
+| **6.4** | **`Card 4: Captura de Muellaje`** | Muellaje activado con check `RF` no se sumaba a los ingresos | **`(+) Refacturación de Muellaje`** sumado a Ingresos y restado a Costos | **Crimen 6.4 (Omitir Refacturación):** Si el check `RF` estaba activo, la tarjeta no re-capturaba la refacturación de muellaje como ingreso comercial. | ✅ RESUELTO |
+
 ---
 
 ## 📄 Archivos Relacionados

@@ -6,6 +6,8 @@ export interface FinancialResultCardsProps {
     bunkerPriceMdo: number;
     puertosConfig: any[];
     tramos: any[];
+    vessels?: any[];
+    selectedVessel?: string;
     vesselParams: any;
     addressCommPct: number;
     brokerCommPct: number;
@@ -39,11 +41,14 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
     bunkerPriceMdo,
     puertosConfig,
     tramos,
+    vessels,
+    selectedVessel,
     vesselParams,
     addressCommPct,
     brokerCommPct,
     demurrageRate,
     commentsText,
+    refacturarMuellajeMap,
     setAddressCommPct,
     setBrokerCommPct,
     setDemurrageRate,
@@ -54,6 +59,77 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
     fmtDays,
     fmtThousandSep
 }) => {
+    // 1. Cálculo Live de Búnker Tonnage (IFO & MDO)
+    let liveIfoTons = 0;
+    let liveMdoTons = 0;
+    let liveTotalSeaDays = 0;
+    let liveTotalPortDays = 0;
+
+    tramos.forEach((tr, idx) => {
+        const selectedVesselObj = (vessels || []).find(v => v.vessel_id === selectedVessel);
+        const distVal = Number(tr.route_distance || 0);
+        const rawWf = Number(tr.weather_factor || 0);
+        const wfPct = rawWf > 1 ? rawWf : (rawWf * 100);
+        const speedVal = Math.max(1, Number(tr.speed || selectedVesselObj?.vessel_speed || vesselParams?.vessel_speed || 11));
+        const calcSeaDays = distVal > 0 ? (distVal * (1 + (wfPct / 100))) / (speedVal * 24) : 0;
+        liveTotalSeaDays += calcSeaDays;
+
+        const pCfg = puertosConfig[idx + 1] || {};
+        const qVal = Number(pCfg.quantity || 0);
+        const rVal = Math.max(1, Number(pCfg.op_rate || 500));
+        const tcVal = Number(pCfg.time_to_count || 0);
+        const posVal = Number(pCfg.positioning || 0);
+        const calcPortDays = pCfg.action !== 'NONE' ? (((qVal / rVal) + tcVal + posVal) / 24) : 0;
+        liveTotalPortDays += calcPortDays;
+
+        const ifoSeaRatio = Number(vesselParams?.consumption_sea_ifo || selectedVesselObj?.consumption_sea_ifo || 14.5);
+        const mdoSeaRatio = Number(vesselParams?.consumption_sea_mdo || selectedVesselObj?.consumption_sea_mdo || 0.1);
+        const ifoIdleRatio = Number(vesselParams?.consumption_idle_ifo || selectedVesselObj?.consumption_idle_ifo || 1.5);
+        const mdoIdleRatio = Number(vesselParams?.consumption_idle_mdo || selectedVesselObj?.consumption_idle_mdo || 0.1);
+
+        liveIfoTons += (calcSeaDays * ifoSeaRatio) + (calcPortDays * ifoIdleRatio);
+        liveMdoTons += (calcSeaDays * mdoSeaRatio) + (calcPortDays * mdoIdleRatio);
+    });
+
+    const ifoT = (result?.consolidated?.bunker_ifo_tonnage && result.consolidated.bunker_ifo_tonnage > 0) ? result.consolidated.bunker_ifo_tonnage : liveIfoTons;
+    const mdoT = (result?.consolidated?.bunker_mdo_tonnage && result.consolidated.bunker_mdo_tonnage > 0) ? result.consolidated.bunker_mdo_tonnage : liveMdoTons;
+    const ifoCost = ifoT * bunkerPriceIfo;
+    const mdoCost = mdoT * bunkerPriceMdo;
+    const totalBunkerCost = ifoCost + mdoCost;
+
+    // 2. Port Costs Live Sum
+    const livePortCostsSum = puertosConfig.reduce((sum, p) => sum + (Number(p.manual_port_cost) || 0), 0);
+    const totalPortCostsVal = (result?.consolidated?.total_port_costs && result.consolidated.total_port_costs > 0) ? result.consolidated.total_port_costs : livePortCostsSum;
+
+    // 3. Revenue & Refacturación de Muellaje Live
+    const liveRevenue = tramos.reduce((sum, _, idx) => sum + (puertosConfig[idx + 1]?.action === 'DESCARGAR' ? (Number(puertosConfig[idx + 1]?.quantity || 0) * Number(puertosConfig[idx + 1]?.freight_rate || 0)) : 0), 0);
+    const revenue = (result?.consolidated?.total_freight_revenue && result.consolidated.total_freight_revenue > 0) ? result.consolidated.total_freight_revenue : liveRevenue;
+
+    const liveRefacturacionMuellaje = puertosConfig.reduce((sum, p, i) => {
+        if (p.action === 'NONE') return sum;
+        if (refacturarMuellajeMap[i] !== false && Number(p.muellaje_cost || 0) > 0) {
+            return sum + Number(p.muellaje_cost);
+        }
+        return sum;
+    }, 0);
+    const refacturacionMuellajeUsd = (result?.consolidated?.refacturacion_muellaje !== undefined && result.consolidated.refacturacion_muellaje > 0) ? result.consolidated.refacturacion_muellaje : liveRefacturacionMuellaje;
+
+    // 4. Financial Voyage Result Live
+    const totalDays = (result?.consolidated?.total_days && result.consolidated.total_days > 0) ? result.consolidated.total_days : (liveTotalSeaDays + liveTotalPortDays);
+    const tceReq = result?.consolidated?.tce_required || Number(vesselParams?.tce_required) || 15000;
+    const hireUsd = tceReq * totalDays;
+
+    const addressCommUsd = revenue * (addressCommPct / 100);
+    const brokerCommUsd = revenue * (brokerCommPct / 100);
+    const totalCommUsd = (result?.consolidated?.total_commissions && result.consolidated.total_commissions > 0) ? result.consolidated.total_commissions : (addressCommUsd + brokerCommUsd);
+
+    const liveNetProfit = (revenue + refacturacionMuellajeUsd) - (hireUsd + totalBunkerCost + totalPortCostsVal + totalCommUsd);
+    const pnlVal = (result?.consolidated?.net_profit !== undefined && result?.consolidated?.net_profit !== 0) ? result.consolidated.net_profit : liveNetProfit;
+
+    const liveTceReal = totalDays > 0 ? (((revenue + refacturacionMuellajeUsd) - (totalBunkerCost + totalPortCostsVal + totalCommUsd)) / totalDays) : 0;
+    const tceReal = (result?.consolidated?.tce_real && result.consolidated.tce_real > 0) ? result.consolidated.tce_real : liveTceReal;
+    const tceDiff = tceReal - tceReq;
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 flex-shrink-0 mt-3">
             
@@ -78,33 +154,21 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {(() => {
-                                        const ifoT = result?.consolidated?.bunker_ifo_tonnage || 0;
-                                        const mdoT = result?.consolidated?.bunker_mdo_tonnage || 0;
-                                        const ifoCost = ifoT * bunkerPriceIfo;
-                                        const mdoCost = mdoT * bunkerPriceMdo;
-                                        const totalBunker = ifoCost + mdoCost;
-
-                                        return (
-                                            <>
-                                                <tr className="border-b border-slate-100">
-                                                    <td className="py-1 pl-1 text-slate-600 font-sans text-[11px]">IFO (Heavy Fuel)</td>
-                                                    <td className="text-right py-1 pr-1">{fmtNum(ifoT)}</td>
-                                                    <td className="text-right py-1 pr-1 font-bold">{fmtCur(ifoCost)}</td>
-                                                </tr>
-                                                <tr className="border-b border-slate-100">
-                                                    <td className="py-1 pl-1 text-slate-600 font-sans text-[11px]">MDO (Diesel)</td>
-                                                    <td className="text-right py-1 pr-1">{fmtNum(mdoT)}</td>
-                                                    <td className="text-right py-1 pr-1 font-bold">{fmtCur(mdoCost)}</td>
-                                                </tr>
-                                                <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
-                                                    <td className="py-1 pl-1 font-sans text-[10.5px] uppercase">Total Fuel</td>
-                                                    <td className="text-right py-1 pr-1">{fmtNum(ifoT + mdoT)}</td>
-                                                    <td className="text-right py-1 pr-1">{fmtCur(totalBunker)}</td>
-                                                </tr>
-                                            </>
-                                        );
-                                    })()}
+                                    <tr className="border-b border-slate-100">
+                                        <td className="py-1 pl-1 text-slate-600 font-sans text-[11px]">IFO (Heavy Fuel)</td>
+                                        <td className="text-right py-1 pr-1">{fmtNum(ifoT)}</td>
+                                        <td className="text-right py-1 pr-1 font-bold">{fmtCur(ifoCost)}</td>
+                                    </tr>
+                                    <tr className="border-b border-slate-100">
+                                        <td className="py-1 pl-1 text-slate-600 font-sans text-[11px]">MDO (Diesel)</td>
+                                        <td className="text-right py-1 pr-1">{fmtNum(mdoT)}</td>
+                                        <td className="text-right py-1 pr-1 font-bold">{fmtCur(mdoCost)}</td>
+                                    </tr>
+                                    <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
+                                        <td className="py-1 pl-1 font-sans text-[10.5px] uppercase">Total Fuel</td>
+                                        <td className="text-right py-1 pr-1">{fmtNum(ifoT + mdoT)}</td>
+                                        <td className="text-right py-1 pr-1">{fmtCur(totalBunkerCost)}</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -126,7 +190,6 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                 <tbody>
                                     {(() => {
                                         const portItems = getDynamicPortCostItems();
-                                        
 
                                         return (
                                             <>
@@ -175,7 +238,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                                 <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
                                                     <td className="py-1.5 pl-1.5 font-sans text-[10.5px] uppercase">Total Port Costs</td>
                                                     <td className="text-right py-1.5 pr-1.5">
-                                                        {fmtCur(result?.consolidated?.total_port_costs || 0)}
+                                                        {fmtCur(totalPortCostsVal)}
                                                     </td>
                                                 </tr>
                                             </>
@@ -230,19 +293,19 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                         <tr className="border-b border-slate-100">
                                             <td className="py-0.5 pl-1 text-slate-500 text-[10.5px]">Address (USD)</td>
                                             <td className="text-right py-0.5 pr-1 font-bold">
-                                                {result ? fmtCur(result.consolidated.total_freight_revenue * (addressCommPct / 100)) : '$0'}
+                                                {fmtCur(revenue * (addressCommPct / 100))}
                                             </td>
                                         </tr>
                                         <tr className="border-b border-slate-100">
                                             <td className="py-0.5 pl-1 text-slate-500 text-[10.5px]">Broker (USD)</td>
                                             <td className="text-right py-0.5 pr-1 font-bold">
-                                                {result ? fmtCur(result.consolidated.total_freight_revenue * (brokerCommPct / 100)) : '$0'}
+                                                {fmtCur(revenue * (brokerCommPct / 100))}
                                             </td>
                                         </tr>
                                         <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
                                             <td className="py-0.5 pl-1 font-sans text-[10px] uppercase">Total Comm</td>
                                             <td className="text-right py-0.5 pr-1 text-rose-600 font-bold">
-                                                {result ? `-${fmtCur(result.consolidated.total_commissions || 0)}` : '$0'}
+                                                {totalCommUsd > 0 ? `-${fmtCur(totalCommUsd)}` : '$0'}
                                             </td>
                                         </tr>
                                     </tbody>
@@ -309,85 +372,64 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                     </h3>
                     <table className="w-full border-collapse text-xs font-mono">
                         <tbody>
+                            {/* 1. Revenue */}
+                            <tr className="border-b border-emerald-100/60">
+                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                    Revenue ({fmtThousandSep(puertosConfig[2]?.quantity || puertosConfig[1]?.quantity || 13500)} MT × {fmtCur(puertosConfig[2]?.freight_rate || puertosConfig[1]?.freight_rate || 30)}/MT)
+                                </td>
+                                <td className="text-right py-0.5 pr-1 font-bold text-slate-800">
+                                    {fmtCur(revenue)}
+                                </td>
+                            </tr>
+
+                            {/* 1.b Refacturación de Muellaje (al cliente) */}
+                            {refacturacionMuellajeUsd > 0 && (
+                                <tr className="border-b border-emerald-100/40 bg-emerald-100/40">
+                                    <td className="py-0.5 pl-2 text-emerald-900 font-sans text-[9.5px] font-bold italic">
+                                        (+) Refacturación Muellaje (al cliente)
+                                    </td>
+                                    <td className="text-right py-0.5 pr-1 font-mono text-[9.5px] text-emerald-900 font-bold">
+                                        +{fmtCur(refacturacionMuellajeUsd)}
+                                    </td>
+                                </tr>
+                            )}
+
+                            {/* 2. Hire */}
+                            <tr className="border-b border-emerald-100/60">
+                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                    (-) Hire ({fmtCur(tceReq)}/d × {fmtDays(totalDays)} d)
+                                </td>
+                                <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
+                                    -{fmtCur(hireUsd)}
+                                </td>
+                            </tr>
+
+                            {/* 3. Bunker IFO */}
+                            <tr className="border-b border-emerald-100/60">
+                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                    (-) Bunker IFO ({fmtNum(ifoT)} T × {fmtCur(bunkerPriceIfo)}/T)
+                                </td>
+                                <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
+                                    -{fmtCur(ifoCost)}
+                                </td>
+                            </tr>
+
+                            {/* 4. Bunker MDO */}
+                            <tr className="border-b border-emerald-100/60">
+                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                    (-) Bunker MDO ({fmtNum(mdoT)} T × {fmtCur(bunkerPriceMdo)}/T)
+                                </td>
+                                <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
+                                    -{fmtCur(mdoCost)}
+                                </td>
+                            </tr>
+
+                            {/* 5. Port Costs dinámicos */}
                             {(() => {
-                                const Q = Number(puertosConfig[1]?.quantity || tramos[0]?.quantity || 0);
-                                const F = Number(puertosConfig[1]?.freight_rate || tramos[0]?.freight_rate || 0);
-                                const totalDays = result?.consolidated?.total_days || 0;
-                                const tceReq = result?.consolidated?.tce_required || Number(vesselParams?.tce_required) || 0;
-                                const hireUsd = tceReq * totalDays;
-
-                                const ifoTons = result?.consolidated?.bunker_ifo_tonnage || 0;
-                                const mdoTons = result?.consolidated?.bunker_mdo_tonnage || 0;
-                                const ifoUsd = ifoTons * bunkerPriceIfo;
-                                const mdoUsd = mdoTons * bunkerPriceMdo;
-
                                 const portItems = getDynamicPortCostItems();
-                                
-
-                                const revenue = result?.consolidated?.total_freight_revenue || (Q * F);
-                                const refacturacionMuellajeUsd = result?.consolidated?.refacturacion_muellaje || 0;
-                                const addressCommUsd = revenue * (addressCommPct / 100);
-                                const brokerCommUsd = revenue * (brokerCommPct / 100);
-                                const totalCommUsd = result?.consolidated?.total_commissions || (addressCommUsd + brokerCommUsd);
-
-                                const tceReal = result?.consolidated?.tce_real || 0;
-                                const tceDiff = tceReal - tceReq;
 
                                 return (
                                     <>
-                                        {/* 1. Revenue */}
-                                        <tr className="border-b border-emerald-100/60">
-                                            <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
-                                                Revenue ({fmtThousandSep(Q)} MT × {fmtCur(F)}/MT)
-                                            </td>
-                                            <td className="text-right py-0.5 pr-1 font-bold text-slate-800">
-                                                {fmtCur(revenue)}
-                                            </td>
-                                        </tr>
-
-                                        {/* 1.b Refacturación de Muellaje (al cliente) */}
-                                        {refacturacionMuellajeUsd > 0 && (
-                                            <tr className="border-b border-emerald-100/40 bg-slate-50/50">
-                                                <td className="py-0.5 pl-2 text-slate-500 font-sans text-[9.5px] font-normal italic">
-                                                    (+) Refacturación Muellaje (al cliente)
-                                                </td>
-                                                <td className="text-right py-0.5 pr-1 font-mono text-[9.5px] text-slate-500 font-medium">
-                                                    +{fmtCur(refacturacionMuellajeUsd)}
-                                                </td>
-                                            </tr>
-                                        )}
-
-                                        {/* 2. Hire */}
-                                        <tr className="border-b border-emerald-100/60">
-                                            <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
-                                                (-) Hire ({fmtCur(tceReq)}/d × {fmtDays(totalDays)} d)
-                                            </td>
-                                            <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
-                                                -{fmtCur(hireUsd)}
-                                            </td>
-                                        </tr>
-
-                                        {/* 3. Bunker IFO */}
-                                        <tr className="border-b border-emerald-100/60">
-                                            <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
-                                                (-) Bunker IFO ({fmtNum(ifoTons)} T × {fmtCur(bunkerPriceIfo)}/T)
-                                            </td>
-                                            <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
-                                                -{fmtCur(ifoUsd)}
-                                            </td>
-                                        </tr>
-
-                                        {/* 4. Bunker MDO */}
-                                        <tr className="border-b border-emerald-100/60">
-                                            <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
-                                                (-) Bunker MDO ({fmtNum(mdoTons)} T × {fmtCur(bunkerPriceMdo)}/T)
-                                            </td>
-                                            <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
-                                                -{fmtCur(mdoUsd)}
-                                            </td>
-                                        </tr>
-
-                                        {/* 5. Port Costs dinámicos */}
                                         {portItems.map((item, idx) => {
                                             const isChile = CHILEAN_PORTS.includes((item.port_id || '').toUpperCase());
                                             const lmCost = (isChile && item.cost >= 2500) ? 2500 : 0;
@@ -436,58 +478,53 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                                 </React.Fragment>
                                             );
                                         })}
-
-                                        {/* 6. Comisiones */}
-                                        {(totalCommUsd > 0 || (addressCommPct + brokerCommPct) > 0) && (
-                                            <tr className="border-b border-emerald-100/60">
-                                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
-                                                    (-) Comisiones ({(addressCommPct + brokerCommPct).toFixed(2).replace(/\.00$/, '')}%)
-                                                </td>
-                                                <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
-                                                    -{fmtCur(totalCommUsd)}
-                                                </td>
-                                            </tr>
-                                        )}
-
-                                        {/* VOYAGE RESULT / P&L */}
-                                        {(() => {
-                                            const pnlVal = result?.consolidated?.net_profit || 0;
-                                            return (
-                                                <tr className="border-t-2 border-emerald-300 bg-emerald-100/80 font-black text-emerald-950">
-                                                    <td className="py-1 pl-1 font-sans text-xs uppercase">VOYAGE RESULT / P&L</td>
-                                                    <td className="text-right py-1 pr-1 font-mono text-xs">
-                                                        {fmtCur(pnlVal)}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })()}
-
-                                        {/* TCE REALIZADO */}
-                                        <tr className="border-t border-emerald-200">
-                                            <td className="py-0.5 pl-1 font-bold text-slate-700 font-sans text-[10.5px]">TCE REALIZADO</td>
-                                            <td className="text-right py-0.5 pr-1 font-bold text-emerald-900 font-mono text-xs">
-                                                {result ? `${fmtCur(tceReal)}/d` : '$0/d'}
-                                            </td>
-                                        </tr>
-
-                                        {/* TCE REQUERIDO */}
-                                        <tr className="border-b border-emerald-100/60 text-slate-500">
-                                            <td className="py-0.5 pl-1 font-sans text-[10px]">TCE REQUERIDO</td>
-                                            <td className="text-right py-0.5 pr-1 font-mono text-[10.5px]">
-                                                {fmtCur(tceReq)}/d
-                                            </td>
-                                        </tr>
-
-                                        {/* DIFERENCIA TCE */}
-                                        <tr className="font-bold border-t border-emerald-200">
-                                            <td className="py-0.5 pl-1 font-sans text-[10px]">DIFERENCIA TCE (+/-)</td>
-                                            <td className={`text-right py-0.5 pr-1 font-mono text-[10.5px] ${tceDiff >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
-                                                {tceDiff >= 0 ? `+${fmtCur(tceDiff)}/d` : `-${fmtCur(Math.abs(tceDiff))}/d`}
-                                            </td>
-                                        </tr>
                                     </>
                                 );
                             })()}
+
+                            {/* 6. Comisiones */}
+                            {(totalCommUsd > 0 || (addressCommPct + brokerCommPct) > 0) && (
+                                <tr className="border-b border-emerald-100/60">
+                                    <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                        (-) Comisiones ({(addressCommPct + brokerCommPct).toFixed(2).replace(/\.00$/, '')}%)
+                                    </td>
+                                    <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
+                                        -{fmtCur(totalCommUsd)}
+                                    </td>
+                                </tr>
+                            )}
+
+                            {/* VOYAGE RESULT / P&L */}
+                            <tr className={`border-t-2 border-emerald-300 font-black ${pnlVal >= 0 ? 'bg-emerald-100/90 text-emerald-950' : 'bg-rose-100/90 text-rose-950'}`}>
+                                <td className="py-1 pl-1 font-sans text-xs uppercase">VOYAGE RESULT / P&L</td>
+                                <td className="text-right py-1 pr-1 font-mono text-xs">
+                                    {fmtCur(pnlVal)}
+                                </td>
+                            </tr>
+
+                            {/* TCE REALIZADO */}
+                            <tr className="border-t border-emerald-200">
+                                <td className="py-0.5 pl-1 font-bold text-slate-700 font-sans text-[10.5px]">TCE REALIZADO</td>
+                                <td className="text-right py-0.5 pr-1 font-bold text-emerald-900 font-mono text-xs">
+                                    {fmtCur(tceReal)}/d
+                                </td>
+                            </tr>
+
+                            {/* TCE REQUERIDO */}
+                            <tr className="border-b border-emerald-100/60 text-slate-500">
+                                <td className="py-0.5 pl-1 font-sans text-[10px]">TCE REQUERIDO</td>
+                                <td className="text-right py-0.5 pr-1 font-mono text-[10.5px]">
+                                    {fmtCur(tceReq)}/d
+                                </td>
+                            </tr>
+
+                            {/* DIFERENCIA TCE */}
+                            <tr className="font-bold border-t border-emerald-200">
+                                <td className="py-0.5 pl-1 font-sans text-[10px]">DIFERENCIA TCE (+/-)</td>
+                                <td className={`text-right py-0.5 pr-1 font-mono text-[10.5px] ${tceDiff >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                                    {tceDiff >= 0 ? `+${fmtCur(tceDiff)}/d` : `-${fmtCur(Math.abs(tceDiff))}/d`}
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
