@@ -174,6 +174,18 @@ A partir del hallazgo de Sherlock Holmes sobre el comportamiento marítimo de la
 | **3.4** | **`Op. Dest (Fila 3 ILO)`** | **`NONE`** | **`NONE`** (`destination_action = 'NONE'` en Supabase) | **Correcto:** Puerto destino del tramo reposicionamiento `MATARANI ➔ ILO`. | ✅ RESUELTO |
 | **3.5** | **`Combinación de JSON puertosConfig`** | `puertosConfig` estático sobrescribía del todo a `contracts` | **Fusión Inteligente (Merge)** | **Crimen 3.5 (Fusión Ausente):** `handleSelectRoute` leía `puertosConfig` estático viejo sin hacer un merge con los parámetros contractuales en tiempo real de `contracts`. | ✅ RESUELTO |
 
+### ───────────────
+
+### 🕵️‍♂️ 5.4. Cuarta Vuelta (Serie 4: Consulta Estática de Costos de Puerto & Simplificación Fila Única TOTAL)
+
+A partir de la auditoría visual de la cuarta escena del crimen y las instrucciones de housekeeping del equipo pericial:
+
+| # | Columna Auditada | Valor en Pantalla (Hallazgo Serie 4) | Valor Real BD Supabase / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **4.1** | **`Costo Pto (Sin Buque)`** | Muestra `$20,000` estático al estar en `[SELECCIONAR BUQUE]` | **Consulta Dinámica al Seleccionar Buque** | **Crimen 4.1 (Cambio de Buque Apagado):** `handleVesselChange` no ejecutaba el barrido `autoFillPortCost` sobre los puertos activos de la grilla. | ✅ RESUELTO |
+| **4.2** | **`Costos de Puerto Estáticos`** | `$20,000` harcodeado legacy | **`$16,846.50`** (Callao) / **`$17,105.00`** (Matarani) | **Refresco en Vivo:** Al seleccionar buque (`TABLONES`), se auto-completan los costos fijos reales de `port_cost_static`. | ✅ RESUELTO |
+| **4.3** | **`Filas de Totales (Housekeeping)`** | Existían 3 filas confusas (`Motor`, `Aritmético`, `Δ Red`) | **Fila Única Azul `📊 TOTAL`** | **Simplificación Operativa:** Se eliminaron las 3 filas antiguas y se reemplazaron por una **única hilera azul `📊 TOTAL`** que realiza la suma aritmética pura y directa de todas las columnas visibles superiores. | ✅ RESUELTO |
+
 ---
 
 ## 📄 Archivos Relacionados

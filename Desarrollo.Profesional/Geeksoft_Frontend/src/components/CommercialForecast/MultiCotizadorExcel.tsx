@@ -256,6 +256,14 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             const resolved = VesselProviderService.extractVesselParams(vesselId, vessels);
             if (resolved) setVesselParams(resolved);
         }
+
+        // Barrido automático de costos portuarios estáticos al seleccionar buque
+        puertosConfig.forEach((p, idx) => {
+            const portId = idx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[idx - 1]?.destination_port_id || '');
+            if (portId && p.action !== 'NONE') {
+                autoFillPortCost(idx, portId, p.action, vesselId);
+            }
+        });
     };
 
     const handleVesselParamChange = (field: string, val: any) => {

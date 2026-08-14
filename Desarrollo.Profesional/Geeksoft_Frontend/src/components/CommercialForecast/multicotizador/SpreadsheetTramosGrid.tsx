@@ -49,12 +49,8 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     fmtDays,
     fmtThousandSep
 }) => {
-    // Calculo de balance de toneladas
-    const totalCargas = puertosConfig.reduce((sum, p) => sum + (p.action === 'CARGAR' ? (Number(p.quantity) || 0) : 0), 0);
+    // Calculo de total descargas
     const totalDescargas = puertosConfig.reduce((sum, p) => sum + (p.action === 'DESCARGAR' ? (Number(p.quantity) || 0) : 0), 0);
-    const isBalanced = totalCargas === totalDescargas;
-
-    const sumPortCosts = puertosConfig.reduce((sum, p) => sum + (Number(p.manual_port_cost) || 0), 0);
 
     // Array de costos live de búnker por tramo
     const liveBunkerCosts = tramos.map((tr, idx) => {
@@ -604,122 +600,68 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         );
                     })}
 
-                    {/* FILA 1 DE TOTALES: ESTIMADO MOTOR */}
-                    <tr className="bg-blue-100/80 border-b border-blue-300 h-8 select-none font-black text-blue-950 text-xs">
-                        <td colSpan={3} className="border-r border-blue-300 text-left pl-3 font-sans text-[10.5px] uppercase tracking-wide text-blue-950 bg-blue-200/50">📊 TOTAL ESTIMADO (MOTOR)</td>
-                        <td className="border-r border-blue-300 text-right pr-2 font-mono text-blue-900">
-                            {result ? fmtNum(result.tramos.reduce((s: any, t: any) => s + (t.distance || 0), 0)) : '0'}
-                        </td>
-                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
-                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
-                        <td className="border-r border-blue-200 text-right pr-2 font-mono text-blue-900">
-                            {result ? fmtDays(result.consolidated.total_sea_days || 0) : '0.00'}
-                        </td>
-                        <td className="border-r border-blue-200 text-right pr-2 font-mono text-blue-900">
-                            {result ? fmtDays(result.consolidated.total_port_days || 0) : '0.00'}
-                        </td>
-                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
-                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
-                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
-                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
-                        <td className={`border-r border-blue-200 text-right pr-2 font-mono font-bold text-[11px] ${isBalanced ? 'text-emerald-700 bg-emerald-50/20' : 'text-rose-600 bg-rose-50/60'}`} title={isBalanced ? "Carga y descarga balanceadas" : `Desbalance: Carga ${totalCargas.toLocaleString()} MT vs Descarga ${totalDescargas.toLocaleString()} MT`}>
-                            {isBalanced ? (
-                                <span>{totalDescargas > 0 ? fmtNum(totalDescargas) : '—'}</span>
-                            ) : (
-                                <span>⚠️ {fmtNum(totalDescargas)} / {fmtNum(totalCargas)}</span>
-                            )}
-                        </td>
-                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
-                        <td className="border-r border-blue-200 text-right pr-2 font-mono text-blue-900">
-                            {fmtCur((result?.consolidated?.total_port_costs && result.consolidated.total_port_costs > 0) ? result.consolidated.total_port_costs : sumPortCosts)}
-                        </td>
-                        <td className="border-r border-blue-200 text-right pr-2 font-mono text-blue-900">
-                            {result ? fmtCur(result.consolidated.total_freight_revenue || 0) : '$0'}
-                        </td>
-                        <td className="border-r border-blue-200 text-right pr-2 font-mono text-blue-900">
-                            {fmtCur((result?.consolidated?.total_bunker_costs && result.consolidated.total_bunker_costs > 0) ? result.consolidated.total_bunker_costs : sumLiveBunkerCosts)}
-                        </td>
-                        <td className="border-r border-blue-200 text-right pr-2 text-slate-400">—</td>
-                        <td className="text-right pr-2 text-slate-400">—</td>
-                    </tr>
-
-                    {/* FILA 2 DE TOTALES: ARITMÉTICO */}
+                    {/* FILA ÚNICA DE TOTALES (HOUSEKEEPING) */}
                     {(() => {
                         const sumDistance = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.distance || 0), 0) : tramos.reduce((s, t) => s + (Number(t.route_distance) || 0), 0);
-                        const sumSeaDays = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.sea_days || 0), 0) : 0;
-                        const sumPortDays = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.port_days || 0), 0) : 0;
+                        const sumSeaDays = result?.consolidated?.total_sea_days || tramos.reduce((s, _, idx) => {
+                            const tr = tramos[idx];
+                            const selectedVesselObj = vessels.find(v => v.vessel_id === selectedVessel);
+                            const distVal = Number(tr.route_distance || 0);
+                            const rawWf = Number(tr.weather_factor || 0);
+                            const wfPct = rawWf > 1 ? rawWf : (rawWf * 100);
+                            const speedVal = Math.max(1, Number(tr.speed || selectedVesselObj?.vessel_speed || vesselParams?.vessel_speed || 11));
+                            return s + (distVal > 0 ? (distVal * (1 + (wfPct / 100))) / (speedVal * 24) : 0);
+                        }, 0);
+
+                        const sumPortDays = result?.consolidated?.total_port_days || puertosConfig.reduce((s, p) => {
+                            if (p.action === 'NONE') return s;
+                            const qVal = Number(p.quantity || 0);
+                            const rVal = Math.max(1, Number(p.op_rate || 500));
+                            const tcVal = Number(p.time_to_count || 0);
+                            const posVal = Number(p.positioning || 0);
+                            return s + (((qVal / rVal) + tcVal + posVal) / 24);
+                        }, 0);
+
                         const sumPortCostsCalculated = puertosConfig.reduce((sum, p) => sum + (Number(p.manual_port_cost) || 0), 0);
-                        const sumFreightIncome = result?.tramos ? result.tramos.reduce((s: number, t: any) => s + (t.net_income || 0), 0) : tramos.reduce((sum, _, idx) => sum + (puertosConfig[idx + 1]?.action === 'DESCARGAR' ? (Number(puertosConfig[idx + 1]?.quantity || 0) * Number(puertosConfig[idx + 1]?.freight_rate || 0)) : 0), 0);
-                        const sumBunkerCostsCalculated = (result?.consolidated?.total_bunker_costs && result.consolidated.total_bunker_costs > 0) ? result.consolidated.total_bunker_costs : sumLiveBunkerCosts;
-
-                        const motorSeaDays = result?.consolidated?.total_sea_days || sumSeaDays;
-                        const motorPortDays = result?.consolidated?.total_port_days || sumPortDays;
-                        const motorPortCosts = (result?.consolidated?.total_port_costs && result.consolidated.total_port_costs > 0) ? result.consolidated.total_port_costs : sumPortCostsCalculated;
-                        const motorBunkerCosts = (result?.consolidated?.total_bunker_costs && result.consolidated.total_bunker_costs > 0) ? result.consolidated.total_bunker_costs : sumBunkerCostsCalculated;
-
-                        const diffSeaDays = sumSeaDays - motorSeaDays;
-                        const diffPortDays = sumPortDays - motorPortDays;
-                        const diffPortCosts = sumPortCostsCalculated - motorPortCosts;
-                        const diffBunkerCosts = sumBunkerCostsCalculated - motorBunkerCosts;
-
-                        const hasAnyDiff = Math.abs(diffSeaDays) > 0.001 || Math.abs(diffPortDays) > 0.001 || Math.abs(diffPortCosts) > 0.5 || Math.abs(diffBunkerCosts) > 0.5;
+                        const sumFreightIncome = tramos.reduce((sum, _, idx) => sum + (puertosConfig[idx + 1]?.action === 'DESCARGAR' ? (Number(puertosConfig[idx + 1]?.quantity || 0) * Number(puertosConfig[idx + 1]?.freight_rate || 0)) : 0), 0);
+                        const sumBunkerCostsCalculated = sumLiveBunkerCosts;
 
                         return (
-                            <>
-                                <tr className="bg-amber-100/90 border-b border-amber-300 h-8 select-none font-black text-amber-950 text-xs">
-                                    <td colSpan={3} className="border-r border-amber-300 text-left pl-3 font-sans text-[10.5px] uppercase tracking-wide text-amber-950 bg-amber-200/60">🧮 TOTAL ARITMÉTICO (SUMA Σ)</td>
-                                    <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtNum(sumDistance)}</td>
-                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className={`border-r border-amber-300 text-right pr-2 font-mono ${Math.abs(diffSeaDays) > 0.001 ? 'bg-amber-200 text-amber-950 font-black' : ''}`}>
-                                        {fmtDays(sumSeaDays)}
-                                    </td>
-                                    <td className={`border-r border-amber-300 text-right pr-2 font-mono ${Math.abs(diffPortDays) > 0.001 ? 'bg-amber-200 text-amber-950 font-black' : ''}`}>
-                                        {fmtDays(sumPortDays)}
-                                    </td>
-                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtNum(totalDescargas)}</td>
-                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtCur(sumPortCostsCalculated)}</td>
-                                    <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtCur(sumFreightIncome)}</td>
-                                    <td className="border-r border-amber-300 text-right pr-2 font-mono">{fmtCur(sumBunkerCostsCalculated)}</td>
-                                    <td className="border-r border-amber-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="text-right pr-2 text-slate-400">—</td>
-                                </tr>
-
-                                <tr className={`h-7 select-none font-black text-xs ${hasAnyDiff ? 'bg-rose-100 text-rose-950 border-b-2 border-rose-400' : 'bg-emerald-100 text-emerald-950 border-b-2 border-emerald-400'}`}>
-                                    <td colSpan={3} className="border-r border-slate-300 text-left pl-3 font-sans text-[10.5px] uppercase tracking-wide">
-                                        {hasAnyDiff ? '⚠️ DIFERENCIA DETECTADA (Δ)' : '✅ CONVERGENCIA PERFECTA (Δ = 0)'}
-                                    </td>
-                                    <td className="border-r border-slate-300 text-right pr-2 font-mono">—</td>
-                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="border-r border-slate-300 text-right pr-2 font-mono">
-                                        {Math.abs(diffSeaDays) > 0.001 ? `${diffSeaDays > 0 ? '+' : ''}${fmtDays(diffSeaDays)}d` : '0.00d'}
-                                    </td>
-                                    <td className="border-r border-slate-300 text-right pr-2 font-mono">
-                                        {Math.abs(diffPortDays) > 0.001 ? `${diffPortDays > 0 ? '+' : ''}${fmtDays(diffPortDays)}d` : '0.00d'}
-                                    </td>
-                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="border-r border-slate-300 text-right pr-2 font-mono">—</td>
-                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="border-r border-slate-300 text-right pr-2 font-mono">
-                                        {Math.abs(diffPortCosts) > 0.5 ? `${diffPortCosts > 0 ? '+' : ''}${fmtCur(diffPortCosts)}` : '$0'}
-                                    </td>
-                                    <td className="border-r border-slate-300 text-right pr-2 font-mono">—</td>
-                                    <td className="border-r border-slate-300 text-right pr-2 font-mono">
-                                        {Math.abs(diffBunkerCosts) > 0.5 ? `${diffBunkerCosts > 0 ? '+' : ''}${fmtCur(diffBunkerCosts)}` : '$0'}
-                                    </td>
-                                    <td className="border-r border-slate-300 text-right pr-2 text-slate-400">—</td>
-                                    <td className="text-right pr-2 text-slate-400">—</td>
-                                </tr>
-                            </>
+                            <tr className="bg-blue-600 text-white h-8 select-none font-black text-xs border-t-2 border-blue-800">
+                                <td colSpan={3} className="border-r border-blue-500 text-left pl-3 font-sans text-[11px] uppercase tracking-wider text-white bg-blue-700 font-extrabold">
+                                    📊 TOTAL
+                                </td>
+                                <td className="border-r border-blue-500 text-right pr-2 font-mono text-white">
+                                    {fmtNum(sumDistance)}
+                                </td>
+                                <td className="border-r border-blue-500 text-right pr-2 text-blue-200">—</td>
+                                <td className="border-r border-blue-500 text-right pr-2 text-blue-200">—</td>
+                                <td className="border-r border-blue-500 text-right pr-2 font-mono text-white">
+                                    {fmtDays(sumSeaDays)}
+                                </td>
+                                <td className="border-r border-blue-500 text-right pr-2 font-mono text-white">
+                                    {fmtDays(sumPortDays)}
+                                </td>
+                                <td className="border-r border-blue-500 text-right pr-2 text-blue-200">—</td>
+                                <td className="border-r border-blue-500 text-right pr-2 text-blue-200">—</td>
+                                <td className="border-r border-blue-500 text-right pr-2 text-blue-200">—</td>
+                                <td className="border-r border-blue-500 text-right pr-2 text-blue-200">—</td>
+                                <td className="border-r border-blue-500 text-right pr-2 font-mono text-white">
+                                    {totalDescargas > 0 ? fmtNum(totalDescargas) : '—'}
+                                </td>
+                                <td className="border-r border-blue-500 text-right pr-2 text-blue-200">—</td>
+                                <td className="border-r border-blue-500 text-right pr-2 font-mono text-white font-black">
+                                    {fmtCur(sumPortCostsCalculated)}
+                                </td>
+                                <td className="border-r border-blue-500 text-right pr-2 font-mono text-white font-black">
+                                    {fmtCur(sumFreightIncome)}
+                                </td>
+                                <td className="border-r border-blue-500 text-right pr-2 font-mono text-white font-black">
+                                    {fmtCur(sumBunkerCostsCalculated)}
+                                </td>
+                                <td className="border-r border-blue-500 text-right pr-2 text-blue-200">—</td>
+                                <td className="text-right pr-2 text-blue-200">—</td>
+                            </tr>
                         );
                     })()}
                 </tbody>
