@@ -1,0 +1,192 @@
+import os
+import sys
+import subprocess
+
+def generate_multicotizador_flowchart():
+    base_name = "FLUJOGRAMA_Arquitectura_Multicotizador_V3"
+    output_dir = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador"
+    
+    print(f"Generando Flujograma Vertical en Cascada (Niveles Apilados 1->6): {base_name}...")
+    
+    # Path setup para Graphviz en Windows
+    potential_paths = [
+        r"C:\Program Files\Graphviz\bin",
+        r"C:\Program Files (x86)\Graphviz\bin",
+    ]
+    for p in potential_paths:
+        if os.path.exists(p) and p not in os.environ["PATH"]:
+            os.environ["PATH"] += os.pathsep + p
+
+    dot_content = """digraph MulticotizadorCascadeV3 {
+    rankdir=TB;
+    newrank=true;
+    splines=polyline;
+    nodesep=0.9;
+    ranksep=1.8;
+    
+    node [shape=box, style="filled,rounded", fontname="Arial", fontsize=10, margin="0.18,0.14"];
+    edge [fontname="Arial", fontsize=9];
+
+    # ==========================================
+    #  NIVEL 1: CAPA DE PERSISTENCIA (TOP)
+    # ==========================================
+    subgraph cluster_lvl1 {
+        label = "NIVEL 1: CAPA DE PERSISTENCIA & MAESTROS (Supabase DB - Naming Sovereign Key)"; 
+        style="filled"; color="#ECEFF1"; fontcolor="#37474F"; fillcolor="#F5F5F5";
+        
+        { rank=same; DB_Vessels; DB_RoutesClients; DB_PortCosts; DB_Bunker; DB_Contracts; DB_RoutesQuotes; }
+        
+        DB_Vessels [label="🚢 MAESTRO BUQUES (vessels)\\nSpecs, DWT, Speed,\\nConsumos Sea/Idle/Load/Disch IFO & MDO", shape=cylinder, fillcolor="#FFE0B2"];
+        DB_RoutesClients [label="⚓ MAESTRO RUTAS CLIENTES (routes_clients)\\nPK: name (Nomenclatura Negocio)\\nOrigen, Destino, Distancias, legs_data JSON", shape=cylinder, fillcolor="#B2EBF2", penwidth=2];
+        DB_PortCosts [label="💰 MAESTRO GASTOS PORTUARIOS (port_cost_static)\\nAgencia, Loading Master y\\nMuellaje en tarifa fija estática", shape=cylinder, fillcolor="#B2EBF2", penwidth=2];
+        DB_Bunker [label="🛢️ MATRIZ BÚNKER GENERAL (bunker_prices)\\nPrecios Mercado Spot IFO/MDO\\n(Prospectos & Crear Ruta/Cotización)", shape=cylinder, fillcolor="#FFE082"];
+        DB_Contracts [label="📑 MAESTRO DE CONTRATOS (contracts)\\nTarifas Fijas por Cliente Activo\\nSuma Max (IFO + MDO) por Destino", shape=cylinder, fillcolor="#FFCDD2", penwidth=2];
+        DB_RoutesQuotes [label="📁 MAESTRO COTIZACIONES PROSPECTOS (routes_quotes)\\nPK: name (Nomenclatura Prospecto)\\nVersionado de Cotización Commercial", shape=cylinder, fillcolor="#C8E6C9", penwidth=2];
+
+        DB_Vessels -> DB_RoutesClients -> DB_PortCosts -> DB_Bunker -> DB_Contracts -> DB_RoutesQuotes [style=invis];
+    }
+
+    # ==========================================
+    #  NIVEL 2: SERVICIOS PROVIDERS & RETRIEVER (FRONTEND REACT)
+    # ==========================================
+    subgraph cluster_lvl2 {
+        label = "NIVEL 2: PROVEEDORES DE DATOS Y RESOLUCIÓN BÚNKER (Frontend Services V3)"; 
+        style="filled,dashed"; color="#78909C"; fillcolor="#FAFAFA";
+        
+        { rank=same; S_Vessel; S_Bunker; S_Route; S_Port; S_Storage; S_Retriever; }
+
+        S_Vessel [label="⚙️ vesselProviderService\\nResuelve specs y consumos del buque", shape=component, fillcolor="#C5CAE9"];
+        S_Bunker [label="⚙️ bunkerProviderService\\n• Activos: contracts (Suma Max IFO+MDO)\\n• OP. DEST: Disch 5.0 T/D vs Load 3.5 T/D\\n• Prospectos/Crear: bunker_prices\\n• Cotización: routes_quotes", shape=component, fillcolor="#FFE0B2", penwidth=2];
+        S_Route [label="⚙️ routeDistancesService\\nResuelve distancias NM desde routes_clients", shape=component, fillcolor="#B2DFDB", penwidth=2];
+        S_Port [label="⚙️ portCostsRatesService\\nResuelve tarifas reales (0-Fallback Legacy)", shape=component, fillcolor="#B3E5FC", penwidth=2];
+        S_Storage [label="💾 multicotizadorStorageService\\nSobrescritura Pura por Naming: name == request.name\\nEmpaqueta getCalculatedTramos() + puertosConfig\\nen routes_clients / routes_quotes", shape=component, fillcolor="#A5D6A7", penwidth=2];
+        S_Retriever [label="🔍 multicotizadorRetrieverService\\nCarga cotizaciones y preserva puertosConfig", shape=component, fillcolor="#81C784", penwidth=2];
+
+        S_Vessel -> S_Bunker -> S_Route -> S_Port -> S_Storage -> S_Retriever [style=invis];
+    }
+
+    # ==========================================
+    #  NIVEL 3: INTERFAZ DE USUARIO (REACT FRONTEND)
+    # ==========================================
+    subgraph cluster_lvl3 {
+        label = "NIVEL 3: CABECERA COMERCIAL Y GRILLA SPREADSHEET (MultiCotizadorExcel.tsx V3)"; 
+        style="filled"; color="#0284C7"; fontcolor="#F3E5F5";
+        
+        { rank=same; UI_Step1; UI_Step2; UI_Step3; UI_FactSheet; UI_Grid; UI_SaveModal; }
+
+        UI_Step1 [label="1. SELECCIONAR CLIENTE\\nPestañas: ACTIVOS vs PROSPECTOS\\n(Cambio instantáneo 0ms en memoria)", shape=box, fillcolor="#E0F2FE", penwidth=2];
+        UI_Step2 [label="2. BUSCAR RUTA CLIENTE (Activos)\\n• Opción 1: ➕ CREAR RUTA CLIENTE (Reset $0 & bunker_prices)\\n• Opción N: Preserva puertosConfig guardado tras F5", shape=box, fillcolor="#E0F2FE", penwidth=2];
+        UI_Step3 [label="3. CARGAR COTIZACION PROSPECTO (Prospectos)\\n• Opción 1: ➕ CREAR COTIZACIÓN PROSPECTO (Reset $0 & bunker_prices)\\n• Opción N: Cotizaciones BD routes_quotes", shape=box, fillcolor="#E0F2FE", penwidth=2];
+        UI_FactSheet [label="📋 Fact Sheet del Buque\\n(Imagen object-fill 100% + Insumos Búnker)", shape=folder, fillcolor="#E0F2FE"];
+        UI_Grid [label="📑 Grilla Principal Spreadsheet Live\\n(Sincronización Flete tramos & puertosConfig\\nConsumo Búnker según OP. DEST)", shape=box, fillcolor="white"];
+        UI_SaveModal [label="💾 Paso 6: GRABAR & EXPORTAR\\n• Sobrescribir in-situ por Naming\\n• Naming Standard: [CLIENTE].[RUTAS].[SUFIJO]", shape=box, fillcolor="#BBDEFB", penwidth=2];
+
+        UI_Step1 -> UI_Step2 -> UI_Step3 -> UI_FactSheet -> UI_Grid -> UI_SaveModal [style=invis];
+    }
+
+    # ==========================================
+    #  NIVEL 4: MOTOR DE CÁLCULO & PERSISTENCIA (GEEKSOFT ENGINE FASTAPI V3)
+    # ==========================================
+    subgraph cluster_lvl4 {
+        label = "NIVEL 4: MOTOR DE CÁLCULO BACKEND (spot_engine.py & /spot/save Purificado)"; 
+        style="filled,dashed"; color="#4E342E"; fillcolor="#EFEBE9";
+        
+        { rank=same; API_Endpoint; API_SaveEndpoint; Engine_Sim; Engine_PnL; }
+
+        API_Endpoint [label="📡 Router HTTP API Calculate\\n/forecast/multicotizador/calculate", shape=cds, fillcolor="#D7CCC8", penwidth=2];
+        API_SaveEndpoint [label="📡 Router HTTP API Save\\n/forecast/spot/save\\n• Upsert Inteligente eq('name', request.name)\\n• Invalida Caché clear_forecast_cache()", shape=cds, fillcolor="#C8E6C9", penwidth=2];
+        Engine_Sim [label="🧮 calculate_multicotizador_simulation()\\n• Días Mar (dist*(1+WF)/speed*24)\\n• Días Puerto ((Q/rate+overhead)/24)\\n• Consumos Búnker Sea/Idle/Load/Disch (OP. DEST)", shape=box, fillcolor="#FFE082"];
+        Engine_PnL [label="💰 Consolidación PnL & Refacturación\\n• Revenue Total = Q * F\\n• Refacturación Muellaje (Checks RF)\\n• Voyage Result = Revenue - Hire - Bunker - Ports", shape=box, fillcolor="#AED581", penwidth=2];
+
+        API_Endpoint -> API_SaveEndpoint -> Engine_Sim -> Engine_PnL [style=invis];
+    }
+
+    # ==========================================
+    #  NIVEL 5: OUTPUTS FINANCIEROS Y TARJETAS AUDITORÍA
+    # ==========================================
+    subgraph cluster_lvl5 {
+        label = "NIVEL 5: RESUMEN FINANCIERO Y AUDITORÍA"; 
+        style="filled"; color="#33691E"; fillcolor="#F1F8E9";
+        
+        { rank=same; Card_Bunker; Card_PortCosts; Card_Financials; }
+
+        Card_Bunker [label="🛢️ Card Búnker\\nConsumos e importes IFO/MDO (OP. DEST)", shape=rect, fillcolor="white"];
+        Card_PortCosts [label="🏛️ Card Port Costs\\nAgencias + ↳ Loading Master + ↳ 2 Muellajes", shape=rect, fillcolor="#FFF9C4", penwidth=2];
+        Card_Financials [label="📊 Card Financial Voyage Result\\n(+) REVENUE | (+) Refact. Muellaje | (-) Hire\\n(-) Búnker OP. DEST | (-) Port Costs Real", shape=doubleoctagon, fillcolor="#C8E6C9", penwidth=2];
+
+        Card_Bunker -> Card_PortCosts -> Card_Financials [style=invis];
+    }
+
+    # ==========================================
+    #  NIVEL 6: PROTOCOLO DE CONTROL DE CALIDAD (BOTTOM)
+    # ==========================================
+    subgraph cluster_lvl6 {
+        label = "NIVEL 6: BUCLE DE CONTROL DE CALIDAD (QC LOOP V3)"; 
+        style="filled,dashed"; color="#1B5E20"; fillcolor="#E8F5E9";
+        
+        { rank=same; QC_Master; QC_Pass; }
+
+        QC_Master [label="🛡️ run_triangular_qc_loop.py\\nControl Triangular: Vértice A (Excel) <-> Vértice B (API) <-> Vértice C (UI)", shape=component, fillcolor="#A5D6A7", penwidth=2];
+        QC_Pass [label="✅ CONVERGENCIA ABSOLUTA 100%\\n(Delta = 0.000000 | 12 Rondas Auditas Impolutas)", shape=note, fillcolor="#C8E6C9", penwidth=2];
+
+        QC_Master -> QC_Pass [style=invis];
+    }
+
+    # ==========================================
+    #  APILAMIENTO ESTRICTO DE NIVELES (TOP-TO-BOTTOM STACK)
+    # ==========================================
+    DB_Vessels -> S_Vessel -> UI_Step1 -> API_Endpoint -> Card_Bunker -> QC_Master [style=invis, weight=100];
+
+    # ==========================================
+    #  CONEXIONES FUNCIONALES ENTRE NIVELES
+    # ==========================================
+    
+    # 1. DB -> Providers & Retriever
+    DB_Vessels -> S_Vessel [label=" Specs & Consumos"];
+    DB_RoutesClients -> S_Route [label=" Rutas Clientes Activos (PK: name)"];
+    DB_PortCosts -> S_Port [label=" Tarifa port_cost_static"];
+    DB_Bunker -> S_Bunker [label=" Spot Prices (Prospectos / Crear)"];
+    DB_Contracts -> S_Bunker [label=" Contract Prices (Activos / Suma Max)"];
+    DB_RoutesQuotes -> S_Retriever [label=" Cotizaciones Prospectos (PK: name)"];
+
+    # 2. UI Controls -> Providers
+    UI_Step1 -> UI_Step2 [label=" Habilita solo en ACTIVOS"];
+    UI_Step1 -> UI_Step3 [label=" Habilita solo en PROSPECTOS"];
+    S_Bunker -> UI_FactSheet [label=" Precios IFO/MDO"];
+    S_Route -> UI_Grid;
+    S_Port -> UI_SaveModal;
+
+    # 3. UI -> Engine API & Storage
+    UI_SaveModal -> API_Endpoint [label=" Payload JSON Prístino", color="#0284C7", penwidth=2];
+    API_SaveEndpoint -> DB_RoutesQuotes [label=" Save/Overwrite Quote by name", color="#2E7D32"];
+    API_SaveEndpoint -> DB_RoutesClients [label=" Save/Overwrite Route by name", color="#2E7D32"];
+
+    # 4. Engine PnL -> Cards
+    API_Endpoint -> Engine_Sim -> Engine_PnL [style=dashed];
+    Engine_PnL -> Card_Bunker [color="#388E3C"];
+    Engine_PnL -> Card_PortCosts [color="#388E3C"];
+    Engine_PnL -> Card_Financials [color="#388E3C", penwidth=2];
+
+    # 5. Financials -> QC Loop
+    Card_Financials -> QC_Master [label=" Validación Cero Errores", color="#2E7D32", style=dashed];
+    QC_Master -> QC_Pass [color="#2E7D32"];
+}
+"""
+
+    dot_file_path = os.path.join(output_dir, f"{base_name}.dot")
+    pdf_file_path = os.path.join(output_dir, f"{base_name}.pdf")
+
+    with open(dot_file_path, "w", encoding="utf-8") as f:
+        f.write(dot_content)
+
+    print(f"Archivo DOT guardado en: {dot_file_path}")
+
+    try:
+        cmd_pdf = ["dot", "-Tpdf", dot_file_path, "-o", pdf_file_path]
+        subprocess.run(cmd_pdf, check=True)
+        print(f"[OK] PDF Generado Exitosamente: {pdf_file_path}")
+    except Exception as e:
+        print(f"Error renderizando Graphviz a PDF con dot.exe: {e}")
+
+if __name__ == "__main__":
+    generate_multicotizador_flowchart()

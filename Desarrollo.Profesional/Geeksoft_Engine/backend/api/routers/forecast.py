@@ -676,6 +676,10 @@ def get_ports(year: int = 2026):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/spot/list")
+def list_spot_voyages():
+    return get_routes_master()
+
 @router.get("/masters/routes")
 def get_routes_master():
     try:
@@ -689,22 +693,31 @@ def get_routes_master():
         
         routes = []
         for r in (clients_data or []):
-            name = (r.get("name") or "").strip().upper()
-            client_group = "SPCC" if name.startswith("SPCC") else ("NEXA" if name.startswith("NEXA") else "NEXA")
-            route_id = (r.get("name") or r.get("client_route_id") or r.get("route_id") or "").strip()
+            name = (r.get("name") or "").strip()
+            client_group = "SPCC" if name.upper().startswith("SPCC") else ("NEXA" if name.upper().startswith("NEXA") else "NEXA")
+            route_id = name
             routes.append({
                 **r,
+                "name": name,
                 "route_id": route_id,
+                "client_route_id": route_id,
+                "spot_id": route_id,
+                "table_source": "routes_clients",
                 "is_prospect": False,
                 "client_group": client_group,
                 "_id": route_id
             })
             
         for r in (prospects_data or []):
-            route_id = (r.get("name") or r.get("prospect_route_id") or r.get("route_id") or "").strip()
+            name = (r.get("name") or "").strip()
+            route_id = name
             routes.append({
                 **r,
+                "name": name,
                 "route_id": route_id,
+                "prospect_route_id": route_id,
+                "spot_id": route_id,
+                "table_source": "routes_quotes",
                 "is_prospect": True,
                 "client_group": "PROSPECTOS",
                 "_id": route_id

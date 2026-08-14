@@ -655,7 +655,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             handleCreateNewGrid();
             return;
         }
-        const r = routes.find(x => x.route_id === routeId || x.id === routeId || x.spot_id === routeId);
+        const r = routes.find(x => x.name === routeId || x.route_id === routeId || x.id === routeId || x.spot_id === routeId);
         if (!r) return;
 
         setLoadedRouteName(r.name || r.route_id || '');
@@ -810,9 +810,10 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                         >
                             <option value="CREAR_RUTA">➕ NUEVA RUTA</option>
                             {filteredRoutes.map(r => {
+                                const rKey = r.name || r.route_id || r.id || r.spot_id;
                                 const routeLabel = r.name || (r.origin_port_id && r.destination_port_id ? `${r.origin_port_id} ➔ ${r.destination_port_id}` : (r.legs_data?.tramos && r.legs_data.tramos.length > 0 ? r.legs_data.tramos.map((t: any) => t.origin_port_id).concat(r.legs_data.tramos[r.legs_data.tramos.length - 1]?.destination_port_id).join(' ➔ ') : r.route_id));
                                 return (
-                                    <option key={r.route_id || r.id || r.spot_id} value={r.route_id || r.id || r.spot_id}>
+                                    <option key={rKey} value={rKey}>
                                         {routeLabel}
                                     </option>
                                 );
@@ -837,17 +838,20 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                                     handleCreateNewGrid();
                                     return;
                                 }
-                                const q = savedRoutes.find(x => (x.route_id || x.spot_id || x.id) === qId);
+                                const q = savedRoutes.find(x => (x.name || x.route_id || x.spot_id || x.id) === qId);
                                 if (q) handleLoadRoute(q);
                             }}
                             className={`h-6 text-[11px] font-extrabold border rounded px-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 ${clientType === 'ACTIVOS' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-800 border-slate-300 cursor-pointer'}`}
                         >
                             <option value="CREAR_COTIZACION">➕ NUEVA COTIZACION</option>
-                            {filteredQuotes.map(q => (
-                                <option key={q.route_id || q.spot_id || q.id} value={q.route_id || q.spot_id || q.id}>
-                                    {q.name || q.route_id || 'COTIZACIÓN'}
-                                </option>
-                            ))}
+                            {filteredQuotes.map(q => {
+                                const qKey = q.name || q.route_id || q.spot_id || q.id;
+                                return (
+                                    <option key={qKey} value={qKey}>
+                                        {q.name || q.route_id || 'COTIZACIÓN'}
+                                    </option>
+                                );
+                            })}
                         </select>
                     </div>
 
