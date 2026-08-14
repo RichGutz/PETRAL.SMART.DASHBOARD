@@ -691,18 +691,20 @@ def get_routes_master():
         for r in (clients_data or []):
             name = (r.get("name") or "").strip().upper()
             client_group = "SPCC" if name.startswith("SPCC") else ("NEXA" if name.startswith("NEXA") else "NEXA")
-            route_id = r.get("client_route_id") or r.get("route_id") or r.get("name")
+            route_id = (r.get("name") or r.get("client_route_id") or r.get("route_id") or "").strip()
             routes.append({
                 **r,
+                "route_id": route_id,
                 "is_prospect": False,
                 "client_group": client_group,
                 "_id": route_id
             })
             
         for r in (prospects_data or []):
-            route_id = r.get("prospect_route_id") or r.get("route_id") or r.get("name")
+            route_id = (r.get("name") or r.get("prospect_route_id") or r.get("route_id") or "").strip()
             routes.append({
                 **r,
+                "route_id": route_id,
                 "is_prospect": True,
                 "client_group": "PROSPECTOS",
                 "_id": route_id
