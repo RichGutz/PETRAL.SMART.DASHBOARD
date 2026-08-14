@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import os
+
+path = r'C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend\src\components\CommercialForecast\MultiCotizadorExcel.tsx'
+
+code = """import React, { useState, useEffect } from 'react';
 import { ForecastService } from '../../services/api';
-import { FolderOpen } from 'lucide-react';
+import { Save, FolderOpen } from 'lucide-react';
 
 // Servicios Provistos (Providers)
 import { VesselProviderService } from '../../services/providers/vesselProviderService';
@@ -48,7 +52,7 @@ export interface MultiCotizadorExcelProps {
 export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCostMode: initialPortCostMode = 'static' }) => {
     // 1. Estados de Navegación & Pestañas
     const [clientType, setClientType] = useState<'ACTIVOS' | 'PROSPECTOS'>('ACTIVOS');
-    const [selectedClient, setSelectedClient] = useState<string>('');
+    const [selectedClient, setSelectedClient] = useState<string>('SPCC');
     const [localPortCostMode, setLocalPortCostMode] = useState<'static' | 'matrix'>(initialPortCostMode);
 
     // 2. Estados de Catálogos & Contratos
@@ -597,7 +601,30 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
                         </div>
                     </div>
 
-
+                    {/* PASO 6: GRABAR Y EXPORTAR */}
+                    <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded px-2 py-1 shadow-sm shrink-0">
+                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                            6. GRABAR & EXPORT:
+                        </span>
+                        <button
+                            onClick={() => {
+                                const suggested = getSuggestedRouteName(selectedClient);
+                                setRouteName(suggested);
+                                setShowSaveModal(true);
+                            }}
+                            className="h-6 text-[10px] font-black uppercase bg-blue-600 hover:bg-blue-700 text-white px-2 rounded cursor-pointer shadow-sm flex items-center gap-1"
+                            title="Grabar Cotización"
+                        >
+                            <Save size={12} /> Grabar
+                        </button>
+                        <button
+                            onClick={handlePrintPDF}
+                            className="h-6 text-[10px] font-black uppercase bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-2 rounded cursor-pointer shadow-sm"
+                            title="Exportar a PDF"
+                        >
+                            🖨️ PDF
+                        </button>
+                    </div>
 
                 </div>
             </div>
@@ -686,3 +713,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = ({ portCo
         </div>
     );
 };
+"""
+
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(code)
+
+print("UNIFIED 6-STEP HEADER AND CLEAN WHITE BG APPLIED SUCCESSFULLY!")

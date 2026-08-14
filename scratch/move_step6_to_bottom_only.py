@@ -1,4 +1,83 @@
-import React from 'react';
+import os
+
+# 1. Update MultiCotizadorExcel.tsx to remove Step 6 from top bar and pass needed props to SaveLoadQuoteModals
+p_container = r'C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend\src\components\CommercialForecast\MultiCotizadorExcel.tsx'
+
+with open(p_container, 'r', encoding='utf-8') as f:
+    c_container = f.read()
+
+# Remove step 6 from top bar
+step6_top_bar = """                    {/* PASO 6: GRABAR Y EXPORTAR */}
+                    <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded px-2 py-1 shadow-sm shrink-0">
+                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                            6. GRABAR & EXPORT:
+                        </span>
+                        <button
+                            onClick={() => {
+                                const suggested = getSuggestedRouteName(selectedClient);
+                                setRouteName(suggested);
+                                setShowSaveModal(true);
+                            }}
+                            className="h-6 text-[10px] font-black uppercase bg-blue-600 hover:bg-blue-700 text-white px-2 rounded cursor-pointer shadow-sm flex items-center gap-1"
+                            title="Grabar Cotización"
+                        >
+                            <Save size={12} /> Grabar
+                        </button>
+                        <button
+                            onClick={handlePrintPDF}
+                            className="h-6 text-[10px] font-black uppercase bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-2 rounded cursor-pointer shadow-sm"
+                            title="Exportar a PDF"
+                        >
+                            🖨️ PDF
+                        </button>
+                    </div>"""
+
+c_container = c_container.replace(step6_top_bar, "")
+
+# Pass selectedClient, handlePrintPDF, getSuggestedRouteName to SaveLoadQuoteModals call
+old_modal_call = """            {/* MODALES DE GRABAR Y CARGAR PERSISTENTES */}
+            <SaveLoadQuoteModals
+                showSaveModal={showSaveModal}
+                showLoadModal={showLoadModal}
+                routeName={routeName}
+                isSaving={isSaving}
+                isLoadingRoutes={isLoadingRoutes}
+                savedRoutes={savedRoutes}
+                setShowSaveModal={setShowSaveModal}
+                setShowLoadModal={setShowLoadModal}
+                setRouteName={setRouteName}
+                handleSaveRoute={handleSaveRoute}
+                handleLoadRoute={handleLoadRoute}
+            />"""
+
+new_modal_call = """            {/* MODALES DE GRABAR Y CARGAR PERSISTENTES */}
+            <SaveLoadQuoteModals
+                showSaveModal={showSaveModal}
+                showLoadModal={showLoadModal}
+                routeName={routeName}
+                isSaving={isSaving}
+                isLoadingRoutes={isLoadingRoutes}
+                savedRoutes={savedRoutes}
+                selectedClient={selectedClient}
+                setShowSaveModal={setShowSaveModal}
+                setShowLoadModal={setShowLoadModal}
+                setRouteName={setRouteName}
+                handleSaveRoute={handleSaveRoute}
+                handleLoadRoute={handleLoadRoute}
+                handlePrintPDF={handlePrintPDF}
+                getSuggestedRouteName={getSuggestedRouteName}
+            />"""
+
+c_container = c_container.replace(old_modal_call, new_modal_call)
+
+with open(p_container, 'w', encoding='utf-8') as f:
+    f.write(c_container)
+
+
+# 2. Update SaveLoadQuoteModals.tsx to restore Step 6 bottom panel
+p_modal = r'C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend\src\components\CommercialForecast\multicotizador\SaveLoadQuoteModals.tsx'
+
+modal_code = """import React from 'react';
 import { X, Save } from 'lucide-react';
 
 export interface SaveLoadQuoteModalsProps {
@@ -144,3 +223,9 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
         </>
     );
 };
+"""
+
+with open(p_modal, 'w', encoding='utf-8') as f:
+    f.write(modal_code)
+
+print("STEP 6 MOVED TO BOTTOM ONLY SUCCESSFULLY!")

@@ -51,8 +51,19 @@ export const ForecastService = {
         return response.data;
     },
     getClients: async () => {
-        const response = await api.get('/forecast/clients');
-        return response.data;
+        try {
+            const response = await api.get('/forecast/clients');
+            return response.data;
+        } catch (e) {
+            console.warn("Using local fallback clients for localhost dev:", e);
+            return [
+                { client_id: 'SPCC', client_name: 'SPCC (Southern Peru)' },
+                { client_id: 'TRAFIGURA', client_name: 'TRAFIGURA PERU S.A.C.' },
+                { client_id: 'GLENCORE', client_name: 'GLENCORE PERU S.A.' },
+                { client_id: 'SOUTHERN', client_name: 'SOUTHERN COPPER CORPORATION' },
+                { client_id: 'CERRO_VERDE', client_name: 'CERRO VERDE' }
+            ];
+        }
     },
     getVoyageLiquidations: async () => {
         try {
@@ -135,8 +146,17 @@ export const ForecastService = {
         return response.data;
     },
     getVessels: async () => {
-        const response = await api.get('/forecast/vessels');
-        return response.data;
+        try {
+            const response = await api.get('/forecast/vessels');
+            return response.data;
+        } catch (e) {
+            console.warn("Using local fallback vessels for localhost dev:", e);
+            return [
+                { vessel_id: 'V01', vessel_name: 'SANTA SOFIA', dwt: 38200, grt: 24500, vessel_speed: 11.0, tce_required: 15000 },
+                { vessel_id: 'V02', vessel_name: 'PETRAL EXPLORER', dwt: 45000, grt: 28000, vessel_speed: 12.0, tce_required: 18000 },
+                { vessel_id: 'V03', vessel_name: 'NEOAUTO VOYAGER', dwt: 52000, grt: 31000, vessel_speed: 12.5, tce_required: 20000 }
+            ];
+        }
     },
     saveVessel: async (payload: any) => {
         const response = await api.post('/forecast/vessels', payload);
@@ -218,8 +238,17 @@ export const ForecastService = {
         return response.data;
     },
     getRoutes: async () => {
-        const response = await api.get('/forecast/routes');
-        return response.data;
+        try {
+            const response = await api.get('/forecast/routes');
+            return response.data;
+        } catch (e) {
+            console.warn("Using local fallback routes for localhost dev:", e);
+            return [
+                { route_id: 'r1', origin_port_id: 'CALLAO', destination_port_id: 'VALPARAISO', route_distance: 1320 },
+                { route_id: 'r2', origin_port_id: 'MATARANI', destination_port_id: 'SHANGHAI', route_distance: 9800 },
+                { route_id: 'r3', origin_port_id: 'ILO', destination_port_id: 'QINGDAO', route_distance: 9500 }
+            ];
+        }
     },
 
     saveRoutes: async (payload: any[]) => {

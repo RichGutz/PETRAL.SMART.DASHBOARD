@@ -30,7 +30,7 @@ export const ToolsLayout_V2: React.FC = () => {
             
             <div className="flex-1 flex flex-col gap-6 print:gap-0 print:m-0 h-full">
                 {/* 1. Builder Bar (Shared across interactive modeling tools) */}
-                {activeTab !== 'liquidations-pdf-audit' && activeTab !== 'system-documentation' && activeTab !== 'system-flowchart' && (
+                {activeTab !== 'liquidations-pdf-audit' && activeTab !== 'system-documentation' && activeTab !== 'system-flowchart' && activeTab !== 'multicotizador' && (
                     <div className="print:hidden">
                     <ForecastBuilder 
                         currentStartDate={context.startDate}

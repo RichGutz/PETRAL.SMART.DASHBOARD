@@ -1,5 +1,7 @@
-import React from 'react';
-import { X, Save } from 'lucide-react';
+path = r'C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend\src\components\CommercialForecast\multicotizador\SaveLoadQuoteModals.tsx'
+
+code = """import React from 'react';
+import { X } from 'lucide-react';
 
 export interface SaveLoadQuoteModalsProps {
     showSaveModal: boolean;
@@ -8,14 +10,11 @@ export interface SaveLoadQuoteModalsProps {
     isSaving: boolean;
     isLoadingRoutes: boolean;
     savedRoutes: any[];
-    selectedClient: string;
     setShowSaveModal: (val: boolean) => void;
     setShowLoadModal: (val: boolean) => void;
     setRouteName: (val: string) => void;
     handleSaveRoute: () => void;
     handleLoadRoute: (route: any) => void;
-    handlePrintPDF: () => void;
-    getSuggestedRouteName: (client: string) => string;
 }
 
 export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
@@ -25,48 +24,14 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
     isSaving,
     isLoadingRoutes,
     savedRoutes,
-    selectedClient,
     setShowSaveModal,
     setShowLoadModal,
     setRouteName,
     handleSaveRoute,
-    handleLoadRoute,
-    handlePrintPDF,
-    getSuggestedRouteName
+    handleLoadRoute
 }) => {
     return (
         <>
-            {/* 6. GRABAR Y EXPORTAR EN LA PARTE INFERIOR DE LA PANTALLA */}
-            <div className="bg-white border border-slate-300 rounded shadow-sm p-2 mt-2 select-none flex-shrink-0 w-full">
-                <div className="flex items-center justify-between bg-slate-50 p-2 rounded border border-slate-200 flex-nowrap whitespace-nowrap gap-2 w-full">
-                    <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[11px] font-black uppercase text-blue-700 bg-blue-50 px-2.5 py-1 rounded border border-blue-200 tracking-wide whitespace-nowrap">
-                            6. GRABAR Y EXPORTAR
-                        </span>
-                    </div>
-
-                    <div className="flex items-center gap-3 flex-nowrap whitespace-nowrap shrink-0">
-                        <button
-                            onClick={() => {
-                                const suggested = getSuggestedRouteName(selectedClient);
-                                setRouteName(suggested);
-                                setShowSaveModal(true);
-                            }}
-                            className="h-7 text-xs font-black uppercase tracking-wider rounded px-3.5 bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm whitespace-nowrap"
-                        >
-                            <Save size={14} /> 💾 Grabar
-                        </button>
-
-                        <button
-                            onClick={handlePrintPDF}
-                            className="h-7 text-xs font-bold rounded px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm whitespace-nowrap"
-                        >
-                            🖨️ Export PDF
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             {/* MODAL DE GRABAR */}
             {showSaveModal && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
@@ -144,3 +109,9 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
         </>
     );
 };
+"""
+
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(code)
+
+print("UNUSED PROPS REMOVED FROM SaveLoadQuoteModals.tsx SUCCESSFULLY!")

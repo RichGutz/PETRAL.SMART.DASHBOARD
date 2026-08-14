@@ -42,7 +42,7 @@ export const VesselFactSheetHeader: React.FC<VesselFactSheetProps> = ({
     }
 
     return (
-        <div className="bg-slate-50/50 border border-slate-200 rounded p-1 flex-shrink-0 mb-3">
+        <div className="bg-slate-50/50 border border-slate-200 rounded p-1 flex-shrink-0 mb-1">
             <table className="w-full border-collapse border border-slate-250 bg-white font-mono text-[11px] table-fixed">
                 <thead>
                     <tr className="bg-slate-100 border-b border-slate-250 font-sans text-[9.5px] text-slate-500 font-bold uppercase tracking-wider h-7">

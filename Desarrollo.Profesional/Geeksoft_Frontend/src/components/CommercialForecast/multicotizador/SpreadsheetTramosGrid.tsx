@@ -49,7 +49,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     const isBalanced = totalCargas === totalDescargas;
 
     return (
-        <div className="overflow-x-auto border border-slate-300 rounded bg-white shadow-sm flex flex-col mb-3">
+        <div className="overflow-x-auto border border-slate-300 rounded bg-white shadow-sm flex flex-col mb-1">
             <table className="w-full border-collapse text-[12px] font-mono table-fixed select-text">
                 <colgroup>
                     <col style={{ width: '4.1%' }} />
