@@ -400,7 +400,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                             {/* 1.b Refacturación de Muellaje (al cliente) */}
                             {refacturacionMuellajeUsd > 0 && (
                                 <tr className="border-b border-emerald-100/40 bg-emerald-50/60">
-                                    <td className="py-0.5 pl-2 text-emerald-800 font-sans text-[9.5px] font-semibold italic">
+                                    <td className="py-0.5 pl-3 text-emerald-800 font-sans text-[9.5px] font-semibold italic">
                                         (+) Refacturación Muellaje (al cliente)
                                     </td>
                                     <td className="text-right py-0.5 pr-1 font-mono text-[9.5px] text-emerald-800 font-bold">
@@ -411,7 +411,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
 
                             {/* 2. Hire */}
                             <tr className="border-b border-emerald-100/60">
-                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                <td className="py-0.5 pl-3 text-slate-600 font-sans text-[10.5px]">
                                     (-) Hire ({fmtCur(tceReq)}/d × {fmtDays(totalDays)} d)
                                 </td>
                                 <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
@@ -421,7 +421,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
 
                             {/* 3. Bunker IFO */}
                             <tr className="border-b border-emerald-100/60">
-                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                <td className="py-0.5 pl-3 text-slate-600 font-sans text-[10.5px]">
                                     (-) Bunker IFO ({fmtNum(ifoT)} T × {fmtCur(bunkerPriceIfo)}/T)
                                 </td>
                                 <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
@@ -431,7 +431,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
 
                             {/* 4. Bunker MDO */}
                             <tr className="border-b border-emerald-100/60">
-                                <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                <td className="py-0.5 pl-3 text-slate-600 font-sans text-[10.5px]">
                                     (-) Bunker MDO ({fmtNum(mdoT)} T × {fmtCur(bunkerPriceMdo)}/T)
                                 </td>
                                 <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
@@ -459,7 +459,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                                 <React.Fragment key={idx}>
                                                     {baseAgencyCost >= 1 && (
                                                         <tr className={`border-b border-emerald-100/60 ${theme.bg}`}>
-                                                            <td className={`py-0.5 pl-1.5 font-sans text-[10.5px] font-normal ${theme.text}`}>
+                                                            <td className={`py-0.5 pl-3 font-sans text-[10.5px] font-normal ${theme.text}`}>
                                                                 (-) Port Costs {item.label}
                                                             </td>
                                                             <td className={`text-right py-0.5 pr-1 font-mono text-[10.5px] font-normal ${theme.text}`}>
@@ -469,7 +469,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                                     )}
                                                     {lmCost >= 1 && (
                                                         <tr className={`border-b border-emerald-100/60 ${theme.bg}`}>
-                                                            <td className={`py-0.5 pl-1.5 font-sans text-[10.5px] font-normal ${theme.text}`}>
+                                                            <td className={`py-0.5 pl-3 font-sans text-[10.5px] font-normal ${theme.text}`}>
                                                                 (-) Loading Master ({item.port_id})
                                                             </td>
                                                             <td className={`text-right py-0.5 pr-1 font-mono text-[10.5px] font-normal ${theme.text}`}>
@@ -479,7 +479,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                                     )}
                                                     {mValPort >= 1 && (
                                                         <tr className={`border-b border-emerald-100/60 ${theme.bg}`}>
-                                                            <td className={`py-0.5 pl-1.5 font-sans text-[10.5px] font-normal ${theme.text}`}>
+                                                            <td className={`py-0.5 pl-3 font-sans text-[10.5px] font-normal ${theme.text}`}>
                                                                 (-) Muellaje ({item.port_id})
                                                             </td>
                                                             <td className={`text-right py-0.5 pr-1 font-mono text-[10.5px] font-normal ${theme.text}`}>
@@ -497,7 +497,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                             {/* 6. Comisiones */}
                             {(totalCommUsd > 0 || (addressCommPct + brokerCommPct) > 0) && (
                                 <tr className="border-b border-emerald-100/60">
-                                    <td className="py-0.5 pl-1 text-slate-600 font-sans text-[10.5px]">
+                                    <td className="py-0.5 pl-3 text-slate-600 font-sans text-[10.5px]">
                                         (-) Comisiones ({(addressCommPct + brokerCommPct).toFixed(2).replace(/\.00$/, '')}%)
                                     </td>
                                     <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
