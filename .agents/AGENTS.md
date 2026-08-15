@@ -32,6 +32,10 @@
 
 <RULE[benoit_blanc_audit_protocol]>
 - **Protocolo Benoit Blanc de Auditoría**: Cada vuelta/ronda de auditoría visual o pericial planteada por el usuario DEBE ser documentada al máximo detalle en una **tabla nueva e independiente** (ej. 5.1 Vuelta 1, 5.2 Vuelta 2, 5.3 Vuelta 3, etc.) dentro del documento Obsidian: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador\07_Especificaciones_Comerciales_Grilla_y_Puertos.md`.
-</RULE[benoit_blanc_audit_protocol]>
+<RULE[flowchart_pdf_only]>
+- **Generación de Flujogramas y Diagramas de Arquitectura (Graphviz / DOT)**:
+  - **NUNCA** generar archivos de imagen PNG como output de flujogramas o diagramas de arquitectura.
+  - Generar **ÚNICAMENTE** la salida en formato **PDF** (junto con el archivo fuente `.dot` / `.py`).
+</RULE[flowchart_pdf_only]>
 
 

@@ -190,10 +190,13 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                             {puertosConfig[0]?.action !== 'NONE' ? (
                                 <input
                                     type="number"
-                                    value={puertosConfig[0]?.time_to_count ?? ''}
-                                    onChange={(e) => updatePuertoConfigField(0, 'time_to_count', e.target.value)}
+                                    value={puertosConfig[0]?.time_to_count !== undefined && puertosConfig[0]?.time_to_count !== '' ? puertosConfig[0]?.time_to_count : (puertosConfig[0]?.overhead ?? '')}
+                                    onChange={(e) => {
+                                        updatePuertoConfigField(0, 'time_to_count', e.target.value);
+                                        updatePuertoConfigField(0, 'overhead', e.target.value);
+                                    }}
                                     className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                    placeholder={result?.tramos?.[0]?.time_to_count_carga_hrs !== undefined ? String(result.tramos[0].time_to_count_carga_hrs) : '0.0'}
+                                    placeholder={result?.tramos?.[0]?.time_to_count_carga_hrs !== undefined ? String(result.tramos[0].time_to_count_carga_hrs) : '6.0'}
                                 />
                             ) : (
                                 <span className="text-slate-350 select-none pr-2">—</span>
@@ -453,10 +456,13 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                     {puertosConfig[idx + 1]?.action !== 'NONE' ? (
                                         <input
                                             type="number"
-                                            value={puertosConfig[idx + 1]?.time_to_count ?? ''}
-                                            onChange={(e) => updatePuertoConfigField(idx + 1, 'time_to_count', e.target.value)}
+                                            value={puertosConfig[idx + 1]?.time_to_count !== undefined && puertosConfig[idx + 1]?.time_to_count !== '' ? puertosConfig[idx + 1]?.time_to_count : (puertosConfig[idx + 1]?.overhead ?? '')}
+                                            onChange={(e) => {
+                                                updatePuertoConfigField(idx + 1, 'time_to_count', e.target.value);
+                                                updatePuertoConfigField(idx + 1, 'overhead', e.target.value);
+                                            }}
                                             className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                            placeholder={trResult?.time_to_count_descarga_hrs !== undefined ? String(trResult.time_to_count_descarga_hrs) : '0.0'}
+                                            placeholder={trResult?.time_to_count_descarga_hrs !== undefined ? String(trResult.time_to_count_descarga_hrs) : '6.0'}
                                         />
                                     ) : (
                                         <span className="text-slate-350 select-none pr-2">—</span>

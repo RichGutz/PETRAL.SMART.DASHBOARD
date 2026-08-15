@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ForecastService } from '../../services/api';
-import { FolderOpen, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 // Servicios Provistos (Providers)
 import { VesselProviderService } from '../../services/providers/vesselProviderService';
@@ -9,6 +9,7 @@ import { PortCostsRatesService } from '../../services/providers/portCostsRatesSe
 import { MulticotizadorStorageService } from '../../services/providers/multicotizadorStorageService';
 import { MulticotizadorRetrieverService } from '../../services/providers/multicotizadorRetrieverService';
 import { BunkerProviderService } from '../../services/providers/bunkerProviderService';
+import { MulticotizadorPdfPrintService } from '../../services/providers/multicotizadorPdfPrintService';
 
 // Subcomponentes Visuales UI (Fase 2)
 import { VesselFactSheetHeader } from './multicotizador/VesselFactSheetHeader';
@@ -51,7 +52,6 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     const [clientType, setClientType] = useState<'ACTIVOS' | 'PROSPECTOS'>('ACTIVOS');
     const [selectedClient, setSelectedClient] = useState<string>('');
     const [selectedRouteId, setSelectedRouteId] = useState<string>('CREAR_RUTA');
-    const [selectedQuoteId, setSelectedQuoteId] = useState<string>('');
     
     // Estados de Vigencia / Validez (Paso 5)
     const [validFrom, setValidFrom] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -204,8 +204,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 setBunkerPriceIfo(resolved.ifo > 0 ? resolved.ifo : (latestSpotPrices.ifo || 0));
                 setBunkerPriceMdo(resolved.mdo > 0 ? resolved.mdo : (latestSpotPrices.mdo || 0));
             } else if (bunkerSource === 'COTIZACION') {
-                if (selectedQuoteId && selectedQuoteId !== 'CREAR_COTIZACION') {
-                    const q = savedRoutes.find(x => (x.route_id || x.spot_id || x.id) === selectedQuoteId);
+                if (selectedRouteId && selectedRouteId !== 'CREAR_RUTA') {
+                    const q = savedRoutes.find(x => (x.name || x.route_id || x.spot_id || x.id) === selectedRouteId);
                     if (q) {
                         const unpacked = MulticotizadorRetrieverService.unpackQuoteData(q);
                         setBunkerPriceIfo(unpacked.bunker_price_ifo || latestSpotPrices.ifo || 0);
@@ -230,47 +230,36 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         };
 
         executeBunkerLookup();
-    }, [bunkerSource, selectedClient, clientType, tramos, selectedQuoteId, contractsList, latestSpotPrices]);
+    }, [bunkerSource, selectedClient, clientType, tramos, selectedRouteId, contractsList, latestSpotPrices]);
 
     // Filtrado Dinámico e Instantáneo (en memoria) de Clientes (ACTIVOS vs PROSPECTOS)
     useEffect(() => {
         const isProspectMode = clientType === 'PROSPECTOS';
-        let filteredClientNames: string[] = [];
-
+        
         if (isProspectMode) {
+            const prospectDefaults = ['MARCOBRE', 'PRIMAX', 'CODELCO', 'R TRADING', 'CERRO VERDE', 'PROSPECTO GENERAL'];
+            const dbProspects: string[] = [];
             (rawClients || []).forEach((c: any) => {
                 if (c.is_prospect === true || String(c.is_prospect).toLowerCase() === 'true') {
                     const name = c.client_name || c.client_id || '';
-                    if (name) filteredClientNames.push(name.trim());
+                    if (name) dbProspects.push(name.trim());
                 }
             });
-            (savedRoutes || []).forEach((s: any) => {
-                if (s.table_source === 'routes_quotes' || s.is_prospect === true || s.is_quote === true) {
-                    const name = (s.client_id || s.name || '').split('.')[0];
-                    if (name) filteredClientNames.push(name.trim());
-                }
-            });
-            const uniqueProspects = Array.from(new Set(filteredClientNames.filter(Boolean)));
-            const finalList = uniqueProspects.length > 0 ? uniqueProspects : ['MARCOBRE', 'PRIMAX', 'CODELCO', 'R TRADING', 'CERRO VERDE'];
+            const finalList = Array.from(new Set([...dbProspects, ...prospectDefaults].filter(Boolean)));
             setClients(finalList);
-            if (!finalList.includes(selectedClient)) {
-                setSelectedClient(finalList[0]);
-            }
         } else {
+            const activoDefaults = ['SPCC', 'NEXA'];
+            const dbActivos: string[] = [];
             (rawClients || []).forEach((c: any) => {
                 if (!c.is_prospect || c.is_prospect === false || String(c.is_prospect).toLowerCase() === 'false') {
                     const name = c.client_name || c.client_id || '';
-                    if (name) filteredClientNames.push(name.trim());
+                    if (name) dbActivos.push(name.trim());
                 }
             });
-            const uniqueActivos = Array.from(new Set(filteredClientNames.filter(Boolean)));
-            const finalList = uniqueActivos.length > 0 ? uniqueActivos : ['SPCC', 'NEXA'];
+            const finalList = Array.from(new Set([...dbActivos, ...activoDefaults].filter(Boolean)));
             setClients(finalList);
-            if (!finalList.includes(selectedClient)) {
-                setSelectedClient(finalList[0]);
-            }
         }
-    }, [clientType, rawClients, savedRoutes]);
+    }, [clientType, rawClients]);
 
     // Manejador de Cambio de Buque
     const handleVesselChange = (vesselId: string) => {
@@ -461,9 +450,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     quantity: tr.desc_tons,
                     freight_rate: tr.freight_rate,
                     origin_op_rate: pOrig.op_rate || 500,
-                    dest_op_rate: pDest.op_rate || 300,
-                    time_to_count_carga_hrs: Number(pOrig.time_to_count) || 0,
-                    time_to_count_descarga_hrs: Number(pDest.time_to_count) || 0,
+                    dest_op_rate: pDest.op_rate || 400,
+                    time_to_count_carga_hrs: Number(pOrig.time_to_count !== undefined && pOrig.time_to_count !== '' ? pOrig.time_to_count : (pOrig.overhead ?? 0)) || 0,
+                    time_to_count_descarga_hrs: Number(pDest.time_to_count !== undefined && pDest.time_to_count !== '' ? pDest.time_to_count : (pDest.overhead ?? 0)) || 0,
                     positioning_carga_hrs: Number(pOrig.positioning) || 0,
                     positioning_descarga_hrs: Number(pDest.positioning) || 0,
                     manual_agency_cost_origin: pOrig.manual_port_cost !== '' ? Number(pOrig.manual_port_cost) : null,
@@ -516,11 +505,38 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         return `${clientClean}.${portsSeq}.`;
     };
 
+    const [saveTargetTable, setSaveTargetTable] = useState<'contracts' | 'routes_quotes'>('contracts');
+
     const handleSaveRoute = async () => {
-        if (!validFrom || !validFrom.trim() || !validTo || !validTo.trim()) {
-            alert("⚠️ Validación Requerida: Debe seleccionar las fechas de Inicio y Fin en el Paso 5 (VALIDEZ) antes de guardar.");
-            return;
+        const isSavingContract = clientType === 'ACTIVOS' && saveTargetTable === 'contracts';
+
+        if (isSavingContract) {
+            // Validación estricta para guardar un Contrato Formal (contracts)
+            if (!selectedClient || !selectedClient.trim()) {
+                alert("⚠️ Validación de Contrato: Debe seleccionar un cliente activo válido.");
+                return;
+            }
+            if (!selectedVessel || !selectedVessel.trim()) {
+                alert("⚠️ Validación de Contrato: Para registrar un Contrato Formal en 'contracts' se requiere seleccionar un Buque asignado en el Paso 4.");
+                return;
+            }
+            if (!validFrom || !validFrom.trim() || !validTo || !validTo.trim()) {
+                alert("⚠️ Validación de Contrato: Debe completar las fechas de Inicio y Fin de Validez (Paso 5).");
+                return;
+            }
+            const hasValidLadenTramo = tramos.some(tr => tr.type === 'LADEN' && Number(tr.quantity || 0) > 0 && Number(tr.freight_rate || 0) > 0);
+            if (!hasValidLadenTramo) {
+                alert("⚠️ Validación de Contrato: Para registrar un Contrato Formal se requiere al menos un tramo de carga (LADEN) con Tonelaje > 0 MT y Tarifa de Flete > $0/MT.");
+                return;
+            }
+        } else {
+            // Validación estándar para Cotizaciones (routes_quotes)
+            if (!validFrom || !validFrom.trim() || !validTo || !validTo.trim()) {
+                alert("⚠️ Validación Requerida: Debe seleccionar las fechas de Inicio y Fin en el Paso 5 (VALIDEZ) antes de guardar.");
+                return;
+            }
         }
+
         const prefix = getSuggestedRoutePrefix(selectedClient);
         const finalName = (saveMode === 'OVERWRITE' && loadedRouteName)
             ? loadedRouteName
@@ -534,7 +550,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 routeId: saveMode === 'OVERWRITE' ? loadedRouteId : undefined,
                 routeName: finalName,
                 selectedClient,
-                filterProspecto: clientType === 'PROSPECTOS',
+                filterProspecto: clientType === 'PROSPECTOS' || !isSavingContract,
+                isContract: isSavingContract,
                 selectedVessel,
                 bunkerPriceIfo,
                 bunkerPriceMdo,
@@ -556,12 +573,16 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             });
             setLoadedRouteName(finalName);
             setShowSaveModal(false);
-            const freshRoutes = await ForecastService.getRoutesMaster();
-            if (freshRoutes && Array.isArray(freshRoutes)) {
-                setRoutes(freshRoutes);
-            }
+            const [freshContracts, freshQuotes, freshRoutes] = await Promise.all([
+                ForecastService.getContractsMaster(),
+                MulticotizadorRetrieverService.searchSavedQuotes('', true, true, ''),
+                ForecastService.getRoutesMaster()
+            ]);
+            if (freshContracts && Array.isArray(freshContracts)) setContractsList(freshContracts);
+            if (freshQuotes && Array.isArray(freshQuotes)) setSavedRoutes(freshQuotes);
+            if (freshRoutes && Array.isArray(freshRoutes)) setRoutes(freshRoutes);
         } catch (e) {
-            console.error("Error guardando cotización:", e);
+            console.error("Error guardando registro comercial:", e);
         } finally {
             setIsSaving(false);
         }
@@ -587,12 +608,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         
         config.push({
             action: action0,
-            time_to_count: !is0Loading ? 0 : (polContract?.time_to_count_carga_hrs ?? t0.time_to_count_carga_hrs ?? (clientClean === 'NEXA' ? 12 : clientClean === 'SPCC' ? 6 : 0)),
-            op_rate: !is0Loading ? 0 : (polContract?.load_rate ?? t0.origin_op_rate ?? 800),
+            time_to_count: !is0Loading ? 0 : (polContract?.time_to_count_carga_hrs ?? t0.time_to_count_carga_hrs ?? 6),
+            overhead: !is0Loading ? 0 : (polContract?.time_to_count_carga_hrs ?? t0.time_to_count_carga_hrs ?? 6),
+            op_rate: !is0Loading ? 0 : (polContract?.load_rate ?? t0.origin_op_rate ?? 500),
             rate_unit: t0.rate_unit_origin || 'TH',
             quantity: is0Loading ? (t0.quantity || 13500) : 0,
             freight_rate: is0Loading ? (t0.freight_rate ?? 0) : 0,
-            positioning: !is0Loading ? 0 : (polContract?.maneuver_carga_hrs ?? t0.positioning_carga_hrs ?? (clientClean === 'NEXA' ? 3 : clientClean === 'SPCC' ? 1 : 0)),
+            positioning: !is0Loading ? 0 : (polContract?.maneuver_carga_hrs ?? t0.positioning_carga_hrs ?? 1),
             manual_port_cost: !is0Loading ? '' : (t0.manual_agency_cost_origin ?? polContract?.agency_cost ?? (polId === 'CALLAO' ? 17000 : polId === 'MATARANI' ? 18000 : ''))
         });
 
@@ -624,13 +646,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             let pos = 0;
 
             if (isCargar) {
-                ttc = podContract?.time_to_count_carga_hrs ?? (clientClean === 'NEXA' ? 12 : 6);
-                opRate = podContract?.load_rate ?? (clientClean === 'NEXA' ? 800 : 500);
-                pos = podContract?.maneuver_carga_hrs ?? (clientClean === 'NEXA' ? 3 : 1);
+                ttc = podContract?.time_to_count_carga_hrs ?? tr.time_to_count_carga_hrs ?? 6;
+                opRate = podContract?.load_rate ?? (clientClean === 'NEXA' ? 500 : 500);
+                pos = podContract?.maneuver_carga_hrs ?? tr.positioning_carga_hrs ?? 1;
             } else if (isDescargar) {
-                ttc = podContract?.time_to_count_descarga_hrs ?? (clientClean === 'NEXA' ? 12 : 6);
-                opRate = podContract?.discharge_rate ?? (clientClean === 'NEXA' ? 600 : 500);
-                pos = podContract?.maneuver_descarga_hrs ?? (clientClean === 'NEXA' ? 3 : 0);
+                ttc = podContract?.time_to_count_descarga_hrs ?? tr.time_to_count_descarga_hrs ?? 6;
+                opRate = podContract?.discharge_rate ?? (clientClean === 'NEXA' ? 400 : 500);
+                pos = podContract?.maneuver_descarga_hrs ?? tr.positioning_descarga_hrs ?? 0;
             }
 
             const qVal = hasAction ? (tr.quantity || tr.desc_tons || 13500) : 0;
@@ -651,6 +673,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             config.push({
                 action: actionN,
                 time_to_count: ttc,
+                overhead: ttc,
                 op_rate: opRate,
                 rate_unit: tr.rate_unit_destination || 'TH',
                 quantity: qVal,
@@ -690,7 +713,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             handleCreateNewGrid();
             return;
         }
-        const r = routes.find(x => x.name === routeId || x.route_id === routeId || x.id === routeId || x.spot_id === routeId);
+        const r = contractsList.find(x => x.name === routeId || x.route_id === routeId || x.id === routeId || x.spot_id === routeId)
+               || savedRoutes.find(x => x.name === routeId || x.route_id === routeId || x.id === routeId || x.spot_id === routeId)
+               || routes.find(x => x.name === routeId || x.route_id === routeId || x.id === routeId || x.spot_id === routeId);
         if (!r) return;
 
         setLoadedRouteName(r.name || r.route_id || '');
@@ -703,7 +728,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         if (tramosList.length > 0) {
             setTramos(tramosList);
             const resolvedConfig = (legsData.puertosConfig && Array.isArray(legsData.puertosConfig) && legsData.puertosConfig.length === tramosList.length + 1)
-                ? legsData.puertosConfig
+                ? legsData.puertosConfig.map((p: any) => ({
+                    ...p,
+                    time_to_count: (p.time_to_count !== undefined && p.time_to_count !== '') 
+                        ? p.time_to_count 
+                        : (p.overhead !== undefined && p.overhead !== '' ? p.overhead : (p.action !== 'NONE' ? 6 : '')),
+                    overhead: p.overhead ?? p.time_to_count ?? (p.action !== 'NONE' ? 6 : '')
+                }))
                 : buildPuertosConfigFromTramos(tramosList, selectedClient);
             setPuertosConfig(resolvedConfig);
         } else if (r.origin_port_id && r.destination_port_id) {
@@ -760,61 +791,87 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     };
 
     const handlePrintPDF = () => {
-        window.print();
+        MulticotizadorPdfPrintService.printDocument({
+            clientType,
+            selectedClient,
+            selectedRouteName: loadedRouteName || selectedRouteId,
+            selectedRouteId: loadedRouteId || selectedRouteId,
+            selectedVessel,
+            validFrom,
+            validTo,
+            vessels,
+            vesselParams,
+            bunkerSource,
+            bunkerPriceIfo,
+            bunkerPriceMdo,
+            tramos,
+            puertosConfig,
+            ports,
+            refacturarMuellajeMap,
+            addressCommPct,
+            brokerCommPct,
+            commentsText,
+            bafFormula,
+            bafValidFrom,
+            bafValidTo,
+            bafIfoBase,
+            bafMdoBase,
+            tariffTiers,
+            demurrageRatesMap
+        });
     };
 
     const calculatedTramosList = getCalculatedTramos();
 
     const filteredRoutes = React.useMemo(() => {
-        if (!selectedClient) return routes;
+        if (!selectedClient) return contractsList;
         const sClient = selectedClient.trim().toUpperCase();
-        const matches = routes.filter(r => {
-            const rName = (r.name || r.route_id || r.client_id || r.client_name || '').trim().toUpperCase();
-            return rName.includes(sClient) || sClient.includes(rName);
+        return contractsList.filter(r => {
+            const nameUpper = (r.name || r.route_id || '').toUpperCase();
+            const cid = (r.client_id || (nameUpper.startsWith('SPCC') ? 'SPCC' : 'NEXA')).toUpperCase();
+            return cid === sClient || nameUpper.startsWith(sClient);
         });
-        return matches.length > 0 ? matches : routes;
-    }, [routes, selectedClient]);
+    }, [contractsList, selectedClient]);
 
     const filteredQuotes = React.useMemo(() => {
         if (!selectedClient) return savedRoutes;
         const sClient = selectedClient.trim().toUpperCase();
-        const matches = savedRoutes.filter(q => {
-            const qName = (q.name || q.route_id || q.client_id || q.client_name || '').trim().toUpperCase();
-            return qName.includes(sClient) || sClient.includes(qName);
+        return savedRoutes.filter(q => {
+            const nameUpper = (q.name || q.route_id || '').toUpperCase();
+            const cid = (q.client_id || (nameUpper.startsWith('SPCC') ? 'SPCC' : 'NEXA')).toUpperCase();
+            return cid === sClient || nameUpper.startsWith(sClient);
         });
-        return matches.length > 0 ? matches : savedRoutes;
     }, [savedRoutes, selectedClient]);
 
     return (
         <div className="w-full min-h-screen bg-white p-2 text-slate-800 font-sans flex flex-col select-text">
-            
-            {/* BARRA UNIFICADA Y ESTANDARIZADA DE PASOS COMERCIALES (1 A 5) - SIN SCROLLBAR HORIZONTAL */}
-            <div className="bg-slate-50 border border-slate-300 rounded p-1.5 mb-2 select-none flex-shrink-0">
-                <div className="flex items-center justify-between gap-1 flex-wrap">
+            {/* BARRA UNIFICADA Y ESTANDARIZADA DE PASOS COMERCIALES (1 A 5) - UNA SOLA FILA HORIZONTAL (FLEX-NOWRAP) */}
+            <div className="bg-slate-50 border border-slate-300 rounded p-1.5 mb-2 select-none flex-shrink-0 overflow-x-auto">
+                <div className="flex items-center gap-1.5 flex-nowrap min-w-max">
                     
-                    {/* PASO 1: SELECCIONAR CLIENTE */}
-                    <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded px-2 py-1 shadow-sm shrink-0">
-                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                            1. SELECCIONAR CLIENTE
+                    {/* PASO 1: CLIENTE */}
+                    <div className="flex items-center gap-1 bg-white border border-slate-300 rounded px-1.5 py-0.5 shadow-xs shrink-0">
+                        <span className="text-[8.5px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                            1. CLIENTE
                         </span>
-                        <div className="flex rounded bg-slate-100 p-0.5 border border-slate-250">
+                        <div className="flex rounded bg-slate-100 p-0.5 border border-slate-200">
                             <button
                                 onClick={() => {
                                     setClientType('ACTIVOS');
+                                    setSelectedClient('');
                                     setSelectedRouteId('CREAR_RUTA');
-                                    setSelectedQuoteId('');
                                 }}
-                                className={`px-2 py-0.5 text-[9.5px] font-black uppercase rounded cursor-pointer ${clientType === 'ACTIVOS' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
+                                className={`px-1.5 py-0.2 text-[8px] font-black uppercase rounded cursor-pointer ${clientType === 'ACTIVOS' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
                             >
                                 Activos
                             </button>
                             <button
                                 onClick={() => {
                                     setClientType('PROSPECTOS');
-                                    setSelectedQuoteId('CREAR_COTIZACION');
-                                    setSelectedRouteId('');
+                                    setSelectedClient('');
+                                    setSelectedRouteId('CREAR_RUTA');
                                 }}
-                                className={`px-2 py-0.5 text-[9.5px] font-black uppercase rounded cursor-pointer ${clientType === 'PROSPECTOS' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
+                                className={`px-1.5 py-0.2 text-[8px] font-black uppercase rounded cursor-pointer ${clientType === 'PROSPECTOS' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
                             >
                                 Prospectos
                             </button>
@@ -822,16 +879,17 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                         <select
                             value={selectedClient}
                             onChange={(e) => setSelectedClient(e.target.value)}
-                            className="h-6 text-[11px] font-extrabold bg-white border border-slate-300 rounded px-1.5 text-blue-900 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                            className={`h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${!selectedClient ? 'bg-amber-50 border-amber-300 text-amber-800 font-bold' : 'bg-white border-slate-300 text-blue-900'}`}
                         >
+                            <option value="">[SELECCIONAR CLIENTE]</option>
                             {clients.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
                     </div>
 
-                    {/* PASO 2: RUTA CLIENTE */}
-                    <div className={`flex items-center gap-1.5 border rounded px-2 py-1 shadow-sm shrink-0 transition-opacity ${clientType === 'PROSPECTOS' ? 'bg-slate-100 border-slate-200 opacity-50' : 'bg-white border-slate-300'}`}>
-                        <span className={`text-[10px] font-black uppercase tracking-wider whitespace-nowrap ${clientType === 'PROSPECTOS' ? 'text-slate-400' : 'text-slate-700'}`}>
-                            2. RUTA CLIENTE
+                    {/* PASO 2: RUTA (JALA DE CONTRACTS -> GRABA EN CONTRACTS) */}
+                    <div className={`flex items-center gap-1 border rounded px-1.5 py-0.5 shadow-xs shrink-0 transition-opacity ${clientType === 'PROSPECTOS' ? 'bg-slate-100 border-slate-200 opacity-50' : 'bg-white border-slate-300'}`}>
+                        <span className={`text-[8.5px] font-black uppercase tracking-wider whitespace-nowrap ${clientType === 'PROSPECTOS' ? 'text-slate-400' : 'text-slate-700'}`}>
+                            2. RUTA
                         </span>
                         <select
                             value={selectedRouteId}
@@ -839,14 +897,19 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                             onChange={(e) => {
                                 const val = e.target.value;
                                 setSelectedRouteId(val);
+                                setSaveTargetTable('contracts');
+                                if (val === 'CREAR_RUTA') {
+                                    handleCreateNewGrid();
+                                    return;
+                                }
                                 handleSelectRoute(val);
                             }}
-                            className={`h-6 text-[11px] font-extrabold border rounded px-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 ${clientType === 'PROSPECTOS' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-800 border-slate-300 cursor-pointer'}`}
+                            className={`h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-blue-500 ${clientType === 'PROSPECTOS' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-800 border-slate-300 cursor-pointer'}`}
                         >
-                            <option value="CREAR_RUTA">➕ NUEVA RUTA</option>
+                            <option value="CREAR_RUTA">➕ NUEVA RUTA (`contracts`)</option>
                             {filteredRoutes.map(r => {
                                 const rKey = r.name || r.route_id || r.id || r.spot_id;
-                                const routeLabel = r.name || (r.origin_port_id && r.destination_port_id ? `${r.origin_port_id} ➔ ${r.destination_port_id}` : (r.legs_data?.tramos && r.legs_data.tramos.length > 0 ? r.legs_data.tramos.map((t: any) => t.origin_port_id).concat(r.legs_data.tramos[r.legs_data.tramos.length - 1]?.destination_port_id).join(' ➔ ') : r.route_id));
+                                const routeLabel = r.name || (r.origin_port_id && r.destination_port_id ? `${r.origin_port_id} ➔ ${r.destination_port_id}` : r.route_id);
                                 return (
                                     <option key={rKey} value={rKey}>
                                         {routeLabel}
@@ -856,29 +919,29 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                         </select>
                     </div>
 
-                    {/* PASO 3: COTIZACION PROSPECTO */}
-                    <div className={`flex items-center gap-1.5 border rounded px-2 py-1 shadow-sm shrink-0 transition-opacity ${clientType === 'ACTIVOS' ? 'bg-slate-100 border-slate-200 opacity-50' : 'bg-white border-slate-300'}`}>
-                        <span className={`text-[10px] font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1 ${clientType === 'ACTIVOS' ? 'text-slate-400' : 'text-slate-700'}`}>
-                            <FolderOpen size={13} className={clientType === 'ACTIVOS' ? 'text-slate-400' : 'text-blue-600'} />
-                            <span>3. COTIZACION PROSPECTO</span>
+                    {/* PASO 3: COTIZACIÓN */}
+                    <div className="flex items-center gap-1 border rounded px-1.5 py-0.5 shadow-xs shrink-0 bg-white border-slate-300">
+                        <span className="text-[8.5px] font-black uppercase tracking-wider whitespace-nowrap text-slate-700">
+                            3. COTIZACIÓN
                         </span>
                         <select
-                            value={selectedQuoteId}
-                            disabled={clientType === 'ACTIVOS'}
+                            value={selectedRouteId}
+                            disabled={false}
                             onChange={(e) => {
                                 const qId = e.target.value;
-                                setSelectedQuoteId(qId);
+                                setSelectedRouteId(qId);
+                                setSaveTargetTable('routes_quotes');
                                 if (!qId) return;
-                                if (qId === 'CREAR_COTIZACION') {
+                                if (qId === 'CREAR_RUTA') {
                                     handleCreateNewGrid();
                                     return;
                                 }
                                 const q = savedRoutes.find(x => (x.name || x.route_id || x.spot_id || x.id) === qId);
                                 if (q) handleLoadRoute(q);
                             }}
-                            className={`h-6 text-[11px] font-extrabold border rounded px-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 ${clientType === 'ACTIVOS' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-800 border-slate-300 cursor-pointer'}`}
+                            className="h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white text-slate-800 border-slate-300 cursor-pointer"
                         >
-                            <option value="CREAR_COTIZACION">➕ NUEVA COTIZACION</option>
+                            <option value="CREAR_RUTA">➕ NUEVA COTIZACIÓN (`routes_quotes`)</option>
                             {filteredQuotes.map(q => {
                                 const qKey = q.name || q.route_id || q.spot_id || q.id;
                                 return (
@@ -890,15 +953,15 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                         </select>
                     </div>
 
-                    {/* PASO 4: SELECCIONAR BUQUE */}
-                    <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded px-2 py-1 shadow-sm shrink-0">
-                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                            4. SELECCIONAR BUQUE
+                    {/* PASO 4: BUQUE */}
+                    <div className="flex items-center gap-1 bg-white border border-slate-300 rounded px-1.5 py-0.5 shadow-xs shrink-0">
+                        <span className="text-[8.5px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                            4. BUQUE
                         </span>
                         <select
                             value={selectedVessel}
                             onChange={(e) => handleVesselChange(e.target.value)}
-                            className="h-6 text-[11px] font-extrabold bg-white border border-slate-300 rounded px-1.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                            className="h-5.5 text-[9.5px] font-extrabold bg-white border border-slate-300 rounded px-1 text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                         >
                             <option value="">[SELECCIONAR BUQUE]</option>
                             {vessels.map(v => (
@@ -908,34 +971,30 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     </div>
 
                     {/* PASO 5: VALIDEZ (FECHA INICIO Y FIN) */}
-                    <div className={`flex items-center gap-1.5 bg-white border rounded px-2 py-1 shadow-sm shrink-0 ${!validFrom || !validTo ? 'border-amber-400 bg-amber-50/50' : 'border-slate-300'}`}>
-                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap flex items-center gap-1">
-                            <Calendar size={12} className="text-blue-600" />
+                    <div className={`flex items-center gap-1 bg-white border rounded px-1.5 py-0.5 shadow-xs shrink-0 ${!validFrom || !validTo ? 'border-amber-400 bg-amber-50/50' : 'border-slate-300'}`}>
+                        <span className="text-[8.5px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap flex items-center gap-1">
+                            <Calendar size={11} className="text-blue-600" />
                             <span>5. VALIDEZ</span>
                         </span>
                         <div className="flex items-center gap-1">
-                            <label className="text-[9px] font-bold text-slate-500 uppercase">Inicio:</label>
+                            <label className="text-[8px] font-bold text-slate-500 uppercase">Inicio:</label>
                             <input
                                 type="date"
                                 value={validFrom}
                                 onChange={(e) => setValidFrom(e.target.value)}
-                                className="h-6 text-[10.5px] font-mono font-bold bg-white border border-slate-300 rounded px-1 text-blue-900 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                                className="h-5.5 text-[9px] font-mono font-bold bg-white border border-slate-300 rounded px-1 text-blue-900 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                             />
                         </div>
                         <div className="flex items-center gap-1">
-                            <label className="text-[9px] font-bold text-slate-500 uppercase">Fin:</label>
+                            <label className="text-[8px] font-bold text-slate-500 uppercase">Fin:</label>
                             <input
                                 type="date"
                                 value={validTo}
                                 onChange={(e) => setValidTo(e.target.value)}
-                                className="h-6 text-[10.5px] font-mono font-bold bg-white border border-slate-300 rounded px-1 text-blue-900 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                                className="h-5.5 text-[9px] font-mono font-bold bg-white border border-slate-300 rounded px-1 text-blue-900 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                             />
                         </div>
                     </div>
-
-
-
-
 
                 </div>
             </div>
@@ -1029,6 +1088,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 showLoadModal={showLoadModal}
                 routeSuffix={routeSuffix}
                 saveMode={saveMode}
+                saveTargetTable={saveTargetTable}
+                setSaveTargetTable={setSaveTargetTable}
                 loadedRouteName={loadedRouteName}
                 clientType={clientType}
                 selectedClient={selectedClient}

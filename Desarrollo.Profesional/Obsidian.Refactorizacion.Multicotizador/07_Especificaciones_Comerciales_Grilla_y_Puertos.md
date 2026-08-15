@@ -298,6 +298,18 @@ A partir de la inspección pericial de la fila inferior de resultados comerciale
 
 ### ───────────────
 
+### 🕵️‍♂️ 5.14. Decimocuarta Vuelta (Serie 14: Sincronización Pericial de Time to Count = 6.0h en Callao y Matarani para NEXA)
+
+A partir de la inspección pericial reportada en pantalla sobre la cotización patrón `NEXA.ILO.CALLAO.MATARANI.ILO (12.08.26)` con buque `TABLONES`:
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 14) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- | :-: |
+| **14.1** | **`Time to Count (Callao / Matarani)`** | Mostraba **`0.0`** en gris claro (placeholder) en lugar del valor activo `6` | **`6.0 H`** en Callao (Carga) y **`6.0 H`** en Matarani (Descarga) | **Crimen de la Discrepancia de Nombres de Propiedad (`overhead` vs `time_to_count`):** El JSON de BD guardaba `"overhead": "6"`, pero la grilla leía `p.time_to_count`, resultando en `undefined` y mostrando el placeholder `0.0`. Se implementó la normalización dual `p.time_to_count ?? p.overhead` en `unpackQuoteData` y en los inputs de `SpreadsheetTramosGrid.tsx`. | ✅ RESUELTO |
+| **14.2** | **`Días Puerto (Días Pto)`** | Mostraba **`1.17d`** en Callao y **`1.41d`** en Matarani (**Total `2.57d`**) | **`1.42d`** en Callao + **`1.66d`** en Matarani = **`3.07d`** Días Puerto Totales | **Convergencia 100% con Excel PETRAL:** Al incorporar las 6h de Time to Count en Callao (27h + 6h + 1h = 34h = 1.417d) y 6h en Matarani (33.75h + 6h = 39.75h = 1.656d), los Días Totales de Viaje alcanzan exactamente **`7.13 días`** (4.06d mar + 3.07d pto). | ✅ RESUELTO |
+| **14.3** | **`Persistencia en BD Supabase`** | `puertosConfig` en `routes_quotes` tenía `overhead=""` en Matarani | **Actualización Prístina en `routes_quotes`:** Se actualizaron `puertosConfig[1]` (Callao: `time_to_count: 6`, `overhead: "6"`, `positioning: 1`) y `puertosConfig[2]` (Matarani: `time_to_count: 6`, `overhead: "6"`, `positioning: 0`). | **Preservación de Datos:** Toda recarga o guardado posterior mantiene íntegro el valor de 6.0 horas para ambos puertos. | ✅ RESUELTO |
+
+### ───────────────
+
 ---
 
 ## 💾 6. Paso 6: Especificaciones Técnicas del Botón GRABAR y Payload Prístino

@@ -1,0 +1,192 @@
+import os
+import sys
+import subprocess
+
+def generate_matriz_financiera_v2_flowchart():
+    base_name = "FLUJOGRAMA_Arquitectura_Matriz_Financiera_V2"
+    output_dir = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador"
+    
+    print(f"Generando Flujograma Vertical V2 para la Matriz Financiera (Reutilización Multicotizador): {base_name}...")
+    
+    # Path setup para Graphviz en Windows
+    potential_paths = [
+        r"C:\Program Files\Graphviz\bin",
+        r"C:\Program Files (x86)\Graphviz\bin",
+        r"C:\Users\rguti\AppData\Local\Programs\Graphviz\bin"
+    ]
+    for p in potential_paths:
+        if os.path.exists(p) and p not in os.environ["PATH"]:
+            os.environ["PATH"] += os.pathsep + p
+
+    dot_content = """digraph MatrizFinancieraCascadeV2 {
+    rankdir=TB;
+    newrank=true;
+    splines=polyline;
+    nodesep=0.9;
+    ranksep=1.8;
+    
+    node [shape=box, style="filled,rounded", fontname="Arial", fontsize=10, margin="0.18,0.14"];
+    edge [fontname="Arial", fontsize=9];
+
+    # ==========================================
+    #  NIVEL 1: CAPA DE PERSISTENCIA AUTOCONTENIDA (Supabase DB)
+    # ==========================================
+    subgraph cluster_lvl1 {
+        label = "NIVEL 1: CAPA DE PERSISTENCIA AUTOCONTENIDA (Supabase DB)"; 
+        style="filled"; color="#ECEFF1"; fontcolor="#37474F"; fillcolor="#F5F5F5";
+        
+        { rank=same; DB_Contracts; DB_RoutesQuotes; DB_Vessels; }
+        
+        DB_Contracts [label="📜 MAESTRO CONTRATOS (contracts)\\nJSON legs_data completo: Tramos, Puertos, Distancias,\\nPrecios Búnker Cotizados, Gastos Puerto, Fletes, Muellaje RF", shape=cylinder, fillcolor="#FFCDD2", penwidth=2];
+        DB_RoutesQuotes [label="💼 MAESTRO COTIZACIONES (routes_quotes)\\nJSON legs_data completo: Tramos, Puertos, Distancias,\\nPrecios Búnker Cotizados, Gastos Puerto, Fletes, Muellaje RF", shape=cylinder, fillcolor="#C8E6C9", penwidth=2];
+        DB_Vessels [label="🚢 MAESTRO BUQUES (vessels)\\nÚnico Maestro Requerido para Adaptación:\\nSpecs, DWT, Speed, TCE Req, Consumos Sea/Idle/Load/Disch", shape=cylinder, fillcolor="#FFE0B2", penwidth=2];
+
+        DB_Contracts -> DB_RoutesQuotes -> DB_Vessels [style=invis];
+    }
+
+    # ==========================================
+    #  NIVEL 2: SERVICIOS PROVIDERS Y RECUPERACIÓN MODULAR
+    # ==========================================
+    subgraph cluster_lvl2 {
+        label = "NIVEL 2: SERVICIOS PROVIDERS Y RECUPERACIÓN (Frontend / Backend Services)"; 
+        style="filled,dashed"; color="#78909C"; fillcolor="#FAFAFA";
+        
+        { rank=same; S_Retriever; S_VesselProvider; S_Storage; }
+
+        S_Retriever [label="⚙️ MulticotizadorRetrieverService.unpackQuoteData()\\n• Desempaqueta la ruta/quote íntegra sin consultar otros maestros\\n• Fusiona contracts + routes_quotes en lista única unificada", shape=component, fillcolor="#D1C4E9", penwidth=2];
+        S_VesselProvider [label="⚙️ vesselProviderService\\nResuelve e inyecta dinámicamente las specs del buque asignado\\n(o del buque seleccionado para simulación global)", shape=component, fillcolor="#C5CAE9", penwidth=2];
+        S_Storage [label="⚙️ MulticotizadorStorageService\\nPersistencia voluntaria tras simulación en caliente", shape=component, fillcolor="#B2DFDB"];
+
+        S_Retriever -> S_VesselProvider -> S_Storage [style=invis];
+    }
+
+    # ==========================================
+    #  NIVEL 3: ARTEFACTO BUSCADOR Y FILTROS SUPERIORES (FRONTEND REACT)
+    # ==========================================
+    subgraph cluster_lvl3 {
+        label = "NIVEL 3: ARTEFACTO BUSCADOR SUPERIOR (FinancialMatrixRibbonFilter.tsx)"; 
+        style="filled"; color="#0284C7"; fontcolor="#F3E5F5";
+        
+        { rank=same; UI_FilterClient; UI_FilterSource; UI_FilterVessel; UI_FilterDates; UI_SearchText; }
+
+        UI_FilterClient [label="1. FILTRO CLIENTE\\nActivos (SPCC / NEXA) vs Prospectos", shape=box, fillcolor="#E0F2FE", penwidth=2];
+        UI_FilterSource [label="2. ORIGEN DE RUTAS\\n📜 contracts vs 💼 routes_quotes vs 🔄 Todas", shape=box, fillcolor="#E0F2FE", penwidth=2];
+        UI_FilterVessel [label="3. INYECTOR DE BUQUE FLOTA\\nSimular toda la cartera con TABLONES, MOQUEGUA, etc.\\no mantener buque original de cada cotización", shape=box, fillcolor="#FFF3E0", penwidth=2];
+        UI_FilterDates [label="4. RANGO DE VALIDEZ\\nFecha Inicio y Fecha Fin", shape=box, fillcolor="#E0F2FE"];
+        UI_SearchText [label="5. BÚSQUEDA LIBRE\\nFiltro dinámico 0ms por texto", shape=box, fillcolor="#E0F2FE"];
+
+        UI_FilterClient -> UI_FilterSource -> UI_FilterVessel -> UI_FilterDates -> UI_SearchText [style=invis];
+    }
+
+    # ==========================================
+    #  NIVEL 4: MOTOR DE CÁLCULO PURO DEL MULTICOTIZADOR (FUENTE ÚNICA DE LA VERDAD)
+    # ==========================================
+    subgraph cluster_lvl4 {
+        label = "NIVEL 4: MOTOR PURO DEL MULTICOTIZADOR (MulticotizadorCalculationEngine - 0ms Memoria)"; 
+        style="filled,dashed"; color="#4E342E"; fillcolor="#EFEBE9";
+        
+        { rank=same; Engine_Input; Engine_VoyageDays; Engine_BunkerPort; Engine_PnLResult; }
+
+        Engine_Input [label="📥 Input de Cálculo\\n(routeData + vesselParams inyectado)\\n• Usado para carga inicial y recálculo en caliente", shape=cds, fillcolor="#D7CCC8", penwidth=2];
+        Engine_VoyageDays [label="⏱️ Cálculo Días de Viaje\\n• Días Mar (dist * 1.03 / speed * 24)\\n• Días Puerto (Load + Disch rates & overhead)", shape=box, fillcolor="#FFE082"];
+        Engine_BunkerPort [label="🛢️ Búnker & Puertos por Buque\\n• Consumos IFO & MDO según buque\\n• Gastos portuarios y Muellaje RF", shape=box, fillcolor="#FFE082"];
+        Engine_PnLResult [label="💰 Consolidación PnL & TCE Exactos\\n• Revenue Bruto = Tonelaje * Flete\\n• (+) Refacturación Muellaje (si RF=true)\\n• (-) Hire, Búnker, Puertos, Comisiones\\n• VOYAGE RESULT P&L & TCE Realizado", shape=box, fillcolor="#AED581", penwidth=2];
+
+        Engine_Input -> Engine_VoyageDays -> Engine_BunkerPort -> Engine_PnLResult [style=invis];
+    }
+
+    # ==========================================
+    #  NIVEL 5: TARJETAS DE RESUMEN FINANCIERO KPI (CONSOLIDACIÓN DE CARTERA)
+    # ==========================================
+    subgraph cluster_lvl5 {
+        label = "NIVEL 5: TARJETAS FINANCIERAS KPI CONSOLIDADAS (FinancialKpiCardsHeader.tsx)"; 
+        style="filled"; color="#33691E"; fillcolor="#F1F8E9";
+        
+        { rank=same; Card_PnLTotal; Card_TCEAvg; Card_RevenueTotal; Card_BunkerTotal; Card_PortCostsTotal; }
+
+        Card_PnLTotal [label="💰 PnL Net Total Cartera ($)\\nUtilidad Acumulada de la Selección", shape=doubleoctagon, fillcolor="#C8E6C9", penwidth=2];
+        Card_TCEAvg [label="📈 TCE Promedio Flota ($/día)\\nTime Charter Equivalent Ponderado", shape=rect, fillcolor="#FFF9C4", penwidth=2];
+        Card_RevenueTotal [label="💵 Ingreso Bruto Total ($)\\nFlete Contratado + Refacturación RF", shape=rect, fillcolor="white"];
+        Card_BunkerTotal [label="🛢️ Búnker Total Cartera ($)\\nImporte Consolidado IFO & MDO", shape=rect, fillcolor="white"];
+        Card_PortCostsTotal [label="🏛️ Gastos Puerto Total ($)\\nAgencias y Muellaje Consolidado", shape=rect, fillcolor="white"];
+
+        Card_PnLTotal -> Card_TCEAvg -> Card_RevenueTotal -> Card_BunkerTotal -> Card_PortCostsTotal [style=invis];
+    }
+
+    # ==========================================
+    #  NIVEL 6: CUERPO INTERACTIVO & BUCLE REACTIVO EN CALIENTE
+    # ==========================================
+    subgraph cluster_lvl6 {
+        label = "NIVEL 6: GRILLA INTERACTIVA & EDICIÓN EN CALIENTE (FinancialMatrixGridTable.tsx)"; 
+        style="filled,dashed"; color="#1B5E20"; fillcolor="#E8F5E9";
+        
+        { rank=same; UI_AccordionRow; UI_InSituEdit; UI_ReactiveUpdate; UI_SavePersist; }
+
+        UI_AccordionRow [label="📂 Filas Acordeón Multi-Ruta\\nDesglose de tramos BALLAST/LADEN, puertos y fletes", shape=component, fillcolor="#A5D6A7", penwidth=2];
+        UI_InSituEdit [label="✍️ Edición en Caliente In-Situ\\n• Tonelaje Q (MT) y Flete F ($/MT)\\n• Precios Búnker IFO/MDO\\n• Buque asignado por fila\\n• Checkbox Muellaje Refacturado [x] RF", shape=box, fillcolor="#FFF9C4", penwidth=2];
+        UI_ReactiveUpdate [label="⚡ Bucle Reactivo 0ms\\nDisparo instantáneo a Engine Nivel 4\\nRefresco inmediato de fila y KPIs", shape=note, fillcolor="#DCEDC8", penwidth=2];
+        UI_SavePersist [label="💾 Guardado Voluntario (Opcional)\\nPersistir escenario en DB via MulticotizadorStorage", shape=box, fillcolor="#B2DFDB"];
+
+        UI_AccordionRow -> UI_InSituEdit -> UI_ReactiveUpdate -> UI_SavePersist [style=invis];
+    }
+
+    # ==========================================
+    #  APILAMIENTO ESTRICTO DE NIVELES (TOP-TO-BOTTOM STACK)
+    # ==========================================
+    DB_Contracts -> S_Retriever -> UI_FilterClient -> Engine_Input -> Card_PnLTotal -> UI_AccordionRow [style=invis, weight=100];
+
+    # ==========================================
+    #  CONEXIONES FUNCIONALES ENTRE NIVELES
+    # ==========================================
+    
+    # 1. DB Espejo -> Servicios Provider
+    DB_Contracts -> S_Retriever [label=" Rutas contracts (JSON legs_data)"];
+    DB_RoutesQuotes -> S_Retriever [label=" Rutas routes_quotes (JSON legs_data)"];
+    DB_Vessels -> S_VesselProvider [label=" Specs Técnicas & Consumos"];
+
+    # 2. Servicios Provider -> Ribbon Buscador UI
+    S_Retriever -> UI_FilterSource [label=" Lista Unificada de Rutas"];
+    S_VesselProvider -> UI_FilterVessel [label=" Catálogo de Buques"];
+
+    # 3. Ribbon Buscador UI -> Engine Multicotizador
+    UI_FilterClient -> Engine_Input [label=" Inyección de Rutas Filtradas", color="#0284C7", penwidth=2];
+    UI_FilterSource -> Engine_Input [color="#0284C7"];
+    UI_FilterVessel -> Engine_Input [label=" Buque Inyectado", color="#E65100", penwidth=2];
+
+    # 4. Engine Multicotizador -> KPIs
+    Engine_Input -> Engine_VoyageDays -> Engine_BunkerPort -> Engine_PnLResult [style=dashed];
+    Engine_PnLResult -> Card_PnLTotal [color="#2E7D32", penwidth=2];
+    Engine_PnLResult -> Card_TCEAvg [color="#2E7D32"];
+    Engine_PnLResult -> Card_RevenueTotal [color="#2E7D32"];
+    Engine_PnLResult -> Card_BunkerTotal [color="#2E7D32"];
+    Engine_PnLResult -> Card_PortCostsTotal [color="#2E7D32"];
+
+    # 5. KPIs -> Grilla Multi-Ruta
+    Card_PnLTotal -> UI_AccordionRow [color="#2E7D32", style=dashed];
+
+    # 6. BUCLE REACTIVO DE EDICIÓN EN CALIENTE (IN-SITU)
+    UI_InSituEdit -> Engine_Input [label=" 🔄 Recálculo en Caliente 0ms (In-Situ)", color="#E65100", penwidth=2, style=bold];
+    Engine_PnLResult -> UI_ReactiveUpdate [label=" Salida Exacta 1:1", color="#2E7D32", penwidth=2];
+    UI_ReactiveUpdate -> Card_PnLTotal [label=" Actualiza Totales Cartera", color="#2E7D32", style=dashed];
+    UI_InSituEdit -> UI_SavePersist [label=" Si el usuario presiona Grabar", style=dotted];
+    UI_SavePersist -> S_Storage [label=" Persiste en Supabase DB", color="#00796B"];
+}
+"""
+
+    dot_file_path = os.path.join(output_dir, f"{base_name}.dot")
+    pdf_file_path = os.path.join(output_dir, f"{base_name}.pdf")
+
+    with open(dot_file_path, "w", encoding="utf-8") as f:
+        f.write(dot_content)
+
+    print(f"Archivo DOT guardado en: {dot_file_path}")
+
+    try:
+        cmd_pdf = ["dot", "-Tpdf", dot_file_path, "-o", pdf_file_path]
+        subprocess.run(cmd_pdf, check=True)
+        print(f"[OK] PDF Generado Exitosamente: {pdf_file_path}")
+    except Exception as e:
+        print(f"Error renderizando Graphviz a PDF con dot.exe: {e}")
+
+if __name__ == "__main__":
+    generate_matriz_financiera_v2_flowchart()

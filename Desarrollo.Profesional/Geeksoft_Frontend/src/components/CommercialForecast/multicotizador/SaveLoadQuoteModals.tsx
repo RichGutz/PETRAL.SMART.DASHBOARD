@@ -6,6 +6,8 @@ export interface SaveLoadQuoteModalsProps {
     showLoadModal: boolean;
     routeSuffix: string;
     saveMode: 'OVERWRITE' | 'NEW';
+    saveTargetTable?: 'contracts' | 'routes_quotes';
+    setSaveTargetTable?: (table: 'contracts' | 'routes_quotes') => void;
     loadedRouteName: string;
     clientType: 'ACTIVOS' | 'PROSPECTOS';
     selectedClient: string;
@@ -27,6 +29,8 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
     showLoadModal,
     routeSuffix,
     saveMode,
+    saveTargetTable = 'contracts',
+    setSaveTargetTable,
     loadedRouteName,
     clientType,
     selectedClient,
@@ -43,7 +47,8 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
     getSuggestedRoutePrefix
 }) => {
     const routePrefix = getSuggestedRoutePrefix(selectedClient);
-    const targetTableLabel = clientType === 'ACTIVOS' ? 'routes_clients' : 'routes_quotes';
+    const activeTargetTable = clientType === 'PROSPECTOS' ? 'routes_quotes' : (saveTargetTable || 'contracts');
+    const targetTableLabel = activeTargetTable === 'contracts' ? '📜 contracts (Contrato Formal)' : '💼 routes_quotes (Cotización Spot)';
     const isLoadedRoute = Boolean(loadedRouteName && loadedRouteName.trim() !== '');
 
     const finalFullName = saveMode === 'OVERWRITE'
@@ -108,6 +113,35 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                                 <X size={18} />
                             </button>
                         </div>
+
+                        {/* SELECCIÓN DE TABLA DESTINO SEGÚN MODO CLIENTE */}
+                        {clientType === 'ACTIVOS' ? (
+                            <div className="mb-3 bg-blue-50/60 p-2 rounded-lg border border-blue-200 flex flex-col gap-1">
+                                <label className="text-[10.5px] font-bold text-blue-900 uppercase">
+                                    📋 Tipo de Registro para Cliente Activo ({selectedClient}):
+                                </label>
+                                <div className="grid grid-cols-2 gap-2 mt-0.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSaveTargetTable && setSaveTargetTable('contracts')}
+                                        className={`py-1 px-2 text-[11px] font-extrabold rounded border transition-all cursor-pointer ${activeTargetTable === 'contracts' ? 'bg-blue-700 text-white border-blue-800 shadow-sm' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
+                                    >
+                                        📜 Contrato Formal (`contracts`)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSaveTargetTable && setSaveTargetTable('routes_quotes')}
+                                        className={`py-1 px-2 text-[11px] font-extrabold rounded border transition-all cursor-pointer ${activeTargetTable === 'routes_quotes' ? 'bg-purple-700 text-white border-purple-800 shadow-sm' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
+                                    >
+                                        💼 Cotización Spot (`routes_quotes`)
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="mb-3 bg-emerald-50/60 p-2 rounded-lg border border-emerald-200 text-[11px] font-bold text-emerald-900">
+                                🏭 Cliente Prospecto ({selectedClient}): Graba exclusivamente en <span className="font-mono text-emerald-950">`routes_quotes`</span>
+                            </div>
+                        )}
 
                         {/* MODO DE GRABADO: SOBRESCRIBIR VS NUEVO NOMBRE */}
                         {isLoadedRoute && (

@@ -94,8 +94,29 @@ flowchart TD
 
 1. **Botón 1 — Selector de Cliente (Activos vs. Prospectos)**:
    * **Pestaña `ACTIVOS`:** Filtra únicamente a los clientes con contratos vigentes (`SPCC`, `NEXA`).
-   * **Pestaña `PROSPECTOS`:** Filtra dinámicamente el listado de prospectos comerciales (`MARCOBRE`, `PRIMAX`, `CODELCO`, `R TRADING`, `CERRO VERDE`).
+   * **Pestaña `PROSPECTOS`:** Filtra dinámicamente el listado de prospectos comerciales (`MARCOBRE`, `PRIMAX`, `CODELCO`, `R TRADING`, `CERRO VERDE`), permitiendo seleccionar o ingresar prospectos en tiempo real.
    * **Rendimiento Instantáneo (0ms):** El filtrado se ejecuta en memoria sobre el catálogo cacheados en el cliente React sin realizar peticiones de red asíncronas redundantes.
+
+---
+
+### 🔹 1.3. Reglas de Negocio de Guardado y Reruteo Inteligente (`contracts` vs `routes_quotes`)
+
+Para mantener la coherencia y la integridad de la base de datos comercial, la acción de guardar a través del botón **GRABAR** en el Multicotizador aplica un reruteo y protocolo de validación diferenciado según el tipo de cliente y el tipo de registro:
+
+#### 1. Reruteo y Protocolo para Clientes Activos (`SPCC`, `NEXA`, etc.):
+- **Caso A: Guardado como Contrato Formal (Persiste en `contracts`)**:
+  - **Exigencia Estricta de Formalidad**: Requiere que el cliente esté en pestaña `ACTIVOS` y que **TODOS los campos operativos y comerciales** de la ruta (Puertos Origen/Destino, Tramos, Tonelaje, Tarifa de Flete $/MT, Consumos de Búnker, Días de Puerto y Fechas de Validez) estén 100% llenos y validados.
+  - **Única Excepción**: El campo `comments` (Observaciones) es opcional.
+  - **Persistencia**: Se guarda o actualiza directamente en la tabla **`contracts`**.
+- **Caso B: Guardado como Cotización Spot (Persiste en `routes_quotes`)**:
+  - A un cliente activo **SÍ** se le permite guardar cotizaciones spot o propuestas preliminares.
+  - En este caso no se exige la formalidad estricta de validación completa de contrato formal y el registro se guarda directamente en la tabla **`routes_quotes`**.
+
+#### 2. Reruteo y Protocolo para Clientes Prospectos (`MARCOBRE`, `PRIMAX`, `CODELCO`, etc.):
+- **Caso C: Guardado como Cotización Prospecto (Persiste en `routes_quotes`)**:
+  - Toda propuesta o cotización generada para un cliente prospecto se guarda **exclusivamente en la tabla `routes_quotes`**.
+- **Prohibición Estricta**:
+  - A los clientes prospectos **NUNCA** se les permite guardar registros en la tabla **`contracts`**.
 
 2. **Botón 2 — `2. RUTA CLIENTE` (Clientes Activos)**:
    * **Condición de Activación:** Se encuentra **habilitado** únicamente cuando el Botón 1 está en **`ACTIVOS`**.

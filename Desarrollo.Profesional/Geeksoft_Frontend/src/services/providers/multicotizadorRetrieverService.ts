@@ -65,12 +65,24 @@ export class MulticotizadorRetrieverService {
 
     public static unpackQuoteData(quote: RetrievedQuote) {
         const legsData = quote.legs_data || {};
+        const rawPuertosConfig = legsData.puertosConfig || [];
+        const normalizedPuertosConfig = rawPuertosConfig.map((p: any) => {
+            const ttc = (p.time_to_count !== undefined && p.time_to_count !== '')
+                ? p.time_to_count
+                : (p.overhead !== undefined && p.overhead !== '' ? p.overhead : (p.action !== 'NONE' ? 6 : ''));
+            return {
+                ...p,
+                time_to_count: ttc,
+                overhead: p.overhead ?? ttc
+            };
+        });
+
         return {
             vessel_id: legsData.vessel_id || quote.vessel_id || '',
             bunker_price_ifo: Number(legsData.bunker_price_ifo ?? legsData.bunker_ifo ?? 0),
             bunker_price_mdo: Number(legsData.bunker_price_mdo ?? legsData.bunker_mdo ?? 0),
             tramos: legsData.tramos || [],
-            puertosConfig: legsData.puertosConfig || [],
+            puertosConfig: normalizedPuertosConfig,
             vesselParams: legsData.vesselParams || null,
             addressCommPct: legsData.addressCommPct !== undefined ? Number(legsData.addressCommPct) : undefined,
             brokerCommPct: legsData.brokerCommPct !== undefined ? Number(legsData.brokerCommPct) : undefined

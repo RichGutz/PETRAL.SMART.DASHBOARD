@@ -614,23 +614,12 @@ def save_spot_voyage(request: SpotSaveRequest):
         else:
             target_table = "routes_clients"
         
-        # BUSCAR SI YA EXISTE UN REGISTRO EN LA TABLA OBJETIVO
-        if target_table == "contracts" and orig_port and dest_port and payload.get("client_id"):
-            existing = sb.table(target_table).select("*").eq("client_id", payload["client_id"]).eq("origin_port_id", orig_port).eq("destination_port_id", dest_port).execute()
-            if not (existing.data and len(existing.data) > 0):
-                existing = sb.table(target_table).select("*").eq("name", request.name).execute()
-        else:
-            existing = sb.table(target_table).select("*").eq("name", request.name).execute()
+        # BUSCAR SI YA EXISTE UN REGISTRO EN LA TABLA OBJETIVO POR SU NOMBRE ÚNICO
+        existing = sb.table(target_table).select("*").eq("name", request.name).execute()
 
         if existing.data and len(existing.data) > 0:
-            # SOBREESCRIBIR / UPDATE LA RUTA EXISTENTE
-            row = existing.data[0]
-            if target_table == "contracts" and row.get("id"):
-                res = sb.table(target_table).update(payload).eq("id", row["id"]).execute()
-            elif target_table == "contracts" and row.get("contract_id"):
-                res = sb.table(target_table).update(payload).eq("contract_id", row["contract_id"]).execute()
-            else:
-                res = sb.table(target_table).update(payload).eq("name", request.name).execute()
+            # SOBREESCRIBIR / UPDATE LA RUTA EXISTENTE POR SU NOMBRE ÚNICO
+            res = sb.table(target_table).update(payload).eq("name", request.name).execute()
 
             if not res.data:
                 raise Exception(f"Failed to overwrite spot route in {target_table} for name {request.name}")
@@ -716,13 +705,12 @@ def get_routes_master():
         sb = get_supabase()
         masters = get_cached_masters(sb)
         
-        clients_data = masters.get("routes_clients", [])
         prospects_data = masters.get("routes_quotes", [])
         contracts_data = masters.get("contracts", [])
         
         routes = []
         for r in (contracts_data or []):
-            client_id = r.get("client_id") or "NEXA"
+            client_id = r.get("client_id") or ("SPCC" if (r.get("name") or "").upper().startswith("SPCC") else "NEXA")
             orig = r.get("origin_port_id") or "CALLAO"
             dest = r.get("destination_port_id") or "MATARANI"
             name = (r.get("name") or f"{client_id}.{orig}.{dest}.{orig}.2025.V1").strip()
@@ -731,6 +719,7 @@ def get_routes_master():
                 **r,
                 "name": name,
                 "route_id": route_id,
+                "client_id": client_id,
                 "contract_id": r.get("contract_id") or r.get("id"),
                 "spot_id": route_id,
                 "table_source": "contracts",
@@ -739,35 +728,22 @@ def get_routes_master():
                 "client_group": client_id,
                 "_id": route_id
             })
-
-        for r in (clients_data or []):
-            name = (r.get("name") or "").strip()
-            client_group = "SPCC" if name.upper().startswith("SPCC") else ("NEXA" if name.upper().startswith("NEXA") else "NEXA")
-            route_id = name
-            routes.append({
-                **r,
-                "name": name,
-                "route_id": route_id,
-                "client_route_id": route_id,
-                "spot_id": route_id,
-                "table_source": "routes_clients",
-                "is_prospect": False,
-                "client_group": client_group,
-                "_id": route_id
-            })
             
         for r in (prospects_data or []):
             name = (r.get("name") or "").strip()
+            client_id = r.get("client_id") or ("SPCC" if name.upper().startswith("SPCC") else "NEXA")
             route_id = name
             routes.append({
                 **r,
                 "name": name,
                 "route_id": route_id,
+                "client_id": client_id,
                 "prospect_route_id": route_id,
                 "spot_id": route_id,
                 "table_source": "routes_quotes",
                 "is_prospect": True,
-                "client_group": "PROSPECTOS",
+                "is_contract": False,
+                "client_group": client_id,
                 "_id": route_id
             })
             

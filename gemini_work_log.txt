@@ -96,3 +96,19 @@ CONCURRENCY & QC SUMMARY:
 - Documentación AS-BUILT: Actualizado `06_Especificaciones_Comerciales_UI_Header_y_Bunker.md` y creado `07_Especificaciones_Comerciales_Grilla_y_Puertos.md`.
 - Despliegue VPS: Publicación exitosa en https://forecast.geeksoft.tech (0 errores TS).
 ================================================================================
+GEMINI WORK LOG: 2026-08-14 (08:20 PM)
+================================================================================
+CONCURRENCY & QC SUMMARY:
+- Auditoría Visual & Pericial: Revisión de la cotización NEXA.ILO.CALLAO.MATARANI.ILO (12.08.26) en `routes_quotes` y `contracts`.
+- Sincronización Time to Count: Corregido binding de `time_to_count` y `overhead` en `SpreadsheetTramosGrid.tsx`, `MultiCotizadorExcel.tsx` y `multicotizadorRetrieverService.ts`.
+- Valores Exactos en Puertos: Fijado `time_to_count = 6.0h` en Callao (Carga) y `time_to_count = 6.0h` en Matarani (Descarga), alcanzando 3.07d Días Puerto y 7.13d Días Totales en concordancia con el Excel oficial de PETRAL.
+- Base de Datos Supabase: Actualizados registros en `routes_quotes` y `routes_clients` para persistir `time_to_count = 6` y `overhead = "6"`.
+- Documentación AS-BUILT: Registrada Sección 5.14 en `07_Especificaciones_Comerciales_Grilla_y_Puertos.md` (Protocolo Benoit Blanc).
+- Respaldo PNG: Copia guardada en `Obsidian.Maestro.Costos.Portuarios/PNGs/` y `Exceles.Petral/PORT.COSTS.PATRICIA/`.
+- Compilación de producción: `npm run build` en Geeksoft_Frontend (100% SUCCESS en 3.85s, 0 errores).
+================================================================================
+
+[2026-08-14 20:36:40] Implementado multicotizadorPdfPrintService.ts (A4 Landscape 297x210mm) e integrado en MultiCotizadorExcel.tsx. Build verificado y desplegado a VPS exitosamente.
+[2026-08-14 20:44:20] Ajustados estilos de visor (width: 100%) y tipografía de botones 1 a 5 en multicotizadorPdfPrintService.ts y MultiCotizadorExcel.tsx. Recompilado y desplegado a VPS exitosamente.
+[2026-08-14 20:54:39] Creado FLUJOGRAMA_Arquitectura_Matriz_Financiera_V2.py y compilado FLUJOGRAMA_Arquitectura_Matriz_Financiera_V2.pdf exitosamente con Graphviz.
+[2026-08-14 21:01:29] Actualizado 09_MODULARIZACION_MATRIZ_FINANCIERA.md con la arquitectura V2 simplificada, contrato data.aggregated_data para Analisis Grafico y Spaghetti Map, y bucle reactivo de edicion en caliente 0ms.
