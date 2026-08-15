@@ -1,0 +1,767 @@
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import ReactECharts from 'echarts-for-react';
+import * as echarts from 'echarts';
+
+
+// Reglas de curvatura del usuario para evitar solapamientos y asegurar concavidad hacia el Este (panza hacia el mar)
+const getDynamicCurveness = (sourcePort: any, targetPort: any): number => {
+    if (!sourcePort || !targetPort || sourcePort.lat === null || targetPort.lat === null) return 0.2;
+    
+    const latDiff = Math.abs(sourcePort.lat - targetPort.lat);
+    const lonDiff = Math.abs(sourcePort.lon - targetPort.lon);
+    const distance = Math.sqrt(latDiff * latDiff + lonDiff * lonDiff);
+    
+    // Scale curvature with distance so long routes bulge more
+    let magnitude = 0.1 + (distance * 0.04);
+    magnitude = Math.min(magnitude, 0.85);
+    
+    const isNorthToSouth = sourcePort.lat > targetPort.lat;
+    
+    // Si vamos de Norte a Sur, la curvatura en ECharts debe ser negativa para ir a la derecha (Oeste)
+    // Si vamos de Sur a Norte, la curvatura debe ser positiva para ir a la derecha (Oeste)
+    return isNorthToSouth ? -magnitude : magnitude;
+};
+
+// Helper para calcular puntos a lo largo de una curva de Bezier cuadrática para simular arcos con polilíneas
+const getBezierPoints = (
+    p0: [number, number],
+    p2: [number, number],
+    curveness: number,
+    numPoints: number = 20
+): Array<[number, number]> => {
+    if (curveness === 0) {
+        return [p0, p2];
+    }
+    const mx = (p0[0] + p2[0]) / 2;
+    const my = (p0[1] + p2[1]) / 2;
+    const dx = p2[0] - p0[0];
+    const dy = p2[1] - p0[1];
+    
+    // Vector perpendicular (rotación de 90 grados)
+    const px = -dy;
+    const py = dx;
+    
+    // Punto de control P1
+    const p1x = mx + px * curveness * 0.5;
+    const p1y = my + py * curveness * 0.5;
+
+    const points: Array<[number, number]> = [];
+    for (let i = 0; i <= numPoints; i++) {
+        const t = i / numPoints;
+        const x = (1 - t) * (1 - t) * p0[0] + 2 * (1 - t) * t * p1x + t * t * p2[0];
+        const y = (1 - t) * (1 - t) * p0[1] + 2 * (1 - t) * t * p1y + t * t * p2[1];
+        points.push([x, y]);
+    }
+    return points;
+};
+
+// Función pura para calcular datos de espaguetis acumulados para un mes dado (Versión V2)
+const computeSpaghettiDataForMonth = (
+    aggregatedData: any,
+    selectedMonths: string[],
+    months: string[],
+    ports: any[],
+    showPies: boolean = true,
+    playSpeed: number = 2,
+    clients: any[] = []
+) => {
+    if (!aggregatedData || !selectedMonths || selectedMonths.length === 0 || !months || months.length === 0 || !ports) {
+        return { nodes: [], edges: [], pieSeries: [], missileSeries: [], haloSeries: [] };
+    }
+
+    const targetMonths = selectedMonths;
+    const activePorts = ports.filter(p => p.lat !== null && p.lon !== null);
+
+    const getClientColor = (clientName: string): string => {
+        const clientUpper = clientName.toUpperCase();
+        const found = clients?.find(c => c.client_name.toUpperCase() === clientUpper || c.client_id.toUpperCase() === clientUpper);
+        if (found && found.color_hex) {
+            return found.color_hex;
+        }
+        if (clientUpper.includes('NEXA')) return '#9333EA'; // Violeta/Púrpura
+        if (clientUpper.includes('SPCC') || clientUpper.includes('SOUTHERN')) return '#E11D48'; // Rosado/Rojo
+        if (clientUpper.includes('SPOT')) return '#F59E0B'; // Ámbar/Amarillo
+        return '#3B82F6'; // Azul por defecto
+    };
+
+    const missileSeries: any[] = [];
+
+    const portMap: Record<string, { carga: number; descarga: number }> = {};
+    ports.forEach(p => {
+        portMap[p.port_id] = { carga: 0, descarga: 0 };
+    });
+
+    const edgeAccumulator: Record<string, { source: string; target: string; vessel: string; client: string; tons: number; freq: number; isBallast: boolean }> = {};
+
+    // Helper V2 que soporta piernas físicas de posicionamiento para cualquier ruta compleja o estándar
+    const getRouteLegs = (client: string, routeKey: string): Array<{ origin: string; dest: string; isBallast?: boolean }> => {
+        const clientUpper = client.toUpperCase();
+        const routeUpper = routeKey.toUpperCase();
+
+        // 1. Si es Nexa y es la ruta Callao-Mejillones directa, graficamos el viaje complejo completo con posicionamientos
+        if (clientUpper.startsWith('NEXA') && (routeUpper === 'CALLAO-MEJILLONES' || routeUpper === 'CALLAO - MEJILLONES')) {
+            return [
+                { origin: 'ILO', dest: 'CALLAO', isBallast: true },       // Posicionamiento de Ilo a Callao
+                { origin: 'CALLAO', dest: 'MEJILLONES', isBallast: false }, // Comercial Callao a Mejillones
+                { origin: 'MEJILLONES', dest: 'ILO', isBallast: true }      // Retorno de Mejillones a Ilo
+            ];
+        }
+
+        // 2. Extraer todos los puertos válidos encontrados en la cadena de la ruta
+        const parts = routeKey.split(/[\.\-\s\(\):_]+/).map(p => p.trim().toUpperCase());
+        const validRoutePorts = parts.filter(part => ports.some(p => p.port_id.toUpperCase() === part));
+        
+        if (validRoutePorts.length >= 2) {
+            const legs: Array<{ origin: string; dest: string; isBallast?: boolean }> = [];
+            for (let i = 0; i < validRoutePorts.length - 1; i++) {
+                if (validRoutePorts[i] !== validRoutePorts[i + 1]) {
+                    const isBallast = (i === 0 && validRoutePorts[i] === 'ILO' && validRoutePorts[i + 1] === 'CALLAO' && clientUpper.startsWith('NEXA')) ||
+                                      (i === validRoutePorts.length - 2 && validRoutePorts[i] === 'MEJILLONES' && validRoutePorts[i + 1] === 'ILO' && clientUpper.startsWith('NEXA'));
+                    legs.push({ origin: validRoutePorts[i], dest: validRoutePorts[i + 1], isBallast });
+                }
+            }
+            if (legs.length > 0) return legs;
+        }
+
+        // 3. Fallback a par simple si contiene guión
+        const dashParts = routeKey.split('-').map(p => p.trim().toUpperCase());
+        if (dashParts.length === 2 && ports.some(p => p.port_id.toUpperCase() === dashParts[0]) && ports.some(p => p.port_id.toUpperCase() === dashParts[1])) {
+            return [{ origin: dashParts[0], dest: dashParts[1], isBallast: false }];
+        }
+        return [];
+    };
+
+    Object.entries(aggregatedData).forEach(([client, rMap]: any) => {
+        Object.entries(rMap).forEach(([route, vMap]: any) => {
+            const legs = getRouteLegs(client, route);
+            if (legs.length === 0) return;
+
+            Object.entries(vMap).forEach(([vessel, mMap]: any) => {
+                Object.entries(mMap).forEach(([month, metrics]: any) => {
+                    if (targetMonths.includes(month)) {
+                        const rawFreq = metrics['raw_inputs']?.['monthly_frequency'];
+                        const freq = rawFreq !== undefined ? rawFreq : (metrics['freq'] !== undefined ? metrics['freq'] : 0);
+                        const carga_unit = metrics['carga_unit'] || 0;
+                        const tons = carga_unit * freq;
+
+                        if (tons > 0) {
+                            const ladenLegsCount = legs.filter(l => !l.isBallast).length || legs.length;
+                            
+                                legs.forEach((leg) => {
+                                    // Las piernas de lastre (ballast) no cargan ni descargan tonelaje real en los puertos
+                                    if (!leg.isBallast) {
+                                        if (portMap[leg.origin]) {
+                                            portMap[leg.origin].carga += tons / ladenLegsCount;
+                                        }
+                                        if (portMap[leg.dest]) {
+                                            portMap[leg.dest].descarga += tons / ladenLegsCount;
+                                        }
+                                    }
+
+                                    const edgeKey = `${leg.origin}-${leg.dest}|${vessel}`;
+                                    if (!edgeAccumulator[edgeKey]) {
+                                        edgeAccumulator[edgeKey] = {
+                                            source: leg.origin,
+                                            target: leg.dest,
+                                            vessel: vessel,
+                                            client: client,
+                                            tons: 0,
+                                            freq: 0,
+                                            isBallast: leg.isBallast || false
+                                        };
+                                    }
+                                    if (!leg.isBallast) {
+                                        edgeAccumulator[edgeKey].tons += tons;
+                                    }
+                                    edgeAccumulator[edgeKey].freq += freq;
+                                });
+
+                                // Generar misiles (Efecto secuencial / En Serie - Solo en vista de 1 mes y si hay frecuencia activa)
+                                if (targetMonths.length === 1 && freq > 0) {
+                                    let coordsList: Array<[number, number]> = [];
+                                    let valid = true;
+
+                                    for (let i = 0; i < legs.length; i++) {
+                                        const leg = legs[i];
+                                        const sPort = activePorts.find(p => p.port_id === leg.origin);
+                                        const tPort = activePorts.find(p => p.port_id === leg.dest);
+                                        if (sPort && tPort && sPort.lon !== null && sPort.lat !== null && tPort.lon !== null && tPort.lat !== null) {
+                                            const c = getDynamicCurveness(sPort, tPort);
+                                            const bezier = getBezierPoints([sPort.lon, sPort.lat], [tPort.lon, tPort.lat], c, 20);
+                                            if (i === 0) {
+                                                coordsList = coordsList.concat(bezier);
+                                            } else {
+                                                // Evitar duplicar el punto de conexión (destino de pierna anterior = origen de pierna actual)
+                                                coordsList = coordsList.concat(bezier.slice(1));
+                                            }
+                                        } else {
+                                            valid = false;
+                                            break;
+                                        }
+                                    }
+
+                                    if (valid && coordsList.length >= 2) {
+                                        const trips = Math.max(1, freq);
+                                        const period = Math.max(0.2, playSpeed / trips);
+
+                                        missileSeries.push({
+                                            type: 'lines',
+                                            coordinateSystem: 'geo',
+                                            polyline: true, // Polyline es true porque usamos los puntos calculados de la curva Bezier
+                                            zlevel: 3,
+                                            effect: {
+                                                show: true,
+                                                period: period,
+                                                trailLength: 0.65,
+                                                color: getClientColor(client),
+                                                symbol: 'arrow',
+                                                symbolSize: 4
+                                            },
+                                            lineStyle: {
+                                                color: 'transparent',
+                                                width: 0
+                                            },
+                                            data: [
+                                                {
+                                                    coords: coordsList
+                                                }
+                                            ],
+                                            silent: true
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+            });
+        });
+
+    const edgesGroupedByPair: Record<string, any[]> = {};
+    Object.values(edgeAccumulator).forEach((edge: any) => {
+        // Mantenemos también los tramos de lastre si tienen frecuencia mayor a 0
+        if (edge.tons > 0 || (edge.isBallast && edge.freq > 0)) {
+            const pairKey = `${edge.source}-${edge.target}`;
+            if (!edgesGroupedByPair[pairKey]) {
+                edgesGroupedByPair[pairKey] = [];
+            }
+            edgesGroupedByPair[pairKey].push({
+                ...edge,
+                isAggregated: true
+            });
+        }
+    });
+
+    const finalEdges: any[] = [];
+
+    Object.entries(edgesGroupedByPair).forEach(([pairKey, edgesInPair]) => {
+        const [source, target] = pairKey.split('-');
+        const sPort = activePorts.find(p => p.port_id === source);
+        const tPort = activePorts.find(p => p.port_id === target);
+        const baseCurveness = (sPort && tPort) ? getDynamicCurveness(sPort, tPort) : 0.2;
+        
+        edgesInPair.forEach((edge, index) => {
+            const sign = baseCurveness < 0 ? -1 : 1;
+            const curveness = baseCurveness + sign * (index * 0.06);
+            
+            const edgeConfig: any = {
+                source: edge.source,
+                target: edge.target,
+                value: edge.isBallast ? 0 : Math.round(edge.tons),
+                vessel: edge.vessel,
+                isBallast: edge.isBallast,
+                lineStyle: {
+                    // Estilo de línea de ECharts: discontinua (dashed) para lastres, sólida para cargados
+                                                    width: targetMonths.length === 1 ? 0 : (edge.isBallast ? 1.5 : Math.max(0.5, Math.min(2, edge.tons / 50000))),
+                                                    color: targetMonths.length === 1 ? 'transparent' : getClientColor(edge.client),
+                                                    type: edge.isBallast ? 'dashed' : 'solid',
+                                                    curveness: curveness,
+                                                    opacity: edge.isBallast ? 0.6 : 0.8
+                                                }
+                                            };
+                                
+                                            if (edge.isAggregated && edge.freq > 0 && targetMonths.length > 1) {
+                                                edgeConfig.label = {
+                                                    show: true,
+                                                    formatter: `${Math.round(edge.freq)}`,
+                                                    backgroundColor: edge.isBallast ? '#64748B' : getClientColor(edge.client),
+                                                    color: '#fff',
+                                                    width: 16,
+                    height: 16,
+                    lineHeight: 16,
+                    align: 'center',
+                    verticalAlign: 'middle',
+                    padding: 0,
+                    borderRadius: 8,
+                    fontSize: 10,
+                    fontWeight: 'bold',
+                    position: 'middle',
+                    rotate: 0
+                };
+            }
+
+            finalEdges.push(edgeConfig);
+        });
+    });
+
+    const maxCapacity = Math.max(...ports.map(p => {
+        return p.sources_sinks?.reduce((sum: number, ss: any) => sum + (Number(ss.capacity_mt) || 0), 0) || 0;
+    }), 1);
+
+    const nodesForGraph = activePorts.filter(p => {
+        const marketTotal = p.sources_sinks?.reduce((sum: number, ss: any) => sum + (Number(ss.capacity_mt) || 0), 0) || 0;
+        const petralTotal = (portMap[p.port_id]?.carga || 0) + (portMap[p.port_id]?.descarga || 0);
+        return marketTotal > 0 || petralTotal > 0;
+    }).map(p => {
+        const petralCarga = portMap[p.port_id]?.carga || 0;
+        const petralDescarga = portMap[p.port_id]?.descarga || 0;
+        const capacity = p.sources_sinks?.reduce((sum: number, ss: any) => sum + (Number(ss.capacity_mt) || 0), 0) || 0;
+        const pieRadius = 14 + (capacity / maxCapacity) * 20;
+
+        return {
+            id: p.port_id,
+            name: p.port_name || p.port_id,
+            value: [p.lon!, p.lat!],
+            carga: Math.round(petralCarga),
+            descarga: Math.round(petralDescarga),
+            capacity_mt: capacity,
+            type: p.type || 'SINK',
+            symbolSize: 6,
+            pieRadius: pieRadius,
+            sources_sinks: p.sources_sinks || []
+        };
+    });
+
+    const pieSeries: any[] = [];
+    const calloutLinesData: any[] = [];
+
+    if (showPies) {
+        nodesForGraph.forEach(n => {
+            let marketOffset = 4.0;
+            let petralOffset = -4.0;
+            let latOffset = 0.0;
+
+            if (n.name.includes('ILO') || n.id.includes('ILO')) {
+                marketOffset = 10.0;
+                petralOffset = -10.0;
+                latOffset = -1.2;
+            } else if (n.name.toUpperCase().includes('SAN JUAN') || n.id.toUpperCase().includes('SAN JUAN')) {
+                marketOffset = 8.0;
+                petralOffset = -8.0;
+            }
+            
+            const landCenter = [n.value[0] + marketOffset, n.value[1] + latOffset];
+            const seaCenter = [n.value[0] + petralOffset, n.value[1] + latOffset];
+
+            const monthsCount = targetMonths.length;
+
+            const marketData = n.sources_sinks?.map((ss: any) => {
+                const proratedCapacity = (Number(ss.capacity_mt) / 12) * monthsCount;
+                return {
+                    value: Math.round(proratedCapacity),
+                    name: `${ss.empresa} (${ss.type})`,
+                    itemStyle: { color: ss.color_hex || '#64748B' },
+                    portInfo: n
+                };
+            }) || [];
+            
+            if (marketData.length === 0 && Number(n.capacity_mt) > 0) {
+                let fallbackColor = '#64748B';
+                if (n.type === 'SOURCE') fallbackColor = '#A78BFA';
+                if (n.type === 'MIXED') fallbackColor = '#3B82F6';
+                const proratedFallback = (Number(n.capacity_mt) / 12) * monthsCount;
+                if (proratedFallback > 0) {
+                    marketData.push({
+                        value: Math.round(proratedFallback),
+                        name: `Capacidad Mercado (${n.type})`,
+                        itemStyle: { color: fallbackColor },
+                        portInfo: n
+                    });
+                }
+            }
+
+            if (marketData.length > 0) {
+                pieSeries.push({
+                    type: 'pie',
+                    coordinateSystem: 'geo',
+                    center: landCenter,
+                    radius: [0, n.pieRadius],
+                    label: { show: false },
+                    emphasis: { 
+                        label: { 
+                            show: true, 
+                            position: 'inside', 
+                            formatter: '{b}\n{c} MT',
+                            fontSize: 9,
+                            color: '#ffffff',
+                            fontWeight: 'bold'
+                        } 
+                    },
+                    data: marketData,
+                    zlevel: 4
+                });
+            }
+
+            const totalProratedCapacity = (Number(n.capacity_mt) / 12) * monthsCount;
+
+            if (n.carga > 0) {
+                const cargaRatio = totalProratedCapacity > 0 ? (n.carga / totalProratedCapacity) : 0;
+                const cargaRadius = Math.max(3, n.pieRadius * cargaRatio);
+                
+                pieSeries.push({
+                    type: 'pie',
+                    coordinateSystem: 'geo',
+                    center: seaCenter,
+                    radius: [0, cargaRadius],
+                    label: { show: false },
+                    emphasis: { 
+                        label: { 
+                            show: true, 
+                            formatter: '{b}',
+                            position: 'inside',
+                            fontSize: 9,
+                            color: '#ffffff'
+                        } 
+                    },
+                    data: [
+                        { 
+                            value: n.carga, 
+                            name: 'Carga Petral', 
+                            itemStyle: { color: '#0EA5E9' }, 
+                            portInfo: n
+                        }
+                    ],
+                    zlevel: 4
+                });
+            }
+
+            const seaCenterDescarga = [seaCenter[0] - 2.5, seaCenter[1]];
+
+            if (n.descarga > 0) {
+                const descargaRatio = totalProratedCapacity > 0 ? (n.descarga / totalProratedCapacity) : 0;
+                const descargaRadius = Math.max(3, n.pieRadius * descargaRatio);
+                
+                pieSeries.push({
+                    type: 'pie',
+                    coordinateSystem: 'geo',
+                    center: seaCenterDescarga,
+                    radius: [0, descargaRadius],
+                    label: { show: false },
+                    emphasis: { 
+                        label: { 
+                            show: true, 
+                            formatter: '{b}',
+                            position: 'inside',
+                            fontSize: 9,
+                            color: '#ffffff'
+                        } 
+                    },
+                    data: [
+                        { 
+                            value: n.descarga, 
+                            name: 'Descarga Petral', 
+                            itemStyle: { color: '#F97316' }, 
+                            portInfo: n
+                        }
+                    ],
+                    zlevel: 4
+                });
+            }
+
+            calloutLinesData.push({
+                coords: [n.value, landCenter],
+                lineStyle: { color: '#94A3B8', type: 'dashed', width: 1.2, opacity: 0.7 }
+            });
+            
+            if (n.carga > 0 || n.descarga > 0) {
+                const targetCenter = n.carga > 0 ? seaCenter : seaCenterDescarga;
+                calloutLinesData.push({
+                    coords: [n.value, targetCenter],
+                    lineStyle: { color: '#94A3B8', type: 'dashed', width: 1.2, opacity: 0.7 }
+                });
+            }
+        });
+
+        if (calloutLinesData.length > 0) {
+            pieSeries.push({
+                type: 'lines',
+                coordinateSystem: 'geo',
+                zlevel: 1,
+                silent: true,
+                data: calloutLinesData
+            });
+        }
+    }
+
+    return { nodes: nodesForGraph, edges: finalEdges, pieSeries, missileSeries };
+};
+
+interface SpaghettiMapProps {
+    data: any;
+    months: string[];
+    selectedMonths: string[];
+    ports: any[];
+    clients?: any[];
+    isDarkMode?: boolean;
+    showPies?: boolean;
+    playSpeed?: number;
+    onPortClick?: (portId: string) => void;
+}
+
+export const SpaghettiMap_V2: React.FC<SpaghettiMapProps> = ({
+    data,
+    months,
+    selectedMonths,
+    ports,
+    clients = [],
+    isDarkMode = false,
+    showPies = true,
+    playSpeed = 2,
+    onPortClick
+}) => {
+    const [mapLoaded, setMapLoaded] = useState(false);
+    const chartRef = useRef<any>(null);
+    const zoomRef = useRef<number>(2.5);
+    const centerRef = useRef<[number, number]>([-75.0, -12.0]);
+
+    useEffect(() => {
+        const loadMap = async () => {
+            try {
+                const response = await fetch('/peru_chile_ecuador.json?v=3');
+                const geoJson = await response.json();
+                echarts.registerMap('peru_chile_ecuador', geoJson);
+                setMapLoaded(true);
+            } catch (error) {
+                console.error("Error loading Peru/Chile GeoJSON map:", error);
+            }
+        };
+        loadMap();
+    }, []);
+
+    const option = useMemo(() => {
+        if (!mapLoaded || !data || !data.aggregated_data || selectedMonths.length === 0 || !ports) return;
+
+        const { nodes, edges, pieSeries, missileSeries } = computeSpaghettiDataForMonth(
+            data.aggregated_data, 
+            selectedMonths, 
+            months, 
+            ports, 
+            showPies, 
+            playSpeed,
+            clients
+        );
+
+        return {
+            backgroundColor: isDarkMode ? 'transparent' : '#ebf8ff',
+            title: {
+                text: `Flujos y Viajes Acumulados a ${selectedMonths[selectedMonths.length - 1]}`,
+                left: '20px',
+                top: '20px',
+                textStyle: {
+                    color: isDarkMode ? '#f1f5f9' : '#1e293b',
+                    fontSize: 16,
+                    fontWeight: 'bold'
+                }
+            },
+            geo: {
+                map: 'peru_chile_ecuador',
+                roam: true,
+                zoom: zoomRef.current,
+                center: centerRef.current,
+                aspectScale: 0.85,
+                itemStyle: {
+                    borderColor: isDarkMode ? '#334155' : '#cbd5e1',
+                    borderWidth: 0.8
+                },
+                regions: [
+                    {
+                        name: 'Peru',
+                        itemStyle: {
+                            areaColor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : 'rgba(241, 245, 249, 0.75)'
+                        }
+                    },
+                    {
+                        name: 'Chile',
+                        itemStyle: {
+                            areaColor: isDarkMode ? 'rgba(15, 23, 42, 0.8)' : 'rgba(226, 232, 240, 0.75)'
+                        }
+                    },
+                    {
+                        name: 'Ecuador',
+                        itemStyle: {
+                            areaColor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : 'rgba(241, 245, 249, 0.75)'
+                        }
+                    }
+                ],
+                emphasis: {
+                    itemStyle: {
+                        areaColor: isDarkMode ? '#273549' : '#e2e8f0'
+                    },
+                    label: { show: false }
+                }
+            },
+            tooltip: {
+                trigger: 'item',
+                backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+                borderColor: isDarkMode ? '#334155' : '#e2e8f0',
+                textStyle: { color: isDarkMode ? '#f1f5f9' : '#1e293b' },
+                formatter: (params: any) => {
+                    if (params.dataType === 'node') {
+                        const d = params.data;
+                        const monthsCount = selectedMonths.length;
+                        const proratedCapacity = (d.capacity_mt / 12) * monthsCount;
+                        const totalPetral = d.carga + d.descarga;
+                        const pct = proratedCapacity > 0 ? ((totalPetral / proratedCapacity) * 100).toFixed(1) : '0';
+                        
+                        return `
+                            <div style="font-family: Inter, sans-serif; padding: 4px;">
+                                <b style="font-size: 13px; color: #0EA5E9;">${d.name}</b> (${d.type})<br/>
+                                <hr style="margin: 6px 0; border-color: #334155;"/>
+                                <b>Operación Petral (Acumulada):</b><br/>
+                                • Carga: <span style="color: #0EA5E9; font-family: monospace;">${Math.round(d.carga).toLocaleString()} MT</span><br/>
+                                • Descarga: <span style="color: #F97316; font-family: monospace;">${Math.round(d.descarga).toLocaleString()} MT</span><br/>
+                                • Total: <span style="font-weight: bold; font-family: monospace;">${Math.round(totalPetral).toLocaleString()} MT</span><br/>
+                                <hr style="margin: 6px 0; border-color: #334155;"/>
+                                <b>Cap. Mercado (${monthsCount} mes${monthsCount > 1 ? 'es' : ''}):</b> <span style="font-family: monospace;">${Math.round(proratedCapacity).toLocaleString()} MT</span><br/>
+                                <b>Market Share Petral:</b> <span style="font-weight: bold; color: #16A34A; font-family: monospace;">${pct}%</span>
+                            </div>
+                        `;
+                    }
+                    if (params.dataType === 'edge') {
+                        const d = params.data;
+                        if (d.isBallast) {
+                            return `
+                                <div style="font-family: Inter, sans-serif; padding: 4px;">
+                                    <b>${d.source} &rarr; ${d.target} <span style="color: #64748B; font-weight: normal;">(Posicionamiento / Lastre)</span></b><br/>
+                                    <hr style="margin: 6px 0; border-color: #334155;"/>
+                                    <b>Buque:</b> ${d.vessel}<br/>
+                                    <b>Estado:</b> <span style="font-weight: bold; color: #64748B;">Sin Carga</span>
+                                </div>
+                            `;
+                        }
+                        return `
+                            <div style="font-family: Inter, sans-serif; padding: 4px;">
+                                <b>${d.source} &rarr; ${d.target}</b><br/>
+                                <hr style="margin: 6px 0; border-color: #334155;"/>
+                                <b>Buque:</b> ${d.vessel}<br/>
+                                <b>Volumen Transportado:</b> <span style="font-weight: bold; color: #10B981; font-family: monospace;">${d.value.toLocaleString()} MT</span>
+                            </div>
+                        `;
+                    }
+                    if (params.componentType === 'series' && params.seriesType === 'pie') {
+                        const d = params.data;
+                        if (d.portInfo) {
+                            const pi = d.portInfo;
+                            const isPetralSlice = params.name.includes('Petral');
+                            
+                            return `
+                                <div style="font-family: Inter, sans-serif;">
+                                    <b>${pi.name}</b> - ${isPetralSlice ? 'Operación Petral' : 'Mercado (Sinks/Sources)'}<br/>
+                                    ${params.name}: <span style="font-weight: bold; font-family: monospace;">${params.value.toLocaleString()} MT (${params.percent}%)</span>
+                                </div>
+                            `;
+                        }
+                    }
+                    return '';
+                }
+            },
+            series: [
+                {
+                    name: 'Rutas y Puertos',
+                    type: 'graph',
+                    coordinateSystem: 'geo',
+                    layout: 'none',
+                    data: nodes,
+                    links: edges,
+                    zlevel: 2,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{b}',
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                        color: isDarkMode ? '#f1f5f9' : '#1e293b',
+                        backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+                        padding: [3, 5],
+                        borderRadius: 4,
+                        borderWidth: 1,
+                        borderColor: isDarkMode ? '#334155' : '#e2e8f0',
+                        distance: 10
+                    },
+                    emphasis: {
+                        focus: 'adjacency',
+                        lineStyle: {
+                            width: 8,
+                            opacity: 1
+                        }
+                    },
+                    lineStyle: {
+                        curveness: 0.2,
+                        opacity: 0.8
+                    }
+                },
+                ...pieSeries,
+                ...missileSeries
+            ]
+        };
+    }, [mapLoaded, data, months, selectedMonths, ports, isDarkMode, showPies, playSpeed, clients]);
+
+    const onEvents = useMemo(() => {
+        return {
+            click: (params: any) => {
+                if (params.componentSubType === 'pie' && params.seriesName && params.seriesName.includes('-Market')) {
+                    const portId = params.seriesName.replace('-Market', '');
+                    if (onPortClick) {
+                        onPortClick(portId);
+                    }
+                }
+            },
+            georoam: () => {
+                const chartInstance = chartRef.current?.getEchartsInstance();
+                if (chartInstance) {
+                    const opt = chartInstance.getOption();
+                    const geo = opt.geo;
+                    const newZoom = Array.isArray(geo) ? geo[0].zoom : geo?.zoom;
+                    const newCenter = Array.isArray(geo) ? geo[0].center : geo?.center;
+                    
+                    if (newZoom !== undefined) {
+                        zoomRef.current = newZoom;
+                    }
+                    if (newCenter !== undefined) {
+                        centerRef.current = newCenter;
+                    }
+                }
+            }
+        };
+    }, [onPortClick]);
+
+    if (!data || !data.aggregated_data) {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full bg-white rounded-lg border border-slate-200">
+                <p className="text-slate-500 font-medium text-lg">Ingresar o cargar escenario para mostrar herramienta.</p>
+            </div>
+        );
+    }
+
+    if (!mapLoaded || !option) {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full">
+                <div className="animate-spin h-8 w-8 border-4 border-petral-teal border-t-transparent rounded-full mb-4"></div>
+                <p className="text-slate-400 font-medium">Cargando Mapa de Espaguetis V2...</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex-1 relative w-full h-full">
+            <ReactECharts 
+                ref={chartRef}
+                option={option} 
+                style={{ height: '100%', width: '100%', minHeight: '600px' }}
+                notMerge={true}
+                lazyUpdate={true}
+                onEvents={onEvents}
+            />
+        </div>
+    );
+};

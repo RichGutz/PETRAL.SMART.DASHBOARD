@@ -160,6 +160,32 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     const portCostModeRef = useRef<'static' | 'matrix'>('static');
 
     const dynamicMonths = useMemo(() => {
+        // 1. Extraer primero los meses reales presentes en data.aggregated_data
+        const monthsSet = new Set<string>();
+        if (data && data.aggregated_data && typeof data.aggregated_data === 'object') {
+            Object.values(data.aggregated_data).forEach((routes: any) => {
+                if (routes && typeof routes === 'object') {
+                    Object.values(routes).forEach((vessels: any) => {
+                        if (vessels && typeof vessels === 'object') {
+                            Object.values(vessels).forEach((mMap: any) => {
+                                if (mMap && typeof mMap === 'object') {
+                                    Object.keys(mMap).forEach(m => {
+                                        if (m && m.match(/^\d{4}-\d{2}$/)) {
+                                            monthsSet.add(m);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        if (monthsSet.size > 0) {
+            return Array.from(monthsSet).sort();
+        }
+
+        // 2. Fallback a fechas de rango configuradas
         if (!startDate || !endDate) return [];
         const startParts = startDate.split('-');
         const endParts = endDate.split('-');
@@ -179,7 +205,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             }
         }
         return months;
-    }, [startDate, endDate]);
+    }, [data, startDate, endDate]);
 
     // UI Toggles & Filters states
     const [hiddenClients, setHiddenClients] = useState<string[]>([]);
@@ -239,7 +265,18 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
                 // NO retornar aquí — dejar que finally limpie el estado
             } else {
                 console.error("Error fetching simulation:", error);
-                const msg = error?.response?.data?.detail || error?.message || "Error desconocido";
+                let msg = "Error desconocido";
+                if (error?.response?.data?.detail) {
+                    if (typeof error.response.data.detail === 'string') {
+                        msg = error.response.data.detail;
+                    } else if (Array.isArray(error.response.data.detail)) {
+                        msg = error.response.data.detail.map((d: any) => `${d.loc ? d.loc.slice(-2).join('.') + ': ' : ''}${d.msg}`).join(' | ');
+                    } else {
+                        msg = JSON.stringify(error.response.data.detail);
+                    }
+                } else if (error?.message) {
+                    msg = error.message;
+                }
                 alert(`Error al correr simulación: ${msg}`);
                 setData(null);
             }

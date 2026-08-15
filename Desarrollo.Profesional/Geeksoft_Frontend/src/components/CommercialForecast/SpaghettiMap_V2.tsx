@@ -65,16 +65,16 @@ const computeSpaghettiDataForMonth = (
     playSpeed: number = 2,
     clients: any[] = []
 ) => {
-    if (!aggregatedData || !selectedMonths || selectedMonths.length === 0 || !months || months.length === 0 || !ports) {
+    if (!aggregatedData || !selectedMonths || selectedMonths.length === 0 || !months || months.length === 0 || !ports || ports.length === 0) {
         return { nodes: [], edges: [], pieSeries: [], missileSeries: [], haloSeries: [] };
     }
 
     const targetMonths = selectedMonths;
-    const activePorts = ports.filter(p => p.lat !== null && p.lon !== null);
+    const activePorts = (ports || []).filter(p => p && p.lat !== null && p.lon !== null && !isNaN(Number(p.lat)) && !isNaN(Number(p.lon)));
 
     const getClientColor = (clientName: string): string => {
-        const clientUpper = clientName.toUpperCase();
-        const found = clients?.find(c => c.client_name.toUpperCase() === clientUpper || c.client_id.toUpperCase() === clientUpper);
+        const clientUpper = (clientName || '').toUpperCase();
+        const found = clients?.find(c => c.client_name?.toUpperCase() === clientUpper || c.client_id?.toUpperCase() === clientUpper);
         if (found && found.color_hex) {
             return found.color_hex;
         }
@@ -87,19 +87,20 @@ const computeSpaghettiDataForMonth = (
     const missileSeries: any[] = [];
 
     const portMap: Record<string, { carga: number; descarga: number }> = {};
-    ports.forEach(p => {
-        portMap[p.port_id] = { carga: 0, descarga: 0 };
+    activePorts.forEach(p => {
+        if (p.port_id) portMap[p.port_id] = { carga: 0, descarga: 0 };
     });
 
     const edgeAccumulator: Record<string, { source: string; target: string; vessel: string; client: string; tons: number; freq: number; isBallast: boolean }> = {};
 
-    // Helper V2 que soporta piernas físicas de posicionamiento para la ruta compleja de Nexa
+    // Helper V2 que soporta piernas físicas de posicionamiento para cualquier ruta compleja o estándar
     const getRouteLegs = (client: string, routeKey: string): Array<{ origin: string; dest: string; isBallast?: boolean }> => {
-        const clientUpper = client.toUpperCase();
+        if (!routeKey || typeof routeKey !== 'string') return [];
+        const clientUpper = (client || '').toUpperCase();
         const routeUpper = routeKey.toUpperCase();
 
-        // Si es Nexa y es la ruta Callao-Mejillones, graficamos el viaje complejo completo con posicionamientos
-        if (clientUpper.startsWith('NEXA') && routeUpper === 'CALLAO-MEJILLONES') {
+        // 1. Si es Nexa y es la ruta Callao-Mejillones directa, graficamos el viaje complejo completo con posicionamientos
+        if (clientUpper.startsWith('NEXA') && (routeUpper === 'CALLAO-MEJILLONES' || routeUpper === 'CALLAO - MEJILLONES')) {
             return [
                 { origin: 'ILO', dest: 'CALLAO', isBallast: true },       // Posicionamiento de Ilo a Callao
                 { origin: 'CALLAO', dest: 'MEJILLONES', isBallast: false }, // Comercial Callao a Mejillones
@@ -107,42 +108,51 @@ const computeSpaghettiDataForMonth = (
             ];
         }
 
-        if (routeKey.includes('SPOT-NEXA') || routeKey.startsWith('SPOT-')) {
-            const parts = routeKey.split(/[\.-]/);
-            const validRoutePorts = parts.filter(part => ports.some(p => p.port_id === part));
-            
+        // 2. Extraer todos los puertos válidos encontrados en la cadena de la ruta
+        const parts = routeKey.split(/[\.\-\s\(\):_]+/).map(p => p.trim().toUpperCase());
+        const validRoutePorts = parts.filter(part => activePorts.some(p => p.port_id?.toUpperCase() === part));
+        
+        if (validRoutePorts.length >= 2) {
             const legs: Array<{ origin: string; dest: string; isBallast?: boolean }> = [];
             for (let i = 0; i < validRoutePorts.length - 1; i++) {
-                legs.push({ origin: validRoutePorts[i], dest: validRoutePorts[i + 1], isBallast: false });
+                if (validRoutePorts[i] !== validRoutePorts[i + 1]) {
+                    const isBallast = (i === 0 && validRoutePorts[i] === 'ILO' && validRoutePorts[i + 1] === 'CALLAO' && clientUpper.startsWith('NEXA')) ||
+                                      (i === validRoutePorts.length - 2 && validRoutePorts[i] === 'MEJILLONES' && validRoutePorts[i + 1] === 'ILO' && clientUpper.startsWith('NEXA'));
+                    legs.push({ origin: validRoutePorts[i], dest: validRoutePorts[i + 1], isBallast });
+                }
             }
-            return legs;
-        } else {
-            const parts = routeKey.split('-');
-            if (parts.length === 2) {
-                return [{ origin: parts[0], dest: parts[1], isBallast: false }];
-            }
+            if (legs.length > 0) return legs;
+        }
+
+        // 3. Fallback a par simple si contiene guión
+        const dashParts = routeKey.split('-').map(p => p.trim().toUpperCase());
+        if (dashParts.length === 2 && activePorts.some(p => p.port_id?.toUpperCase() === dashParts[0]) && activePorts.some(p => p.port_id?.toUpperCase() === dashParts[1])) {
+            return [{ origin: dashParts[0], dest: dashParts[1], isBallast: false }];
         }
         return [];
     };
 
-    Object.entries(aggregatedData).forEach(([client, rMap]: any) => {
-        Object.entries(rMap).forEach(([route, vMap]: any) => {
-            const legs = getRouteLegs(client, route);
-            if (legs.length === 0) return;
+    if (aggregatedData && typeof aggregatedData === 'object') {
+        Object.entries(aggregatedData).forEach(([client, rMap]: any) => {
+            if (!rMap || typeof rMap !== 'object') return;
+            Object.entries(rMap).forEach(([route, vMap]: any) => {
+                if (!vMap || typeof vMap !== 'object') return;
+                const legs = getRouteLegs(client, route);
+                if (legs.length === 0) return;
 
-            Object.entries(vMap).forEach(([vessel, mMap]: any) => {
-                Object.entries(mMap).forEach(([month, metrics]: any) => {
-                    if (targetMonths.includes(month)) {
-                        const rawFreq = metrics['raw_inputs']?.['monthly_frequency'];
-                        const freq = rawFreq !== undefined ? rawFreq : (metrics['freq'] !== undefined ? metrics['freq'] : 0);
-                        const carga_unit = metrics['carga_unit'] || 0;
-                        const tons = carga_unit * freq;
+                Object.entries(vMap).forEach(([vessel, mMap]: any) => {
+                    if (!mMap || typeof mMap !== 'object') return;
+                    Object.entries(mMap).forEach(([month, metrics]: any) => {
+                        if (targetMonths.includes(month) && metrics && typeof metrics === 'object') {
+                            const rawFreq = metrics?.['raw_inputs']?.['monthly_frequency'];
+                            const freq = rawFreq !== undefined ? rawFreq : (metrics?.['freq'] !== undefined ? metrics['freq'] : 0);
+                            const carga_unit = metrics?.['carga_unit'] || 0;
+                            const tons = carga_unit * freq;
 
-                        if (tons > 0) {
-                            const ladenLegsCount = legs.filter(l => !l.isBallast).length || legs.length;
-                            
+                            if (tons > 0 || (legs.some(l => l.isBallast) && freq > 0)) {
+                                const ladenLegsCount = legs.filter(l => !l.isBallast).length || legs.length;
+                                
                                 legs.forEach((leg) => {
-                                    // Las piernas de lastre (ballast) no cargan ni descargan tonelaje real en los puertos
                                     if (!leg.isBallast) {
                                         if (portMap[leg.origin]) {
                                             portMap[leg.origin].carga += tons / ladenLegsCount;
@@ -179,13 +189,12 @@ const computeSpaghettiDataForMonth = (
                                         const leg = legs[i];
                                         const sPort = activePorts.find(p => p.port_id === leg.origin);
                                         const tPort = activePorts.find(p => p.port_id === leg.dest);
-                                        if (sPort && tPort && sPort.lon !== null && sPort.lat !== null && tPort.lon !== null && tPort.lat !== null) {
+                                        if (sPort && tPort && sPort.lon != null && sPort.lat != null && tPort.lon != null && tPort.lat != null) {
                                             const c = getDynamicCurveness(sPort, tPort);
-                                            const bezier = getBezierPoints([sPort.lon, sPort.lat], [tPort.lon, tPort.lat], c, 20);
+                                            const bezier = getBezierPoints([Number(sPort.lon), Number(sPort.lat)], [Number(tPort.lon), Number(tPort.lat)], c, 20);
                                             if (i === 0) {
                                                 coordsList = coordsList.concat(bezier);
                                             } else {
-                                                // Evitar duplicar el punto de conexión (destino de pierna anterior = origen de pierna actual)
                                                 coordsList = coordsList.concat(bezier.slice(1));
                                             }
                                         } else {
@@ -201,7 +210,7 @@ const computeSpaghettiDataForMonth = (
                                         missileSeries.push({
                                             type: 'lines',
                                             coordinateSystem: 'geo',
-                                            polyline: true, // Polyline es true porque usamos los puntos calculados de la curva Bezier
+                                            polyline: true,
                                             zlevel: 3,
                                             effect: {
                                                 show: true,
@@ -230,10 +239,10 @@ const computeSpaghettiDataForMonth = (
                 });
             });
         });
+    }
 
     const edgesGroupedByPair: Record<string, any[]> = {};
     Object.values(edgeAccumulator).forEach((edge: any) => {
-        // Mantenemos también los tramos de lastre si tienen frecuencia mayor a 0
         if (edge.tons > 0 || (edge.isBallast && edge.freq > 0)) {
             const pairKey = `${edge.source}-${edge.target}`;
             if (!edgesGroupedByPair[pairKey]) {
@@ -252,7 +261,8 @@ const computeSpaghettiDataForMonth = (
         const [source, target] = pairKey.split('-');
         const sPort = activePorts.find(p => p.port_id === source);
         const tPort = activePorts.find(p => p.port_id === target);
-        const baseCurveness = (sPort && tPort) ? getDynamicCurveness(sPort, tPort) : 0.2;
+        if (!sPort || !tPort) return;
+        const baseCurveness = getDynamicCurveness(sPort, tPort);
         
         edgesInPair.forEach((edge, index) => {
             const sign = baseCurveness < 0 ? -1 : 1;
@@ -298,24 +308,24 @@ const computeSpaghettiDataForMonth = (
         });
     });
 
-    const maxCapacity = Math.max(...ports.map(p => {
-        return p.sources_sinks?.reduce((sum: number, ss: any) => sum + (Number(ss.capacity_mt) || 0), 0) || 0;
+    const maxCapacity = Math.max(...(ports || []).map(p => {
+        return p?.sources_sinks?.reduce((sum: number, ss: any) => sum + (Number(ss.capacity_mt) || 0), 0) || 0;
     }), 1);
 
     const nodesForGraph = activePorts.filter(p => {
-        const marketTotal = p.sources_sinks?.reduce((sum: number, ss: any) => sum + (Number(ss.capacity_mt) || 0), 0) || 0;
+        const marketTotal = p?.sources_sinks?.reduce((sum: number, ss: any) => sum + (Number(ss.capacity_mt) || 0), 0) || 0;
         const petralTotal = (portMap[p.port_id]?.carga || 0) + (portMap[p.port_id]?.descarga || 0);
         return marketTotal > 0 || petralTotal > 0;
     }).map(p => {
         const petralCarga = portMap[p.port_id]?.carga || 0;
         const petralDescarga = portMap[p.port_id]?.descarga || 0;
-        const capacity = p.sources_sinks?.reduce((sum: number, ss: any) => sum + (Number(ss.capacity_mt) || 0), 0) || 0;
-        const pieRadius = 14 + (capacity / maxCapacity) * 20;
+        const capacity = p?.sources_sinks?.reduce((sum: number, ss: any) => sum + (Number(ss.capacity_mt) || 0), 0) || 0;
+        const pieRadius = 14 + (maxCapacity > 0 ? (capacity / maxCapacity) * 20 : 0);
 
         return {
             id: p.port_id,
             name: p.port_name || p.port_id,
-            value: [p.lon!, p.lat!],
+            value: [Number(p.lon), Number(p.lat)],
             carga: Math.round(petralCarga),
             descarga: Math.round(petralDescarga),
             capacity_mt: capacity,
@@ -728,6 +738,22 @@ export const SpaghettiMap_V2: React.FC<SpaghettiMapProps> = ({
             }
         };
     }, [onPortClick]);
+
+    // Auto-resize de ECharts para evitar canvas de 0px durante transiciones de React Router
+    useEffect(() => {
+        const handleResize = () => {
+            if (chartRef.current) {
+                const instance = chartRef.current.getEchartsInstance();
+                if (instance) instance.resize();
+            }
+        };
+        const timers = [50, 150, 350, 600].map(delay => setTimeout(handleResize, delay));
+        window.addEventListener('resize', handleResize);
+        return () => {
+            timers.forEach(clearTimeout);
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [option]);
 
     if (!data || !data.aggregated_data) {
         return (

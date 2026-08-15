@@ -43,8 +43,6 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     hideInputs = false,
     displayMode = 'usd',
     onDisplayModeChange,
-    portCostMode = 'static',
-    onPortCostModeChange,
     forecastName,
     isAdding = false,
     demurragePct = '0',
@@ -54,11 +52,12 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     demurrageDays = '0',
     showDemurrageDays = false,
     onDemurrageDaysChange,
-    onShowDemurrageDaysChange
+    onShowDemurrageDaysChange,
 }) => {
     // Form State
     const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
     const [showFilters, setShowFilters] = useState(false);
+    const [clientTab, setClientTab] = useState<'activos' | 'prospectos'>('activos');
     const [client, setClient] = useState('');
     const [route, setRoute] = useState('');
     const [vessel, setVessel] = useState('');
@@ -68,7 +67,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     const [spotSuffix, setSpotSuffix] = useState('');
     
     // Dynamic Clients State
-    const [availableClients, setAvailableClients] = useState<string[]>(['SPCC', 'NEXA', 'SPOT']);
+    const [activeClients, setActiveClients] = useState<string[]>(['SPCC', 'NEXA', 'SPOT']);
+    const [prospectClients, setProspectClients] = useState<string[]>([]);
     const [spotRoutes, setSpotRoutes] = useState<any[]>([]);
 
     // Identificar si la ruta seleccionada es una ruta de cotización o ruta multicotizador compleja
@@ -76,8 +76,14 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         if (!client || !route) return null;
         if (route.startsWith('QUOTE:')) {
             const parts = route.split(':');
-            const spotId = parseInt(parts[1]);
-            return spotRoutes.find(s => s.spot_id === spotId) || null;
+            const spotIdStr = parts[1];
+            return spotRoutes.find(s => 
+                String(s.spot_id) === spotIdStr || 
+                String(s.route_id) === spotIdStr || 
+                String(s.contract_id) === spotIdStr || 
+                String(s.id) === spotIdStr ||
+                String(s.name) === spotIdStr
+            ) || null;
         }
 
         const ports = route.split('-');
@@ -101,8 +107,10 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     }, [client, route, spotRoutes]);
 
     const isComplexRoute = useMemo(() => {
-        return matchedSpot?.legs_data?.is_multicotizador === true;
-    }, [matchedSpot]);
+        return matchedSpot?.legs_data?.is_multicotizador === true || 
+               Boolean(matchedSpot?.legs_data?.tramos && matchedSpot.legs_data.tramos.length > 0) || 
+               route.startsWith('QUOTE:');
+    }, [matchedSpot, route]);
 
     // Filtrar las rutas disponibles comercialmente y cotizaciones para el cliente activo
     const clientRoutes = useMemo(() => {
@@ -120,7 +128,6 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         // 2. Cotizaciones (routes_quotes) para este cliente (ej: Cerro Verde - Matarani a Ilo)
         spotRoutes.forEach(s => {
             const name = (s.name || "").trim().toUpperCase();
-            // Extraer por punto '.' o por guion '-' para obtener el nombre del cliente/prospecto
             let qClient = name;
             if (name.includes('.')) {
                 qClient = name.split('.')[0].trim();
@@ -132,19 +139,20 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 const tramos = s.legs_data?.tramos || [];
                 const laden = tramos.filter((t: any) => t.type?.toUpperCase() === 'LADEN');
                 let key = '';
+                const sId = s.spot_id || s.route_id || s.contract_id || s.name || s.id;
                 if (laden.length > 0) {
                     const orig = laden[0].origin_port_id;
                     const dest = laden[laden.length - 1].destination_port_id;
-                    key = `QUOTE:${s.spot_id}:${orig}-${dest}`;
+                    key = `QUOTE:${sId}:${orig}-${dest}`;
                 } else if (s.origin_port_id && s.destination_port_id) {
-                    key = `QUOTE:${s.spot_id}:${s.origin_port_id}-${s.destination_port_id}`;
+                    key = `QUOTE:${sId}:${s.origin_port_id}-${s.destination_port_id}`;
                 } else {
-                    key = `QUOTE:${s.spot_id}:UNK-UNK`;
+                    key = `QUOTE:${sId}:UNK-UNK`;
                 }
 
                 routesList.push({
                     key,
-                    label: s.name, // "Cerro Verde - Matarani a Callao"
+                    label: s.name,
                     isQuote: true
                 });
             }
@@ -153,13 +161,13 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         return routesList;
     }, [client, spotRoutes]);
 
-    // Lógica reactiva para autocompletar buque, cantidad y flete (yield) si es ruta compleja
+    // Lógica reactiva para autocompletar buque, cantidad y flete (yield)
     useEffect(() => {
         if (isComplexRoute && matchedSpot) {
-            const legs = matchedSpot.legs_data;
+            const legs = matchedSpot.legs_data || {};
             
             // 1. Resolver buque guardado
-            const savedVessel = legs.vessel_id || legs.vesselParams?.vessel_id || '';
+            const savedVessel = legs.vessel_id || legs.vesselParams?.vessel_id || matchedSpot.vessel_id || '';
             if (savedVessel) {
                 setVessel(savedVessel);
             }
@@ -182,7 +190,6 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 setCustomTariff(yieldFlete.toFixed(2));
             }
         } else {
-            // Si NO es ruta de cotización compleja (es ruta fija de contrato), limpiamos override de flete y naves
             if (route && !route.startsWith('QUOTE:')) {
                 setCustomTariff('');
                 setVessel('');
@@ -200,7 +207,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
     useEffect(() => {
         import('../../services/api').then(({ ForecastService }) => {
-            // Cargar clientes dinámicamente extrayéndolos de las rutas de contratos y cotizaciones (primer token antes del punto)
+            // 1. Clientes Activos
             ForecastService.getRoutesMaster().then(routesList => {
                 const clientNames = (routesList || []).map((r: any) => {
                     const name = r.name || "";
@@ -208,47 +215,66 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     return firstPart.trim().toUpperCase();
                 }).filter((name: string) => name && name !== 'SPOT');
 
-                // Asegurar SPCC y NEXA por defecto, ordenar alfabéticamente
-                const uniqueClients = Array.from(new Set(['SPCC', 'NEXA', ...clientNames]));
-                uniqueClients.sort();
-                setAvailableClients(uniqueClients);
+                const uniqueActive = Array.from(new Set(['SPCC', 'NEXA', ...clientNames]));
+                uniqueActive.sort();
+                setActiveClients(uniqueActive);
             }).catch(err => {
                 console.error("Failed to load routes master for clients:", err);
-                setAvailableClients(['SPCC', 'NEXA']);
+                setActiveClients(['SPCC', 'NEXA']);
             });
 
-            ForecastService.listSpots().then(spotRoutes => {
-                setSpotRoutes(spotRoutes || []);
+            // 2. Cotizaciones y Prospectos
+            ForecastService.listSpots().then(spots => {
+                setSpotRoutes(spots || []);
+                const prospectNames = new Set<string>();
+                (spots || []).forEach((s: any) => {
+                    const name = (s.name || "").trim().toUpperCase();
+                    let pName = name;
+                    if (name.includes('.')) pName = name.split('.')[0].trim();
+                    else if (name.includes('-')) pName = name.split('-')[0].trim();
+                    if (pName && pName !== 'SPCC' && pName !== 'NEXA' && pName !== 'SPOT') {
+                        prospectNames.add(pName);
+                    }
+                });
+                const sortedProspects = Array.from(prospectNames).sort();
+                setProspectClients(sortedProspects.length > 0 ? sortedProspects : ['MARCOBRE', 'PRIMAX', 'CODELCO', 'CERRO VERDE']);
             }).catch(err => console.error("Failed to fetch spot routes:", err));
         });
     }, []);
 
-    // Limpiar la ruta seleccionada si cambia el cliente
+    // Limpiar la ruta seleccionada si cambia el cliente o la pestaña
     useEffect(() => {
         setRoute('');
-    }, [client]);
+    }, [client, clientTab]);
 
-    // Clear month if it falls outside the new horizon, otherwise leave it alone (or empty initially)
+    // Limpiar cliente al cambiar de pestaña
+    const handleTabChange = (tab: 'activos' | 'prospectos') => {
+        setClientTab(tab);
+        setClient('');
+        setRoute('');
+    };
+
+    // Clear month if it falls outside the new horizon
     useEffect(() => {
         setSelectedMonths(prev => prev.filter(m => dynamicMonths.includes(m)));
     }, [dynamicMonths]);
 
-    // Maestro de Flota (Capacidad de Carga Normal/Comercial, no DWT nominal)
+    // Maestro de Flota (Capacidad de Carga Normal)
     const VESSEL_CAPACITY: Record<string, string> = {
         'TABLONES': '13500',
         'MOQUEGUA': '13500',
         'CONCON_TRADER': '19000',
-        'HUEMUL': '22062' // DWT por defecto hasta que se especifique su carga normal
+        'HUEMUL': '22062'
     };
 
     // Autocompletar la capacidad del buque (MT) cuando se selecciona uno
     useEffect(() => {
-        if (vessel && VESSEL_CAPACITY[vessel]) {
-            setQuantity(VESSEL_CAPACITY[vessel]);
-        } else {
-            setQuantity('');
+        if (!isComplexRoute) {
+            if (vessel && VESSEL_CAPACITY[vessel]) {
+                setQuantity(VESSEL_CAPACITY[vessel]);
+            }
         }
-    }, [vessel]);
+    }, [vessel, isComplexRoute]);
 
     useEffect(() => {
         if (client !== 'SPOT') {
@@ -256,10 +282,24 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         }
     }, [client]);
 
+    // Validación precisa de campos faltantes para la burbuja / tooltip
+    const missingFields = useMemo(() => {
+        const missing: string[] = [];
+        if (selectedMonths.length === 0) missing.push("3. Meses a modelar");
+        if (!client) missing.push("4. Cliente");
+        if (!route) missing.push("5. Ruta / Quote");
+        if (!vessel) missing.push("6. Buque");
+        if (!frequency || parseInt(frequency) <= 0) missing.push("7. N° Viajes");
+        if (client === 'SPOT' && !spotSuffix.trim()) missing.push("Sufijo SPOT");
+        if (client === 'SPOT' && !customTariff) missing.push("Flete SPOT");
+        return missing;
+    }, [selectedMonths, client, route, vessel, frequency, spotSuffix, customTariff]);
+
+    const isFormValid = missingFields.length === 0;
+
     const handleAdd = () => {
-        if (!client || !route || !vessel || selectedMonths.length === 0 || !quantity || !frequency) return;
-        if (client === 'SPOT' && (!customTariff || !spotSuffix.trim())) return;
-        if (client === 'NEXA' && !isComplexRoute && !customTariff) return;
+        const effectiveQty = quantity || (vessel ? VESSEL_CAPACITY[vessel] : '13500');
+        if (!isFormValid || !effectiveQty) return;
 
         const finalClient = client === 'SPOT' ? `SPOT-${spotSuffix.trim().toUpperCase()}` : client;
 
@@ -270,7 +310,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
             if (route.startsWith('QUOTE:')) {
                 const parts = route.split(':');
-                quote_id = parseInt(parts[1]);
+                const rawQuoteId = parts[1];
+                quote_id = isNaN(Number(rawQuoteId)) ? (rawQuoteId as any) : parseInt(rawQuoteId);
                 const ports = parts[2].split('-');
                 origin_port_id = ports[0];
                 destination_port_id = ports[1];
@@ -285,7 +326,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 origin_port_id,
                 destination_port_id,
                 vessel_id: vessel,
-                quantity: parseInt(quantity),
+                quantity: parseInt(effectiveQty),
                 monthly_frequency: parseInt(frequency),
                 custom_tariff: customTariff ? parseFloat(customTariff) : undefined,
                 quote_id
@@ -297,22 +338,35 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         return null;
     }
 
+    const currentClientList = clientTab === 'activos' ? activeClients : prospectClients;
+
+    // Resolver objeto y etiqueta legible de la ruta seleccionada
+    const selectedRouteObj = useMemo(() => {
+        return clientRoutes.find(r => r.key === route);
+    }, [clientRoutes, route]);
+
+    const selectedRouteDisplay = useMemo(() => {
+        if (!selectedRouteObj) return '';
+        return selectedRouteObj.isQuote ? `💬 ${selectedRouteObj.label}` : selectedRouteObj.label.replace('-', ' - ');
+    }, [selectedRouteObj]);
+
     return (
         <Card className="border-slate-200 shadow-sm relative overflow-visible">
-            <CardContent className="py-1 px-6">
+            <CardContent className="py-2 px-6 flex flex-col gap-3">
                 
-                {/* Contenedor Flex en una sola línea sin wrap, con scroll horizontal si es muy pequeña la pantalla */}
-                <div className="flex flex-row items-center gap-2 w-full pb-0.5">
+                {/* ========================================================================= */}
+                {/* FILA 1: HORIZONTE, CLIENTE, RUTA Y BUQUE (Pasos 1 al 6 amplios y cómodos) */}
+                {/* ========================================================================= */}
+                <div className="flex flex-row items-center gap-3 w-full">
                     
-                    {/* 1. Inicio */}
-                    <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
+                    {/* 1. Inicio forecast */}
+                    <div className="flex flex-col gap-1.5 flex-1 min-w-[130px]">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">1. Inicio forecast</Label>
                         <MonthPicker 
                             value={currentStartDate.slice(0, 7)}
                             onChange={(val) => {
                                 const newStartVal = val || '';
                                 const currentEndVal = currentEndDate.slice(0, 7);
-                                // Si elige un inicio MAYOR al fin actual, empujamos el fin
                                 if (newStartVal > currentEndVal) {
                                     const y = parseInt(newStartVal.split('-')[0]);
                                     const m = parseInt(newStartVal.split('-')[1]);
@@ -323,12 +377,12 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 }
                             }}
                             placeholder="Inicio"
-                            className="border-slate-200 shadow-sm"
+                            className="border-slate-200 shadow-sm h-8"
                         />
                     </div>
 
-                    {/* 2. Fin */}
-                    <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
+                    {/* 2. Fin forecast */}
+                    <div className="flex flex-col gap-1.5 flex-1 min-w-[130px]">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">2. Fin forecast</Label>
                         <MonthPicker 
                             value={currentEndDate.slice(0, 7)}
@@ -336,7 +390,6 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 if (!val) return;
                                 const currentStartVal = currentStartDate.slice(0, 7);
                                 let finalStart = currentStartDate;
-                                // Si elige un fin MENOR al inicio actual, retrocedemos el inicio
                                 if (val < currentStartVal) {
                                     finalStart = `${val}-01`;
                                 }
@@ -347,12 +400,12 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             }}
                             minDate={currentStartDate.slice(0, 7)}
                             placeholder="Fin"
-                            className="border-slate-200 shadow-sm"
+                            className="border-slate-200 shadow-sm h-8"
                         />
                     </div>
 
-                    {/* 3. Meses a Modelar */}
-                    <div className="flex flex-col gap-2 flex-1 w-0 flex-1 relative">
+                    {/* 3. Meses a modelar */}
+                    <div className="flex flex-col gap-1.5 flex-1 min-w-[140px] relative">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">3. Meses a modelar</Label>
                         <Popover>
                             <PopoverTrigger
@@ -373,7 +426,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                             <div className="col-span-3 text-xs text-slate-500 italic py-2 text-center">Falta definir horizonte</div>
                                         ) : (
                                             dynamicMonths.map(m => (
-                                                <button
+                                                 <button
                                                     key={m}
                                                     type="button"
                                                     onClick={(e) => {
@@ -411,18 +464,38 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Popover>
                     </div>
 
-                    {/* 4. Cliente */}
-                    <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">4. Cliente</Label>
+                    {/* 4. Cliente (Pestañas ACTIVOS / PROSPECTOS + Dropdown) */}
+                    <div className="flex flex-col gap-1 flex-1 min-w-[170px]">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">4. Cliente</Label>
+                            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded text-[9px] font-bold">
+                                <button
+                                    type="button"
+                                    onClick={() => handleTabChange('activos')}
+                                    className={`px-1.5 py-0.5 rounded transition-colors ${clientTab === 'activos' ? 'bg-sky-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                                >
+                                    ACTIVOS
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleTabChange('prospectos')}
+                                    className={`px-1.5 py-0.5 rounded transition-colors ${clientTab === 'prospectos' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                                >
+                                    PROSP.
+                                </button>
+                            </div>
+                        </div>
                         <Select value={client} onValueChange={(val) => setClient(val || '')}>
                             <SelectTrigger className="w-full h-8 bg-white">
-                                <SelectValue placeholder="Cliente" />
+                                <SelectValue placeholder="Cliente">
+                                    {client || undefined}
+                                </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                                {availableClients.map(c => (
+                                {currentClientList.map(c => (
                                     <SelectItem key={c} value={c}>
                                         <div className="flex items-center gap-2">
-                                            <div className="w-2.5 h-2.5 rounded-full bg-[#1E3A8A]"></div>{c}
+                                            <div className={`w-2.5 h-2.5 rounded-full ${clientTab === 'activos' ? 'bg-[#1E3A8A]' : 'bg-purple-600'}`}></div>{c}
                                         </div>
                                     </SelectItem>
                                 ))}
@@ -431,7 +504,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {client === 'SPOT' && (
-                        <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
+                        <div className="flex flex-col gap-1.5 flex-1 min-w-[120px]">
                             <Label className="text-xs font-semibold text-red-500 whitespace-nowrap">Sufijo SPOT *</Label>
                             <Input 
                                 type="text" 
@@ -443,12 +516,14 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </div>
                     )}
 
-                    {/* 4. Ruta */}
-                    <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">5. Ruta</Label>
+                    {/* 5. Ruta o Cotización */}
+                    <div className="flex flex-col gap-1.5 flex-2 min-w-[220px]">
+                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">5. Ruta / Quote</Label>
                         <Select value={route} onValueChange={(val) => setRoute(val || '')} disabled={!client}>
                             <SelectTrigger className="w-full h-8">
-                                <SelectValue placeholder="Ruta" />
+                                <SelectValue placeholder="Ruta">
+                                    {selectedRouteDisplay || undefined}
+                                </SelectValue>
                             </SelectTrigger>
                             <SelectContent className="w-auto min-w-[max-content] max-h-[300px] overflow-y-auto">
                                 {clientRoutes.length === 0 ? (
@@ -476,12 +551,14 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Select>
                     </div>
 
-                    {/* 5. Buque */}
-                    <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
+                    {/* 6. Buque */}
+                    <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
                         <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">6. Buque</Label>
                         <Select value={vessel} onValueChange={(val) => setVessel(val || '')} disabled={!route}>
                             <SelectTrigger className="w-full h-8 bg-white disabled:opacity-80">
-                                <SelectValue placeholder="Buque" />
+                                <SelectValue placeholder="Buque">
+                                    {vessel ? vessel.replace('_', ' ') : undefined}
+                                </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="MOQUEGUA">
@@ -500,56 +577,31 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Select>
                     </div>
 
-                    {/* 6. Viajes */}
-                    <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">7. N° Viajes</Label>
+                </div>
+                {/* FIN FILA 1 */}
+
+                {/* ====================================================================================== */}
+                {/* FILA 2: PARÁMETROS OPERATIVOS, BOTÓN AÑADIR, ESCENARIOS Y ACCIONES (Look & Feel Fiel) */}
+                {/* ====================================================================================== */}
+                <div className="flex flex-row items-center gap-3 w-full pt-1 border-t border-slate-100">
+                    
+                    {/* 7. Nº Viajes */}
+                    <div className="flex items-center gap-1.5">
+                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">7. Viajes:</Label>
                         <Input 
                             type="number" 
-                            min="0"
+                            min="1"
                             value={frequency} 
                             onChange={e => setFrequency(e.target.value)}
-                            placeholder="Freq"
-                            title="Frecuencia Mensual"
-                            className="w-full h-8"
+                            placeholder="1"
+                            title="Frecuencia Mensual de Viajes"
+                            className="w-16 h-8 text-center text-xs"
                         />
                     </div>
 
-                    {/* 7. Toneladas por Viaje */}
-                    <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">8. TM/viaje</Label>
-                        <Input 
-                            type="number" 
-                            min="0"
-                            value={quantity} 
-                            onChange={e => setQuantity(e.target.value)}
-                            placeholder="TM"
-                            title="Toneladas (Full Carga)"
-                            className="w-full h-8 disabled:bg-slate-50 disabled:text-slate-600 disabled:opacity-80"
-                            disabled={isComplexRoute}
-                        />
-                    </div>
-
-                    {/* 8. Flete Override */}
-                    <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                        <Label className={`text-xs font-semibold whitespace-nowrap ${(client === 'SPOT' || (client === 'NEXA' && !isComplexRoute)) ? 'text-red-500' : 'text-slate-600'}`}>
-                            9. Flete {(client === 'SPOT' || (client === 'NEXA' && !isComplexRoute)) && '*'}
-                        </Label>
-                        <Input 
-                            type="number" 
-                            min="0"
-                            step="0.01"
-                            value={customTariff} 
-                            onChange={e => setCustomTariff(e.target.value)}
-                            placeholder={isComplexRoute ? "Yield Auto" : ((client === 'SPOT' || client === 'NEXA') ? "Obligatorio" : "Auto")}
-                            title={isComplexRoute ? "El flete ponderado se calcula de forma automática desde la simulación de la ruta" : "Sobrescribir tarifa del contrato. Déjelo vacío para usar la tarifa maestra."}
-                            className={`w-full h-8 ${(client === 'SPOT' || (client === 'NEXA' && !isComplexRoute)) ? 'border-red-300 bg-red-50' : ''} disabled:bg-slate-50 disabled:text-slate-600 disabled:opacity-80`}
-                            disabled={isComplexRoute}
-                        />
-                    </div>
-
-                    {/* 9. Demurrage (%) */}
-                    <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">10. Demurrage (%)</Label>
+                    {/* 8. Demurrage (%) */}
+                    <div className="flex items-center gap-1.5">
+                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">8. Demurrage (%):</Label>
                         <div className="flex gap-1 h-8">
                             <Input 
                                 type="number" 
@@ -557,21 +609,22 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 value={demurragePct} 
                                 onChange={e => onDemurragePctChange?.(e.target.value)}
                                 placeholder="%"
-                                className="w-16 h-8"
+                                className="w-14 h-8 text-xs text-center"
                             />
                             <button 
+                                type="button"
                                 onClick={() => onShowDemurrageChange?.(!showDemurrage)}
-                                className={`flex-1 text-[11px] font-semibold rounded transition-colors border ${showDemurrage ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
-                                title="Mostrar Demurrage en la Matriz Financiera"
+                                className={`px-2 text-[11px] font-semibold rounded transition-colors border ${showDemurrage ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                                title="Mostrar Demurrage Porcentual en la Matriz Financiera"
                             >
                                 Mostrar
                             </button>
                         </div>
                     </div>
 
-                    {/* 11. Demurrage (d) */}
-                    <div className="flex flex-col gap-2 flex-1 w-0 flex-1">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">11. Demurrage (d)</Label>
+                    {/* 9. Demurrage (días) */}
+                    <div className="flex items-center gap-1.5">
+                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">9. Demurrage (d):</Label>
                         <div className="flex gap-1 h-8">
                             <Input 
                                 type="number" 
@@ -579,111 +632,100 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 value={demurrageDays} 
                                 onChange={e => onDemurrageDaysChange?.(e.target.value)}
                                 placeholder="días"
-                                className="w-16 h-8"
+                                className="w-14 h-8 text-xs text-center"
                             />
                             <button 
+                                type="button"
                                 onClick={() => onShowDemurrageDaysChange?.(!showDemurrageDays)}
-                                className={`flex-1 text-[11px] font-semibold rounded transition-colors border ${showDemurrageDays ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
-                                title="Mostrar Demurrage en Días"
+                                className={`px-2 text-[11px] font-semibold rounded transition-colors border ${showDemurrageDays ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                                title="Mostrar Demurrage en Días (toma tarifa diaria de la quote/buque)"
                             >
                                 Mostrar
                             </button>
                         </div>
                     </div>
 
+                    {/* ➕ Botón Añadir al Modelo con Burbuja de Validación */}
+                    <div className="relative group">
+                        <Button 
+                            onClick={handleAdd} 
+                            className={`relative h-8 px-4 overflow-hidden transition-colors rounded-full ${isAdding ? 'bg-primary text-white pointer-events-none' : isFormValid ? 'bg-primary hover:bg-primary/90 text-white shadow-sm' : 'bg-slate-200 text-slate-400 cursor-not-allowed hover:bg-slate-200'}`}
+                            disabled={isAdding || !isFormValid}
+                        >
+                            {isAdding && (
+                                <div className="absolute inset-0 bg-white/20 animate-pulse" style={{ width: '100%' }}></div>
+                            )}
+                            <span className="relative flex items-center justify-center z-10 gap-1.5 text-[11px] font-bold">
+                                {isAdding ? (
+                                    <>
+                                        <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></div>
+                                        <span>Procesando...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <PlusCircle className="h-3.5 w-3.5" />
+                                        <span>Añadir al Modelo</span>
+                                    </>
+                                )}
+                            </span>
+                        </Button>
+                        {!isFormValid && (
+                            <div className="absolute bottom-[115%] left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-50 pointer-events-none">
+                                <div className="bg-slate-800 text-white text-[10px] font-medium py-1.5 px-3 rounded shadow-xl whitespace-nowrap border border-slate-700">
+                                    <span className="text-amber-400 font-bold">⚠️ Falta completar: </span>
+                                    {missingFields.join(' • ')}
+                                </div>
+                                <div className="w-2 h-2 bg-slate-800 rotate-45 -mt-1 border-r border-b border-slate-700"></div>
+                            </div>
+                        )}
                     </div>
-                    {/* FIN FILA 1 */}
 
-                    {/* FILA 2: Controles y Acciones */}
-                    <div className="flex flex-row items-center gap-4 w-full mt-3">
-                        {/* Indicador de Escenario */}
-                        <div className="flex items-center gap-2 font-bold text-sky-800 bg-sky-50 border border-sky-200 px-3 h-8 rounded-full shadow-sm text-[11px]">
-                            📁 Escenario: {forecastName || 'Sin guardar'}
+                    {/* Indicador de Escenario */}
+                    <div className="flex items-center gap-1.5 font-bold text-sky-800 bg-sky-50 border border-sky-200 px-3 h-8 rounded-full shadow-xs text-[11px] shrink-0">
+                        📁 Escenario: {forecastName || 'Sin guardar'}
+                    </div>
+
+                    {/* Botón de Filtros */}
+                    <div>
+                        <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-3 h-8 rounded-full text-[11px] font-bold shadow-xs transition-colors shrink-0">
+                            <Filter size={13} /> Filtros de Tabla y Exportación
+                        </button>
+                    </div>
+                    {showFilters && (
+                        <div className="absolute top-[100%] left-0 w-full z-50 mt-1 shadow-2xl rounded-xl border border-slate-200 overflow-hidden bg-white">
+                            <ForecastGridFilters />
                         </div>
+                    )}
 
-                        {/* Botón de Filtros */}
-                        <div>
-                            <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-4 h-8 rounded-full text-[11px] font-bold shadow-sm transition-colors">
-                                <Filter size={14} /> Filtros de Tabla y Exportación
+                    {/* Vista ($ / %) */}
+                    {displayMode && onDisplayModeChange && (
+                        <div className="flex items-center gap-1 bg-slate-200 rounded p-0.5 h-8 w-28 shadow-inner shrink-0">
+                            <span className="text-[10px] uppercase font-bold text-slate-600 px-1.5">Vista:</span>
+                            <button
+                                onClick={() => onDisplayModeChange('usd')}
+                                className={`flex-1 text-center py-1 text-[10px] font-bold rounded transition-colors ${displayMode === 'usd' ? 'bg-white shadow-xs text-petral-blue' : 'text-slate-500 hover:bg-slate-300'}`}
+                            >
+                                UND
+                            </button>
+                            <button
+                                onClick={() => onDisplayModeChange('pct')}
+                                className={`flex-1 text-center py-1 text-[10px] font-bold rounded transition-colors ${displayMode === 'pct' ? 'bg-white shadow-xs text-petral-blue' : 'text-slate-500 hover:bg-slate-300'}`}
+                            >
+                                %
                             </button>
                         </div>
-                        {showFilters && (
-                            <div className="absolute top-[100%] left-0 w-full z-50 mt-1 shadow-2xl rounded-xl border border-slate-200 overflow-hidden bg-white">
-                                <ForecastGridFilters />
-                            </div>
-                        )}
+                    )}
 
-                        {/* Vista ($ / %) */}
-                        {displayMode && onDisplayModeChange && (
-                            <div className="flex items-center gap-1 bg-slate-200 rounded p-0.5 h-8 w-32 shadow-inner">
-                                <span className="text-[10px] uppercase font-bold text-slate-600 px-2">Vista:</span>
-                                <button
-                                    onClick={() => onDisplayModeChange('usd')}
-                                    className={`flex-1 text-center py-1 text-[10px] font-bold rounded transition-colors ${displayMode === 'usd' ? 'bg-white shadow-sm text-petral-blue' : 'text-slate-500 hover:bg-slate-300'}`}
-                                >
-                                    UND
-                                </button>
-                                <button
-                                    onClick={() => onDisplayModeChange('pct')}
-                                    className={`flex-1 text-center py-1 text-[10px] font-bold rounded transition-colors ${displayMode === 'pct' ? 'bg-white shadow-sm text-petral-blue' : 'text-slate-500 hover:bg-slate-300'}`}
-                                >
-                                    %
-                                </button>
-                            </div>
-                        )}
+                    {/* Spacer para empujar Recalcular / Guardar / Cargar a la derecha */}
+                    <div className="flex-1"></div>
 
-                        {/* Costo Puerto */}
-                        {onPortCostModeChange && (
-                            <div className="w-40 flex bg-slate-200 rounded p-0.5 h-8 shadow-inner">
-                                <button
-                                    onClick={() => onPortCostModeChange('static')}
-                                    className={`flex-1 text-center py-1 text-[10px] uppercase font-bold rounded transition-colors ${portCostMode === 'static' ? 'bg-emerald-600 shadow-sm text-white' : 'text-slate-500 hover:bg-slate-300'}`}
-                                >
-                                    STATIC
-                                </button>
-                                <button
-                                    onClick={() => onPortCostModeChange('matrix')}
-                                    className={`flex-1 text-center py-1 text-[10px] uppercase font-bold rounded transition-colors ${portCostMode === 'matrix' ? 'bg-amber-600 shadow-sm text-white' : 'text-slate-500 hover:bg-slate-300'}`}
-                                >
-                                    MATRIX
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Spacer para empujar el resto a la derecha */}
-                        <div className="flex-1"></div>
-
-                        {/* Guardar / Cargar (bottomRightContent) */}
+                    {/* Guardar / Cargar / Recalcular (bottomRightContent) */}
+                    <div className="shrink-0">
                         {bottomRightContent}
-
-                        {/* Botón Añadir */}
-                        <div className="w-32 ml-2">
-                            <Button 
-                                onClick={handleAdd} 
-                                className={`relative w-full h-8 overflow-hidden transition-colors rounded-full ${isAdding ? 'bg-primary text-white pointer-events-none' : 'bg-primary hover:bg-primary/90 text-white'}`}
-                                disabled={isAdding || !client || !route || !vessel || selectedMonths.length === 0 || !quantity || !frequency || (client === 'SPOT' && (!customTariff || !spotSuffix.trim())) || (client === 'NEXA' && !customTariff)}
-                            >
-                                {isAdding && (
-                                    <div className="absolute inset-0 bg-white/20 animate-pulse" style={{ width: '100%' }}></div>
-                                )}
-                                <span className="relative flex items-center justify-center z-10 w-full text-[11px]">
-                                    {isAdding ? (
-                                        <>
-                                            <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                                            <span>Procesando...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <PlusCircle className="mr-1.5 h-3.5 w-3.5" />
-                                            <span>Añadir</span>
-                                        </>
-                                    )}
-                                </span>
-                            </Button>
-                        </div>
-
                     </div>
-                    {/* FIN FILA 2 */}
+
+                </div>
+                {/* FIN FILA 2 */}
 
             </CardContent>
         </Card>

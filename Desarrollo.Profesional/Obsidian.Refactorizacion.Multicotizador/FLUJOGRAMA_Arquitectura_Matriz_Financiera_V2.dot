@@ -1,153 +1,124 @@
-digraph MatrizFinancieraCascadeV2 {
+digraph MatrizFinanciera3PartesV2 {
     rankdir=TB;
     newrank=true;
     splines=polyline;
-    nodesep=0.9;
-    ranksep=1.8;
+    nodesep=0.8;
+    ranksep=1.5;
     
     node [shape=box, style="filled,rounded", fontname="Arial", fontsize=10, margin="0.18,0.14"];
     edge [fontname="Arial", fontsize=9];
 
     # ==========================================
-    #  NIVEL 1: CAPA DE PERSISTENCIA AUTOCONTENIDA (Supabase DB)
+    #  NIVEL 1: CAPA DE PERSISTENCIA (Supabase DB)
     # ==========================================
     subgraph cluster_lvl1 {
-        label = "NIVEL 1: CAPA DE PERSISTENCIA AUTOCONTENIDA (Supabase DB)"; 
-        style="filled"; color="#ECEFF1"; fontcolor="#37474F"; fillcolor="#F5F5F5";
+        label = "NIVEL 1: PERSISTENCIA Y MAESTROS (Supabase DB)"; 
+        style="filled"; color="#37474F"; fillcolor="#F8FAFC";
         
-        { rank=same; DB_Contracts; DB_RoutesQuotes; DB_Vessels; }
+        { rank=same; DB_Clients; DB_Contracts; DB_Quotes; DB_Vessels; }
         
-        DB_Contracts [label="📜 MAESTRO CONTRATOS (contracts)\nJSON legs_data completo: Tramos, Puertos, Distancias,\nPrecios Búnker Cotizados, Gastos Puerto, Fletes, Muellaje RF", shape=cylinder, fillcolor="#FFCDD2", penwidth=2];
-        DB_RoutesQuotes [label="💼 MAESTRO COTIZACIONES (routes_quotes)\nJSON legs_data completo: Tramos, Puertos, Distancias,\nPrecios Búnker Cotizados, Gastos Puerto, Fletes, Muellaje RF", shape=cylinder, fillcolor="#C8E6C9", penwidth=2];
-        DB_Vessels [label="🚢 MAESTRO BUQUES (vessels)\nÚnico Maestro Requerido para Adaptación:\nSpecs, DWT, Speed, TCE Req, Consumos Sea/Idle/Load/Disch", shape=cylinder, fillcolor="#FFE0B2", penwidth=2];
+        DB_Clients [label="👥 clients\n• Activos (is_prospect=false)\n• Prospectos (is_prospect=true)", shape=cylinder, fillcolor="#E0F2FE", penwidth=2];
+        DB_Contracts [label="📜 contracts / routes_clients\n• Rutas fijas (port_a ➔ port_b)\n• Tarifas base y condiciones", shape=cylinder, fillcolor="#FFCDD2", penwidth=2];
+        DB_Quotes [label="💼 routes_quotes\n• Cotizaciones comerciales guardadas\n• JSON legs_data completo autocontenido", shape=cylinder, fillcolor="#C8E6C9", penwidth=2];
+        DB_Vessels [label="🚢 vessels\n• Flota (Specs, DWT, Velocidad)\n• Consumos Sea/Idle/Port y TCE Req", shape=cylinder, fillcolor="#FFE0B2", penwidth=2];
 
-        DB_Contracts -> DB_RoutesQuotes -> DB_Vessels [style=invis];
+        DB_Clients -> DB_Contracts -> DB_Quotes -> DB_Vessels [style=invis];
     }
 
     # ==========================================
-    #  NIVEL 2: SERVICIOS PROVIDERS Y RECUPERACIÓN MODULAR
+    #  NIVEL 2: ORQUESTADOR Y CONTEXTO GLOBAL
     # ==========================================
     subgraph cluster_lvl2 {
-        label = "NIVEL 2: SERVICIOS PROVIDERS Y RECUPERACIÓN (Frontend / Backend Services)"; 
-        style="filled,dashed"; color="#78909C"; fillcolor="#FAFAFA";
+        label = "NIVEL 2: ORQUESTADOR Y MOTOR REACTIVO (ForecastContext_V2 / FastAPI Engine)"; 
+        style="filled,dashed"; color="#0284C7"; fillcolor="#F0F9FF";
         
-        { rank=same; S_Retriever; S_VesselProvider; S_Storage; }
+        { rank=same; Ctx_State; Engine_Calculate; }
 
-        S_Retriever [label="⚙️ MulticotizadorRetrieverService.unpackQuoteData()\n• Desempaqueta la ruta/quote íntegra sin consultar otros maestros\n• Fusiona contracts + routes_quotes en lista única unificada", shape=component, fillcolor="#D1C4E9", penwidth=2];
-        S_VesselProvider [label="⚙️ vesselProviderService\nResuelve e inyecta dinámicamente las specs del buque asignado\n(o del buque seleccionado para simulación global)", shape=component, fillcolor="#C5CAE9", penwidth=2];
-        S_Storage [label="⚙️ MulticotizadorStorageService\nPersistencia voluntaria tras simulación en caliente", shape=component, fillcolor="#B2DFDB"];
+        Ctx_State [label="🧠 ForecastContext_V2 (Estado Reactivo en Memoria)\n• Horizon (startDate / endDate) & dynamicMonths\n• projectionLines (Líneas activas proyectadas)\n• Visibilidad (hiddenClients, hiddenRoutes, hiddenVessels, hiddenMonths)\n• Bucle isDirty (Alerta de cambios pendientes)", shape=component, fillcolor="#BAE6FD", penwidth=2];
+        Engine_Calculate [label="⚡ Motor de Cálculo Comercial (/forecast/calculate)\n• Agregación matricial pura: [cliente][ruta][buque][mes]\n• Cálculo exacto de Días, Búnker, Puertos, P&L y TCE\n• Emisión del contrato data.aggregated_data", shape=component, fillcolor="#D1C4E9", penwidth=2];
 
-        S_Retriever -> S_VesselProvider -> S_Storage [style=invis];
+        Ctx_State -> Engine_Calculate [style=invis];
     }
 
     # ==========================================
-    #  NIVEL 3: ARTEFACTO BUSCADOR Y FILTROS SUPERIORES (FRONTEND REACT)
+    #  NIVEL 3: PARTE 2 — SELECTORES Y RIBBON DE CONSTRUCCIÓN
     # ==========================================
     subgraph cluster_lvl3 {
-        label = "NIVEL 3: ARTEFACTO BUSCADOR SUPERIOR (FinancialMatrixRibbonFilter.tsx)"; 
-        style="filled"; color="#0284C7"; fontcolor="#F3E5F5";
+        label = "PARTE 2: SELECTORES Y RIBBON DE CONSTRUCCIÓN (ForecastBuilder.tsx)"; 
+        style="filled"; color="#0F766E"; fillcolor="#F0FDFA";
         
-        { rank=same; UI_FilterClient; UI_FilterSource; UI_FilterVessel; UI_FilterDates; UI_SearchText; }
+        { rank=same; UI_Horizon; UI_ClientStep; UI_RouteStep; UI_VesselStep; UI_FreqDemurrage; UI_BtnAdd; }
 
-        UI_FilterClient [label="1. FILTRO CLIENTE\nActivos (SPCC / NEXA) vs Prospectos", shape=box, fillcolor="#E0F2FE", penwidth=2];
-        UI_FilterSource [label="2. ORIGEN DE RUTAS\n📜 contracts vs 💼 routes_quotes vs 🔄 Todas", shape=box, fillcolor="#E0F2FE", penwidth=2];
-        UI_FilterVessel [label="3. INYECTOR DE BUQUE FLOTA\nSimular toda la cartera con TABLONES, MOQUEGUA, etc.\no mantener buque original de cada cotización", shape=box, fillcolor="#FFF3E0", penwidth=2];
-        UI_FilterDates [label="4. RANGO DE VALIDEZ\nFecha Inicio y Fecha Fin", shape=box, fillcolor="#E0F2FE"];
-        UI_SearchText [label="5. BÚSQUEDA LIBRE\nFiltro dinámico 0ms por texto", shape=box, fillcolor="#E0F2FE"];
+        UI_Horizon [label="1-2. INICIO & FIN / 3. MESES\n• MonthPicker (Inicio y Fin)\n• Popover multiselección meses", shape=box, fillcolor="#CCFBF1"];
+        UI_ClientStep [label="4. CLIENTE (Activos vs Prospectos)\n• [ ACTIVOS ] (Azul/Sky: SPCC, NEXA)\n• [ PROSPECTOS ] (Morado: MARCOBRE...)", shape=box, fillcolor="#E0E7FF", penwidth=2];
+        UI_RouteStep [label="5. RUTA O COTIZACIÓN UNIFICADA\n• Fusión Pasos 2 y 3 Multicotizador\n• Rutas de Contrato + 💬 Cotizaciones", shape=box, fillcolor="#FEF3C7", penwidth=2];
+        UI_VesselStep [label="6. BUQUE\n• MOQUEGUA, TABLONES,\nCONCON TRADER, HUEMUL", shape=box, fillcolor="#DCFCE7"];
+        UI_FreqDemurrage [label="7. VIAJES & 8. DEMURRAGE (%)\n• Frecuencia mensual\n• Toggle Demurrage %", shape=box, fillcolor="#F1F5F9"];
+        UI_BtnAdd [label="➕ AÑADIR AL MODELO\n• Inyecta en projectionLines\n• Dispara recálculo", shape=cds, fillcolor="#0D9488", fontcolor="white", penwidth=2];
 
-        UI_FilterClient -> UI_FilterSource -> UI_FilterVessel -> UI_FilterDates -> UI_SearchText [style=invis];
+        UI_Horizon -> UI_ClientStep -> UI_RouteStep -> UI_VesselStep -> UI_FreqDemurrage -> UI_BtnAdd [style=invis];
     }
 
     # ==========================================
-    #  NIVEL 4: MOTOR DE CÁLCULO PURO DEL MULTICOTIZADOR (FUENTE ÚNICA DE LA VERDAD)
+    #  NIVEL 4: PARTE 1 — FILTROS DE TABLA Y EXPORTACIÓN
     # ==========================================
     subgraph cluster_lvl4 {
-        label = "NIVEL 4: MOTOR PURO DEL MULTICOTIZADOR (MulticotizadorCalculationEngine - 0ms Memoria)"; 
-        style="filled,dashed"; color="#4E342E"; fillcolor="#EFEBE9";
+        label = "PARTE 1: FILTROS DE TABLA Y EXPORTACIÓN (ForecastGridFilters.tsx)"; 
+        style="filled,dashed"; color="#C026D3"; fillcolor="#FDF4FF";
         
-        { rank=same; Engine_Input; Engine_VoyageDays; Engine_BunkerPort; Engine_PnLResult; }
+        { rank=same; Filter_Cascada; Filter_Estructura; Export_Actions; }
 
-        Engine_Input [label="📥 Input de Cálculo\n(routeData + vesselParams inyectado)\n• Usado para carga inicial y recálculo en caliente", shape=cds, fillcolor="#D7CCC8", penwidth=2];
-        Engine_VoyageDays [label="⏱️ Cálculo Días de Viaje\n• Días Mar (dist * 1.03 / speed * 24)\n• Días Puerto (Load + Disch rates & overhead)", shape=box, fillcolor="#FFE082"];
-        Engine_BunkerPort [label="🛢️ Búnker & Puertos por Buque\n• Consumos IFO & MDO según buque\n• Gastos portuarios y Muellaje RF", shape=box, fillcolor="#FFE082"];
-        Engine_PnLResult [label="💰 Consolidación PnL & TCE Exactos\n• Revenue Bruto = Tonelaje * Flete\n• (+) Refacturación Muellaje (si RF=true)\n• (-) Hire, Búnker, Puertos, Comisiones\n• VOYAGE RESULT P&L & TCE Realizado", shape=box, fillcolor="#AED581", penwidth=2];
+        Filter_Cascada [label="Filtros en Cascada (Checkboxes)\n• Clientes (Select All / Items)\n• Rutas (Grid 2 columnas)\n• Buques & Meses por Quarters (Q1..Q4)", shape=box, fillcolor="#FAE8FF"];
+        Filter_Estructura [label="Toggles de Estructura\n• Subtotales Cliente\n• Acumulado Global", shape=box, fillcolor="#F3E8FF"];
+        Export_Actions [label="Acciones de Exportación\n• 📄 PDF Vertical (Impresión A4)\n• 📄 PDF Horizontal (Apaisado A4)\n• 📊 a Excel (XLSX con formatos)", shape=box, fillcolor="#E879F9", fontcolor="white", penwidth=2];
 
-        Engine_Input -> Engine_VoyageDays -> Engine_BunkerPort -> Engine_PnLResult [style=invis];
+        Filter_Cascada -> Filter_Estructura -> Export_Actions [style=invis];
     }
 
     # ==========================================
-    #  NIVEL 5: TARJETAS DE RESUMEN FINANCIERO KPI (CONSOLIDACIÓN DE CARTERA)
+    #  NIVEL 5: PARTE 3 — GRILLA TABULAR FINANCIERA FIEL
     # ==========================================
     subgraph cluster_lvl5 {
-        label = "NIVEL 5: TARJETAS FINANCIERAS KPI CONSOLIDADAS (FinancialKpiCardsHeader.tsx)"; 
-        style="filled"; color="#33691E"; fillcolor="#F1F8E9";
+        label = "PARTE 3: GRILLA TABULAR FINANCIERA FIEL (ForecastGrid.tsx + ForecastGrid.css)"; 
+        style="filled"; color="#1E293B"; fillcolor="#F8FAFC";
         
-        { rank=same; Card_PnLTotal; Card_TCEAvg; Card_RevenueTotal; Card_BunkerTotal; Card_PortCostsTotal; }
+        { rank=same; Grid_GroupOrder; Grid_MainMetrics; Grid_SubRows; Grid_Totals; }
 
-        Card_PnLTotal [label="💰 PnL Net Total Cartera ($)\nUtilidad Acumulada de la Selección", shape=doubleoctagon, fillcolor="#C8E6C9", penwidth=2];
-        Card_TCEAvg [label="📈 TCE Promedio Flota ($/día)\nTime Charter Equivalent Ponderado", shape=rect, fillcolor="#FFF9C4", penwidth=2];
-        Card_RevenueTotal [label="💵 Ingreso Bruto Total ($)\nFlete Contratado + Refacturación RF", shape=rect, fillcolor="white"];
-        Card_BunkerTotal [label="🛢️ Búnker Total Cartera ($)\nImporte Consolidado IFO & MDO", shape=rect, fillcolor="white"];
-        Card_PortCostsTotal [label="🏛️ Gastos Puerto Total ($)\nAgencias y Muellaje Consolidado", shape=rect, fillcolor="white"];
+        Grid_GroupOrder [label="Reagrupamiento Dinámico (groupOrder)\n• Permutador Cliente ⇄ Ruta ⇄ Buque\n• Insignias de Color semánticas\n• Selector in-situ de buque por fila", shape=box, fillcolor="#E2E8F0", penwidth=2];
+        Grid_MainMetrics [label="10 Métricas Principales Consolidadas\n• Viajes (freq), Toneladas, Gross Revenue\n• Comisiones, Net Freight, Port Costs\n• Bunker Costs, Voyage Result, TCE, P/L", shape=box, fillcolor="#FEF08A", penwidth=2];
+        Grid_SubRows [label="24 Sub-Filas Desplegables ([▶] en Viajes)\n• Distancias, Días Mar/Puerto, Duración Total\n• IFO & MDO (Consumo, Precio $/T, Costo $)\n• Carga por viaje, Flete Base, Comisiones\n• Edición In-Situ de Frecuencia, Flete y Búnker", shape=box, fillcolor="#FEF9C3"];
+        Grid_Totals [label="Filas de Consolidación y Cierre\n• Subtotales por Cliente\n• Total General de Cartera\n• Acumulado Global Mes a Mes", shape=box, fillcolor="#BBF7D0", penwidth=2];
 
-        Card_PnLTotal -> Card_TCEAvg -> Card_RevenueTotal -> Card_BunkerTotal -> Card_PortCostsTotal [style=invis];
+        Grid_GroupOrder -> Grid_MainMetrics -> Grid_SubRows -> Grid_Totals [style=invis];
     }
 
     # ==========================================
-    #  NIVEL 6: CUERPO INTERACTIVO & BUCLE REACTIVO EN CALIENTE
+    #  APILAMIENTO VERTICAL (TOP-TO-BOTTOM)
     # ==========================================
-    subgraph cluster_lvl6 {
-        label = "NIVEL 6: GRILLA INTERACTIVA & EDICIÓN EN CALIENTE (FinancialMatrixGridTable.tsx)"; 
-        style="filled,dashed"; color="#1B5E20"; fillcolor="#E8F5E9";
-        
-        { rank=same; UI_AccordionRow; UI_InSituEdit; UI_ReactiveUpdate; UI_SavePersist; }
-
-        UI_AccordionRow [label="📂 Filas Acordeón Multi-Ruta\nDesglose de tramos BALLAST/LADEN, puertos y fletes", shape=component, fillcolor="#A5D6A7", penwidth=2];
-        UI_InSituEdit [label="✍️ Edición en Caliente In-Situ\n• Tonelaje Q (MT) y Flete F ($/MT)\n• Precios Búnker IFO/MDO\n• Buque asignado por fila\n• Checkbox Muellaje Refacturado [x] RF", shape=box, fillcolor="#FFF9C4", penwidth=2];
-        UI_ReactiveUpdate [label="⚡ Bucle Reactivo 0ms\nDisparo instantáneo a Engine Nivel 4\nRefresco inmediato de fila y KPIs", shape=note, fillcolor="#DCEDC8", penwidth=2];
-        UI_SavePersist [label="💾 Guardado Voluntario (Opcional)\nPersistir escenario en DB via MulticotizadorStorage", shape=box, fillcolor="#B2DFDB"];
-
-        UI_AccordionRow -> UI_InSituEdit -> UI_ReactiveUpdate -> UI_SavePersist [style=invis];
-    }
+    DB_Clients -> Ctx_State -> UI_ClientStep -> Filter_Cascada -> Grid_GroupOrder [style=invis, weight=100];
 
     # ==========================================
-    #  APILAMIENTO ESTRICTO DE NIVELES (TOP-TO-BOTTOM STACK)
-    # ==========================================
-    DB_Contracts -> S_Retriever -> UI_FilterClient -> Engine_Input -> Card_PnLTotal -> UI_AccordionRow [style=invis, weight=100];
-
-    # ==========================================
-    #  CONEXIONES FUNCIONALES ENTRE NIVELES
+    #  CONEXIONES FUNCIONALES
     # ==========================================
     
-    # 1. DB Espejo -> Servicios Provider
-    DB_Contracts -> S_Retriever [label=" Rutas contracts (JSON legs_data)"];
-    DB_RoutesQuotes -> S_Retriever [label=" Rutas routes_quotes (JSON legs_data)"];
-    DB_Vessels -> S_VesselProvider [label=" Specs Técnicas & Consumos"];
+    # DB a Contexto y Selectores
+    DB_Clients -> UI_ClientStep [label=" Activos vs Prospectos"];
+    DB_Contracts -> UI_RouteStep [label=" Rutas port_a ➔ port_b"];
+    DB_Quotes -> UI_RouteStep [label=" Cotizaciones guardadas"];
+    DB_Vessels -> UI_VesselStep [label=" Catálogo buques"];
 
-    # 2. Servicios Provider -> Ribbon Buscador UI
-    S_Retriever -> UI_FilterSource [label=" Lista Unificada de Rutas"];
-    S_VesselProvider -> UI_FilterVessel [label=" Catálogo de Buques"];
+    # Selectores a Contexto
+    UI_BtnAdd -> Ctx_State [label=" onAddLine()", color="#0D9488", penwidth=2];
+    Ctx_State -> Engine_Calculate [label=" projectionLines", color="#0284C7", penwidth=2];
+    Engine_Calculate -> Ctx_State [label=" data.aggregated_data", color="#0284C7", penwidth=2];
 
-    # 3. Ribbon Buscador UI -> Engine Multicotizador
-    UI_FilterClient -> Engine_Input [label=" Inyección de Rutas Filtradas", color="#0284C7", penwidth=2];
-    UI_FilterSource -> Engine_Input [color="#0284C7"];
-    UI_FilterVessel -> Engine_Input [label=" Buque Inyectado", color="#E65100", penwidth=2];
+    # Filtros de Tabla
+    Ctx_State -> Filter_Cascada [label=" clientList, routeList, vesselList"];
+    Filter_Cascada -> Ctx_State [label=" setHiddenClients, etc."];
+    Filter_Actions -> Export_Actions [style=invis];
 
-    # 4. Engine Multicotizador -> KPIs
-    Engine_Input -> Engine_VoyageDays -> Engine_BunkerPort -> Engine_PnLResult [style=dashed];
-    Engine_PnLResult -> Card_PnLTotal [color="#2E7D32", penwidth=2];
-    Engine_PnLResult -> Card_TCEAvg [color="#2E7D32"];
-    Engine_PnLResult -> Card_RevenueTotal [color="#2E7D32"];
-    Engine_PnLResult -> Card_BunkerTotal [color="#2E7D32"];
-    Engine_PnLResult -> Card_PortCostsTotal [color="#2E7D32"];
-
-    # 5. KPIs -> Grilla Multi-Ruta
-    Card_PnLTotal -> UI_AccordionRow [color="#2E7D32", style=dashed];
-
-    # 6. BUCLE REACTIVO DE EDICIÓN EN CALIENTE (IN-SITU)
-    UI_InSituEdit -> Engine_Input [label=" 🔄 Recálculo en Caliente 0ms (In-Situ)", color="#E65100", penwidth=2, style=bold];
-    Engine_PnLResult -> UI_ReactiveUpdate [label=" Salida Exacta 1:1", color="#2E7D32", penwidth=2];
-    UI_ReactiveUpdate -> Card_PnLTotal [label=" Actualiza Totales Cartera", color="#2E7D32", style=dashed];
-    UI_InSituEdit -> UI_SavePersist [label=" Si el usuario presiona Grabar", style=dotted];
-    UI_SavePersist -> S_Storage [label=" Persiste en Supabase DB", color="#00796B"];
+    # Grilla Tabular
+    Ctx_State -> Grid_GroupOrder [label=" Inyección de data", color="#1E293B", penwidth=2];
+    Grid_SubRows -> Ctx_State [label=" Edición in-situ (onFrequency, onTariff, onBunker) ➔ Activa isDirty", color="#DC2626", penwidth=2];
+    Grid_GroupOrder -> Grid_MainMetrics -> Grid_SubRows -> Grid_Totals [style=dashed];
 }

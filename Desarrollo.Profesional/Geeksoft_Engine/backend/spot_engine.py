@@ -322,7 +322,7 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
             Q_load = float(leg_inputs.get("destination_quantity") or leg_inputs.get("quantity") or leg_inputs.get("desc_tons") or 0)
             if Q_load == 0:
                 Q_load = float(vessel.get("dwcc") or vessel.get("dwt") or 13500)
-            c_load = float(leg_inputs.get("custom_load_rate") or leg_inputs.get("contract_agreed_load_rate") or vessel.get("act_load") or 0)
+            c_load = float(leg_inputs.get("custom_load_rate") or leg_inputs.get("contract_agreed_load_rate") or vessel.get("act_load") or 500.0)
             if c_load > 0:
                 load_days = (Q_load / c_load) / 24.0
         
@@ -616,7 +616,22 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         if dest: visited_ports.add(dest)
         
     tot_sea_days = sum(t["sea_days"] for t in processed_tramos)
-    tot_port_days = sum(t["port_days"] for t in processed_tramos)
+    puertos_cfg = payload.get("puertosConfig") or []
+    if puertos_cfg:
+        tot_port_days = 0.0
+        for p in puertos_cfg:
+            action = p.get("action", "NONE")
+            if action != "NONE":
+                tc = float(p.get("time_to_count") if p.get("time_to_count") not in (None, "") else (p.get("overhead") if p.get("overhead") not in (None, "") else 6.0))
+                pos = float(p.get("positioning") or 0.0)
+                q = float(p.get("quantity") or 13500)
+                r = float(p.get("op_rate") or 500)
+                if r <= 0: r = 500.0
+                idle_d = (tc + pos) / 24.0
+                op_d = (q / r) / 24.0
+                tot_port_days += (idle_d + op_d)
+    else:
+        tot_port_days = sum(t["port_days"] for t in processed_tramos)
     tot_days = tot_sea_days + tot_port_days
     
     tot_ifo_tons = sum(t["bunker_ifo"] for t in processed_tramos)
@@ -650,9 +665,10 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         if tr_m.get("refacturar_muellaje", True) and tr_m.get("destination_action", "NONE") != "NONE":
             tot_refacturacion_muellaje += float(tr_m.get("muellaje_cost_dest", 0))
 
-    pnl_net_utility = tot_freight_revenue - tot_port_costs - tot_bunker_costs - tot_comm_usd
+    gross_revenue_total = tot_freight_revenue + tot_refacturacion_muellaje
+    pnl_net_utility = gross_revenue_total - tot_port_costs - tot_bunker_costs - tot_comm_usd
     tce_real = pnl_net_utility / tot_days if tot_days > 0 else 0
-    # P/L correcto: voyage_result - (total_days * tce_required)
+    # P/L correcto: voyage_result - (total_days * tce_req)
     pl_vs_req = pnl_net_utility - (tot_days * tce_req)
     
     return {
@@ -667,6 +683,8 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
             "total_bunker_costs": round(tot_bunker_costs, 2),
             "total_port_costs": round(tot_port_costs, 2),
             "total_freight_revenue": round(tot_freight_revenue, 2),
+            "total_refacturacion_muellaje": round(tot_refacturacion_muellaje, 2),
+            "gross_revenue_total": round(gross_revenue_total, 2),
             "address_commission_pct": addr_comm_pct,
             "broker_commission_pct": bkr_comm_pct,
             "total_commissions": round(tot_comm_usd, 2),

@@ -322,7 +322,6 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     const isDemurrageDaysVisible = showDemurrageDays && demurrageDays !== '' && !isDemurrageExcluded;
                     
                     const isDemurrageExpanded = !!expandedDemurrages[rowKey];
-                    const demurrageRowsCount = (isDemurrageVisible || isDemurrageDaysVisible) ? (isDemurrageExpanded ? 3 : 1) : 0;
                     
                     const trips = months.map(m => {
                         const line = projectionLines.find(p => 
@@ -372,14 +371,33 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         });
                     };
 
-                    const grossRevenues = getMonthlyValues("gross_income");
+                    const freightRevenues = getMonthlyValues("gross_income_unit").map((val, i) => (val !== undefined ? val * trips[i] : (getMonthlyValues("carga_unit")[i] || 0) * (getMonthlyValues("flete_unit")[i] || 0) * trips[i]));
+                    const refacturacionMuellaje = months.map((m, i) => {
+                        const tripCount = trips[i] || 0;
+                        if (tripCount <= 0) return 0;
+                        const mVal = monthData[m]?.["refacturacion_muellaje"] || monthData[m]?.["muellaje_refacturado"] || 0;
+                        return Number(mVal) * tripCount;
+                    });
+
+                    const grossRevenues = months.map((_, i) => freightRevenues[i] + refacturacionMuellaje[i]);
                     const commissions = getMonthlyValues("total_commissions");
-                    const netRevenues = getMonthlyValues("net_income");
+                    const netRevenues = months.map((_, i) => grossRevenues[i] - (commissions[i] || 0));
+                    
                     const portCosts = getMonthlyValues("total_port_costs");
                     const bunker = getMonthlyValues("total_bunker_costs");
-                    const voyageResult = getMonthlyValues("voyage_result");
-                    const plVsRequired = getMonthlyValues("pl_vs_required");
-                    const tceCostTotal = months.map((_, i) => voyageResult[i] - plVsRequired[i]);
+                    const voyageResult = months.map((_, i) => (trips[i] > 0 ? (netRevenues[i] || 0) - (portCosts[i] || 0) - (bunker[i] || 0) : 0));
+                    
+                    const totalDaysArr = getMonthlyValues("total_duration_unit");
+                    const tceReq = getMonthlyValues("tce_required_unit");
+                    const tceCostTotal = months.map((_, i) => (trips[i] > 0 ? (tceReq[i] || 13000) * (totalDaysArr[i] || 0) * trips[i] : 0));
+                    
+                    const plVsRequired = months.map((_, i) => (trips[i] > 0 ? (voyageResult[i] || 0) - (tceCostTotal[i] || 0) : 0));
+                    
+                    const tceReal = months.map((_, i) => {
+                        const d = (totalDaysArr[i] || 0) * trips[i];
+                        return d > 0 ? (voyageResult[i] || 0) / d : 0;
+                    });
+                    const tceDiff = months.map((_, i) => (trips[i] > 0 ? (tceReal[i] - (tceReq[i] || 13000)) : 0));
 
                     grossRevenues.forEach((v, i) => level1GrossRevenue[i] += v);
                     portCosts.forEach((v, i) => level1PortCosts[i] += v);
@@ -405,7 +423,8 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
                     let demurrageArr = new Array(months.length).fill(0);
                     if (isDemurrageVisible) {
-                        demurrageArr = netRevenues.map((r, i) => r * (demurragePctArray[i] / 100));
+                        // Demurrage % calculado estrictamente sobre Freight Revenue
+                        demurrageArr = freightRevenues.map((fRev, i) => (fRev || 0) * (demurragePctArray[i] / 100));
                         demurrageArr.forEach((v, i) => level1Demurrage[i] += v);
                     } else if (isDemurrageDaysVisible) {
                         demurrageArr = trips.map((t, i) => t * demurrageDaysArray[i] * (vesselDemurrageRate[i] || 20000));
@@ -419,24 +438,29 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     const calcPct = (arr: number[]) => arr.map((v, i) => grossRevenues[i] ? (v / grossRevenues[i]) * 100 : 0);
                     const calcTotalPct = (totalVal: number, totalRev: number) => totalRev ? (totalVal / totalRev) * 100 : 0;
 
+                    const isExpandedGross = !!expandedGrossRevenue[rowKey];
+                    const isExpandedTceRow = !!expandedTce[rowKey];
+
                     const metrics: any[] = [
                         { name: "Viajes (freq)", values: trips, total: sum(trips), pct: null, totalPct: null, isCurrency: false, isTotal: false, isExpandable: true, rowKey, isExpanded },
                         { name: "Toneladas", values: tonsTotal, total: sum(tonsTotal), pct: null, totalPct: null, isCurrency: false, isTotal: false },
-                        { name: "Gross Revenue", values: grossRevenues, total: sum(grossRevenues), pct: grossRevenues.map(r => r ? 100 : 0), totalPct: sum(grossRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
-                        { name: "Comisiones", values: commissions, total: sum(commissions), pct: calcPct(commissions), totalPct: calcTotalPct(sum(commissions), sum(grossRevenues)), isCurrency: true, isTotal: false },
-                        { name: "Net Freight", values: netRevenues, total: sum(netRevenues), pct: calcPct(netRevenues), totalPct: calcTotalPct(sum(netRevenues), sum(grossRevenues)), isCurrency: true, isTotal: false },
-                        { name: "Port Costs", values: portCosts, total: sum(portCosts), pct: calcPct(portCosts), totalPct: calcTotalPct(sum(portCosts), sum(grossRevenues)), isCurrency: true, isTotal: false },
-                        { name: "Bunker Costs", values: bunker, total: sum(bunker), pct: calcPct(bunker), totalPct: calcTotalPct(sum(bunker), sum(grossRevenues)), isCurrency: true, isTotal: false },
-                        { name: "Voyage Result", values: voyageResult, total: sum(voyageResult), pct: calcPct(voyageResult), totalPct: calcTotalPct(sum(voyageResult), sum(grossRevenues)), isCurrency: true, isTotal: false },
-                        { name: "TCE x días", values: tceCostTotal, total: sum(tceCostTotal), pct: calcPct(tceCostTotal), totalPct: calcTotalPct(sum(tceCostTotal), sum(grossRevenues)), isCurrency: true, isTotal: false },
-                        { name: "P/L", values: plVsRequired, total: sum(plVsRequired), pct: calcPct(plVsRequired), totalPct: calcTotalPct(sum(plVsRequired), sum(grossRevenues)), isCurrency: true, isTotal: true }
+                        { name: "Net Revenue", values: netRevenues, total: sum(netRevenues), pct: calcPct(netRevenues), totalPct: calcTotalPct(sum(netRevenues), sum(grossRevenues)), isCurrency: true, isTotal: false, isExpandableGrossRevenue: true, rowKey, isExpanded: isExpandedGross },
+                        { name: "(-) Port Costs", values: portCosts, total: sum(portCosts), pct: calcPct(portCosts), totalPct: calcTotalPct(sum(portCosts), sum(grossRevenues)), isCurrency: true, isTotal: false },
+                        { name: "(-) Bunker Costs", values: bunker, total: sum(bunker), pct: calcPct(bunker), totalPct: calcTotalPct(sum(bunker), sum(grossRevenues)), isCurrency: true, isTotal: false },
+                        { name: "(=) Voyage Result", values: voyageResult, total: sum(voyageResult), pct: calcPct(voyageResult), totalPct: calcTotalPct(sum(voyageResult), sum(grossRevenues)), isCurrency: true, isTotal: false },
+                        { name: "TCE x días", values: tceCostTotal, total: sum(tceCostTotal), pct: calcPct(tceCostTotal), totalPct: calcTotalPct(sum(tceCostTotal), sum(grossRevenues)), isCurrency: true, isTotal: false, isExpandableTce: true, rowKey, isExpanded: isExpandedTceRow },
+                        { name: "(=) P/L", values: plVsRequired, total: sum(plVsRequired), pct: calcPct(plVsRequired), totalPct: calcTotalPct(sum(plVsRequired), sum(grossRevenues)), isCurrency: true, isTotal: true }
                     ];
 
                     if (isDemurrageVisible || isDemurrageDaysVisible) {
                         metrics.push({ name: "Demurrage", values: demurrageArr, total: sum(demurrageArr), pct: calcPct(demurrageArr), totalPct: calcTotalPct(sum(demurrageArr), sum(grossRevenues)), isCurrency: true, isTotal: false, isExpandableDemurrage: true, rowKey, isExpanded: isDemurrageExpanded });
                     }
 
-                    const vesselRowSpan = metrics.length + numSubRows + (demurrageRowsCount > 0 && (isDemurrageVisible || isDemurrageDaysVisible) ? (isDemurrageExpanded ? 2 : 0) : 0);
+                    const netRevenueSubRowsCount = isExpandedGross ? 4 : 0;
+                    const tceSubRowsCount = isExpandedTceRow ? 3 : 0;
+                    const demurrageSubRowsCount = (isDemurrageVisible || isDemurrageDaysVisible) ? (isDemurrageExpanded ? 2 : 0) : 0;
+
+                    const vesselRowSpan = metrics.length + numSubRows + netRevenueSubRowsCount + tceSubRowsCount + demurrageSubRowsCount;
                     
                     level1RowSpanRef.value += vesselRowSpan;
                     level2RowSpanRef.value += vesselRowSpan;
@@ -453,8 +477,128 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 isSubRow: false
                             });
 
+                        // 1. Acordeón de Net Revenue (4 sub-filas fijas)
+                        if (metric.isExpandableGrossRevenue && isExpandedGross) {
+                            result.push({
+                                col1: null, col2: null, col3: null,
+                                clientName: client, routeName: route, vesselName: vessel,
+                                metric: {
+                                    name: "↳ (+) Freight Revenue",
+                                    values: freightRevenues,
+                                    total: sum(freightRevenues),
+                                    pct: calcPct(freightRevenues),
+                                    totalPct: calcTotalPct(sum(freightRevenues), sum(grossRevenues)),
+                                    isCurrency: true,
+                                    isTotal: false,
+                                    isSubRowMetric: true
+                                },
+                                isSubRow: true
+                            });
 
+                            result.push({
+                                col1: null, col2: null, col3: null,
+                                clientName: client, routeName: route, vesselName: vessel,
+                                metric: {
+                                    name: "↳ (+) Pass-Through Revenue",
+                                    values: refacturacionMuellaje,
+                                    total: sum(refacturacionMuellaje),
+                                    pct: calcPct(refacturacionMuellaje),
+                                    totalPct: calcTotalPct(sum(refacturacionMuellaje), sum(grossRevenues)),
+                                    isCurrency: true,
+                                    isTotal: false,
+                                    isSubRowMetric: true
+                                },
+                                isSubRow: true
+                            });
 
+                            result.push({
+                                col1: null, col2: null, col3: null,
+                                clientName: client, routeName: route, vesselName: vessel,
+                                metric: {
+                                    name: "↳ (=) Gross Revenue",
+                                    values: grossRevenues,
+                                    total: sum(grossRevenues),
+                                    pct: grossRevenues.map(r => r ? 100 : 0),
+                                    totalPct: sum(grossRevenues) ? 100 : 0,
+                                    isCurrency: true,
+                                    isTotal: false,
+                                    isSubRowMetric: true
+                                },
+                                isSubRow: true
+                            });
+
+                            result.push({
+                                col1: null, col2: null, col3: null,
+                                clientName: client, routeName: route, vesselName: vessel,
+                                metric: {
+                                    name: "↳ (-) Comisiones",
+                                    values: commissions,
+                                    total: sum(commissions),
+                                    pct: calcPct(commissions),
+                                    totalPct: calcTotalPct(sum(commissions), sum(grossRevenues)),
+                                    isCurrency: true,
+                                    isTotal: false,
+                                    isSubRowMetric: true
+                                },
+                                isSubRow: true
+                            });
+                        }
+
+                        // 2. Acordeón de TCE x días
+                        if (metric.isExpandableTce && isExpandedTceRow) {
+                            result.push({
+                                col1: null, col2: null, col3: null,
+                                clientName: client, routeName: route, vesselName: vessel,
+                                metric: {
+                                    name: "↳ TCE Realizado ($/d)",
+                                    values: tceReal,
+                                    total: trips.reduce((a, b) => a + b, 0) > 0 ? sum(voyageResult) / sum(months.map((_, i) => (totalDaysArr[i] || 0) * trips[i])) : 0,
+                                    pct: null,
+                                    totalPct: null,
+                                    isCurrency: true,
+                                    isTceDay: true,
+                                    isTotal: false,
+                                    isSubRowMetric: true
+                                },
+                                isSubRow: true
+                            });
+
+                            result.push({
+                                col1: null, col2: null, col3: null,
+                                clientName: client, routeName: route, vesselName: vessel,
+                                metric: {
+                                    name: "↳ TCE Requerido ($/d)",
+                                    values: tceReq,
+                                    total: tceReq.find(v => typeof v === 'number' && v > 0) || 13000,
+                                    pct: null,
+                                    totalPct: null,
+                                    isCurrency: true,
+                                    isTceDay: true,
+                                    isTotal: false,
+                                    isSubRowMetric: true
+                                },
+                                isSubRow: true
+                            });
+
+                            result.push({
+                                col1: null, col2: null, col3: null,
+                                clientName: client, routeName: route, vesselName: vessel,
+                                metric: {
+                                    name: "↳ Diferencia TCE (+/- $/d)",
+                                    values: tceDiff,
+                                    total: (trips.reduce((a, b) => a + b, 0) > 0 ? sum(voyageResult) / sum(months.map((_, i) => (totalDaysArr[i] || 0) * trips[i])) : 0) - (tceReq.find(v => typeof v === 'number' && v > 0) || 13000),
+                                    pct: null,
+                                    totalPct: null,
+                                    isCurrency: true,
+                                    isTceDiff: true,
+                                    isTotal: false,
+                                    isSubRowMetric: true
+                                },
+                                isSubRow: true
+                            });
+                        }
+
+                        // 3. Acordeón de Demurrage
                         if (metric.name === "Demurrage" && isDemurrageExpanded) {
                             if (isDemurrageVisible) {
                                 result.push({
@@ -506,6 +650,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 isSubRow: true
                             });
                         }
+
 
                         if (metric.isExpandable && isExpanded) {
                             const subMetricsData = [
@@ -951,22 +1096,22 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 ) : row.metric.isExpandableGrossRevenue ? (
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); toggleGrossRevenue(row.metric.rowKey); }}
-                                        className="flex items-center gap-1 text-emerald-700 hover:text-emerald-900 focus:outline-none transition-colors font-bold w-full text-left cursor-pointer"
-                                        title="Ver desglose auditable P x Q"
+                                        className="flex items-center gap-1 text-emerald-800 hover:text-emerald-950 focus:outline-none transition-colors font-bold w-full text-left cursor-pointer"
+                                        title="Desglosar Freight Revenue, Refacturación de Muellaje y Comisiones"
                                     >
                                         {row.metric.isExpanded ? <ChevronDown className="h-4 w-4 text-emerald-600 flex-shrink-0" /> : <ChevronRight className="h-4 w-4 text-emerald-600 flex-shrink-0" />}
                                         <span>{row.metric.name}</span>
-                                        <span className="text-[9px] text-emerald-700 bg-emerald-100/80 px-1 py-0.2 rounded border border-emerald-300 ml-1 font-mono">P×Q</span>
+                                        <span className="text-[9px] text-emerald-700 bg-emerald-100/80 px-1 py-0.2 rounded border border-emerald-300 ml-1 font-mono">Net</span>
                                     </button>
                                 ) : row.metric.isExpandableTce ? (
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); toggleTce(row.metric.rowKey); }}
-                                        className="flex items-center gap-1 text-blue-700 hover:text-blue-900 focus:outline-none transition-colors font-bold w-full text-left cursor-pointer"
-                                        title="Ver desglose auditable TCE x días"
+                                        className="flex items-center gap-1 text-blue-800 hover:text-blue-950 focus:outline-none transition-colors font-bold w-full text-left cursor-pointer"
+                                        title="Desglosar TCE Realizado vs Requerido y Diferencial Diario"
                                     >
                                         {row.metric.isExpanded ? <ChevronDown className="h-4 w-4 text-blue-600 flex-shrink-0" /> : <ChevronRight className="h-4 w-4 text-blue-600 flex-shrink-0" />}
                                         <span>{row.metric.name}</span>
-                                        <span className="text-[9px] text-blue-700 bg-blue-100/80 px-1 py-0.2 rounded border border-blue-300 ml-1 font-mono">Días×TCE</span>
+                                        <span className="text-[9px] text-blue-700 bg-blue-100/80 px-1 py-0.2 rounded border border-blue-300 ml-1 font-mono">TCE $/d</span>
                                     </button>
                                 ) : row.metric.isExpandableDemurrage ? (
                                     <button 
@@ -1043,30 +1188,28 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                 }}
                                                 className="w-14 p-1 text-center block mx-auto text-xs font-bold border border-slate-200 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-amber-50"
                                             />
-                                        ) : row.metric.name === "Viajes (freq)" && !row.isClientSubtotal && !row.isGlobalTotal ? (
+                                        ) : row.metric.isBunkerPriceEditable && !row.isClientSubtotal && !row.isGlobalTotal ? (
                                             <input 
                                                 type="number"
                                                 min="0"
-                                                value={v}
+                                                step="0.1"
+                                                value={v || ''}
+                                                onChange={(e) => {
+                                                    const val = parseFloat(e.target.value) || 0;
+                                                    onBunkerPriceChange && onBunkerPriceChange(row.clientName, row.routeName, row.vesselName, months[origColIdx], row.metric.fuelType, val);
+                                                }}
+                                                className="w-16 p-1 text-right text-xs font-bold border border-slate-300 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white text-petral-blue"
+                                            />
+                                        ) : row.metric.isFrequencyEditable && !row.isClientSubtotal && !row.isGlobalTotal ? (
+                                            <input 
+                                                type="number" 
+                                                min="0"
+                                                value={v || ''} 
                                                 onChange={(e) => {
                                                     const val = parseInt(e.target.value) || 0;
                                                     onFrequencyChange && onFrequencyChange(row.clientName, row.routeName, row.vesselName, months[origColIdx], val);
                                                 }}
-                                                className="w-14 p-1 text-center block mx-auto text-xs font-bold border border-slate-200 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white"
-                                            />
-                                        ) : (row.metric.name.includes("Precio IFO") || row.metric.name.includes("Precio MDO")) && !row.isClientSubtotal && !row.isGlobalTotal ? (
-                                            <input 
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                value={v || ''}
-                                                placeholder="0.00"
-                                                onChange={(e) => {
-                                                    const val = parseFloat(e.target.value) || 0;
-                                                    const fuelType = row.metric.name.includes("IFO") ? 'ifo' : 'mdo';
-                                                    onBunkerPriceChange && onBunkerPriceChange(row.clientName, row.routeName, row.vesselName, months[origColIdx], fuelType, val);
-                                                }}
-                                                className="w-16 p-1 text-right text-xs font-bold border border-amber-300 rounded focus:border-amber-500 focus:ring-1 focus:ring-amber-500 bg-amber-50/60 text-amber-900"
+                                                className="w-12 p-1 text-center text-xs font-bold border border-slate-300 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white text-petral-blue"
                                             />
                                         ) : (row.metric.name === "Flete (USD/MT)" || row.metric.name.includes("Tarifa Flete Base P")) && !row.isClientSubtotal && !row.isGlobalTotal ? (
                                             <input 
@@ -1080,6 +1223,14 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                 }}
                                                 className="w-16 p-1 text-right text-xs font-bold border border-slate-300 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white text-petral-blue"
                                             />
+                                        ) : row.metric.isTceDiff ? (
+                                            <span className={`font-mono text-xs font-bold ${v > 0 ? 'text-emerald-700' : v < 0 ? 'text-rose-600' : 'text-slate-500'}`}>
+                                                {v > 0 ? `+${formatCurrency(v)}/d` : v < 0 ? `-${formatCurrency(Math.abs(v))}/d` : '-'}
+                                            </span>
+                                        ) : row.metric.isTceDay ? (
+                                            <span className="font-mono text-xs font-bold text-slate-700">
+                                                {v ? `${formatCurrency(v)}/d` : '-'}
+                                            </span>
                                         ) : (
                                             row.metric.isCurrency ? (
                                                 <div className="flex items-center justify-end w-full min-w-[60px]">
@@ -1131,7 +1282,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                 </span>
                                             )}
                                         </div>
-                                    ) : formatNumber(visibleTotal);
+                                    ) : (
+                                        <span className="font-bold">{formatNumber(visibleTotal)}</span>
+                                    );
                                 })())}
                             </td>
                         </tr>

@@ -4,6 +4,7 @@ import { MasterTemplate } from '../components/Masters/MasterTemplate_V2';
 import { ForecastBuilder } from '../components/CommercialForecast/ForecastBuilder_V2';
 import { useForecastContext_V2 } from '../context/ForecastContext_V2';
 import { Save, FolderOpen, X, RefreshCw } from 'lucide-react';
+import { ErrorBoundary } from '../components/common/ErrorBoundary';
 
 export const ToolsLayout_V2: React.FC = () => {
     const context = useForecastContext_V2();
@@ -77,7 +78,15 @@ export const ToolsLayout_V2: React.FC = () => {
                                         )}
                                         <span>{context.loading ? 'Calculando...' : context.isDirty ? '¡Recalcular!' : 'Recalcular'}</span>
                                     </button>
-                                    <button onClick={() => context.setShowSaveModal(true)} className="flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground h-8 px-3 rounded font-medium text-[11px] transition-colors shadow-sm cursor-pointer">
+                                    <button 
+                                        onClick={async () => {
+                                            if (context.isDirty) {
+                                                await context.handleManualRecalculate();
+                                            }
+                                            context.setShowSaveModal(true);
+                                        }} 
+                                        className="flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground h-8 px-3 rounded font-medium text-[11px] transition-colors shadow-sm cursor-pointer"
+                                    >
                                         <Save size={14} /> Guardar
                                     </button>
                                     <button 
@@ -106,8 +115,10 @@ export const ToolsLayout_V2: React.FC = () => {
                 </div>
                 )}
 
-                {/* 2. Outlet renders the specific tool (Grid, Chart, Map) */}
-                <Outlet />
+                {/* 2. Outlet renders the specific tool (Grid, Chart, Map) con ErrorBoundary de protección */}
+                <ErrorBoundary fallbackTitle="Error al cargar la herramienta interactiva">
+                    <Outlet />
+                </ErrorBoundary>
 
             </div>
 

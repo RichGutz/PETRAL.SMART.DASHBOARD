@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 
 class ProjectionLine(BaseModel):
     month_index: str = Field(..., description="Mes de la proyección, ej. '2026-07'")
@@ -12,7 +12,7 @@ class ProjectionLine(BaseModel):
     forecast_bunker_price_ifo: Optional[float] = Field(None, description="Precio proyectado de IFO (What-if)")
     forecast_bunker_price_mdo: Optional[float] = Field(None, description="Precio proyectado de MDO (What-if)")
     custom_tariff: Optional[float] = Field(None, description="Tarifa manual comercial (sobrescribe contrato)")
-    quote_id: Optional[int] = Field(None, description="ID de la cotización original (spot_id)")
+    quote_id: Optional[Union[int, str]] = Field(None, description="ID de la cotización original (spot_id o string)")
 
 class ForecastRequest(BaseModel):
     start_date: str = Field(..., description="Fecha de inicio, ej. '2026-07-01'")

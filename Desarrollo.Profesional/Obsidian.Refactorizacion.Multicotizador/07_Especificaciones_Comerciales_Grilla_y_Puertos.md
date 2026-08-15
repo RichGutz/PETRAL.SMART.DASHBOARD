@@ -423,6 +423,19 @@ El JSON guardado en `legs_data` / `quote_data` almacena el estado **absoluto y c
 
 ---
 
+### 🕵️‍♂️ 5.6. Sexta Vuelta (Serie 6: Auditoría Pericial de Descalce Multicotizador $182,961 vs Matriz Financiera $193,604)
+
+A partir del peritaje sobre la ruta **`NEXA.ILO.CALLAO.MATARANI.ILO (12.08.26)`** (Buque `TABLONES`, 13,500 MT), se identificaron las 3 causas raíz exactas que hacían que la Matriz Financiera devolviera **$193,604 USD** de PnL mientras que el Multicotizador (Verdad Absoluta) devolvía **$182,961 USD**:
+
+| # | Columna / Componente Auditado | Valor Multicotizador (Verdad Absoluta) | Valor Matriz Financiera (Backend actual) | Dictamen Pericial / Causa Raíz del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **6.1** | **`Precios de Búnker`** | **IFO $1,100 / MDO $1,700**<br/>(Costo Búnker Total: **$80,082 USD**) | **Precios de Mercado BD**<br/>(Costo Búnker Total: **$76,564 USD**) | **Crimen 6.1 (Sobrescritura de Búnker):** `forecast_service.py` no utilizaba los precios IFO/MDO específicos grabados en el payload de la cotización (`legs_data`), sino que los pisaba con precios promedio de mercado en Supabase, generando un descalce de **-$3,518 USD** en búnker. | ⚠️ DETECTADO |
+| **6.2** | **`Gastos de Puerto & Muellaje`** | **Bruto: $48,000 USD**<br/>(Callao $17k+$7k, Matarani $18k+$6k)<br/>Refacturación Muellaje: **+$13,000 USD**<br/>Neto Puerto: **$35,000 USD** | **Costo Estático BD: $41,000 USD**<br/>(Callao $24k, Matarani $17k)<br/>Refacturación Muellaje: **$0 USD** | **Crimen 6.2 (Recálculo Estático de Puertos):** `calculate_detailed_port_costs()` en `forecast_service.py` ignoraba los costos y muellaje guardados en la cotización, consultando la tabla `port_cost_static` y omitiendo por completo los +$13,000 USD de refacturación al cliente. | ⚠️ DETECTADO |
+| **6.3** | **`Días de Navegación & Hire`** | **7.1305 Días Totales**<br/>(Hire: **$106,957 USD** @ $15,000/d) | **6.2555 Días Totales**<br/>(Hire / TCE x días: **$93,832 USD**) | **Crimen 6.3 (Descalce en Rotación de Tramos):** Matriz recalculaba los días de puerto/mar usando solo el tramo principal sin considerar la rotación redonda completa (lastre `ILO ➔ CALLAO`, laden `CALLAO ➔ MATARANI`, lastre `MATARANI ➔ ILO`), subestimando el Hire en **-$13,125 USD**. | ⚠️ DETECTADO |
+| **6.4** | **`Resultado PnL Viaje`** | **$182,961 USD**<br/>($405k + $13k - $48k - $80k - $107k) | **$193,604 USD**<br/>($405k - $41k - $76.5k - $93.8k) | **Descalce Cuantitativo Neto: $10,643 USD.**<br/>La Matriz sobreestimaba el PnL al ignorar la refacturación de muellaje, subestimar el Hire (-$13.1k) y subestimar el Búnker (-$3.5k). | ⚠️ DETECTADO |
+
+---
+
 ## 📄 Archivos Relacionados
 * **Documento UI Cabecera y Búnker:** [`06_Especificaciones_Comerciales_UI_Header_y_Bunker.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/06_Especificaciones_Comerciales_UI_Header_y_Bunker.md)
 * **Documento Modularización previa:** [`04_Modularizacion_Frontend_Servicios_y_Tabs.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/04_Modularizacion_Frontend_Servicios_y_Tabs.md)

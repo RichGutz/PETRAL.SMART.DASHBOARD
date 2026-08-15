@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 
 interface InteractiveChartProps {
@@ -43,76 +43,69 @@ const getHexColor = (name: string, type: GroupBy) => {
 
 export const InteractiveChart: React.FC<InteractiveChartProps> = ({ 
     data, 
-    months,
-    demurragePct = '',
-    showDemurrage = false,
-    excludedDemurrages = [],
-    customDemurrages = {}
+    months = [], 
+    demurragePct = '', 
+    showDemurrage = false, 
+    excludedDemurrages = [], 
+    customDemurrages = {} 
 }) => {
     const [groupBy, setGroupBy] = useState<GroupBy>('vessel');
     const [filterClient, setFilterClient] = useState<string>('ALL');
     const [filterRoute, setFilterRoute] = useState<string>('ALL');
     const [filterVessel, setFilterVessel] = useState<string>('ALL');
     const [filterTradeType, setFilterTradeType] = useState<string[]>(['Cabotaje', 'Chile']);
-    const [isTradeTypeFilterOpen, setIsTradeTypeFilterOpen] = useState(false);
 
-    // Primary Axis
-    const [primaryMetric, setPrimaryMetric] = useState<PlotMetric | 'gross_and_gross_plus_dem'>('voyage_result');
-    const [primaryGraphType, setPrimaryGraphType] = useState<'bar_stack' | 'bar_group' | 'line' | 'line_straight'>('bar_stack');
-
-    // Secondary Axis
-    const [secondaryMetric, setSecondaryMetric] = useState<PlotMetric | 'gross_and_gross_plus_dem'>('none');
-    const [secondaryGraphType, setSecondaryGraphType] = useState<'bar' | 'line' | 'line_straight'>('line');
-    const [isSecondaryCumulativeSeries, setIsSecondaryCumulativeSeries] = useState<boolean>(false);
-    const [isSecondaryCumulativeGlobal, setIsSecondaryCumulativeGlobal] = useState<boolean>(false);
-    const [isSecondaryPercentage, setIsSecondaryPercentage] = useState<boolean>(false);
-
-    const [isPriOpen, setIsPriOpen] = useState<boolean>(false);
-    const [isSecOpen, setIsSecOpen] = useState<boolean>(false);
-
-    // Label settings
-    const [primaryLabelPos, setPrimaryLabelPos] = useState<'inside' | 'top' | 'none'>('inside');
-    const [primaryLabelColor, setPrimaryLabelColor] = useState<'#ffffff' | '#000000'>('#ffffff');
-    const [secondaryLabelPos, setSecondaryLabelPos] = useState<'inside' | 'top' | 'none'>('none');
-    const [secondaryLabelColor, setSecondaryLabelColor] = useState<'#ffffff' | '#000000'>('#000000');
-
-    // Filter popovers
     const [isClientFilterOpen, setIsClientFilterOpen] = useState(false);
     const [isRouteFilterOpen, setIsRouteFilterOpen] = useState(false);
     const [isVesselFilterOpen, setIsVesselFilterOpen] = useState(false);
+    const [isTradeTypeFilterOpen, setIsTradeTypeFilterOpen] = useState(false);
 
-    // Helper: infiere el tradeType de una ruta por su nombre
+    // Eje Primario
+    const [primaryMetric, setPrimaryMetric] = useState<PlotMetric | 'gross_and_gross_plus_dem'>('viajes');
+    const [primaryGraphType, setPrimaryGraphType] = useState<string>('bar_stack');
+    const [isPriOpen, setIsPriOpen] = useState(false);
+    const [primaryLabelPos, setPrimaryLabelPos] = useState<'none' | 'top' | 'inside'>('none');
+    const [primaryLabelColor, setPrimaryLabelColor] = useState<string>('#ffffff');
+
+    // Eje Secundario
+    const [secondaryMetric, setSecondaryMetric] = useState<PlotMetric | 'gross_and_gross_plus_dem'>('none');
+    const [secondaryGraphType, setSecondaryGraphType] = useState<string>('line');
+    const [isSecOpen, setIsSecOpen] = useState(false);
+    const [isSecondaryCumulativeSeries, setIsSecondaryCumulativeSeries] = useState(false);
+    const [isSecondaryCumulativeGlobal, setIsSecondaryCumulativeGlobal] = useState(false);
+    const [isSecondaryPercentage, setIsSecondaryPercentage] = useState(false);
+    const [secondaryLabelPos, setSecondaryLabelPos] = useState<'none' | 'top' | 'inside'>('none');
+    const [secondaryLabelColor, setSecondaryLabelColor] = useState<string>('#ffffff');
+
+    // Helper to determine if a route is Chile or Cabotaje
     const getTradeType = (route: string): string => {
+        if (!route) return 'Cabotaje';
         const r = route.toUpperCase();
-        if (r.includes('MEJILLONES') || r.includes('BARQUITO')) return 'Chile';
+        if (r.includes('MEJILLONES') || r.includes('BARQUITO') || r.includes('CHILE')) {
+            return 'Chile';
+        }
         return 'Cabotaje';
     };
 
-    useEffect(() => {
-        const handleOutsideClick = () => {
-            setIsPriOpen(false);
-            setIsSecOpen(false);
-            setIsClientFilterOpen(false);
-            setIsRouteFilterOpen(false);
-            setIsVesselFilterOpen(false);
-            setIsTradeTypeFilterOpen(false);
-        };
-        document.addEventListener('click', handleOutsideClick);
-        return () => document.removeEventListener('click', handleOutsideClick);
-    }, []);
-
+    // Calcular opciones de filtro a partir de aggregated_data
     const filterOptions = useMemo(() => {
         const clients = new Set<string>();
         const routes = new Set<string>();
         const vessels = new Set<string>();
 
-        if (data && data.aggregated_data) {
+        if (data && data.aggregated_data && typeof data.aggregated_data === 'object') {
             Object.entries(data.aggregated_data).forEach(([c, rMap]: any) => {
-                clients.add(c);
-                Object.entries(rMap).forEach(([r, vMap]: any) => {
-                    routes.add(r);
-                    Object.keys(vMap).forEach(v => vessels.add(v));
-                });
+                if (c) clients.add(c);
+                if (rMap && typeof rMap === 'object') {
+                    Object.entries(rMap).forEach(([r, vMap]: any) => {
+                        if (r) routes.add(r);
+                        if (vMap && typeof vMap === 'object') {
+                            Object.keys(vMap).forEach(v => {
+                                if (v) vessels.add(v);
+                            });
+                        }
+                    });
+                }
             });
         }
 
@@ -123,8 +116,13 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         };
     }, [data]);
 
+    // Filtros efectivos calculados inline (sin disparar re-renders en useEffect)
+    const effectiveFilterClient = (filterClient !== 'ALL' && filterOptions.clients.includes(filterClient)) ? filterClient : 'ALL';
+    const effectiveFilterRoute = (filterRoute !== 'ALL' && filterOptions.routes.includes(filterRoute)) ? filterRoute : 'ALL';
+    const effectiveFilterVessel = (filterVessel !== 'ALL' && filterOptions.vessels.includes(filterVessel)) ? filterVessel : 'ALL';
+
     const options = useMemo(() => {
-        if (!data || !data.aggregated_data || !months) return {};
+        if (!data || !data.aggregated_data || !months || months.length === 0) return {};
 
         const seriesMapPri: { [key: string]: { [month: string]: number } } = {};
         const seriesMapPri2: { [key: string]: { [month: string]: number } } = {};
@@ -167,34 +165,34 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         };
 
         const getMetricValue = (metrics: any, m: PlotMetric, client: string, route: string, vessel: string, month: string) => {
-            if (m === 'none') return 0;
+            if (!metrics || m === 'none') return 0;
             
-            const rawFreq = metrics['raw_inputs']?.['monthly_frequency'];
-            const freq = rawFreq !== undefined ? rawFreq : (metrics['freq'] !== undefined ? metrics['freq'] : 0);
+            const rawFreq = metrics?.['raw_inputs']?.['monthly_frequency'];
+            const freq = rawFreq !== undefined ? rawFreq : (metrics?.['freq'] !== undefined ? metrics['freq'] : 0);
             
             if (m === 'viajes') return freq;
             
             if (m === 'total_duration') {
-                const duration_unit = metrics['total_duration_unit'] || 0;
+                const duration_unit = metrics?.['total_duration_unit'] || 0;
                 return duration_unit * freq;
             }
             
-            const carga_unit = metrics['carga_unit'] || 0;
+            const carga_unit = metrics?.['carga_unit'] || 0;
             const tons = carga_unit * freq;
             if (m === 'total_cargo') return tons;
 
-            const revenue = metrics['net_income'] || 0;
+            const revenue = metrics?.['net_income'] || 0;
             
             if (m === 'demurrage' || m === 'gross_plus_dem' || m === 'yield' || m === 'yield_flete') {
                 const rowKey = `${client}-${route}-${vessel}`;
-                const isDemurrageExcluded = excludedDemurrages.includes(rowKey);
+                const isDemurrageExcluded = Array.isArray(excludedDemurrages) ? excludedDemurrages.includes(rowKey) : false;
                 const isDemurrageVisible = showDemurrage && demurragePct !== '' && !isDemurrageExcluded;
                 
                 let demurrage = 0;
                 if (isDemurrageVisible) {
                     const monthIndex = months.indexOf(month);
                     let customPct = parseFloat(demurragePct) || 0;
-                    if (customDemurrages[rowKey] && customDemurrages[rowKey][monthIndex] !== undefined) {
+                    if (customDemurrages && customDemurrages[rowKey] && customDemurrages[rowKey][monthIndex] !== undefined) {
                         customPct = parseFloat(customDemurrages[rowKey][monthIndex]) || 0;
                     }
                     demurrage = revenue * (customPct / 100);
@@ -202,21 +200,22 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 
                 if (m === 'demurrage') return demurrage;
                 if (m === 'gross_plus_dem') return revenue + demurrage;
-                // Yield is handled separately because it's a ratio, but we return 0 here to avoid NaNs if directly fetched
                 if (m === 'yield' || m === 'yield_flete') return 0; 
             }
 
-            return metrics[m] || 0;
+            return metrics?.[m] || 0;
         };
 
         // Extract and aggregate
         Object.entries(data.aggregated_data).forEach(([client, routes]: any) => {
-            if (filterClient !== 'ALL' && client !== filterClient) return;
+            if (effectiveFilterClient !== 'ALL' && client !== effectiveFilterClient) return;
+            if (!routes || typeof routes !== 'object') return;
             Object.entries(routes).forEach(([route, vessels]: any) => {
-                if (filterRoute !== 'ALL' && route !== filterRoute) return;
+                if (effectiveFilterRoute !== 'ALL' && route !== effectiveFilterRoute) return;
                 if (!filterTradeType.includes(getTradeType(route))) return;
+                if (!vessels || typeof vessels !== 'object') return;
                 Object.entries(vessels).forEach(([vessel, mData]: any) => {
-                    if (filterVessel !== 'ALL' && vessel !== filterVessel) return;
+                    if (effectiveFilterVessel !== 'ALL' && vessel !== effectiveFilterVessel) return;
 
                     Object.entries(mData).forEach(([month, metrics]: any) => {
                         let key = vessel;
@@ -527,9 +526,9 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             if (isPct || metric === 'pl_percentage') return '{value}%';
             if (metric === 'viajes') return '{value}';
             if (metric === 'total_duration') return '{value}';
-            if (metric === 'yield' || metric === 'yield_flete') return (v: number) => `$${v.toFixed(2)}`;
-            if (metric === 'total_cargo') return (v: number) => `${(v/1000).toFixed(0)}k`;
-            return (v: number) => `$${(v/1000).toFixed(0)}k`;
+            if (metric === 'yield' || metric === 'yield_flete') return (v: number) => `$${(Number(v) || 0).toFixed(2)}`;
+            if (metric === 'total_cargo') return (v: number) => `${((Number(v) || 0)/1000).toFixed(0)}k`;
+            return (v: number) => `$${((Number(v) || 0)/1000).toFixed(0)}k`;
         };
 
         return {
@@ -537,25 +536,29 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 trigger: 'axis',
                 axisPointer: { type: 'cross' },
                 formatter: (params: any) => {
-                    let tooltip = `<div style="font-weight:600;margin-bottom:4px">${params[0].axisValue}</div>`;
+                    if (!params || !Array.isArray(params) || params.length === 0) return '';
+                    let tooltip = `<div style="font-weight:600;margin-bottom:4px">${params[0]?.axisValue || ''}</div>`;
                     params.forEach((p: any) => {
-                        const isSec = p.seriesName.includes('(Sec)');
+                        const isSec = p?.seriesName?.includes('(Sec)');
                         const m = isSec ? secondaryMetric : primaryMetric;
                         const isPct = isSec ? isSecondaryPercentage : false;
                         
+                        const numVal = typeof p?.value === 'number' ? p.value : (parseFloat(p?.value) || 0);
+                        const raw = p?.data?.rawVal !== undefined ? p.data.rawVal : numVal;
                         let valStr = '';
                         if (isPct && m !== 'yield' && m !== 'yield_flete') {
-                            valStr = `${p.value.toFixed(1)}% (${p.data.rawVal.toLocaleString()})`;
+                            valStr = `${numVal.toFixed(1)}% (${Math.round(Number(raw) || 0).toLocaleString()})`;
                         } else {
-                            if (m === 'viajes') valStr = p.value.toString();
-                            else if (m === 'total_duration') valStr = `${Math.round(p.value).toLocaleString()} d`;
-                            else if (m === 'yield' || m === 'yield_flete') valStr = `$${p.value.toFixed(2)}`;
-                            else if (m === 'total_cargo') valStr = `${Math.round(p.value).toLocaleString()} MT`;
-                            else if (m === 'pl_percentage') valStr = `${p.value.toFixed(1)}%`;
-                            else valStr = `$${Math.round(p.value).toLocaleString()}`;
+                            if (m === 'viajes') valStr = numVal.toString();
+                            else if (m === 'total_duration') valStr = `${Math.round(numVal).toLocaleString()} d`;
+                            else if (m === 'yield' || m === 'yield_flete') valStr = `$${numVal.toFixed(2)}`;
+                            else if (m === 'total_cargo') valStr = `${Math.round(numVal).toLocaleString()} MT`;
+                            else if (m === 'pl_percentage') valStr = `${numVal.toFixed(1)}%`;
+                            else valStr = `$${Math.round(numVal).toLocaleString()}`;
                         }
                         
-                        tooltip += `<div>${p.marker} <b>${p.seriesName.replace(' (Pri)','').replace(' (Sec)','')}</b>: ${valStr}</div>`;
+                        const cleanName = (p?.seriesName || '').replace(' (Pri)','').replace(' (Sec)','');
+                        tooltip += `<div>${p?.marker || '•'} <b>${cleanName}</b>: ${valStr}</div>`;
                     });
                     return tooltip;
                 }
@@ -602,6 +605,26 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             color: ['#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#14B8A6', '#10B981']
         };
     }, [data, groupBy, months, filterClient, filterRoute, filterVessel, filterTradeType, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryCumulativeGlobal, isSecondaryPercentage, demurragePct, showDemurrage, excludedDemurrages, customDemurrages, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
+
+    const echartsRef = useRef<any>(null);
+
+    // Auto-resize de ECharts para evitar canvas de 0px durante transiciones de React Router o animaciones flexbox
+    useEffect(() => {
+        const handleResize = () => {
+            if (echartsRef.current) {
+                const chartInstance = echartsRef.current.getEchartsInstance();
+                if (chartInstance) chartInstance.resize();
+            }
+        };
+
+        const timers = [50, 150, 350, 600].map(delay => setTimeout(handleResize, delay));
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            timers.forEach(clearTimeout);
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [options]);
 
     if (!data || !data.aggregated_data || months.length === 0) {
         return (
@@ -1083,7 +1106,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
                 {/* Contenedor del Gráfico (Right) */}
                 <div className="flex-1 flex flex-col min-h-[650px]">
-                    <ReactECharts option={options} style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} notMerge={true} />
+                    <ReactECharts ref={echartsRef} option={options} style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} notMerge={true} />
                 </div>
             </div>
     );

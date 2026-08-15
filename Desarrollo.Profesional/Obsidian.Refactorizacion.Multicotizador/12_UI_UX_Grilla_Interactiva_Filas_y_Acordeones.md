@@ -1,0 +1,159 @@
+# 12: Especificación UI / UX — Grilla Tabular Interactiva con Acordeones Financieros (ForecastGrid)
+
+**Fecha de Actualización**: 15 de Agosto de 2026  
+**Origen**: Homologación Oficial de Métricas con Card 4 (`FINANCIAL VOYAGE RESULT`) del Multicotizador  
+**Proyecto**: PETRAL Smart Dashboard / Geeksoft Commercial Engine  
+**Estado**: Especificación Aprobada — Grilla Modular con Acordeones de Revenue y TCE  
+
+---
+
+## 🎯 1. Filosofía de la Grilla: Vista Ejecutiva con Auditoría en 1 Clic
+
+La grilla tabular de la Matriz Financiera está diseñada bajo el principio de **máxima limpieza visual por defecto** combinada con **auditoría profunda bajo demanda** mediante acordeones colapsables:
+
+```mermaid
+flowchart TD
+    subgraph G1 ["📊 VISTA EJECUTIVA (8 Filas Consolidadas)"]
+        F0["0. ▶ Viajes (freq)"]
+        F1["1.   Toneladas"]
+        F2["2. ▶ Net Revenue"]
+        F3["3.   (-) Port Costs"]
+        F4["4.   (-) Bunker Costs"]
+        F5["5.   (=) Voyage Result"]
+        F6["6. ▶ TCE x días"]
+        F7["7.   (=) P/L (Cierre Financiero)"]
+    end
+
+    subgraph A1 ["📂 ACORDEÓN 1: Net Revenue"]
+        F2 --> A1_1["↳ (+) Freight Revenue (TM × Flete)"]
+        F2 --> A1_2["↳ (+) Refacturación Muellaje (RF al cliente)"]
+        F2 --> A1_3["↳ (=) Gross Revenue (Freight + Muellaje)"]
+        F2 --> A1_4["↳ (-) Comisiones (Address % + Broker %)"]
+    end
+
+    subgraph A2 ["📂 ACORDEÓN 2: Rendimiento TCE"]
+        F6 --> A2_1["↳ TCE Realizado ($/d = Voyage Result / Días)"]
+        F6 --> A2_2["↳ TCE Requerido ($/d = Costo Buque)"]
+        F6 --> A2_3["↳ Diferencia TCE (+/- $/d)"]
+    end
+
+    subgraph A3 ["📂 ACORDEÓN 3: 24 Sub-filas Operativas"]
+        F0 --> A3_1["↳ Días de Mar, Puerto, Búnker IFO/MDO, Flete, Celdas Editables"]
+    end
+```
+
+---
+
+## 📐 2. Estructura de Filas Principales (Modo Colapsado por Defecto)
+
+Por defecto, cada buque/ruta modelada presenta **8 filas consolidadas**, logrando una presentación ejecutiva sumamente ordenada:
+
+| # | Métrica en Grilla | Tipo | Descripción / Fórmula Consolidada |
+| :---: | :--- | :---: | :--- |
+| **0** | **`▶ Viajes (freq)`** | `Numérico` | Frecuencia mensual de viajes modelados *(Desplegable con 24 sub-filas)* |
+| **1** | **`  Toneladas`** | `Numérico` | $\text{TM/viaje} \times \text{Viajes}$ |
+| **2** | **`▶ Net Revenue`** | `Moneda ($)` | **Ingreso Comercial Neto** $\mathbf{(= \text{Gross Revenue} - \text{Comisiones})}$ *(Desplegable)* |
+| **3** | **`  (-) Port Costs`** | `Moneda ($)` | Gastos de Puerto Totales (Agencias + Loading Master + Muellajes) |
+| **4** | **`  (-) Bunker Costs`** | `Moneda ($)` | Costo Total de Combustible (IFO + MDO) |
+| **5** | **`  (=) Voyage Result`** | `Moneda ($)` | $\text{Net Revenue} - \text{Port Costs} - \text{Bunker Costs}$ *(Margen Operativo)* |
+| **6** | **`▶ TCE x días`** | `Moneda ($)` | $\text{TCE Requerido} \times \text{Días Totales} \times \text{Viajes}$ *(Desplegable con TCEs $/día)* |
+| **7** | **`  (=) P/L`** | `Moneda ($)` | $\mathbf{\text{Voyage Result} - \text{TCE x días}}$ *(Línea de Resultado Neto / Cierre)* |
+| *8* | *`▶ Demurrage`* | *`Moneda ($)`* | *Opcional al activar el conmutador de Demurrage en el Ribbon* |
+
+---
+
+## 📂 3. Especificación Detallada de los Acordeones
+
+### 🅰️ Acordeón 1: Desglose de `Net Revenue` (`isExpandedNetRevenue`)
+
+Al hacer clic en el chevron **`▼ Net Revenue`**, se despliega el cálculo transparente del ingreso comercial homologado con el Multicotizador:
+
+```text
+▼ Net Revenue                                  $ 428,208.00  (Consolidado Neto)
+   ↳ (+) Freight Revenue                       $ 405,000.00  [TM/viaje × Flete × Viajes]
+   ↳ (+) Pass-Through Revenue                  $  33,333.00  [Muellaje RF × Viajes] (o '-' si es $0)
+   ↳ (=) Gross Revenue                         $ 438,333.00  [Freight Revenue + Pass-Through Revenue]
+   ↳ (-) Comisiones                            -$ 10,125.00  [Freight Revenue × (Address % + Broker %)]
+```
+
+* **Fórmulas**:
+  1. $\text{Freight Revenue} = \text{TM} \times \text{Flete} \times \text{Viajes}$
+  2. $\text{Pass-Through Revenue} = \text{Muellaje } \text{RF} \times \text{Viajes}$ *(se muestra siempre fijo, incluso con valor $0 / -)*
+  3. $\text{Gross Revenue} = \text{Freight Revenue} + \text{Pass-Through Revenue}$
+  4. $\text{Comisiones} = \text{Freight Revenue} \times (\text{Address Comm \%} + \text{Broker Comm \%})$
+  5. $\text{Net Revenue} = \text{Gross Revenue} - \text{Comisiones}$
+
+---
+
+### 🅱️ Acordeón 2: Rendimiento Diario `TCE` (`isExpandedTce`)
+
+Al hacer clic en el chevron **`▼ TCE x días`**, se despliegan las métricas unitarias diarias extraídas de la tarjeta `FINANCIAL VOYAGE RESULT`:
+
+```text
+▼ TCE x días                                   $ 240,500.00  (Hire Total: TCE Requerido × Días × Viajes)
+   ↳ TCE Realizado ($/d)                       $  16,880.00 /d  [Voyage Result / Días Totales]
+   ↳ TCE Requerido ($/d)                       $  13,000.00 /d  [Costo Diario Base del Buque]
+   ↳ Diferencia TCE (+/- $/d)                 +$   3,880.00 /d  [Verde si ≥ 0, Rojo si < 0]
+```
+
+* **Fórmulas**:
+  1. $\text{TCE x días (Hire Total)} = \text{TCE Requerido} \times \text{Días de Viaje} \times \text{Viajes}$
+  2. $\text{TCE Realizado} = \frac{\text{Voyage Result}}{\text{Días Totales}}$
+  3. $\text{TCE Requerido} = \text{Tarifa Diaria del Buque (Maestro de Flota)}$
+  4. $\text{Diferencia TCE} = \text{TCE Realizado} - \text{TCE Requerido}$
+
+---
+
+### 🅲️ Acordeón 3: Sub-filas Operativas de `Viajes (freq)` (`isExpandedRows`)
+
+Al desplegar **`▼ Viajes (freq)`**, se expanden las **24 sub-filas de desglose analítico**:
+1. `Distancia (NM)`
+2. `Días Mar`
+3. `Días Puerto`
+4. `Días Totales`
+5. `Consumo IFO (T)`
+6. `Precio IFO ($/T)` *(Celda editable in-situ)*
+7. `Costo IFO ($)`
+8. `Consumo MDO (T)`
+9. `Precio MDO ($/T)` *(Celda editable in-situ)*
+10. `Costo MDO ($)`
+11. `Búnker Total ($)`
+12. `Gastos Puerto ($)`
+13. `Carga / TM` *(Celda editable in-situ)*
+14. `Flete ($/TM)` *(Celda editable in-situ)*
+15. `Gross Income ($)`
+16. `Comisión Address (%)`
+17. `Comisión Broker (%)`
+18. `Comisiones ($)`
+19. `Net Income ($)`
+20. `Voyage Result ($)`
+21. `TCE Real ($/d)`
+22. `TCE Req ($/d)`
+23. `Costo TCE ($)`
+24. `P/L Unitario ($)`
+
+### 🅳️ Acordeón 4: Demurrage (`isDemurrageVisible` / `isDemurrageDaysVisible`)
+
+Al activar el conmutador de Demurrage en el Ribbon:
+* **Modo Porcentual (`Demurrage %`)**:
+  $$\mathbf{\text{Demurrage (USD)}} = \mathbf{\text{Freight Revenue}} \times \frac{\mathbf{\text{Demurrage \%}}}{100}$$
+  > [!IMPORTANT]
+  > El Demurrage porcentual se calcula **estrictamente como porcentaje del `Freight Revenue`** ($\text{TM} \times \text{Flete} \times \text{Viajes}$), sin incluir el muellaje refacturado ni deducciones de comisiones.
+
+* **Modo Diario (`Demurrage d`)**:
+  $$\mathbf{\text{Demurrage (USD)}} = \mathbf{\text{Viajes}} \times \mathbf{\text{Días Demurrage}} \times \mathbf{\text{Tarifa Diaria Buque/Quote ($/día)}}$$
+
+---
+
+## 🔄 4. Dinamismo de Cabecera y Jerarquía (`groupOrder`)
+
+La grilla permite permutar libremente los 3 niveles jerárquicos mediante botones interactivos `⇄` en la cabecera:
+* `[ Cliente ⇄ Ruta ⇄ Buque ]`
+* `[ Buque ⇄ Cliente ⇄ Ruta ]`
+* `[ Ruta ⇄ Buque ⇄ Cliente ]`
+
+### 📊 Subtotales y Consolidación Global:
+* **Subtotales por Nivel 1**: Fila de consolidación con botón colapsable para cada cliente/nodo principal.
+* **Total General**: Consolidado mensual de toda la flota/cartera.
+* **Total Acumulado**: Proyección sumatoria mes a mes a lo largo de todo el horizonte.
+

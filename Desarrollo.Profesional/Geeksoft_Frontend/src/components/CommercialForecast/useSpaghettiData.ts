@@ -103,20 +103,22 @@ export function useSpaghettiData(
 
         // Helper para extraer piernas físicas válidas de una ruta
         const getRouteLegs = (routeKey: string): Array<{ origin: string; dest: string }> => {
-            if (routeKey.startsWith('SPOT-')) {
-                const parts = routeKey.split(/[\.\-\s\(\)]+/);
-                const validRoutePorts = parts.filter(part => ports.some(p => p.port_id === part));
-                
-                const legs: Array<{ origin: string; dest: string }> = [];
+            const parts = routeKey.split(/[\.\-\s\(\):_]+/).map(p => p.trim().toUpperCase());
+            const validRoutePorts = parts.filter(part => ports.some(p => p.port_id.toUpperCase() === part));
+            
+            const legs: Array<{ origin: string; dest: string }> = [];
+            if (validRoutePorts.length >= 2) {
                 for (let i = 0; i < validRoutePorts.length - 1; i++) {
-                    legs.push({ origin: validRoutePorts[i], dest: validRoutePorts[i + 1] });
+                    if (validRoutePorts[i] !== validRoutePorts[i + 1]) {
+                        legs.push({ origin: validRoutePorts[i], dest: validRoutePorts[i + 1] });
+                    }
                 }
-                return legs;
-            } else {
-                const parts = routeKey.split('-');
-                if (parts.length === 2) {
-                    return [{ origin: parts[0], dest: parts[1] }];
-                }
+                if (legs.length > 0) return legs;
+            }
+
+            const dashParts = routeKey.split('-').map(p => p.trim().toUpperCase());
+            if (dashParts.length === 2 && ports.some(p => p.port_id.toUpperCase() === dashParts[0]) && ports.some(p => p.port_id.toUpperCase() === dashParts[1])) {
+                return [{ origin: dashParts[0], dest: dashParts[1] }];
             }
             return [];
         };

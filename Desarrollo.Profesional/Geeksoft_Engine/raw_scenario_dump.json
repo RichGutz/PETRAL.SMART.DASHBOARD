@@ -1,0 +1,1619 @@
+{
+  "scenario_metadata": {
+    "id": "513f2ea9-0aa4-4ee6-b420-22820e477245",
+    "name": "PRIMER.MODELO.MODULAR",
+    "start_date": "2027-01-01",
+    "end_date": "2027-12-31",
+    "user_id": "Rich.Gutz",
+    "projection_lines_count": 24
+  },
+  "first_3_projection_lines": [
+    {
+      "quantity": 15000,
+      "quote_id": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+      "client_id": "NEXA",
+      "vessel_id": "MOQUEGUA",
+      "month_index": "2027-01",
+      "custom_tariff": 25,
+      "origin_port_id": "CALLAO",
+      "monthly_frequency": 1,
+      "destination_port_id": "MEJILLONES",
+      "metadata_demurrage_pct": "",
+      "metadata_demurrage_days": "",
+      "metadata_show_demurrage": false,
+      "metadata_custom_demurrages": {},
+      "metadata_excluded_demurrages": [],
+      "metadata_show_demurrage_days": false,
+      "metadata_custom_demurrage_days": {}
+    },
+    {
+      "quantity": 15000,
+      "quote_id": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+      "client_id": "NEXA",
+      "vessel_id": "MOQUEGUA",
+      "month_index": "2027-02",
+      "custom_tariff": 25,
+      "origin_port_id": "CALLAO",
+      "monthly_frequency": 1,
+      "destination_port_id": "MEJILLONES",
+      "metadata_demurrage_pct": "",
+      "metadata_demurrage_days": "",
+      "metadata_show_demurrage": false,
+      "metadata_custom_demurrages": {},
+      "metadata_excluded_demurrages": [],
+      "metadata_show_demurrage_days": false,
+      "metadata_custom_demurrage_days": {}
+    },
+    {
+      "quantity": 15000,
+      "quote_id": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+      "client_id": "NEXA",
+      "vessel_id": "MOQUEGUA",
+      "month_index": "2027-03",
+      "custom_tariff": 25,
+      "origin_port_id": "CALLAO",
+      "monthly_frequency": 1,
+      "destination_port_id": "MEJILLONES",
+      "metadata_demurrage_pct": "",
+      "metadata_demurrage_days": "",
+      "metadata_show_demurrage": false,
+      "metadata_custom_demurrages": {},
+      "metadata_excluded_demurrages": [],
+      "metadata_show_demurrage_days": false,
+      "metadata_custom_demurrage_days": {}
+    }
+  ],
+  "simulation_output": {
+    "status": "success",
+    "aggregated_data": {
+      "NEXA": {
+        "CALLAO-MEJILLONES": {
+          "MOQUEGUA": {
+            "2027-01": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 375000.0,
+              "total_commissions": 14062.5,
+              "net_income": 360937.5,
+              "total_port_costs": 39996.0,
+              "total_bunker_costs": 89058.27,
+              "voyage_result": 231883.23,
+              "pl_vs_required": 141001.41,
+              "tce_real": 33169.25,
+              "total_duration": 6.990909,
+              "distancia_total": 1632.0,
+              "carga_unit": 15000.0,
+              "flete_unit": 25.0,
+              "gross_income_unit": 375000.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 14062.5,
+              "net_income_unit": 360937.5,
+              "sea_days_unit": 6.490909,
+              "port_days_unit": 0.5,
+              "total_duration_unit": 6.990909,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 92.0727,
+              "bunker_ifo_cost_unit": 89058.239802,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.0,
+              "bunker_mdo_cost_unit": 0.0,
+              "total_bunker_costs_unit": 89058.27,
+              "total_port_costs_unit": 39996.0,
+              "voyage_result_unit": 231883.23,
+              "tce_real_unit": 33169.25,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 90881.81700000001,
+              "pcm_projected": 20169.25,
+              "pl_vs_required_unit": 141001.41,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 92.0727 t, MDO: 0.0 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (2.5% addr + 1.25% broker)",
+                  "values": "Gross: 375000.0 | Comm: 14062.5 | Net: 360937.5"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 1632.0,
+                "quantity": 15000.0,
+                "freight_rate": 25.0
+              },
+              "route_name": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-02": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 375000.0,
+              "total_commissions": 14062.5,
+              "net_income": 360937.5,
+              "total_port_costs": 39996.0,
+              "total_bunker_costs": 89058.27,
+              "voyage_result": 231883.23,
+              "pl_vs_required": 141001.41,
+              "tce_real": 33169.25,
+              "total_duration": 6.990909,
+              "distancia_total": 1632.0,
+              "carga_unit": 15000.0,
+              "flete_unit": 25.0,
+              "gross_income_unit": 375000.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 14062.5,
+              "net_income_unit": 360937.5,
+              "sea_days_unit": 6.490909,
+              "port_days_unit": 0.5,
+              "total_duration_unit": 6.990909,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 92.0727,
+              "bunker_ifo_cost_unit": 89058.239802,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.0,
+              "bunker_mdo_cost_unit": 0.0,
+              "total_bunker_costs_unit": 89058.27,
+              "total_port_costs_unit": 39996.0,
+              "voyage_result_unit": 231883.23,
+              "tce_real_unit": 33169.25,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 90881.81700000001,
+              "pcm_projected": 20169.25,
+              "pl_vs_required_unit": 141001.41,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 92.0727 t, MDO: 0.0 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (2.5% addr + 1.25% broker)",
+                  "values": "Gross: 375000.0 | Comm: 14062.5 | Net: 360937.5"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 1632.0,
+                "quantity": 15000.0,
+                "freight_rate": 25.0
+              },
+              "route_name": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-03": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 375000.0,
+              "total_commissions": 14062.5,
+              "net_income": 360937.5,
+              "total_port_costs": 39996.0,
+              "total_bunker_costs": 89058.27,
+              "voyage_result": 231883.23,
+              "pl_vs_required": 141001.41,
+              "tce_real": 33169.25,
+              "total_duration": 6.990909,
+              "distancia_total": 1632.0,
+              "carga_unit": 15000.0,
+              "flete_unit": 25.0,
+              "gross_income_unit": 375000.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 14062.5,
+              "net_income_unit": 360937.5,
+              "sea_days_unit": 6.490909,
+              "port_days_unit": 0.5,
+              "total_duration_unit": 6.990909,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 92.0727,
+              "bunker_ifo_cost_unit": 89058.239802,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.0,
+              "bunker_mdo_cost_unit": 0.0,
+              "total_bunker_costs_unit": 89058.27,
+              "total_port_costs_unit": 39996.0,
+              "voyage_result_unit": 231883.23,
+              "tce_real_unit": 33169.25,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 90881.81700000001,
+              "pcm_projected": 20169.25,
+              "pl_vs_required_unit": 141001.41,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 92.0727 t, MDO: 0.0 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (2.5% addr + 1.25% broker)",
+                  "values": "Gross: 375000.0 | Comm: 14062.5 | Net: 360937.5"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 1632.0,
+                "quantity": 15000.0,
+                "freight_rate": 25.0
+              },
+              "route_name": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-04": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 375000.0,
+              "total_commissions": 14062.5,
+              "net_income": 360937.5,
+              "total_port_costs": 39996.0,
+              "total_bunker_costs": 89058.27,
+              "voyage_result": 231883.23,
+              "pl_vs_required": 141001.41,
+              "tce_real": 33169.25,
+              "total_duration": 6.990909,
+              "distancia_total": 1632.0,
+              "carga_unit": 15000.0,
+              "flete_unit": 25.0,
+              "gross_income_unit": 375000.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 14062.5,
+              "net_income_unit": 360937.5,
+              "sea_days_unit": 6.490909,
+              "port_days_unit": 0.5,
+              "total_duration_unit": 6.990909,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 92.0727,
+              "bunker_ifo_cost_unit": 89058.239802,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.0,
+              "bunker_mdo_cost_unit": 0.0,
+              "total_bunker_costs_unit": 89058.27,
+              "total_port_costs_unit": 39996.0,
+              "voyage_result_unit": 231883.23,
+              "tce_real_unit": 33169.25,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 90881.81700000001,
+              "pcm_projected": 20169.25,
+              "pl_vs_required_unit": 141001.41,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 92.0727 t, MDO: 0.0 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (2.5% addr + 1.25% broker)",
+                  "values": "Gross: 375000.0 | Comm: 14062.5 | Net: 360937.5"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 1632.0,
+                "quantity": 15000.0,
+                "freight_rate": 25.0
+              },
+              "route_name": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-05": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 375000.0,
+              "total_commissions": 14062.5,
+              "net_income": 360937.5,
+              "total_port_costs": 39996.0,
+              "total_bunker_costs": 89058.27,
+              "voyage_result": 231883.23,
+              "pl_vs_required": 141001.41,
+              "tce_real": 33169.25,
+              "total_duration": 6.990909,
+              "distancia_total": 1632.0,
+              "carga_unit": 15000.0,
+              "flete_unit": 25.0,
+              "gross_income_unit": 375000.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 14062.5,
+              "net_income_unit": 360937.5,
+              "sea_days_unit": 6.490909,
+              "port_days_unit": 0.5,
+              "total_duration_unit": 6.990909,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 92.0727,
+              "bunker_ifo_cost_unit": 89058.239802,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.0,
+              "bunker_mdo_cost_unit": 0.0,
+              "total_bunker_costs_unit": 89058.27,
+              "total_port_costs_unit": 39996.0,
+              "voyage_result_unit": 231883.23,
+              "tce_real_unit": 33169.25,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 90881.81700000001,
+              "pcm_projected": 20169.25,
+              "pl_vs_required_unit": 141001.41,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 92.0727 t, MDO: 0.0 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (2.5% addr + 1.25% broker)",
+                  "values": "Gross: 375000.0 | Comm: 14062.5 | Net: 360937.5"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 1632.0,
+                "quantity": 15000.0,
+                "freight_rate": 25.0
+              },
+              "route_name": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-06": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 375000.0,
+              "total_commissions": 14062.5,
+              "net_income": 360937.5,
+              "total_port_costs": 39996.0,
+              "total_bunker_costs": 89058.27,
+              "voyage_result": 231883.23,
+              "pl_vs_required": 141001.41,
+              "tce_real": 33169.25,
+              "total_duration": 6.990909,
+              "distancia_total": 1632.0,
+              "carga_unit": 15000.0,
+              "flete_unit": 25.0,
+              "gross_income_unit": 375000.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 14062.5,
+              "net_income_unit": 360937.5,
+              "sea_days_unit": 6.490909,
+              "port_days_unit": 0.5,
+              "total_duration_unit": 6.990909,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 92.0727,
+              "bunker_ifo_cost_unit": 89058.239802,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.0,
+              "bunker_mdo_cost_unit": 0.0,
+              "total_bunker_costs_unit": 89058.27,
+              "total_port_costs_unit": 39996.0,
+              "voyage_result_unit": 231883.23,
+              "tce_real_unit": 33169.25,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 90881.81700000001,
+              "pcm_projected": 20169.25,
+              "pl_vs_required_unit": 141001.41,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 92.0727 t, MDO: 0.0 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (2.5% addr + 1.25% broker)",
+                  "values": "Gross: 375000.0 | Comm: 14062.5 | Net: 360937.5"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 1632.0,
+                "quantity": 15000.0,
+                "freight_rate": 25.0
+              },
+              "route_name": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-07": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 375000.0,
+              "total_commissions": 14062.5,
+              "net_income": 360937.5,
+              "total_port_costs": 39996.0,
+              "total_bunker_costs": 89058.27,
+              "voyage_result": 231883.23,
+              "pl_vs_required": 141001.41,
+              "tce_real": 33169.25,
+              "total_duration": 6.990909,
+              "distancia_total": 1632.0,
+              "carga_unit": 15000.0,
+              "flete_unit": 25.0,
+              "gross_income_unit": 375000.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 14062.5,
+              "net_income_unit": 360937.5,
+              "sea_days_unit": 6.490909,
+              "port_days_unit": 0.5,
+              "total_duration_unit": 6.990909,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 92.0727,
+              "bunker_ifo_cost_unit": 89058.239802,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.0,
+              "bunker_mdo_cost_unit": 0.0,
+              "total_bunker_costs_unit": 89058.27,
+              "total_port_costs_unit": 39996.0,
+              "voyage_result_unit": 231883.23,
+              "tce_real_unit": 33169.25,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 90881.81700000001,
+              "pcm_projected": 20169.25,
+              "pl_vs_required_unit": 141001.41,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 92.0727 t, MDO: 0.0 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (2.5% addr + 1.25% broker)",
+                  "values": "Gross: 375000.0 | Comm: 14062.5 | Net: 360937.5"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 1632.0,
+                "quantity": 15000.0,
+                "freight_rate": 25.0
+              },
+              "route_name": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-08": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 375000.0,
+              "total_commissions": 14062.5,
+              "net_income": 360937.5,
+              "total_port_costs": 39996.0,
+              "total_bunker_costs": 89058.27,
+              "voyage_result": 231883.23,
+              "pl_vs_required": 141001.41,
+              "tce_real": 33169.25,
+              "total_duration": 6.990909,
+              "distancia_total": 1632.0,
+              "carga_unit": 15000.0,
+              "flete_unit": 25.0,
+              "gross_income_unit": 375000.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 14062.5,
+              "net_income_unit": 360937.5,
+              "sea_days_unit": 6.490909,
+              "port_days_unit": 0.5,
+              "total_duration_unit": 6.990909,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 92.0727,
+              "bunker_ifo_cost_unit": 89058.239802,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.0,
+              "bunker_mdo_cost_unit": 0.0,
+              "total_bunker_costs_unit": 89058.27,
+              "total_port_costs_unit": 39996.0,
+              "voyage_result_unit": 231883.23,
+              "tce_real_unit": 33169.25,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 90881.81700000001,
+              "pcm_projected": 20169.25,
+              "pl_vs_required_unit": 141001.41,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 92.0727 t, MDO: 0.0 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (2.5% addr + 1.25% broker)",
+                  "values": "Gross: 375000.0 | Comm: 14062.5 | Net: 360937.5"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 1632.0,
+                "quantity": 15000.0,
+                "freight_rate": 25.0
+              },
+              "route_name": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-09": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 375000.0,
+              "total_commissions": 14062.5,
+              "net_income": 360937.5,
+              "total_port_costs": 39996.0,
+              "total_bunker_costs": 89058.27,
+              "voyage_result": 231883.23,
+              "pl_vs_required": 141001.41,
+              "tce_real": 33169.25,
+              "total_duration": 6.990909,
+              "distancia_total": 1632.0,
+              "carga_unit": 15000.0,
+              "flete_unit": 25.0,
+              "gross_income_unit": 375000.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 14062.5,
+              "net_income_unit": 360937.5,
+              "sea_days_unit": 6.490909,
+              "port_days_unit": 0.5,
+              "total_duration_unit": 6.990909,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 92.0727,
+              "bunker_ifo_cost_unit": 89058.239802,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.0,
+              "bunker_mdo_cost_unit": 0.0,
+              "total_bunker_costs_unit": 89058.27,
+              "total_port_costs_unit": 39996.0,
+              "voyage_result_unit": 231883.23,
+              "tce_real_unit": 33169.25,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 90881.81700000001,
+              "pcm_projected": 20169.25,
+              "pl_vs_required_unit": 141001.41,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 92.0727 t, MDO: 0.0 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (2.5% addr + 1.25% broker)",
+                  "values": "Gross: 375000.0 | Comm: 14062.5 | Net: 360937.5"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 1632.0,
+                "quantity": 15000.0,
+                "freight_rate": 25.0
+              },
+              "route_name": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-10": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 375000.0,
+              "total_commissions": 14062.5,
+              "net_income": 360937.5,
+              "total_port_costs": 39996.0,
+              "total_bunker_costs": 89058.27,
+              "voyage_result": 231883.23,
+              "pl_vs_required": 141001.41,
+              "tce_real": 33169.25,
+              "total_duration": 6.990909,
+              "distancia_total": 1632.0,
+              "carga_unit": 15000.0,
+              "flete_unit": 25.0,
+              "gross_income_unit": 375000.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 14062.5,
+              "net_income_unit": 360937.5,
+              "sea_days_unit": 6.490909,
+              "port_days_unit": 0.5,
+              "total_duration_unit": 6.990909,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 92.0727,
+              "bunker_ifo_cost_unit": 89058.239802,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.0,
+              "bunker_mdo_cost_unit": 0.0,
+              "total_bunker_costs_unit": 89058.27,
+              "total_port_costs_unit": 39996.0,
+              "voyage_result_unit": 231883.23,
+              "tce_real_unit": 33169.25,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 90881.81700000001,
+              "pcm_projected": 20169.25,
+              "pl_vs_required_unit": 141001.41,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 92.0727 t, MDO: 0.0 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (2.5% addr + 1.25% broker)",
+                  "values": "Gross: 375000.0 | Comm: 14062.5 | Net: 360937.5"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 1632.0,
+                "quantity": 15000.0,
+                "freight_rate": 25.0
+              },
+              "route_name": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-11": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 375000.0,
+              "total_commissions": 14062.5,
+              "net_income": 360937.5,
+              "total_port_costs": 39996.0,
+              "total_bunker_costs": 89058.27,
+              "voyage_result": 231883.23,
+              "pl_vs_required": 141001.41,
+              "tce_real": 33169.25,
+              "total_duration": 6.990909,
+              "distancia_total": 1632.0,
+              "carga_unit": 15000.0,
+              "flete_unit": 25.0,
+              "gross_income_unit": 375000.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 14062.5,
+              "net_income_unit": 360937.5,
+              "sea_days_unit": 6.490909,
+              "port_days_unit": 0.5,
+              "total_duration_unit": 6.990909,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 92.0727,
+              "bunker_ifo_cost_unit": 89058.239802,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.0,
+              "bunker_mdo_cost_unit": 0.0,
+              "total_bunker_costs_unit": 89058.27,
+              "total_port_costs_unit": 39996.0,
+              "voyage_result_unit": 231883.23,
+              "tce_real_unit": 33169.25,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 90881.81700000001,
+              "pcm_projected": 20169.25,
+              "pl_vs_required_unit": 141001.41,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 92.0727 t, MDO: 0.0 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (2.5% addr + 1.25% broker)",
+                  "values": "Gross: 375000.0 | Comm: 14062.5 | Net: 360937.5"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 1632.0,
+                "quantity": 15000.0,
+                "freight_rate": 25.0
+              },
+              "route_name": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-12": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 375000.0,
+              "total_commissions": 14062.5,
+              "net_income": 360937.5,
+              "total_port_costs": 39996.0,
+              "total_bunker_costs": 89058.27,
+              "voyage_result": 231883.23,
+              "pl_vs_required": 141001.41,
+              "tce_real": 33169.25,
+              "total_duration": 6.990909,
+              "distancia_total": 1632.0,
+              "carga_unit": 15000.0,
+              "flete_unit": 25.0,
+              "gross_income_unit": 375000.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 14062.5,
+              "net_income_unit": 360937.5,
+              "sea_days_unit": 6.490909,
+              "port_days_unit": 0.5,
+              "total_duration_unit": 6.990909,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 92.0727,
+              "bunker_ifo_cost_unit": 89058.239802,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.0,
+              "bunker_mdo_cost_unit": 0.0,
+              "total_bunker_costs_unit": 89058.27,
+              "total_port_costs_unit": 39996.0,
+              "voyage_result_unit": 231883.23,
+              "tce_real_unit": 33169.25,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 90881.81700000001,
+              "pcm_projected": 20169.25,
+              "pl_vs_required_unit": 141001.41,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 92.0727 t, MDO: 0.0 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (2.5% addr + 1.25% broker)",
+                  "values": "Gross: 375000.0 | Comm: 14062.5 | Net: 360937.5"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 1632.0,
+                "quantity": 15000.0,
+                "freight_rate": 25.0
+              },
+              "route_name": "NEXA.ILO.CALLAO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            }
+          }
+        }
+      },
+      "SPCC": {
+        "ILO-MEJILLONES": {
+          "MOQUEGUA": {
+            "2027-01": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 281745.0,
+              "total_commissions": 0.0,
+              "net_income": 281745.0,
+              "total_port_costs": 88833.0,
+              "total_bunker_costs": 43482.02,
+              "voyage_result": 149429.98,
+              "pl_vs_required": 87752.13,
+              "tce_real": 31495.74,
+              "total_duration": 4.74445,
+              "distancia_total": 670.0,
+              "carga_unit": 13500.0,
+              "flete_unit": 20.87,
+              "gross_income_unit": 281745.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 0.0,
+              "net_income_unit": 281745.0,
+              "sea_days_unit": 2.614015,
+              "port_days_unit": 2.130435,
+              "total_duration_unit": 4.74445,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 43.6658,
+              "bunker_ifo_cost_unit": 42236.181708,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.8152,
+              "bunker_mdo_cost_unit": 1245.837552,
+              "total_bunker_costs_unit": 43482.02,
+              "total_port_costs_unit": 88833.0,
+              "voyage_result_unit": 149429.98,
+              "tce_real_unit": 31495.74,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 61677.85,
+              "pcm_projected": 18495.74,
+              "pl_vs_required_unit": 87752.13,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 43.6658 t, MDO: 0.8152 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (0.0% addr + 0.0% broker)",
+                  "values": "Gross: 281745.0 | Comm: 0.0 | Net: 281745.0"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 670.0,
+                "quantity": 13500.0,
+                "freight_rate": 20.87
+              },
+              "route_name": "SPCC.ILO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-02": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 281745.0,
+              "total_commissions": 0.0,
+              "net_income": 281745.0,
+              "total_port_costs": 88833.0,
+              "total_bunker_costs": 43482.02,
+              "voyage_result": 149429.98,
+              "pl_vs_required": 87752.13,
+              "tce_real": 31495.74,
+              "total_duration": 4.74445,
+              "distancia_total": 670.0,
+              "carga_unit": 13500.0,
+              "flete_unit": 20.87,
+              "gross_income_unit": 281745.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 0.0,
+              "net_income_unit": 281745.0,
+              "sea_days_unit": 2.614015,
+              "port_days_unit": 2.130435,
+              "total_duration_unit": 4.74445,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 43.6658,
+              "bunker_ifo_cost_unit": 42236.181708,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.8152,
+              "bunker_mdo_cost_unit": 1245.837552,
+              "total_bunker_costs_unit": 43482.02,
+              "total_port_costs_unit": 88833.0,
+              "voyage_result_unit": 149429.98,
+              "tce_real_unit": 31495.74,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 61677.85,
+              "pcm_projected": 18495.74,
+              "pl_vs_required_unit": 87752.13,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 43.6658 t, MDO: 0.8152 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (0.0% addr + 0.0% broker)",
+                  "values": "Gross: 281745.0 | Comm: 0.0 | Net: 281745.0"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 670.0,
+                "quantity": 13500.0,
+                "freight_rate": 20.87
+              },
+              "route_name": "SPCC.ILO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-03": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 281745.0,
+              "total_commissions": 0.0,
+              "net_income": 281745.0,
+              "total_port_costs": 88833.0,
+              "total_bunker_costs": 43482.02,
+              "voyage_result": 149429.98,
+              "pl_vs_required": 87752.13,
+              "tce_real": 31495.74,
+              "total_duration": 4.74445,
+              "distancia_total": 670.0,
+              "carga_unit": 13500.0,
+              "flete_unit": 20.87,
+              "gross_income_unit": 281745.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 0.0,
+              "net_income_unit": 281745.0,
+              "sea_days_unit": 2.614015,
+              "port_days_unit": 2.130435,
+              "total_duration_unit": 4.74445,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 43.6658,
+              "bunker_ifo_cost_unit": 42236.181708,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.8152,
+              "bunker_mdo_cost_unit": 1245.837552,
+              "total_bunker_costs_unit": 43482.02,
+              "total_port_costs_unit": 88833.0,
+              "voyage_result_unit": 149429.98,
+              "tce_real_unit": 31495.74,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 61677.85,
+              "pcm_projected": 18495.74,
+              "pl_vs_required_unit": 87752.13,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 43.6658 t, MDO: 0.8152 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (0.0% addr + 0.0% broker)",
+                  "values": "Gross: 281745.0 | Comm: 0.0 | Net: 281745.0"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 670.0,
+                "quantity": 13500.0,
+                "freight_rate": 20.87
+              },
+              "route_name": "SPCC.ILO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-04": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 281745.0,
+              "total_commissions": 0.0,
+              "net_income": 281745.0,
+              "total_port_costs": 88833.0,
+              "total_bunker_costs": 43482.02,
+              "voyage_result": 149429.98,
+              "pl_vs_required": 87752.13,
+              "tce_real": 31495.74,
+              "total_duration": 4.74445,
+              "distancia_total": 670.0,
+              "carga_unit": 13500.0,
+              "flete_unit": 20.87,
+              "gross_income_unit": 281745.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 0.0,
+              "net_income_unit": 281745.0,
+              "sea_days_unit": 2.614015,
+              "port_days_unit": 2.130435,
+              "total_duration_unit": 4.74445,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 43.6658,
+              "bunker_ifo_cost_unit": 42236.181708,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.8152,
+              "bunker_mdo_cost_unit": 1245.837552,
+              "total_bunker_costs_unit": 43482.02,
+              "total_port_costs_unit": 88833.0,
+              "voyage_result_unit": 149429.98,
+              "tce_real_unit": 31495.74,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 61677.85,
+              "pcm_projected": 18495.74,
+              "pl_vs_required_unit": 87752.13,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 43.6658 t, MDO: 0.8152 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (0.0% addr + 0.0% broker)",
+                  "values": "Gross: 281745.0 | Comm: 0.0 | Net: 281745.0"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 670.0,
+                "quantity": 13500.0,
+                "freight_rate": 20.87
+              },
+              "route_name": "SPCC.ILO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-05": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 281745.0,
+              "total_commissions": 0.0,
+              "net_income": 281745.0,
+              "total_port_costs": 88833.0,
+              "total_bunker_costs": 43482.02,
+              "voyage_result": 149429.98,
+              "pl_vs_required": 87752.13,
+              "tce_real": 31495.74,
+              "total_duration": 4.74445,
+              "distancia_total": 670.0,
+              "carga_unit": 13500.0,
+              "flete_unit": 20.87,
+              "gross_income_unit": 281745.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 0.0,
+              "net_income_unit": 281745.0,
+              "sea_days_unit": 2.614015,
+              "port_days_unit": 2.130435,
+              "total_duration_unit": 4.74445,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 43.6658,
+              "bunker_ifo_cost_unit": 42236.181708,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.8152,
+              "bunker_mdo_cost_unit": 1245.837552,
+              "total_bunker_costs_unit": 43482.02,
+              "total_port_costs_unit": 88833.0,
+              "voyage_result_unit": 149429.98,
+              "tce_real_unit": 31495.74,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 61677.85,
+              "pcm_projected": 18495.74,
+              "pl_vs_required_unit": 87752.13,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 43.6658 t, MDO: 0.8152 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (0.0% addr + 0.0% broker)",
+                  "values": "Gross: 281745.0 | Comm: 0.0 | Net: 281745.0"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 670.0,
+                "quantity": 13500.0,
+                "freight_rate": 20.87
+              },
+              "route_name": "SPCC.ILO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-06": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 281745.0,
+              "total_commissions": 0.0,
+              "net_income": 281745.0,
+              "total_port_costs": 88833.0,
+              "total_bunker_costs": 43482.02,
+              "voyage_result": 149429.98,
+              "pl_vs_required": 87752.13,
+              "tce_real": 31495.74,
+              "total_duration": 4.74445,
+              "distancia_total": 670.0,
+              "carga_unit": 13500.0,
+              "flete_unit": 20.87,
+              "gross_income_unit": 281745.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 0.0,
+              "net_income_unit": 281745.0,
+              "sea_days_unit": 2.614015,
+              "port_days_unit": 2.130435,
+              "total_duration_unit": 4.74445,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 43.6658,
+              "bunker_ifo_cost_unit": 42236.181708,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.8152,
+              "bunker_mdo_cost_unit": 1245.837552,
+              "total_bunker_costs_unit": 43482.02,
+              "total_port_costs_unit": 88833.0,
+              "voyage_result_unit": 149429.98,
+              "tce_real_unit": 31495.74,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 61677.85,
+              "pcm_projected": 18495.74,
+              "pl_vs_required_unit": 87752.13,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 43.6658 t, MDO: 0.8152 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (0.0% addr + 0.0% broker)",
+                  "values": "Gross: 281745.0 | Comm: 0.0 | Net: 281745.0"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 670.0,
+                "quantity": 13500.0,
+                "freight_rate": 20.87
+              },
+              "route_name": "SPCC.ILO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-07": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 281745.0,
+              "total_commissions": 0.0,
+              "net_income": 281745.0,
+              "total_port_costs": 88833.0,
+              "total_bunker_costs": 43482.02,
+              "voyage_result": 149429.98,
+              "pl_vs_required": 87752.13,
+              "tce_real": 31495.74,
+              "total_duration": 4.74445,
+              "distancia_total": 670.0,
+              "carga_unit": 13500.0,
+              "flete_unit": 20.87,
+              "gross_income_unit": 281745.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 0.0,
+              "net_income_unit": 281745.0,
+              "sea_days_unit": 2.614015,
+              "port_days_unit": 2.130435,
+              "total_duration_unit": 4.74445,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 43.6658,
+              "bunker_ifo_cost_unit": 42236.181708,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.8152,
+              "bunker_mdo_cost_unit": 1245.837552,
+              "total_bunker_costs_unit": 43482.02,
+              "total_port_costs_unit": 88833.0,
+              "voyage_result_unit": 149429.98,
+              "tce_real_unit": 31495.74,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 61677.85,
+              "pcm_projected": 18495.74,
+              "pl_vs_required_unit": 87752.13,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 43.6658 t, MDO: 0.8152 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (0.0% addr + 0.0% broker)",
+                  "values": "Gross: 281745.0 | Comm: 0.0 | Net: 281745.0"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 670.0,
+                "quantity": 13500.0,
+                "freight_rate": 20.87
+              },
+              "route_name": "SPCC.ILO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-08": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 281745.0,
+              "total_commissions": 0.0,
+              "net_income": 281745.0,
+              "total_port_costs": 88833.0,
+              "total_bunker_costs": 43482.02,
+              "voyage_result": 149429.98,
+              "pl_vs_required": 87752.13,
+              "tce_real": 31495.74,
+              "total_duration": 4.74445,
+              "distancia_total": 670.0,
+              "carga_unit": 13500.0,
+              "flete_unit": 20.87,
+              "gross_income_unit": 281745.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 0.0,
+              "net_income_unit": 281745.0,
+              "sea_days_unit": 2.614015,
+              "port_days_unit": 2.130435,
+              "total_duration_unit": 4.74445,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 43.6658,
+              "bunker_ifo_cost_unit": 42236.181708,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.8152,
+              "bunker_mdo_cost_unit": 1245.837552,
+              "total_bunker_costs_unit": 43482.02,
+              "total_port_costs_unit": 88833.0,
+              "voyage_result_unit": 149429.98,
+              "tce_real_unit": 31495.74,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 61677.85,
+              "pcm_projected": 18495.74,
+              "pl_vs_required_unit": 87752.13,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 43.6658 t, MDO: 0.8152 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (0.0% addr + 0.0% broker)",
+                  "values": "Gross: 281745.0 | Comm: 0.0 | Net: 281745.0"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 670.0,
+                "quantity": 13500.0,
+                "freight_rate": 20.87
+              },
+              "route_name": "SPCC.ILO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-09": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 281745.0,
+              "total_commissions": 0.0,
+              "net_income": 281745.0,
+              "total_port_costs": 88833.0,
+              "total_bunker_costs": 43482.02,
+              "voyage_result": 149429.98,
+              "pl_vs_required": 87752.13,
+              "tce_real": 31495.74,
+              "total_duration": 4.74445,
+              "distancia_total": 670.0,
+              "carga_unit": 13500.0,
+              "flete_unit": 20.87,
+              "gross_income_unit": 281745.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 0.0,
+              "net_income_unit": 281745.0,
+              "sea_days_unit": 2.614015,
+              "port_days_unit": 2.130435,
+              "total_duration_unit": 4.74445,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 43.6658,
+              "bunker_ifo_cost_unit": 42236.181708,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.8152,
+              "bunker_mdo_cost_unit": 1245.837552,
+              "total_bunker_costs_unit": 43482.02,
+              "total_port_costs_unit": 88833.0,
+              "voyage_result_unit": 149429.98,
+              "tce_real_unit": 31495.74,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 61677.85,
+              "pcm_projected": 18495.74,
+              "pl_vs_required_unit": 87752.13,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 43.6658 t, MDO: 0.8152 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (0.0% addr + 0.0% broker)",
+                  "values": "Gross: 281745.0 | Comm: 0.0 | Net: 281745.0"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 670.0,
+                "quantity": 13500.0,
+                "freight_rate": 20.87
+              },
+              "route_name": "SPCC.ILO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-10": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 281745.0,
+              "total_commissions": 0.0,
+              "net_income": 281745.0,
+              "total_port_costs": 88833.0,
+              "total_bunker_costs": 43482.02,
+              "voyage_result": 149429.98,
+              "pl_vs_required": 87752.13,
+              "tce_real": 31495.74,
+              "total_duration": 4.74445,
+              "distancia_total": 670.0,
+              "carga_unit": 13500.0,
+              "flete_unit": 20.87,
+              "gross_income_unit": 281745.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 0.0,
+              "net_income_unit": 281745.0,
+              "sea_days_unit": 2.614015,
+              "port_days_unit": 2.130435,
+              "total_duration_unit": 4.74445,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 43.6658,
+              "bunker_ifo_cost_unit": 42236.181708,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.8152,
+              "bunker_mdo_cost_unit": 1245.837552,
+              "total_bunker_costs_unit": 43482.02,
+              "total_port_costs_unit": 88833.0,
+              "voyage_result_unit": 149429.98,
+              "tce_real_unit": 31495.74,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 61677.85,
+              "pcm_projected": 18495.74,
+              "pl_vs_required_unit": 87752.13,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 43.6658 t, MDO: 0.8152 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (0.0% addr + 0.0% broker)",
+                  "values": "Gross: 281745.0 | Comm: 0.0 | Net: 281745.0"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 670.0,
+                "quantity": 13500.0,
+                "freight_rate": 20.87
+              },
+              "route_name": "SPCC.ILO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-11": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 281745.0,
+              "total_commissions": 0.0,
+              "net_income": 281745.0,
+              "total_port_costs": 88833.0,
+              "total_bunker_costs": 43482.02,
+              "voyage_result": 149429.98,
+              "pl_vs_required": 87752.13,
+              "tce_real": 31495.74,
+              "total_duration": 4.74445,
+              "distancia_total": 670.0,
+              "carga_unit": 13500.0,
+              "flete_unit": 20.87,
+              "gross_income_unit": 281745.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 0.0,
+              "net_income_unit": 281745.0,
+              "sea_days_unit": 2.614015,
+              "port_days_unit": 2.130435,
+              "total_duration_unit": 4.74445,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 43.6658,
+              "bunker_ifo_cost_unit": 42236.181708,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.8152,
+              "bunker_mdo_cost_unit": 1245.837552,
+              "total_bunker_costs_unit": 43482.02,
+              "total_port_costs_unit": 88833.0,
+              "voyage_result_unit": 149429.98,
+              "tce_real_unit": 31495.74,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 61677.85,
+              "pcm_projected": 18495.74,
+              "pl_vs_required_unit": 87752.13,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 43.6658 t, MDO: 0.8152 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (0.0% addr + 0.0% broker)",
+                  "values": "Gross: 281745.0 | Comm: 0.0 | Net: 281745.0"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 670.0,
+                "quantity": 13500.0,
+                "freight_rate": 20.87
+              },
+              "route_name": "SPCC.ILO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            },
+            "2027-12": {
+              "freq": 1.0,
+              "vessel_demurrage_rate": 0.0,
+              "gross_income": 281745.0,
+              "total_commissions": 0.0,
+              "net_income": 281745.0,
+              "total_port_costs": 88833.0,
+              "total_bunker_costs": 43482.02,
+              "voyage_result": 149429.98,
+              "pl_vs_required": 87752.13,
+              "tce_real": 31495.74,
+              "total_duration": 4.74445,
+              "distancia_total": 670.0,
+              "carga_unit": 13500.0,
+              "flete_unit": 20.87,
+              "gross_income_unit": 281745.0,
+              "address_comm_pct": 0.0,
+              "broker_comm_pct": 0.0,
+              "total_commissions_unit": 0.0,
+              "net_income_unit": 281745.0,
+              "sea_days_unit": 2.614015,
+              "port_days_unit": 2.130435,
+              "total_duration_unit": 4.74445,
+              "price_ifo_unit": 967.26,
+              "bunker_ifo_tonnage_unit": 43.6658,
+              "bunker_ifo_cost_unit": 42236.181708,
+              "price_mdo_unit": 1528.26,
+              "bunker_mdo_tonnage_unit": 0.8152,
+              "bunker_mdo_cost_unit": 1245.837552,
+              "total_bunker_costs_unit": 43482.02,
+              "total_port_costs_unit": 88833.0,
+              "voyage_result_unit": 149429.98,
+              "tce_real_unit": 31495.74,
+              "tce_required_unit": 13000.0,
+              "tce_cost_total_unit": 61677.85,
+              "pcm_projected": 18495.74,
+              "pl_vs_required_unit": 87752.13,
+              "actual_load_rate": 0.0,
+              "actual_discharge_rate": 0.0,
+              "audit_trail": {
+                "bunker_costs": {
+                  "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
+                  "values": "IFO: 43.6658 t, MDO: 0.8152 t"
+                },
+                "commissions": {
+                  "formula": "Gross Revenue × (0.0% addr + 0.0% broker)",
+                  "values": "Gross: 281745.0 | Comm: 0.0 | Net: 281745.0"
+                }
+              },
+              "raw_inputs": {
+                "route_distance": 670.0,
+                "quantity": 13500.0,
+                "freight_rate": 20.87
+              },
+              "route_name": "SPCC.ILO.MEJILLONES.ILO",
+              "port_costs_breakdown": {
+                "origin": {},
+                "destination": {}
+              },
+              "port_costs_audit": {
+                "origin": {},
+                "destination": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -496,7 +496,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     
     routes_clients_data = masters.get("routes_clients") or []
     routes_prospects_data = masters.get("routes_quotes") or []
-    routes_master_data = routes_clients_data + routes_prospects_data
+    contracts_data = masters.get("contracts") or []
+    routes_master_data = routes_clients_data + routes_prospects_data + contracts_data
     
     bunker_data = masters["bunker_prices"]
     # Asegurar que se tome el precio con la fecha más reciente ordenando ascendentemente
@@ -615,8 +616,14 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         spot_id = None
         
         if quote_id is not None:
-            # Buscar directamente por spot_id en el maestro de cotizaciones
-            spot_route = next((s for s in routes_prospects_data if s and (s.get("spot_id") == quote_id or s.get("id") == quote_id)), None)
+            # Buscar directamente por spot_id en routes_quotes, routes_clients y contracts
+            spot_route = next((s for s in routes_master_data if s and (
+                str(s.get("spot_id")) == str(quote_id) or 
+                str(s.get("id")) == str(quote_id) or 
+                str(s.get("route_id")) == str(quote_id) or 
+                str(s.get("contract_id")) == str(quote_id) or 
+                str(s.get("name")) == str(quote_id)
+            )), None)
             if spot_route:
                 is_spot_route = True
                 spot_id = quote_id
@@ -682,9 +689,12 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                                     short_k = k.replace("bunker_consumption_", "consumption_")
                                     vparams[short_k] = v
 
-                # --- BUNKER: usar precios dinámicos de la simulación ---
-                final_p_ifo = p_ifo
-                final_p_mdo = p_mdo
+                # --- BUNKER: usar precios cotizados guardados en legs_data (o fallbacks dinámicos si no existen) ---
+                saved_vparams = legs_data.get("vesselParams", {})
+                saved_ifo = float(saved_vparams.get("bunker_price_ifo") or legs_data.get("bunker_price_ifo") or 0)
+                saved_mdo = float(saved_vparams.get("bunker_price_mdo") or legs_data.get("bunker_price_mdo") or 0)
+                final_p_ifo = saved_ifo if saved_ifo > 0 else p_ifo
+                final_p_mdo = saved_mdo if saved_mdo > 0 else p_mdo
                 vparams["bunker_price_ifo"] = final_p_ifo
                 vparams["bunker_price_mdo"] = final_p_mdo
                 vparams["tce_required"] = tce_req
@@ -711,15 +721,15 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                         orig_port = tr.get("origin_port_id")
                         dest_port = tr.get("destination_port_id")
 
-                        # Recalcular costos de puerto origen y destino según request.port_cost_mode
-                        if orig_port and tr.get("origin_action", "NONE") != "NONE":
+                        # Respetar costos de puerto cotizados si existen (> 0); de lo contrario calcular
+                        if orig_port and tr.get("origin_action", "NONE") != "NONE" and float(tr.get("agency_costs_origin", 0)) <= 0:
                             tr["agency_costs_origin"] = calculate_detailed_port_costs(
                                 client, orig_port, "CARGA", vessel,
                                 port_costs_data, agency_matrix_data, request.port_cost_mode,
                                 vparams, float(tr.get("quantity", 0)), contract, ports_db
                             )["total_cost"]
 
-                        if dest_port and tr.get("destination_action", "NONE") != "NONE":
+                        if dest_port and tr.get("destination_action", "NONE") != "NONE" and float(tr.get("agency_costs_destination", 0)) <= 0:
                             tr["agency_costs_destination"] = calculate_detailed_port_costs(
                                 client, dest_port, "DESCARGA", vessel,
                                 port_costs_data, agency_matrix_data, request.port_cost_mode,
@@ -732,6 +742,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 payload = {
                     "vessel_params": vparams,
                     "tramos": tramos_copy,
+                    "puertosConfig": legs_data.get("puertosConfig", []),
                     "port_cost_mode": request.port_cost_mode,
                     "client_id": client,
                     "vessel_id": vessel
@@ -745,7 +756,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 addr_comm_pct = float(legs_data.get("addressCommPct", 0))
                 broker_comm_pct = float(legs_data.get("brokerCommPct", 0))
                 total_comm_pct = addr_comm_pct + broker_comm_pct
-                gross_revenue = consolidated.get("total_freight_revenue", 0)
+                gross_revenue = consolidated.get("gross_revenue_total") or (consolidated.get("total_freight_revenue", 0) + consolidated.get("total_refacturacion_muellaje", 0))
                 total_commissions = gross_revenue * (total_comm_pct / 100)
                 net_revenue = gross_revenue - total_commissions
                 pnl_after_comm = net_revenue - consolidated.get("total_port_costs", 0) - consolidated.get("total_bunker_costs", 0)
@@ -1001,7 +1012,8 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
     
     routes_clients_data = masters.get("routes_clients") or []
     routes_prospects_data = masters.get("routes_quotes") or []
-    routes_master_data = routes_clients_data + routes_prospects_data
+    contracts_data = masters.get("contracts") or []
+    routes_master_data = routes_clients_data + routes_prospects_data + contracts_data
     
     bunker_data = masters["bunker_prices"]
     bunker_data = sorted(bunker_data, key=lambda x: x.get("date", "2000-01-01"))
@@ -1353,28 +1365,42 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             }
             
             if contract and contract.get("bunker_baseline_price_ifo") and line.forecast_bunker_price_ifo:
-                 inputs["freight_rate"] = calculate_baf_adjusted_rate_universal(inputs, contract, line.forecast_bunker_price_ifo)
+                 inputs["freight_rate"] = calculate_baf_adjusted_rate(inputs, contract, line.forecast_bunker_price_ifo)
  
-            unit_result = calculate_voyage_pnl_universal(inputs)
+            unit_result = calculate_voyage_pnl(inputs)
             route_key = f"{line.origin_port_id}-{line.destination_port_id}"
         
         freq = line.monthly_frequency
+        
+        hire_cost_val = unit_result.get("hire_cost", unit_result.get("total_duration", 0) * float(v_data.get("tce_required", 15000.0))) * freq
+        gross_rev_total_val = unit_result.get("gross_revenue_total", unit_result.get("gross_income", 0)) * freq
+        refact_muell_val = unit_result.get("refacturacion_muellaje", 0.0) * freq
+
         monthly_result = {
             "freq": freq,
             "vessel_demurrage_rate": float(contract.get("demurrage_rates", {}).get(vessel, 0.0)) if contract and isinstance(contract.get("demurrage_rates"), dict) else 0.0,
-            "net_income": unit_result["net_income"] * freq,
             "gross_income": unit_result.get("gross_income", inputs["quantity"] * inputs["freight_rate"]) * freq,
+            "gross_revenue_total": gross_rev_total_val,
+            "refacturacion_muellaje": refact_muell_val,
+            "hire_cost": hire_cost_val,
             "total_commissions": unit_result.get("total_commissions", 0.0) * freq,
+            "net_income": unit_result["net_income"] * freq,
             "total_port_costs": unit_result["total_port_costs"] * freq,
             "total_bunker_costs": unit_result["total_bunker_costs"] * freq,
             "voyage_result": unit_result["voyage_result"] * freq,
-            "pl_vs_required": unit_result["pl_vs_required"] * freq,
+            "pl_vs_required": unit_result.get("pl_vs_required", unit_result["voyage_result"] - hire_cost_val) * freq,
             "tce_real": unit_result["tce_real"],
             "total_duration": unit_result["total_duration"] * freq,
+            "sea_days": unit_result.get("sea_days", 0) * freq,
+            "port_days": unit_result.get("port_days", 0) * freq,
+            "total_days": unit_result.get("total_duration", 0) * freq,
+            # Unit details for Ledger
             "distancia_total": unit_result.get("total_distance", inputs.get("route_distance")),
             "carga_unit": inputs["quantity"],
             "flete_unit": inputs["freight_rate"],
             "gross_income_unit": unit_result.get("gross_income", inputs["quantity"] * inputs["freight_rate"]),
+            "refacturacion_muellaje_unit": unit_result.get("refacturacion_muellaje", 0.0),
+            "gross_revenue_total_unit": unit_result.get("gross_revenue_total", unit_result.get("gross_income", 0)),
             "address_comm_pct": inputs.get("address_commission", 0.0),
             "broker_comm_pct": inputs.get("broker_commission", 0.0),
             "total_commissions_unit": unit_result.get("total_commissions", 0.0),
@@ -1382,6 +1408,7 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             "sea_days_unit": unit_result["sea_days"],
             "port_days_unit": unit_result["port_days"],
             "total_duration_unit": unit_result["total_duration"],
+            "hire_cost_unit": unit_result.get("hire_cost", unit_result["total_duration"] * float(v_data.get("tce_required", 15000.0))),
             "price_ifo_unit": float(p_ifo),
             "bunker_ifo_tonnage_unit": unit_result["bunker_ifo_tonnage"],
             "bunker_ifo_cost_unit": float(unit_result["bunker_ifo_tonnage"] * p_ifo),
@@ -1392,8 +1419,8 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             "total_port_costs_unit": unit_result["total_port_costs"],
             "voyage_result_unit": unit_result["voyage_result"],
             "tce_real_unit": unit_result["tce_real"],
-            "tce_required_unit": float(v_data.get("tce_required", 13000.0)),
-            "tce_cost_total_unit": float(unit_result["total_duration"] * float(v_data.get("tce_required", 13000.0))),
+            "tce_required_unit": float(v_data.get("tce_required", 15000.0)),
+            "tce_cost_total_unit": float(unit_result["total_duration"] * float(v_data.get("tce_required", 15000.0))),
             "pcm_projected": unit_result["pcm_projected"],
             "pl_vs_required_unit": unit_result["pl_vs_required"],
             "actual_load_rate": unit_result.get("actual_load_rate", 0.0),

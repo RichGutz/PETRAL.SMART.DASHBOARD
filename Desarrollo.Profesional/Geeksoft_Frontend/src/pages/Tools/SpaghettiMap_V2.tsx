@@ -44,10 +44,10 @@ export const SpaghettiMap_V2: React.FC = () => {
         setClients(activeClients);
     }, [rawClients]);
 
-    // Default to the first month when months change
+    // Seleccionar por defecto todos los meses activos modelados en la grilla
     useEffect(() => {
         if (months && months.length > 0 && selectedMonths.length === 0 && !isPlaying) {
-            setSelectedMonths([months[0]]);
+            setSelectedMonths([...months]);
         }
     }, [months, selectedMonths, isPlaying]);
 
@@ -121,18 +121,21 @@ export const SpaghettiMap_V2: React.FC = () => {
         let trips = 0;
         let tons = 0;
         const ag = context.data?.aggregated_data;
-        if (!ag) return { trips: 0, tons: 0 };
+        if (!ag || typeof ag !== 'object') return { trips: 0, tons: 0 };
         
         Object.values(ag).forEach((rMap: any) => {
+            if (!rMap || typeof rMap !== 'object') return;
             Object.values(rMap).forEach((vMap: any) => {
+                if (!vMap || typeof vMap !== 'object') return;
                 Object.values(vMap).forEach((mMap: any) => {
+                    if (!mMap || typeof mMap !== 'object') return;
                     const metrics = mMap[m];
-                    if (metrics) {
-                        const rawFreq = metrics['raw_inputs']?.['monthly_frequency'];
-                        const freq = rawFreq !== undefined ? rawFreq : (metrics['freq'] !== undefined ? metrics['freq'] : 0);
-                        const carga = metrics['carga_unit'] || 0;
-                        trips += freq;
-                        tons += (freq * carga);
+                    if (metrics && typeof metrics === 'object') {
+                        const rawFreq = metrics?.['raw_inputs']?.['monthly_frequency'];
+                        const freq = rawFreq !== undefined ? rawFreq : (metrics?.['freq'] !== undefined ? metrics['freq'] : 0);
+                        const carga = metrics?.['carga_unit'] || 0;
+                        trips += Number(freq) || 0;
+                        tons += ((Number(freq) || 0) * (Number(carga) || 0));
                     }
                 });
             });
@@ -140,8 +143,8 @@ export const SpaghettiMap_V2: React.FC = () => {
         return { trips: Math.round(trips), tons: Math.round(tons) };
     };
 
-    const totalSelectedTrips = selectedMonths.reduce((acc, m) => acc + getMonthData(m).trips, 0);
-    const totalSelectedTons = selectedMonths.reduce((acc, m) => acc + getMonthData(m).tons, 0);
+    const totalSelectedTrips = (selectedMonths || []).reduce((acc, m) => acc + getMonthData(m).trips, 0);
+    const totalSelectedTons = (selectedMonths || []).reduce((acc, m) => acc + getMonthData(m).tons, 0);
 
     if (!context.data || !context.data.aggregated_data) {
         return (
