@@ -327,6 +327,38 @@ A partir de la autopsia técnica comparativa entre el commit histórico funciona
 A partir de la autopsia técnica pericial sobre por qué las vistas de ANGRAF y Spaghetti Map se mostraban "En Blanco / Sin escenario cargado" al refrescar (F5) o conmutar de pestaña tras haber cargado un escenario en la Matriz Financiera:
 
 | # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 17) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+### 🕵️‍♂️ 5.23. Vigesimotercera Vuelta (Serie 23: Guarda Defensiva `options = null` en ReactECharts)
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 23) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **23.1** | **`ReactECharts Render Guard`** | Crash de ECharts al recibir objeto de opciones nulo | **Validación de `hasValidOptions`:** Se condicionó la renderización de `<ReactECharts>` a la existencia de `options` no nulos con series válidas, mostrando un spinner limpio durante la fase de cálculo. | **El Crimen del setOption(null):** `echarts-for-react` intentaba ejecutar `setOption(null)` lanzando una excepción no controlada en el ciclo de vida de React. | ✅ RESUELTO |
+
+### 🕵️‍♂️ 5.24. Vigesimocuarta Vuelta (Serie 24: Desmonte Limpio de Instancias ECharts `dispose()`)
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 24) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **24.1** | **`ECharts Instance Disposal`** | Fugas de memoria y timers colgados de `requestAnimationFrame` (`_onframe`) | **Ejecución de `chartInstance.dispose()`:** Se agregó limpieza explícita en la función de desmonte (`return () => ...`) de los `useEffect` de renderizado en ANGRAF y Spaghetti Map. | **Animaciones Huérfanas:** Las instancias de ECharts mantenían bucles de animación activos en segundo plano tras cambiar de pestaña. | ✅ RESUELTO |
+
+### 🕵️‍♂️ 5.25. Vigesimoquinta Vuelta (Serie 25: Cumplimiento Estricto de Hooks + Tipografía Inter)
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 25) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **25.1** | **`Reglas de Hooks en React (`InteractiveChart.tsx`)`** | `Minified React Error #310` (Hooks rendered conditionally) | **Eliminación de Return Intermedio:** Se movieron todas las evaluaciones condicionales al JSX inline, garantizando que el recuento de hooks de React sea 100% constante en cada render pass. | **Violación de Hooks de React:** Un `return` anticipado a mitad del componente saltaba la invocación de `useMemo` y `useEffect`. | ✅ RESUELTO |
+| **25.2** | **`Tipografía Geist Doblada / Rotaciones OTS`** | 12 advertencias `OTS parsing error: invalid sfntVersion` en la consola | **Sustitución por Google Fonts Inter:** Se reemplazó el paquete dañando `@fontsource-variable/geist` por el import canónico de Google Fonts Inter en `index.css`. | **Fuentes Corruptas:** Los navegadores Chromium rechazaban la fuente y arrojaban 404/OTS errors. | ✅ RESUELTO |
+
+### 🕵️‍♂️ 5.26. Vigesimosexta Vuelta (Serie 26: Montaje Incondicional de Vistas Gráficas y Watcher de Meses)
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 26) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **26.1** | **`Montaje de Componentes Gráficos`** | Parpadeo y colapso visual al conmutar entre Matriz y Gráficos | **Montaje Incondicional:** Se eliminó el envoltorio ternario `{context.loading ? ... : <InteractiveChart />}` en `GraphicAnalysis_V2.tsx`, pasando los datos incondicionalmente. | **Destrucción innecesaria del DOM:** React destruía el canvas completo cada vez que el contexto notificaba `loading: true`. | ✅ RESUELTO |
+| **26.2** | **`Estabilización del Watcher de Meses (`SpaghettiMap_V2.tsx`)`** | Bucle de re-renderizado al sincronizar la lista de meses | **Sincronización por Primitiva (`monthsStr`):** Se cambió la dependencia del `useEffect` de `[months]` (array reference) a `[monthsStr]` (string join primitivo). | **Referencias inestables de Arrays:** La re-creación del array `months` provocaba re-renders infinitos. | ✅ RESUELTO |
+
+### 🕵️‍♂️ 5.27. Vigesimoséptima Vuelta (Serie 27: Blindaje Defensivo en FastAPI `/api/v1/forecast/ports`)
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 27) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **27.1** | **`FastAPI Backend (`forecast.py`)`** | `GET /api/v1/forecast/ports 500 (Internal Server Error)` | **Fallback Defensivo con `try/except`:** Si la unión relacional con `sources_sinks` falla en Supabase, el backend responde automáticamente con la lista limpia de la tabla `ports` con HTTP 200. | **Error 500 Desencadenante:** El fallo del servidor reseteaba los datos del frontend a `null`, desencadenando cierres de sesión y errores de renderizado. | ✅ RESUELTO |
+
 ### 🕵️‍♂️ 5.28. Vigesimooctava Vuelta (Serie 28: Exterminio de la Doble Instanciación de Componentes y Sincronización Canónica de `<Outlet />` en React Router)
 
 A partir de la autopsia estructural sobre la coexistencia de rutas de React Router e instanciaciones manuales en `ToolsLayout_V2.tsx`:
@@ -336,7 +368,17 @@ A partir de la autopsia estructural sobre la coexistencia de rutas de React Rout
 | **28.1** | **`Sincronización Canónica de `<Outlet />``** | `Uncaught Error: Minified React error #300 / #310` al navegar de Matriz a ANGRAF o Spaghetti | **Enrutamiento Único vía `<Outlet />` (`ToolsLayout_V2.tsx`):** Se eliminó la instanciación duplicada manual de `<FinancialMatrix_V2 />`, `<GraphicAnalysis_V2 />` y `<SpaghettiMap_V2 />` en `ToolsLayout_V2`. Toda herramienta interactiva se renderiza de forma limpia e incondicional a través del `<Outlet />` de React Router. | **El Crimen de la Instanciación Duplicada en Paralelo:** React Router instanciaba la vista mediante la ruta en `App_V2.tsx` mientras `ToolsLayout_V2` instanciaba la misma vista manualmente. Las dos instancias competían en paralelo actualizando el contexto, desincronizando los hooks y disparando bucles infinitos (#300 / #310). | ✅ RESUELTO |
 | **28.2** | **`Higiene Total de Memoria y Ciclo de Vida`** | La consola fallaba en navegadores reales durante la interacción del usuario | **Instancia Única de Componente:** Al existir una sola instancia activa de cada componente en el árbol de React, el ciclo de vida de montaje, actualización y desmonte es 100% determinista y predecible. | **Restablecimiento del Modelo Canónico de React Router:** Garantiza estabilidad 100% en Brave, Chrome, Firefox y Safari sin choques de contexto. | ✅ RESUELTO |
 
+### 🕵️‍♂️ 5.29. Vigesimonovena Vuelta (Serie 29: Sanitización Universal `safeNum()` contra `NaN` / `Infinity` en Calculadoras ECharts)
+
+A partir de la autopsia técnica sobre el colapso visual producido al cargar escenarios reales complejos como `ESCENARIO.QC.TRIANGULAR.2027`:
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 29) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **29.1** | **`Sanitización de Métricas (`InteractiveChart.tsx`)`** | Crash de ECharts `TypeError` al renderizar series de datos de escenarios guardados | **Filtro Sanitizador `safeNum()` en `getMetricValue`:** Se envolvió todo cálculo o conversión de ingresos, frecuencias y demurrages con `safeNum() = isNaN(n) \|\| !isFinite(n) ? 0 : n`. | **El Crimen del Valor `NaN`:** Métricas nulas o indefinidas en escenarios cargados retornaban `NaN`, corrompiendo el JSON de opciones de ECharts y haciendo colapsar el motor gráfico. | ✅ RESUELTO |
+| **29.2** | **`Acumulación de Flujos Marítimos (`useSpaghettiData.ts`)`** | Pantalla en blanco en Spaghetti Map al conmutar desde un escenario cargado | **Sanitización de Carga y Frecuencia:** Se sanitizó `freq` y `carga_unit` con `safeNum()`, asegurando que `portMap` y `pieSeries` jamás reciban `value: NaN`. | **Propagación Aritmética de `NaN`:** Un valor `NaN` en una sola pierna de viaje contaminaba el acumulador entero del puerto, inutilizando la serie de gráficos de pie. | ✅ RESUELTO |
+
 ### ───────────────
+
 
 
 
