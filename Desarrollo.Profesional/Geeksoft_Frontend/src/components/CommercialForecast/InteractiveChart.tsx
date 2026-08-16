@@ -628,24 +628,37 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     }, [data, groupBy, activeMonths, filterClient, filterRoute, filterVessel, filterTradeType, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryCumulativeGlobal, isSecondaryPercentage, demurragePct, showDemurrage, excludedDemurrages, customDemurrages, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
 
     const echartsRef = useRef<any>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    // Auto-resize de ECharts para evitar canvas de 0px durante transiciones de React Router o animaciones flexbox
+    // Auto-resize de ECharts con ResizeObserver para garantizar dimensiones en transiciones de React Router sin F5
     useEffect(() => {
         const handleResize = () => {
             if (echartsRef.current) {
                 const chartInstance = echartsRef.current.getEchartsInstance();
-                if (chartInstance) chartInstance.resize();
+                if (chartInstance && typeof chartInstance.resize === 'function') {
+                    chartInstance.resize();
+                }
             }
         };
 
-        const timers = [50, 150, 350, 600, 800].map(delay => setTimeout(handleResize, delay));
+        let resizeObserver: ResizeObserver | null = null;
+        if (containerRef.current && typeof ResizeObserver !== 'undefined') {
+            resizeObserver = new ResizeObserver(() => {
+                handleResize();
+            });
+            resizeObserver.observe(containerRef.current);
+        }
+
+        const timers = [50, 150, 300, 500, 800, 1200].map(delay => setTimeout(handleResize, delay));
         window.addEventListener('resize', handleResize);
 
         return () => {
             timers.forEach(clearTimeout);
             window.removeEventListener('resize', handleResize);
+            if (resizeObserver) resizeObserver.disconnect();
         };
     }, [options]);
+
 
     if (!data || !data.aggregated_data || activeMonths.length === 0) {
         return (
@@ -1126,9 +1139,10 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             </div>
 
                 {/* Contenedor del Gráfico (Right) */}
-                <div className="flex-1 flex flex-col min-h-[650px]">
+                <div ref={containerRef} className="flex-1 flex flex-col min-h-[650px]">
                     <ReactECharts ref={echartsRef} option={options} style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} notMerge={true} />
                 </div>
+
             </div>
     );
 };

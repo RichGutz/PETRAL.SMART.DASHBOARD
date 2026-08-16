@@ -327,12 +327,17 @@ A partir de la autopsia técnica comparativa entre el commit histórico funciona
 A partir de la autopsia técnica pericial sobre por qué las vistas de ANGRAF y Spaghetti Map se mostraban "En Blanco / Sin escenario cargado" al refrescar (F5) o conmutar de pestaña tras haber cargado un escenario en la Matriz Financiera:
 
 | # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 17) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+### 🕵️‍♂️ 5.18. Decimooctava Vuelta (Serie 18: Auto-Resize Dinámico vía `ResizeObserver` y Eliminación del Requisito F5 para Conmutación entre Pestañas)
+
+A partir de la auditoría pericial sobre por qué las vistas requerían presionar F5 para visualizarse tras conmutar entre Matriz Financiera, ANGRAF y Spaghetti Map:
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 18) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
-| **17.1** | **`Persistencia de Sesión Activa en Memoria de Pestaña`** | Al refrescar (F5) en ANGRAF o Spaghetti Map salía *"Análisis Gráfico en Blanco / Sin Escenario Cargado"* | **Sincronización `sessionStorage` 0-ms:** `ForecastContext_V2` guarda `projectionLines`, `data` y `forecastName` en `sessionStorage` (`petral_active_*`) al simular o cargar. Al refrescar en cualquier pestaña, restaura la sesión activa instantáneamente. | **El Crimen del Olvido por F5:** Al exigir que la app iniciara 100% limpia en blanco sin auto-cargar de `localStorage`, F5 borraba `data` del estado en memoria de React, haciendo que ANGRAF no encontrara el escenario activo al re-montar la URL. | ✅ RESUELTO |
-| **17.2** | **`Garantía de Inicio Limpio (Fresh Login)`** | Una nueva pestaña o sesión limpia debe arrancar 100% en blanco | **Purga en `Limpiar` y Aislamiento por Pestaña:** Abrir el navegador en una pestaña nueva inicia en blanco. El botón **"Limpiar"** borra `sessionStorage`, `data` y `projectionLines`, volviendo todas las herramientas a estado limpio simultáneamente. | **Calce con Requerimiento N°6:** Preserva la matriz en blanco al iniciar el sistema, pero mantiene vivo el escenario activo mientras el usuario trabaja o navega en la misma sesión. | ✅ RESUELTO |
-| **17.3** | **`Sincronización Inmediata entre Matriz, ANGRAF y Spaghetti`** | Conmutar a ANGRAF o Spaghetti renderizaba la tarjeta de "Sin escenario" | **Renderizado Inmediato (`hasData` Instantáneo):** Al estar `data` y `projectionLines` en Context y `sessionStorage`, ANGRAF y Spaghetti leen el dataset en 0 milisegundos sin esperar re-cálculos ni mostrar tarjetas vacías. | **Recreación Fiel del Monolito (`4afad62`):** Las 3 herramientas comparten el mismo modelo mental de memoria del monolito antiguo, sin parpadeos ni pérdidas de escenario. | ✅ RESUELTO |
+| **18.1** | **`Redimensionamiento de Canvas sin F5 (`ResizeObserver`)`** | Conmutar a ANGRAF o Spaghetti se veía blanco hasta presionar F5 | **`ResizeObserver` en Contenedores ECharts:** `InteractiveChart.tsx` y `SpaghettiMap.tsx` observan los cambios de dimensión del contenedor DOM en tiempo real y ejecutan `chartInstance.resize()` en cuanto la pestaña se vuelve visible. | **El Crimen del Canvas Oculto en Transición CSS:** Al navegar entre rutas, la animación CSS `fade-in` de React Router inicializaba el canvas con ancho 0px. Sin F5 o `ResizeObserver`, ECharts no detectaba que el DOM se había expandido. | ✅ RESUELTO |
+| **18.2** | **`Retorno al Dashboard / Matriz Financiera`** | Al presionar el botón "Atrás" del navegador hacia la Matriz, la pantalla salía en blanco hasta F5 | **Efecto Auto-Simulador en `FinancialMatrix_V2.tsx`:** Se añadió la comprobación reactiva `runSimulationWith` en el montaje de la Matriz cuando existen líneas en la sesión pero `data` necesita refresco. | **Garantía de Renderizado Retroactivo:** La Matriz Financiera reconstruye sus totales instantáneamente al volver atrás desde cualquier vista gráfica. | ✅ RESUELTO |
 
 ### ───────────────
+
 
 
 
