@@ -342,16 +342,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                                         onClick={() => navigate('/contracts')}
                                                         className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'contracts' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                                                     >
-                                                        <span className="text-xs">📜</span> Maestro de Contratos
-                                                    </button>
-                                                )}
-                                                {hasPermission('maestro_rutas', 'Visor') && (
-                                                    <button 
-                                                        onClick={() => navigate('/spot-routes')}
-                                                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'spot-routes' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                                        title="Rutas Físicas Activas (routes_clients)"
-                                                    >
-                                                        <span className="text-xs">📍</span> Maestro de Rutas
+                                                        <span className="text-xs">📜</span> Maestro de Rutas COA
                                                     </button>
                                                 )}
                                                 {hasPermission('maestro_rutas', 'Visor') && (
