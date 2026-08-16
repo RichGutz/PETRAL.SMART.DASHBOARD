@@ -534,6 +534,44 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
         }
     }, []);
 
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Auto-resize de ECharts con ResizeObserver para garantizar dimensiones en transiciones de React Router sin F5
+    useEffect(() => {
+        const handleResize = () => {
+            if (chartRef.current && mapLoaded) {
+                try {
+                    const chartInstance = chartRef.current.getEchartsInstance();
+                    if (chartInstance && typeof chartInstance.resize === 'function' && !chartInstance.isDisposed()) {
+                        chartInstance.resize();
+                    }
+                } catch (e) {
+                    // Prevenir que errores de layout internos de ECharts rompan el árbol de React
+                }
+            }
+        };
+
+        let resizeObserver: ResizeObserver | null = null;
+        if (containerRef.current && typeof ResizeObserver !== 'undefined') {
+            resizeObserver = new ResizeObserver(() => {
+                handleResize();
+            });
+            resizeObserver.observe(containerRef.current);
+        }
+
+        const timers = [50, 150, 300, 500, 800, 1200].map(delay => setTimeout(handleResize, delay));
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            timers.forEach(clearTimeout);
+            window.removeEventListener('resize', handleResize);
+            if (resizeObserver) resizeObserver.disconnect();
+        };
+    }, [mapLoaded]);
+
+
+
+
     const option = useMemo(() => {
         if (!mapLoaded || !data || !data.aggregated_data || selectedMonths.length === 0 || !ports) return;
 
@@ -720,7 +758,7 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
         );
     }
 
-    if (!mapLoaded || !option) {
+    if (!mapLoaded || !option || !option.series || !Array.isArray(option.series) || option.series.length === 0) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full">
                 <div className="animate-spin h-8 w-8 border-4 border-petral-teal border-t-transparent rounded-full mb-4"></div>
@@ -729,8 +767,9 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
         );
     }
 
+
     return (
-        <div className="flex-1 relative w-full h-full">
+        <div ref={containerRef} className="flex-1 relative w-full h-full min-h-[600px]">
             <ReactECharts 
                 ref={chartRef}
                 option={option} 
@@ -742,3 +781,4 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
         </div>
     );
 };
+

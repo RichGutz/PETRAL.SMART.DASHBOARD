@@ -20,7 +20,47 @@ from backend.services.forecast_service import run_forecast_simulation, run_forec
 
 router = APIRouter(tags=["Commercial Forecast"])
 
+import os
+from datetime import datetime
+
+LOG_FILE_PATH = "/opt/geeksoft_engine/frontend_runtime_errors.log"
+
+@router.post("/telemetry-log")
+def log_frontend_telemetry(payload: dict = Body(...)):
+    try:
+        timestamp = datetime.utcnow().isoformat()
+        level = payload.get("level", "INFO").upper()
+        message = payload.get("message", "")
+        url = payload.get("url", "")
+        user = payload.get("user", "Anonymous")
+        stack = payload.get("stack", "")
+        extra = payload.get("extra", {})
+
+        log_entry = (
+            f"[{timestamp}] [{level}] [User: {user}] [URL: {url}]\n"
+            f"Message: {message}\n"
+            + (f"Stack:\n{stack}\n" if stack else "")
+            + (f"Extra: {extra}\n" if extra else "")
+            + ("-" * 70) + "\n"
+        )
+
+        log_dir = os.path.dirname(LOG_FILE_PATH)
+        if os.path.exists(log_dir):
+            target_path = LOG_FILE_PATH
+        else:
+            target_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "scratch", "frontend_runtime_errors.log")
+            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+
+        with open(target_path, "a", encoding="utf-8") as f:
+            f.write(log_entry)
+
+        return {"status": "logged", "timestamp": timestamp}
+    except Exception as e:
+        print(f"Error recording telemetry log: {e}")
+        return {"status": "error", "detail": str(e)}
+
 @router.post("/run", response_model=ForecastResponse)
+
 def simulate_forecast(request: ForecastRequest):
     try:
         result = run_forecast_simulation(request)
@@ -675,23 +715,32 @@ def get_ports(year: int = 2026):
         res = sb.table("ports").select("*, sources_sinks(capacity_mt, type, empresa, color_hex, producto)").eq("sources_sinks.year", year).order("display_order").execute()
         
         flat_data = []
-        for p in res.data:
-            ss_list = p.get("sources_sinks", [])
+        if res and hasattr(res, 'data') and res.data:
+            for p in res.data:
+                ss_list = p.get("sources_sinks", [])
+                
+                total_capacity = sum(ss["capacity_mt"] for ss in ss_list if ss and isinstance(ss, dict) and ss.get("capacity_mt") is not None) if ss_list else None
+                
+                types = set(ss["type"] for ss in ss_list if ss and isinstance(ss, dict) and ss.get("type"))
+                primary_type = "MIXED" if len(types) > 1 else (types.pop() if len(types) == 1 else None)
+                
+                p["capacity_mt"] = total_capacity
+                p["type"] = primary_type
+                
+                flat_data.append(p)
+            return flat_data
             
-            total_capacity = sum(ss["capacity_mt"] for ss in ss_list if ss and ss.get("capacity_mt") is not None) if ss_list else None
-            
-            types = set(ss["type"] for ss in ss_list if ss and ss.get("type"))
-            primary_type = "MIXED" if len(types) > 1 else (types.pop() if len(types) == 1 else None)
-            
-            p["capacity_mt"] = total_capacity
-            p["type"] = primary_type
-            
-            # Do NOT pop sources_sinks, keep the list of companies
-            flat_data.append(p)
-            
-        return flat_data
+        res_simple = sb.table("ports").select("*").order("display_order").execute()
+        return res_simple.data or []
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error in get_ports: {e}")
+        try:
+            from backend.database import get_supabase
+            sb = get_supabase()
+            res_simple = sb.table("ports").select("*").order("display_order").execute()
+            return res_simple.data or []
+        except Exception:
+            return []
 
 @router.get("/spot/list")
 def list_spot_voyages():

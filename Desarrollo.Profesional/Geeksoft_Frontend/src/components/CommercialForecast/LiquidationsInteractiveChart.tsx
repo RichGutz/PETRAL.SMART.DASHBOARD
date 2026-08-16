@@ -68,7 +68,35 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
     const [filterVessel, setFilterVessel] = useState<string>('ALL');
     const [vesselsMaster, setVesselsMaster] = useState<any[]>([]);
 
+    const echartsRef = React.useRef<any>(null);
+
+    // Auto-resize de ECharts para evitar canvas de 0px durante transiciones de React Router
+    useEffect(() => {
+        const handleResize = () => {
+            if (echartsRef.current && liquidations && liquidations.length > 0) {
+                try {
+                    const chartInstance = echartsRef.current.getEchartsInstance();
+                    if (chartInstance && typeof chartInstance.resize === 'function' && !chartInstance.isDisposed()) {
+                        chartInstance.resize();
+                    }
+                } catch (e) {
+                    // Prevenir que errores de layout internos de ECharts rompan el árbol de React
+                }
+            }
+        };
+
+        const timers = [50, 150, 350, 600, 800].map(delay => setTimeout(handleResize, delay));
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            timers.forEach(clearTimeout);
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [liquidations]);
+
+
     // CARGAR MATRIZ DE FLOTA (tabla vessels de Supabase) PARA CONECTAR EL color_hex OFICIAL
+
     useEffect(() => {
         ForecastService.getVessels()
             .then(data => {
@@ -933,13 +961,28 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
 
             {/* CONTENEDOR DEL GRÁFICO (COLUMNA DERECHA FLEX-1 MIN-H-[650PX]) */}
             <div className="flex-1 min-w-0 flex flex-col min-h-[650px] bg-white rounded-lg border border-slate-200 p-2 shadow-sm">
-                <ReactECharts 
-                    option={options} 
-                    style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} 
-                    notMerge={true} 
-                    lazyUpdate={true}
-                />
+                {sortedFilteredData.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full p-8 text-center">
+                        <div className="w-16 h-16 bg-purple-50 text-purple-600 border border-purple-200 rounded-full flex items-center justify-center text-3xl mb-4 shadow-sm">
+                            📊
+                        </div>
+                        <h3 className="text-base font-black text-slate-800 mb-1 uppercase tracking-tight">Sin Liquidaciones Auditadas</h3>
+                        <p className="text-xs text-slate-500 max-w-md leading-relaxed">
+                            No se encontraron viajes auditados para la combinación de filtros seleccionada.
+                        </p>
+                    </div>
+                ) : (
+                    <ReactECharts 
+                        ref={echartsRef}
+                        option={options} 
+                        style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} 
+                        notMerge={true} 
+                        lazyUpdate={true}
+                    />
+                )}
             </div>
+
+
 
         </div>
     );

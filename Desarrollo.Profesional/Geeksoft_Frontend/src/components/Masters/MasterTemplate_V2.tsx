@@ -5,6 +5,9 @@ import { Button } from '../ui/button';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 import { useAuth } from '../../context/AuthContext';
 import { AuthService } from '../../services/api';
+// import { TelemetryConsoleModal } from '../common/TelemetryConsoleModal'; // SERIE 33: DESACTIVADO — hook violation. Pendiente refactor.
+
+
 
 interface MasterTemplateProps {
     title: string;
@@ -648,7 +651,11 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                     </div>
                 </div>
             )}
+            {/* TelemetryConsoleModal DESACTIVADO — Serie 33: violación de hooks (useEffect L15 después de return null L13) */}
+            {/* <TelemetryConsoleModal /> */}
+
         </div>
     );
 };
+
 

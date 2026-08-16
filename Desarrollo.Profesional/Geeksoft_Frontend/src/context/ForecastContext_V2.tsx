@@ -35,6 +35,7 @@ interface ForecastContextType {
 
     isDirty: boolean;
     handleManualRecalculate: () => Promise<void>;
+    handleClearSession: () => void;
 
     displayMode: 'usd' | 'pct';
     setDisplayMode: (v: 'usd' | 'pct') => void;
@@ -132,37 +133,24 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
                 setPorts(portsData || []);
                 setSpotRoutes(routesData || []);
 
-                // Restaurar automáticamente el último escenario cargado por el usuario (persistencia de sesión)
-                const lastId = localStorage.getItem('petral_last_forecast_id');
-                if (lastId) {
+                // Restaurar sesión activa de memoria de pestaña (sessionStorage) si el usuario presionó F5
+                const savedLinesStr = sessionStorage.getItem('petral_active_projection_lines');
+                const savedDataStr = sessionStorage.getItem('petral_active_data');
+                const savedName = sessionStorage.getItem('petral_active_forecast_name');
+                const savedId = sessionStorage.getItem('petral_active_forecast_id');
+
+                if (savedLinesStr && savedDataStr) {
                     try {
-                        const loadedData = await ForecastService.loadForecast(lastId);
-                        if (loadedData && loadedData.projection_lines && loadedData.projection_lines.length > 0) {
-                            const newStartDate = loadedData.start_date || '2027-01-01';
-                            const newEndDate = loadedData.end_date || '2027-12-31';
-                            setStartDate(newStartDate);
-                            setEndDate(newEndDate);
-
-                            const cleanedLines = loadedData.projection_lines.map((line: any) => {
-                                const { metadata_demurrage_pct, metadata_show_demurrage, metadata_excluded_demurrages, metadata_custom_demurrages, metadata_demurrage_days, metadata_show_demurrage_days, metadata_custom_demurrage_days, ...rest } = line;
-                                return {
-                                    ...rest,
-                                    quantity: parseFloat(rest.quantity) || 0,
-                                    monthly_frequency: parseFloat(rest.monthly_frequency) || 1,
-                                    custom_tariff: rest.custom_tariff != null ? parseFloat(rest.custom_tariff) : undefined,
-                                    forecast_bunker_price_ifo: rest.forecast_bunker_price_ifo != null ? parseFloat(rest.forecast_bunker_price_ifo) : undefined,
-                                    forecast_bunker_price_mdo: rest.forecast_bunker_price_mdo != null ? parseFloat(rest.forecast_bunker_price_mdo) : undefined,
-                                };
-                            });
-
-                            setProjectionLines(cleanedLines);
-                            setCurrentForecastId(loadedData.id);
-                            setForecastName(loadedData.name);
-                            setLoadedAuthor(loadedData.user_id);
-                            await runSimulationWith(cleanedLines, newStartDate, newEndDate);
+                        const lines = JSON.parse(savedLinesStr);
+                        const simData = JSON.parse(savedDataStr);
+                        if (Array.isArray(lines) && lines.length > 0) {
+                            setProjectionLines(lines);
+                            setData(simData);
+                            if (savedName) setForecastName(savedName);
+                            if (savedId) setCurrentForecastId(savedId);
                         }
-                    } catch (lastErr) {
-                        console.warn("No se pudo restaurar el último escenario activo:", lastErr);
+                    } catch (e) {
+                        console.error("Error al restaurar sesión activa de sessionStorage:", e);
                     }
                 }
             } catch (e) {
@@ -173,6 +161,8 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
         };
         loadInitialData();
     }, []);
+
+
 
     const [demurragePct, setDemurragePct] = useState<string>('');
     const [showDemurrage, setShowDemurrage] = useState<boolean>(false);
@@ -266,12 +256,23 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     const simulatingRef = useRef(false);
     const isBatchLoadingRef = useRef(false);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const lastSimulatedKeyRef = useRef<string>('');
 
-    const runSimulationWith = async (lines: any[], sDate: string, eDate: string) => {
+    const runSimulationWith = async (lines: any[], sDate: string, eDate: string, force: boolean = false) => {
         if (lines.length === 0) {
             setData(null);
             setIsDirty(false);
             setLoading(false);
+            lastSimulatedKeyRef.current = '';
+            return;
+        }
+
+        const currentKey = JSON.stringify(lines.map(p => ({
+            m: p.month_index, c: p.client_id, o: p.origin_port_id, d: p.destination_port_id,
+            v: p.vessel_id, f: p.monthly_frequency, t: p.custom_tariff, q: p.quantity
+        }))) + `_${sDate}_${eDate}_${portCostModeRef.current}`;
+
+        if (!force && lastSimulatedKeyRef.current === currentKey && data !== null) {
             return;
         }
 
@@ -296,6 +297,11 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             if (!controller.signal.aborted) {
                 setData(result);
                 setIsDirty(false);
+                lastSimulatedKeyRef.current = currentKey;
+                try {
+                    sessionStorage.setItem('petral_active_projection_lines', JSON.stringify(lines));
+                    sessionStorage.setItem('petral_active_data', JSON.stringify(result));
+                } catch (e) {}
             }
         } catch (error: any) {
             // Si fue abortado intencionalmente, no hacer nada (otro request está corriendo)
@@ -305,9 +311,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
                 console.error("Error fetching simulation:", error);
                 let msg = "Error desconocido";
                 if (error?.response?.data?.detail) {
-                    if (typeof error.response.data.detail === 'string') {
-                        msg = error.response.data.detail;
-                    } else if (Array.isArray(error.response.data.detail)) {
+                    if (Array.isArray(error.response.data.detail)) {
                         msg = error.response.data.detail.map((d: any) => `${d.loc ? d.loc.slice(-2).join('.') + ': ' : ''}${d.msg}`).join(' | ');
                     } else {
                         msg = JSON.stringify(error.response.data.detail);
@@ -325,15 +329,54 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     };
 
     const handleManualRecalculate = async () => {
-        await runSimulationWith(projectionLines, startDate, endDate);
+        await runSimulationWith(projectionLines, startDate, endDate, true);
     };
 
-    // Reactividad automática ante cambios en projectionLines, fechas o portCostMode
+    const handleClearSession = () => {
+        lastSimulatedKeyRef.current = '';
+        sessionStorage.removeItem('petral_active_projection_lines');
+        sessionStorage.removeItem('petral_active_data');
+        sessionStorage.removeItem('petral_active_forecast_name');
+        sessionStorage.removeItem('petral_active_forecast_id');
+        localStorage.removeItem('petral_last_forecast_id');
+        setProjectionLines([]);
+        setData(null);
+        setCurrentForecastId(null);
+        setForecastName('');
+        setLoadedAuthor('');
+        setIsDirty(false);
+        setDemurragePct('');
+        setShowDemurrage(false);
+        setDemurrageDays('');
+        setShowDemurrageDays(false);
+        setExcludedDemurrages([]);
+        setCustomDemurrages({});
+        setCustomDemurrageDays({});
+    };
+
+
+
+    // Clave memorizada de contenido para reaccionar ante cambios de frecuencia, tarifas o cantidades
+    const projectionLinesKey = useMemo(() => {
+        return JSON.stringify(projectionLines.map(p => ({
+            m: p.month_index,
+            c: p.client_id,
+            o: p.origin_port_id,
+            d: p.destination_port_id,
+            v: p.vessel_id,
+            f: p.monthly_frequency,
+            t: p.custom_tariff,
+            q: p.quantity
+        })));
+    }, [projectionLines]);
+
+    // Reactividad automática ante cambios en contenido de projectionLines, fechas o portCostMode
     useEffect(() => {
         if (!isBatchLoadingRef.current && projectionLines.length > 0) {
             runSimulationWith(projectionLines, startDate, endDate);
         }
-    }, [projectionLines.length, startDate, endDate, portCostMode]);
+    }, [projectionLinesKey, startDate, endDate, portCostMode]);
+
 
     const handleAddLine = (newLine: any) => {
         setIsDirty(true);
@@ -502,9 +545,13 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             setForecastName(loadedData.name);
             setLoadedAuthor(loadedData.user_id);
             if (loadedData.id) {
-                localStorage.setItem('petral_last_forecast_id', loadedData.id);
+                sessionStorage.setItem('petral_active_forecast_id', loadedData.id);
+            }
+            if (loadedData.name) {
+                sessionStorage.setItem('petral_active_forecast_name', loadedData.name);
             }
             setShowLoadModal(false);
+
 
             await runSimulationWith(cleanedLines, newStartDate, newEndDate);
 
@@ -524,7 +571,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             dynamicMonths, projectionLines, setProjectionLines, currentForecastId,
             forecastName, setForecastName, userId, setUserId, loadedAuthor,
             showSaveModal, setShowSaveModal, showLoadModal, setShowLoadModal, savedForecasts,
-            isDirty, handleManualRecalculate,
+            isDirty, handleManualRecalculate, handleClearSession,
             displayMode, setDisplayMode, ports, spotRoutes, portCostMode, setPortCostMode: handlePortCostModeChange,
             demurragePct, setDemurragePct, showDemurrage, setShowDemurrage, handleSetShowDemurrage,
             demurrageDays, setDemurrageDays, showDemurrageDays, setShowDemurrageDays, handleSetShowDemurrageDays,

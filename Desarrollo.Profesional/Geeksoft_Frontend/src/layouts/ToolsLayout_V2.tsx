@@ -3,8 +3,9 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { MasterTemplate } from '../components/Masters/MasterTemplate_V2';
 import { ForecastBuilder } from '../components/CommercialForecast/ForecastBuilder_V2';
 import { useForecastContext_V2 } from '../context/ForecastContext_V2';
-import { Save, FolderOpen, X, RefreshCw } from 'lucide-react';
+import { Save, FolderOpen, X, RefreshCw, Trash2 } from 'lucide-react';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
+
 
 export const ToolsLayout_V2: React.FC = () => {
     const context = useForecastContext_V2();
@@ -24,6 +25,7 @@ export const ToolsLayout_V2: React.FC = () => {
     else if (location.pathname.includes('/system-flowchart')) activeTab = 'system-flowchart';
     else if (location.pathname.includes('/static-vs-dynamic-port-cost')) activeTab = 'static-vs-dynamic-port-cost';
     else if (location.pathname.includes('/system-documentation')) activeTab = 'system-documentation';
+
 
 
     return (
@@ -60,6 +62,15 @@ export const ToolsLayout_V2: React.FC = () => {
                         bottomRightContent={
                             <>
                                 <div className="flex flex-row items-center gap-2 h-8">
+                                    <button 
+                                        onClick={context.handleClearSession} 
+                                        disabled={context.loading}
+                                        className="flex items-center justify-center gap-1 h-8 px-3 rounded font-semibold text-[11px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-all duration-200 shadow-sm cursor-pointer"
+                                        title="Limpiar sesión y volver a pantalla en blanco"
+                                    >
+                                        <Trash2 size={13} className="text-rose-600" />
+                                        <span>Limpiar</span>
+                                    </button>
                                     <button 
                                         onClick={context.handleManualRecalculate} 
                                         disabled={context.loading}
@@ -115,10 +126,15 @@ export const ToolsLayout_V2: React.FC = () => {
                 </div>
                 )}
 
-                {/* 2. Outlet renders the specific tool (Grid, Chart, Map) con ErrorBoundary de protección */}
+                {/* 2. Sincronización Canónica de Rutas con React Router Outlet */}
                 <ErrorBoundary fallbackTitle="Error al cargar la herramienta interactiva">
-                    <Outlet />
+                    <div className="flex-1 flex flex-col min-h-0 relative w-full h-full">
+                        <Outlet />
+                    </div>
                 </ErrorBoundary>
+
+
+
 
             </div>
 

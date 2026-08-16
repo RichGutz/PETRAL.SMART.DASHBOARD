@@ -143,7 +143,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     }, [data, months]);
 
     const options = useMemo(() => {
-        if (!data || !data.aggregated_data || !activeMonths || activeMonths.length === 0) return {};
+        if (!data || !data.aggregated_data || !activeMonths || activeMonths.length === 0) return null;
+
 
         const seriesMapPri: { [key: string]: { [month: string]: number } } = {};
         const seriesMapPri2: { [key: string]: { [month: string]: number } } = {};
@@ -187,22 +188,23 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
         const getMetricValue = (metrics: any, m: PlotMetric, client: string, route: string, vessel: string, month: string) => {
             if (!metrics || m === 'none') return 0;
+            const safeNum = (v: any) => { const n = Number(v); return isNaN(n) || !isFinite(n) ? 0 : n; };
             
             const rawFreq = metrics?.['raw_inputs']?.['monthly_frequency'];
-            const freq = rawFreq !== undefined ? rawFreq : (metrics?.['freq'] !== undefined ? metrics['freq'] : 0);
+            const freq = safeNum(rawFreq !== undefined ? rawFreq : metrics?.['freq']);
             
             if (m === 'viajes') return freq;
             
             if (m === 'total_duration') {
-                const duration_unit = metrics?.['total_duration_unit'] || 0;
+                const duration_unit = safeNum(metrics?.['total_duration_unit']);
                 return duration_unit * freq;
             }
             
-            const carga_unit = metrics?.['carga_unit'] || 0;
+            const carga_unit = safeNum(metrics?.['carga_unit']);
             const tons = carga_unit * freq;
             if (m === 'total_cargo') return tons;
 
-            const revenue = metrics?.['net_income'] || 0;
+            const revenue = safeNum(metrics?.['net_income']);
             
             if (m === 'demurrage' || m === 'gross_plus_dem' || m === 'yield' || m === 'yield_flete') {
                 const rowKey = `${client}-${route}-${vessel}`;
@@ -212,20 +214,21 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 let demurrage = 0;
                 if (isDemurrageVisible) {
                     const monthIndex = activeMonths.indexOf(month);
-                    let customPct = parseFloat(demurragePct) || 0;
+                    let customPct = safeNum(demurragePct);
                     if (customDemurrages && customDemurrages[rowKey] && customDemurrages[rowKey][monthIndex] !== undefined) {
-                        customPct = parseFloat(customDemurrages[rowKey][monthIndex]) || 0;
+                        customPct = safeNum(customDemurrages[rowKey][monthIndex]);
                     }
                     demurrage = revenue * (customPct / 100);
                 }
                 
-                if (m === 'demurrage') return demurrage;
-                if (m === 'gross_plus_dem') return revenue + demurrage;
+                if (m === 'demurrage') return safeNum(demurrage);
+                if (m === 'gross_plus_dem') return safeNum(revenue + demurrage);
                 if (m === 'yield' || m === 'yield_flete') return 0; 
             }
 
-            return metrics?.[m] || 0;
+            return safeNum(metrics?.[m]);
         };
+
 
         // Extract and aggregate
         Object.entries(data.aggregated_data).forEach(([client, routes]: any) => {
@@ -628,32 +631,49 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     }, [data, groupBy, activeMonths, filterClient, filterRoute, filterVessel, filterTradeType, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryCumulativeGlobal, isSecondaryPercentage, demurragePct, showDemurrage, excludedDemurrages, customDemurrages, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
 
     const echartsRef = useRef<any>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    // Auto-resize de ECharts para evitar canvas de 0px durante transiciones de React Router o animaciones flexbox
+    // Auto-resize de ECharts con ResizeObserver para garantizar dimensiones en transiciones de React Router sin F5
     useEffect(() => {
         const handleResize = () => {
-            if (echartsRef.current) {
-                const chartInstance = echartsRef.current.getEchartsInstance();
-                if (chartInstance) chartInstance.resize();
+            if (echartsRef.current && options && options.series && Array.isArray(options.series) && options.series.length > 0) {
+                try {
+                    const chartInstance = echartsRef.current.getEchartsInstance();
+                    if (chartInstance && typeof chartInstance.resize === 'function' && !chartInstance.isDisposed()) {
+                        chartInstance.resize();
+                    }
+                } catch (e) {
+                    // Prevenir que errores de layout internos de ECharts en opciones intermedias rompan el árbol de React
+                }
             }
         };
 
-        const timers = [50, 150, 350, 600].map(delay => setTimeout(handleResize, delay));
+        let resizeObserver: ResizeObserver | null = null;
+        if (containerRef.current && typeof ResizeObserver !== 'undefined') {
+            resizeObserver = new ResizeObserver(() => {
+                handleResize();
+            });
+            resizeObserver.observe(containerRef.current);
+        }
+
+        const timer = setTimeout(handleResize, 100);
         window.addEventListener('resize', handleResize);
 
         return () => {
-            timers.forEach(clearTimeout);
+            clearTimeout(timer);
             window.removeEventListener('resize', handleResize);
+            if (resizeObserver) resizeObserver.disconnect();
         };
-    }, [options]);
+    }, []);
 
-    if (!data || !data.aggregated_data || activeMonths.length === 0) {
-        return (
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full bg-white rounded-lg border border-slate-200">
-                <p className="text-slate-500 font-medium text-lg">Ingresar o cargar escenario para mostrar herramienta.</p>
-            </div>
-        );
-    }
+
+
+
+    const hasValidOptions = options && options.series && Array.isArray(options.series) && options.series.length > 0;
+
+
+
+
 
     const metricOptions = [
         { value: 'none', label: 'Ninguno', icon: '🚫', desc: 'No graficar' },
@@ -907,7 +927,17 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         );
     };
 
+    if (!data || !data.aggregated_data || activeMonths.length === 0) {
+
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full bg-white rounded-lg border border-slate-200">
+                <p className="text-slate-500 font-medium text-lg">Ingresar o cargar escenario para mostrar herramienta.</p>
+            </div>
+        );
+    }
+
     return (
+
         <div className="w-full bg-white pt-6 pb-6 px-6 shadow-sm rounded-b-lg flex flex-row gap-6 items-stretch min-h-[calc(100vh-220px)]">
             {/* Sidebar de Controles (Left) */}
             <div className="flex flex-col gap-3 shrink-0 w-[240px]">
@@ -1126,9 +1156,18 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             </div>
 
                 {/* Contenedor del Gráfico (Right) */}
-                <div className="flex-1 flex flex-col min-h-[650px]">
-                    <ReactECharts ref={echartsRef} option={options} style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} notMerge={true} />
+                <div ref={containerRef} className="flex-1 flex flex-col min-h-[650px]">
+                    {hasValidOptions ? (
+                        <ReactECharts ref={echartsRef} option={options} style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} notMerge={true} />
+                    ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center min-h-[650px] w-full bg-slate-50 rounded border border-slate-200">
+                            <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mb-2"></div>
+                            <p className="text-slate-500 text-xs font-semibold">Procesando gráficos ECharts...</p>
+                        </div>
+                    )}
                 </div>
+
+
             </div>
     );
 };

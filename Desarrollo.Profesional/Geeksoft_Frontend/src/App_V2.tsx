@@ -55,15 +55,15 @@ const ProtectedRoute = ({
     }
     
     if (!isAuthenticated || !user) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/login" replace={false} />;
     }
     
     if (requireAdmin && user.role !== 'ADMIN') {
-        return <Navigate to="/dashboard" replace />;
+        return <Navigate to="/dashboard" replace={false} />;
     }
     
     if (module && !hasPermission(module, requiredAccess)) {
-        return <Navigate to="/dashboard" replace />;
+        return <Navigate to="/dashboard" replace={false} />;
     }
     
     return <>{children}</>;
@@ -93,22 +93,22 @@ function App_V2() {
               <Route path="/port-tariffs" element={<ProtectedRoute module="maestro_costos_agencia"><PortTariffsMaster /></ProtectedRoute>} />
               <Route path="/sources-sinks" element={<ProtectedRoute module="maestro_rutas"><SourcesSinksMaster_V2 /></ProtectedRoute>} />
               <Route path="/bunker-prices" element={<ProtectedRoute module="maestro_bunker"><BunkerMaster /></ProtectedRoute>} />
-              {/* [HIDDEN FROM UI] <Route path="/static-vs-dynamic-port-cost" element={<ProtectedRoute><StaticVsDynamicPortCost /></ProtectedRoute>} /> */}
               
               {/* Herramientas Protegidas (Ribbon via ToolsLayout) */}
               <Route element={<ProtectedRoute><ToolsLayout_V2 /></ProtectedRoute>}>
-                  <Route path="/multicotizador" element={<ProtectedRoute module="multicotizador_spot"><MultiCotizador_V2 /></ProtectedRoute>} />
-                  <Route path="/dashboard" element={<ProtectedRoute module="matriz_financiera"><FinancialMatrix_V2 /></ProtectedRoute>} />
-                  <Route path="/graphic-analysis" element={<ProtectedRoute module="matriz_financiera"><GraphicAnalysis_V2 /></ProtectedRoute>} />
-                  <Route path="/liquidations-graphic-analysis" element={<ProtectedRoute module="matriz_financiera"><LiquidationsGraphicAnalysis_V2 /></ProtectedRoute>} />
-                  <Route path="/liquidations-pdf-audit" element={<ProtectedRoute module="matriz_financiera"><LiquidationsAuditPdf_V2 /></ProtectedRoute>} />
-                  <Route path="/spaghetti-map" element={<ProtectedRoute module="matriz_financiera"><SpaghettiMap_V2 /></ProtectedRoute>} />
-                  <Route path="/audit-ledger" element={<ProtectedRoute module="matriz_financiera"><AuditLedger_V2 /></ProtectedRoute>} />
-                  <Route path="/audit-engine" element={<ProtectedRoute module="matriz_financiera"><AuditEngine_V2 /></ProtectedRoute>} />
-                  <Route path="/audit-final" element={<ProtectedRoute module="matriz_financiera"><AuditFinal_V2 /></ProtectedRoute>} />
-                  <Route path="/system-flowchart" element={<ProtectedRoute><SystemFlowchartViewer_V2 /></ProtectedRoute>} />
-                  <Route path="/system-documentation" element={<ProtectedRoute><SystemDocumentation_V2 /></ProtectedRoute>} />
+                  <Route path="/multicotizador" element={<MultiCotizador_V2 />} />
+                  <Route path="/dashboard" element={<FinancialMatrix_V2 />} />
+                  <Route path="/graphic-analysis" element={<GraphicAnalysis_V2 />} />
+                  <Route path="/liquidations-graphic-analysis" element={<LiquidationsGraphicAnalysis_V2 />} />
+                  <Route path="/liquidations-pdf-audit" element={<LiquidationsAuditPdf_V2 />} />
+                  <Route path="/spaghetti-map" element={<SpaghettiMap_V2 />} />
+                  <Route path="/audit-ledger" element={<AuditLedger_V2 />} />
+                  <Route path="/audit-engine" element={<AuditEngine_V2 />} />
+                  <Route path="/audit-final" element={<AuditFinal_V2 />} />
+                  <Route path="/system-flowchart" element={<SystemFlowchartViewer_V2 />} />
+                  <Route path="/system-documentation" element={<SystemDocumentation_V2 />} />
               </Route>
+
 
               
               {/* Panel de Gestión de Usuarios y Roles (Sólo ADMIN) */}

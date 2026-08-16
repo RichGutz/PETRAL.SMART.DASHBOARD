@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { TelemetryLogger } from '../../services/TelemetryLogger';
 
 interface Props {
     children: ReactNode;
@@ -22,7 +23,12 @@ export class ErrorBoundary extends Component<Props, State> {
 
     public override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         console.error("ErrorBoundary caught an error:", error, errorInfo);
+        TelemetryLogger.log('ERROR', `[ErrorBoundary] ${error.message}`, {
+            stack: error.stack,
+            componentStack: errorInfo.componentStack
+        });
     }
+
 
     public override render() {
         if (this.state.hasError) {

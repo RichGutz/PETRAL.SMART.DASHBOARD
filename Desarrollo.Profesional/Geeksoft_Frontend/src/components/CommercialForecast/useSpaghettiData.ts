@@ -132,12 +132,14 @@ export function useSpaghettiData(
                 Object.entries(vMap).forEach(([vessel, mMap]: any) => {
                     Object.entries(mMap).forEach(([month, metrics]: any) => {
                         if (targetMonths.includes(month)) {
-                            const rawFreq = metrics['raw_inputs']?.['monthly_frequency'];
-                            const freq = rawFreq !== undefined ? rawFreq : (metrics['freq'] !== undefined ? metrics['freq'] : 0);
-                            const carga_unit = metrics['carga_unit'] || 0;
+                            const safeNum = (v: any) => { const n = Number(v); return isNaN(n) || !isFinite(n) ? 0 : n; };
+                            const rawFreq = metrics?.['raw_inputs']?.['monthly_frequency'];
+                            const freq = safeNum(rawFreq !== undefined ? rawFreq : metrics?.['freq']);
+                            const carga_unit = safeNum(metrics?.['carga_unit']);
                             const tons = carga_unit * freq;
 
                             if (tons > 0) {
+
                                 legs.forEach((leg) => {
                                     if (portMap[leg.origin]) {
                                         portMap[leg.origin].carga += tons / legs.length;
