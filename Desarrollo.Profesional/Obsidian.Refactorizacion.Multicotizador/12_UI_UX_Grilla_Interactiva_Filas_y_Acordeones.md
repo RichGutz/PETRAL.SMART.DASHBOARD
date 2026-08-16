@@ -13,28 +13,29 @@ La grilla tabular de la Matriz Financiera está diseñada bajo el principio de *
 
 ```mermaid
 flowchart TD
-    subgraph G1 ["📊 VISTA EJECUTIVA (8 Filas Consolidadas)"]
+    subgraph G1 ["📊 VISTA EJECUTIVA (8 Filas Consolidadas - Fuente de la Verdad Card)"]
         F0["0. ▶ Viajes (freq)"]
         F1["1.   Toneladas"]
         F2["2. ▶ Net Revenue"]
-        F3["3.   (-) Port Costs"]
+        F3["3.   (-) Hire (TCE x días)"]
         F4["4.   (-) Bunker Costs"]
-        F5["5.   (=) Voyage Result"]
-        F6["6. ▶ TCE x días"]
-        F7["7.   (=) P/L (Cierre Financiero)"]
+        F5["5.   (-) Port Costs"]
+        F6["6.   (-) Muellaje (Costos)"]
+        F7["7.   (=) VOYAGE RESULT / P&L"]
+        F8["8. ▶ Métricas TCE ($/d)"]
     end
 
     subgraph A1 ["📂 ACORDEÓN 1: Net Revenue"]
         F2 --> A1_1["↳ (+) Freight Revenue (TM × Flete)"]
-        F2 --> A1_2["↳ (+) Refacturación Muellaje (RF al cliente)"]
-        F2 --> A1_3["↳ (=) Gross Revenue (Freight + Muellaje)"]
+        F2 --> A1_2["↳ (+) Pass-Through Revenue (Refacturación Muellaje al cliente)"]
+        F2 --> A1_3["↳ (=) Gross Revenue (Freight + Pass-Through)"]
         F2 --> A1_4["↳ (-) Comisiones (Address % + Broker %)"]
     end
 
-    subgraph A2 ["📂 ACORDEÓN 2: Rendimiento TCE"]
-        F6 --> A2_1["↳ TCE Realizado ($/d = Voyage Result / Días)"]
-        F6 --> A2_2["↳ TCE Requerido ($/d = Costo Buque)"]
-        F6 --> A2_3["↳ Diferencia TCE (+/- $/d)"]
+    subgraph A2 ["📂 ACORDEÓN 2: Rendimiento TCE Unitario"]
+        F8 --> A2_1["↳ TCE Realizado ($/d = (Net Revenue - Bunker - Ports) / Días)"]
+        F8 --> A2_2["↳ TCE Requerido ($/d = Costo Buque Base)"]
+        F8 --> A2_3["↳ Diferencia TCE (+/- $/d = Realizado - Requerido)"]
     end
 
     subgraph A3 ["📂 ACORDEÓN 3: 24 Sub-filas Operativas"]
@@ -46,19 +47,21 @@ flowchart TD
 
 ## 📐 2. Estructura de Filas Principales (Modo Colapsado por Defecto)
 
-Por defecto, cada buque/ruta modelada presenta **8 filas consolidadas**, logrando una presentación ejecutiva sumamente ordenada:
+Por defecto, cada buque/ruta modelada presenta las filas consolidadas homologadas con la tarjeta `FINANCIAL VOYAGE RESULT` (Card Multicotizador):
 
 | # | Métrica en Grilla | Tipo | Descripción / Fórmula Consolidada |
 | :---: | :--- | :---: | :--- |
 | **0** | **`▶ Viajes (freq)`** | `Numérico` | Frecuencia mensual de viajes modelados *(Desplegable con 24 sub-filas)* |
 | **1** | **`  Toneladas`** | `Numérico` | $\text{TM/viaje} \times \text{Viajes}$ |
 | **2** | **`▶ Net Revenue`** | `Moneda ($)` | **Ingreso Comercial Neto** $\mathbf{(= \text{Gross Revenue} - \text{Comisiones})}$ *(Desplegable)* |
-| **3** | **`  (-) Port Costs`** | `Moneda ($)` | Gastos de Puerto Totales (Agencias + Loading Master + Muellajes) |
+| **3** | **`  (-) Hire (TCE x días)`** | `Moneda ($)` | Costo por tiempo de charter $\mathbf{(= \text{TCE Requerido} \times \text{Días Totales} \times \text{Viajes})}$ |
 | **4** | **`  (-) Bunker Costs`** | `Moneda ($)` | Costo Total de Combustible (IFO + MDO) |
-| **5** | **`  (=) Voyage Result`** | `Moneda ($)` | $\text{Net Revenue} - \text{Port Costs} - \text{Bunker Costs}$ *(Margen Operativo)* |
-| **6** | **`▶ TCE x días`** | `Moneda ($)` | $\text{TCE Requerido} \times \text{Días Totales} \times \text{Viajes}$ *(Desplegable con TCEs $/día)* |
-| **7** | **`  (=) P/L`** | `Moneda ($)` | $\mathbf{\text{Voyage Result} - \text{TCE x días}}$ *(Línea de Resultado Neto / Cierre)* |
-| *8* | *`▶ Demurrage`* | *`Moneda ($)`* | *Opcional al activar el conmutador de Demurrage en el Ribbon* |
+| **5** | **`  (-) Port Costs`** | `Moneda ($)` | Gastos de Puerto Totales (Agencias + Fondeo + Tarifas Portuarias) |
+| **6** | **`  (-) Muellaje (Costos)`** | `Moneda ($)` | Costo de Muellaje Refacturable *(Suma a Costos)* |
+| **7** | **`  (=) VOYAGE RESULT / P&L`** | `Moneda ($)` | $\mathbf{\text{Net Revenue} - (\text{Hire} + \text{Bunker} + \text{Ports} + \text{Muellaje})}$ *(Cierre Financiero Único)* |
+| **8** | **`▶ Métricas TCE ($/d)`** | `Informativo` | TCE Realizado ($/d), TCE Requerido ($/d), Diferencia TCE (+/- $/d) *(Desplegable)* |
+| *9* | *`▶ Demurrage`* | *`Moneda ($)`* | *Opcional al activar el conmutador de Demurrage en el Ribbon* |
+
 
 ---
 
