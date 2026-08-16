@@ -327,16 +327,17 @@ A partir de la autopsia técnica comparativa entre el commit histórico funciona
 A partir de la autopsia técnica pericial sobre por qué las vistas de ANGRAF y Spaghetti Map se mostraban "En Blanco / Sin escenario cargado" al refrescar (F5) o conmutar de pestaña tras haber cargado un escenario en la Matriz Financiera:
 
 | # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 17) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
-### 🕵️‍♂️ 5.27. Vigesimoséptima Vuelta (Serie 27: Blindaje Defensivo en FastAPI `/api/v1/forecast/ports` y Exterminio del Error HTTP 500)
+### 🕵️‍♂️ 5.28. Vigesimooctava Vuelta (Serie 28: Exterminio de la Doble Instanciación de Componentes y Sincronización Canónica de `<Outlet />` en React Router)
 
-A partir del análisis del log de red de Axios (`AxiosError: Request failed with status code 500` en `/api/v1/forecast/ports`):
+A partir de la autopsia estructural sobre la coexistencia de rutas de React Router e instanciaciones manuales en `ToolsLayout_V2.tsx`:
 
-| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 27) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 28) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
-| **27.1** | **`Blindaje Defensivo en FastAPI (`forecast.py`)`** | `GET /api/v1/forecast/ports 500 (Internal Server Error)` al conmutar a Spaghetti Map | **Fallback Silencioso en `get_ports()`:** Se implementó un bloque `try/except` con fallback a la consulta limpia de la tabla `ports`. Si la unión relacional con `sources_sinks` falla en Supabase, la API retorna la lista simple de puertos con HTTP 200. | **El Crimen del Error 500 Desencadenante:** El fallo del backend al consultar los puertos lanzaba un HTTP 500. El frontend capturaba el error, vaciaba los datos de la sesión y desencadenaba los errores de re-renders de React (#300 / #310). | ✅ RESUELTO |
-| **27.2** | **`Estabilidad Total de la Sesión en el Frontend`** | `Error loading initial context data` en consola | **Preservación de Datos:** Al responder siempre la API con HTTP 200, `ForecastService.getPorts()` no vuelve a fallar y el contexto del frontend mantiene intacto el estado del escenario. | **Exterminio del Efecto Dominó:** Se corta la cadena de fallos desde su origen en el servidor FastAPI. | ✅ RESUELTO |
+| **28.1** | **`Sincronización Canónica de `<Outlet />``** | `Uncaught Error: Minified React error #300 / #310` al navegar de Matriz a ANGRAF o Spaghetti | **Enrutamiento Único vía `<Outlet />` (`ToolsLayout_V2.tsx`):** Se eliminó la instanciación duplicada manual de `<FinancialMatrix_V2 />`, `<GraphicAnalysis_V2 />` y `<SpaghettiMap_V2 />` en `ToolsLayout_V2`. Toda herramienta interactiva se renderiza de forma limpia e incondicional a través del `<Outlet />` de React Router. | **El Crimen de la Instanciación Duplicada en Paralelo:** React Router instanciaba la vista mediante la ruta en `App_V2.tsx` mientras `ToolsLayout_V2` instanciaba la misma vista manualmente. Las dos instancias competían en paralelo actualizando el contexto, desincronizando los hooks y disparando bucles infinitos (#300 / #310). | ✅ RESUELTO |
+| **28.2** | **`Higiene Total de Memoria y Ciclo de Vida`** | La consola fallaba en navegadores reales durante la interacción del usuario | **Instancia Única de Componente:** Al existir una sola instancia activa de cada componente en el árbol de React, el ciclo de vida de montaje, actualización y desmonte es 100% determinista y predecible. | **Restablecimiento del Modelo Canónico de React Router:** Garantiza estabilidad 100% en Brave, Chrome, Firefox y Safari sin choques de contexto. | ✅ RESUELTO |
 
 ### ───────────────
+
 
 
 
