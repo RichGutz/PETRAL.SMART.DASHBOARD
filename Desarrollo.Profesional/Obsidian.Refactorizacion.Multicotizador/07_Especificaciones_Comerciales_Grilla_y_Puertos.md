@@ -292,7 +292,7 @@ A partir de la inspección pericial de la fila inferior de resultados comerciale
 | # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 13) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
 | **13.1** | **`Partición de Fila Inferior (Cards)`** | La antigua caja de Comentarios ocupaba 2 columnas (`col-span-2`), desalineando la grilla | **3 Cards Independientes de 1 Columna (`grid-cols-3`):** `COMMENTS` (Debajo de Bunker), `BAF` (Debajo de Port Costs) y `DEMURRAGE` (Debajo de Comisiones). | **Alineación Limpia 1:1:** Cada card inferior se posiciona exactamente bajo su respectiva columna de la fila superior sin deformar el layout. | ✅ RESUELTO |
-| **13.2** | **`Disposición Simétrica de Card BAF`** | Fechas de Inicio Validez ocupaban ancho completo | **Diseño Simétrico en 2 Columnas (`grid grid-cols-2`):** `📅 Inicio Validez` (mitad izquierda) y `📅 Fin Validez` (mitad derecha), alineadas sobre `⚓ IFO Base ($/T)` y `⚓ MDO Base ($/T)`. | **Calce Visual:** Estructura limpia y balanceada de 3 filas compactas para los 4 parámetros BAF. | ✅ RESUELTO |
+| **13.2** | **`Disposición Simétrica de Card BAF`** | Fechas de Inicio Validez ocupaban ancho completo | **Diseño Simétrico en 2 Columnas (`grid grid-cols-2`):** `📅 Inicio Validez` (mitad izquierda) y `📅 Fin Validez` (mitad derecha), alineadas sobre `⚓ IFO Base ($/T)` y `⚓ MDO Base ($/T)` | **Calce Visual:** Estructura limpia y balanceada de 3 filas compactas para los 4 parámetros BAF. | ✅ RESUELTO |
 | **13.3** | **`Exterminio de Data Dummy en BAF`** | Aparecía fórmula predeterminada y precios base dummy `$550.00` / `$720.00` | **Inicialización Limpia 100% en Cero/Vacío:** `bafFormula=""`, `bafValidFrom=""`, `bafValidTo=""`, `bafIfoBase=0`, `bafMdoBase=0`. | **El Crimen del Dummy Hardcodeado:** Se eliminaron los valores fallback e inicializadores ficticios que ensuciaban la cotización nueva. | ✅ RESUELTO |
 | **13.4** | **`Exterminio de Fallbacks en Card 4 (P&L)`** | En cotización vacía mostraba `13,500 MT × $30/MT`, `$15,000/d` Hire y búnker ratios legacy | **Evaluación Pura de la Grilla (0.00):** Muestra `Revenue (0 MT × $0/MT) -> $0` y `TCE REQUERIDO $0/d` si no hay buque ni tramos cargados. | **Limpieza Total:** Eliminación de los operadores `|| 13500`, `|| 30`, `|| 15000` y ratios `14.5`, `3.5`, `5.0`. | ✅ RESUELTO |
 
@@ -303,10 +303,22 @@ A partir de la inspección pericial de la fila inferior de resultados comerciale
 A partir de la inspección pericial reportada en pantalla sobre la cotización patrón `NEXA.ILO.CALLAO.MATARANI.ILO (12.08.26)` con buque `TABLONES`:
 
 | # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 14) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
-| :-: | :--- | :--- | :--- | :--- | :--- | :-: |
+| :-: | :--- | :--- | :--- | :--- | :-: |
 | **14.1** | **`Time to Count (Callao / Matarani)`** | Mostraba **`0.0`** en gris claro (placeholder) en lugar del valor activo `6` | **`6.0 H`** en Callao (Carga) y **`6.0 H`** en Matarani (Descarga) | **Crimen de la Discrepancia de Nombres de Propiedad (`overhead` vs `time_to_count`):** El JSON de BD guardaba `"overhead": "6"`, pero la grilla leía `p.time_to_count`, resultando en `undefined` y mostrando el placeholder `0.0`. Se implementó la normalización dual `p.time_to_count ?? p.overhead` en `unpackQuoteData` y en los inputs de `SpreadsheetTramosGrid.tsx`. | ✅ RESUELTO |
 | **14.2** | **`Días Puerto (Días Pto)`** | Mostraba **`1.17d`** en Callao y **`1.41d`** en Matarani (**Total `2.57d`**) | **`1.42d`** en Callao + **`1.66d`** en Matarani = **`3.07d`** Días Puerto Totales | **Convergencia 100% con Excel PETRAL:** Al incorporar las 6h de Time to Count en Callao (27h + 6h + 1h = 34h = 1.417d) y 6h en Matarani (33.75h + 6h = 39.75h = 1.656d), los Días Totales de Viaje alcanzan exactamente **`7.13 días`** (4.06d mar + 3.07d pto). | ✅ RESUELTO |
 | **14.3** | **`Persistencia en BD Supabase`** | `puertosConfig` en `routes_quotes` tenía `overhead=""` en Matarani | **Actualización Prístina en `routes_quotes`:** Se actualizaron `puertosConfig[1]` (Callao: `time_to_count: 6`, `overhead: "6"`, `positioning: 1`) y `puertosConfig[2]` (Matarani: `time_to_count: 6`, `overhead: "6"`, `positioning: 0`). | **Preservación de Datos:** Toda recarga o guardado posterior mantiene íntegro el valor de 6.0 horas para ambos puertos. | ✅ RESUELTO |
+
+### ───────────────
+
+### 🕵️‍♂️ 5.15. Decimoquinta Vuelta (Serie 15: Telemetría de Runtime, Diagnóstico Pericial de React Error #300 y Reestructuración de Navegación Monolítica)
+
+A partir de la auditoría pericial con la técnica Benoit Blanc sobre la conmutación entre Matriz Financiera, Análisis Gráfico y Spaghetti Map:
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 15) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **15.1** | **`Navegación Router entre Matriz, ANGRAF y Spaghetti`** | Pantalla en blanco al pasar a ANGRAF/Spaghetti y dar "Atrás" en el navegador nativo | **Reestructuración Monolítica & Eliminación de Early Returns:** Se eliminaron los retornos condicionales que desmontaban `<InteractiveChart>` y los cierres con `replace={true}` en `ProtectedRoute`. | **El Crimen del Early Return des-sincronizado (React Error #300):** La alternancia de `context.loading` causaba desmontado y des-sincronización en el árbol de hooks de React, destruyendo las referencias de ECharts. | ✅ RESUELTO |
+| **15.2** | **`Consola de Telemetría VPS`** | Excepciones en el cliente eran invisibles en el servidor | **Logger Global (`TelemetryLogger.ts`) y Endpoint VPS (`/telemetry-log`):** Cada excepción o error no controlado se transmite al VPS y se escribe en `/opt/geeksoft_engine/frontend_runtime_errors.log`. | **Visibilidad In-Situ:** Los logs del navegador cliente se transmiten a la consola flotante para usuarios `ADMIN` y al archivo físico en VPS. | ✅ RESUELTO |
+| **15.3** | **`Análisis Gráfico de Liquidaciones Reales`** | Pantalla en blanco al cargar liquidaciones | **Auto-resize Progresivo de Canvas & Fallback de Datos:** `LiquidationsInteractiveChart.tsx` dispone de referencia `echartsRef` y redimensionamiento temporizado tras montarse. | **El Crimen del Canvas 0x0px:** El contenedor modal/tab no le otorgaba dimensiones iniciales al canvas de ECharts, dejando la vista vacía. | ✅ RESUELTO |
 
 ### ───────────────
 
