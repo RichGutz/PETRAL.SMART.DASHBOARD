@@ -534,6 +534,25 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
         }
     }, []);
 
+    // Auto-resize de ECharts para evitar canvas 0px durante la animación de transición de React Router
+    useEffect(() => {
+        const handleResize = () => {
+            if (chartRef.current) {
+                const chartInstance = chartRef.current.getEchartsInstance();
+                if (chartInstance) chartInstance.resize();
+            }
+        };
+
+        const timers = [50, 150, 300, 500, 800].map(delay => setTimeout(handleResize, delay));
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            timers.forEach(clearTimeout);
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [mapLoaded]);
+
+
     const option = useMemo(() => {
         if (!mapLoaded || !data || !data.aggregated_data || selectedMonths.length === 0 || !ports) return;
 

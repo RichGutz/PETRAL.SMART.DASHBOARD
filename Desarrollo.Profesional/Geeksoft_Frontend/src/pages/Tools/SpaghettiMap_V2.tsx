@@ -8,12 +8,19 @@ import { ForecastService } from '../../services/api';
 export const SpaghettiMap_V2: React.FC = () => {
     const context = useForecastContext_V2();
     const months = context.dynamicMonths;
-    const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
+    const [selectedMonths, setSelectedMonths] = useState<string[]>(() => context.dynamicMonths || []);
     const [selectedPortId, setSelectedPortId] = useState<string | null>(null);
     const [, setForceRender] = useState(0);
     const [ports, setPorts] = useState<any[]>([]);
     const [clients, setClients] = useState<any[]>([]);
     const [rawClients, setRawClients] = useState<any[]>([]);
+
+    // Disparar simulación automáticamente si data no está presente al montar el mapa
+    useEffect(() => {
+        if (!context.loading && (!context.data || !context.data.aggregated_data) && context.projectionLines.length > 0) {
+            context.runSimulationWith(context.projectionLines, context.startDate, context.endDate);
+        }
+    }, [context.data, context.projectionLines, context.loading]);
 
     // Controles de animación y nodos
     const [showPies, setShowPies] = useState(false);
@@ -46,10 +53,11 @@ export const SpaghettiMap_V2: React.FC = () => {
 
     // Seleccionar por defecto todos los meses activos modelados en la grilla
     useEffect(() => {
-        if (months && months.length > 0 && selectedMonths.length === 0 && !isPlaying) {
+        if (months && months.length > 0 && (selectedMonths.length === 0 || selectedMonths.length !== months.length) && !isPlaying) {
             setSelectedMonths([...months]);
         }
-    }, [months, selectedMonths, isPlaying]);
+    }, [months, isPlaying]);
+
 
     // Animación automática de la línea de tiempo
     useEffect(() => {

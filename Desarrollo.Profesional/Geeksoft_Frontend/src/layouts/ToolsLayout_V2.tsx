@@ -3,7 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { MasterTemplate } from '../components/Masters/MasterTemplate_V2';
 import { ForecastBuilder } from '../components/CommercialForecast/ForecastBuilder_V2';
 import { useForecastContext_V2 } from '../context/ForecastContext_V2';
-import { Save, FolderOpen, X, RefreshCw } from 'lucide-react';
+import { Save, FolderOpen, X, RefreshCw, Trash2 } from 'lucide-react';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 
 export const ToolsLayout_V2: React.FC = () => {
@@ -60,6 +60,15 @@ export const ToolsLayout_V2: React.FC = () => {
                         bottomRightContent={
                             <>
                                 <div className="flex flex-row items-center gap-2 h-8">
+                                    <button 
+                                        onClick={context.handleClearSession} 
+                                        disabled={context.loading}
+                                        className="flex items-center justify-center gap-1 h-8 px-3 rounded font-semibold text-[11px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-all duration-200 shadow-sm cursor-pointer"
+                                        title="Limpiar sesión y volver a pantalla en blanco"
+                                    >
+                                        <Trash2 size={13} className="text-rose-600" />
+                                        <span>Limpiar</span>
+                                    </button>
                                     <button 
                                         onClick={context.handleManualRecalculate} 
                                         disabled={context.loading}

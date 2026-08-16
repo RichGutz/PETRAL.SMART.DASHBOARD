@@ -638,7 +638,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             }
         };
 
-        const timers = [50, 150, 350, 600].map(delay => setTimeout(handleResize, delay));
+        const timers = [50, 150, 350, 600, 800].map(delay => setTimeout(handleResize, delay));
         window.addEventListener('resize', handleResize);
 
         return () => {
