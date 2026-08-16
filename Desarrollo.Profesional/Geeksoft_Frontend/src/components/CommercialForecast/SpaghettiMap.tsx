@@ -97,7 +97,7 @@ const computeSpaghettiDataForMonth = (
         portMap[p.port_id] = { carga: 0, descarga: 0 };
     });
 
-    const edgeAccumulator: Record<string, { source: string; target: string; vessel: string; tons: number, freq: number }> = {};
+    const edgeAccumulator: Record<string, { source: string; target: string; vessel: string; tons: number; freq: number; isLaden: boolean }> = {};
     const rotationList: Array<{ vessel: string; fullRouteName: string; legs: Array<{ origin: string; dest: string }>; freq: number }> = [];
 
     const getRouteLegs = (routeKey: string): Array<{ origin: string; dest: string }> => {
@@ -145,12 +145,17 @@ const computeSpaghettiDataForMonth = (
 
                         if (tons > 0 || freq > 0) {
                             const effectiveTons = tons > 0 ? tons : 13500;
-                            legs.forEach((leg) => {
+
+                            // REFINAMIENTO 1: Contabilidad estricta de Carga Paga SOLO en la pierna LADEN (Pierna 0)
+                            legs.forEach((leg, legIdx) => {
+                                const isLaden = legIdx === 0;
+                                const legTons = isLaden ? effectiveTons : 0;
+
                                 if (portMap[leg.origin]) {
-                                    portMap[leg.origin].carga += effectiveTons / legs.length;
+                                    portMap[leg.origin].carga += legTons;
                                 }
                                 if (portMap[leg.dest]) {
-                                    portMap[leg.dest].descarga += effectiveTons / legs.length;
+                                    portMap[leg.dest].descarga += legTons;
                                 }
 
                                 const edgeKey = `${leg.origin}-${leg.dest}|${vessel}`;
@@ -160,10 +165,11 @@ const computeSpaghettiDataForMonth = (
                                         target: leg.dest,
                                         vessel: vessel,
                                         tons: 0,
-                                        freq: 0
+                                        freq: 0,
+                                        isLaden: isLaden
                                     };
                                 }
-                                edgeAccumulator[edgeKey].tons += effectiveTons;
+                                edgeAccumulator[edgeKey].tons += legTons;
                                 edgeAccumulator[edgeKey].freq += freq;
                             });
 
@@ -179,16 +185,14 @@ const computeSpaghettiDataForMonth = (
 
     const edgesGroupedByPair: Record<string, any[]> = {};
     Object.values(edgeAccumulator).forEach((edge: any) => {
-        if (edge.tons > 0) {
-            const pairKey = `${edge.source}-${edge.target}`;
-            if (!edgesGroupedByPair[pairKey]) {
-                edgesGroupedByPair[pairKey] = [];
-            }
-            edgesGroupedByPair[pairKey].push({
-                ...edge,
-                isAggregated: true
-            });
+        const pairKey = `${edge.source}-${edge.target}`;
+        if (!edgesGroupedByPair[pairKey]) {
+            edgesGroupedByPair[pairKey] = [];
         }
+        edgesGroupedByPair[pairKey].push({
+            ...edge,
+            isAggregated: true
+        });
     });
 
     const activePorts = ports.filter(p => p.lat !== null && p.lon !== null);
@@ -202,13 +206,17 @@ const computeSpaghettiDataForMonth = (
         const baseCurveness = getBaseCurveness(source, target);
 
         edgesInPair.forEach((edge, index) => {
-            const curveness = baseCurveness + index * 0.04;
+            // REFINAMIENTO 2: Offset dinámico de curvatura para evitar superposición de rutas que comparten piernas
+            const offsetSign = baseCurveness >= 0 ? 1 : -1;
+            const curveness = baseCurveness + (index * 0.08 * offsetSign);
             
             const edgeConfig: any = {
                 source: edge.source,
                 target: edge.target,
                 value: Math.round(edge.tons),
                 vessel: edge.vessel,
+                freq: Math.round(edge.freq),
+                isLaden: edge.isLaden,
                 lineStyle: {
                     width: targetMonths.length === 1 ? 1.2 : Math.max(0.5, Math.min(2, edge.tons / 50000)),
                     color: getVesselColor(edge.vessel),
@@ -253,7 +261,11 @@ const computeSpaghettiDataForMonth = (
                 const targetPort = activePorts.find(p => p.port_id === leg.dest);
 
                 if (sourcePort && targetPort && sourcePort.lon !== null && sourcePort.lat !== null && targetPort.lon !== null && targetPort.lat !== null) {
-                    const curveness = getBaseCurveness(leg.origin, leg.dest) + vIdx * 0.04;
+                    const baseCurveness = getBaseCurveness(leg.origin, leg.dest);
+                    // REFINAMIENTO 2: Offset dinámico por vIdx para separar autopistas marítimas paralelas
+                    const offsetSign = baseCurveness >= 0 ? 1 : -1;
+                    const curveness = baseCurveness + (vIdx * 0.08 * offsetSign);
+
                     const legPoints = getBezierPoints(
                         { lon: sourcePort.lon, lat: sourcePort.lat },
                         { lon: targetPort.lon, lat: targetPort.lat },
@@ -599,12 +611,17 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
                     }
                     if (params.dataType === 'edge') {
                         const d = params.data;
+                        const isLaden = d.value > 0;
                         return `
                             <div style="font-family: Inter, sans-serif; padding: 4px;">
-                                <b>${d.source} &rarr; ${d.target}</b><br/>
+                                <b>${d.source} &rarr; ${d.target}</b> <span style="font-size: 11px; color: ${isLaden ? '#10B981' : '#94A3B8'};">(${isLaden ? 'Pierna LADEN / Carga Paga' : 'Pierna BALLAST / Lastre'})</span><br/>
                                 <hr style="margin: 6px 0; border-color: #334155;"/>
                                 <b>Buque:</b> ${d.vessel}<br/>
-                                <b>Volumen Transportado:</b> <span style="font-weight: bold; color: #10B981; font-family: monospace;">${d.value.toLocaleString()} MT</span>
+                                <b>Viajes Redondos Cerrados:</b> ${d.freq || 1} viaje${(d.freq || 1) > 1 ? 's' : ''}<br/>
+                                ${isLaden 
+                                    ? `<b>Carga Paga Transportada:</b> <span style="font-weight: bold; color: #10B981; font-family: monospace;">${d.value.toLocaleString()} MT</span>`
+                                    : `<b>Estado:</b> <span style="color: #94A3B8;">Re-posicionamiento en Vacío (0 MT Paga)</span>`
+                                }
                             </div>
                         `;
                     }
