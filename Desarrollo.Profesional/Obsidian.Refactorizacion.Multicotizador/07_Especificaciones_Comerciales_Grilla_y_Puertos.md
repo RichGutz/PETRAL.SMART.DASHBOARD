@@ -327,16 +327,17 @@ A partir de la autopsia técnica comparativa entre el commit histórico funciona
 A partir de la autopsia técnica pericial sobre por qué las vistas de ANGRAF y Spaghetti Map se mostraban "En Blanco / Sin escenario cargado" al refrescar (F5) o conmutar de pestaña tras haber cargado un escenario en la Matriz Financiera:
 
 | # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 17) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
-### 🕵️‍♂️ 5.24. Vigesimocuarta Vuelta (Serie 24: Detención de Bucle de Animación `_onframe` en Fondo mediante Desmonte Limpio de Herramientas Gráficas)
+### 🕵️‍♂️ 5.25. Vigesimoquinta Vuelta (Serie 25: Exterminio de React Error #310 mediante Eliminación de Retornos Anticipados y Reemplazo de Fuentes Corruptas `@fontsource-variable/geist`)
 
-A partir del análisis forense del Stack Trace completo (`_onframe -> update -> e.create -> AQ [as resize] -> LT`):
+A partir del análisis forense de la consola F12 (`React Error #310` al volver de ANGRAF a Dashboard y `OTS parsing error: invalid sfntVersion`):
 
-| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 24) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 25) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
-| **24.1** | **`Detención de Bucle Fantasma de Animación (`_onframe`)`** | `Uncaught TypeError: Cannot read properties of null (reading '0') at LT at t._onframe` y `React Error #300` | **Desmonte Limpio de Vistas Gráficas (`ToolsLayout_V2.tsx`):** `<FinancialMatrix_V2 />` se mantiene montada de forma continua en memoria, mientras que `<GraphicAnalysis_V2 />` y `<SpaghettiMap_V2 />` se montan/desmontan condicionalmente según `activeTab`. | **El Crimen del Bucle `requestAnimationFrame` en Fondo:** Con `display: none`, ECharts no se destruía y su bucle interno de animación (`_onframe`) continuaba ejecutándose en segundo plano sobre un elemento sin dimensiones DOM, lanzando excepciones de coordenadas nulas y destruyendo el scheduler de React (#300). | ✅ RESUELTO |
-| **24.2** | **`Destrucción Limpia `echarts.dispose()``** | Al conmutar de ANGRAF a Matriz, la consola arrojaba errores en segundo plano | **Cancelación de Timers de Animación al Desmontar:** Al desmontarse el componente gráfico al cambiar de pestaña, `<ReactECharts>` invoca `echartsInstance.dispose()`, cancelando inmediatamente todos los cuadros de animación y limpiando la memoria del navegador. | **Calce Perfeccionado:** Combina la velocidad 0-ms de la Matriz Financiera en memoria con la higiene de recursos y eliminación total de errores de consola de ECharts. | ✅ RESUELTO |
+| **25.1** | **`Cumplimiento Estricto de la Regla de Hooks (`React Error #310`)`** | `Uncaught Error: Minified React error #310` al conmutar entre ANGRAF y Dashboard | **Eliminación de Retorno Anticipado Intermedio (`InteractiveChart.tsx`):** Se eliminó el `return` intermedio condicional `if (!hasValidOptions)`. Ahora todos los hooks se ejecutan incondicionalmente en la parte superior y la renderización de `<ReactECharts>` se maneja de forma inline (`hasValidOptions ? <ReactECharts> : <Spinner>`). | **El Crimen del Retorno Condicional Intermedio:** Poner un `return` en medio del cuerpo del componente provocaba que en renders donde `hasValidOptions` cambiaba a falso, React ejecutara menos Hooks que en el render anterior, rompiendo la regla de oro de Hooks de React (Error #310). | ✅ RESUELTO |
+| **25.2** | **`Exterminio de Errores OTS Parsing 404 de Fuentes`** | 12 mensajes de error `Failed to decode downloaded font: geist-latin-wght-normal.woff2` y `OTS parsing error` | **Inyección de Fuente Limpia Google Fonts Inter (`src/index.css`):** Se reemplazó la importación corrupta `@fontsource-variable/geist` por `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap')`. | **Limpieza de Recursos:** El paquete fontsource intentaba cargar archivos `.woff2` relativos no resueltos por Vite en producción. Al usar Google Fonts Inter, la consola queda 100% libre de advertencias 404. | ✅ RESUELTO |
 
 ### ───────────────
+
 
 
 

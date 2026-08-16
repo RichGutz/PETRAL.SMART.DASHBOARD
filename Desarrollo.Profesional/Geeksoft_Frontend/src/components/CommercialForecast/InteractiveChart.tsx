@@ -668,13 +668,14 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
     const hasValidOptions = options && options.series && Array.isArray(options.series) && options.series.length > 0;
 
-    if (!data || !data.aggregated_data || activeMonths.length === 0 || !hasValidOptions) {
+    if (!data || !data.aggregated_data || activeMonths.length === 0) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full bg-white rounded-lg border border-slate-200">
                 <p className="text-slate-500 font-medium text-lg">Ingresar o cargar escenario para mostrar herramienta.</p>
             </div>
         );
     }
+
 
 
     const metricOptions = [
@@ -1149,8 +1150,16 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
                 {/* Contenedor del Gráfico (Right) */}
                 <div ref={containerRef} className="flex-1 flex flex-col min-h-[650px]">
-                    <ReactECharts ref={echartsRef} option={options} style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} notMerge={true} />
+                    {hasValidOptions ? (
+                        <ReactECharts ref={echartsRef} option={options} style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} notMerge={true} />
+                    ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center min-h-[650px] w-full bg-slate-50 rounded border border-slate-200">
+                            <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mb-2"></div>
+                            <p className="text-slate-500 text-xs font-semibold">Procesando gráficos ECharts...</p>
+                        </div>
+                    )}
                 </div>
+
 
             </div>
     );
