@@ -228,8 +228,9 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    // Ref para evitar simulaciones concurrentes (mutex simple)
+    // Ref para evitar simulaciones concurrentes (mutex simple) y doble disparo en batch load
     const simulatingRef = useRef(false);
+    const isBatchLoadingRef = useRef(false);
     const abortControllerRef = useRef<AbortController | null>(null);
 
     const runSimulationWith = async (lines: any[], sDate: string, eDate: string) => {
@@ -284,8 +285,6 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
                 setData(null);
             }
         } finally {
-            // SIEMPRE limpiar el loading — sin condición.
-            // Si otro request está corriendo, él mismo llamará setLoading(true) y luego setLoading(false).
             setLoading(false);
             simulatingRef.current = false;
         }
@@ -297,7 +296,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
 
     // Reactividad automática ante cambios en projectionLines, fechas o portCostMode
     useEffect(() => {
-        if (projectionLines.length > 0) {
+        if (!isBatchLoadingRef.current && projectionLines.length > 0) {
             runSimulationWith(projectionLines, startDate, endDate);
         }
     }, [projectionLines.length, startDate, endDate, portCostMode]);
@@ -432,6 +431,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     const handleLoadSelected = async (id: string) => {
         try {
             setActionLoading('loadSelected');
+            isBatchLoadingRef.current = true;
             const loadedData = await ForecastService.loadForecast(id);
 
             const newStartDate = loadedData.start_date || startDate;
@@ -475,6 +475,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             const msg = e?.response?.data?.detail || e?.message || "Error desconocido";
             alert(`Error al cargar el forecast: ${msg}`);
         } finally {
+            isBatchLoadingRef.current = false;
             setActionLoading('none');
         }
     };
