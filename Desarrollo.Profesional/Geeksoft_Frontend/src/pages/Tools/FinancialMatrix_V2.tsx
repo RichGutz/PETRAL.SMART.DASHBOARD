@@ -5,13 +5,8 @@ import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 export const FinancialMatrix_V2: React.FC = () => {
     const context = useForecastContext_V2();
 
-    React.useEffect(() => {
-        if (!context.loading && (!context.data || !context.data.aggregated_data) && context.projectionLines.length > 0) {
-            context.runSimulationWith(context.projectionLines, context.startDate, context.endDate);
-        }
-    }, [context.data, context.projectionLines, context.loading]);
-
     return (
+
         <section className="flex flex-col gap-2 relative animate-in fade-in slide-in-from-bottom-2 duration-300 mt-2 min-h-0 flex-1">
             <ForecastGrid 
                 data={context.data} 

@@ -327,16 +327,17 @@ A partir de la autopsia técnica comparativa entre el commit histórico funciona
 A partir de la autopsia técnica pericial sobre por qué las vistas de ANGRAF y Spaghetti Map se mostraban "En Blanco / Sin escenario cargado" al refrescar (F5) o conmutar de pestaña tras haber cargado un escenario en la Matriz Financiera:
 
 | # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 17) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
-### 🕵️‍♂️ 5.19. Decimonovena Vuelta (Serie 19: Arquitectura de Vistas Persistentes en Memoria `display: flex/none` para Calce 100% Idéntico al Monolito `4afad62`)
+### 🕵️‍♂️ 5.20. Vigésima Vuelta (Serie 20: Captura del Asesino — Eliminación de los `useEffect` Duplicados de Simulación que Provocaban la Condición de Carrera por Aborto del Request en Conmutación de Rutas)
 
-A partir de la autopsia técnica profunda sobre cómo funcionaba la alternancia de pestañas en la versión monolítica original (`4afad62c45799a88633a7716daa240e36474d2bf`):
+A partir de la autopsia de código forense comparativa contra el commit monolítico `4afad62c45799a88633a7716daa240e36474d2bf`:
 
-| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 19) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 20) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
-| **19.1** | **`Montaje Continuo en Memoria de Matriz, ANGRAF y Spaghetti`** | Al cambiar entre Matriz, ANGRAF y Spaghetti, o presionar "Atrás", salía en blanco hasta F5 | **Contenedores Persistentes (`ToolsLayout_V2.tsx`):** Las 3 herramientas (`FinancialMatrix_V2`, `GraphicAnalysis_V2`, `SpaghettiMap_V2`) conviven montadas simultáneamente en el DOM dentro de `<ToolsLayout_V2>` con conmutación de visibilidad `display: activeTab === '...' ? 'flex' : 'none'`. | **El Crimen del Desmontado por `<Outlet />`:** Al cambiar de ruta, `<Outlet />` desmontaba el componente del DOM y destruía su estado y referencias de canvas. Al volver atrás, el componente recién montado intentaba leer un estado no inicializado. | ✅ RESUELTO |
-| **19.2** | **`Navegación Fluida 0-ms sin F5 ni Re-Fetches`** | Al ir de Matriz a Spaghetti o de ANGRAF a Matriz, la grilla o gráfico se perdía | **Retención de Estado e Instancias (Calce 100% Monolito):** Al no desmontarse los componentes, la Matriz conserva todas sus filas extendidas y scroll position. ANGRAF y Spaghetti Map mantienen sus referencias de ECharts y Leaflet listas sin requerir F5 ni re-cálculos. | **Calce Idéntico a la Versión `4afad62`:** Recrea exactamente la arquitectura del monolito funcional mientras preserva las URLs dinámicas (`/dashboard`, `/graphic-analysis`, `/spaghetti-map`) para la barra de navegación del usuario. | ✅ RESUELTO |
+| **20.1** | **`Identificación del Asesino (Disparos Duplicados de `runSimulationWith`)`** | Pasar de Matriz a ANGRAF o a Spaghetti borraba `data` y dejaba la pantalla en blanco | **Unificación de Fuente Única de Verdad (`ForecastContext_V2.tsx`):** Se eliminaron los `useEffect` redundantes en `GraphicAnalysis_V2.tsx`, `SpaghettiMap_V2.tsx` y `FinancialMatrix_V2.tsx` que intentaban ejecutar la simulación de forma independiente al montarse. | **El Crimen del Aborto por Condición de Carrera:** Al cambiar de pestaña, el `useEffect` de la vista hija disparaba una simulación secundaria mientras la del Contexto aún estaba corriendo. `abortControllerRef.current.abort()` cancelaba el request en vuelo y vaciaba `data` a `null`, destruyendo la renderización. | ✅ RESUELTO |
+| **20.2** | **`Calce Estricto 1:1 con el Monolito (`4afad62`)`** | En el monolito nunca ocurrieron cierres o abortos en conmutación de pestañas | **Centralización Estricta en Context:** El monolito original poseía un único pipeline centralizado de simulación. Al remover los disparadores duplicados en las vistas hijas, se eliminaron por completo las colisiones de cancelaciones de requests. | **Garantía de Fluidez Continua:** `ForecastContext_V2` retiene y entrega `data` a todas las herramientas hijas de forma síncrona sin abortar llamadas de API ni vaciar el estado en memoria. | ✅ RESUELTO |
 
 ### ───────────────
+
 
 
 

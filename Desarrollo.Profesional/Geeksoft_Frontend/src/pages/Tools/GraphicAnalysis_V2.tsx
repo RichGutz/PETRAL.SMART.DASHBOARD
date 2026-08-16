@@ -5,13 +5,8 @@ import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 export const GraphicAnalysis_V2: React.FC = () => {
     const context = useForecastContext_V2();
 
-    React.useEffect(() => {
-        if (!context.loading && (!context.data || !context.data.aggregated_data) && context.projectionLines.length > 0) {
-            context.runSimulationWith(context.projectionLines, context.startDate, context.endDate);
-        }
-    }, [context.data, context.projectionLines, context.loading]);
-
     const hasData = context.data && context.data.aggregated_data && typeof context.data.aggregated_data === 'object' && Object.keys(context.data.aggregated_data).length > 0;
+
 
     return (
         <section className="flex flex-col flex-1 gap-2 relative mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300 w-full min-h-[600px]">

@@ -15,12 +15,6 @@ export const SpaghettiMap_V2: React.FC = () => {
     const [clients, setClients] = useState<any[]>([]);
     const [rawClients, setRawClients] = useState<any[]>([]);
 
-    // Disparar simulación automáticamente si data no está presente al montar el mapa
-    useEffect(() => {
-        if (!context.loading && (!context.data || !context.data.aggregated_data) && context.projectionLines.length > 0) {
-            context.runSimulationWith(context.projectionLines, context.startDate, context.endDate);
-        }
-    }, [context.data, context.projectionLines, context.loading]);
 
     // Controles de animación y nodos
     const [showPies, setShowPies] = useState(false);
