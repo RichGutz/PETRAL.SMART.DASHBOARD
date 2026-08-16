@@ -180,8 +180,18 @@ export const SpaghettiMap_V2: React.FC = () => {
     return (
         <section className="flex-1 flex flex-col mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300 w-full h-full min-h-[600px] -mx-4 md:-mx-6 -mb-4 md:-mb-6 overflow-hidden bg-white border border-slate-200 rounded-tl-xl shadow-lg" style={{ width: 'calc(100% + 2rem)' }}>
             
+            {/* Margen Superior Blanco para Escenario Activo */}
+            {context.forecastName && (
+                <div className="w-full bg-white border-b border-slate-200 py-2 px-4 flex items-center justify-center shrink-0 shadow-sm z-20">
+                    <div className="flex items-center gap-2 bg-sky-50 px-4 py-1 rounded-full border border-sky-200 shadow-sm">
+                        <span className="text-xs font-bold text-sky-700">📁 Escenario Activo:</span>
+                        <span className="text-xs font-extrabold text-sky-900">{context.forecastName}</span>
+                    </div>
+                </div>
+            )}
+
             {/* GRID LAYOUT: 1 Row with 2 Columns */}
-            <div className="flex-1 flex flex-row w-full h-full">
+            <div className="flex-1 flex flex-row w-full h-full relative">
                 
                 {/* COLUMN 1: Custom HTML Timeline */}
                 <div className="w-[340px] md:w-[380px] bg-slate-50 border-r border-slate-200 flex flex-col py-6 px-4 shadow-[4px_0_15px_rgba(0,0,0,0.05)] z-10 overflow-y-auto">
@@ -323,14 +333,6 @@ export const SpaghettiMap_V2: React.FC = () => {
 
                 {/* COLUMN 2: ECharts Map */}
                 <div className="flex-1 relative overflow-hidden">
-                    {/* Scenario Active Pill centered at top */}
-                    {context.forecastName && (
-                        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-sky-50/90 backdrop-blur-sm px-3.5 py-1 rounded-full border border-sky-200 shadow-md">
-                            <span className="text-xs font-bold text-sky-700">📁 Escenario Activo:</span>
-                            <span className="text-xs font-extrabold text-sky-900">{context.forecastName}</span>
-                        </div>
-                    )}
-
                     <SpaghettiMapComponent 
                         data={context.data} 
                         months={months} 
