@@ -132,7 +132,27 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
                 ]);
                 setPorts(portsData || []);
                 setSpotRoutes(routesData || []);
-                // Nota: El software inicia 100% en blanco por defecto sin auto-cargar escenarios
+
+                // Restaurar sesión activa de memoria de pestaña (sessionStorage) si el usuario presionó F5
+                const savedLinesStr = sessionStorage.getItem('petral_active_projection_lines');
+                const savedDataStr = sessionStorage.getItem('petral_active_data');
+                const savedName = sessionStorage.getItem('petral_active_forecast_name');
+                const savedId = sessionStorage.getItem('petral_active_forecast_id');
+
+                if (savedLinesStr && savedDataStr) {
+                    try {
+                        const lines = JSON.parse(savedLinesStr);
+                        const simData = JSON.parse(savedDataStr);
+                        if (Array.isArray(lines) && lines.length > 0) {
+                            setProjectionLines(lines);
+                            setData(simData);
+                            if (savedName) setForecastName(savedName);
+                            if (savedId) setCurrentForecastId(savedId);
+                        }
+                    } catch (e) {
+                        console.error("Error al restaurar sesión activa de sessionStorage:", e);
+                    }
+                }
             } catch (e) {
                 console.error("Error loading initial context data:", e);
             } finally {
@@ -141,6 +161,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
         };
         loadInitialData();
     }, []);
+
 
 
     const [demurragePct, setDemurragePct] = useState<string>('');
@@ -265,6 +286,10 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             if (!controller.signal.aborted) {
                 setData(result);
                 setIsDirty(false);
+                try {
+                    sessionStorage.setItem('petral_active_projection_lines', JSON.stringify(lines));
+                    sessionStorage.setItem('petral_active_data', JSON.stringify(result));
+                } catch (e) {}
             }
         } catch (error: any) {
             // Si fue abortado intencionalmente, no hacer nada (otro request está corriendo)
@@ -274,9 +299,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
                 console.error("Error fetching simulation:", error);
                 let msg = "Error desconocido";
                 if (error?.response?.data?.detail) {
-                    if (typeof error.response.data.detail === 'string') {
-                        msg = error.response.data.detail;
-                    } else if (Array.isArray(error.response.data.detail)) {
+                    if (Array.isArray(error.response.data.detail)) {
                         msg = error.response.data.detail.map((d: any) => `${d.loc ? d.loc.slice(-2).join('.') + ': ' : ''}${d.msg}`).join(' | ');
                     } else {
                         msg = JSON.stringify(error.response.data.detail);
@@ -298,6 +321,10 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     };
 
     const handleClearSession = () => {
+        sessionStorage.removeItem('petral_active_projection_lines');
+        sessionStorage.removeItem('petral_active_data');
+        sessionStorage.removeItem('petral_active_forecast_name');
+        sessionStorage.removeItem('petral_active_forecast_id');
         localStorage.removeItem('petral_last_forecast_id');
         setProjectionLines([]);
         setData(null);
@@ -504,9 +531,13 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             setForecastName(loadedData.name);
             setLoadedAuthor(loadedData.user_id);
             if (loadedData.id) {
-                localStorage.setItem('petral_last_forecast_id', loadedData.id);
+                sessionStorage.setItem('petral_active_forecast_id', loadedData.id);
+            }
+            if (loadedData.name) {
+                sessionStorage.setItem('petral_active_forecast_name', loadedData.name);
             }
             setShowLoadModal(false);
+
 
             await runSimulationWith(cleanedLines, newStartDate, newEndDate);
 

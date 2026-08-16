@@ -322,12 +322,18 @@ A partir de la auditoría pericial con la técnica Benoit Blanc sobre la conmuta
 
 A partir de la autopsia técnica comparativa entre el commit histórico funcional `4afad62c45799a88633a7716daa240e36474d2bf` y la refactorización modular:
 
-| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 16) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+### 🕵️‍♂️ 5.17. Decimoséptima Vuelta (Serie 17: Persistencia de Sesión Activa en `sessionStorage` y Sincronización Total 0-ms entre Matriz, ANGRAF y Spaghetti Map)
+
+A partir de la autopsia técnica pericial sobre por qué las vistas de ANGRAF y Spaghetti Map se mostraban "En Blanco / Sin escenario cargado" al refrescar (F5) o conmutar de pestaña tras haber cargado un escenario en la Matriz Financiera:
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 17) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
-| **16.1** | **`Entrega de Opciones Vacías `{}` a ECharts`** | Pantalla en blanco en Liquidaciones y ANGRAF al filtrar o cargar | **Retorno de Tarjetas de Reposo (`hasData` Check):** `LiquidationsInteractiveChart.tsx`, `GraphicAnalysis_V2.tsx` y `SpaghettiMap_V2.tsx` evalúan si hay registros antes de invocar a ECharts. Si está vacío, muestran una tarjeta de reposo visual. | **El Asesinato por Opciones Vacías `{}`:** Cuando ECharts recibía `option={}` durante la carga o filtrado, destruía el canvas y colapsaba las dimensiones a 0 × 0 px, dejando la vista totalmente transparente. | ✅ RESUELTO |
-| **16.2** | **`Preservación de Estado Estilo Monolito (`4afad62`)`** | Pérdida de estado y parpadeo al cambiar de herramientas | **Preservación Continua en Memoria:** React Context y los contenedores `<section>` mantienen las referencias de datos vivas sin des-sincronizar el árbol de hooks de React (Exterminio del Error #300). | **El Crimen del Desmontado Involuntario:** En el monolito antiguo (`4afad62`), la matriz y los gráficos convivían bajo el mismo componente sin cambiar la URL ni desmontar el árbol de React. | ✅ RESUELTO |
+| **17.1** | **`Persistencia de Sesión Activa en Memoria de Pestaña`** | Al refrescar (F5) en ANGRAF o Spaghetti Map salía *"Análisis Gráfico en Blanco / Sin Escenario Cargado"* | **Sincronización `sessionStorage` 0-ms:** `ForecastContext_V2` guarda `projectionLines`, `data` y `forecastName` en `sessionStorage` (`petral_active_*`) al simular o cargar. Al refrescar en cualquier pestaña, restaura la sesión activa instantáneamente. | **El Crimen del Olvido por F5:** Al exigir que la app iniciara 100% limpia en blanco sin auto-cargar de `localStorage`, F5 borraba `data` del estado en memoria de React, haciendo que ANGRAF no encontrara el escenario activo al re-montar la URL. | ✅ RESUELTO |
+| **17.2** | **`Garantía de Inicio Limpio (Fresh Login)`** | Una nueva pestaña o sesión limpia debe arrancar 100% en blanco | **Purga en `Limpiar` y Aislamiento por Pestaña:** Abrir el navegador en una pestaña nueva inicia en blanco. El botón **"Limpiar"** borra `sessionStorage`, `data` y `projectionLines`, volviendo todas las herramientas a estado limpio simultáneamente. | **Calce con Requerimiento N°6:** Preserva la matriz en blanco al iniciar el sistema, pero mantiene vivo el escenario activo mientras el usuario trabaja o navega en la misma sesión. | ✅ RESUELTO |
+| **17.3** | **`Sincronización Inmediata entre Matriz, ANGRAF y Spaghetti`** | Conmutar a ANGRAF o Spaghetti renderizaba la tarjeta de "Sin escenario" | **Renderizado Inmediato (`hasData` Instantáneo):** Al estar `data` y `projectionLines` en Context y `sessionStorage`, ANGRAF y Spaghetti leen el dataset en 0 milisegundos sin esperar re-cálculos ni mostrar tarjetas vacías. | **Recreación Fiel del Monolito (`4afad62`):** Las 3 herramientas comparten el mismo modelo mental de memoria del monolito antiguo, sin parpadeos ni pérdidas de escenario. | ✅ RESUELTO |
 
 ### ───────────────
+
 
 
 ---
