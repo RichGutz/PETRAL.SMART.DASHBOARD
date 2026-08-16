@@ -118,8 +118,16 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         const cleanClient = client.trim().toUpperCase();
         const routesList: Array<{ key: string; label: string; isQuote?: boolean }> = [];
 
-        // 1. Rutas fijas para clientes estándar
-        if (cleanClient === 'SPOT') {
+        // 1. Rutas fijas para clientes estándar (restaurado de commit 4f4b59e)
+        if (cleanClient === 'SPCC') {
+            routesList.push({ key: 'ILO-MATARANI', label: 'ILO - MATARANI' });
+            routesList.push({ key: 'ILO-MARCONA', label: 'ILO - MARCONA' });
+            routesList.push({ key: 'ILO-MEJILLONES', label: 'ILO - MEJILLONES' });
+        } else if (cleanClient === 'NEXA') {
+            routesList.push({ key: 'CALLAO-MEJILLONES', label: 'CALLAO - MEJILLONES' });
+            routesList.push({ key: 'CALLAO-MATARANI', label: 'CALLAO - MATARANI' });
+            routesList.push({ key: 'CALLAO-MARCONA', label: 'CALLAO - MARCONA' });
+        } else if (cleanClient === 'SPOT' || cleanClient.startsWith('SPOT')) {
             routesList.push({ key: 'CALLAO-MEJILLONES', label: 'CALLAO - MEJILLONES' });
             routesList.push({ key: 'ILO-MATARANI', label: 'ILO - MATARANI' });
             routesList.push({ key: 'ILO-MEJILLONES', label: 'ILO - MEJILLONES' });
