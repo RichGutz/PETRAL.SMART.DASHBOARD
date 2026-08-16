@@ -445,11 +445,11 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         { name: "Viajes (freq)", values: trips, total: sum(trips), pct: null, totalPct: null, isCurrency: false, isTotal: false, isExpandable: true, rowKey, isExpanded },
                         { name: "Toneladas", values: tonsTotal, total: sum(tonsTotal), pct: null, totalPct: null, isCurrency: false, isTotal: false },
                         { name: "Net Revenue", values: netRevenues, total: sum(netRevenues), pct: calcPct(netRevenues), totalPct: calcTotalPct(sum(netRevenues), sum(grossRevenues)), isCurrency: true, isTotal: false, isExpandableGrossRevenue: true, rowKey, isExpanded: isExpandedGross },
-                        { name: "(-) Port Costs", values: portCosts, total: sum(portCosts), pct: calcPct(portCosts), totalPct: calcTotalPct(sum(portCosts), sum(grossRevenues)), isCurrency: true, isTotal: false },
+                        { name: "(-) Hire (TCE x días)", values: tceCostTotal, total: sum(tceCostTotal), pct: calcPct(tceCostTotal), totalPct: calcTotalPct(sum(tceCostTotal), sum(grossRevenues)), isCurrency: true, isTotal: false },
                         { name: "(-) Bunker Costs", values: bunker, total: sum(bunker), pct: calcPct(bunker), totalPct: calcTotalPct(sum(bunker), sum(grossRevenues)), isCurrency: true, isTotal: false },
-                        { name: "(=) Voyage Result", values: voyageResult, total: sum(voyageResult), pct: calcPct(voyageResult), totalPct: calcTotalPct(sum(voyageResult), sum(grossRevenues)), isCurrency: true, isTotal: false },
-                        { name: "TCE x días", values: tceCostTotal, total: sum(tceCostTotal), pct: calcPct(tceCostTotal), totalPct: calcTotalPct(sum(tceCostTotal), sum(grossRevenues)), isCurrency: true, isTotal: false, isExpandableTce: true, rowKey, isExpanded: isExpandedTceRow },
-                        { name: "(=) P/L", values: plVsRequired, total: sum(plVsRequired), pct: calcPct(plVsRequired), totalPct: calcTotalPct(sum(plVsRequired), sum(grossRevenues)), isCurrency: true, isTotal: true }
+                        { name: "(-) Port Costs", values: portCosts, total: sum(portCosts), pct: calcPct(portCosts), totalPct: calcTotalPct(sum(portCosts), sum(grossRevenues)), isCurrency: true, isTotal: false },
+                        { name: "(=) VOYAGE RESULT / P&L", values: plVsRequired, total: sum(plVsRequired), pct: calcPct(plVsRequired), totalPct: calcTotalPct(sum(plVsRequired), sum(grossRevenues)), isCurrency: true, isTotal: true },
+                        { name: "▶ Métricas TCE ($/d)", values: tceReal, total: null, pct: null, totalPct: null, isCurrency: false, isTotal: false, isExpandableTce: true, rowKey, isExpanded: isExpandedTceRow }
                     ];
 
                     if (isDemurrageVisible || isDemurrageDaysVisible) {
