@@ -4,33 +4,77 @@ import * as echarts from 'echarts';
 import peruChileGeoJson from '../../assets/peru_chile.json';
 
 
-// Colores de barcos según Manual.Estilos.md
+// Colores unificados por Buque según Manual.Estilos.md
 const getVesselColor = (vesselName: string): string => {
     const name = vesselName.toUpperCase();
     if (name.includes('TABLONES')) return '#DC2626'; // Rojo
     if (name.includes('MOQUEGUA')) return '#16A34A'; // Verde
-    if (name.includes('CONCON') || name.includes('TRADER')) return '#475569'; // Gris
+    if (name.includes('CONCON') || name.includes('TRADER')) return '#475569'; // Gris / Slate
     if (name.includes('HUEMUL')) return '#4F46E5'; // Índigo / Azul
-    return '#94A3B8'; // Fallback Slate
+    return '#0EA5E9'; // Fallback Cían
 };
 
-// Reglas de curvatura del usuario para evitar solapamientos
+// Reglas de curvatura monolíticas con signos ajustados para que todas las piernas abomben al Pacífico (Oeste)
 const getBaseCurveness = (origin: string, dest: string): number => {
     const pair = `${origin}-${dest}`;
-    const reverse = `${dest}-${origin}`;
 
-    if (pair === 'ILO-MATARANI' || reverse === 'ILO-MATARANI') return 0.10;
-    if (pair === 'ILO-MARCONA' || reverse === 'ILO-MARCONA') return 0.22;
-    if (pair === 'ILO-CALLAO' || reverse === 'ILO-CALLAO') return 0.55;
+    if (pair === 'ILO-MATARANI') return 0.10;
+    if (pair === 'MATARANI-ILO') return -0.10;
 
-    if (pair === 'CALLAO-MARCONA' || reverse === 'CALLAO-MARCONA') return 0.15;
-    if (pair === 'CALLAO-MATARANI' || reverse === 'CALLAO-MATARANI') return 0.28;
+    if (pair === 'ILO-MARCONA') return 0.22;
+    if (pair === 'MARCONA-ILO') return -0.22;
 
-    if (pair === 'ILO-MEJILLONES' || reverse === 'ILO-MEJILLONES') return -0.15;
-    if (pair === 'ILO-BARQUITO' || reverse === 'ILO-BARQUITO') return -0.32;
-    if (pair === 'CALLAO-MEJILLONES' || reverse === 'CALLAO-MEJILLONES') return -0.45;
+    if (pair === 'ILO-CALLAO') return 0.55;
+    if (pair === 'CALLAO-ILO') return -0.55;
 
-    return 0.20;
+    if (pair === 'CALLAO-MARCONA') return -0.15;
+    if (pair === 'MARCONA-CALLAO') return 0.15;
+
+    if (pair === 'CALLAO-MATARANI') return -0.28;
+    if (pair === 'MATARANI-CALLAO') return 0.28;
+
+    if (pair === 'ILO-MEJILLONES') return -0.25;
+    if (pair === 'MEJILLONES-ILO') return 0.25;
+
+    if (pair === 'ILO-BARQUITO') return -0.32;
+    if (pair === 'BARQUITO-ILO') return 0.32;
+
+    if (pair === 'CALLAO-MEJILLONES') return -0.45;
+    if (pair === 'MEJILLONES-CALLAO') return 0.45;
+
+    return -0.20;
+};
+
+// Interpolador Bézier Cuadrático para autopistas marítimas curvas en el Océano Pacífico
+const getBezierPoints = (
+    src: { lon: number; lat: number },
+    dst: { lon: number; lat: number },
+    curveness: number,
+    steps: number = 20
+): Array<[number, number]> => {
+    const x1 = src.lon;
+    const y1 = src.lat;
+    const x2 = dst.lon;
+    const y2 = dst.lat;
+
+    const mx = (x1 + x2) / 2;
+    const my = (y1 + y2) / 2;
+
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+
+    const cx = mx - curveness * dy;
+    const cy = my + curveness * dx;
+
+    const points: Array<[number, number]> = [];
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const invT = 1 - t;
+        const px = invT * invT * x1 + 2 * invT * t * cx + t * t * x2;
+        const py = invT * invT * y1 + 2 * invT * t * cy + t * t * y2;
+        points.push([px, py]);
+    }
+    return points;
 };
 
 // Función pura para calcular datos de espaguetis acumulados para un mes dado
@@ -46,7 +90,6 @@ const computeSpaghettiDataForMonth = (
         return { nodes: [], edges: [], pieSeries: [], missileSeries: [] };
     }
 
-    // Since we now receive an array of months directly from the multi-select UI
     const targetMonths = selectedMonths;
 
     const portMap: Record<string, { carga: number; descarga: number }> = {};
@@ -55,9 +98,10 @@ const computeSpaghettiDataForMonth = (
     });
 
     const edgeAccumulator: Record<string, { source: string; target: string; vessel: string; tons: number, freq: number }> = {};
+    const rotationList: Array<{ vessel: string; fullRouteName: string; legs: Array<{ origin: string; dest: string }>; freq: number }> = [];
 
     const getRouteLegs = (routeKey: string): Array<{ origin: string; dest: string }> => {
-        if (routeKey.includes('SPOT-NEXA')) {
+        if (routeKey.includes('SPOT-NEXA') || routeKey.includes('QUOTE:') || routeKey.includes('.')) {
             const parts = routeKey.split(/[\.-]/);
             const validRoutePorts = parts.filter(part => ports.some(p => p.port_id === part));
             
@@ -65,36 +109,48 @@ const computeSpaghettiDataForMonth = (
             for (let i = 0; i < validRoutePorts.length - 1; i++) {
                 legs.push({ origin: validRoutePorts[i], dest: validRoutePorts[i + 1] });
             }
-            return legs;
-        } else {
-            const parts = routeKey.split('-');
-            if (parts.length === 2) {
-                return [{ origin: parts[0], dest: parts[1] }];
-            }
+            if (legs.length > 0) return legs;
+        }
+        const parts = routeKey.split('-');
+        if (parts.length === 2) {
+            return [
+                { origin: parts[0], dest: parts[1] },
+                { origin: parts[1], dest: parts[0] }
+            ];
         }
         return [];
     };
 
     Object.entries(aggregatedData).forEach(([_client, rMap]: any) => {
-        Object.entries(rMap).forEach(([route, vMap]: any) => {
-            const legs = getRouteLegs(route);
-            if (legs.length === 0) return;
+        Object.entries(rMap).forEach(([routeKey, vMap]: any) => {
+            if (!vMap || typeof vMap !== 'object') return;
 
             Object.entries(vMap).forEach(([vessel, mMap]: any) => {
+                if (!mMap || typeof mMap !== 'object') return;
+
                 Object.entries(mMap).forEach(([month, metrics]: any) => {
                     if (targetMonths.includes(month)) {
+                        const fullRouteName = metrics?.['route_name'] || metrics?.['raw_inputs']?.['route_id'] || routeKey;
+                        const legs = getRouteLegs(fullRouteName);
+                        if (legs.length === 0) return;
+
                         const rawFreq = metrics['raw_inputs']?.['monthly_frequency'];
                         const freq = rawFreq !== undefined ? rawFreq : (metrics['freq'] !== undefined ? metrics['freq'] : 0);
                         const carga_unit = metrics['carga_unit'] || 0;
-                        const tons = carga_unit * freq;
+                        let tons = carga_unit * freq;
 
-                        if (tons > 0) {
+                        if (freq > 0 && tons <= 0) {
+                            tons = freq * 13500;
+                        }
+
+                        if (tons > 0 || freq > 0) {
+                            const effectiveTons = tons > 0 ? tons : 13500;
                             legs.forEach((leg) => {
                                 if (portMap[leg.origin]) {
-                                    portMap[leg.origin].carga += tons / legs.length;
+                                    portMap[leg.origin].carga += effectiveTons / legs.length;
                                 }
                                 if (portMap[leg.dest]) {
-                                    portMap[leg.dest].descarga += tons / legs.length;
+                                    portMap[leg.dest].descarga += effectiveTons / legs.length;
                                 }
 
                                 const edgeKey = `${leg.origin}-${leg.dest}|${vessel}`;
@@ -107,9 +163,13 @@ const computeSpaghettiDataForMonth = (
                                         freq: 0
                                     };
                                 }
-                                edgeAccumulator[edgeKey].tons += tons;
+                                edgeAccumulator[edgeKey].tons += effectiveTons;
                                 edgeAccumulator[edgeKey].freq += freq;
                             });
+
+                            if (targetMonths.length === 1) {
+                                rotationList.push({ vessel, fullRouteName, legs, freq });
+                            }
                         }
                     }
                 });
@@ -124,7 +184,6 @@ const computeSpaghettiDataForMonth = (
             if (!edgesGroupedByPair[pairKey]) {
                 edgesGroupedByPair[pairKey] = [];
             }
-            // Agrupar siempre, ya sea 1 mes o acumulado, para que el misil dispare secuencialmente sobre la misma ruta
             edgesGroupedByPair[pairKey].push({
                 ...edge,
                 isAggregated: true
@@ -137,15 +196,13 @@ const computeSpaghettiDataForMonth = (
     const finalEdges: any[] = [];
     const missileSeries: any[] = [];
 
+    // Generar aristas estáticas del grafo con curvaturas monolíticas traslúcidas
     Object.entries(edgesGroupedByPair).forEach(([pairKey, edgesInPair]) => {
         const [source, target] = pairKey.split('-');
         const baseCurveness = getBaseCurveness(source, target);
-        
-        const sourcePort = activePorts.find(p => p.port_id === source);
-        const targetPort = activePorts.find(p => p.port_id === target);
 
         edgesInPair.forEach((edge, index) => {
-            const curveness = baseCurveness + index * 0.06;
+            const curveness = baseCurveness + index * 0.04;
             
             const edgeConfig: any = {
                 source: edge.source,
@@ -153,16 +210,14 @@ const computeSpaghettiDataForMonth = (
                 value: Math.round(edge.tons),
                 vessel: edge.vessel,
                 lineStyle: {
-                    // Ocultar la línea estática si es un solo mes (para ver solo el misil)
-                    width: targetMonths.length === 1 ? 0 : Math.max(0.5, Math.min(2, edge.tons / 50000)),
-                    color: targetMonths.length === 1 ? 'transparent' : getVesselColor(edge.vessel),
+                    width: targetMonths.length === 1 ? 1.2 : Math.max(0.5, Math.min(2, edge.tons / 50000)),
+                    color: getVesselColor(edge.vessel),
+                    opacity: targetMonths.length === 1 ? 0.35 : 0.8,
                     curveness: curveness
                 }
             };
 
-            // Bolita de viajes (solo en acumulado o si decides mostrarla)
             if (edge.isAggregated && edge.freq > 0 && targetMonths.length > 1) {
-                // Bolita con el número de viajes (horizontal, estilo bola de billar)
                 edgeConfig.label = {
                     show: true,
                     formatter: `${Math.round(edge.freq)}`,
@@ -183,45 +238,71 @@ const computeSpaghettiDataForMonth = (
             }
 
             finalEdges.push(edgeConfig);
+        });
+    });
 
-            // Misil Effect (Animación de viaje desde origen a destino)
-            // Solo lo mostramos en vista de 1 mes (durante la animación o al hacer clic en un mes)
-            if (sourcePort && targetPort && targetMonths.length === 1) {
-                const trips = Math.max(1, edge.freq || 1);
-                // Si hay más viajes, el periodo es menor (va más rápido)
-                // Ej: 2 viajes = mitad de tiempo = recorre el doble de rápido, permitiendo que repita.
-                const period = Math.max(0.2, playSpeed / trips); 
+    // Generar misiles de color UNIFICADO por Buque en trayectoria polilineal continua cerrada
+    if (targetMonths.length === 1) {
+        rotationList.forEach(({ legs, freq }, vIdx) => {
+            if (legs.length === 0) return;
+
+            const fullPolyCoords: Array<[number, number]> = [];
+
+            legs.forEach((leg, legIdx) => {
+                const sourcePort = activePorts.find(p => p.port_id === leg.origin);
+                const targetPort = activePorts.find(p => p.port_id === leg.dest);
+
+                if (sourcePort && targetPort && sourcePort.lon !== null && sourcePort.lat !== null && targetPort.lon !== null && targetPort.lat !== null) {
+                    const curveness = getBaseCurveness(leg.origin, leg.dest) + vIdx * 0.04;
+                    const legPoints = getBezierPoints(
+                        { lon: sourcePort.lon, lat: sourcePort.lat },
+                        { lon: targetPort.lon, lat: targetPort.lat },
+                        curveness,
+                        20
+                    );
+
+                    if (legIdx === 0) {
+                        fullPolyCoords.push(...legPoints);
+                    } else {
+                        fullPolyCoords.push(...legPoints.slice(1));
+                    }
+                }
+            });
+
+            if (fullPolyCoords.length >= 2) {
+                const trips = Math.max(1, freq || 1);
+                const totalPeriod = Math.max(2.5, (playSpeed * 1.5) / trips);
+                const routeColorsPalette = ['#0EA5E9', '#F97316', '#8B5CF6', '#10B981', '#DC2626'];
+                const vesselColor = routeColorsPalette[vIdx % routeColorsPalette.length];
 
                 missileSeries.push({
                     type: 'lines',
                     coordinateSystem: 'geo',
-                    zlevel: 3, // Por encima de las líneas normales del grafo
+                    polyline: true,
+                    zlevel: 3,
                     effect: {
                         show: true,
-                        period: period,
-                        trailLength: 0.6, // Deja la ruta pintada detrás del misil
-                        color: getVesselColor(edge.vessel), // Color del barco para el misil
+                        period: totalPeriod,
+                        trailLength: 0.5,
+                        color: vesselColor,
                         symbol: 'arrow',
-                        symbolSize: 4 // Reducido a la mitad para que la estela (ruta) sea mucho más delgada
+                        symbolSize: 6
                     },
                     lineStyle: {
-                        color: 'transparent', // La línea base no se ve
-                        width: 0, 
-                        curveness: curveness
+                        color: vesselColor,
+                        width: 1.8,
+                        opacity: 0.45
                     },
                     data: [
                         {
-                            coords: [
-                                [sourcePort.lon, sourcePort.lat],
-                                [targetPort.lon, targetPort.lat]
-                            ]
+                            coords: fullPolyCoords
                         }
                     ],
                     silent: true
                 });
             }
         });
-    });
+    }
 
     const maxCapacity = Math.max(...ports.map(p => p.capacity_mt || 0), 1);
 
@@ -239,167 +320,157 @@ const computeSpaghettiDataForMonth = (
             descarga: Math.round(petralDescarga),
             capacity_mt: capacity,
             type: p.type || 'SINK',
-            symbolSize: 6, // Bolita fija sin escala de datos
+            symbolSize: 6,
             pieRadius: pieRadius,
             sources_sinks: p.sources_sinks || []
         };
     });
 
-    // 6. Generar las series de Pie Charts (Tierra y Mar)
     const pieSeries: any[] = [];
     const calloutLinesData: any[] = [];
 
     if (showPies) {
         nodesForGraph.forEach(n => {
+            let marketOffset = 4.0;
+            let petralOffset = -4.0;
+            let latOffset = 0.0;
 
-        // El pastel de mercado (Sink/Source) en tierra (Este -> offset positivo)
-        // El pastel de Petral en el mar (Oeste -> offset negativo)
-        let marketOffset = 4.0;
-        let petralOffset = -4.0;
-        let latOffset = 0.0;
-
-        if (n.name.includes('ILO') || n.id.includes('ILO')) {
-            // Alejar en espejo los pasteles de ILO aún más lejos del centro (eje ILO)
-            // para evitar cualquier solapamiento
-            marketOffset = 10.0;
-            petralOffset = -10.0;
-            // Bajar un piquitito al SUR (latitudes de Sudamérica son negativas -> restar)
-            latOffset = -1.2;
-        } else if (n.name.toUpperCase().includes('SAN JUAN') || n.id.toUpperCase().includes('SAN JUAN')) {
-            // Incremento del 100% sobre la base de 4.0 (es decir, el doble de separación)
-            marketOffset = 4.0 * 2.0; // 8.0
-            petralOffset = -4.0 * 2.0; // -8.0
-        }
-        
-        const landCenter = [n.value[0] + marketOffset, n.value[1] + latOffset];
-        const seaCenter = [n.value[0] + petralOffset, n.value[1] + latOffset];
-
-        const monthsCount = targetMonths.length;
-
-        // A. Pie de Tierra (Mercado)
-        const marketData = n.sources_sinks?.map((ss: any) => {
-            const proratedCapacity = (ss.capacity_mt / 12) * monthsCount;
-            return {
-                value: Math.round(proratedCapacity),
-                name: `${ss.empresa} (${ss.type})`,
-                itemStyle: { color: ss.color_hex || '#64748B' },
-                portInfo: n
-            };
-        }) || [];
-        
-        if (marketData.length === 0) {
-            let fallbackColor = '#64748B';
-            if (n.type === 'SOURCE') fallbackColor = '#A78BFA';
-            if (n.type === 'MIXED') fallbackColor = '#3B82F6';
-            const proratedFallback = (n.capacity_mt / 12) * monthsCount;
-            marketData.push({
-                value: Math.round(proratedFallback),
-                name: `Capacidad Mercado (${n.type})`,
-                itemStyle: { color: fallbackColor },
-                portInfo: n
-            });
-        }
-
-        pieSeries.push({
-            type: 'pie',
-            coordinateSystem: 'geo',
-            center: landCenter,
-            radius: [0, n.pieRadius],
-            label: { show: false },
-            emphasis: { 
-                label: { 
-                    show: true, 
-                    position: 'inside', 
-                    formatter: '{b}\n{c} MT',
-                    fontSize: 9,
-                    color: '#ffffff',
-                    fontWeight: 'bold'
-                } 
-            },
-            data: marketData,
-            zlevel: 4
-        });
-
-        const totalProratedCapacity = (n.capacity_mt / 12) * monthsCount;
-
-        if (n.carga > 0) {
-            const cargaRatio = totalProratedCapacity > 0 ? (n.carga / totalProratedCapacity) : 0;
-            const cargaRadius = Math.max(3, n.pieRadius * cargaRatio);
+            if (n.name.includes('ILO') || n.id.includes('ILO')) {
+                marketOffset = 10.0;
+                petralOffset = -10.0;
+                latOffset = -1.2;
+            } else if (n.name.toUpperCase().includes('SAN JUAN') || n.id.toUpperCase().includes('SAN JUAN')) {
+                marketOffset = 8.0;
+                petralOffset = -8.0;
+            }
             
+            const landCenter = [n.value[0] + marketOffset, n.value[1] + latOffset];
+            const seaCenter = [n.value[0] + petralOffset, n.value[1] + latOffset];
+
+            const monthsCount = targetMonths.length;
+
+            const marketData = n.sources_sinks?.map((ss: any) => {
+                const proratedCapacity = (ss.capacity_mt / 12) * monthsCount;
+                return {
+                    value: Math.round(proratedCapacity),
+                    name: `${ss.empresa} (${ss.type})`,
+                    itemStyle: { color: ss.color_hex || '#64748B' },
+                    portInfo: n
+                };
+            }) || [];
+            
+            if (marketData.length === 0) {
+                let fallbackColor = '#64748B';
+                if (n.type === 'SOURCE') fallbackColor = '#A78BFA';
+                if (n.type === 'MIXED') fallbackColor = '#3B82F6';
+                const proratedFallback = (n.capacity_mt / 12) * monthsCount;
+                marketData.push({
+                    value: Math.round(proratedFallback),
+                    name: `Capacidad Mercado (${n.type})`,
+                    itemStyle: { color: fallbackColor },
+                    portInfo: n
+                });
+            }
+
             pieSeries.push({
                 type: 'pie',
                 coordinateSystem: 'geo',
-                center: seaCenter,
-                radius: [0, cargaRadius],
+                center: landCenter,
+                radius: [0, n.pieRadius],
                 label: { show: false },
                 emphasis: { 
                     label: { 
                         show: true, 
-                        formatter: '{b}',
-                        position: 'inside',
+                        position: 'inside', 
+                        formatter: '{b}\n{c} MT',
                         fontSize: 9,
-                        color: '#ffffff'
+                        color: '#ffffff',
+                        fontWeight: 'bold'
                     } 
                 },
-                data: [
-                    { 
-                        value: n.carga, 
-                        name: 'Carga Petral', 
-                        itemStyle: { color: '#0EA5E9' }, 
-                        portInfo: n
-                    }
-                ],
+                data: marketData,
                 zlevel: 4
             });
-        }
 
-        const seaCenterDescarga = [seaCenter[0] - 2.5, seaCenter[1]];
+            const totalProratedCapacity = (n.capacity_mt / 12) * monthsCount;
 
-        if (n.descarga > 0) {
-            const descargaRatio = totalProratedCapacity > 0 ? (n.descarga / totalProratedCapacity) : 0;
-            const descargaRadius = Math.max(3, n.pieRadius * descargaRatio);
-            
-            pieSeries.push({
-                type: 'pie',
-                coordinateSystem: 'geo',
-                center: seaCenterDescarga,
-                radius: [0, descargaRadius],
-                label: { show: false },
-                emphasis: { 
-                    label: { 
-                        show: true, 
-                        formatter: '{b}',
-                        position: 'inside',
-                        fontSize: 9,
-                        color: '#ffffff'
-                    } 
-                },
-                data: [
-                    { 
-                        value: n.descarga, 
-                        name: 'Descarga Petral', 
-                        itemStyle: { color: '#F97316' }, 
-                        portInfo: n
-                    }
-                ],
-                zlevel: 4
-            });
-        }
+            if (n.carga > 0) {
+                const cargaRatio = totalProratedCapacity > 0 ? (n.carga / totalProratedCapacity) : 0;
+                const cargaRadius = Math.max(3, n.pieRadius * cargaRatio);
+                
+                pieSeries.push({
+                    type: 'pie',
+                    coordinateSystem: 'geo',
+                    center: seaCenter,
+                    radius: [0, cargaRadius],
+                    label: { show: false },
+                    emphasis: { 
+                        label: { 
+                            show: true, 
+                            formatter: '{b}',
+                            position: 'inside',
+                            fontSize: 9,
+                            color: '#ffffff'
+                        } 
+                    },
+                    data: [
+                        { 
+                            value: n.carga, 
+                            name: 'Carga Petral', 
+                            itemStyle: { color: '#0EA5E9' }, 
+                            portInfo: n
+                        }
+                    ],
+                    zlevel: 4
+                });
+            }
 
-        // C. Líneas Callout (del puerto al pastel)
-        calloutLinesData.push({
-            coords: [n.value, landCenter],
-            lineStyle: { color: '#94A3B8', type: 'dashed', width: 1.2, opacity: 0.7 }
-        });
-        
-        if (n.carga > 0 || n.descarga > 0) {
-            const targetCenter = n.carga > 0 ? seaCenter : seaCenterDescarga;
+            const seaCenterDescarga = [seaCenter[0] - 2.5, seaCenter[1]];
+
+            if (n.descarga > 0) {
+                const descargaRatio = totalProratedCapacity > 0 ? (n.descarga / totalProratedCapacity) : 0;
+                const descargaRadius = Math.max(3, n.pieRadius * descargaRatio);
+                
+                pieSeries.push({
+                    type: 'pie',
+                    coordinateSystem: 'geo',
+                    center: seaCenterDescarga,
+                    radius: [0, descargaRadius],
+                    label: { show: false },
+                    emphasis: { 
+                        label: { 
+                            show: true, 
+                            formatter: '{b}',
+                            position: 'inside',
+                            fontSize: 9,
+                            color: '#ffffff'
+                        } 
+                    },
+                    data: [
+                        { 
+                            value: n.descarga, 
+                            name: 'Descarga Petral', 
+                            itemStyle: { color: '#F97316' }, 
+                            portInfo: n
+                        }
+                    ],
+                    zlevel: 4
+                });
+            }
+
             calloutLinesData.push({
-                coords: [n.value, targetCenter],
+                coords: [n.value, landCenter],
                 lineStyle: { color: '#94A3B8', type: 'dashed', width: 1.2, opacity: 0.7 }
             });
-        }
-    });
+            
+            if (n.carga > 0 || n.descarga > 0) {
+                const targetCenter = n.carga > 0 ? seaCenter : seaCenterDescarga;
+                calloutLinesData.push({
+                    coords: [n.value, targetCenter],
+                    lineStyle: { color: '#94A3B8', type: 'dashed', width: 1.2, opacity: 0.7 }
+                });
+            }
+        });
 
         if (calloutLinesData.length > 0) {
             pieSeries.push({
@@ -561,7 +632,7 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
                     coordinateSystem: 'geo',
                     layout: 'none',
                     data: nodes,
-                    links: edges,
+                    links: selectedMonths.length === 1 ? [] : edges,
                     zlevel: 2,
                     label: {
                         show: true,

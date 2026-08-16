@@ -136,3 +136,5 @@ CONCURRENCY & QC SUMMARY:
 2026-08-15 21:06:27 - FIX VPS: Se elimino la dependencia de red fetch('/peru_chile.json') importando el GeoJSON de Peru/Chile directamente en el bundle JavaScript. Garantizado 100% de carga en VPS.
 2026-08-15 21:13:50 - FIX AMBOS ENTORNOS: 1. Resuelto multitramo local agregando KNOWN_PORT_IDS y fallback de navegacion para que reproduzca absolutamente todas las piernas. 2. Resuelto pantalla blanca en VPS trasladando peru_chile.json a src/assets/ y empaquetandolo en el bundle principal. Desplegado a VPS.
 2026-08-15 21:38:32 - RESTAURADO 100%: Revertido SpaghettiMap.tsx al codigo monolítico inmaculado original (666 lineas) con curvaturas por tramo getBaseCurveness, tal cual estaba configurado en el monolito.
+2026-08-15 22:00:21 - IMPLEMENTADO: Misiles nativos ECharts divididos por pierna con timing de 2/3s por pierna (2.0s total rotacion) y curvaturas en espejo de retorno por el Pacifico.
+2026-08-15 22:17:01 - CORREGIDO: Asignacion de paleta cromaticos distintos por ruta ('#0EA5E9' Cian y '#F97316' Naranja) y eliminacion de linea estatica gris por links vacios en graph.
