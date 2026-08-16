@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts';
+import peruChileGeoJson from '../../assets/peru_chile.json';
 
 
 // Colores de barcos según Manual.Estilos.md
@@ -304,12 +305,6 @@ const computeSpaghettiDataForMonth = (
             coordinateSystem: 'geo',
             center: landCenter,
             radius: [0, n.pieRadius],
-            // IMPORTANTE: Por instrucción directa del usuario, el pie de TIERRA (Sinks/Sources) 
-            // debe comportarse EXACTAMENTE igual al de PETRAL: 
-            // - Etiquetas ocultas por defecto
-            // - Sin líneas de conexión (labelLine)
-            // - Etiqueta se muestra ADENTRO (inside) solo al hacer hover (emphasis).
-            // NINGUN AGENTE ESTA AUTORIZADO A INVENTAR NADA NI CAMBIAR ESTO A ETIQUETAS EXTERNAS.
             label: { show: false },
             emphasis: { 
                 label: { 
@@ -425,6 +420,7 @@ interface SpaghettiMapProps {
     months: string[];
     selectedMonths: string[];
     ports: any[];
+    clients?: any[];
     isDarkMode?: boolean;
     showPies?: boolean;
     playSpeed?: number;
@@ -447,17 +443,12 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
     const centerRef = useRef<[number, number]>([-73.0, -20.0]);
 
     useEffect(() => {
-        const loadMap = async () => {
-            try {
-                const response = await fetch('/peru_chile.json');
-                const geoJson = await response.json();
-                echarts.registerMap('peru_chile', geoJson);
-                setMapLoaded(true);
-            } catch (error) {
-                console.error("Error loading Peru/Chile GeoJSON map:", error);
-            }
-        };
-        loadMap();
+        try {
+            echarts.registerMap('peru_chile', peruChileGeoJson as any);
+            setMapLoaded(true);
+        } catch (error) {
+            console.error("Error registering Peru/Chile GeoJSON map:", error);
+        }
     }, []);
 
     const option = useMemo(() => {

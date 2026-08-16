@@ -1,21 +1,19 @@
-import os
-from supabase import create_client
+import requests
+import json
 
-env_path = 'C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/.env'
-url = None
-key = None
-with open(env_path, 'r', encoding='utf-8') as f:
-    for line in f:
-        line = line.strip()
-        if line.startswith('SUPABASE_URL='):
-            url = line.split('=', 1)[1].strip('"\' ')
-        elif line.startswith('SUPABASE_SERVICE_ROLE_KEY='):
-            key = line.split('=', 1)[1].strip('"\' ')
+url = 'https://ylburlewwxbaslsuuwre.supabase.co/rest/v1/commercial_forecasts?select=*'
+headers = {
+    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsYnVybGV3d3hiYXNsc3V1d3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyODgxMzUsImV4cCI6MjA1Njg2NDEzNX0.2B04E5u1ZlI25XwESt7i1Sst1wA-P-o1xWp1L63_6-E',
+    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsYnVybGV3d3hiYXNsc3V1d3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyODgxMzUsImV4cCI6MjA1Njg2NDEzNX0.2B04E5u1ZlI25XwESt7i1Sst1wA-P-o1xWp1L63_6-E'
+}
 
-if url and key:
-    sb = create_client(url, key)
-    res = sb.table('routes').select('*').limit(1).execute()
-    if res.data:
-        print('Route columns:', list(res.data[0].keys()))
-    else:
-        print('No route data')
+r = requests.get(url, headers=headers)
+rows = r.json()
+print("Total rows in commercial_forecasts:", len(rows))
+for row in rows:
+    name = row.get('name')
+    f_id = row.get('id')
+    lines = row.get('projection_lines', [])
+    print(f"\nScenario: '{name}' | ID: {f_id} | Lines count: {len(lines)}")
+    for l in lines[:5]:
+        print("  Line sample:", l.get('client'), l.get('route_id'), l.get('vessel'), l.get('month'))

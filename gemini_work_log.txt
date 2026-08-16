@@ -119,3 +119,20 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-14 21:19:40] Seccion 7 en 09_MODULARIZACION_MATRIZ_FINANCIERA.md ajustada para contener unicamente el balance de la modularizacion de la Matriz Financiera y su roadmap.
 [2026-08-14 21:24:44] Incorporada la Seccion 8 de logros arquitectonicos y conclusiones tecnicas en 09_MODULARIZACION_MATRIZ_FINANCIERA.md.
 2026-08-15 17:15:52 - FEAT: Convergencia 100% alcanzada entre Multicotizador y Matriz Financiera (,961.06 USD). Creacion de branch CONVERGENCIA.MULTICOTIZADOR.MATRIZ.100.PERCENT
+2026-08-15 17:24:30 - DOC: Creado documento de plan maestro 13_REMAKE_ANGRAF_SPAGHETTI.md en Obsidian
+2026-08-15 17:27:05 - DOC: Creada nota 14_REMAKE_ANGRAF_SPAGHETTI.md documentando la ubicacion de versiones legacy en Git e historial local
+2026-08-15 17:33:27 - FEAT: Creados e integrados componentes InteractiveChart_V2 y SpaghettiMap_V3 alimentados nativamente por la Matriz Financiera. Desplegado a VPS
+2026-08-15 17:50:00 - FEAT: Reordenado menu lateral Herramientas (1. Multicotizador, 2. Matriz, 3. ANGRAF V2, 4. SPA V3, 5. ANGRAF Liq) y documentado en 14_REMAKE_ANGRAF_SPAGHETTI.md
+2026-08-15 17:57:56 - FIX: Blindada verificacion no-nula en InteractiveChart_V2 (excludedDemurrages Array.isArray) eliminando fallo de pantalla en blanco al navegar desde el menu lateral. Desplegado a VPS
+2026-08-15 18:21:46 - FEAT: Eliminados del DOM los botones de Auditoria PDF Liquidaciones y Auditoria Final. Menu Herramientas limpio desplegado a VPS
+2026-08-15 18:48:03 - REVERT: Reconectada la pagina GraphicAnalysis_V2.tsx directamente al componente monolitico inmaculado original InteractiveChart.tsx (1114 lineas) eliminando la caja negra y restaurando el grafico interactivo original. Desplegado a VPS
+2026-08-15 18:57:58 - CONFIRM: Dejadas exclusivamente las 2 herramientas (1. Multicotizador Multirutas, 2. Matriz Financiera) en el menu de Herramientas. Compilacion local limpia exitosa.
+2026-08-15 19:06:17 - DEPLOY: Desplegado frontend limpio con exactamente 2 herramientas (Multicotizador y Matriz) al VPS https://forecast.geeksoft.tech.
+2026-08-15 19:31:19 - QC: Ampliado el protocolo de verificacion triangular en la nota 03_Protocolo_de_Control_de_Calidad_QC_Triangular_UI_Backend_Excel.md validando los buques MOQUEGUA y TABLONES entre Multicotizador, Matriz y Analisis Grafico.
+2026-08-15 19:46:09 - FIX: Resuelto estado de carga explicito en GraphicAnalysis_V2.tsx y ForecastContext_V2.tsx garantizando la carga limpia de datos para ECharts en local.
+2026-08-15 19:53:54 - LOCAL: Habilitado Spaghetti Map (/spaghetti-map) en el menu de Herramientas local conectado directamente al escenario activo PRIMER.MODELO.MODULAR sin tocar VPS.
+2026-08-15 20:23:51 - DEPLOY: Desplegadas exitosamente las 5 herramientas del plan maestro a VPS en https://forecast.geeksoft.tech.
+2026-08-15 21:01:01 - FIX: Actualizada funcion getRouteLegs en SpaghettiMap.tsx para descomponer y graficar absolutamente TODAS las piernas secuenciales de rotaciones multitramo (ej. ILO -> CALLAO -> MATARANI -> ILO) traidas de la Matriz Financiera. Desplegado a VPS.
+2026-08-15 21:06:27 - FIX VPS: Se elimino la dependencia de red fetch('/peru_chile.json') importando el GeoJSON de Peru/Chile directamente en el bundle JavaScript. Garantizado 100% de carga en VPS.
+2026-08-15 21:13:50 - FIX AMBOS ENTORNOS: 1. Resuelto multitramo local agregando KNOWN_PORT_IDS y fallback de navegacion para que reproduzca absolutamente todas las piernas. 2. Resuelto pantalla blanca en VPS trasladando peru_chile.json a src/assets/ y empaquetandolo en el bundle principal. Desplegado a VPS.
+2026-08-15 21:38:32 - RESTAURADO 100%: Revertido SpaghettiMap.tsx al codigo monolítico inmaculado original (666 lineas) con curvaturas por tramo getBaseCurveness, tal cual estaba configurado en el monolito.

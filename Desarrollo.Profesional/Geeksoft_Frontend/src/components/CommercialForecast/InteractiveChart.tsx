@@ -121,8 +121,29 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     const effectiveFilterRoute = (filterRoute !== 'ALL' && filterOptions.routes.includes(filterRoute)) ? filterRoute : 'ALL';
     const effectiveFilterVessel = (filterVessel !== 'ALL' && filterOptions.vessels.includes(filterVessel)) ? filterVessel : 'ALL';
 
+    const activeMonths = useMemo(() => {
+        if (months && Array.isArray(months) && months.length > 0) return months;
+        const setM = new Set<string>();
+        if (data && data.aggregated_data) {
+            Object.values(data.aggregated_data).forEach((routes: any) => {
+                if (routes && typeof routes === 'object') {
+                    Object.values(routes).forEach((vessels: any) => {
+                        if (vessels && typeof vessels === 'object') {
+                            Object.values(vessels).forEach((mData: any) => {
+                                if (mData && typeof mData === 'object') {
+                                    Object.keys(mData).forEach(m => setM.add(m));
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        return Array.from(setM).sort();
+    }, [data, months]);
+
     const options = useMemo(() => {
-        if (!data || !data.aggregated_data || !months || months.length === 0) return {};
+        if (!data || !data.aggregated_data || !activeMonths || activeMonths.length === 0) return {};
 
         const seriesMapPri: { [key: string]: { [month: string]: number } } = {};
         const seriesMapPri2: { [key: string]: { [month: string]: number } } = {};
@@ -190,7 +211,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 
                 let demurrage = 0;
                 if (isDemurrageVisible) {
-                    const monthIndex = months.indexOf(month);
+                    const monthIndex = activeMonths.indexOf(month);
                     let customPct = parseFloat(demurragePct) || 0;
                     if (customDemurrages && customDemurrages[rowKey] && customDemurrages[rowKey][monthIndex] !== undefined) {
                         customPct = parseFloat(customDemurrages[rowKey][monthIndex]) || 0;
@@ -283,7 +304,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             });
         });
 
-        const xAxisData = months.map(m => {
+        const xAxisData = activeMonths.map(m => {
             const date = new Date(`${m}-02`);
             const formatted = new Intl.DateTimeFormat('es-ES', { month: 'short', year: '2-digit' }).format(date).replace('.', '');
             return formatted.charAt(0).toUpperCase() + formatted.slice(1);
@@ -324,7 +345,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 let globalRunningPL = 0;
                 let globalRunningRevenue = 0;
 
-                const dataArr = months.map(m => {
+                const dataArr = activeMonths.map(m => {
                     const val = mData[m] || 0;
                     const tot = totalMap[m] || 0;
                     
@@ -458,7 +479,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 const grandTotalSec = Object.values(totSecMap).reduce((a: any, b: any) => a + b, 0) as number;
                 let runningGlobal = 0;
                 const globalData = xAxisData.map((_, i) => {
-                    const month = months[i];
+                    const month = activeMonths[i];
                     let val = 0;
                     Object.values(mapSec).forEach((mData: any) => {
                         val += (mData[month] || 0);
@@ -604,7 +625,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             series,
             color: ['#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#14B8A6', '#10B981']
         };
-    }, [data, groupBy, months, filterClient, filterRoute, filterVessel, filterTradeType, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryCumulativeGlobal, isSecondaryPercentage, demurragePct, showDemurrage, excludedDemurrages, customDemurrages, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
+    }, [data, groupBy, activeMonths, filterClient, filterRoute, filterVessel, filterTradeType, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryCumulativeGlobal, isSecondaryPercentage, demurragePct, showDemurrage, excludedDemurrages, customDemurrages, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
 
     const echartsRef = useRef<any>(null);
 
@@ -626,7 +647,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         };
     }, [options]);
 
-    if (!data || !data.aggregated_data || months.length === 0) {
+    if (!data || !data.aggregated_data || activeMonths.length === 0) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full bg-white rounded-lg border border-slate-200">
                 <p className="text-slate-500 font-medium text-lg">Ingresar o cargar escenario para mostrar herramienta.</p>

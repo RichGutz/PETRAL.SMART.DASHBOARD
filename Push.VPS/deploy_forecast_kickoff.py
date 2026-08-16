@@ -110,11 +110,12 @@ server {{
 
     location / {{
         try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
     }}
 
     # Compresión
     gzip on;
-    gzip_types text/html text/css application/javascript application/json;
+    gzip_types text/plain text/css application/javascript application/json;
 }}"""
         run(client,
             f"echo '{nginx_cfg}' > /etc/nginx/sites-available/{DOMAIN} && "

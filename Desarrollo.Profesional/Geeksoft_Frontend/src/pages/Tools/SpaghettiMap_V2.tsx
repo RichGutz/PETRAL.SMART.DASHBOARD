@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SpaghettiMap_V2 as SpaghettiMapComponent } from '../../components/CommercialForecast/SpaghettiMap_V2';
+import { SpaghettiMap as SpaghettiMapComponent } from '../../components/CommercialForecast/SpaghettiMap';
 import { SourcesSinksEditor } from '../../components/CommercialForecast/SourcesSinksEditor';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 import type { SourceSink } from '../../components/CommercialForecast/useSpaghettiData';
@@ -145,6 +145,16 @@ export const SpaghettiMap_V2: React.FC = () => {
 
     const totalSelectedTrips = (selectedMonths || []).reduce((acc, m) => acc + getMonthData(m).trips, 0);
     const totalSelectedTons = (selectedMonths || []).reduce((acc, m) => acc + getMonthData(m).tons, 0);
+
+    if (context.loading && (!context.data || !context.data.aggregated_data)) {
+        return (
+            <section className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full mt-2 bg-white border border-slate-200 rounded-tl-xl shadow-lg -mx-4 md:-mx-6 -mb-4 md:-mb-6" style={{ width: 'calc(100% + 2rem)' }}>
+                <div className="animate-spin h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full mb-4"></div>
+                <p className="text-slate-700 font-bold text-base">Cargando Spaghetti Map...</p>
+                <p className="text-slate-400 text-xs mt-1">Calculando flujos marítimos de {context.forecastName || 'Escenario'}</p>
+            </section>
+        );
+    }
 
     if (!context.data || !context.data.aggregated_data) {
         return (

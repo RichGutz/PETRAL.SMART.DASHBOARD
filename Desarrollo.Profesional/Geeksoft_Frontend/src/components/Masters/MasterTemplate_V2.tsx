@@ -440,6 +440,7 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
 
                             {isHerramientasOpen && (
                                 <nav className="flex flex-col gap-1 transition-all">
+                                    {/* 1. Multicotizador Multirutas */}
                                     {hasPermission('multicotizador_spot', 'Visor') && (
                                         <button 
                                             onClick={() => navigate('/multicotizador')}
@@ -451,75 +452,36 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                     
                                     {hasPermission('matriz_financiera', 'Visor') && (
                                         <>
+                                            {/* 2. Matriz Financiera */}
                                             <button 
                                                 onClick={() => navigate('/dashboard')}
                                                 className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'financial-matrix' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                                             >
                                                 <span className="text-sm">📊</span> Matriz Financiera
                                             </button>
+
+                                            {/* 3. Análisis Gráfico */}
                                             <button 
                                                 onClick={() => navigate('/graphic-analysis')}
                                                 className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'graphic-analysis' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                                             >
                                                 <span className="text-sm">📈</span> Análisis Gráfico
                                             </button>
+
+                                            {/* 4. Spaghetti Map */}
+                                            <button 
+                                                onClick={() => navigate('/spaghetti-map')}
+                                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'spaghetti-map' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                            >
+                                                <span className="text-sm">🗺️</span> Spaghetti Map
+                                            </button>
+
+                                            {/* 5. Análisis Gráfico Liquidaciones */}
                                             <button 
                                                 onClick={() => navigate('/liquidations-graphic-analysis')}
                                                 className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'liquidations-graphic-analysis' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                                             >
                                                 <span className="text-sm">📊</span> Análisis Gráfico Liquidaciones
-                                            </button>
-                                            <button 
-                                                onClick={() => navigate('/liquidations-pdf-audit')}
-                                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'liquidations-pdf-audit' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                            >
-                                                <span className="text-sm">📄</span> Auditoría PDF Liquidaciones
-                                            </button>
-                                            <button 
-                                                onClick={() => navigate('/spaghetti-map')}
-                                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'spaghetti-map' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                            >
-                                                <span className="text-sm">🗺️</span> Spaguetti Map
-                                            </button>
-                                            {/* OCULTO DE UI — no borrar, mantener para uso futuro */}
-                                            <button 
-                                                onClick={() => navigate('/audit-ledger')}
-                                                className="hidden"
-                                            >
-                                                <span className="text-sm">🔍</span> Auditoría Ledger
-                                            </button>
-                                            {/* OCULTO DE UI — no borrar, mantener para uso futuro */}
-                                            <button 
-                                                onClick={() => navigate('/audit-engine')}
-                                                className="hidden"
-                                            >
-                                                <span className="text-sm">🔎</span> Auditoría Motor
-                                            </button>
-                                            <button 
-                                                onClick={() => navigate('/audit-final')}
-                                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'audit-final' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                            >
-                                                <span className="text-sm">⚖️</span> Auditoría Final
-                                            </button>
-                                            <button 
-                                                onClick={() => navigate('/system-flowchart')}
-                                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'system-flowchart' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                            >
-                                                <span className="text-sm">🗺️</span> Flowchart del Sistema
-                                            </button>
-                                            {/* [HIDDEN FROM UI]
-                                            <button 
-                                                onClick={() => navigate('/static-vs-dynamic-port-cost')}
-                                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'static-vs-dynamic-port-cost' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                            >
-                                                <span className="text-sm">⚖️</span> Static vs Dynamic Port Cost
-                                            </button>
-                                            */}
-                                            <button 
-                                                onClick={() => navigate('/system-documentation')}
-                                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'system-documentation' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                            >
-                                                <span className="text-sm">📚</span> Documentación del Sistema
                                             </button>
                                         </>
                                     )}
