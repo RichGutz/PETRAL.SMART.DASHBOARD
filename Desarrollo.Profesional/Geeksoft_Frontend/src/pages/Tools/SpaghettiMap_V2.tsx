@@ -237,14 +237,8 @@ export const SpaghettiMap_V2: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between mb-4 px-1">
+                    <div className="flex items-center justify-between mb-3 px-1">
                         <h3 className="text-petral-teal text-xs font-bold uppercase tracking-widest text-left">Línea de Tiempo</h3>
-                        {context.forecastName && (
-                            <div className="flex items-center gap-1.5 bg-sky-50 px-2 py-1 rounded-md border border-sky-200 shadow-sm">
-                                <span className="text-[10px] font-bold text-sky-600 uppercase">Escenario:</span>
-                                <span className="text-[10px] font-semibold text-sky-800">📁 {context.forecastName}</span>
-                            </div>
-                        )}
                     </div>
                     
                     {/* List of Months Header */}
@@ -270,7 +264,7 @@ export const SpaghettiMap_V2: React.FC = () => {
                         </div>
                     )}
                     
-                    <div className="flex flex-col gap-1 relative mt-1 flex-1">
+                    <div className="flex flex-col gap-1 relative mt-1">
                         {months.length === 0 && (
                             <p className="text-slate-500 text-[10px] text-center italic mt-10">Sin horizonte</p>
                         )}
@@ -311,8 +305,8 @@ export const SpaghettiMap_V2: React.FC = () => {
                         })}
                     </div>
                     
-                    {/* Footer Row: Accumulated Total moved to bottom */}
-                    <div className="flex flex-col bg-white border border-slate-200 rounded-lg p-3 mt-4 shadow-sm">
+                    {/* Footer Row: Accumulated Total pegadito al último mes */}
+                    <div className="flex flex-col bg-white border border-slate-200 rounded-lg p-3 mt-2 shadow-sm">
                         <span className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">Acumulado ({selectedMonths.length} meses)</span>
                         <div className="flex items-center justify-between">
                             <div className="flex flex-col">
@@ -329,6 +323,14 @@ export const SpaghettiMap_V2: React.FC = () => {
 
                 {/* COLUMN 2: ECharts Map */}
                 <div className="flex-1 relative overflow-hidden">
+                    {/* Scenario Active Pill centered at top */}
+                    {context.forecastName && (
+                        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-sky-50/90 backdrop-blur-sm px-3.5 py-1 rounded-full border border-sky-200 shadow-md">
+                            <span className="text-xs font-bold text-sky-700">📁 Escenario Activo:</span>
+                            <span className="text-xs font-extrabold text-sky-900">{context.forecastName}</span>
+                        </div>
+                    )}
+
                     <SpaghettiMapComponent 
                         data={context.data} 
                         months={months} 
