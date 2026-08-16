@@ -327,16 +327,17 @@ A partir de la autopsia técnica comparativa entre el commit histórico funciona
 A partir de la autopsia técnica pericial sobre por qué las vistas de ANGRAF y Spaghetti Map se mostraban "En Blanco / Sin escenario cargado" al refrescar (F5) o conmutar de pestaña tras haber cargado un escenario en la Matriz Financiera:
 
 | # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 17) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
-### 🕵️‍♂️ 5.25. Vigesimoquinta Vuelta (Serie 25: Exterminio de React Error #310 mediante Eliminación de Retornos Anticipados y Reemplazo de Fuentes Corruptas `@fontsource-variable/geist`)
+### 🕵️‍♂️ 5.26. Vigesimosexta Vuelta (Serie 26: Exterminio del Bucle Infinito de Re-renders React Error #300 en ANGRAF y Spaghetti Map)
 
-A partir del análisis forense de la consola F12 (`React Error #310` al volver de ANGRAF a Dashboard y `OTS parsing error: invalid sfntVersion`):
+A partir del análisis de la consola (`Uncaught Error: Minified React error #300` al ingresar a ANGRAF y Spaghetti Map):
 
-| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 25) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 26) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
-| **25.1** | **`Cumplimiento Estricto de la Regla de Hooks (`React Error #310`)`** | `Uncaught Error: Minified React error #310` al conmutar entre ANGRAF y Dashboard | **Eliminación de Retorno Anticipado Intermedio (`InteractiveChart.tsx`):** Se eliminó el `return` intermedio condicional `if (!hasValidOptions)`. Ahora todos los hooks se ejecutan incondicionalmente en la parte superior y la renderización de `<ReactECharts>` se maneja de forma inline (`hasValidOptions ? <ReactECharts> : <Spinner>`). | **El Crimen del Retorno Condicional Intermedio:** Poner un `return` en medio del cuerpo del componente provocaba que en renders donde `hasValidOptions` cambiaba a falso, React ejecutara menos Hooks que en el render anterior, rompiendo la regla de oro de Hooks de React (Error #310). | ✅ RESUELTO |
-| **25.2** | **`Exterminio de Errores OTS Parsing 404 de Fuentes`** | 12 mensajes de error `Failed to decode downloaded font: geist-latin-wght-normal.woff2` y `OTS parsing error` | **Inyección de Fuente Limpia Google Fonts Inter (`src/index.css`):** Se reemplazó la importación corrupta `@fontsource-variable/geist` por `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap')`. | **Limpieza de Recursos:** El paquete fontsource intentaba cargar archivos `.woff2` relativos no resueltos por Vite en producción. Al usar Google Fonts Inter, la consola queda 100% libre de advertencias 404. | ✅ RESUELTO |
+| **26.1** | **`Montaje Incondicional de Componentes Gráficos (`GraphicAnalysis_V2.tsx`)`** | `Uncaught Error: Minified React error #300` al entrar a ANGRAF | **Montaje Directo de `<InteractiveChart />`:** Se removió la envoltura ternaria condicional `{context.loading ? ... : <InteractiveChart />}` y se pasa `data={context.data}` de forma incondicional al componente. | **El Crimen del Re-render en Cascada:** Las transiciones de estado de `loading` en el contexto provocaban desmontes/remontes de `<InteractiveChart />` en medio del ciclo de renderizado, excediendo el límite de actualización de React (#300). | ✅ RESUELTO |
+| **26.2** | **`Estabilización de Dependencias en `SpaghettiMap_V2.tsx``** | `Uncaught Error: Minified React error #300` al entrar a Spaghetti Map | **Cadena Primitiva `monthsStr` en `useEffect`:** Se transformó el arreglo `months` a un string primitivo `monthsStr = months.join(',')` como dependencia del `useEffect` de selección de meses. | **El Crimen de la Referencia de Arreglo Efímera:** Al evaluar `selectedMonths.length !== months.length` con un arreglo instanciado en cada renderizado, `setSelectedMonths([...months])` se ejecutaba en bucle infinito (> 50 re-renders/frame). | ✅ RESUELTO |
 
 ### ───────────────
+
 
 
 

@@ -46,11 +46,13 @@ export const SpaghettiMap_V2: React.FC = () => {
     }, [rawClients]);
 
     // Seleccionar por defecto todos los meses activos modelados en la grilla
+    const monthsStr = months ? months.join(',') : '';
     useEffect(() => {
-        if (months && months.length > 0 && (selectedMonths.length === 0 || selectedMonths.length !== months.length) && !isPlaying) {
+        if (months && months.length > 0 && selectedMonths.length === 0 && !isPlaying) {
             setSelectedMonths([...months]);
         }
-    }, [months, isPlaying]);
+    }, [monthsStr, isPlaying]);
+
 
 
     // Animación automática de la línea de tiempo
