@@ -138,3 +138,4 @@ CONCURRENCY & QC SUMMARY:
 2026-08-15 21:38:32 - RESTAURADO 100%: Revertido SpaghettiMap.tsx al codigo monolítico inmaculado original (666 lineas) con curvaturas por tramo getBaseCurveness, tal cual estaba configurado en el monolito.
 2026-08-15 22:00:21 - IMPLEMENTADO: Misiles nativos ECharts divididos por pierna con timing de 2/3s por pierna (2.0s total rotacion) y curvaturas en espejo de retorno por el Pacifico.
 2026-08-15 22:17:01 - CORREGIDO: Asignacion de paleta cromaticos distintos por ruta ('#0EA5E9' Cian y '#F97316' Naranja) y eliminacion de linea estatica gris por links vacios en graph.
+2026-08-15 22:28:36 - DESPLEGADO EN PRODUCCION VPS (91.108.125.253 | https://forecast.geeksoft.tech): SpaghettiMap con trayectorias polilineales continuas cerradas en el Pacifico, contabilidad LADEN estricta y offset dinamico por rotacion.
