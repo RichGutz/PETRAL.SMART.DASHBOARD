@@ -154,7 +154,9 @@ export const SpaghettiMap_V2: React.FC = () => {
     const totalSelectedTrips = (selectedMonths || []).reduce((acc, m) => acc + getMonthData(m).trips, 0);
     const totalSelectedTons = (selectedMonths || []).reduce((acc, m) => acc + getMonthData(m).tons, 0);
 
-    if (context.loading && (!context.data || !context.data.aggregated_data)) {
+    const hasData = context.data && context.data.aggregated_data && typeof context.data.aggregated_data === 'object' && Object.keys(context.data.aggregated_data).length > 0;
+
+    if (context.loading && !hasData) {
         return (
             <section className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full mt-2 bg-white border border-slate-200 rounded-tl-xl shadow-lg -mx-4 md:-mx-6 -mb-4 md:-mb-6" style={{ width: 'calc(100% + 2rem)' }}>
                 <div className="animate-spin h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full mb-4"></div>
@@ -164,13 +166,20 @@ export const SpaghettiMap_V2: React.FC = () => {
         );
     }
 
-    if (!context.data || !context.data.aggregated_data) {
+    if (!hasData) {
         return (
-            <section className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full mt-2 bg-white border border-slate-200 rounded-tl-xl shadow-lg -mx-4 md:-mx-6 -mb-4 md:-mb-6" style={{ width: 'calc(100% + 2rem)' }}>
-                <p className="text-slate-500 font-medium text-lg">Ingresar o cargar escenario para mostrar herramienta.</p>
+            <section className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full mt-2 bg-white border border-slate-200 rounded-tl-xl shadow-lg -mx-4 md:-mx-6 -mb-4 md:-mb-6 p-8 text-center" style={{ width: 'calc(100% + 2rem)' }}>
+                <div className="w-16 h-16 bg-blue-50 text-blue-600 border border-blue-200 rounded-full flex items-center justify-center text-3xl mb-4 shadow-sm">
+                    🗺️
+                </div>
+                <h3 className="text-base font-black text-slate-800 mb-1 uppercase tracking-tight">Spaghetti Map en Blanco</h3>
+                <p className="text-xs text-slate-500 max-w-md leading-relaxed">
+                    No hay un escenario cargado en la sesión. Agrega líneas en la Matriz Financiera o haz clic en <strong>"Cargar"</strong> para proyectar la red de navegación.
+                </p>
             </section>
         );
     }
+
 
     return (
         <section className="flex-1 flex flex-col mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300 w-full h-full min-h-[600px] -mx-4 md:-mx-6 -mb-4 md:-mb-6 overflow-hidden bg-white border border-slate-200 rounded-tl-xl shadow-lg" style={{ width: 'calc(100% + 2rem)' }}>
