@@ -131,6 +131,40 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
                 ]);
                 setPorts(portsData || []);
                 setSpotRoutes(routesData || []);
+
+                // Restaurar automáticamente el último escenario cargado por el usuario (persistencia de sesión)
+                const lastId = localStorage.getItem('petral_last_forecast_id');
+                if (lastId) {
+                    try {
+                        const loadedData = await ForecastService.loadForecast(lastId);
+                        if (loadedData && loadedData.projection_lines && loadedData.projection_lines.length > 0) {
+                            const newStartDate = loadedData.start_date || '2027-01-01';
+                            const newEndDate = loadedData.end_date || '2027-12-31';
+                            setStartDate(newStartDate);
+                            setEndDate(newEndDate);
+
+                            const cleanedLines = loadedData.projection_lines.map((line: any) => {
+                                const { metadata_demurrage_pct, metadata_show_demurrage, metadata_excluded_demurrages, metadata_custom_demurrages, metadata_demurrage_days, metadata_show_demurrage_days, metadata_custom_demurrage_days, ...rest } = line;
+                                return {
+                                    ...rest,
+                                    quantity: parseFloat(rest.quantity) || 0,
+                                    monthly_frequency: parseFloat(rest.monthly_frequency) || 1,
+                                    custom_tariff: rest.custom_tariff != null ? parseFloat(rest.custom_tariff) : undefined,
+                                    forecast_bunker_price_ifo: rest.forecast_bunker_price_ifo != null ? parseFloat(rest.forecast_bunker_price_ifo) : undefined,
+                                    forecast_bunker_price_mdo: rest.forecast_bunker_price_mdo != null ? parseFloat(rest.forecast_bunker_price_mdo) : undefined,
+                                };
+                            });
+
+                            setProjectionLines(cleanedLines);
+                            setCurrentForecastId(loadedData.id);
+                            setForecastName(loadedData.name);
+                            setLoadedAuthor(loadedData.user_id);
+                            await runSimulationWith(cleanedLines, newStartDate, newEndDate);
+                        }
+                    } catch (lastErr) {
+                        console.warn("No se pudo restaurar el último escenario activo:", lastErr);
+                    }
+                }
             } catch (e) {
                 console.error("Error loading initial context data:", e);
             } finally {
@@ -467,6 +501,9 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             setCurrentForecastId(loadedData.id);
             setForecastName(loadedData.name);
             setLoadedAuthor(loadedData.user_id);
+            if (loadedData.id) {
+                localStorage.setItem('petral_last_forecast_id', loadedData.id);
+            }
             setShowLoadModal(false);
 
             await runSimulationWith(cleanedLines, newStartDate, newEndDate);
