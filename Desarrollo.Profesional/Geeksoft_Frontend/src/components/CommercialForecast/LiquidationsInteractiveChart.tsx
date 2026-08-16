@@ -68,7 +68,28 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
     const [filterVessel, setFilterVessel] = useState<string>('ALL');
     const [vesselsMaster, setVesselsMaster] = useState<any[]>([]);
 
+    const echartsRef = React.useRef<any>(null);
+
+    // Auto-resize de ECharts para evitar canvas de 0px durante transiciones de React Router
+    useEffect(() => {
+        const handleResize = () => {
+            if (echartsRef.current) {
+                const chartInstance = echartsRef.current.getEchartsInstance();
+                if (chartInstance) chartInstance.resize();
+            }
+        };
+
+        const timers = [50, 150, 350, 600, 800].map(delay => setTimeout(handleResize, delay));
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            timers.forEach(clearTimeout);
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [liquidations]);
+
     // CARGAR MATRIZ DE FLOTA (tabla vessels de Supabase) PARA CONECTAR EL color_hex OFICIAL
+
     useEffect(() => {
         ForecastService.getVessels()
             .then(data => {
@@ -934,12 +955,14 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             {/* CONTENEDOR DEL GRÁFICO (COLUMNA DERECHA FLEX-1 MIN-H-[650PX]) */}
             <div className="flex-1 min-w-0 flex flex-col min-h-[650px] bg-white rounded-lg border border-slate-200 p-2 shadow-sm">
                 <ReactECharts 
+                    ref={echartsRef}
                     option={options} 
                     style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} 
                     notMerge={true} 
                     lazyUpdate={true}
                 />
             </div>
+
 
         </div>
     );

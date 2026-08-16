@@ -20,7 +20,47 @@ from backend.services.forecast_service import run_forecast_simulation, run_forec
 
 router = APIRouter(tags=["Commercial Forecast"])
 
+import os
+from datetime import datetime
+
+LOG_FILE_PATH = "/opt/geeksoft_engine/frontend_runtime_errors.log"
+
+@router.post("/telemetry-log")
+def log_frontend_telemetry(payload: dict = Body(...)):
+    try:
+        timestamp = datetime.utcnow().isoformat()
+        level = payload.get("level", "INFO").upper()
+        message = payload.get("message", "")
+        url = payload.get("url", "")
+        user = payload.get("user", "Anonymous")
+        stack = payload.get("stack", "")
+        extra = payload.get("extra", {})
+
+        log_entry = (
+            f"[{timestamp}] [{level}] [User: {user}] [URL: {url}]\n"
+            f"Message: {message}\n"
+            + (f"Stack:\n{stack}\n" if stack else "")
+            + (f"Extra: {extra}\n" if extra else "")
+            + ("-" * 70) + "\n"
+        )
+
+        log_dir = os.path.dirname(LOG_FILE_PATH)
+        if os.path.exists(log_dir):
+            target_path = LOG_FILE_PATH
+        else:
+            target_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "scratch", "frontend_runtime_errors.log")
+            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+
+        with open(target_path, "a", encoding="utf-8") as f:
+            f.write(log_entry)
+
+        return {"status": "logged", "timestamp": timestamp}
+    except Exception as e:
+        print(f"Error recording telemetry log: {e}")
+        return {"status": "error", "detail": str(e)}
+
 @router.post("/run", response_model=ForecastResponse)
+
 def simulate_forecast(request: ForecastRequest):
     try:
         result = run_forecast_simulation(request)

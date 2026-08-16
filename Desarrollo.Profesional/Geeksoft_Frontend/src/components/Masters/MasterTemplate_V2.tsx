@@ -5,6 +5,8 @@ import { Button } from '../ui/button';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 import { useAuth } from '../../context/AuthContext';
 import { AuthService } from '../../services/api';
+import { TelemetryConsoleModal } from '../common/TelemetryConsoleModal';
+
 
 interface MasterTemplateProps {
     title: string;
@@ -648,7 +650,10 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                     </div>
                 </div>
             )}
+            {/* Modal de Telemetría VPS para Administrador */}
+            <TelemetryConsoleModal />
         </div>
     );
 };
+
 
