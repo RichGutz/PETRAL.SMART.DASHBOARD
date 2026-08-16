@@ -117,33 +117,39 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         if (!client) return [];
         const cleanClient = client.trim().toUpperCase();
         const routesList: Array<{ key: string; label: string; isQuote?: boolean }> = [];
+        const addedKeys = new Set<string>();
 
         // 1. Rutas fijas para clientes estándar (restaurado de commit 4f4b59e)
         if (cleanClient === 'SPCC') {
             routesList.push({ key: 'ILO-MATARANI', label: 'ILO - MATARANI' });
             routesList.push({ key: 'ILO-MARCONA', label: 'ILO - MARCONA' });
             routesList.push({ key: 'ILO-MEJILLONES', label: 'ILO - MEJILLONES' });
+            addedKeys.add('ILO-MATARANI'); addedKeys.add('ILO-MARCONA'); addedKeys.add('ILO-MEJILLONES');
         } else if (cleanClient === 'NEXA') {
             routesList.push({ key: 'CALLAO-MEJILLONES', label: 'CALLAO - MEJILLONES' });
             routesList.push({ key: 'CALLAO-MATARANI', label: 'CALLAO - MATARANI' });
             routesList.push({ key: 'CALLAO-MARCONA', label: 'CALLAO - MARCONA' });
+            addedKeys.add('CALLAO-MEJILLONES'); addedKeys.add('CALLAO-MATARANI'); addedKeys.add('CALLAO-MARCONA');
         } else if (cleanClient === 'SPOT' || cleanClient.startsWith('SPOT')) {
             routesList.push({ key: 'CALLAO-MEJILLONES', label: 'CALLAO - MEJILLONES' });
             routesList.push({ key: 'ILO-MATARANI', label: 'ILO - MATARANI' });
             routesList.push({ key: 'ILO-MEJILLONES', label: 'ILO - MEJILLONES' });
+            addedKeys.add('CALLAO-MEJILLONES'); addedKeys.add('ILO-MATARANI'); addedKeys.add('ILO-MEJILLONES');
         }
 
-        // 2. Cotizaciones (routes_quotes) para este cliente (ej: Cerro Verde - Matarani a Ilo)
+        // 2. Cotizaciones (routes_quotes) para este cliente (de commit 7af186c)
         spotRoutes.forEach(s => {
             const name = (s.name || "").trim().toUpperCase();
-            let qClient = name;
-            if (name.includes('.')) {
-                qClient = name.split('.')[0].trim();
-            } else if (name.includes('-')) {
-                qClient = name.split('-')[0].trim();
+            let qClient = (s.client_id || s.client_name || "").trim().toUpperCase();
+            if (!qClient) {
+                if (name.includes('.')) {
+                    qClient = name.split('.')[0].trim();
+                } else if (name.includes('-')) {
+                    qClient = name.split('-')[0].trim();
+                }
             }
 
-            if (qClient === cleanClient) {
+            if (qClient === cleanClient || name.startsWith(`${cleanClient}.`) || name.startsWith(`${cleanClient}_`)) {
                 const tramos = s.legs_data?.tramos || [];
                 const laden = tramos.filter((t: any) => t.type?.toUpperCase() === 'LADEN');
                 let key = '';
@@ -158,16 +164,20 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     key = `QUOTE:${sId}:UNK-UNK`;
                 }
 
-                routesList.push({
-                    key,
-                    label: s.name,
-                    isQuote: true
-                });
+                if (!addedKeys.has(key)) {
+                    addedKeys.add(key);
+                    routesList.push({
+                        key,
+                        label: s.name,
+                        isQuote: true
+                    });
+                }
             }
         });
 
         return routesList;
     }, [client, spotRoutes]);
+
 
     // Lógica reactiva para autocompletar buque, cantidad y flete (yield)
     useEffect(() => {
