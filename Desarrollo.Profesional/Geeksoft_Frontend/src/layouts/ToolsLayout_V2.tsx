@@ -128,23 +128,28 @@ export const ToolsLayout_V2: React.FC = () => {
                 </div>
                 )}
 
-                {/* 2. Persistent View Containers (Keep Matriz, ANGRAF, and Spaghetti Map alive in memory like the 4afad62 monolith) */}
+                {/* 2. Matriz Financiera persistente en memoria + Herramientas Gráficas con desmonte limpio de animaciones ECharts */}
                 <ErrorBoundary fallbackTitle="Error al cargar la herramienta interactiva">
                     <div className="flex-1 flex flex-col min-h-0 relative w-full h-full">
                         <div style={{ display: activeTab === 'financial-matrix' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 w-full h-full">
                             <FinancialMatrix_V2 />
                         </div>
-                        <div style={{ display: activeTab === 'graphic-analysis' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 w-full h-full">
-                            <GraphicAnalysis_V2 />
-                        </div>
-                        <div style={{ display: activeTab === 'spaghetti-map' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 w-full h-full">
-                            <SpaghettiMap_V2 />
-                        </div>
+                        {activeTab === 'graphic-analysis' && (
+                            <div className="flex-1 flex flex-col min-h-0 w-full h-full">
+                                <GraphicAnalysis_V2 />
+                            </div>
+                        )}
+                        {activeTab === 'spaghetti-map' && (
+                            <div className="flex-1 flex flex-col min-h-0 w-full h-full">
+                                <SpaghettiMap_V2 />
+                            </div>
+                        )}
                         {activeTab !== 'financial-matrix' && activeTab !== 'graphic-analysis' && activeTab !== 'spaghetti-map' && (
                             <Outlet />
                         )}
                     </div>
                 </ErrorBoundary>
+
 
 
             </div>
