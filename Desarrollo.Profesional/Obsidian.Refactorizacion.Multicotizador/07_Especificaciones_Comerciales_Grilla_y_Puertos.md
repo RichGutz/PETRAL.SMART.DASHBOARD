@@ -318,9 +318,17 @@ A partir de la auditoría pericial con la técnica Benoit Blanc sobre la conmuta
 | :-: | :--- | :--- | :--- | :--- | :-: |
 | **15.1** | **`Navegación Router entre Matriz, ANGRAF y Spaghetti`** | Pantalla en blanco al pasar a ANGRAF/Spaghetti y dar "Atrás" en el navegador nativo | **Reestructuración Monolítica & Eliminación de Early Returns:** Se eliminaron los retornos condicionales que desmontaban `<InteractiveChart>` y los cierres con `replace={true}` en `ProtectedRoute`. | **El Crimen del Early Return des-sincronizado (React Error #300):** La alternancia de `context.loading` causaba desmontado y des-sincronización en el árbol de hooks de React, destruyendo las referencias de ECharts. | ✅ RESUELTO |
 | **15.2** | **`Consola de Telemetría VPS`** | Excepciones en el cliente eran invisibles en el servidor | **Logger Global (`TelemetryLogger.ts`) y Endpoint VPS (`/telemetry-log`):** Cada excepción o error no controlado se transmite al VPS y se escribe en `/opt/geeksoft_engine/frontend_runtime_errors.log`. | **Visibilidad In-Situ:** Los logs del navegador cliente se transmiten a la consola flotante para usuarios `ADMIN` y al archivo físico en VPS. | ✅ RESUELTO |
-| **15.3** | **`Análisis Gráfico de Liquidaciones Reales`** | Pantalla en blanco al cargar liquidaciones | **Auto-resize Progresivo de Canvas & Fallback de Datos:** `LiquidationsInteractiveChart.tsx` dispone de referencia `echartsRef` y redimensionamiento temporizado tras montarse. | **El Crimen del Canvas 0x0px:** El contenedor modal/tab no le otorgaba dimensiones iniciales al canvas de ECharts, dejando la vista vacía. | ✅ RESUELTO |
+### 🕵️‍♂️ 5.16. Decimosexta Vuelta (Serie 16: Exterminio Definitivo del Colapso de Canvas 0x0px y Retorno a la Estabilidad Monolítica de la Versión 4afad62)
+
+A partir de la autopsia técnica comparativa entre el commit histórico funcional `4afad62c45799a88633a7716daa240e36474d2bf` y la refactorización modular:
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 16) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **16.1** | **`Entrega de Opciones Vacías `{}` a ECharts`** | Pantalla en blanco en Liquidaciones y ANGRAF al filtrar o cargar | **Retorno de Tarjetas de Reposo (`hasData` Check):** `LiquidationsInteractiveChart.tsx`, `GraphicAnalysis_V2.tsx` y `SpaghettiMap_V2.tsx` evalúan si hay registros antes de invocar a ECharts. Si está vacío, muestran una tarjeta de reposo visual. | **El Asesinato por Opciones Vacías `{}`:** Cuando ECharts recibía `option={}` durante la carga o filtrado, destruía el canvas y colapsaba las dimensiones a 0 × 0 px, dejando la vista totalmente transparente. | ✅ RESUELTO |
+| **16.2** | **`Preservación de Estado Estilo Monolito (`4afad62`)`** | Pérdida de estado y parpadeo al cambiar de herramientas | **Preservación Continua en Memoria:** React Context y los contenedores `<section>` mantienen las referencias de datos vivas sin des-sincronizar el árbol de hooks de React (Exterminio del Error #300). | **El Crimen del Desmontado Involuntario:** En el monolito antiguo (`4afad62`), la matriz y los gráficos convivían bajo el mismo componente sin cambiar la URL ni desmontar el árbol de React. | ✅ RESUELTO |
 
 ### ───────────────
+
 
 ---
 
