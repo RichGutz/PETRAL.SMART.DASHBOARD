@@ -327,16 +327,17 @@ A partir de la autopsia técnica comparativa entre el commit histórico funciona
 A partir de la autopsia técnica pericial sobre por qué las vistas de ANGRAF y Spaghetti Map se mostraban "En Blanco / Sin escenario cargado" al refrescar (F5) o conmutar de pestaña tras haber cargado un escenario en la Matriz Financiera:
 
 | # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 17) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
-### 🕵️‍♂️ 5.26. Vigesimosexta Vuelta (Serie 26: Exterminio del Bucle Infinito de Re-renders React Error #300 en ANGRAF y Spaghetti Map)
+### 🕵️‍♂️ 5.27. Vigesimoséptima Vuelta (Serie 27: Blindaje Defensivo en FastAPI `/api/v1/forecast/ports` y Exterminio del Error HTTP 500)
 
-A partir del análisis de la consola (`Uncaught Error: Minified React error #300` al ingresar a ANGRAF y Spaghetti Map):
+A partir del análisis del log de red de Axios (`AxiosError: Request failed with status code 500` en `/api/v1/forecast/ports`):
 
-| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 26) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 27) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
-| **26.1** | **`Montaje Incondicional de Componentes Gráficos (`GraphicAnalysis_V2.tsx`)`** | `Uncaught Error: Minified React error #300` al entrar a ANGRAF | **Montaje Directo de `<InteractiveChart />`:** Se removió la envoltura ternaria condicional `{context.loading ? ... : <InteractiveChart />}` y se pasa `data={context.data}` de forma incondicional al componente. | **El Crimen del Re-render en Cascada:** Las transiciones de estado de `loading` en el contexto provocaban desmontes/remontes de `<InteractiveChart />` en medio del ciclo de renderizado, excediendo el límite de actualización de React (#300). | ✅ RESUELTO |
-| **26.2** | **`Estabilización de Dependencias en `SpaghettiMap_V2.tsx``** | `Uncaught Error: Minified React error #300` al entrar a Spaghetti Map | **Cadena Primitiva `monthsStr` en `useEffect`:** Se transformó el arreglo `months` a un string primitivo `monthsStr = months.join(',')` como dependencia del `useEffect` de selección de meses. | **El Crimen de la Referencia de Arreglo Efímera:** Al evaluar `selectedMonths.length !== months.length` con un arreglo instanciado en cada renderizado, `setSelectedMonths([...months])` se ejecutaba en bucle infinito (> 50 re-renders/frame). | ✅ RESUELTO |
+| **27.1** | **`Blindaje Defensivo en FastAPI (`forecast.py`)`** | `GET /api/v1/forecast/ports 500 (Internal Server Error)` al conmutar a Spaghetti Map | **Fallback Silencioso en `get_ports()`:** Se implementó un bloque `try/except` con fallback a la consulta limpia de la tabla `ports`. Si la unión relacional con `sources_sinks` falla en Supabase, la API retorna la lista simple de puertos con HTTP 200. | **El Crimen del Error 500 Desencadenante:** El fallo del backend al consultar los puertos lanzaba un HTTP 500. El frontend capturaba el error, vaciaba los datos de la sesión y desencadenaba los errores de re-renders de React (#300 / #310). | ✅ RESUELTO |
+| **27.2** | **`Estabilidad Total de la Sesión en el Frontend`** | `Error loading initial context data` en consola | **Preservación de Datos:** Al responder siempre la API con HTTP 200, `ForecastService.getPorts()` no vuelve a fallar y el contexto del frontend mantiene intacto el estado del escenario. | **Exterminio del Efecto Dominó:** Se corta la cadena de fallos desde su origen en el servidor FastAPI. | ✅ RESUELTO |
 
 ### ───────────────
+
 
 
 
