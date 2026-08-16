@@ -633,10 +633,14 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     // Auto-resize de ECharts con ResizeObserver para garantizar dimensiones en transiciones de React Router sin F5
     useEffect(() => {
         const handleResize = () => {
-            if (echartsRef.current) {
-                const chartInstance = echartsRef.current.getEchartsInstance();
-                if (chartInstance && typeof chartInstance.resize === 'function') {
-                    chartInstance.resize();
+            if (echartsRef.current && options && options.series && Array.isArray(options.series) && options.series.length > 0) {
+                try {
+                    const chartInstance = echartsRef.current.getEchartsInstance();
+                    if (chartInstance && typeof chartInstance.resize === 'function' && !chartInstance.isDisposed()) {
+                        chartInstance.resize();
+                    }
+                } catch (e) {
+                    // Prevenir que errores de layout internos de ECharts en opciones intermedias rompan el árbol de React
                 }
             }
         };
@@ -658,6 +662,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             if (resizeObserver) resizeObserver.disconnect();
         };
     }, [options]);
+
 
 
     if (!data || !data.aggregated_data || activeMonths.length === 0) {

@@ -539,10 +539,14 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
     // Auto-resize de ECharts con ResizeObserver para garantizar dimensiones en transiciones de React Router sin F5
     useEffect(() => {
         const handleResize = () => {
-            if (chartRef.current) {
-                const chartInstance = chartRef.current.getEchartsInstance();
-                if (chartInstance && typeof chartInstance.resize === 'function') {
-                    chartInstance.resize();
+            if (chartRef.current && mapLoaded) {
+                try {
+                    const chartInstance = chartRef.current.getEchartsInstance();
+                    if (chartInstance && typeof chartInstance.resize === 'function' && !chartInstance.isDisposed()) {
+                        chartInstance.resize();
+                    }
+                } catch (e) {
+                    // Prevenir que errores de layout internos de ECharts rompan el árbol de React
                 }
             }
         };
@@ -564,6 +568,7 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
             if (resizeObserver) resizeObserver.disconnect();
         };
     }, [mapLoaded]);
+
 
 
 

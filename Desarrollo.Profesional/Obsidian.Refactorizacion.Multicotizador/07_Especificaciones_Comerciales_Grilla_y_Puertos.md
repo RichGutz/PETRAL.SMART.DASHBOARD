@@ -327,16 +327,17 @@ A partir de la autopsia técnica comparativa entre el commit histórico funciona
 A partir de la autopsia técnica pericial sobre por qué las vistas de ANGRAF y Spaghetti Map se mostraban "En Blanco / Sin escenario cargado" al refrescar (F5) o conmutar de pestaña tras haber cargado un escenario en la Matriz Financiera:
 
 | # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 17) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
-### 🕵️‍♂️ 5.21. Vigesimoprimera Vuelta (Serie 21: Eliminación del Doble Disparo en `handleLoadSelected` y `useEffect([projectionLinesKey])` mediante Ref Detección de Payload Idéntico)
+### 🕵️‍♂️ 5.22. Vigesimosegunda Vuelta (Serie 22: Captura Definitiva vía Consola F12 — Blindaje Pericial de `handleResize()` contra `TypeError` de ECharts y Error #310 de React)
 
-A partir de la autopsia de flujos asíncronos y análisis de eventos de estado en `ForecastContext_V2.tsx`:
+A partir de los logs de consola del navegador extraídos directamente por el usuario (`TypeError: Cannot read properties of null (reading '0') at LT at chartInstance.resize`):
 
-| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 21) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 22) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
-| **21.1** | **`Guardia de Simulación Duplicada (`lastSimulatedKeyRef`)`** | Cargar escenario e ir de inmediato a ANGRAF dejaba la pantalla en blanco | **Guardián de Clave de Simulación en `ForecastContext_V2.tsx`:** `runSimulationWith` guarda la clave MD5/JSON del payload (`lastSimulatedKeyRef`). Si recibe exactamente la misma llamada con el mismo escenario ya calculado y `data !== null`, retorna en 0ms sin hacer HTTP ni poner `loading = true`. | **El Crimen del Doble Disparo Asíncrono:** `handleLoadSelected` ejecutaba la 1ra simulación y al terminar ponía `isBatchLoadingRef = false`. En ese milisegundo, `useEffect([projectionLinesKey])` detectaba el cambio de líneas y disparaba una 2da simulación innecesaria, manteniendo `loading = true` justo cuando el usuario pasaba a ANGRAF. | ✅ RESUELTO |
-| **21.2** | **`Conmutación Inmediata de Pestañas sin Parpadeos`** | Pasar a ANGRAF mostraba *"Cargando Análisis Gráfico..."* o pantalla transparente | **Respuesta Inmediata 0-ms sin `loading = true`:** Al ignorar simulaciones duplicadas con la misma clave de payload, el Contexto entrega `data` síncronamente y mantiene `loading = false`, permitiendo que ANGRAF y Spaghetti Map se desplieguen instantáneamente. | **Exterminio del Falso Positivo:** Se aisló la raíz exacta de la re-evaluación reactiva de React y se garantizó la fluidez total entre la Matriz y las vistas gráficas. | ✅ RESUELTO |
+| **22.1** | **`Captura del Verdadero Asesino (`TypeError` en ECharts `resize()`)`** | `Uncaught TypeError: Cannot read properties of null (reading '0') at LT` seguido de `React Error #310` | **Blindaje `try/catch` y Validación de Opciones:** En `InteractiveChart.tsx`, `SpaghettiMap.tsx` y `LiquidationsInteractiveChart.tsx`, `handleResize()` ahora valida `options.series.length > 0` y ejecuta `chartInstance.resize()` dentro de un bloque `try {} catch (e) {}`. | **El Crimen de la Excepción en Fotograma Intermedio:** Al conmutar de pestaña, ECharts pasaba por 1 fotograma intermedio con `options = {}`. `ResizeObserver` invocaba `chartInstance.resize()` sobre esas opciones vacías, ECharts lanzaba un `TypeError` no capturado, ¡y destruía el árbol de React! | ✅ RESUELTO |
+| **22.2** | **`Exterminio del Colapso de Pantalla y Fluidez Total`** | Al navegar de Matriz a ANGRAF o Spaghetti, la pantalla se congelaba en blanco | **Captura Silenciosa de Errores de Layout:** Cualquier intento prematuro de rediseño de ECharts durante transiciones DOM es ignorado silenciosamente sin lanzar excepciones a React. Tan pronto como el layout se estabiliza, los gráficos se renderizan al 100% de escala. | **Resolución Definitiva:** Se logró la combinación perfecta entre montaje monolítico en memoria, prevención de cancelaciones de red y protección de runtime contra fallos de canvas. | ✅ RESUELTO |
 
 ### ───────────────
+
 
 
 

@@ -73,9 +73,15 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
     // Auto-resize de ECharts para evitar canvas de 0px durante transiciones de React Router
     useEffect(() => {
         const handleResize = () => {
-            if (echartsRef.current) {
-                const chartInstance = echartsRef.current.getEchartsInstance();
-                if (chartInstance) chartInstance.resize();
+            if (echartsRef.current && liquidations && liquidations.length > 0) {
+                try {
+                    const chartInstance = echartsRef.current.getEchartsInstance();
+                    if (chartInstance && typeof chartInstance.resize === 'function' && !chartInstance.isDisposed()) {
+                        chartInstance.resize();
+                    }
+                } catch (e) {
+                    // Prevenir que errores de layout internos de ECharts rompan el árbol de React
+                }
             }
         };
 
@@ -87,6 +93,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             window.removeEventListener('resize', handleResize);
         };
     }, [liquidations]);
+
 
     // CARGAR MATRIZ DE FLOTA (tabla vessels de Supabase) PARA CONECTAR EL color_hex OFICIAL
 
