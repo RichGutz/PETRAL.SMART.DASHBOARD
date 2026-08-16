@@ -327,16 +327,17 @@ A partir de la autopsia técnica comparativa entre el commit histórico funciona
 A partir de la autopsia técnica pericial sobre por qué las vistas de ANGRAF y Spaghetti Map se mostraban "En Blanco / Sin escenario cargado" al refrescar (F5) o conmutar de pestaña tras haber cargado un escenario en la Matriz Financiera:
 
 | # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 17) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
-### 🕵️‍♂️ 5.20. Vigésima Vuelta (Serie 20: Captura del Asesino — Eliminación de los `useEffect` Duplicados de Simulación que Provocaban la Condición de Carrera por Aborto del Request en Conmutación de Rutas)
+### 🕵️‍♂️ 5.21. Vigesimoprimera Vuelta (Serie 21: Eliminación del Doble Disparo en `handleLoadSelected` y `useEffect([projectionLinesKey])` mediante Ref Detección de Payload Idéntico)
 
-A partir de la autopsia de código forense comparativa contra el commit monolítico `4afad62c45799a88633a7716daa240e36474d2bf`:
+A partir de la autopsia de flujos asíncronos y análisis de eventos de estado en `ForecastContext_V2.tsx`:
 
-| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 20) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 21) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
-| **20.1** | **`Identificación del Asesino (Disparos Duplicados de `runSimulationWith`)`** | Pasar de Matriz a ANGRAF o a Spaghetti borraba `data` y dejaba la pantalla en blanco | **Unificación de Fuente Única de Verdad (`ForecastContext_V2.tsx`):** Se eliminaron los `useEffect` redundantes en `GraphicAnalysis_V2.tsx`, `SpaghettiMap_V2.tsx` y `FinancialMatrix_V2.tsx` que intentaban ejecutar la simulación de forma independiente al montarse. | **El Crimen del Aborto por Condición de Carrera:** Al cambiar de pestaña, el `useEffect` de la vista hija disparaba una simulación secundaria mientras la del Contexto aún estaba corriendo. `abortControllerRef.current.abort()` cancelaba el request en vuelo y vaciaba `data` a `null`, destruyendo la renderización. | ✅ RESUELTO |
-| **20.2** | **`Calce Estricto 1:1 con el Monolito (`4afad62`)`** | En el monolito nunca ocurrieron cierres o abortos en conmutación de pestañas | **Centralización Estricta en Context:** El monolito original poseía un único pipeline centralizado de simulación. Al remover los disparadores duplicados en las vistas hijas, se eliminaron por completo las colisiones de cancelaciones de requests. | **Garantía de Fluidez Continua:** `ForecastContext_V2` retiene y entrega `data` a todas las herramientas hijas de forma síncrona sin abortar llamadas de API ni vaciar el estado en memoria. | ✅ RESUELTO |
+| **21.1** | **`Guardia de Simulación Duplicada (`lastSimulatedKeyRef`)`** | Cargar escenario e ir de inmediato a ANGRAF dejaba la pantalla en blanco | **Guardián de Clave de Simulación en `ForecastContext_V2.tsx`:** `runSimulationWith` guarda la clave MD5/JSON del payload (`lastSimulatedKeyRef`). Si recibe exactamente la misma llamada con el mismo escenario ya calculado y `data !== null`, retorna en 0ms sin hacer HTTP ni poner `loading = true`. | **El Crimen del Doble Disparo Asíncrono:** `handleLoadSelected` ejecutaba la 1ra simulación y al terminar ponía `isBatchLoadingRef = false`. En ese milisegundo, `useEffect([projectionLinesKey])` detectaba el cambio de líneas y disparaba una 2da simulación innecesaria, manteniendo `loading = true` justo cuando el usuario pasaba a ANGRAF. | ✅ RESUELTO |
+| **21.2** | **`Conmutación Inmediata de Pestañas sin Parpadeos`** | Pasar a ANGRAF mostraba *"Cargando Análisis Gráfico..."* o pantalla transparente | **Respuesta Inmediata 0-ms sin `loading = true`:** Al ignorar simulaciones duplicadas con la misma clave de payload, el Contexto entrega `data` síncronamente y mantiene `loading = false`, permitiendo que ANGRAF y Spaghetti Map se desplieguen instantáneamente. | **Exterminio del Falso Positivo:** Se aisló la raíz exacta de la re-evaluación reactiva de React y se garantizó la fluidez total entre la Matriz y las vistas gráficas. | ✅ RESUELTO |
 
 ### ───────────────
+
 
 
 

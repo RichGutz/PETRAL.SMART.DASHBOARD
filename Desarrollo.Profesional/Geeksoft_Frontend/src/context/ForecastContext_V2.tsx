@@ -256,12 +256,23 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     const simulatingRef = useRef(false);
     const isBatchLoadingRef = useRef(false);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const lastSimulatedKeyRef = useRef<string>('');
 
-    const runSimulationWith = async (lines: any[], sDate: string, eDate: string) => {
+    const runSimulationWith = async (lines: any[], sDate: string, eDate: string, force: boolean = false) => {
         if (lines.length === 0) {
             setData(null);
             setIsDirty(false);
             setLoading(false);
+            lastSimulatedKeyRef.current = '';
+            return;
+        }
+
+        const currentKey = JSON.stringify(lines.map(p => ({
+            m: p.month_index, c: p.client_id, o: p.origin_port_id, d: p.destination_port_id,
+            v: p.vessel_id, f: p.monthly_frequency, t: p.custom_tariff, q: p.quantity
+        }))) + `_${sDate}_${eDate}_${portCostModeRef.current}`;
+
+        if (!force && lastSimulatedKeyRef.current === currentKey && data !== null) {
             return;
         }
 
@@ -286,6 +297,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             if (!controller.signal.aborted) {
                 setData(result);
                 setIsDirty(false);
+                lastSimulatedKeyRef.current = currentKey;
                 try {
                     sessionStorage.setItem('petral_active_projection_lines', JSON.stringify(lines));
                     sessionStorage.setItem('petral_active_data', JSON.stringify(result));
@@ -317,10 +329,11 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     };
 
     const handleManualRecalculate = async () => {
-        await runSimulationWith(projectionLines, startDate, endDate);
+        await runSimulationWith(projectionLines, startDate, endDate, true);
     };
 
     const handleClearSession = () => {
+        lastSimulatedKeyRef.current = '';
         sessionStorage.removeItem('petral_active_projection_lines');
         sessionStorage.removeItem('petral_active_data');
         sessionStorage.removeItem('petral_active_forecast_name');
@@ -340,6 +353,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
         setCustomDemurrages({});
         setCustomDemurrageDays({});
     };
+
 
 
     // Clave memorizada de contenido para reaccionar ante cambios de frecuencia, tarifas o cantidades
