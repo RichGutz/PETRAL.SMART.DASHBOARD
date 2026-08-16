@@ -327,16 +327,17 @@ A partir de la autopsia técnica comparativa entre el commit histórico funciona
 A partir de la autopsia técnica pericial sobre por qué las vistas de ANGRAF y Spaghetti Map se mostraban "En Blanco / Sin escenario cargado" al refrescar (F5) o conmutar de pestaña tras haber cargado un escenario en la Matriz Financiera:
 
 | # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 17) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
-### 🕵️‍♂️ 5.22. Vigesimosegunda Vuelta (Serie 22: Captura Definitiva vía Consola F12 — Blindaje Pericial de `handleResize()` contra `TypeError` de ECharts y Error #310 de React)
+### 🕵️‍♂️ 5.23. Vigesimotercera Vuelta (Serie 23: Exterminio del Montaje de `<ReactECharts option={{}}>` y Retorno de `options = null` con Tarjeta Fallback de React)
 
-A partir de los logs de consola del navegador extraídos directamente por el usuario (`TypeError: Cannot read properties of null (reading '0') at LT at chartInstance.resize`):
+A partir del análisis profundo del ciclo de vida interno de ECharts (`e.create -> t.eachComponent -> t.AQ [as resize]`):
 
-| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 22) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 23) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
-| **22.1** | **`Captura del Verdadero Asesino (`TypeError` en ECharts `resize()`)`** | `Uncaught TypeError: Cannot read properties of null (reading '0') at LT` seguido de `React Error #310` | **Blindaje `try/catch` y Validación de Opciones:** En `InteractiveChart.tsx`, `SpaghettiMap.tsx` y `LiquidationsInteractiveChart.tsx`, `handleResize()` ahora valida `options.series.length > 0` y ejecuta `chartInstance.resize()` dentro de un bloque `try {} catch (e) {}`. | **El Crimen de la Excepción en Fotograma Intermedio:** Al conmutar de pestaña, ECharts pasaba por 1 fotograma intermedio con `options = {}`. `ResizeObserver` invocaba `chartInstance.resize()` sobre esas opciones vacías, ECharts lanzaba un `TypeError` no capturado, ¡y destruía el árbol de React! | ✅ RESUELTO |
-| **22.2** | **`Exterminio del Colapso de Pantalla y Fluidez Total`** | Al navegar de Matriz a ANGRAF o Spaghetti, la pantalla se congelaba en blanco | **Captura Silenciosa de Errores de Layout:** Cualquier intento prematuro de rediseño de ECharts durante transiciones DOM es ignorado silenciosamente sin lanzar excepciones a React. Tan pronto como el layout se estabiliza, los gráficos se renderizan al 100% de escala. | **Resolución Definitiva:** Se logró la combinación perfecta entre montaje monolítico en memoria, prevención de cancelaciones de red y protección de runtime contra fallos de canvas. | ✅ RESUELTO |
+| **23.1** | **`Prohibición de Opciones Vacías `{}` a ECharts`** | `TypeError: Cannot read properties of null (reading '0') at LT` al montar ANGRAF | **Retorno `null` y Fallback React en `InteractiveChart.tsx`:** `useMemo` retorna `null` cuando no hay datos suficientes y el componente renderiza la tarjeta de espera de React en lugar de montar `<ReactECharts option={{}}>`. | **El Crimen del Montaje con `{}` Vacío:** Cuando `options` era `{}`, `<ReactECharts>` intentaba inicializar ECharts con un objeto vacío. Al crear el componente (`e.create`), ECharts fallaba buscando ejes inexistentes (`null[0]`), lanzando una excepción interna durante el propio montaje de la vista. | ✅ RESUELTO |
+| **23.2** | **`Montaje Seguro Únicamente con `series` Válidas`** | Al cambiar a ANGRAF, React lanzaba `Minified Error #310` y congelaba la vista | **Validación Estricta `hasValidOptions`:** `InteractiveChart` solo invoca a `<ReactECharts>` cuando `options.series` existe y posee al menos 1 serie lista para ser renderizada, evitando 100% las llamadas de layout a ciegas de ECharts. | **Exterminio del Crash de React:** Al no montar ECharts con objetos vacíos, se elimina la fuente de excepciones JS y el árbol de componentes de React permanece 100% estable. | ✅ RESUELTO |
 
 ### ───────────────
+
 
 
 

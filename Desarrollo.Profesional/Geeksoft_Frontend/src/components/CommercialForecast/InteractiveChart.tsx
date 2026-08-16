@@ -143,7 +143,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     }, [data, months]);
 
     const options = useMemo(() => {
-        if (!data || !data.aggregated_data || !activeMonths || activeMonths.length === 0) return {};
+        if (!data || !data.aggregated_data || !activeMonths || activeMonths.length === 0) return null;
+
 
         const seriesMapPri: { [key: string]: { [month: string]: number } } = {};
         const seriesMapPri2: { [key: string]: { [month: string]: number } } = {};
@@ -665,13 +666,16 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
 
 
-    if (!data || !data.aggregated_data || activeMonths.length === 0) {
+    const hasValidOptions = options && options.series && Array.isArray(options.series) && options.series.length > 0;
+
+    if (!data || !data.aggregated_data || activeMonths.length === 0 || !hasValidOptions) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full bg-white rounded-lg border border-slate-200">
                 <p className="text-slate-500 font-medium text-lg">Ingresar o cargar escenario para mostrar herramienta.</p>
             </div>
         );
     }
+
 
     const metricOptions = [
         { value: 'none', label: 'Ninguno', icon: '🚫', desc: 'No graficar' },
