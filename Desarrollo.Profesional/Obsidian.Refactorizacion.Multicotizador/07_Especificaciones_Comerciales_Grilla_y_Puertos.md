@@ -327,16 +327,17 @@ A partir de la autopsia técnica comparativa entre el commit histórico funciona
 A partir de la autopsia técnica pericial sobre por qué las vistas de ANGRAF y Spaghetti Map se mostraban "En Blanco / Sin escenario cargado" al refrescar (F5) o conmutar de pestaña tras haber cargado un escenario en la Matriz Financiera:
 
 | # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 17) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
-### 🕵️‍♂️ 5.18. Decimooctava Vuelta (Serie 18: Auto-Resize Dinámico vía `ResizeObserver` y Eliminación del Requisito F5 para Conmutación entre Pestañas)
+### 🕵️‍♂️ 5.19. Decimonovena Vuelta (Serie 19: Arquitectura de Vistas Persistentes en Memoria `display: flex/none` para Calce 100% Idéntico al Monolito `4afad62`)
 
-A partir de la auditoría pericial sobre por qué las vistas requerían presionar F5 para visualizarse tras conmutar entre Matriz Financiera, ANGRAF y Spaghetti Map:
+A partir de la autopsia técnica profunda sobre cómo funcionaba la alternancia de pestañas en la versión monolítica original (`4afad62c45799a88633a7716daa240e36474d2bf`):
 
-| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 18) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 19) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
-| **18.1** | **`Redimensionamiento de Canvas sin F5 (`ResizeObserver`)`** | Conmutar a ANGRAF o Spaghetti se veía blanco hasta presionar F5 | **`ResizeObserver` en Contenedores ECharts:** `InteractiveChart.tsx` y `SpaghettiMap.tsx` observan los cambios de dimensión del contenedor DOM en tiempo real y ejecutan `chartInstance.resize()` en cuanto la pestaña se vuelve visible. | **El Crimen del Canvas Oculto en Transición CSS:** Al navegar entre rutas, la animación CSS `fade-in` de React Router inicializaba el canvas con ancho 0px. Sin F5 o `ResizeObserver`, ECharts no detectaba que el DOM se había expandido. | ✅ RESUELTO |
-| **18.2** | **`Retorno al Dashboard / Matriz Financiera`** | Al presionar el botón "Atrás" del navegador hacia la Matriz, la pantalla salía en blanco hasta F5 | **Efecto Auto-Simulador en `FinancialMatrix_V2.tsx`:** Se añadió la comprobación reactiva `runSimulationWith` en el montaje de la Matriz cuando existen líneas en la sesión pero `data` necesita refresco. | **Garantía de Renderizado Retroactivo:** La Matriz Financiera reconstruye sus totales instantáneamente al volver atrás desde cualquier vista gráfica. | ✅ RESUELTO |
+| **19.1** | **`Montaje Continuo en Memoria de Matriz, ANGRAF y Spaghetti`** | Al cambiar entre Matriz, ANGRAF y Spaghetti, o presionar "Atrás", salía en blanco hasta F5 | **Contenedores Persistentes (`ToolsLayout_V2.tsx`):** Las 3 herramientas (`FinancialMatrix_V2`, `GraphicAnalysis_V2`, `SpaghettiMap_V2`) conviven montadas simultáneamente en el DOM dentro de `<ToolsLayout_V2>` con conmutación de visibilidad `display: activeTab === '...' ? 'flex' : 'none'`. | **El Crimen del Desmontado por `<Outlet />`:** Al cambiar de ruta, `<Outlet />` desmontaba el componente del DOM y destruía su estado y referencias de canvas. Al volver atrás, el componente recién montado intentaba leer un estado no inicializado. | ✅ RESUELTO |
+| **19.2** | **`Navegación Fluida 0-ms sin F5 ni Re-Fetches`** | Al ir de Matriz a Spaghetti o de ANGRAF a Matriz, la grilla o gráfico se perdía | **Retención de Estado e Instancias (Calce 100% Monolito):** Al no desmontarse los componentes, la Matriz conserva todas sus filas extendidas y scroll position. ANGRAF y Spaghetti Map mantienen sus referencias de ECharts y Leaflet listas sin requerir F5 ni re-cálculos. | **Calce Idéntico a la Versión `4afad62`:** Recrea exactamente la arquitectura del monolito funcional mientras preserva las URLs dinámicas (`/dashboard`, `/graphic-analysis`, `/spaghetti-map`) para la barra de navegación del usuario. | ✅ RESUELTO |
 
 ### ───────────────
+
 
 
 

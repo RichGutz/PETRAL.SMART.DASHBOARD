@@ -5,6 +5,9 @@ import { ForecastBuilder } from '../components/CommercialForecast/ForecastBuilde
 import { useForecastContext_V2 } from '../context/ForecastContext_V2';
 import { Save, FolderOpen, X, RefreshCw, Trash2 } from 'lucide-react';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
+import { FinancialMatrix_V2 } from '../pages/Tools/FinancialMatrix_V2';
+import { GraphicAnalysis_V2 } from '../pages/Tools/GraphicAnalysis_V2';
+import { SpaghettiMap_V2 } from '../pages/Tools/SpaghettiMap_V2';
 
 export const ToolsLayout_V2: React.FC = () => {
     const context = useForecastContext_V2();
@@ -24,6 +27,7 @@ export const ToolsLayout_V2: React.FC = () => {
     else if (location.pathname.includes('/system-flowchart')) activeTab = 'system-flowchart';
     else if (location.pathname.includes('/static-vs-dynamic-port-cost')) activeTab = 'static-vs-dynamic-port-cost';
     else if (location.pathname.includes('/system-documentation')) activeTab = 'system-documentation';
+
 
 
     return (
@@ -124,10 +128,24 @@ export const ToolsLayout_V2: React.FC = () => {
                 </div>
                 )}
 
-                {/* 2. Outlet renders the specific tool (Grid, Chart, Map) con ErrorBoundary de protección */}
+                {/* 2. Persistent View Containers (Keep Matriz, ANGRAF, and Spaghetti Map alive in memory like the 4afad62 monolith) */}
                 <ErrorBoundary fallbackTitle="Error al cargar la herramienta interactiva">
-                    <Outlet />
+                    <div className="flex-1 flex flex-col min-h-0 relative w-full h-full">
+                        <div style={{ display: activeTab === 'financial-matrix' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 w-full h-full">
+                            <FinancialMatrix_V2 />
+                        </div>
+                        <div style={{ display: activeTab === 'graphic-analysis' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 w-full h-full">
+                            <GraphicAnalysis_V2 />
+                        </div>
+                        <div style={{ display: activeTab === 'spaghetti-map' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 w-full h-full">
+                            <SpaghettiMap_V2 />
+                        </div>
+                        {activeTab !== 'financial-matrix' && activeTab !== 'graphic-analysis' && activeTab !== 'spaghetti-map' && (
+                            <Outlet />
+                        )}
+                    </div>
                 </ErrorBoundary>
+
 
             </div>
 
