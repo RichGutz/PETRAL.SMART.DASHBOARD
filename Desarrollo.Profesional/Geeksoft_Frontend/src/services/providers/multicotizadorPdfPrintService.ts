@@ -31,6 +31,7 @@ export interface MulticotizadorPrintData {
     bafMdoBase?: number;
     tariffTiers?: Array<{ label?: string; min?: number; max?: number; rate: number }>;
     demurrageRatesMap?: Record<string, number>;
+    printedBy?: string;
 }
 
 export class MulticotizadorPdfPrintService {
@@ -88,7 +89,7 @@ export class MulticotizadorPdfPrintService {
             validFrom, validTo, vessels, vesselParams, bunkerSource, bunkerPriceIfo, bunkerPriceMdo,
             tramos, puertosConfig, refacturarMuellajeMap, addressCommPct, brokerCommPct,
             commentsText, bafFormula, bafValidFrom, bafValidTo, bafIfoBase, bafMdoBase,
-            tariffTiers, demurrageRatesMap
+            tariffTiers, demurrageRatesMap, printedBy
         } = data;
 
         const vObj = vessels.find(v => v.vessel_id === selectedVessel);
@@ -332,11 +333,15 @@ export class MulticotizadorPdfPrintService {
 
         /* Dimensiones fijas A4 Horizontal (Landscape 297mm x 210mm) */
         @page {
-            size: A4 landscape;
-            margin: 4mm 5mm;
+            size: 297mm 210mm;
+            margin: 3mm 4mm;
         }
 
         @media print {
+            @page {
+                size: 297mm 210mm;
+                margin: 3mm 4mm;
+            }
             .no-print {
                 display: none !important;
             }
@@ -906,14 +911,51 @@ export class MulticotizadorPdfPrintService {
 
                 </div>
 
+                <!-- FORMATO DE AUDITORÍA Y VALIDACIÓN COMERCIAL (Punto 4) -->
+                <div class="mt-1.5 pt-1 border-t border-dashed border-slate-300">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[8px] font-extrabold uppercase text-slate-800 tracking-wider">
+                            ✍️ REGISTRO DE AUDITORÍA Y VALIDACIÓN MATEMÁTICA (V°B° COMERCIAL)
+                        </span>
+                        <span class="text-[7.5px] font-bold text-slate-500 uppercase">
+                            NAVIERA PETRAL S.A. · CONTROL COMERCIAL
+                        </span>
+                    </div>
+                    
+                    <div class="grid grid-cols-4 gap-2 text-[8px] bg-slate-50/70 p-1 rounded border border-slate-200">
+                        <div class="border border-slate-200 rounded p-1 bg-white">
+                            <span class="block text-[7px] font-bold text-slate-600 uppercase">Revisado / Auditado por:</span>
+                            <div class="border-b border-slate-400 h-3 mt-3"></div>
+                            <span class="block text-[6.5px] text-slate-400 mt-0.5">Nombre & Cargo</span>
+                        </div>
+                        <div class="border border-slate-200 rounded p-1 bg-white">
+                            <span class="block text-[7px] font-bold text-slate-600 uppercase">Firma de Conformidad:</span>
+                            <div class="border-b border-slate-400 h-3 mt-3"></div>
+                            <span class="block text-[6.5px] text-slate-400 mt-0.5">Firma / Sello Digital</span>
+                        </div>
+                        <div class="border border-slate-200 rounded p-1 bg-white">
+                            <span class="block text-[7px] font-bold text-slate-600 uppercase">Fecha de Auditoría:</span>
+                            <div class="border-b border-slate-400 h-3 mt-3"></div>
+                            <span class="block text-[6.5px] text-slate-400 mt-0.5">DD / MM / AAAA</span>
+                        </div>
+                        <div class="border border-slate-200 rounded p-1 bg-white">
+                            <span class="block text-[7px] font-bold text-slate-600 uppercase">Dictamen:</span>
+                            <div class="flex items-center gap-2 mt-2.5 font-bold text-[7.5px]">
+                                <span class="text-emerald-700 flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 border border-emerald-600 rounded-sm"></span> APROBADO</span>
+                                <span class="text-amber-700 flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 border border-amber-600 rounded-sm"></span> OBSERVADO</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
         </div>
 
-        <!-- FOOTER PETRAL -->
-        <div class="flex items-center justify-between text-[7.5px] font-mono text-slate-400 pt-0.5 border-t border-slate-200">
-            <span>© ${new Date().getFullYear()} NAVIERA PETRAL S.A. — Sistema Integral Multicotizador de Fletes & Viajes</span>
-            <span>Documento Oficial de Simulación Comercial • Formato A4 Landscape</span>
+        <!-- FOOTER OFICIAL PETRAL (Punto 2 & Punto 3) -->
+        <div class="flex items-center justify-between text-[7.5px] font-mono text-slate-500 pt-1 mt-1 border-t border-slate-200">
+            <span>Ruta: <strong>${selectedRouteName || selectedRouteId}</strong> &nbsp;|&nbsp; Emitido por: <strong>${printedBy || 'Usuario Comercial'}</strong></span>
+            <span>Emisión: ${new Date().toLocaleDateString('es-PE')} ${new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })} &nbsp;|&nbsp; NAVIERA PETRAL S.A.</span>
         </div>
 
     </div>

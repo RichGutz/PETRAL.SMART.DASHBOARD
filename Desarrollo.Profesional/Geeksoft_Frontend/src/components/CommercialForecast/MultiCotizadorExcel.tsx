@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ForecastService } from '../../services/api';
 import { Calendar } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 // Servicios Provistos (Providers)
 import { VesselProviderService } from '../../services/providers/vesselProviderService';
@@ -48,6 +49,7 @@ export interface MultiCotizadorExcelProps {
 }
 
 export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
+    const { user } = useAuth();
     // 1. Estados de Navegación & Pestañas
     const [clientType, setClientType] = useState<'ACTIVOS' | 'PROSPECTOS'>('ACTIVOS');
     const [selectedClient, setSelectedClient] = useState<string>('');
@@ -817,7 +819,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             bafIfoBase,
             bafMdoBase,
             tariffTiers,
-            demurrageRatesMap
+            demurrageRatesMap,
+            printedBy: user?.full_name || user?.email || 'Usuario Comercial'
         });
     };
 
