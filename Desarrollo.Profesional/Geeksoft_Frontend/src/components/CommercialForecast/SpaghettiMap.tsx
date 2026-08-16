@@ -758,7 +758,7 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
         );
     }
 
-    if (!mapLoaded || !option) {
+    if (!mapLoaded || !option || !option.series || !Array.isArray(option.series) || option.series.length === 0) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full">
                 <div className="animate-spin h-8 w-8 border-4 border-petral-teal border-t-transparent rounded-full mb-4"></div>
@@ -766,6 +766,7 @@ export const SpaghettiMap: React.FC<SpaghettiMapProps> = ({
             </div>
         );
     }
+
 
     return (
         <div ref={containerRef} className="flex-1 relative w-full h-full min-h-[600px]">

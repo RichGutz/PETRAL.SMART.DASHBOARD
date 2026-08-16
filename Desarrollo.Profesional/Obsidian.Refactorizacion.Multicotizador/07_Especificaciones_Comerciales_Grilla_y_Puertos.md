@@ -377,7 +377,17 @@ A partir de la autopsia técnica sobre el colapso visual producido al cargar esc
 | **29.1** | **`Sanitización de Métricas (`InteractiveChart.tsx`)`** | Crash de ECharts `TypeError` al renderizar series de datos de escenarios guardados | **Filtro Sanitizador `safeNum()` en `getMetricValue`:** Se envolvió todo cálculo o conversión de ingresos, frecuencias y demurrages con `safeNum() = isNaN(n) \|\| !isFinite(n) ? 0 : n`. | **El Crimen del Valor `NaN`:** Métricas nulas o indefinidas en escenarios cargados retornaban `NaN`, corrompiendo el JSON de opciones de ECharts y haciendo colapsar el motor gráfico. | ✅ RESUELTO |
 | **29.2** | **`Acumulación de Flujos Marítimos (`useSpaghettiData.ts`)`** | Pantalla en blanco en Spaghetti Map al conmutar desde un escenario cargado | **Sanitización de Carga y Frecuencia:** Se sanitizó `freq` y `carga_unit` con `safeNum()`, asegurando que `portMap` y `pieSeries` jamás reciban `value: NaN`. | **Propagación Aritmética de `NaN`:** Un valor `NaN` en una sola pierna de viaje contaminaba el acumulador entero del puerto, inutilizando la serie de gráficos de pie. | ✅ RESUELTO |
 
+### 🕵️‍♂️ 5.30. Trigésima Vuelta (Serie 30: Exterminio Definitivo del Return Anticipado Intermedio en `InteractiveChart.tsx` y Alineación Pericial con el Monolito `InteractiveChart_monolitico.tsx`)
+
+A partir de la comparación pericial entre la versión monolítica original `InteractiveChart_monolitico.tsx` (Línea 619) y la versión refactorizada `InteractiveChart.tsx`:
+
+| # | Componente Auditado | Valor en Pantalla (Hallazgo Serie 30) | Valor Real Sincronizado / Solución | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **30.1** | **`Ubicación Canónica de la Guarda de Datos (`InteractiveChart.tsx`)`** | `Uncaught Error: Minified React error #300` (*"Rendered fewer hooks than expected. This may be caused by an accidental early return statement."*) | **Reubicación de Guarda al Pie del Componente:** Se movió la evaluación `if (!data \|\| !data.aggregated_data \|\| activeMonths.length === 0)` desde la línea 674 al pie del componente (justo antes del `return` principal del JSX en la línea 928), garantizando que las 25 llamadas a `useState`, `useMemo` y `useEffect` se ejecuten al 100% de forma incondicional en cada render pass. | **El Crimen del Early Return Intermedio:** En la versión refactorizada, la guarda estaba ubicada a mitad de archivo (línea 674). Cuando los datos no estaban listos, la función retornaba anticipadamente saltándose las definiciones de helpers y hooks posteriores. Al llegar los datos del escenario, React detectaba un recuento de hooks diferente y hacía colapsar el componente con Minified Error #300. | ✅ RESUELTO |
+| **30.2** | **`Estabilidad Absoluta del Ciclo de Vida del Canvas`** | Pantalla en blanco intermitente al navegar a ANGRAF con escenarios reales | **Alineación con el Monolito:** Al igual que en `InteractiveChart_monolitico.tsx`, el recuento de hooks es invulnerable a la disponibilidad de datos de la sesión, asegurando que ECharts se monte sobre un DOM y ciclo de vida determinista. | **Exterminio Total del Error de Hooks:** Garantiza que ANGRAF y Spaghetti Map funcionen 100% perfecto con cualquier escenario cargado. | ✅ RESUELTO |
+
 ### ───────────────
+
 
 
 

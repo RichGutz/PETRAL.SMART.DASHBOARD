@@ -5,9 +5,7 @@ import { ForecastBuilder } from '../components/CommercialForecast/ForecastBuilde
 import { useForecastContext_V2 } from '../context/ForecastContext_V2';
 import { Save, FolderOpen, X, RefreshCw, Trash2 } from 'lucide-react';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
-import { FinancialMatrix_V2 } from '../pages/Tools/FinancialMatrix_V2';
-import { GraphicAnalysis_V2 } from '../pages/Tools/GraphicAnalysis_V2';
-import { SpaghettiMap_V2 } from '../pages/Tools/SpaghettiMap_V2';
+
 
 export const ToolsLayout_V2: React.FC = () => {
     const context = useForecastContext_V2();

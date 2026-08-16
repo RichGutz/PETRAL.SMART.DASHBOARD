@@ -334,10 +334,6 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         });
     };
 
-    if (hideInputs) {
-        return null;
-    }
-
     const currentClientList = clientTab === 'activos' ? activeClients : prospectClients;
 
     // Resolver objeto y etiqueta legible de la ruta seleccionada
@@ -349,6 +345,14 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         if (!selectedRouteObj) return '';
         return selectedRouteObj.isQuote ? `💬 ${selectedRouteObj.label}` : selectedRouteObj.label.replace('-', ' - ');
     }, [selectedRouteObj]);
+
+    // SERIE 33: Guarda DESPUÉS de todos los hooks (Fix React Error #300)
+    // hideInputs cambia con activeTab (false en /dashboard, true en /graphic-analysis)
+    // Si el return estuviera antes de los useMemo de arriba, React contaría hooks distintos
+    // en cada render y lanzaría "Rendered fewer hooks than expected".
+    if (hideInputs) {
+        return null;
+    }
 
     return (
         <Card className="border-slate-200 shadow-sm relative overflow-visible">

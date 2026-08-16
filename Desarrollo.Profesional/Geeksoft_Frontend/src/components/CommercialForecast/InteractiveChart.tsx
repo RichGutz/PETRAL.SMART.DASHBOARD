@@ -188,22 +188,23 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
         const getMetricValue = (metrics: any, m: PlotMetric, client: string, route: string, vessel: string, month: string) => {
             if (!metrics || m === 'none') return 0;
+            const safeNum = (v: any) => { const n = Number(v); return isNaN(n) || !isFinite(n) ? 0 : n; };
             
             const rawFreq = metrics?.['raw_inputs']?.['monthly_frequency'];
-            const freq = rawFreq !== undefined ? rawFreq : (metrics?.['freq'] !== undefined ? metrics['freq'] : 0);
+            const freq = safeNum(rawFreq !== undefined ? rawFreq : metrics?.['freq']);
             
             if (m === 'viajes') return freq;
             
             if (m === 'total_duration') {
-                const duration_unit = metrics?.['total_duration_unit'] || 0;
+                const duration_unit = safeNum(metrics?.['total_duration_unit']);
                 return duration_unit * freq;
             }
             
-            const carga_unit = metrics?.['carga_unit'] || 0;
+            const carga_unit = safeNum(metrics?.['carga_unit']);
             const tons = carga_unit * freq;
             if (m === 'total_cargo') return tons;
 
-            const revenue = metrics?.['net_income'] || 0;
+            const revenue = safeNum(metrics?.['net_income']);
             
             if (m === 'demurrage' || m === 'gross_plus_dem' || m === 'yield' || m === 'yield_flete') {
                 const rowKey = `${client}-${route}-${vessel}`;
@@ -213,20 +214,21 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 let demurrage = 0;
                 if (isDemurrageVisible) {
                     const monthIndex = activeMonths.indexOf(month);
-                    let customPct = parseFloat(demurragePct) || 0;
+                    let customPct = safeNum(demurragePct);
                     if (customDemurrages && customDemurrages[rowKey] && customDemurrages[rowKey][monthIndex] !== undefined) {
-                        customPct = parseFloat(customDemurrages[rowKey][monthIndex]) || 0;
+                        customPct = safeNum(customDemurrages[rowKey][monthIndex]);
                     }
                     demurrage = revenue * (customPct / 100);
                 }
                 
-                if (m === 'demurrage') return demurrage;
-                if (m === 'gross_plus_dem') return revenue + demurrage;
+                if (m === 'demurrage') return safeNum(demurrage);
+                if (m === 'gross_plus_dem') return safeNum(revenue + demurrage);
                 if (m === 'yield' || m === 'yield_flete') return 0; 
             }
 
-            return metrics?.[m] || 0;
+            return safeNum(metrics?.[m]);
         };
+
 
         // Extract and aggregate
         Object.entries(data.aggregated_data).forEach(([client, routes]: any) => {
@@ -654,27 +656,22 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             resizeObserver.observe(containerRef.current);
         }
 
-        const timers = [50, 150, 300, 500, 800, 1200].map(delay => setTimeout(handleResize, delay));
+        const timer = setTimeout(handleResize, 100);
         window.addEventListener('resize', handleResize);
 
         return () => {
-            timers.forEach(clearTimeout);
+            clearTimeout(timer);
             window.removeEventListener('resize', handleResize);
             if (resizeObserver) resizeObserver.disconnect();
         };
-    }, [options]);
+    }, []);
+
 
 
 
     const hasValidOptions = options && options.series && Array.isArray(options.series) && options.series.length > 0;
 
-    if (!data || !data.aggregated_data || activeMonths.length === 0) {
-        return (
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full bg-white rounded-lg border border-slate-200">
-                <p className="text-slate-500 font-medium text-lg">Ingresar o cargar escenario para mostrar herramienta.</p>
-            </div>
-        );
-    }
+
 
 
 
@@ -930,7 +927,17 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         );
     };
 
+    if (!data || !data.aggregated_data || activeMonths.length === 0) {
+
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full bg-white rounded-lg border border-slate-200">
+                <p className="text-slate-500 font-medium text-lg">Ingresar o cargar escenario para mostrar herramienta.</p>
+            </div>
+        );
+    }
+
     return (
+
         <div className="w-full bg-white pt-6 pb-6 px-6 shadow-sm rounded-b-lg flex flex-row gap-6 items-stretch min-h-[calc(100vh-220px)]">
             {/* Sidebar de Controles (Left) */}
             <div className="flex flex-col gap-3 shrink-0 w-[240px]">
