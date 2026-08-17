@@ -1136,6 +1136,27 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 />
             </div>
 
+            {/* BANNER PERSISTENTE DE CONFIRMACIÓN DE GUARDADO */}
+            {saveNotification && (
+                <div className="bg-emerald-600 text-white font-extrabold text-xs px-4 py-2.5 rounded-md shadow-lg border border-emerald-700 flex items-center justify-between mt-2 animate-in fade-in slide-in-from-bottom duration-200">
+                    <div className="flex items-center gap-2">
+                        <span className="text-base">✅</span>
+                        <div>
+                            <span>{saveNotification.message}</span>
+                            <span className="ml-2 bg-emerald-800 px-2 py-0.5 rounded text-[11px] font-mono text-emerald-100 border border-emerald-600">
+                                📌 Nombre: {saveNotification.detail}
+                            </span>
+                        </div>
+                    </div>
+                    <button 
+                        onClick={() => setSaveNotification(null)}
+                        className="text-emerald-200 hover:text-white font-bold text-xs px-2 py-0.5 rounded bg-emerald-700 hover:bg-emerald-800 transition-colors cursor-pointer"
+                    >
+                        ✕ Cerrar
+                    </button>
+                </div>
+            )}
+
             {/* MODALES DE GRABAR Y CARGAR PERSISTENTES */}
             <SaveLoadQuoteModals
                 showSaveModal={showSaveModal}
