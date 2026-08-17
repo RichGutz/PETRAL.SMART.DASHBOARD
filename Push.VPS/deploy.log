@@ -1,0 +1,40 @@
+
+=======================================================
+  DEPLOY -> https://forecast.geeksoft.tech
+=======================================================
+
+Conectando a 91.108.125.253...
+  >> Conexi├│n SSH establecida Ô£ô
+
+[1. Preparar directorio]
+
+[2. Subiendo carpeta dist y backend Geeksoft_Engine via SFTP]
+  >> Carpeta dist y Geeksoft_Engine subidas con ├®xito Ô£ô
+
+[3. Permisos Frontend]
+
+[3. Reiniciar Servicio Backend FastAPI (geeksoft-engine)]
+
+[4. Configurar Nginx]
+  !! nginx: [warn] duplicate MIME type "text/html" in /etc/nginx/sites-enabled/forecast.geeksoft.pe:13
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+[5. Certificado SSL ÔÇö Certbot]
+
+[5. Certbot SSL]
+  >> Certificate not yet due for renewal
+Deploying certificate
+Successfully deployed certificate for forecast.geeksoft.tech to /etc/nginx/sites-enabled/forecast.geeksoft.tech
+Congratulations! You have successfully enabled HTTPS on https://forecast.geeksoft.tech
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ 
+  !! Saving debug log to /var/log/letsencrypt/letsencrypt.log
+
+=======================================================
+  [OK] PRESENTACI├ôN PUBLICADA EN:
+  PUBLICADA EN: https://forecast.geeksoft.tech
+=======================================================
+

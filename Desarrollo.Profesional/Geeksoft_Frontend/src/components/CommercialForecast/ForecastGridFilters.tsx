@@ -19,22 +19,18 @@ export const ForecastGridFilters: React.FC = () => {
 
     const { clientList, routeList, vesselList } = useMemo(() => {
         const allClients = new Set<string>();
-        const validRoutes = new Set<string>();
-        const validVessels = new Set<string>();
+        const allRoutes = new Set<string>();
+        const allVessels = new Set<string>();
 
         if (data?.aggregated_data) {
             Object.entries(data.aggregated_data).forEach(([client, routesData]: any) => {
                 allClients.add(client);
-                
-                // Si el cliente está activo (no oculto), procesamos sus rutas
-                if (!hiddenClients.includes(client)) {
+                if (routesData && typeof routesData === 'object') {
                     Object.entries(routesData).forEach(([route, vesselsData]: any) => {
-                        validRoutes.add(route);
-                        
-                        // Si la ruta está activa (no oculta), procesamos sus buques
-                        if (!hiddenRoutes.includes(route)) {
+                        allRoutes.add(route);
+                        if (vesselsData && typeof vesselsData === 'object') {
                             Object.entries(vesselsData).forEach(([vessel]: any) => {
-                                validVessels.add(vessel);
+                                allVessels.add(vessel);
                             });
                         }
                     });
@@ -43,10 +39,10 @@ export const ForecastGridFilters: React.FC = () => {
         }
         return {
             clientList: Array.from(allClients).sort(),
-            routeList: Array.from(validRoutes).sort(),
-            vesselList: Array.from(validVessels).sort()
+            routeList: Array.from(allRoutes).sort(),
+            vesselList: Array.from(allVessels).sort()
         };
-    }, [data, hiddenClients, hiddenRoutes]);
+    }, [data]);
 
     const toggleFilter = (item: string, hiddenList: string[], setHiddenList: React.Dispatch<React.SetStateAction<string[]>>) => {
         if (hiddenList.includes(item)) setHiddenList(hiddenList.filter(i => i !== item));
