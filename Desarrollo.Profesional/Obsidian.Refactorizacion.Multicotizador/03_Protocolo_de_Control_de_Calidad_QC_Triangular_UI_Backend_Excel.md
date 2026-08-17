@@ -323,3 +323,20 @@ sequenceDiagram
 | 2 | **Auto-Carga Hardcodeada al Iniciar** | `PRIMER.MODELO.MODULAR` aparecía forzado al abrir `/dashboard`. | Eliminación del bloque de precarga en `useEffect` inicial. App inicia 100% limpia. | 🟢 **SOLUCIONADO** |
 | 3 | **Sobrescritura del Historial de Navegador** | El botón "Atrás" de Brave no regresaba a `/dashboard`. | Corrección de redirecciones eliminando `replace: true` innecesarios en `ProtectedRoute`. | 🟢 **SOLUCIONADO** |
 | 4 | **Compatibilidad de Dataset en Producción** | Verificación de que `data.aggregated_data` producido por la API VPS es idéntico entre las 4 herramientas. | Prueba end-to-end con `run_full_qc_triangular_loop.py` exitosa con 0 errores. | 🟢 **VERIFICADO** |
+| 5 | **Normalización de Clima y Mapeo `puertosConfig` (Prueba Tabula Rasa)** | Al crear rutas desde cero tras borrar tablas, `weather_factor = 3` inflaba búnker por 400% y `puertosConfig` omitía gastos de puerto y muellaje. | Normalización decimal de `weather_factor` (`3 -> 0.03`) y mapeo integral de `puertosConfig` (gastos de puerto $48k + muellaje refacturado $13k) en `forecast_service.py`. | 🟢 **SOLUCIONADO Y RIGORIZADO** |
+
+---
+
+### 6.3. Nueva Regla Incorporada al Protocolo de QC: "Prueba de Tabula Rasa" (Zero-State QC)
+
+A partir de la autopsia pericial realizada (17.08.2026), se instituye el **Protocolo de Validación en Estado Cero (Tabula Rasa)** como requisito obligatorio en toda ronda de Control de Calidad:
+
+1. **Obligatoriedad de Creación Desde Cero:**
+   * Las validaciones QC **NUNCA** deben realizarse únicamente sobre rutas o cotizaciones pre-existentes en la base de datos.
+   * Toda prueba debe ejecutar la creación de una cotización/ruta totalmente nueva desde la interfaz del Multicotizador (o simulando la purga previa de las tablas).
+
+2. **Criterios de Verificación Hermética (Tríada Tabula Rasa):**
+   - **A. Decimalización de Factores Porcentuales:** Garantizar que parámetros porcentuales digitados en UI (ej. `weather_factor = 3%`) se transfieran al motor backend como ratios decimales (`0.03`) para evitar la hiperinflación de distancias navegacionales.
+   - **B. Mapeo Integral de `puertosConfig`:** Verificar que las tarifas manuales de agencia/puerto (`manual_port_cost`) y sobrecostos operativos leídos del array JSONB `puertosConfig` se inyecten en los tramos de la simulación de la Matriz.
+   - **C. Refacturación de Muellaje al Ingreso Bruto:** Confirmar que `muellaje_cost_origin`, `muellaje_cost_dest` y la bandera `refacturar_muellaje = True` se pasen a la simulación para integrar la refacturación de muellaje al Ingreso Bruto del viaje.
+
