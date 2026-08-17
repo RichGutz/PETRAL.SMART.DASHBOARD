@@ -739,10 +739,16 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 # --- YIELD PONDERADO: tarifa representativa para la Matriz ---
                 yield_flete = (total_laden_revenue / total_laden_qty) if total_laden_qty > 0 else 0.0
 
+                # --- INYECCIÓN DE PRECIOS BÚNKER GUARDADOS EN LEGS_DATA AL PAYLOAD DE SIMULACIÓN ---
+                b_ifo = float(legs_data.get("bunker_price_ifo") if legs_data.get("bunker_price_ifo") is not None else (legs_data.get("bunker_ifo") if legs_data.get("bunker_ifo") is not None else (contract.get("bunker_baseline_price_ifo") if contract and contract.get("bunker_baseline_price_ifo") is not None else 0.0)))
+                b_mdo = float(legs_data.get("bunker_price_mdo") if legs_data.get("bunker_price_mdo") is not None else (legs_data.get("bunker_mdo") if legs_data.get("bunker_mdo") is not None else (contract.get("bunker_baseline_price_mdo") if contract and contract.get("bunker_baseline_price_mdo") is not None else 0.0)))
+
                 payload = {
                     "vessel_params": vparams,
                     "tramos": tramos_copy,
                     "puertosConfig": legs_data.get("puertosConfig", []),
+                    "bunker_price_ifo": b_ifo,
+                    "bunker_price_mdo": b_mdo,
                     "port_cost_mode": request.port_cost_mode,
                     "client_id": client,
                     "vessel_id": vessel

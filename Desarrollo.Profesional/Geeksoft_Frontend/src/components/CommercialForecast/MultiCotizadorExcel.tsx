@@ -206,16 +206,15 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 setBunkerPriceIfo(resolved.ifo > 0 ? resolved.ifo : (latestSpotPrices.ifo || 0));
                 setBunkerPriceMdo(resolved.mdo > 0 ? resolved.mdo : (latestSpotPrices.mdo || 0));
             } else if (bunkerSource === 'COTIZACION') {
-                if (selectedRouteId && selectedRouteId !== 'CREAR_RUTA') {
-                    const q = savedRoutes.find(x => (x.name || x.route_id || x.spot_id || x.id) === selectedRouteId);
+                const targetName = selectedRouteId || loadedRouteName;
+                if (targetName && targetName !== 'CREAR_RUTA') {
+                    const q = savedRoutes.find(x => (x.name || x.route_id || x.spot_id || x.id) === targetName)
+                           || contractsList.find(x => (x.name || x.route_id || x.spot_id || x.id) === targetName);
                     if (q) {
                         const unpacked = MulticotizadorRetrieverService.unpackQuoteData(q);
-                        setBunkerPriceIfo(unpacked.bunker_price_ifo || latestSpotPrices.ifo || 0);
-                        setBunkerPriceMdo(unpacked.bunker_price_mdo || latestSpotPrices.mdo || 0);
+                        if (unpacked.bunker_price_ifo > 0) setBunkerPriceIfo(unpacked.bunker_price_ifo);
+                        if (unpacked.bunker_price_mdo > 0) setBunkerPriceMdo(unpacked.bunker_price_mdo);
                     }
-                } else {
-                    setBunkerPriceIfo(latestSpotPrices.ifo || 0);
-                    setBunkerPriceMdo(latestSpotPrices.mdo || 0);
                 }
             } else if (bunkerSource === 'MAESTRO_BUNKER') {
                 let spot = latestSpotPrices;
@@ -753,7 +752,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
         setLoadedRouteName(r.name || r.route_id || '');
         setLoadedRouteId(r.route_id || r.client_route_id || r.prospect_route_id || r.spot_id || r.id || '');
-        setBunkerSource('MAESTRO_CONTRATOS');
+        setBunkerSource('COTIZACION');
 
         const legsData = r.legs_data || {};
         const tramosList = legsData.tramos || [];
@@ -797,8 +796,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             setPuertosConfig(buildPuertosConfigFromTramos(singleTramo, selectedClient));
         }
 
-        const ifo = Number(legsData.bunker_price_ifo ?? r.bunker_price_ifo ?? (selectedClient === 'NEXA' ? 450 : selectedClient === 'SPCC' ? 895.14 : 967.26));
-        const mdo = Number(legsData.bunker_price_mdo ?? r.bunker_price_mdo ?? (selectedClient === 'NEXA' ? 800 : selectedClient === 'SPCC' ? 1460.30 : 1528.26));
+        const ifo = Number(legsData.bunker_price_ifo ?? r.bunker_price_ifo ?? r.bunker_baseline_price_ifo ?? 0);
+        const mdo = Number(legsData.bunker_price_mdo ?? r.bunker_price_mdo ?? r.bunker_baseline_price_mdo ?? 0);
 
         if (ifo > 0) setBunkerPriceIfo(ifo);
         if (mdo > 0) setBunkerPriceMdo(mdo);
@@ -1063,8 +1062,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     bunkerPriceMdo={bunkerPriceMdo}
                     bunkerSource={bunkerSource}
                     handleVesselParamChange={handleVesselParamChange}
-                    handleIfoInputChange={(val) => setBunkerPriceIfo(val)}
-                    handleMdoInputChange={(val) => setBunkerPriceMdo(val)}
+                    handleIfoInputChange={(val) => { setBunkerPriceIfo(val); setBunkerSource('SOBREESCRITURA'); }}
+                    handleMdoInputChange={(val) => { setBunkerPriceMdo(val); setBunkerSource('SOBREESCRITURA'); }}
                     handleBunkerSourceChange={(s: any) => setBunkerSource(s)}
                     fmtThousandSep={fmtThousandSep}
                 />

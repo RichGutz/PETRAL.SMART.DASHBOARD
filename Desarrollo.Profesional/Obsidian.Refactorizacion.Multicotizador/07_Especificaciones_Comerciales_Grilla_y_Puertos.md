@@ -575,10 +575,23 @@ A partir de las capturas y dictamen del usuario (17.08.2026), se identificaron y
 
 ---
 
+### 🕵️‍♂️ 5.11. Onceava Vuelta (Serie 11: Autopsia Pericial - Recuperación Fiel de Precios Búnker Guardados, Conmutación de Fuente Búnker y Sincronización Backend Matriz Financiera)
+
+A partir de las instrucciones y capturas del usuario (17.08.2026), se eliminaron las discrepancias de búnker y resultados entre Multicotizador y Matriz Financiera.
+
+| # | Objeto / Función Auditada | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **11.1** | **`MultiCotizadorExcel.tsx` (`handleSelectRoute` / `handleLoadRoute`)** | Al cargar una ruta/cotización, `executeBunkerLookup` o fallbacks duros (`NEXA ? 450 : 895`) sobrescribían los precios búnker guardados ($1000/$1000) con los precios de mercado ($967/$1528). | Eliminados fallbacks duros. Se inyectan e imponen los precios guardados en la cotización (`legsData.bunker_price_ifo` / `mdo`) y se fija la fuente en `COTIZACION` (`📌 Cotización / Viaje Actual`). | **RESUELTO:** Al seleccionar la cotización, la UI muestra exactamente los precios búnker guardados ($1,000 / $1,000). | ✅ SOLUCIONADO |
+| **11.2** | **`MultiCotizadorExcel.tsx` (`handleIfoInputChange` / `handleMdoInputChange`)** | Al editar los precios búnker en las casillas rojas de la UI, la fuente no conmutaba visualmente. | Al escribir en las casillas Búnker de la UI, la fuente conmuta automáticamente a `SOBREESCRITURA` (`✍️ Sobreescritura Manual`), respetando lo digitado. | **RESUELTO:** La UI conmuta dinámicamente a `Sobreescritura` y respeta cualquier cambio digitado. | ✅ SOLUCIONADO |
+| **11.3** | **`forecast_service.py` (`run_forecast_simulation`)** | El payload hacia `calculate_multicotizador_simulation` omitía `bunker_price_ifo` y `bunker_price_mdo` del JSONB `legs_data`, haciendo que Matriz Financiera calculase $230,061 en búnker en vez de $69,839. | Inyectadas las propiedades `bunker_price_ifo` y `bunker_price_mdo` leídas del `legs_data` hacia el objeto payload de simulación. | **RESUELTO:** Matriz Financiera calcula exactamente los mismos resultados de Búnker ($69,839), Puerto ($48,000) y P/L (+$198,223) que Multicotizador. | ✅ SOLUCIONADO |
+
+---
+
 ## 📄 Archivos Relacionados
 * **Documento UI Cabecera y Búnker:** [`06_Especificaciones_Comerciales_UI_Header_y_Bunker.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/06_Especificaciones_Comerciales_UI_Header_y_Bunker.md)
 * **Documento Modularización previa:** [`04_Modularizacion_Frontend_Servicios_y_Tabs.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/04_Modularizacion_Frontend_Servicios_y_Tabs.md)
 * **Script Flujograma Python:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.py)
+
 
 
 
