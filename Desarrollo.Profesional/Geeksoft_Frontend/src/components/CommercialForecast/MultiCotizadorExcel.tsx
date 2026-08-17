@@ -226,8 +226,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 setBunkerPriceIfo(spot.ifo || 0);
                 setBunkerPriceMdo(spot.mdo || 0);
             } else if (bunkerSource === 'SOBREESCRITURA') {
-                setBunkerPriceIfo(0);
-                setBunkerPriceMdo(0);
+                // En modo SOBREESCRITURA se preservan intactos los valores tipeados manualmente por el usuario
             }
         };
 

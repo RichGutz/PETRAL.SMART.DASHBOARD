@@ -119,25 +119,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         const routesList: Array<{ key: string; label: string; isQuote?: boolean }> = [];
         const addedKeys = new Set<string>();
 
-        // 1. Rutas fijas para clientes estándar (restaurado de commit 4f4b59e)
-        if (cleanClient === 'SPCC') {
-            routesList.push({ key: 'ILO-MATARANI', label: 'ILO - MATARANI' });
-            routesList.push({ key: 'ILO-MARCONA', label: 'ILO - MARCONA' });
-            routesList.push({ key: 'ILO-MEJILLONES', label: 'ILO - MEJILLONES' });
-            addedKeys.add('ILO-MATARANI'); addedKeys.add('ILO-MARCONA'); addedKeys.add('ILO-MEJILLONES');
-        } else if (cleanClient === 'NEXA') {
-            routesList.push({ key: 'CALLAO-MEJILLONES', label: 'CALLAO - MEJILLONES' });
-            routesList.push({ key: 'CALLAO-MATARANI', label: 'CALLAO - MATARANI' });
-            routesList.push({ key: 'CALLAO-MARCONA', label: 'CALLAO - MARCONA' });
-            addedKeys.add('CALLAO-MEJILLONES'); addedKeys.add('CALLAO-MATARANI'); addedKeys.add('CALLAO-MARCONA');
-        } else if (cleanClient === 'SPOT' || cleanClient.startsWith('SPOT')) {
-            routesList.push({ key: 'CALLAO-MEJILLONES', label: 'CALLAO - MEJILLONES' });
-            routesList.push({ key: 'ILO-MATARANI', label: 'ILO - MATARANI' });
-            routesList.push({ key: 'ILO-MEJILLONES', label: 'ILO - MEJILLONES' });
-            addedKeys.add('CALLAO-MEJILLONES'); addedKeys.add('ILO-MATARANI'); addedKeys.add('ILO-MEJILLONES');
-        }
-
-        // 2. Cotizaciones (routes_quotes) para este cliente (de commit 7af186c)
+        // 1. Carga 100% Dinámica desde Supabase (contracts, routes_quotes, routes_clients)
         spotRoutes.forEach(s => {
             const name = (s.name || "").trim().toUpperCase();
             let qClient = (s.client_id || s.client_name || "").trim().toUpperCase();

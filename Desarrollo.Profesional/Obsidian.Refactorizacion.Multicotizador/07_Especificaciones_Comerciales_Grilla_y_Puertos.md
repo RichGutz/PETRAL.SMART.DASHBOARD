@@ -564,10 +564,22 @@ A partir del reporte pericial y capturas enviadas por el usuario (17.08.2026), s
 
 ---
 
+### 🕵️‍♂️ 5.10. Décima Vuelta (Serie 10: Autopsia Pericial - Eliminación de Reseteo a $0 de Precios Búnker y Purga Total de Fallbacks Hardcodeados en Matriz Financiera)
+
+A partir de las capturas y dictamen del usuario (17.08.2026), se identificaron y eliminaron dos comportamientos anómalos: el reseteo a $0 de los precios búnker tipeados manualmente y la persistencia de rutas estáticas de respaldo.
+
+| # | Objeto / Función Auditada | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **10.1** | **`MultiCotizadorExcel.tsx` (`executeBunkerLookup`)** | Al activar `bunkerSource === 'SOBREESCRITURA'`, un `useEffect` ejecutaba `setBunkerPriceIfo(0)` y `setBunkerPriceMdo(0)`, destruyendo los precios digitados. | Eliminada la instrucción de reseteo a cero. En modo `SOBREESCRITURA` se respetan e inyectan intactos los valores digitados por el usuario. | **RESUELTO:** Los precios digitados ($1000/$1000) se conservan, calculan el gasto búnker real y se guardan intactos en Supabase. | ✅ SOLUCIONADO |
+| **10.2** | **`ForecastBuilder_V2.tsx` (`clientRoutes`)** | Bloque harcodeado que forzaba rutas estáticas (`CALLAO-MEJILLONES`, `CALLAO-MATARANI`, etc.) aun con la base de datos totalmente limpia. | Purgado el bloque de fallbacks en duro. El menú desplegable `5. Ruta / Quote` consulta 100% de forma dinámica la base de datos Supabase. | **RESUELTO:** El menú desplegable depende 100% de `contracts` y `routes_quotes`. Si no hay rutas, indica limpiamente que no hay registros. | ✅ SOLUCIONADO |
+
+---
+
 ## 📄 Archivos Relacionados
 * **Documento UI Cabecera y Búnker:** [`06_Especificaciones_Comerciales_UI_Header_y_Bunker.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/06_Especificaciones_Comerciales_UI_Header_y_Bunker.md)
 * **Documento Modularización previa:** [`04_Modularizacion_Frontend_Servicios_y_Tabs.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/04_Modularizacion_Frontend_Servicios_y_Tabs.md)
 * **Script Flujograma Python:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.py)
+
 
 
 
