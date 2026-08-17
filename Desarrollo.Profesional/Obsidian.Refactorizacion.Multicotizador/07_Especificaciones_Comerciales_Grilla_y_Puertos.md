@@ -598,10 +598,21 @@ A partir del dictamen del usuario y capturas del 17.08.2026, se descubrieron y c
 
 ---
 
+### 🕵️‍♂️ 5.13. Treceava Vuelta (Serie 13: Autopsia Pericial - Espejo 100% Identico Multicotizador vs Matriz Financiera con Refacturación de Muellaje)
+
+A partir de la auditoría pericial sobre la cotización `NEXA.ILO.CALLAO.MATARANI.ILO.2026.08.17.RG`, se sincronizó la Refacturación de Muellaje de $13,000 USD al ingreso bruto, logrando que el Resultado de Viaje P/L coincida en $196,283 USD exactos.
+
+| # | Objeto / Función Auditada | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **13.1** | **`forecast_service.py` (`muellaje_cost_origin` / `muellaje_cost_dest`)** | Omitía el traspaso de `muellaje_cost` ($7,000 Callao + $6,000 Matarani = $13,000) desde `puertosConfig` hacia los tramos de la simulación, omitiendo la refacturación de muellaje al cliente en el Ingreso Bruto ($405,000 vs $418,000). | Mapeadas las propiedades `muellaje_cost_origin`, `muellaje_cost_dest` y `refacturar_muellaje = True` en `tramos_copy` en `forecast_service.py`. | **RESUELTO:** Matriz Financiera reporta $418,000 USD de Ingreso Bruto y $196,283 USD de Resultado de Viaje P/L, espejo 100% idéntico al Multicotizador. | ✅ SOLUCIONADO |
+
+---
+
 ## 📄 Archivos Relacionados
 * **Documento UI Cabecera y Búnker:** [`06_Especificaciones_Comerciales_UI_Header_y_Bunker.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/06_Especificaciones_Comerciales_UI_Header_y_Bunker.md)
 * **Documento Modularización previa:** [`04_Modularizacion_Frontend_Servicios_y_Tabs.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/04_Modularizacion_Frontend_Servicios_y_Tabs.md)
 * **Script Flujograma Python:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.py)
+
 
 
 

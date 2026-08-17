@@ -725,7 +725,12 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     if float(tr.get("agency_costs_destination", 0)) <= 0 and c_dest > 0:
                         tr["agency_costs_destination"] = c_dest
 
+                    tr["origin_action"] = p_orig.get("action", tr.get("origin_action", "NONE"))
                     tr["destination_action"] = p_dest.get("action", tr.get("destination_action", "NONE"))
+                    tr["muellaje_cost_origin"] = float(p_orig.get("muellaje_cost") or 0)
+                    tr["muellaje_cost_dest"] = float(p_dest.get("muellaje_cost") or 0)
+                    tr["refacturar_muellaje"] = True
+
                     tr["port_overhead_hours_origin"] = float(p_orig.get("time_to_count") or p_orig.get("overhead") or 0)
                     tr["port_overhead_hours_dest"] = float(p_dest.get("time_to_count") or p_dest.get("overhead") or 0)
 
