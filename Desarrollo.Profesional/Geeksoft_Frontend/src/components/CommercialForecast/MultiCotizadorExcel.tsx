@@ -524,27 +524,35 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     };
 
     const [saveTargetTable, setSaveTargetTable] = useState<'contracts' | 'routes_quotes'>('contracts');
+    const [saveNotification, setSaveNotification] = useState<{ message: string; detail: string; table: string; timestamp: string } | null>(null);
 
     const handleSaveRoute = async () => {
         const isSavingContract = clientType === 'ACTIVOS' && saveTargetTable === 'contracts';
+        const calculatedTramos = getCalculatedTramos();
+        const masterName = isSavingContract ? "Maestro de Rutas COA" : "Maestro de Cotizaciones";
+        const tableSource = isSavingContract ? "contracts" : "routes_quotes";
 
         if (isSavingContract) {
             // Validación estricta para guardar un Contrato Formal (contracts)
             if (!selectedClient || !selectedClient.trim()) {
-                alert("⚠️ Validación de Contrato: Debe seleccionar un cliente activo válido.");
+                alert(`⚠️ Validación de Contrato: Debe seleccionar un cliente activo válido antes de guardar en el ${masterName}.`);
                 return;
             }
             if (!selectedVessel || !selectedVessel.trim()) {
-                alert("⚠️ Validación de Contrato: Para registrar un Contrato Formal en 'contracts' se requiere seleccionar un Buque asignado en el Paso 4.");
+                alert(`⚠️ Validación de Contrato: Para registrar un Contrato Formal en el ${masterName} (${tableSource}) se requiere seleccionar un Buque asignado en el Paso 4.`);
                 return;
             }
             if (!validFrom || !validFrom.trim() || !validTo || !validTo.trim()) {
                 alert("⚠️ Validación de Contrato: Debe completar las fechas de Inicio y Fin de Validez (Paso 5).");
                 return;
             }
-            const hasValidLadenTramo = tramos.some(tr => tr.type === 'LADEN' && Number(tr.quantity || 0) > 0 && Number(tr.freight_rate || 0) > 0);
+            const hasValidLadenTramo = calculatedTramos.some(tr => 
+                (tr.type === 'LADEN' || tr.desc_tons > 0 || tr.quantity > 0) &&
+                (Number(tr.desc_tons || tr.quantity || 0) > 0) &&
+                (Number(tr.freight_rate || 0) > 0)
+            );
             if (!hasValidLadenTramo) {
-                alert("⚠️ Validación de Contrato: Para registrar un Contrato Formal se requiere al menos un tramo de carga (LADEN) con Tonelaje > 0 MT y Tarifa de Flete > $0/MT.");
+                alert(`⚠️ Validación de Contrato: Para registrar en el ${masterName} (${tableSource}) se requiere al menos un tramo de carga (LADEN) con Tonelaje > 0 MT y Tarifa de Flete > $0/MT.`);
                 return;
             }
         } else {
@@ -563,7 +571,6 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         if (!finalName.trim()) return;
         setIsSaving(true);
         try {
-            const calculatedTramos = getCalculatedTramos();
             await MulticotizadorStorageService.saveQuote({
                 routeId: saveMode === 'OVERWRITE' ? loadedRouteId : undefined,
                 routeName: finalName,
@@ -599,6 +606,15 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             if (freshContracts && Array.isArray(freshContracts)) setContractsList(freshContracts);
             if (freshQuotes && Array.isArray(freshQuotes)) setSavedRoutes(freshQuotes);
             if (freshRoutes && Array.isArray(freshRoutes)) setRoutes(freshRoutes);
+
+            const successMsg = `✅ Se grabó correctamente en el ${masterName} (${tableSource})\n📌 Nombre: ${finalName}`;
+            setSaveNotification({
+                message: `Se grabó correctamente en el ${masterName} (${tableSource})`,
+                detail: finalName,
+                table: tableSource,
+                timestamp: new Date().toLocaleTimeString()
+            });
+            alert(successMsg);
         } catch (e) {
             console.error("Error guardando registro comercial:", e);
         } finally {

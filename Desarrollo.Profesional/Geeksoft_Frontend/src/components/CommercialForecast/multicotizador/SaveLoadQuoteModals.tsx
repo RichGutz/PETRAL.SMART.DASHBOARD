@@ -48,7 +48,7 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
 }) => {
     const routePrefix = getSuggestedRoutePrefix(selectedClient);
     const activeTargetTable = clientType === 'PROSPECTOS' ? 'routes_quotes' : (saveTargetTable || 'contracts');
-    const targetTableLabel = activeTargetTable === 'contracts' ? '📜 contracts (Contrato Formal)' : '💼 routes_quotes (Cotización Spot)';
+    const targetTableLabel = activeTargetTable === 'contracts' ? '📜 Maestro de Rutas COA (contracts)' : '📑 Maestro de Cotizaciones (routes_quotes)';
     const isLoadedRoute = Boolean(loadedRouteName && loadedRouteName.trim() !== '');
 
     const finalFullName = saveMode === 'OVERWRITE'
@@ -103,10 +103,10 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                         <div className="flex justify-between items-center border-b border-slate-200 pb-2 mb-3">
                             <div>
                                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide">
-                                    💾 Grabar Cotización / Ruta Commercial
+                                    💾 Grabar Cotización / Ruta Comercial
                                 </h3>
                                 <span className="text-[10px] font-mono text-slate-500 font-semibold">
-                                    Tabla Supabase Target: <strong className="text-blue-700">{targetTableLabel}</strong>
+                                    Destino Supabase: <strong className="text-blue-700">{targetTableLabel}</strong>
                                 </span>
                             </div>
                             <button onClick={() => setShowSaveModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
@@ -126,20 +126,20 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                                         onClick={() => setSaveTargetTable && setSaveTargetTable('contracts')}
                                         className={`py-1 px-2 text-[11px] font-extrabold rounded border transition-all cursor-pointer ${activeTargetTable === 'contracts' ? 'bg-blue-700 text-white border-blue-800 shadow-sm' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
                                     >
-                                        📜 Contrato Formal (`contracts`)
+                                        📜 Maestro de Rutas COA (`contracts`)
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setSaveTargetTable && setSaveTargetTable('routes_quotes')}
                                         className={`py-1 px-2 text-[11px] font-extrabold rounded border transition-all cursor-pointer ${activeTargetTable === 'routes_quotes' ? 'bg-purple-700 text-white border-purple-800 shadow-sm' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
                                     >
-                                        💼 Cotización Spot (`routes_quotes`)
+                                        📑 Maestro de Cotizaciones (`routes_quotes`)
                                     </button>
                                 </div>
                             </div>
                         ) : (
                             <div className="mb-3 bg-emerald-50/60 p-2 rounded-lg border border-emerald-200 text-[11px] font-bold text-emerald-900">
-                                🏭 Cliente Prospecto ({selectedClient}): Graba exclusivamente en <span className="font-mono text-emerald-950">`routes_quotes`</span>
+                                🏭 Cliente Prospecto ({selectedClient}): Graba exclusivamente en <span className="font-mono text-emerald-950">`Maestro de Cotizaciones (routes_quotes)`</span>
                             </div>
                         )}
 

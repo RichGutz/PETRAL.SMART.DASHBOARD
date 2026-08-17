@@ -553,9 +553,21 @@ A partir de la captura enviada por el usuario (17.08.2026), se identificó un co
 
 ---
 
+### 🕵️‍♂️ 5.9. Novena Vuelta (Serie 9: Corrección Pericial - Validación de Contrato con Datos Reales de UI y Confirmación Dinámica de Guardado en Maestros Comerciales)
+
+A partir del reporte pericial y capturas enviadas por el usuario (17.08.2026), se corrigió la falsa alerta de falta de tonelaje/flete al guardar contratos formales y se estandarizaron los mensajes de confirmación de guardado con la nomenclatura exacta del menú lateral **Maestros Comerciales**.
+
+| # | Objeto / Función Auditada | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **9.1** | **`MultiCotizadorExcel.tsx` (`handleSaveRoute`)** | Evaluaba la lista de tramos en bruto (`tramos.some(...)`) que conservaba `0 MT` y `$0/MT` en las propiedades del objeto base, ignorando los 13,500 MT y $30/MT ingresados en `puertosConfig`. | Actualizada la validación de contrato para evaluar `calculatedTramos` (que integra dinámicamente `puertosConfig` y la grilla comercial). | **RESUELTO:** El contrato formal se guarda sin arrojar falsas alertas cuando hay tonelaje y flete en la UI. | ✅ SOLUCIONADO |
+| **9.2** | **`SaveLoadQuoteModals.tsx` / `MultiCotizadorExcel.tsx`** | Los avisos y etiquetas del modal de guardado mostraban nombres genéricos (`contracts`, `routes_quotes`). | Homologados dinámicamente los nombres oficiales del menú **Maestros Comerciales**: `Maestro de Rutas COA` (contracts) y `Maestro de Cotizaciones` (routes_quotes). | **RESUELTO:** Tras guardar, el sistema confirma explícitamente: `✅ Se grabó correctamente en el Maestro de Rutas COA (contracts)` o `Maestro de Cotizaciones (routes_quotes)`. | ✅ SOLUCIONADO |
+
+---
+
 ## 📄 Archivos Relacionados
 * **Documento UI Cabecera y Búnker:** [`06_Especificaciones_Comerciales_UI_Header_y_Bunker.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/06_Especificaciones_Comerciales_UI_Header_y_Bunker.md)
 * **Documento Modularización previa:** [`04_Modularizacion_Frontend_Servicios_y_Tabs.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/04_Modularizacion_Frontend_Servicios_y_Tabs.md)
 * **Script Flujograma Python:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.py)
+
 
 
