@@ -39,4 +39,9 @@
   - Generar **ÚNICAMENTE** la salida en formato **PDF** (junto con el archivo fuente `.dot` / `.py`).
 </RULE[flowchart_pdf_only]>
 
+<RULE[ask_first_token_efficiency]>
+- **PREGUNTAR ANTES DE INVESTIGAR (EFICIENCIA DE TOKENS)**: Para evitar el consumo innecesario de tokens ("quemar tokens"), ante cualquier duda, ambigüedad o requerimiento puntual planteado por el usuario, el agente DEBE preguntar y consultar directamente al usuario PRIMERO en lugar de realizar inspecciones profundas de código o búsquedas extensas en segundo plano.
+</RULE[ask_first_token_efficiency]>
+
+
 
