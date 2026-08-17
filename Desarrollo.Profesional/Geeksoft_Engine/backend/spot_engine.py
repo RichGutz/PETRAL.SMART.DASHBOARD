@@ -306,6 +306,8 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         
         dist = float(leg_inputs.get("route_distance", 0))
         w_factor = float(leg_inputs.get("weather_factor", 0))
+        if w_factor > 1.0:
+            w_factor = w_factor / 100.0
         
         delay_load = float(leg_inputs.get("port_delay_hours_loading") or 0)
         delay_disch = float(leg_inputs.get("port_delay_hours_discharging") or 0)
@@ -371,6 +373,8 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
             
         dist = float(leg_inputs.get("route_distance", 0))
         w_factor = float(leg_inputs.get("weather_factor", 0))
+        if w_factor > 1.0:
+            w_factor = w_factor / 100.0
         Q = float(leg_inputs.get("quantity", 0))
         F = float(leg_inputs.get("freight_rate", 0))
         

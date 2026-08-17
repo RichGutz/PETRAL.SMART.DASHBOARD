@@ -587,10 +587,22 @@ A partir de las instrucciones y capturas del usuario (17.08.2026), se eliminaron
 
 ---
 
+### 🕵️‍♂️ 5.12. Doceava Vuelta (Serie 12: Autopsia Pericial - Normalización de Weather Factor y Mapeo de PuertosConfig en Motor Backend de Matriz Financiera)
+
+A partir del dictamen del usuario y capturas del 17.08.2026, se descubrieron y corrigieron las dos causas raíz de la discrepancia de Matriz Financiera: la hiperinflación de distancias por el factor de clima y la omisión de los costos de puerto de `puertosConfig`.
+
+| # | Objeto / Función Auditada | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **12.1** | **`spot_engine.py` / `forecast_service.py` (`weather_factor`)** | El factor de clima venía guardado en DB como `3.0` (3%). La fórmula `dist * (1 + w_factor)` multiplicaba por `(1 + 3.0) = 4.0` (400% de distancia extra!), inflando el búnker de $70,978 a $230,061. | Normalizado `weather_factor`: si `w_factor > 1.0`, se divide entre 100 (`3.0 -> 0.03`), calculando `(1 + 0.03) = 1.03` (3% real de factor de clima). | **RESUELTO:** El gasto búnker se calcula correctamente alineado con los días mar reales del buque. | ✅ SOLUCIONADO |
+| **12.2** | **`forecast_service.py` (`tramos_copy` & `puertosConfig`)** | `forecast_service.py` no inyectaba los costos de puerto `manual_port_cost` ($24,000 Callao + $24,000 Matarani = $48,000) leídos de `puertosConfig` hacia `agency_costs_origin` y `agency_costs_destination` del payload de la Matriz. | Mapeada la lista `puertosConfig` hacia cada tramo en `forecast_service.py`, asignando `agency_costs_origin`, `agency_costs_destination`, `port_overhead_hours` y `positioning_hrs`. | **RESUELTO:** Matriz Financiera calcula exactamente los $48,000 USD de Gastos de Puerto de la cotización. | ✅ SOLUCIONADO |
+
+---
+
 ## 📄 Archivos Relacionados
 * **Documento UI Cabecera y Búnker:** [`06_Especificaciones_Comerciales_UI_Header_y_Bunker.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/06_Especificaciones_Comerciales_UI_Header_y_Bunker.md)
 * **Documento Modularización previa:** [`04_Modularizacion_Frontend_Servicios_y_Tabs.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/04_Modularizacion_Frontend_Servicios_y_Tabs.md)
 * **Script Flujograma Python:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.py)
+
 
 
 

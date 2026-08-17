@@ -702,9 +702,38 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 # --- TRAMOS: enriquecer solo lo necesario ---
                 total_laden_qty = 0.0
                 total_laden_revenue = 0.0
-                for tr in tramos_copy:
+                puertos_cfg = legs_data.get("puertosConfig", [])
+
+                for idx, tr in enumerate(tramos_copy):
                     tr["bunker_price_ifo"] = final_p_ifo
                     tr["bunker_price_mdo"] = final_p_mdo
+
+                    # Normalización de Weather Factor (3.0 -> 0.03)
+                    wf = float(tr.get("weather_factor", 0))
+                    if wf > 1.0:
+                        tr["weather_factor"] = wf / 100.0
+
+                    # Mapeo de puertosConfig a cada tramo de la ruta
+                    p_orig = puertos_cfg[idx] if idx < len(puertos_cfg) else {}
+                    p_dest = puertos_cfg[idx + 1] if (idx + 1) < len(puertos_cfg) else {}
+
+                    c_orig = float(p_orig.get("manual_port_cost") or 0)
+                    c_dest = float(p_dest.get("manual_port_cost") or 0)
+
+                    if float(tr.get("agency_costs_origin", 0)) <= 0 and c_orig > 0:
+                        tr["agency_costs_origin"] = c_orig
+                    if float(tr.get("agency_costs_destination", 0)) <= 0 and c_dest > 0:
+                        tr["agency_costs_destination"] = c_dest
+
+                    tr["destination_action"] = p_dest.get("action", tr.get("destination_action", "NONE"))
+                    tr["port_overhead_hours_origin"] = float(p_orig.get("time_to_count") or p_orig.get("overhead") or 0)
+                    tr["port_overhead_hours_dest"] = float(p_dest.get("time_to_count") or p_dest.get("overhead") or 0)
+
+                    if p_dest.get("action") == "CARGAR":
+                        tr["positioning_carga_hrs"] = float(p_dest.get("positioning") or 0)
+                    elif p_dest.get("action") == "DESCARGAR":
+                        tr["positioning_descarga_hrs"] = float(p_dest.get("positioning") or 0)
+
                     tipo = tr.get("type", "").upper()
                     if tipo == "LADEN":
                         # PRIORIDAD ABSOLUTA: Tarifa contractual de Supabase
