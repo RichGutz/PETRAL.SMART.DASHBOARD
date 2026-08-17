@@ -529,7 +529,32 @@ A partir del peritaje sobre la ruta **`NEXA.ILO.CALLAO.MATARANI.ILO (12.08.26)`*
 
 ---
 
+### 🕵️‍♂️ 5.7. Séptima Vuelta (Serie 7: Corrección de Esquema Supabase - Ausencia de PRIMARY KEY en `routes_quotes` y `routes_clients`)
+
+A partir del feedback del usuario el 17.08.2026, se detectó que el panel interactivo de Supabase Studio no permitía eliminar ni editar registros de la tabla **`routes_quotes`** debido a la falta de una restricción de clave primaria (`PRIMARY KEY`).
+
+| # | Objeto Auditado | Estado Inicial (Supabase BD) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **7.1** | **`routes_quotes` (PrimaryKey)** | **Sin `PRIMARY KEY`**<br/>(Supabase deshabilita borrado/edición manual) | Ejecutado `ALTER TABLE routes_quotes ADD PRIMARY KEY (name);` via DDL directo PostgreSQL. | **RESUELTO:** La columna `name` actúa como PK única. Supabase Studio ya habilita la eliminación y edición de filas. | ✅ SOLUCIONADO |
+| **7.2** | **`routes_clients` (PrimaryKey)** | **Sin `PRIMARY KEY`**<br/>(Supabase deshabilita borrado/edición manual) | Ejecutado `ALTER TABLE routes_clients ADD PRIMARY KEY (name);` via DDL directo PostgreSQL. | **RESUELTO:** Homologación completa del esquema espejo. Supabase Studio ya permite borrado y edición directa. | ✅ SOLUCIONADO |
+
+---
+
+### 🕵️‍♂️ 5.8. Octava Vuelta (Serie 8: Corrección Pericial - Autofill de Distancias Náuticas Par a Par y Velocidad del Buque por Defecto en Grilla)
+
+A partir de la captura enviada por el usuario (17.08.2026), se identificó un congelamiento visual en las columnas `DIST (NM)`, `W.F (%)`, `VEL (KN)` y `DÍAS MAR` que mostraban `0`, `0.0`, `0` y `0.00` al armar o cargar tramos.
+
+| # | Objeto / Función Auditada | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **8.1** | **`RouteDistancesService.ts`** | Solo buscaba origen/destino en rutas cliente completas. Si no existía par exacto, devolvía `0 NM`. | Implementada matriz estandarizada par-a-par de distancias náuticas (`PAIRWISE_PORT_DISTANCES`) con fallback automático para todos los puertos sudamericanos. | **RESUELTO:** Al seleccionar cualquier par de puertos (ej. `MARCONA ➔ CALLAO`), auto-completa la distancia real (`254 NM`) y `W.F = 3.0%`. | ✅ SOLUCIONADO |
+| **8.2** | **`MultiCotizadorExcel.tsx` / `SpreadsheetTramosGrid.tsx`** | El atributo `speed` en la grilla venía inicializado en `0` en lugar de heredar la velocidad del buque. | Hereda dinámicamente la velocidad nominal del buque activo (`11.0 kn`) en todos los tramos si no se especifica otra. | **RESUELTO:** La columna `VEL (KN)` muestra `11.0` kn por defecto y `DÍAS MAR` calcula dinámicamente la navegación real. | ✅ SOLUCIONADO |
+| **8.3** | **`handleSelectRoute` / `handleLoadRoute`** | Al cargar una ruta con distancias en cero, la grilla no recalculaba el par náutico. | Enriquecimiento automático de tramos cargados invocando `resolveAutoRouteInfo` si `route_distance` es 0 o falsy. | **RESUELTO:** Las rutas cargadas se auto-completan inmediatamente con distancias náuticas reales y velocidad activa. | ✅ SOLUCIONADO |
+
+---
+
 ## 📄 Archivos Relacionados
 * **Documento UI Cabecera y Búnker:** [`06_Especificaciones_Comerciales_UI_Header_y_Bunker.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/06_Especificaciones_Comerciales_UI_Header_y_Bunker.md)
 * **Documento Modularización previa:** [`04_Modularizacion_Frontend_Servicios_y_Tabs.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/04_Modularizacion_Frontend_Servicios_y_Tabs.md)
 * **Script Flujograma Python:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.py)
+
+

@@ -307,14 +307,30 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             list[index] = { ...list[index], [field]: value };
             if (field === 'origin_port_id' || field === 'destination_port_id' || field === 'type') {
                 const auto = RouteDistancesService.resolveAutoRouteInfo(list[index].origin_port_id, list[index].destination_port_id, list[index].type, routes);
-                list[index].route_distance = auto.route_distance;
-                list[index].weather_factor = auto.weather_factor;
+                if (Number(auto.route_distance) > 0) {
+                    list[index].route_distance = auto.route_distance;
+                }
+                if (auto.weather_factor) {
+                    list[index].weather_factor = auto.weather_factor;
+                }
+                if (!list[index].speed || Number(list[index].speed) <= 0) {
+                    const currentVessel = vessels.find(v => v.vessel_id === selectedVessel);
+                    list[index].speed = currentVessel?.vessel_speed || vesselParams?.vessel_speed || 11.0;
+                }
             }
             if (field === 'destination_port_id' && index < list.length - 1) {
                 list[index + 1].origin_port_id = value;
                 const autoNext = RouteDistancesService.resolveAutoRouteInfo(list[index + 1].origin_port_id, list[index + 1].destination_port_id, list[index + 1].type, routes);
-                list[index + 1].route_distance = autoNext.route_distance;
-                list[index + 1].weather_factor = autoNext.weather_factor;
+                if (Number(autoNext.route_distance) > 0) {
+                    list[index + 1].route_distance = autoNext.route_distance;
+                }
+                if (autoNext.weather_factor) {
+                    list[index + 1].weather_factor = autoNext.weather_factor;
+                }
+                if (!list[index + 1].speed || Number(list[index + 1].speed) <= 0) {
+                    const currentVessel = vessels.find(v => v.vessel_id === selectedVessel);
+                    list[index + 1].speed = currentVessel?.vessel_speed || vesselParams?.vessel_speed || 11.0;
+                }
             }
             return list;
         });
@@ -728,7 +744,16 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         const tramosList = legsData.tramos || [];
 
         if (tramosList.length > 0) {
-            setTramos(tramosList);
+            const enrichedTramos = tramosList.map((tr: any) => {
+                const auto = RouteDistancesService.resolveAutoRouteInfo(tr.origin_port_id, tr.destination_port_id, tr.type, routes);
+                return {
+                    ...tr,
+                    route_distance: (Number(tr.route_distance) > 0) ? tr.route_distance : (auto.route_distance || 0),
+                    weather_factor: (tr.weather_factor !== undefined && tr.weather_factor !== null && Number(tr.weather_factor) > 0) ? tr.weather_factor : (auto.weather_factor || 3.0),
+                    speed: (Number(tr.speed) > 0) ? tr.speed : 11.0
+                };
+            });
+            setTramos(enrichedTramos);
             const resolvedConfig = (legsData.puertosConfig && Array.isArray(legsData.puertosConfig) && legsData.puertosConfig.length === tramosList.length + 1)
                 ? legsData.puertosConfig.map((p: any) => ({
                     ...p,
@@ -737,9 +762,10 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                         : (p.overhead !== undefined && p.overhead !== '' ? p.overhead : (p.action !== 'NONE' ? 6 : '')),
                     overhead: p.overhead ?? p.time_to_count ?? (p.action !== 'NONE' ? 6 : '')
                 }))
-                : buildPuertosConfigFromTramos(tramosList, selectedClient);
+                : buildPuertosConfigFromTramos(enrichedTramos, selectedClient);
             setPuertosConfig(resolvedConfig);
         } else if (r.origin_port_id && r.destination_port_id) {
+            const auto = RouteDistancesService.resolveAutoRouteInfo(r.origin_port_id, r.destination_port_id, 'LADEN', routes);
             const singleTramo = [{
                 type: 'LADEN' as 'LADEN' | 'BALLAST',
                 origin_port_id: r.origin_port_id,
@@ -748,8 +774,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 freight_rate: 0,
                 port_delay_hours_loading: selectedClient === 'NEXA' ? 12 : 6,
                 port_delay_hours_discharging: selectedClient === 'NEXA' ? 12 : 6,
-                route_distance: r.route_distance || r.distance || 0,
-                weather_factor: 3.0,
+                route_distance: r.route_distance || r.distance || auto.route_distance || 0,
+                weather_factor: r.weather_factor || auto.weather_factor || 3.0,
                 speed: 11.0
             }];
             setTramos(singleTramo);
@@ -775,10 +801,19 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         const unpacked = MulticotizadorRetrieverService.unpackQuoteData(quote);
 
         if (unpacked.tramos && unpacked.tramos.length > 0) {
-            setTramos(unpacked.tramos);
+            const enrichedTramos = unpacked.tramos.map((tr: any) => {
+                const auto = RouteDistancesService.resolveAutoRouteInfo(tr.origin_port_id, tr.destination_port_id, tr.type, routes);
+                return {
+                    ...tr,
+                    route_distance: (Number(tr.route_distance) > 0) ? tr.route_distance : (auto.route_distance || 0),
+                    weather_factor: (tr.weather_factor !== undefined && tr.weather_factor !== null && Number(tr.weather_factor) > 0) ? tr.weather_factor : (auto.weather_factor || 3.0),
+                    speed: (Number(tr.speed) > 0) ? tr.speed : 11.0
+                };
+            });
+            setTramos(enrichedTramos);
             const pConfig = (unpacked.puertosConfig && unpacked.puertosConfig.length > 0)
                 ? unpacked.puertosConfig
-                : buildPuertosConfigFromTramos(unpacked.tramos, selectedClient);
+                : buildPuertosConfigFromTramos(enrichedTramos, selectedClient);
             setPuertosConfig(pConfig);
         }
 
