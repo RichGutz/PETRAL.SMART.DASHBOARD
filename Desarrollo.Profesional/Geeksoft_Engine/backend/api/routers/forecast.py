@@ -684,12 +684,15 @@ def save_spot_voyage(request: SpotSaveRequest):
 def delete_spot_route(spot_id: str, is_prospect: bool = False):
     try:
         from backend.database import get_supabase
+        from backend.services.forecast_service import clear_forecast_cache
         sb = get_supabase()
         
-        # Intentar eliminar primero en routes_quotes y luego en routes_clients si es necesario
-        res1 = sb.table("routes_quotes").delete().eq("spot_id", spot_id).execute()
-        res2 = sb.table("routes_clients").delete().eq("route_id", spot_id).execute()
+        # Intentar eliminar por spot_id/route_id/contract_id o por name en todas las tablas
+        sb.table("routes_quotes").delete().or_(f"spot_id.eq.{spot_id},name.eq.{spot_id}").execute()
+        sb.table("routes_clients").delete().or_(f"route_id.eq.{spot_id},name.eq.{spot_id}").execute()
+        sb.table("contracts").delete().or_(f"contract_id.eq.{spot_id},name.eq.{spot_id}").execute()
         
+        clear_forecast_cache()
         return {"status": "success", "deleted_id": spot_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

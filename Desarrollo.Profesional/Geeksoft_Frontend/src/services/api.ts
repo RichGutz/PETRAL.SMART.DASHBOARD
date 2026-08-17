@@ -275,6 +275,10 @@ export const ForecastService = {
     deleteSpotVoyage: async (spotId: string) => {
         const response = await api.delete(`/forecast/spot/delete/${spotId}`);
         return response.data;
+    },
+    deleteSpot: async (spotId: string) => {
+        const response = await api.delete(`/forecast/spot/delete/${spotId}`);
+        return response.data;
     }
 };
 

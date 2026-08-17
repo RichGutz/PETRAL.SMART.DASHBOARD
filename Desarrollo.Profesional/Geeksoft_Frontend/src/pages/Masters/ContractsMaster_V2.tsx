@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
-import { FileText, Calendar, ChevronDown, ChevronRight, Anchor, DollarSign, Ship, CheckCircle2, Layers, RefreshCw } from 'lucide-react';
+import { FileText, Calendar, ChevronDown, ChevronRight, Anchor, DollarSign, Ship, CheckCircle2, Layers, RefreshCw, Trash2 } from 'lucide-react';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
 
@@ -81,6 +81,26 @@ export const ContractsMaster: React.FC = () => {
         } catch (err) {
             console.error("Error cargando maestro de contratos:", err);
         } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeleteRoute = async (route: EnrichedRoute) => {
+        const identifier = route.name || route.contract_id || route.route_id;
+        if (!identifier) return;
+
+        if (!window.confirm(`¿Estás seguro de que deseas eliminar la ruta de contrato "${route.name}"? Esta acción eliminará el registro de la base de datos.`)) {
+            return;
+        }
+
+        try {
+            setLoading(true);
+            await ForecastService.deleteSpot(identifier);
+            await loadData();
+            alert(`Ruta "${route.name}" eliminada exitosamente.`);
+        } catch (err) {
+            console.error("Error al eliminar la ruta:", err);
+            alert("Ocurrió un error al eliminar la ruta.");
             setLoading(false);
         }
     };
@@ -339,6 +359,17 @@ export const ContractsMaster: React.FC = () => {
                                                                 <span className="text-blue-600 font-bold hover:underline">
                                                                     {isExpanded ? 'Ocultar UI Multicotizador' : 'Ver UI Multicotizador ➔'}
                                                                 </span>
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDeleteRoute(route);
+                                                                    }}
+                                                                    className="px-2.5 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-200 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer shadow-sm ml-2"
+                                                                    title="Eliminar ruta de contrato COA"
+                                                                >
+                                                                    <Trash2 size={13} />
+                                                                    <span>Eliminar</span>
+                                                                </button>
                                                             </div>
                                                         </div>
 
