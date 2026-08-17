@@ -1,14 +1,19 @@
 # Reglas de Despliegue para el Proyecto PETRAL
 
 <RULE[deployment_vps]>
-- **NUNCA** utilices comandos genéricos de Railway (`git push railway main`) para desplegar este proyecto, sin importar lo que digan las instrucciones globales.
-- **Lanzamiento Local vs VPS**: Cuando el usuario solicite "lanzar en local", **NUNCA** subir ni desplegar al VPS a menos que el usuario lo pida expresamente.
-- Las especificaciones y comandos para lanzamiento local y despliegue a VPS se encuentran en: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.1\DashBoardPetral\01_Arquitectura_y_Especificaciones\Lanzamiento.Local.y.VPS.md`.
-- El flujo para el Frontend al desplegar a Producción (VPS) es:
-  1. `cd C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend`
-  2. `npm run build`
-  3. `cd C:\Users\rguti\PETRAL.SMART.DASHBOARD\Push.VPS`
-  4. `python deploy_forecast_kickoff.py`
+- **PROHIBICIÓN TOTAL RAILWAY**: NUNCA utilizar comandos de Railway (`git push railway main`). Este proyecto se despliega ÚNICAMENTE al VPS de Producción (`91.108.125.253`).
+- **DISTINCIÓN LOCAL VS VPS**: Cuando el usuario pida "lanzar en local", NUNCA desplegar al VPS. Solo desplegar al VPS cuando el usuario lo ordene explícitamente ("pushea al VPS", "despliega al VPS", "sube a producción").
+- **PROTOCOLO DE DESPLIEGUE DIRECTO A PRODUCCIÓN (VPS)**:
+  Ejecutar INMEDIATAMENTE esta secuencia exacta de 3 pasos sin perder tiempo investigando:
+  1. **Merge a Main y Git Push**:
+     `git checkout main; git merge <branch_actual>; git push origin main`
+  2. **Compilar Frontend Bundle**:
+     `cd C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Frontend`
+     `npx vite build`
+  3. **Deploy Automatizado SFTP/SSH al VPS**:
+     `cd C:\Users\rguti\PETRAL.SMART.DASHBOARD\Push.VPS`
+     `python deploy_forecast_kickoff.py`
+  - URL Oficial de Producción en Vivo: `https://forecast.geeksoft.tech`
 </RULE[deployment_vps]>
 
 <RULE[markdown_pdf_conversion]>
