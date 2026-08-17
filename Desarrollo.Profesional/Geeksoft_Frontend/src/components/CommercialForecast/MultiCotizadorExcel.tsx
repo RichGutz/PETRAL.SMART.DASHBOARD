@@ -172,7 +172,15 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     BunkerProviderService.fetchLatestBunkerPrices() // tabla: bunker_prices
                 ]);
                 setVessels(vData || []);
-                setPorts(pData || []);
+                
+                // Ordenar puertos geográficamente de Norte (arriba) a Sur (abajo) según su latitud
+                const sortedPortsData = [...(pData || [])].sort((a: any, b: any) => {
+                    const latA = a.lat !== undefined && a.lat !== null ? parseFloat(a.lat) : (a.latitude !== undefined && a.latitude !== null ? parseFloat(a.latitude) : 0);
+                    const latB = b.lat !== undefined && b.lat !== null ? parseFloat(b.lat) : (b.latitude !== undefined && b.latitude !== null ? parseFloat(b.latitude) : 0);
+                    return latB - latA; // Mayor latitud (Norte) a menor latitud (Sur)
+                });
+                setPorts(sortedPortsData);
+
                 setRawClients(cData || []);
                 setSavedRoutes(quoteList || []);
                 setContractsList(contractsData || []);
