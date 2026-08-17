@@ -155,7 +155,7 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                                         onClick={() => setSaveMode('OVERWRITE')}
                                         className={`py-1.5 px-2 text-xs font-bold rounded border transition-all cursor-pointer ${saveMode === 'OVERWRITE' ? 'bg-amber-500 text-white border-amber-600 shadow-sm' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
                                     >
-                                        ✍️ Sobrescribir Ruta
+                                        ✍️ Sobrescribir
                                     </button>
                                     <button
                                         type="button"
@@ -168,10 +168,10 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                             </div>
                         )}
 
-                        {/* MODO A: SOBRESCRIBIR RUTA CARGADA */}
+                        {/* MODO A: SOBRESCRIBIR REGISTRO CARGADO */}
                         {saveMode === 'OVERWRITE' && isLoadedRoute ? (
                             <div className="bg-amber-50 border border-amber-300 rounded p-3 mb-4 text-xs font-sans text-amber-900">
-                                <p className="font-bold">⚠️ Sobrescribiendo la ruta cargada:</p>
+                                <p className="font-bold">⚠️ Sobrescribiendo el registro cargado:</p>
                                 <p className="font-mono font-bold text-amber-950 text-sm mt-1 bg-amber-100/80 p-1.5 rounded border border-amber-300">
                                     {loadedRouteName}
                                 </p>
@@ -183,7 +183,7 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                             /* MODO B: GUARDAR CON NUEVA NOMENCLATURA */
                             <div className="flex flex-col gap-2.5 mb-4">
                                 <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">
-                                    🏷️ Nomenclatura Estándar de la Ruta:
+                                    🏷️ Nomenclatura Estándar:
                                 </label>
                                 
                                 <div className="flex flex-col gap-1.5 bg-slate-50 p-2.5 rounded-lg border border-slate-250">

@@ -649,12 +649,15 @@ def save_spot_voyage(request: SpotSaveRequest):
                 payload["client_id"] = request.client_id
             payload.pop("route_distance", None)
             payload.pop("pais", None)
+            payload.pop("is_prospect", None)
         elif request.is_prospect:
             target_table = "routes_quotes"
             payload["spot_id"] = request.name
             if getattr(request, "client_id", None):
                 payload["client_id"] = request.client_id
-            payload["is_prospect"] = True
+            payload.pop("route_distance", None)
+            payload.pop("pais", None)
+            payload.pop("is_prospect", None)
         else:
             target_table = "routes_clients"
             payload["spot_id"] = request.name
