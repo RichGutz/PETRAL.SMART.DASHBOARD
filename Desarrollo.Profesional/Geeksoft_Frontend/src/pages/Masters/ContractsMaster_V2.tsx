@@ -152,15 +152,17 @@ export const ContractsMaster: React.FC = () => {
         const groups: Record<string, EnrichedRoute[]> = {};
 
         clientRoutes.forEach(route => {
-            let year = '2025';
-            const metaFrom = route.valid_from || route.legs_data?.contract_metadata?.valid_from || route.legs_data?.baf_valid_from;
-            if (metaFrom && metaFrom.length >= 4) {
-                year = metaFrom.substring(0, 4);
-            } else {
-                const nameYearMatch = (route.name || '').match(/\.(20\d{2})\./);
-                if (nameYearMatch) {
-                    year = nameYearMatch[1];
-                }
+            const dateStr = route.valid_from || route.legs_data?.contract_metadata?.valid_from || route.legs_data?.baf_valid_from;
+            const nameStr = route.name || '';
+
+            let year = '2026';
+            if (dateStr) {
+                const match = dateStr.match(/\b(20\d{2})\b/);
+                if (match) year = match[1];
+            }
+            if (year === '2026' && nameStr) {
+                const match = nameStr.match(/\b(20\d{2})\b/);
+                if (match) year = match[1];
             }
 
             if (!groups[year]) groups[year] = [];

@@ -492,7 +492,10 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     routes_data = masters.get("distances") or []
     routes_db = {}
     for r in routes_data:
-        routes_db[f"{r['port_a']}-{r['port_b']}"] = r
+        p_a = str(r['port_a']).strip().upper()
+        p_b = str(r['port_b']).strip().upper()
+        routes_db[f"{p_a}-{p_b}"] = r
+        routes_db[f"{p_b}-{p_a}"] = r
     
     routes_clients_data = masters.get("routes_clients") or []
     routes_prospects_data = masters.get("routes_quotes") or []
@@ -1048,7 +1051,10 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
     routes_data = masters.get("distances") or []
     routes_db = {}
     for r in routes_data:
-        routes_db[f"{r['port_a']}-{r['port_b']}"] = r
+        p_a = str(r['port_a']).strip().upper()
+        p_b = str(r['port_b']).strip().upper()
+        routes_db[f"{p_a}-{p_b}"] = r
+        routes_db[f"{p_b}-{p_a}"] = r
     
     routes_clients_data = masters.get("routes_clients") or []
     routes_prospects_data = masters.get("routes_quotes") or []

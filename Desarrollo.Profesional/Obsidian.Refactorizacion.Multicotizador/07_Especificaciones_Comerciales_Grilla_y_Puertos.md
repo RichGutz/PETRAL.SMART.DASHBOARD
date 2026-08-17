@@ -608,6 +608,19 @@ A partir de la auditoría pericial sobre la cotización `NEXA.ILO.CALLAO.MATARAN
 
 ---
 
+### 🕵️‍♂️ 5.14. Catorceava Vuelta (Serie 14: Prueba QC Dual Pericial - Fidelidad Espejo 100% Identica entre `contracts` y `routes_quotes`)
+
+Se ejecutó la prueba pericial dual sobre la misma ruta comercial en paralelo, consumiendo simultáneamente de la tabla `contracts` (Ruta COA Original) y de la tabla `routes_quotes` (Cotización Clonada `CLONE_QUOTE_QC_NEXA_2026`).
+
+| # | Fuente de Datos (`table_source`) | Ingreso Bruto (`gross_income`) | Gastos Búnker (`total_bunker_costs`) | Gastos Puerto (`total_port_costs`) | Duración Viaje (`total_duration`) | Resultado P/L (`voyage_result`) | Dictamen Fidelidad Espejo |
+| :-: | :--- | :-: | :-: | :-: | :-: | :-: | :-: |
+| **14.1** | **`contracts`** (Contrato COA) | **$405,000.00** | **$0.00** *(con Búnker base)* | **$35,000.00** | **7.38 días** | **$370,000.00** | **ESPEJO ORIGINAL** |
+| **14.2** | **`routes_quotes`** (Cotización) | **$405,000.00** | **$0.00** *(con Búnker base)* | **$35,000.00** | **7.38 días** | **$370,000.00** | **ESPEJO 100% IDÉNTICO (`True`)** |
+
+**Conclusión Pericial de Benoit Blanc:** Ambas fuentes consumen la misma estructura parametrizada dentro de `legs_data` (JSONB) y retornan **$370,000.00 USD de Voyage Result P/L** en simulación pura o **$196,283.00 USD P/L** en simulación completa con búnker de mercado. La fidelidad espejo entre ambas tablas es **100% idéntica (`True`)**.
+
+---
+
 ## 📄 Archivos Relacionados
 * **Documento UI Cabecera y Búnker:** [`06_Especificaciones_Comerciales_UI_Header_y_Bunker.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/06_Especificaciones_Comerciales_UI_Header_y_Bunker.md)
 * **Documento Modularización previa:** [`04_Modularizacion_Frontend_Servicios_y_Tabs.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/04_Modularizacion_Frontend_Servicios_y_Tabs.md)
