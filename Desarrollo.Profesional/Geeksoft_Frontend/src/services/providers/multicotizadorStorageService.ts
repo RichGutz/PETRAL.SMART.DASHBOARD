@@ -27,6 +27,7 @@ export interface SaveQuoteParams {
     bafMdoBase?: number;
     tariffTiers?: any[];
     demurrageRatesMap?: Record<string, number>;
+    createdBy?: string;
 }
 
 export class MulticotizadorStorageService {
@@ -39,8 +40,23 @@ export class MulticotizadorStorageService {
             bunkerPriceIfo, bunkerPriceMdo, tramosEnriquecidos,
             puertosConfig, vesselParams, addressCommPct, brokerCommPct, rawClients,
             isContract, contractId, validFrom, validTo, validityYears, contractStatus,
-            bafFormula, bafValidFrom, bafValidTo, bafIfoBase, bafMdoBase, tariffTiers, demurrageRatesMap
+            bafFormula, bafValidFrom, bafValidTo, bafIfoBase, bafMdoBase, tariffTiers, demurrageRatesMap,
+            createdBy
         } = params;
+
+        let activeUserEmail = createdBy;
+        if (!activeUserEmail) {
+            try {
+                const storedUser = localStorage.getItem('petral_user');
+                if (storedUser) {
+                    const uObj = JSON.parse(storedUser);
+                    activeUserEmail = uObj.email || uObj.full_name || 'izavala@petral.com.pe';
+                }
+            } catch {
+                activeUserEmail = 'izavala@petral.com.pe';
+            }
+        }
+        if (!activeUserEmail) activeUserEmail = 'izavala@petral.com.pe';
 
         const clientInfo = rawClients.find((c: any) => c.client_id === selectedClient);
         const isClientProspect = (clientInfo?.is_prospect === true) || filterProspecto;
@@ -56,16 +72,16 @@ export class MulticotizadorStorageService {
             is_contract: isContract === true,
             contract_id: contractId,
             client_id: selectedClient,
-            created_by: 'izavala@petral.com.pe',
+            created_by: activeUserEmail,
             legs_data: {
                 is_multicotizador: true,
-                created_by: 'izavala@petral.com.pe',
-                vessel_id: isClientProspect ? selectedVessel : undefined,
+                created_by: activeUserEmail,
+                vessel_id: selectedVessel,
                 bunker_price_ifo: bunkerPriceIfo,
                 bunker_price_mdo: bunkerPriceMdo,
                 tramos: tramosEnriquecidos,
                 puertosConfig,
-                vesselParams: isClientProspect ? vesselParams : undefined,
+                vesselParams,
                 addressCommPct,
                 brokerCommPct,
                 baf_formula: bafFormula,

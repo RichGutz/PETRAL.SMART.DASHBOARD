@@ -651,8 +651,15 @@ def save_spot_voyage(request: SpotSaveRequest):
             payload.pop("pais", None)
         elif request.is_prospect:
             target_table = "routes_quotes"
+            payload["spot_id"] = request.name
+            if getattr(request, "client_id", None):
+                payload["client_id"] = request.client_id
+            payload["is_prospect"] = True
         else:
             target_table = "routes_clients"
+            payload["spot_id"] = request.name
+            if getattr(request, "client_id", None):
+                payload["client_id"] = request.client_id
         
         # BUSCAR SI YA EXISTE UN REGISTRO EN LA TABLA OBJETIVO POR SU NOMBRE ÚNICO
         existing = sb.table(target_table).select("*").eq("name", request.name).execute()

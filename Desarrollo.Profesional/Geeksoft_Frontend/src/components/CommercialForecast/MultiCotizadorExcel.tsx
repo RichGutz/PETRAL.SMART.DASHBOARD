@@ -577,6 +577,10 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         if (!finalName.trim()) return;
         setIsSaving(true);
         try {
+            const activeUserEmail = localStorage.getItem('petral_user') 
+                ? (JSON.parse(localStorage.getItem('petral_user')!).email || 'izavala@petral.com.pe')
+                : 'izavala@petral.com.pe';
+
             await MulticotizadorStorageService.saveQuote({
                 routeId: saveMode === 'OVERWRITE' ? loadedRouteId : undefined,
                 routeName: finalName,
@@ -600,7 +604,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 bafIfoBase,
                 bafMdoBase,
                 tariffTiers,
-                demurrageRatesMap
+                demurrageRatesMap,
+                createdBy: activeUserEmail
             });
             setLoadedRouteName(finalName);
             setShowSaveModal(false);
@@ -621,8 +626,10 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 timestamp: new Date().toLocaleTimeString()
             });
             alert(successMsg);
-        } catch (e) {
+        } catch (e: any) {
             console.error("Error guardando registro comercial:", e);
+            const errDetail = e?.response?.data?.detail || e?.message || "Ocurrió un error al conectar con la base de datos.";
+            alert(`❌ No se pudo guardar en el ${masterName}:\n${errDetail}`);
         } finally {
             setIsSaving(false);
         }
