@@ -456,7 +456,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                         : ['HUEMUL', 'MOQUEGUA', 'TABLONES', 'CONCON TRADER'];
                                     
                                     return vesselList.map((vName, idx) => {
-                                        const currentVal = demurrageRatesMap ? demurrageRatesMap[vName] : (idx === 0 ? 25000 : 25000);
+                                        const currentVal = (demurrageRatesMap && demurrageRatesMap[vName] !== undefined) ? demurrageRatesMap[vName] : 20000;
                                         return (
                                             <div key={idx} className="bg-slate-50 border border-slate-200 rounded p-1 flex flex-col justify-between text-center">
                                                 <span className="text-[8.5px] font-bold text-slate-600 truncate border-b border-slate-200 pb-0.5 mb-0.5 block">
@@ -479,7 +479,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                                                 setDemurrageRate(val);
                                                             }
                                                         }}
-                                                        placeholder="25000"
+                                                        placeholder="20000"
                                                         className="w-full h-5 text-center font-mono font-bold bg-white border border-slate-300 rounded text-[10px] text-slate-800 focus:outline-none focus:ring-1 focus:ring-amber-500"
                                                     />
                                                 </div>

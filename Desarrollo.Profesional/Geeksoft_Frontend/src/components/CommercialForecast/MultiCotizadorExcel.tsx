@@ -114,10 +114,10 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         { label: '', rate: 0 }
     ]);
     const [demurrageRatesMap, setDemurrageRatesMap] = useState<Record<string, number>>({
-        'HUEMUL': 25000,
-        'MOQUEGUA': 25000,
-        'TABLONES': 25000,
-        'CONCON TRADER': 25000
+        'HUEMUL': 20000,
+        'MOQUEGUA': 20000,
+        'TABLONES': 20000,
+        'CONCON TRADER': 20000
     });
     const [refacturarMuellajeMap, setRefacturarMuellajeMap] = useState<Record<number, boolean>>({});
 
