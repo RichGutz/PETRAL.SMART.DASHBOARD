@@ -490,36 +490,6 @@ export const SourcesSinksMaster_V2: React.FC = () => {
                         {/* NIVEL 1: TABS DE PUERTOS POR PAÍS */}
                         <div className="flex flex-col border-b border-slate-200 bg-slate-50/70 p-4 gap-3">
                             
-                            {/* ECUADOR */}
-                            {groupedPortsByCountry.EC.length > 0 && (
-                                <div className="flex flex-col md:flex-row md:items-center gap-3">
-                                    <div className="flex items-center gap-1.5 min-w-[140px] text-[10px] font-black text-slate-500 uppercase tracking-widest select-none border-b md:border-b-0 md:border-r border-slate-200 pb-1 md:pb-0 md:pr-3">
-                                        <img 
-                                            src="https://flagcdn.com/16x12/ec.png" 
-                                            alt="Ecuador" 
-                                            className="w-5 h-3.5 object-cover rounded shadow-sm border border-slate-200 shrink-0"
-                                        />
-                                        Ecuador (EC)
-                                    </div>
-                                    <div className="flex flex-wrap gap-2">
-                                        {groupedPortsByCountry.EC.map((p) => (
-                                            <button
-                                                key={p.port_id}
-                                                onClick={() => setActivePortId(p.port_id)}
-                                                className={`px-4 py-1.5 font-bold text-xs uppercase tracking-wider rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                                                    activePortId === p.port_id
-                                                        ? 'bg-blue-600 border-blue-600 text-white shadow-sm font-black'
-                                                        : 'bg-white border-slate-300 text-slate-600 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-400'
-                                                }`}
-                                            >
-                                                <Anchor size={12} />
-                                                {p.port_name || p.port_id}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
                             {/* PERÚ */}
                             {groupedPortsByCountry.PE.length > 0 && (
                                 <div className="flex flex-col md:flex-row md:items-center gap-3">
@@ -563,6 +533,36 @@ export const SourcesSinksMaster_V2: React.FC = () => {
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {groupedPortsByCountry.CL.map((p) => (
+                                            <button
+                                                key={p.port_id}
+                                                onClick={() => setActivePortId(p.port_id)}
+                                                className={`px-4 py-1.5 font-bold text-xs uppercase tracking-wider rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                                                    activePortId === p.port_id
+                                                        ? 'bg-blue-600 border-blue-600 text-white shadow-sm font-black'
+                                                        : 'bg-white border-slate-300 text-slate-600 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-400'
+                                                }`}
+                                            >
+                                                <Anchor size={12} />
+                                                {p.port_name || p.port_id}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ECUADOR */}
+                            {groupedPortsByCountry.EC.length > 0 && (
+                                <div className="flex flex-col md:flex-row md:items-center gap-3">
+                                    <div className="flex items-center gap-1.5 min-w-[140px] text-[10px] font-black text-slate-500 uppercase tracking-widest select-none border-b md:border-b-0 md:border-r border-slate-200 pb-1 md:pb-0 md:pr-3">
+                                        <img 
+                                            src="https://flagcdn.com/16x12/ec.png" 
+                                            alt="Ecuador" 
+                                            className="w-5 h-3.5 object-cover rounded shadow-sm border border-slate-200 shrink-0"
+                                        />
+                                        Ecuador (EC)
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {groupedPortsByCountry.EC.map((p) => (
                                             <button
                                                 key={p.port_id}
                                                 onClick={() => setActivePortId(p.port_id)}

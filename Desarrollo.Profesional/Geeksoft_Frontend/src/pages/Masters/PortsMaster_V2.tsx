@@ -63,9 +63,15 @@ export const PortsMaster_V2: React.FC = () => {
             setTerminals(terminalsData || []);
             
             if (sortedPorts.length > 0 && !activeCountry) {
-                const firstCountry = (sortedPorts[0].country || 'PE').toUpperCase();
+                // Prioridad de selección inicial: PERÚ primero
+                const countriesFound = Array.from(new Set(sortedPorts.map((p: any) => String(p.country || 'PE').toUpperCase())));
+                countriesFound.sort((a: any, b: any) => {
+                    const order: Record<string, number> = { 'PERU': 1, 'PERÚ': 1, 'PE': 1, 'CHILE': 2, 'CL': 2, 'ECUADOR': 3, 'EC': 3 };
+                    return (order[String(a)] || 99) - (order[String(b)] || 99);
+                });
+                const firstCountry = String(countriesFound[0] || 'PERU');
                 setActiveCountry(firstCountry);
-                const firstPort = sortedPorts.find((p:any) => (p.country || 'PE').toUpperCase() === firstCountry);
+                const firstPort = sortedPorts.find((p:any) => String(p.country || 'PE').toUpperCase() === firstCountry);
                 if (firstPort) setActivePortId(firstPort.port_id);
             }
         } catch (error) {
@@ -80,7 +86,10 @@ export const PortsMaster_V2: React.FC = () => {
     }, []);
 
     // Derived State
-    const uniqueCountries = Array.from(new Set(ports.map(p => (p.country || "PE").toUpperCase())));
+    const uniqueCountries = Array.from(new Set(ports.map(p => String(p.country || "PE").toUpperCase()))).sort((a: any, b: any) => {
+        const order: Record<string, number> = { 'PERU': 1, 'PERÚ': 1, 'PE': 1, 'CHILE': 2, 'CL': 2, 'ECUADOR': 3, 'EC': 3 };
+        return (order[String(a)] || 99) - (order[String(b)] || 99);
+    });
     const portsForCountry = ports.filter(p => (p.country || "PE").toUpperCase() === activeCountry);
     const terminalsForPort = terminals.filter(t => t.port_id === activePortId);
     

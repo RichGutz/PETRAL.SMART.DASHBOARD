@@ -202,7 +202,10 @@ export const PortCostsMaster_V2: React.FC = () => {
 
     const currentPort = ports.find(p => p.port_id === activePortId);
     const activeCountry = (currentPort?.country || "PE").toUpperCase();
-    const uniqueCountries = Array.from(new Set(ports.map(p => (p.country || "PE").toUpperCase())));
+    const uniqueCountries = Array.from(new Set(ports.map(p => (p.country || "PE").toUpperCase()))).sort((a, b) => {
+        const order: Record<string, number> = { 'PERU': 1, 'PERÚ': 1, 'PE': 1, 'CHILE': 2, 'CL': 2, 'ECUADOR': 3, 'EC': 3 };
+        return (order[a] || 99) - (order[b] || 99);
+    });
     const portsForCountry = ports.filter(p => (p.country || "PE").toUpperCase() === activeCountry);
 
     // AUTO-SELECCIÓN DEL PRIMER PUERTO DEL PAÍS AL CAMBIAR DE PESTAÑA DE PAÍS

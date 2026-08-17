@@ -100,8 +100,8 @@ export const PortTariffsMaster: React.FC = () => {
             setRules(mappedRules);
             
             if (portsData?.length > 0) {
-                // Ordenar países EC, PE, CL
-                const cOrder: Record<string, number> = { 'EC': 1, 'PE': 2, 'CL': 3 };
+                // Ordenar países PERU (1), CHILE (2), ECUADOR (3)
+                const cOrder: Record<string, number> = { 'PE': 1, 'PERU': 1, 'PERÚ': 1, 'CL': 2, 'CHILE': 2, 'EC': 3, 'ECUADOR': 3 };
                 const uCountries = Array.from(new Set(portsData.map((p: any) => (p.country || "PE").toUpperCase())))
                     .sort((a: any, b: any) => (cOrder[a] || 99) - (cOrder[b] || 99));
                 
@@ -125,7 +125,7 @@ export const PortTariffsMaster: React.FC = () => {
     const currentPort = ports.find(p => p.port_id === activePortId);
     const activeCountry = (currentPort?.country || "PE").toUpperCase();
     
-    const countryOrder: Record<string, number> = { 'EC': 1, 'PE': 2, 'CL': 3 };
+    const countryOrder: Record<string, number> = { 'PE': 1, 'PERU': 1, 'PERÚ': 1, 'CL': 2, 'CHILE': 2, 'EC': 3, 'ECUADOR': 3 };
     const uniqueCountries = Array.from(new Set(ports.map(p => (p.country || "PE").toUpperCase())))
         .sort((a: any, b: any) => (countryOrder[a] || 99) - (countryOrder[b] || 99));
 
