@@ -627,10 +627,14 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
             action = p.get("action", "NONE")
             if action != "NONE":
                 tc = float(p.get("time_to_count") if p.get("time_to_count") not in (None, "") else (p.get("overhead") if p.get("overhead") not in (None, "") else 6.0))
-                pos = float(p.get("positioning") or 0.0)
-                q = float(p.get("quantity") or 13500)
-                r = float(p.get("op_rate") or 500)
-                if r <= 0: r = 500.0
+                pos = float(p.get("positioning") if p.get("positioning") not in (None, "") else 0.0)
+                
+                raw_q = p.get("quantity")
+                q = float(raw_q) if (raw_q not in (None, "") and float(raw_q) > 0) else 13500.0
+                
+                raw_r = p.get("op_rate")
+                r = float(raw_r) if (raw_r not in (None, "") and float(raw_r) > 0) else 500.0
+                
                 idle_d = (tc + pos) / 24.0
                 op_d = (q / r) / 24.0
                 tot_port_days += (idle_d + op_d)

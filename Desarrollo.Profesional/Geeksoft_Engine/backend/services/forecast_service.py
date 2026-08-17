@@ -500,7 +500,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     routes_clients_data = masters.get("routes_clients") or []
     routes_prospects_data = masters.get("routes_quotes") or []
     contracts_data = masters.get("contracts") or []
-    routes_master_data = routes_clients_data + routes_prospects_data + contracts_data
+    routes_master_data = routes_prospects_data + routes_clients_data + contracts_data
     
     bunker_data = masters["bunker_prices"]
     # Asegurar que se tome el precio con la fecha más reciente ordenando ascendentemente
@@ -696,11 +696,12 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 saved_vparams = legs_data.get("vesselParams", {})
                 saved_ifo = float(saved_vparams.get("bunker_price_ifo") or legs_data.get("bunker_price_ifo") or 0)
                 saved_mdo = float(saved_vparams.get("bunker_price_mdo") or legs_data.get("bunker_price_mdo") or 0)
+                saved_tce = float(saved_vparams.get("tce_required") or legs_data.get("tce_required") or 0)
                 final_p_ifo = saved_ifo if saved_ifo > 0 else p_ifo
                 final_p_mdo = saved_mdo if saved_mdo > 0 else p_mdo
                 vparams["bunker_price_ifo"] = final_p_ifo
                 vparams["bunker_price_mdo"] = final_p_mdo
-                vparams["tce_required"] = tce_req
+                vparams["tce_required"] = saved_tce if saved_tce > 0 else tce_req
 
                 # --- TRAMOS: enriquecer solo lo necesario ---
                 total_laden_qty = 0.0
@@ -734,7 +735,10 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     tr["muellaje_cost_dest"] = float(p_dest.get("muellaje_cost") or 0)
                     tr["refacturar_muellaje"] = True
 
-                    tr["port_overhead_hours_origin"] = float(p_orig.get("time_to_count") or p_orig.get("overhead") or 0)
+                    if idx == 0:
+                        tr["port_overhead_hours_origin"] = float(p_orig.get("time_to_count") or p_orig.get("overhead") or 0)
+                    else:
+                        tr["port_overhead_hours_origin"] = 0.0
                     tr["port_overhead_hours_dest"] = float(p_dest.get("time_to_count") or p_dest.get("overhead") or 0)
 
                     if p_dest.get("action") == "CARGAR":
@@ -744,13 +748,14 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
 
                     tipo = tr.get("type", "").upper()
                     if tipo == "LADEN":
-                        # PRIORIDAD ABSOLUTA: Tarifa contractual de Supabase
-                        if contract_tariff_val > 0:
-                            tr["freight_rate"] = float(contract_tariff_val)
-                        elif line.custom_tariff is not None:
-                            tr["freight_rate"] = float(line.custom_tariff)
-                        elif freight_rate > 0:
-                            tr["freight_rate"] = float(freight_rate)
+                        # Preservar flete cotizado original del tramo si existe (> 0)
+                        if float(tr.get("freight_rate", 0)) <= 0:
+                            if contract_tariff_val > 0:
+                                tr["freight_rate"] = float(contract_tariff_val)
+                            elif line.custom_tariff is not None and float(line.custom_tariff) > 0:
+                                tr["freight_rate"] = float(line.custom_tariff)
+                            elif freight_rate > 0:
+                                tr["freight_rate"] = float(freight_rate)
                         # Acumular para yield ponderado
                         total_laden_qty += float(tr.get("quantity", 0))
                         total_laden_revenue += float(tr.get("quantity", 0)) * float(tr.get("freight_rate", 0))
@@ -777,8 +782,11 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 yield_flete = (total_laden_revenue / total_laden_qty) if total_laden_qty > 0 else 0.0
 
                 # --- INYECCIÓN DE PRECIOS BÚNKER GUARDADOS EN LEGS_DATA AL PAYLOAD DE SIMULACIÓN ---
-                b_ifo = float(legs_data.get("bunker_price_ifo") if legs_data.get("bunker_price_ifo") is not None else (legs_data.get("bunker_ifo") if legs_data.get("bunker_ifo") is not None else (contract.get("bunker_baseline_price_ifo") if contract and contract.get("bunker_baseline_price_ifo") is not None else 0.0)))
-                b_mdo = float(legs_data.get("bunker_price_mdo") if legs_data.get("bunker_price_mdo") is not None else (legs_data.get("bunker_mdo") if legs_data.get("bunker_mdo") is not None else (contract.get("bunker_baseline_price_mdo") if contract and contract.get("bunker_baseline_price_mdo") is not None else 0.0)))
+                saved_vparams = legs_data.get("vesselParams", {})
+                b_ifo = float(saved_vparams.get("bunker_price_ifo") or legs_data.get("bunker_price_ifo") or legs_data.get("bunker_ifo") or contract.get("bunker_baseline_price_ifo") or p_ifo or 600.0)
+                b_mdo = float(saved_vparams.get("bunker_price_mdo") or legs_data.get("bunker_price_mdo") or legs_data.get("bunker_mdo") or contract.get("bunker_baseline_price_mdo") or p_mdo or 900.0)
+                if b_ifo <= 0: b_ifo = p_ifo if p_ifo > 0 else 600.0
+                if b_mdo <= 0: b_mdo = p_mdo if p_mdo > 0 else 900.0
 
                 payload = {
                     "vessel_params": vparams,
