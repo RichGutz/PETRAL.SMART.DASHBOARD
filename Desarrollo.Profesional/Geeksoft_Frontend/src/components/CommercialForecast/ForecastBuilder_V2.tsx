@@ -135,7 +135,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 const tramos = s.legs_data?.tramos || [];
                 const laden = tramos.filter((t: any) => t.type?.toUpperCase() === 'LADEN');
                 let key = '';
-                const sId = s.spot_id || s.route_id || s.contract_id || s.name || s.id;
+                const sId = s.name || s.spot_id || s.route_id || s.contract_id || s.id;
                 if (laden.length > 0) {
                     const orig = laden[0].origin_port_id;
                     const dest = laden[laden.length - 1].destination_port_id;

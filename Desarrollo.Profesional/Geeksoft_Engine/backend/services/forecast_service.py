@@ -628,14 +628,27 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         spot_id = None
         
         if quote_id is not None:
-            # Buscar directamente por spot_id en routes_quotes, routes_clients y contracts
-            spot_route = next((s for s in routes_master_data if s and (
-                str(s.get("spot_id")) == str(quote_id) or 
-                str(s.get("id")) == str(quote_id) or 
-                str(s.get("route_id")) == str(quote_id) or 
-                str(s.get("contract_id")) == str(quote_id) or 
-                str(s.get("name")) == str(quote_id)
+            raw_q_id = str(quote_id)
+            clean_q_id = raw_q_id.replace("QUOTE:", "").split(":")[0].strip()
+            
+            # 1. Búsqueda por Coincidencia Total Exacta de Nombre o ID en Cotizaciones Vivas (routes_quotes)
+            spot_route = next((s for s in routes_prospects_data if s and (
+                str(s.get("name", "")).strip().upper() == clean_q_id.upper() or
+                str(s.get("spot_id", "")).strip() == clean_q_id or 
+                str(s.get("route_id", "")).strip() == clean_q_id or 
+                str(s.get("id", "")).strip() == clean_q_id
             )), None)
+            
+            # 2. Si no está en routes_quotes, Coincidencia Total Exacta en Maestro General
+            if not spot_route:
+                spot_route = next((s for s in routes_master_data if s and (
+                    str(s.get("name", "")).strip().upper() == clean_q_id.upper() or
+                    str(s.get("name", "")).strip().upper() == raw_q_id.upper() or
+                    str(s.get("spot_id", "")).strip() == clean_q_id or 
+                    str(s.get("route_id", "")).strip() == clean_q_id or 
+                    str(s.get("contract_id", "")).strip() == clean_q_id
+                )), None)
+                
             if spot_route:
                 is_spot_route = True
                 spot_id = quote_id
@@ -660,7 +673,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                         if laden_tramos:
                             first_o = (laden_tramos[0].get("origin_port_id") or "").upper()
                             last_d = (laden_tramos[-1].get("destination_port_id") or "").upper()
-                            if last_d == line.destination_port_id.upper() or (first_o == line.origin_port_id.upper() and last_d == line.destination_port_id.upper()):
+                            if (first_o == line.origin_port_id.upper() and last_d == line.destination_port_id.upper()):
                                 spot_route = s
                                 break
 
@@ -790,7 +803,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 # --- YIELD PONDERADO: tarifa representativa para la Matriz ---
                 yield_flete = (total_laden_revenue / total_laden_qty) if total_laden_qty > 0 else 0.0
 
-                # --- LA RUTA SELECCIONADA ES LA ÚNICA Y EXCLUSIVA FUENTE DE LA VERDAD PARA EL BÚNKER ---
+                # --- LECTURA ÚNICA Y EXCLUSIVA DE LA COTIZACIÓN - SIN FALLBACKS (FALLBACK = 0.0) ---
                 saved_vparams = legs_data.get("vesselParams", {}) if legs_data else {}
                 quote_ifo = float(
                     (line.forecast_bunker_price_ifo if (line.forecast_bunker_price_ifo and float(line.forecast_bunker_price_ifo) > 0) else 0.0) or
@@ -809,8 +822,9 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     0.0
                 )
 
-                b_ifo = quote_ifo if quote_ifo > 0 else (p_ifo if p_ifo > 0 else 1100.0)
-                b_mdo = quote_mdo if quote_mdo > 0 else (p_mdo if p_mdo > 0 else 1700.0)
+                # SIN FALLBACKS EXTERNOS (Si no está en la cotización, es estrictamente 0.0)
+                b_ifo = quote_ifo
+                b_mdo = quote_mdo
 
                 vparams["bunker_price_ifo"] = b_ifo
                 vparams["bunker_price_mdo"] = b_mdo
@@ -848,6 +862,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     "net_income": round(net_revenue, 2),
                     "total_port_costs": consolidated.get("total_port_costs", 0),
                     "total_bunker_costs": consolidated.get("total_bunker_costs", 0),
+                    "bunker_price_ifo": consolidated.get("bunker_price_ifo", b_ifo),
+                    "bunker_price_mdo": consolidated.get("bunker_price_mdo", b_mdo),
                     "voyage_result": round(pnl_after_comm, 2),
                     "pl_vs_required": round(pnl_after_comm - (total_days * tce_req), 2),
                     "tce_real": round(tce_real, 2),
@@ -1510,12 +1526,12 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             "port_days_unit": unit_result["port_days"],
             "total_duration_unit": unit_result["total_duration"],
             "hire_cost_unit": unit_result.get("hire_cost", unit_result["total_duration"] * float(v_data.get("tce_required", 15000.0))),
-            "price_ifo_unit": float(b_ifo if 'b_ifo' in locals() and b_ifo > 0 else p_ifo),
+            "price_ifo_unit": float(unit_result.get("bunker_price_ifo", p_ifo)),
             "bunker_ifo_tonnage_unit": unit_result.get("bunker_ifo_tonnage", 0.0),
-            "bunker_ifo_cost_unit": float(unit_result.get("bunker_ifo_tonnage", 0.0) * float(b_ifo if 'b_ifo' in locals() and b_ifo > 0 else p_ifo)),
-            "price_mdo_unit": float(b_mdo if 'b_mdo' in locals() and b_mdo > 0 else p_mdo),
+            "bunker_ifo_cost_unit": float(unit_result.get("bunker_ifo_tonnage", 0.0) * float(unit_result.get("bunker_price_ifo", p_ifo))),
+            "price_mdo_unit": float(unit_result.get("bunker_price_mdo", p_mdo)),
             "bunker_mdo_tonnage_unit": unit_result.get("bunker_mdo_tonnage", 0.0),
-            "bunker_mdo_cost_unit": float(unit_result.get("bunker_mdo_tonnage", 0.0) * float(b_mdo if 'b_mdo' in locals() and b_mdo > 0 else p_mdo)),
+            "bunker_mdo_cost_unit": float(unit_result.get("bunker_mdo_tonnage", 0.0) * float(unit_result.get("bunker_price_mdo", p_mdo))),
             "total_bunker_costs_unit": unit_result["total_bunker_costs"],
             "total_port_costs_unit": unit_result["total_port_costs"],
             "voyage_result_unit": unit_result["voyage_result"],

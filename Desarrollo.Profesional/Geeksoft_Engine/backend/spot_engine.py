@@ -688,6 +688,8 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
             "bunker_ifo_tonnage": round(tot_ifo_tons, 4),
             "bunker_mdo_tonnage": round(tot_mdo_tons, 4),
             "total_bunker_costs": round(tot_bunker_costs, 2),
+            "bunker_price_ifo": p_ifo,
+            "bunker_price_mdo": p_mdo,
             "total_port_costs": round(tot_port_costs, 2),
             "total_freight_revenue": round(tot_freight_revenue, 2),
             "total_refacturacion_muellaje": round(tot_refacturacion_muellaje, 2),
