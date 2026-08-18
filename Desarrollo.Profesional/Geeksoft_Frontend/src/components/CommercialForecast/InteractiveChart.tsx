@@ -943,11 +943,11 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             <div className="flex flex-col gap-3 shrink-0 w-[245px]">
                 
                 {/* FILTROS TABS */}
-                <div className="flex bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-                    <div className="bg-slate-900 w-7 flex items-center justify-center shrink-0">
+                <div className="flex bg-white rounded-xl border border-slate-200 shadow-2xs">
+                    <div className="bg-slate-900 w-7 flex items-center justify-center shrink-0 rounded-l-xl">
                         <span className="text-[10.5px] font-black text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Filtros</span>
                     </div>
-                    <div className="flex-1 p-2.5 flex flex-col gap-2 bg-slate-50/70 relative">
+                    <div className="flex-1 p-2.5 flex flex-col gap-2 bg-slate-50/70 rounded-r-xl">
                         <button onClick={() => setGroupBy('petral')} className={`w-full h-8 flex items-center justify-center text-center px-2 text-[11.5px] font-black rounded-lg transition-all cursor-pointer ${groupBy === 'petral' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-sky-700 border border-slate-200 hover:bg-slate-100 font-extrabold'}`}>
                             PETRAL (Todo)
                         </button>
