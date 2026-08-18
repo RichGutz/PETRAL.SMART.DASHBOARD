@@ -544,25 +544,25 @@ export const CommercialForecast: React.FC = () => {
                         bottomRightContent={
                             activeTab !== 'ledger' && activeTab !== 'ledger_universal' && activeTab !== 'multicotizador_excel' && (
                                 <>
-                                    <div className="flex gap-2 w-full justify-end h-full">
-                                        <button onClick={() => setShowSaveModal(true)} className="flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground h-8 px-4 rounded font-medium text-[11px] transition-colors shadow-sm cursor-pointer">
+                                    <div className="flex items-center gap-2 w-full justify-end">
+                                        <button onClick={() => setShowSaveModal(true)} className="flex items-center justify-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white h-7.5 px-4 rounded-lg font-extrabold text-[11px] transition-all shadow-2xs cursor-pointer">
                                             <Save size={14} /> Guardar
                                         </button>
                                         <button 
                                             onClick={handleLoadClick} 
                                             disabled={actionLoading === 'loadList'}
-                                            className={`relative overflow-hidden flex items-center justify-center gap-1 h-8 px-4 rounded font-medium text-[11px] transition-colors shadow-sm cursor-pointer ${actionLoading === 'loadList' ? 'bg-slate-200 pointer-events-none' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'}`}
+                                            className={`relative overflow-hidden flex items-center justify-center gap-1.5 h-7.5 px-4 rounded-lg font-extrabold text-[11px] transition-all shadow-2xs cursor-pointer ${actionLoading === 'loadList' ? 'bg-slate-100 text-slate-400 pointer-events-none' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
                                         >
-                                            {actionLoading === 'loadList' && <div className="absolute inset-0 bg-slate-300/50 animate-pulse" style={{ width: '100%' }}></div>}
-                                            <span className="relative flex items-center justify-center z-10 w-full gap-1">
+                                            {actionLoading === 'loadList' && <div className="absolute inset-0 bg-slate-200/50 animate-pulse" style={{ width: '100%' }}></div>}
+                                            <span className="relative flex items-center justify-center z-10 w-full gap-1.5">
                                                 {actionLoading === 'loadList' ? (
                                                     <>
-                                                        <div className="animate-spin h-2.5 w-2.5 border-2 border-slate-500 border-t-transparent rounded-full"></div>
+                                                        <div className="animate-spin h-2.5 w-2.5 border-2 border-sky-600 border-t-transparent rounded-full"></div>
                                                         <span>Abrir...</span>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <FolderOpen size={14} /> Cargar
+                                                        <FolderOpen size={14} className="text-sky-600" /> Cargar
                                                     </>
                                                 )}
                                             </span>
