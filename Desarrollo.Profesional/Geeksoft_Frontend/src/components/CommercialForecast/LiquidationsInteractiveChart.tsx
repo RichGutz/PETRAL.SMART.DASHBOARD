@@ -782,11 +782,11 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
             <div className="flex flex-col gap-3 shrink-0 w-[240px] max-w-[240px]">
                 
                 {/* 1. BLOQUE DE FILTROS (SLATE) */}
-                <div className="flex bg-white rounded-lg border border-slate-200 shadow-sm w-full overflow-visible">
-                    <div className="bg-slate-700 w-7 flex items-center justify-center shrink-0 rounded-l-lg">
-                        <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Filtros</span>
+                <div className="flex flex-row items-stretch bg-white rounded-xl border border-slate-200 shadow-2xs w-full overflow-visible">
+                    <div className="bg-slate-900 w-7 flex items-center justify-center shrink-0 rounded-l-xl self-stretch min-h-full">
+                        <span className="text-[11px] font-black text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Filtros</span>
                     </div>
-                    <div className="flex-1 p-2 flex flex-col gap-2 bg-slate-50/50 rounded-r-lg min-w-0 relative">
+                    <div className="flex-1 p-2.5 flex flex-col gap-2 bg-slate-50/70 rounded-r-xl min-w-0 relative">
                         <button 
                             onClick={() => setGroupBy('petral')} 
                             className={`w-full h-8 flex items-center justify-center text-center px-2 text-[12px] font-extrabold rounded-md transition-colors cursor-pointer ${
@@ -824,11 +824,11 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                 </div>
 
                 {/* 2. BLOQUE EJE PRIMARIO (AZUL) */}
-                <div className="flex bg-white rounded-lg border border-blue-200 shadow-sm w-full overflow-visible">
-                    <div className="bg-blue-600 w-7 flex items-center justify-center shrink-0 rounded-l-lg">
+                <div className="flex flex-row items-stretch bg-white rounded-xl border border-blue-200 shadow-2xs w-full overflow-visible">
+                    <div className="bg-blue-600 w-7 flex items-center justify-center shrink-0 rounded-l-xl self-stretch min-h-full">
                         <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Eje Primario</span>
                     </div>
-                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-blue-50/30 rounded-r-lg min-w-0 relative">
+                    <div className="flex-1 p-2.5 flex flex-col gap-2.5 bg-blue-50/30 rounded-r-xl min-w-0 relative">
                         {renderCustomDropdown(primaryMetric, setPrimaryMetric, isPriOpen, setIsPriOpen, 'blue')}
 
                         <div className="flex flex-row gap-4 pt-2 border-t border-blue-200/40 mt-1">

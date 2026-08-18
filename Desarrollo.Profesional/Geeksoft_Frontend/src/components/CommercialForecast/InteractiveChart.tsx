@@ -943,8 +943,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             <div className="flex flex-col gap-3 shrink-0 w-[245px]">
                 
                 {/* FILTROS TABS */}
-                <div className="flex bg-white rounded-xl border border-slate-200 shadow-2xs">
-                    <div className="bg-slate-900 w-7 flex items-center justify-center shrink-0 rounded-l-xl">
+                <div className="flex flex-row items-stretch bg-white rounded-xl border border-slate-200 shadow-2xs">
+                    <div className="bg-slate-900 w-7 flex items-center justify-center shrink-0 rounded-l-xl self-stretch min-h-full">
                         <span className="text-[10.5px] font-black text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Filtros</span>
                     </div>
                     <div className="flex-1 p-2.5 flex flex-col gap-2 bg-slate-50/70 rounded-r-xl">
@@ -1002,11 +1002,11 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 </div>
 
                 {/* EJE PRIMARIO TABS */}
-                <div className="flex bg-white rounded-lg border border-blue-200 shadow-sm">
-                    <div className="bg-blue-600 w-7 flex items-center justify-center shrink-0 rounded-l-lg">
+                <div className="flex flex-row items-stretch bg-white rounded-xl border border-blue-200 shadow-2xs">
+                    <div className="bg-blue-600 w-7 flex items-center justify-center shrink-0 rounded-l-xl self-stretch min-h-full">
                         <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Eje Primario</span>
                     </div>
-                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-blue-50/30 rounded-r-lg relative">
+                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-blue-50/30 rounded-r-xl relative">
                         {renderCustomDropdown(
                             primaryMetric, 
                             (val) => setPrimaryMetric(val as PlotMetric), 
@@ -1074,11 +1074,11 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 </div>
 
                 {/* EJE SECUNDARIO TABS */}
-                <div className="flex bg-white rounded-lg border border-emerald-200 shadow-sm">
-                    <div className="bg-emerald-600 w-7 flex items-center justify-center shrink-0 rounded-l-lg">
+                <div className="flex flex-row items-stretch bg-white rounded-xl border border-emerald-200 shadow-2xs">
+                    <div className="bg-emerald-600 w-7 flex items-center justify-center shrink-0 rounded-l-xl self-stretch min-h-full">
                         <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Eje Secundario</span>
                     </div>
-                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-emerald-50/30 rounded-r-lg relative">
+                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-emerald-50/30 rounded-r-xl relative">
                         {renderCustomDropdown(
                             secondaryMetric, 
                             (val) => setSecondaryMetric(val as PlotMetric), 
