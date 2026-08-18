@@ -192,11 +192,24 @@ input[type="number"] {
   }
 }
 
-/* Ocultar barra de scroll en elementos horizontales superflujos */
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
+/* Scrollbar styling for smooth enterprise tables */
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Reglas Canónicas de Fluidez y Truncamiento para Selectores y Ribbons en MasterTemplate */
+.master-template-content select,
+.master-template-content [role="combobox"] {
+  max-width: 100%;
+}
+
+.master-template-content [role="combobox"] span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
 }

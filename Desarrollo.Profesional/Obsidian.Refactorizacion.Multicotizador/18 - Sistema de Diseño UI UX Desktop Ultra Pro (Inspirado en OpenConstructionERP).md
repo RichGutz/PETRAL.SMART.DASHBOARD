@@ -168,3 +168,17 @@ graph LR
 3. **Garantía Universal de Ajuste:**
    * Cualquier pantalla de cualquier módulo respeta el 100% de la altura y ancho útil de la ventana del usuario sin desbordar el marco exterior ni requerir zoom manual (`Ctrl + Scroll`).
 
+### 4.4 Truncamiento Inteligente y Fluidez de Selectores & Ribbons Superiores
+
+> [!NOTE]
+> Se resolvió el desborde horizontal de elementos en la barra de control superior (Selector de Rutas en `/dashboard` y Cintas de Pestañas en Módulos Maestros como `/ports`, `/clients`).
+
+1. **Truncamiento Elíptico Canónico en Selectores (`index.css`):**
+   * Se asignó la clase de alcance `.master-template-content` a nivel del contenedor `<main>` en `MasterTemplate_V2.tsx`.
+   * En `index.css` se agregaron reglas globales para que todo control `select` o `combobox` dentro del marco principal aplique `max-width: 100%` con truncamiento elíptico automático (`text-overflow: ellipsis; white-space: nowrap; overflow: hidden;`), impidiendo que nombres largos de ruta (ej: `SPCC.MATARANI-ILO-CALLAO-MOQUEGUA`) deformen los contenedores superiores.
+2. **Cinta Superior de Opciones con Overflow Contenido (`ForecastBuilder_V2.tsx`):**
+   * El selector de rutas se delimitó en `max-w-[280px]` con truncado elíptico limpio (`truncate`).
+   * El contenedor flex de la barra de herramientas adoptó `overflow-x-auto scrollbar-none shrink-0`, asegurando que todos los botones (`Buque`, `N° Viajes`, `Demurrage`, `Añadir al Modelo`) permanezcan alineados sin empujar elementos fuera del área visible.
+3. **Cero Intrusividad en Lógica de Negocio:**
+   * Cambio 100% visual y estructural de CSS, sin tocar variables, funciones de cálculo, APIs FastAPI ni la base de datos Supabase. Ninguna modificación al branch Benoit.
+
