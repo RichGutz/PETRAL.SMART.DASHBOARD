@@ -29,6 +29,74 @@ La **Grilla Live Tabular** es el motor operativo donde se construye la secuencia
 
 ---
 
+### 🏛️ 1.1. Principio Fundamental de Inmutabilidad al Cargar y Libertad Total de Edición/Guardado (Protocolo Sherlock & Benoit Blanc)
+
+> [!IMPORTANT]
+> **REGLA DE ORO DE SHERLOCK & BENOIT BLANC:**
+> **"Al cargar una cotización guardada, el sistema la presenta exactamente como fue persistida (inmutable ante procesos automáticos de fondo). El usuario tiene control y libertad total para modificar cualquier valor en pantalla y sobreescribirla o crear una nueva a partir de ella."**
+
+1. **Inmutabilidad Absoluta al Cargar (Cero Auto-Update No Solicitado):**
+   - Al seleccionar una cotización existente en el **Paso 3** (o ruta COA en el **Paso 2**), todos sus parámetros (`tramos`, `puertosConfig`, `manual_port_cost`, `muellaje_cost`, `bunker`, `precios`, etc.) se cargan y renderizan exactamente como fueron persistidos en la base de datos `routes_quotes` (JSONB `legs_data`).
+   - El sistema **NUNCA** ejecuta procesos automáticos de fondo (`PortCostsRatesService.lookupPortCost` o barridos de puertos) que alteren o pisen los valores guardados.
+
+2. **Ámbito Exclusivo de los Servicios Automáticos:**
+   - Los servicios de auto-consulta de tarifas maestras y costos estáticos de puerto **SÓLO Y EXCLUSIVAMENTE** se invocan al presionar **`➕ NUEVA COTIZACIÓN`** o **`➕ NUEVA RUTA`** (creación desde cero).
+
+3. **Aislamiento en Memoria (`Deep Clone`):**
+   - Toda cotización desempacada es un clon profundo independiente (`JSON.parse(JSON.stringify(quote))`), evitando mutaciones cruzadas por referencia en la memoria del navegador.
+
+4. **Libertad Total de Edición y Guardado por el Usuario:**
+   - Una vez cargada en pantalla, la cotización **no está bloqueada**. El usuario puede editar libremente cualquier celda de la grilla (puertos, fletes, toneladas, costos de puerto, muellaje, búnker, etc.).
+   - Con los cambios realizados, el sistema proporciona dos caminos operativos:
+     - **🅰️ Opción A — Sobreescribir y Actualizar:** Guardar y actualizar las modificaciones directamente sobre la cotización existente (`Update`).
+     - **🅱️ Opción B — Derivar / Clonar:** Guardar una **nueva cotización** a partir de la actual asignándole un nuevo nombre o correlativo (`Insert / Save As`).
+
+---
+
+### 💾 1.2. Especificación Comercial del Modal de Guardado Unificado (`SaveLoadQuoteModals.tsx`)
+
+A partir de la unificación total de fuentes en la tabla única `routes_quotes`, el **Modal de Guardado** se reestructura bajo los siguientes pilares de negocio:
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│ 💾 GRABAR COTIZACIÓN / RUTA COMERCIAL                                ✕ │
+│ Destino: 📄 Supabase (routes_quotes)                                   │
+├────────────────────────────────────────────────────────────────────────┤
+│ 1️⃣ CLIENTE DESTINO:                                                   │
+│   [ACTIVOS] [PROSPECTOS]   ▼ [ SPCC / NEXA / OTROS / PRIMAX ... ]      │
+│   * Inicializado por defecto con el cliente del Paso 1, pero editable  │
+│     para permitir transferir/clonar rutas entre diferentes clientes.   │
+├────────────────────────────────────────────────────────────────────────┤
+│ 2️⃣ TIPO DE REGISTRO COMERCIAL (Campo description en routes_quotes):    │
+│   • Para Clientes ACTIVOS:                                             │
+│     ┌──────────────────────────────┬─────────────────────────────────┐ │
+│     │ 📜 Ruta COA                  │ 📄 Cotización Spot              │ │
+│     │ ('COA Cliente Activo' -> P2) │ ('Cotizacion Cliente Activo'->P3│ │
+│     └──────────────────────────────┴─────────────────────────────────┘ │
+│   • Para Clientes PROSPECTOS:                                          │
+│     ┌────────────────────────────────────────────────────────────────┐ │
+│     │ 🏭 Cotización Prospecto ('Cotización Prospecto' -> Paso 3)     │ │
+│     └────────────────────────────────────────────────────────────────┘ │
+├────────────────────────────────────────────────────────────────────────┤
+│ 3️⃣ ACCIÓN DE GUARDADO:                                                 │
+│   ┌──────────────────────────────┬─────────────────────────────────┐   │
+│   │ ✍️ Sobrescribir (Update)      │ ➕ Guardar como Nuevo (Insert)   │   │
+│   └──────────────────────────────┴─────────────────────────────────┘   │
+│                                                                        │
+│   • Si Sobrescribir: Muestra el nombre cargado a actualizar.           │
+│   • Si Guardar como Nuevo: Muestra [ Prefijo ] + [ Input Sufijo ].     │
+├────────────────────────────────────────────────────────────────────────┤
+│                                     [ Cancelar ]   [ 💾 GUARDAR ]      │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 📌 Reglas Operativas del Modal:
+1. **Reutilización y Transferencia Inter-Cliente:** Un analista puede cargar la ruta base de un cliente (ej. `NEXA`), modificar parámetros en la grilla y grabársela a otro cliente (ej. `SPCC` o `PRIMAX`).
+2. **Sincronización Reactiva de Nomenclatura:** Al cambiar el cliente en el modal, el prefijo del nombre se actualiza de forma automática (ej. `SPCC.ILO.CALLAO...`).
+3. **Persistencia Monolítica:** Todo registro se inserta o actualiza exclusivamente en `public.routes_quotes` con su `legs_data` (JSONB) prístino y completo.
+
+---
+
 ## 📊 2. Matriz Completa de Columnas (De Izquierda a Derecha)
 
 Below is the exhaustive, column-by-column operational matrix mapping exact database sources (`distances`, `contracts`, `port_cost_static`), input fields, and mathematical formulas:
@@ -43,9 +111,9 @@ Below is the exhaustive, column-by-column operational matrix mapping exact datab
 | **6** | **`Vel (kn)`** | Velocidad de navegación del buque en nudos (knots). | Auto-completado de Buque | Heredado automáticamente del buque seleccionado en el Paso 4 (ej. `TABLONES = 11.0 kn`). |
 | **7** | **`Días Mar`** | Días totales de navegación efectiva en mar. | Cálculo Matemático | $$\text{Días Mar} = \frac{\text{Distancia (NM)} \times \left(1 + \frac{\text{W.F \%}}{100}\right)}{\text{Velocidad (kn)} \times 24}$$ |
 | **8** | **`Días Pto`** | Días de permanencia operativa en el puerto de destino. | Cálculo Matemático | $$\text{Días Pto} = \frac{\frac{\text{Cantidad (MT)}}{\text{Ritmo (TH)}} + \text{Time to Count (h)} + \text{Posic (h)}}{24}$$ |
-| **9** | **`Time to Count (H)`**| Demora/espera en puerto estipulada en contrato antes del inicio de plancha. | Consulta BD: Tabla **`contracts`** | Leído de `contracts`: `time_to_count_carga_hrs` si `Op. Dest` es `CARGAR`, `time_to_count_descarga_hrs` si es `DESCARGAR`, y `0.0h` si es `NONE`. |
-| **10** | **`Posic (h)`** | Horas de maniobra, atracadero y desamarre en el puerto. | Consulta BD: Tabla **`contracts`** | Leído de `contracts`: `maneuver_carga_hrs` si `Op. Dest` es `CARGAR`, `maneuver_descarga_hrs` si es `DESCARGAR`, y `0.0h` si es `NONE`. |
-| **11** | **`Op. Dest`** | **COLUMNA CLAVE DE CONTROL:** Acción en puerto: **`NONE`**, **`CARGAR`**, **`DESCARGAR`**. | Selector Manual / Lógica Live | Fila 0 = `CARGAR` por defecto. Determina la asignación de `Time to Count` y `Posicionamiento` (si es `NONE`, ambos se fijan en `0.0h`). |
+| **9** | **`Time to Count (H)`**| Demora/espera en puerto antes del inicio de plancha. | Valor Sugerido / Input Editable | **Sugerido (Gris):** Si `Op. Dest` es `CARGAR` ➔ **`6h`**. Si `Op. Dest` es `DESCARGAR` ➔ **`6h`**. Si es `NONE` ➔ **`—`**. |
+| **10** | **`Posic (h)`** | Horas de maniobra, atracadero y desamarre en el puerto. | Valor Sugerido / Input Editable | **Sugerido (Gris):** Si `Op. Dest` es `CARGAR` ➔ **`1h`**. Si `Op. Dest` es `DESCARGAR` ➔ **`—`** (solo 6h de Time to Count). Si es `NONE` ➔ **`—`**. |
+| **11** | **`Op. Dest`** | **COLUMNA CLAVE DE CONTROL:** Acción operativa en puerto: **`NONE`**, **`CARGAR`**, **`DESCARGAR`**. | Selector Manual / Lógica Live | Marca lo que se hace en cada puerto. Al cambiar detona automáticamente los valores sugeridos de `Time to Count` (6h carga/6h descarga) y `Posicionamiento` (1h carga/0h descarga). Si es `NONE`, ambos se fijan en `—`. |
 | **12** | **`Ritmo (C/D)`** | Velocidad de operación en puerto (Toneladas/Hora - TH). | Consulta BD / Defecto 500 TH | Leído de `contracts` (`load_rate` / `discharge_rate`). **Si no existe en contrato, se fija por defecto en 500 TH** tanto para Carga como Descarga. |
 | **13** | **`Q (MT)`** | Cantidad de mineral a cargar o descargar en Toneladas Métricas (MT). | Input Numérico (Editable) | Tonelaje estándar nominal por defecto: **`13,500 MT`** (capacidad estándar PETRAL). |
 | **14** | **`F ($/t)`** | Tarifa de flete unitaria fijada en Dólares por Tonelada ($/MT). | Consulta BD: Tabla **`contracts`** | Clientes ACTIVOS: leída de la matriz de tarifas por rango de toneladas en `contracts`. Prospectos: digitada libremente. |
@@ -628,14 +696,63 @@ A partir del dictamen pericial del 17.08.2026, se eliminaron los valores obsolet
 | # | Objeto / Componente Auditado | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
 | :-: | :--- | :--- | :--- | :--- | :-: |
 | **15.1** | **`forecast_service.py` (`bunker_price_ifo` / `mdo`)** | `forecast_service.py` leía $967.26 e $1,528.26 de la tabla `bunker_prices` en la rama fallback de contratos. | Purgados $967/$1528 del backend. Fijados a **0.0 estricto** cuando no provienen de una cotización viva. | **RESUELTO:** Imposible que el sistema devuelva $967 o $1528. Si no hay cotización viva, el búnker es estrictamente **0.0 USD**. | ✅ SOLUCIONADO |
-| **15.2** | **`ForecastContext_V2.tsx` (`sessionStorage`)** | `sessionStorage` guardaba la simulación previa con $967/$1528 y la restauraba al recargar la página. | Eliminada la restauración a ciegas de `sessionStorage`. Forzado recálculo fresco en vivo con el backend. | **RESUELTO:** El frontend realiza peticiones limpias en vivo y muestra los **$1,100 IFO** y **$1,700 MDO** de la cotización viva. | ✅ SOLUCIONADO |
+---
+
+### 🕵️‍♂️ 5.16. Dieciseisava Vuelta (Serie 36 / 36-B: Unificación de Tabla Única `routes_quotes`, Desacople Total de `contracts`, Header Limpio y Certificación QC Triangular)
+
+A partir de la autopsia pericial de la Serie 36 y 36-B (17.08.2026), se eliminó la tabla `contracts` como fuente comercial duplicada, unificando todo en `routes_quotes` mediante el campo `description`, saneando los Pasos 1, 2 y 3 del Header e implementando la regla de CERO fallbacks numéricos.
+
+| # | Objeto / Componente Auditado | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **16.1** | **`MultiCotizadorExcel.tsx` (Paso 1: Selector de Clientes)** | El desplegable duplicaba nombres (`"Southern Peru Copper Corporation"` y `"SPCC"`) por mezclar `client_name` con arrays hardcodeados auxiliares (`activoDefaults`). | Conectado exclusivamente al endpoint `/forecast/clients` (tabla `clients`). Uso estricto de `client_id` (`SPCC`, `NEXA`, `OTROS`, `PRIMAX`, `R TRADING`). Filtrado por `is_active` / `is_prospect`. | **RESUELTO:** Dropdown 100% limpio sin duplicidades ni nombres redundantes. | ✅ SOLUCIONADO |
+| **16.2** | **`MultiCotizadorExcel.tsx` (Paso 2: RUTA COA)** | El Paso 2 intentaba consultar la tabla `contracts` dada de baja y mostraba opciones erróneas. | Paso 2 filtra exclusivamente en `routes_quotes` donde `client_id === selectedClient` y `description === "COA Cliente Activo"`. Opción por defecto: `➕ NUEVA RUTA COA`. | **RESUELTO:** Rutas de contrato COA segmentadas de forma limpia y precisa. | ✅ SOLUCIONADO |
+| **16.3** | **`MultiCotizadorExcel.tsx` (Paso 3: COTIZACIÓN)** | El Paso 3 no distinguía cotizaciones spot de activos vs prospectos en la tabla unificada. | Paso 3 filtra en `routes_quotes` cotizaciones spot de activos (`description === "Cotizacion Cliente Activo"`) o de prospectos (`description === "Cotización Prospecto"`). | **RESUELTO:** Cotizaciones cargan directamente desde `routes_quotes` con sus precios y parámetros completos. | ✅ SOLUCIONADO |
+| **16.4** | **`forecast_service.py` & `spot_engine.py` (CERO Fallbacks)** | Existían fallbacks residuales (`$450`, `$800`, `$13000`, `11.0 kn`, `14.0 MT/d`) que enmascaraban datos faltantes en cotizaciones. | Todos los fallbacks numéricos fueron fijados estrictamente a **`0.0`**. | **RESUELTO:** Todo parámetro ausente reporta 0.0 para alertar de inmediato al auditor. | ✅ SOLUCIONADO |
+| **16.5** | **`run_qc_triangular_loop_nexa.py` (Certificación QC)** | Discrepancia previa de búnker en Ledger por variables externas del maestro. | Inyección de precios cotizados ($1,100 IFO / $1,700 MDO) y ritmo operativo de descarga ($400 MT/d) en el Ledger. | **CERTIFICADO:** Cuadratura al centavo en los 3 vértices: DB Supabase = Multicotizador = Matriz ($80,082 Búnker / $182,961 P&L / 0.00 Dif). | ✅ CERTIFICADO |
+
+---
+
+### 🕵️‍♂️ 5.17. Diecisieteava Vuelta (Serie 40: Caso de Muellaje Fantasma de $30,000, Inmutabilidad Monolítica de Cotizaciones Cargadas y Exterminio del Auto-Update)
+
+A partir de la investigación pericial liderada por Sherlock Holmes y Benoit Blanc (17.08.2026), se eliminó la mutación cruzada de cotizaciones en memoria y se desactivó el auto-llenado automático de costos portuarios al cargar cotizaciones existentes.
+
+| # | Objeto / Componente Auditado | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **17.1** | **`MultiCotizadorExcel.tsx` (`handleLoadRoute`)** | `unpackQuoteData` compartía referencias en memoria; al switchear cotizaciones, `handleVesselChange` disparaba `autoFillPortCost` que sobreescribía los costos guardados e inyectaba $30,000 de muellaje proveniente de otra cotización. | 1. Implementado clonado profundo (`structuredClone` / `JSON.parse(JSON.stringify)`).<br>2. Desactivado `autoFillPortCost` al cargar cotizaciones guardadas.<br>3. Servicio de tarifas sólo se activa en `➕ NUEVA COTIZACIÓN` o `➕ NUEVA RUTA`. | **RESUELTO:** La cotización cargada es 100% inmutable. Sus costos y muellajes guardados se respetan estrictamente. | ✅ SOLUCIONADO |
+| **17.2** | **`SpreadsheetTramosGrid.tsx` (`MUELLAJE`)** | La columna `MUELLAJE` era un `<span>` estático no editable, impidiendo al usuario corregir o tipear un monto manual. | Convertida la celda a `<input>` editable con formato y separador de miles. | **RESUELTO:** El usuario puede editar, corregir o colocar en `$0` el muellaje de cualquier puerto libremente. | ✅ SOLUCIONADO |
+
+---
+
+### 🕵️‍♂️ 5.18. Dieciochoava Vuelta (Serie 41: Rediseño del Modal de Guardado Unificado `routes_quotes`, Clasificación por `description` y Reasignación Inter-Cliente)
+
+A partir de la unificación de tablas y la directiva de Sherlock Holmes (17.08.2026), se reestructuró el modal `SaveLoadQuoteModals.tsx` para eliminar referencias a la tabla `contracts`, añadir selector dinámico de cliente y clasificar según el campo `description`.
+
+| # | Objeto / Componente Auditado | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **18.1** | **`SaveLoadQuoteModals.tsx` (Tabla Destino)** | El modal forzaba al usuario a elegir entre la tabla `contracts` (obsoleta) y `routes_quotes`. | Destino único fijado en `routes_quotes`. Eliminado el botón hacia `contracts`. | **RESUELTO:** Persistencia única e inequívoca en `routes_quotes`. | ✅ SOLUCIONADO |
+| **18.2** | **`SaveLoadQuoteModals.tsx` (Selector de Cliente Destino)** | No permitía transferir o clonar la ruta actual hacia otro cliente sin reiniciar el formulario. | Añadido selector de cliente (`[ACTIVOS]`/`[PROSPECTOS]` + dropdown `SPCC, NEXA, OTROS, PRIMAX, R TRADING`) inicializado con el cliente del Paso 1 pero editable. | **RESUELTO:** Reutilización y transferencia inter-cliente 100% habilitada. | ✅ SOLUCIONADO |
+| **18.3** | **`SaveLoadQuoteModals.tsx` (Clasificación Comercial)** | No permitía clasificar si el guardado era para Paso 2 (`COA`) o Paso 3 (`Spot`). | En clientes Activos permite elegir `📜 Ruta COA` (`COA Cliente Activo` ➔ P2) o `📄 Cotización Spot` (`Cotizacion Cliente Activo` ➔ P3). En Prospectos asigna `🏭 Cotización Prospecto` (P3). | **RESUELTO:** Cada registro guardado aparece con precisión quirúrgica en el paso correspondiente del Header. | ✅ SOLUCIONADO |
+
+### 🕵️‍♂️ 5.19. Diecinueveava Vuelta (Serie 42: Conexión del Maestro de Rutas COA a `routes_quotes` y Agrupación Dinámica por Año Real de Validez)
+
+A partir de la auditoría de Sherlock Holmes y Benoit Blanc (17.08.2026), se redirigió el Maestro de Rutas COA (`ContractsMaster_V2.tsx` y `RouteMaster_V2.tsx`) hacia la tabla unificada `routes_quotes` y se exterminó el fallback fijo de año `2025`/`2026`.
+
+| # | Objeto / Componente Auditado | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- | :-: |
+| **19.1** | **`ContractsMaster_V2.tsx` (Fuente de Datos)** | Intentaba consultar la tabla `contracts` (dada de baja) o requería `contract_id` inexistente. | Filtrado exclusivo en `routes_quotes` donde `description === "COA Cliente Activo"` o `description.includes("COA")` o `is_contract === true`. | **RESUELTO:** El Maestro de Rutas COA muestra de inmediato todas las rutas COA creadas en el Multicotizador. | ✅ SOLUCIONADO |
+| **19.2** | **`ContractsMaster_V2.tsx` (Agrupación por Año - Tab)** | Poseía un fallback hardcodeado `let year = '2025'` / `'2026'`, asignando rutas nuevas a pestañas de años anteriores si el formato de fecha variaba. | El año se extrae estrictamente de las fechas de Validez del **Paso 5** (`valid_from` / `legs_data.valid_from` / `baf_valid_from`) mediante regex de 4 dígitos `/\b(20\d{2})\b/`, o secundariamente del correlativo del nombre de la ruta. | **RESUELTO:** Agrupación dinámica 100% fidedigna al año comercial estipulado. | ✅ SOLUCIONADO |
+| **19.3** | **`RouteMaster_V2.tsx` (Discriminación COA vs Cotizaciones)** | Usaba prefijos ambiguos (`prospect`) para distinguir cotizaciones de contratos. | Clasificación precisa según `description`: COA para `description === "COA Cliente Activo"` y Cotizaciones para el resto. | **RESUELTO:** Separación limpia de catálogos en base al estándar unificado. | ✅ SOLUCIONADO |
 
 ---
 
 ## 📄 Archivos Relacionados
 * **Documento UI Cabecera y Búnker:** [`06_Especificaciones_Comerciales_UI_Header_y_Bunker.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/06_Especificaciones_Comerciales_UI_Header_y_Bunker.md)
-* **Documento Autopsia Pericial:** [`16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md)
+* **Documento Autopsia Pericial Benoit Blanc:** [`16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md)
+* **Protocolo de Control de Calidad Triangular:** [`03_Protocolo_de_Control_de_Calidad_QC_Triangular_UI_Backend_Excel.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/03_Protocolo_de_Control_de_Calidad_QC_Triangular_UI_Backend_Excel.md)
 * **Script Flujograma Python:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.py)
+
+
+
 
 
 

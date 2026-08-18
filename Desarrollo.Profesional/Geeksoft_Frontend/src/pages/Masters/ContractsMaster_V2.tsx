@@ -22,6 +22,8 @@ interface EnrichedRoute {
     comments?: Array<{ text: string; date?: string; user?: string }>;
     legs_data?: {
         is_multicotizador?: boolean;
+        valid_from?: string;
+        valid_to?: string;
         bunker_price_ifo?: number;
         bunker_price_mdo?: number;
         tramos?: any[];
@@ -109,9 +111,12 @@ export const ContractsMaster: React.FC = () => {
         loadData();
     }, []);
 
-    // 1. Filtrar solo las rutas contractuales (contracts)
+    // 1. Filtrar solo las rutas contractuales COA (unificadas en routes_quotes)
     const contractRoutesAll = useMemo(() => {
-        return allRoutes.filter(r => r.is_contract === true || r.table_source === 'contracts' || r.legs_data?.contract_metadata?.contract_id);
+        return allRoutes.filter(r => {
+            const desc = (r.description || '').trim();
+            return desc === 'COA Cliente Activo' || desc.includes('COA') || r.is_contract === true;
+        });
     }, [allRoutes]);
 
     // 2. Clientes Activos que tienen contratos o presencia en catálogo
@@ -152,17 +157,22 @@ export const ContractsMaster: React.FC = () => {
         const groups: Record<string, EnrichedRoute[]> = {};
 
         clientRoutes.forEach(route => {
-            const dateStr = route.valid_from || route.legs_data?.contract_metadata?.valid_from || route.legs_data?.baf_valid_from;
+            const ld = route.legs_data || {};
+            // El año de vigencia viene estrictamente de las fechas de Validez (Paso 5) guardadas en la cotización
+            const dateStr = route.valid_from || ld.valid_from || ld.baf_valid_from || ld.contract_metadata?.valid_from;
             const nameStr = route.name || '';
 
-            let year = '2026';
+            let year = '';
             if (dateStr) {
-                const match = dateStr.match(/\b(20\d{2})\b/);
+                const match = String(dateStr).match(/\b(20\d{2})\b/);
                 if (match) year = match[1];
             }
-            if (year === '2026' && nameStr) {
+            if (!year && nameStr) {
                 const match = nameStr.match(/\b(20\d{2})\b/);
                 if (match) year = match[1];
+            }
+            if (!year) {
+                year = new Date().getFullYear().toString();
             }
 
             if (!groups[year]) groups[year] = [];

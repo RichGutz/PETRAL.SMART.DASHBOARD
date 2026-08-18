@@ -465,10 +465,11 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                                 <div className="flex items-center justify-center gap-0.5">
                                                     <span className="text-[9px] font-bold text-amber-700">$</span>
                                                     <input
-                                                        type="number"
-                                                        value={currentVal || ''}
+                                                        type="text"
+                                                        value={currentVal ? Number(currentVal).toLocaleString('en-US') : ''}
                                                         onChange={(e) => {
-                                                            const val = parseFloat(e.target.value) || 0;
+                                                            const rawVal = e.target.value.replace(/,/g, '');
+                                                            const val = parseFloat(rawVal) || 0;
                                                             if (setDemurrageRatesMap) {
                                                                 setDemurrageRatesMap({
                                                                     ...(demurrageRatesMap || {}),
@@ -479,7 +480,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                                                 setDemurrageRate(val);
                                                             }
                                                         }}
-                                                        placeholder="20000"
+                                                        placeholder="20,000"
                                                         className="w-full h-5 text-center font-mono font-bold bg-white border border-slate-300 rounded text-[10px] text-slate-800 focus:outline-none focus:ring-1 focus:ring-amber-500"
                                                     />
                                                 </div>

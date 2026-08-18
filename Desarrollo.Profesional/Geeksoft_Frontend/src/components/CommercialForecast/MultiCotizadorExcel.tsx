@@ -81,7 +81,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     const [bunkerSource, setBunkerSource] = useState<'MAESTRO_CONTRATOS' | 'COTIZACION' | 'MAESTRO_BUNKER' | 'SOBREESCRITURA'>('MAESTRO_CONTRATOS');
     const [bunkerPriceIfo, setBunkerPriceIfo] = useState<number>(0);
     const [bunkerPriceMdo, setBunkerPriceMdo] = useState<number>(0);
-    const [contractsList, setContractsList] = useState<any[]>([]);
+    const [contractsList] = useState<any[]>([]);
     const [latestSpotPrices, setLatestSpotPrices] = useState<{ ifo: number; mdo: number }>({ ifo: 0, mdo: 0 });
 
     // 5. Grilla de Tramos & Configuración de Puertos
@@ -242,37 +242,26 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     // El branch MAESTRO_BUNKER hace su propio fetch interno cuando ifo === 0 (líneas 229-231).
     }, [bunkerSource, selectedClient, clientType, selectedRouteId, contractsList]);
 
-    // Filtrado Dinámico e Instantáneo (en memoria) de Clientes (ACTIVOS vs PROSPECTOS)
+    // Filtrado Dinámico e Instantáneo (en memoria) de Clientes (ACTIVOS vs PROSPECTOS) desde tabla clients
     useEffect(() => {
         const isProspectMode = clientType === 'PROSPECTOS';
-        
         if (isProspectMode) {
-            const prospectDefaults = ['MARCOBRE', 'PRIMAX', 'CODELCO', 'R TRADING', 'CERRO VERDE', 'PROSPECTO GENERAL'];
-            const dbProspects: string[] = [];
-            (rawClients || []).forEach((c: any) => {
-                if (c.is_prospect === true || String(c.is_prospect).toLowerCase() === 'true') {
-                    const name = c.client_name || c.client_id || '';
-                    if (name) dbProspects.push(name.trim());
-                }
-            });
-            const finalList = Array.from(new Set([...dbProspects, ...prospectDefaults].filter(Boolean)));
-            setClients(finalList);
+            const list = (rawClients || [])
+                .filter((c: any) => c.is_prospect === true || String(c.is_prospect).toLowerCase() === 'true')
+                .map((c: any) => (c.client_id || c.client_name || '').trim())
+                .filter(Boolean);
+            setClients(Array.from(new Set(list)));
         } else {
-            const activoDefaults = ['SPCC', 'NEXA'];
-            const dbActivos: string[] = [];
-            (rawClients || []).forEach((c: any) => {
-                if (!c.is_prospect || c.is_prospect === false || String(c.is_prospect).toLowerCase() === 'false') {
-                    const name = c.client_name || c.client_id || '';
-                    if (name) dbActivos.push(name.trim());
-                }
-            });
-            const finalList = Array.from(new Set([...dbActivos, ...activoDefaults].filter(Boolean)));
-            setClients(finalList);
+            const list = (rawClients || [])
+                .filter((c: any) => c.is_active === true || String(c.is_active).toLowerCase() === 'true' || (!c.is_prospect && c.is_prospect !== false))
+                .map((c: any) => (c.client_id || c.client_name || '').trim())
+                .filter(Boolean);
+            setClients(Array.from(new Set(list)));
         }
     }, [clientType, rawClients]);
 
     // Manejador de Cambio de Buque
-    const handleVesselChange = (vesselId: string) => {
+    const handleVesselChange = (vesselId: string, isAutoFillEnabled: boolean = false) => {
         setSelectedVessel(vesselId);
         if (!vesselId) return;
         const v = vessels.find(x => x.vessel_id === vesselId);
@@ -281,13 +270,15 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             if (resolved) setVesselParams(resolved);
         }
 
-        // Barrido automático de costos portuarios estáticos al seleccionar buque
-        puertosConfig.forEach((p, idx) => {
-            const portId = idx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[idx - 1]?.destination_port_id || '');
-            if (portId && p.action !== 'NONE') {
-                autoFillPortCost(idx, portId, p.action, vesselId);
-            }
-        });
+        // AutoFill de costos portuarios SOLO si se está creando una nueva ruta/cotización desde cero
+        if (isAutoFillEnabled) {
+            puertosConfig.forEach((p, idx) => {
+                const portId = idx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[idx - 1]?.destination_port_id || '');
+                if (portId && p.action !== 'NONE') {
+                    autoFillPortCost(idx, portId, p.action, vesselId);
+                }
+            });
+        }
     };
 
     const handleVesselParamChange = (field: string, val: any) => {
@@ -531,50 +522,34 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         return `${clientClean}.${portsSeq}.`;
     };
 
-    const [saveTargetTable, setSaveTargetTable] = useState<'contracts' | 'routes_quotes'>('contracts');
+    const [saveTargetTable, setSaveTargetTable] = useState<'contracts' | 'routes_quotes'>('routes_quotes');
     const [saveNotification, setSaveNotification] = useState<{ message: string; detail: string; table: string; timestamp: string } | null>(null);
 
-    const handleSaveRoute = async () => {
-        const isSavingContract = clientType === 'ACTIVOS' && saveTargetTable === 'contracts';
+    const handleSaveRoute = async (saveOptions?: {
+        targetClient?: string;
+        targetClientType?: 'ACTIVOS' | 'PROSPECTOS';
+        isContract?: boolean;
+        finalName?: string;
+    }) => {
+        const effectiveClient = saveOptions?.targetClient || selectedClient;
+        const effectiveClientType = saveOptions?.targetClientType || clientType;
+        const isSavingContract = effectiveClientType === 'ACTIVOS' && (saveOptions?.isContract ?? (saveTargetTable === 'contracts'));
         const calculatedTramos = getCalculatedTramos();
-        const masterName = isSavingContract ? "Maestro de Rutas COA" : "Maestro de Cotizaciones";
-        const tableSource = isSavingContract ? "contracts" : "routes_quotes";
 
-        if (isSavingContract) {
-            // Validación estricta para guardar un Contrato Formal (contracts)
-            if (!selectedClient || !selectedClient.trim()) {
-                alert(`⚠️ Validación de Contrato: Debe seleccionar un cliente activo válido antes de guardar en el ${masterName}.`);
-                return;
-            }
-            if (!selectedVessel || !selectedVessel.trim()) {
-                alert(`⚠️ Validación de Contrato: Para registrar un Contrato Formal en el ${masterName} (${tableSource}) se requiere seleccionar un Buque asignado en el Paso 4.`);
-                return;
-            }
-            if (!validFrom || !validFrom.trim() || !validTo || !validTo.trim()) {
-                alert("⚠️ Validación de Contrato: Debe completar las fechas de Inicio y Fin de Validez (Paso 5).");
-                return;
-            }
-            const hasValidLadenTramo = calculatedTramos.some(tr => 
-                (tr.type === 'LADEN' || tr.desc_tons > 0 || tr.quantity > 0) &&
-                (Number(tr.desc_tons || tr.quantity || 0) > 0) &&
-                (Number(tr.freight_rate || 0) > 0)
-            );
-            if (!hasValidLadenTramo) {
-                alert(`⚠️ Validación de Contrato: Para registrar en el ${masterName} (${tableSource}) se requiere al menos un tramo de carga (LADEN) con Tonelaje > 0 MT y Tarifa de Flete > $0/MT.`);
-                return;
-            }
-        } else {
-            // Validación estándar para Cotizaciones (routes_quotes)
-            if (!validFrom || !validFrom.trim() || !validTo || !validTo.trim()) {
-                alert("⚠️ Validación Requerida: Debe seleccionar las fechas de Inicio y Fin en el Paso 5 (VALIDEZ) antes de guardar.");
-                return;
-            }
+        if (!effectiveClient || !effectiveClient.trim()) {
+            alert("⚠️ Validación Requerida: Debe seleccionar un cliente destino válido antes de guardar.");
+            return;
         }
 
-        const prefix = getSuggestedRoutePrefix(selectedClient);
-        const finalName = (saveMode === 'OVERWRITE' && loadedRouteName)
+        if (!validFrom || !validFrom.trim() || !validTo || !validTo.trim()) {
+            alert("⚠️ Validación Requerida: Debe seleccionar las fechas de Inicio y Fin en el Paso 5 (VALIDEZ) antes de guardar.");
+            return;
+        }
+
+        const prefix = getSuggestedRoutePrefix(effectiveClient);
+        const finalName = saveOptions?.finalName || ((saveMode === 'OVERWRITE' && loadedRouteName && effectiveClient === selectedClient)
             ? loadedRouteName
-            : `${prefix}${routeSuffix.trim() ? routeSuffix.trim() : '2026'}`;
+            : `${prefix}${routeSuffix.trim() ? routeSuffix.trim() : '2026'}`);
 
         if (!finalName.trim()) return;
         setIsSaving(true);
@@ -584,10 +559,10 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 : 'izavala@petral.com.pe';
 
             await MulticotizadorStorageService.saveQuote({
-                routeId: saveMode === 'OVERWRITE' ? loadedRouteId : undefined,
+                routeId: (saveMode === 'OVERWRITE' && effectiveClient === selectedClient) ? loadedRouteId : undefined,
                 routeName: finalName,
-                selectedClient,
-                filterProspecto: clientType === 'PROSPECTOS' || !isSavingContract,
+                selectedClient: effectiveClient,
+                filterProspecto: effectiveClientType === 'PROSPECTOS',
                 isContract: isSavingContract,
                 selectedVessel,
                 bunkerPriceIfo,
@@ -611,27 +586,27 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             });
             setLoadedRouteName(finalName);
             setShowSaveModal(false);
-            const [freshContracts, freshQuotes, freshRoutes] = await Promise.all([
-                ForecastService.getContractsMaster(),
+            const [freshQuotes, freshRoutes] = await Promise.all([
                 MulticotizadorRetrieverService.searchSavedQuotes('', true, true, ''),
                 ForecastService.getRoutesMaster()
             ]);
-            if (freshContracts && Array.isArray(freshContracts)) setContractsList(freshContracts);
             if (freshQuotes && Array.isArray(freshQuotes)) setSavedRoutes(freshQuotes);
             if (freshRoutes && Array.isArray(freshRoutes)) setRoutes(freshRoutes);
 
-            const successMsg = `✅ Se grabó correctamente en el ${masterName} (${tableSource})\n📌 Nombre: ${finalName}`;
+            const recordTypeDesc = isSavingContract 
+                ? 'Ruta COA (Paso 2)' 
+                : (effectiveClientType === 'PROSPECTOS' ? 'Cotización Prospecto (Paso 3)' : 'Cotización Spot (Paso 3)');
+
             setSaveNotification({
-                message: `Se grabó correctamente en el ${masterName} (${tableSource})`,
-                detail: finalName,
-                table: tableSource,
+                message: `✅ ¡Guardado con Éxito en routes_quotes!`,
+                detail: `"${finalName}" registrado como ${recordTypeDesc} para el cliente ${effectiveClient}.`,
+                table: `routes_quotes`,
                 timestamp: new Date().toLocaleTimeString()
             });
-            alert(successMsg);
+            setTimeout(() => setSaveNotification(null), 8000);
         } catch (e: any) {
-            console.error("Error guardando registro comercial:", e);
-            const errDetail = e?.response?.data?.detail || e?.message || "Ocurrió un error al conectar con la base de datos.";
-            alert(`❌ No se pudo guardar en el ${masterName}:\n${errDetail}`);
+            console.error("Error al guardar:", e);
+            alert(`❌ Error al guardar en Supabase: ${e.message || e}`);
         } finally {
             setIsSaving(false);
         }
@@ -756,80 +731,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         setBunkerSource('MAESTRO_BUNKER');
     };
 
-    const handleSelectRoute = (routeId: string) => {
-        if (!routeId) return;
-        if (routeId === 'CREAR_RUTA') {
-            handleCreateNewGrid();
-            return;
-        }
-        const r = contractsList.find(x => x.name === routeId || x.route_id === routeId || x.id === routeId || x.spot_id === routeId)
-               || savedRoutes.find(x => x.name === routeId || x.route_id === routeId || x.id === routeId || x.spot_id === routeId)
-               || routes.find(x => x.name === routeId || x.route_id === routeId || x.id === routeId || x.spot_id === routeId);
-        if (!r) return;
-
-        setLoadedRouteName(r.name || r.route_id || '');
-        setLoadedRouteId(r.route_id || r.client_route_id || r.prospect_route_id || r.spot_id || r.id || '');
-        setBunkerSource('COTIZACION');
-
-        const legsData = r.legs_data || {};
-        const tramosList = legsData.tramos || [];
-
-        if (tramosList.length > 0) {
-            const enrichedTramos = tramosList.map((tr: any) => {
-                const auto = RouteDistancesService.resolveAutoRouteInfo(tr.origin_port_id, tr.destination_port_id, tr.type, routes);
-                return {
-                    ...tr,
-                    route_distance: (Number(tr.route_distance) > 0) ? tr.route_distance : (auto.route_distance || 0),
-                    weather_factor: (tr.weather_factor !== undefined && tr.weather_factor !== null && Number(tr.weather_factor) > 0) ? tr.weather_factor : (auto.weather_factor || 3.0),
-                    speed: (Number(tr.speed) > 0) ? tr.speed : 11.0
-                };
-            });
-            setTramos(enrichedTramos);
-            const resolvedConfig = (legsData.puertosConfig && Array.isArray(legsData.puertosConfig) && legsData.puertosConfig.length === tramosList.length + 1)
-                ? legsData.puertosConfig.map((p: any) => ({
-                    ...p,
-                    time_to_count: (p.time_to_count !== undefined && p.time_to_count !== '') 
-                        ? p.time_to_count 
-                        : (p.overhead !== undefined && p.overhead !== '' ? p.overhead : (p.action !== 'NONE' ? 6 : '')),
-                    overhead: p.overhead ?? p.time_to_count ?? (p.action !== 'NONE' ? 6 : '')
-                }))
-                : buildPuertosConfigFromTramos(enrichedTramos, selectedClient);
-            setPuertosConfig(resolvedConfig);
-        } else if (r.origin_port_id && r.destination_port_id) {
-            const auto = RouteDistancesService.resolveAutoRouteInfo(r.origin_port_id, r.destination_port_id, 'LADEN', routes);
-            const singleTramo = [{
-                type: 'LADEN' as 'LADEN' | 'BALLAST',
-                origin_port_id: r.origin_port_id,
-                destination_port_id: r.destination_port_id,
-                quantity: 0,
-                freight_rate: 0,
-                port_delay_hours_loading: selectedClient === 'NEXA' ? 12 : 6,
-                port_delay_hours_discharging: selectedClient === 'NEXA' ? 12 : 6,
-                route_distance: r.route_distance || r.distance || auto.route_distance || 0,
-                weather_factor: r.weather_factor || auto.weather_factor || 3.0,
-                speed: 11.0
-            }];
-            setTramos(singleTramo);
-            setPuertosConfig(buildPuertosConfigFromTramos(singleTramo, selectedClient));
-        }
-
-        const ifo = Number(legsData.bunker_price_ifo ?? r.bunker_price_ifo ?? r.bunker_baseline_price_ifo ?? 0);
-        const mdo = Number(legsData.bunker_price_mdo ?? r.bunker_price_mdo ?? r.bunker_baseline_price_mdo ?? 0);
-
-        if (ifo > 0) setBunkerPriceIfo(ifo);
-        if (mdo > 0) setBunkerPriceMdo(mdo);
-
-        if (legsData.addressCommPct !== undefined) setAddressCommPct(Number(legsData.addressCommPct));
-        if (legsData.brokerCommPct !== undefined) setBrokerCommPct(Number(legsData.brokerCommPct));
-        if (legsData.vessel_id || r.vessel_id) handleVesselChange(legsData.vessel_id || r.vessel_id);
-    };
-
     const handleLoadRoute = (quote: any) => {
         if (!quote) return;
-        setLoadedRouteName(quote.name || quote.route_id || quote.spot_id || '');
-        setLoadedRouteId(quote.route_id || quote.client_route_id || quote.prospect_route_id || quote.spot_id || quote.id || '');
+        const clonedQuote = JSON.parse(JSON.stringify(quote));
+        setLoadedRouteName(clonedQuote.name || clonedQuote.route_id || clonedQuote.spot_id || '');
+        setLoadedRouteId(clonedQuote.route_id || clonedQuote.client_route_id || clonedQuote.prospect_route_id || clonedQuote.spot_id || clonedQuote.id || '');
         setBunkerSource('COTIZACION');
-        const unpacked = MulticotizadorRetrieverService.unpackQuoteData(quote);
+        const unpacked = MulticotizadorRetrieverService.unpackQuoteData(clonedQuote);
 
         if (unpacked.tramos && unpacked.tramos.length > 0) {
             const enrichedTramos = unpacked.tramos.map((tr: any) => {
@@ -848,7 +756,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             setPuertosConfig(pConfig);
         }
 
-        if (unpacked.vessel_id) handleVesselChange(unpacked.vessel_id);
+        if (unpacked.vessel_id) handleVesselChange(unpacked.vessel_id, false);
 
         // SERIE 35-B FIX: Si los precios de bunker están guardados (> 0) en la cotización,
         // usar esos valores exactos (fuente = 'COTIZACION' ya seteada en L.831).
@@ -907,24 +815,36 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     const calculatedTramosList = getCalculatedTramos();
 
     const filteredRoutes = React.useMemo(() => {
-        if (!selectedClient) return contractsList;
+        if (!selectedClient) return [];
         const sClient = selectedClient.trim().toUpperCase();
-        return contractsList.filter(r => {
+        return savedRoutes.filter(r => {
             const nameUpper = (r.name || r.route_id || '').toUpperCase();
-            const cid = (r.client_id || (nameUpper.startsWith('SPCC') ? 'SPCC' : 'NEXA')).toUpperCase();
-            return cid === sClient || nameUpper.startsWith(sClient);
-        });
-    }, [contractsList, selectedClient]);
-
-    const filteredQuotes = React.useMemo(() => {
-        if (!selectedClient) return savedRoutes;
-        const sClient = selectedClient.trim().toUpperCase();
-        return savedRoutes.filter(q => {
-            const nameUpper = (q.name || q.route_id || '').toUpperCase();
-            const cid = (q.client_id || (nameUpper.startsWith('SPCC') ? 'SPCC' : 'NEXA')).toUpperCase();
-            return cid === sClient || nameUpper.startsWith(sClient);
+            const cid = (r.client_id || '').toUpperCase();
+            const matchesClient = cid === sClient || nameUpper.startsWith(sClient);
+            const desc = (r.description || '').trim();
+            const isCOA = desc.includes('COA') || desc === 'COA Cliente Activo';
+            return matchesClient && isCOA;
         });
     }, [savedRoutes, selectedClient]);
+
+    const filteredQuotes = React.useMemo(() => {
+        if (!selectedClient) return [];
+        const sClient = selectedClient.trim().toUpperCase();
+        const isProspectMode = clientType === 'PROSPECTOS';
+        return savedRoutes.filter(q => {
+            const nameUpper = (q.name || q.route_id || '').toUpperCase();
+            const cid = (q.client_id || '').toUpperCase();
+            const matchesClient = cid === sClient || nameUpper.startsWith(sClient);
+            const desc = (q.description || '').trim();
+            const isProspect = desc.includes('Prospecto') || desc.includes('prospecto');
+            if (isProspectMode) {
+                return matchesClient && isProspect;
+            } else {
+                const isCOA = desc.includes('COA') || desc === 'COA Cliente Activo';
+                return matchesClient && !isCOA && !isProspect;
+            }
+        });
+    }, [savedRoutes, selectedClient, clientType]);
 
     return (
         <div className="w-full min-h-screen bg-white p-2 text-slate-800 font-sans flex flex-col select-text">
@@ -969,7 +889,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                         </select>
                     </div>
 
-                    {/* PASO 2: RUTA (JALA DE CONTRACTS -> GRABA EN CONTRACTS) */}
+                    {/* PASO 2: RUTA (COA Cliente Activo) */}
                     <div className={`flex items-center gap-1 border rounded px-1.5 py-0.5 shadow-xs shrink-0 transition-opacity ${clientType === 'PROSPECTOS' ? 'bg-slate-100 border-slate-200 opacity-50' : 'bg-white border-slate-300'}`}>
                         <span className={`text-[8.5px] font-black uppercase tracking-wider whitespace-nowrap ${clientType === 'PROSPECTOS' ? 'text-slate-400' : 'text-slate-700'}`}>
                             2. RUTA
@@ -980,22 +900,22 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                             onChange={(e) => {
                                 const val = e.target.value;
                                 setSelectedRouteId(val);
-                                setSaveTargetTable('contracts');
+                                setSaveTargetTable('routes_quotes');
                                 if (val === 'CREAR_RUTA') {
                                     handleCreateNewGrid();
                                     return;
                                 }
-                                handleSelectRoute(val);
+                                const r = savedRoutes.find(x => (x.name || x.route_id || x.spot_id || x.id) === val);
+                                if (r) handleLoadRoute(r);
                             }}
                             className={`h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-blue-500 ${clientType === 'PROSPECTOS' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-800 border-slate-300 cursor-pointer'}`}
                         >
-                            <option value="CREAR_RUTA">➕ NUEVA RUTA (`contracts`)</option>
+                            <option value="CREAR_RUTA">➕ NUEVA RUTA COA</option>
                             {filteredRoutes.map(r => {
                                 const rKey = r.name || r.route_id || r.id || r.spot_id;
-                                const routeLabel = r.name || (r.origin_port_id && r.destination_port_id ? `${r.origin_port_id} ➔ ${r.destination_port_id}` : r.route_id);
                                 return (
                                     <option key={rKey} value={rKey}>
-                                        {routeLabel}
+                                        {r.name || r.route_id}
                                     </option>
                                 );
                             })}
@@ -1024,7 +944,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                             }}
                             className="h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white text-slate-800 border-slate-300 cursor-pointer"
                         >
-                            <option value="CREAR_RUTA">➕ NUEVA COTIZACIÓN (`routes_quotes`)</option>
+                            <option value="CREAR_RUTA">
+                                {clientType === 'PROSPECTOS' ? '➕ NUEVA COTIZACIÓN PROSPECTO' : '➕ NUEVA COTIZACIÓN SPOT'}
+                            </option>
                             {filteredQuotes.map(q => {
                                 const qKey = q.name || q.route_id || q.spot_id || q.id;
                                 return (
@@ -1197,6 +1119,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 loadedRouteName={loadedRouteName}
                 clientType={clientType}
                 selectedClient={selectedClient}
+                rawClients={rawClients}
                 isSaving={isSaving}
                 isLoadingRoutes={false}
                 savedRoutes={savedRoutes}

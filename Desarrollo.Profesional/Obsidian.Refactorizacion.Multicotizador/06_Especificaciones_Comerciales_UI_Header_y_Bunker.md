@@ -247,16 +247,71 @@ La fila inferior bajo los resultados comerciales se estructura en 3 columnas igu
    * **Regla Estricta de Cero Data Dummy**: Prohibido hardcodear fórmulas, fechas o precios ficticios (`550.00`, `720.00`).
 
 3. **Card 3 — DEMURRAGE & BANDAS TARIFARIAS POR VOLUMEN**:
-   * **Mitad Superior**: `Demurrage (Estadías)` con input de `Rate ($/día)` (ej. `$20,000/día`). Purgado el texto de pie de página.
+   * **Mitad Superior**: `Demurrage (Estadías por Buque)` con 4 Cajas horizontales por buque (`MOQUEGUA`, `TABLONES`, `CONCON`, `HUEMUL`) con inputs formateados con **separador de miles** (ej. `$ 20,000 / día`). Purgado el texto de pie de página.
    * **Mitad Inferior**: `Bandas Tarifarias por Volumen ($/MT)` con **4 Cajas/Boxes en 1 sola fila horizontal** (`grid grid-cols-4`):
      * **Arriba del Box**: Rango de Tonelaje (ej. `10k-11.5k MT`, `11.5k-13k MT`, `13k-13.5k MT`, `13.6k-14.5k MT`).
      * **Abajo del Box**: Tarifa de flete en $/MT (ej. `$20.12`, `$19.52`, `$19.01`, `$18.92`).
 
 ---
 
+## 🏛️ 5. Nuevas Reglas de Arquitectura Unificada (Serie 36 / 17.08.2026)
+
+### 🔹 5.1. Selector de Clientes (Botón 1 — Tabla Maestra `clients`)
+* **Fuente Única:** Lectura directa y exclusiva de la tabla `clients` de Supabase.
+* **Valor Canónico (`value` y label):** Se utiliza estrictamente el campo **`client_id`** (`SPCC`, `NEXA`, `OTROS`, `PRIMAX`, `R TRADING`). Queda terminantemente prohibido concatenar `client_name` con `client_id` o inyectar listas hardcodeadas (`activoDefaults` / `prospectDefaults`) que generen duplicidades en la UI.
+* **Filtrado por Banderas Booleanas:**
+  - **Pestaña `ACTIVOS`:** Filtra en memoria donde **`is_active === true`** ➔ Resultando en `[SPCC, NEXA, OTROS]`.
+  - **Pestaña `PROSPECTOS`:** Filtra en memoria donde **`is_prospect === true`** ➔ Resultando en `[PRIMAX, R TRADING]`.
+
+---
+
+### 🔹 5.2. Unificación de Persistencia y Filtros por Campo `description` (`routes_quotes`)
+* **Deprecación de `contracts`:** La tabla `contracts` queda dada de baja como destino de guardado y lectura de rutas.
+* **Tabla Única Central:** Todo se persiste y consulta desde la tabla **`routes_quotes`**.
+
+```text
+                                TABLA: routes_quotes
+               ┌───────────────────────────┴───────────────────────────┐
+               │                                                       │
+      [CLIENTES ACTIVOS]                                      [PROSPECTOS]
+ (Pestaña ACTIVOS: SPCC, NEXA)                      (Pestaña PROSPECTOS: PRIMAX, etc.)
+       ┌───────┴───────┐                                               │
+       │               │                                               │
+   [PASO 2]        [PASO 3]                                        [PASO 3]
+   2. RUTA     3. COTIZACIÓN                                    3. COTIZACIÓN
+       │               │                                               │
+  description:    description:                                    description:
+"COA Cliente    "Cotizacion Cliente                             "Cotización
+   Activo"           Activo"                                      Prospecto"
+ (Ruta COA/      (Cotización Spot                                (Cotización
+  Contrato)        de Activo)                                     Prospecto)
+```
+
+* **Diferenciación Canónica por Campo `description`:**
+  1. **Paso 2 (`2. RUTA`):**
+     - **Habilitado:** Solo en pestaña `ACTIVOS`.
+     - **Filtro `routes_quotes`:** `client_id == selectedClient` **Y** `description === "COA Cliente Activo"`.
+     - **Opción 1 por defecto:** `➕ NUEVA RUTA COA`.
+  2. **Paso 3 (`3. COTIZACIÓN`):**
+     - **En Pestaña `ACTIVOS`:**
+       - **Filtro `routes_quotes`:** `client_id == selectedClient` **Y** `description === "Cotizacion Cliente Activo"`.
+       - **Opción 1 por defecto:** `➕ NUEVA COTIZACIÓN SPOT`.
+     - **En Pestaña `PROSPECTOS`:**
+       - **Filtro `routes_quotes`:** `client_id == selectedClient` **Y** `description === "Cotización Prospecto"`.
+       - **Opción 1 por defecto:** `➕ NUEVA COTIZACIÓN PROSPECTO`.
+* **Filtros Resilientes:** Toda búsqueda en frontend o backend utiliza coincidencia tolerante (`.includes("Prospecto")` o `.includes("COA")`) para convivir armónicamente con registros legacy.
+
+---
+
+### 🔹 5.3. Política Inmutable de CERO Fallbacks Numéricos
+* **Cero Números Inventados:** Si un parámetro no está presente en la cotización (`legs_data`), el sistema debe asignar estrictamente **`0.0`** (nunca valores por defecto como `$450`, `$800`, `$13,000`, `11.0 kn`, `14.0 MT/d`).
+* **Principio Auditor:** *"Un cero alerta al auditor de que el dato no fue ingresado; un número inventado confunde haciéndole creer que proviene de la cotización y omite la auditoría."*
+
+---
+
 ## 📄 Archivos Relacionados
 * **Documento Especificaciones Grilla & Puertos:** [`07_Especificaciones_Comerciales_Grilla_y_Puertos.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/07_Especificaciones_Comerciales_Grilla_y_Puertos.md)
-* **Documento Refactorización Contratos & Matriz:** [`08_Refactorizacion_triangulo_multicotizador_contratos_matriz.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/08_Refactorizacion_triangulo_multicotizador_contratos_matriz.md)
-* **Documento Modularización previa:** [`04_Modularizacion_Frontend_Servicios_y_Tabs.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/04_Modularizacion_Frontend_Servicios_y_Tabs.md)
-* **Script Flujograma Python:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.py)
+* **Documento Autopsia Pericial Benoit Blanc:** [`16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md)
+* **Protocolo de Control de Calidad Triangular:** [`03_Protocolo_de_Control_de_Calidad_QC_Triangular_UI_Backend_Excel.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/03_Protocolo_de_Control_de_Calidad_QC_Triangular_UI_Backend_Excel.md)
+
 

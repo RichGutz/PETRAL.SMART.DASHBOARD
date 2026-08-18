@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Save, Users, Layers } from 'lucide-react';
 
 export interface SaveLoadQuoteModalsProps {
     showSaveModal: boolean;
@@ -11,6 +11,7 @@ export interface SaveLoadQuoteModalsProps {
     loadedRouteName: string;
     clientType: 'ACTIVOS' | 'PROSPECTOS';
     selectedClient: string;
+    rawClients?: any[];
     isSaving: boolean;
     isLoadingRoutes: boolean;
     savedRoutes: any[];
@@ -18,7 +19,12 @@ export interface SaveLoadQuoteModalsProps {
     setShowLoadModal: (val: boolean) => void;
     setRouteSuffix: (val: string) => void;
     setSaveMode: (mode: 'OVERWRITE' | 'NEW') => void;
-    handleSaveRoute: () => void;
+    handleSaveRoute: (options?: {
+        targetClient?: string;
+        targetClientType?: 'ACTIVOS' | 'PROSPECTOS';
+        isContract?: boolean;
+        finalName?: string;
+    }) => void;
     handleLoadRoute: (route: any) => void;
     handlePrintPDF: () => void;
     getSuggestedRoutePrefix: (client: string) => string;
@@ -29,11 +35,10 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
     showLoadModal,
     routeSuffix,
     saveMode,
-    saveTargetTable = 'contracts',
-    setSaveTargetTable,
     loadedRouteName,
     clientType,
     selectedClient,
+    rawClients = [],
     isSaving,
     isLoadingRoutes,
     savedRoutes,
@@ -46,14 +51,74 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
     handlePrintPDF,
     getSuggestedRoutePrefix
 }) => {
-    const routePrefix = getSuggestedRoutePrefix(selectedClient);
-    const activeTargetTable = clientType === 'PROSPECTOS' ? 'routes_quotes' : (saveTargetTable || 'contracts');
-    const targetTableLabel = activeTargetTable === 'contracts' ? '📜 Maestro de Rutas COA (contracts)' : '📑 Maestro de Cotizaciones (routes_quotes)';
-    const isLoadedRoute = Boolean(loadedRouteName && loadedRouteName.trim() !== '');
+    // Estado local para selector de cliente destino en el modal de guardado
+    const [targetClientType, setTargetClientType] = useState<'ACTIVOS' | 'PROSPECTOS'>('ACTIVOS');
+    const [targetClient, setTargetClient] = useState<string>('');
+    const [recordCategory, setRecordCategory] = useState<'COA' | 'SPOT'>('COA');
 
-    const finalFullName = saveMode === 'OVERWRITE'
+    // Sincronizar cliente por defecto cuando se abre el modal
+    useEffect(() => {
+        if (showSaveModal) {
+            setTargetClientType(clientType);
+            setTargetClient(selectedClient || (clientType === 'ACTIVOS' ? 'SPCC' : 'PRIMAX'));
+            setRecordCategory('COA');
+            if (loadedRouteName && loadedRouteName.trim() !== '') {
+                setSaveMode('OVERWRITE');
+            } else {
+                setSaveMode('NEW');
+            }
+        }
+    }, [showSaveModal, clientType, selectedClient, loadedRouteName, setSaveMode]);
+
+    // Lista dinámica de clientes según targetClientType
+    const availableClients = React.useMemo(() => {
+        if (rawClients && rawClients.length > 0) {
+            return rawClients
+                .filter(c => targetClientType === 'ACTIVOS' ? (c.is_active === true) : (c.is_prospect === true))
+                .map(c => c.client_id)
+                .filter(Boolean);
+        }
+        return targetClientType === 'ACTIVOS' ? ['SPCC', 'NEXA', 'OTROS'] : ['PRIMAX', 'R TRADING'];
+    }, [rawClients, targetClientType]);
+
+    // Cuando cambia targetClientType, validar que targetClient pertenezca a la lista
+    const handleTargetTypeChange = (newType: 'ACTIVOS' | 'PROSPECTOS') => {
+        setTargetClientType(newType);
+        const filtered = (rawClients || [])
+            .filter(c => newType === 'ACTIVOS' ? (c.is_active === true) : (c.is_prospect === true))
+            .map(c => c.client_id)
+            .filter(Boolean);
+        const nextClient = filtered[0] || (newType === 'ACTIVOS' ? 'SPCC' : 'PRIMAX');
+        setTargetClient(nextClient);
+        if (nextClient !== selectedClient) {
+            setSaveMode('NEW');
+        }
+    };
+
+    const handleTargetClientChange = (newClient: string) => {
+        setTargetClient(newClient);
+        if (newClient !== selectedClient) {
+            setSaveMode('NEW');
+        }
+    };
+
+    const isLoadedRoute = Boolean(loadedRouteName && loadedRouteName.trim() !== '');
+    const isSameClient = targetClient === selectedClient;
+    const canOverwrite = isLoadedRoute && isSameClient;
+
+    const routePrefix = getSuggestedRoutePrefix(targetClient || selectedClient);
+    const finalFullName = (saveMode === 'OVERWRITE' && canOverwrite)
         ? loadedRouteName
         : `${routePrefix}${routeSuffix.trim() ? routeSuffix.trim() : '2026'}`;
+
+    const onConfirmSave = () => {
+        handleSaveRoute({
+            targetClient: targetClient || selectedClient,
+            targetClientType,
+            isContract: targetClientType === 'ACTIVOS' && recordCategory === 'COA',
+            finalName: finalFullName
+        });
+    };
 
     return (
         <>
@@ -74,11 +139,6 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                     <div className="flex items-center gap-3 flex-nowrap whitespace-nowrap shrink-0">
                         <button
                             onClick={() => {
-                                if (isLoadedRoute) {
-                                    setSaveMode('OVERWRITE');
-                                } else {
-                                    setSaveMode('NEW');
-                                }
                                 setShowSaveModal(true);
                             }}
                             className="h-7 text-xs font-black uppercase tracking-wider rounded px-3.5 bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm whitespace-nowrap"
@@ -98,15 +158,17 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
 
             {/* MODAL DE GRABAR */}
             {showSaveModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white p-5 rounded-xl w-[440px] shadow-2xl border border-slate-300 animate-in fade-in zoom-in duration-150">
-                        <div className="flex justify-between items-center border-b border-slate-200 pb-2 mb-3">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2">
+                    <div className="bg-white p-4.5 rounded-xl w-[460px] max-w-full shadow-2xl border border-slate-300 animate-in fade-in zoom-in duration-150 flex flex-col gap-3">
+                        
+                        {/* CABECERA */}
+                        <div className="flex justify-between items-start border-b border-slate-200 pb-2">
                             <div>
-                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide">
+                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
                                     💾 Grabar Cotización / Ruta Comercial
                                 </h3>
-                                <span className="text-[10px] font-mono text-slate-500 font-semibold">
-                                    Destino Supabase: <strong className="text-blue-700">{targetTableLabel}</strong>
+                                <span className="text-[10px] font-mono text-slate-500 font-semibold flex items-center gap-1 mt-0.5">
+                                    Destino: <strong className="text-blue-700">📄 Supabase (routes_quotes)</strong>
                                 </span>
                             </div>
                             <button onClick={() => setShowSaveModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
@@ -114,53 +176,91 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                             </button>
                         </div>
 
-                        {/* SELECCIÓN DE TABLA DESTINO SEGÚN MODO CLIENTE */}
-                        {clientType === 'ACTIVOS' ? (
-                            <div className="mb-3 bg-blue-50/60 p-2 rounded-lg border border-blue-200 flex flex-col gap-1">
-                                <label className="text-[10.5px] font-bold text-blue-900 uppercase">
-                                    📋 Tipo de Registro para Cliente Activo ({selectedClient}):
-                                </label>
-                                <div className="grid grid-cols-2 gap-2 mt-0.5">
+                        {/* BLOQUE 1: SELECTOR DE CLIENTE DESTINO (ACTIVOS / PROSPECTOS) */}
+                        <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-250 flex flex-col gap-1.5">
+                            <label className="text-[10.5px] font-bold text-slate-700 uppercase flex items-center gap-1">
+                                <Users size={13} className="text-blue-600" /> 1️⃣ Cliente Destino:
+                            </label>
+                            <div className="flex items-center gap-2">
+                                <div className="flex rounded bg-slate-200 p-0.5 border border-slate-300 shrink-0">
                                     <button
                                         type="button"
-                                        onClick={() => setSaveTargetTable && setSaveTargetTable('contracts')}
-                                        className={`py-1 px-2 text-[11px] font-extrabold rounded border transition-all cursor-pointer ${activeTargetTable === 'contracts' ? 'bg-blue-700 text-white border-blue-800 shadow-sm' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
+                                        onClick={() => handleTargetTypeChange('ACTIVOS')}
+                                        className={`px-2 py-0.5 text-[9px] font-black uppercase rounded cursor-pointer transition-all ${targetClientType === 'ACTIVOS' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-300'}`}
                                     >
-                                        📜 Maestro de Rutas COA (`contracts`)
+                                        Activos
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => setSaveTargetTable && setSaveTargetTable('routes_quotes')}
-                                        className={`py-1 px-2 text-[11px] font-extrabold rounded border transition-all cursor-pointer ${activeTargetTable === 'routes_quotes' ? 'bg-purple-700 text-white border-purple-800 shadow-sm' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
+                                        onClick={() => handleTargetTypeChange('PROSPECTOS')}
+                                        className={`px-2 py-0.5 text-[9px] font-black uppercase rounded cursor-pointer transition-all ${targetClientType === 'PROSPECTOS' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-300'}`}
                                     >
-                                        📑 Maestro de Cotizaciones (`routes_quotes`)
+                                        Prospectos
                                     </button>
                                 </div>
+                                <select
+                                    value={targetClient}
+                                    onChange={(e) => handleTargetClientChange(e.target.value)}
+                                    className="flex-1 h-7 text-xs font-bold border border-slate-300 rounded px-2 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                                >
+                                    {availableClients.map(c => (
+                                        <option key={c} value={c}>
+                                            {c} {c === selectedClient ? '(Actual)' : ''}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
-                        ) : (
-                            <div className="mb-3 bg-emerald-50/60 p-2 rounded-lg border border-emerald-200 text-[11px] font-bold text-emerald-900">
-                                🏭 Cliente Prospecto ({selectedClient}): Graba exclusivamente en <span className="font-mono text-emerald-950">`Maestro de Cotizaciones (routes_quotes)`</span>
-                            </div>
-                        )}
+                        </div>
 
-                        {/* MODO DE GRABADO: SOBRESCRIBIR VS NUEVO NOMBRE */}
-                        {isLoadedRoute && (
-                            <div className="mb-4 bg-slate-50 p-2 rounded-lg border border-slate-200 flex flex-col gap-1.5">
-                                <label className="text-[11px] font-bold text-slate-600 uppercase font-sans">
-                                    Seleccione Acción de Guardado:
+                        {/* BLOQUE 2: CLASIFICACIÓN COMERCIAL (Campo description) */}
+                        <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-250 flex flex-col gap-1.5">
+                            <label className="text-[10.5px] font-bold text-slate-700 uppercase flex items-center gap-1">
+                                <Layers size={13} className="text-purple-600" /> 2️⃣ Tipo de Registro ({targetClient}):
+                            </label>
+                            {targetClientType === 'ACTIVOS' ? (
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setRecordCategory('COA')}
+                                        className={`py-1.5 px-2 text-[11px] font-extrabold rounded border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${recordCategory === 'COA' ? 'bg-blue-700 text-white border-blue-800 shadow-sm ring-1 ring-blue-500' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
+                                    >
+                                        <span>📜 Ruta COA</span>
+                                        <span className={`text-[8.5px] font-normal ${recordCategory === 'COA' ? 'text-blue-100' : 'text-slate-400'}`}>(Aparecerá en Paso 2)</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setRecordCategory('SPOT')}
+                                        className={`py-1.5 px-2 text-[11px] font-extrabold rounded border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${recordCategory === 'SPOT' ? 'bg-purple-700 text-white border-purple-800 shadow-sm ring-1 ring-purple-500' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
+                                    >
+                                        <span>📄 Cotización Spot</span>
+                                        <span className={`text-[8.5px] font-normal ${recordCategory === 'SPOT' ? 'text-purple-100' : 'text-slate-400'}`}>(Aparecerá en Paso 3)</span>
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 rounded p-2 text-center text-xs font-bold">
+                                    🏭 Cotización Prospecto <span className="text-[9.5px] font-normal text-emerald-700 block">(Se listará en el Paso 3)</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* BLOQUE 3: MODO DE GUARDADO (SOBRESCRIBIR VS NUEVO) */}
+                        {canOverwrite && (
+                            <div className="bg-slate-50 p-2 rounded-lg border border-slate-200 flex flex-col gap-1">
+                                <label className="text-[10.5px] font-bold text-slate-600 uppercase font-sans">
+                                    3️⃣ Acción de Guardado:
                                 </label>
                                 <div className="grid grid-cols-2 gap-2">
                                     <button
                                         type="button"
                                         onClick={() => setSaveMode('OVERWRITE')}
-                                        className={`py-1.5 px-2 text-xs font-bold rounded border transition-all cursor-pointer ${saveMode === 'OVERWRITE' ? 'bg-amber-500 text-white border-amber-600 shadow-sm' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
+                                        className={`py-1 px-2 text-xs font-bold rounded border transition-all cursor-pointer ${saveMode === 'OVERWRITE' ? 'bg-amber-500 text-white border-amber-600 shadow-xs' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
                                     >
                                         ✍️ Sobrescribir
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setSaveMode('NEW')}
-                                        className={`py-1.5 px-2 text-xs font-bold rounded border transition-all cursor-pointer ${saveMode === 'NEW' ? 'bg-blue-600 text-white border-blue-700 shadow-sm' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
+                                        className={`py-1 px-2 text-xs font-bold rounded border transition-all cursor-pointer ${saveMode === 'NEW' ? 'bg-blue-600 text-white border-blue-700 shadow-xs' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
                                     >
                                         ➕ Guardar como Nuevo
                                     </button>
@@ -168,44 +268,33 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                             </div>
                         )}
 
-                        {/* MODO A: SOBRESCRIBIR REGISTRO CARGADO */}
-                        {saveMode === 'OVERWRITE' && isLoadedRoute ? (
-                            <div className="bg-amber-50 border border-amber-300 rounded p-3 mb-4 text-xs font-sans text-amber-900">
-                                <p className="font-bold">⚠️ Sobrescribiendo el registro cargado:</p>
-                                <p className="font-mono font-bold text-amber-950 text-sm mt-1 bg-amber-100/80 p-1.5 rounded border border-amber-300">
+                        {/* DETALLE SEGÚN ACCIÓN */}
+                        {saveMode === 'OVERWRITE' && canOverwrite ? (
+                            <div className="bg-amber-50 border border-amber-300 rounded p-2.5 text-xs font-sans text-amber-900">
+                                <p className="font-bold text-[11px]">⚠️ Sobrescribiendo el registro cargado:</p>
+                                <p className="font-mono font-bold text-amber-950 text-xs mt-1 bg-amber-100/80 p-1.5 rounded border border-amber-300 truncate">
                                     {loadedRouteName}
-                                </p>
-                                <p className="text-[10.5px] text-amber-800 mt-1.5 italic">
-                                    Se actualizará el payload prístino completo en la tabla <strong className="font-bold">{targetTableLabel}</strong>.
                                 </p>
                             </div>
                         ) : (
-                            /* MODO B: GUARDAR CON NUEVA NOMENCLATURA */
-                            <div className="flex flex-col gap-2.5 mb-4">
-                                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wide">
-                                    🏷️ Nomenclatura Estándar:
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-[10.5px] font-bold text-slate-700 uppercase tracking-wide">
+                                    🏷️ Nomenclatura del Nuevo Registro:
                                 </label>
-                                
-                                <div className="flex flex-col gap-1.5 bg-slate-50 p-2.5 rounded-lg border border-slate-250">
-                                    <div className="flex items-center gap-1 font-mono text-xs">
-                                        <span className="bg-slate-200 text-slate-800 font-extrabold px-2 py-1 rounded border border-slate-350 select-none shrink-0">
-                                            {routePrefix}
-                                        </span>
-                                        <input
-                                            type="text"
-                                            placeholder="2026.V1"
-                                            value={routeSuffix}
-                                            onChange={(e) => setRouteSuffix(e.target.value)}
-                                            className="flex-1 bg-white border border-blue-400 rounded px-2 py-1 text-xs font-mono font-bold text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner"
-                                        />
-                                    </div>
-                                    <p className="text-[10px] text-slate-500 italic pl-0.5">
-                                        * El prefijo <strong className="font-mono font-bold">{routePrefix}</strong> es automático. Ingrese su sufijo distintivo.
-                                    </p>
+                                <div className="flex items-center gap-1 font-mono text-xs bg-slate-50 p-2 rounded-lg border border-slate-250">
+                                    <span className="bg-slate-200 text-slate-800 font-extrabold px-2 py-1 rounded border border-slate-350 select-none shrink-0 text-[11px]">
+                                        {routePrefix}
+                                    </span>
+                                    <input
+                                        type="text"
+                                        placeholder="2026.V1"
+                                        value={routeSuffix}
+                                        onChange={(e) => setRouteSuffix(e.target.value)}
+                                        className="flex-1 bg-white border border-blue-400 rounded px-2 py-1 text-xs font-mono font-bold text-blue-900 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-inner"
+                                    />
                                 </div>
-
-                                <div className="bg-emerald-50 border border-emerald-300 p-2 rounded text-xs font-mono">
-                                    <span className="text-[10px] text-emerald-800 font-bold block uppercase font-sans">Vista Previa Nombre Final:</span>
+                                <div className="bg-emerald-50 border border-emerald-300 p-1.5 rounded text-xs font-mono">
+                                    <span className="text-[9.5px] text-emerald-800 font-bold block uppercase font-sans">Nombre Final en Supabase:</span>
                                     <span className="font-black text-emerald-950 text-xs block truncate mt-0.5">
                                         {finalFullName}
                                     </span>
@@ -213,7 +302,8 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                             </div>
                         )}
 
-                        <div className="flex justify-end gap-2 text-xs font-sans border-t border-slate-100 pt-3">
+                        {/* BOTONES DE ACCIÓN */}
+                        <div className="flex justify-end gap-2 text-xs font-sans border-t border-slate-200 pt-2.5">
                             <button
                                 onClick={() => setShowSaveModal(false)}
                                 className="h-8 font-bold rounded px-3.5 bg-white text-slate-700 border border-slate-300 shadow-sm hover:bg-slate-50 cursor-pointer"
@@ -221,12 +311,12 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                                 Cancelar
                             </button>
                             <button
-                                onClick={handleSaveRoute}
+                                onClick={onConfirmSave}
                                 disabled={isSaving}
                                 className="h-8 font-extrabold uppercase tracking-wide rounded px-4 bg-blue-600 hover:bg-blue-700 text-white shadow-md cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                             >
                                 <Save size={14} />
-                                {isSaving ? "Grabando Payload..." : (saveMode === 'OVERWRITE' ? "Sobrescribir" : "Confirmar Guardado")}
+                                {isSaving ? "Grabando en routes_quotes..." : (saveMode === 'OVERWRITE' && canOverwrite ? "Sobrescribir" : "Confirmar Guardado")}
                             </button>
                         </div>
                     </div>
@@ -241,7 +331,7 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                             <div>
                                 <h3 className="text-sm font-black text-slate-900 uppercase">📂 Cargar Ruta Multicotizador</h3>
                                 <span className="text-[10px] font-mono text-slate-500">
-                                    Cliente: <strong className="text-blue-700">{selectedClient}</strong> ({targetTableLabel})
+                                    Cliente: <strong className="text-blue-700">{selectedClient}</strong> (routes_quotes)
                                 </span>
                             </div>
                             <button onClick={() => setShowLoadModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">

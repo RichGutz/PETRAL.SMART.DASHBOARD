@@ -53,8 +53,8 @@ export class MulticotizadorRetrieverService {
             // ej: "Cotización Prospecto (routes_quotes)" → también es prospecto
             const desc = (s.description || '').trim();
             const isProspectDesc = desc.includes('Prospecto') || desc.includes('prospecto');
-            if (_filterProspecto && !isProspectDesc) return false;
-            if (_filterActivo && isProspectDesc) return false;
+            if (_filterProspecto && !_filterActivo && !isProspectDesc) return false;
+            if (_filterActivo && !_filterProspecto && isProspectDesc) return false;
 
             // Filtro por cliente
             if (selectedClient && selectedClient.trim() !== '') {
