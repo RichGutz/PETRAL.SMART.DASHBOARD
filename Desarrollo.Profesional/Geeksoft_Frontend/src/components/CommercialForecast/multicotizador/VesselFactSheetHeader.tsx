@@ -41,6 +41,16 @@ export const VesselFactSheetHeader: React.FC<VesselFactSheetProps> = ({
         }
     }
 
+    const [editingIfo, setEditingIfo] = React.useState<string | null>(null);
+    const [editingMdo, setEditingMdo] = React.useState<string | null>(null);
+
+    const fmtBunkerPrice = (val: number | string | undefined | null): string => {
+        if (val === undefined || val === null || val === '' || val === 0) return '';
+        const num = Number(val);
+        if (isNaN(num)) return String(val);
+        return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
     return (
         <div className="bg-slate-50/50 border border-slate-200 rounded p-1 flex-shrink-0 mb-1">
             <table className="w-full border-collapse border border-slate-250 bg-white font-mono text-[11px] table-fixed">
@@ -196,10 +206,13 @@ export const VesselFactSheetHeader: React.FC<VesselFactSheetProps> = ({
                             <input
                                 type="text"
                                 placeholder="0.00"
-                                value={bunkerPriceIfo !== undefined && bunkerPriceIfo !== null && bunkerPriceIfo !== 0 ? fmtThousandSep(bunkerPriceIfo) : ''}
+                                value={editingIfo !== null ? editingIfo : (bunkerPriceIfo !== undefined && bunkerPriceIfo !== null && bunkerPriceIfo !== 0 ? fmtBunkerPrice(bunkerPriceIfo) : '')}
+                                onFocus={() => setEditingIfo(bunkerPriceIfo !== undefined && bunkerPriceIfo !== null && bunkerPriceIfo !== 0 ? String(bunkerPriceIfo) : '')}
+                                onBlur={() => setEditingIfo(null)}
                                 onChange={(e) => {
                                     const raw = e.target.value.replace(/,/g, '');
                                     if (/^\d*\.?\d*$/.test(raw)) {
+                                        setEditingIfo(e.target.value);
                                         handleIfoInputChange(raw === '' ? 0 : Number(raw));
                                     }
                                 }}
@@ -268,10 +281,13 @@ export const VesselFactSheetHeader: React.FC<VesselFactSheetProps> = ({
                             <input
                                 type="text"
                                 placeholder="0.00"
-                                value={bunkerPriceMdo !== undefined && bunkerPriceMdo !== null && bunkerPriceMdo !== 0 ? fmtThousandSep(bunkerPriceMdo) : ''}
+                                value={editingMdo !== null ? editingMdo : (bunkerPriceMdo !== undefined && bunkerPriceMdo !== null && bunkerPriceMdo !== 0 ? fmtBunkerPrice(bunkerPriceMdo) : '')}
+                                onFocus={() => setEditingMdo(bunkerPriceMdo !== undefined && bunkerPriceMdo !== null && bunkerPriceMdo !== 0 ? String(bunkerPriceMdo) : '')}
+                                onBlur={() => setEditingMdo(null)}
                                 onChange={(e) => {
                                     const raw = e.target.value.replace(/,/g, '');
                                     if (/^\d*\.?\d*$/.test(raw)) {
+                                        setEditingMdo(e.target.value);
                                         handleMdoInputChange(raw === '' ? 0 : Number(raw));
                                     }
                                 }}

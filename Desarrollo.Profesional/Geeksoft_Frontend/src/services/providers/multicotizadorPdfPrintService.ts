@@ -524,7 +524,7 @@ export class MulticotizadorPdfPrintService {
                         <td class="border-r border-slate-200 text-center text-slate-800 py-0.5">${this.fmtNum(vesselParams?.consumption_idle_ifo || 3.5, 1)}</td>
                         <td class="border-r border-slate-200 text-center text-slate-800 py-0.5">${this.fmtNum(vesselParams?.consumption_load_ifo || 3.5, 1)}</td>
                         <td class="border-r border-slate-200 text-center text-slate-800 py-0.5">${this.fmtNum(vesselParams?.consumption_disch_ifo || 5.0, 1)}</td>
-                        <td class="border-r border-slate-200 text-center bg-red-600 text-white font-black py-0.5">${this.fmtNum(bunkerPriceIfo, 0)}</td>
+                        <td class="border-r border-slate-200 text-center bg-red-600 text-white font-black py-0.5">${this.fmtNum(bunkerPriceIfo, 2)}</td>
                         <td class="text-center font-sans text-[8.5px] font-semibold text-purple-900 bg-purple-50/40 py-0.5 truncate" rowspan="2">
                             📌 ${bunkerSource === 'COTIZACION' ? 'Cotización / Viaje Actual' : bunkerSource === 'MAESTRO_BUNKER' ? 'Maestro Búnker' : 'Maestro Contratos'}
                         </td>
@@ -536,7 +536,7 @@ export class MulticotizadorPdfPrintService {
                         <td class="border-r border-slate-200 text-center text-slate-800 py-0.5">${this.fmtNum(vesselParams?.consumption_idle_mdo || 0.1, 1)}</td>
                         <td class="border-r border-slate-200 text-center text-slate-800 py-0.5">${this.fmtNum(vesselParams?.consumption_load_mdo || 0.1, 1)}</td>
                         <td class="border-r border-slate-200 text-center text-slate-800 py-0.5">${this.fmtNum(vesselParams?.consumption_disch_mdo || 0.1, 1)}</td>
-                        <td class="border-r border-slate-200 text-center bg-red-600 text-white font-black py-0.5">${this.fmtNum(bunkerPriceMdo, 0)}</td>
+                        <td class="border-r border-slate-200 text-center bg-red-600 text-white font-black py-0.5">${this.fmtNum(bunkerPriceMdo, 2)}</td>
                     </tr>
                 </tbody>
             </table>
@@ -831,13 +831,13 @@ export class MulticotizadorPdfPrintService {
 
                         <!-- BUNKER IFO -->
                         <div class="flex justify-between items-center text-rose-800 text-[8.5px]">
-                            <span class="font-sans">(-) Bunker IFO (${this.fmtNum(totalIfoTons, 1)} T × $${this.fmtNum(bunkerPriceIfo, 0)}/T)</span>
+                            <span class="font-sans">(-) Bunker IFO (${this.fmtNum(totalIfoTons, 1)} T × $${this.fmtNum(bunkerPriceIfo, 2)}/T)</span>
                             <span>-${this.fmtCur(ifoCost)}</span>
                         </div>
 
                         <!-- BUNKER MDO -->
                         <div class="flex justify-between items-center text-rose-800 text-[8.5px]">
-                            <span class="font-sans">(-) Bunker MDO (${this.fmtNum(totalMdoTons, 1)} T × $${this.fmtNum(bunkerPriceMdo, 0)}/T)</span>
+                            <span class="font-sans">(-) Bunker MDO (${this.fmtNum(totalMdoTons, 1)} T × $${this.fmtNum(bunkerPriceMdo, 2)}/T)</span>
                             <span>-${this.fmtCur(mdoCost)}</span>
                         </div>
 
