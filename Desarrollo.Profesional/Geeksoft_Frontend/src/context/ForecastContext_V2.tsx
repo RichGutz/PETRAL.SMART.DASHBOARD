@@ -139,18 +139,20 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
                 const savedName = sessionStorage.getItem('petral_active_forecast_name');
                 const savedId = sessionStorage.getItem('petral_active_forecast_id');
 
-                if (savedLinesStr && savedDataStr) {
+                if (savedLinesStr) {
                     try {
                         const lines = JSON.parse(savedLinesStr);
-                        const simData = JSON.parse(savedDataStr);
                         if (Array.isArray(lines) && lines.length > 0) {
                             setProjectionLines(lines);
-                            setData(simData);
                             if (savedName) setForecastName(savedName);
                             if (savedId) setCurrentForecastId(savedId);
+                            // Re-ejecutar simulación fresca con backend en vivo para garantizar cero caché obsoleta
+                            setTimeout(() => {
+                                runSimulationWith(lines, startDate, endDate, true);
+                            }, 100);
                         }
                     } catch (e) {
-                        console.error("Error al restaurar sesión activa de sessionStorage:", e);
+                        console.error("Error al restaurar sesión activa:", e);
                     }
                 }
             } catch (e) {

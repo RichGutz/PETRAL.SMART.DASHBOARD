@@ -662,11 +662,12 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 spot_route = next((s for s in routes_master_data if s and (s.get("name", "").upper() == lookup_key)), None)
                 
                 if not spot_route:
-                    for s in routes_master_data:
+                    # Buscar primero en cotizaciones vivas (routes_quotes) para priorizar precios de búnker cotizados ($1100/$1700)
+                    for s in (routes_prospects_data + routes_master_data):
                         if not s:
                             continue
                         s_name = (s.get("name") or "").upper()
-                        if not s_name.startswith(f"{client.upper()}."):
+                        if client.upper() not in s_name:
                             continue
                         tramos_list = (s.get("legs_data") or {}).get("tramos", [])
                         laden_tramos = [t for t in tramos_list if t and t.get("type", "").upper() == "LADEN"]
@@ -1447,8 +1448,8 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                 "agency_costs_origin": ag_orig,
                 "agency_costs_destination": ag_dest,
                 "loading_master_dest": dest_result["breakdown"].get("loading_master", 0.0),
-                "bunker_price_ifo": p_ifo,
-                "bunker_price_mdo": p_mdo,
+                "bunker_price_ifo": 0.0,
+                "bunker_price_mdo": 0.0,
                 "bunker_price_date": bunker_dates_db.get("IFO", "N/A"),
                 "tce_required": v_data.get("tce_required", 0),
                 "bunker_consumption_sea_ifo": v_data.get("consumption_sea_ifo", 0),
