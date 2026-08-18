@@ -160,3 +160,27 @@ La grilla permite permutar libremente los 3 niveles jerárquicos mediante botone
 * **Total General**: Consolidado mensual de toda la flota/cartera.
 * **Total Acumulado**: Proyección sumatoria mes a mes a lo largo de todo el horizonte.
 
+---
+
+## 🕵️‍♂️ 5. Plan Forense Serie 50 (Benoit Blanc): Habilitación Operativa de Fila 0 (POL) y Saneamiento de Naming
+
+**Fecha de Dictamen**: 18 de Agosto de 2026  
+**Objetivo Forense**: Erradicar el bug donde las operaciones de carga en el Puerto de Origen (Fila 0 / POL) no calculaban Días de Puerto ni Búnker, y subsanar el naming duplicado de rutas simples (`SPCC.ILO.ILO.MATARANI.ILO`).
+
+### 5.1. El Crimen en la Fila 0 y en el Naming
+1. **Fila 0 Ciega en `SpreadsheetTramosGrid.tsx` (L186)**: La columna `DÍAS PTO` mostraba un guión estático `—` ignorando los días calculados de estadía/carga en el puerto de origen.
+2. **Omisión en `MulticotizadorCalculationEngine.ts` (L127–138)**: El motor ignoraba `calcPortDays0` y los consumos de combustible (IFO/MDO) durante la operación de carga en Fila 0, sumando únicamente el costo de agencia monetario.
+3. **Naming Duplicado en `MultiCotizadorExcel.tsx` (L527–533)**: `getSuggestedRoutePrefix` unía tramos sin deduplicar puertos adyacentes repetidos, generando secuencias erróneas como `ILO.ILO.MATARANI.ILO` si existía un tramo fantasma de 0 NM.
+
+### 5.2. Cirugía Quirúrgica Propuesta
+| Componente | Archivo | Modificación Pericial |
+| :--- | :--- | :--- |
+| **Cálculo Fila 0** | `MulticotizadorCalculationEngine.ts` | Calcular `idleDays0 = (tc + pos) / 24`, `opDays0 = Q / (rate * factor)`, `calcPortDays0 = idleDays0 + opDays0` y consumos IFO/MDO de Fila 0. Sumar a `totalPortDays`, `totalDays`, `totalIfoTons`, `totalMdoTons`, `ifoCost`, `mdoCost`, `grandBunkerTotal`. |
+| **Visualización Grilla** | `SpreadsheetTramosGrid.tsx` | Renderizar `fmtDays(calcPortDays0)` en la columna `DÍAS PTO` de Fila 0 cuando `action !== 'NONE'`, y sumar el búnker de Fila 0 a la fila de costos en vivo. |
+| **Naming Limpio** | `MultiCotizadorExcel.tsx` | Deduplicar puertos adyacentes en `getSuggestedRoutePrefix` para garantizar nombres limpios como `SPCC.ILO.MATARANI.ILO.2026`. |
+
+### 5.3. Garantía de Integridad
+- **Esquema de BD Inmutable**: No se altera la estructura de `routes_quotes` ni el contrato JSONB de `legs_data`.
+- **Compatibilidad Total**: `QuoteExecutiveCardSummary.tsx`, `forecast_service.py` y `multicotizadorPdfPrintService.ts` consumen los datos consolidados con total cuadratura.
+
+
