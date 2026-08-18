@@ -55,11 +55,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     const [selectedClient, setSelectedClient] = useState<string>('');
     const [selectedRouteId, setSelectedRouteId] = useState<string>('CREAR_RUTA');
     
-    // Estados de Vigencia / Validez (Paso 5)
-    const [validFrom, setValidFrom] = useState<string>(new Date().toISOString().split('T')[0]);
-    const [validTo, setValidTo] = useState<string>(
-        new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
-    );
+    // Estados de Vigencia / Validez (Paso 4) — Inicializan vacíos para obligar selección del usuario
+    const [validFrom, setValidFrom] = useState<string>('');
+    const [validTo, setValidTo] = useState<string>('');
 
     // 2. Estados de Catálogos, Contratos & Etiquetas UX
     const [vessels, setVessels] = useState<any[]>([]);
@@ -153,7 +151,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         if (val === undefined || val === null || val === '') return '';
         const num = Number(val);
         if (isNaN(num)) return String(val);
-        return num.toLocaleString('en-US');
+        return num.toLocaleString('en-US', { maximumFractionDigits: 2 });
     };
 
     // Carga de Catálogos Iniciales (Mapeo a tablas reales BD)
@@ -437,7 +435,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     };
 
     const handleRemoveLastTramo = () => {
-        if (tramos.length <= 1) return; // Mínimo 1 pierna obligatoria
+        if (tramos.length <= 2) return; // Mínimo 2 tramos obligatorios (3 filas exactas en la tabla)
         setTramos(prev => prev.slice(0, -1));
         setPuertosConfig(prev => prev.slice(0, -1));
     };
@@ -725,6 +723,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
     const handleCreateNewGrid = async () => {
         setLoadedRouteName('');
+        setValidFrom('');
+        setValidTo('');
         setTramos([
             { type: 'BALLAST', origin_port_id: '', destination_port_id: '', quantity: 0, freight_rate: 0, port_delay_hours_loading: 0, port_delay_hours_discharging: 0, route_distance: 0, weather_factor: 3.0, speed: 0 },
             { type: 'LADEN', origin_port_id: '', destination_port_id: '', quantity: 0, freight_rate: 0, port_delay_hours_loading: 0, port_delay_hours_discharging: 0, route_distance: 0, weather_factor: 3.0, speed: 0 }

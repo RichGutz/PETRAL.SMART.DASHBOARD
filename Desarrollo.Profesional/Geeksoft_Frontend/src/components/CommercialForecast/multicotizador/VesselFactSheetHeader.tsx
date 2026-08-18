@@ -195,8 +195,14 @@ export const VesselFactSheetHeader: React.FC<VesselFactSheetProps> = ({
                         <td className="border-r border-slate-200 p-0 text-center align-middle bg-red-600 h-8">
                             <input
                                 type="text"
-                                value={fmtThousandSep(bunkerPriceIfo)}
-                                onChange={(e) => { const raw = Number(e.target.value.replace(/,/g, '')); if (!isNaN(raw)) handleIfoInputChange(raw); }}
+                                placeholder="0.00"
+                                value={bunkerPriceIfo !== undefined && bunkerPriceIfo !== null && bunkerPriceIfo !== 0 ? fmtThousandSep(bunkerPriceIfo) : ''}
+                                onChange={(e) => {
+                                    const raw = e.target.value.replace(/,/g, '');
+                                    if (/^\d*\.?\d*$/.test(raw)) {
+                                        handleIfoInputChange(raw === '' ? 0 : Number(raw));
+                                    }
+                                }}
                                 className="w-full h-8 bg-red-600 border-0 p-0 text-center text-xs font-mono font-black text-white focus:outline-none focus:ring-1 focus:ring-red-400 align-middle"
                             />
                         </td>
@@ -261,8 +267,14 @@ export const VesselFactSheetHeader: React.FC<VesselFactSheetProps> = ({
                         <td className="border-r border-slate-200 p-0 text-center align-middle bg-red-600 h-8">
                             <input
                                 type="text"
-                                value={fmtThousandSep(bunkerPriceMdo)}
-                                onChange={(e) => { const raw = Number(e.target.value.replace(/,/g, '')); if (!isNaN(raw)) handleMdoInputChange(raw); }}
+                                placeholder="0.00"
+                                value={bunkerPriceMdo !== undefined && bunkerPriceMdo !== null && bunkerPriceMdo !== 0 ? fmtThousandSep(bunkerPriceMdo) : ''}
+                                onChange={(e) => {
+                                    const raw = e.target.value.replace(/,/g, '');
+                                    if (/^\d*\.?\d*$/.test(raw)) {
+                                        handleMdoInputChange(raw === '' ? 0 : Number(raw));
+                                    }
+                                }}
                                 className="w-full h-8 bg-red-600 border-0 p-0 text-center text-xs font-mono font-black text-white focus:outline-none focus:ring-1 focus:ring-red-400 align-middle"
                             />
                         </td>

@@ -128,7 +128,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                 </button>
                                 <button
                                     onClick={handleRemoveLastTramo}
-                                    disabled={tramos.length <= 1}
+                                    disabled={tramos.length <= 2}
                                     className="w-4 h-4 rounded bg-red-600 hover:bg-red-700 text-white font-black text-[11px] flex items-center justify-center shadow-sm disabled:opacity-30 cursor-pointer"
                                     title="Borrar Tramo (-)"
                                 >
