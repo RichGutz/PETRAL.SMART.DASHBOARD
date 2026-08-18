@@ -715,16 +715,16 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                                     short_k = k.replace("bunker_consumption_", "consumption_")
                                     vparams[short_k] = v
 
-                # --- BUNKER: usar precios cotizados guardados en legs_data (o fallbacks dinámicos si no existen) ---
+                # --- BUNKER: usar precios cotizados guardados en legs_data (CERO FALLBACKS, SI NO EXISTE ES 0.0) ---
                 saved_vparams = legs_data.get("vesselParams", {})
-                saved_ifo = float(saved_vparams.get("bunker_price_ifo") or legs_data.get("bunker_price_ifo") or 0)
-                saved_mdo = float(saved_vparams.get("bunker_price_mdo") or legs_data.get("bunker_price_mdo") or 0)
-                saved_tce = float(saved_vparams.get("tce_required") or legs_data.get("tce_required") or 0)
-                final_p_ifo = saved_ifo if saved_ifo > 0 else p_ifo
-                final_p_mdo = saved_mdo if saved_mdo > 0 else p_mdo
+                saved_ifo = float(saved_vparams.get("bunker_price_ifo") or legs_data.get("bunker_price_ifo") or 0.0)
+                saved_mdo = float(saved_vparams.get("bunker_price_mdo") or legs_data.get("bunker_price_mdo") or 0.0)
+                saved_tce = float(saved_vparams.get("tce_required") or legs_data.get("tce_required") or 0.0)
+                final_p_ifo = saved_ifo
+                final_p_mdo = saved_mdo
                 vparams["bunker_price_ifo"] = final_p_ifo
                 vparams["bunker_price_mdo"] = final_p_mdo
-                vparams["tce_required"] = saved_tce if saved_tce > 0 else tce_req
+                vparams["tce_required"] = saved_tce if saved_tce > 0 else float(v_data.get("tce_required") or 0.0)
 
                 # --- TRAMOS: enriquecer solo lo necesario ---
                 total_laden_qty = 0.0
@@ -768,6 +768,9 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                         tr["positioning_carga_hrs"] = float(p_dest.get("positioning") or 0)
                     elif p_dest.get("action") == "DESCARGAR":
                         tr["positioning_descarga_hrs"] = float(p_dest.get("positioning") or 0)
+
+                    if p_dest.get("op_rate"):
+                        tr["custom_discharge_rate"] = float(p_dest.get("op_rate"))
 
                     tipo = tr.get("type", "").upper()
                     if tipo == "LADEN":
@@ -1034,6 +1037,13 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         if demurrage_rate_val <= 0 and contract:
             demurrage_rate_val = get_demurrage_from_dict(contract.get("demurrage_rates"), vessel)
 
+        if is_spot_route:
+            effective_p_ifo = float(unit_result.get("bunker_price_ifo", 0.0))
+            effective_p_mdo = float(unit_result.get("bunker_price_mdo", 0.0))
+        else:
+            effective_p_ifo = float(unit_result.get("bunker_price_ifo") or p_ifo)
+            effective_p_mdo = float(unit_result.get("bunker_price_mdo") or p_mdo)
+
         # Apply Frequency for aggregate totals, but keep unit values for the Ledger view
         monthly_result = {
             "freq": freq,
@@ -1059,18 +1069,18 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "sea_days_unit": unit_result["sea_days"],
             "port_days_unit": unit_result["port_days"],
             "total_duration_unit": unit_result["total_duration"],
-            "price_ifo_unit": float(p_ifo),
+            "price_ifo_unit": effective_p_ifo,
             "bunker_ifo_tonnage_unit": unit_result["bunker_ifo_tonnage"],
-            "bunker_ifo_cost_unit": float(unit_result["bunker_ifo_tonnage"] * p_ifo),
-            "price_mdo_unit": float(p_mdo),
+            "bunker_ifo_cost_unit": float(unit_result["bunker_ifo_tonnage"] * effective_p_ifo),
+            "price_mdo_unit": effective_p_mdo,
             "bunker_mdo_tonnage_unit": unit_result["bunker_mdo_tonnage"],
-            "bunker_mdo_cost_unit": float(unit_result["bunker_mdo_tonnage"] * p_mdo),
+            "bunker_mdo_cost_unit": float(unit_result["bunker_mdo_tonnage"] * effective_p_mdo),
             "total_bunker_costs_unit": unit_result["total_bunker_costs"],
             "total_port_costs_unit": unit_result["total_port_costs"],
             "voyage_result_unit": unit_result["voyage_result"],
             "tce_real_unit": unit_result["tce_real"],
-            "tce_required_unit": float(v_data.get("tce_required", 13000.0)),
-            "tce_cost_total_unit": float(unit_result["total_duration"] * float(v_data.get("tce_required", 13000.0))),
+            "tce_required_unit": float(vparams.get("tce_required") if 'vparams' in locals() and isinstance(vparams, dict) else (v_data.get("tce_required") or 0.0)),
+            "tce_cost_total_unit": float(unit_result["total_duration"] * float(vparams.get("tce_required") if 'vparams' in locals() and isinstance(vparams, dict) else (v_data.get("tce_required") or 0.0))),
             "pcm_projected": unit_result["pcm_projected"],
             "pl_vs_required_unit": unit_result["pl_vs_required"],
             "actual_load_rate": unit_result.get("actual_load_rate", 0.0),

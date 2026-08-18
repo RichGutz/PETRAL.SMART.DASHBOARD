@@ -333,9 +333,6 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         return line ? (line.monthly_frequency || 0) : 0;
                     });
 
-                    const activeIfoPrice = months.map(m => monthData[m]?.["price_ifo_unit"] || monthData[m]?.["p_ifo"]).find(v => typeof v === 'number' && v > 0) || 0;
-                    const activeMdoPrice = months.map(m => monthData[m]?.["price_mdo_unit"] || monthData[m]?.["p_mdo"]).find(v => typeof v === 'number' && v > 0) || 0;
-
                     const getMonthlyValues = (metricKey: string) => {
                         return months.map((m, idx) => {
                             const tripCount = trips[idx] || 0;
@@ -356,14 +353,14 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 if (metricKey === "address_comm_pct") val = monthData[m]?.["address_comm_pct"];
                                 if (metricKey === "broker_comm_pct") val = monthData[m]?.["broker_comm_pct"];
                                 if (metricKey === "total_commissions_unit") val = monthData[m]?.["total_commissions"];
-                                if (metricKey === "price_ifo_unit") val = monthData[m]?.["price_ifo_unit"] || monthData[m]?.["p_ifo"] || activeIfoPrice || 0;
-                                if (metricKey === "bunker_ifo_cost_unit") val = monthData[m]?.["bunker_ifo_cost_unit"] || (monthData[m]?.["bunker_ifo_tonnage_unit"] ? monthData[m]?.["bunker_ifo_tonnage_unit"] * (monthData[m]?.["price_ifo_unit"] || activeIfoPrice || 0) : undefined);
-                                if (metricKey === "price_mdo_unit") val = monthData[m]?.["price_mdo_unit"] || monthData[m]?.["p_mdo"] || activeMdoPrice || 0;
-                                if (metricKey === "bunker_mdo_cost_unit") val = monthData[m]?.["bunker_mdo_cost_unit"] || (monthData[m]?.["bunker_mdo_tonnage_unit"] ? monthData[m]?.["bunker_mdo_tonnage_unit"] * (monthData[m]?.["price_mdo_unit"] || activeMdoPrice || 0) : undefined);
+                                if (metricKey === "price_ifo_unit") val = monthData[m]?.["price_ifo_unit"] ?? 0;
+                                if (metricKey === "bunker_ifo_cost_unit") val = monthData[m]?.["bunker_ifo_cost_unit"] ?? ((monthData[m]?.["bunker_ifo_tonnage_unit"] && monthData[m]?.["price_ifo_unit"]) ? monthData[m]?.["bunker_ifo_tonnage_unit"] * monthData[m]?.["price_ifo_unit"] : 0);
+                                if (metricKey === "price_mdo_unit") val = monthData[m]?.["price_mdo_unit"] ?? 0;
+                                if (metricKey === "bunker_mdo_cost_unit") val = monthData[m]?.["bunker_mdo_cost_unit"] ?? ((monthData[m]?.["bunker_mdo_tonnage_unit"] && monthData[m]?.["price_mdo_unit"]) ? monthData[m]?.["bunker_mdo_tonnage_unit"] * monthData[m]?.["price_mdo_unit"] : 0);
                                 if (metricKey === "voyage_result_unit") val = monthData[m]?.["voyage_result"] || monthData[m]?.["voyage_result_unit"];
                                 if (metricKey === "tce_real_unit") val = monthData[m]?.["tce_real"] || monthData[m]?.["tce"];
-                                if (metricKey === "tce_required_unit") val = monthData[m]?.["tce_required_unit"] || monthData[m]?.["tce_required"] || 13000;
-                                if (metricKey === "tce_cost_total_unit") val = monthData[m]?.["tce_cost_total_unit"] || (monthData[m]?.["total_duration_unit"] ? monthData[m]?.["total_duration_unit"] * (monthData[m]?.["tce_required_unit"] || 13000) : undefined);
+                                if (metricKey === "tce_required_unit") val = monthData[m]?.["tce_required_unit"] ?? monthData[m]?.["tce_required"] ?? 0;
+                                if (metricKey === "tce_cost_total_unit") val = monthData[m]?.["tce_cost_total_unit"] ?? ((monthData[m]?.["total_duration_unit"] && monthData[m]?.["tce_required_unit"]) ? monthData[m]?.["total_duration_unit"] * monthData[m]?.["tce_required_unit"] : 0);
                                 if (metricKey === "flete_unit") val = monthData[m]?.["flete_unit"] || monthData[m]?.["freight_rate"];
                                 if (metricKey === "pl_vs_required_unit") val = monthData[m]?.["pl_vs_required_unit"] || monthData[m]?.["pl_vs_required"] || monthData[m]?.["pl_neto"];
                             }

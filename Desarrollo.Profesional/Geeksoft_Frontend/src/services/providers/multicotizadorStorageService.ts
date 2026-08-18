@@ -32,14 +32,18 @@ export interface SaveQuoteParams {
 
 export class MulticotizadorStorageService {
     /**
-     * Empaqueta y guarda una cotización multicotizador enriquecida en Supabase DB (routes_clients, routes_quotes o contracts).
+     * Empaqueta y guarda una cotización multicotizador en routes_quotes (tabla única).
+     * SERIE 36: contracts dado de baja. Diferenciación por campo description:
+     *   - "COA Cliente Activo"        → cliente activo guardando ruta COA (Maestro Rutas)
+     *   - "Cotización Cliente Activo" → cliente activo guardando cotización normal
+     *   - "Cotización Prospecto"      → cliente prospecto
      */
     public static async saveQuote(params: SaveQuoteParams): Promise<boolean> {
         const {
             routeId, routeName, selectedClient, filterProspecto, selectedVessel,
             bunkerPriceIfo, bunkerPriceMdo, tramosEnriquecidos,
             puertosConfig, vesselParams, addressCommPct, brokerCommPct, rawClients,
-            isContract, contractId, validFrom, validTo, validityYears, contractStatus,
+            isContract, validFrom, validTo, validityYears, contractStatus,
             bafFormula, bafValidFrom, bafValidTo, bafIfoBase, bafMdoBase, tariffTiers, demurrageRatesMap,
             createdBy
         } = params;
@@ -61,16 +65,23 @@ export class MulticotizadorStorageService {
         const clientInfo = rawClients.find((c: any) => c.client_id === selectedClient);
         const isClientProspect = (clientInfo?.is_prospect === true) || filterProspecto;
 
+        // SERIE 36: 3 valores canónicos de description para routes_quotes
+        let description: string;
+        if (isContract) {
+            description = 'COA Cliente Activo';
+        } else if (isClientProspect) {
+            description = 'Cotización Prospecto';
+        } else {
+            description = 'Cotización Cliente Activo';
+        }
+
         const payload: any = {
             route_id: routeId,
             name: routeName,
-            description: isContract
-                ? `Contrato Registrado (contracts) - Cliente ${selectedClient}`
-                : (isClientProspect ? "Cotización Prospecto (routes_quotes)" : "Ruta Cliente Activo (routes_clients)"),
+            description,
             pais: 'PE',
             is_prospect: isClientProspect,
-            is_contract: isContract === true,
-            contract_id: contractId,
+            is_contract: isContract === true,  // el backend usa este flag para asignar description si no viene
             client_id: selectedClient,
             created_by: activeUserEmail,
             legs_data: {
@@ -91,19 +102,14 @@ export class MulticotizadorStorageService {
                 baf_mdo_base: bafMdoBase,
                 tariff_tiers: tariffTiers,
                 demurrage_rates: demurrageRatesMap,
-                // Toda la complejidad adicional del contrato se almacena en el JSONB legs_data
+                // Metadata de contrato COA (solo si aplica) dentro del JSONB
                 contract_metadata: isContract ? {
-                    contract_id: contractId || `CTR-${selectedClient}-${Date.now()}`,
                     client_id: selectedClient,
                     valid_from: validFrom,
                     valid_to: validTo,
                     validity_years: validityYears || 1,
                     contract_status: contractStatus || 'ACTIVE',
                     baf_formula: bafFormula,
-                    baf_valid_from: bafValidFrom,
-                    baf_valid_to: bafValidTo,
-                    baf_ifo_base: bafIfoBase,
-                    baf_mdo_base: bafMdoBase,
                     tariff_tiers: tariffTiers,
                     demurrage_rates: demurrageRatesMap
                 } : undefined

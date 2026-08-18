@@ -148,12 +148,19 @@ def get_clients():
     try:
         from backend.database import get_supabase
         sb = get_supabase()
-        
-        res = sb.table("contracts").select("client_id").execute()
-        # Extract distinct clients
-        clients = list(set([row["client_id"] for row in res.data]))
-        # Sort alphabetically
-        clients.sort()
+        # SERIE 36: contracts dado de baja → leer de tabla clients
+        res = sb.table("clients").select("client_id, client_name, is_prospect, is_active").execute()
+        # Retornar objetos completos para que el frontend pueda filtrar ACTIVOS/PROSPECTOS
+        clients = [
+            {
+                "client_id": row["client_id"],
+                "client_name": row.get("client_name") or row["client_id"],
+                "is_prospect": row.get("is_prospect", False),
+                "is_active": row.get("is_active", True)
+            }
+            for row in (res.data or [])
+        ]
+        clients.sort(key=lambda x: x["client_id"])
         return clients
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -641,12 +648,18 @@ def save_spot_voyage(request: SpotSaveRequest):
         if tot_dist > 0:
             payload["route_distance"] = tot_dist
         
+        # SERIE 36: Tabla única routes_quotes. contracts dado de baja.
+        # Diferenciación por campo description:
+        #   - "COA Cliente Activo"        (antes is_contract=True → contracts)
+        #   - "Cotización Cliente Activo" (cliente activo, no COA)
+        #   - "Cotización Prospecto"       (is_prospect=True)
         if getattr(request, "is_contract", False):
-            target_table = "contracts"
-            if getattr(request, "contract_id", None):
-                payload["contract_id"] = request.contract_id
+            # COA de cliente activo → routes_quotes con description
+            target_table = "routes_quotes"
             if getattr(request, "client_id", None):
                 payload["client_id"] = request.client_id
+            if not payload.get("description"):
+                payload["description"] = "COA Cliente Activo"
             payload.pop("spot_id", None)
             payload.pop("route_distance", None)
             payload.pop("is_prospect", None)
@@ -654,13 +667,17 @@ def save_spot_voyage(request: SpotSaveRequest):
             target_table = "routes_quotes"
             if getattr(request, "client_id", None):
                 payload["client_id"] = request.client_id
+            if not payload.get("description"):
+                payload["description"] = "Cotización Prospecto"
             payload.pop("spot_id", None)
             payload.pop("route_distance", None)
             payload.pop("is_prospect", None)
         else:
-            target_table = "routes_clients"
+            target_table = "routes_quotes"
             if getattr(request, "client_id", None):
                 payload["client_id"] = request.client_id
+            if not payload.get("description"):
+                payload["description"] = "Cotización Cliente Activo"
             payload.pop("spot_id", None)
             payload.pop("is_prospect", None)
         
@@ -767,34 +784,17 @@ def get_routes_master():
         sb = get_supabase()
         masters = get_cached_masters(sb)
         
-        prospects_data = masters.get("routes_quotes", [])
-        contracts_data = masters.get("contracts", [])
+        # SERIE 36: Solo routes_quotes. contracts dado de baja.
+        routes_quotes_data = masters.get("routes_quotes", [])
         
         routes = []
-        for r in (contracts_data or []):
-            client_id = r.get("client_id") or ("SPCC" if (r.get("name") or "").upper().startswith("SPCC") else "NEXA")
-            orig = r.get("origin_port_id") or "CALLAO"
-            dest = r.get("destination_port_id") or "MATARANI"
-            name = (r.get("name") or f"{client_id}.{orig}.{dest}.{orig}.2025.V1").strip()
-            route_id = name
-            routes.append({
-                **r,
-                "name": name,
-                "route_id": route_id,
-                "client_id": client_id,
-                "contract_id": r.get("contract_id") or r.get("id"),
-                "spot_id": route_id,
-                "table_source": "contracts",
-                "is_prospect": False,
-                "is_contract": True,
-                "client_group": client_id,
-                "_id": route_id
-            })
-            
-        for r in (prospects_data or []):
+        for r in (routes_quotes_data or []):
             name = (r.get("name") or "").strip()
             client_id = r.get("client_id") or ("SPCC" if name.upper().startswith("SPCC") else "NEXA")
             route_id = name
+            description = r.get("description") or ""
+            is_coa = description == "COA Cliente Activo"
+            is_prospect = description == "Cotización Prospecto"
             routes.append({
                 **r,
                 "name": name,
@@ -803,8 +803,8 @@ def get_routes_master():
                 "prospect_route_id": route_id,
                 "spot_id": route_id,
                 "table_source": "routes_quotes",
-                "is_prospect": True,
-                "is_contract": False,
+                "is_prospect": is_prospect,
+                "is_contract": is_coa,
                 "client_group": client_id,
                 "_id": route_id
             })
@@ -888,23 +888,21 @@ def list_spot_voyages():
             r["is_quote"] = False
             r["table_source"] = "routes_clients"
 
-        res_prospects = sb.table("routes_quotes").select("*").order("created_at", desc=True).execute().data or []
-        for r in res_prospects:
-            r["is_prospect"] = True
+        # SERIE 36: Solo routes_quotes. contracts dado de baja.
+        res_quotes = sb.table("routes_quotes").select("*").order("created_at", desc=True).execute().data or []
+        for r in res_quotes:
+            description = r.get("description") or ""
+            is_coa = description == "COA Cliente Activo"
+            is_prospect = description == "Cotización Prospecto"
+            r["is_prospect"] = is_prospect
             r["is_quote"] = True
+            r["is_contract"] = is_coa
             r["table_source"] = "routes_quotes"
-
-        res_contracts = sb.table("contracts").select("*").order("created_at", desc=True).execute().data or []
-        for r in res_contracts:
-            r["is_prospect"] = False
-            r["is_quote"] = False
-            r["is_contract"] = True
-            r["table_source"] = "contracts"
-            if "spot_id" not in r:
-                r["spot_id"] = r.get("contract_id") or r.get("name")
+            if "spot_id" not in r or not r["spot_id"]:
+                r["spot_id"] = r.get("name")
         
-        # Combine list: 3 tablas homologadas con la misma estructura (routes_clients, routes_quotes, contracts)
-        all_routes = res_clients + res_prospects + res_contracts
+        # Tabla única unificada: routes_clients + routes_quotes
+        all_routes = res_clients + res_quotes
         return all_routes
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

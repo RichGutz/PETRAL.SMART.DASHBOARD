@@ -24,7 +24,11 @@ export interface RetrievedQuote {
 
 export class MulticotizadorRetrieverService {
     /**
-     * Carga cotizaciones guardadas EXCLUSIVAMENTE desde la tabla routes_quotes (Paso 3).
+     * SERIE 36: Carga cotizaciones desde routes_quotes (tabla única).
+     * description canónico:
+     *   "COA Cliente Activo"        → activo COA
+     *   "Cotización Cliente Activo" → activo normal
+     *   "Cotización Prospecto"      → prospecto
      */
     public static async searchSavedQuotes(
         searchQuery: string,
@@ -36,13 +40,27 @@ export class MulticotizadorRetrieverService {
         if (!rawSpots || !Array.isArray(rawSpots)) return [];
 
         const filtered = rawSpots.filter((s: any) => {
-            const isQuotesTable = s.table_source === 'routes_quotes' || s.is_quote === true || s.is_prospect === true;
-            if (!isQuotesTable) return false;
+            // SERIE 36: Aceptar TODO lo que venga de routes_quotes (incluyendo COA).
+            // Excluir routes_clients (viajes operativos, no cotizaciones comerciales).
+            const isFromRoutesQuotes = s.table_source === 'routes_quotes'
+                || s.is_quote === true
+                || s.is_prospect === true
+                || s.is_contract === true;  // ← COA ahora en routes_quotes
+            if (!isFromRoutesQuotes) return false;
 
+            // Pre-filtro ACTIVOS/PROSPECTOS por campo description canónico
+            // Tolerante a registros legacy que tienen texto adicional en description
+            // ej: "Cotización Prospecto (routes_quotes)" → también es prospecto
+            const desc = (s.description || '').trim();
+            const isProspectDesc = desc.includes('Prospecto') || desc.includes('prospecto');
+            if (_filterProspecto && !isProspectDesc) return false;
+            if (_filterActivo && isProspectDesc) return false;
+
+            // Filtro por cliente
             if (selectedClient && selectedClient.trim() !== '') {
                 const clientUpper = selectedClient.trim().toUpperCase();
                 const nameUpper = String(s.name || '').toUpperCase();
-                const descUpper = String(s.description || '').toUpperCase();
+                const descUpper = desc.toUpperCase();
                 const cIdUpper = String(s.client_id || '').toUpperCase();
                 if (!nameUpper.includes(clientUpper) && !descUpper.includes(clientUpper) && cIdUpper !== clientUpper) {
                     return false;
@@ -62,6 +80,7 @@ export class MulticotizadorRetrieverService {
             return nameUpper.includes(queryUpper) || descUpper.includes(queryUpper);
         });
     }
+
 
     public static unpackQuoteData(quote: RetrievedQuote) {
         const legsData = quote.legs_data || {};

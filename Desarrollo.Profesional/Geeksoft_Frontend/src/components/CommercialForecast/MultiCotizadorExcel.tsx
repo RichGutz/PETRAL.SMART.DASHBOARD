@@ -162,13 +162,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     useEffect(() => {
         const init = async () => {
             try {
-                const [vData, pData, cData, spotData, quoteList, contractsData, latestBunker] = await Promise.all([
+                const [vData, pData, cData, spotData, quoteList, latestBunker] = await Promise.all([
                     ForecastService.getVessels(),       // tabla: vessels
                     ForecastService.getPorts(),         // tabla: ports
                     ForecastService.getClients(),       // tabla: clients
-                    ForecastService.getSpotVoyages(),   // tabla: routes_clients / routes_quotes
+                    ForecastService.getSpotVoyages(),   // tabla: routes_quotes (unificada)
                     MulticotizadorRetrieverService.searchSavedQuotes('', true, true, ''),
-                    ForecastService.getContractsMaster(), // tabla: contracts
+                    // SERIE 36: getContractsMaster() eliminado — contracts dado de baja
                     BunkerProviderService.fetchLatestBunkerPrices() // tabla: bunker_prices
                 ]);
                 setVessels(vData || []);
@@ -183,13 +183,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
                 setRawClients(cData || []);
                 setSavedRoutes(quoteList || []);
-                setContractsList(contractsData || []);
+                // SERIE 36: contractsList ya no se carga de BD. Se mantiene [] para compatibilidad con BunkerProviderService.
                 setLatestSpotPrices(latestBunker || { ifo: 0, mdo: 0 });
 
-                // Carga exclusiva de rutas desde la tabla routes_clients
+                // Carga de rutas desde routes_quotes (tabla unificada)
                 if (spotData && Array.isArray(spotData)) {
-                    const clientRoutes = spotData.filter((s: any) => s.table_source === 'routes_clients' || s.is_prospect === false);
-                    setRoutes(clientRoutes);
+                    const allQuoteRoutes = spotData.filter((s: any) => s.table_source === 'routes_quotes' || s.is_quote === true || s.is_contract === true);
+                    setRoutes(allQuoteRoutes);
                 }
             } catch (e) {
                 console.error("Error cargando catálogos BD:", e);

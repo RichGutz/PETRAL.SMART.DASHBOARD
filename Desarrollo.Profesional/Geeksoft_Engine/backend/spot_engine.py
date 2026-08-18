@@ -276,16 +276,16 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
         except Exception:
             pass
     
-    speed = float(vessel.get("vessel_speed") or vessel.get("speed") or 11.0)
-    tce_req = float(vessel.get("tce_required") or 0)
+    speed = float(vessel.get("vessel_speed") or vessel.get("speed") or 0.0)
+    tce_req = float(vessel.get("tce_required") or 0.0)
     
     p_ifo = float(payload.get("bunker_price_ifo") or vessel.get("bunker_price_ifo") or vessel.get("p_ifo") or 0.0)
     p_mdo = float(payload.get("bunker_price_mdo") or vessel.get("bunker_price_mdo") or vessel.get("p_mdo") or 0.0)
     
-    c_sea_ifo = float(vessel.get("consumption_sea_ifo") or vessel.get("bunker_consumption_sea_ifo") or 14.0)
-    c_idle_ifo = float(vessel.get("consumption_idle_ifo") or vessel.get("bunker_consumption_idle_ifo") or vessel.get("consumption_port_ifo") or 2.4)
-    c_load_ifo = float(vessel.get("consumption_load_ifo") or vessel.get("bunker_consumption_load_ifo") or vessel.get("consumption_port_ifo") or 2.4)
-    c_disch_ifo = float(vessel.get("consumption_disch_ifo") or vessel.get("bunker_consumption_disch_ifo") or vessel.get("consumption_port_ifo") or 3.6)
+    c_sea_ifo = float(vessel.get("consumption_sea_ifo") or vessel.get("bunker_consumption_sea_ifo") or 0.0)
+    c_idle_ifo = float(vessel.get("consumption_idle_ifo") or vessel.get("bunker_consumption_idle_ifo") or vessel.get("consumption_port_ifo") or 0.0)
+    c_load_ifo = float(vessel.get("consumption_load_ifo") or vessel.get("bunker_consumption_load_ifo") or vessel.get("consumption_port_ifo") or 0.0)
+    c_disch_ifo = float(vessel.get("consumption_disch_ifo") or vessel.get("bunker_consumption_disch_ifo") or vessel.get("consumption_port_ifo") or 0.0)
     
     c_sea_mdo = float(vessel.get("consumption_sea_mdo") if vessel.get("consumption_sea_mdo") is not None else (vessel.get("bunker_consumption_sea_mdo") if vessel.get("bunker_consumption_sea_mdo") is not None else 0.0))
     c_idle_mdo = float(vessel.get("consumption_idle_mdo") if vessel.get("consumption_idle_mdo") is not None else (vessel.get("bunker_consumption_idle_mdo") if vessel.get("bunker_consumption_idle_mdo") is not None else 0.0))
