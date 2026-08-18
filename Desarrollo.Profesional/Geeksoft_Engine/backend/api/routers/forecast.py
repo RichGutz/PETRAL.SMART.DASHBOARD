@@ -715,14 +715,40 @@ def delete_spot_route(spot_id: str, is_prospect: bool = False):
         from backend.services.forecast_service import clear_forecast_cache
         sb = get_supabase()
         
-        # Intentar eliminar por spot_id/route_id/contract_id o por name en todas las tablas
-        sb.table("routes_quotes").delete().or_(f"spot_id.eq.{spot_id},name.eq.{spot_id}").execute()
-        sb.table("routes_clients").delete().or_(f"route_id.eq.{spot_id},name.eq.{spot_id}").execute()
-        sb.table("contracts").delete().or_(f"contract_id.eq.{spot_id},name.eq.{spot_id}").execute()
-        
+        # 1. Intentar borrar en routes_quotes por name o id
+        try:
+            sb.table("routes_quotes").delete().eq("name", spot_id).execute()
+        except Exception as eq_err:
+            logger.warning(f"Error al borrar routes_quotes por name={spot_id}: {eq_err}")
+
+        try:
+            if spot_id.isdigit():
+                sb.table("routes_quotes").delete().eq("id", int(spot_id)).execute()
+        except Exception:
+            pass
+
+        # 2. Intentar borrar en routes_clients por name o route_id
+        try:
+            sb.table("routes_clients").delete().or_(f"route_id.eq.{spot_id},name.eq.{spot_id}").execute()
+        except Exception:
+            try:
+                sb.table("routes_clients").delete().eq("name", spot_id).execute()
+            except Exception:
+                pass
+
+        # 3. Intentar borrar en contracts por name o contract_id
+        try:
+            sb.table("contracts").delete().or_(f"contract_id.eq.{spot_id},name.eq.{spot_id}").execute()
+        except Exception:
+            try:
+                sb.table("contracts").delete().eq("name", spot_id).execute()
+            except Exception:
+                pass
+
         clear_forecast_cache()
         return {"status": "success", "deleted_id": spot_id}
     except Exception as e:
+        logger.error(f"Error en delete_spot_route para spot_id={spot_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/vessels")
