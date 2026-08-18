@@ -754,6 +754,15 @@ A partir de la orden directa de Sherlock Holmes (17.08.2026), se eliminaron las 
 | **20.3** | **`RouteMaster_V2.tsx` & `ContractsMaster_V2.tsx` (Metadatos de Creación y Validez)** | Los metadatos de fechas y vigencia comercial del Paso 5 estaban ocultos o dispersos. | Barra superior en la ficha con: Fecha de Creación exacta, Rango de Validez Comercial (Desde ➔ Hasta del Paso 5), Creador y Buque Asignado. | **RESUELTO:** Trazabilidad comercial y temporal visible de inmediato. | ✅ SOLUCIONADO |
 | **20.4** | **`RouteMaster_V2.tsx` & `ContractsMaster_V2.tsx` (Botón "Ver en Multicotizador")** | Existía un visor estático de actas en iframe PDF sin capacidad de interactividad o edición. | Reemplazado por el botón **`[ 🚀 Ver en Multicotizador ➔ ]`** que abre una **nueva ventana** (`window.open('/multicotizador', '_blank')`). El Multicotizador detecta automáticamente la cotización vía `sessionStorage`, carga los 5 pasos y calcula en tiempo real. | **RESUELTO:** Experiencia unificada y viva entre todos los maestros y la herramienta de simulación. | ✅ SOLUCIONADO |
 
+### 🕵️‍♂️ 5.21. Vigésima Primera Vuelta (Serie 44: Caso del Descalce de Fórmulas en Cards vs Multicotizador e Inyección de `QuoteExecutiveCardSummary` en Maestro COA)
+
+A partir de la intervención pericial de Sherlock Holmes y Benoit Blanc (18.08.2026), se detectó que las tarjetas del visor calculaban consumos y días con aproximaciones empíricas locales en vez de usar el motor puro, generando descalces (ej. P&L $289k vs $182k) y que el Maestro de Rutas COA no había recibido el nuevo componente visual unificado.
+
+| # | Objeto / Componente Auditado | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- | :-: |
+| **21.1** | **`RouteMaster_V2.tsx` (Descalce de Números en Cards)** | Las tarjetas calculaban días y consumos con fórmulas manuales inexactas (`portLoadDays = (0 + 6 + 1)/24`), arrojando P&L de **$289,257 USD** (5.68 d) cuando el Multicotizador daba **$182,961 USD** (7.13 d / $80,082 Búnker / $48,000 Puertos). | Creado el componente unificado `QuoteExecutiveCardSummary.tsx` que ejecuta directamente `MulticotizadorCalculationEngine.calculate()` (Single Source of Truth), asegurando cuadratura al 100.00% con la pantalla del Multicotizador. | **RESUELTO:** Cuadratura matemática absoluta al centavo entre el Multicotizador y las 4 Cards. | ✅ SOLUCIONADO |
+| **21.2** | **`ContractsMaster_V2.tsx` (Inyección en Maestro de Rutas COA)** | El Maestro de Rutas COA mantenía el diseño antiguo de tablas extensas y acordeón desalineado sin el visor ejecutivo de 4 cards. | Se inyectó `QuoteExecutiveCardSummary.tsx` en el acordeón expandido de cada ruta COA agrupada por año. | **RESUELTO:** Ambos maestros (`RouteMaster_V2` y `ContractsMaster_V2`) comparten exactamente la misma UI y la misma verdad matemática. | ✅ SOLUCIONADO |
+
 ---
 
 ## 📄 Archivos Relacionados
