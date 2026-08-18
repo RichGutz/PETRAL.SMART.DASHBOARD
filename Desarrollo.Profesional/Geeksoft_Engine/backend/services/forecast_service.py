@@ -507,6 +507,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     
     routes_clients_data = masters.get("routes_clients") or []
     routes_prospects_data = masters.get("routes_quotes") or []
+    contracts_data = masters.get("contracts") or []
     all_routes = routes_prospects_data + routes_clients_data + contracts_data
     routes_master_data = sorted(all_routes, key=lambda x: str((x and x.get("created_at")) or "2000-01-01"), reverse=True)
     
