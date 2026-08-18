@@ -556,26 +556,26 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* 6. Buque */}
-                    <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">6. Buque</Label>
+                    <div className="flex flex-col gap-1 flex-1 min-w-[140px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">6. Buque</Label>
                         <Select value={vessel} onValueChange={(val) => setVessel(val || '')} disabled={!route}>
-                            <SelectTrigger className="w-full h-8 bg-white disabled:opacity-80">
+                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold disabled:opacity-80">
                                 <SelectValue placeholder="Buque">
                                     {vessel ? vessel.replace('_', ' ') : undefined}
                                 </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="MOQUEGUA">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#16A34A]"></div>MOQUEGUA</div>
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-600"></div>MOQUEGUA</div>
                                 </SelectItem>
                                 <SelectItem value="TABLONES">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#DC2626]"></div>TABLONES</div>
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-rose-600"></div>TABLONES</div>
                                 </SelectItem>
                                 <SelectItem value="CONCON_TRADER">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#475569]"></div>CONCON TRADER</div>
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-slate-600"></div>CONCON TRADER</div>
                                 </SelectItem>
                                 <SelectItem value="HUEMUL">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#4F46E5]"></div>HUEMUL</div>
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-indigo-600"></div>HUEMUL</div>
                                 </SelectItem>
                             </SelectContent>
                         </Select>
@@ -585,13 +585,13 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 {/* FIN FILA 1 */}
 
                 {/* ====================================================================================== */}
-                {/* FILA 2: PARÁMETROS OPERATIVOS, BOTÓN AÑADIR, ESCENARIOS Y ACCIONES (Look & Feel Fiel) */}
+                {/* FILA 2: PARÁMETROS OPERATIVOS, BOTÓN AÑADIR, ESCENARIOS Y ACCIONES (APEFAC ENTERPRISE) */}
                 {/* ====================================================================================== */}
-                <div className="flex flex-row items-center gap-3 w-full pt-1 border-t border-slate-100">
+                <div className="flex flex-row items-center gap-2.5 w-full pt-2 border-t border-slate-200/80 overflow-x-auto">
                     
                     {/* 7. Nº Viajes */}
-                    <div className="flex items-center gap-1.5">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">7. Viajes:</Label>
+                    <div className="flex items-center gap-1.5 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs shrink-0">
+                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">7. Viajes:</Label>
                         <Input 
                             type="number" 
                             min="1"
@@ -599,26 +599,26 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             onChange={e => setFrequency(e.target.value)}
                             placeholder="1"
                             title="Frecuencia Mensual de Viajes"
-                            className="w-16 h-8 text-center text-xs"
+                            className="w-14 h-7 text-center text-xs font-bold bg-white border-slate-200 shadow-2xs"
                         />
                     </div>
 
                     {/* 8. Demurrage (%) */}
-                    <div className="flex items-center gap-1.5">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">8. Demurrage (%):</Label>
-                        <div className="flex gap-1 h-8">
+                    <div className="flex items-center gap-1.5 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs shrink-0">
+                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">8. Demurrage (%):</Label>
+                        <div className="flex gap-1 h-7">
                             <Input 
                                 type="number" 
                                 min="0"
                                 value={demurragePct} 
                                 onChange={e => onDemurragePctChange?.(e.target.value)}
                                 placeholder="%"
-                                className="w-14 h-8 text-xs text-center"
+                                className="w-14 h-7 text-xs text-center font-bold bg-white border-slate-200 shadow-2xs"
                             />
                             <button 
                                 type="button"
                                 onClick={() => onShowDemurrageChange?.(!showDemurrage)}
-                                className={`px-2 text-[11px] font-semibold rounded transition-colors border ${showDemurrage ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                                className={`px-2 text-[10px] font-black rounded-md transition-colors border ${showDemurrage ? 'bg-amber-100 border-amber-300 text-amber-900 shadow-2xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                                 title="Mostrar Demurrage Porcentual en la Matriz Financiera"
                             >
                                 Mostrar
@@ -627,21 +627,21 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* 9. Demurrage (días) */}
-                    <div className="flex items-center gap-1.5">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">9. Demurrage (d):</Label>
-                        <div className="flex gap-1 h-8">
+                    <div className="flex items-center gap-1.5 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs shrink-0">
+                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">9. Demurrage (d):</Label>
+                        <div className="flex gap-1 h-7">
                             <Input 
                                 type="number" 
                                 min="0"
                                 value={demurrageDays} 
                                 onChange={e => onDemurrageDaysChange?.(e.target.value)}
                                 placeholder="días"
-                                className="w-14 h-8 text-xs text-center"
+                                className="w-14 h-7 text-xs text-center font-bold bg-white border-slate-200 shadow-2xs"
                             />
                             <button 
                                 type="button"
                                 onClick={() => onShowDemurrageDaysChange?.(!showDemurrageDays)}
-                                className={`px-2 text-[11px] font-semibold rounded transition-colors border ${showDemurrageDays ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                                className={`px-2 text-[10px] font-black rounded-md transition-colors border ${showDemurrageDays ? 'bg-amber-100 border-amber-300 text-amber-900 shadow-2xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                                 title="Mostrar Demurrage en Días (toma tarifa diaria de la quote/buque)"
                             >
                                 Mostrar
@@ -650,16 +650,16 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* ➕ Botón Añadir al Modelo con Burbuja de Validación */}
-                    <div className="relative group">
+                    <div className="relative group shrink-0">
                         <Button 
                             onClick={handleAdd} 
-                            className={`relative h-8 px-4 overflow-hidden transition-colors rounded-full ${isAdding ? 'bg-primary text-white pointer-events-none' : isFormValid ? 'bg-primary hover:bg-primary/90 text-white shadow-sm' : 'bg-slate-200 text-slate-400 cursor-not-allowed hover:bg-slate-200'}`}
+                            className={`relative h-7.5 px-4 overflow-hidden transition-all rounded-lg shadow-2xs ${isAdding ? 'bg-sky-600 text-white pointer-events-none' : isFormValid ? 'bg-sky-600 hover:bg-sky-700 text-white font-extrabold' : 'bg-slate-200 text-slate-400 cursor-not-allowed hover:bg-slate-200'}`}
                             disabled={isAdding || !isFormValid}
                         >
                             {isAdding && (
                                 <div className="absolute inset-0 bg-white/20 animate-pulse" style={{ width: '100%' }}></div>
                             )}
-                            <span className="relative flex items-center justify-center z-10 gap-1.5 text-[11px] font-bold">
+                            <span className="relative flex items-center justify-center z-10 gap-1.5 text-[11px] font-extrabold">
                                 {isAdding ? (
                                     <>
                                         <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></div>
@@ -685,14 +685,14 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* Indicador de Escenario */}
-                    <div className="flex items-center gap-1.5 font-bold text-sky-800 bg-sky-50 border border-sky-200 px-3 h-8 rounded-full shadow-xs text-[11px] shrink-0">
+                    <div className="flex items-center gap-1.5 font-extrabold text-sky-800 bg-sky-50 border border-sky-200 px-3 h-7.5 rounded-lg shadow-2xs text-[11px] shrink-0">
                         📁 Escenario: {forecastName || 'Sin guardar'}
                     </div>
 
                     {/* Botón de Filtros */}
-                    <div>
-                        <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-3 h-8 rounded-full text-[11px] font-bold shadow-xs transition-colors shrink-0">
-                            <Filter size={13} /> Filtros de Tabla y Exportación
+                    <div className="shrink-0">
+                        <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 h-7.5 rounded-lg text-[11px] font-extrabold shadow-2xs transition-colors">
+                            <Filter size={13} className="text-sky-600" /> Filtros de Tabla y Exportación
                         </button>
                     </div>
                     {showFilters && (
@@ -703,17 +703,17 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
                     {/* Vista ($ / %) */}
                     {displayMode && onDisplayModeChange && (
-                        <div className="flex items-center gap-1 bg-slate-200 rounded p-0.5 h-8 w-28 shadow-inner shrink-0">
-                            <span className="text-[10px] uppercase font-bold text-slate-600 px-1.5">Vista:</span>
+                        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5 h-7.5 w-28 border border-slate-200 shadow-2xs shrink-0">
+                            <span className="text-[9.5px] uppercase font-black text-slate-500 px-1">Vista:</span>
                             <button
                                 onClick={() => onDisplayModeChange('usd')}
-                                className={`flex-1 text-center py-1 text-[10px] font-bold rounded transition-colors ${displayMode === 'usd' ? 'bg-white shadow-xs text-petral-blue' : 'text-slate-500 hover:bg-slate-300'}`}
+                                className={`flex-1 text-center py-0.5 text-[9.5px] font-black rounded cursor-pointer transition-colors ${displayMode === 'usd' ? 'bg-white shadow-2xs text-sky-700' : 'text-slate-500 hover:bg-slate-200'}`}
                             >
                                 UND
                             </button>
                             <button
                                 onClick={() => onDisplayModeChange('pct')}
-                                className={`flex-1 text-center py-1 text-[10px] font-bold rounded transition-colors ${displayMode === 'pct' ? 'bg-white shadow-xs text-petral-blue' : 'text-slate-500 hover:bg-slate-300'}`}
+                                className={`flex-1 text-center py-0.5 text-[9.5px] font-black rounded cursor-pointer transition-colors ${displayMode === 'pct' ? 'bg-white shadow-2xs text-sky-700' : 'text-slate-500 hover:bg-slate-200'}`}
                             >
                                 %
                             </button>
