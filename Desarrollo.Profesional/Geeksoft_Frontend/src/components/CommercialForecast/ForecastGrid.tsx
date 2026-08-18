@@ -386,9 +386,11 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     const commissions = getMonthlyValues("total_commissions");
                     const netRevenues = months.map((_, i) => grossRevenues[i] - (commissions[i] || 0));
                     
-                    const portCosts = getMonthlyValues("total_port_costs");
+                    const portCostsTotal = getMonthlyValues("total_port_costs");
+                    const dockageCosts = refacturacionMuellaje;
+                    const portCosts = months.map((_, i) => Math.max(0, (portCostsTotal[i] || 0) - (dockageCosts[i] || 0)));
                     const bunker = getMonthlyValues("total_bunker_costs");
-                    const voyageResult = months.map((_, i) => (trips[i] > 0 ? (netRevenues[i] || 0) - (portCosts[i] || 0) - (bunker[i] || 0) : 0));
+                    const voyageResult = months.map((_, i) => (trips[i] > 0 ? (netRevenues[i] || 0) - (portCosts[i] || 0) - (dockageCosts[i] || 0) - (bunker[i] || 0) : 0));
                     
                     const totalDaysArr = getMonthlyValues("total_duration_unit");
                     const tceReq = getMonthlyValues("tce_required_unit");
@@ -410,7 +412,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         level1GrossRevenue[i] += v;
                         globalRevenues[i] += v;
                     });
-                    portCosts.forEach((v, i) => {
+                    portCostsTotal.forEach((v, i) => {
                         level1PortCosts[i] += v;
                         globalPortCosts[i] += v;
                     });
@@ -470,6 +472,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         { name: "(-) Hire (TCE x días)", values: tceCostTotal, total: sum(tceCostTotal), pct: calcPct(tceCostTotal), totalPct: calcTotalPct(sum(tceCostTotal), sum(grossRevenues)), isCurrency: true, isTotal: false },
                         { name: "(-) Bunker Costs", values: bunker, total: sum(bunker), pct: calcPct(bunker), totalPct: calcTotalPct(sum(bunker), sum(grossRevenues)), isCurrency: true, isTotal: false },
                         { name: "(-) Port Costs", values: portCosts, total: sum(portCosts), pct: calcPct(portCosts), totalPct: calcTotalPct(sum(portCosts), sum(grossRevenues)), isCurrency: true, isTotal: false },
+                        { name: "(-) Dockage", values: dockageCosts, total: sum(dockageCosts), pct: calcPct(dockageCosts), totalPct: calcTotalPct(sum(dockageCosts), sum(grossRevenues)), isCurrency: true, isTotal: false },
                         { name: "(=) VOYAGE RESULT / P&L", values: plVsRequired, total: sum(plVsRequired), pct: calcPct(plVsRequired), totalPct: calcTotalPct(sum(plVsRequired), sum(grossRevenues)), isCurrency: true, isTotal: true },
                         { name: "▶ Métricas TCE ($/d)", values: tceReal, total: null, pct: null, totalPct: null, isCurrency: false, isTotal: false, isExpandableTce: true, rowKey, isExpanded: isExpandedTceRow }
                     ];
