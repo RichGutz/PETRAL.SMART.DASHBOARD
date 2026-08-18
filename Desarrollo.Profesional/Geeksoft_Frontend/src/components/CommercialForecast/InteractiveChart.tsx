@@ -938,24 +938,24 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
     return (
 
-        <div className="w-full bg-white pt-6 pb-6 px-6 shadow-sm rounded-b-lg flex flex-row gap-6 items-stretch min-h-[calc(100vh-220px)]">
+        <div className="w-full glass-card bg-white p-5 rounded-xl shadow-xs border border-slate-200 flex flex-row gap-6 items-stretch min-h-[calc(100vh-220px)]">
             {/* Sidebar de Controles (Left) */}
-            <div className="flex flex-col gap-3 shrink-0 w-[240px]">
+            <div className="flex flex-col gap-3 shrink-0 w-[245px]">
                 
                 {/* FILTROS TABS */}
-                <div className="flex bg-white rounded-lg border border-slate-200 shadow-sm">
-                    <div className="bg-slate-700 w-7 flex items-center justify-center shrink-0 rounded-l-lg">
-                        <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Filtros</span>
+                <div className="flex bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+                    <div className="bg-slate-900 w-7 flex items-center justify-center shrink-0">
+                        <span className="text-[10.5px] font-black text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Filtros</span>
                     </div>
-                    <div className="flex-1 p-2 flex flex-col gap-2 bg-slate-50/50 rounded-r-lg relative">
-                        <button onClick={() => setGroupBy('petral')} className={`w-full h-8 flex items-center justify-center text-center px-2 text-[12px] font-extrabold rounded-md transition-colors ${groupBy === 'petral' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-petral-blue border border-slate-300 hover:bg-slate-100'}`}>
+                    <div className="flex-1 p-2.5 flex flex-col gap-2 bg-slate-50/70 relative">
+                        <button onClick={() => setGroupBy('petral')} className={`w-full h-8 flex items-center justify-center text-center px-2 text-[11.5px] font-black rounded-lg transition-all cursor-pointer ${groupBy === 'petral' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-sky-700 border border-slate-200 hover:bg-slate-100 font-extrabold'}`}>
                             PETRAL (Todo)
                         </button>
                         <div className="h-px w-full bg-slate-200 my-0.5"></div>
                         
                         {/* Cliente filter row */}
                         <div className="flex items-center gap-1">
-                            <button onClick={() => setGroupBy('client')} className={`w-[75px] shrink-0 h-8 flex items-center justify-center text-[11px] font-bold rounded-md transition-colors ${groupBy === 'client' || filterClient !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                            <button onClick={() => setGroupBy('client')} className={`w-[75px] shrink-0 h-7.5 flex items-center justify-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${groupBy === 'client' || filterClient !== 'ALL' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}`}>
                                 Cliente
                             </button>
                             {renderFilterDropdown(filterClient, setFilterClient, filterOptions.clients, isClientFilterOpen, setIsClientFilterOpen, 'Cliente')}
@@ -963,7 +963,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
                         {/* Ruta filter row */}
                         <div className="flex items-center gap-1">
-                            <button onClick={() => setGroupBy('route')} className={`w-[75px] shrink-0 h-8 flex items-center justify-center text-[11px] font-bold rounded-md transition-colors ${groupBy === 'route' || filterRoute !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                            <button onClick={() => setGroupBy('route')} className={`w-[75px] shrink-0 h-7.5 flex items-center justify-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${groupBy === 'route' || filterRoute !== 'ALL' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}`}>
                                 Ruta
                             </button>
                             {renderFilterDropdown(filterRoute, setFilterRoute, filterOptions.routes, isRouteFilterOpen, setIsRouteFilterOpen, 'Ruta')}
@@ -971,7 +971,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
                         {/* Buque filter row */}
                         <div className="flex items-center gap-1">
-                            <button onClick={() => setGroupBy('vessel')} className={`w-[75px] shrink-0 h-8 flex items-center justify-center text-[11px] font-bold rounded-md transition-colors ${groupBy === 'vessel' || filterVessel !== 'ALL' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                            <button onClick={() => setGroupBy('vessel')} className={`w-[75px] shrink-0 h-7.5 flex items-center justify-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${groupBy === 'vessel' || filterVessel !== 'ALL' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}`}>
                                 Buque
                             </button>
                             {renderFilterDropdown(filterVessel, setFilterVessel, filterOptions.vessels, isVesselFilterOpen, setIsVesselFilterOpen, 'Buque')}
@@ -982,8 +982,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                         <div className="flex items-center gap-1">
                             <button
                                 onClick={() => setGroupBy('tradeType')}
-                                className={`w-[75px] shrink-0 h-8 flex items-center justify-center text-[10px] font-bold rounded-md transition-colors text-center leading-tight ${
-                                    groupBy === 'tradeType' ? 'bg-petral-blue text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'
+                                className={`w-[75px] shrink-0 h-7.5 flex items-center justify-center text-[10px] font-extrabold rounded-lg transition-all cursor-pointer text-center leading-tight ${
+                                    groupBy === 'tradeType' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
                                 }`}
                                 title="Agrupar por Tipo de Operación"
                             >
