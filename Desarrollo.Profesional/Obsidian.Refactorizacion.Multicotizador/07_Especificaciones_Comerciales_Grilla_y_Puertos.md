@@ -621,9 +621,20 @@ Se ejecutó la prueba pericial dual sobre la misma ruta comercial en paralelo, c
 
 ---
 
+### 🕵️‍♂️ 5.15. Quinceava Vuelta (Serie 15: Peritaje Benoit Blanc - Homologación MDO/MDO en Forecast, Purga Total de $967/$1,528 de Mercado y Regla Estricta 0 Fallbacks)
+
+A partir del dictamen pericial del 17.08.2026, se eliminaron los valores obsoletos de búnker ($967 IFO / $1,528 MDO) de la BD de mercado y la memoria del navegador.
+
+| # | Objeto / Componente Auditado | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **15.1** | **`forecast_service.py` (`bunker_price_ifo` / `mdo`)** | `forecast_service.py` leía $967.26 e $1,528.26 de la tabla `bunker_prices` en la rama fallback de contratos. | Purgados $967/$1528 del backend. Fijados a **0.0 estricto** cuando no provienen de una cotización viva. | **RESUELTO:** Imposible que el sistema devuelva $967 o $1528. Si no hay cotización viva, el búnker es estrictamente **0.0 USD**. | ✅ SOLUCIONADO |
+| **15.2** | **`ForecastContext_V2.tsx` (`sessionStorage`)** | `sessionStorage` guardaba la simulación previa con $967/$1528 y la restauraba al recargar la página. | Eliminada la restauración a ciegas de `sessionStorage`. Forzado recálculo fresco en vivo con el backend. | **RESUELTO:** El frontend realiza peticiones limpias en vivo y muestra los **$1,100 IFO** y **$1,700 MDO** de la cotización viva. | ✅ SOLUCIONADO |
+
+---
+
 ## 📄 Archivos Relacionados
 * **Documento UI Cabecera y Búnker:** [`06_Especificaciones_Comerciales_UI_Header_y_Bunker.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/06_Especificaciones_Comerciales_UI_Header_y_Bunker.md)
-* **Documento Modularización previa:** [`04_Modularizacion_Frontend_Servicios_y_Tabs.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/04_Modularizacion_Frontend_Servicios_y_Tabs.md)
+* **Documento Autopsia Pericial:** [`16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md)
 * **Script Flujograma Python:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.py)
 
 
