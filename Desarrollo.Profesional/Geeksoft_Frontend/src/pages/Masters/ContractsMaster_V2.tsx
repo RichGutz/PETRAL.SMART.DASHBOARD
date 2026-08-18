@@ -159,13 +159,14 @@ export const ContractsMaster: React.FC = () => {
 
         clientRoutes.forEach(route => {
             const ld = route.legs_data || {};
-            // El año de vigencia viene estrictamente de las fechas de Validez (Paso 5) guardadas en la cotización
-            const dateStr = route.valid_from || ld.valid_from || ld.baf_valid_from || ld.contract_metadata?.valid_from;
+            const meta = ld.contract_metadata || {};
+            // La fecha final de validez (valid_to) determina estrictamente el año de vigencia
+            const validToStr = route.valid_to || ld.valid_to || ld.validTo || meta.valid_to || meta.validTo || ld.baf_valid_to;
             const nameStr = route.name || '';
 
             let year = '';
-            if (dateStr) {
-                const match = String(dateStr).match(/\b(20\d{2})\b/);
+            if (validToStr) {
+                const match = String(validToStr).match(/\b(20\d{2})\b/);
                 if (match) year = match[1];
             }
             if (!year && nameStr) {
