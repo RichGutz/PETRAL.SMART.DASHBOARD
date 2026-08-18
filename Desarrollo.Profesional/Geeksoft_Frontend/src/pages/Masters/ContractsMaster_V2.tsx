@@ -220,7 +220,7 @@ export const ContractsMaster: React.FC = () => {
 
     return (
         <MasterTemplate
-            title="Maestro de Contratos"
+            title="Maestro de Cierres"
             activeTab="contracts"
             onExportExcel={() => exportMasterToExcel('Maestro_Contratos', exportColumns, clientRoutes)}
             onExportPDF={() => exportMasterToPDF('Maestro_Contratos', exportColumns, clientRoutes)}

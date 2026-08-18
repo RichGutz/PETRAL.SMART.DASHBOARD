@@ -744,9 +744,47 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     const handleLoadRoute = (quote: any) => {
         if (!quote) return;
         const clonedQuote = JSON.parse(JSON.stringify(quote));
-        setLoadedRouteName(clonedQuote.name || clonedQuote.route_id || clonedQuote.spot_id || '');
+        
+        // 1. Identificadores de Ruta (Paso 2 / 3)
+        const rKey = clonedQuote.name || clonedQuote.route_id || clonedQuote.spot_id || clonedQuote.id || '';
+        setLoadedRouteName(rKey);
         setLoadedRouteId(clonedQuote.route_id || clonedQuote.client_route_id || clonedQuote.prospect_route_id || clonedQuote.spot_id || clonedQuote.id || '');
+        setSelectedRouteId(rKey);
         setBunkerSource('COTIZACION');
+
+        // 2. Cliente y Modo (Paso 1: ACTIVOS vs PROSPECTOS)
+        const desc = (clonedQuote.description || '').trim();
+        const isProspect = clonedQuote.is_prospect === true || String(clonedQuote.is_prospect).toLowerCase() === 'true' || desc.includes('Prospecto') || desc.includes('prospecto');
+        setClientType(isProspect ? 'PROSPECTOS' : 'ACTIVOS');
+
+        let extractedClient = clonedQuote.client_id || clonedQuote.legs_data?.client_id || clonedQuote.legs_data?.selectedClient || '';
+        if (!extractedClient && rKey) {
+            const parts = rKey.split('.');
+            if (parts.length > 1) {
+                extractedClient = parts[0];
+            }
+        }
+        if (extractedClient) {
+            setSelectedClient(extractedClient);
+        }
+
+        // 3. Validez Fechas (Paso 4: Inicio y Fin)
+        const vFrom = clonedQuote.valid_from || clonedQuote.legs_data?.valid_from || clonedQuote.validity_start || clonedQuote.legs_data?.baf_valid_from || '';
+        const vTo = clonedQuote.valid_to || clonedQuote.legs_data?.valid_to || clonedQuote.validity_end || clonedQuote.legs_data?.baf_valid_to || '';
+
+        const formatToDateInput = (val: string) => {
+            if (!val || val === 'Sin Fecha') return '';
+            if (/^\d{4}-\d{2}-\d{2}/.test(val)) return val.substring(0, 10);
+            if (/^\d{2}\/\d{2}\/\d{4}/.test(val)) {
+                const [d, m, y] = val.split('/');
+                return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+            }
+            return val;
+        };
+
+        if (vFrom) setValidFrom(formatToDateInput(vFrom));
+        if (vTo) setValidTo(formatToDateInput(vTo));
+
         const unpacked = MulticotizadorRetrieverService.unpackQuoteData(clonedQuote);
 
         if (unpacked.tramos && unpacked.tramos.length > 0) {
@@ -762,21 +800,20 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             setTramos(enrichedTramos);
             const pConfig = (unpacked.puertosConfig && unpacked.puertosConfig.length > 0)
                 ? unpacked.puertosConfig
-                : buildPuertosConfigFromTramos(enrichedTramos, selectedClient);
+                : buildPuertosConfigFromTramos(enrichedTramos, extractedClient || selectedClient);
             setPuertosConfig(pConfig);
         }
 
-        if (unpacked.vessel_id) handleVesselChange(unpacked.vessel_id, false);
+        // 4. Buque (Paso 5)
+        const targetVessel = unpacked.vessel_id || clonedQuote.vessel_id || clonedQuote.legs_data?.vessel_id || '';
+        if (targetVessel) {
+            handleVesselChange(targetVessel, false);
+        }
 
-        // SERIE 35-B FIX: Si los precios de bunker están guardados (> 0) en la cotización,
-        // usar esos valores exactos (fuente = 'COTIZACION' ya seteada en L.831).
-        // Si son 0 (cotización guardada en era anterior donde el precio del maestro no se
-        // persistía en legs_data), cambiar la fuente a 'MAESTRO_CONTRATOS' para que el
-        // useEffect reactivo resuelva el precio correcto del contrato NEXA/SPCC.
+        // Precios de búnker y comisiones
         if (unpacked.bunker_price_ifo > 0) {
             setBunkerPriceIfo(unpacked.bunker_price_ifo);
         } else {
-            // Precio no persistido en la cotización (legacy) → resolver desde maestro de contratos
             setBunkerSource('MAESTRO_CONTRATOS');
         }
         if (unpacked.bunker_price_mdo > 0) {
