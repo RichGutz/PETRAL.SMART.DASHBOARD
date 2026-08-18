@@ -663,14 +663,28 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
 
     # Refacturación de Muellaje acumulada (1 sola vez por recalada de puerto)
     tot_refacturacion_muellaje = 0.0
-    for idx_m, tr_m in enumerate(processed_tramos):
-        # Puerto Origen (solo en la recalada 0)
-        if idx_m == 0:
-            if tr_m.get("refacturar_muellaje", True) and tr_m.get("origin_action", "NONE") != "NONE":
-                tot_refacturacion_muellaje += float(tr_m.get("muellaje_cost_origin", 0))
-        # Puerto Destino (en cada tramo idx_m)
-        if tr_m.get("refacturar_muellaje", True) and tr_m.get("destination_action", "NONE") != "NONE":
-            tot_refacturacion_muellaje += float(tr_m.get("muellaje_cost_dest", 0))
+    refact_map = payload.get("refacturarMuellajeMap") or {}
+    
+    if puertos_cfg:
+        for p_idx, p in enumerate(puertos_cfg):
+            action = p.get("action", "NONE")
+            if action != "NONE":
+                m_val = float(p.get("muellaje_cost") or 0.0)
+                if m_val == 0.0:
+                    m_val = 7000.0 if action == "CARGAR" else (6000.0 if action == "DESCARGAR" else 0.0)
+                is_refact = refact_map.get(str(p_idx), refact_map.get(p_idx, True))
+                if is_refact:
+                    tot_refacturacion_muellaje += m_val
+    else:
+        for idx_m, tr_m in enumerate(processed_tramos):
+            if idx_m == 0:
+                if tr_m.get("refacturar_muellaje", True) and tr_m.get("origin_action", "NONE") != "NONE":
+                    tot_refacturacion_muellaje += float(tr_m.get("muellaje_cost_origin", 0))
+            if tr_m.get("refacturar_muellaje", True) and tr_m.get("destination_action", "NONE") != "NONE":
+                tot_refacturacion_muellaje += float(tr_m.get("muellaje_cost_dest", 0))
+
+    if tot_refacturacion_muellaje == 0.0 and payload.get("financial_summary"):
+        tot_refacturacion_muellaje = float(payload.get("financial_summary", {}).get("refacturacionMuellaje") or 0.0)
 
     gross_revenue_total = tot_freight_revenue + tot_refacturacion_muellaje
     pnl_net_utility = gross_revenue_total - tot_port_costs - tot_bunker_costs - tot_comm_usd

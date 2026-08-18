@@ -837,6 +837,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     "vessel_params": vparams,
                     "tramos": tramos_copy,
                     "puertosConfig": legs_data.get("puertosConfig", []),
+                    "refacturarMuellajeMap": legs_data.get("refacturarMuellajeMap", {}),
+                    "financial_summary": legs_data.get("financial_summary", {}),
                     "bunker_price_ifo": b_ifo,
                     "bunker_price_mdo": b_mdo,
                     "port_cost_mode": request.port_cost_mode,

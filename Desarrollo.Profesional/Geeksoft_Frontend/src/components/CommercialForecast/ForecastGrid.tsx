@@ -406,11 +406,26 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         level1FreightRevenue[i] += v;
                         globalFreightRevenues[i] += v;
                     });
-                    grossRevenues.forEach((v, i) => level1GrossRevenue[i] += v);
-                    portCosts.forEach((v, i) => level1PortCosts[i] += v);
-                    bunker.forEach((v, i) => level1BunkerCosts[i] += v);
-                    voyageResult.forEach((v, i) => level1VoyageResult[i] += v);
-                    plVsRequired.forEach((v, i) => level1PlVsRequired[i] += v);
+                    grossRevenues.forEach((v, i) => {
+                        level1GrossRevenue[i] += v;
+                        globalRevenues[i] += v;
+                    });
+                    portCosts.forEach((v, i) => {
+                        level1PortCosts[i] += v;
+                        globalPortCosts[i] += v;
+                    });
+                    bunker.forEach((v, i) => {
+                        level1BunkerCosts[i] += v;
+                        globalBunkerCosts[i] += v;
+                    });
+                    voyageResult.forEach((v, i) => {
+                        level1VoyageResult[i] += v;
+                        globalVoyageResult[i] += v;
+                    });
+                    plVsRequired.forEach((v, i) => {
+                        level1PlVsRequired[i] += v;
+                        globalPlVsRequired[i] += v;
+                    });
                     
                     const demurragePctArray = months.map((_, i) => {
                         if (customDemurrages[rowKey] && customDemurrages[rowKey][i] !== undefined) {
