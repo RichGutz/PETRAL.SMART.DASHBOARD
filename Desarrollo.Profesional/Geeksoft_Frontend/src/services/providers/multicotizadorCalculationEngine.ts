@@ -126,6 +126,8 @@ export class MulticotizadorCalculationEngine {
         // Puerto 0 (Origen Inicial)
         const pCfg0 = puertosConfig[0] || {};
         const originPort0 = tramos[0]?.origin_port_id || '';
+        let portDays0 = 0;
+        let bunkerCost0 = 0;
         if (pCfg0.action && pCfg0.action !== 'NONE') {
             const isMejillones0 = (originPort0 || '').trim().toUpperCase() === 'MEJILLONES' && pCfg0.action === 'DESCARGAR';
             const mVal0 = Number(pCfg0.manual_port_cost) || 0;
@@ -134,6 +136,34 @@ export class MulticotizadorCalculationEngine {
             totalPortCosts += totalCost0;
             if (refacturarMuellajeMap[0] !== false && muellVal0 > 0) {
                 liveRefacturacionMuellaje += muellVal0;
+            }
+
+            const qVal0 = Number(pCfg0.quantity || 0);
+            const rVal0 = Math.max(1, Number(pCfg0.op_rate || 500));
+            const rUnit0 = pCfg0.rate_unit || 'TH';
+            const rateFactor0 = rUnit0 === 'TD' ? 1 : 24;
+            const tcVal0 = Number(pCfg0.time_to_count !== undefined && pCfg0.time_to_count !== '' ? pCfg0.time_to_count : (pCfg0.overhead !== undefined && pCfg0.overhead !== '' ? pCfg0.overhead : 0));
+            const posVal0 = Number(pCfg0.positioning || 0);
+
+            const idleDays0 = (tcVal0 + posVal0) / 24;
+            const opDays0 = (qVal0 / rVal0) / rateFactor0;
+            portDays0 = idleDays0 + opDays0;
+            totalPortDays += portDays0;
+
+            const opIfoRate0 = pCfg0.action === 'DESCARGAR' ? ifoDischRatio : pCfg0.action === 'CARGAR' ? ifoLoadRatio : ifoIdleRatio;
+            const opMdoRate0 = pCfg0.action === 'DESCARGAR' ? mdoDischRatio : pCfg0.action === 'CARGAR' ? mdoLoadRatio : mdoIdleRatio;
+
+            const ifoTons0 = (idleDays0 * ifoIdleRatio) + (opDays0 * opIfoRate0);
+            const mdoTons0 = (idleDays0 * mdoIdleRatio) + (opDays0 * opMdoRate0);
+            bunkerCost0 = (ifoTons0 * bunkerPriceIfo) + (mdoTons0 * bunkerPriceMdo);
+
+            totalIfoTons += ifoTons0;
+            totalMdoTons += mdoTons0;
+
+            if (pCfg0.action === 'DESCARGAR') {
+                const fRate0 = Number(pCfg0.freight_rate || 0);
+                totalQuantity += qVal0;
+                totalFreight += (qVal0 * fRate0);
             }
         }
 
@@ -149,11 +179,12 @@ export class MulticotizadorCalculationEngine {
             const qVal = Number(pCfg.quantity || 0);
             const rVal = Math.max(1, Number(pCfg.op_rate || 500));
             const rUnit = pCfg.rate_unit || 'TH';
+            const rateFactor = rUnit === 'TD' ? 1 : 24;
             const tcVal = Number(pCfg.time_to_count !== undefined && pCfg.time_to_count !== '' ? pCfg.time_to_count : (pCfg.overhead !== undefined && pCfg.overhead !== '' ? pCfg.overhead : 0));
             const posVal = Number(pCfg.positioning || 0);
 
             const idleDays = pCfg.action !== 'NONE' ? ((tcVal + posVal) / 24) : 0;
-            const opDays = pCfg.action !== 'NONE' ? ((qVal / rVal) / 24) : 0;
+            const opDays = pCfg.action !== 'NONE' ? ((qVal / rVal) / rateFactor) : 0;
             const calcPortDays = idleDays + opDays;
 
             const opIfoRate = pCfg.action === 'DESCARGAR' ? ifoDischRatio : pCfg.action === 'CARGAR' ? ifoLoadRatio : ifoIdleRatio;

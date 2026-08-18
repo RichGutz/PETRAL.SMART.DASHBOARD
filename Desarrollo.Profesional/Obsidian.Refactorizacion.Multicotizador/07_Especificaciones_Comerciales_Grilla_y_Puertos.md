@@ -801,6 +801,18 @@ A partir de la intervención pericial de Benoit Blanc (18.08.2026), se eliminó 
 | **25.2** | **`MultiCotizadorExcel.tsx` & `multicotizadorStorageService.ts` (Fotografía `financial_summary`)** | Al guardar no se empaquetaba el resumen financiero consolidado, forzando a los maestros a recalcular desde cero con riesgo de descalce. | Se calcula y graba el objeto `financial_summary` completo en `legs_data` (totales de flete, gross revenue, dockage rev, búnker por combustible, costos portuarios, P&L, días de viaje y TCE). | **RESUELTO:** La cotización queda congelada como una fotografía monolítica inmutable. | ✅ SOLUCIONADO |
 | **25.3** | **`QuoteExecutiveCardSummary.tsx` (Lectura Directa de Fotografía)** | Re-calculaba las 4 tarjetas llamando al motor en lugar de leer los resultados congelados de la cotización. | Prioriza y muestra directamente `unpacked.financial_summary` como espejo 1:1 de la cotización, calculando solo como fallback secundario si no existe snapshot. | **RESUELTO:** Reflejo espejo idéntico al 100.00% entre lo cotizado en el Multicotizador y lo mostrado en los Maestros. | ✅ SOLUCIONADO |
 
+### 🕵️‍♂️ 5.26. Vigésima Sexta Vuelta (Serie 50: Habilitación Operativa de Fila 0 / POL y Saneamiento de Naming en Rutas Simples)
+
+A partir de la auditoría pericial de Benoit Blanc (18.08.2026), se resolvieron los dos bugs que afectaban a las rutas simples (ej. `ILO-MATARANI-ILO`):
+1. **Fila 0 Operativa (POL)**: Se habilitó el cálculo de Días de Puerto (`DÍAS PTO`) y consumo de búnker (IFO/MDO) para el puerto de origen inicial en `MulticotizadorCalculationEngine.ts` y `SpreadsheetTramosGrid.tsx`.
+2. **Naming Deduplicado**: Se sanearon los generadores de prefijos para evitar secuencias repetidas como `SPCC.ILO.ILO.MATARANI.ILO`.
+
+| # | Objeto / Componente Auditado | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- | :-: |
+| **26.1** | **`MulticotizadorCalculationEngine.ts` (Omisión de Estadía & Búnker en Puerto 0)** | Omitía el cálculo de `portDays0` y consumos de combustible IFO/MDO en el puerto de origen (Fila 0), sumando únicamente el costo de agencia monetario. | Implementado cálculo integral de `idleDays0 = (tc + pos) / 24`, `opDays0 = Q / (rate * factor)`, `calcPortDays0`, `ifoTons0` y `mdoTons0`. Sumados a `totalPortDays`, `totalDays`, `totalIfoTons`, `totalMdoTons` y `grandBunkerTotal`. | **RESUELTO:** La Fila 0 calcula con total exactitud operativa el tiempo de puerto y consumo de combustible. | ✅ SOLUCIONADO |
+| **26.2** | **`SpreadsheetTramosGrid.tsx` (Renderizado Fila 0 Días Pto y Búnker)** | Mostraba guión estático `—` en la columna `DÍAS PTO` y `$0` en Búnker para la Fila 0. | Se reemplazó por el renderizado reactivo de `fmtDays(calcPortDays0)` y el costo de combustible live de Fila 0 `fmtCur(liveBunkerCost0)`. | **RESUELTO:** La UI refleja de inmediato los días de puerto y el búnker consumido en el POL. | ✅ SOLUCIONADO |
+| **26.3** | **`MultiCotizadorExcel.tsx` (Naming Prefix Duplicado & Ritmo Auto)** | Generaba prefijos duplicados como `ILO.ILO.MATARANI.ILO` y no sugería ritmo contractual al seleccionar `CARGAR` en Fila 0. | Se deduplicaron puertos consecutivos adyacentes en `getSuggestedRoutePrefix` y se auto-sugirió el ritmo nominal en `updatePuertoConfigField`. | **RESUELTO:** Naming limpio `SPCC.ILO.MATARANI.ILO.2026` y auto-completado fluido de ritmos. | ✅ SOLUCIONADO |
+
 ---
 
 ## 📄 Archivos Relacionados

@@ -52,9 +52,36 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     // Calculo de total descargas
     const totalDescargas = puertosConfig.reduce((sum, p) => sum + (p.action === 'DESCARGAR' ? (Number(p.quantity) || 0) : 0), 0);
 
-    // Array de costos live de búnker por tramo
+    const selectedVesselObj = vessels.find(v => v.vessel_id === selectedVessel);
+    const ifoSeaRatio = Number(vesselParams?.consumption_sea_ifo || selectedVesselObj?.consumption_sea_ifo || 0);
+    const mdoSeaRatio = Number(vesselParams?.consumption_sea_mdo || selectedVesselObj?.consumption_sea_mdo || 0);
+    const ifoIdleRatio = Number(vesselParams?.consumption_idle_ifo || selectedVesselObj?.consumption_idle_ifo || 0);
+    const mdoIdleRatio = Number(vesselParams?.consumption_idle_mdo || selectedVesselObj?.consumption_idle_mdo || 0);
+    const ifoLoadRatio = Number(vesselParams?.consumption_load_ifo || selectedVesselObj?.consumption_load_ifo || ifoIdleRatio);
+    const mdoLoadRatio = Number(vesselParams?.consumption_load_mdo || selectedVesselObj?.consumption_load_mdo || mdoIdleRatio);
+    const ifoDischRatio = Number(vesselParams?.consumption_disch_ifo || selectedVesselObj?.consumption_disch_ifo || 0);
+    const mdoDischRatio = Number(vesselParams?.consumption_disch_mdo || selectedVesselObj?.consumption_disch_mdo || mdoIdleRatio);
+
+    // Calculo Fila 0 (Puerto de Origen / POL)
+    const pCfg0 = puertosConfig[0] || {};
+    const qVal0 = Number(pCfg0.quantity || 0);
+    const rVal0 = Math.max(1, Number(pCfg0.op_rate || 500));
+    const rUnit0 = pCfg0.rate_unit || 'TH';
+    const rateFactor0 = rUnit0 === 'TD' ? 1 : 24;
+    const tcVal0 = Number(pCfg0.time_to_count !== undefined && pCfg0.time_to_count !== '' ? pCfg0.time_to_count : (pCfg0.overhead !== undefined && pCfg0.overhead !== '' ? pCfg0.overhead : 0));
+    const posVal0 = Number(pCfg0.positioning || 0);
+    const idleDays0 = pCfg0.action !== 'NONE' ? ((tcVal0 + posVal0) / 24) : 0;
+    const opDays0 = pCfg0.action !== 'NONE' ? ((qVal0 / rVal0) / rateFactor0) : 0;
+    const calcPortDays0 = idleDays0 + opDays0;
+
+    const opIfoRate0 = pCfg0.action === 'DESCARGAR' ? ifoDischRatio : pCfg0.action === 'CARGAR' ? ifoLoadRatio : ifoIdleRatio;
+    const opMdoRate0 = pCfg0.action === 'DESCARGAR' ? mdoDischRatio : pCfg0.action === 'CARGAR' ? mdoLoadRatio : mdoIdleRatio;
+    const ifoTons0 = (idleDays0 * ifoIdleRatio) + (opDays0 * opIfoRate0);
+    const mdoTons0 = (idleDays0 * mdoIdleRatio) + (opDays0 * opMdoRate0);
+    const liveBunkerCost0 = (ifoTons0 * (bunkerPriceIfo || 0)) + (mdoTons0 * (bunkerPriceMdo || 0));
+
+    // Array de costos live de búnker por tramo 1..N
     const liveBunkerCosts = tramos.map((tr, idx) => {
-        const selectedVesselObj = vessels.find(v => v.vessel_id === selectedVessel);
         const distVal = Number(tr.route_distance || 0);
         const rawWf = Number(tr.weather_factor || 0);
         const wfPct = rawWf > 1 ? rawWf : (rawWf * 100);
@@ -64,20 +91,13 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
         const pCfg = puertosConfig[idx + 1] || {};
         const qVal = Number(pCfg.quantity || 0);
         const rVal = Math.max(1, Number(pCfg.op_rate || 500));
-        const tcVal = Number(pCfg.time_to_count || 0);
+        const rUnit = pCfg.rate_unit || 'TH';
+        const rateFactor = rUnit === 'TD' ? 1 : 24;
+        const tcVal = Number(pCfg.time_to_count !== undefined && pCfg.time_to_count !== '' ? pCfg.time_to_count : (pCfg.overhead !== undefined && pCfg.overhead !== '' ? pCfg.overhead : 0));
         const posVal = Number(pCfg.positioning || 0);
 
         const idleDays = pCfg.action !== 'NONE' ? ((tcVal + posVal) / 24) : 0;
-        const opDays = pCfg.action !== 'NONE' ? ((qVal / rVal) / 24) : 0;
-
-        const ifoSeaRatio = Number(vesselParams?.consumption_sea_ifo || selectedVesselObj?.consumption_sea_ifo || 14.5);
-        const mdoSeaRatio = Number(vesselParams?.consumption_sea_mdo || selectedVesselObj?.consumption_sea_mdo || 0.1);
-        const ifoIdleRatio = Number(vesselParams?.consumption_idle_ifo || selectedVesselObj?.consumption_idle_ifo || 3.5);
-        const mdoIdleRatio = Number(vesselParams?.consumption_idle_mdo || selectedVesselObj?.consumption_idle_mdo || 0.1);
-        const ifoLoadRatio = Number(vesselParams?.consumption_load_ifo || selectedVesselObj?.consumption_load_ifo || ifoIdleRatio);
-        const mdoLoadRatio = Number(vesselParams?.consumption_load_mdo || selectedVesselObj?.consumption_load_mdo || mdoIdleRatio);
-        const ifoDischRatio = Number(vesselParams?.consumption_disch_ifo || selectedVesselObj?.consumption_disch_ifo || 5.0);
-        const mdoDischRatio = Number(vesselParams?.consumption_disch_mdo || selectedVesselObj?.consumption_disch_mdo || mdoIdleRatio);
+        const opDays = pCfg.action !== 'NONE' ? ((qVal / rVal) / rateFactor) : 0;
 
         const opIfoRate = pCfg.action === 'DESCARGAR' ? ifoDischRatio : pCfg.action === 'CARGAR' ? ifoLoadRatio : ifoIdleRatio;
         const opMdoRate = pCfg.action === 'DESCARGAR' ? mdoDischRatio : pCfg.action === 'CARGAR' ? mdoLoadRatio : mdoIdleRatio;
@@ -87,7 +107,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
         return (ifoTons * (bunkerPriceIfo || 0)) + (mdoTons * (bunkerPriceMdo || 0));
     });
 
-    const sumLiveBunkerCosts = liveBunkerCosts.reduce((a, b) => a + b, 0);
+    const sumLiveBunkerCosts = liveBunkerCost0 + liveBunkerCosts.reduce((a, b) => a + b, 0);
 
     return (
         <div className="overflow-x-auto border border-slate-300 rounded bg-white shadow-sm flex flex-col mb-1">
@@ -183,7 +203,9 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
                         <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
                         <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
-                        <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">—</td>
+                        <td className="border-r border-slate-200 text-right pr-2 text-slate-500 bg-slate-50/50 font-bold select-none">
+                            {puertosConfig[0]?.action !== 'NONE' ? fmtDays(calcPortDays0) : '0.00'}
+                        </td>
 
                         {/* Fila 0 Time to Count */}
                         <td className="border-r border-slate-200 p-0 text-right">
@@ -319,7 +341,9 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">$0</td>
 
                         {/* Fila 0 Bunker ($) */}
-                        <td className="border-r border-slate-200 text-right pr-2 text-slate-350 select-none">$0</td>
+                        <td className="border-r border-slate-200 text-right pr-2 font-mono font-bold text-slate-800 bg-amber-50/20 select-none">
+                            {puertosConfig[0]?.action !== 'NONE' && liveBunkerCost0 > 0 ? fmtCur(liveBunkerCost0) : '$0'}
+                        </td>
 
                         {/* Fila 0 Muellaje */}
                         <td className="border-r border-slate-200 text-right pr-2 font-mono font-bold text-[11px] bg-slate-50/40">
@@ -642,9 +666,11 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                             if (p.action === 'NONE') return s;
                             const qVal = Number(p.quantity || 0);
                             const rVal = Math.max(1, Number(p.op_rate || 500));
-                            const tcVal = Number(p.time_to_count || 0);
+                            const rUnit = p.rate_unit || 'TH';
+                            const rateFactor = rUnit === 'TD' ? 1 : 24;
+                            const tcVal = Number(p.time_to_count !== undefined && p.time_to_count !== '' ? p.time_to_count : (p.overhead !== undefined && p.overhead !== '' ? p.overhead : 0));
                             const posVal = Number(p.positioning || 0);
-                            return s + (((qVal / rVal) + tcVal + posVal) / 24);
+                            return s + (((qVal / rVal) / rateFactor) + ((tcVal + posVal) / 24));
                         }, 0);
 
                         const sumPortCostsCalculated = puertosConfig.reduce((sum, p) => sum + (Number(p.manual_port_cost) || 0), 0);

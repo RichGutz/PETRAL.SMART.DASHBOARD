@@ -369,6 +369,14 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     list[idx].op_rate = '';
                     list[idx].time_to_count = '';
                     list[idx].positioning = '';
+                } else if (val === 'CARGAR' || val === 'DESCARGAR') {
+                    const portId = idx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[idx - 1]?.destination_port_id || '');
+                    if (portId) {
+                        const autoRate = PortCostsRatesService.resolveAutoPortRate(portId, val, ports);
+                        if (autoRate && (!list[idx].op_rate || list[idx].op_rate === 0 || list[idx].op_rate === '0')) {
+                            list[idx].op_rate = autoRate;
+                        }
+                    }
                 }
             }
             if (field === 'freight_rate') {
@@ -524,11 +532,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     // Persistencia: Guardar y Cargar Cotizaciones
     const getSuggestedRoutePrefix = (client: string) => {
         const clientClean = (client || 'CLIENTE').trim().toUpperCase();
-        const portsList: string[] = [];
-        if (tramos[0]?.origin_port_id) portsList.push(tramos[0].origin_port_id.trim().toUpperCase());
+        const rawPortsList: string[] = [];
+        if (tramos[0]?.origin_port_id) rawPortsList.push(tramos[0].origin_port_id.trim().toUpperCase());
         tramos.forEach(tr => {
-            if (tr.destination_port_id) portsList.push(tr.destination_port_id.trim().toUpperCase());
+            if (tr.destination_port_id) rawPortsList.push(tr.destination_port_id.trim().toUpperCase());
         });
+        // Deduplicar puertos adyacentes idénticos consecutivos (ej: ['ILO', 'ILO', 'MATARANI', 'ILO'] -> ['ILO', 'MATARANI', 'ILO'])
+        const portsList = rawPortsList.filter((p, i) => i === 0 || p !== rawPortsList[i - 1]);
         const portsSeq = portsList.length > 0 ? portsList.join('.') : 'RUTA';
         return `${clientClean}.${portsSeq}.`;
     };
