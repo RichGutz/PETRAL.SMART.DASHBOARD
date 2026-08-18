@@ -178,7 +178,7 @@ export const SpaghettiMap_V2: React.FC = () => {
 
 
     return (
-        <section className="flex-1 flex flex-col mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300 w-full h-full min-h-[600px] -mx-4 md:-mx-6 -mb-4 md:-mb-6 overflow-hidden bg-white border border-slate-200 rounded-tl-xl shadow-lg" style={{ width: 'calc(100% + 2rem)' }}>
+        <section className="flex-1 flex flex-col mt-2 animate-in fade-in slide-in-from-bottom-2 duration-300 w-full h-full min-h-[600px] -mx-4 md:-mx-6 -mb-4 md:-mb-6 overflow-hidden glass-card bg-white border border-slate-200 rounded-xl shadow-xs" style={{ width: 'calc(100% + 2rem)' }}>
             
             {/* Margen Superior Blanco para Escenario Activo */}
             {context.forecastName && (
@@ -194,22 +194,26 @@ export const SpaghettiMap_V2: React.FC = () => {
             <div className="flex-1 flex flex-row w-full h-full relative">
                 
                 {/* COLUMN 1: Custom HTML Timeline */}
-                <div className="w-[340px] md:w-[380px] bg-slate-50 border-r border-slate-200 flex flex-col py-6 px-4 shadow-[4px_0_15px_rgba(0,0,0,0.05)] z-10 overflow-y-auto">
+                <div className="w-[340px] md:w-[380px] bg-slate-50/70 border-r border-slate-200 flex flex-col py-5 px-4 shadow-[4px_0_15px_rgba(0,0,0,0.03)] z-10 overflow-y-auto">
 
                     {/* Controls Panel */}
-                    <div className="bg-white border border-slate-200 rounded-lg p-3 mb-4 shadow-sm flex flex-col gap-3 shrink-0">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                            <span className="text-xs font-bold text-slate-600">Nodos (Pies y Líneas)</span>
+                    <div className="flex flex-row items-stretch bg-white rounded-xl border border-slate-200 shadow-2xs mb-4 shrink-0">
+                        <div className="bg-slate-900 w-7 flex items-center justify-center shrink-0 rounded-l-xl self-stretch min-h-full">
+                            <span className="text-[10.5px] font-black text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Controles</span>
+                        </div>
+                        <div className="flex-1 p-2.5 flex flex-col gap-3 bg-slate-50/70 rounded-r-xl">
+                        <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                            <span className="text-[11px] font-extrabold text-slate-800 uppercase tracking-tight">Nodos (Pies y Líneas)</span>
                             <button
                                 onClick={() => setShowPies(!showPies)}
-                                className={`w-10 h-5 rounded-full relative transition-colors focus:outline-none ${showPies ? 'bg-petral-teal' : 'bg-slate-300'}`}
+                                className={`w-10 h-5 rounded-full relative transition-colors focus:outline-none ${showPies ? 'bg-sky-600' : 'bg-slate-300'}`}
                             >
                                 <span className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full transition-transform ${showPies ? 'translate-x-5' : 'translate-x-0'}`}></span>
                             </button>
                         </div>
                         <div className="flex flex-col gap-2 pt-1">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-slate-600">Animación</span>
+                                <span className="text-[11px] font-extrabold text-slate-800 uppercase tracking-tight">Animación</span>
                                 <div className="flex items-center gap-1">
                                     <input 
                                         type="number" 
@@ -217,14 +221,14 @@ export const SpaghettiMap_V2: React.FC = () => {
                                         max="10" 
                                         value={playSpeed} 
                                         onChange={(e) => setPlaySpeed(Number(e.target.value) || 2)}
-                                        className="w-10 h-6 text-center text-xs font-bold border border-slate-300 rounded text-slate-700 bg-slate-50 focus:outline-none focus:border-petral-teal"
+                                        className="w-10 h-6 text-center text-xs font-bold border border-slate-200 rounded-lg text-slate-700 bg-white shadow-2xs focus:outline-none focus:border-sky-500"
                                     />
                                     <span className="text-[10px] text-slate-500 font-bold">seg/mes</span>
                                 </div>
                             </div>
                             <button
                                 onClick={handlePlayAnimation}
-                                className={`w-full py-1.5 rounded-md text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-sm ${isPlaying ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-petral-blue text-white hover:bg-blue-800'}`}
+                                className={`w-full h-7.5 rounded-lg text-[11px] font-extrabold flex items-center justify-center gap-2 transition-all shadow-2xs cursor-pointer ${isPlaying ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-sky-600 text-white hover:bg-sky-700'}`}
                             >
                                 {isPlaying ? (
                                     <>
@@ -245,10 +249,11 @@ export const SpaghettiMap_V2: React.FC = () => {
                                 )}
                             </button>
                         </div>
+                        </div>
                     </div>
 
                     <div className="flex items-center justify-between mb-3 px-1">
-                        <h3 className="text-petral-teal text-xs font-bold uppercase tracking-widest text-left">Línea de Tiempo</h3>
+                        <h3 className="text-sky-700 text-[11px] font-black uppercase tracking-widest text-left">Línea de Tiempo</h3>
                     </div>
                     
                     {/* List of Months Header */}
@@ -257,7 +262,7 @@ export const SpaghettiMap_V2: React.FC = () => {
                             <div className="w-[45%]">
                                 <button
                                     onClick={toggleAllMonths}
-                                    className="text-[10px] font-bold text-petral-teal hover:text-petral-blue uppercase flex items-center gap-1 transition-colors"
+                                    className="text-[10px] font-extrabold text-sky-600 hover:text-sky-800 uppercase flex items-center gap-1 transition-colors"
                                 >
                                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -286,27 +291,27 @@ export const SpaghettiMap_V2: React.FC = () => {
                                 <button
                                     key={m}
                                     onClick={() => toggleMonth(m)}
-                                    className={`w-full flex items-center p-1.5 px-2 rounded-md transition-all border ${isSelected ? 'bg-white border-petral-teal/30 shadow-[0_2px_8px_rgba(14,165,233,0.1)]' : 'bg-transparent border-transparent hover:bg-slate-100 hover:border-slate-200'} focus:outline-none group`}
+                                    className={`w-full flex items-center p-1.5 px-2 rounded-lg transition-all border ${isSelected ? 'bg-white border-sky-200 shadow-2xs' : 'bg-transparent border-transparent hover:bg-slate-100 hover:border-slate-200'} focus:outline-none group cursor-pointer`}
                                 >
                                     <div className="w-[45%] flex items-center gap-3">
-                                        <div className={`w-[20px] h-[20px] flex items-center justify-center shrink-0 transition-colors border-2 ${isSelected ? 'bg-petral-teal border-petral-teal' : 'bg-white border-slate-300 group-hover:border-petral-teal'} rounded-[4px]`}>
+                                        <div className={`w-[20px] h-[20px] flex items-center justify-center shrink-0 transition-colors border-2 ${isSelected ? 'bg-sky-600 border-sky-600' : 'bg-white border-slate-300 group-hover:border-sky-500'} rounded-[4px]`}>
                                             {isSelected && (
                                                 <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                                 </svg>
                                             )}
                                         </div>
-                                        <span className={`text-sm font-semibold transition-colors ${isSelected ? 'text-petral-teal' : 'text-slate-500 group-hover:text-slate-700'}`}>
+                                        <span className={`text-[12px] font-extrabold transition-colors ${isSelected ? 'text-sky-700' : 'text-slate-500 group-hover:text-slate-700'}`}>
                                             {formatMonthPill(m)}
                                         </span>
                                     </div>
                                     <div className="w-[20%] text-center">
-                                        <span className={`text-sm font-bold ${isSelected ? 'text-petral-blue' : 'text-slate-400'}`}>
+                                        <span className={`text-[12px] font-bold font-mono ${isSelected ? 'text-sky-900' : 'text-slate-400'}`}>
                                             {trips}
                                         </span>
                                     </div>
                                     <div className="w-[35%] text-right">
-                                        <span className={`text-sm font-bold ${isSelected ? 'text-sky-600' : 'text-slate-400'}`}>
+                                        <span className={`text-[12px] font-bold font-mono ${isSelected ? 'text-sky-600' : 'text-slate-400'}`}>
                                             {tons.toLocaleString('en-US')} <span className="text-[10px] font-normal">MT</span>
                                         </span>
                                     </div>
@@ -316,15 +321,15 @@ export const SpaghettiMap_V2: React.FC = () => {
                     </div>
                     
                     {/* Footer Row: Accumulated Total pegadito al último mes */}
-                    <div className="flex flex-col bg-white border border-slate-200 rounded-lg p-3 mt-2 shadow-sm">
+                    <div className="flex flex-col bg-white border border-slate-200 rounded-xl p-3 mt-2 shadow-2xs">
                         <span className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">Acumulado ({selectedMonths.length} meses)</span>
                         <div className="flex items-center justify-between">
                             <div className="flex flex-col">
-                                <span className="text-xl font-bold text-petral-blue">{totalSelectedTrips}</span>
+                                <span className="text-xl font-black font-mono text-sky-900">{totalSelectedTrips}</span>
                                 <span className="text-[10px] text-slate-400 uppercase">Viajes</span>
                             </div>
                             <div className="flex flex-col text-right">
-                                <span className="text-xl font-bold text-sky-600">{totalSelectedTons.toLocaleString('en-US')}</span>
+                                <span className="text-xl font-black font-mono text-sky-600">{totalSelectedTons.toLocaleString('en-US')}</span>
                                 <span className="text-[10px] text-slate-400 uppercase">Toneladas (MT)</span>
                             </div>
                         </div>
