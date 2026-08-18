@@ -972,9 +972,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         </th>
                         <th className="py-1 px-2 border border-slate-700 bg-slate-800 text-center font-bold text-xs tracking-wider w-36 min-w-[120px]">Métrica</th>
                         {months.filter(m => !hiddenMonths.includes(m)).map((m, idx) => (
-                            <th key={idx} className="py-1 px-2 border border-slate-700 bg-slate-800 text-center font-bold text-xs tracking-wider min-w-[60px] w-16">{m}</th>
+                            <th key={idx} className="py-1 px-2 border border-slate-700 bg-slate-800 text-center font-extrabold text-xs tracking-wider min-w-[60px] w-16">{m}</th>
                         ))}
-                        <th className="py-1 px-1 border border-slate-700 bg-petral-teal text-white text-center font-bold text-xs tracking-wider min-w-[60px] w-16">TOTAL</th>
+                        <th className="py-1 px-2 border border-sky-800 bg-sky-900 text-sky-100 text-center font-black text-[11px] tracking-wider min-w-[70px] w-20 shadow-2xs">TOTAL ACUM</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1263,26 +1263,26 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                             row.metric.isCurrency ? (
                                                 <div className="flex items-center justify-end w-full min-w-[60px]">
                                                     {displayMode === 'pct' && row.metric.pct && row.metric.pct[origColIdx] !== null && row.metric.pct[origColIdx] !== undefined ? (
-                                                        <span className="font-medium text-slate-700">
+                                                        <span className="font-semibold text-slate-700 font-mono">
                                                             {row.metric.pct[origColIdx].toFixed(1)}%
                                                         </span>
                                                     ) : (
-                                                        <span className="font-medium">
+                                                        <span className="font-bold font-mono">
                                                             {(row.metric.name.includes("Flete") || row.metric.name.includes("Yield") || row.metric.name.includes("Tarifa")) ? formatYield(v) : formatCurrency(v)}
                                                         </span>
                                                     )}
                                                 </div>
                                              ) : row.metric.isPct ? (
-                                                 <span className="font-medium text-slate-700">{v != null && v !== 0 ? `${Number(v).toFixed(1)}%` : '-'}</span>
+                                                 <span className="font-semibold text-slate-700 font-mono">{v != null && v !== 0 ? `${Number(v).toFixed(1)}%` : '-'}</span>
                                              ) : (
-                                                 <span className="font-medium text-slate-700">{formatNumber(v)}</span>
+                                                 <span className="font-semibold text-slate-700 font-mono">{formatNumber(v)}</span>
                                              )
                                         )
                                     )}
                                 </td>
                                 );
                             })}
-                            <td className={`py-1 px-1 text-right tabular-nums font-bold border border-slate-200 ${row.metric.isTotal ? 'bg-slate-200' : 'bg-slate-50'} ${row.isSubRow ? 'text-slate-300' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
+                            <td className={`py-1.5 px-2 text-right tabular-nums font-black font-mono text-xs border border-slate-200 border-l-2 border-l-sky-300 ${row.metric.isTotal ? 'bg-sky-100/90 text-sky-950 shadow-2xs' : 'bg-sky-50/80 text-sky-900'} ${row.isSubRow ? 'text-slate-400' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
                                 {row.metric.isCategoryHeader ? '' : (row.metric.isSubRowMetric ? '-' : (() => {
                                     // Recalculate total using only visible months
                                     const visibleIndices = months
