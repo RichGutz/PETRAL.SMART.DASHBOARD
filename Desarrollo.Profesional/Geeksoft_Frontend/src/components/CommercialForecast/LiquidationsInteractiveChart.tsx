@@ -776,7 +776,7 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
     };
 
     return (
-        <div className="w-full bg-white pt-4 pb-6 px-6 shadow-sm rounded-b-lg flex flex-row gap-6 items-stretch min-h-[calc(100vh-220px)]">
+        <div className="w-full glass-card bg-white p-5 rounded-xl shadow-xs border border-slate-200 flex flex-row gap-6 items-stretch min-h-[calc(100vh-220px)]">
             
             {/* SIDEBAR IZQUIERDO DE CONTROLES (ELÁSTICO — SE ADAPTA AL CONTENIDO MÁS ANCHO) */}
             <div className="flex flex-col gap-3 shrink-0 min-w-[245px] w-fit">
@@ -787,35 +787,30 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
                         <span className="text-[11px] font-black text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Filtros</span>
                     </div>
                     <div className="flex-1 p-2.5 flex flex-col gap-2 bg-slate-50/70 rounded-r-xl min-w-0 relative">
-                        <button 
-                            onClick={() => setGroupBy('petral')} 
-                            className={`w-full h-8 flex items-center justify-center text-center px-2 text-[12px] font-extrabold rounded-md transition-colors cursor-pointer ${
-                                groupBy === 'petral' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-blue-600 border border-slate-300 hover:bg-slate-100'
-                            }`}
-                        >
+                        <button onClick={() => setGroupBy('petral')} className={`w-full h-8 flex items-center justify-center text-center px-2 text-[11.5px] font-black rounded-lg transition-all cursor-pointer ${groupBy === 'petral' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-sky-700 border border-slate-200 hover:bg-slate-100 font-extrabold'}`}>
                             PETRAL (Todo)
                         </button>
                         <div className="h-px w-full bg-slate-200 my-0.5"></div>
                         
-                        {/* Cliente */}
-                        <div className="flex items-center gap-1 w-full min-w-0">
-                            <button onClick={() => setGroupBy('client')} className={`w-[65px] shrink-0 h-8 flex items-center justify-center text-[11px] font-bold rounded-md transition-colors cursor-pointer ${groupBy === 'client' || filterClient !== 'ALL' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                        {/* Cliente filter row */}
+                        <div className="flex items-center gap-1">
+                            <button onClick={() => setGroupBy('client')} className={`w-[75px] shrink-0 h-7.5 flex items-center justify-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${groupBy === 'client' || filterClient !== 'ALL' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}`}>
                                 Cliente
                             </button>
                             {renderFilterDropdown(filterClient, setFilterClient, filterOptions.clients, isClientFilterOpen, setIsClientFilterOpen, 'Cliente')}
                         </div>
 
-                        {/* Ruta */}
-                        <div className="flex items-center gap-1 w-full min-w-0">
-                            <button onClick={() => setGroupBy('route')} className={`w-[65px] shrink-0 h-8 flex items-center justify-center text-[11px] font-bold rounded-md transition-colors cursor-pointer ${groupBy === 'route' || filterRoute !== 'ALL' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                        {/* Ruta filter row */}
+                        <div className="flex items-center gap-1">
+                            <button onClick={() => setGroupBy('route')} className={`w-[75px] shrink-0 h-7.5 flex items-center justify-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${groupBy === 'route' || filterRoute !== 'ALL' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}`}>
                                 Ruta
                             </button>
                             {renderFilterDropdown(filterRoute, setFilterRoute, filterOptions.routes, isRouteFilterOpen, setIsRouteFilterOpen, 'Ruta')}
                         </div>
 
-                        {/* Buque */}
-                        <div className="flex items-center gap-1 w-full min-w-0">
-                            <button onClick={() => setGroupBy('vessel')} className={`w-[65px] shrink-0 h-8 flex items-center justify-center text-[11px] font-bold rounded-md transition-colors cursor-pointer ${groupBy === 'vessel' || filterVessel !== 'ALL' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                        {/* Buque filter row */}
+                        <div className="flex items-center gap-1">
+                            <button onClick={() => setGroupBy('vessel')} className={`w-[75px] shrink-0 h-7.5 flex items-center justify-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${groupBy === 'vessel' || filterVessel !== 'ALL' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}`}>
                                 Buque
                             </button>
                             {renderFilterDropdown(filterVessel, setFilterVessel, filterOptions.vessels, isVesselFilterOpen, setIsVesselFilterOpen, 'Buque')}
