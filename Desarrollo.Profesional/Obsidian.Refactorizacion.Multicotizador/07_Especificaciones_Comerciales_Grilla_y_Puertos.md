@@ -763,6 +763,15 @@ A partir de la intervención pericial de Sherlock Holmes y Benoit Blanc (18.08.2
 | **21.1** | **`RouteMaster_V2.tsx` (Descalce de Números en Cards)** | Las tarjetas calculaban días y consumos con fórmulas manuales inexactas (`portLoadDays = (0 + 6 + 1)/24`), arrojando P&L de **$289,257 USD** (5.68 d) cuando el Multicotizador daba **$182,961 USD** (7.13 d / $80,082 Búnker / $48,000 Puertos). | Creado el componente unificado `QuoteExecutiveCardSummary.tsx` que ejecuta directamente `MulticotizadorCalculationEngine.calculate()` (Single Source of Truth), asegurando cuadratura al 100.00% con la pantalla del Multicotizador. | **RESUELTO:** Cuadratura matemática absoluta al centavo entre el Multicotizador y las 4 Cards. | ✅ SOLUCIONADO |
 | **21.2** | **`ContractsMaster_V2.tsx` (Inyección en Maestro de Rutas COA)** | El Maestro de Rutas COA mantenía el diseño antiguo de tablas extensas y acordeón desalineado sin el visor ejecutivo de 4 cards. | Se inyectó `QuoteExecutiveCardSummary.tsx` en el acordeón expandido de cada ruta COA agrupada por año. | **RESUELTO:** Ambos maestros (`RouteMaster_V2` y `ContractsMaster_V2`) comparten exactamente la misma UI y la misma verdad matemática. | ✅ SOLUCIONADO |
 
+### 🕵️‍♂️ 5.22. Vigésima Segunda Vuelta (Serie 45: Desglose Espejo de Freight Revenue Puro $405k vs Dockage Revenue $13k en Matriz Financiera)
+
+A partir de la orden de Sherlock Holmes (18.08.2026), se corrigió el backend (`forecast_service.py`) y el frontend (`ForecastGrid.tsx`) para desglosar el ingreso bruto total ($418,000 USD) en sus dos componentes independientes: Flete Base ($405,000 USD @ $30/MT) y Dockage/Muellaje Refacturado ($13,000 USD).
+
+| # | Objeto / Componente Auditado | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- | :-: |
+| **22.1** | **`forecast_service.py` (Backend Engine)** | Asignaba a `gross_income` y `gross_income_unit` el total consolidado con muellaje ($418,000 USD) en vez del flete puro ($405,000 USD). | Se asignó a `gross_income` y `freight_revenue` el `total_freight_revenue` ($405,000 USD) y a `dockage_revenue` el `total_refacturacion_muellaje` ($13,000 USD). | **RESUELTO:** El backend envía ambos conceptos desglosados y exactos. | ✅ SOLUCIONADO |
+| **22.2** | **`ForecastGrid.tsx` (Matriz Financiera)** | Mostraba `↳ (+) Freight Revenue` en **$418,000 USD** y `↳ (+) Dockage Revenue` en **`-` ($0)**, distorsionando el `Yield Flete` a $30.96/MT. | Lee `freight_revenue_unit` ($405k) para Freight Revenue y `dockage_revenue_unit` ($13k) para Dockage Revenue, totalizando Gross Revenue en $418,000 USD. | **RESUELTO:** El desglose es 100% fiel al Multicotizador y el Yield Flete reporta exactamente **$30.00/MT**. | ✅ SOLUCIONADO |
+
 ---
 
 ## 📄 Archivos Relacionados
