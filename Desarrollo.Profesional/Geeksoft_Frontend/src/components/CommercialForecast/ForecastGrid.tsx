@@ -351,7 +351,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 if (metricKey === "bunker_mdo_tonnage_unit") val = monthData[m]?.["bunker_mdo_tonnage"] || monthData[m]?.["mdo_tons"];
                                 if (metricKey === "total_port_costs_unit") val = monthData[m]?.["total_port_costs"] || monthData[m]?.["port_costs"];
                                 if (metricKey === "total_bunker_costs_unit") val = monthData[m]?.["total_bunker_costs"] || monthData[m]?.["bunker_costs"];
-                                if (metricKey === "gross_income_unit") val = monthData[m]?.["gross_income"] || (monthData[m]?.["carga_unit"] && monthData[m]?.["flete_unit"] ? monthData[m]?.["carga_unit"] * monthData[m]?.["flete_unit"] : undefined);
+                                if (metricKey === "gross_income_unit") val = monthData[m]?.["freight_revenue_unit"] ?? monthData[m]?.["freight_revenue"] ?? monthData[m]?.["gross_income"] ?? (monthData[m]?.["carga_unit"] && monthData[m]?.["flete_unit"] ? monthData[m]?.["carga_unit"] * monthData[m]?.["flete_unit"] : undefined);
                                 if (metricKey === "address_comm_pct") val = monthData[m]?.["address_comm_pct"];
                                 if (metricKey === "broker_comm_pct") val = monthData[m]?.["broker_comm_pct"];
                                 if (metricKey === "total_commissions_unit") val = monthData[m]?.["total_commissions"];
@@ -374,8 +374,12 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     const refacturacionMuellaje = months.map((m, i) => {
                         const tripCount = trips[i] || 0;
                         if (tripCount <= 0) return 0;
-                        const mVal = monthData[m]?.["refacturacion_muellaje"] || monthData[m]?.["muellaje_refacturado"] || 0;
-                        return Number(mVal) * tripCount;
+                        const mUnit = monthData[m]?.["dockage_revenue_unit"] ?? monthData[m]?.["refacturacion_muellaje_unit"];
+                        if (mUnit !== undefined) {
+                            return Number(mUnit) * tripCount;
+                        }
+                        const mVal = monthData[m]?.["dockage_revenue"] ?? monthData[m]?.["refacturacion_muellaje"] ?? monthData[m]?.["muellaje_refacturado"] ?? 0;
+                        return Number(mVal);
                     });
 
                     const grossRevenues = months.map((_, i) => freightRevenues[i] + refacturacionMuellaje[i]);

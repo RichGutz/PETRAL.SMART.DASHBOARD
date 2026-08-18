@@ -852,7 +852,10 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 addr_comm_pct = float(legs_data.get("addressCommPct", 0))
                 broker_comm_pct = float(legs_data.get("brokerCommPct", 0))
                 total_comm_pct = addr_comm_pct + broker_comm_pct
-                gross_revenue = consolidated.get("gross_revenue_total") or (consolidated.get("total_freight_revenue", 0) + consolidated.get("total_refacturacion_muellaje", 0))
+                tot_freight_rev = float(consolidated.get("total_freight_revenue", 0))
+                tot_refact_muell = float(consolidated.get("total_refacturacion_muellaje", 0) or consolidated.get("refacturacion_muellaje", 0))
+                gross_revenue = float(consolidated.get("gross_revenue_total", 0) or (tot_freight_rev + tot_refact_muell))
+                
                 total_commissions = gross_revenue * (total_comm_pct / 100)
                 net_revenue = gross_revenue - total_commissions
                 pnl_after_comm = net_revenue - consolidated.get("total_port_costs", 0) - consolidated.get("total_bunker_costs", 0)
@@ -860,8 +863,16 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 tce_real = (pnl_after_comm / total_days) if total_days > 0 else 0
 
                 unit_result = {
-                    "gross_income": round(gross_revenue, 2),
-                    "gross_income_unit": round(gross_revenue, 2),
+                    "gross_income": round(tot_freight_rev if tot_freight_rev > 0 else gross_revenue, 2),
+                    "gross_income_unit": round(tot_freight_rev if tot_freight_rev > 0 else gross_revenue, 2),
+                    "freight_revenue": round(tot_freight_rev if tot_freight_rev > 0 else gross_revenue, 2),
+                    "freight_revenue_unit": round(tot_freight_rev if tot_freight_rev > 0 else gross_revenue, 2),
+                    "refacturacion_muellaje": round(tot_refact_muell, 2),
+                    "refacturacion_muellaje_unit": round(tot_refact_muell, 2),
+                    "dockage_revenue": round(tot_refact_muell, 2),
+                    "dockage_revenue_unit": round(tot_refact_muell, 2),
+                    "gross_revenue_total": round(gross_revenue, 2),
+                    "gross_revenue_total_unit": round(gross_revenue, 2),
                     "total_commissions": round(total_commissions, 2),
                     "net_income": round(net_revenue, 2),
                     "total_port_costs": consolidated.get("total_port_costs", 0),
@@ -1501,15 +1512,18 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             demurrage_rate_val = get_demurrage_from_dict(contract.get("demurrage_rates"), vessel)
 
         hire_cost_val = unit_result.get("hire_cost", unit_result.get("total_duration", 0) * float(v_data.get("tce_required", 15000.0))) * freq
-        gross_rev_total_val = unit_result.get("gross_revenue_total", unit_result.get("gross_income", 0)) * freq
+        freight_rev_val = unit_result.get("freight_revenue", unit_result.get("gross_income", inputs["quantity"] * inputs["freight_rate"])) * freq
         refact_muell_val = unit_result.get("refacturacion_muellaje", 0.0) * freq
+        gross_rev_total_val = unit_result.get("gross_revenue_total", freight_rev_val + refact_muell_val)
 
         monthly_result = {
             "freq": freq,
             "vessel_demurrage_rate": demurrage_rate_val,
-            "gross_income": unit_result.get("gross_income", inputs["quantity"] * inputs["freight_rate"]) * freq,
+            "gross_income": freight_rev_val,
+            "freight_revenue": freight_rev_val,
             "gross_revenue_total": gross_rev_total_val,
             "refacturacion_muellaje": refact_muell_val,
+            "dockage_revenue": refact_muell_val,
             "hire_cost": hire_cost_val,
             "total_commissions": unit_result.get("total_commissions", 0.0) * freq,
             "net_income": unit_result["net_income"] * freq,
@@ -1527,7 +1541,9 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             "carga_unit": inputs["quantity"],
             "flete_unit": inputs["freight_rate"],
             "gross_income_unit": unit_result.get("gross_income", inputs["quantity"] * inputs["freight_rate"]),
+            "freight_revenue_unit": unit_result.get("freight_revenue", unit_result.get("gross_income", inputs["quantity"] * inputs["freight_rate"])),
             "refacturacion_muellaje_unit": unit_result.get("refacturacion_muellaje", 0.0),
+            "dockage_revenue_unit": unit_result.get("dockage_revenue", unit_result.get("refacturacion_muellaje", 0.0)),
             "gross_revenue_total_unit": unit_result.get("gross_revenue_total", unit_result.get("gross_income", 0)),
             "address_comm_pct": inputs.get("address_commission", 0.0),
             "broker_comm_pct": inputs.get("broker_commission", 0.0),
