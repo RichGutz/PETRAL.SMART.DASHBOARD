@@ -355,17 +355,17 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     }
 
     return (
-        <Card className="border-slate-200 shadow-sm relative overflow-visible">
-            <CardContent className="py-2 px-6 flex flex-col gap-3">
+        <Card className="glass-card bg-white border border-slate-200 shadow-xs relative overflow-visible rounded-xl">
+            <CardContent className="py-2.5 px-4 flex flex-col gap-3">
                 
                 {/* ========================================================================= */}
-                {/* FILA 1: HORIZONTE, CLIENTE, RUTA Y BUQUE (Pasos 1 al 6 amplios y cómodos) */}
+                {/* FILA 1: HORIZONTE, CLIENTE, RUTA Y BUQUE (SISTEMA DE DISEÑO APEFAC LIGHT) */}
                 {/* ========================================================================= */}
                 <div className="flex flex-row items-center gap-2.5 w-full overflow-x-auto pb-1 scrollbar-none shrink-0">
                     
                     {/* 1. Inicio forecast */}
-                    <div className="flex flex-col gap-1.5 flex-1 min-w-[130px]">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">1. Inicio forecast</Label>
+                    <div className="flex flex-col gap-1 flex-1 min-w-[130px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">1. Inicio forecast</Label>
                         <MonthPicker 
                             value={currentStartDate.slice(0, 7)}
                             onChange={(val) => {
@@ -381,13 +381,13 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 }
                             }}
                             placeholder="Inicio"
-                            className="border-slate-200 shadow-sm h-8"
+                            className="border-slate-200 bg-white shadow-2xs h-7.5 text-xs font-bold"
                         />
                     </div>
 
                     {/* 2. Fin forecast */}
-                    <div className="flex flex-col gap-1.5 flex-1 min-w-[130px]">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">2. Fin forecast</Label>
+                    <div className="flex flex-col gap-1 flex-1 min-w-[130px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">2. Fin forecast</Label>
                         <MonthPicker 
                             value={currentEndDate.slice(0, 7)}
                             onChange={(val) => {
@@ -404,23 +404,23 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             }}
                             minDate={currentStartDate.slice(0, 7)}
                             placeholder="Fin"
-                            className="border-slate-200 shadow-sm h-8"
+                            className="border-slate-200 bg-white shadow-2xs h-7.5 text-xs font-bold"
                         />
                     </div>
 
                     {/* 3. Meses a modelar */}
-                    <div className="flex flex-col gap-1.5 flex-1 min-w-[140px] relative">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">3. Meses a modelar</Label>
+                    <div className="flex flex-col gap-1 flex-1 min-w-[140px] relative bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">3. Meses a modelar</Label>
                         <Popover>
                             <PopoverTrigger
-                                className="w-full flex items-center justify-between px-3 h-8 text-xs bg-white border-2 border-petral-teal shadow-sm rounded hover:border-[#0F2340] focus:outline-none transition-all text-slate-700"
+                                className="w-full flex items-center justify-between px-2.5 h-7.5 text-xs bg-white border border-sky-300 shadow-2xs rounded-md hover:border-sky-500 focus:outline-none transition-all text-sky-900 font-extrabold"
                             >
-                                <span className="truncate text-left w-full font-medium">
+                                <span className="truncate text-left w-full">
                                     {selectedMonths.length === 0 ? "Seleccionar..." : 
                                      selectedMonths.length === 1 ? selectedMonths[0] : 
                                      `${selectedMonths.length} meses`}
                                 </span>
-                                <span className="text-[10px] text-slate-500 shrink-0 ml-1">▼</span>
+                                <span className="text-[10px] text-sky-600 shrink-0 ml-1">▼</span>
                             </PopoverTrigger>
                             <PopoverContent className="w-[320px] p-4" side="bottom" align="start">
                                 <div className="text-[11px] uppercase font-bold tracking-wider text-slate-400 mb-3 border-b pb-1.5">Selección Múltiple</div>
@@ -469,28 +469,28 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* 4. Cliente (Pestañas ACTIVOS / PROSPECTOS + Dropdown) */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[170px]">
+                    <div className="flex flex-col gap-1 flex-1 min-w-[170px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <div className="flex items-center justify-between">
-                            <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">4. Cliente</Label>
-                            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded text-[9px] font-bold">
+                            <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">4. Cliente</Label>
+                            <div className="flex items-center gap-0.5 bg-white p-0.5 rounded border border-slate-200 text-[8px] font-black shadow-2xs">
                                 <button
                                     type="button"
                                     onClick={() => handleTabChange('activos')}
-                                    className={`px-1.5 py-0.5 rounded transition-colors ${clientTab === 'activos' ? 'bg-sky-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                                    className={`px-1.5 py-0.2 rounded transition-colors ${clientTab === 'activos' ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'}`}
                                 >
                                     ACTIVOS
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => handleTabChange('prospectos')}
-                                    className={`px-1.5 py-0.5 rounded transition-colors ${clientTab === 'prospectos' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                                    className={`px-1.5 py-0.2 rounded transition-colors ${clientTab === 'prospectos' ? 'bg-purple-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'}`}
                                 >
                                     PROSP.
                                 </button>
                             </div>
                         </div>
                         <Select value={client} onValueChange={(val) => setClient(val || '')}>
-                            <SelectTrigger className="w-full h-8 bg-white">
+                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold">
                                 <SelectValue placeholder="Cliente">
                                     {client || undefined}
                                 </SelectValue>
@@ -499,7 +499,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 {currentClientList.map(c => (
                                     <SelectItem key={c} value={c}>
                                         <div className="flex items-center gap-2">
-                                            <div className={`w-2.5 h-2.5 rounded-full ${clientTab === 'activos' ? 'bg-[#1E3A8A]' : 'bg-purple-600'}`}></div>{c}
+                                            <div className={`w-2.5 h-2.5 rounded-full ${clientTab === 'activos' ? 'bg-sky-600' : 'bg-purple-600'}`}></div>{c}
                                         </div>
                                     </SelectItem>
                                 ))}
@@ -508,23 +508,23 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {client === 'SPOT' && (
-                        <div className="flex flex-col gap-1.5 flex-1 min-w-[120px]">
-                            <Label className="text-xs font-semibold text-red-500 whitespace-nowrap">Sufijo SPOT *</Label>
+                        <div className="flex flex-col gap-1 flex-1 min-w-[120px] bg-red-50/80 border border-red-200 rounded-lg p-1.5 shadow-2xs">
+                            <Label className="text-[10px] font-extrabold text-red-600 uppercase tracking-tight whitespace-nowrap">Sufijo SPOT *</Label>
                             <Input 
                                 type="text" 
                                 value={spotSuffix} 
                                 onChange={e => setSpotSuffix(e.target.value)}
                                 placeholder="Ej: NEXA"
-                                className="w-full h-8 border-red-300 bg-red-50 uppercase text-xs"
+                                className="w-full h-7.5 border-red-300 bg-white uppercase text-xs font-bold"
                             />
                         </div>
                     )}
 
                     {/* 5. Ruta o Cotización */}
-                    <div className="flex flex-col gap-1.5 flex-2 min-w-[180px] max-w-[280px]">
-                        <Label className="text-xs font-semibold text-slate-600 whitespace-nowrap">5. Ruta / Quote</Label>
+                    <div className="flex flex-col gap-1 flex-2 min-w-[180px] max-w-[280px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">5. Ruta / Quote</Label>
                         <Select value={route} onValueChange={(val) => setRoute(val || '')} disabled={!client}>
-                            <SelectTrigger className="w-full h-8 truncate">
+                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold truncate">
                                 <SelectValue placeholder="Ruta" className="truncate">
                                     {selectedRouteDisplay || undefined}
                                 </SelectValue>

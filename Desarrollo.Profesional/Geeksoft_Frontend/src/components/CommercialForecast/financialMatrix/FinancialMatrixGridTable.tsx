@@ -107,19 +107,19 @@ export const FinancialMatrixGridTable: React.FC<FinancialMatrixGridTableProps> =
     }
 
     return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-x-auto">
+        <div className="glass-card bg-white border border-slate-200 rounded-xl shadow-xs overflow-x-auto">
             <table className="w-full text-xs text-left border-collapse">
-                <thead className="bg-slate-800 text-white text-[10.5px] font-bold uppercase tracking-wider sticky top-0 z-10 select-none">
+                <thead className="bg-slate-900 text-slate-100 text-[10.5px] font-black uppercase tracking-wider sticky top-0 z-10 select-none shadow-xs">
                     <tr>
-                        <th className="p-1.5 border-r border-slate-700 w-20 text-center">CLIENTE</th>
-                        <th className="p-1.5 border-r border-slate-700 w-28 text-center">RUTA</th>
-                        <th className="p-1.5 border-r border-slate-700 w-20 text-center">BUQUE</th>
-                        <th className="p-1.5 border-r border-slate-700 w-44">MÉTRICA / ACORDEÓN</th>
+                        <th className="p-2 border-r border-slate-700 w-20 text-center">CLIENTE</th>
+                        <th className="p-2 border-r border-slate-700 w-28 text-center">RUTA</th>
+                        <th className="p-2 border-r border-slate-700 w-20 text-center">BUQUE</th>
+                        <th className="p-2 border-r border-slate-700 w-44">MÉTRICA / ACORDEÓN</th>
                         {months.map(m => (
-                            <th key={m} className="p-1.5 border-r border-slate-700 text-right min-w-[75px]">{m}</th>
+                            <th key={m} className="p-2 border-r border-slate-700 text-right min-w-[75px]">{m}</th>
                         ))}
-                        <th className="p-1.5 text-right min-w-[95px] bg-slate-900">TOTAL ACUM.</th>
-                        <th className="p-1.5 text-center w-16">ACC.</th>
+                        <th className="p-2 text-right min-w-[95px] bg-sky-900 text-sky-100 font-black">TOTAL ACUM.</th>
+                        <th className="p-2 text-center w-16">ACC.</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
