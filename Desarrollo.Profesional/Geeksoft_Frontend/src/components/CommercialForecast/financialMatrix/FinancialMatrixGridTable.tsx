@@ -210,11 +210,11 @@ export const FinancialMatrixGridTable: React.FC<FinancialMatrixGridTableProps> =
                                             </td>
                                         );
                                     })}
-                                    <td className="p-2 border-r text-right font-black text-slate-900 dark:text-white font-mono bg-slate-100 dark:bg-slate-800">
+                                    <td className="p-2 border-r text-right font-black text-sky-950 font-mono bg-sky-50 border-l border-slate-200">
                                         {totFreq}
                                     </td>
                                     {/* ACCIONES DE FILA */}
-                                    <td rowSpan={8 + (isExpandedNetRev ? 3 : 0) + (isExpandedTceVal ? 3 : 0)} className="p-2 text-center align-middle bg-slate-50 dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800">
+                                    <td rowSpan={8 + (isExpandedNetRev ? 3 : 0) + (isExpandedTceVal ? 3 : 0)} className="p-2 text-center align-middle bg-slate-50 border-l border-slate-200">
                                         <div className="flex flex-col items-center gap-1.5">
                                             {isModified && (
                                                 <>
@@ -222,7 +222,7 @@ export const FinancialMatrixGridTable: React.FC<FinancialMatrixGridTableProps> =
                                                         type="button"
                                                         onClick={() => handleSaveRow(lineKey)}
                                                         title="Guardar cambios en memoria a DB"
-                                                        className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md shadow-sm transition active:scale-95 flex items-center gap-1 text-[10px] font-bold"
+                                                        className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md shadow-sm transition active:scale-95 flex items-center gap-1 text-[10px] font-bold cursor-pointer"
                                                     >
                                                         <Save className="w-3.5 h-3.5" />
                                                         <span>💾</span>
@@ -231,7 +231,7 @@ export const FinancialMatrixGridTable: React.FC<FinancialMatrixGridTableProps> =
                                                         type="button"
                                                         onClick={() => handleResetRow(lineKey)}
                                                         title="Restablecer valores originales"
-                                                        className="p-1.5 bg-slate-600 hover:bg-slate-700 text-white rounded-md transition active:scale-95 flex items-center gap-1 text-[10px] font-bold"
+                                                        className="p-1.5 bg-slate-600 hover:bg-slate-700 text-white rounded-md transition active:scale-95 flex items-center gap-1 text-[10px] font-bold cursor-pointer"
                                                     >
                                                         <RotateCcw className="w-3.5 h-3.5" />
                                                         <span>🔄</span>
@@ -242,7 +242,7 @@ export const FinancialMatrixGridTable: React.FC<FinancialMatrixGridTableProps> =
                                                 type="button"
                                                 onClick={() => handleDeleteNode('route', clientId, routeKey, vesselId)}
                                                 title="Eliminar ruta de la matriz"
-                                                className="p-1 text-slate-400 hover:text-red-600 transition"
+                                                className="p-1 text-slate-400 hover:text-red-600 transition cursor-pointer"
                                             >
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
@@ -252,40 +252,40 @@ export const FinancialMatrixGridTable: React.FC<FinancialMatrixGridTableProps> =
 
                                 {/* FILA 1: TONELADAS */}
                                 <tr className={rowBgClass}>
-                                    <td className="p-2 border-r pl-6 font-medium text-slate-600 dark:text-slate-400">
+                                    <td className="p-2 border-r pl-6 font-medium text-slate-600">
                                         Toneladas (MT)
                                     </td>
                                     {months.map(m => {
                                         const mData = monthsMap[m] || {};
                                         const tons = Number(mData.carga_unit || mData.quantity || 13500) * Number(mData.freq || 1);
                                         return (
-                                            <td key={m} className="p-2 border-r text-right font-mono text-slate-700 dark:text-slate-300">
+                                            <td key={m} className="p-2 border-r text-right font-mono text-slate-700">
                                                 {fmtNumber(tons)}
                                             </td>
                                         );
                                     })}
-                                    <td className="p-2 border-r text-right font-bold text-slate-900 dark:text-white font-mono bg-slate-100 dark:bg-slate-800">
+                                    <td className="p-2 border-r text-right font-bold text-sky-950 font-mono bg-sky-50 border-l border-slate-200">
                                         {fmtNumber(totTons)}
                                     </td>
                                 </tr>
 
                                 {/* FILA 2: NET REVENUE CON ACORDEÓN DESPLEGABLE */}
-                                <tr className={`bg-sky-50/50 dark:bg-sky-950/20 font-bold ${rowBgClass}`}>
-                                    <td className="p-2 border-r flex items-center gap-1 text-sky-700 dark:text-sky-300 cursor-pointer select-none" onClick={() => toggleExpandNetRevenue(lineKey)}>
+                                <tr className={`bg-sky-50/50 font-bold ${rowBgClass}`}>
+                                    <td className="p-2 border-r flex items-center gap-1 text-sky-700 cursor-pointer select-none" onClick={() => toggleExpandNetRevenue(lineKey)}>
                                         {isExpandedNetRev ? <ChevronDown className="w-3.5 h-3.5 text-sky-600" /> : <ChevronRight className="w-3.5 h-3.5 text-sky-400" />}
                                         <span>▶ Net Revenue</span>
-                                        <span className="text-[9px] bg-sky-200 dark:bg-sky-900 text-sky-800 dark:text-sky-200 px-1 rounded ml-1">Net</span>
+                                        <span className="text-[9px] bg-sky-200 text-sky-800 px-1 rounded ml-1 font-extrabold">Net</span>
                                     </td>
                                     {months.map(m => {
                                         const mData = monthsMap[m] || {};
                                         const gross = Number(mData.gross_revenue_total || mData.gross_income || 0);
                                         return (
-                                            <td key={m} className="p-2 border-r text-right font-mono text-sky-700 dark:text-sky-300">
+                                            <td key={m} className="p-2 border-r text-right font-mono text-sky-700 font-bold">
                                                 {fmtUsd(gross)}
                                             </td>
                                         );
                                     })}
-                                    <td className="p-2 border-r text-right font-black text-sky-900 dark:text-sky-200 font-mono bg-sky-100/80 dark:bg-sky-950">
+                                    <td className="p-2 border-r text-right font-black text-sky-950 font-mono bg-sky-100/90 border-l-2 border-sky-300">
                                         {fmtUsd(totGrossRev)}
                                     </td>
                                 </tr>
