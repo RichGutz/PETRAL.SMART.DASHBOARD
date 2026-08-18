@@ -437,7 +437,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     };
 
     const handleRemoveLastTramo = () => {
-        if (tramos.length <= 3) return; // Mínimo 3 piernas obligatorias
+        if (tramos.length <= 1) return; // Mínimo 1 pierna obligatoria
         setTramos(prev => prev.slice(0, -1));
         setPuertosConfig(prev => prev.slice(0, -1));
     };
@@ -968,28 +968,11 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                         </select>
                     </div>
 
-                    {/* PASO 4: BUQUE */}
-                    <div className="flex items-center gap-1 bg-white border border-slate-300 rounded px-1.5 py-0.5 shadow-xs shrink-0">
-                        <span className="text-[8.5px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                            4. BUQUE
-                        </span>
-                        <select
-                            value={selectedVessel}
-                            onChange={(e) => handleVesselChange(e.target.value)}
-                            className="h-5.5 text-[9.5px] font-extrabold bg-white border border-slate-300 rounded px-1 text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-                        >
-                            <option value="">[SELECCIONAR BUQUE]</option>
-                            {vessels.map(v => (
-                                <option key={v.vessel_id} value={v.vessel_id}>{v.vessel_name || v.vessel_id}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* PASO 5: VALIDEZ (FECHA INICIO Y FIN) */}
+                    {/* PASO 4: VALIDEZ (FECHA INICIO Y FIN) */}
                     <div className={`flex items-center gap-1 bg-white border rounded px-1.5 py-0.5 shadow-xs shrink-0 ${!validFrom || !validTo ? 'border-amber-400 bg-amber-50/50' : 'border-slate-300'}`}>
                         <span className="text-[8.5px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap flex items-center gap-1">
                             <Calendar size={11} className="text-blue-600" />
-                            <span>5. VALIDEZ</span>
+                            <span>4. VALIDEZ</span>
                         </span>
                         <div className="flex items-center gap-1">
                             <label className="text-[8px] font-bold text-slate-500 uppercase">Inicio:</label>
@@ -1010,6 +993,40 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                             />
                         </div>
                     </div>
+
+                    {/* PASO 5: BUQUE (BLOQUEADO HASTA COMPLETAR PASO 4 VALIDEZ) */}
+                    {(() => {
+                        const isValidezComplete = Boolean(validFrom && validTo);
+                        return (
+                            <div 
+                                className={`flex items-center gap-1 border rounded px-1.5 py-0.5 shadow-xs shrink-0 transition-all ${
+                                    !isValidezComplete 
+                                        ? 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed' 
+                                        : 'bg-white border-slate-300'
+                                }`}
+                                title={!isValidezComplete ? 'Complete las fechas de Validez (Paso 4) para habilitar la selección de Buque' : ''}
+                            >
+                                <span className={`text-[8.5px] font-black uppercase tracking-wider whitespace-nowrap ${!isValidezComplete ? 'text-slate-400' : 'text-slate-700'}`}>
+                                    5. BUQUE
+                                </span>
+                                <select
+                                    value={selectedVessel}
+                                    disabled={!isValidezComplete}
+                                    onChange={(e) => handleVesselChange(e.target.value)}
+                                    className={`h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                                        !isValidezComplete 
+                                            ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' 
+                                            : 'bg-white border-slate-300 text-slate-800 cursor-pointer'
+                                    }`}
+                                >
+                                    <option value="">[SELECCIONAR BUQUE]</option>
+                                    {vessels.map(v => (
+                                        <option key={v.vessel_id} value={v.vessel_id}>{v.vessel_name || v.vessel_id}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        );
+                    })()}
 
                 </div>
             </div>

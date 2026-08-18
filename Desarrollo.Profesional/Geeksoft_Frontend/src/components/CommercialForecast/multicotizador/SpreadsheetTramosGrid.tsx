@@ -539,7 +539,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                     {puertosConfig[idx + 1]?.action === 'DESCARGAR' ? (
                                         <input
                                             type="number"
-                                            step="0.1"
+                                            step="any"
                                             placeholder="F"
                                             value={puertosConfig[idx + 1]?.freight_rate ?? ''}
                                             onChange={(e) => updatePuertoConfigField(idx + 1, 'freight_rate', e.target.value)}
