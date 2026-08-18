@@ -109,17 +109,17 @@ export const FinancialMatrixGridTable: React.FC<FinancialMatrixGridTableProps> =
     return (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-x-auto">
             <table className="w-full text-xs text-left border-collapse">
-                <thead className="bg-slate-800 text-white text-[11px] font-bold uppercase tracking-wider sticky top-0 z-10">
+                <thead className="bg-slate-800 text-white text-[10.5px] font-bold uppercase tracking-wider sticky top-0 z-10 select-none">
                     <tr>
-                        <th className="p-2.5 border-r border-slate-700 w-28 text-center">CLIENTE</th>
-                        <th className="p-2.5 border-r border-slate-700 w-36 text-center">RUTA</th>
-                        <th className="p-2.5 border-r border-slate-700 w-28 text-center">BUQUE</th>
-                        <th className="p-2.5 border-r border-slate-700 w-52">MÉTRICA / ACORDEÓN</th>
+                        <th className="p-1.5 border-r border-slate-700 w-20 text-center">CLIENTE</th>
+                        <th className="p-1.5 border-r border-slate-700 w-28 text-center">RUTA</th>
+                        <th className="p-1.5 border-r border-slate-700 w-20 text-center">BUQUE</th>
+                        <th className="p-1.5 border-r border-slate-700 w-44">MÉTRICA / ACORDEÓN</th>
                         {months.map(m => (
-                            <th key={m} className="p-2.5 border-r border-slate-700 text-right min-w-[90px]">{m}</th>
+                            <th key={m} className="p-1.5 border-r border-slate-700 text-right min-w-[75px]">{m}</th>
                         ))}
-                        <th className="p-2.5 text-right min-w-[110px] bg-slate-900">TOTAL ACUM.</th>
-                        <th className="p-2.5 text-center w-20">ACCIONES</th>
+                        <th className="p-1.5 text-right min-w-[95px] bg-slate-900">TOTAL ACUM.</th>
+                        <th className="p-1.5 text-center w-16">ACC.</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
@@ -177,13 +177,13 @@ export const FinancialMatrixGridTable: React.FC<FinancialMatrixGridTableProps> =
                             <React.Fragment key={lineKey}>
                                 {/* FILA 0: VIAJES (FREQ) CON ACORDEÓN DESPLEGABLE */}
                                 <tr className={`border-t-2 border-slate-300 dark:border-slate-700 ${rowBgClass}`}>
-                                    <td rowSpan={8 + (isExpandedNetRev ? 3 : 0) + (isExpandedTceVal ? 3 : 0)} className={`p-2.5 border-r font-bold text-center align-middle ${getClientColor(clientId)}`}>
+                                    <td rowSpan={8 + (isExpandedNetRev ? 3 : 0) + (isExpandedTceVal ? 3 : 0)} className={`p-1.5 border-r font-bold text-center align-middle ${getClientColor(clientId)}`}>
                                         {clientId}
                                     </td>
-                                    <td rowSpan={8 + (isExpandedNetRev ? 3 : 0) + (isExpandedTceVal ? 3 : 0)} className={`p-2.5 border-r font-bold text-center align-middle ${getRouteColor(routeKey)}`}>
+                                    <td rowSpan={8 + (isExpandedNetRev ? 3 : 0) + (isExpandedTceVal ? 3 : 0)} className={`p-1.5 border-r font-bold text-center align-middle ${getRouteColor(routeKey)}`}>
                                         {routeKey}
                                     </td>
-                                    <td rowSpan={8 + (isExpandedNetRev ? 3 : 0) + (isExpandedTceVal ? 3 : 0)} className={`p-2.5 border-r font-bold text-center align-middle ${getVesselColor(vesselId)}`}>
+                                    <td rowSpan={8 + (isExpandedNetRev ? 3 : 0) + (isExpandedTceVal ? 3 : 0)} className={`p-1.5 border-r font-bold text-center align-middle ${getVesselColor(vesselId)}`}>
                                         {vesselId}
                                     </td>
                                     {/* Métrica 0 */}

@@ -81,9 +81,9 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
 
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans flex flex-col antialiased">
+        <div className="h-screen max-h-screen w-screen max-w-full bg-slate-50 font-sans flex flex-col antialiased overflow-hidden">
             {/* Header Superior Principal */}
-            <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm px-6 py-3">
+            <header className="bg-white border-b border-slate-200 shrink-0 shadow-sm px-6 py-2.5 z-50">
                 <div className="flex items-center justify-between max-w-full mx-auto w-full">
                     
                     {/* Logos y Título de App */}
@@ -250,10 +250,10 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
             )}
 
             {/* Layout Principal con Sidebar Lateral de Maestros */}
-            <div className="flex-1 flex max-w-full w-full mx-auto p-4 gap-4">
+            <div className="flex-1 flex max-w-full w-full mx-auto p-3 gap-3 min-h-0 overflow-hidden">
                 
                 {/* Sidebar Izquierdo Colapsable */}
-                <aside className={`${isSidebarCollapsed ? 'w-0 opacity-0 overflow-hidden p-0 m-0 border-0 pointer-events-none' : 'w-64 opacity-100'} shrink-0 flex flex-col gap-4 hidden md:flex transition-all duration-300`}>
+                <aside className={`${isSidebarCollapsed ? 'w-0 opacity-0 overflow-hidden p-0 m-0 border-0 pointer-events-none' : 'w-64 opacity-100'} shrink-0 flex flex-col gap-3 hidden md:flex transition-all duration-300 h-full overflow-y-auto pr-1`}>
 
                     {/* CINTA / RIBBON SUPERIOR DEL SIDEBAR DE MAESTROS */}
                     <button
@@ -513,14 +513,14 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
 
 
                 {/* Contenido Principal */}
-                <main className="flex-1 flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm p-6 min-w-0 overflow-y-auto">
+                <main className="flex-1 flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm p-4 min-w-0 min-h-0 overflow-auto">
                     {children}
                 </main>
 
             </div>
 
             {/* Footer Corporativo */}
-            <footer className="bg-white border-t border-slate-200 py-3 px-6 text-center text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-auto">
+            <footer className="shrink-0 bg-white border-t border-slate-200 py-2 px-6 text-center text-[10px] text-slate-400 font-semibold tracking-wider uppercase">
                 © {new Date().getFullYear()} NAVIERA PETRAL · GEEKSOFT TECHNOLOGY PARTNER
             </footer>
 

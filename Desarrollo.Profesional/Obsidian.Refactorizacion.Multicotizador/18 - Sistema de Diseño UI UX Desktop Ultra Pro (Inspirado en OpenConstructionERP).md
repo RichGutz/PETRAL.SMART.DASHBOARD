@@ -156,3 +156,15 @@ graph LR
 | **1366px – 1535px** | Laptops Enterprise 14" / 15.6" | `13px - 13.5px` | Densidad alta, reducción de paddings (`py-0.5`), compresión de botones. |
 | **< 1366px** | Laptops Compactas HD (1366x768) | `11.5px - 12px` | Ribbons en `overflow-x-auto scrollbar-none`, grillas ultra-compactas sin desbordamiento general. |
 
+### 4.3 Estandarización Canónica en Plantilla Global `MasterTemplate_V2.tsx`
+
+> [!TIP]
+> Para evitar parches o trucos de ancho fijo (`px`) celda por celda en cada tabla, la responsividad se aplica **directamente en la plantilla contenedora global `MasterTemplate_V2.tsx`**, propagándose de manera unificada a **absolutamente todos** los módulos del sistema (Matriz Financiera, Multicotizador Multirutas, Maestros, Spaghetti Map, etc.).
+
+1. **Delimitación Viewport Bounded 100%:**
+   * El contenedor raíz sustituye `min-h-screen` por `h-screen max-h-screen w-screen max-w-full overflow-hidden`.
+2. **Relativización Flexbox Dynamic Space (`min-h-0 min-w-0`):**
+   * El cuerpo de contenido principal (`<main>`) y la barra lateral de maestros (`<aside>`) adoptan `flex-1 min-h-0 min-w-0 overflow-auto`.
+3. **Garantía Universal de Ajuste:**
+   * Cualquier pantalla de cualquier módulo respeta el 100% de la altura y ancho útil de la ventana del usuario sin desbordar el marco exterior ni requerir zoom manual (`Ctrl + Scroll`).
+
