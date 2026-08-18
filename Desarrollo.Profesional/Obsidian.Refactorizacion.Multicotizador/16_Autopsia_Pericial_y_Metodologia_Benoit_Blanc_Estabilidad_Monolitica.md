@@ -65,6 +65,8 @@ Esto garantiza que los objetos JSON de opciones entregados a ECharts nunca conte
 | **Serie 32** | `TelemetryConsoleModal.tsx` + `ForecastBuilder_V2.tsx` (ambos en árbol compartido de TODAS las rutas) | `Minified React error #300 / #310` idéntico tras fix de Serie 30 | **DOS CULPABLES IDENTIFICADOS**: (1) `TelemetryConsoleModal`: 4 hooks (L7-10) → `return null` L13 → `useEffect` L15 skipped. (2) `ForecastBuilder_V2`: 12+ hooks + `useMemo`×3 → `return null` L338 (`if hideInputs`) → `useMemo`×2 (L344, L348) SKIPPED cuando `hideInputs` cambia de `false`→`true` al navegar `/dashboard`→`/graphic-analysis`. `hideInputs = activeTab !== 'financial-matrix'` confirma que cambia en CADA navegación. **ESTE ES EL CRASH REAL.** | (1) Cloroformo: eliminar `TelemetryConsoleModal` de `MasterTemplate_V2`. (2) Mover `if (hideInputs) return null` al pie de `ForecastBuilder_V2`, después de L344 y L348. | ✅ AMBOS CULPABLES CONFIRMADOS — APROBADO POR USUARIO |
 | **Serie 33** | `ForecastBuilder_V2.tsx` + `MasterTemplate_V2.tsx` (cloroformo TelemetryConsoleModal) | Dos violaciones simultáneas de la Regla de Hooks Incondicionales | `ForecastBuilder_V2`: `if (hideInputs) return null` en L338 interrumpe 2 `useMemo` en L344 y L348 en cada cambio de tab. `TelemetryConsoleModal`: `useEffect` después de `return null` en L13 — herramienta de diagnóstico sin valor confirmado, se descarta. | Dos cambios quirúrgicos: mover guarda en `ForecastBuilder_V2` al pie del componente + eliminar `TelemetryConsoleModal` de `MasterTemplate_V2`. | ✅ **RESUELTO** — Verificado en Brave 2026-08-16T12:27. Navegación `/dashboard`→`/graphic-analysis`→`/spaghetti-map` sin F5: sin pantalla blanca. React Error #300/#310 eliminado. |
 | **Serie 34** | `ForecastBuilder_V2.tsx` | Selector "5. Ruta / Quote" muestra *"No hay rutas para NEXA"* (o SPCC) | En `clientRoutes` (`useMemo` L.116-162), la sección 1 solo agregaba rutas fijas cuando `cleanClient === 'SPOT'`. Para `NEXA` y `SPCC`, no había rutas fijas en la lista base y si no existían cotizaciones con su prefijo en `spotRoutes`, el arreglo `routesList` quedaba vacío `[]`. | Restauradas las rutas comerciales estándar fijas para `SPCC` (`ILO-MATARANI`, `ILO-MARCONA`, `ILO-MEJILLONES`) y `NEXA` (`CALLAO-MEJILLONES`, `CALLAO-MATARANI`, `CALLAO-MARCONA`) según commit histórico `4f4b59e`. | ✅ **RESUELTO — FIX APLICADO Y DESPLEGADO** |
+| **Serie 35** | `MultiCotizadorExcel.tsx` — `useEffect` Reactivo de Búnker (L.202-243) | Precios de bunker de la cotización `NEXA.ILO.CALLAO.MATARANI.ILO.2026 (IZ)` sobreescritos por valores del Maestro de Búnker en la Matriz Financiera. | **El "Fantasma del useEffect Reactivo"**: `handleLoadRoute()` seteaba correctamente `setBunkerPriceIfo/Mdo` desde la BD, pero `setTramos()` disparaba re-ejecución del useEffect. El branch `'COTIZACION'` buscaba por `selectedRouteId` (que permanecía en `'CREAR_RUTA'`), fallaba silenciosamente y pisaba los precios. | **Fix #1:** Branch `'COTIZACION'` retorna inmediatamente. **Fix #2:** Removidos `tramos` y `latestSpotPrices` del array de dependencias. | ✅ **RESUELTO Y DESPLEGADO** — Bundle `index-CO_NIgOu.js` · 2026-08-17T20:50 |
+| **Serie 35-B** | `MultiCotizadorExcel.tsx` — `handleLoadRoute()` L.851-869 | Bunker sigue incorrecto incluso después de Serie 35. El único campo que no se recupera bien de la cotización es el bunker — todos los demás (tramos, puertos, buque, comisiones) llegan perfectos. | **El "Crimen de la Cotización Fantasma" — El asesino real estaba en la capa de datos**: La cotización `NEXA.ILO.CALLAO.MATARANI.ILO.2026 (IZ)` fue guardada en una era anterior donde el precio del maestro de búnker se mostraba en pantalla pero `bunkerPriceIfo` en el estado interno era `0` (nunca fue tipeado manualmente). Por tanto `legs_data.bunker_price_ifo = 0` quedó en Supabase. Al cargar, `unpackQuoteData` retorna `0`, la guarda `if (> 0)` falla, `setBunkerPriceIfo` nunca se llama, y el precio queda en el valor anterior del maestro de contratos. Causa raíz: **rezago de la funcionalidad antigua "maestro de bunker / precio de compra final"** que no persistía el precio en `legs_data`. | **Fix:** Si `unpacked.bunker_price_ifo === 0` (cotización legacy), cambiar `bunkerSource` a `'MAESTRO_CONTRATOS'` → el useEffect resuelva el precio correcto del contrato NEXA/SPCC. Si `> 0` (cotización nueva), respetar el precio guardado con `bunkerSource = 'COTIZACION'`. | ✅ **RESUELTO Y DESPLEGADO** — Build exit 0 · Bundle `index-fQL5Hdu0.js` (3,836 kB) · Deploy VPS OK · 2026-08-17T20:57 |
 
 ---
 
@@ -383,3 +385,116 @@ if (user?.role !== 'ADMIN') return null;  // ✅ Guarda AL FINAL — patrón del
 2. `npm run build` en `Geeksoft_Frontend/`
 3. `python deploy_forecast_kickoff.py` en `Push.VPS/`
 4. Auditoría browser: Ctrl+Shift+R → cargar escenario → navegar sin F5 → 0 errores
+
+---
+
+## 🗂️ PLAN MAESTRO — Serie 36: Unificación Arquitectural en Tabla Única `routes_quotes`
+
+> **Dictado vía audio — 2026-08-17T21:05 / 21:09 | Clarificado 2026-08-17T21:17 | Documentado por Benoit Blanc**
+
+### 🎯 Decisión Arquitectural (CLARIFICADA Y DEFINITIVA)
+
+| Decisión | Detalle |
+|---|---|
+| **Tabla única** | Todo va a `routes_quotes`. `contracts` dado de baja. |
+| **Diferenciación** | Campo `description` con 3 valores exactos |
+| **Grabador** | Ya graba perfectamente. Solo añadir `description` correcto. |
+| **Buscadores** | Apuntan a `routes_quotes` únicamente. Mantienen pre-filtro ACTIVOS / PROSPECTOS. |
+
+**Los 3 valores de `description`:**
+```
+"COA Cliente Activo"        ← antes iba a tabla contracts
+"Cotización Cliente Activo" ← ya iba a routes_quotes (activo, no COA)
+"Cotización Prospecto"      ← ya iba a routes_quotes (prospecto)
+```
+
+**Causa raíz del crimen del bunker (confirmada):**
+La tabla `contracts` NO tiene la misma estructura de `legs_data` que `routes_quotes`. Al cargar rutas COA de `contracts`, `unpackQuoteData` retorna `bunker_price_ifo = 0`. **Una vez dado de baja `contracts`, el bunker se resuelve solo.**
+
+---
+
+### 🗺️ Los 3 Artefactos a Corregir
+
+#### ARTEFACTO 2 — Grabador del Multicotizador ← PRIMERO Y MÁS SIMPLE
+**Archivos:**
+- [`multicotizadorStorageService.ts`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/services/providers/multicotizadorStorageService.ts) → `saveQuote()` (L.37-115)
+- [`MultiCotizadorExcel.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/components/CommercialForecast/MultiCotizadorExcel.tsx) → `handleSaveRoute()` (L.537-638) + estado `saveTargetTable` (L.534)
+- [`SaveLoadQuoteModals.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/components/CommercialForecast/multicotizador/SaveLoadQuoteModals.tsx) → Selector UI "¿dónde grabar?"
+
+**¿Qué cambia?**
+- El `legs_data` ya se graba perfectamente ✅
+- Solo hay que asegurar que `is_contract: false` siempre → backend graba en `routes_quotes`
+- Calcular `description` correctamente según el tipo:
+  ```typescript
+  const description = isContract
+      ? "COA Cliente Activo"
+      : (isClientProspect ? "Cotización Prospecto" : "Cotización Cliente Activo");
+  ```
+- Eliminar `saveTargetTable` state de `MultiCotizadorExcel.tsx`
+- Eliminar selector UI "¿dónde grabar?" de `SaveLoadQuoteModals.tsx`
+- `handleSaveRoute()`: Eliminar rama `isSavingContract` y sus validaciones duras exclusivas de `contracts`
+
+---
+
+#### ARTEFACTO 1 — Filtrador del Multicotizador
+**Archivo:** [`multicotizadorRetrieverService.ts`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/services/providers/multicotizadorRetrieverService.ts) → `searchSavedQuotes()` (L.29-64)
+
+**¿Qué cambia?**
+- Fuente única: `getSpotVoyages()` → `/forecast/spot/list` → solo `routes_quotes`
+- El filtro actual `isQuotesTable` (L.39) excluye `is_contract: true` → se corrige para incluirlos (o simplificar: aceptar todo lo que venga de `routes_quotes`)
+- **Mantener** el pre-filtro por cliente (ACTIVOS/PROSPECTOS) usando el campo `description`:
+  - Modo ACTIVOS: mostrar `description` = `"COA Cliente Activo"` o `"Cotización Cliente Activo"`
+  - Modo PROSPECTOS: mostrar `description` = `"Cotización Prospecto"`
+- Eliminar toda referencia a `getContractsMaster()` como fuente de datos del Paso 2 (RUTA) en `MultiCotizadorExcel.tsx`
+
+---
+
+#### ARTEFACTO 3 — Filtrador de Matriz Financiera
+**Archivo:** [`ForecastBuilder_V2.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/components/CommercialForecast/ForecastBuilder_V2.tsx) → `clientRoutes` useMemo (L.116-161)
+
+**¿Qué cambia?**
+- Ya lee de `spotRoutes` via `ForecastService.listSpots()` → `/forecast/spot/list` → `routes_quotes` ✅
+- Una vez que COA va a `routes_quotes`, las cotizaciones COA aparecerán automáticamente en `spotRoutes`
+- **Mantener** el pre-filtro de ACTIVOS/PROSPECTOS: el `clientRoutes` useMemo ya filtra por `client_id`/`name`. Añadir filtro por `description` para separar activos de prospectos si se requiere.
+- Eliminar cualquier referencia a `getContractsMaster()` en `ForecastContext_V2.tsx` si existe.
+
+---
+
+### 📋 Secuencia de Ejecución DEFINITIVA
+
+| # | Acción | Archivo | Complejidad |
+|---|---|---|---|
+| **1** | Verificar backend: `/forecast/spot/save` con `is_contract: false` → confirmar graba en `routes_quotes` | `Geeksoft_Engine` | 🔴 PRIMERO |
+| **2** | Verificar backend: `/forecast/spot/list` → confirmar incluye `is_contract: true` en retorno | `Geeksoft_Engine` | 🔴 PRIMERO |
+| **3** | `saveQuote()`: Forzar `is_contract: false`. Calcular `description` con 3 valores | `multicotizadorStorageService.ts` | 🟠 1 archivo |
+| **4** | `handleSaveRoute()`: Eliminar rama `isSavingContract`, simplificar | `MultiCotizadorExcel.tsx` | 🟠 1 función |
+| **5** | Eliminar `saveTargetTable` state y su UI | `MultiCotizadorExcel.tsx` + `SaveLoadQuoteModals.tsx` | 🟡 2 archivos |
+| **6** | `searchSavedQuotes()`: Ampliar filtro + usar `description` para ACTIVOS/PROSPECTOS | `multicotizadorRetrieverService.ts` | 🟠 1 archivo |
+| **7** | Eliminar `getContractsMaster()` del init del multicotizador | `MultiCotizadorExcel.tsx` | 🟡 1 useEffect |
+| **8** | Verificar `clientRoutes` useMemo en Matriz Financiera post-unificación | `ForecastBuilder_V2.tsx` | 🟢 Solo verificar |
+| **9** | Build + Deploy VPS | Terminal | 🔴 FINAL |
+| **10** | Migración legacy `contracts` → `routes_quotes` (si el usuario lo decide) | Script SQL/Python | 🟣 OPCIONAL |
+
+---
+
+### ⚠️ Alertas
+
+> **`contracts` DADO DE BAJA**: Eliminar TODA referencia frontend. Backend: `/forecast/masters/contracts` puede quedar en standby pero no se llama.
+
+> **PRE-FILTRO ACTIVOS/PROSPECTOS SE MANTIENE**: El campo `description` es la nueva clave de diferenciación. Los buscadores filtran por `description` + `client_id`/`name`.
+
+> **BUNKER FIX AUTOMÁTICO**: Una vez que COA va a `routes_quotes`, `legs_data.bunker_price_ifo` siempre tendrá el valor correcto. Series 35/35-B quedan superadas.
+
+---
+
+### 📊 Estado del Plan Serie 36
+
+| Etapa | Estado |
+|---|---|
+| Análisis + clarificación arquitectural | ✅ COMPLETADO — 2026-08-17T21:17 |
+| Verificación backend Pasos 1+2 | ⏳ PENDIENTE — APROBACIÓN USUARIO |
+| Fix Grabador — Artefacto 2 (Pasos 3-5) | ⏳ PENDIENTE |
+| Fix Filtrador Multicotizador — Artefacto 1 (Pasos 6-7) | ⏳ PENDIENTE |
+| Verificación Filtrador Matriz — Artefacto 3 (Paso 8) | ⏳ PENDIENTE POST-DEPLOY |
+| Build + Deploy VPS | ⏳ PENDIENTE |
+| Migración datos legacy | ⏳ DECISIÓN USUARIO |

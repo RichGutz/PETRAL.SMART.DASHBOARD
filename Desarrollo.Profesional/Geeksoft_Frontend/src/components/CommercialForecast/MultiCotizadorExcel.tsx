@@ -214,16 +214,14 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 setBunkerPriceIfo(resolved.ifo > 0 ? resolved.ifo : (latestSpotPrices.ifo || 0));
                 setBunkerPriceMdo(resolved.mdo > 0 ? resolved.mdo : (latestSpotPrices.mdo || 0));
             } else if (bunkerSource === 'COTIZACION') {
-                const targetName = selectedRouteId || loadedRouteName;
-                if (targetName && targetName !== 'CREAR_RUTA') {
-                    const q = savedRoutes.find(x => (x.name || x.route_id || x.spot_id || x.id) === targetName)
-                           || contractsList.find(x => (x.name || x.route_id || x.spot_id || x.id) === targetName);
-                    if (q) {
-                        const unpacked = MulticotizadorRetrieverService.unpackQuoteData(q);
-                        if (unpacked.bunker_price_ifo > 0) setBunkerPriceIfo(unpacked.bunker_price_ifo);
-                        if (unpacked.bunker_price_mdo > 0) setBunkerPriceMdo(unpacked.bunker_price_mdo);
-                    }
-                }
+                // SERIE 35 FIX: En modo COTIZACION, los precios de bunker ya fueron seteados
+                // DIRECTAMENTE por handleLoadRoute() (L.850-851) o handleSelectRoute() (L.817-818)
+                // en el momento de cargar la cotización (ej: NEXA.ILO.CALLAO.MATARANI.ILO.2026 IZ).
+                // Este useEffect NO debe re-buscar ni re-setear los precios porque:
+                //   1. selectedRouteId no se actualiza en handleLoadRoute (queda en 'CREAR_RUTA')
+                //   2. Re-ejecutar aquí pisa los valores correctos ya seteados desde la BD.
+                // Los precios quedan PROTEGIDOS hasta que el usuario cambie la fuente explícitamente.
+                return;
             } else if (bunkerSource === 'MAESTRO_BUNKER') {
                 let spot = latestSpotPrices;
                 if (!spot || spot.ifo === 0) {
@@ -238,7 +236,11 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         };
 
         executeBunkerLookup();
-    }, [bunkerSource, selectedClient, clientType, tramos, selectedRouteId, contractsList, latestSpotPrices]);
+    // SERIE 35 FIX: Removidos 'tramos' y 'latestSpotPrices' de las dependencias.
+    // 'tramos' se actualizaba en handleLoadRoute y disparaba re-búsqueda espuria que pisaba precios de cotización.
+    // 'latestSpotPrices' se resolvía async en init() y disparaba re-ejecución post-carga de cotización.
+    // El branch MAESTRO_BUNKER hace su propio fetch interno cuando ifo === 0 (líneas 229-231).
+    }, [bunkerSource, selectedClient, clientType, selectedRouteId, contractsList]);
 
     // Filtrado Dinámico e Instantáneo (en memoria) de Clientes (ACTIVOS vs PROSPECTOS)
     useEffect(() => {
@@ -847,14 +849,28 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         }
 
         if (unpacked.vessel_id) handleVesselChange(unpacked.vessel_id);
-        if (unpacked.bunker_price_ifo > 0) setBunkerPriceIfo(unpacked.bunker_price_ifo);
-        if (unpacked.bunker_price_mdo > 0) setBunkerPriceMdo(unpacked.bunker_price_mdo);
+
+        // SERIE 35-B FIX: Si los precios de bunker están guardados (> 0) en la cotización,
+        // usar esos valores exactos (fuente = 'COTIZACION' ya seteada en L.831).
+        // Si son 0 (cotización guardada en era anterior donde el precio del maestro no se
+        // persistía en legs_data), cambiar la fuente a 'MAESTRO_CONTRATOS' para que el
+        // useEffect reactivo resuelva el precio correcto del contrato NEXA/SPCC.
+        if (unpacked.bunker_price_ifo > 0) {
+            setBunkerPriceIfo(unpacked.bunker_price_ifo);
+        } else {
+            // Precio no persistido en la cotización (legacy) → resolver desde maestro de contratos
+            setBunkerSource('MAESTRO_CONTRATOS');
+        }
+        if (unpacked.bunker_price_mdo > 0) {
+            setBunkerPriceMdo(unpacked.bunker_price_mdo);
+        }
         if (unpacked.addressCommPct !== undefined) setAddressCommPct(unpacked.addressCommPct);
         if (unpacked.brokerCommPct !== undefined) setBrokerCommPct(unpacked.brokerCommPct);
         if (unpacked.vesselParams) setVesselParams(unpacked.vesselParams);
 
         setShowLoadModal(false);
     };
+
 
     const handlePrintPDF = () => {
         MulticotizadorPdfPrintService.printDocument({

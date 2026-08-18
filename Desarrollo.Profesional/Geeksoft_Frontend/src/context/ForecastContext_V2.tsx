@@ -135,7 +135,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
 
                 // Restaurar sesión activa de memoria de pestaña (sessionStorage) si el usuario presionó F5
                 const savedLinesStr = sessionStorage.getItem('petral_active_projection_lines');
-                const savedDataStr = sessionStorage.getItem('petral_active_data');
+
                 const savedName = sessionStorage.getItem('petral_active_forecast_name');
                 const savedId = sessionStorage.getItem('petral_active_forecast_id');
 
