@@ -778,8 +778,8 @@ export const LiquidationsInteractiveChart: React.FC<LiquidationsInteractiveChart
     return (
         <div className="w-full bg-white pt-4 pb-6 px-6 shadow-sm rounded-b-lg flex flex-row gap-6 items-stretch min-h-[calc(100vh-220px)]">
             
-            {/* SIDEBAR IZQUIERDO DE CONTROLES (ANCHO FIX W-[240PX] RIGIDO SIN DEFORMAR EL GRÁFICO) */}
-            <div className="flex flex-col gap-3 shrink-0 w-[240px] max-w-[240px]">
+            {/* SIDEBAR IZQUIERDO DE CONTROLES (ELÁSTICO — SE ADAPTA AL CONTENIDO MÁS ANCHO) */}
+            <div className="flex flex-col gap-3 shrink-0 min-w-[245px] w-fit">
                 
                 {/* 1. BLOQUE DE FILTROS (SLATE) */}
                 <div className="flex flex-row items-stretch bg-white rounded-xl border border-slate-200 shadow-2xs w-full overflow-visible">

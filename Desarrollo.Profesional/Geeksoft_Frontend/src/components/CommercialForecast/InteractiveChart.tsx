@@ -940,7 +940,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
         <div className="w-full glass-card bg-white p-5 rounded-xl shadow-xs border border-slate-200 flex flex-row gap-6 items-stretch min-h-[calc(100vh-220px)]">
             {/* Sidebar de Controles (Left) */}
-            <div className="flex flex-col gap-3 shrink-0 w-[245px]">
+            <div className="flex flex-col gap-3 shrink-0 min-w-[245px] w-fit">
                 
                 {/* FILTROS TABS */}
                 <div className="flex flex-row items-stretch bg-white rounded-xl border border-slate-200 shadow-2xs">
