@@ -375,10 +375,10 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         const tripCount = trips[i] || 0;
                         if (tripCount <= 0) return 0;
                         const mUnit = monthData[m]?.["dockage_revenue_unit"] ?? monthData[m]?.["refacturacion_muellaje_unit"];
-                        if (mUnit !== undefined) {
+                        if (mUnit !== undefined && mUnit !== null && Number(mUnit) > 0) {
                             return Number(mUnit) * tripCount;
                         }
-                        const mVal = monthData[m]?.["dockage_revenue"] ?? monthData[m]?.["refacturacion_muellaje"] ?? monthData[m]?.["muellaje_refacturado"] ?? 0;
+                        const mVal = monthData[m]?.["dockage_revenue"] ?? monthData[m]?.["refacturacion_muellaje"] ?? monthData[m]?.["total_refacturacion_muellaje"] ?? monthData[m]?.["muellaje_refacturado"] ?? monthData[m]?.["muellaje"] ?? 0;
                         return Number(mVal);
                     });
 

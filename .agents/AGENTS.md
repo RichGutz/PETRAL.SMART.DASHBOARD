@@ -40,7 +40,9 @@
 </RULE[flowchart_pdf_only]>
 
 <RULE[ask_first_token_efficiency]>
-- **PREGUNTAR ANTES DE INVESTIGAR (EFICIENCIA DE TOKENS)**: Para evitar el consumo innecesario de tokens ("quemar tokens"), ante cualquier duda, ambigüedad o requerimiento puntual planteado por el usuario, el agente DEBE preguntar y consultar directamente al usuario PRIMERO en lugar de realizar inspecciones profundas de código o búsquedas extensas en segundo plano.
+- **PREGUNTAR ANTES DE INVESTIGAR (EFICIENCIA TOTAL DE TOKENS & NO REINVENTAR LA RUEDA)**:
+  - **PROHIBIDO QUEMAR TOKENS**: Ante cualquier lógica de negocio, campo ambiguo o requerimiento comercial, el agente **DEBE PREGUNTAR DIRECTAMENTE AL USUARIO PRIMERO**.
+  - **EL HUMANO CONOCE EL NEGOCIO**: NUNCA asumir, deducir a ciegas ni hacer investigaciones profundas en bucle en segundo plano cuando una pregunta simple de una línea al usuario aclara el requerimiento en 5 segundos.
 </RULE[ask_first_token_efficiency]>
 
 
