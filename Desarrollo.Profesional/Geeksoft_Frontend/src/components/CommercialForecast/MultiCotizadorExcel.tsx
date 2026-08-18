@@ -191,6 +191,20 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     const allQuoteRoutes = spotData.filter((s: any) => s.table_source === 'routes_quotes' || s.is_quote === true || s.is_contract === true);
                     setRoutes(allQuoteRoutes);
                 }
+
+                // Detección y Carga Automática de Cotización enviada desde Maestros (sessionStorage)
+                try {
+                    const rawStored = sessionStorage.getItem('petral_load_quote');
+                    if (rawStored) {
+                        sessionStorage.removeItem('petral_load_quote');
+                        const parsedQuote = JSON.parse(rawStored);
+                        setTimeout(() => {
+                            handleLoadRoute(parsedQuote);
+                        }, 150);
+                    }
+                } catch (err) {
+                    console.error("Error al recuperar cotización de sessionStorage:", err);
+                }
             } catch (e) {
                 console.error("Error cargando catálogos BD:", e);
             }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
-import { FileText, Calendar, ChevronDown, ChevronRight, Anchor, DollarSign, Ship, CheckCircle2, Layers, RefreshCw, Trash2 } from 'lucide-react';
+import { FileText, Calendar, ChevronDown, ChevronRight, Anchor, DollarSign, Ship, CheckCircle2, Layers, RefreshCw, Trash2, ExternalLink } from 'lucide-react';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
 
@@ -364,19 +364,36 @@ export const ContractsMaster: React.FC = () => {
                                                                 </div>
                                                             </div>
 
-                                                            <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
+                                                            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
                                                                 <span className="bg-slate-100 px-2.5 py-1 rounded border border-slate-200 font-mono text-[11px]">
                                                                     {tramos.length} Tramos
                                                                 </span>
-                                                                <span className="text-blue-600 font-bold hover:underline">
-                                                                    {isExpanded ? 'Ocultar UI Multicotizador' : 'Ver UI Multicotizador ➔'}
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        try {
+                                                                            sessionStorage.setItem('petral_load_quote', JSON.stringify(route));
+                                                                            window.open('/multicotizador', '_blank');
+                                                                        } catch (err) {
+                                                                            console.error("Error opening quote:", err);
+                                                                            window.open('/multicotizador', '_blank');
+                                                                        }
+                                                                    }}
+                                                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-colors cursor-pointer shadow-xs"
+                                                                    title="Abrir esta ruta COA en vivo en el Multicotizador"
+                                                                >
+                                                                    <ExternalLink size={12} />
+                                                                    <span>Ver en Multicotizador ➔</span>
+                                                                </button>
+                                                                <span className="text-slate-400 font-bold hover:underline cursor-pointer px-1" onClick={() => toggleRow(routeId)}>
+                                                                    {isExpanded ? '▲ Ocultar Ficha' : '▼ Detalle Rápido'}
                                                                 </span>
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
                                                                         handleDeleteRoute(route);
                                                                     }}
-                                                                    className="px-2.5 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-200 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer shadow-sm ml-2"
+                                                                    className="px-2.5 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-200 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer shadow-sm ml-1"
                                                                     title="Eliminar ruta de contrato COA"
                                                                 >
                                                                     <Trash2 size={13} />
@@ -394,9 +411,26 @@ export const ContractsMaster: React.FC = () => {
                                                                         <Ship size={16} className="text-blue-400" />
                                                                         <span>Ficha Comercial Multicotizador — {route.name}</span>
                                                                     </div>
-                                                                    <span className="text-[11px] font-mono text-blue-200 bg-blue-900/80 px-2 py-0.5 rounded">
-                                                                        Origen: Supabase DB ({route.table_source || 'contracts'})
-                                                                    </span>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                try {
+                                                                                    sessionStorage.setItem('petral_load_quote', JSON.stringify(route));
+                                                                                    window.open('/multicotizador', '_blank');
+                                                                                } catch (err) {
+                                                                                    console.error("Error opening quote:", err);
+                                                                                    window.open('/multicotizador', '_blank');
+                                                                                }
+                                                                            }}
+                                                                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded shadow-sm transition-all cursor-pointer"
+                                                                        >
+                                                                            <ExternalLink size={13} />
+                                                                            <span>🚀 Abrir en Multicotizador (Nueva Ventana)</span>
+                                                                        </button>
+                                                                        <span className="text-[11px] font-mono text-blue-200 bg-blue-900/80 px-2 py-0.5 rounded">
+                                                                            Origen: Supabase DB ({route.table_source || 'contracts'})
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
 
                                                                 {/* 1. TRAMOS Y TARIFAS DE FLETE */}
