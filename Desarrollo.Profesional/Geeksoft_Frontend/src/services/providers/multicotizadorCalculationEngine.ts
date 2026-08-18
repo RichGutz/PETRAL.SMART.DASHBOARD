@@ -81,6 +81,10 @@ export class MulticotizadorCalculationEngine {
 
     private static CHILEAN_PORTS = ['MEJILLONES', 'ANTOFAGASTA', 'VALPARAISO', 'SAN ANTONIO', 'ARICA', 'IQUIQUE', 'COQUIMBO'];
 
+    public static calculate(params: CalculateVoyageParams): VoyageCalculationResult {
+        return this.calculateVoyage(params);
+    }
+
     /**
      * Función pura que calcula un viaje completo con precisión al centavo.
      */

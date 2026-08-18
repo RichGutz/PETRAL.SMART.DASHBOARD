@@ -16,17 +16,50 @@ export const QuoteExecutiveCardSummary: React.FC<QuoteExecutiveCardSummaryProps>
     const trms = unpacked.tramos || [];
     const portsCfg = unpacked.puertosConfig || [];
     
-    // Ejecutar el motor puro de cálculo unificado (Single Source of Truth)
-    const calc = MulticotizadorCalculationEngine.calculate({
-        tramos: trms,
-        puertosConfig: portsCfg,
-        vesselParams: unpacked.vesselParams,
-        bunkerPriceIfo: unpacked.bunker_price_ifo,
-        bunkerPriceMdo: unpacked.bunker_price_mdo,
-        addressCommPct: unpacked.addressCommPct,
-        brokerCommPct: unpacked.brokerCommPct,
-        refacturarMuellajeMap: unpacked.refacturarMuellajeMap
-    });
+    // Ejecutar el motor puro de cálculo unificado (Single Source of Truth) con try-catch de seguridad
+    const calc = React.useMemo(() => {
+        try {
+            return MulticotizadorCalculationEngine.calculateVoyage({
+                tramos: trms,
+                puertosConfig: portsCfg,
+                vesselParams: unpacked.vesselParams,
+                bunkerPriceIfo: unpacked.bunker_price_ifo,
+                bunkerPriceMdo: unpacked.bunker_price_mdo,
+                addressCommPct: unpacked.addressCommPct,
+                brokerCommPct: unpacked.brokerCommPct,
+                refacturarMuellajeMap: unpacked.refacturarMuellajeMap
+            });
+        } catch (err) {
+            console.error("Error al calcular resumen de cotización:", err);
+            return {
+                totalDist: 0,
+                totalSeaDays: 0,
+                totalPortDays: 0,
+                totalDays: 0,
+                totalIfoTons: 0,
+                totalMdoTons: 0,
+                totalFuelTons: 0,
+                ifoCost: 0,
+                mdoCost: 0,
+                grandBunkerTotal: 0,
+                totalQuantity: 0,
+                totalFreight: 0,
+                refacturacionMuellaje: 0,
+                grossRevenueTotal: 0,
+                totalPortCosts: 0,
+                tceReq: 0,
+                hireUsd: 0,
+                addressCommUsd: 0,
+                brokerCommUsd: 0,
+                totalCommUsd: 0,
+                voyageResultPnl: 0,
+                tceRealizado: 0,
+                tceDiff: 0,
+                calculatedTramos: [],
+                portCostItems: []
+            };
+        }
+    }, [trms, portsCfg, unpacked]);
 
     const ladenTramos = trms.filter((tr: any) => tr.type === 'LADEN' || Number(tr.quantity || 0) > 0 || Number(tr.freight_rate || 0) > 0);
     const createdBy = route.created_by || route.legs_data?.created_by || 'izavala@petral.com.pe';
