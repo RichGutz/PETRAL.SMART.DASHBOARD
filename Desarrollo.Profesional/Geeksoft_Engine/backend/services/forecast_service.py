@@ -17,6 +17,14 @@ def clear_forecast_cache():
     _masters_cache = {}
     _cache_time = 0.0
 
+def get_demurrage_from_dict(d, vessel_name):
+    if not isinstance(d, dict) or not vessel_name: return 0.0
+    for k, v in d.items():
+        if str(k).strip().upper() == str(vessel_name).strip().upper():
+            try: return float(v or 0.0)
+            except Exception: pass
+    return 0.0
+
 def get_cached_masters(supabase) -> Dict[str, Any]:
     global _masters_cache, _cache_time
     now = time.time()
@@ -499,8 +507,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
     
     routes_clients_data = masters.get("routes_clients") or []
     routes_prospects_data = masters.get("routes_quotes") or []
-    contracts_data = masters.get("contracts") or []
-    routes_master_data = routes_prospects_data + routes_clients_data + contracts_data
+    all_routes = routes_prospects_data + routes_clients_data + contracts_data
+    routes_master_data = sorted(all_routes, key=lambda x: str((x and x.get("created_at")) or "2000-01-01"), reverse=True)
     
     bunker_data = masters["bunker_prices"]
     # Asegurar que se tome el precio con la fecha más reciente ordenando ascendentemente
@@ -781,12 +789,18 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 # --- YIELD PONDERADO: tarifa representativa para la Matriz ---
                 yield_flete = (total_laden_revenue / total_laden_qty) if total_laden_qty > 0 else 0.0
 
-                # --- INYECCIÓN DE PRECIOS BÚNKER GUARDADOS EN LEGS_DATA AL PAYLOAD DE SIMULACIÓN ---
+                # --- INYECCIÓN MANDATORIA DE PRECIOS BÚNKER DE LA COTIZACIÓN ---
                 saved_vparams = legs_data.get("vesselParams", {})
-                b_ifo = float(saved_vparams.get("bunker_price_ifo") or legs_data.get("bunker_price_ifo") or legs_data.get("bunker_ifo") or contract.get("bunker_baseline_price_ifo") or p_ifo or 600.0)
-                b_mdo = float(saved_vparams.get("bunker_price_mdo") or legs_data.get("bunker_price_mdo") or legs_data.get("bunker_mdo") or contract.get("bunker_baseline_price_mdo") or p_mdo or 900.0)
+                quote_ifo = float(saved_vparams.get("bunker_price_ifo") or legs_data.get("bunker_price_ifo") or legs_data.get("bunker_ifo") or 0.0)
+                quote_mdo = float(saved_vparams.get("bunker_price_mdo") or legs_data.get("bunker_price_mdo") or legs_data.get("bunker_mdo") or 0.0)
+                
+                b_ifo = quote_ifo if quote_ifo > 0 else float(contract.get("bunker_baseline_price_ifo") or p_ifo or 600.0)
+                b_mdo = quote_mdo if quote_mdo > 0 else float(contract.get("bunker_baseline_price_mdo") or p_mdo or 900.0)
                 if b_ifo <= 0: b_ifo = p_ifo if p_ifo > 0 else 600.0
                 if b_mdo <= 0: b_mdo = p_mdo if p_mdo > 0 else 900.0
+
+                vparams["bunker_price_ifo"] = b_ifo
+                vparams["bunker_price_mdo"] = b_mdo
 
                 payload = {
                     "vessel_params": vparams,
@@ -980,10 +994,20 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
         
         freq = line.monthly_frequency
         
+        # RESOLUCIÓN MANDATORIA DE DEMURRAGE DESDE COTIZACIÓN / RUTA / LEGS_DATA / CONTRATO
+        safe_legs = (spot_route.get("legs_data") or {}) if spot_route else {}
+        demurrage_rate_val = get_demurrage_from_dict(safe_legs.get("demurrage_rates") if safe_legs else None, vessel)
+        if demurrage_rate_val <= 0 and spot_route:
+            demurrage_rate_val = get_demurrage_from_dict(spot_route.get("demurrage_rates"), vessel)
+        if demurrage_rate_val <= 0 and 'vparams' in locals() and isinstance(vparams, dict):
+            demurrage_rate_val = float(vparams.get("demurrage_rate") or vparams.get("demurrage_rate_pd") or 0.0)
+        if demurrage_rate_val <= 0 and contract:
+            demurrage_rate_val = get_demurrage_from_dict(contract.get("demurrage_rates"), vessel)
+
         # Apply Frequency for aggregate totals, but keep unit values for the Ledger view
         monthly_result = {
             "freq": freq,
-            "vessel_demurrage_rate": float(contract.get("demurrage_rates", {}).get(vessel, 0.0)) if contract and isinstance(contract.get("demurrage_rates"), dict) else 0.0,
+            "vessel_demurrage_rate": demurrage_rate_val,
             "gross_income": unit_result.get("gross_income", inputs["quantity"] * inputs["freight_rate"]) * freq,
             "total_commissions": unit_result.get("total_commissions", 0.0) * freq,
             "net_income": unit_result["net_income"] * freq,
@@ -1426,13 +1450,23 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
         
         freq = line.monthly_frequency
         
+        # RESOLUCIÓN MANDATORIA DE DEMURRAGE DESDE COTIZACIÓN / RUTA / LEGS_DATA / CONTRATO
+        safe_legs = (spot_route.get("legs_data") or {}) if spot_route else {}
+        demurrage_rate_val = get_demurrage_from_dict(safe_legs.get("demurrage_rates") if safe_legs else None, vessel)
+        if demurrage_rate_val <= 0 and spot_route:
+            demurrage_rate_val = get_demurrage_from_dict(spot_route.get("demurrage_rates"), vessel)
+        if demurrage_rate_val <= 0 and 'vparams' in locals() and isinstance(vparams, dict):
+            demurrage_rate_val = float(vparams.get("demurrage_rate") or vparams.get("demurrage_rate_pd") or 0.0)
+        if demurrage_rate_val <= 0 and contract:
+            demurrage_rate_val = get_demurrage_from_dict(contract.get("demurrage_rates"), vessel)
+
         hire_cost_val = unit_result.get("hire_cost", unit_result.get("total_duration", 0) * float(v_data.get("tce_required", 15000.0))) * freq
         gross_rev_total_val = unit_result.get("gross_revenue_total", unit_result.get("gross_income", 0)) * freq
         refact_muell_val = unit_result.get("refacturacion_muellaje", 0.0) * freq
 
         monthly_result = {
             "freq": freq,
-            "vessel_demurrage_rate": float(contract.get("demurrage_rates", {}).get(vessel, 0.0)) if contract and isinstance(contract.get("demurrage_rates"), dict) else 0.0,
+            "vessel_demurrage_rate": demurrage_rate_val,
             "gross_income": unit_result.get("gross_income", inputs["quantity"] * inputs["freight_rate"]) * freq,
             "gross_revenue_total": gross_rev_total_val,
             "refacturacion_muellaje": refact_muell_val,
