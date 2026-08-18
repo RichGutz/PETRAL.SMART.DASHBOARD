@@ -521,11 +521,11 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     )}
 
                     {/* 5. Ruta o Cotización */}
-                    <div className="flex flex-col gap-1 flex-2 min-w-[180px] max-w-[280px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    <div className="flex flex-col gap-1 flex-2 min-w-[180px] max-w-[280px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all overflow-hidden">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">5. Ruta / Quote</Label>
                         <Select value={route} onValueChange={(val) => setRoute(val || '')} disabled={!client}>
-                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold truncate">
-                                <SelectValue placeholder="Ruta" className="truncate">
+                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold overflow-hidden">
+                                <SelectValue placeholder="Ruta" className="block truncate max-w-full">
                                     {selectedRouteDisplay || undefined}
                                 </SelectValue>
                             </SelectTrigger>

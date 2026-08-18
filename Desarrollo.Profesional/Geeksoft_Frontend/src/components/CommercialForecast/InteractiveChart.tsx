@@ -774,7 +774,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         title: string
     ) => {
         return (
-            <div className="relative flex-1" onClick={(e) => e.stopPropagation()}>
+            <div className="relative flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
                 <button 
                     onClick={() => {
                         setIsClientFilterOpen(false);
@@ -784,10 +784,10 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                         setIsSecOpen(false);
                         setIsOpen(!isOpen);
                     }}
-                    className="w-full flex items-center justify-between gap-1 px-2 py-1.5 text-xs bg-white border border-slate-200 rounded hover:border-slate-350 focus:outline-none transition-all cursor-pointer text-slate-700 font-bold"
+                    className="w-full flex items-center justify-between gap-1 px-2 py-1.5 text-xs bg-white border border-slate-200 rounded hover:border-slate-350 focus:outline-none transition-all cursor-pointer text-slate-700 font-bold overflow-hidden"
                 >
-                    <span className="truncate">{selectedVal === 'ALL' ? 'Todos' : selectedVal}</span>
-                    <span className="text-[8px] text-slate-400 shrink-0">{isOpen ? '▲' : '▼'}</span>
+                    <span className="truncate block max-w-full">{selectedVal === 'ALL' ? 'Todos' : selectedVal}</span>
+                    <span className="text-[8px] text-slate-400 shrink-0 ml-1">{isOpen ? '▲' : '▼'}</span>
                 </button>
 
                 {isOpen && (
