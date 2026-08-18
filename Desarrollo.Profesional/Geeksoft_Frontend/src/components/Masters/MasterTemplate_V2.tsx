@@ -88,10 +88,16 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                     
                     {/* Logos y Título de App */}
                     <div className="flex items-center gap-3">
-                        <img src="/Logo.Petral.png" alt="Naviera Petral" className="h-8 object-contain" />
+                        <img src="/Logo.Petral.png" alt="Naviera Petral" className="h-8 object-contain cursor-pointer" onClick={() => navigate('/dashboard')} />
                         <div className="flex flex-col border-l border-slate-200 pl-3">
                             <h1 className="text-sm font-black text-slate-800 tracking-tight uppercase">SHIPPING.SOFT</h1>
                             <span className="text-[10px] text-slate-500 font-bold tracking-wider uppercase">Módulos de Datos Maestros</span>
+                        </div>
+
+                        {/* Live Network Status Pill Estilo APEFAC */}
+                        <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 bg-emerald-50 rounded-full border border-emerald-200 shadow-2xs">
+                            <span className="w-2 h-2 rounded-full bg-emerald-600 shadow-[0_0_0_2px_rgba(5,150,105,0.2)] animate-pulse"></span>
+                            <span className="text-[10.5px] text-emerald-700 font-black tracking-wide uppercase">PETRAL 100% ONLINE</span>
                         </div>
                     </div>
 

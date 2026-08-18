@@ -858,139 +858,163 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
     return (
         <div className="w-full min-h-screen bg-white p-2 text-slate-800 font-sans flex flex-col select-text">
-            {/* BARRA UNIFICADA Y ESTANDARIZADA DE PASOS COMERCIALES (1 A 5) - ESTILO OPENCONSTRUCTIONERP ULTRA PRO */}
-            <div className="bg-slate-900 border border-slate-800 rounded-lg p-1.5 mb-2 select-none flex-shrink-0 overflow-x-auto shadow-md">
-                <div className="flex items-center gap-1.5 flex-nowrap min-w-max">
+            {/* BARRA UNIFICADA Y ESTANDARIZADA DE PASOS COMERCIALES (1 A 5) - SISTEMA DE DISEÑO APEFAC ENTERPRISE LIGHT */}
+            <div className="bg-white border border-slate-200 rounded-xl p-2 mb-2 select-none flex-shrink-0 overflow-x-auto shadow-xs">
+                <div className="flex items-center gap-2 flex-nowrap min-w-max">
                     
                     {/* PASO 1: CLIENTE */}
-                    <div className="flex items-center gap-1 bg-slate-800/90 border border-slate-700/80 rounded px-1.5 py-0.5 shadow-xs shrink-0">
-                        <span className="text-[8.5px] font-black text-cyan-400 uppercase tracking-wider whitespace-nowrap">
-                            1. CLIENTE
-                        </span>
-                        <div className="flex rounded bg-slate-900 p-0.5 border border-slate-700">
-                            <button
-                                onClick={() => {
-                                    setClientType('ACTIVOS');
-                                    setSelectedClient('');
-                                    setSelectedRouteId('CREAR_RUTA');
-                                }}
-                                className={`px-1.5 py-0.2 text-[8px] font-black uppercase rounded cursor-pointer ${clientType === 'ACTIVOS' ? 'bg-cyan-600 text-white shadow-xs' : 'text-slate-400 hover:bg-slate-800'}`}
-                            >
-                                Activos
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setClientType('PROSPECTOS');
-                                    setSelectedClient('');
-                                    setSelectedRouteId('CREAR_RUTA');
-                                }}
-                                className={`px-1.5 py-0.2 text-[8px] font-black uppercase rounded cursor-pointer ${clientType === 'PROSPECTOS' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-400 hover:bg-slate-800'}`}
-                            >
-                                Prospectos
-                            </button>
+                    <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                        <div className="w-7 h-7 rounded-md bg-sky-100 text-sky-700 flex items-center justify-center font-black text-[11px] shadow-2xs">
+                            1
                         </div>
-                        <select
-                            value={selectedClient}
-                            onChange={(e) => setSelectedClient(e.target.value)}
-                            className={`h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer ${!selectedClient ? 'bg-amber-950/40 border-amber-500/50 text-amber-300 font-bold' : 'bg-slate-900 border-slate-700 text-cyan-300'}`}
-                        >
-                            <option value="">[SELECCIONAR CLIENTE]</option>
-                            {clients.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
+                        <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                                    CLIENTE
+                                </span>
+                                <div className="flex rounded bg-white p-0.5 border border-slate-200 shadow-2xs">
+                                    <button
+                                        onClick={() => {
+                                            setClientType('ACTIVOS');
+                                            setSelectedClient('');
+                                            setSelectedRouteId('CREAR_RUTA');
+                                        }}
+                                        className={`px-1.5 py-0.2 text-[8px] font-black uppercase rounded cursor-pointer transition-colors ${clientType === 'ACTIVOS' ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'}`}
+                                    >
+                                        Activos
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setClientType('PROSPECTOS');
+                                            setSelectedClient('');
+                                            setSelectedRouteId('CREAR_RUTA');
+                                        }}
+                                        className={`px-1.5 py-0.2 text-[8px] font-black uppercase rounded cursor-pointer transition-colors ${clientType === 'PROSPECTOS' ? 'bg-purple-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'}`}
+                                    >
+                                        Prospectos
+                                    </button>
+                                </div>
+                            </div>
+                            <select
+                                value={selectedClient}
+                                onChange={(e) => setSelectedClient(e.target.value)}
+                                className={`h-6 text-[10px] font-extrabold border rounded-md px-1.5 focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer ${!selectedClient ? 'bg-amber-50 border-amber-300 text-amber-900 font-bold' : 'bg-white border-slate-200 text-sky-900 shadow-2xs'}`}
+                            >
+                                <option value="">[SELECCIONAR CLIENTE]</option>
+                                {clients.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                        </div>
                     </div>
 
                     {/* PASO 2: RUTA (COA Cliente Activo) */}
-                    <div className={`flex items-center gap-1 border rounded px-1.5 py-0.5 shadow-xs shrink-0 transition-opacity ${clientType === 'PROSPECTOS' ? 'bg-slate-900 border-slate-800 opacity-50' : 'bg-slate-800/90 border-slate-700/80'}`}>
-                        <span className={`text-[8.5px] font-black uppercase tracking-wider whitespace-nowrap ${clientType === 'PROSPECTOS' ? 'text-slate-500' : 'text-cyan-400'}`}>
-                            2. RUTA
-                        </span>
-                        <select
-                            value={selectedRouteId}
-                            disabled={clientType === 'PROSPECTOS'}
-                            onChange={(e) => {
-                                const val = e.target.value;
-                                setSelectedRouteId(val);
-                                setSaveTargetTable('routes_quotes');
-                                if (val === 'CREAR_RUTA') {
-                                    handleCreateNewGrid();
-                                    return;
-                                }
-                                const r = savedRoutes.find(x => (x.name || x.route_id || x.spot_id || x.id) === val);
-                                if (r) handleLoadRoute(r);
-                            }}
-                            className={`h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-cyan-500 ${clientType === 'PROSPECTOS' ? 'bg-slate-900 text-slate-500 border-slate-800 cursor-not-allowed' : 'bg-slate-900 text-slate-100 border-slate-700 cursor-pointer'}`}
-                        >
-                            <option value="CREAR_RUTA">➕ NUEVA RUTA COA</option>
-                            {filteredRoutes.map(r => {
-                                const rKey = r.name || r.route_id || r.id || r.spot_id;
-                                return (
-                                    <option key={rKey} value={rKey}>
-                                        {r.name || r.route_id}
-                                    </option>
-                                );
-                            })}
-                        </select>
+                    <div className={`flex items-center gap-2 border rounded-lg p-1.5 shadow-2xs shrink-0 transition-all ${clientType === 'PROSPECTOS' ? 'bg-slate-100 border-slate-200 opacity-50' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}>
+                        <div className={`w-7 h-7 rounded-md flex items-center justify-center font-black text-[11px] ${clientType === 'PROSPECTOS' ? 'bg-slate-200 text-slate-400' : 'bg-sky-100 text-sky-700 shadow-2xs'}`}>
+                            2
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                            <span className={`text-[10px] font-extrabold uppercase tracking-tight whitespace-nowrap ${clientType === 'PROSPECTOS' ? 'text-slate-400' : 'text-slate-800'}`}>
+                                RUTA COA
+                            </span>
+                            <select
+                                value={selectedRouteId}
+                                disabled={clientType === 'PROSPECTOS'}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setSelectedRouteId(val);
+                                    setSaveTargetTable('routes_quotes');
+                                    if (val === 'CREAR_RUTA') {
+                                        handleCreateNewGrid();
+                                        return;
+                                    }
+                                    const r = savedRoutes.find(x => (x.name || x.route_id || x.spot_id || x.id) === val);
+                                    if (r) handleLoadRoute(r);
+                                }}
+                                className={`h-6 text-[10px] font-extrabold border rounded-md px-1.5 focus:outline-none focus:ring-1 focus:ring-sky-500 ${clientType === 'PROSPECTOS' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-800 border-slate-200 cursor-pointer shadow-2xs'}`}
+                            >
+                                <option value="CREAR_RUTA">➕ NUEVA RUTA COA</option>
+                                {filteredRoutes.map(r => {
+                                    const rKey = r.name || r.route_id || r.id || r.spot_id;
+                                    return (
+                                        <option key={rKey} value={rKey}>
+                                            {r.name || r.route_id}
+                                        </option>
+                                    );
+                                })}
+                            </select>
+                        </div>
                     </div>
 
                     {/* PASO 3: COTIZACIÓN */}
-                    <div className="flex items-center gap-1 border rounded px-1.5 py-0.5 shadow-xs shrink-0 bg-slate-800/90 border-slate-700/80">
-                        <span className="text-[8.5px] font-black uppercase tracking-wider whitespace-nowrap text-cyan-400">
-                            3. COTIZACIÓN
-                        </span>
-                        <select
-                            value={selectedRouteId}
-                            disabled={false}
-                            onChange={(e) => {
-                                const qId = e.target.value;
-                                setSelectedRouteId(qId);
-                                setSaveTargetTable('routes_quotes');
-                                if (!qId) return;
-                                if (qId === 'CREAR_RUTA') {
-                                    handleCreateNewGrid();
-                                    return;
-                                }
-                                const q = savedRoutes.find(x => (x.name || x.route_id || x.spot_id || x.id) === qId);
-                                if (q) handleLoadRoute(q);
-                            }}
-                            className="h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-cyan-500 bg-slate-900 text-slate-100 border-slate-700 cursor-pointer"
-                        >
-                            <option value="CREAR_RUTA">
-                                {clientType === 'PROSPECTOS' ? '➕ NUEVA COTIZACIÓN PROSPECTO' : '➕ NUEVA COTIZACIÓN SPOT'}
-                            </option>
-                            {filteredQuotes.map(q => {
-                                const qKey = q.name || q.route_id || q.spot_id || q.id;
-                                return (
-                                    <option key={qKey} value={qKey}>
-                                        {q.name || q.route_id || 'COTIZACIÓN'}
-                                    </option>
-                                );
-                            })}
-                        </select>
+                    <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                        <div className="w-7 h-7 rounded-md bg-purple-100 text-purple-700 flex items-center justify-center font-black text-[11px] shadow-2xs">
+                            3
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                                COTIZACIÓN
+                            </span>
+                            <select
+                                value={selectedRouteId}
+                                disabled={false}
+                                onChange={(e) => {
+                                    const qId = e.target.value;
+                                    setSelectedRouteId(qId);
+                                    setSaveTargetTable('routes_quotes');
+                                    if (!qId) return;
+                                    if (qId === 'CREAR_RUTA') {
+                                        handleCreateNewGrid();
+                                        return;
+                                    }
+                                    const q = savedRoutes.find(x => (x.name || x.route_id || x.spot_id || x.id) === qId);
+                                    if (q) handleLoadRoute(q);
+                                }}
+                                className="h-6 text-[10px] font-extrabold border rounded-md px-1.5 focus:outline-none focus:ring-1 focus:ring-purple-500 bg-white text-slate-800 border-slate-200 cursor-pointer shadow-2xs"
+                            >
+                                <option value="CREAR_RUTA">
+                                    {clientType === 'PROSPECTOS' ? '➕ NUEVA COTIZACIÓN PROSPECTO' : '➕ NUEVA COTIZACIÓN SPOT'}
+                                </option>
+                                {filteredQuotes.map(q => {
+                                    const qKey = q.name || q.route_id || q.spot_id || q.id;
+                                    return (
+                                        <option key={qKey} value={qKey}>
+                                            {q.name || q.route_id || 'COTIZACIÓN'}
+                                        </option>
+                                    );
+                                })}
+                            </select>
+                        </div>
                     </div>
 
                     {/* PASO 4: VALIDEZ (FECHA INICIO Y FIN) */}
-                    <div className={`flex items-center gap-1 bg-slate-800/90 border rounded px-1.5 py-0.5 shadow-xs shrink-0 ${!validFrom || !validTo ? 'border-amber-500/60 bg-amber-950/30' : 'border-slate-700/80'}`}>
-                        <span className="text-[8.5px] font-black text-cyan-400 uppercase tracking-wider whitespace-nowrap flex items-center gap-1">
-                            <Calendar size={11} className="text-cyan-400" />
-                            <span>4. VALIDEZ</span>
-                        </span>
-                        <div className="flex items-center gap-1">
-                            <label className="text-[8px] font-bold text-slate-400 uppercase">Inicio:</label>
-                            <input
-                                type="date"
-                                value={validFrom}
-                                onChange={(e) => setValidFrom(e.target.value)}
-                                className="h-5.5 text-[9px] font-mono font-bold bg-slate-900 border border-slate-700 rounded px-1 text-cyan-300 focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer"
-                            />
+                    <div className={`flex items-center gap-2 border rounded-lg p-1.5 shadow-2xs shrink-0 transition-all ${!validFrom || !validTo ? 'border-amber-300 bg-amber-50/60' : 'bg-slate-50 border-slate-200'}`}>
+                        <div className="w-7 h-7 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-[11px] shadow-2xs">
+                            4
                         </div>
-                        <div className="flex items-center gap-1">
-                            <label className="text-[8px] font-bold text-slate-400 uppercase">Fin:</label>
-                            <input
-                                type="date"
-                                value={validTo}
-                                onChange={(e) => setValidTo(e.target.value)}
-                                className="h-5.5 text-[9px] font-mono font-bold bg-slate-900 border border-slate-700 rounded px-1 text-cyan-300 focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer"
-                            />
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap flex items-center gap-1">
+                                <Calendar size={11} className="text-emerald-600" />
+                                <span>VALIDEZ</span>
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                                <div className="flex items-center gap-1">
+                                    <label className="text-[8px] font-extrabold text-slate-500 uppercase">Inicio:</label>
+                                    <input
+                                        type="date"
+                                        value={validFrom}
+                                        onChange={(e) => setValidFrom(e.target.value)}
+                                        className="h-6 text-[9.5px] font-mono font-bold bg-white border border-slate-200 rounded-md px-1 text-sky-900 focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer shadow-2xs"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <label className="text-[8px] font-extrabold text-slate-500 uppercase">Fin:</label>
+                                    <input
+                                        type="date"
+                                        value={validTo}
+                                        onChange={(e) => setValidTo(e.target.value)}
+                                        className="h-6 text-[9.5px] font-mono font-bold bg-white border border-slate-200 rounded-md px-1 text-sky-900 focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer shadow-2xs"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -999,31 +1023,36 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                         const isValidezComplete = Boolean(validFrom && validTo);
                         return (
                             <div 
-                                className={`flex items-center gap-1 border rounded px-1.5 py-0.5 shadow-xs shrink-0 transition-all ${
+                                className={`flex items-center gap-2 border rounded-lg p-1.5 shadow-2xs shrink-0 transition-all ${
                                     !isValidezComplete 
-                                        ? 'bg-slate-900 border-slate-800 opacity-60 cursor-not-allowed' 
-                                        : 'bg-slate-800/90 border-slate-700/80'
+                                        ? 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed' 
+                                        : 'bg-slate-50 border-slate-200 hover:border-slate-300'
                                 }`}
                                 title={!isValidezComplete ? 'Complete las fechas de Validez (Paso 4) para habilitar la selección de Buque' : ''}
                             >
-                                <span className={`text-[8.5px] font-black uppercase tracking-wider whitespace-nowrap ${!isValidezComplete ? 'text-slate-500' : 'text-cyan-400'}`}>
-                                    5. BUQUE
-                                </span>
-                                <select
-                                    value={selectedVessel}
-                                    disabled={!isValidezComplete}
-                                    onChange={(e) => handleVesselChange(e.target.value)}
-                                    className={`h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-cyan-500 ${
-                                        !isValidezComplete 
-                                            ? 'bg-slate-900 text-slate-500 border-slate-800 cursor-not-allowed' 
-                                            : 'bg-slate-900 border-slate-700 text-slate-100 cursor-pointer'
-                                    }`}
-                                >
-                                    <option value="">[SELECCIONAR BUQUE]</option>
-                                    {vessels.map(v => (
-                                        <option key={v.vessel_id} value={v.vessel_id}>{v.vessel_name || v.vessel_id}</option>
-                                    ))}
-                                </select>
+                                <div className={`w-7 h-7 rounded-md flex items-center justify-center font-black text-[11px] ${!isValidezComplete ? 'bg-slate-200 text-slate-400' : 'bg-indigo-100 text-indigo-700 shadow-2xs'}`}>
+                                    5
+                                </div>
+                                <div className="flex flex-col gap-0.5">
+                                    <span className={`text-[10px] font-extrabold uppercase tracking-tight whitespace-nowrap ${!isValidezComplete ? 'text-slate-400' : 'text-slate-800'}`}>
+                                        BUQUE
+                                    </span>
+                                    <select
+                                        value={selectedVessel}
+                                        disabled={!isValidezComplete}
+                                        onChange={(e) => handleVesselChange(e.target.value)}
+                                        className={`h-6 text-[10px] font-extrabold border rounded-md px-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
+                                            !isValidezComplete 
+                                                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' 
+                                                : 'bg-white border-slate-200 text-slate-800 cursor-pointer shadow-2xs'
+                                        }`}
+                                    >
+                                        <option value="">[SELECCIONAR BUQUE]</option>
+                                        {vessels.map(v => (
+                                            <option key={v.vessel_id} value={v.vessel_id}>{v.vessel_name || v.vessel_id}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                         );
                     })()}
