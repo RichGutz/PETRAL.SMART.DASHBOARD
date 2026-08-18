@@ -213,3 +213,39 @@ input[type="number"] {
   white-space: nowrap;
   display: block;
 }
+
+/* ==========================================================================
+   FASE 2: SISTEMA DE DISEÑO UI/UX ENTERPRISE "OPENCONSTRUCTIONERP"
+   ========================================================================== */
+:root {
+  --bg-deep-obsidian: #090d16;
+  --bg-slate-panel: #0f172a;
+  --bg-slate-card: #1e293b;
+  --accent-cyan: #06b6d4;
+  --accent-indigo: #6366f1;
+  --risk-emerald: #10b981;
+  --risk-amber: #f59e0b;
+  --risk-crimson: #ef4444;
+}
+
+.open-erp-glow-cyan {
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
+}
+
+.open-erp-glow-indigo {
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.15);
+}
+
+.open-erp-card {
+  background-color: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+}
+
+.open-erp-ribbon-item {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.open-erp-ribbon-item:hover {
+  transform: translateY(-1px);
+}

@@ -858,23 +858,23 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
     return (
         <div className="w-full min-h-screen bg-white p-2 text-slate-800 font-sans flex flex-col select-text">
-            {/* BARRA UNIFICADA Y ESTANDARIZADA DE PASOS COMERCIALES (1 A 5) - UNA SOLA FILA HORIZONTAL (FLEX-NOWRAP) */}
-            <div className="bg-slate-50 border border-slate-300 rounded p-1.5 mb-2 select-none flex-shrink-0 overflow-x-auto">
+            {/* BARRA UNIFICADA Y ESTANDARIZADA DE PASOS COMERCIALES (1 A 5) - ESTILO OPENCONSTRUCTIONERP ULTRA PRO */}
+            <div className="bg-slate-900 border border-slate-800 rounded-lg p-1.5 mb-2 select-none flex-shrink-0 overflow-x-auto shadow-md">
                 <div className="flex items-center gap-1.5 flex-nowrap min-w-max">
                     
                     {/* PASO 1: CLIENTE */}
-                    <div className="flex items-center gap-1 bg-white border border-slate-300 rounded px-1.5 py-0.5 shadow-xs shrink-0">
-                        <span className="text-[8.5px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                    <div className="flex items-center gap-1 bg-slate-800/90 border border-slate-700/80 rounded px-1.5 py-0.5 shadow-xs shrink-0">
+                        <span className="text-[8.5px] font-black text-cyan-400 uppercase tracking-wider whitespace-nowrap">
                             1. CLIENTE
                         </span>
-                        <div className="flex rounded bg-slate-100 p-0.5 border border-slate-200">
+                        <div className="flex rounded bg-slate-900 p-0.5 border border-slate-700">
                             <button
                                 onClick={() => {
                                     setClientType('ACTIVOS');
                                     setSelectedClient('');
                                     setSelectedRouteId('CREAR_RUTA');
                                 }}
-                                className={`px-1.5 py-0.2 text-[8px] font-black uppercase rounded cursor-pointer ${clientType === 'ACTIVOS' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
+                                className={`px-1.5 py-0.2 text-[8px] font-black uppercase rounded cursor-pointer ${clientType === 'ACTIVOS' ? 'bg-cyan-600 text-white shadow-xs' : 'text-slate-400 hover:bg-slate-800'}`}
                             >
                                 Activos
                             </button>
@@ -884,7 +884,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                                     setSelectedClient('');
                                     setSelectedRouteId('CREAR_RUTA');
                                 }}
-                                className={`px-1.5 py-0.2 text-[8px] font-black uppercase rounded cursor-pointer ${clientType === 'PROSPECTOS' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-200'}`}
+                                className={`px-1.5 py-0.2 text-[8px] font-black uppercase rounded cursor-pointer ${clientType === 'PROSPECTOS' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-400 hover:bg-slate-800'}`}
                             >
                                 Prospectos
                             </button>
@@ -892,7 +892,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                         <select
                             value={selectedClient}
                             onChange={(e) => setSelectedClient(e.target.value)}
-                            className={`h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer ${!selectedClient ? 'bg-amber-50 border-amber-300 text-amber-800 font-bold' : 'bg-white border-slate-300 text-blue-900'}`}
+                            className={`h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer ${!selectedClient ? 'bg-amber-950/40 border-amber-500/50 text-amber-300 font-bold' : 'bg-slate-900 border-slate-700 text-cyan-300'}`}
                         >
                             <option value="">[SELECCIONAR CLIENTE]</option>
                             {clients.map(c => <option key={c} value={c}>{c}</option>)}
@@ -900,8 +900,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     </div>
 
                     {/* PASO 2: RUTA (COA Cliente Activo) */}
-                    <div className={`flex items-center gap-1 border rounded px-1.5 py-0.5 shadow-xs shrink-0 transition-opacity ${clientType === 'PROSPECTOS' ? 'bg-slate-100 border-slate-200 opacity-50' : 'bg-white border-slate-300'}`}>
-                        <span className={`text-[8.5px] font-black uppercase tracking-wider whitespace-nowrap ${clientType === 'PROSPECTOS' ? 'text-slate-400' : 'text-slate-700'}`}>
+                    <div className={`flex items-center gap-1 border rounded px-1.5 py-0.5 shadow-xs shrink-0 transition-opacity ${clientType === 'PROSPECTOS' ? 'bg-slate-900 border-slate-800 opacity-50' : 'bg-slate-800/90 border-slate-700/80'}`}>
+                        <span className={`text-[8.5px] font-black uppercase tracking-wider whitespace-nowrap ${clientType === 'PROSPECTOS' ? 'text-slate-500' : 'text-cyan-400'}`}>
                             2. RUTA
                         </span>
                         <select
@@ -918,7 +918,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                                 const r = savedRoutes.find(x => (x.name || x.route_id || x.spot_id || x.id) === val);
                                 if (r) handleLoadRoute(r);
                             }}
-                            className={`h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-blue-500 ${clientType === 'PROSPECTOS' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-800 border-slate-300 cursor-pointer'}`}
+                            className={`h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-cyan-500 ${clientType === 'PROSPECTOS' ? 'bg-slate-900 text-slate-500 border-slate-800 cursor-not-allowed' : 'bg-slate-900 text-slate-100 border-slate-700 cursor-pointer'}`}
                         >
                             <option value="CREAR_RUTA">➕ NUEVA RUTA COA</option>
                             {filteredRoutes.map(r => {
@@ -933,8 +933,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     </div>
 
                     {/* PASO 3: COTIZACIÓN */}
-                    <div className="flex items-center gap-1 border rounded px-1.5 py-0.5 shadow-xs shrink-0 bg-white border-slate-300">
-                        <span className="text-[8.5px] font-black uppercase tracking-wider whitespace-nowrap text-slate-700">
+                    <div className="flex items-center gap-1 border rounded px-1.5 py-0.5 shadow-xs shrink-0 bg-slate-800/90 border-slate-700/80">
+                        <span className="text-[8.5px] font-black uppercase tracking-wider whitespace-nowrap text-cyan-400">
                             3. COTIZACIÓN
                         </span>
                         <select
@@ -952,7 +952,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                                 const q = savedRoutes.find(x => (x.name || x.route_id || x.spot_id || x.id) === qId);
                                 if (q) handleLoadRoute(q);
                             }}
-                            className="h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white text-slate-800 border-slate-300 cursor-pointer"
+                            className="h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-cyan-500 bg-slate-900 text-slate-100 border-slate-700 cursor-pointer"
                         >
                             <option value="CREAR_RUTA">
                                 {clientType === 'PROSPECTOS' ? '➕ NUEVA COTIZACIÓN PROSPECTO' : '➕ NUEVA COTIZACIÓN SPOT'}
@@ -969,27 +969,27 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     </div>
 
                     {/* PASO 4: VALIDEZ (FECHA INICIO Y FIN) */}
-                    <div className={`flex items-center gap-1 bg-white border rounded px-1.5 py-0.5 shadow-xs shrink-0 ${!validFrom || !validTo ? 'border-amber-400 bg-amber-50/50' : 'border-slate-300'}`}>
-                        <span className="text-[8.5px] font-black text-slate-700 uppercase tracking-wider whitespace-nowrap flex items-center gap-1">
-                            <Calendar size={11} className="text-blue-600" />
+                    <div className={`flex items-center gap-1 bg-slate-800/90 border rounded px-1.5 py-0.5 shadow-xs shrink-0 ${!validFrom || !validTo ? 'border-amber-500/60 bg-amber-950/30' : 'border-slate-700/80'}`}>
+                        <span className="text-[8.5px] font-black text-cyan-400 uppercase tracking-wider whitespace-nowrap flex items-center gap-1">
+                            <Calendar size={11} className="text-cyan-400" />
                             <span>4. VALIDEZ</span>
                         </span>
                         <div className="flex items-center gap-1">
-                            <label className="text-[8px] font-bold text-slate-500 uppercase">Inicio:</label>
+                            <label className="text-[8px] font-bold text-slate-400 uppercase">Inicio:</label>
                             <input
                                 type="date"
                                 value={validFrom}
                                 onChange={(e) => setValidFrom(e.target.value)}
-                                className="h-5.5 text-[9px] font-mono font-bold bg-white border border-slate-300 rounded px-1 text-blue-900 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                                className="h-5.5 text-[9px] font-mono font-bold bg-slate-900 border border-slate-700 rounded px-1 text-cyan-300 focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer"
                             />
                         </div>
                         <div className="flex items-center gap-1">
-                            <label className="text-[8px] font-bold text-slate-500 uppercase">Fin:</label>
+                            <label className="text-[8px] font-bold text-slate-400 uppercase">Fin:</label>
                             <input
                                 type="date"
                                 value={validTo}
                                 onChange={(e) => setValidTo(e.target.value)}
-                                className="h-5.5 text-[9px] font-mono font-bold bg-white border border-slate-300 rounded px-1 text-blue-900 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                                className="h-5.5 text-[9px] font-mono font-bold bg-slate-900 border border-slate-700 rounded px-1 text-cyan-300 focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer"
                             />
                         </div>
                     </div>
@@ -1001,22 +1001,22 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                             <div 
                                 className={`flex items-center gap-1 border rounded px-1.5 py-0.5 shadow-xs shrink-0 transition-all ${
                                     !isValidezComplete 
-                                        ? 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed' 
-                                        : 'bg-white border-slate-300'
+                                        ? 'bg-slate-900 border-slate-800 opacity-60 cursor-not-allowed' 
+                                        : 'bg-slate-800/90 border-slate-700/80'
                                 }`}
                                 title={!isValidezComplete ? 'Complete las fechas de Validez (Paso 4) para habilitar la selección de Buque' : ''}
                             >
-                                <span className={`text-[8.5px] font-black uppercase tracking-wider whitespace-nowrap ${!isValidezComplete ? 'text-slate-400' : 'text-slate-700'}`}>
+                                <span className={`text-[8.5px] font-black uppercase tracking-wider whitespace-nowrap ${!isValidezComplete ? 'text-slate-500' : 'text-cyan-400'}`}>
                                     5. BUQUE
                                 </span>
                                 <select
                                     value={selectedVessel}
                                     disabled={!isValidezComplete}
                                     onChange={(e) => handleVesselChange(e.target.value)}
-                                    className={`h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                                    className={`h-5.5 text-[9.5px] font-extrabold border rounded px-1 focus:outline-none focus:ring-1 focus:ring-cyan-500 ${
                                         !isValidezComplete 
-                                            ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' 
-                                            : 'bg-white border-slate-300 text-slate-800 cursor-pointer'
+                                            ? 'bg-slate-900 text-slate-500 border-slate-800 cursor-not-allowed' 
+                                            : 'bg-slate-900 border-slate-700 text-slate-100 cursor-pointer'
                                     }`}
                                 >
                                     <option value="">[SELECCIONAR BUQUE]</option>
