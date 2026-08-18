@@ -547,7 +547,6 @@ def calculate_multicotizador_simulation(payload: dict) -> dict:
             "bunker_costs": bunker_costs_total,
             "net_income": net_income,
             "port_costs": port_costs,
-            "bunker_costs": bunker_costs,
             "delay_loading_audit": delay_loading_audit,
             "delay_disch_audit": delay_disch_audit,
             "audit_trail": audit_trail

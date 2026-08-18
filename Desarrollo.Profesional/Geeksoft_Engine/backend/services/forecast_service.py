@@ -790,15 +790,27 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 # --- YIELD PONDERADO: tarifa representativa para la Matriz ---
                 yield_flete = (total_laden_revenue / total_laden_qty) if total_laden_qty > 0 else 0.0
 
-                # --- INYECCIÓN MANDATORIA DE PRECIOS BÚNKER DE LA COTIZACIÓN ---
-                saved_vparams = legs_data.get("vesselParams", {})
-                quote_ifo = float(saved_vparams.get("bunker_price_ifo") or legs_data.get("bunker_price_ifo") or legs_data.get("bunker_ifo") or 0.0)
-                quote_mdo = float(saved_vparams.get("bunker_price_mdo") or legs_data.get("bunker_price_mdo") or legs_data.get("bunker_mdo") or 0.0)
-                
-                b_ifo = quote_ifo if quote_ifo > 0 else float(contract.get("bunker_baseline_price_ifo") or p_ifo or 600.0)
-                b_mdo = quote_mdo if quote_mdo > 0 else float(contract.get("bunker_baseline_price_mdo") or p_mdo or 900.0)
-                if b_ifo <= 0: b_ifo = p_ifo if p_ifo > 0 else 600.0
-                if b_mdo <= 0: b_mdo = p_mdo if p_mdo > 0 else 900.0
+                # --- LA RUTA SELECCIONADA ES LA ÚNICA Y EXCLUSIVA FUENTE DE LA VERDAD PARA EL BÚNKER ---
+                saved_vparams = legs_data.get("vesselParams", {}) if legs_data else {}
+                quote_ifo = float(
+                    (line.forecast_bunker_price_ifo if (line.forecast_bunker_price_ifo and float(line.forecast_bunker_price_ifo) > 0) else 0.0) or
+                    saved_vparams.get("bunker_price_ifo") or
+                    legs_data.get("bunker_price_ifo") or
+                    legs_data.get("bunker_ifo") or
+                    (spot_route.get("bunker_price_ifo") if spot_route else 0.0) or
+                    0.0
+                )
+                quote_mdo = float(
+                    (line.forecast_bunker_price_mdo if (line.forecast_bunker_price_mdo and float(line.forecast_bunker_price_mdo) > 0) else 0.0) or
+                    saved_vparams.get("bunker_price_mdo") or
+                    legs_data.get("bunker_price_mdo") or
+                    legs_data.get("bunker_mdo") or
+                    (spot_route.get("bunker_price_mdo") if spot_route else 0.0) or
+                    0.0
+                )
+
+                b_ifo = quote_ifo if quote_ifo > 0 else (p_ifo if p_ifo > 0 else 1100.0)
+                b_mdo = quote_mdo if quote_mdo > 0 else (p_mdo if p_mdo > 0 else 1700.0)
 
                 vparams["bunker_price_ifo"] = b_ifo
                 vparams["bunker_price_mdo"] = b_mdo
@@ -1498,12 +1510,12 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             "port_days_unit": unit_result["port_days"],
             "total_duration_unit": unit_result["total_duration"],
             "hire_cost_unit": unit_result.get("hire_cost", unit_result["total_duration"] * float(v_data.get("tce_required", 15000.0))),
-            "price_ifo_unit": float(p_ifo),
-            "bunker_ifo_tonnage_unit": unit_result["bunker_ifo_tonnage"],
-            "bunker_ifo_cost_unit": float(unit_result["bunker_ifo_tonnage"] * p_ifo),
-            "price_mdo_unit": float(p_mdo),
-            "bunker_mdo_tonnage_unit": unit_result["bunker_mdo_tonnage"],
-            "bunker_mdo_cost_unit": float(unit_result["bunker_mdo_tonnage"] * p_mdo),
+            "price_ifo_unit": float(b_ifo if 'b_ifo' in locals() and b_ifo > 0 else p_ifo),
+            "bunker_ifo_tonnage_unit": unit_result.get("bunker_ifo_tonnage", 0.0),
+            "bunker_ifo_cost_unit": float(unit_result.get("bunker_ifo_tonnage", 0.0) * float(b_ifo if 'b_ifo' in locals() and b_ifo > 0 else p_ifo)),
+            "price_mdo_unit": float(b_mdo if 'b_mdo' in locals() and b_mdo > 0 else p_mdo),
+            "bunker_mdo_tonnage_unit": unit_result.get("bunker_mdo_tonnage", 0.0),
+            "bunker_mdo_cost_unit": float(unit_result.get("bunker_mdo_tonnage", 0.0) * float(b_mdo if 'b_mdo' in locals() and b_mdo > 0 else p_mdo)),
             "total_bunker_costs_unit": unit_result["total_bunker_costs"],
             "total_port_costs_unit": unit_result["total_port_costs"],
             "voyage_result_unit": unit_result["voyage_result"],
