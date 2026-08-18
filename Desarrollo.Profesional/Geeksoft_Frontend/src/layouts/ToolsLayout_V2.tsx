@@ -61,11 +61,11 @@ export const ToolsLayout_V2: React.FC = () => {
                         onPortCostModeChange={context.setPortCostMode}
                         bottomRightContent={
                             <>
-                                <div className="flex flex-row items-center gap-2 h-8">
+                                <div className="flex flex-row items-center gap-2 h-7.5">
                                     <button 
                                         onClick={context.handleClearSession} 
                                         disabled={context.loading}
-                                        className="flex items-center justify-center gap-1 h-8 px-3 rounded font-semibold text-[11px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-all duration-200 shadow-sm cursor-pointer"
+                                        className="flex items-center justify-center gap-1.5 h-7.5 px-3.5 rounded-lg font-extrabold text-[11px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-all duration-200 shadow-2xs cursor-pointer"
                                         title="Limpiar sesión y volver a pantalla en blanco"
                                     >
                                         <Trash2 size={13} className="text-rose-600" />
@@ -74,18 +74,18 @@ export const ToolsLayout_V2: React.FC = () => {
                                     <button 
                                         onClick={context.handleManualRecalculate} 
                                         disabled={context.loading}
-                                        className={`flex items-center justify-center gap-1 h-8 px-3 rounded font-semibold text-[11px] transition-all duration-300 shadow-sm cursor-pointer ${
+                                        className={`flex items-center justify-center gap-1.5 h-7.5 px-3.5 rounded-lg font-extrabold text-[11px] transition-all duration-300 shadow-2xs cursor-pointer ${
                                             context.loading
                                                 ? 'bg-slate-400 text-white cursor-not-allowed'
                                                 : context.isDirty 
                                                     ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
-                                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200'
                                         }`}
                                     >
                                         {context.loading ? (
                                             <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full"></div>
                                         ) : (
-                                            <RefreshCw size={14} />
+                                            <RefreshCw size={13} className="text-sky-600" />
                                         )}
                                         <span>{context.loading ? 'Calculando...' : context.isDirty ? '¡Recalcular!' : 'Recalcular'}</span>
                                     </button>
@@ -96,25 +96,25 @@ export const ToolsLayout_V2: React.FC = () => {
                                             }
                                             context.setShowSaveModal(true);
                                         }} 
-                                        className="flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground h-8 px-3 rounded font-medium text-[11px] transition-colors shadow-sm cursor-pointer"
+                                        className="flex items-center justify-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white h-7.5 px-4 rounded-lg font-extrabold text-[11px] transition-all shadow-2xs cursor-pointer"
                                     >
                                         <Save size={14} /> Guardar
                                     </button>
                                     <button 
                                         onClick={context.handleLoadClick} 
                                         disabled={context.actionLoading === 'loadList'}
-                                        className={`relative overflow-hidden flex items-center justify-center gap-1 h-8 px-3 rounded font-medium text-[11px] transition-colors shadow-sm cursor-pointer ${context.actionLoading === 'loadList' ? 'bg-slate-200 pointer-events-none' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'}`}
+                                        className={`relative overflow-hidden flex items-center justify-center gap-1.5 h-7.5 px-4 rounded-lg font-extrabold text-[11px] transition-all shadow-2xs cursor-pointer ${context.actionLoading === 'loadList' ? 'bg-slate-100 text-slate-400 pointer-events-none' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
                                     >
-                                        {context.actionLoading === 'loadList' && <div className="absolute inset-0 bg-slate-300/50 animate-pulse" style={{ width: '100%' }}></div>}
-                                        <span className="relative flex items-center justify-center z-10 w-full gap-1">
+                                        {context.actionLoading === 'loadList' && <div className="absolute inset-0 bg-slate-200/50 animate-pulse" style={{ width: '100%' }}></div>}
+                                        <span className="relative flex items-center justify-center z-10 w-full gap-1.5">
                                             {context.actionLoading === 'loadList' ? (
                                                 <>
-                                                    <div className="animate-spin h-3 w-3 border-2 border-slate-500 border-t-transparent rounded-full"></div>
+                                                    <div className="animate-spin h-3 w-3 border-2 border-sky-600 border-t-transparent rounded-full"></div>
                                                     <span>Abrir...</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <FolderOpen size={14} /> Cargar
+                                                    <FolderOpen size={14} className="text-sky-600" /> Cargar
                                                 </>
                                             )}
                                         </span>
