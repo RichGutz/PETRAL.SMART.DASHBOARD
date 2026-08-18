@@ -102,3 +102,57 @@ graph LR
    * Al hacer clic en cualquier estadio de mora, se despliegan suavemente las 22 instituciones asociadas mostrando el secreto comercial intacto.
 5. **Certificado de Carga en 1 Clic:**
    * En el módulo de ingestión, el analista arrastra el Excel y ve la validación fila por fila en caliente con feedback instantáneo.
+
+---
+
+## 4. Estrategia de Responsividad para Dispositivos Fijos (Laptops & Desktops de Distinta Proporción)
+
+> [!IMPORTANT]
+> **Eliminación del Zoom Manual (`Ctrl + Scroll`):** El sistema se auto-ajusta en escala, densidad y altura de contenedor para encajar exactamente al 100% de la pantalla visible en cualquier resolución (desde Laptops HD de 1366x768 hasta Monitores 4K de 3840x2160), eliminando la necesidad de que el usuario ajuste manualmente el zoom del navegador (`Ctrl + +` / `Ctrl + -`).
+
+### 4.1 Arquitectura de Escalado Dinámico ("Zero-Scroll-Deformation")
+
+1. **Auto-Scaling Root / Escala Tipográfica Fluida (`rem` adaptativo):**
+   * Inyección de reglas de medios adaptativas sobre el tamaño de fuente base de la aplicación (`html / :root`):
+     ```css
+     /* Desktops HD / Full HD Standard (1080p) */
+     @media (max-width: 1920px) {
+       :root {
+         font-size: 15px;
+       }
+     }
+     /* Laptops 14" / 15.6" (1440px - 1536px) */
+     @media (max-width: 1536px) {
+       :root {
+         font-size: 13.5px;
+       }
+     }
+     /* Laptops Compactas HD (1366x768) */
+     @media (max-width: 1366px) {
+       :root {
+         font-size: 12px;
+       }
+     }
+     ```
+   * Utilización estricta de `height: 100dvh` (Dynamic Viewport Height) para garantizar que los elementos de cabecera, ribbon y pie encajen exactamente en el área de visión sin desbordamiento vertical.
+
+2. **Paneles Flexibles Verticales con Contención de Scroll Interno:**
+   * **Estructura Flex-Col Rígida de Aplicación:**
+     * `Header / Top Ribbon`: `flex-shrink-0` (altura fija auto-ajustable por `rem`).
+     * `Fact Sheet Header`: `flex-shrink-0` (altura compacta responsiva).
+     * `Cuerpo de Grilla / Gráficas`: `flex-1 min-h-0 overflow-auto`.
+   * Los controles superiores permanecen **100% visibles y fijos** independientemente de la resolución, y solo la grilla interna o panel analítico habilita scroll de datos cuando el contenido excede el espacio dinámico.
+
+3. **Apache ECharts & Data Grids Auto-Resizables:**
+   * Vinculación obligatoria de `ResizeObserver` en todos los contenedores de gráficos (`Apache ECharts`) para ejecutar `.resize()` en tiempo real ante cualquier cambio de pantalla o colapso de menú.
+   * Celdas de tabla numéricas con `max-width` dinámico y truncado inteligente (`truncate` + tooltip nativo `title={valor}`) para prevenir la deformación horizontal del layout en pantallas pequeñas.
+
+### 4.2 Matriz de Breakpoints para Dispositivos Fijos Enterprise
+
+| Rango de Resolución | Dispositivo / Pantalla | Escala Root (`rem`) | Ajustes de Layout y Densidad |
+| :--- | :--- | :---: | :--- |
+| **> 1920px** | Monitores Ultrawide / Workstations 2K/4K | `16px` | Espaciado holgado, tarjetas expandidas con vistas analíticas en paralelo. |
+| **1536px – 1920px** | Desktops Full HD Standard (1080p) | `14.5px - 15px` | Escala base 1:1 por defecto, vista corporativa equilibrada. |
+| **1366px – 1535px** | Laptops Enterprise 14" / 15.6" | `13px - 13.5px` | Densidad alta, reducción de paddings (`py-0.5`), compresión de botones. |
+| **< 1366px** | Laptops Compactas HD (1366x768) | `11.5px - 12px` | Ribbons en `overflow-x-auto scrollbar-none`, grillas ultra-compactas sin desbordamiento general. |
+

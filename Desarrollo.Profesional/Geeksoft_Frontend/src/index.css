@@ -168,3 +168,35 @@ input[type="number"]::-webkit-inner-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+/* ==========================================================================
+   FASE 1: RESPONSIVIDAD DINÁMICA PARA DISPOSITIVOS FIJOS (ENTERPRISE FIT)
+   Ajusta automáticamente el tamaño base rem sin requerir Ctrl + Scroll manual.
+   ========================================================================== */
+
+@media (max-width: 1920px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 1536px) {
+  html {
+    font-size: 13.5px;
+  }
+}
+
+@media (max-width: 1366px) {
+  html {
+    font-size: 12.5px;
+  }
+}
+
+/* Ocultar barra de scroll en elementos horizontales superflujos */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
