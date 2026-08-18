@@ -443,6 +443,150 @@ Las observaciones del usuario son hipótesis forenses enmascaradas. Interpretarl
 
 ---
 
-*Método creado durante el debugging del proyecto PETRAL Smart Dashboard.*
-*Verificado en producción: https://forecast.geeksoft.tech*
-*Branch de referencia: `BENOIT.LOGRO.MONOLITO.MODULAR`*
+## 14. Caso Forense Extra: La Odisea de los $13,000 USD de Muellaje (Dockage Revenue) y la Trampa de la Sobre-Investigación
+
+> *"El error más grave de un investigador novato es buscar en la oscuridad lo que el testigo ya puso sobre la mesa a plena luz del día."* — Benoit Blanc
+
+### 14.1. El Misterio: Un Número Visible en la Base de Datos que Desapareció en Pantalla
+
+En la ruta/cotización `NEXA.ILO.CALLAO.MATARANI.ILO.2026 (IZ)`:
+- En la base de datos Supabase (`routes_quotes`), dentro de `legs_data.puertosConfig`, existían grabados con total claridad:
+  - **Puerto 1 (Callao - CARGAR):** `muellaje_cost = $7,000 USD`
+  - **Puerto 2 (Matarani - DESCARGAR):** `muellaje_cost = $6,000 USD`
+  - **Total Muellaje Refacturado:** **$13,000 USD**
+- En el Multicotizador:
+  - **Flete Puro:** $405,000 USD (13,500 MT × $30.00/MT)
+  - **Refacturación de Muellaje:** +$13,000 USD
+  - **Gross Revenue Total:** **$418,000 USD**
+- En la Matriz Financiera de Producción (`https://forecast.geeksoft.tech`):
+  - `Net Revenue`: $405,000 USD
+  - `↳ (+) Freight Revenue`: $405,000 USD
+  - `↳ (+) Dockage Revenue`: **`-` ($0)** ❌
+  - `(=) VOYAGE RESULT / P&L`: **$169,961 USD** (descalzado por exactamente $13,000 USD frente a los $182,961 USD reales).
+
+---
+
+### 14.2. Crónica de las Decenas de Iteraciones y la "Ceguera por Sobre-Investigación"
+
+¿Por qué se perdieron más de 20 minutos y decenas de miles de tokens en un problema cuya respuesta estaba en una sola línea?
+
+| Iteración / Fase | Acción Errónea del Agente | Causa del Descalce | Lección Aprendida |
+| :--- | :--- | :--- | :--- |
+| **Iteración 1-3** | Intentó separar `gross_income` restando o asumiendo que el backend ya enviaba `refacturacion_muellaje`. | El backend `forecast_service.py` históricamente fusionaba los $418,000 completos en `gross_income`, enviando `refacturacion_muellaje = 0.0`. Al separar el flete a $405k, el muellaje se quedó huérfano. | Si separas un componente de una suma, debes garantizar de dónde se nutre la otra mitad. |
+| **Iteración 4-7** | Modificó `spot_engine.py` buscando `muellaje_cost_origin` y `muellaje_cost_dest` dentro de `processed_tramos`. | Los tramos nunca tuvieron esas propiedades asignadas porque el Multicotizador moderno guarda la configuración portuaria en `puertosConfig`, no en las piernas planas. El motor devolvía 0.0 silenciosamente. | No asumas la estructura del objeto sin inspeccionar el JSON real de la tabla. |
+| **Iteración 8-11** | En vez de preguntar directamente al usuario cómo quería estructurar la suma, el agente ejecutó scripts de dump en bucle, quemando tokens en segundo plano. | **Violación directa de la regla `ask_first_token_efficiency`**. El usuario conocía perfectamente que la suma de `puertosConfig` era el origen del número. | **El humano conoce el negocio.** Preguntar en 5 segundos ahorra 20 minutos de investigación a ciegas. |
+| **Iteración 12-15** | En `ForecastGrid.tsx`, una condición estricta `if (mUnit !== undefined)` evaluaba `0 !== undefined` como verdadero y multiplicaba por 0, tapando el fallback de `total_refacturacion_muellaje`. | Bug sutil de JavaScript: `0` es falsy pero no es `undefined`. | Los fallbacks numéricos deben validar `Number(v) > 0`, no solo presencia de clave. |
+
+---
+
+### 14.3. El "Smoking Gun": La Trampa de la Función Gemela (`run_forecast_simulation_universal`)
+
+Tras más de una docena de intentos, la prueba forense definitiva en terminal con el script `test_dockage.py` reveló por qué el backend seguía fallando a pesar de que el código parecía correcto:
+
+```text
+=== SMOKING GUN FIELDS ===
+  gross_income: 405000.0
+  freight_revenue: --- KEY MISSING ---
+  freight_revenue_unit: --- KEY MISSING ---
+  dockage_revenue: --- KEY MISSING ---
+  dockage_revenue_unit: --- KEY MISSING ---
+  refacturacion_muellaje: --- KEY MISSING ---
+  refacturacion_muellaje_unit: --- KEY MISSING ---
+  gross_revenue_total: --- KEY MISSING ---
+  net_income: 418000.0
+  voyage_result: 289918.44
+  pl_vs_required: 182961.06
+```
+
+#### 🔍 El Hallazgo Pericial:
+En `forecast_service.py` coexistían **dos funciones de simulación paralelas**:
+1. `run_forecast_simulation` (Línea 849 - la que se había editado inicialmente).
+2. `run_forecast_simulation_universal` (Línea 1131 - **la que realmente ejecutaba la simulación de la Matriz Financiera en vivo**).
+
+La función universal contenía su propio loop duplicado (Línea 1347), donde:
+- Se calculaba `gross_revenue = consolidated.get("total_freight_revenue", 0)` ($405k).
+- **Nunca se leía `puertosConfig`**.
+- El diccionario `unit_result` se construía sin `dockage_revenue` ni `freight_revenue`.
+- El diccionario `monthly_result` (Línea 1064) omitía por completo estas claves, dejándolas en estado `KEY MISSING`.
+
+---
+
+### 14.4. La Cirugía Definitiva y Verificación
+
+Se intervino quirúrgicamente la función `run_forecast_simulation_universal`:
+
+1. **En `unit_result` (Líneas 1347–1385):**
+   ```python
+   # 1. Leer directamente los muellajes grabados en puertosConfig
+   puertos_cfg_list = legs_data.get("puertosConfig", [])
+   sum_muellaje = sum(float(p.get("muellaje_cost") or 0.0) for p in puertos_cfg_list) if puertos_cfg_list else 0.0
+
+   tot_freight_rev = float(consolidated.get("total_freight_revenue", 0))
+   tot_dockage = sum_muellaje if sum_muellaje > 0 else float(consolidated.get("total_refacturacion_muellaje", 0) or 0.0)
+   gross_revenue = tot_freight_rev + tot_dockage  # $418,000.00 USD
+
+   unit_result = {
+       "gross_income": round(tot_freight_rev, 2),            # $405,000 USD (Flete Puro)
+       "freight_revenue": round(tot_freight_rev, 2),         # $405,000 USD
+       "freight_revenue_unit": round(tot_freight_rev, 2),
+       "dockage_revenue": round(tot_dockage, 2),             # $13,000 USD (Muellaje)
+       "dockage_revenue_unit": round(tot_dockage, 2),
+       "refacturacion_muellaje": round(tot_dockage, 2),
+       "refacturacion_muellaje_unit": round(tot_dockage, 2),
+       "gross_revenue_total": round(gross_revenue, 2),       # $418,000 USD
+       "gross_revenue_total_unit": round(gross_revenue, 2),
+       "net_income": round(gross_revenue, 2),                # $418,000 USD
+       ...
+   }
+   ```
+
+2. **En `monthly_result` (Líneas 1064–1085):**
+   Se propagaron explícitamente todas las claves desglosadas multiplicadas por la frecuencia (`freq`).
+
+3. **Resultado Inmediato en Terminal:**
+   ```text
+   === SMOKING GUN FIELDS (POST-FIX) ===
+     gross_income: 405000.0 ✅
+     freight_revenue: 405000.0 ✅
+     freight_revenue_unit: 405000.0 ✅
+     dockage_revenue: 13000.0 ✅
+     dockage_revenue_unit: 13000.0 ✅
+     refacturacion_muellaje: 13000.0 ✅
+     refacturacion_muellaje_unit: 13000.0 ✅
+     gross_revenue_total: 418000.0 ✅
+     net_income: 418000.0 ✅
+     voyage_result: 289918.44 ✅
+     pl_vs_required: 182961.06 ✅ (Cuadratura con $182,961 P&L)
+   ```
+
+---
+
+### 14.5. Despliegue y Sellado en Producción
+
+| Etapa | Comando Ejecutado | Resultado |
+| :--- | :--- | :--- |
+| **Paso 1: Git Commit & Push** | `git commit -m "fix: SMOKING GUN dockage_revenue..." ; git push origin main` | Commit `9c5b3c8` en `origin/main` ✅ |
+| **Paso 2: Vite Build** | `npx vite build` | `1064 modules transformed — built in 7.27s` ✅ |
+| **Paso 3: Deploy VPS** | `python deploy_forecast_kickoff.py` | SSH/SFTP + Nginx + Certbot en `91.108.125.253` ✅ |
+| **URL Oficial en Vivo** | `https://forecast.geeksoft.tech` | **PUBLICADO Y VERIFICADO EN PRODUCCIÓN** ✅ |
+
+---
+
+### 14.6. Mandamiento Inquebrantable para Futuras Sesiones
+
+```text
+========================================================================================
+🚨 LEY FORENSE #1 DE EFICIENCIA DE TOKENS:
+NUNCA inventar la rueda ni hacer bucles de investigación cuando el humano está presente.
+Ante cualquier lógica de negocio, campo ambiguo o requerimiento de suma:
+1. DETENTE.
+2. PREGUNTA al humano en una sola línea clara.
+3. EJECUTA exactamente lo indicado sin inventar deducciones en segundo plano.
+========================================================================================
+```
+
+---
+
+*Caso cerrado y sellado en bitácora por Benoit Blanc y Sherlock Holmes — 18.08.2026.*
+
+
