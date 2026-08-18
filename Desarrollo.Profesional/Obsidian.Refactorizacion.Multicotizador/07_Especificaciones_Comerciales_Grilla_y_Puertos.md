@@ -772,6 +772,15 @@ A partir de la orden de Sherlock Holmes (18.08.2026), se corrigió el backend (`
 | **22.1** | **`forecast_service.py` (Backend Engine)** | Asignaba a `gross_income` y `gross_income_unit` el total consolidado con muellaje ($418,000 USD) en vez del flete puro ($405,000 USD). | Se asignó a `gross_income` y `freight_revenue` el `total_freight_revenue` ($405,000 USD) y a `dockage_revenue` el `total_refacturacion_muellaje` ($13,000 USD). | **RESUELTO:** El backend envía ambos conceptos desglosados y exactos. | ✅ SOLUCIONADO |
 | **22.2** | **`ForecastGrid.tsx` (Matriz Financiera)** | Mostraba `↳ (+) Freight Revenue` en **$418,000 USD** y `↳ (+) Dockage Revenue` en **`-` ($0)**, distorsionando el `Yield Flete` a $30.96/MT. | Lee `freight_revenue_unit` ($405k) para Freight Revenue y `dockage_revenue_unit` ($13k) para Dockage Revenue, totalizando Gross Revenue en $418,000 USD. | **RESUELTO:** El desglose es 100% fiel al Multicotizador y el Yield Flete reporta exactamente **$30.00/MT**. | ✅ SOLUCIONADO |
 
+### 🕵️‍♂️ 5.23. Vigésima Tercera Vuelta (Serie 46: Caso del Muellaje Omitido en `spot_engine.py` e Integración Total de Dockage Revenue $13k)
+
+A partir de la auditoría pericial de Sherlock Holmes y Benoit Blanc (18.08.2026), se descubrió que `spot_engine.py` omitía el cálculo de `tot_refacturacion_muellaje` al buscar campos inexistentes en `processed_tramos` en lugar de iterar `puertosConfig` y `refacturarMuellajeMap`, provocando que el P&L cayera a **$169,961 USD** en vez de **$182,961 USD**.
+
+| # | Objeto / Componente Auditado | Estado Inicial (Bug Identificado) | Solución / Corrección Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- | :-: |
+| **23.1** | **`spot_engine.py` (Cálculo de Refacturación)** | Buscaba `muellaje_cost_origin` y `muellaje_cost_dest` en tramos procesados donde nunca se inyectaban, retornando `$0` de muellaje. | Modificado para iterar directamente sobre `puertosConfig` aplicando las tarifas de muellaje estipuladas ($7k Callao + $6k Matarani = **$13,000 USD**) y respetando `refacturarMuellajeMap`. | **RESUELTO:** `spot_engine` calcula y reporta `$13,000 USD` de Refacturación de Muellaje (Dockage Revenue) con total exactitud. | ✅ SOLUCIONADO |
+| **23.2** | **`forecast_service.py` & `ForecastGrid.tsx`** | `forecast_service.py` no transmitía `refacturarMuellajeMap` ni `financial_summary` a `spot_engine`, y `ForecastGrid.tsx` multiplicaba incorrectamente unidades vacías. | Se inyectaron `refacturarMuellajeMap` y `financial_summary` al payload del motor y se ajustó la lectura en la grilla para que `Dockage Revenue` reciba los **+$13,000 USD** exactos. | **RESUELTO:** Cuadratura absoluta en la Matriz Financiera: Gross Revenue = **$418,000 USD** y Voyage P&L = **+$182,961 USD**. | ✅ SOLUCIONADO |
+
 ---
 
 ## 📄 Archivos Relacionados
