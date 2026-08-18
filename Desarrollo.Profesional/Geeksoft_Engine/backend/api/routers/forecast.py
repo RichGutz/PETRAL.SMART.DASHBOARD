@@ -679,6 +679,7 @@ def save_spot_voyage(request: SpotSaveRequest):
             if not payload.get("description"):
                 payload["description"] = "Cotización Cliente Activo"
             payload.pop("spot_id", None)
+            payload.pop("route_distance", None)
             payload.pop("is_prospect", None)
         
         # BUSCAR SI YA EXISTE UN REGISTRO EN LA TABLA OBJETIVO POR SU NOMBRE ÚNICO
