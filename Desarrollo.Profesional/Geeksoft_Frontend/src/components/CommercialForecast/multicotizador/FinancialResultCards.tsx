@@ -452,15 +452,36 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                             <div className="grid grid-cols-4 gap-1 pt-0.5">
                                 {(() => {
                                     const vesselList = (vessels && vessels.length > 0)
-                                        ? vessels.slice(0, 4).map(v => v.vessel_name || v.name || 'BUQUE')
+                                        ? vessels.slice(0, 4).map(v => v.vessel_name || v.name || v.vessel_id || 'BUQUE')
                                         : ['HUEMUL', 'MOQUEGUA', 'TABLONES', 'CONCON TRADER'];
                                     
+                                    const cleanVesselName = (vName: string) => {
+                                        return vName.replace(/^(B\/T|M\/T|M\/V)\s+/i, '').trim();
+                                    };
+
+                                    const getDemurrageRate = (map: Record<string, number> | undefined, name: string): number => {
+                                        if (!map) return 0;
+                                        const clean = cleanVesselName(name);
+                                        const short = clean.split(' ')[0];
+                                        if (map[name] !== undefined) return map[name];
+                                        if (map[clean] !== undefined) return map[clean];
+                                        if (map[short] !== undefined) return map[short];
+                                        for (const [k, v] of Object.entries(map)) {
+                                            const kClean = cleanVesselName(k);
+                                            if (k.toUpperCase() === name.toUpperCase() || kClean.toUpperCase() === clean.toUpperCase() || kClean.toUpperCase().startsWith(short.toUpperCase())) {
+                                                return v;
+                                            }
+                                        }
+                                        return 0;
+                                    };
+                                    
                                     return vesselList.map((vName, idx) => {
-                                        const currentVal = (demurrageRatesMap && demurrageRatesMap[vName] !== undefined) ? demurrageRatesMap[vName] : 20000;
+                                        const clean = cleanVesselName(vName);
+                                        const currentVal = getDemurrageRate(demurrageRatesMap, vName);
                                         return (
                                             <div key={idx} className="bg-slate-50 border border-slate-200 rounded p-1 flex flex-col justify-between text-center">
-                                                <span className="text-[8.5px] font-bold text-slate-600 truncate border-b border-slate-200 pb-0.5 mb-0.5 block">
-                                                    🚢 {vName.split(' ')[0]}
+                                                <span className="text-[8.5px] font-bold text-slate-600 truncate border-b border-slate-200 pb-0.5 mb-0.5 block" title={vName}>
+                                                    🚢 {clean.split(' ')[0]}
                                                 </span>
                                                 <div className="flex items-center justify-center gap-0.5">
                                                     <span className="text-[9px] font-bold text-amber-700">$</span>
@@ -470,17 +491,20 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                                         onChange={(e) => {
                                                             const rawVal = e.target.value.replace(/,/g, '');
                                                             const val = parseFloat(rawVal) || 0;
+                                                            const short = clean.split(' ')[0];
                                                             if (setDemurrageRatesMap) {
                                                                 setDemurrageRatesMap({
                                                                     ...(demurrageRatesMap || {}),
-                                                                    [vName]: val
+                                                                    [vName]: val,
+                                                                    [clean]: val,
+                                                                    [short]: val
                                                                 });
                                                             }
                                                             if (setDemurrageRate && idx === 0) {
                                                                 setDemurrageRate(val);
                                                             }
                                                         }}
-                                                        placeholder="20,000"
+                                                        placeholder="0"
                                                         className="w-full h-5 text-center font-mono font-bold bg-white border border-slate-300 rounded text-[10px] text-slate-800 focus:outline-none focus:ring-1 focus:ring-amber-500"
                                                     />
                                                 </div>

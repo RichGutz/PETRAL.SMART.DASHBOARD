@@ -295,12 +295,21 @@ export class MulticotizadorPdfPrintService {
             hour: '2-digit', minute: '2-digit'
         });
 
-        // Demurrage items
-        const demurrageMap = demurrageRatesMap || {
-            'MOQUEGUA': 25000,
-            'TABLONES': 25000,
-            'CONCON': 25000,
-            'HUEMUL': 25000
+        // Demurrage items (Strict 0 fallback)
+        const demurrageMap = demurrageRatesMap || {};
+        const getDemurrageVal = (name: string): number => {
+            const clean = name.replace(/^(B\/T|M\/T|M\/V)\s+/i, '').trim();
+            const short = clean.split(' ')[0];
+            if (demurrageMap[name] !== undefined) return Number(demurrageMap[name]) || 0;
+            if (demurrageMap[clean] !== undefined) return Number(demurrageMap[clean]) || 0;
+            if (demurrageMap[short] !== undefined) return Number(demurrageMap[short]) || 0;
+            for (const [k, v] of Object.entries(demurrageMap)) {
+                const kClean = k.replace(/^(B\/T|M\/T|M\/V)\s+/i, '').trim();
+                if (k.toUpperCase() === name.toUpperCase() || kClean.toUpperCase() === clean.toUpperCase() || kClean.toUpperCase().startsWith(short.toUpperCase())) {
+                    return Number(v) || 0;
+                }
+            }
+            return 0;
         };
 
         return `<!DOCTYPE html>
@@ -754,19 +763,19 @@ export class MulticotizadorPdfPrintService {
                         <div class="grid grid-cols-4 gap-1 text-center font-mono text-[8px] mb-1">
                             <div class="bg-slate-50 p-0.5 rounded border border-slate-200">
                                 <div class="font-bold text-slate-500 text-[7.5px]">MOQUEGUA</div>
-                                <div class="font-black text-slate-800">${this.fmtNum(demurrageMap['MOQUEGUA'] || 25000, 0)}</div>
+                                <div class="font-black text-slate-800">${this.fmtNum(getDemurrageVal('MOQUEGUA'), 0)}</div>
                             </div>
                             <div class="bg-slate-50 p-0.5 rounded border border-slate-200">
                                 <div class="font-bold text-slate-500 text-[7.5px]">TABLONES</div>
-                                <div class="font-black text-slate-800">${this.fmtNum(demurrageMap['TABLONES'] || 25000, 0)}</div>
+                                <div class="font-black text-slate-800">${this.fmtNum(getDemurrageVal('TABLONES'), 0)}</div>
                             </div>
                             <div class="bg-slate-50 p-0.5 rounded border border-slate-200">
                                 <div class="font-bold text-slate-500 text-[7.5px]">CONCON</div>
-                                <div class="font-black text-slate-800">${this.fmtNum(demurrageMap['CONCON'] || demurrageMap['CONCON TRADER'] || 25000, 0)}</div>
+                                <div class="font-black text-slate-800">${this.fmtNum(getDemurrageVal('CONCON'), 0)}</div>
                             </div>
                             <div class="bg-slate-50 p-0.5 rounded border border-slate-200">
                                 <div class="font-bold text-slate-500 text-[7.5px]">HUEMUL</div>
-                                <div class="font-black text-slate-800">${this.fmtNum(demurrageMap['HUEMUL'] || 25000, 0)}</div>
+                                <div class="font-black text-slate-800">${this.fmtNum(getDemurrageVal('HUEMUL'), 0)}</div>
                             </div>
                         </div>
 

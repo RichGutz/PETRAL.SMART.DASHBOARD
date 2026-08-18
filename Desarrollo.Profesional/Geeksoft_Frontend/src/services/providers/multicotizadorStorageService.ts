@@ -27,6 +27,9 @@ export interface SaveQuoteParams {
     bafMdoBase?: number;
     tariffTiers?: any[];
     demurrageRatesMap?: Record<string, number>;
+    commentsText?: string;
+    financialSummary?: any;
+    refacturarMuellajeMap?: Record<number, boolean>;
     createdBy?: string;
 }
 
@@ -45,6 +48,9 @@ export class MulticotizadorStorageService {
             puertosConfig, vesselParams, addressCommPct, brokerCommPct, rawClients,
             isContract, validFrom, validTo, validityYears, contractStatus,
             bafFormula, bafValidFrom, bafValidTo, bafIfoBase, bafMdoBase, tariffTiers, demurrageRatesMap,
+            commentsText,
+            financialSummary,
+            refacturarMuellajeMap,
             createdBy
         } = params;
 
@@ -102,6 +108,9 @@ export class MulticotizadorStorageService {
                 baf_mdo_base: bafMdoBase,
                 tariff_tiers: tariffTiers,
                 demurrage_rates: demurrageRatesMap,
+                comments_text: commentsText,
+                financial_summary: financialSummary || null,
+                refacturarMuellajeMap: refacturarMuellajeMap || null,
                 // Metadata de contrato COA (solo si aplica) dentro del JSONB
                 contract_metadata: isContract ? {
                     client_id: selectedClient,
@@ -111,7 +120,8 @@ export class MulticotizadorStorageService {
                     contract_status: contractStatus || 'ACTIVE',
                     baf_formula: bafFormula,
                     tariff_tiers: tariffTiers,
-                    demurrage_rates: demurrageRatesMap
+                    demurrage_rates: demurrageRatesMap,
+                    financial_summary: financialSummary || null
                 } : undefined
             }
         };

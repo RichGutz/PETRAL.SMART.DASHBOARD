@@ -165,7 +165,7 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                         <div className="flex justify-between items-start border-b border-slate-200 pb-2">
                             <div>
                                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
-                                    💾 Grabar Cotización / Ruta Comercial
+                                    💾 Grabar Ruta Cierres / Cotizaciones
                                 </h3>
                                 <span className="text-[10px] font-mono text-slate-500 font-semibold flex items-center gap-1 mt-0.5">
                                     Destino: <strong className="text-blue-700">📄 Supabase (routes_quotes)</strong>
@@ -224,7 +224,7 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                                         onClick={() => setRecordCategory('COA')}
                                         className={`py-1.5 px-2 text-[11px] font-extrabold rounded border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${recordCategory === 'COA' ? 'bg-blue-700 text-white border-blue-800 shadow-sm ring-1 ring-blue-500' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
                                     >
-                                        <span>📜 Ruta COA</span>
+                                        <span>📜 Ruta Cierres</span>
                                         <span className={`text-[8.5px] font-normal ${recordCategory === 'COA' ? 'text-blue-100' : 'text-slate-400'}`}>(Aparecerá en Paso 2)</span>
                                     </button>
                                     <button
@@ -232,7 +232,7 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                                         onClick={() => setRecordCategory('SPOT')}
                                         className={`py-1.5 px-2 text-[11px] font-extrabold rounded border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${recordCategory === 'SPOT' ? 'bg-purple-700 text-white border-purple-800 shadow-sm ring-1 ring-purple-500' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
                                     >
-                                        <span>📄 Cotización Spot</span>
+                                        <span>📄 Cotizaciones</span>
                                         <span className={`text-[8.5px] font-normal ${recordCategory === 'SPOT' ? 'text-purple-100' : 'text-slate-400'}`}>(Aparecerá en Paso 3)</span>
                                     </button>
                                 </div>

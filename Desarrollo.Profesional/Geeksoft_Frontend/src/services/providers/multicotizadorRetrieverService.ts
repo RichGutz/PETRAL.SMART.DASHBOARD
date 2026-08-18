@@ -96,6 +96,9 @@ export class MulticotizadorRetrieverService {
             };
         });
 
+        const demurrageRates = legsData.demurrage_rates || legsData.contract_metadata?.demurrage_rates || null;
+        const tariffTiers = legsData.tariff_tiers || legsData.contract_metadata?.tariff_tiers || null;
+
         return {
             vessel_id: legsData.vessel_id || quote.vessel_id || '',
             bunker_price_ifo: Number(legsData.bunker_price_ifo ?? legsData.bunker_ifo ?? 0),
@@ -103,8 +106,19 @@ export class MulticotizadorRetrieverService {
             tramos: legsData.tramos || [],
             puertosConfig: normalizedPuertosConfig,
             vesselParams: legsData.vesselParams || null,
-            addressCommPct: legsData.addressCommPct !== undefined ? Number(legsData.addressCommPct) : undefined,
-            brokerCommPct: legsData.brokerCommPct !== undefined ? Number(legsData.brokerCommPct) : undefined
+            addressCommPct: legsData.addressCommPct !== undefined ? Number(legsData.addressCommPct) : 0,
+            brokerCommPct: legsData.brokerCommPct !== undefined ? Number(legsData.brokerCommPct) : 0,
+            baf_formula: legsData.baf_formula || legsData.contract_metadata?.baf_formula || '',
+            baf_valid_from: legsData.baf_valid_from || legsData.valid_from || legsData.contract_metadata?.valid_from || '',
+            baf_valid_to: legsData.baf_valid_to || legsData.valid_to || legsData.contract_metadata?.valid_to || '',
+            baf_ifo_base: Number(legsData.baf_ifo_base || 0),
+            baf_mdo_base: Number(legsData.baf_mdo_base || 0),
+            tariff_tiers: tariffTiers,
+            demurrage_rates: demurrageRates,
+            comments_text: legsData.comments_text || '',
+            financial_summary: legsData.financial_summary || legsData.contract_metadata?.financial_summary || null,
+            refacturarMuellajeMap: legsData.refacturarMuellajeMap || null
         };
     }
 }
+

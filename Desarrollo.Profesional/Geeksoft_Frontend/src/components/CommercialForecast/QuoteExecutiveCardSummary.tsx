@@ -16,8 +16,39 @@ export const QuoteExecutiveCardSummary: React.FC<QuoteExecutiveCardSummaryProps>
     const trms = unpacked.tramos || [];
     const portsCfg = unpacked.puertosConfig || [];
     
-    // Ejecutar el motor puro de cálculo unificado (Single Source of Truth) con try-catch de seguridad
+    // 1. Usar fotografía financiera (financial_summary) si ya fue guardada en el JSONB, o calcular con motor puro
     const calc = React.useMemo(() => {
+        if (unpacked.financial_summary && typeof unpacked.financial_summary === 'object') {
+            const fs = unpacked.financial_summary;
+            return {
+                totalDist: Number(fs.totalDist || 0),
+                totalSeaDays: Number(fs.totalSeaDays || 0),
+                totalPortDays: Number(fs.totalPortDays || 0),
+                totalDays: Number(fs.totalDays || 0),
+                totalIfoTons: Number(fs.totalIfoTons || 0),
+                totalMdoTons: Number(fs.totalMdoTons || 0),
+                totalFuelTons: Number(fs.totalFuelTons || (Number(fs.totalIfoTons || 0) + Number(fs.totalMdoTons || 0))),
+                ifoCost: Number(fs.ifoCost || 0),
+                mdoCost: Number(fs.mdoCost || 0),
+                grandBunkerTotal: Number(fs.grandBunkerTotal || 0),
+                totalQuantity: Number(fs.totalQuantity || 0),
+                totalFreight: Number(fs.totalFreight || 0),
+                refacturacionMuellaje: Number(fs.refacturacionMuellaje || 0),
+                grossRevenueTotal: Number(fs.grossRevenueTotal || 0),
+                totalPortCosts: Number(fs.totalPortCosts || 0),
+                tceReq: Number(fs.tceReq || 0),
+                hireUsd: Number(fs.hireUsd || 0),
+                addressCommUsd: Number(fs.addressCommUsd || 0),
+                brokerCommUsd: Number(fs.brokerCommUsd || 0),
+                totalCommUsd: Number(fs.totalCommUsd || 0),
+                voyageResultPnl: Number(fs.voyageResultPnl || 0),
+                tceRealizado: Number(fs.tceRealizado || 0),
+                tceDiff: Number(fs.tceDiff || 0),
+                calculatedTramos: fs.calculatedTramos || [],
+                portCostItems: fs.portCostItems || []
+            };
+        }
+
         try {
             return MulticotizadorCalculationEngine.calculateVoyage({
                 tramos: trms,

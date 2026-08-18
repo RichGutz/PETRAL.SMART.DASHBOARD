@@ -113,14 +113,14 @@ export class MulticotizadorCalculationEngine {
         const calculatedTramos: LegCalculationDetail[] = [];
         const portCostItems: DynamicPortCostItem[] = [];
 
-        const defaultSpeed = Number(vesselParams?.vessel_speed || 11.0);
-        const ifoSeaRatio = Number(vesselParams?.consumption_sea_ifo || 14.5);
-        const mdoSeaRatio = Number(vesselParams?.consumption_sea_mdo || 0.1);
-        const ifoIdleRatio = Number(vesselParams?.consumption_idle_ifo || 3.5);
-        const mdoIdleRatio = Number(vesselParams?.consumption_idle_mdo || 0.1);
+        const defaultSpeed = Number(vesselParams?.vessel_speed || 0);
+        const ifoSeaRatio = Number(vesselParams?.consumption_sea_ifo || 0);
+        const mdoSeaRatio = Number(vesselParams?.consumption_sea_mdo || 0);
+        const ifoIdleRatio = Number(vesselParams?.consumption_idle_ifo || 0);
+        const mdoIdleRatio = Number(vesselParams?.consumption_idle_mdo || 0);
         const ifoLoadRatio = Number(vesselParams?.consumption_load_ifo || ifoIdleRatio);
         const mdoLoadRatio = Number(vesselParams?.consumption_load_mdo || mdoIdleRatio);
-        const ifoDischRatio = Number(vesselParams?.consumption_disch_ifo || 5.0);
+        const ifoDischRatio = Number(vesselParams?.consumption_disch_ifo || 0);
         const mdoDischRatio = Number(vesselParams?.consumption_disch_mdo || mdoIdleRatio);
 
         // Puerto 0 (Origen Inicial)
@@ -129,7 +129,7 @@ export class MulticotizadorCalculationEngine {
         if (pCfg0.action && pCfg0.action !== 'NONE') {
             const isMejillones0 = (originPort0 || '').trim().toUpperCase() === 'MEJILLONES' && pCfg0.action === 'DESCARGAR';
             const mVal0 = Number(pCfg0.manual_port_cost) || 0;
-            const muellVal0 = Number(pCfg0.muellaje_cost) || (isMejillones0 ? 33333 : (pCfg0.action === 'CARGAR' ? 7000 : pCfg0.action === 'DESCARGAR' ? 6000 : 0));
+            const muellVal0 = Number(pCfg0.muellaje_cost) || (isMejillones0 ? 33333 : 0);
             const totalCost0 = Math.max(mVal0, muellVal0);
             totalPortCosts += totalCost0;
             if (refacturarMuellajeMap[0] !== false && muellVal0 > 0) {
@@ -142,14 +142,14 @@ export class MulticotizadorCalculationEngine {
             const distVal = Number(tr.route_distance || 0);
             const rawWf = Number(tr.weather_factor || 0);
             const wfPct = rawWf > 1 ? rawWf : (rawWf * 100);
-            const speedVal = Math.max(1, Number(tr.speed || defaultSpeed));
+            const speedVal = Math.max(1, Number(tr.speed || defaultSpeed || 11.0));
             const calcSeaDays = distVal > 0 ? (distVal * (1 + (wfPct / 100))) / (speedVal * 24) : 0;
 
             const pCfg = puertosConfig[idx + 1] || {};
             const qVal = Number(pCfg.quantity || 0);
             const rVal = Math.max(1, Number(pCfg.op_rate || 500));
             const rUnit = pCfg.rate_unit || 'TH';
-            const tcVal = Number(pCfg.time_to_count !== undefined && pCfg.time_to_count !== '' ? pCfg.time_to_count : (pCfg.overhead !== undefined && pCfg.overhead !== '' ? pCfg.overhead : 6));
+            const tcVal = Number(pCfg.time_to_count !== undefined && pCfg.time_to_count !== '' ? pCfg.time_to_count : (pCfg.overhead !== undefined && pCfg.overhead !== '' ? pCfg.overhead : 0));
             const posVal = Number(pCfg.positioning || 0);
 
             const idleDays = pCfg.action !== 'NONE' ? ((tcVal + posVal) / 24) : 0;
@@ -172,13 +172,13 @@ export class MulticotizadorCalculationEngine {
             const destPortId = tr.destination_port_id || '';
             const isMejillonesDischarge = (destPortId || '').trim().toUpperCase() === 'MEJILLONES' && pCfg.action === 'DESCARGAR';
             const mVal = Number(pCfg.manual_port_cost) || 0;
-            const muellVal = Number(pCfg.muellaje_cost) || (isMejillonesDischarge ? 33333 : (pCfg.action === 'CARGAR' ? 7000 : pCfg.action === 'DESCARGAR' ? 6000 : 0));
+            const muellVal = Number(pCfg.muellaje_cost) || (isMejillonesDischarge ? 33333 : 0);
             const legPortCost = Math.max(mVal, muellVal);
 
             totalDist += distVal;
             totalSeaDays += calcSeaDays;
             totalPortDays += calcPortDays;
-            if (pCfg.action === 'DESCARGAR' || pCfg.action === 'CARGAR') totalQuantity += qVal;
+            if (pCfg.action === 'DESCARGAR') totalQuantity += qVal;
             totalPortCosts += legPortCost;
             totalFreight += legFreight;
 

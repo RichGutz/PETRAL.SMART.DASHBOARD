@@ -110,10 +110,11 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         { label: '', rate: 0 }
     ]);
     const [demurrageRatesMap, setDemurrageRatesMap] = useState<Record<string, number>>({
-        'HUEMUL': 20000,
-        'MOQUEGUA': 20000,
-        'TABLONES': 20000,
-        'CONCON TRADER': 20000
+        'HUEMUL': 0,
+        'MOQUEGUA': 0,
+        'TABLONES': 0,
+        'CONCON TRADER': 0,
+        'CONCON': 0
     });
     const [refacturarMuellajeMap, setRefacturarMuellajeMap] = useState<Record<number, boolean>>({});
 
@@ -568,6 +569,17 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 ? (JSON.parse(localStorage.getItem('petral_user')!).email || 'izavala@petral.com.pe')
                 : 'izavala@petral.com.pe';
 
+            const financialSummary = MulticotizadorCalculationEngine.calculateVoyage({
+                tramos: calculatedTramos,
+                puertosConfig,
+                vesselParams,
+                bunkerPriceIfo,
+                bunkerPriceMdo,
+                addressCommPct,
+                brokerCommPct,
+                refacturarMuellajeMap
+            });
+
             await MulticotizadorStorageService.saveQuote({
                 routeId: (saveMode === 'OVERWRITE' && effectiveClient === selectedClient) ? loadedRouteId : undefined,
                 routeName: finalName,
@@ -592,6 +604,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 bafMdoBase,
                 tariffTiers,
                 demurrageRatesMap,
+                commentsText,
+                financialSummary,
+                refacturarMuellajeMap,
                 createdBy: activeUserEmail
             });
             setLoadedRouteName(finalName);
@@ -604,8 +619,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             if (freshRoutes && Array.isArray(freshRoutes)) setRoutes(freshRoutes);
 
             const recordTypeDesc = isSavingContract 
-                ? 'Ruta COA (Paso 2)' 
-                : (effectiveClientType === 'PROSPECTOS' ? 'Cotización Prospecto (Paso 3)' : 'Cotización Spot (Paso 3)');
+                ? 'Ruta Cierres (Paso 2)' 
+                : (effectiveClientType === 'PROSPECTOS' ? 'Cotización Prospecto (Paso 3)' : 'Cotizaciones (Paso 3)');
 
             setSaveNotification({
                 message: `✅ ¡Guardado con Éxito en routes_quotes!`,
@@ -822,6 +837,41 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         if (unpacked.addressCommPct !== undefined) setAddressCommPct(unpacked.addressCommPct);
         if (unpacked.brokerCommPct !== undefined) setBrokerCommPct(unpacked.brokerCommPct);
         if (unpacked.vesselParams) setVesselParams(unpacked.vesselParams);
+
+        // Demurrage (Estadías por Buque) guardado con fallback 0
+        if (unpacked.demurrage_rates && typeof unpacked.demurrage_rates === 'object') {
+            setDemurrageRatesMap(unpacked.demurrage_rates);
+        } else {
+            setDemurrageRatesMap({
+                'HUEMUL': 0,
+                'MOQUEGUA': 0,
+                'TABLONES': 0,
+                'CONCON TRADER': 0,
+                'CONCON': 0
+            });
+        }
+
+        // Bandas Tarifarias (Tariff Tiers) guardadas con fallback 0
+        if (unpacked.tariff_tiers && Array.isArray(unpacked.tariff_tiers) && unpacked.tariff_tiers.length > 0) {
+            setTariffTiers(unpacked.tariff_tiers);
+        } else {
+            setTariffTiers([
+                { label: '', rate: 0 },
+                { label: '', rate: 0 },
+                { label: '', rate: 0 },
+                { label: '', rate: 0 }
+            ]);
+        }
+
+        // Parámetros BAF guardados
+        if (unpacked.baf_formula !== undefined) setBafFormula(unpacked.baf_formula);
+        if (unpacked.baf_valid_from) setBafValidFrom(formatToDateInput(unpacked.baf_valid_from));
+        if (unpacked.baf_valid_to) setBafValidTo(formatToDateInput(unpacked.baf_valid_to));
+        if (unpacked.baf_ifo_base !== undefined) setBafIfoBase(Number(unpacked.baf_ifo_base) || 0);
+        if (unpacked.baf_mdo_base !== undefined) setBafMdoBase(Number(unpacked.baf_mdo_base) || 0);
+
+        // Comentarios guardados
+        if (unpacked.comments_text !== undefined) setCommentsText(unpacked.comments_text);
 
         setShowLoadModal(false);
     };
