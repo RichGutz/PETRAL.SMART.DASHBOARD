@@ -65,11 +65,12 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     // Calculo Fila 0 (Puerto de Origen / POL)
     const pCfg0 = puertosConfig[0] || {};
     const qVal0 = Number(pCfg0.quantity || 0);
-    const rVal0 = Math.max(1, Number(pCfg0.op_rate || 500));
+    const rDefault0 = pCfg0.action === 'DESCARGAR' ? 450 : 500;
+    const rVal0 = Math.max(1, Number(pCfg0.op_rate || rDefault0));
     const rUnit0 = pCfg0.rate_unit || 'TH';
     const rateFactor0 = rUnit0 === 'TD' ? 1 : 24;
-    const tcVal0 = Number(pCfg0.time_to_count !== undefined && pCfg0.time_to_count !== '' ? pCfg0.time_to_count : (pCfg0.overhead !== undefined && pCfg0.overhead !== '' ? pCfg0.overhead : 0));
-    const posVal0 = Number(pCfg0.positioning || 0);
+    const tcVal0 = Number(pCfg0.time_to_count !== undefined && pCfg0.time_to_count !== '' ? pCfg0.time_to_count : (pCfg0.overhead !== undefined && pCfg0.overhead !== '' ? pCfg0.overhead : 6.0));
+    const posVal0 = Number(pCfg0.positioning !== undefined && pCfg0.positioning !== '' ? pCfg0.positioning : (pCfg0.action === 'CARGAR' ? 1.0 : 0.0));
     const idleDays0 = pCfg0.action !== 'NONE' ? ((tcVal0 + posVal0) / 24) : 0;
     const opDays0 = pCfg0.action !== 'NONE' ? ((qVal0 / rVal0) / rateFactor0) : 0;
     const calcPortDays0 = idleDays0 + opDays0;
@@ -90,11 +91,12 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
 
         const pCfg = puertosConfig[idx + 1] || {};
         const qVal = Number(pCfg.quantity || 0);
-        const rVal = Math.max(1, Number(pCfg.op_rate || 500));
+        const rDefault = pCfg.action === 'DESCARGAR' ? 450 : 500;
+        const rVal = Math.max(1, Number(pCfg.op_rate || rDefault));
         const rUnit = pCfg.rate_unit || 'TH';
         const rateFactor = rUnit === 'TD' ? 1 : 24;
-        const tcVal = Number(pCfg.time_to_count !== undefined && pCfg.time_to_count !== '' ? pCfg.time_to_count : (pCfg.overhead !== undefined && pCfg.overhead !== '' ? pCfg.overhead : 0));
-        const posVal = Number(pCfg.positioning || 0);
+        const tcVal = Number(pCfg.time_to_count !== undefined && pCfg.time_to_count !== '' ? pCfg.time_to_count : (pCfg.overhead !== undefined && pCfg.overhead !== '' ? pCfg.overhead : 6.0));
+        const posVal = Number(pCfg.positioning !== undefined && pCfg.positioning !== '' ? pCfg.positioning : (pCfg.action === 'CARGAR' ? 1.0 : 0.0));
 
         const idleDays = pCfg.action !== 'NONE' ? ((tcVal + posVal) / 24) : 0;
         const opDays = pCfg.action !== 'NONE' ? ((qVal / rVal) / rateFactor) : 0;
@@ -233,7 +235,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                     value={puertosConfig[0]?.positioning ?? ''}
                                     onChange={(e) => updatePuertoConfigField(0, 'positioning', e.target.value)}
                                     className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                    placeholder={result?.tramos?.[0]?.positioning_carga_hrs !== undefined ? String(result.tramos[0].positioning_carga_hrs) : '0.0'}
+                                    placeholder={result?.tramos?.[0]?.positioning_carga_hrs !== undefined ? String(result.tramos[0].positioning_carga_hrs) : (puertosConfig[0]?.action === 'CARGAR' ? '1.0' : '0.0')}
                                 />
                             ) : (
                                 <span className="text-slate-350 select-none pr-2">—</span>
@@ -262,7 +264,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                         value={puertosConfig[0]?.op_rate ?? ''}
                                         onChange={(e) => updatePuertoConfigField(0, 'op_rate', e.target.value)}
                                         className="w-[60%] h-full bg-white border-0 px-1 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
-                                        placeholder={result?.tramos?.[0]?.contract_agreed_load_rate !== undefined ? String(result.tramos[0].contract_agreed_load_rate) : String(getAutoPortRate(tramos[0]?.origin_port_id || '', puertosConfig[0]?.action) || '500')}
+                                        placeholder={result?.tramos?.[0]?.contract_agreed_load_rate !== undefined ? String(result.tramos[0].contract_agreed_load_rate) : String(getAutoPortRate(tramos[0]?.origin_port_id || '', puertosConfig[0]?.action) || (puertosConfig[0]?.action === 'DESCARGAR' ? '450' : '500'))}
                                     />
                                     <select
                                         value={puertosConfig[0]?.rate_unit || 'TH'}
@@ -499,7 +501,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                             value={puertosConfig[idx + 1]?.positioning ?? ''}
                                             onChange={(e) => updatePuertoConfigField(idx + 1, 'positioning', e.target.value)}
                                             className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                            placeholder={puertosConfig[idx + 1]?.action === 'CARGAR' ? String(trResult?.positioning_carga_hrs ?? '0.0') : String(trResult?.positioning_descarga_hrs ?? '0.0')}
+                                            placeholder={puertosConfig[idx + 1]?.action === 'CARGAR' ? String(trResult?.positioning_carga_hrs ?? '1.0') : String(trResult?.positioning_descarga_hrs ?? '0.0')}
                                         />
                                     ) : (
                                         <span className="text-slate-350 select-none pr-2">—</span>
@@ -524,7 +526,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                                 value={puertosConfig[idx + 1]?.op_rate ?? ''}
                                                 onChange={(e) => updatePuertoConfigField(idx + 1, 'op_rate', e.target.value)}
                                                 className="w-[60%] h-full bg-white border-0 px-1 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs"
-                                                placeholder={trResult?.contract_agreed_disch_rate !== undefined ? String(trResult.contract_agreed_disch_rate) : String(getAutoPortRate(tr.destination_port_id, puertosConfig[idx + 1]?.action) || '500')}
+                                                placeholder={puertosConfig[idx + 1]?.action === 'CARGAR' ? String(trResult?.contract_agreed_load_rate ?? (getAutoPortRate(tr.destination_port_id, 'CARGAR') || '500')) : String(trResult?.contract_agreed_disch_rate ?? (getAutoPortRate(tr.destination_port_id, 'DESCARGAR') || '450'))}
                                             />
                                             <select
                                                 value={puertosConfig[idx + 1]?.rate_unit || 'TH'}
@@ -665,11 +667,12 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         const sumPortDays = puertosConfig.reduce((s, p) => {
                             if (p.action === 'NONE') return s;
                             const qVal = Number(p.quantity || 0);
-                            const rVal = Math.max(1, Number(p.op_rate || 500));
+                            const rDefault = p.action === 'DESCARGAR' ? 450 : 500;
+                            const rVal = Math.max(1, Number(p.op_rate || rDefault));
                             const rUnit = p.rate_unit || 'TH';
                             const rateFactor = rUnit === 'TD' ? 1 : 24;
-                            const tcVal = Number(p.time_to_count !== undefined && p.time_to_count !== '' ? p.time_to_count : (p.overhead !== undefined && p.overhead !== '' ? p.overhead : 0));
-                            const posVal = Number(p.positioning || 0);
+                            const tcVal = Number(p.time_to_count !== undefined && p.time_to_count !== '' ? p.time_to_count : (p.overhead !== undefined && p.overhead !== '' ? p.overhead : 6.0));
+                            const posVal = Number(p.positioning !== undefined && p.positioning !== '' ? p.positioning : (p.action === 'CARGAR' ? 1.0 : 0.0));
                             return s + (((qVal / rVal) / rateFactor) + ((tcVal + posVal) / 24));
                         }, 0);
 

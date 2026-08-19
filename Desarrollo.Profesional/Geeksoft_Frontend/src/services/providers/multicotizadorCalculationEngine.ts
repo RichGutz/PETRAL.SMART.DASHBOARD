@@ -139,11 +139,12 @@ export class MulticotizadorCalculationEngine {
             }
 
             const qVal0 = Number(pCfg0.quantity || 0);
-            const rVal0 = Math.max(1, Number(pCfg0.op_rate || 500));
+            const rDefault0 = pCfg0.action === 'DESCARGAR' ? 450 : 500;
+            const rVal0 = Math.max(1, Number(pCfg0.op_rate || rDefault0));
             const rUnit0 = pCfg0.rate_unit || 'TH';
             const rateFactor0 = rUnit0 === 'TD' ? 1 : 24;
-            const tcVal0 = Number(pCfg0.time_to_count !== undefined && pCfg0.time_to_count !== '' ? pCfg0.time_to_count : (pCfg0.overhead !== undefined && pCfg0.overhead !== '' ? pCfg0.overhead : 0));
-            const posVal0 = Number(pCfg0.positioning || 0);
+            const tcVal0 = Number(pCfg0.time_to_count !== undefined && pCfg0.time_to_count !== '' ? pCfg0.time_to_count : (pCfg0.overhead !== undefined && pCfg0.overhead !== '' ? pCfg0.overhead : 6.0));
+            const posVal0 = Number(pCfg0.positioning !== undefined && pCfg0.positioning !== '' ? pCfg0.positioning : (pCfg0.action === 'CARGAR' ? 1.0 : 0.0));
 
             const idleDays0 = (tcVal0 + posVal0) / 24;
             const opDays0 = (qVal0 / rVal0) / rateFactor0;
@@ -177,11 +178,12 @@ export class MulticotizadorCalculationEngine {
 
             const pCfg = puertosConfig[idx + 1] || {};
             const qVal = Number(pCfg.quantity || 0);
-            const rVal = Math.max(1, Number(pCfg.op_rate || 500));
+            const rDefault = pCfg.action === 'DESCARGAR' ? 450 : 500;
+            const rVal = Math.max(1, Number(pCfg.op_rate || rDefault));
             const rUnit = pCfg.rate_unit || 'TH';
             const rateFactor = rUnit === 'TD' ? 1 : 24;
-            const tcVal = Number(pCfg.time_to_count !== undefined && pCfg.time_to_count !== '' ? pCfg.time_to_count : (pCfg.overhead !== undefined && pCfg.overhead !== '' ? pCfg.overhead : 0));
-            const posVal = Number(pCfg.positioning || 0);
+            const tcVal = Number(pCfg.time_to_count !== undefined && pCfg.time_to_count !== '' ? pCfg.time_to_count : (pCfg.overhead !== undefined && pCfg.overhead !== '' ? pCfg.overhead : 6.0));
+            const posVal = Number(pCfg.positioning !== undefined && pCfg.positioning !== '' ? pCfg.positioning : (pCfg.action === 'CARGAR' ? 1.0 : 0.0));
 
             const idleDays = pCfg.action !== 'NONE' ? ((tcVal + posVal) / 24) : 0;
             const opDays = pCfg.action !== 'NONE' ? ((qVal / rVal) / rateFactor) : 0;
