@@ -88,9 +88,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         { type: 'LADEN', origin_port_id: '', destination_port_id: '', quantity: 0, freight_rate: 0, port_delay_hours_loading: 0, port_delay_hours_discharging: 0, route_distance: 0, weather_factor: 3.0, speed: 0 }
     ]);
     const [puertosConfig, setPuertosConfig] = useState<PuertoConfig[]>([
-        { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' },
-        { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' },
-        { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' }
+        { action: 'NONE', quantity: '', freight_rate: '', op_rate: '', rate_unit: 'TH', time_to_count: '', positioning: '', manual_port_cost: '' },
+        { action: 'NONE', quantity: '', freight_rate: '', op_rate: '', rate_unit: 'TH', time_to_count: '', positioning: '', manual_port_cost: '' },
+        { action: 'NONE', quantity: '', freight_rate: '', op_rate: '', rate_unit: 'TH', time_to_count: '', positioning: '', manual_port_cost: '' }
     ]);
 
     // 6. Comisiones, Demurrage & BAF
@@ -370,6 +370,12 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     list[idx].time_to_count = '';
                     list[idx].positioning = '';
                 } else if (val === 'CARGAR' || val === 'DESCARGAR') {
+                    if (list[idx].time_to_count === 0 || list[idx].time_to_count === '0') {
+                        list[idx].time_to_count = '';
+                    }
+                    if (list[idx].positioning === 0 || list[idx].positioning === '0') {
+                        list[idx].positioning = '';
+                    }
                     const portId = idx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[idx - 1]?.destination_port_id || '');
                     if (portId) {
                         const autoRate = PortCostsRatesService.resolveAutoPortRate(portId, val, ports);
@@ -439,7 +445,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         ]);
         setPuertosConfig(prev => [
             ...prev,
-            { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' }
+            { action: 'NONE', quantity: '', freight_rate: '', op_rate: '', rate_unit: 'TH', time_to_count: '', positioning: '', manual_port_cost: '' }
         ]);
     };
 
