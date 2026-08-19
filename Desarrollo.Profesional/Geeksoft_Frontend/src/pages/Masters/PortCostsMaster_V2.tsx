@@ -84,15 +84,17 @@ export const PortCostsMaster_V2: React.FC = () => {
                     newState[portId][vKey] = {
                         CARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
                         DESCARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
+                        BUNKERING: { MAIN: 0, bunkering_survey: 0, other: 0 },
                         updated_at: row.updated_at || null,
                         updated_by: row.updated_by || null,
                         raw_vessel_id: rawVesselId
                     };
                 }
 
-                if (newState[portId][vKey][op]) {
-                    newState[portId][vKey][op][subOp] = Number(row.cost || 0);
+                if (!newState[portId][vKey][op]) {
+                    newState[portId][vKey][op] = {};
                 }
+                newState[portId][vKey][op][subOp] = Number(row.cost || 0);
             });
             setCostsState(newState);
             
@@ -111,7 +113,7 @@ export const PortCostsMaster_V2: React.FC = () => {
         fetchData();
     }, []);
 
-    const handleCostChange = (portId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA', subOp: string, value: string) => {
+    const handleCostChange = (portId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA' | 'BUNKERING', subOp: string, value: string) => {
         const cleanValue = value.replace(/,/g, '');
         const numValue = parseFloat(cleanValue) || 0;
         const vKey = normalizeVesselKey(vesselId);
@@ -124,13 +126,16 @@ export const PortCostsMaster_V2: React.FC = () => {
                 next[upperPortId][vKey] = {
                     CARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
                     DESCARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
+                    BUNKERING: { MAIN: 0, bunkering_survey: 0, other: 0 },
                     updated_at: null,
                     updated_by: null,
                     raw_vessel_id: vesselId
                 };
             }
             if (!next[upperPortId][vKey][operation]) {
-                next[upperPortId][vKey][operation] = { MAIN: 0, loading_master: 0, other: 0 };
+                next[upperPortId][vKey][operation] = operation === 'BUNKERING'
+                    ? { MAIN: 0, bunkering_survey: 0, other: 0 }
+                    : { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 };
             }
             next[upperPortId][vKey][operation][subOp] = numValue;
             return next;
@@ -153,11 +158,11 @@ export const PortCostsMaster_V2: React.FC = () => {
                     if (!targetVesselId) return;
                     
                     const currentUser = user?.full_name || user?.email || 'USUARIO';
-                    const subOps = ['MAIN', 'loading_master', 'muellaje', 'other'];
-                    subOps.forEach(subOp => {
+                    
+                    // CARGA y DESCARGA
+                    const standardSubOps = ['MAIN', 'loading_master', 'muellaje', 'other'];
+                    standardSubOps.forEach(subOp => {
                         const cargaVal = costData.CARGA?.[subOp] ?? 0;
-                        const descargaVal = costData.DESCARGA?.[subOp] ?? 0;
-                        
                         const cargaKey = `${cleanPortId}|CARGA|${targetVesselId}|${subOp}`;
                         if (!seenKeys.has(cargaKey)) {
                             seenKeys.add(cargaKey);
@@ -172,6 +177,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                             });
                         }
                         
+                        const descargaVal = costData.DESCARGA?.[subOp] ?? 0;
                         const descargaKey = `${cleanPortId}|DESCARGA|${targetVesselId}|${subOp}`;
                         if (!seenKeys.has(descargaKey)) {
                             seenKeys.add(descargaKey);
@@ -182,6 +188,25 @@ export const PortCostsMaster_V2: React.FC = () => {
                                 vessel_id: targetVesselId,
                                 sub_operation_type: subOp,
                                 cost: descargaVal,
+                                updated_by: currentUser
+                            });
+                        }
+                    });
+
+                    // BUNKERING
+                    const bunkeringSubOps = ['MAIN', 'bunkering_survey', 'other'];
+                    bunkeringSubOps.forEach(subOp => {
+                        const bunkVal = costData.BUNKERING?.[subOp] ?? 0;
+                        const bunkKey = `${cleanPortId}|BUNKERING|${targetVesselId}|${subOp}`;
+                        if (!seenKeys.has(bunkKey)) {
+                            seenKeys.add(bunkKey);
+                            payload.push({
+                                client_id: 'PETRAL',
+                                port_id: cleanPortId,
+                                operation_type: 'BUNKERING',
+                                vessel_id: targetVesselId,
+                                sub_operation_type: subOp,
+                                cost: bunkVal,
                                 updated_by: currentUser
                             });
                         }
@@ -243,7 +268,11 @@ export const PortCostsMaster_V2: React.FC = () => {
                 // Extraer datos del estado o inicializar en ceros para la plantilla
                 const data = (costsState[portId] && costsState[portId][vKey]) 
                     ? costsState[portId][vKey]
-                    : { CARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 }, DESCARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 } };
+                    : { 
+                        CARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 }, 
+                        DESCARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
+                        BUNKERING: { MAIN: 0, bunkering_survey: 0, other: 0 }
+                    };
 
                 // Fila Operación CARGA
                 const cMain = data.CARGA?.MAIN || 0;
@@ -263,6 +292,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                     main_cost: cMain,
                     lm_cost: cLm,
                     muellaje_cost: cMuellaje,
+                    survey_cost: 0,
                     other_cost: cOther,
                     total_cost: cTotal
                 });
@@ -285,8 +315,31 @@ export const PortCostsMaster_V2: React.FC = () => {
                     main_cost: dMain,
                     lm_cost: dLm,
                     muellaje_cost: dMuellaje,
+                    survey_cost: 0,
                     other_cost: dOther,
                     total_cost: dTotal
+                });
+
+                // Fila Operación BUNKERING
+                const bMain = data.BUNKERING?.MAIN || 0;
+                const bSurvey = data.BUNKERING?.bunkering_survey || 0;
+                const bOther = data.BUNKERING?.other || 0;
+                const bTotal = bMain + bSurvey + bOther;
+
+                rows.push({
+                    country: portCountry,
+                    port_id: portId,
+                    port_name: portName,
+                    client_name: 'PETRAL',
+                    vessel_id: vesselId,
+                    vessel_name: vesselName,
+                    operation: 'Bunkering',
+                    main_cost: bMain,
+                    lm_cost: 0,
+                    muellaje_cost: 0,
+                    survey_cost: bSurvey,
+                    other_cost: bOther,
+                    total_cost: bTotal
                 });
             });
         });
@@ -304,6 +357,7 @@ export const PortCostsMaster_V2: React.FC = () => {
         { header: 'Costo Agencia (USD)', key: 'main_cost', type: 'currency' },
         { header: 'Loading Master (USD)', key: 'lm_cost', type: 'currency' },
         { header: 'Muellaje (USD)', key: 'muellaje_cost', type: 'currency' },
+        { header: 'Bunkering Survey (USD)', key: 'survey_cost', type: 'currency' },
         { header: 'Otros Costos (USD)', key: 'other_cost', type: 'currency' },
         { header: 'Costo Total (USD)', key: 'total_cost', type: 'currency' }
     ];
@@ -471,6 +525,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                                             const vData = getVesselData(effectiveActivePortId, v.vessel_id) || {
                                                 CARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
                                                 DESCARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
+                                                BUNKERING: { MAIN: 0, bunkering_survey: 0, other: 0 },
                                                 updated_at: null,
                                                 updated_by: null
                                             };
@@ -500,8 +555,8 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                         </div>
                                                     </div>
 
-                                                    {/* Formulario Carga / Descarga */}
-                                                    <div className="flex flex-col gap-4 flex-1">
+                                                    {/* Formulario Carga / Descarga / Bunkering */}
+                                                    <div className="flex flex-col gap-3 flex-1">
                                                         
                                                         {/* Operación CARGA */}
                                                         <div className="flex flex-col gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
@@ -617,6 +672,54 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                         onBlur={() => setFocusedInput(null)}
                                                                         onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'DESCARGA', 'other', e.target.value)}
                                                                         className="w-full text-xs font-bold px-1.5 py-1 bg-white border border-slate-200 rounded focus:border-blue-500 focus:outline-none text-slate-800 text-right"
+                                                                        placeholder="0.00"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Operación BUNKERING */}
+                                                        <div className="flex flex-col gap-2 bg-amber-50/40 p-2.5 rounded-lg border border-amber-200/60">
+                                                            <div className="text-[11px] font-black text-amber-800 uppercase tracking-wider flex items-center justify-between">
+                                                                <span className="flex items-center gap-1">⛽ Bunkering</span>
+                                                                <span className="text-[10px] text-amber-700 font-bold">
+                                                                    Total: ${( (vData.BUNKERING?.MAIN || 0) + (vData.BUNKERING?.bunkering_survey || 0) + (vData.BUNKERING?.other || 0) ).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                                                </span>
+                                                            </div>
+                                                            <div className="grid grid-cols-3 gap-1.5">
+                                                                <div className="flex flex-col gap-1">
+                                                                    <label className="text-[9px] font-bold text-slate-500 uppercase">Agencia</label>
+                                                                    <input 
+                                                                        type="text"
+                                                                        value={focusedInput === `${effectiveActivePortId}-${v.vessel_id}-BUNKERING-MAIN` ? (vData.BUNKERING?.MAIN ?? '') : formatCostValue(vData.BUNKERING?.MAIN)}
+                                                                        onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-BUNKERING-MAIN`)}
+                                                                        onBlur={() => setFocusedInput(null)}
+                                                                        onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'BUNKERING', 'MAIN', e.target.value)}
+                                                                        className="w-full text-xs font-bold px-1.5 py-1 bg-white border border-amber-200 rounded focus:border-amber-500 focus:outline-none text-slate-800 text-right"
+                                                                        placeholder="0.00"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <label className="text-[9px] font-bold text-amber-800 uppercase">Bunkering Survey</label>
+                                                                    <input 
+                                                                        type="text"
+                                                                        value={focusedInput === `${effectiveActivePortId}-${v.vessel_id}-BUNKERING-bunkering_survey` ? (vData.BUNKERING?.bunkering_survey ?? '') : formatCostValue(vData.BUNKERING?.bunkering_survey)}
+                                                                        onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-BUNKERING-bunkering_survey`)}
+                                                                        onBlur={() => setFocusedInput(null)}
+                                                                        onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'BUNKERING', 'bunkering_survey', e.target.value)}
+                                                                        className="w-full text-xs font-bold px-1.5 py-1 bg-amber-100/50 border border-amber-300 rounded focus:border-amber-500 focus:outline-none text-amber-950 text-right"
+                                                                        placeholder="0.00"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <label className="text-[9px] font-bold text-slate-500 uppercase">Otros</label>
+                                                                    <input 
+                                                                        type="text"
+                                                                        value={focusedInput === `${effectiveActivePortId}-${v.vessel_id}-BUNKERING-other` ? (vData.BUNKERING?.other ?? '') : formatCostValue(vData.BUNKERING?.other)}
+                                                                        onFocus={() => setFocusedInput(`${effectiveActivePortId}-${v.vessel_id}-BUNKERING-other`)}
+                                                                        onBlur={() => setFocusedInput(null)}
+                                                                        onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'BUNKERING', 'other', e.target.value)}
+                                                                        className="w-full text-xs font-bold px-1.5 py-1 bg-white border border-amber-200 rounded focus:border-amber-500 focus:outline-none text-slate-800 text-right"
                                                                         placeholder="0.00"
                                                                     />
                                                                 </div>
