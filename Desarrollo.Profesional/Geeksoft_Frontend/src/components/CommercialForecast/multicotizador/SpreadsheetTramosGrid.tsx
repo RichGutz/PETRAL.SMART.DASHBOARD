@@ -241,9 +241,12 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         <td className="border-r border-slate-200 p-0 text-right">
                             {puertosConfig[0]?.action === 'CARGAR' ? (
                                 <input
-                                    type="number"
-                                    value={puertosConfig[0]?.quantity !== undefined && puertosConfig[0]?.quantity !== '' ? puertosConfig[0]?.quantity : ''}
-                                    onChange={(e) => updatePuertoConfigField(0, 'quantity', e.target.value)}
+                                    type="text"
+                                    value={puertosConfig[0]?.quantity !== undefined && puertosConfig[0]?.quantity !== '' ? fmtThousandSep(puertosConfig[0].quantity) : ''}
+                                    onChange={(e) => {
+                                        const cleanVal = e.target.value.replace(/,/g, '');
+                                        updatePuertoConfigField(0, 'quantity', cleanVal);
+                                    }}
                                     className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs"
                                     placeholder="13,500"
                                 />
@@ -482,9 +485,12 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                 <td className="border-r border-slate-200 p-0 text-right">
                                     {puertosConfig[idx + 1]?.action !== 'NONE' ? (
                                         <input
-                                            type="number"
-                                            value={puertosConfig[idx + 1]?.quantity !== undefined && puertosConfig[idx + 1]?.quantity !== '' ? puertosConfig[idx + 1]?.quantity : ''}
-                                            onChange={(e) => updatePuertoConfigField(idx + 1, 'quantity', e.target.value)}
+                                            type="text"
+                                            value={puertosConfig[idx + 1]?.quantity !== undefined && puertosConfig[idx + 1]?.quantity !== '' ? fmtThousandSep(puertosConfig[idx + 1].quantity) : ''}
+                                            onChange={(e) => {
+                                                const cleanVal = e.target.value.replace(/,/g, '');
+                                                updatePuertoConfigField(idx + 1, 'quantity', cleanVal);
+                                            }}
                                             className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs"
                                             placeholder="13,500"
                                         />
@@ -583,12 +589,41 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         <td className="border-r border-blue-500 text-right pr-2 font-mono text-white">
                             {fmtDays(liveCalc?.totalPortDays ?? 0)}
                         </td>
-                        <td className="border-r border-blue-500 text-right pr-2 text-blue-200">—</td>
-                        <td className="border-r border-blue-500 text-right pr-2 text-blue-200">—</td>
+                        {/* TOTAL TIME TO COUNT (H) */}
+                        <td className="border-r border-blue-500 text-right pr-2 font-mono text-white">
+                            {(() => {
+                                let totalTTC = 0;
+                                let hasActive = false;
+                                (puertosConfig || []).forEach(p => {
+                                    if (p.action === 'CARGAR' || p.action === 'DESCARGAR') {
+                                        hasActive = true;
+                                        const val = p.time_to_count !== undefined && p.time_to_count !== '' ? Number(p.time_to_count) : 6.0;
+                                        totalTTC += isNaN(val) ? 0 : val;
+                                    }
+                                });
+                                return hasActive ? `${totalTTC.toFixed(1)}` : '—';
+                            })()}
+                        </td>
+                        {/* TOTAL POSICIONAMIENTO (H) */}
+                        <td className="border-r border-blue-500 text-right pr-2 font-mono text-white">
+                            {(() => {
+                                let totalPosic = 0;
+                                let hasActive = false;
+                                (puertosConfig || []).forEach(p => {
+                                    if (p.action === 'CARGAR' || p.action === 'DESCARGAR') {
+                                        hasActive = true;
+                                        const defPosic = p.action === 'CARGAR' ? 1.0 : 0.0;
+                                        const val = p.positioning !== undefined && p.positioning !== '' ? Number(p.positioning) : defPosic;
+                                        totalPosic += isNaN(val) ? 0 : val;
+                                    }
+                                });
+                                return hasActive ? `${totalPosic.toFixed(1)}` : '0.0';
+                            })()}
+                        </td>
                         <td className="border-r border-blue-500 text-right pr-2 text-blue-200">—</td>
                         <td className="border-r border-blue-500 text-right pr-2 text-blue-200">—</td>
                         <td className="border-r border-blue-500 text-right pr-2 font-mono text-white">
-                            {totalDescargas > 0 ? fmtNum(totalDescargas) : '—'}
+                            {totalDescargas > 0 ? fmtThousandSep(totalDescargas) : '—'}
                         </td>
                         <td className="border-r border-blue-500 text-right pr-2 text-blue-200">—</td>
                         <td className="border-r border-blue-500 text-right pr-2 font-mono text-white font-black">
