@@ -941,8 +941,6 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         });
     };
 
-    const calculatedTramosList = getCalculatedTramos();
-
     const filteredRoutes = React.useMemo(() => {
         if (!selectedClient) return [];
         const sClient = selectedClient.trim().toUpperCase();
