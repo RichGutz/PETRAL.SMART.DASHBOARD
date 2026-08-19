@@ -11,6 +11,7 @@ import { MulticotizadorStorageService } from '../../services/providers/multicoti
 import { MulticotizadorRetrieverService } from '../../services/providers/multicotizadorRetrieverService';
 import { BunkerProviderService } from '../../services/providers/bunkerProviderService';
 import { MulticotizadorPdfPrintService } from '../../services/providers/multicotizadorPdfPrintService';
+import { MulticotizadorCalculationEngine } from '../../services/providers/multicotizadorCalculationEngine';
 
 // Subcomponentes Visuales UI (Fase 2)
 import { VesselFactSheetHeader } from './multicotizador/VesselFactSheetHeader';
