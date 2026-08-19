@@ -332,3 +332,19 @@ Una vez levantado el stack en Contabo:
 4. **Redirección de Dominio Legado & Cierre de Hostinger:**
    - En el VPS Hostinger (`91.108.125.253`), configurar redirección 301 de `forecast.geeksoft.tech` ➔ `https://petral.geeksoft.tech`.
    - Proceder a la cancelación del servidor VPS Hostinger para eliminar costos recurrentes.
+
+---
+
+## 8. 📌 Checklist de Tareas Pendientes (TO-DOs)
+
+> [!NOTE]
+> Esta fase de migración a Contabo queda **estabilizada y documentada en espera**. Se ejecutará una vez que la estructura de tablas maestras, esquemas y lógica de negocio en Supabase Cloud queden 100% cerrados y homologados con la dirección comercial.
+
+- [ ] **TO-DO 1:** Cerrar y congelar la estructura final de tablas en Supabase Cloud (`hjjxooxcpvlvbaxgifbn`):
+  - [ ] Homologación de campos de Bunkering (`operation_type = 'BUNKERING'`).
+  - [ ] Consolidación de tablas maestras (`ports`, `vessels`, `routes`, `contracts`, `bunker_prices`).
+- [ ] **TO-DO 2:** Extraer `pg_dump` definitivo de Supabase Cloud.
+- [ ] **TO-DO 3:** Importar dump en el contenedor PostgreSQL de Contabo (`supabase-db`).
+- [ ] **TO-DO 4:** Desplegar `petral_dashboard` y `petral_backend` en `/var/www/PETRAL` vía `docker compose up -d`.
+- [ ] **TO-DO 5:** Apuntar DNS `petral.geeksoft.tech` ➔ `169.58.168.107` en Cloudflare.
+- [ ] **TO-DO 6:** Verificación final en vivo y apagado del VPS Hostinger.
