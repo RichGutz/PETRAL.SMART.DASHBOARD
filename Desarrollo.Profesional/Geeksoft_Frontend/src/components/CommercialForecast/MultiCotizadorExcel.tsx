@@ -276,9 +276,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     const handleVesselChange = (vesselId: string, isAutoFillEnabled: boolean = false) => {
         setSelectedVessel(vesselId);
         if (!vesselId) return;
-        const v = vessels.find(x => x.vessel_id === vesselId);
+        const v = (vessels || []).find(x => x.vessel_id === vesselId);
         if (v) {
-            const resolved = VesselProviderService.extractVesselParams(vesselId, vessels);
+            const resolved = VesselProviderService.extractVesselParams(vesselId, vessels || []);
             if (resolved) setVesselParams(resolved);
         }
 
@@ -325,7 +325,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     list[index].weather_factor = auto.weather_factor;
                 }
                 if (!list[index].speed || Number(list[index].speed) <= 0) {
-                    const currentVessel = vessels.find(v => v.vessel_id === selectedVessel);
+                    const currentVessel = (vessels || []).find(v => v.vessel_id === selectedVessel);
                     list[index].speed = currentVessel?.vessel_speed || vesselParams?.vessel_speed || 11.0;
                 }
             }
@@ -339,7 +339,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     list[index + 1].weather_factor = autoNext.weather_factor;
                 }
                 if (!list[index + 1].speed || Number(list[index + 1].speed) <= 0) {
-                    const currentVessel = vessels.find(v => v.vessel_id === selectedVessel);
+                    const currentVessel = (vessels || []).find(v => v.vessel_id === selectedVessel);
                     list[index + 1].speed = currentVessel?.vessel_speed || vesselParams?.vessel_speed || 11.0;
                 }
             }
@@ -486,14 +486,17 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         return MulticotizadorCalculationEngine.calculateVoyage({
             tramos: calculatedTramosList,
             puertosConfig,
+            selectedVessel,
+            vessels: vessels || [],
             vesselParams,
             bunkerPriceIfo,
             bunkerPriceMdo,
             addressCommPct,
             brokerCommPct,
-            refacturarMuellajeMap
+            refacturarMuellajeMap,
+            ports: ports || []
         });
-    }, [calculatedTramosList, puertosConfig, vesselParams, bunkerPriceIfo, bunkerPriceMdo, addressCommPct, brokerCommPct, refacturarMuellajeMap]);
+    }, [calculatedTramosList, puertosConfig, selectedVessel, vessels, vesselParams, bunkerPriceIfo, bunkerPriceMdo, addressCommPct, brokerCommPct, refacturarMuellajeMap, ports]);
 
     const handleCalculate = async () => {
         try {
@@ -1166,7 +1169,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                                         }`}
                                     >
                                         <option value="">[SELECCIONAR BUQUE]</option>
-                                        {vessels.map(v => (
+                                        {(vessels || []).map(v => (
                                             <option key={v.vessel_id} value={v.vessel_id}>{v.vessel_name || v.vessel_id}</option>
                                         ))}
                                     </select>
@@ -1183,7 +1186,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 {/* FACT SHEET CABECERA BUQUE */}
                 <VesselFactSheetHeader
                     selectedVessel={selectedVessel}
-                    vessels={vessels}
+                    vessels={vessels || []}
                     vesselParams={vesselParams}
                     bunkerPriceIfo={bunkerPriceIfo}
                     bunkerPriceMdo={bunkerPriceMdo}
@@ -1199,8 +1202,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 <SpreadsheetTramosGrid
                     tramos={tramos}
                     puertosConfig={puertosConfig}
-                    ports={ports}
-                    vessels={vessels}
+                    ports={ports || []}
+                    vessels={vessels || []}
                     selectedVessel={selectedVessel}
                     bunkerPriceIfo={bunkerPriceIfo}
                     bunkerPriceMdo={bunkerPriceMdo}
@@ -1214,7 +1217,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     updateTramoField={updateTramoField}
                     updatePuertoConfigField={updatePuertoConfigField}
                     setRefacturarMuellajeMap={setRefacturarMuellajeMap}
-                    getAutoPortRate={(portId, action) => PortCostsRatesService.resolveAutoPortRate(portId, action, ports)}
+                    getAutoPortRate={(portId, action) => PortCostsRatesService.resolveAutoPortRate(portId, action, ports || [])}
                     fmtCur={fmtCur}
                     fmtNum={fmtNum}
                     fmtDays={fmtDays}
@@ -1229,7 +1232,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     bunkerPriceMdo={bunkerPriceMdo}
                     puertosConfig={puertosConfig}
                     tramos={calculatedTramosList}
-                    vessels={vessels}
+                    vessels={vessels || []}
                     selectedVessel={selectedVessel}
                     vesselParams={vesselParams}
                     addressCommPct={addressCommPct}
