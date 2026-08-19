@@ -81,6 +81,9 @@ export class MulticotizadorStorageService {
             description = 'Cotización Cliente Activo';
         }
 
+        const effectiveValidFrom = validFrom || bafValidFrom || undefined;
+        const effectiveValidTo = validTo || bafValidTo || undefined;
+
         const payload: any = {
             route_id: routeId,
             name: routeName,
@@ -90,6 +93,8 @@ export class MulticotizadorStorageService {
             is_contract: isContract === true,  // el backend usa este flag para asignar description si no viene
             client_id: selectedClient,
             created_by: activeUserEmail,
+            valid_from: effectiveValidFrom,
+            valid_to: effectiveValidTo,
             legs_data: {
                 is_multicotizador: true,
                 created_by: activeUserEmail,
@@ -101,9 +106,11 @@ export class MulticotizadorStorageService {
                 vesselParams,
                 addressCommPct,
                 brokerCommPct,
+                valid_from: effectiveValidFrom,
+                valid_to: effectiveValidTo,
                 baf_formula: bafFormula,
-                baf_valid_from: bafValidFrom,
-                baf_valid_to: bafValidTo,
+                baf_valid_from: bafValidFrom || effectiveValidFrom,
+                baf_valid_to: bafValidTo || effectiveValidTo,
                 baf_ifo_base: bafIfoBase,
                 baf_mdo_base: bafMdoBase,
                 tariff_tiers: tariffTiers,

@@ -819,24 +819,55 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             setSelectedClient(extractedClient);
         }
 
-        // 3. Validez Fechas (Paso 4: Inicio y Fin)
-        const vFrom = clonedQuote.valid_from || clonedQuote.legs_data?.valid_from || clonedQuote.validity_start || clonedQuote.legs_data?.baf_valid_from || '';
-        const vTo = clonedQuote.valid_to || clonedQuote.legs_data?.valid_to || clonedQuote.validity_end || clonedQuote.legs_data?.baf_valid_to || '';
-
-        const formatToDateInput = (val: string) => {
+        const formatToDateInput = (val: any) => {
             if (!val || val === 'Sin Fecha') return '';
-            if (/^\d{4}-\d{2}-\d{2}/.test(val)) return val.substring(0, 10);
-            if (/^\d{2}\/\d{2}\/\d{4}/.test(val)) {
-                const [d, m, y] = val.split('/');
-                return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+            const s = String(val).trim();
+            if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0, 10);
+            if (/^\d{4}[\/.]\d{2}[\/.]\d{2}/.test(s)) {
+                const parts = s.substring(0, 10).split(/[\/.]/);
+                return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
             }
-            return val;
+            if (/^\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4}/.test(s)) {
+                const parts = s.substring(0, 10).split(/[\/\-\.]/);
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+            const d = new Date(s);
+            if (!isNaN(d.getTime())) {
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd}`;
+            }
+            return '';
         };
 
-        if (vFrom) setValidFrom(formatToDateInput(vFrom));
-        if (vTo) setValidTo(formatToDateInput(vTo));
-
         const unpacked = MulticotizadorRetrieverService.unpackQuoteData(clonedQuote);
+
+        // 3. Validez Fechas (Paso 4: Inicio y Fin)
+        const rawValidFrom = unpacked.valid_from 
+            || clonedQuote.valid_from 
+            || clonedQuote.legs_data?.valid_from 
+            || clonedQuote.validity_start 
+            || unpacked.baf_valid_from 
+            || '';
+
+        const rawValidTo = unpacked.valid_to 
+            || clonedQuote.valid_to 
+            || clonedQuote.legs_data?.valid_to 
+            || clonedQuote.validity_end 
+            || unpacked.baf_valid_to 
+            || '';
+
+        const resolvedValidFrom = formatToDateInput(rawValidFrom);
+        const resolvedValidTo = formatToDateInput(rawValidTo);
+
+        if (resolvedValidFrom) setValidFrom(resolvedValidFrom);
+        if (resolvedValidTo) setValidTo(resolvedValidTo);
+
+        const resolvedBafFrom = formatToDateInput(unpacked.baf_valid_from) || resolvedValidFrom;
+        const resolvedBafTo = formatToDateInput(unpacked.baf_valid_to) || resolvedValidTo;
+        if (resolvedBafFrom) setBafValidFrom(resolvedBafFrom);
+        if (resolvedBafTo) setBafValidTo(resolvedBafTo);
 
         if (unpacked.tramos && unpacked.tramos.length > 0) {
             const enrichedTramos = unpacked.tramos.map((tr: any) => {

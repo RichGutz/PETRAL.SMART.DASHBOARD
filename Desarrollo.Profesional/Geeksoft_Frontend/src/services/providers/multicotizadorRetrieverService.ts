@@ -129,9 +129,33 @@ export class MulticotizadorRetrieverService {
             };
         });
 
-        const demurrageRates = legsData.demurrage_rates || legsData.contract_metadata?.demurrage_rates || null;
-        const tariffTiers = legsData.tariff_tiers || legsData.contract_metadata?.tariff_tiers || null;
+        const meta = legsData.contract_metadata || {};
+        const demurrageRates = legsData.demurrage_rates || meta.demurrage_rates || null;
+        const tariffTiers = legsData.tariff_tiers || meta.tariff_tiers || null;
         const rawTramos = legsData.tramos || quote.tramos || [];
+
+        const validFrom = legsData.valid_from 
+            || legsData.validFrom 
+            || meta.valid_from 
+            || meta.validFrom 
+            || legsData.baf_valid_from 
+            || quote.valid_from 
+            || quote.validFrom 
+            || quote.validity_start 
+            || '';
+
+        const validTo = legsData.valid_to 
+            || legsData.validTo 
+            || meta.valid_to 
+            || meta.validTo 
+            || legsData.baf_valid_to 
+            || quote.valid_to 
+            || quote.validTo 
+            || quote.validity_end 
+            || '';
+
+        const bafValidFrom = legsData.baf_valid_from || validFrom;
+        const bafValidTo = legsData.baf_valid_to || validTo;
 
         return {
             vessel_id: legsData.vessel_id || quote.vessel_id || '',
@@ -143,15 +167,17 @@ export class MulticotizadorRetrieverService {
             vesselParams: legsData.vesselParams || quote.vesselParams || null,
             addressCommPct: legsData.addressCommPct !== undefined ? Number(legsData.addressCommPct) : 0,
             brokerCommPct: legsData.brokerCommPct !== undefined ? Number(legsData.brokerCommPct) : 0,
-            baf_formula: legsData.baf_formula || legsData.contract_metadata?.baf_formula || '',
-            baf_valid_from: legsData.baf_valid_from || legsData.valid_from || legsData.contract_metadata?.valid_from || '',
-            baf_valid_to: legsData.baf_valid_to || legsData.valid_to || legsData.contract_metadata?.valid_to || '',
+            valid_from: validFrom,
+            valid_to: validTo,
+            baf_formula: legsData.baf_formula || meta.baf_formula || '',
+            baf_valid_from: bafValidFrom,
+            baf_valid_to: bafValidTo,
             baf_ifo_base: Number(legsData.baf_ifo_base || 0),
             baf_mdo_base: Number(legsData.baf_mdo_base || 0),
             tariff_tiers: tariffTiers,
             demurrage_rates: demurrageRates,
             comments_text: legsData.comments_text || '',
-            financial_summary: legsData.financial_summary || legsData.contract_metadata?.financial_summary || null,
+            financial_summary: legsData.financial_summary || meta.financial_summary || null,
             refacturarMuellajeMap: legsData.refacturarMuellajeMap || null
         };
     }

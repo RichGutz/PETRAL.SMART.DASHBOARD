@@ -96,8 +96,8 @@ export const QuoteExecutiveCardSummary: React.FC<QuoteExecutiveCardSummaryProps>
 
     const ladenTramos = trms.filter((tr: any) => tr.type === 'LADEN' || Number(tr.quantity || 0) > 0 || Number(tr.freight_rate || 0) > 0);
     const createdBy = route.created_by || route.legs_data?.created_by || 'izavala@petral.com.pe';
-    const validFrom = route.valid_from || route.legs_data?.valid_from || 'Sin Fecha';
-    const validTo = route.valid_to || route.legs_data?.valid_to || 'Sin Fecha';
+    const validFrom = unpacked.valid_from || route.valid_from || route.legs_data?.valid_from || 'Sin Fecha';
+    const validTo = unpacked.valid_to || route.valid_to || route.legs_data?.valid_to || 'Sin Fecha';
     const vesselName = unpacked.vessel_name || unpacked.vessel_id || route.vessel_name || 'BT MOQUEGUA';
 
     const handleOpen = (e: React.MouseEvent) => {
