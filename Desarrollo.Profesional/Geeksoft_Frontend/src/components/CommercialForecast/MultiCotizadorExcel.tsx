@@ -478,6 +478,22 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         return items;
     };
 
+    const calculatedTramosList = getCalculatedTramos();
+
+    // Orquestación Central Reactiva — Única Fuente de Verdad Inmune
+    const liveCalculation = useMemo(() => {
+        return MulticotizadorCalculationEngine.calculateVoyage({
+            tramos: calculatedTramosList,
+            puertosConfig,
+            vesselParams,
+            bunkerPriceIfo,
+            bunkerPriceMdo,
+            addressCommPct,
+            brokerCommPct,
+            refacturarMuellajeMap
+        });
+    }, [calculatedTramosList, puertosConfig, vesselParams, bunkerPriceIfo, bunkerPriceMdo, addressCommPct, brokerCommPct, refacturarMuellajeMap]);
+
     const handleCalculate = async () => {
         try {
             const calculatedTramos = getCalculatedTramos();
@@ -1180,7 +1196,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     fmtThousandSep={fmtThousandSep}
                 />
 
-                {/* GRILLA TABULAR TRAMOS Y PUERTOS */}
+                {/* GRILLA TABULAR TRAMOS Y PUERTOS (ÚNICA FUENTE DE VERDAD) */}
                 <SpreadsheetTramosGrid
                     tramos={tramos}
                     puertosConfig={puertosConfig}
@@ -1193,6 +1209,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     result={result}
                     refacturarMuellajeMap={refacturarMuellajeMap}
                     calculatedTramosList={calculatedTramosList}
+                    liveCalc={liveCalculation}
                     handleAddTramo={handleAddTramo}
                     handleRemoveLastTramo={handleRemoveLastTramo}
                     updateTramoField={updateTramoField}
@@ -1205,9 +1222,10 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     fmtThousandSep={fmtThousandSep}
                 />
 
-                {/* TARJETAS FINANCIERAS Y RESULTADO DE VIAJE */}
+                {/* TARJETAS FINANCIERAS Y RESULTADO DE VIAJE (ÚNICA FUENTE DE VERDAD) */}
                 <FinancialResultCards
                     result={result}
+                    liveCalc={liveCalculation}
                     bunkerPriceIfo={bunkerPriceIfo}
                     bunkerPriceMdo={bunkerPriceMdo}
                     puertosConfig={puertosConfig}

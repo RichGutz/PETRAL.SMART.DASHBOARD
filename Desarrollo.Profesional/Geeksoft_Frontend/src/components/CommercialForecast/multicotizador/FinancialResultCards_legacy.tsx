@@ -3,7 +3,6 @@ import { MulticotizadorCalculationEngine } from '../../../services/providers/mul
 
 export interface FinancialResultCardsProps {
     result?: any;
-    liveCalc?: any;
     bunkerPriceIfo: number;
     bunkerPriceMdo: number;
     puertosConfig: any[];
@@ -53,7 +52,6 @@ const PORT_THEMES = [
 
 export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
     result: _result,
-    liveCalc,
     bunkerPriceIfo,
     bunkerPriceMdo,
     puertosConfig,
@@ -91,7 +89,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
     fmtThousandSep
 }) => {
     // Cálculo reactivo puro e instantáneo con el motor central
-    const calc = liveCalc || MulticotizadorCalculationEngine.calculateVoyage({
+    const calc = MulticotizadorCalculationEngine.calculateVoyage({
         tramos,
         puertosConfig,
         vesselParams,

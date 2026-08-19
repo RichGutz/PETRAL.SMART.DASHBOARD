@@ -301,6 +301,8 @@ export class MulticotizadorCalculationEngine {
             voyageResultPnl,
             tceRealizado,
             tceDiff,
+            portDays0,
+            bunkerCost0,
             calculatedTramos,
             portCostItems
         };
