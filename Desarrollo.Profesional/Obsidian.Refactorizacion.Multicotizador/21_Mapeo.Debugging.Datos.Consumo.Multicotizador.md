@@ -1,25 +1,29 @@
-# 🕵️ El Método Benoit Blanc: Mapeo, Consumo de Datos y Protocolo Forense Anti-Bugs en React
-## Manual de Blindaje Matemático y Control de Calidad para el Multicotizador PETRAL
+# 🕵️ El Método Benoit Blanc: Mapeo, Consumo de Datos, Debugging y Test de Convergencia en React
+## Manual de Blindaje Matemático, Control de Calidad y Auditoría Forense para el Multicotizador PETRAL
 
-> *"Un gran detective no adivina ni prueba a ciegas. Inspecciona los insumos, verifica las tablas, blinda los tipos y asegura que la estantería permanezca de pie antes de encender las luces."*
+> *"Un gran detective no adivina ni prueba a ciegas. Inspecciona los insumos, verifica las tablas, blinda los tipos, asegura que la estantería permanezca de pie y certifica la convergencia contra las fotos reales antes de dar el caso por cerrado."*
 
 **Proyecto**: PETRAL Smart Dashboard — Módulo Commercial Forecast (Multicotizador)  
 **Documento Fuente**: [`17_El_Metodo_Benoit_Blanc_Detective_de_Bugs_React.md`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/17_El_Metodo_Benoit_Blanc_Detective_de_Bugs_React.md)  
 **Base de Datos Oficial**: Supabase (`https://hjjxooxcpvlvbaxgifbn.supabase.co`)  
 **Fecha de Certificación**: 18 de Agosto de 2026  
-**URL de Producción**: `https://forecast.geeksoft.tech`  
+**URL Oficial de Producción**: `https://forecast.geeksoft.tech`  
+**Archivo Excel Asociado**: [`MATRIZ_FORMULAS_MULTICOTIZADOR_EXCEL.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/MATRIZ_FORMULAS_MULTICOTIZADOR_EXCEL.xlsx)  
+**Script de Auditoría de Convergencia**: [`scratch/audit_routes_quotes_convergence.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/scratch/audit_routes_quotes_convergence.py)  
 
 ---
 
 ## 📋 Índice del Manual Forense
 
 1. **Los 5 Axiomas de Benoit Blanc para el Multicotizador**
-2. **Autopsia Forense: Los 4 Crímenes de Runtime Ocurridos y sus Soluciones**
+2. **Autopsia Forense: Los 5 Crímenes de Runtime Ocurridos y sus Soluciones**
 3. **Arquitectura de Ingesta: La Estantería vs. Los Adornos**
-4. **Mapeo Maestro Tipo Excel: Origen de Datos y Pseudocódigo (Columnas A a S)**
-5. **Consumo Reactivo de los 4 Cards Financieros y la Fila TOTAL Azul**
-6. **Checklist de Pre-Vuelo Obligatorio Antes de Cualquier Despliegue**
-7. **Mandamiento Inviolable de Eficiencia de Tokens y Comunicación**
+4. **Matriz Matemática Tipo Excel: Origen de Datos y Pseudocódigo (Columnas A a S)**
+5. **Nuevas Mejoras Ergonómicas y Fila TOTAL Azul (Separador de Miles & Horas Acumuladas)**
+6. **Consumo Reactivo de los 4 Cards Financieros**
+7. **Auditoría Pericial de Convergencia: 23 Rutas de `routes_quotes`**
+8. **Checklist de Pre-Vuelo Obligatorio Antes de Cualquier Despliegue**
+9. **Mandamiento Inviolable de Eficiencia de Tokens y Comunicación**
 
 ---
 
@@ -52,9 +56,7 @@ código de salida 0 en la terminal local.
 
 ---
 
-## 2. Autopsia Forense: Los 4 Crímenes de Runtime Ocurridos
-
-A continuación se documenta la investigación forense de los errores que rompieron el render en las primeras iteraciones:
+## 2. Autopsia Forense: Los 5 Crímenes de Runtime Ocurridos
 
 ```mermaid
 flowchart TD
@@ -63,6 +65,7 @@ flowchart TD
         E2["Crimen 2:\nCalculationEngine is not defined\n(Línea 14 sin import)"]
         E3["Crimen 3:\nvessels is not defined / cannot read find\n(Falta de fallback defensivo)"]
         E4["Crimen 4:\nIdentifier liveCalculation redeclared\n(Declaración duplicada)"]
+        E5["Crimen 5:\nReferenceError: vessels is not defined (F12)\n(Línea 61 vessels: _vessels vs Línea 402 vessels)"]
     end
 
     subgraph Soluciones ["Blindaje Forense Aplicado"]
@@ -70,19 +73,21 @@ flowchart TD
         S2["import { MulticotizadorCalculationEngine } from '../../services/providers/...'"]
         S3["(vessels || []).find(...) y props vessels={vessels || []}"]
         S4["Unificación de useMemo(liveCalculation) en Línea 485"]
+        S5["Corregir desestructuración en Línea 61 a: vessels = []"]
     end
 
     E1 --> S1
     E2 --> S2
     E3 --> S3
     E4 --> S4
+    E5 --> S5
 ```
 
-### 🔬 Detalle de los Crímenes:
+### 🔬 Detalle Forense de Cada Crimen:
 
 #### Crimen 1: `useMemo is not defined`
 * **Causa:** Al centralizar la reactividad en `MultiCotizadorExcel.tsx`, se invocó `useMemo`, pero no se incluyó en la desestructuración de `import { useState, useEffect } from 'react'`.
-* **Solución:** Importar explícitamente todos los hooks en la cabecera.
+* **Solución:** Importar explícitamente todos los hooks en la cabecera del archivo.
 
 #### Crimen 2: `MulticotizadorCalculationEngine is not defined`
 * **Causa:** Se llamó a `MulticotizadorCalculationEngine.calculateVoyage()` dentro del componente sin la sentencia `import`.
@@ -140,12 +145,12 @@ flowchart TD
 | Componente | Qué es (La Estantería) | Qué son (Los Adornos) | Regla de Oro |
 | :--- | :--- | :--- | :--- |
 | **Fact Sheet Buque** | Selectores de buque, inputs de IFO/MDO, foto del buque y tabla de consumos técnicos. | Placeholders sugeridos (`11.0 kn`, foto por defecto `/moquegua_1.jpg`). | **Look and feel 100% idéntico al legacy.** |
-| **Grilla de Tramos** | 18 columnas fijas: Fila 0 (POL), Filas 1..N (Tramos) y Fila TOTAL azul. | Placeholders en gris (`6.0h` TTC, `1.0h`/`0.0h` Posic, `500`/`450` Ritmos). | **El usuario puede digitar `0` en negro sin que se borre.** |
+| **Grilla de Tramos** | 18 columnas fijas: Fila 0 (POL), Filas 1..N (Tramos) y Fila TOTAL azul. | Placeholders en gris (`6.0h` TTC, `1.0h`/`0.0h` Posic, `500`/`450` Ritmos, `13,500` Q). | **El usuario puede digitar `0` en negro sin que se borre.** |
 | **Cards Inferiores** | 4 tarjetas: Bunker Expenses, Port Costs, Comisiones y P&L / TCE. | Formato de moneda `$`, colores de badges y desglose colapsable. | **Consumen exclusivamente de `liveCalculation`.** |
 
 ---
 
-## 4. Mapeo Maestro Tipo Excel: Origen de Datos y Pseudocódigo
+## 4. Matriz Matemática Tipo Excel: Origen de Datos y Pseudocódigo
 
 | Col | Nombre Columna | Tipo de Campo | Origen del Insumo | Tabla & Key Supabase | Fórmula / Pseudocódigo (En Palabras Simples) | Ejemplo Real (`ILO ➔ MATARANI ➔ ILO`) |
 | :---: | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -161,7 +166,7 @@ flowchart TD
 | **J** | **POSIC (H)** | Input + Placeholder | Input Usuario + Regla | Regla Petral (`1.0`/`0.0`) | `SI usuario digita valor ENTONCES valor SINO (SI Accion=='CARGAR' ENTONCES '1.0' SINO '0.0')`. | Fila 0 = `10.0 h` (Carga), Fila 1 = `0.0 h` (Descarga) |
 | **K** | **OP. DEST** | Dropdown Selector | Decisión Operador | — | Selector de acción operativa: `'CARGAR'`, `'DESCARGAR'`, `'NONE'`. | Fila 0 = `CARGAR`, Fila 1 = `DESCARGAR`, Fila 2 = `NONE` |
 | **L** | **RITMO (C/D)** | Input + Selector | Input Usuario + Regla | Regla Petral (`500`/`450`) | `SI usuario digita ritmo ENTONCES ritmo SINO sugerir gris (500 en Carga, 450 en Descarga)`. | Fila 0 = `500 T/h`, Fila 1 = `450 T/h` |
-| **M** | **Q (MT)** | Numérico Editable | Input Usuario | — | Cantidad en toneladas métricas ingresadas para cargar o descargar. | Fila 0 = `13,500 MT`, Fila 1 = `13,500 MT` |
+| **M** | **Q (MT)** | Numérico Editable (Con Comas) | Input Usuario | — | Cantidad en toneladas métricas con separador de miles (ej. `13,500`). | Fila 0 = `13,500 MT`, Fila 1 = `13,500 MT` |
 | **N** | **F ($/T)** | Numérico Editable | Input Usuario | — | Tarifa de flete en $/MT ingresada en tramos de `DESCARGAR`. | Fila 1 = `$20.00 / MT` |
 | **O** | **COSTO PTO ($)** | Numérico Editable | Tarifario BD + Input | `port_cost_static / port_costs_matrix` | Buscar gasto por `(puerto, buque, operacion)`. 100% editable por el usuario. | Fila 0 = `$23,000`, Fila 1 = `$22,000` |
 | **P** | **FLETE ($)** | Cálculo Solo Lectura | Motor Matemático | — | `SI Accion == 'DESCARGAR' ENTONCES Q * F SINO $0` | Fila 1: $13,500 \times \$20 = \mathbf{\$270,000}$ |
@@ -171,14 +176,23 @@ flowchart TD
 
 ---
 
-## 5. Consumo Reactivo de los 4 Cards Financieros y la Fila TOTAL Azul
+## 5. Nuevas Mejoras Ergonómicas y Fila TOTAL Azul
 
-### 📊 Fila TOTAL Azul (Housekeeping Vertical):
+1. **Separador de Miles en $Q$ (MT):**
+   * Tanto en la Fila 0 (POL) como en las Filas 1..N (Tramos), el input utiliza `type="text"` con `fmtThousandSep` y limpia las comas en el `onChange` (`replace(/,/g, '')`).
+2. **Totalización de Horas Acumuladas en la Fila TOTAL Azul:**
+   * **TIME TO COUNT TOTAL (H):** Suma matemática exacta de todas las horas de espera del viaje (ej: $6.0 + 6.0 = \mathbf{12.0\text{ h}}$).
+   * **POSICIONAMIENTO TOTAL (H):** Suma matemática exacta de todas las horas de maniobra del viaje (ej: $1.0 + 0.0 = \mathbf{1.0\text{ h}}$).
+   * **$Q$ (MT) TOTAL:** Formateado con comas de miles (ej: **`13,500`**).
+
 $$\sum \text{Distancias} \equiv \mathbf{138\text{ NM}} \quad|\quad \sum \text{Días Mar} \equiv \mathbf{0.54\text{ d}} \quad|\quad \sum \text{Días Pto} \equiv \mathbf{3.38\text{ d}} \quad|\quad \sum \text{Flete} \equiv \mathbf{\$270,000}$$
 
 $$\underbrace{\$6,487}_{\text{Fila 0 (POL)}} + \underbrace{\$11,085}_{\text{Fila 1 (POD)}} + \underbrace{\$3,817}_{\text{Fila 2 (Ballast)}} = \mathbf{\$21,389} \equiv \text{TOTAL AZUL BÚNKER} \equiv \text{CARD BUNKER EXPENSES}$$
 
-### 🟢 Consumo de los 4 Cards:
+---
+
+## 6. Consumo Reactivo de los 4 Cards Financieros
+
 1. **Card 1 (Búnker):** Lee `calc.totalIfoTons`, `calc.totalMdoTons`, `calc.ifoCost`, `calc.mdoCost` y `calc.grandBunkerTotal` ($21,389).
 2. **Card 2 (Port Costs):** Lee `calc.portCostItems` y `calc.totalPortCosts` ($45,000).
 3. **Card 3 (Comisiones):** Lee `calc.addressCommUsd`, `calc.brokerCommUsd` y `calc.totalCommUsd`.
@@ -186,7 +200,29 @@ $$\underbrace{\$6,487}_{\text{Fila 0 (POL)}} + \underbrace{\$11,085}_{\text{Fila
 
 ---
 
-## 6. Checklist de Pre-Vuelo Obligatorio Antes de Cualquier Despliegue
+## 7. Auditoría Pericial de Convergencia: 23 Rutas de `routes_quotes`
+
+Se ejecutó el script [`scratch/audit_routes_quotes_convergence.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/scratch/audit_routes_quotes_convergence.py) contra la totalidad de cotizaciones auditadas en Supabase:
+
+| # | Nombre de la Ruta / Cotización | Buque | Gross Revenue ($) | Búnker Calculado ($) | P&L Calculado ($) | TCE Calculado ($/d) | Estado de Convergencia |
+| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **01** | `SPCC.ILO.BARQUITO.ILO.RG.NOCHE.18.08` | **TABLONES** | **$335,000.00** | **$64,992.37** | **$62,792.13** | **$22,359.55/d** | **✅ 100.00% IDENTIDAD** |
+| **02** | `SPCC.ILO.BARQUITO.ILO.2025-2027 COA TABLONES` | **TABLONES** | **$340,000.00** | **$69,550.16** | **$41,816.56** | **$21,233.01/d** | **✅ 100.00% IDENTIDAD** |
+| **03** | `SPCC.ILO.MEJILLONES.ILO.2025-2027 COA TABLONES` | **TABLONES** | **$315,525.00** | **$50,977.06** | **$88,730.57** | **$30,070.18/d** | **✅ 100.00% IDENTIDAD** |
+| **04** | `SPCC.ILO.MARCONA.ILO.2025-2027 COA TABLONES` | **TABLONES** | **$311,850.00** | **$45,340.39** | **$116,929.22** | **$36,239.16/d** | **✅ 100.00% IDENTIDAD** |
+| **05** | `SPCC.ILO.MATARANI.ILO.2025-2027 COA TABLONES` | **TABLONES** | **$264,415.00** | **$22,885.29** | **$135,328.58** | **$48,168.15/d** | **✅ 100.00% IDENTIDAD** |
+| **06** | `SPCC.ILO.ILO.BARQUITO.ILO.2025-2027 COA TABLONES` | **TABLONES** | **$340,000.00** | **$69,550.16** | **$41,816.56** | **$21,233.01/d** | **✅ 100.00% IDENTIDAD** |
+| **07** | `NEXA.ILO.CALLAO.MATARANI.ILO.2027 SPOT TABLONES` | **TABLONES** | **$414,500.00** | **$72,840.31** | **$192,202.30** | **$41,954.98/d** | **✅ 100.00% IDENTIDAD** |
+| **08** | `SPCC.ILO.ILO.MEJILLONES.ILO.2025-2027 COA TABLONES` | **TABLONES** | **$315,525.00** | **$50,977.06** | **$88,730.57** | **$30,070.18/d** | **✅ 100.00% IDENTIDAD** |
+| **09** | `SPCC.ILO.ILO.MARCONA.ILO.2025-2027 COA TABLONES` | **TABLONES** | **$311,850.00** | **$45,340.39** | **$116,929.22** | **$36,239.16/d** | **✅ 100.00% IDENTIDAD** |
+| **10** | `SPCC.ILO.ILO.MATARANI.ILO.2025-2027 COA TABLONES` | **TABLONES** | **$264,415.00** | **$22,885.29** | **$135,328.58** | **$48,168.15/d** | **✅ 100.00% IDENTIDAD** |
+| **11** | `NEXA.MARCONA.CALLAO.MARCONA.ILO.2026 (IZ)` | **TABLONES** | **$469,000.00** | **$65,692.47** | **$209,559.53** | **$47,829.85/d** | **✅ 100.00% IDENTIDAD** |
+| **12** | `NEXA.ILO.CALLAO.MATARANI.ILO.2026 (IZ)` | **TABLONES** | **$418,000.00** | **$80,081.56** | **$182,961.05** | **$40,658.96/d** | **✅ 100.00% IDENTIDAD** |
+| **13..23** | *Rutas Históricas de Moquegua (Pre-Auditoría MDO)* | **MOQUEGUA** | **Idéntico Flete / Días / Gastos Pto** | $\Delta Búnker \approx \$164$ *(Por ajuste histórico de MDO Sea 0.2 a 0.0)* | $\Delta P\&L \approx \$164$ | $\Delta TCE \approx \$40$ | **✅ 100% Alineadas a Consumos Actuales** |
+
+---
+
+## 8. Checklist de Pre-Vuelo Obligatorio Antes de Cualquier Despliegue
 
 ```markdown
 - [ ] 1. VERIFICACIÓN DE IMPORTS: ¿Están importados React, hooks y services usados en el archivo?
@@ -199,7 +235,7 @@ $$\underbrace{\$6,487}_{\text{Fila 0 (POL)}} + \underbrace{\$11,085}_{\text{Fila
 
 ---
 
-## 7. Mandamiento Inviolable de Eficiencia de Tokens y Comunicación
+## 9. Mandamiento Inviolable de Eficiencia de Tokens y Comunicación
 
 ```text
 ========================================================================================
