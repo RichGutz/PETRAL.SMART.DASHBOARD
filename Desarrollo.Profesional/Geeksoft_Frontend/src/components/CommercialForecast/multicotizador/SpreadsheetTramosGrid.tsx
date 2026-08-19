@@ -214,7 +214,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                             {puertosConfig[0]?.action !== 'NONE' ? (
                                 <input
                                     type="number"
-                                    value={puertosConfig[0]?.time_to_count !== undefined && puertosConfig[0]?.time_to_count !== '' && puertosConfig[0]?.time_to_count !== 0 && puertosConfig[0]?.time_to_count !== '0' ? puertosConfig[0]?.time_to_count : (puertosConfig[0]?.overhead && puertosConfig[0]?.overhead !== 0 && puertosConfig[0]?.overhead !== '0' ? puertosConfig[0]?.overhead : '')}
+                                    value={puertosConfig[0]?.time_to_count !== undefined && puertosConfig[0]?.time_to_count !== null ? puertosConfig[0]?.time_to_count : (puertosConfig[0]?.overhead ?? '')}
                                     onChange={(e) => {
                                         updatePuertoConfigField(0, 'time_to_count', e.target.value);
                                         updatePuertoConfigField(0, 'overhead', e.target.value);
@@ -232,7 +232,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                             {puertosConfig[0]?.action !== 'NONE' ? (
                                 <input
                                     type="number"
-                                    value={puertosConfig[0]?.positioning !== undefined && puertosConfig[0]?.positioning !== '' && puertosConfig[0]?.positioning !== 0 && puertosConfig[0]?.positioning !== '0' ? puertosConfig[0]?.positioning : ''}
+                                    value={puertosConfig[0]?.positioning ?? ''}
                                     onChange={(e) => updatePuertoConfigField(0, 'positioning', e.target.value)}
                                     className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     placeholder={result?.tramos?.[0]?.positioning_carga_hrs !== undefined ? String(result.tramos[0].positioning_carga_hrs) : (puertosConfig[0]?.action === 'CARGAR' ? '1.0' : '0.0')}
@@ -482,7 +482,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                     {puertosConfig[idx + 1]?.action !== 'NONE' ? (
                                         <input
                                             type="number"
-                                            value={puertosConfig[idx + 1]?.time_to_count !== undefined && puertosConfig[idx + 1]?.time_to_count !== '' && puertosConfig[idx + 1]?.time_to_count !== 0 && puertosConfig[idx + 1]?.time_to_count !== '0' ? puertosConfig[idx + 1]?.time_to_count : (puertosConfig[idx + 1]?.overhead && puertosConfig[idx + 1]?.overhead !== 0 && puertosConfig[idx + 1]?.overhead !== '0' ? puertosConfig[idx + 1]?.overhead : '')}
+                                            value={puertosConfig[idx + 1]?.time_to_count !== undefined && puertosConfig[idx + 1]?.time_to_count !== null ? puertosConfig[idx + 1]?.time_to_count : (puertosConfig[idx + 1]?.overhead ?? '')}
                                             onChange={(e) => {
                                                 updatePuertoConfigField(idx + 1, 'time_to_count', e.target.value);
                                                 updatePuertoConfigField(idx + 1, 'overhead', e.target.value);
@@ -498,7 +498,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                     {puertosConfig[idx + 1]?.action !== 'NONE' ? (
                                         <input
                                             type="number"
-                                            value={puertosConfig[idx + 1]?.positioning !== undefined && puertosConfig[idx + 1]?.positioning !== '' && puertosConfig[idx + 1]?.positioning !== 0 && puertosConfig[idx + 1]?.positioning !== '0' ? puertosConfig[idx + 1]?.positioning : ''}
+                                            value={puertosConfig[idx + 1]?.positioning ?? ''}
                                             onChange={(e) => updatePuertoConfigField(idx + 1, 'positioning', e.target.value)}
                                             className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             placeholder={puertosConfig[idx + 1]?.action === 'CARGAR' ? String(trResult?.positioning_carga_hrs ?? '1.0') : String(trResult?.positioning_descarga_hrs ?? '0.0')}

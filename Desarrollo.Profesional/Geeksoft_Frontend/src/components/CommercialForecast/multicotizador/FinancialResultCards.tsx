@@ -1,4 +1,5 @@
 import React from 'react';
+import { MulticotizadorCalculationEngine } from '../../../services/providers/multicotizadorCalculationEngine';
 
 export interface FinancialResultCardsProps {
     result?: any;
@@ -55,8 +56,8 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
     bunkerPriceMdo,
     puertosConfig,
     tramos,
-    vessels,
-    selectedVessel,
+    vessels: _vessels,
+    selectedVessel: _selectedVessel,
     vesselParams,
     addressCommPct,
     brokerCommPct,
@@ -87,94 +88,39 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
     fmtDays,
     fmtThousandSep
 }) => {
-    // 1. Cálculo Live de Búnker Tonnage (IFO & MDO)
-    let liveIfoTons = 0;
-    let liveMdoTons = 0;
-    let liveTotalSeaDays = 0;
-    let liveTotalPortDays = 0;
-
-    tramos.forEach((tr, idx) => {
-        const selectedVesselObj = (vessels || []).find(v => v.vessel_id === selectedVessel);
-        const distVal = Number(tr.route_distance || 0);
-        const rawWf = Number(tr.weather_factor || 0);
-        const wfPct = rawWf > 1 ? rawWf : (rawWf * 100);
-        const speedVal = Math.max(1, Number(tr.speed || selectedVesselObj?.vessel_speed || vesselParams?.vessel_speed || 11));
-        const calcSeaDays = distVal > 0 ? (distVal * (1 + (wfPct / 100))) / (speedVal * 24) : 0;
-        liveTotalSeaDays += calcSeaDays;
-
-        const pCfg = puertosConfig[idx + 1] || {};
-        const qVal = Number(pCfg.quantity || 0);
-        const rVal = Math.max(1, Number(pCfg.op_rate || 500));
-        const tcVal = Number(pCfg.time_to_count || 0);
-        const posVal = Number(pCfg.positioning || 0);
-
-        const idleDays = pCfg.action !== 'NONE' ? ((tcVal + posVal) / 24) : 0;
-        const opDays = pCfg.action !== 'NONE' ? ((qVal / rVal) / 24) : 0;
-        const calcPortDays = idleDays + opDays;
-        liveTotalPortDays += calcPortDays;
-
-        const ifoSeaRatio = Number(vesselParams?.consumption_sea_ifo || selectedVesselObj?.consumption_sea_ifo || 0);
-        const mdoSeaRatio = Number(vesselParams?.consumption_sea_mdo || selectedVesselObj?.consumption_sea_mdo || 0);
-        const ifoIdleRatio = Number(vesselParams?.consumption_idle_ifo || selectedVesselObj?.consumption_idle_ifo || 0);
-        const mdoIdleRatio = Number(vesselParams?.consumption_idle_mdo || selectedVesselObj?.consumption_idle_mdo || 0);
-        const ifoLoadRatio = Number(vesselParams?.consumption_load_ifo || selectedVesselObj?.consumption_load_ifo || ifoIdleRatio);
-        const mdoLoadRatio = Number(vesselParams?.consumption_load_mdo || selectedVesselObj?.consumption_load_mdo || mdoIdleRatio);
-        const ifoDischRatio = Number(vesselParams?.consumption_disch_ifo || selectedVesselObj?.consumption_disch_ifo || 0);
-        const mdoDischRatio = Number(vesselParams?.consumption_disch_mdo || selectedVesselObj?.consumption_disch_mdo || mdoIdleRatio);
-
-        const opIfoRate = pCfg.action === 'DESCARGAR' ? ifoDischRatio : pCfg.action === 'CARGAR' ? ifoLoadRatio : ifoIdleRatio;
-        const opMdoRate = pCfg.action === 'DESCARGAR' ? mdoDischRatio : pCfg.action === 'CARGAR' ? mdoLoadRatio : mdoIdleRatio;
-
-        liveIfoTons += (calcSeaDays * ifoSeaRatio) + (idleDays * ifoIdleRatio) + (opDays * opIfoRate);
-        liveMdoTons += (calcSeaDays * mdoSeaRatio) + (idleDays * mdoIdleRatio) + (opDays * opMdoRate);
+    // Cálculo reactivo puro e instantáneo con el motor central
+    const calc = MulticotizadorCalculationEngine.calculateVoyage({
+        tramos,
+        puertosConfig,
+        vesselParams,
+        bunkerPriceIfo,
+        bunkerPriceMdo,
+        addressCommPct,
+        brokerCommPct,
+        refacturarMuellajeMap
     });
 
-    const ifoT = liveIfoTons;
-    const mdoT = liveMdoTons;
-    const ifoCost = ifoT * bunkerPriceIfo;
-    const mdoCost = mdoT * bunkerPriceMdo;
-    const totalBunkerCost = ifoCost + mdoCost;
+    const ifoT = calc.totalIfoTons;
+    const mdoT = calc.totalMdoTons;
+    const ifoCost = calc.ifoCost;
+    const mdoCost = calc.mdoCost;
+    const totalBunkerCost = calc.grandBunkerTotal;
 
-    // 2. Port Costs Live Sum
-    const livePortCostsSum = puertosConfig.reduce((sum, p, i) => {
-        if (p.action === 'NONE') return sum;
-        const portId = i === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[i - 1]?.destination_port_id || '');
-        const isMejillonesDischarge = (portId || '').trim().toUpperCase() === 'MEJILLONES' && p.action === 'DESCARGAR';
-        const mCost = Number(p.manual_port_cost) || 0;
-        const muellCost = Number(p.muellaje_cost) || (isMejillonesDischarge ? 33333 : 0);
-        return sum + Math.max(mCost, muellCost);
-    }, 0);
-    const totalPortCostsVal = livePortCostsSum;
+    const totalPortCostsVal = calc.totalPortCosts;
+    const revenue = calc.totalFreight;
+    const refacturacionMuellajeUsd = calc.refacturacionMuellaje;
 
-    // 3. Revenue & Refacturación de Muellaje Live
-    const liveRevenue = tramos.reduce((sum, _, idx) => sum + (puertosConfig[idx + 1]?.action === 'DESCARGAR' ? (Number(puertosConfig[idx + 1]?.quantity || 0) * Number(puertosConfig[idx + 1]?.freight_rate || 0)) : 0), 0);
-    const revenue = liveRevenue;
+    const totalDays = calc.totalDays;
+    const tceReq = calc.tceReq;
+    const hireUsd = calc.hireUsd;
 
-    const liveRefacturacionMuellaje = puertosConfig.reduce((sum, p, i) => {
-        if (p.action === 'NONE') return sum;
-        const portId = i === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[i - 1]?.destination_port_id || '');
-        const isMejillonesDischarge = (portId || '').trim().toUpperCase() === 'MEJILLONES' && p.action === 'DESCARGAR';
-        const muellCost = Number(p.muellaje_cost) || (isMejillonesDischarge ? 33333 : 0);
-        if (refacturarMuellajeMap[i] !== false && muellCost > 0) {
-            return sum + muellCost;
-        }
-        return sum;
-    }, 0);
-    const refacturacionMuellajeUsd = liveRefacturacionMuellaje;
+    const addressCommUsd = calc.addressCommUsd;
+    const brokerCommUsd = calc.brokerCommUsd;
+    const totalCommUsd = calc.totalCommUsd;
 
-    // 4. Financial Voyage Result Live
-    const totalDays = liveTotalSeaDays + liveTotalPortDays;
-    const tceReq = Number(vesselParams?.tce_required || 0);
-    const hireUsd = tceReq * totalDays;
-
-    const addressCommUsd = revenue * (addressCommPct / 100);
-    const brokerCommUsd = revenue * (brokerCommPct / 100);
-    const totalCommUsd = addressCommUsd + brokerCommUsd;
-
-    const pnlVal = (revenue + refacturacionMuellajeUsd) - (hireUsd + totalBunkerCost + totalPortCostsVal + totalCommUsd);
-
-    const tceReal = totalDays > 0 ? (((revenue + refacturacionMuellajeUsd) - (totalBunkerCost + totalPortCostsVal + totalCommUsd)) / totalDays) : 0;
-    const tceDiff = tceReal - tceReq;
+    const pnlVal = calc.voyageResultPnl;
+    const tceReal = calc.tceRealizado;
+    const tceDiff = calc.tceDiff;
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 flex-shrink-0 mt-3">
