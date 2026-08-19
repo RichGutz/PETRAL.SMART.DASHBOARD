@@ -103,6 +103,36 @@ flowchart TD
 * **Causa:** Tras hacer reemplazos en el archivo padre, `liveCalculation` quedó declarado dos veces (en la línea 485 y en la línea 977).
 * **Solución:** Mantener una única declaración en la línea 485 que reciba la totalidad de parámetros del viaje.
 
+#### Crimen 5 (EL SMOKING GUN DE F12): `ReferenceError: vessels is not defined at FinancialResultCards.tsx:402:57`
+* **La Evidencia de F12:**
+  ```text
+  react-dom-client.production.js:5892 ReferenceError: vessels is not defined
+      at FinancialResultCards.tsx:402:57
+      at AFe (FinancialResultCards.tsx:462:33)
+  ```
+* **La Escena del Crimen (Línea 61 vs Línea 402):**
+  En la línea 61 de `FinancialResultCards.tsx`, al desestructurar los props se renombró la variable a `_vessels`:
+  ```typescript
+  // ❌ Línea 61:
+  export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
+      ...
+      vessels: _vessels, // <-- EL ASESINO: Renombró la variable local a _vessels
+  ```
+  Y 341 líneas después, en la **Línea 402 (Card 3A de Estadías/Demurrage)**, el código intentó renderizar la lista de buques buscando `vessels`:
+  ```typescript
+  // 💥 Línea 402:
+  const vesselList = (vessels && vessels.length > 0) // <-- ¡ReferenceError! vessels no existe en scope
+      ? vessels.slice(0, 4).map(...)
+      : ['HUEMUL', 'MOQUEGUA', 'TABLONES', 'CONCON TRADER'];
+  ```
+* **La Solución Forense:**
+  En la línea 61, desestructurar directamente con fallback defensivo:
+  ```typescript
+  // ✅ Corregido en Línea 61:
+  vessels = [],
+  ```
+  De este modo, `vessels` existe perfectamente en todo el cuerpo del componente y la línea 402 evalúa su contenido de forma segura.
+
 ---
 
 ## 3. Arquitectura de Ingesta: La Estantería vs. Los Adornos

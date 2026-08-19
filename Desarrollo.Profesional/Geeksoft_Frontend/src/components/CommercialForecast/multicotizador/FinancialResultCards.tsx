@@ -58,7 +58,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
     bunkerPriceMdo,
     puertosConfig,
     tramos,
-    vessels: _vessels,
+    vessels = [],
     selectedVessel: _selectedVessel,
     vesselParams,
     addressCommPct,
