@@ -27,16 +27,16 @@ export interface SpreadsheetTramosGridProps {
 }
 
 export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
-    tramos,
-    puertosConfig,
-    ports,
-    vessels,
+    tramos = [],
+    puertosConfig = [],
+    ports = [],
+    vessels = [],
     selectedVessel,
     bunkerPriceIfo: _bunkerPriceIfo,
     bunkerPriceMdo: _bunkerPriceMdo,
     vesselParams: _vesselParams,
     result: _result,
-    refacturarMuellajeMap,
+    refacturarMuellajeMap = {},
     calculatedTramosList: _calculatedTramosList,
     liveCalc,
     handleAddTramo,
@@ -51,7 +51,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     fmtThousandSep
 }) => {
     const totalDescargas = liveCalc?.totalQuantity ?? puertosConfig.reduce((sum, p) => sum + (p.action === 'DESCARGAR' ? (Number(p.quantity) || 0) : 0), 0);
-    const selectedVesselObj = vessels.find(v => v.vessel_id === selectedVessel);
+    const selectedVesselObj = (vessels || []).find(v => v.vessel_id === selectedVessel);
 
     return (
         <div className="overflow-x-auto border border-slate-300 rounded bg-white shadow-sm flex flex-col mb-1">

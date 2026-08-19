@@ -16,7 +16,7 @@ export interface VesselFactSheetProps {
 
 export const VesselFactSheetHeader: React.FC<VesselFactSheetProps> = ({
     selectedVessel,
-    vessels,
+    vessels = [],
     vesselParams,
     bunkerPriceIfo,
     bunkerPriceMdo,
@@ -27,7 +27,7 @@ export const VesselFactSheetHeader: React.FC<VesselFactSheetProps> = ({
     handleBunkerSourceChange,
     fmtThousandSep
 }) => {
-    const vObj = vessels.find(v => v.vessel_id === selectedVessel);
+    const vObj = (vessels || []).find(v => v.vessel_id === selectedVessel);
     let photoSrc = vObj?.image_url;
     if (!photoSrc || photoSrc.trim() === '') {
         const vid = (selectedVessel || vObj?.vessel_id || '').toUpperCase();
