@@ -204,3 +204,4 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-08-18 17:00:47] [SERIE 47 / BENOIT BLANC] Correccion de persistencia y desempaque de Demurrage en Multicotizador. Purgados fallbacks 25k/20k -> CERO estricto. Build Vite OK.
 [2026-08-18 17:38:26] [SERIE 48 / BENOIT BLANC] Implementacion de Snapshot financial_summary en cotizaciones y lectura espejo en QuoteExecutiveCardSummary. Purgados fallbacks muellaje 7k/6k y ratios bunker a CERO estricto. Build Vite OK.
 [2026-08-18 17:45:03] [SERIE 49 / BENOIT BLANC] Homologacion de etiquetas en modal de guardado: 'Ruta Cierres' y 'Cotizaciones' alineadas con el menu lateral (Maestro de Cierres y Maestro de Cotizaciones). Build Vite OK.
+[2026-08-18 19:21:28] [SERIE 50 / BENOIT BLANC] Limpieza de sufijo (V2) en routes_quotes. Las 8 rutas modernas ahora tienen naming limpio sin .ILO.ILO. y conviven con las legacy para revision.

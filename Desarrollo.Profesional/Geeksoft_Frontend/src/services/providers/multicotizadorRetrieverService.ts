@@ -82,9 +82,42 @@ export class MulticotizadorRetrieverService {
     }
 
 
-    public static unpackQuoteData(quote: RetrievedQuote) {
-        const legsData = quote.legs_data || {};
-        const rawPuertosConfig = legsData.puertosConfig || [];
+    public static unpackQuoteData(quote: any): any {
+        if (!quote) {
+            return {
+                vessel_id: '',
+                bunker_price_ifo: 0,
+                bunker_price_mdo: 0,
+                tramos: [],
+                puertosConfig: [],
+                vesselParams: null,
+                addressCommPct: 0,
+                brokerCommPct: 0,
+                baf_formula: '',
+                baf_valid_from: '',
+                baf_valid_to: '',
+                baf_ifo_base: 0,
+                baf_mdo_base: 0,
+                tariff_tiers: null,
+                demurrage_rates: null,
+                comments_text: '',
+                financial_summary: null,
+                refacturarMuellajeMap: null
+            };
+        }
+
+        let legsData = quote.legs_data;
+        if (typeof legsData === 'string') {
+            try {
+                legsData = JSON.parse(legsData);
+            } catch (e) {
+                console.error("Error parsing legs_data JSON string in unpackQuoteData:", e);
+                legsData = {};
+            }
+        }
+        legsData = legsData || {};
+
+        const rawPuertosConfig = legsData.puertosConfig || quote.puertosConfig || [];
         const normalizedPuertosConfig = rawPuertosConfig.map((p: any) => {
             const ttc = (p.time_to_count !== undefined && p.time_to_count !== '')
                 ? p.time_to_count
@@ -98,14 +131,16 @@ export class MulticotizadorRetrieverService {
 
         const demurrageRates = legsData.demurrage_rates || legsData.contract_metadata?.demurrage_rates || null;
         const tariffTiers = legsData.tariff_tiers || legsData.contract_metadata?.tariff_tiers || null;
+        const rawTramos = legsData.tramos || quote.tramos || [];
 
         return {
             vessel_id: legsData.vessel_id || quote.vessel_id || '',
-            bunker_price_ifo: Number(legsData.bunker_price_ifo ?? legsData.bunker_ifo ?? 0),
-            bunker_price_mdo: Number(legsData.bunker_price_mdo ?? legsData.bunker_mdo ?? 0),
-            tramos: legsData.tramos || [],
+            vessel_name: legsData.vessel_name || quote.vessel_name || legsData.vesselParams?.vessel_name || '',
+            bunker_price_ifo: Number(legsData.bunker_price_ifo ?? legsData.bunker_ifo ?? quote.bunker_price_ifo ?? 0),
+            bunker_price_mdo: Number(legsData.bunker_price_mdo ?? legsData.bunker_mdo ?? quote.bunker_price_mdo ?? 0),
+            tramos: rawTramos,
             puertosConfig: normalizedPuertosConfig,
-            vesselParams: legsData.vesselParams || null,
+            vesselParams: legsData.vesselParams || quote.vesselParams || null,
             addressCommPct: legsData.addressCommPct !== undefined ? Number(legsData.addressCommPct) : 0,
             brokerCommPct: legsData.brokerCommPct !== undefined ? Number(legsData.brokerCommPct) : 0,
             baf_formula: legsData.baf_formula || legsData.contract_metadata?.baf_formula || '',

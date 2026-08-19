@@ -387,7 +387,7 @@ export const ContractsMaster: React.FC = () => {
                                                                     <ExternalLink size={12} />
                                                                     <span>Ver en Multicotizador ➔</span>
                                                                 </button>
-                                                                <span className="text-slate-400 font-bold hover:underline cursor-pointer px-1" onClick={() => toggleRow(routeId)}>
+                                                                <span className="text-slate-400 font-bold hover:underline cursor-pointer px-1" onClick={() => toggleRouteExpansion(route.name)}>
                                                                     {isExpanded ? '▲ Ocultar Ficha' : '▼ Detalle Rápido'}
                                                                 </span>
                                                                 <button

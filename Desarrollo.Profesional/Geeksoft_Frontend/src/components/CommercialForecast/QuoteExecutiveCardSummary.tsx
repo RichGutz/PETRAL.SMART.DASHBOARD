@@ -18,8 +18,10 @@ export const QuoteExecutiveCardSummary: React.FC<QuoteExecutiveCardSummaryProps>
     
     // 1. Usar fotografía financiera (financial_summary) si ya fue guardada en el JSONB, o calcular con motor puro
     const calc = React.useMemo(() => {
-        if (unpacked.financial_summary && typeof unpacked.financial_summary === 'object') {
-            const fs = unpacked.financial_summary;
+        const fs = unpacked.financial_summary;
+        const hasValidFinancialSummary = fs && typeof fs === 'object' && Object.keys(fs).length > 0 && (Number(fs.grossRevenueTotal || 0) > 0 || Number(fs.totalDist || 0) > 0 || Number(fs.totalFreight || 0) > 0);
+
+        if (hasValidFinancialSummary) {
             return {
                 totalDist: Number(fs.totalDist || 0),
                 totalSeaDays: Number(fs.totalSeaDays || 0),
@@ -90,7 +92,7 @@ export const QuoteExecutiveCardSummary: React.FC<QuoteExecutiveCardSummaryProps>
                 portCostItems: []
             };
         }
-    }, [trms, portsCfg, unpacked]);
+    }, [route, trms, portsCfg, unpacked]);
 
     const ladenTramos = trms.filter((tr: any) => tr.type === 'LADEN' || Number(tr.quantity || 0) > 0 || Number(tr.freight_rate || 0) > 0);
     const createdBy = route.created_by || route.legs_data?.created_by || 'izavala@petral.com.pe';
