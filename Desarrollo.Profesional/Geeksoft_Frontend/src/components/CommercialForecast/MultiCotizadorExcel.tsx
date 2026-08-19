@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ForecastService } from '../../services/api';
 import { Calendar } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
