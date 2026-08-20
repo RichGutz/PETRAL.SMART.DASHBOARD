@@ -25,6 +25,7 @@
 8. **Checklist de Pre-Vuelo Obligatorio Antes de Cualquier Despliegue**
 9. **Mandamiento Inviolable de Eficiencia de Tokens y Comunicación**
 10. **Especificación Operativa: Nuevo Concepto 'BUNKERING' en OP. Dest (0 Millas, 24h y Costo Estático)**
+11. **Autopsia & Solución: Determinación Reactiva de Tipo de Pierna (LADEN vs BALLAST) y Sincronización de Weather Factor (W.F %)**
 
 ---
 
@@ -269,4 +270,33 @@ Se incorpora la operación **`BUNKERING`** como una opción oficial dentro de lo
 4. **Integración con Totales y Matriz Financiera**:
    - El costo portuario del tramo de bunkering se suma a los costos portuarios totales (`total_port_costs` / Card 2 de Port Costs).
    - Las horas de estadía (24h) computan el consumo de combustible de puerto (IFO/MDO Port) de acuerdo al consumo diario de puerto del buque.
+
+---
+
+## 11. Autopsia & Solución: Determinación Reactiva de Tipo de Pierna (LADEN vs BALLAST) y Sincronización de Weather Factor (W.F %)
+
+### 11.1 El Problema Detectado (Autopsia Forense)
+En la versión inicial, al ingresar una ruta compleja (ej. `CALLAO (CARGA) ➔ CALLAO (BUNKERING) ➔ ILO (DESCARGAR) ➔ BAYOVAR (NONE)`):
+- Todas las filas figuraban como **`BALLAST`** en la columna **TIPO**, a pesar de que el buque zarpaba con carga y se dirigía a descargar en Ilo.
+- **Causa Raíz:** La lógica calculaba el tipo de tramo únicamente si el input numérico $Q$ (MT) tenía un valor tipeado en caliente, ignorando el estado lógico de las operaciones (`CARGAR`, `BUNKERING`, `DESCARGAR`) e iniciando en cero ($0\text{ MT} \implies \text{BALLAST}$).
+- Asimismo, al no identificarse como `LADEN`, el sistema consultaba el factor de clima de lastre (`weather_factor_ballast`) en lugar del factor de carga (`weather_factor_laden`).
+
+### 11.2 La Solución Matemática & Lógica Reactiva
+Se reestructuró `getCalculatedTramos()` en `MultiCotizadorExcel.tsx` y el motor puro `multicotizadorCalculationEngine.ts`:
+
+1. **Estado de Carga a Bordo Acumulada**:
+   - Si `puertosConfig[0].action === 'CARGAR'` (o en cualquier tramo previo): Se activa `is_laden = true` y carga inicial ($\text{por defecto } 13,500\text{ MT}$).
+   - Si `puertosConfig[idx + 1].action === 'DESCARGAR'`: El tramo que navega hacia ese destino **es obligatoriamente `LADEN`** (la nave transporta la carga hacia la entrega).
+   - En tramos intermedios (ej. `BUNKERING` en Callao): La nave retiene la carga a bordo $\implies$ Permanece como **`LADEN`**.
+   - Tras el puerto de descarga: Al completarse la descarga sin nueva carga, el tramo siguiente pasa automáticamente a **`BALLAST`** (lastre).
+
+2. **Sincronización Automática de Weather Factor (W.F %)**:
+   - Para cada tramo, una vez deducido su tipo (`LADEN` vs `BALLAST`), se invoca `RouteDistancesService.resolveAutoRouteInfo(orig, dest, typeTramo, routes)`.
+   - Si el tramo es `LADEN`, toma el `weather_factor_laden` oficial del catálogo.
+   - Si el tramo es `BALLAST`, toma el `weather_factor_ballast`.
+   - Si el tramo es en el mismo puerto ($0.0\text{ NM}$, ej. Bunkering), el W.F se fija estrictamente en **`0.0%`**.
+
+3. **Inyección Directa a la Grilla**:
+   - `SpreadsheetTramosGrid` consume directamente `calculatedTramosList`, garantizando sincronía inmediata a 60 FPS sin latencia.
+
 
