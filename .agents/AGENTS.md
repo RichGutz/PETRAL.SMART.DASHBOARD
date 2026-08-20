@@ -18,11 +18,14 @@
 
 <RULE[markdown_pdf_conversion]>
 - **NO** convertir archivos Markdown (.md) a PDF automáticamente. Solo generar o convertir a PDF cuando el usuario lo solicite de manera explícita y directa.
+</RULE[markdown_pdf_conversion]>
+
 <RULE[png_local_storage]>
 - **SIEMPRE** copiar y respaldar de inmediato cada captura de pantalla PNG enviada por el usuario en las rutas locales:
   1. `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\`
   2. `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\PORT.COSTS.PATRICIA\`
 </RULE[png_local_storage]>
+
 <RULE[bunker_mdo_mgo_homologation]>
 - En todo el software PETRAL, las siglas **MGO** (Marine Gas Oil / Diesel Marino) que figuran en facturas o cotizaciones equivalen y se registran unificadamente bajo el estándar **MDO**.
 </RULE[bunker_mdo_mgo_homologation]>
@@ -33,6 +36,8 @@
 
 <RULE[benoit_blanc_audit_protocol]>
 - **Protocolo Benoit Blanc de Auditoría**: Cada vuelta/ronda de auditoría visual o pericial planteada por el usuario DEBE ser documentada al máximo detalle en una **tabla nueva e independiente** (ej. 5.1 Vuelta 1, 5.2 Vuelta 2, 5.3 Vuelta 3, etc.) dentro del documento Obsidian: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador\07_Especificaciones_Comerciales_Grilla_y_Puertos.md`.
+</RULE[benoit_blanc_audit_protocol]>
+
 <RULE[flowchart_pdf_only]>
 - **Generación de Flujogramas y Diagramas de Arquitectura (Graphviz / DOT)**:
   - **NUNCA** generar archivos de imagen PNG como output de flujogramas o diagramas de arquitectura.
@@ -45,5 +50,6 @@
   - **EL HUMANO CONOCE EL NEGOCIO**: NUNCA asumir, deducir a ciegas ni hacer investigaciones profundas en bucle en segundo plano cuando una pregunta simple de una línea al usuario aclara el requerimiento en 5 segundos.
 </RULE[ask_first_token_efficiency]>
 
-
-
+<RULE[no_browser_subagent]>
+- **PROHIBICIÓN TOTAL DE ABRIR EL NAVEGADOR / BROWSER SUBAGENT**: NUNCA utilizar la herramienta `browser_subagent` ni abrir ventanas de navegador en la máquina del usuario bajo ninguna circunstancia. Toda verificación debe realizarse mediante terminal, scripts headless, inspección de código o consultando al usuario.
+</RULE[no_browser_subagent]>
