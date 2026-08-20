@@ -439,22 +439,61 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
     const getCalculatedTramos = () => {
         let carga_a_bordo = 0;
+        let is_laden = false;
         return tramos.map((tr, idx) => {
             const pOrig = puertosConfig[idx] || { action: 'NONE', quantity: 0 };
-            let qOrig = Number(pOrig.quantity) || 0;
-            if (pOrig.action === 'CARGAR') {
-                carga_a_bordo += qOrig;
-            } else if (pOrig.action === 'DESCARGAR') {
-                carga_a_bordo -= qOrig;
-                if (carga_a_bordo < 0) carga_a_bordo = 0;
-            }
-            const qtyTramo = carga_a_bordo;
-            const typeTramo = qtyTramo > 0 ? 'LADEN' : 'BALLAST';
             const pDest = puertosConfig[idx + 1] || { action: 'NONE', quantity: 0, freight_rate: 0 };
-            const fleteTramo = pDest.action === 'DESCARGAR' ? (Number(pDest.freight_rate) || 0) : 0;
-            const descTons = pDest.action === 'DESCARGAR' ? (Number(pDest.quantity) || 0) : 0;
+            
+            // Fila de origen o anterior inició carga
+            if (pOrig.action === 'CARGAR') {
+                const qCarga = Number(pOrig.quantity) || 13500;
+                carga_a_bordo += qCarga;
+                is_laden = true;
+            }
 
-            return { ...tr, type: typeTramo, quantity: qtyTramo, freight_rate: fleteTramo, desc_tons: descTons };
+            // Si el destino es DESCARGAR, este tramo por definición transporta la carga a destino (LADEN)
+            const isDescargaDest = pDest.action === 'DESCARGAR';
+            if (isDescargaDest) {
+                is_laden = true;
+                if (carga_a_bordo <= 0) {
+                    carga_a_bordo = Number(pDest.quantity) || 13500;
+                }
+            }
+
+            const qtyTramo = carga_a_bordo;
+            const typeTramo: 'LADEN' | 'BALLAST' = (is_laden || isDescargaDest || qtyTramo > 0) ? 'LADEN' : 'BALLAST';
+
+            // Resolver auto weather_factor según tipo (LADEN vs BALLAST)
+            let wf = tr.weather_factor !== undefined && tr.weather_factor !== null ? tr.weather_factor : 3.0;
+            const isSamePort = tr.origin_port_id && tr.destination_port_id && tr.origin_port_id.trim().toUpperCase() === tr.destination_port_id.trim().toUpperCase();
+            if (isSamePort) {
+                wf = 0.0;
+            } else if (routes && routes.length > 0) {
+                const auto = RouteDistancesService.resolveAutoRouteInfo(tr.origin_port_id, tr.destination_port_id, typeTramo, routes);
+                if (auto.weather_factor !== undefined && auto.weather_factor !== null && Number(auto.weather_factor) > 0) {
+                    wf = auto.weather_factor;
+                }
+            }
+
+            const fleteTramo = isDescargaDest ? (Number(pDest.freight_rate) || 0) : 0;
+            const descTons = isDescargaDest ? (Number(pDest.quantity) || (qtyTramo > 0 ? qtyTramo : 13500)) : 0;
+
+            if (isDescargaDest) {
+                carga_a_bordo -= (Number(pDest.quantity) || carga_a_bordo);
+                if (carga_a_bordo <= 0) {
+                    carga_a_bordo = 0;
+                    is_laden = false;
+                }
+            }
+
+            return {
+                ...tr,
+                type: typeTramo,
+                quantity: qtyTramo,
+                freight_rate: fleteTramo,
+                desc_tons: descTons,
+                weather_factor: wf
+            };
         });
     };
 
@@ -1252,7 +1291,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
                 {/* GRILLA TABULAR TRAMOS Y PUERTOS (ÚNICA FUENTE DE VERDAD) */}
                 <SpreadsheetTramosGrid
-                    tramos={tramos}
+                    tramos={calculatedTramosList}
                     puertosConfig={puertosConfig}
                     ports={ports || []}
                     vessels={vessels || []}

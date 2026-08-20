@@ -222,7 +222,7 @@ export class MulticotizadorCalculationEngine {
 
             calculatedTramos.push({
                 index: idx + 1,
-                type: tr.type || 'BALLAST',
+                type: (tr.type as 'LADEN' | 'BALLAST') || (pCfg.action === 'DESCARGAR' || qVal > 0 ? 'LADEN' : 'BALLAST'),
                 origin_port_id: tr.origin_port_id || '',
                 destination_port_id: destPortId,
                 distance: distVal,
