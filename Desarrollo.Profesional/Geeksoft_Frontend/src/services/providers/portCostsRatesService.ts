@@ -93,8 +93,8 @@ export class PortCostsRatesService {
     /**
      * Resuelve ritmos nominales para un puerto según la acción.
      */
-    public static resolveAutoPortRate(portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR', portsList: any[]): number | string {
-        if (!portId || action === 'NONE') return '';
+    public static resolveAutoPortRate(portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR' | 'BUNKERING', portsList: any[]): number | string {
+        if (!portId || action === 'NONE' || action === 'BUNKERING') return '';
         const p = portsList.find(x => x.port_id === portId);
         if (!p) return '';
         const val = action === 'CARGAR' ? (p.max_load_rate || p.act_load) : (p.max_disch_rate || p.act_disch);
@@ -107,7 +107,7 @@ export class PortCostsRatesService {
     public static async lookupPortCost(
         vesselId: string,
         portId: string,
-        action: 'NONE' | 'CARGAR' | 'DESCARGAR',
+        action: 'NONE' | 'CARGAR' | 'DESCARGAR' | 'BUNKERING',
         portCostMode: 'static' | 'matrix'
     ): Promise<PortLookupResult> {
         if (!vesselId || !portId || action === 'NONE') {

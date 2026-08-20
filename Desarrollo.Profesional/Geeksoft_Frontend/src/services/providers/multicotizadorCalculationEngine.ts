@@ -27,7 +27,7 @@ export interface LegCalculationDetail {
     port_days: number;
     time_to_count_h: number;
     positioning_h: number;
-    action: 'NONE' | 'CARGAR' | 'DESCARGAR';
+    action: 'NONE' | 'CARGAR' | 'DESCARGAR' | 'BUNKERING';
     op_rate: number;
     rate_unit: string;
     quantity: number;
@@ -138,16 +138,16 @@ export class MulticotizadorCalculationEngine {
                 liveRefacturacionMuellaje += muellVal0;
             }
 
-            const qVal0 = Number(pCfg0.quantity || 0);
+            const qVal0 = pCfg0.action === 'BUNKERING' ? 0 : Number(pCfg0.quantity || 0);
             const rDefault0 = pCfg0.action === 'DESCARGAR' ? 450 : 500;
             const rVal0 = Math.max(1, Number(pCfg0.op_rate || rDefault0));
             const rUnit0 = pCfg0.rate_unit || 'TH';
             const rateFactor0 = rUnit0 === 'TD' ? 1 : 24;
-            const tcVal0 = Number(pCfg0.time_to_count !== undefined && pCfg0.time_to_count !== '' ? pCfg0.time_to_count : (pCfg0.overhead !== undefined && pCfg0.overhead !== '' ? pCfg0.overhead : 6.0));
-            const posVal0 = Number(pCfg0.positioning !== undefined && pCfg0.positioning !== '' ? pCfg0.positioning : (pCfg0.action === 'CARGAR' ? 1.0 : 0.0));
+            const tcVal0 = Number(pCfg0.time_to_count !== undefined && pCfg0.time_to_count !== '' ? pCfg0.time_to_count : (pCfg0.overhead !== undefined && pCfg0.overhead !== '' ? pCfg0.overhead : (pCfg0.action === 'BUNKERING' ? 0.0 : 6.0)));
+            const posVal0 = Number(pCfg0.positioning !== undefined && pCfg0.positioning !== '' ? pCfg0.positioning : (pCfg0.action === 'BUNKERING' ? 24.0 : (pCfg0.action === 'CARGAR' ? 1.0 : 0.0)));
 
             const idleDays0 = (tcVal0 + posVal0) / 24;
-            const opDays0 = (qVal0 / rVal0) / rateFactor0;
+            const opDays0 = pCfg0.action === 'BUNKERING' ? 0 : ((qVal0 / rVal0) / rateFactor0);
             portDays0 = idleDays0 + opDays0;
             totalPortDays += portDays0;
 
@@ -177,16 +177,16 @@ export class MulticotizadorCalculationEngine {
             const calcSeaDays = distVal > 0 ? (distVal * (1 + (wfPct / 100))) / (speedVal * 24) : 0;
 
             const pCfg = puertosConfig[idx + 1] || {};
-            const qVal = Number(pCfg.quantity || 0);
+            const qVal = pCfg.action === 'BUNKERING' ? 0 : Number(pCfg.quantity || 0);
             const rDefault = pCfg.action === 'DESCARGAR' ? 450 : 500;
             const rVal = Math.max(1, Number(pCfg.op_rate || rDefault));
             const rUnit = pCfg.rate_unit || 'TH';
             const rateFactor = rUnit === 'TD' ? 1 : 24;
-            const tcVal = Number(pCfg.time_to_count !== undefined && pCfg.time_to_count !== '' ? pCfg.time_to_count : (pCfg.overhead !== undefined && pCfg.overhead !== '' ? pCfg.overhead : 6.0));
-            const posVal = Number(pCfg.positioning !== undefined && pCfg.positioning !== '' ? pCfg.positioning : (pCfg.action === 'CARGAR' ? 1.0 : 0.0));
+            const tcVal = Number(pCfg.time_to_count !== undefined && pCfg.time_to_count !== '' ? pCfg.time_to_count : (pCfg.overhead !== undefined && pCfg.overhead !== '' ? pCfg.overhead : (pCfg.action === 'BUNKERING' ? 0.0 : 6.0)));
+            const posVal = Number(pCfg.positioning !== undefined && pCfg.positioning !== '' ? pCfg.positioning : (pCfg.action === 'BUNKERING' ? 24.0 : (pCfg.action === 'CARGAR' ? 1.0 : 0.0)));
 
             const idleDays = pCfg.action !== 'NONE' ? ((tcVal + posVal) / 24) : 0;
-            const opDays = pCfg.action !== 'NONE' ? ((qVal / rVal) / rateFactor) : 0;
+            const opDays = (pCfg.action !== 'NONE' && pCfg.action !== 'BUNKERING') ? ((qVal / rVal) / rateFactor) : 0;
             const calcPortDays = idleDays + opDays;
 
             const opIfoRate = pCfg.action === 'DESCARGAR' ? ifoDischRatio : pCfg.action === 'CARGAR' ? ifoLoadRatio : ifoIdleRatio;
@@ -205,7 +205,7 @@ export class MulticotizadorCalculationEngine {
             const destPortId = tr.destination_port_id || '';
             const isMejillonesDischarge = (destPortId || '').trim().toUpperCase() === 'MEJILLONES' && pCfg.action === 'DESCARGAR';
             const mVal = Number(pCfg.manual_port_cost) || 0;
-            const muellVal = Number(pCfg.muellaje_cost) || (isMejillonesDischarge ? 33333 : 0);
+            const muellVal = (pCfg.action === 'BUNKERING') ? 0 : (Number(pCfg.muellaje_cost) || (isMejillonesDischarge ? 33333 : 0));
             const legPortCost = Math.max(mVal, muellVal);
 
             totalDist += distVal;
@@ -245,18 +245,30 @@ export class MulticotizadorCalculationEngine {
             });
 
             if (pCfg.action !== 'NONE') {
-                const isChile = this.CHILEAN_PORTS.includes(destPortId.toUpperCase());
-                const lmCost = (isChile && legPortCost >= 2500) ? 2500 : 0;
-                const baseAgencyCost = Math.max(0, legPortCost - lmCost - muellVal);
-                portCostItems.push({
-                    port_id: destPortId,
-                    label: pCfg.action === 'CARGAR' ? `POL (${destPortId})` : `POD (${destPortId})`,
-                    action: pCfg.action,
-                    base_agency_cost: baseAgencyCost,
-                    loading_master_cost: lmCost,
-                    muellaje_cost: muellVal,
-                    total_cost: legPortCost
-                });
+                if (pCfg.action === 'BUNKERING') {
+                    portCostItems.push({
+                        port_id: destPortId,
+                        label: `Bunkering Costs (${destPortId})`,
+                        action: 'BUNKERING',
+                        base_agency_cost: legPortCost,
+                        loading_master_cost: 0,
+                        muellaje_cost: 0,
+                        total_cost: legPortCost
+                    });
+                } else {
+                    const isChile = this.CHILEAN_PORTS.includes(destPortId.toUpperCase());
+                    const lmCost = (isChile && legPortCost >= 2500) ? 2500 : 0;
+                    const baseAgencyCost = Math.max(0, legPortCost - lmCost - muellVal);
+                    portCostItems.push({
+                        port_id: destPortId,
+                        label: pCfg.action === 'CARGAR' ? `POL (${destPortId})` : `POD (${destPortId})`,
+                        action: pCfg.action,
+                        base_agency_cost: baseAgencyCost,
+                        loading_master_cost: lmCost,
+                        muellaje_cost: muellVal,
+                        total_cost: legPortCost
+                    });
+                }
             }
         });
 

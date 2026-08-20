@@ -24,6 +24,7 @@
 7. **Auditoría Pericial de Convergencia: 23 Rutas de `routes_quotes`**
 8. **Checklist de Pre-Vuelo Obligatorio Antes de Cualquier Despliegue**
 9. **Mandamiento Inviolable de Eficiencia de Tokens y Comunicación**
+10. **Especificación Operativa: Nuevo Concepto 'BUNKERING' en OP. Dest (0 Millas, 24h y Costo Estático)**
 
 ---
 
@@ -246,3 +247,26 @@ El humano conoce el negocio marítimo de memoria y responde en 5 segundos lo que
 a un agente le tomaría 15 herramientas y 20,000 tokens deducir a ciegas.
 ========================================================================================
 ```
+
+---
+
+## 10. Especificación Operativa: Nuevo Concepto 'BUNKERING' en OP. Dest (0 Millas, 24h y Costo Estático)
+
+### 10.1 Definición y Propósito
+Se incorpora la operación **`BUNKERING`** como una opción oficial dentro de los selectores de operación de destino (`OP. Dest`) en la grilla del Multicotizador.
+
+### 10.2 Reglas de Negocio y Validación de Tramos
+1. **Regla de Desplazamiento de Cero Millas (0.0 NM)**:
+   - **Primer Tramo (Fila 1 / Tramo 1)**: Si `OP. Dest = BUNKERING`, se valida y permite que el **Puerto Destino sea idéntico al Puerto Origen** (ej. `CALLAO` $\rightarrow$ `CALLAO`), fijando distancia navegada en **0.0 NM** y días de mar en **0.0 d**.
+   - **Tramos Posteriores (Fila 2 en adelante)**: Si `OP. Dest = BUNKERING`, se permite que el Puerto Destino sea igual al Puerto Destino inmediatamente anterior (permanencia en la misma bahía/puerto para maniobra de abastecimiento).
+2. **Sugerencia de Posicionamiento / Horas de Estadía**:
+   - Al seleccionar la operación `BUNKERING`, el sistema sugiere automáticamente por defecto un tiempo de estadía de **24.0 horas** (1.0 día de puerto).
+3. **Mapeo de Insumos desde `port_cost_static`**:
+   - El motor de cálculo (`multicotizadorCalculationEngine`) consulta en la tabla `port_cost_static` las filas con `operation_type = 'BUNKERING'` asociadas al puerto y nave seleccionados.
+   - Suma los tres componentes desglosados:
+     $$\text{Costo Puerto Bunkering} = \text{Costo}_{\text{MAIN (Agencia)}} + \text{Costo}_{\text{bunkering\_survey}} + \text{Costo}_{\text{other (Otros)}}$$
+   - *Ejemplo verificado en BD*: En `CALLAO` para la nave `MOQUEGUA`, el costo estático es $\$2,000 + \$3,000 + \$4,000 = \mathbf{\$9,000.00\text{ USD}}$.
+4. **Integración con Totales y Matriz Financiera**:
+   - El costo portuario del tramo de bunkering se suma a los costos portuarios totales (`total_port_costs` / Card 2 de Port Costs).
+   - Las horas de estadía (24h) computan el consumo de combustible de puerto (IFO/MDO Port) de acuerdo al consumo diario de puerto del buque.
+

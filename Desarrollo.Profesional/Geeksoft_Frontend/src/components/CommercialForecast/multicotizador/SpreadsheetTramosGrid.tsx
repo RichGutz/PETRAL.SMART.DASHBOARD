@@ -190,7 +190,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                     value={puertosConfig[0]?.positioning ?? ''}
                                     onChange={(e) => updatePuertoConfigField(0, 'positioning', e.target.value)}
                                     className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                    placeholder={puertosConfig[0]?.action === 'CARGAR' ? '1.0' : '0.0'}
+                                    placeholder={puertosConfig[0]?.action === 'BUNKERING' ? '24.0' : (puertosConfig[0]?.action === 'CARGAR' ? '1.0' : '0.0')}
                                 />
                             ) : (
                                 <span className="text-slate-350 select-none pr-2">—</span>
@@ -207,12 +207,13 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                 <option value="NONE">NONE</option>
                                 <option value="CARGAR">CARGAR</option>
                                 <option value="DESCARGAR">DESCARGAR</option>
+                                <option value="BUNKERING">BUNKERING</option>
                             </select>
                         </td>
 
                         {/* Fila 0 Ritmo Op */}
                         <td className="border-r border-slate-200 p-0">
-                            {puertosConfig[0]?.action !== 'NONE' ? (
+                            {puertosConfig[0]?.action !== 'NONE' && puertosConfig[0]?.action !== 'BUNKERING' ? (
                                 <div className="flex items-center h-full w-full">
                                     <input
                                         type="number"
@@ -434,7 +435,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                             value={puertosConfig[idx + 1]?.positioning ?? ''}
                                             onChange={(e) => updatePuertoConfigField(idx + 1, 'positioning', e.target.value)}
                                             className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-slate-700 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                            placeholder={puertosConfig[idx + 1]?.action === 'CARGAR' ? '1.0' : '0.0'}
+                                            placeholder={puertosConfig[idx + 1]?.action === 'BUNKERING' ? '24.0' : (puertosConfig[idx + 1]?.action === 'CARGAR' ? '1.0' : '0.0')}
                                         />
                                     ) : (
                                         <span className="text-slate-350 select-none pr-2">—</span>
@@ -451,12 +452,13 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                         <option value="NONE">NONE</option>
                                         <option value="CARGAR">CARGAR</option>
                                         <option value="DESCARGAR">DESCARGAR</option>
+                                        <option value="BUNKERING">BUNKERING</option>
                                     </select>
                                 </td>
 
                                 {/* Ritmo Op Destino */}
                                 <td className="border-r border-slate-200 p-0">
-                                    {puertosConfig[idx + 1]?.action !== 'NONE' ? (
+                                    {puertosConfig[idx + 1]?.action !== 'NONE' && puertosConfig[idx + 1]?.action !== 'BUNKERING' ? (
                                         <div className="flex items-center h-full w-full">
                                             <input
                                                 type="number"
@@ -483,7 +485,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
 
                                 {/* Cantidad Descarga/Carga */}
                                 <td className="border-r border-slate-200 p-0 text-right">
-                                    {puertosConfig[idx + 1]?.action !== 'NONE' ? (
+                                    {puertosConfig[idx + 1]?.action !== 'NONE' && puertosConfig[idx + 1]?.action !== 'BUNKERING' ? (
                                         <input
                                             type="text"
                                             value={puertosConfig[idx + 1]?.quantity !== undefined && puertosConfig[idx + 1]?.quantity !== '' ? fmtThousandSep(puertosConfig[idx + 1].quantity) : ''}

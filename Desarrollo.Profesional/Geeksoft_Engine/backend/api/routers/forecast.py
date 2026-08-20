@@ -605,7 +605,13 @@ def lookup_port_cost(
         ag_res = sb.table("port_cost_static").select("*").execute()
         agency_matrix_data = ag_res.data
         
-        o_type = 'CARGA' if operation.upper() == 'CARGAR' else 'DESCARGA'
+        op_upper = operation.upper()
+        if op_upper == 'BUNKERING':
+            o_type = 'BUNKERING'
+        elif op_upper in ['CARGA', 'CARGAR']:
+            o_type = 'CARGA'
+        else:
+            o_type = 'DESCARGA'
         cost_res = calculate_detailed_port_costs(
             client_id, port_id, o_type, vessel_id, port_costs_data, agency_matrix_data, port_cost_mode,
             vparams={}, quantity=13500.0, contract={}, ports_db={}

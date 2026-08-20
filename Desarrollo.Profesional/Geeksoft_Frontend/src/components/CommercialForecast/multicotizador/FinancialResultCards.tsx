@@ -201,7 +201,9 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                                         <React.Fragment key={idx}>
                                                             {baseAgencyCost >= 1 && (
                                                                 <tr className={`border-b border-slate-200/80 ${theme.bg} ${theme.border}`}>
-                                                                    <td className={`py-1 pl-2 font-normal ${theme.text}`}>Port Costs {item.label}</td>
+                                                                    <td className={`py-1 pl-2 font-normal ${theme.text}`}>
+                                                                        {item.action === 'BUNKERING' || item.role === 'BUNKERING' ? item.label : `Port Costs ${item.label}`}
+                                                                    </td>
                                                                     <td className={`text-right py-1 pr-1.5 font-mono ${theme.text}`}>
                                                                         {fmtCur(baseAgencyCost)}
                                                                     </td>
@@ -600,7 +602,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                                     {baseAgencyCost >= 1 && (
                                                         <tr className={`border-b border-emerald-100/60 ${theme.bg}`}>
                                                             <td className={`py-0.5 pl-3 font-sans text-[10.5px] font-normal ${theme.text}`}>
-                                                                (-) Port Costs {item.label}
+                                                                (-) {item.action === 'BUNKERING' || item.role === 'BUNKERING' ? item.label : `Port Costs ${item.label}`}
                                                             </td>
                                                             <td className={`text-right py-0.5 pr-1 font-mono text-[10.5px] font-normal ${theme.text}`}>
                                                                 -{fmtCur(baseAgencyCost)}

@@ -33,7 +33,7 @@ interface TramoState {
 }
 
 interface PuertoConfig {
-    action: 'NONE' | 'CARGAR' | 'DESCARGAR';
+    action: 'NONE' | 'CARGAR' | 'DESCARGAR' | 'BUNKERING';
     quantity: string | number;
     freight_rate: string | number;
     op_rate: string | number;
@@ -297,7 +297,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         setVesselParams((prev: any) => ({ ...prev, [field]: val }));
     };
 
-    const autoFillPortCost = async (idx: number, portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR', vId: string) => {
+    const autoFillPortCost = async (idx: number, portId: string, action: 'NONE' | 'CARGAR' | 'DESCARGAR' | 'BUNKERING', vId: string) => {
         if (!vId || !portId || action === 'NONE') return;
         const res = await PortCostsRatesService.lookupPortCost(vId, portId, action, 'static');
         if (res.total_cost !== '') {
@@ -317,12 +317,19 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             const list = [...prev];
             list[index] = { ...list[index], [field]: value };
             if (field === 'origin_port_id' || field === 'destination_port_id' || field === 'type') {
-                const auto = RouteDistancesService.resolveAutoRouteInfo(list[index].origin_port_id, list[index].destination_port_id, list[index].type, routes);
-                if (Number(auto.route_distance) > 0) {
-                    list[index].route_distance = auto.route_distance;
-                }
-                if (auto.weather_factor) {
-                    list[index].weather_factor = auto.weather_factor;
+                const orig = (list[index].origin_port_id || '').trim().toUpperCase();
+                const dest = (list[index].destination_port_id || '').trim().toUpperCase();
+                if (orig && dest && orig === dest) {
+                    list[index].route_distance = 0.0;
+                    list[index].weather_factor = 0.0;
+                } else {
+                    const auto = RouteDistancesService.resolveAutoRouteInfo(list[index].origin_port_id, list[index].destination_port_id, list[index].type, routes);
+                    if (Number(auto.route_distance) > 0) {
+                        list[index].route_distance = auto.route_distance;
+                    }
+                    if (auto.weather_factor) {
+                        list[index].weather_factor = auto.weather_factor;
+                    }
                 }
                 if (!list[index].speed || Number(list[index].speed) <= 0) {
                     const currentVessel = (vessels || []).find(v => v.vessel_id === selectedVessel);
@@ -331,12 +338,19 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             }
             if (field === 'destination_port_id' && index < list.length - 1) {
                 list[index + 1].origin_port_id = value;
-                const autoNext = RouteDistancesService.resolveAutoRouteInfo(list[index + 1].origin_port_id, list[index + 1].destination_port_id, list[index + 1].type, routes);
-                if (Number(autoNext.route_distance) > 0) {
-                    list[index + 1].route_distance = autoNext.route_distance;
-                }
-                if (autoNext.weather_factor) {
-                    list[index + 1].weather_factor = autoNext.weather_factor;
+                const nextOrig = (list[index + 1].origin_port_id || '').trim().toUpperCase();
+                const nextDest = (list[index + 1].destination_port_id || '').trim().toUpperCase();
+                if (nextOrig && nextDest && nextOrig === nextDest) {
+                    list[index + 1].route_distance = 0.0;
+                    list[index + 1].weather_factor = 0.0;
+                } else {
+                    const autoNext = RouteDistancesService.resolveAutoRouteInfo(list[index + 1].origin_port_id, list[index + 1].destination_port_id, list[index + 1].type, routes);
+                    if (Number(autoNext.route_distance) > 0) {
+                        list[index + 1].route_distance = autoNext.route_distance;
+                    }
+                    if (autoNext.weather_factor) {
+                        list[index + 1].weather_factor = autoNext.weather_factor;
+                    }
                 }
                 if (!list[index + 1].speed || Number(list[index + 1].speed) <= 0) {
                     const currentVessel = (vessels || []).find(v => v.vessel_id === selectedVessel);
@@ -370,11 +384,17 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     list[idx].op_rate = '';
                     list[idx].time_to_count = '';
                     list[idx].positioning = '';
+                } else if (val === 'BUNKERING') {
+                    list[idx].quantity = '';
+                    list[idx].freight_rate = '';
+                    list[idx].op_rate = '';
+                    list[idx].time_to_count = '0.0';
+                    list[idx].positioning = '24.0';
                 } else if (val === 'CARGAR' || val === 'DESCARGAR') {
-                    if (list[idx].time_to_count === 0 || list[idx].time_to_count === '0') {
+                    if (list[idx].time_to_count === 0 || list[idx].time_to_count === '0' || list[idx].time_to_count === '0.0') {
                         list[idx].time_to_count = '';
                     }
-                    if (list[idx].positioning === 0 || list[idx].positioning === '0') {
+                    if (list[idx].positioning === 0 || list[idx].positioning === '0' || list[idx].positioning === '24.0' || list[idx].positioning === '24') {
                         list[idx].positioning = '';
                     }
                     const portId = idx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[idx - 1]?.destination_port_id || '');
@@ -463,14 +483,15 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 const portId = pIdx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[pIdx - 1]?.destination_port_id || '');
                 if (portId) {
                     const isMejillonesDischarge = portId.trim().toUpperCase() === 'MEJILLONES' && p.action === 'DESCARGAR';
-                    const muellajeVal = Number(p.muellaje_cost) || (isMejillonesDischarge ? 33333 : 0);
+                    const muellajeVal = (p.action === 'BUNKERING') ? 0 : (Number(p.muellaje_cost) || (isMejillonesDischarge ? 33333 : 0));
                     const costVal = Number(p.manual_port_cost) || (isMejillonesDischarge ? 33333 : 0);
                     items.push({
-                        label: `${pIdx === 0 ? 'POL' : 'POD'} (${portId})`,
+                        label: p.action === 'BUNKERING' ? `Bunkering Costs (${portId})` : `${pIdx === 0 ? 'POL' : 'POD'} (${portId})`,
                         cost: costVal,
                         muellaje_cost: muellajeVal,
                         port_id: portId,
-                        role: pIdx === 0 ? 'POL' : 'POD',
+                        role: p.action === 'BUNKERING' ? 'BUNKERING' : (pIdx === 0 ? 'POL' : 'POD'),
+                        action: p.action,
                         pIndex: pIdx
                     });
                 }
