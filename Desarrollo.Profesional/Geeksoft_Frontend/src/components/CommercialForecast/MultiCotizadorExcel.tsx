@@ -273,7 +273,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     }, [clientType, rawClients]);
 
     // Manejador de Cambio de Buque
-    const handleVesselChange = (vesselId: string, isAutoFillEnabled: boolean = false) => {
+    const handleVesselChange = (vesselId: string) => {
         setSelectedVessel(vesselId);
         if (!vesselId) return;
         const v = (vessels || []).find(x => x.vessel_id === vesselId);
@@ -282,15 +282,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             if (resolved) setVesselParams(resolved);
         }
 
-        // AutoFill de costos portuarios SOLO si se está creando una nueva ruta/cotización desde cero
-        if (isAutoFillEnabled) {
-            puertosConfig.forEach((p, idx) => {
-                const portId = idx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[idx - 1]?.destination_port_id || '');
-                if (portId && p.action !== 'NONE') {
-                    autoFillPortCost(idx, portId, p.action, vesselId);
-                }
-            });
-        }
+        // AutoFill reactivo de costos portuarios para todos los puertos configurados
+        puertosConfig.forEach((p, idx) => {
+            const portId = idx === 0 ? (tramos[0]?.origin_port_id || '') : (tramos[idx - 1]?.destination_port_id || '');
+            if (portId && p.action !== 'NONE') {
+                autoFillPortCost(idx, portId, p.action, vesselId);
+            }
+        });
     };
 
     const handleVesselParamChange = (field: string, val: any) => {
