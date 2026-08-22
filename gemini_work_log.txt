@@ -149,4 +149,6 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-18 19:21:28] [SERIE 50 / BENOIT BLANC] Limpieza de sufijo (V2) en routes_quotes. Las 8 rutas modernas ahora tienen naming limpio sin .ILO.ILO. y conviven con las legacy para revision.
 [2026-08-22 17:57:54] [DEMURRAGE DUAL & MAESTRO GASTOS PORTUARIOS] Documentado e implementado el Paso 1 (Demoras Mensuales en 3 filas x 4 meses) y redactado el Documento Maestro 22 y Vuelta 28 de Benoit Blanc en Obsidian.
 [2026-08-22 18:14:00] [DEMURRAGE MULTICOTIZADOR & MATRIZ TRIPARTITA] Implementacion completa del flujo: Servicio PortDemurrageRatesService, columna DEM (D) con selector minimalista [P | M] en SpreadsheetTramosGrid, motor de calculo unificado con consumo 100% IDLE, Card 1 Bunker Expenses con desglose tripartito (1. Mar, 2. Pto, 3. Dem, Total) y Card 4 Casilla Verde con Ingreso Demurrage y Costo Demurrage. Build Vite OK (9.87s).
+[2026-08-22 18:21:30] [DEPLOY VPS PRODUCCION (91.108.125.253 | https://forecast.geeksoft.tech)] Despliegue exitoso con SSH/SFTP del frontend bundle con Demurrage Dual, Maestro de Demoras Mensuales 3x4 y Casilla Verde P&L. Servicio backend FastAPI reiniciado y certificado SSL activo.
+
 
