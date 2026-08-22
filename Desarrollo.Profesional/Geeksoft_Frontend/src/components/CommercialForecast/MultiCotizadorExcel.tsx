@@ -117,6 +117,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         'CONCON TRADER': 0,
         'CONCON': 0
     });
+    const [demurrageMode, setDemurrageMode] = useState<'P' | 'M'>('P');
+    const [staticCostsData, setStaticCostsData] = useState<any[]>([]);
     const [refacturarMuellajeMap, setRefacturarMuellajeMap] = useState<Record<number, boolean>>({});
 
     // 7. Resultados & Persistencia Modales
@@ -160,16 +162,18 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     useEffect(() => {
         const init = async () => {
             try {
-                const [vData, pData, cData, spotData, quoteList, latestBunker] = await Promise.all([
+                const [vData, pData, cData, spotData, quoteList, latestBunker, staticCosts] = await Promise.all([
                     ForecastService.getVessels(),       // tabla: vessels
                     ForecastService.getPorts(),         // tabla: ports
                     ForecastService.getClients(),       // tabla: clients
                     ForecastService.getSpotVoyages(),   // tabla: routes_quotes (unificada)
                     MulticotizadorRetrieverService.searchSavedQuotes('', true, true, ''),
                     // SERIE 36: getContractsMaster() eliminado — contracts dado de baja
-                    BunkerProviderService.fetchLatestBunkerPrices() // tabla: bunker_prices
+                    BunkerProviderService.fetchLatestBunkerPrices(), // tabla: bunker_prices
+                    ForecastService.getPortCostsStatic() // tabla: port_cost_static
                 ]);
                 setVessels(vData || []);
+                setStaticCostsData(staticCosts || []);
                 
                 // Ordenar puertos geográficamente de Norte (arriba) a Sur (abajo) según su latitud
                 const sortedPortsData = [...(pData || [])].sort((a: any, b: any) => {
@@ -544,17 +548,15 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         return MulticotizadorCalculationEngine.calculateVoyage({
             tramos: calculatedTramosList,
             puertosConfig,
-            selectedVessel,
-            vessels: vessels || [],
             vesselParams,
             bunkerPriceIfo,
             bunkerPriceMdo,
             addressCommPct,
             brokerCommPct,
-            refacturarMuellajeMap,
-            ports: ports || []
+            demurrageRate: Number(vesselParams?.demurrage_rate || demurrageRate || 20000),
+            refacturarMuellajeMap
         });
-    }, [calculatedTramosList, puertosConfig, selectedVessel, vessels, vesselParams, bunkerPriceIfo, bunkerPriceMdo, addressCommPct, brokerCommPct, refacturarMuellajeMap, ports]);
+    }, [calculatedTramosList, puertosConfig, vesselParams, bunkerPriceIfo, bunkerPriceMdo, addressCommPct, brokerCommPct, demurrageRate, refacturarMuellajeMap]);
 
     const handleCalculate = async () => {
         try {
@@ -1301,6 +1303,10 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     refacturarMuellajeMap={refacturarMuellajeMap}
                     calculatedTramosList={calculatedTramosList}
                     liveCalc={liveCalculation}
+                    demurrageMode={demurrageMode}
+                    staticCostsData={staticCostsData}
+                    validFrom={validFrom}
+                    onDemurrageModeChange={setDemurrageMode}
                     handleAddTramo={handleAddTramo}
                     handleRemoveLastTramo={handleRemoveLastTramo}
                     updateTramoField={updateTramoField}

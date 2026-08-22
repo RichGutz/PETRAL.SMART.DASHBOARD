@@ -299,4 +299,14 @@ Se reestructuró `getCalculatedTramos()` en `MultiCotizadorExcel.tsx` y el motor
 3. **Inyección Directa a la Grilla**:
    - `SpreadsheetTramosGrid` consume directamente `calculatedTramosList`, garantizando sincronía inmediata a 60 FPS sin latencia.
 
+---
 
+## 12. Especificación Maestra de Demurrage (Estadías en Días): Consumo Dual, Búnker Idle y Desglose Financiero
+
+* Documento Maestro Independiente: [`22_Especificacion_Demurrage_Multicotizador_y_Matriz.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/22_Especificacion_Demurrage_Multicotizador_y_Matriz.md)
+* Resumen de Implementación:
+  1. **Maestro de Gastos Portuarios:** Cuadrícula de 3 filas × 4 meses (12 meses de demoras) debajo de Bunkering.
+  2. **Grilla del Multicotizador:** Columna `DEMURRAGE (DÍAS)` a la izquierda de `TIME TO COUNT (H)`, habilitada exclusivamente en `CARGAR` / `DESCARGAR` con sugerido en gris y sobreescritura libre.
+  3. **Búnker Idle en Demurrage:** Consumo en fondeo 100% IDLE valorizado a precios IFO/MDO.
+  4. **Card 1 (Bunker Expenses):** Matriz de 3 columnas (`1. Mar`, `2. Pto`, `3. Demurrage`, `TOTAL`).
+  5. **Card 4 (Casilla Verde P&L):** Desglose explícito de `(+) Ingreso por Demurrage` y `(-) Costo Hire Demurrage`.

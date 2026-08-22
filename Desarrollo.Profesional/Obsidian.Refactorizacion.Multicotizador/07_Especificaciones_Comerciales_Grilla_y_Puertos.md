@@ -822,6 +822,17 @@ A partir de la auditoría pericial de Benoit Blanc (19.08.2026), se detectó que
 | **27.3** | **`multicotizadorStorageService.ts` (`saveQuote`)** | No persistía `valid_from` y `valid_to` en el nivel raíz del payload ni en `legs_data` de forma homogénea para cotizaciones no contractuales. | Se graban `valid_from` y `valid_to` tanto en el objeto raíz como en `legs_data` y en `contract_metadata` (para contratos COA). | **RESUELTO:** Persistencia íntegra y simétrica de la vigencia comercial en todas las tablas de Supabase. | ✅ SOLUCIONADO |
 | **27.4** | **`QuoteExecutiveCardSummary.tsx`** | Leía `route.valid_from` directamente mostrando en ocasiones `'Sin Fecha'`. | Conectado a `unpacked.valid_from` y `unpacked.valid_to` para reflejar la validez exacta en los resúmenes de los maestros. | **RESUELTO:** Trazabilidad y visibilidad de vigencia perfecta en todos los visores. | ✅ SOLUCIONADO |
 
+### 🕵️‍♂️ 5.28. Vigésima Octava Vuelta (Serie 52: Caso de Demurrage Dual, Maestro de Gastos Portuarios Mensual y Búnker Idle Tripartito)
+
+A partir de la auditoría pericial de Benoit Blanc (22.08.2026), se diseñó e implementó la arquitectura integral de Demurrage (Estadías en Días) con consumo dual (Promedio Anual para el Multicotizador vs. Mes Calendario Específico para la Matriz Financiera), búnker idle tripartito y desglose financiero en el Card Verde:
+
+| # | Objeto / Componente Auditado | Estado Inicial (Requerimiento Identificado) | Solución / Arquitectura Pericial Aplicada | Dictamen Pericial & Estado | Estado |
+| :-: | :--- | :--- | :--- | :--- | :--- | :-: |
+| **28.1** | **`PortCostsMaster_V2.tsx` (Maestro de Gastos Portuarios)** | No existía configuración de tiempos de estadías/demoras por mes para cada par `(Puerto, Buque)`. | Se implementó el 4to bloque debajo de `⛽ Bunkering` con cuadrícula de **3 filas × 4 meses** (ENE a DIC), promedio anual en tiempo real y persistencia en `port_cost_static`. | **RESUELTO:** El maestro registra y calcula la media anual de demoras con exactitud de centésima de día. | ✅ SOLUCIONADO |
+| **28.2** | **`SpreadsheetTramosGrid.tsx` & `MultiCotizadorExcel.tsx` (Columna Demurrage)** | La grilla no contemplaba días de demurrage por tramo a la izquierda de `TIME TO COUNT (H)`. | Se insertó la columna `DEMURRAGE (DÍAS)` habilitada exclusivamente en operaciones `CARGAR` / `DESCARGAR`, con sugerido en gris (promedio del maestro) y sobreescritura libre por el usuario. | **RESUELTO:** Ergonomía 100% intuitiva con sugerencia inteligente y control comercial absoluto. | ✅ SOLUCIONADO |
+| **28.3** | **`multicotizadorCalculationEngine.ts` (Búnker Idle en Demurrage)** | No computaba el consumo de combustible derivado de los días de demora en fondeo. | Se integró el régimen **100% IDLE**: `Tons IFO = Días Dem × Ratio Idle IFO` y `Tons MDO = Días Dem × Ratio Idle MDO`, valorizados con los precios del búnker. | **RESUELTO:** El combustible en estadías concilia al centavo con la Fila TOTAL Azul y las Cards Financieras. | ✅ SOLUCIONADO |
+| **28.4** | **`FinancialResultCards.tsx` (Búnker Tripartito & Casilla Verde P&L)** | El Card 1 mostraba solo IFO/MDO globales y la Casilla Verde no desglosaba el ingreso ni el costo de hire por demurrage. | Card 1 reorganizado en matriz 3 columnas (`1. Mar`, `2. Pto`, `3. Demurrage`, `TOTAL`). Casilla Verde enriquecida con `(+) Ingreso por Demurrage` (Línea 2) y `(-) Costo Hire Demurrage` (Línea 5). | **RESUELTO:** Transparencia analítica total en la rentabilidad y TCE del viaje. | ✅ SOLUCIONADO |
+
 ---
 
 ## 📄 Archivos Relacionados

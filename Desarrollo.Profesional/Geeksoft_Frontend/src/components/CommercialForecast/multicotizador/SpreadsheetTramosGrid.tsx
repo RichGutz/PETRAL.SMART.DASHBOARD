@@ -1,5 +1,6 @@
 import React from 'react';
-import { Plus, Minus, Check } from 'lucide-react';
+import { Plus, Minus } from 'lucide-react';
+import { PortDemurrageRatesService } from '../../../services/providers/portDemurrageRatesService';
 
 export interface SpreadsheetTramosGridProps {
     tramos: any[];
@@ -14,6 +15,10 @@ export interface SpreadsheetTramosGridProps {
     refacturarMuellajeMap: Record<number, boolean>;
     calculatedTramosList: any[];
     liveCalc: any;
+    demurrageMode?: 'P' | 'M';
+    staticCostsData?: any[];
+    validFrom?: string;
+    onDemurrageModeChange?: (mode: 'P' | 'M') => void;
     handleAddTramo: () => void;
     handleRemoveLastTramo: () => void;
     updateTramoField: (idx: number, field: string, val: any) => void;
@@ -39,6 +44,10 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     refacturarMuellajeMap = {},
     calculatedTramosList: _calculatedTramosList,
     liveCalc,
+    demurrageMode = 'P',
+    staticCostsData = [],
+    validFrom,
+    onDemurrageModeChange,
     handleAddTramo,
     handleRemoveLastTramo,
     updateTramoField,
@@ -53,20 +62,32 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     const totalDescargas = liveCalc?.totalQuantity ?? puertosConfig.reduce((sum, p) => sum + (p.action === 'DESCARGAR' ? (Number(p.quantity) || 0) : 0), 0);
     const selectedVesselObj = (vessels || []).find(v => v.vessel_id === selectedVessel);
 
+    const getSuggestedDemurrage = (portId: string, action: string) => {
+        if (!portId || (action !== 'CARGAR' && action !== 'DESCARGAR')) return 0;
+        return PortDemurrageRatesService.resolveDemurrageDays(
+            portId,
+            selectedVessel,
+            demurrageMode,
+            validFrom,
+            staticCostsData
+        );
+    };
+
     return (
         <div className="overflow-x-auto border border-slate-300 rounded bg-white shadow-sm flex flex-col mb-1">
             <table className="w-full border-collapse text-[12px] font-mono table-fixed select-text">
                 <colgroup>
                     <col className="w-[50px]" />
                     <col className="w-[85px]" />
-                    <col className="w-[185px]" />
+                    <col className="w-[180px]" />
                     <col className="w-[75px]" />
                     <col className="w-[60px]" />
                     <col className="w-[65px]" />
                     <col className="w-[75px]" />
                     <col className="w-[75px]" />
-                    <col className="w-[95px]" />
-                    <col className="w-[75px]" />
+                    <col className="w-[85px]" /> {/* DEMURRAGE (D) */}
+                    <col className="w-[95px]" /> {/* TIME TO COUNT */}
+                    <col className="w-[75px]" /> {/* POSIC */}
                     <col className="w-[95px]" />
                     <col className="w-[100px]" />
                     <col className="w-[85px]" />
@@ -107,6 +128,32 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         <th className="border-r border-slate-300 text-right pr-1">VEL (KN)</th>
                         <th className="border-r border-slate-300 text-right pr-2">DÍAS MAR</th>
                         <th className="border-r border-slate-300 text-right pr-2">DÍAS PTO</th>
+                        
+                        {/* CABECERA DEMURRAGE CON SELECTOR P / M */}
+                        <th className="border-r border-slate-300 px-1 bg-sky-50/60">
+                            <div className="flex items-center justify-between gap-0.5 px-0.5">
+                                <span className="font-extrabold text-[9.5px] text-sky-950 uppercase tracking-tight">DEM (D)</span>
+                                <div className="flex items-center rounded bg-slate-200/90 p-0.5 border border-slate-300 shadow-2xs">
+                                    <button
+                                        type="button"
+                                        onClick={() => onDemurrageModeChange && onDemurrageModeChange('P')}
+                                        title="P: Promedio Anual (12 Meses)"
+                                        className={`px-1 py-0.2 text-[8px] font-black rounded cursor-pointer transition-colors ${demurrageMode === 'P' ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
+                                    >
+                                        P
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onDemurrageModeChange && onDemurrageModeChange('M')}
+                                        title="M: Mensual según Fecha de Cotización"
+                                        className={`px-1 py-0.2 text-[8px] font-black rounded cursor-pointer transition-colors ${demurrageMode === 'M' ? 'bg-purple-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
+                                    >
+                                        M
+                                    </button>
+                                </div>
+                            </div>
+                        </th>
+
                         <th className="border-r border-slate-300 text-right pr-1">TIME TO COUNT (H)</th>
                         <th className="border-r border-slate-300 text-right pr-1">POSIC (H)</th>
                         <th className="border-r border-slate-300">OP. DEST</th>
@@ -162,6 +209,22 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         {/* Fila 0 Días Puerto */}
                         <td className="border-r border-slate-200 text-right pr-2 text-slate-700 bg-slate-50/50 font-bold select-none">
                             {puertosConfig[0]?.action !== 'NONE' ? fmtDays(liveCalc?.portDays0 ?? 0) : '0.00'}
+                        </td>
+
+                        {/* Fila 0 Demurrage (Días) - Solo si CARGAR */}
+                        <td className="border-r border-slate-200 p-0 text-right bg-sky-50/30">
+                            {puertosConfig[0]?.action === 'CARGAR' ? (
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={puertosConfig[0]?.demurrage_days !== undefined && puertosConfig[0]?.demurrage_days !== '' ? puertosConfig[0]?.demurrage_days : ''}
+                                    onChange={(e) => updatePuertoConfigField(0, 'demurrage_days', e.target.value)}
+                                    className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-sky-950 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    placeholder={getSuggestedDemurrage(tramos[0]?.origin_port_id, 'CARGAR').toFixed(2)}
+                                />
+                            ) : (
+                                <span className="text-slate-350 select-none pr-2">—</span>
+                            )}
                         </td>
 
                         {/* Fila 0 Time to Count */}
@@ -409,6 +472,22 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                     {fmtDays(trCalc.port_days ?? 0)}
                                 </td>
 
+                                {/* Demurrage Destino (Días) - Solo si CARGAR o DESCARGAR */}
+                                <td className="border-r border-slate-200 p-0 text-right bg-sky-50/30">
+                                    {puertosConfig[idx + 1]?.action === 'CARGAR' || puertosConfig[idx + 1]?.action === 'DESCARGAR' ? (
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={puertosConfig[idx + 1]?.demurrage_days !== undefined && puertosConfig[idx + 1]?.demurrage_days !== '' ? puertosConfig[idx + 1]?.demurrage_days : ''}
+                                            onChange={(e) => updatePuertoConfigField(idx + 1, 'demurrage_days', e.target.value)}
+                                            className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-sky-950 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            placeholder={getSuggestedDemurrage(tr.destination_port_id, puertosConfig[idx + 1]?.action).toFixed(2)}
+                                        />
+                                    ) : (
+                                        <span className="text-slate-350 select-none pr-2">—</span>
+                                    )}
+                                </td>
+
                                 {/* Time to count Destino */}
                                 <td className="border-r border-slate-200 p-0 text-right">
                                     {puertosConfig[idx + 1]?.action !== 'NONE' ? (
@@ -591,6 +670,12 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         <td className="border-r border-blue-500 text-right pr-2 font-mono text-white">
                             {fmtDays(liveCalc?.totalPortDays ?? 0)}
                         </td>
+                        
+                        {/* TOTAL DEMURRAGE (DÍAS) */}
+                        <td className="border-r border-blue-500 text-right pr-2 font-mono text-white bg-sky-700/80 font-black">
+                            {liveCalc?.totalDemurrageDays > 0 ? `${fmtDays(liveCalc.totalDemurrageDays)}` : '0.00'}
+                        </td>
+
                         {/* TOTAL TIME TO COUNT (H) */}
                         <td className="border-r border-blue-500 text-right pr-2 font-mono text-white">
                             {(() => {

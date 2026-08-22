@@ -108,6 +108,21 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
     const mdoCost = calc.mdoCost;
     const totalBunkerCost = calc.grandBunkerTotal;
 
+    const seaIfoT = calc.seaIfoTons || 0;
+    const seaMdoT = calc.seaMdoTons || 0;
+    const seaBunkerCost = calc.seaBunkerCost || 0;
+    const portIfoT = calc.portIfoTons || 0;
+    const portMdoT = calc.portMdoTons || 0;
+    const portBunkerCost = calc.portBunkerCost || 0;
+    const demIfoT = calc.demurrageIfoTons || 0;
+    const demMdoT = calc.demurrageMdoTons || 0;
+    const demBunkerCost = calc.demurrageBunkerCost || 0;
+
+    const totalDemurrageDays = calc.totalDemurrageDays || 0;
+    const demurrageRevenue = calc.demurrageRevenue || 0;
+    const demurrageHireCost = calc.demurrageHireCost || 0;
+    const standardHireCost = calc.standardHireCost || 0;
+
     const totalPortCostsVal = calc.totalPortCosts;
     const revenue = calc.totalFreight;
     const refacturacionMuellajeUsd = calc.refacturacionMuellaje;
@@ -116,8 +131,6 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
     const tceReq = calc.tceReq;
     const hireUsd = calc.hireUsd;
 
-    const addressCommUsd = calc.addressCommUsd;
-    const brokerCommUsd = calc.brokerCommUsd;
     const totalCommUsd = calc.totalCommUsd;
 
     const pnlVal = calc.voyageResultPnl;
@@ -136,32 +149,45 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                     {/* 1. Bunker Expenses */}
                     <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
                         <div>
-                            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans">
-                                Bunker Expenses (Combustible)
+                            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans flex items-center justify-between">
+                                <span>Bunker Expenses (Combustible)</span>
+                                {totalDemurrageDays > 0 && (
+                                    <span className="text-[9px] font-mono text-sky-700 bg-sky-50 px-1 py-0.2 rounded border border-sky-200">
+                                        Dem: {fmtDays(totalDemurrageDays)} d
+                                    </span>
+                                )}
                             </h3>
-                            <table className="w-full border-collapse text-xs font-mono">
+                            <table className="w-full border-collapse text-[11px] font-mono">
                                 <thead>
-                                    <tr className="bg-slate-50 border-b border-slate-200 font-sans text-[10.5px] text-slate-500 font-bold">
+                                    <tr className="bg-slate-50 border-b border-slate-200 font-sans text-[9.5px] text-slate-500 font-bold">
                                         <th className="text-left py-0.5 pl-1">Fuel</th>
-                                        <th className="text-right py-0.5 pr-1">Tonnage (T)</th>
-                                        <th className="text-right py-0.5 pr-1">Expense (USD)</th>
+                                        <th className="text-right py-0.5 pr-0.5" title="Travesía en Mar">1. Mar</th>
+                                        <th className="text-right py-0.5 pr-0.5" title="Operaciones Puerto">2. Pto</th>
+                                        <th className="text-right py-0.5 pr-0.5" title="Estadías en Demurrage">3. Dem</th>
+                                        <th className="text-right py-0.5 pr-1 font-black text-slate-700">Total ($)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr className="border-b border-slate-100">
-                                        <td className="py-1 pl-1 text-slate-600 font-sans text-[11px]">IFO (Heavy Fuel)</td>
-                                        <td className="text-right py-1 pr-1">{fmtNum(ifoT)}</td>
-                                        <td className="text-right py-1 pr-1 font-bold">{fmtCur(ifoCost)}</td>
+                                        <td className="py-1 pl-1 text-slate-600 font-sans text-[10.5px]">IFO</td>
+                                        <td className="text-right py-1 pr-0.5 text-slate-500">{fmtNum(seaIfoT)}</td>
+                                        <td className="text-right py-1 pr-0.5 text-slate-500">{fmtNum(portIfoT)}</td>
+                                        <td className="text-right py-1 pr-0.5 text-sky-800 font-semibold">{fmtNum(demIfoT)}</td>
+                                        <td className="text-right py-1 pr-1 font-bold text-slate-800">{fmtCur(ifoCost)}</td>
                                     </tr>
                                     <tr className="border-b border-slate-100">
-                                        <td className="py-1 pl-1 text-slate-600 font-sans text-[11px]">MDO (Diesel)</td>
-                                        <td className="text-right py-1 pr-1">{fmtNum(mdoT)}</td>
-                                        <td className="text-right py-1 pr-1 font-bold">{fmtCur(mdoCost)}</td>
+                                        <td className="py-1 pl-1 text-slate-600 font-sans text-[10.5px]">MDO</td>
+                                        <td className="text-right py-1 pr-0.5 text-slate-500">{fmtNum(seaMdoT)}</td>
+                                        <td className="text-right py-1 pr-0.5 text-slate-500">{fmtNum(portMdoT)}</td>
+                                        <td className="text-right py-1 pr-0.5 text-sky-800 font-semibold">{fmtNum(demMdoT)}</td>
+                                        <td className="text-right py-1 pr-1 font-bold text-slate-800">{fmtCur(mdoCost)}</td>
                                     </tr>
                                     <tr className="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
-                                        <td className="py-1 pl-1 font-sans text-[10.5px] uppercase">Total Fuel</td>
-                                        <td className="text-right py-1 pr-1">{fmtNum(ifoT + mdoT)}</td>
-                                        <td className="text-right py-1 pr-1">{fmtCur(totalBunkerCost)}</td>
+                                        <td className="py-1 pl-1 font-sans text-[10px] uppercase">Total</td>
+                                        <td className="text-right py-1 pr-0.5 font-sans text-[10px] text-slate-600">{fmtCur(seaBunkerCost)}</td>
+                                        <td className="text-right py-1 pr-0.5 font-sans text-[10px] text-slate-600">{fmtCur(portBunkerCost)}</td>
+                                        <td className="text-right py-1 pr-0.5 font-sans text-[10px] text-sky-800">{fmtCur(demBunkerCost)}</td>
+                                        <td className="text-right py-1 pr-1 font-black text-amber-950">{fmtCur(totalBunkerCost)}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -539,6 +565,18 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                 </td>
                             </tr>
 
+                            {/* 1.a Ingreso por Demurrage */}
+                            {totalDemurrageDays > 0 && (
+                                <tr className="border-b border-sky-100/60 bg-sky-50/50">
+                                    <td className="py-0.5 pl-3 text-sky-900 font-sans text-[9.5px] font-semibold">
+                                        (+) Ingreso Demurrage ({fmtCur(vesselParams?.demurrage_rate || 0)}/d × {fmtDays(totalDemurrageDays)} d)
+                                    </td>
+                                    <td className="text-right py-0.5 pr-1 font-mono text-[9.5px] text-sky-900 font-bold">
+                                        +{fmtCur(demurrageRevenue)}
+                                    </td>
+                                </tr>
+                            )}
+
                             {/* 1.b Refacturación de Muellaje (al cliente) */}
                             {refacturacionMuellajeUsd > 0 && (
                                 <tr className="border-b border-emerald-100/40 bg-emerald-50/60">
@@ -551,15 +589,27 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                 </tr>
                             )}
 
-                            {/* 2. Hire */}
+                            {/* 2. Hire Estándar (Mar + Puerto) */}
                             <tr className="border-b border-emerald-100/60">
                                 <td className="py-0.5 pl-3 text-slate-600 font-sans text-[10.5px]">
-                                    (-) Hire ({fmtCur(tceReq)}/d × {fmtDays(totalDays)} d)
+                                    (-) Hire ({fmtCur(tceReq)}/d × {fmtDays(calc.totalSeaDays + calc.totalPortDays)} d)
                                 </td>
                                 <td className="text-right py-0.5 pr-1 text-slate-700 font-medium">
-                                    -{fmtCur(hireUsd)}
+                                    -{fmtCur(standardHireCost)}
                                 </td>
                             </tr>
+
+                            {/* 2.a Costo Hire Demurrage */}
+                            {totalDemurrageDays > 0 && (
+                                <tr className="border-b border-rose-100/60 bg-rose-50/30">
+                                    <td className="py-0.5 pl-3 text-rose-900 font-sans text-[9.5px] font-medium">
+                                        (-) Costo Demurrage ({fmtCur(tceReq)}/d × {fmtDays(totalDemurrageDays)} d)
+                                    </td>
+                                    <td className="text-right py-0.5 pr-1 text-rose-900 font-mono text-[9.5px] font-medium">
+                                        -{fmtCur(demurrageHireCost)}
+                                    </td>
+                                </tr>
+                            )}
 
                             {/* 3. Bunker IFO */}
                             <tr className="border-b border-emerald-100/60">

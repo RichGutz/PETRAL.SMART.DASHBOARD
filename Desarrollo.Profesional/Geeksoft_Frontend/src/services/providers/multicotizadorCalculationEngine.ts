@@ -12,6 +12,7 @@ export interface CalculateVoyageParams {
     bunkerPriceMdo?: number;
     addressCommPct?: number;
     brokerCommPct?: number;
+    demurrageRate?: number;
     refacturarMuellajeMap?: Record<number, boolean>;
 }
 
@@ -25,6 +26,7 @@ export interface LegCalculationDetail {
     speed: number;
     sea_days: number;
     port_days: number;
+    demurrage_days: number;
     time_to_count_h: number;
     positioning_h: number;
     action: 'NONE' | 'CARGAR' | 'DESCARGAR' | 'BUNKERING';
@@ -53,6 +55,7 @@ export interface VoyageCalculationResult {
     totalDist: number;
     totalSeaDays: number;
     totalPortDays: number;
+    totalDemurrageDays: number;
     totalDays: number;
     totalIfoTons: number;
     totalMdoTons: number;
@@ -60,8 +63,23 @@ export interface VoyageCalculationResult {
     ifoCost: number;
     mdoCost: number;
     grandBunkerTotal: number;
+    
+    // Búnker Tripartito
+    seaIfoTons: number;
+    seaMdoTons: number;
+    seaBunkerCost: number;
+    portIfoTons: number;
+    portMdoTons: number;
+    portBunkerCost: number;
+    demurrageIfoTons: number;
+    demurrageMdoTons: number;
+    demurrageBunkerCost: number;
+
     totalQuantity: number;
     totalFreight: number;
+    demurrageRevenue: number;
+    demurrageHireCost: number;
+    standardHireCost: number;
     refacturacionMuellaje: number;
     grossRevenueTotal: number;
     totalPortCosts: number;
@@ -73,6 +91,9 @@ export interface VoyageCalculationResult {
     voyageResultPnl: number;
     tceRealizado: number;
     tceDiff: number;
+    portDays0: number;
+    bunkerCost0: number;
+    demurrageDays0: number;
     calculatedTramos: LegCalculationDetail[];
     portCostItems: DynamicPortCostItem[];
 }
@@ -97,14 +118,22 @@ export class MulticotizadorCalculationEngine {
             bunkerPriceMdo = 0,
             addressCommPct = 0,
             brokerCommPct = 0,
+            demurrageRate = 0,
             refacturarMuellajeMap = {}
         } = params;
 
         let totalDist = 0;
         let totalSeaDays = 0;
         let totalPortDays = 0;
-        let totalIfoTons = 0;
-        let totalMdoTons = 0;
+        let totalDemurrageDays = 0;
+        
+        let seaIfoTons = 0;
+        let seaMdoTons = 0;
+        let portIfoTons = 0;
+        let portMdoTons = 0;
+        let demurrageIfoTons = 0;
+        let demurrageMdoTons = 0;
+
         let totalQuantity = 0;
         let totalFreight = 0;
         let totalPortCosts = 0;
@@ -128,6 +157,8 @@ export class MulticotizadorCalculationEngine {
         const originPort0 = tramos[0]?.origin_port_id || '';
         let portDays0 = 0;
         let bunkerCost0 = 0;
+        let demurrageDays0 = 0;
+
         if (pCfg0.action && pCfg0.action !== 'NONE') {
             const isMejillones0 = (originPort0 || '').trim().toUpperCase() === 'MEJILLONES' && pCfg0.action === 'DESCARGAR';
             const mVal0 = Number(pCfg0.manual_port_cost) || 0;
@@ -151,15 +182,26 @@ export class MulticotizadorCalculationEngine {
             portDays0 = idleDays0 + opDays0;
             totalPortDays += portDays0;
 
+            // Demurrage en Fila 0 (Solo si CARGAR)
+            if (pCfg0.action === 'CARGAR') {
+                demurrageDays0 = Number(pCfg0.demurrage_days || 0);
+                totalDemurrageDays += demurrageDays0;
+            }
+
             const opIfoRate0 = pCfg0.action === 'DESCARGAR' ? ifoDischRatio : pCfg0.action === 'CARGAR' ? ifoLoadRatio : ifoIdleRatio;
             const opMdoRate0 = pCfg0.action === 'DESCARGAR' ? mdoDischRatio : pCfg0.action === 'CARGAR' ? mdoLoadRatio : mdoIdleRatio;
 
-            const ifoTons0 = (idleDays0 * ifoIdleRatio) + (opDays0 * opIfoRate0);
-            const mdoTons0 = (idleDays0 * mdoIdleRatio) + (opDays0 * opMdoRate0);
-            bunkerCost0 = (ifoTons0 * bunkerPriceIfo) + (mdoTons0 * bunkerPriceMdo);
+            const ifoPort0 = (idleDays0 * ifoIdleRatio) + (opDays0 * opIfoRate0);
+            const mdoPort0 = (idleDays0 * mdoIdleRatio) + (opDays0 * opMdoRate0);
+            const ifoDem0 = demurrageDays0 * ifoIdleRatio;
+            const mdoDem0 = demurrageDays0 * mdoIdleRatio;
 
-            totalIfoTons += ifoTons0;
-            totalMdoTons += mdoTons0;
+            portIfoTons += ifoPort0;
+            portMdoTons += mdoPort0;
+            demurrageIfoTons += ifoDem0;
+            demurrageMdoTons += mdoDem0;
+
+            bunkerCost0 = ((ifoPort0 + ifoDem0) * bunkerPriceIfo) + ((mdoPort0 + mdoDem0) * bunkerPriceMdo);
 
             if (pCfg0.action === 'DESCARGAR') {
                 const fRate0 = Number(pCfg0.freight_rate || 0);
@@ -189,15 +231,32 @@ export class MulticotizadorCalculationEngine {
             const opDays = (pCfg.action !== 'NONE' && pCfg.action !== 'BUNKERING') ? ((qVal / rVal) / rateFactor) : 0;
             const calcPortDays = idleDays + opDays;
 
+            // Demurrage en tramos 1..N (Solo en CARGAR o DESCARGAR)
+            const isCargoOp = pCfg.action === 'CARGAR' || pCfg.action === 'DESCARGAR';
+            const legDemurrageDays = isCargoOp ? Number(pCfg.demurrage_days || 0) : 0;
+            totalDemurrageDays += legDemurrageDays;
+
             const opIfoRate = pCfg.action === 'DESCARGAR' ? ifoDischRatio : pCfg.action === 'CARGAR' ? ifoLoadRatio : ifoIdleRatio;
             const opMdoRate = pCfg.action === 'DESCARGAR' ? mdoDischRatio : pCfg.action === 'CARGAR' ? mdoLoadRatio : mdoIdleRatio;
 
-            const ifoTons = (calcSeaDays * ifoSeaRatio) + (idleDays * ifoIdleRatio) + (opDays * opIfoRate);
-            const mdoTons = (calcSeaDays * mdoSeaRatio) + (idleDays * mdoIdleRatio) + (opDays * opMdoRate);
-            const legBunkerCost = (ifoTons * bunkerPriceIfo) + (mdoTons * bunkerPriceMdo);
+            // Desglose de Toneladas
+            const legSeaIfo = calcSeaDays * ifoSeaRatio;
+            const legSeaMdo = calcSeaDays * mdoSeaRatio;
+            const legPortIfo = (idleDays * ifoIdleRatio) + (opDays * opIfoRate);
+            const legPortMdo = (idleDays * mdoIdleRatio) + (opDays * opMdoRate);
+            const legDemIfo = legDemurrageDays * ifoIdleRatio;
+            const legDemMdo = legDemurrageDays * mdoIdleRatio;
 
-            totalIfoTons += ifoTons;
-            totalMdoTons += mdoTons;
+            seaIfoTons += legSeaIfo;
+            seaMdoTons += legSeaMdo;
+            portIfoTons += legPortIfo;
+            portMdoTons += legPortMdo;
+            demurrageIfoTons += legDemIfo;
+            demurrageMdoTons += legDemMdo;
+
+            const totalLegIfo = legSeaIfo + legPortIfo + legDemIfo;
+            const totalLegMdo = legSeaMdo + legPortMdo + legDemMdo;
+            const legBunkerCost = (totalLegIfo * bunkerPriceIfo) + (totalLegMdo * bunkerPriceMdo);
 
             const fRate = Number(pCfg.freight_rate || 0);
             const legFreight = pCfg.action === 'DESCARGAR' ? (qVal * fRate) : 0;
@@ -230,6 +289,7 @@ export class MulticotizadorCalculationEngine {
                 speed: speedVal,
                 sea_days: calcSeaDays,
                 port_days: calcPortDays,
+                demurrage_days: legDemurrageDays,
                 time_to_count_h: tcVal,
                 positioning_h: posVal,
                 action: pCfg.action || 'NONE',
@@ -272,14 +332,27 @@ export class MulticotizadorCalculationEngine {
             }
         });
 
-        const totalDays = totalSeaDays + totalPortDays;
+        const totalIfoTons = seaIfoTons + portIfoTons + demurrageIfoTons;
+        const totalMdoTons = seaMdoTons + portMdoTons + demurrageMdoTons;
+
+        const seaBunkerCost = (seaIfoTons * bunkerPriceIfo) + (seaMdoTons * bunkerPriceMdo);
+        const portBunkerCost = (portIfoTons * bunkerPriceIfo) + (portMdoTons * bunkerPriceMdo);
+        const demurrageBunkerCost = (demurrageIfoTons * bunkerPriceIfo) + (demurrageMdoTons * bunkerPriceMdo);
+
         const ifoCost = totalIfoTons * bunkerPriceIfo;
         const mdoCost = totalMdoTons * bunkerPriceMdo;
         const grandBunkerTotal = ifoCost + mdoCost;
 
-        const grossRevenueTotal = totalFreight + liveRefacturacionMuellaje;
+        const totalDays = totalSeaDays + totalPortDays + totalDemurrageDays;
         const tceReq = Number(vesselParams?.tce_required || 15000);
-        const hireUsd = tceReq * totalDays;
+
+        // Ingresos y Costos de Demurrage
+        const demurrageRevenue = totalDemurrageDays * Number(demurrageRate || 0);
+        const demurrageHireCost = totalDemurrageDays * tceReq;
+        const standardHireCost = (totalSeaDays + totalPortDays) * tceReq;
+        const hireUsd = standardHireCost + demurrageHireCost;
+
+        const grossRevenueTotal = totalFreight + liveRefacturacionMuellaje + demurrageRevenue;
 
         const addressCommUsd = totalFreight * (addressCommPct / 100);
         const brokerCommUsd = totalFreight * (brokerCommPct / 100);
@@ -293,6 +366,7 @@ export class MulticotizadorCalculationEngine {
             totalDist,
             totalSeaDays,
             totalPortDays,
+            totalDemurrageDays,
             totalDays,
             totalIfoTons,
             totalMdoTons,
@@ -300,8 +374,20 @@ export class MulticotizadorCalculationEngine {
             ifoCost,
             mdoCost,
             grandBunkerTotal,
+            seaIfoTons,
+            seaMdoTons,
+            seaBunkerCost,
+            portIfoTons,
+            portMdoTons,
+            portBunkerCost,
+            demurrageIfoTons,
+            demurrageMdoTons,
+            demurrageBunkerCost,
             totalQuantity,
             totalFreight,
+            demurrageRevenue,
+            demurrageHireCost,
+            standardHireCost,
             refacturacionMuellaje: liveRefacturacionMuellaje,
             grossRevenueTotal,
             totalPortCosts,
@@ -315,6 +401,7 @@ export class MulticotizadorCalculationEngine {
             tceDiff,
             portDays0,
             bunkerCost0,
+            demurrageDays0,
             calculatedTramos,
             portCostItems
         };
