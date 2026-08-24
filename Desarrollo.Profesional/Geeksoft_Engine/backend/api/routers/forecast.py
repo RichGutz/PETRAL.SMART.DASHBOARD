@@ -1617,3 +1617,27 @@ def get_voyage_liquidations():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get('/demurrage_records')
+def get_demurrage_records():
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        res = sb.table('demurrage_records').select('*').order('year', desc=True).order('month', desc=True).execute()
+        return res.data or []
+    except Exception as e:
+        print(f"Error fetching demurrage records: {e}")
+        return []
+
+@router.post('/demurrage_records')
+def save_demurrage_records(payload: List[dict] = Body(...)):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        if payload:
+            res = sb.table('demurrage_records').upsert(payload).execute()
+            return {'status': 'success', 'count': len(payload)}
+        return {'status': 'empty'}
+    except Exception as e:
+        print(f"Error saving demurrage records: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+

@@ -15,10 +15,10 @@ export interface SpreadsheetTramosGridProps {
     refacturarMuellajeMap: Record<number, boolean>;
     calculatedTramosList: any[];
     liveCalc: any;
-    demurrageMode?: 'P' | 'M';
+    demurrageMode?: 'P' | 'M' | 'C';
     staticCostsData?: any[];
     validFrom?: string;
-    onDemurrageModeChange?: (mode: 'P' | 'M') => void;
+    onDemurrageModeChange?: (mode: 'P' | 'M' | 'C') => void;
     handleAddTramo: () => void;
     handleRemoveLastTramo: () => void;
     updateTramoField: (idx: number, field: string, val: any) => void;
@@ -133,11 +133,11 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         <th className="border-r border-slate-300 px-1 bg-sky-50/60">
                             <div className="flex items-center justify-between gap-0.5 px-0.5">
                                 <span className="font-extrabold text-[9.5px] text-sky-950 uppercase tracking-tight">DEM (D)</span>
-                                <div className="flex items-center rounded bg-slate-200/90 p-0.5 border border-slate-300 shadow-2xs">
+                                <div className="flex items-center rounded bg-slate-200/90 p-0.5 border border-slate-300 shadow-2xs gap-0.5">
                                     <button
                                         type="button"
                                         onClick={() => onDemurrageModeChange && onDemurrageModeChange('P')}
-                                        title="P: Promedio Anual (12 Meses)"
+                                        title="P: Promedio Histórico para Buque y Puerto"
                                         className={`px-1 py-0.2 text-[8px] font-black rounded cursor-pointer transition-colors ${demurrageMode === 'P' ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
                                     >
                                         P
@@ -149,6 +149,14 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                         className={`px-1 py-0.2 text-[8px] font-black rounded cursor-pointer transition-colors ${demurrageMode === 'M' ? 'bg-purple-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
                                     >
                                         M
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onDemurrageModeChange && onDemurrageModeChange('C')}
+                                        title="C: Cero / Sin Demora Sugerida (0.00 d)"
+                                        className={`px-1 py-0.2 text-[8px] font-black rounded cursor-pointer transition-colors ${demurrageMode === 'C' ? 'bg-slate-800 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
+                                    >
+                                        C
                                     </button>
                                 </div>
                             </div>

@@ -117,7 +117,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         'CONCON TRADER': 0,
         'CONCON': 0
     });
-    const [demurrageMode, setDemurrageMode] = useState<'P' | 'M'>('P');
+    const [demurrageMode, setDemurrageMode] = useState<'P' | 'M' | 'C'>('P');
     const [staticCostsData, setStaticCostsData] = useState<any[]>([]);
     const [refacturarMuellajeMap, setRefacturarMuellajeMap] = useState<Record<number, boolean>>({});
 

@@ -26,6 +26,7 @@ import { ClientsMaster } from './pages/Masters/ClientsMaster_V2';
 import { ContractsMaster } from './pages/Masters/ContractsMaster_V2';
 import { PortsMaster_V2 } from './pages/Masters/PortsMaster_V2';
 import { PortCostsMaster_V2 } from './pages/Masters/PortCostsMaster_V2';
+import { DemurrageMaster_V2 } from './pages/Masters/DemurrageMaster_V2';
 import { PortTariffsMaster } from './pages/Masters/PortTariffsMaster';
 import { SourcesSinksMaster_V2 } from './pages/Masters/SourcesSinksMaster_V2';
 import { BunkerMaster } from './pages/Masters/BunkerMaster';
@@ -90,6 +91,7 @@ function App_V2() {
               <Route path="/contracts" element={<ProtectedRoute module="maestro_contratos"><ContractsMaster /></ProtectedRoute>} />
               <Route path="/ports" element={<ProtectedRoute module="maestro_puertos"><PortsMaster_V2 /></ProtectedRoute>} />
               <Route path="/port-costs" element={<ProtectedRoute module="maestro_costos_agencia"><PortCostsMaster_V2 /></ProtectedRoute>} />
+              <Route path="/demurrage" element={<ProtectedRoute module="maestro_costos_agencia"><DemurrageMaster_V2 /></ProtectedRoute>} />
               <Route path="/port-tariffs" element={<ProtectedRoute module="maestro_costos_agencia"><PortTariffsMaster /></ProtectedRoute>} />
               <Route path="/sources-sinks" element={<ProtectedRoute module="maestro_rutas"><SourcesSinksMaster_V2 /></ProtectedRoute>} />
               <Route path="/bunker-prices" element={<ProtectedRoute module="maestro_bunker"><BunkerMaster /></ProtectedRoute>} />

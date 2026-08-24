@@ -383,6 +383,12 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                                         >
                                                             <span className="text-xs">🧮</span> Maestro de Gastos Portuarios
                                                         </button>
+                                                        <button 
+                                                            onClick={() => navigate('/demurrage')}
+                                                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'demurrage' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+                                                        >
+                                                            <span className="text-xs">⏳</span> Maestro de Demoras
+                                                        </button>
                                                     </>
                                                 )}
                                             </div>

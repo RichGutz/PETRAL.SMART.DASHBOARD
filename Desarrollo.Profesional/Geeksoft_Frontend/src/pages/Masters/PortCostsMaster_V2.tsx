@@ -85,7 +85,6 @@ export const PortCostsMaster_V2: React.FC = () => {
                         CARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
                         DESCARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
                         BUNKERING: { MAIN: 0, bunkering_survey: 0, other: 0 },
-                        DEMURRAGE: { m01: 0, m02: 0, m03: 0, m04: 0, m05: 0, m06: 0, m07: 0, m08: 0, m09: 0, m10: 0, m11: 0, m12: 0 },
                         updated_at: row.updated_at || null,
                         updated_by: row.updated_by || null,
                         raw_vessel_id: rawVesselId
@@ -114,7 +113,7 @@ export const PortCostsMaster_V2: React.FC = () => {
         fetchData();
     }, []);
 
-    const handleCostChange = (portId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA' | 'BUNKERING' | 'DEMURRAGE', subOp: string, value: string) => {
+    const handleCostChange = (portId: string, vesselId: string, operation: 'CARGA' | 'DESCARGA' | 'BUNKERING', subOp: string, value: string) => {
         const cleanValue = value.replace(/,/g, '');
         const numValue = parseFloat(cleanValue) || 0;
         const vKey = normalizeVesselKey(vesselId);
@@ -128,16 +127,13 @@ export const PortCostsMaster_V2: React.FC = () => {
                     CARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
                     DESCARGA: { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 },
                     BUNKERING: { MAIN: 0, bunkering_survey: 0, other: 0 },
-                    DEMURRAGE: { m01: 0, m02: 0, m03: 0, m04: 0, m05: 0, m06: 0, m07: 0, m08: 0, m09: 0, m10: 0, m11: 0, m12: 0 },
                     updated_at: null,
                     updated_by: null,
                     raw_vessel_id: vesselId
                 };
             }
             if (!next[upperPortId][vKey][operation]) {
-                if (operation === 'DEMURRAGE') {
-                    next[upperPortId][vKey][operation] = { m01: 0, m02: 0, m03: 0, m04: 0, m05: 0, m06: 0, m07: 0, m08: 0, m09: 0, m10: 0, m11: 0, m12: 0 };
-                } else if (operation === 'BUNKERING') {
+                if (operation === 'BUNKERING') {
                     next[upperPortId][vKey][operation] = { MAIN: 0, bunkering_survey: 0, other: 0 };
                 } else {
                     next[upperPortId][vKey][operation] = { MAIN: 0, loading_master: 0, muellaje: 0, other: 0 };
@@ -213,25 +209,6 @@ export const PortCostsMaster_V2: React.FC = () => {
                                 vessel_id: targetVesselId,
                                 sub_operation_type: subOp,
                                 cost: bunkVal,
-                                updated_by: currentUser
-                            });
-                        }
-                    });
-
-                    // DEMURRAGE MENSUAL (12 MESES)
-                    const monthSubOps = ['m01', 'm02', 'm03', 'm04', 'm05', 'm06', 'm07', 'm08', 'm09', 'm10', 'm11', 'm12'];
-                    monthSubOps.forEach(mKey => {
-                        const demVal = costData.DEMURRAGE?.[mKey] ?? 0;
-                        const demKey = `${cleanPortId}|DEMURRAGE|${targetVesselId}|${mKey}`;
-                        if (!seenKeys.has(demKey)) {
-                            seenKeys.add(demKey);
-                            payload.push({
-                                client_id: 'PETRAL',
-                                port_id: cleanPortId,
-                                operation_type: 'DEMURRAGE',
-                                vessel_id: targetVesselId,
-                                sub_operation_type: mKey,
-                                cost: demVal,
                                 updated_by: currentUser
                             });
                         }
@@ -772,61 +749,7 @@ export const PortCostsMaster_V2: React.FC = () => {
                                                                 </div>
                                                             </div>
                                                         </div>
-
-                                                        {/* Operación DEMURRAGE MENSUAL (3 filas de 4 meses) */}
-                                                        {(() => {
-                                                            const dem = vData.DEMURRAGE || {};
-                                                            const months = [
-                                                                { key: 'm01', label: 'ENE' },
-                                                                { key: 'm02', label: 'FEB' },
-                                                                { key: 'm03', label: 'MAR' },
-                                                                { key: 'm04', label: 'ABR' },
-                                                                { key: 'm05', label: 'MAY' },
-                                                                { key: 'm06', label: 'JUN' },
-                                                                { key: 'm07', label: 'JUL' },
-                                                                { key: 'm08', label: 'AGO' },
-                                                                { key: 'm09', label: 'SEP' },
-                                                                { key: 'm10', label: 'OCT' },
-                                                                { key: 'm11', label: 'NOV' },
-                                                                { key: 'm12', label: 'DIC' }
-                                                            ];
-                                                            const sum = months.reduce((acc, m) => acc + (Number(dem[m.key]) || 0), 0);
-                                                            const avg = sum / 12;
-
-                                                            return (
-                                                                <div className="flex flex-col gap-2 bg-sky-50/40 p-2.5 rounded-lg border border-sky-200/60">
-                                                                    <div className="text-[11px] font-black text-sky-900 uppercase tracking-wider flex items-center justify-between">
-                                                                        <span className="flex items-center gap-1">⏳ Demoras Mensuales (Días)</span>
-                                                                        <span className="text-[10px] text-sky-700 bg-sky-100/70 px-1.5 py-0.5 rounded border border-sky-200 font-bold">
-                                                                            Promedio Anual: {avg.toFixed(2)} d
-                                                                        </span>
-                                                                    </div>
-                                                                    <div className="grid grid-cols-4 gap-1.5">
-                                                                        {months.map((m) => {
-                                                                            const inputKey = `${effectiveActivePortId}-${v.vessel_id}-DEMURRAGE-${m.key}`;
-                                                                            const val = dem[m.key];
-                                                                            return (
-                                                                                <div key={m.key} className="flex flex-col gap-0.5">
-                                                                                    <label className="text-[8.5px] font-black text-slate-500 uppercase tracking-tight text-center">{m.label}</label>
-                                                                                    <input
-                                                                                        type="text"
-                                                                                        value={focusedInput === inputKey ? (val ?? '') : (val !== undefined && val !== null && val !== '' ? Number(val).toFixed(2) : '')}
-                                                                                        onFocus={() => setFocusedInput(inputKey)}
-                                                                                        onBlur={() => setFocusedInput(null)}
-                                                                                        onChange={(e) => handleCostChange(effectiveActivePortId, v.vessel_id, 'DEMURRAGE', m.key, e.target.value)}
-                                                                                        className="w-full text-xs font-bold px-1 py-0.5 bg-white border border-sky-200 rounded focus:border-sky-500 focus:outline-none text-sky-950 text-right font-mono"
-                                                                                        placeholder="0.00"
-                                                                                    />
-                                                                                </div>
-                                                                            );
-                                                                        })}
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })()}
-
                                                     </div>
-
                                                 </div>
                                             );
                                         })}

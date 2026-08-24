@@ -279,6 +279,14 @@ export const ForecastService = {
     deleteSpot: async (spotId: string) => {
         const response = await api.delete(`/forecast/spot/delete/${spotId}`);
         return response.data;
+    },
+    getDemurrageRecords: async () => {
+        const response = await api.get('/forecast/demurrage_records');
+        return response.data;
+    },
+    saveDemurrageRecords: async (payload: any[]) => {
+        const response = await api.post('/forecast/demurrage_records', payload);
+        return response.data;
     }
 };
 
