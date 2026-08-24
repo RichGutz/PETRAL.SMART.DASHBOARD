@@ -16,7 +16,8 @@ import {
     AlertCircle,
     CheckCircle2,
     Calendar,
-    Layers
+    Layers,
+    TrendingUp
 } from 'lucide-react';
 import { PortDemurrageRatesService } from '../../services/providers/portDemurrageRatesService';
 import type { DemurrageRecord, PortVesselDemurrageProfile } from '../../services/providers/portDemurrageRatesService';
