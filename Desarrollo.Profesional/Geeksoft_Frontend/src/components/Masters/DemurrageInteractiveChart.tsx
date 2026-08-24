@@ -23,7 +23,9 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
     const [filterClient, setFilterClient] = useState<string>('ALL');
     const [filterPort, setFilterPort] = useState<string>('ALL');
     const [filterVessel, setFilterVessel] = useState<string>('ALL');
-    const [filterYear, setFilterYear] = useState<string>('ALL');
+    
+    // Filtro de Año puntual (Sin opción 'ALL')
+    const [filterYear, setFilterYear] = useState<string>('2024');
 
     const [isClientFilterOpen, setIsClientFilterOpen] = useState(false);
     const [isPortFilterOpen, setIsPortFilterOpen] = useState(false);
@@ -34,7 +36,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
     const [primaryMetric, setPrimaryMetric] = useState<PlotMetricPri>('total_days');
     const [primaryGraphType, setPrimaryGraphType] = useState<GraphType>('bar_stack');
     const [isPriOpen, setIsPriOpen] = useState(false);
-    const [primaryLabelPos, setPrimaryLabelPos] = useState<'none' | 'top' | 'inside'>('none');
+    const [primaryLabelPos, setPrimaryLabelPos] = useState<'none' | 'top' | 'inside'>('inside');
     const [primaryLabelColor, setPrimaryLabelColor] = useState<string>('#ffffff');
 
     // Eje Secundario
@@ -43,8 +45,8 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
     const [isSecOpen, setIsSecOpen] = useState(false);
     const [isSecondaryCumulativeGlobal, setIsSecondaryCumulativeGlobal] = useState(false);
     const [isSecondaryPercentage, setIsSecondaryPercentage] = useState(false);
-    const [secondaryLabelPos, setSecondaryLabelPos] = useState<'none' | 'top' | 'inside'>('none');
-    const [secondaryLabelColor, setSecondaryLabelColor] = useState<string>('#ffffff');
+    const [secondaryLabelPos, setSecondaryLabelPos] = useState<'none' | 'top' | 'inside'>('top');
+    const [secondaryLabelColor, setSecondaryLabelColor] = useState<string>('#059669');
 
     // Listas únicas
     const filterOptions = useMemo(() => {
@@ -58,15 +60,24 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
             if (r.year) years.add(String(r.year));
         });
 
+        const sortedYears = Array.from(years).sort().reverse();
+
         return {
             clients: Array.from(clients).sort(),
             ports: PortDemurrageRatesService.STANDARD_PORTS.map(p => p.id),
             vessels: Array.from(vessels).sort(),
-            years: Array.from(years).sort().reverse()
+            years: sortedYears.length > 0 ? sortedYears : ['2026', '2025', '2024']
         };
     }, [records]);
 
-    // Paleta de colores oficial de vessels
+    // Establecer año inicial por defecto al más reciente si no está seteado
+    useEffect(() => {
+        if (filterOptions.years.length > 0 && (!filterYear || filterYear === 'ALL')) {
+            setFilterYear(filterOptions.years[0]);
+        }
+    }, [filterOptions.years]);
+
+    // Paleta de colores oficial
     const getHexColor = (name: string, type: GroupBy): string => {
         if (type === 'petral') return '#0089CF'; // Petral Blue
         
@@ -117,173 +128,202 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
     const options = useMemo(() => {
         if (!records || records.length === 0) return null;
 
-        // Filtrado de registros
+        // Filtrado puntual por Año, Cliente, Buque
+        const targetYear = filterYear && filterYear !== 'ALL' ? filterYear : (filterOptions.years[0] || '2024');
+
         const filtered = records.filter(r => {
+            if (String(r.year) !== targetYear) return false;
             if (filterClient !== 'ALL' && r.client !== filterClient) return false;
             if (filterVessel !== 'ALL' && r.vessel !== filterVessel) return false;
-            if (filterYear !== 'ALL' && String(r.year) !== filterYear) return false;
             return true;
         });
 
-        // Lógica de Desglose y Coloreo Cruzado Dinámico
-        // 1. Si se elige un Buque puntual: la barra se desglosa por PUERTOS y se colorea por Puerto.
-        // 2. Si se elige un Puerto puntual: la barra se desglosa por BUQUES y se colorea por Buque.
-        // 3. En vista general: se desglosa por BUQUES con sus colores oficiales.
-        let stackMode: 'by_vessel' | 'by_port' | 'by_client' = 'by_vessel';
-        let entities: string[] = [];
+        // Modo de Apilamiento y Coloreo Cruzado
+        const isVesselFiltered = filterVessel !== 'ALL' && filterPort === 'ALL';
+        const isPortFiltered = filterPort !== 'ALL' && filterVessel === 'ALL';
 
-        if (filterVessel !== 'ALL' && filterPort === 'ALL') {
-            stackMode = 'by_port';
-            entities = filterOptions.ports;
-        } else if (filterPort !== 'ALL' && filterVessel === 'ALL') {
-            stackMode = 'by_vessel';
-            entities = filterOptions.vessels;
-        } else if (groupBy === 'port') {
-            stackMode = 'by_port';
-            entities = filterPort !== 'ALL' ? [filterPort] : filterOptions.ports;
-        } else if (groupBy === 'client') {
-            stackMode = 'by_client';
-            entities = filterClient !== 'ALL' ? [filterClient] : filterOptions.clients;
-        } else {
-            stackMode = 'by_vessel';
-            entities = filterVessel !== 'ALL' ? [filterVessel] : (filterOptions.vessels.length > 0 ? filterOptions.vessels : ['Moquegua', 'Tablones', 'Huemul', 'Concon Trader']);
-        }
-
-        if (entities.length === 0) {
-            entities = ['PETRAL'];
-        }
-
-        // Matriz por entidad (12 meses)
-        const seriesDataMap: Record<string, { days: number[]; hours: number[]; count: number[] }> = {};
-        entities.forEach(ent => {
-            seriesDataMap[ent] = {
-                days: Array(12).fill(0),
-                hours: Array(12).fill(0),
-                count: Array(12).fill(0)
-            };
-        });
-
+        // Totales mensuales para el eje secundario
         const monthTotals = Array(12).fill(0).map(() => ({ totalDays: 0, totalHours: 0, totalVoyages: 0 }));
+
+        // Agrupación granular por Viaje para el stack del Eje Primario
+        // Estructura: series de viajes individuales o agregadas por puerto/buque con separación visual
+        interface VoyageSeriesItem {
+            seriesName: string;
+            legendGroup: string;
+            color: string;
+            voyageNumber: number;
+            vesselName: string;
+            clientName: string;
+            portName: string;
+            dataByMonth: (number | null)[];
+            daysByMonth: number[];
+            hoursByMonth: number[];
+        }
+
+        const voyageSeriesMap: Record<string, VoyageSeriesItem> = {};
 
         filtered.forEach(r => {
             const mIdx = (r.month >= 1 && r.month <= 12) ? r.month - 1 : 0;
-            
-            if (stackMode === 'by_port') {
-                // Desglose por puertos
+            const voyageNum = r.voyage || 0;
+            const vesselName = r.vessel || 'Buque';
+            const clientName = r.client || 'PETRAL';
+
+            if (isVesselFiltered) {
+                // Filtro por Buque activo: Desglosar por cada PUERTO donde tuvo estadía en ese viaje
                 if (r.ports) {
                     Object.entries(r.ports).forEach(([pKey, pVal]) => {
                         const pDays = Number(pVal.days) || 0;
                         const pHrs = Number(pVal.hours) || 0;
-                        if (seriesDataMap[pKey]) {
-                            seriesDataMap[pKey].days[mIdx] += pDays;
-                            seriesDataMap[pKey].hours[mIdx] += pHrs;
-                            if (pDays > 0 || pHrs > 0) seriesDataMap[pKey].count[mIdx] += 1;
+                        if (pDays > 0 || pHrs > 0) {
+                            const key = `V.${voyageNum} - ${pKey}`;
+                            if (!voyageSeriesMap[key]) {
+                                voyageSeriesMap[key] = {
+                                    seriesName: key,
+                                    legendGroup: pKey,
+                                    color: getHexColor(pKey, 'port'),
+                                    voyageNumber: voyageNum,
+                                    vesselName,
+                                    clientName,
+                                    portName: pKey,
+                                    dataByMonth: Array(12).fill(0),
+                                    daysByMonth: Array(12).fill(0),
+                                    hoursByMonth: Array(12).fill(0)
+                                };
+                            }
+                            (voyageSeriesMap[key].daysByMonth[mIdx]) += pDays;
+                            (voyageSeriesMap[key].hoursByMonth[mIdx]) += pHrs;
+                            
+                            monthTotals[mIdx].totalDays += pDays;
+                            monthTotals[mIdx].totalHours += pHrs;
+                            monthTotals[mIdx].totalVoyages += 1;
                         }
                     });
                 }
-            } else if (stackMode === 'by_vessel') {
-                // Desglose por buques
-                const v = r.vessel;
-                let vDays = 0;
-                let vHours = 0;
-
-                if (filterPort === 'ALL') {
-                    vDays = Number(r.total_days) || 0;
-                    vHours = Number(r.total_hours) || 0;
-                } else if (r.ports && r.ports[filterPort]) {
-                    vDays = Number(r.ports[filterPort].days) || 0;
-                    vHours = Number(r.ports[filterPort].hours) || 0;
+            } else if (isPortFiltered) {
+                // Filtro por Puerto activo: Desglosar por cada BUQUE en ese viaje
+                let pDays = 0;
+                let pHrs = 0;
+                if (r.ports && r.ports[filterPort]) {
+                    pDays = Number(r.ports[filterPort].days) || 0;
+                    pHrs = Number(r.ports[filterPort].hours) || 0;
                 }
-
-                if (seriesDataMap[v]) {
-                    seriesDataMap[v].days[mIdx] += vDays;
-                    seriesDataMap[v].hours[mIdx] += vHours;
-                    if (vDays > 0 || vHours > 0) {
-                        seriesDataMap[v].count[mIdx] += 1;
+                if (pDays > 0 || pHrs > 0) {
+                    const key = `${vesselName} - V.${voyageNum}`;
+                    if (!voyageSeriesMap[key]) {
+                        voyageSeriesMap[key] = {
+                            seriesName: key,
+                            legendGroup: vesselName,
+                            color: getHexColor(vesselName, 'vessel'),
+                            voyageNumber: voyageNum,
+                            vesselName,
+                            clientName,
+                            portName: filterPort,
+                            dataByMonth: Array(12).fill(0),
+                            daysByMonth: Array(12).fill(0),
+                            hoursByMonth: Array(12).fill(0)
+                        };
                     }
+                    (voyageSeriesMap[key].daysByMonth[mIdx]) += pDays;
+                    (voyageSeriesMap[key].hoursByMonth[mIdx]) += pHrs;
+
+                    monthTotals[mIdx].totalDays += pDays;
+                    monthTotals[mIdx].totalHours += pHrs;
+                    monthTotals[mIdx].totalVoyages += 1;
                 }
-            } else if (stackMode === 'by_client') {
-                const c = r.client || 'PETRAL';
-                let cDays = Number(r.total_days) || 0;
-                let cHours = Number(r.total_hours) || 0;
-                if (seriesDataMap[c]) {
-                    seriesDataMap[c].days[mIdx] += cDays;
-                    seriesDataMap[c].hours[mIdx] += cHours;
-                    if (cDays > 0 || cHours > 0) {
-                        seriesDataMap[c].count[mIdx] += 1;
+            } else {
+                // Vista General Flota / Petral Todo: Desglosar por Buque y Viaje
+                const totalDays = Number(r.total_days) || 0;
+                const totalHrs = Number(r.total_hours) || 0;
+                if (totalDays > 0 || totalHrs > 0) {
+                    const key = `${vesselName} - V.${voyageNum}`;
+                    if (!voyageSeriesMap[key]) {
+                        voyageSeriesMap[key] = {
+                            seriesName: key,
+                            legendGroup: vesselName,
+                            color: getHexColor(vesselName, 'vessel'),
+                            voyageNumber: voyageNum,
+                            vesselName,
+                            clientName,
+                            portName: 'Varios',
+                            dataByMonth: Array(12).fill(0),
+                            daysByMonth: Array(12).fill(0),
+                            hoursByMonth: Array(12).fill(0)
+                        };
                     }
+                    (voyageSeriesMap[key].daysByMonth[mIdx]) += totalDays;
+                    (voyageSeriesMap[key].hoursByMonth[mIdx]) += totalHrs;
+
+                    monthTotals[mIdx].totalDays += totalDays;
+                    monthTotals[mIdx].totalHours += totalHrs;
+                    monthTotals[mIdx].totalVoyages += 1;
                 }
-            }
-
-            // Totales para el eje secundario
-            let monthVoyageDays = 0;
-            let monthVoyageHours = 0;
-            if (filterPort === 'ALL') {
-                monthVoyageDays = Number(r.total_days) || 0;
-                monthVoyageHours = Number(r.total_hours) || 0;
-            } else if (r.ports && r.ports[filterPort]) {
-                monthVoyageDays = Number(r.ports[filterPort].days) || 0;
-                monthVoyageHours = Number(r.ports[filterPort].hours) || 0;
-            }
-
-            monthTotals[mIdx].totalDays += monthVoyageDays;
-            monthTotals[mIdx].totalHours += monthVoyageHours;
-            if (monthVoyageDays > 0 || monthVoyageHours > 0) {
-                monthTotals[mIdx].totalVoyages += 1;
             }
         });
 
-        // 1. Series del Eje Primario
-        const seriesPri = entities.map(ent => {
-            const dataObj = seriesDataMap[ent] || { days: Array(12).fill(0), hours: Array(12).fill(0), count: Array(12).fill(0) };
-            
+        // 1. Series del Eje Primario (Barras apiladas con delimitador horizontal translúcido y rótulo V.<número>)
+        const seriesPri = Object.values(voyageSeriesMap).map(vItem => {
             const rawValues = MONTH_LABELS.map((_, i) => {
-                if (primaryMetric === 'total_days') return Number(dataObj.days[i].toFixed(2));
-                if (primaryMetric === 'total_hours') return Number(dataObj.hours[i].toFixed(1));
-                return dataObj.count[i];
+                let val = 0;
+                if (primaryMetric === 'total_days') val = Number(vItem.daysByMonth[i].toFixed(2));
+                else if (primaryMetric === 'total_hours') val = Number(vItem.hoursByMonth[i].toFixed(1));
+                else val = vItem.daysByMonth[i] > 0 ? 1 : 0;
+                return val > 0 ? val : null;
             });
 
-            const isStack = primaryGraphType === 'bar_stack';
-            const isBar = primaryGraphType.startsWith('bar');
-            const isStraight = primaryGraphType === 'line_straight';
-            const color = getHexColor(ent, stackMode === 'by_port' ? 'port' : (stackMode === 'by_client' ? 'client' : 'vessel'));
-
             return {
-                name: ent,
-                type: isBar ? 'bar' : 'line',
-                stack: isStack ? 'pri_stack' : undefined,
+                name: vItem.seriesName,
+                type: 'bar',
+                stack: 'demurrage_trips_stack',
                 yAxisIndex: 0,
-                smooth: isBar ? false : !isStraight,
+                barMaxWidth: 65,
                 itemStyle: {
-                    color,
-                    borderRadius: isStack ? 0 : [3, 3, 0, 0]
+                    color: vItem.color,
+                    borderColor: 'rgba(255, 255, 255, 0.65)',
+                    borderWidth: 1.5,
+                    borderType: 'solid',
+                    borderRadius: 0
                 },
                 label: {
                     show: primaryLabelPos !== 'none',
                     position: primaryLabelPos === 'none' ? undefined : primaryLabelPos,
                     formatter: (params: any) => {
-                        const val = params.data;
-                        if (!val || val === 0) return '';
-                        return primaryMetric === 'total_days' ? `${val}d` : (primaryMetric === 'total_hours' ? `${val}h` : `${val}`);
+                        const val = params.value;
+                        if (!val || val <= 0) return '';
+                        // Rótulo compacto del viaje
+                        return `V.${vItem.voyageNumber}`;
                     },
                     color: primaryLabelColor,
                     fontWeight: 'bold',
-                    fontSize: 10
+                    fontSize: 9.5,
+                    overflow: 'truncate'
                 },
-                emphasis: { focus: 'series' },
+                emphasis: {
+                    focus: 'series',
+                    itemStyle: {
+                        borderColor: '#ffffff',
+                        borderWidth: 2.5,
+                        shadowBlur: 6,
+                        shadowColor: 'rgba(0,0,0,0.35)'
+                    }
+                },
                 data: rawValues
             };
         });
 
-        // 2. Series del Eje Secundario
+        // 2. Series del Eje Secundario (Solo muestra curva donde hay datos, cortando en null si no hay data)
         const seriesSec: any[] = [];
         if (secondaryMetric !== 'none') {
             let runningTotal = 0;
             const secValues = MONTH_LABELS.map((_, i) => {
                 const m = monthTotals[i];
+                // Si no hay viajes en ese mes, no mostrar nada (null) para evitar caída artificial a 0
+                if (m.totalVoyages === 0) {
+                    return null;
+                }
+
                 let val = 0;
                 if (secondaryMetric === 'avg_days') {
-                    val = m.totalVoyages > 0 ? Number((m.totalDays / m.totalVoyages).toFixed(2)) : 0;
+                    val = Number((m.totalDays / m.totalVoyages).toFixed(2));
                 } else if (secondaryMetric === 'global_total_days') {
                     val = Number(m.totalDays.toFixed(2));
                 }
@@ -299,9 +339,10 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
             const isStraightSec = secondaryGraphType === 'line_straight';
 
             seriesSec.push({
-                name: secondaryMetric === 'avg_days' ? 'Promedio Días/Viaje (Sec)' : 'Total Días Mes (Sec)',
+                name: secondaryMetric === 'avg_days' ? 'Promedio Días/Viaje (Sec)' : 'Días de Demora Mes (Sec)',
                 type: isBarSec ? 'bar' : 'line',
                 yAxisIndex: 1,
+                connectNulls: false, // NO conectar meses vacíos
                 smooth: isBarSec ? false : !isStraightSec,
                 symbol: 'circle',
                 symbolSize: 8,
@@ -312,7 +353,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                     position: secondaryLabelPos === 'none' ? undefined : secondaryLabelPos,
                     formatter: (params: any) => {
                         const val = params.data;
-                        if (!val || val === 0) return '';
+                        if (val === null || val === undefined || val === '') return '';
                         return isSecondaryPercentage ? `${val}%` : `${val} d`;
                     },
                     color: secondaryLabelColor,
@@ -337,53 +378,68 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
 
         return {
             tooltip: {
-                trigger: 'axis',
-                axisPointer: { type: 'cross' },
+                trigger: 'item',
                 backgroundColor: 'rgba(15, 23, 42, 0.95)',
                 borderColor: '#334155',
                 borderWidth: 1,
-                textStyle: { color: '#F8FAFC', fontSize: 11 },
+                textStyle: { color: '#F8FAFC', fontSize: 11.5 },
                 formatter: (params: any) => {
-                    if (!params || !Array.isArray(params) || params.length === 0) return '';
-                    let tooltip = `<div style="font-weight:600;margin-bottom:4px;border-bottom:1px solid #475569;padding-bottom:2px">${params[0]?.axisValue || ''}</div>`;
-                    params.forEach((p: any) => {
-                        const isSec = p?.seriesName?.includes('(Sec)');
-                        const val = typeof p?.value === 'number' ? p.value : (parseFloat(p?.value) || 0);
-                        const unit = isSec 
-                            ? (isSecondaryPercentage ? '%' : ' d') 
-                            : (primaryMetric === 'total_days' ? ' d' : (primaryMetric === 'total_hours' ? ' h' : ' viajes'));
-                        const cleanName = (p?.seriesName || '').replace(' (Sec)', '');
-                        tooltip += `<div style="display:flex;justify-content:space-between;gap:12px;margin:2px 0">
-                            <span>${p?.marker || '•'} <b>${cleanName}</b></span>
-                            <span style="font-family:monospace;font-weight:bold">${val}${unit}</span>
+                    if (!params) return '';
+                    const isSec = params?.seriesName?.includes('(Sec)');
+                    const seriesName = params?.seriesName || '';
+                    const monthName = params?.name || '';
+                    const val = typeof params?.value === 'number' ? params.value : (parseFloat(params?.value) || 0);
+
+                    if (isSec) {
+                        return `<div style="font-weight:bold;margin-bottom:4px;border-bottom:1px solid #475569;padding-bottom:2px">
+                            ${monthName} — Eje Secundario
+                        </div>
+                        <div style="display:flex;justify-content:space-between;gap:12px">
+                            <span>${params?.marker || '•'} <b>${seriesName}</b></span>
+                            <span style="font-family:monospace;font-weight:bold">${val} d</span>
                         </div>`;
-                    });
-                    return tooltip;
+                    }
+
+                    const itemObj = voyageSeriesMap[seriesName];
+                    const vNum = itemObj ? `Viaje ${itemObj.voyageNumber}` : seriesName;
+                    const vVessel = itemObj?.vesselName || '';
+                    const vPort = itemObj?.portName || '';
+                    const vClient = itemObj?.clientName || '';
+                    const unit = primaryMetric === 'total_days' ? 'días' : (primaryMetric === 'total_hours' ? 'horas' : 'viaje');
+
+                    return `<div style="font-weight:bold;margin-bottom:4px;border-bottom:1px solid #475569;padding-bottom:2px">
+                        📅 ${monthName} • ${vNum} (${targetYear})
+                    </div>
+                    <div style="font-size:11px;color:#94A3B8;margin-bottom:3px">
+                        🚢 <b>Buque:</b> ${vVessel} ${vPort ? `• ⚓ <b>Puerto:</b> ${vPort}` : ''} • 🏢 <b>Cliente:</b> ${vClient}
+                    </div>
+                    <div style="display:flex;justify-content:space-between;gap:12px;margin-top:4px">
+                        <span>Demora Registrada:</span>
+                        <span style="font-family:monospace;font-weight:bold;color:#38BDF8">${val} ${unit}</span>
+                    </div>`;
                 }
             },
             legend: {
-                top: 0,
-                icon: 'circle',
-                textStyle: { color: '#475569', fontWeight: 'bold' }
+                show: false // Ocultar leyenda masiva de viajes para mantener limpia la gráfica
             },
             grid: {
-                left: 70, 
-                right: secondaryMetric !== 'none' ? 70 : 30,
+                left: 65, 
+                right: secondaryMetric !== 'none' ? 65 : 25,
                 bottom: 30,
-                top: 40,
+                top: 35,
                 containLabel: true
             },
             xAxis: {
                 type: 'category',
                 data: MONTH_LABELS,
                 axisLine: { lineStyle: { color: '#CBD5E1' } },
-                axisLabel: { color: '#64748B', fontWeight: 'bold' }
+                axisLabel: { color: '#475569', fontWeight: 'bold', fontSize: 11 }
             },
             yAxis: [
                 {
                     type: 'value',
                     name: getPrimaryLabel(),
-                    nameTextStyle: { color: '#0EA5E9', padding: [0, 0, 0, -40], fontWeight: 'bold' },
+                    nameTextStyle: { color: '#0EA5E9', padding: [0, 0, 0, -35], fontWeight: 'bold' },
                     axisLine: { show: false },
                     axisLabel: { 
                         color: '#64748B', 
@@ -395,7 +451,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                 {
                     type: 'value',
                     name: getSecondaryLabel(),
-                    nameTextStyle: { color: '#059669', padding: [0, -40, 0, 0], fontWeight: 'bold' },
+                    nameTextStyle: { color: '#059669', padding: [0, -35, 0, 0], fontWeight: 'bold' },
                     show: secondaryMetric !== 'none',
                     axisLine: { show: false },
                     axisLabel: { color: '#059669', fontWeight: 'bold', formatter: (v: number) => `${v} d` },
@@ -404,7 +460,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
             ],
             series: [...seriesPri, ...seriesSec]
         };
-    }, [records, groupBy, filterClient, filterPort, filterVessel, filterYear, primaryMetric, primaryGraphType, primaryLabelPos, primaryLabelColor, secondaryMetric, secondaryGraphType, isSecondaryCumulativeGlobal, isSecondaryPercentage, secondaryLabelPos, secondaryLabelColor, filterOptions, vesselsMap]);
+    }, [records, groupBy, filterClient, filterPort, filterVessel, filterYear, primaryMetric, primaryLabelPos, primaryLabelColor, secondaryMetric, secondaryGraphType, isSecondaryCumulativeGlobal, isSecondaryPercentage, secondaryLabelPos, secondaryLabelColor, filterOptions, vesselsMap]);
 
     const echartsRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -556,7 +612,8 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
         optionsList: string[],
         isOpen: boolean, 
         setIsOpen: (open: boolean) => void,
-        title: string
+        title: string,
+        allowAll: boolean = true
     ) => {
         return (
             <div className="relative flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
@@ -572,7 +629,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                     }}
                     className="w-full flex items-center justify-between gap-1 px-2 py-1.5 text-xs bg-white border border-slate-200 rounded hover:border-slate-350 focus:outline-none transition-all cursor-pointer text-slate-700 font-bold overflow-hidden"
                 >
-                    <span className="truncate block max-w-full">{selectedVal === 'ALL' ? 'Todos' : selectedVal}</span>
+                    <span className="truncate block max-w-full">{selectedVal === 'ALL' ? 'Todos' : (title === 'Año' ? `Año ${selectedVal}` : selectedVal)}</span>
                     <span className="text-[8px] text-slate-400 shrink-0 ml-1">{isOpen ? '▲' : '▼'}</span>
                 </button>
 
@@ -582,19 +639,21 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                             <span>Filtrar {title}</span>
                             <button onClick={() => setIsOpen(false)} className="text-[10px] text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer">✕</button>
                         </div>
-                        <button
-                            onClick={() => {
-                                onSelect('ALL');
-                                setIsOpen(false);
-                            }}
-                            className={`text-left text-[11px] p-1.5 rounded transition-all cursor-pointer border ${
-                                selectedVal === 'ALL' 
-                                    ? 'bg-blue-50 border-blue-200 font-bold text-blue-900' 
-                                    : 'border-transparent hover:bg-slate-50 font-medium text-slate-600'
-                            }`}
-                        >
-                            Todos
-                        </button>
+                        {allowAll && (
+                            <button
+                                onClick={() => {
+                                    onSelect('ALL');
+                                    setIsOpen(false);
+                                }}
+                                className={`text-left text-[11px] p-1.5 rounded transition-all cursor-pointer border ${
+                                    selectedVal === 'ALL' 
+                                        ? 'bg-blue-50 border-blue-200 font-bold text-blue-900' 
+                                        : 'border-transparent hover:bg-slate-50 font-medium text-slate-600'
+                                }`}
+                            >
+                                Todos
+                            </button>
+                        )}
                         {optionsList.map((opt) => {
                             const isSel = opt === selectedVal;
                             return (
@@ -610,7 +669,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                                             : 'border-transparent hover:bg-slate-50 font-medium text-slate-600'
                                     }`}
                                 >
-                                    {opt}
+                                    {title === 'Año' ? `Año ${opt}` : opt}
                                 </button>
                             );
                         })}
@@ -640,9 +699,8 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                                 setFilterClient('ALL');
                                 setFilterPort('ALL');
                                 setFilterVessel('ALL');
-                                setFilterYear('ALL');
                             }} 
-                            className={`w-full h-8 flex items-center justify-center text-center px-2 text-[11.5px] font-black rounded-lg transition-all cursor-pointer ${groupBy === 'petral' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-sky-700 border border-slate-200 hover:bg-slate-100 font-extrabold'}`}
+                            className={`w-full h-8 flex items-center justify-center text-center px-2 text-[11.5px] font-black rounded-lg transition-all cursor-pointer ${groupBy === 'petral' && filterVessel === 'ALL' && filterPort === 'ALL' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-sky-700 border border-slate-200 hover:bg-slate-100 font-extrabold'}`}
                         >
                             PETRAL (Todo)
                         </button>
@@ -653,7 +711,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                             <button onClick={() => setGroupBy('client')} className={`w-[75px] shrink-0 h-7.5 flex items-center justify-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${groupBy === 'client' || filterClient !== 'ALL' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}`}>
                                 Cliente
                             </button>
-                            {renderFilterDropdown(filterClient, setFilterClient, filterOptions.clients, isClientFilterOpen, setIsClientFilterOpen, 'Cliente')}
+                            {renderFilterDropdown(filterClient, setFilterClient, filterOptions.clients, isClientFilterOpen, setIsClientFilterOpen, 'Cliente', true)}
                         </div>
 
                         {/* Puerto filter row */}
@@ -661,7 +719,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                             <button onClick={() => setGroupBy('port')} className={`w-[75px] shrink-0 h-7.5 flex items-center justify-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${groupBy === 'port' || filterPort !== 'ALL' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}`}>
                                 Puerto
                             </button>
-                            {renderFilterDropdown(filterPort, setFilterPort, filterOptions.ports, isPortFilterOpen, setIsPortFilterOpen, 'Puerto')}
+                            {renderFilterDropdown(filterPort, setFilterPort, filterOptions.ports, isPortFilterOpen, setIsPortFilterOpen, 'Puerto', true)}
                         </div>
 
                         {/* Buque filter row */}
@@ -669,15 +727,15 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                             <button onClick={() => setGroupBy('vessel')} className={`w-[75px] shrink-0 h-7.5 flex items-center justify-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${groupBy === 'vessel' || filterVessel !== 'ALL' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}`}>
                                 Buque
                             </button>
-                            {renderFilterDropdown(filterVessel, setFilterVessel, filterOptions.vessels, isVesselFilterOpen, setIsVesselFilterOpen, 'Buque')}
+                            {renderFilterDropdown(filterVessel, setFilterVessel, filterOptions.vessels, isVesselFilterOpen, setIsVesselFilterOpen, 'Buque', true)}
                         </div>
 
-                        {/* Año filter row */}
+                        {/* Año filter row (Sin opción 'Todos') */}
                         <div className="flex items-center gap-1">
                             <button onClick={() => {}} className="w-[75px] shrink-0 h-7.5 flex items-center justify-center text-[11px] font-extrabold rounded-lg transition-all cursor-default bg-white text-slate-700 border border-slate-200">
                                 Año
                             </button>
-                            {renderFilterDropdown(filterYear, setFilterYear, filterOptions.years, isYearFilterOpen, setIsYearFilterOpen, 'Año')}
+                            {renderFilterDropdown(filterYear, setFilterYear, filterOptions.years, isYearFilterOpen, setIsYearFilterOpen, 'Año', false)}
                         </div>
                     </div>
                 </div>
@@ -690,35 +748,14 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                     <div className="flex-1 p-2 flex flex-col gap-2.5 bg-blue-50/30 rounded-r-xl relative">
                         {renderCustomDropdownPri()}
                         <div className="flex flex-row gap-4 pt-2 border-t border-blue-200/40 mt-1">
-                            {/* Columna Izquierda: Tipo de Gráfico (Iconos apilados) */}
+                            {/* Columna Izquierda: Tipo de Gráfico */}
                             <div className="flex flex-col gap-1 w-9 shrink-0">
                                 <button 
                                     onClick={() => setPrimaryGraphType('bar_stack')}
                                     className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'bar_stack' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
-                                    title="Barras Stack"
+                                    title="Barras Stack (Viajes)"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><rect x="7" y="13" width="10" height="4" rx="1"/><rect x="7" y="7" width="10" height="4" rx="1"/></svg>
-                                </button>
-                                <button 
-                                    onClick={() => setPrimaryGraphType('bar_group')}
-                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'bar_group' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
-                                    title="Barras Adjuntas"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 17v-6"/><path d="M11 17V9"/><path d="M15 17v-4"/><path d="M19 17V5"/></svg>
-                                </button>
-                                <button 
-                                    onClick={() => setPrimaryGraphType('line')}
-                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'line' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
-                                    title="Línea Suavizada"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 17c2-5 4-10 8-10s6 5 8 5"/></svg>
-                                </button>
-                                <button 
-                                    onClick={() => setPrimaryGraphType('line_straight')}
-                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'line_straight' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
-                                    title="Línea Recta"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 15l5-8 5 6 4-6"/></svg>
                                 </button>
                             </div>
 
@@ -727,18 +764,18 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                                 <button
                                     onClick={() => setPrimaryLabelColor(primaryLabelColor === '#ffffff' ? '#000000' : '#ffffff')}
                                     className={`w-full text-center py-1 text-[10px] font-extrabold rounded border transition-colors shadow-sm cursor-pointer ${primaryLabelColor === '#ffffff' ? 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800' : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'}`}
-                                    title="Alternar Color (Blanco/Negro)"
+                                    title="Alternar Color Rótulos (Blanco/Negro)"
                                 >
-                                    Etiquetas
+                                    Rótulo Viaje
                                 </button>
                                 <div className="flex flex-col rounded border border-slate-200 overflow-hidden bg-white mt-1 w-full">
-                                    {(['none', 'top', 'inside'] as const).map(pos => (
+                                    {(['none', 'inside', 'top'] as const).map(pos => (
                                         <button
                                             key={pos}
                                             onClick={() => setPrimaryLabelPos(pos)}
                                             className={`text-[9px] font-bold py-1 px-1 transition-all cursor-pointer border-b last:border-0 border-slate-100 ${primaryLabelPos === pos ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
                                         >
-                                            {pos === 'none' ? 'Ocultar' : (pos === 'top' ? 'Encima' : 'Centro')}
+                                            {pos === 'none' ? 'Ocultar' : (pos === 'inside' ? 'V.###' : 'Encima')}
                                         </button>
                                     ))}
                                 </div>
@@ -766,15 +803,8 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                         </div>
                         
                         <div className="flex flex-row gap-4 pt-2 border-t border-emerald-200/40 mt-1">
-                            {/* Columna Izquierda: Tipo de Gráfico (Iconos apilados) */}
+                            {/* Columna Izquierda: Tipo de Gráfico */}
                             <div className="flex flex-col gap-1 w-9 shrink-0">
-                                <button 
-                                    onClick={() => setSecondaryGraphType('bar')}
-                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${secondaryGraphType === 'bar' ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
-                                    title="Barras"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 17v-6"/><path d="M11 17V9"/><path d="M15 17v-4"/><path d="M19 17V5"/></svg>
-                                </button>
                                 <button 
                                     onClick={() => setSecondaryGraphType('line')}
                                     className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${secondaryGraphType === 'line' ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
@@ -825,7 +855,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center min-h-[650px] w-full bg-slate-50 rounded border border-slate-200">
                         <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mb-2"></div>
-                        <p className="text-slate-500 text-xs font-semibold">Procesando gráficos ECharts...</p>
+                        <p className="text-slate-500 text-xs font-semibold">Procesando gráficos ECharts por viaje...</p>
                     </div>
                 )}
             </div>
