@@ -10,7 +10,7 @@ interface DemurrageInteractiveChartProps {
 
 type GroupBy = 'vessel' | 'port' | 'client' | 'petral';
 type PlotMetricPri = 'total_days' | 'total_hours' | 'voyages_count';
-type PlotMetricSec = 'none' | 'avg_days' | 'global_total_days';
+type PlotMetricSec = 'none' | 'rolling_avg_ytd' | 'avg_days' | 'global_total_days';
 type GraphType = 'bar_stack' | 'bar_group' | 'line' | 'line_straight';
 
 const MONTH_LABELS = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
@@ -40,7 +40,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
     const [primaryLabelColor, setPrimaryLabelColor] = useState<string>('#ffffff');
 
     // Eje Secundario
-    const [secondaryMetric, setSecondaryMetric] = useState<PlotMetricSec>('avg_days');
+    const [secondaryMetric, setSecondaryMetric] = useState<PlotMetricSec>('rolling_avg_ytd');
     const [secondaryGraphType, setSecondaryGraphType] = useState<'line' | 'line_straight' | 'bar'>('line');
     const [isSecOpen, setIsSecOpen] = useState(false);
     const [isSecondaryCumulativeGlobal, setIsSecondaryCumulativeGlobal] = useState(false);
@@ -121,8 +121,9 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
 
     const metricOptionsSec = [
         { value: 'none', label: 'Ninguno', icon: '🚫', desc: 'No graficar' },
-        { value: 'avg_days', label: 'Promedio Días/Viaje', icon: '⚖️', desc: 'Días promedio por recalada' },
-        { value: 'global_total_days', label: 'Días de Demora (Mes)', icon: '⏳', desc: 'Suma de días de demora en el mes' }
+        { value: 'rolling_avg_ytd', label: 'Rolling Avg YTD', icon: '📈', desc: 'Promedio móvil acumulado del año en curso' },
+        { value: 'avg_days', label: 'Promedio Mensual', icon: '⚖️', desc: 'Días promedio por recalada en el mes' },
+        { value: 'global_total_days', label: 'Días de Demora (Mes)', icon: '⏳', desc: 'Suma total de días de demora en el mes' }
     ];
 
     const options = useMemo(() => {
@@ -310,13 +311,37 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
             };
         });
 
-        // 2. Series del Eje Secundario (Solo muestra curva donde hay datos, cortando en null si no hay data)
+        // 2. Series del Eje Secundario (Rolling Avg YTD / Promedios con corte limpio en meses vacíos)
         const seriesSec: any[] = [];
         if (secondaryMetric !== 'none') {
+            let runningTotalDays = 0;
+            let runningTotalVoyages = 0;
             let runningTotal = 0;
+
+            // Determinar cuál es el último mes que tiene actividad para cortar limpiamente la curva
+            let lastActiveMonthIdx = -1;
+            for (let i = 11; i >= 0; i--) {
+                if (monthTotals[i].totalVoyages > 0) {
+                    lastActiveMonthIdx = i;
+                    break;
+                }
+            }
+
             const secValues = MONTH_LABELS.map((_, i) => {
+                // Si estamos después del último mes con actividad, retornar null para no dibujar línea en meses vacíos
+                if (i > lastActiveMonthIdx || lastActiveMonthIdx === -1) {
+                    return null;
+                }
+
                 const m = monthTotals[i];
-                // Si no hay viajes en ese mes, no mostrar nada (null) para evitar caída artificial a 0
+                runningTotalDays += m.totalDays;
+                runningTotalVoyages += m.totalVoyages;
+
+                if (secondaryMetric === 'rolling_avg_ytd') {
+                    if (runningTotalVoyages === 0) return null;
+                    return Number((runningTotalDays / runningTotalVoyages).toFixed(2));
+                }
+
                 if (m.totalVoyages === 0) {
                     return null;
                 }
@@ -338,8 +363,14 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
             const isBarSec = secondaryGraphType === 'bar';
             const isStraightSec = secondaryGraphType === 'line_straight';
 
+            const getSecSeriesName = () => {
+                if (secondaryMetric === 'rolling_avg_ytd') return 'Rolling Avg YTD (Sec)';
+                if (secondaryMetric === 'avg_days') return 'Promedio Mensual (Sec)';
+                return 'Días de Demora Mes (Sec)';
+            };
+
             seriesSec.push({
-                name: secondaryMetric === 'avg_days' ? 'Promedio Días/Viaje (Sec)' : 'Días de Demora Mes (Sec)',
+                name: getSecSeriesName(),
                 type: isBarSec ? 'bar' : 'line',
                 yAxisIndex: 1,
                 connectNulls: false, // NO conectar meses vacíos
@@ -371,6 +402,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
         };
 
         const getSecondaryLabel = () => {
+            if (secondaryMetric === 'rolling_avg_ytd') return 'Rolling Avg YTD (d/op)';
             if (secondaryMetric === 'avg_days') return 'Promedio Días / Viaje' + (isSecondaryCumulativeGlobal ? ' (Acum)' : '');
             if (secondaryMetric === 'global_total_days') return 'Días Totales Mes' + (isSecondaryCumulativeGlobal ? ' (Acum)' : '');
             return '';
