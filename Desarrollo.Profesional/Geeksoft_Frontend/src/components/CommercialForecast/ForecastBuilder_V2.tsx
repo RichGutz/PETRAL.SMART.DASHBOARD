@@ -59,6 +59,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     const [showFilters, setShowFilters] = useState(false);
     const [clientTab, setClientTab] = useState<'activos' | 'prospectos'>('activos');
     const [client, setClient] = useState('');
+    const [routeSource, setRouteSource] = useState<'CIERRES' | 'COTIZACIONES' | 'PRESUPUESTOS'>('CIERRES');
     const [route, setRoute] = useState('');
     const [vessel, setVessel] = useState('');
     const [quantity, setQuantity] = useState('');
@@ -70,6 +71,11 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     const [activeClients, setActiveClients] = useState<string[]>(['SPCC', 'NEXA', 'SPOT']);
     const [prospectClients, setProspectClients] = useState<string[]>([]);
     const [spotRoutes, setSpotRoutes] = useState<any[]>([]);
+
+    // Resetear ruta al cambiar de cliente o de fuente para evitar colisiones
+    useEffect(() => {
+        setRoute('');
+    }, [client, routeSource]);
 
     // Identificar si la ruta seleccionada es una ruta de cotización o ruta multicotizador compleja
     const matchedSpot = useMemo(() => {
@@ -112,14 +118,14 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                route.startsWith('QUOTE:');
     }, [matchedSpot, route]);
 
-    // Filtrar las rutas disponibles comercialmente y cotizaciones para el cliente activo
+    // Filtrar las rutas disponibles por la LLAVE COMPUESTA CLIENTE + FUENTE
     const clientRoutes = useMemo(() => {
         if (!client) return [];
         const cleanClient = client.trim().toUpperCase();
-        const routesList: Array<{ key: string; label: string; isQuote?: boolean }> = [];
+        const routesList: Array<{ key: string; label: string; isQuote?: boolean; category?: string }> = [];
         const addedKeys = new Set<string>();
 
-        // 1. Carga 100% Dinámica desde Supabase (contracts, routes_quotes, routes_clients)
+        // Carga Dinámica desde routes_quotes filtrando por CLIENTE + FUENTE
         spotRoutes.forEach(s => {
             const name = (s.name || "").trim().toUpperCase();
             let qClient = (s.client_id || s.client_name || "").trim().toUpperCase();
@@ -131,34 +137,54 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 }
             }
 
-            if (qClient === cleanClient || name.startsWith(`${cleanClient}.`) || name.startsWith(`${cleanClient}_`)) {
-                const tramos = s.legs_data?.tramos || [];
-                const laden = tramos.filter((t: any) => t.type?.toUpperCase() === 'LADEN');
-                let key = '';
-                const sId = s.name || s.spot_id || s.route_id || s.contract_id || s.id;
-                if (laden.length > 0) {
-                    const orig = laden[0].origin_port_id;
-                    const dest = laden[laden.length - 1].destination_port_id;
-                    key = `QUOTE:${sId}:${orig}-${dest}`;
-                } else if (s.origin_port_id && s.destination_port_id) {
-                    key = `QUOTE:${sId}:${s.origin_port_id}-${s.destination_port_id}`;
-                } else {
-                    key = `QUOTE:${sId}:UNK-UNK`;
-                }
+            const isClientMatch = (qClient === cleanClient || name.startsWith(`${cleanClient}.`) || name.startsWith(`${cleanClient}_`));
+            if (!isClientMatch) return;
 
-                if (!addedKeys.has(key)) {
-                    addedKeys.add(key);
-                    routesList.push({
-                        key,
-                        label: s.name,
-                        isQuote: true
-                    });
-                }
+            // Clasificación por Fuente (CIERRES vs COTIZACIONES vs PRESUPUESTOS)
+            const desc = (s.description || '').toUpperCase();
+            const cat = (s.legs_data?.category || '').toUpperCase();
+            const isBudget = desc.includes('PRESUPUESTO') || cat === 'PRESUPUESTO' || s.legs_data?.is_budget === true;
+            const isCoa = desc.includes('COA') || cat === 'COA' || s.is_contract === true;
+            const isSpot = (!isBudget && !isCoa) || desc.includes('COTIZACI') || cat === 'SPOT';
+
+            let isSourceMatch = false;
+            if (routeSource === 'PRESUPUESTOS') {
+                isSourceMatch = isBudget;
+            } else if (routeSource === 'CIERRES') {
+                isSourceMatch = isCoa;
+            } else if (routeSource === 'COTIZACIONES') {
+                isSourceMatch = isSpot && !isBudget;
+            }
+
+            if (!isSourceMatch) return;
+
+            const tramos = s.legs_data?.tramos || [];
+            const laden = tramos.filter((t: any) => t.type?.toUpperCase() === 'LADEN');
+            let key = '';
+            const sId = s.name || s.spot_id || s.route_id || s.contract_id || s.id;
+            if (laden.length > 0) {
+                const orig = laden[0].origin_port_id;
+                const dest = laden[laden.length - 1].destination_port_id;
+                key = `QUOTE:${sId}:${orig}-${dest}`;
+            } else if (s.origin_port_id && s.destination_port_id) {
+                key = `QUOTE:${sId}:${s.origin_port_id}-${s.destination_port_id}`;
+            } else {
+                key = `QUOTE:${sId}:UNK-UNK`;
+            }
+
+            if (!addedKeys.has(key)) {
+                addedKeys.add(key);
+                routesList.push({
+                    key,
+                    label: s.name,
+                    isQuote: true,
+                    category: routeSource
+                });
             }
         });
 
         return routesList;
-    }, [client, spotRoutes]);
+    }, [client, routeSource, spotRoutes]);
 
 
     // Lógica reactiva para autocompletar buque, cantidad y flete (yield)
@@ -223,29 +249,23 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 setActiveClients(['SPCC', 'NEXA']);
             });
 
-            // 2. Cotizaciones y Prospectos
-            ForecastService.listSpots().then(spots => {
+            // 2. Clientes Prospectos
+            ForecastService.getClients().then(clientsList => {
+                const prospects = (clientsList || [])
+                    .filter((c: any) => c.is_prospect === true)
+                    .map((c: any) => c.client_id?.toUpperCase())
+                    .filter(Boolean);
+                const uniqueProspects = Array.from(new Set(prospects)) as string[];
+                uniqueProspects.sort();
+                setProspectClients(uniqueProspects);
+            }).catch(err => console.error("Failed to fetch prospect clients:", err));
+
+            // 3. Rutas Spot / Quotes / Multicotizador
+            ForecastService.getSpotVoyages().then(spots => {
                 setSpotRoutes(spots || []);
-                const prospectNames = new Set<string>();
-                (spots || []).forEach((s: any) => {
-                    const name = (s.name || "").trim().toUpperCase();
-                    let pName = name;
-                    if (name.includes('.')) pName = name.split('.')[0].trim();
-                    else if (name.includes('-')) pName = name.split('-')[0].trim();
-                    if (pName && pName !== 'SPCC' && pName !== 'NEXA' && pName !== 'SPOT') {
-                        prospectNames.add(pName);
-                    }
-                });
-                const sortedProspects = Array.from(prospectNames).sort();
-                setProspectClients(sortedProspects.length > 0 ? sortedProspects : ['MARCOBRE', 'PRIMAX', 'CODELCO', 'CERRO VERDE']);
             }).catch(err => console.error("Failed to fetch spot routes:", err));
         });
     }, []);
-
-    // Limpiar la ruta seleccionada si cambia el cliente o la pestaña
-    useEffect(() => {
-        setRoute('');
-    }, [client, clientTab]);
 
     // Limpiar cliente al cambiar de pestaña
     const handleTabChange = (tab: 'activos' | 'prospectos') => {
@@ -287,13 +307,13 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         const missing: string[] = [];
         if (selectedMonths.length === 0) missing.push("3. Meses a modelar");
         if (!client) missing.push("4. Cliente");
-        if (!route) missing.push("5. Ruta / Quote");
+        if (!route) missing.push(`5. Ruta (${routeSource})`);
         if (!vessel) missing.push("6. Buque");
         if (!frequency || parseInt(frequency) <= 0) missing.push("7. N° Viajes");
         if (client === 'SPOT' && !spotSuffix.trim()) missing.push("Sufijo SPOT");
         if (client === 'SPOT' && !customTariff) missing.push("Flete SPOT");
         return missing;
-    }, [selectedMonths, client, route, vessel, frequency, spotSuffix, customTariff]);
+    }, [selectedMonths, client, route, routeSource, vessel, frequency, spotSuffix, customTariff]);
 
     const isFormValid = missingFields.length === 0;
 
@@ -343,13 +363,11 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
     const selectedRouteDisplay = useMemo(() => {
         if (!selectedRouteObj) return '';
-        return selectedRouteObj.isQuote ? `💬 ${selectedRouteObj.label}` : selectedRouteObj.label.replace('-', ' - ');
-    }, [selectedRouteObj]);
+        const prefix = routeSource === 'PRESUPUESTOS' ? '📊 ' : routeSource === 'CIERRES' ? '📜 ' : '💬 ';
+        return `${prefix}${selectedRouteObj.label}`;
+    }, [selectedRouteObj, routeSource]);
 
     // SERIE 33: Guarda DESPUÉS de todos los hooks (Fix React Error #300)
-    // hideInputs cambia con activeTab (false en /dashboard, true en /graphic-analysis)
-    // Si el return estuviera antes de los useMemo de arriba, React contaría hooks distintos
-    // en cada render y lanzaría "Rendered fewer hooks than expected".
     if (hideInputs) {
         return null;
     }
@@ -359,12 +377,12 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
             <CardContent className="py-2.5 px-4 flex flex-col gap-3">
                 
                 {/* ========================================================================= */}
-                {/* FILA 1: HORIZONTE, CLIENTE, RUTA Y BUQUE (SISTEMA DE DISEÑO APEFAC LIGHT) */}
+                {/* FILA 1: HORIZONTE, CLIENTE, FUENTE, RUTA Y BUQUE */}
                 {/* ========================================================================= */}
                 <div className="flex flex-row items-center gap-2.5 w-full overflow-x-auto pb-1 scrollbar-none shrink-0">
                     
-                    {/* 1. Inicio forecast */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[130px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    {/* 1. Inicio forecast (Angostado -20%: min-w-[105px]) */}
+                    <div className="flex flex-col gap-1 flex-1 min-w-[105px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">1. Inicio forecast</Label>
                         <MonthPicker 
                             value={currentStartDate.slice(0, 7)}
@@ -385,8 +403,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         />
                     </div>
 
-                    {/* 2. Fin forecast */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[130px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    {/* 2. Fin forecast (Angostado -20%: min-w-[105px]) */}
+                    <div className="flex flex-col gap-1 flex-1 min-w-[105px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">2. Fin forecast</Label>
                         <MonthPicker 
                             value={currentEndDate.slice(0, 7)}
@@ -409,7 +427,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* 3. Meses a modelar */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[140px] relative bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    <div className="flex flex-col gap-1 flex-1 min-w-[130px] relative bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">3. Meses a modelar</Label>
                         <Popover>
                             <PopoverTrigger
@@ -417,13 +435,17 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             >
                                 <span className="truncate text-left w-full">
                                     {selectedMonths.length === 0 ? "Seleccionar..." : 
-                                     selectedMonths.length === 1 ? selectedMonths[0] : 
+                                     selectedMonths.length === dynamicMonths.length ? `Todos (${dynamicMonths.length})` :
+                                     selectedMonths.length === 1 ? formatMonthPill(selectedMonths[0]) : 
                                      `${selectedMonths.length} meses`}
                                 </span>
                                 <span className="text-[10px] text-sky-600 shrink-0 ml-1">▼</span>
                             </PopoverTrigger>
                             <PopoverContent className="w-[320px] p-4" side="bottom" align="start">
-                                <div className="text-[11px] uppercase font-bold tracking-wider text-slate-400 mb-3 border-b pb-1.5">Selección Múltiple</div>
+                                <div className="text-[11px] uppercase font-bold tracking-wider text-slate-400 mb-3 border-b pb-1.5 flex justify-between items-center">
+                                    <span>Horizonte ({dynamicMonths.length} meses)</span>
+                                    <span className="text-[10px] text-slate-500 font-mono font-bold">{selectedMonths.length} marcados</span>
+                                </div>
                                 <div className="flex gap-3">
                                     <div className="flex-1 max-h-[220px] overflow-y-auto pr-1 grid grid-cols-3 gap-2 custom-scrollbar">
                                         {dynamicMonths.length === 0 ? (
@@ -438,7 +460,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                                         if (selectedMonths.includes(m)) setSelectedMonths(prev => prev.filter(x => x !== m));
                                                         else setSelectedMonths(prev => [...prev, m].sort());
                                                     }}
-                                                    className={`px-1.5 py-1.5 rounded-full text-[10px] font-bold transition-all border outline-none truncate ${
+                                                    className={`px-1.5 py-1.5 rounded-full text-[10px] font-bold transition-all border outline-none truncate cursor-pointer ${
                                                         selectedMonths.includes(m) 
                                                         ? 'bg-petral-teal text-white border-petral-teal shadow-md transform scale-[1.02]' 
                                                         : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-700'
@@ -453,13 +475,19 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                         <div className="flex flex-col gap-2 border-l pl-3 justify-start pt-1">
                                             <button 
                                                 type="button" 
-                                                onClick={() => setSelectedMonths([...dynamicMonths])}
-                                                className="text-[10px] w-[64px] py-1.5 bg-slate-100 rounded text-slate-600 font-bold hover:bg-slate-200 shadow-sm border border-slate-200"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setSelectedMonths([...dynamicMonths]);
+                                                }}
+                                                className="text-[10px] w-[64px] py-1.5 bg-blue-600 rounded text-white font-black hover:bg-blue-700 shadow-sm cursor-pointer transition-colors"
                                             >Todos</button>
                                             <button 
                                                 type="button" 
-                                                onClick={() => setSelectedMonths([])}
-                                                className="text-[10px] w-[64px] py-1.5 bg-slate-50 rounded text-slate-500 hover:bg-slate-200 shadow-sm border border-slate-200"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setSelectedMonths([]);
+                                                }}
+                                                className="text-[10px] w-[64px] py-1.5 bg-slate-100 rounded text-slate-600 font-bold hover:bg-slate-200 shadow-sm border border-slate-200 cursor-pointer"
                                             >Ninguno</button>
                                         </div>
                                     )}
@@ -468,22 +496,22 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Popover>
                     </div>
 
-                    {/* 4. Cliente (Pestañas ACTIVOS / PROSPECTOS + Dropdown) */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[170px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    {/* 4. Cliente (Angostado -20%: min-w-[135px]) */}
+                    <div className="flex flex-col gap-1 flex-1 min-w-[135px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <div className="flex items-center justify-between">
                             <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">4. Cliente</Label>
                             <div className="flex items-center gap-0.5 bg-white p-0.5 rounded border border-slate-200 text-[8px] font-black shadow-2xs">
                                 <button
                                     type="button"
                                     onClick={() => handleTabChange('activos')}
-                                    className={`px-1.5 py-0.2 rounded transition-colors ${clientTab === 'activos' ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'}`}
+                                    className={`px-1 py-0.2 rounded transition-colors ${clientTab === 'activos' ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'}`}
                                 >
-                                    ACTIVOS
+                                    ACT.
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => handleTabChange('prospectos')}
-                                    className={`px-1.5 py-0.2 rounded transition-colors ${clientTab === 'prospectos' ? 'bg-purple-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'}`}
+                                    className={`px-1 py-0.2 rounded transition-colors ${clientTab === 'prospectos' ? 'bg-purple-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'}`}
                                 >
                                     PROSP.
                                 </button>
@@ -507,6 +535,33 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Select>
                     </div>
 
+                    {/* NUEVO BOTÓN: FUENTE (CIERRES | COTIZACIONES | PRESUPUESTOS) */}
+                    <div className="flex flex-col gap-1 flex-1 min-w-[130px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">FUENTE</Label>
+                        <Select value={routeSource} onValueChange={(val: any) => setRouteSource(val)}>
+                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold">
+                                <SelectValue placeholder="Fuente" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="CIERRES">
+                                    <div className="flex items-center gap-1.5 font-bold text-blue-700">
+                                        <span className="text-xs">📜</span> CIERRES
+                                    </div>
+                                </SelectItem>
+                                <SelectItem value="COTIZACIONES">
+                                    <div className="flex items-center gap-1.5 font-bold text-purple-700">
+                                        <span className="text-xs">📄</span> COTIZACIONES
+                                    </div>
+                                </SelectItem>
+                                <SelectItem value="PRESUPUESTOS">
+                                    <div className="flex items-center gap-1.5 font-bold text-emerald-700">
+                                        <span className="text-xs">📊</span> PRESUPUESTOS
+                                    </div>
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     {client === 'SPOT' && (
                         <div className="flex flex-col gap-1 flex-1 min-w-[120px] bg-red-50/80 border border-red-200 rounded-lg p-1.5 shadow-2xs">
                             <Label className="text-[10px] font-extrabold text-red-600 uppercase tracking-tight whitespace-nowrap">Sufijo SPOT *</Label>
@@ -520,18 +575,22 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </div>
                     )}
 
-                    {/* 5. Ruta o Cotización */}
+                    {/* 5. Ruta o Cotización (Filtrado por Llave Compuesta CLIENTE + FUENTE) */}
                     <div className="flex flex-col gap-1 flex-2 min-w-[180px] max-w-[280px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all overflow-hidden">
-                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">5. Ruta / Quote</Label>
+                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                            5. Ruta ({routeSource === 'CIERRES' ? 'COA' : routeSource === 'PRESUPUESTOS' ? 'PPTOS' : 'SPOT'})
+                        </Label>
                         <Select value={route} onValueChange={(val) => setRoute(val || '')} disabled={!client}>
                             <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold overflow-hidden">
-                                <SelectValue placeholder="Ruta" className="block truncate max-w-full">
+                                <SelectValue placeholder={`Seleccionar ${routeSource.toLowerCase()}...`} className="block truncate max-w-full">
                                     {selectedRouteDisplay || undefined}
                                 </SelectValue>
                             </SelectTrigger>
                             <SelectContent className="w-auto min-w-[max-content] max-h-[300px] overflow-y-auto">
                                 {clientRoutes.length === 0 ? (
-                                    <SelectItem value="" disabled>No hay rutas para {client}</SelectItem>
+                                    <SelectItem value="" disabled>
+                                        No hay {routeSource.toLowerCase()} para {client}
+                                    </SelectItem>
                                 ) : (
                                     clientRoutes.map(rObj => {
                                         const key = rObj.key;
@@ -545,7 +604,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                             <SelectItem key={key} value={key}>
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }}></div>
-                                                    {isQuote ? `💬 ${label}` : label.replace('-', ' - ')}
+                                                    {routeSource === 'PRESUPUESTOS' ? `📊 ${label}` : routeSource === 'CIERRES' ? `📜 ${label}` : `💬 ${label}`}
                                                 </div>
                                             </SelectItem>
                                         );

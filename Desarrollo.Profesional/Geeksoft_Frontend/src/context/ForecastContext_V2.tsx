@@ -189,32 +189,8 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     const portCostModeRef = useRef<'static' | 'matrix'>('static');
 
     const dynamicMonths = useMemo(() => {
-        // 1. Extraer primero los meses reales presentes en data.aggregated_data
-        const monthsSet = new Set<string>();
-        if (data && data.aggregated_data && typeof data.aggregated_data === 'object') {
-            Object.values(data.aggregated_data).forEach((routes: any) => {
-                if (routes && typeof routes === 'object') {
-                    Object.values(routes).forEach((vessels: any) => {
-                        if (vessels && typeof vessels === 'object') {
-                            Object.values(vessels).forEach((mMap: any) => {
-                                if (mMap && typeof mMap === 'object') {
-                                    Object.keys(mMap).forEach(m => {
-                                        if (m && m.match(/^\d{4}-\d{2}$/)) {
-                                            monthsSet.add(m);
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-        }
-        if (monthsSet.size > 0) {
-            return Array.from(monthsSet).sort();
-        }
-
-        // 2. Fallback a fechas de rango configuradas
+        // Derivar SIEMPRE los meses desde el horizonte configurado (startDate a endDate)
+        // para garantizar que la construcción incremental del forecast mantenga todo el año disponible.
         if (!startDate || !endDate) return [];
         const startParts = startDate.split('-');
         const endParts = endDate.split('-');
@@ -234,7 +210,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             }
         }
         return months;
-    }, [data, startDate, endDate]);
+    }, [startDate, endDate]);
 
     // UI Toggles & Filters states
     const [hiddenClients, setHiddenClients] = useState<string[]>([]);
