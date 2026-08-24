@@ -535,27 +535,27 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Select>
                     </div>
 
-                    {/* NUEVO BOTÓN: FUENTE (CIERRES | COTIZACIONES | PRESUPUESTOS) */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[130px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    {/* FUENTE: CIERRES | COTIZACIONES | PRESUPUESTOS (Angostado -30%: min-w-[92px] max-w-[108px]) */}
+                    <div className="flex flex-col gap-1 flex-1 min-w-[92px] max-w-[108px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all shrink-0">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">FUENTE</Label>
                         <Select value={routeSource} onValueChange={(val: any) => setRouteSource(val)}>
-                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold">
+                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold px-1.5">
                                 <SelectValue placeholder="Fuente" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="CIERRES">
-                                    <div className="flex items-center gap-1.5 font-bold text-blue-700">
-                                        <span className="text-xs">📜</span> CIERRES
+                                    <div className="flex items-center gap-1.5 font-bold text-blue-700 text-xs">
+                                        <span>📜</span> CIERRES
                                     </div>
                                 </SelectItem>
                                 <SelectItem value="COTIZACIONES">
-                                    <div className="flex items-center gap-1.5 font-bold text-purple-700">
-                                        <span className="text-xs">📄</span> COTIZACIONES
+                                    <div className="flex items-center gap-1.5 font-bold text-purple-700 text-xs">
+                                        <span>📄</span> COTIZACIONES
                                     </div>
                                 </SelectItem>
                                 <SelectItem value="PRESUPUESTOS">
-                                    <div className="flex items-center gap-1.5 font-bold text-emerald-700">
-                                        <span className="text-xs">📊</span> PRESUPUESTOS
+                                    <div className="flex items-center gap-1.5 font-bold text-emerald-700 text-xs">
+                                        <span>📊</span> PRESUPUESTOS
                                     </div>
                                 </SelectItem>
                             </SelectContent>
@@ -575,14 +575,14 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </div>
                     )}
 
-                    {/* 5. Ruta o Cotización (Filtrado por Llave Compuesta CLIENTE + FUENTE) */}
-                    <div className="flex flex-col gap-1 flex-2 min-w-[180px] max-w-[280px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all overflow-hidden">
+                    {/* 5. Ruta (Expandido con el espacio ganado de FUENTE: min-w-[220px] max-w-[340px]) */}
+                    <div className="flex flex-col gap-1 flex-2 min-w-[220px] max-w-[340px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all overflow-hidden">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">
-                            5. Ruta ({routeSource === 'CIERRES' ? 'COA' : routeSource === 'PRESUPUESTOS' ? 'PPTOS' : 'SPOT'})
+                            5. Ruta
                         </Label>
                         <Select value={route} onValueChange={(val) => setRoute(val || '')} disabled={!client}>
                             <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold overflow-hidden">
-                                <SelectValue placeholder={`Seleccionar ${routeSource.toLowerCase()}...`} className="block truncate max-w-full">
+                                <SelectValue placeholder="Seleccionar ruta..." className="block truncate max-w-full">
                                     {selectedRouteDisplay || undefined}
                                 </SelectValue>
                             </SelectTrigger>
