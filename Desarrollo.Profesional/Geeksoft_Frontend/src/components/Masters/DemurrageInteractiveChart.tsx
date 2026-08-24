@@ -10,7 +10,7 @@ interface DemurrageInteractiveChartProps {
 
 type GroupBy = 'vessel' | 'port' | 'client' | 'petral';
 type PlotMetricPri = 'total_days' | 'total_hours' | 'voyages_count';
-type PlotMetricSec = 'none' | 'rolling_avg_ytd' | 'avg_days' | 'global_total_days';
+type PlotMetricSec = 'none' | 'rolling_avg_ytd_voyage' | 'rolling_avg_ytd_port' | 'avg_days' | 'global_total_days';
 type GraphType = 'bar_stack' | 'bar_group' | 'line' | 'line_straight';
 
 const MONTH_LABELS = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
@@ -40,7 +40,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
     const [primaryLabelColor, setPrimaryLabelColor] = useState<string>('#ffffff');
 
     // Eje Secundario
-    const [secondaryMetric, setSecondaryMetric] = useState<PlotMetricSec>('rolling_avg_ytd');
+    const [secondaryMetric, setSecondaryMetric] = useState<PlotMetricSec>('rolling_avg_ytd_voyage');
     const [secondaryGraphType, setSecondaryGraphType] = useState<'line' | 'line_straight' | 'bar'>('line');
     const [isSecOpen, setIsSecOpen] = useState(false);
     const [isSecondaryCumulativeGlobal, setIsSecondaryCumulativeGlobal] = useState(false);
@@ -121,8 +121,9 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
 
     const metricOptionsSec = [
         { value: 'none', label: 'Ninguno', icon: '🚫', desc: 'No graficar' },
-        { value: 'rolling_avg_ytd', label: 'Rolling Avg YTD', icon: '📈', desc: 'Promedio móvil acumulado del año en curso' },
-        { value: 'avg_days', label: 'Promedio Mensual', icon: '⚖️', desc: 'Días promedio por recalada en el mes' },
+        { value: 'rolling_avg_ytd_voyage', label: 'Rolling Avg YTD (Días/Viaje)', icon: '🚢', desc: 'Promedio móvil acumulado por viaje completo' },
+        { value: 'rolling_avg_ytd_port', label: 'Rolling Avg YTD (Días/Recalada)', icon: '⚓', desc: 'Promedio móvil acumulado por operación portuaria' },
+        { value: 'avg_days', label: 'Promedio Mensual (Días/Viaje)', icon: '⚖️', desc: 'Días promedio por viaje en el mes' },
         { value: 'global_total_days', label: 'Días de Demora (Mes)', icon: '⏳', desc: 'Suma total de días de demora en el mes' }
     ];
 
@@ -144,10 +145,9 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
         const isPortFiltered = filterPort !== 'ALL' && filterVessel === 'ALL';
 
         // Totales mensuales para el eje secundario
-        const monthTotals = Array(12).fill(0).map(() => ({ totalDays: 0, totalHours: 0, totalVoyages: 0 }));
+        const monthTotals = Array(12).fill(0).map(() => ({ totalDays: 0, totalHours: 0, totalVoyages: 0, totalPortTouches: 0 }));
 
         // Agrupación granular por Viaje para el stack del Eje Primario
-        // Estructura: series de viajes individuales o agregadas por puerto/buque con separación visual
         interface VoyageSeriesItem {
             seriesName: string;
             legendGroup: string;
@@ -168,6 +168,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
             const voyageNum = r.voyage || 0;
             const vesselName = r.vessel || 'Buque';
             const clientName = r.client || 'PETRAL';
+            let voyagePortTouches = 0;
 
             if (isVesselFiltered) {
                 // Filtro por Buque activo: Desglosar por cada PUERTO donde tuvo estadía en ese viaje
@@ -176,6 +177,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                         const pDays = Number(pVal.days) || 0;
                         const pHrs = Number(pVal.hours) || 0;
                         if (pDays > 0 || pHrs > 0) {
+                            voyagePortTouches += 1;
                             const key = `V.${voyageNum} - ${pKey}`;
                             if (!voyageSeriesMap[key]) {
                                 voyageSeriesMap[key] = {
@@ -196,10 +198,11 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                             
                             monthTotals[mIdx].totalDays += pDays;
                             monthTotals[mIdx].totalHours += pHrs;
-                            monthTotals[mIdx].totalVoyages += 1;
+                            monthTotals[mIdx].totalPortTouches += 1;
                         }
                     });
                 }
+                monthTotals[mIdx].totalVoyages += 1;
             } else if (isPortFiltered) {
                 // Filtro por Puerto activo: Desglosar por cada BUQUE en ese viaje
                 let pDays = 0;
@@ -229,12 +232,24 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
 
                     monthTotals[mIdx].totalDays += pDays;
                     monthTotals[mIdx].totalHours += pHrs;
+                    monthTotals[mIdx].totalPortTouches += 1;
                     monthTotals[mIdx].totalVoyages += 1;
                 }
             } else {
                 // Vista General Flota / Petral Todo: Desglosar por Buque y Viaje
                 const totalDays = Number(r.total_days) || 0;
                 const totalHrs = Number(r.total_hours) || 0;
+                
+                // Contar puertos tocados con demora en este viaje
+                if (r.ports) {
+                    Object.values(r.ports).forEach(pVal => {
+                        if (Number(pVal.days) > 0 || Number(pVal.hours) > 0) {
+                            voyagePortTouches += 1;
+                        }
+                    });
+                }
+                if (voyagePortTouches === 0 && totalDays > 0) voyagePortTouches = 2; // Default 2 recaladas si no están desglosados
+
                 if (totalDays > 0 || totalHrs > 0) {
                     const key = `${vesselName} - V.${voyageNum}`;
                     if (!voyageSeriesMap[key]) {
@@ -256,6 +271,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
 
                     monthTotals[mIdx].totalDays += totalDays;
                     monthTotals[mIdx].totalHours += totalHrs;
+                    monthTotals[mIdx].totalPortTouches += voyagePortTouches;
                     monthTotals[mIdx].totalVoyages += 1;
                 }
             }
@@ -311,11 +327,12 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
             };
         });
 
-        // 2. Series del Eje Secundario (Rolling Avg YTD / Promedios con corte limpio en meses vacíos)
+        // 2. Series del Eje Secundario (Rolling Avg YTD Viaje / Recalada / Promedios)
         const seriesSec: any[] = [];
         if (secondaryMetric !== 'none') {
             let runningTotalDays = 0;
             let runningTotalVoyages = 0;
+            let runningTotalTouches = 0;
             let runningTotal = 0;
 
             // Determinar cuál es el último mes que tiene actividad para cortar limpiamente la curva
@@ -328,7 +345,6 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
             }
 
             const secValues = MONTH_LABELS.map((_, i) => {
-                // Si estamos después del último mes con actividad, retornar null para no dibujar línea en meses vacíos
                 if (i > lastActiveMonthIdx || lastActiveMonthIdx === -1) {
                     return null;
                 }
@@ -336,10 +352,16 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                 const m = monthTotals[i];
                 runningTotalDays += m.totalDays;
                 runningTotalVoyages += m.totalVoyages;
+                runningTotalTouches += m.totalPortTouches;
 
-                if (secondaryMetric === 'rolling_avg_ytd') {
+                if (secondaryMetric === 'rolling_avg_ytd_voyage') {
                     if (runningTotalVoyages === 0) return null;
                     return Number((runningTotalDays / runningTotalVoyages).toFixed(2));
+                }
+
+                if (secondaryMetric === 'rolling_avg_ytd_port') {
+                    if (runningTotalTouches === 0) return null;
+                    return Number((runningTotalDays / runningTotalTouches).toFixed(2));
                 }
 
                 if (m.totalVoyages === 0) {
@@ -364,8 +386,9 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
             const isStraightSec = secondaryGraphType === 'line_straight';
 
             const getSecSeriesName = () => {
-                if (secondaryMetric === 'rolling_avg_ytd') return 'Rolling Avg YTD (Sec)';
-                if (secondaryMetric === 'avg_days') return 'Promedio Mensual (Sec)';
+                if (secondaryMetric === 'rolling_avg_ytd_voyage') return 'Rolling Avg YTD (Días/Viaje)';
+                if (secondaryMetric === 'rolling_avg_ytd_port') return 'Rolling Avg YTD (Días/Recalada)';
+                if (secondaryMetric === 'avg_days') return 'Promedio Mensual (Días/Viaje)';
                 return 'Días de Demora Mes (Sec)';
             };
 
@@ -402,7 +425,8 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
         };
 
         const getSecondaryLabel = () => {
-            if (secondaryMetric === 'rolling_avg_ytd') return 'Rolling Avg YTD (d/op)';
+            if (secondaryMetric === 'rolling_avg_ytd_voyage') return 'Rolling Avg YTD (d/viaje)';
+            if (secondaryMetric === 'rolling_avg_ytd_port') return 'Rolling Avg YTD (d/recalada)';
             if (secondaryMetric === 'avg_days') return 'Promedio Días / Viaje' + (isSecondaryCumulativeGlobal ? ' (Acum)' : '');
             if (secondaryMetric === 'global_total_days') return 'Días Totales Mes' + (isSecondaryCumulativeGlobal ? ' (Acum)' : '');
             return '';
