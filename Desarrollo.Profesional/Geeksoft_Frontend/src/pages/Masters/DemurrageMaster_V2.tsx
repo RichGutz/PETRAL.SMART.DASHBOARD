@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import ReactECharts from 'echarts-for-react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { Button } from '../../components/ui/button';
 import { 
@@ -11,65 +10,26 @@ import {
     Trash2, 
     Filter, 
     BarChart3, 
-    TrendingUp, 
     Anchor, 
     Ship, 
     Clock,
     AlertCircle,
     CheckCircle2,
     Calendar,
-    Layers,
-    SlidersHorizontal
+    Layers
 } from 'lucide-react';
 import { PortDemurrageRatesService } from '../../services/providers/portDemurrageRatesService';
 import type { DemurrageRecord, PortVesselDemurrageProfile } from '../../services/providers/portDemurrageRatesService';
-
-type GroupBy = 'vessel' | 'port' | 'client';
-type ChartMetric = 'total_days' | 'total_hours' | 'avg_days' | 'voyages_count';
-type ChartType = 'bar_stack' | 'bar' | 'line' | 'area';
+import { DemurrageInteractiveChart } from '../../components/Masters/DemurrageInteractiveChart';
+import { ForecastService } from '../../services/api';
 
 const MONTH_NAMES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
 
-const COLOR_PALETTE: Record<string, string> = {
-    // Buques
-    'Moquegua': '#10B981',       // Verde Esmeralda
-    'Tablones': '#EF4444',       // Rojo Fuerte
-    'Bomar Lynx': '#3B82F6',     // Azul
-    'Huemul': '#8B5CF6',         // Púrpura
-    'Concon Trader': '#64748B',  // Slate
-    // Puertos
-    'ILO': '#0089CF',            // Azul Petral
-    'CALLAO': '#06B6D4',         // Cyan
-    'MARCONA': '#A855F7',        // Violeta
-    'MATARANI': '#F59E0B',       // Ámbar
-    'MEJILLONES': '#EC4899',     // Rosa
-    // Clientes
-    'SPCC': '#0284C7',
-    'NEXA': '#F97316',
-    'PETRAL': '#0089CF'
-};
-
-const getColorForEntity = (name: string): string => {
-    if (COLOR_PALETTE[name]) return COLOR_PALETTE[name];
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-    return '#' + '00000'.substring(0, 6 - c.length) + c;
-};
-
 export const DemurrageMaster_V2: React.FC = () => {
     const [records, setRecords] = useState<DemurrageRecord[]>([]);
+    const [vesselsMap, setVesselsMap] = useState<Record<string, { color_hex?: string; vessel_name?: string }>>({});
     const [activeTab, setActiveTab] = useState<'chart' | 'matrix' | 'voyages'>('chart');
     
-    // Controles del Gráfico Interactivo
-    const [groupBy, setGroupBy] = useState<GroupBy>('vessel');
-    const [chartMetric, setChartMetric] = useState<ChartMetric>('total_days');
-    const [chartType, setChartType] = useState<ChartType>('bar_stack');
-    const [selectedYearChart, setSelectedYearChart] = useState<string>('ALL');
-    const [selectedPortFilterChart, setSelectedPortFilterChart] = useState<string>('ALL');
-
     // Filtros de Tablas
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedVesselFilter, setSelectedVesselFilter] = useState('ALL');
@@ -105,6 +65,20 @@ export const DemurrageMaster_V2: React.FC = () => {
         PortDemurrageRatesService.syncFromBackend().then(synced => {
             if (synced && synced.length > 0) setRecords(synced);
         }).catch(() => {});
+
+        // Cargar Colores Oficiales de Buques desde la tabla vessels
+        ForecastService.getVessels().then((vList: any[]) => {
+            if (Array.isArray(vList) && vList.length > 0) {
+                const map: Record<string, { color_hex?: string; vessel_name?: string }> = {};
+                vList.forEach(v => {
+                    if (v.vessel_name) map[v.vessel_name] = v;
+                    if (v.vessel_id) map[v.vessel_id] = v;
+                });
+                setVesselsMap(map);
+            }
+        }).catch(err => {
+            console.warn('Error cargando buques para colores de demoras:', err);
+        });
 
         const handleUpdated = () => loadData();
         window.addEventListener('petral_demurrage_updated', handleUpdated);
@@ -174,184 +148,6 @@ export const DemurrageMaster_V2: React.FC = () => {
             criticalPortAvg: maxPortAvg.toFixed(2)
         };
     }, [records, uniqueVessels]);
-
-    // Construcción de la Opción de ECharts
-    const chartOption = useMemo(() => {
-        // Filtrar registros para el gráfico
-        const filteredForChart = records.filter(r => {
-            if (selectedYearChart !== 'ALL' && String(r.year) !== selectedYearChart) return false;
-            return true;
-        });
-
-        // Agrupar entidades (Buques, Puertos o Clientes)
-        let entities: string[] = [];
-        if (groupBy === 'vessel') {
-            entities = uniqueVessels.length > 0 ? uniqueVessels : ['Moquegua', 'Tablones', 'Huemul', 'Concon Trader'];
-        } else if (groupBy === 'port') {
-            entities = PortDemurrageRatesService.STANDARD_PORTS.map(p => p.id);
-        } else if (groupBy === 'client') {
-            entities = uniqueClients.length > 0 ? uniqueClients : ['SPCC', 'NEXA', 'PETRAL'];
-        }
-
-        // Matriz de 12 meses para cada entidad
-        const seriesDataMap: Record<string, { sumDays: number[]; sumHrs: number[]; count: number[] }> = {};
-        entities.forEach(ent => {
-            seriesDataMap[ent] = {
-                sumDays: Array(12).fill(0),
-                sumHrs: Array(12).fill(0),
-                count: Array(12).fill(0)
-            };
-        });
-
-        filteredForChart.forEach(r => {
-            const mIdx = (r.month >= 1 && r.month <= 12) ? r.month - 1 : 0;
-            
-            if (groupBy === 'vessel') {
-                const ent = r.vessel;
-                if (!seriesDataMap[ent]) {
-                    seriesDataMap[ent] = { sumDays: Array(12).fill(0), sumHrs: Array(12).fill(0), count: Array(12).fill(0) };
-                }
-
-                if (selectedPortFilterChart === 'ALL') {
-                    seriesDataMap[ent].sumDays[mIdx] += (Number(r.total_days) || 0);
-                    seriesDataMap[ent].sumHrs[mIdx] += (Number(r.total_hours) || 0);
-                    seriesDataMap[ent].count[mIdx] += 1;
-                } else if (r.ports && r.ports[selectedPortFilterChart]) {
-                    seriesDataMap[ent].sumDays[mIdx] += (Number(r.ports[selectedPortFilterChart].days) || 0);
-                    seriesDataMap[ent].sumHrs[mIdx] += (Number(r.ports[selectedPortFilterChart].hours) || 0);
-                    seriesDataMap[ent].count[mIdx] += 1;
-                }
-            } else if (groupBy === 'client') {
-                const ent = r.client || 'PETRAL';
-                if (!seriesDataMap[ent]) {
-                    seriesDataMap[ent] = { sumDays: Array(12).fill(0), sumHrs: Array(12).fill(0), count: Array(12).fill(0) };
-                }
-
-                if (selectedPortFilterChart === 'ALL') {
-                    seriesDataMap[ent].sumDays[mIdx] += (Number(r.total_days) || 0);
-                    seriesDataMap[ent].sumHrs[mIdx] += (Number(r.total_hours) || 0);
-                    seriesDataMap[ent].count[mIdx] += 1;
-                } else if (r.ports && r.ports[selectedPortFilterChart]) {
-                    seriesDataMap[ent].sumDays[mIdx] += (Number(r.ports[selectedPortFilterChart].days) || 0);
-                    seriesDataMap[ent].sumHrs[mIdx] += (Number(r.ports[selectedPortFilterChart].hours) || 0);
-                    seriesDataMap[ent].count[mIdx] += 1;
-                }
-            } else if (groupBy === 'port') {
-                if (r.ports) {
-                    Object.entries(r.ports).forEach(([pKey, pVal]) => {
-                        const ent = pKey;
-                        if (!seriesDataMap[ent]) {
-                            seriesDataMap[ent] = { sumDays: Array(12).fill(0), sumHrs: Array(12).fill(0), count: Array(12).fill(0) };
-                        }
-                        seriesDataMap[ent].sumDays[mIdx] += (Number(pVal.days) || 0);
-                        seriesDataMap[ent].sumHrs[mIdx] += (Number(pVal.hours) || 0);
-                        seriesDataMap[ent].count[mIdx] += 1;
-                    });
-                }
-            }
-        });
-
-        // Crear las series de ECharts
-        const series = Object.keys(seriesDataMap).map(ent => {
-            const dataObj = seriesDataMap[ent];
-            const dataValues = MONTH_NAMES.map((_, i) => {
-                if (chartMetric === 'total_days') {
-                    return Number(dataObj.sumDays[i].toFixed(2));
-                } else if (chartMetric === 'total_hours') {
-                    return Number(dataObj.sumHrs[i].toFixed(1));
-                } else if (chartMetric === 'avg_days') {
-                    return dataObj.count[i] > 0 ? Number((dataObj.sumDays[i] / dataObj.count[i]).toFixed(2)) : 0;
-                } else {
-                    return dataObj.count[i];
-                }
-            });
-
-            const color = getColorForEntity(ent);
-            const isStack = chartType === 'bar_stack';
-            const isBar = chartType.startsWith('bar');
-            const isArea = chartType === 'area';
-
-            return {
-                name: ent,
-                type: isBar ? 'bar' : 'line',
-                stack: isStack ? 'total' : undefined,
-                smooth: true,
-                areaStyle: isArea ? { opacity: 0.25, color } : undefined,
-                itemStyle: {
-                    color: color,
-                    borderRadius: isStack ? 0 : [3, 3, 0, 0]
-                },
-                emphasis: {
-                    focus: 'series'
-                },
-                data: dataValues
-            };
-        });
-
-        const metricLabels: Record<ChartMetric, string> = {
-            total_days: 'Días de Demora Totales',
-            total_hours: 'Horas de Demora Totales',
-            avg_days: 'Demora Promedio por Viaje (Días)',
-            voyages_count: 'Número de Recaladas'
-        };
-
-        const metricUnit: Record<ChartMetric, string> = {
-            total_days: ' d',
-            total_hours: ' h',
-            avg_days: ' d/viaje',
-            voyages_count: ' viajes'
-        };
-
-        return {
-            backgroundColor: '#ffffff',
-            title: {
-                text: `Evolución de Demoras Históricas — ${metricLabels[chartMetric]}`,
-                subtext: `Agrupado por ${groupBy.toUpperCase()} • Período: ${selectedYearChart === 'ALL' ? 'Histórico Consolidado 2024-2026' : `Año ${selectedYearChart}`} • Puerto: ${selectedPortFilterChart}`,
-                left: 10,
-                top: 10,
-                textStyle: { fontSize: 13, fontWeight: 'bold', color: '#1E293B' },
-                subtextStyle: { fontSize: 10.5, color: '#64748B' }
-            },
-            tooltip: {
-                trigger: 'axis',
-                axisPointer: { type: 'shadow' },
-                backgroundColor: 'rgba(15, 23, 42, 0.92)',
-                borderColor: '#334155',
-                borderWidth: 1,
-                textStyle: { color: '#F8FAFC', fontSize: 11 },
-                valueFormatter: (value: any) => `${value !== undefined && value !== null ? value : 0}${metricUnit[chartMetric]}`
-            },
-            legend: {
-                type: 'scroll',
-                top: 45,
-                left: 10,
-                right: 10,
-                textStyle: { fontSize: 11, color: '#334155', fontWeight: 'bold' }
-            },
-            grid: {
-                left: 45,
-                right: 25,
-                bottom: 30,
-                top: 90,
-                containLabel: true
-            },
-            xAxis: {
-                type: 'category',
-                data: MONTH_NAMES,
-                axisLine: { lineStyle: { color: '#CBD5E1' } },
-                axisLabel: { color: '#475569', fontWeight: 'bold', fontSize: 11 }
-            },
-            yAxis: {
-                type: 'value',
-                name: metricLabels[chartMetric],
-                nameTextStyle: { color: '#64748B', fontSize: 10, align: 'right' },
-                axisLine: { show: false },
-                splitLine: { lineStyle: { color: '#F1F5F9', type: 'dashed' } },
-                axisLabel: { color: '#64748B', fontSize: 10 }
-            },
-            series
-        };
-    }, [records, groupBy, chartMetric, chartType, selectedYearChart, selectedPortFilterChart, uniqueVessels, uniqueClients]);
 
     // Perfiles consolidados para la matriz (Buque × Puerto)
     const matrixProfiles = useMemo(() => {
@@ -651,106 +447,8 @@ export const DemurrageMaster_V2: React.FC = () => {
 
                 {/* 4. CONTENIDO SEGÚN PESTAÑA */}
                 {activeTab === 'chart' ? (
-                    /* TAB 1: ANÁLISIS GRÁFICO INTERACTIVO (ECHARTS) */
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-2xs p-4 flex flex-col gap-3">
-                        {/* Controles del Gráfico */}
-                        <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 bg-slate-50/80 rounded-xl border border-slate-200">
-                            
-                            <div className="flex items-center gap-3 flex-wrap">
-                                <div className="flex items-center gap-1.5">
-                                    <SlidersHorizontal size={14} className="text-slate-500" />
-                                    <span className="text-[11px] font-black text-slate-600 uppercase">Agrupar por:</span>
-                                </div>
-                                <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
-                                    <button 
-                                        onClick={() => setGroupBy('vessel')} 
-                                        className={`px-2.5 py-1 text-xs font-bold rounded cursor-pointer ${groupBy === 'vessel' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:text-slate-900'}`}
-                                    >
-                                        Buque
-                                    </button>
-                                    <button 
-                                        onClick={() => setGroupBy('port')} 
-                                        className={`px-2.5 py-1 text-xs font-bold rounded cursor-pointer ${groupBy === 'port' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:text-slate-900'}`}
-                                    >
-                                        Puerto
-                                    </button>
-                                    <button 
-                                        onClick={() => setGroupBy('client')} 
-                                        className={`px-2.5 py-1 text-xs font-bold rounded cursor-pointer ${groupBy === 'client' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:text-slate-900'}`}
-                                    >
-                                        Cliente
-                                    </button>
-                                </div>
-
-                                <div className="h-4 w-px bg-slate-300 mx-1 hidden sm:block" />
-
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-[11px] font-black text-slate-600 uppercase">Métrica:</span>
-                                    <select
-                                        value={chartMetric}
-                                        onChange={(e) => setChartMetric(e.target.value as ChartMetric)}
-                                        className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 font-bold text-slate-800 focus:outline-none"
-                                    >
-                                        <option value="total_days">Días de Demora Totales</option>
-                                        <option value="total_hours">Horas de Demora Totales</option>
-                                        <option value="avg_days">Demora Promedio por Viaje (Días)</option>
-                                        <option value="voyages_count">Conteo de Recaladas</option>
-                                    </select>
-                                </div>
-
-                                <div className="h-4 w-px bg-slate-300 mx-1 hidden sm:block" />
-
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-[11px] font-black text-slate-600 uppercase">Tipo:</span>
-                                    <select
-                                        value={chartType}
-                                        onChange={(e) => setChartType(e.target.value as ChartType)}
-                                        className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 font-bold text-slate-800 focus:outline-none"
-                                    >
-                                        <option value="bar_stack">Barras Apiladas</option>
-                                        <option value="bar">Barras Agrupadas</option>
-                                        <option value="line">Líneas de Tendencia</option>
-                                        <option value="area">Área Suave</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <select
-                                    value={selectedYearChart}
-                                    onChange={(e) => setSelectedYearChart(e.target.value)}
-                                    className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 font-bold text-slate-800 focus:outline-none"
-                                >
-                                    <option value="ALL">Todos los Años (Consolidado)</option>
-                                    {uniqueYears.map(y => <option key={y} value={String(y)}>Año {y}</option>)}
-                                </select>
-
-                                {groupBy === 'vessel' && (
-                                    <select
-                                        value={selectedPortFilterChart}
-                                        onChange={(e) => setSelectedPortFilterChart(e.target.value)}
-                                        className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 font-bold text-slate-800 focus:outline-none"
-                                    >
-                                        <option value="ALL">Todos los Puertos</option>
-                                        {PortDemurrageRatesService.STANDARD_PORTS.map(p => (
-                                            <option key={p.id} value={p.id}>{p.label}</option>
-                                        ))}
-                                    </select>
-                                )}
-                            </div>
-
-                        </div>
-
-                        {/* Contenedor del Gráfico ECharts */}
-                        <div className="w-full h-[460px] relative">
-                            <ReactECharts 
-                                option={chartOption} 
-                                style={{ height: '100%', width: '100%' }}
-                                notMerge={true}
-                                lazyUpdate={true}
-                            />
-                        </div>
-                    </div>
+                    /* TAB 1: ANÁLISIS GRÁFICO INTERACTIVO (ECHARTS CON COLORES OFICIALES Y FILTROS) */
+                    <DemurrageInteractiveChart records={records} vesselsMap={vesselsMap} />
                 ) : activeTab === 'matrix' ? (
                     /* TAB 2: MATRIZ DE PROMEDIOS CONSOLIDADOS */
                     <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
