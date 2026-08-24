@@ -1,15 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { 
-    Filter, 
-    BarChart3, 
-    SlidersHorizontal, 
-    Ship, 
-    Anchor, 
-    Calendar, 
-    Building2,
-    TrendingUp
-} from 'lucide-react';
 import type { DemurrageRecord } from '../../services/providers/portDemurrageRatesService';
 import { PortDemurrageRatesService } from '../../services/providers/portDemurrageRatesService';
 
@@ -18,101 +8,154 @@ interface DemurrageInteractiveChartProps {
     vesselsMap?: Record<string, { color_hex?: string; vessel_name?: string }>;
 }
 
+type GroupBy = 'vessel' | 'port' | 'client' | 'petral';
 type PlotMetricPri = 'total_days' | 'total_hours' | 'voyages_count';
-type PlotMetricSec = 'avg_days' | 'global_avg_days' | 'none';
-type GraphType = 'bar_stack' | 'bar' | 'line' | 'area';
+type PlotMetricSec = 'none' | 'avg_days' | 'global_total_days';
+type GraphType = 'bar_stack' | 'bar_group' | 'line' | 'line_straight';
 
 const MONTH_LABELS = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
 
 export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps> = ({ 
-    records, 
+    records = [], 
     vesselsMap = {} 
 }) => {
-    // Filtros
-    const [filterVessel, setFilterVessel] = useState<string>('ALL');
-    const [filterPort, setFilterPort] = useState<string>('ALL');
-    const [filterYear, setFilterYear] = useState<string>('ALL');
+    const [groupBy, setGroupBy] = useState<GroupBy>('vessel');
     const [filterClient, setFilterClient] = useState<string>('ALL');
+    const [filterPort, setFilterPort] = useState<string>('ALL');
+    const [filterVessel, setFilterVessel] = useState<string>('ALL');
+    const [filterYear, setFilterYear] = useState<string>('ALL');
+
+    const [isClientFilterOpen, setIsClientFilterOpen] = useState(false);
+    const [isPortFilterOpen, setIsPortFilterOpen] = useState(false);
+    const [isVesselFilterOpen, setIsVesselFilterOpen] = useState(false);
+    const [isYearFilterOpen, setIsYearFilterOpen] = useState(false);
 
     // Eje Primario
     const [primaryMetric, setPrimaryMetric] = useState<PlotMetricPri>('total_days');
     const [primaryGraphType, setPrimaryGraphType] = useState<GraphType>('bar_stack');
+    const [isPriOpen, setIsPriOpen] = useState(false);
+    const [primaryLabelPos, setPrimaryLabelPos] = useState<'none' | 'top' | 'inside'>('none');
+    const [primaryLabelColor, setPrimaryLabelColor] = useState<string>('#ffffff');
 
     // Eje Secundario
     const [secondaryMetric, setSecondaryMetric] = useState<PlotMetricSec>('avg_days');
-    const [secondaryGraphType, setSecondaryGraphType] = useState<GraphType>('line');
+    const [secondaryGraphType, setSecondaryGraphType] = useState<'line' | 'line_straight' | 'bar'>('line');
+    const [isSecOpen, setIsSecOpen] = useState(false);
+    const [isSecondaryCumulativeGlobal, setIsSecondaryCumulativeGlobal] = useState(false);
+    const [isSecondaryPercentage, setIsSecondaryPercentage] = useState(false);
+    const [secondaryLabelPos, setSecondaryLabelPos] = useState<'none' | 'top' | 'inside'>('none');
+    const [secondaryLabelColor, setSecondaryLabelColor] = useState<string>('#ffffff');
 
-    // Opciones únicas para filtros
-    const uniqueVessels = useMemo(() => {
-        const set = new Set<string>();
-        records.forEach(r => { if (r.vessel) set.add(r.vessel); });
-        return Array.from(set).sort();
+    // Listas únicas
+    const filterOptions = useMemo(() => {
+        const clients = new Set<string>();
+        const vessels = new Set<string>();
+        const years = new Set<string>();
+
+        records.forEach(r => {
+            if (r.client) clients.add(r.client);
+            if (r.vessel) vessels.add(r.vessel);
+            if (r.year) years.add(String(r.year));
+        });
+
+        return {
+            clients: Array.from(clients).sort(),
+            ports: PortDemurrageRatesService.STANDARD_PORTS.map(p => p.id),
+            vessels: Array.from(vessels).sort(),
+            years: Array.from(years).sort().reverse()
+        };
     }, [records]);
 
-    const uniqueClients = useMemo(() => {
-        const set = new Set<string>();
-        records.forEach(r => { if (r.client) set.add(r.client); });
-        return Array.from(set).sort();
-    }, [records]);
-
-    const uniqueYears = useMemo(() => {
-        const set = new Set<number>();
-        records.forEach(r => { if (r.year) set.add(r.year); });
-        return Array.from(set).sort((a, b) => b - a);
-    }, [records]);
-
-    // Paleta de colores obtenida de la tabla vessels con fallbacks seguros
-    const getVesselColor = (vesselName: string): string => {
-        const upper = (vesselName || '').toUpperCase().trim();
+    // Paleta de colores oficial de vessels
+    const getHexColor = (name: string, type: GroupBy): string => {
+        if (type === 'petral') return '#0089CF'; // Petral Blue
         
-        // 1. Buscar en vesselsMap cargado desde la tabla vessels
-        for (const [vKey, vData] of Object.entries(vesselsMap)) {
-            if (vKey.toUpperCase() === upper || (vData.vessel_name && vData.vessel_name.toUpperCase() === upper)) {
-                if (vData.color_hex) return vData.color_hex;
+        if (type === 'vessel') {
+            const upper = (name || '').toUpperCase().trim();
+            for (const [vKey, vData] of Object.entries(vesselsMap)) {
+                if (vKey.toUpperCase() === upper || (vData.vessel_name && vData.vessel_name.toUpperCase() === upper)) {
+                    if (vData.color_hex) return vData.color_hex;
+                }
             }
+            if (upper.includes('MOQUEGUA') || upper.includes('BOMAR')) return '#16A34A'; // Verde
+            if (upper.includes('TABLONES')) return '#DC2626'; // Rojo
+            if (upper.includes('HUEMUL')) return '#4F46E5';   // Índigo
+            if (upper.includes('CONCON')) return '#475569';   // Slate
+            return '#0EA5E9';
         }
 
-        // 2. Colores estándar de la flota Petral
-        if (upper.includes('MOQUEGUA') || upper.includes('BOMAR')) return '#16A34A'; // Verde Moquegua
-        if (upper.includes('TABLONES')) return '#DC2626';                            // Rojo Tablones
-        if (upper.includes('HUEMUL')) return '#4F46E5';                              // Índigo Huemul
-        if (upper.includes('CONCON')) return '#475569';                              // Slate Concon Trader
+        if (type === 'port') {
+            if (name.includes('ILO')) return '#0089CF';
+            if (name.includes('CALLAO')) return '#06B6D4';
+            if (name.includes('MARCONA')) return '#A855F7';
+            if (name.includes('MATARANI')) return '#F59E0B';
+            if (name.includes('MEJILLONES')) return '#EC4899';
+            return '#334155';
+        }
 
-        return '#0089CF'; // Petral Blue
+        if (type === 'client') {
+            if (name.includes('SPCC')) return '#0369A1';
+            if (name.includes('NEXA')) return '#F97316';
+            return '#1E3A8A';
+        }
+
+        return '#94A3B8';
     };
 
-    // Construcción de Opciones ECharts
-    const chartOptions = useMemo(() => {
-        // Filtrar registros
+    const metricOptionsPri = [
+        { value: 'total_days', label: 'Días de Demora', icon: '⏳', desc: 'Días / Total de estadía' },
+        { value: 'total_hours', label: 'Horas de Demora', icon: '⏱️', desc: 'Horas / Tiempo total fondeo' },
+        { value: 'voyages_count', label: 'Cantidad de Viajes', icon: '📅', desc: 'Recaladas con estadía' }
+    ];
+
+    const metricOptionsSec = [
+        { value: 'none', label: 'Ninguno', icon: '🚫', desc: 'No graficar' },
+        { value: 'avg_days', label: 'Promedio Días/Viaje', icon: '⚖️', desc: 'Días promedio por recalada' },
+        { value: 'global_total_days', label: 'Total Días Mes', icon: '📊', desc: 'Días acumulados en el mes' }
+    ];
+
+    const options = useMemo(() => {
+        if (!records || records.length === 0) return null;
+
+        // Filtrado de registros
         const filtered = records.filter(r => {
+            if (filterClient !== 'ALL' && r.client !== filterClient) return false;
             if (filterVessel !== 'ALL' && r.vessel !== filterVessel) return false;
             if (filterYear !== 'ALL' && String(r.year) !== filterYear) return false;
-            if (filterClient !== 'ALL' && r.client !== filterClient) return false;
             return true;
         });
 
-        // Barcos a graficar en el Eje Primario
-        const vesselsToDisplay = filterVessel !== 'ALL' 
-            ? [filterVessel] 
-            : (uniqueVessels.length > 0 ? uniqueVessels : ['Moquegua', 'Tablones', 'Huemul', 'Concon Trader']);
+        // Entidades a graficar según GroupBy
+        let entities: string[] = [];
+        if (groupBy === 'petral') {
+            entities = ['PETRAL'];
+        } else if (groupBy === 'vessel') {
+            entities = filterVessel !== 'ALL' ? [filterVessel] : filterOptions.vessels;
+        } else if (groupBy === 'port') {
+            entities = filterPort !== 'ALL' ? [filterPort] : filterOptions.ports;
+        } else if (groupBy === 'client') {
+            entities = filterClient !== 'ALL' ? [filterClient] : filterOptions.clients;
+        }
 
-        // Data map por buque y por mes (12 meses)
-        const seriesMapPri: Record<string, { days: number[]; hours: number[]; count: number[] }> = {};
-        vesselsToDisplay.forEach(v => {
-            seriesMapPri[v] = {
+        if (entities.length === 0) {
+            entities = ['PETRAL'];
+        }
+
+        // Matriz por entidad (12 meses)
+        const seriesDataMap: Record<string, { days: number[]; hours: number[]; count: number[] }> = {};
+        entities.forEach(ent => {
+            seriesDataMap[ent] = {
                 days: Array(12).fill(0),
                 hours: Array(12).fill(0),
                 count: Array(12).fill(0)
             };
         });
 
-        // Totales globales mensuales para el Eje Secundario (Promedio)
         const monthTotals = Array(12).fill(0).map(() => ({ totalDays: 0, totalHours: 0, totalVoyages: 0 }));
 
         filtered.forEach(r => {
             const mIdx = (r.month >= 1 && r.month <= 12) ? r.month - 1 : 0;
-            const v = r.vessel;
-
+            
             let voyageDays = 0;
             let voyageHours = 0;
 
@@ -124,11 +167,29 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                 voyageHours = Number(r.ports[filterPort].hours) || 0;
             }
 
-            if (seriesMapPri[v]) {
-                seriesMapPri[v].days[mIdx] += voyageDays;
-                seriesMapPri[v].hours[mIdx] += voyageHours;
+            let ent = 'PETRAL';
+            if (groupBy === 'vessel') ent = r.vessel;
+            else if (groupBy === 'client') ent = r.client || 'PETRAL';
+            else if (groupBy === 'port') {
+                // Cuando agrupa por puerto y no hay filtro único
+                if (filterPort === 'ALL' && r.ports) {
+                    Object.entries(r.ports).forEach(([pKey, pVal]) => {
+                        const pDays = Number(pVal.days) || 0;
+                        const pHrs = Number(pVal.hours) || 0;
+                        if (seriesDataMap[pKey]) {
+                            seriesDataMap[pKey].days[mIdx] += pDays;
+                            seriesDataMap[pKey].hours[mIdx] += pHrs;
+                            if (pDays > 0 || pHrs > 0) seriesDataMap[pKey].count[mIdx] += 1;
+                        }
+                    });
+                }
+            }
+
+            if (groupBy !== 'port' && seriesDataMap[ent]) {
+                seriesDataMap[ent].days[mIdx] += voyageDays;
+                seriesDataMap[ent].hours[mIdx] += voyageHours;
                 if (voyageDays > 0 || voyageHours > 0) {
-                    seriesMapPri[v].count[mIdx] += 1;
+                    seriesDataMap[ent].count[mIdx] += 1;
                 }
             }
 
@@ -139,85 +200,109 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
             }
         });
 
-        // Series del Eje Primario (Barras / Líneas por Buque)
-        const seriesPri = vesselsToDisplay.map(v => {
-            const vData = seriesMapPri[v] || { days: Array(12).fill(0), hours: Array(12).fill(0), count: Array(12).fill(0) };
+        // 1. Series del Eje Primario
+        const seriesPri = entities.map(ent => {
+            const dataObj = seriesDataMap[ent] || { days: Array(12).fill(0), hours: Array(12).fill(0), count: Array(12).fill(0) };
             
-            const dataValues = MONTH_LABELS.map((_, i) => {
-                if (primaryMetric === 'total_days') return Number(vData.days[i].toFixed(2));
-                if (primaryMetric === 'total_hours') return Number(vData.hours[i].toFixed(1));
-                return vData.count[i];
+            const rawValues = MONTH_LABELS.map((_, i) => {
+                if (primaryMetric === 'total_days') return Number(dataObj.days[i].toFixed(2));
+                if (primaryMetric === 'total_hours') return Number(dataObj.hours[i].toFixed(1));
+                return dataObj.count[i];
             });
 
-            const color = getVesselColor(v);
             const isStack = primaryGraphType === 'bar_stack';
             const isBar = primaryGraphType.startsWith('bar');
-            const isArea = primaryGraphType === 'area';
+            const isStraight = primaryGraphType === 'line_straight';
+            const color = getHexColor(ent, groupBy);
 
             return {
-                name: v,
+                name: ent,
                 type: isBar ? 'bar' : 'line',
-                stack: isStack ? 'vessels_total' : undefined,
+                stack: isStack ? 'pri_stack' : undefined,
                 yAxisIndex: 0,
-                smooth: true,
-                areaStyle: isArea ? { opacity: 0.25, color } : undefined,
+                smooth: isBar ? false : !isStraight,
                 itemStyle: {
-                    color: color,
+                    color,
                     borderRadius: isStack ? 0 : [3, 3, 0, 0]
                 },
-                emphasis: {
-                    focus: 'series'
+                label: {
+                    show: primaryLabelPos !== 'none',
+                    position: primaryLabelPos === 'none' ? undefined : primaryLabelPos,
+                    formatter: (params: any) => {
+                        const val = params.data;
+                        if (!val || val === 0) return '';
+                        return primaryMetric === 'total_days' ? `${val}d` : (primaryMetric === 'total_hours' ? `${val}h` : `${val}`);
+                    },
+                    color: primaryLabelColor,
+                    fontWeight: 'bold',
+                    fontSize: 10
                 },
-                data: dataValues
+                emphasis: { focus: 'series' },
+                data: rawValues
             };
         });
 
-        // Series del Eje Secundario (Línea de Promedio)
+        // 2. Series del Eje Secundario
         const seriesSec: any[] = [];
         if (secondaryMetric !== 'none') {
-            const secData = MONTH_LABELS.map((_, i) => {
+            let runningTotal = 0;
+            const secValues = MONTH_LABELS.map((_, i) => {
                 const m = monthTotals[i];
+                let val = 0;
                 if (secondaryMetric === 'avg_days') {
-                    return m.totalVoyages > 0 ? Number((m.totalDays / m.totalVoyages).toFixed(2)) : 0;
+                    val = m.totalVoyages > 0 ? Number((m.totalDays / m.totalVoyages).toFixed(2)) : 0;
+                } else if (secondaryMetric === 'global_total_days') {
+                    val = Number(m.totalDays.toFixed(2));
                 }
-                if (secondaryMetric === 'global_avg_days') {
-                    // Media acumulada
-                    return Number(m.totalDays.toFixed(2));
+
+                if (isSecondaryCumulativeGlobal) {
+                    runningTotal += val;
+                    return Number(runningTotal.toFixed(2));
                 }
-                return 0;
+                return val;
             });
 
-            const isBarSec = secondaryGraphType.startsWith('bar');
-            const isAreaSec = secondaryGraphType === 'area';
+            const isBarSec = secondaryGraphType === 'bar';
+            const isStraightSec = secondaryGraphType === 'line_straight';
 
             seriesSec.push({
-                name: 'Promedio de Demora (Sec)',
+                name: secondaryMetric === 'avg_days' ? 'Promedio Días/Viaje (Sec)' : 'Total Días Mes (Sec)',
                 type: isBarSec ? 'bar' : 'line',
                 yAxisIndex: 1,
-                smooth: true,
+                smooth: isBarSec ? false : !isStraightSec,
                 symbol: 'circle',
-                symbolSize: 7,
-                areaStyle: isAreaSec ? { opacity: 0.15, color: '#F59E0B' } : undefined,
-                lineStyle: { width: 3, type: 'dashed', color: '#F59E0B' },
-                itemStyle: { color: '#F59E0B' },
-                data: secData
+                symbolSize: 8,
+                lineStyle: { width: 3, type: 'dashed', color: '#10B981' },
+                itemStyle: { color: '#10B981' },
+                label: {
+                    show: secondaryLabelPos !== 'none',
+                    position: secondaryLabelPos === 'none' ? undefined : secondaryLabelPos,
+                    formatter: (params: any) => {
+                        const val = params.data;
+                        if (!val || val === 0) return '';
+                        return isSecondaryPercentage ? `${val}%` : `${val} d`;
+                    },
+                    color: secondaryLabelColor,
+                    fontWeight: 'bold',
+                    fontSize: 10
+                },
+                data: secValues
             });
         }
 
-        const getPrimaryMetricLabel = () => {
-            if (primaryMetric === 'total_days') return 'Días de Demora (Totales)';
-            if (primaryMetric === 'total_hours') return 'Horas de Demora (Totales)';
+        const getPrimaryLabel = () => {
+            if (primaryMetric === 'total_days') return 'Días de Demora';
+            if (primaryMetric === 'total_hours') return 'Horas de Demora';
             return 'Cantidad de Viajes';
         };
 
-        const getSecondaryMetricLabel = () => {
-            if (secondaryMetric === 'avg_days') return 'Promedio Días / Viaje';
-            if (secondaryMetric === 'global_avg_days') return 'Días Totales Mes';
+        const getSecondaryLabel = () => {
+            if (secondaryMetric === 'avg_days') return 'Promedio Días / Viaje' + (isSecondaryCumulativeGlobal ? ' (Acum)' : '');
+            if (secondaryMetric === 'global_total_days') return 'Días Totales Mes' + (isSecondaryCumulativeGlobal ? ' (Acum)' : '');
             return '';
         };
 
         return {
-            backgroundColor: '#ffffff',
             tooltip: {
                 trigger: 'axis',
                 axisPointer: { type: 'cross' },
@@ -227,244 +312,489 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                 textStyle: { color: '#F8FAFC', fontSize: 11 },
                 formatter: (params: any) => {
                     if (!params || !Array.isArray(params) || params.length === 0) return '';
-                    let out = `<div style="font-weight:bold;margin-bottom:5px;border-bottom:1px solid #475569;padding-bottom:2px">${params[0]?.axisValue || ''}</div>`;
+                    let tooltip = `<div style="font-weight:600;margin-bottom:4px;border-bottom:1px solid #475569;padding-bottom:2px">${params[0]?.axisValue || ''}</div>`;
                     params.forEach((p: any) => {
                         const isSec = p?.seriesName?.includes('(Sec)');
                         const val = typeof p?.value === 'number' ? p.value : (parseFloat(p?.value) || 0);
                         const unit = isSec 
-                            ? ' d/viaje' 
+                            ? (isSecondaryPercentage ? '%' : ' d') 
                             : (primaryMetric === 'total_days' ? ' d' : (primaryMetric === 'total_hours' ? ' h' : ' viajes'));
                         const cleanName = (p?.seriesName || '').replace(' (Sec)', '');
-                        out += `<div style="display:flex;justify-content:space-between;gap:12px;margin:2px 0">
+                        tooltip += `<div style="display:flex;justify-content:space-between;gap:12px;margin:2px 0">
                             <span>${p?.marker || '•'} <b>${cleanName}</b></span>
                             <span style="font-family:monospace;font-weight:bold">${val}${unit}</span>
                         </div>`;
                     });
-                    return out;
+                    return tooltip;
                 }
             },
             legend: {
-                top: 5,
-                left: 10,
-                right: 10,
-                type: 'scroll',
+                top: 0,
                 icon: 'circle',
-                textStyle: { color: '#334155', fontWeight: 'bold', fontSize: 11 }
+                textStyle: { color: '#475569', fontWeight: 'bold' }
             },
             grid: {
-                left: 55,
-                right: secondaryMetric !== 'none' ? 55 : 20,
-                bottom: 25,
-                top: 45,
+                left: 70, 
+                right: secondaryMetric !== 'none' ? 70 : 30,
+                bottom: 30,
+                top: 40,
                 containLabel: true
             },
             xAxis: {
                 type: 'category',
                 data: MONTH_LABELS,
                 axisLine: { lineStyle: { color: '#CBD5E1' } },
-                axisLabel: { color: '#475569', fontWeight: 'bold', fontSize: 11 }
+                axisLabel: { color: '#64748B', fontWeight: 'bold' }
             },
             yAxis: [
                 {
                     type: 'value',
-                    name: getPrimaryMetricLabel(),
-                    nameTextStyle: { color: '#0EA5E9', fontSize: 10.5, fontWeight: 'bold', align: 'left' },
+                    name: getPrimaryLabel(),
+                    nameTextStyle: { color: '#0EA5E9', padding: [0, 0, 0, -40], fontWeight: 'bold' },
                     axisLine: { show: false },
                     axisLabel: { 
                         color: '#64748B', 
-                        fontWeight: 'bold',
-                        formatter: (val: number) => primaryMetric === 'total_days' ? `${val} d` : (primaryMetric === 'total_hours' ? `${val} h` : `${val}`)
+                        fontWeight: 'bold', 
+                        formatter: (v: number) => primaryMetric === 'total_days' ? `${v} d` : (primaryMetric === 'total_hours' ? `${v} h` : `${v}`)
                     },
-                    splitLine: { lineStyle: { color: '#F1F5F9', type: 'dashed' } }
+                    splitLine: { lineStyle: { type: 'dashed', color: '#E2E8F0' } }
                 },
                 {
                     type: 'value',
-                    name: getSecondaryMetricLabel(),
-                    nameTextStyle: { color: '#D97706', fontSize: 10.5, fontWeight: 'bold', align: 'right' },
+                    name: getSecondaryLabel(),
+                    nameTextStyle: { color: '#059669', padding: [0, -40, 0, 0], fontWeight: 'bold' },
                     show: secondaryMetric !== 'none',
                     axisLine: { show: false },
-                    axisLabel: { 
-                        color: '#D97706', 
-                        fontWeight: 'bold',
-                        formatter: (val: number) => `${val} d`
-                    },
+                    axisLabel: { color: '#059669', fontWeight: 'bold', formatter: (v: number) => `${v} d` },
                     splitLine: { show: false }
                 }
             ],
             series: [...seriesPri, ...seriesSec]
         };
-    }, [records, filterVessel, filterPort, filterYear, filterClient, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, uniqueVessels, vesselsMap]);
+    }, [records, groupBy, filterClient, filterPort, filterVessel, filterYear, primaryMetric, primaryGraphType, primaryLabelPos, primaryLabelColor, secondaryMetric, secondaryGraphType, isSecondaryCumulativeGlobal, isSecondaryPercentage, secondaryLabelPos, secondaryLabelColor, filterOptions, vesselsMap]);
 
     const echartsRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Auto-resize con ResizeObserver
+    // Auto-resize
     useEffect(() => {
         const handleResize = () => {
-            if (echartsRef.current) {
+            if (echartsRef.current && options && options.series && options.series.length > 0) {
                 try {
-                    const instance = echartsRef.current.getEchartsInstance();
-                    if (instance && typeof instance.resize === 'function' && !instance.isDisposed()) {
-                        instance.resize();
+                    const chartInstance = echartsRef.current.getEchartsInstance();
+                    if (chartInstance && typeof chartInstance.resize === 'function' && !chartInstance.isDisposed()) {
+                        chartInstance.resize();
                     }
-                } catch {}
+                } catch (e) {}
             }
         };
 
-        let observer: ResizeObserver | null = null;
+        let resizeObserver: ResizeObserver | null = null;
         if (containerRef.current && typeof ResizeObserver !== 'undefined') {
-            observer = new ResizeObserver(() => handleResize());
-            observer.observe(containerRef.current);
+            resizeObserver = new ResizeObserver(() => handleResize());
+            resizeObserver.observe(containerRef.current);
         }
 
         const timer = setTimeout(handleResize, 100);
         window.addEventListener('resize', handleResize);
+
         return () => {
             clearTimeout(timer);
             window.removeEventListener('resize', handleResize);
-            if (observer) observer.disconnect();
+            if (resizeObserver) resizeObserver.disconnect();
         };
-    }, []);
+    }, [options]);
+
+    const renderCustomDropdownPri = () => {
+        const selectedOption = metricOptionsPri.find(o => o.value === primaryMetric) || metricOptionsPri[0];
+        
+        return (
+            <div className="relative w-full" onClick={(e) => e.stopPropagation()}>
+                <button 
+                    onClick={() => {
+                        setIsSecOpen(false);
+                        setIsPriOpen(!isPriOpen);
+                    }}
+                    className="w-full flex items-center justify-between gap-1 px-2 py-1.5 text-xs font-bold bg-white border border-slate-200 rounded hover:border-slate-350 focus:outline-none transition-all cursor-pointer text-slate-700"
+                >
+                    <div className="flex items-center gap-1.5 truncate">
+                        <span className="text-sm shrink-0">{selectedOption.icon}</span>
+                        <span className="truncate">{selectedOption.label}</span>
+                    </div>
+                    <span className="text-[9px] text-slate-400 shrink-0">{isPriOpen ? '▲' : '▼'}</span>
+                </button>
+
+                {isPriOpen && (
+                    <div className="absolute left-[208px] top-1/2 -translate-y-1/2 bg-white border border-slate-200 rounded-lg shadow-xl z-50 w-[380px] p-2 grid grid-cols-1 gap-1.5 animate-in fade-in slide-in-from-left-2 duration-150">
+                        <div className="px-1 py-0.5 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
+                            <span>Métricas (Eje Primario)</span>
+                            <button onClick={() => setIsPriOpen(false)} className="text-[11px] text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer">✕</button>
+                        </div>
+                        {metricOptionsPri.map((opt) => {
+                            const isSel = opt.value === primaryMetric;
+                            return (
+                                <button
+                                    key={opt.value}
+                                    onClick={() => {
+                                        setPrimaryMetric(opt.value as PlotMetricPri);
+                                        setIsPriOpen(false);
+                                    }}
+                                    className={`text-left p-1.5 flex flex-col gap-0.5 rounded hover:bg-slate-50 transition-all cursor-pointer border ${
+                                        isSel ? 'bg-blue-50/70 border-blue-200 hover:bg-blue-50' : 'border-slate-100/50 bg-slate-50/20'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-sm shrink-0">{opt.icon}</span>
+                                        <span className={`text-[11px] ${isSel ? 'font-bold text-blue-900' : 'font-semibold text-slate-700'} truncate`}>
+                                            {opt.label}
+                                        </span>
+                                    </div>
+                                    <span className="text-[9px] text-slate-400 font-medium pl-5 truncate block">
+                                        {opt.desc}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const renderCustomDropdownSec = () => {
+        const selectedOption = metricOptionsSec.find(o => o.value === secondaryMetric) || metricOptionsSec[0];
+        
+        return (
+            <div className="relative w-full" onClick={(e) => e.stopPropagation()}>
+                <button 
+                    onClick={() => {
+                        setIsPriOpen(false);
+                        setIsSecOpen(!isSecOpen);
+                    }}
+                    className="w-full flex items-center justify-between gap-1 px-2 py-1.5 text-xs font-bold bg-white border border-slate-200 rounded hover:border-slate-350 focus:outline-none transition-all cursor-pointer text-slate-700"
+                >
+                    <div className="flex items-center gap-1.5 truncate">
+                        <span className="text-sm shrink-0">{selectedOption.icon}</span>
+                        <span className="truncate">{selectedOption.label}</span>
+                    </div>
+                    <span className="text-[9px] text-slate-400 shrink-0">{isSecOpen ? '▲' : '▼'}</span>
+                </button>
+
+                {isSecOpen && (
+                    <div className="absolute left-[208px] top-1/2 -translate-y-1/2 bg-white border border-slate-200 rounded-lg shadow-xl z-50 w-[380px] p-2 grid grid-cols-1 gap-1.5 animate-in fade-in slide-in-from-left-2 duration-150">
+                        <div className="px-1 py-0.5 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
+                            <span>Métricas (Eje Secundario)</span>
+                            <button onClick={() => setIsSecOpen(false)} className="text-[11px] text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer">✕</button>
+                        </div>
+                        {metricOptionsSec.map((opt) => {
+                            const isSel = opt.value === secondaryMetric;
+                            return (
+                                <button
+                                    key={opt.value}
+                                    onClick={() => {
+                                        setSecondaryMetric(opt.value as PlotMetricSec);
+                                        setIsSecOpen(false);
+                                    }}
+                                    className={`text-left p-1.5 flex flex-col gap-0.5 rounded hover:bg-slate-50 transition-all cursor-pointer border ${
+                                        isSel ? 'bg-emerald-50/70 border-emerald-200 hover:bg-emerald-50' : 'border-slate-100/50 bg-slate-50/20'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-sm shrink-0">{opt.icon}</span>
+                                        <span className={`text-[11px] ${isSel ? 'font-bold text-emerald-900' : 'font-semibold text-slate-700'} truncate`}>
+                                            {opt.label}
+                                        </span>
+                                    </div>
+                                    <span className="text-[9px] text-slate-400 font-medium pl-5 truncate block">
+                                        {opt.desc}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const renderFilterDropdown = (
+        selectedVal: string, 
+        onSelect: (val: string) => void, 
+        optionsList: string[],
+        isOpen: boolean, 
+        setIsOpen: (open: boolean) => void,
+        title: string
+    ) => {
+        return (
+            <div className="relative flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
+                <button 
+                    onClick={() => {
+                        setIsClientFilterOpen(false);
+                        setIsPortFilterOpen(false);
+                        setIsVesselFilterOpen(false);
+                        setIsYearFilterOpen(false);
+                        setIsPriOpen(false);
+                        setIsSecOpen(false);
+                        setIsOpen(!isOpen);
+                    }}
+                    className="w-full flex items-center justify-between gap-1 px-2 py-1.5 text-xs bg-white border border-slate-200 rounded hover:border-slate-350 focus:outline-none transition-all cursor-pointer text-slate-700 font-bold overflow-hidden"
+                >
+                    <span className="truncate block max-w-full">{selectedVal === 'ALL' ? 'Todos' : selectedVal}</span>
+                    <span className="text-[8px] text-slate-400 shrink-0 ml-1">{isOpen ? '▲' : '▼'}</span>
+                </button>
+
+                {isOpen && (
+                    <div className="absolute left-[130px] top-1/2 -translate-y-1/2 bg-white border border-slate-200 rounded-lg shadow-xl z-50 w-[240px] max-h-[220px] overflow-y-auto p-1.5 flex flex-col gap-0.5 animate-in fade-in slide-in-from-left-2 duration-150">
+                        <div className="px-2 py-1 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
+                            <span>Filtrar {title}</span>
+                            <button onClick={() => setIsOpen(false)} className="text-[10px] text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer">✕</button>
+                        </div>
+                        <button
+                            onClick={() => {
+                                onSelect('ALL');
+                                setIsOpen(false);
+                            }}
+                            className={`text-left text-[11px] p-1.5 rounded transition-all cursor-pointer border ${
+                                selectedVal === 'ALL' 
+                                    ? 'bg-blue-50 border-blue-200 font-bold text-blue-900' 
+                                    : 'border-transparent hover:bg-slate-50 font-medium text-slate-600'
+                            }`}
+                        >
+                            Todos
+                        </button>
+                        {optionsList.map((opt) => {
+                            const isSel = opt === selectedVal;
+                            return (
+                                <button
+                                    key={opt}
+                                    onClick={() => {
+                                        onSelect(opt);
+                                        setIsOpen(false);
+                                    }}
+                                    className={`text-left text-[11px] p-1.5 rounded transition-all cursor-pointer border truncate ${
+                                        isSel 
+                                            ? 'bg-blue-50 border-blue-200 font-bold text-blue-900' 
+                                            : 'border-transparent hover:bg-slate-50 font-medium text-slate-600'
+                                    }`}
+                                >
+                                    {opt}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const hasValidOptions = options && options.series && Array.isArray(options.series) && options.series.length > 0;
 
     return (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-2xs p-4 flex flex-col gap-3.5 w-full">
+        <div className="w-full glass-card bg-white p-5 rounded-xl shadow-xs border border-slate-200 flex flex-row gap-6 items-stretch min-h-[calc(100vh-220px)]">
             
-            {/* RIBBON SUPERIOR: FILTROS + EJE PRIMARIO + EJE SECUNDARIO */}
-            <div className="p-3 bg-slate-50/90 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            {/* Sidebar de Controles (Left) */}
+            <div className="flex flex-col gap-3 shrink-0 min-w-[245px] w-fit">
                 
-                {/* 1. SECCIÓN DE FILTROS (BARCO, PUERTO, AÑO, CLIENTE) */}
-                <div className="flex items-center gap-2.5 flex-wrap">
-                    <div className="flex items-center gap-1.5 text-slate-700">
-                        <Filter size={14} className="text-blue-600" />
-                        <span className="text-[11px] font-black uppercase tracking-tight">Filtros:</span>
+                {/* FILTROS TABS */}
+                <div className="flex flex-row items-stretch bg-white rounded-xl border border-slate-200 shadow-2xs">
+                    <div className="bg-slate-900 w-7 flex items-center justify-center shrink-0 rounded-l-xl self-stretch min-h-full">
+                        <span className="text-[10.5px] font-black text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Filtros</span>
                     </div>
-
-                    {/* Filtro Barco */}
-                    <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-2xs">
-                        <Ship size={12} className="text-emerald-600" />
-                        <select
-                            value={filterVessel}
-                            onChange={(e) => setFilterVessel(e.target.value)}
-                            className="text-xs font-bold text-slate-800 bg-transparent focus:outline-none cursor-pointer"
+                    <div className="flex-1 p-2.5 flex flex-col gap-2 bg-slate-50/70 rounded-r-xl">
+                        <button 
+                            onClick={() => {
+                                setGroupBy('petral');
+                                setFilterClient('ALL');
+                                setFilterPort('ALL');
+                                setFilterVessel('ALL');
+                                setFilterYear('ALL');
+                            }} 
+                            className={`w-full h-8 flex items-center justify-center text-center px-2 text-[11.5px] font-black rounded-lg transition-all cursor-pointer ${groupBy === 'petral' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-sky-700 border border-slate-200 hover:bg-slate-100 font-extrabold'}`}
                         >
-                            <option value="ALL">Todos los Buques</option>
-                            {uniqueVessels.map(v => (
-                                <option key={v} value={v}>{v}</option>
-                            ))}
-                        </select>
-                    </div>
+                            PETRAL (Todo)
+                        </button>
+                        <div className="h-px w-full bg-slate-200 my-0.5"></div>
+                        
+                        {/* Cliente filter row */}
+                        <div className="flex items-center gap-1">
+                            <button onClick={() => setGroupBy('client')} className={`w-[75px] shrink-0 h-7.5 flex items-center justify-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${groupBy === 'client' || filterClient !== 'ALL' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}`}>
+                                Cliente
+                            </button>
+                            {renderFilterDropdown(filterClient, setFilterClient, filterOptions.clients, isClientFilterOpen, setIsClientFilterOpen, 'Cliente')}
+                        </div>
 
-                    {/* Filtro Puerto */}
-                    <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-2xs">
-                        <Anchor size={12} className="text-blue-600" />
-                        <select
-                            value={filterPort}
-                            onChange={(e) => setFilterPort(e.target.value)}
-                            className="text-xs font-bold text-slate-800 bg-transparent focus:outline-none cursor-pointer"
-                        >
-                            <option value="ALL">Todos los Puertos</option>
-                            {PortDemurrageRatesService.STANDARD_PORTS.map(p => (
-                                <option key={p.id} value={p.id}>{p.label}</option>
-                            ))}
-                        </select>
-                    </div>
+                        {/* Puerto filter row */}
+                        <div className="flex items-center gap-1">
+                            <button onClick={() => setGroupBy('port')} className={`w-[75px] shrink-0 h-7.5 flex items-center justify-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${groupBy === 'port' || filterPort !== 'ALL' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}`}>
+                                Puerto
+                            </button>
+                            {renderFilterDropdown(filterPort, setFilterPort, filterOptions.ports, isPortFilterOpen, setIsPortFilterOpen, 'Puerto')}
+                        </div>
 
-                    {/* Filtro Año */}
-                    <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-2xs">
-                        <Calendar size={12} className="text-purple-600" />
-                        <select
-                            value={filterYear}
-                            onChange={(e) => setFilterYear(e.target.value)}
-                            className="text-xs font-bold text-slate-800 bg-transparent focus:outline-none cursor-pointer"
-                        >
-                            <option value="ALL">Todos los Años (Consolidado)</option>
-                            {uniqueYears.map(y => (
-                                <option key={y} value={String(y)}>Año {y}</option>
-                            ))}
-                        </select>
-                    </div>
+                        {/* Buque filter row */}
+                        <div className="flex items-center gap-1">
+                            <button onClick={() => setGroupBy('vessel')} className={`w-[75px] shrink-0 h-7.5 flex items-center justify-center text-[11px] font-extrabold rounded-lg transition-all cursor-pointer ${groupBy === 'vessel' || filterVessel !== 'ALL' ? 'bg-sky-600 text-white shadow-2xs' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'}`}>
+                                Buque
+                            </button>
+                            {renderFilterDropdown(filterVessel, setFilterVessel, filterOptions.vessels, isVesselFilterOpen, setIsVesselFilterOpen, 'Buque')}
+                        </div>
 
-                    {/* Filtro Cliente */}
-                    <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-2xs">
-                        <Building2 size={12} className="text-amber-600" />
-                        <select
-                            value={filterClient}
-                            onChange={(e) => setFilterClient(e.target.value)}
-                            className="text-xs font-bold text-slate-800 bg-transparent focus:outline-none cursor-pointer"
-                        >
-                            <option value="ALL">Todos los Clientes</option>
-                            {uniqueClients.map(c => (
-                                <option key={c} value={c}>{c}</option>
-                            ))}
-                        </select>
+                        {/* Año filter row */}
+                        <div className="flex items-center gap-1">
+                            <button onClick={() => {}} className="w-[75px] shrink-0 h-7.5 flex items-center justify-center text-[11px] font-extrabold rounded-lg transition-all cursor-default bg-white text-slate-700 border border-slate-200">
+                                Año
+                            </button>
+                            {renderFilterDropdown(filterYear, setFilterYear, filterOptions.years, isYearFilterOpen, setIsYearFilterOpen, 'Año')}
+                        </div>
                     </div>
                 </div>
 
-                {/* 2. SECCIÓN DE EJES (PRIMARIO Y SECUNDARIO) */}
-                <div className="flex items-center gap-3 flex-wrap">
-                    
-                    {/* Control Eje Primario (Y1) */}
-                    <div className="flex items-center gap-1.5 bg-blue-50/70 p-1 rounded-lg border border-blue-200/80">
-                        <span className="text-[10px] font-black text-blue-900 uppercase px-1">Eje Primario (Y1):</span>
-                        <select
-                            value={primaryMetric}
-                            onChange={(e) => setPrimaryMetric(e.target.value as PlotMetricPri)}
-                            className="text-xs bg-white border border-blue-200 rounded px-1.5 py-0.5 font-bold text-blue-950 focus:outline-none cursor-pointer"
-                        >
-                            <option value="total_days">Días de Demora</option>
-                            <option value="total_hours">Horas de Demora</option>
-                            <option value="voyages_count">Conteo de Viajes</option>
-                        </select>
-                        <select
-                            value={primaryGraphType}
-                            onChange={(e) => setPrimaryGraphType(e.target.value as GraphType)}
-                            className="text-xs bg-white border border-blue-200 rounded px-1.5 py-0.5 font-bold text-blue-950 focus:outline-none cursor-pointer"
-                        >
-                            <option value="bar_stack">Barras Apiladas</option>
-                            <option value="bar">Barras Agrupadas</option>
-                            <option value="line">Líneas</option>
-                            <option value="area">Área</option>
-                        </select>
+                {/* EJE PRIMARIO TABS */}
+                <div className="flex flex-row items-stretch bg-white rounded-xl border border-blue-200 shadow-2xs">
+                    <div className="bg-blue-600 w-7 flex items-center justify-center shrink-0 rounded-l-xl self-stretch min-h-full">
+                        <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Eje Primario</span>
                     </div>
+                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-blue-50/30 rounded-r-xl relative">
+                        {renderCustomDropdownPri()}
+                        <div className="flex flex-row gap-4 pt-2 border-t border-blue-200/40 mt-1">
+                            {/* Columna Izquierda: Tipo de Gráfico (Iconos apilados) */}
+                            <div className="flex flex-col gap-1 w-9 shrink-0">
+                                <button 
+                                    onClick={() => setPrimaryGraphType('bar_stack')}
+                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'bar_stack' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
+                                    title="Barras Stack"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><rect x="7" y="13" width="10" height="4" rx="1"/><rect x="7" y="7" width="10" height="4" rx="1"/></svg>
+                                </button>
+                                <button 
+                                    onClick={() => setPrimaryGraphType('bar_group')}
+                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'bar_group' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
+                                    title="Barras Adjuntas"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 17v-6"/><path d="M11 17V9"/><path d="M15 17v-4"/><path d="M19 17V5"/></svg>
+                                </button>
+                                <button 
+                                    onClick={() => setPrimaryGraphType('line')}
+                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'line' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
+                                    title="Línea Suavizada"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 17c2-5 4-10 8-10s6 5 8 5"/></svg>
+                                </button>
+                                <button 
+                                    onClick={() => setPrimaryGraphType('line_straight')}
+                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'line_straight' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
+                                    title="Línea Recta"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 15l5-8 5 6 4-6"/></svg>
+                                </button>
+                            </div>
 
-                    {/* Control Eje Secundario (Y2) */}
-                    <div className="flex items-center gap-1.5 bg-amber-50/70 p-1 rounded-lg border border-amber-200/80">
-                        <span className="text-[10px] font-black text-amber-900 uppercase px-1">Eje Secundario (Y2):</span>
-                        <select
-                            value={secondaryMetric}
-                            onChange={(e) => setSecondaryMetric(e.target.value as PlotMetricSec)}
-                            className="text-xs bg-white border border-amber-200 rounded px-1.5 py-0.5 font-bold text-amber-950 focus:outline-none cursor-pointer"
-                        >
-                            <option value="avg_days">Promedio (Días / Viaje)</option>
-                            <option value="global_avg_days">Total Días Mensual</option>
-                            <option value="none">Ninguno (Desactivado)</option>
-                        </select>
-                        {secondaryMetric !== 'none' && (
-                            <select
-                                value={secondaryGraphType}
-                                onChange={(e) => setSecondaryGraphType(e.target.value as GraphType)}
-                                className="text-xs bg-white border border-amber-200 rounded px-1.5 py-0.5 font-bold text-amber-950 focus:outline-none cursor-pointer"
-                            >
-                                <option value="line">Línea</option>
-                                <option value="bar">Barras</option>
-                                <option value="area">Área</option>
-                            </select>
-                        )}
+                            {/* Columna Derecha: Control de Etiquetas */}
+                            <div className="flex-1 flex flex-col gap-1">
+                                <button
+                                    onClick={() => setPrimaryLabelColor(primaryLabelColor === '#ffffff' ? '#000000' : '#ffffff')}
+                                    className={`w-full text-center py-1 text-[10px] font-extrabold rounded border transition-colors shadow-sm cursor-pointer ${primaryLabelColor === '#ffffff' ? 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800' : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'}`}
+                                    title="Alternar Color (Blanco/Negro)"
+                                >
+                                    Etiquetas
+                                </button>
+                                <div className="flex flex-col rounded border border-slate-200 overflow-hidden bg-white mt-1 w-full">
+                                    {(['none', 'top', 'inside'] as const).map(pos => (
+                                        <button
+                                            key={pos}
+                                            onClick={() => setPrimaryLabelPos(pos)}
+                                            className={`text-[9px] font-bold py-1 px-1 transition-all cursor-pointer border-b last:border-0 border-slate-100 ${primaryLabelPos === pos ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                                        >
+                                            {pos === 'none' ? 'Ocultar' : (pos === 'top' ? 'Encima' : 'Centro')}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </div>
 
+                {/* EJE SECUNDARIO TABS */}
+                <div className="flex flex-row items-stretch bg-white rounded-xl border border-emerald-200 shadow-2xs">
+                    <div className="bg-emerald-600 w-7 flex items-center justify-center shrink-0 rounded-l-xl self-stretch min-h-full">
+                        <span className="text-[11px] font-bold text-white uppercase tracking-widest" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Eje Secundario</span>
+                    </div>
+                    <div className="flex-1 p-2 flex flex-col gap-2.5 bg-emerald-50/30 rounded-r-xl relative">
+                        {renderCustomDropdownSec()}
+                        <div className="flex flex-col gap-1.5 mt-1 border-t border-slate-200/50 pt-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" className="w-3 h-3" checked={isSecondaryCumulativeGlobal} onChange={(e) => setIsSecondaryCumulativeGlobal(e.target.checked)} />
+                                <span className="text-[11px] font-medium text-slate-700">Acumular Global</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" className="w-3 h-3" checked={isSecondaryPercentage} onChange={(e) => setIsSecondaryPercentage(e.target.checked)} />
+                                <span className="text-[11px] font-medium text-slate-700">Mostrar en %</span>
+                            </label>
+                        </div>
+                        
+                        <div className="flex flex-row gap-4 pt-2 border-t border-emerald-200/40 mt-1">
+                            {/* Columna Izquierda: Tipo de Gráfico (Iconos apilados) */}
+                            <div className="flex flex-col gap-1 w-9 shrink-0">
+                                <button 
+                                    onClick={() => setSecondaryGraphType('bar')}
+                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${secondaryGraphType === 'bar' ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
+                                    title="Barras"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 17v-6"/><path d="M11 17V9"/><path d="M15 17v-4"/><path d="M19 17V5"/></svg>
+                                </button>
+                                <button 
+                                    onClick={() => setSecondaryGraphType('line')}
+                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${secondaryGraphType === 'line' ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
+                                    title="Línea Suavizada"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 17c2-5 4-10 8-10s6 5 8 5"/></svg>
+                                </button>
+                                <button 
+                                    onClick={() => setSecondaryGraphType('line_straight')}
+                                    className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${secondaryGraphType === 'line_straight' ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
+                                    title="Línea Recta"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 15l5-8 5 6 4-6"/></svg>
+                                </button>
+                            </div>
+
+                            {/* Columna Derecha: Control de Etiquetas */}
+                            <div className="flex-1 flex flex-col gap-1">
+                                <button
+                                    onClick={() => setSecondaryLabelColor(secondaryLabelColor === '#ffffff' ? '#000000' : '#ffffff')}
+                                    className={`w-full text-center py-1 text-[10px] font-extrabold rounded border transition-colors shadow-sm cursor-pointer ${secondaryLabelColor === '#ffffff' ? 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800' : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'}`}
+                                    title="Alternar Color (Blanco/Negro)"
+                                >
+                                    Etiquetas
+                                </button>
+                                <div className="flex flex-col rounded border border-slate-200 overflow-hidden bg-white mt-1 w-full">
+                                    {(['none', 'top', 'inside'] as const).map(pos => (
+                                        <button
+                                            key={pos}
+                                            onClick={() => setSecondaryLabelPos(pos)}
+                                            className={`text-[9px] font-bold py-1 px-1 transition-all cursor-pointer border-b last:border-0 border-slate-100 ${secondaryLabelPos === pos ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                                        >
+                                            {pos === 'none' ? 'Ocultar' : (pos === 'top' ? 'Encima' : 'Centro')}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
 
-            {/* CONTENEDOR GRÁFICO ECHARTS */}
-            <div ref={containerRef} className="w-full h-[470px] relative">
-                <ReactECharts
-                    ref={echartsRef}
-                    option={chartOptions}
-                    style={{ height: '100%', width: '100%' }}
-                    notMerge={true}
-                    lazyUpdate={true}
-                />
+            {/* Contenedor del Gráfico (Right) */}
+            <div ref={containerRef} className="flex-1 flex flex-col min-h-[650px] min-w-0">
+                {hasValidOptions ? (
+                    <ReactECharts ref={echartsRef} option={options} style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} notMerge={true} />
+                ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center min-h-[650px] w-full bg-slate-50 rounded border border-slate-200">
+                        <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mb-2"></div>
+                        <p className="text-slate-500 text-xs font-semibold">Procesando gráficos ECharts...</p>
+                    </div>
+                )}
             </div>
 
         </div>
