@@ -24,8 +24,8 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
     const [filterPort, setFilterPort] = useState<string>('ALL');
     const [filterVessel, setFilterVessel] = useState<string>('ALL');
     
-    // Filtro de Año puntual (Sin opción 'ALL')
-    const [filterYear, setFilterYear] = useState<string>('2024');
+    // Filtro de Año puntual (Sin opción 'ALL', por defecto 2026)
+    const [filterYear, setFilterYear] = useState<string>('2026');
 
     const [isClientFilterOpen, setIsClientFilterOpen] = useState(false);
     const [isPortFilterOpen, setIsPortFilterOpen] = useState(false);
@@ -52,7 +52,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
     const filterOptions = useMemo(() => {
         const clients = new Set<string>();
         const vessels = new Set<string>();
-        const years = new Set<string>();
+        const years = new Set<string>(['2026', '2025', '2024']);
 
         records.forEach(r => {
             if (r.client) clients.add(r.client);
@@ -66,16 +66,9 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
             clients: Array.from(clients).sort(),
             ports: PortDemurrageRatesService.STANDARD_PORTS.map(p => p.id),
             vessels: Array.from(vessels).sort(),
-            years: sortedYears.length > 0 ? sortedYears : ['2026', '2025', '2024']
+            years: sortedYears
         };
     }, [records]);
-
-    // Establecer año inicial por defecto al más reciente si no está seteado
-    useEffect(() => {
-        if (filterOptions.years.length > 0 && (!filterYear || filterYear === 'ALL')) {
-            setFilterYear(filterOptions.years[0]);
-        }
-    }, [filterOptions.years]);
 
     // Paleta de colores oficial
     const getHexColor = (name: string, type: GroupBy): string => {
@@ -131,7 +124,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
         if (!records || records.length === 0) return null;
 
         // Filtrado puntual por Año, Cliente, Buque
-        const targetYear = filterYear && filterYear !== 'ALL' ? filterYear : (filterOptions.years[0] || '2024');
+        const targetYear = filterYear && filterYear !== 'ALL' ? filterYear : '2026';
 
         const filtered = records.filter(r => {
             if (String(r.year) !== targetYear) return false;
