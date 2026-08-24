@@ -636,11 +636,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         targetClient?: string;
         targetClientType?: 'ACTIVOS' | 'PROSPECTOS';
         isContract?: boolean;
+        recordCategory?: 'COA' | 'SPOT' | 'PRESUPUESTO';
         finalName?: string;
     }) => {
         const effectiveClient = saveOptions?.targetClient || selectedClient;
         const effectiveClientType = saveOptions?.targetClientType || clientType;
-        const isSavingContract = effectiveClientType === 'ACTIVOS' && (saveOptions?.isContract ?? (saveTargetTable === 'contracts'));
+        const category = saveOptions?.recordCategory || (saveOptions?.isContract ? 'COA' : 'SPOT');
+        const isSavingContract = category === 'COA' || (effectiveClientType === 'ACTIVOS' && (saveOptions?.isContract ?? (saveTargetTable === 'contracts')));
         const calculatedTramos = getCalculatedTramos();
 
         if (!effectiveClient || !effectiveClient.trim()) {
@@ -682,6 +684,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 selectedClient: effectiveClient,
                 filterProspecto: effectiveClientType === 'PROSPECTOS',
                 isContract: isSavingContract,
+                category,
                 selectedVessel,
                 bunkerPriceIfo,
                 bunkerPriceMdo,
@@ -714,9 +717,11 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             if (freshQuotes && Array.isArray(freshQuotes)) setSavedRoutes(freshQuotes);
             if (freshRoutes && Array.isArray(freshRoutes)) setRoutes(freshRoutes);
 
-            const recordTypeDesc = isSavingContract 
-                ? 'Ruta Cierres (Paso 2)' 
-                : (effectiveClientType === 'PROSPECTOS' ? 'Cotización Prospecto (Paso 3)' : 'Cotizaciones (Paso 3)');
+            const recordTypeDesc = category === 'PRESUPUESTO'
+                ? 'Presupuesto (PPTOS)'
+                : (isSavingContract 
+                    ? 'Ruta Cierres (Paso 2)' 
+                    : (effectiveClientType === 'PROSPECTOS' ? 'Cotización Prospecto (Paso 3)' : 'Cotizaciones (Paso 3)'));
 
             setSaveNotification({
                 message: `✅ ¡Guardado con Éxito en routes_quotes!`,

@@ -15,6 +15,7 @@ export interface SaveQuoteParams {
     brokerCommPct: number;
     rawClients: any[];
     isContract?: boolean;
+    category?: 'COA' | 'SPOT' | 'PRESUPUESTO';
     contractId?: string;
     validFrom?: string;
     validTo?: string;
@@ -36,17 +37,18 @@ export interface SaveQuoteParams {
 export class MulticotizadorStorageService {
     /**
      * Empaqueta y guarda una cotización multicotizador en routes_quotes (tabla única).
-     * SERIE 36: contracts dado de baja. Diferenciación por campo description:
-     *   - "COA Cliente Activo"        → cliente activo guardando ruta COA (Maestro Rutas)
-     *   - "Cotización Cliente Activo" → cliente activo guardando cotización normal
-     *   - "Cotización Prospecto"      → cliente prospecto
+     * Valores canónicos de description para routes_quotes:
+     *   - "COA Cliente Activo"        → cliente activo guardando ruta COA (Maestro Rutas / Paso 2)
+     *   - "Cotización Cliente Activo" → cliente activo guardando cotización normal (Paso 3)
+     *   - "Cotización Prospecto"      → cliente prospecto (Paso 3)
+     *   - "Presupuesto"               → Presupuesto Anual / PPTOS
      */
     public static async saveQuote(params: SaveQuoteParams): Promise<boolean> {
         const {
             routeId, routeName, selectedClient, filterProspecto, selectedVessel,
             bunkerPriceIfo, bunkerPriceMdo, tramosEnriquecidos,
             puertosConfig, vesselParams, addressCommPct, brokerCommPct, rawClients,
-            isContract, validFrom, validTo, validityYears, contractStatus,
+            isContract, category, validFrom, validTo, validityYears, contractStatus,
             bafFormula, bafValidFrom, bafValidTo, bafIfoBase, bafMdoBase, tariffTiers, demurrageRatesMap,
             commentsText,
             financialSummary,
@@ -71,9 +73,11 @@ export class MulticotizadorStorageService {
         const clientInfo = rawClients.find((c: any) => c.client_id === selectedClient);
         const isClientProspect = (clientInfo?.is_prospect === true) || filterProspecto;
 
-        // SERIE 36: 3 valores canónicos de description para routes_quotes
+        // Valores canónicos de description para routes_quotes
         let description: string;
-        if (isContract) {
+        if (category === 'PRESUPUESTO') {
+            description = 'Presupuesto';
+        } else if (isContract || category === 'COA') {
             description = 'COA Cliente Activo';
         } else if (isClientProspect) {
             description = 'Cotización Prospecto';
@@ -90,13 +94,15 @@ export class MulticotizadorStorageService {
             description,
             pais: 'PE',
             is_prospect: isClientProspect,
-            is_contract: isContract === true,  // el backend usa este flag para asignar description si no viene
+            is_contract: (isContract === true || category === 'COA'),
             client_id: selectedClient,
             created_by: activeUserEmail,
             valid_from: effectiveValidFrom,
             valid_to: effectiveValidTo,
             legs_data: {
                 is_multicotizador: true,
+                category: category || (isContract ? 'COA' : 'SPOT'),
+                is_budget: category === 'PRESUPUESTO',
                 created_by: activeUserEmail,
                 vessel_id: selectedVessel,
                 bunker_price_ifo: bunkerPriceIfo,
@@ -119,7 +125,7 @@ export class MulticotizadorStorageService {
                 financial_summary: financialSummary || null,
                 refacturarMuellajeMap: refacturarMuellajeMap || null,
                 // Metadata de contrato COA (solo si aplica) dentro del JSONB
-                contract_metadata: isContract ? {
+                contract_metadata: (isContract || category === 'COA') ? {
                     client_id: selectedClient,
                     valid_from: validFrom,
                     valid_to: validTo,

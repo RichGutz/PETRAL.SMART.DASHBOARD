@@ -23,6 +23,7 @@ export interface SaveLoadQuoteModalsProps {
         targetClient?: string;
         targetClientType?: 'ACTIVOS' | 'PROSPECTOS';
         isContract?: boolean;
+        recordCategory?: 'COA' | 'SPOT' | 'PRESUPUESTO';
         finalName?: string;
     }) => void;
     handleLoadRoute: (route: any) => void;
@@ -54,7 +55,7 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
     // Estado local para selector de cliente destino en el modal de guardado
     const [targetClientType, setTargetClientType] = useState<'ACTIVOS' | 'PROSPECTOS'>('ACTIVOS');
     const [targetClient, setTargetClient] = useState<string>('');
-    const [recordCategory, setRecordCategory] = useState<'COA' | 'SPOT'>('COA');
+    const [recordCategory, setRecordCategory] = useState<'COA' | 'SPOT' | 'PRESUPUESTO'>('COA');
 
     // Sincronizar cliente por defecto cuando se abre el modal
     useEffect(() => {
@@ -116,6 +117,7 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
             targetClient: targetClient || selectedClient,
             targetClientType,
             isContract: targetClientType === 'ACTIVOS' && recordCategory === 'COA',
+            recordCategory,
             finalName: finalFullName
         });
     };
@@ -159,13 +161,13 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
             {/* MODAL DE GRABAR */}
             {showSaveModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2">
-                    <div className="bg-white p-4.5 rounded-xl w-[460px] max-w-full shadow-2xl border border-slate-300 animate-in fade-in zoom-in duration-150 flex flex-col gap-3">
+                    <div className="bg-white p-4.5 rounded-xl w-[490px] max-w-full shadow-2xl border border-slate-300 animate-in fade-in zoom-in duration-150 flex flex-col gap-3">
                         
                         {/* CABECERA */}
                         <div className="flex justify-between items-start border-b border-slate-200 pb-2">
                             <div>
                                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
-                                    💾 Grabar Ruta Cierres / Cotizaciones
+                                    💾 Grabar Ruta Cierres / Cotizaciones / Presupuesto
                                 </h3>
                                 <span className="text-[10px] font-mono text-slate-500 font-semibold flex items-center gap-1 mt-0.5">
                                     Destino: <strong className="text-blue-700">📄 Supabase (routes_quotes)</strong>
@@ -217,30 +219,43 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                             <label className="text-[10.5px] font-bold text-slate-700 uppercase flex items-center gap-1">
                                 <Layers size={13} className="text-purple-600" /> 2️⃣ Tipo de Registro ({targetClient}):
                             </label>
-                            {targetClientType === 'ACTIVOS' ? (
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setRecordCategory('COA')}
-                                        className={`py-1.5 px-2 text-[11px] font-extrabold rounded border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${recordCategory === 'COA' ? 'bg-blue-700 text-white border-blue-800 shadow-sm ring-1 ring-blue-500' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
-                                    >
-                                        <span>📜 Ruta Cierres</span>
-                                        <span className={`text-[8.5px] font-normal ${recordCategory === 'COA' ? 'text-blue-100' : 'text-slate-400'}`}>(Aparecerá en Paso 2)</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setRecordCategory('SPOT')}
-                                        className={`py-1.5 px-2 text-[11px] font-extrabold rounded border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${recordCategory === 'SPOT' ? 'bg-purple-700 text-white border-purple-800 shadow-sm ring-1 ring-purple-500' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
-                                    >
-                                        <span>📄 Cotizaciones</span>
-                                        <span className={`text-[8.5px] font-normal ${recordCategory === 'SPOT' ? 'text-purple-100' : 'text-slate-400'}`}>(Aparecerá en Paso 3)</span>
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 rounded p-2 text-center text-xs font-bold">
-                                    🏭 Cotización Prospecto <span className="text-[9.5px] font-normal text-emerald-700 block">(Se listará en el Paso 3)</span>
-                                </div>
-                            )}
+                            
+                            <div className="grid grid-cols-3 gap-2">
+                                {/* Opción 1: Ruta Cierres (Solo si activo, o deshabilitada si prospecto) */}
+                                <button
+                                    type="button"
+                                    onClick={() => setRecordCategory('COA')}
+                                    disabled={targetClientType === 'PROSPECTOS'}
+                                    className={`py-1.5 px-1.5 text-[10.5px] font-extrabold rounded border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
+                                        targetClientType === 'PROSPECTOS' 
+                                            ? 'opacity-40 bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' 
+                                            : (recordCategory === 'COA' ? 'bg-blue-700 text-white border-blue-800 shadow-sm ring-1 ring-blue-500' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100')
+                                    }`}
+                                >
+                                    <span>📜 Ruta Cierres</span>
+                                    <span className={`text-[8px] font-normal ${recordCategory === 'COA' && targetClientType !== 'PROSPECTOS' ? 'text-blue-100' : 'text-slate-400'}`}>(Paso 2)</span>
+                                </button>
+
+                                {/* Opción 2: Cotizaciones */}
+                                <button
+                                    type="button"
+                                    onClick={() => setRecordCategory('SPOT')}
+                                    className={`py-1.5 px-1.5 text-[10.5px] font-extrabold rounded border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${recordCategory === 'SPOT' ? 'bg-purple-700 text-white border-purple-800 shadow-sm ring-1 ring-purple-500' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
+                                >
+                                    <span>📄 Cotizaciones</span>
+                                    <span className={`text-[8px] font-normal ${recordCategory === 'SPOT' ? 'text-purple-100' : 'text-slate-400'}`}>(Paso 3)</span>
+                                </button>
+
+                                {/* Opción 3: Presupuesto (Nuevo) */}
+                                <button
+                                    type="button"
+                                    onClick={() => setRecordCategory('PRESUPUESTO')}
+                                    className={`py-1.5 px-1.5 text-[10.5px] font-extrabold rounded border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${recordCategory === 'PRESUPUESTO' ? 'bg-emerald-700 text-white border-emerald-800 shadow-sm ring-1 ring-emerald-500' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
+                                >
+                                    <span>📊 Presupuesto</span>
+                                    <span className={`text-[8px] font-normal ${recordCategory === 'PRESUPUESTO' ? 'text-emerald-100' : 'text-slate-400'}`}>(PPTOS)</span>
+                                </button>
+                            </div>
                         </div>
 
                         {/* BLOQUE 3: MODO DE GUARDADO (SOBRESCRIBIR VS NUEVO) */}
@@ -326,7 +341,7 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
             {/* MODAL DE CARGAR */}
             {showLoadModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white p-5 rounded-xl w-96 shadow-2xl border border-slate-300 animate-in fade-in zoom-in duration-150">
+                    <div className="bg-white p-5 rounded-xl w-[420px] max-w-full shadow-2xl border border-slate-300 animate-in fade-in zoom-in duration-150">
                         <div className="flex justify-between items-center border-b border-slate-200 pb-2 mb-3">
                             <div>
                                 <h3 className="text-sm font-black text-slate-900 uppercase">📂 Cargar Ruta Multicotizador</h3>
@@ -345,21 +360,42 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                             ) : savedRoutes.length === 0 ? (
                                 <div className="text-xs font-sans text-slate-400 py-6 text-center italic">No hay rutas grabadas para {selectedClient}</div>
                             ) : (
-                                savedRoutes.map(route => (
-                                    <button
-                                        key={route.spot_id || route.id || route.route_id}
-                                        onClick={() => handleLoadRoute(route)}
-                                        className="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:bg-blue-50 hover:border-blue-400 transition-all flex justify-between items-center group cursor-pointer"
-                                    >
-                                        <div>
-                                            <span className="text-xs font-bold text-slate-800 block group-hover:text-blue-900">{route.name}</span>
-                                            <span className="text-[10.5px] text-slate-400 font-mono block">{route.description || 'Ruta Multicotizador'}</span>
-                                        </div>
-                                        <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
-                                            {route.created_at ? new Date(route.created_at).toLocaleDateString() : ''}
-                                        </span>
-                                    </button>
-                                ))
+                                savedRoutes.map(route => {
+                                    const desc = (route.description || '').toUpperCase();
+                                    const isBudget = desc.includes('PRESUPUESTO') || route.legs_data?.category === 'PRESUPUESTO';
+                                    const isCoa = desc.includes('COA') || route.is_contract === true;
+
+                                    return (
+                                        <button
+                                            key={route.spot_id || route.id || route.route_id}
+                                            onClick={() => handleLoadRoute(route)}
+                                            className="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:bg-blue-50 hover:border-blue-400 transition-all flex justify-between items-center group cursor-pointer"
+                                        >
+                                            <div className="flex-1 min-w-0 pr-2">
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    <span className="text-xs font-bold text-slate-800 group-hover:text-blue-900 truncate">{route.name}</span>
+                                                    {isBudget ? (
+                                                        <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                                            PPTOS
+                                                        </span>
+                                                    ) : isCoa ? (
+                                                        <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 border border-blue-300">
+                                                            COA
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 border border-purple-300">
+                                                            COTIZACIÓN
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <span className="text-[10.5px] text-slate-400 font-mono block truncate mt-0.5">{route.description || 'Ruta Multicotizador'}</span>
+                                            </div>
+                                            <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded shrink-0">
+                                                {route.created_at ? new Date(route.created_at).toLocaleDateString() : ''}
+                                            </span>
+                                        </button>
+                                    );
+                                })
                             )}
                         </div>
 
