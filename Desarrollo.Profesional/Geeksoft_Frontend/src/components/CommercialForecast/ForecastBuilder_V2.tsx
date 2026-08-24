@@ -496,8 +496,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Popover>
                     </div>
 
-                    {/* 4. Cliente (Angostado -20%: min-w-[135px]) */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[135px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    {/* 4. Cliente (Reducido -30%: min-w-[95px] max-w-[110px]) */}
+                    <div className="flex flex-col gap-1 flex-1 min-w-[95px] max-w-[110px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all shrink-0">
                         <div className="flex items-center justify-between">
                             <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">4. Cliente</Label>
                             <div className="flex items-center gap-0.5 bg-white p-0.5 rounded border border-slate-200 text-[8px] font-black shadow-2xs">
@@ -518,7 +518,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             </div>
                         </div>
                         <Select value={client} onValueChange={(val) => setClient(val || '')}>
-                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold">
+                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold px-1.5">
                                 <SelectValue placeholder="Cliente">
                                     {client || undefined}
                                 </SelectValue>
@@ -535,8 +535,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Select>
                     </div>
 
-                    {/* FUENTE: CIERRES | COTIZACIONES | PRESUPUESTOS (Ampliado con espacio de Buque: min-w-[125px] max-w-[145px]) */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[125px] max-w-[145px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all shrink-0">
+                    {/* FUENTE: CIERRES | COTIZACIONES | PRESUPUESTOS (Ampliado con mitad de Cliente: min-w-[145px] max-w-[165px]) */}
+                    <div className="flex flex-col gap-1 flex-1 min-w-[145px] max-w-[165px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all shrink-0">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">FUENTE</Label>
                         <Select value={routeSource} onValueChange={(val: any) => setRouteSource(val)}>
                             <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold px-2">
@@ -575,7 +575,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </div>
                     )}
 
-                    {/* 5. Ruta (Expandido con el espacio ganado de FUENTE: min-w-[220px] max-w-[340px]) */}
+                    {/* 5. Ruta (Expandido: min-w-[220px] max-w-[340px]) */}
                     <div className="flex flex-col gap-1 flex-2 min-w-[220px] max-w-[340px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all overflow-hidden">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">
                             5. Ruta
@@ -614,8 +614,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Select>
                     </div>
 
-                    {/* 6. Buque (Angostado -25%: min-w-[105px] max-w-[125px]) */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[105px] max-w-[125px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    {/* 6. Buque (Ampliado con mitad de Cliente: min-w-[125px] max-w-[145px]) */}
+                    <div className="flex flex-col gap-1 flex-1 min-w-[125px] max-w-[145px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">6. Buque</Label>
                         <Select value={vessel} onValueChange={(val) => setVessel(val || '')} disabled={!route}>
                             <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold disabled:opacity-80">
