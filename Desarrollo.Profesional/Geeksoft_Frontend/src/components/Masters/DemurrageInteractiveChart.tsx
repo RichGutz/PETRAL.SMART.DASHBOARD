@@ -111,7 +111,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
     const metricOptionsSec = [
         { value: 'none', label: 'Ninguno', icon: '🚫', desc: 'No graficar' },
         { value: 'avg_days', label: 'Promedio Días/Viaje', icon: '⚖️', desc: 'Días promedio por recalada' },
-        { value: 'global_total_days', label: 'Total Días Mes', icon: '📊', desc: 'Días acumulados en el mes' }
+        { value: 'global_total_days', label: 'Días de Demora (Mes)', icon: '⏳', desc: 'Suma de días de demora en el mes' }
     ];
 
     const options = useMemo(() => {
@@ -125,16 +125,28 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
             return true;
         });
 
-        // Entidades a graficar según GroupBy
+        // Lógica de Desglose y Coloreo Cruzado Dinámico
+        // 1. Si se elige un Buque puntual: la barra se desglosa por PUERTOS y se colorea por Puerto.
+        // 2. Si se elige un Puerto puntual: la barra se desglosa por BUQUES y se colorea por Buque.
+        // 3. En vista general: se desglosa por BUQUES con sus colores oficiales.
+        let stackMode: 'by_vessel' | 'by_port' | 'by_client' = 'by_vessel';
         let entities: string[] = [];
-        if (groupBy === 'petral') {
-            entities = ['PETRAL'];
-        } else if (groupBy === 'vessel') {
-            entities = filterVessel !== 'ALL' ? [filterVessel] : filterOptions.vessels;
+
+        if (filterVessel !== 'ALL' && filterPort === 'ALL') {
+            stackMode = 'by_port';
+            entities = filterOptions.ports;
+        } else if (filterPort !== 'ALL' && filterVessel === 'ALL') {
+            stackMode = 'by_vessel';
+            entities = filterOptions.vessels;
         } else if (groupBy === 'port') {
+            stackMode = 'by_port';
             entities = filterPort !== 'ALL' ? [filterPort] : filterOptions.ports;
         } else if (groupBy === 'client') {
+            stackMode = 'by_client';
             entities = filterClient !== 'ALL' ? [filterClient] : filterOptions.clients;
+        } else {
+            stackMode = 'by_vessel';
+            entities = filterVessel !== 'ALL' ? [filterVessel] : (filterOptions.vessels.length > 0 ? filterOptions.vessels : ['Moquegua', 'Tablones', 'Huemul', 'Concon Trader']);
         }
 
         if (entities.length === 0) {
@@ -156,23 +168,9 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
         filtered.forEach(r => {
             const mIdx = (r.month >= 1 && r.month <= 12) ? r.month - 1 : 0;
             
-            let voyageDays = 0;
-            let voyageHours = 0;
-
-            if (filterPort === 'ALL') {
-                voyageDays = Number(r.total_days) || 0;
-                voyageHours = Number(r.total_hours) || 0;
-            } else if (r.ports && r.ports[filterPort]) {
-                voyageDays = Number(r.ports[filterPort].days) || 0;
-                voyageHours = Number(r.ports[filterPort].hours) || 0;
-            }
-
-            let ent = 'PETRAL';
-            if (groupBy === 'vessel') ent = r.vessel;
-            else if (groupBy === 'client') ent = r.client || 'PETRAL';
-            else if (groupBy === 'port') {
-                // Cuando agrupa por puerto y no hay filtro único
-                if (filterPort === 'ALL' && r.ports) {
+            if (stackMode === 'by_port') {
+                // Desglose por puertos
+                if (r.ports) {
                     Object.entries(r.ports).forEach(([pKey, pVal]) => {
                         const pDays = Number(pVal.days) || 0;
                         const pHrs = Number(pVal.hours) || 0;
@@ -183,19 +181,54 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                         }
                     });
                 }
-            }
+            } else if (stackMode === 'by_vessel') {
+                // Desglose por buques
+                const v = r.vessel;
+                let vDays = 0;
+                let vHours = 0;
 
-            if (groupBy !== 'port' && seriesDataMap[ent]) {
-                seriesDataMap[ent].days[mIdx] += voyageDays;
-                seriesDataMap[ent].hours[mIdx] += voyageHours;
-                if (voyageDays > 0 || voyageHours > 0) {
-                    seriesDataMap[ent].count[mIdx] += 1;
+                if (filterPort === 'ALL') {
+                    vDays = Number(r.total_days) || 0;
+                    vHours = Number(r.total_hours) || 0;
+                } else if (r.ports && r.ports[filterPort]) {
+                    vDays = Number(r.ports[filterPort].days) || 0;
+                    vHours = Number(r.ports[filterPort].hours) || 0;
+                }
+
+                if (seriesDataMap[v]) {
+                    seriesDataMap[v].days[mIdx] += vDays;
+                    seriesDataMap[v].hours[mIdx] += vHours;
+                    if (vDays > 0 || vHours > 0) {
+                        seriesDataMap[v].count[mIdx] += 1;
+                    }
+                }
+            } else if (stackMode === 'by_client') {
+                const c = r.client || 'PETRAL';
+                let cDays = Number(r.total_days) || 0;
+                let cHours = Number(r.total_hours) || 0;
+                if (seriesDataMap[c]) {
+                    seriesDataMap[c].days[mIdx] += cDays;
+                    seriesDataMap[c].hours[mIdx] += cHours;
+                    if (cDays > 0 || cHours > 0) {
+                        seriesDataMap[c].count[mIdx] += 1;
+                    }
                 }
             }
 
-            monthTotals[mIdx].totalDays += voyageDays;
-            monthTotals[mIdx].totalHours += voyageHours;
-            if (voyageDays > 0 || voyageHours > 0) {
+            // Totales para el eje secundario
+            let monthVoyageDays = 0;
+            let monthVoyageHours = 0;
+            if (filterPort === 'ALL') {
+                monthVoyageDays = Number(r.total_days) || 0;
+                monthVoyageHours = Number(r.total_hours) || 0;
+            } else if (r.ports && r.ports[filterPort]) {
+                monthVoyageDays = Number(r.ports[filterPort].days) || 0;
+                monthVoyageHours = Number(r.ports[filterPort].hours) || 0;
+            }
+
+            monthTotals[mIdx].totalDays += monthVoyageDays;
+            monthTotals[mIdx].totalHours += monthVoyageHours;
+            if (monthVoyageDays > 0 || monthVoyageHours > 0) {
                 monthTotals[mIdx].totalVoyages += 1;
             }
         });
@@ -213,7 +246,7 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
             const isStack = primaryGraphType === 'bar_stack';
             const isBar = primaryGraphType.startsWith('bar');
             const isStraight = primaryGraphType === 'line_straight';
-            const color = getHexColor(ent, groupBy);
+            const color = getHexColor(ent, stackMode === 'by_port' ? 'port' : (stackMode === 'by_client' ? 'client' : 'vessel'));
 
             return {
                 name: ent,
