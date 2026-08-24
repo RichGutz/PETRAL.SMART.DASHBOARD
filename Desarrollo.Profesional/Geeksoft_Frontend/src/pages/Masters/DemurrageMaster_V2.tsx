@@ -186,7 +186,7 @@ export const DemurrageMaster_V2: React.FC = () => {
         // Agrupar entidades (Buques, Puertos o Clientes)
         let entities: string[] = [];
         if (groupBy === 'vessel') {
-            entities = uniqueVessels.length > 0 ? uniqueVessels : ['Moquegua', 'Tablones', 'Bomar Lynx', 'Huemul', 'Concon Trader'];
+            entities = uniqueVessels.length > 0 ? uniqueVessels : ['Moquegua', 'Tablones', 'Huemul', 'Concon Trader'];
         } else if (groupBy === 'port') {
             entities = PortDemurrageRatesService.STANDARD_PORTS.map(p => p.id);
         } else if (groupBy === 'client') {
@@ -356,7 +356,7 @@ export const DemurrageMaster_V2: React.FC = () => {
     // Perfiles consolidados para la matriz (Buque × Puerto)
     const matrixProfiles = useMemo(() => {
         const ports = PortDemurrageRatesService.STANDARD_PORTS;
-        const vesselList = uniqueVessels.length > 0 ? uniqueVessels : ['Moquegua', 'Tablones', 'Bomar Lynx', 'Huemul', 'Concon Trader'];
+        const vesselList = uniqueVessels.length > 0 ? uniqueVessels : ['Moquegua', 'Tablones', 'Huemul', 'Concon Trader'];
         
         const list: { vessel: string; port: { id: string; label: string }; profile: PortVesselDemurrageProfile }[] = [];
         

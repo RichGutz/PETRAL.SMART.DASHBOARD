@@ -67,7 +67,9 @@ export class PortDemurrageRatesService {
      * Normaliza el ID o nombre del buque para coincidencias exactas.
      */
     public static normalizeVesselKey(vesselId: string): string {
-        return (vesselId || '').toUpperCase().trim().replace(/^B\/T\s+/, '').replace(/\s+/g, ' ');
+        const clean = (vesselId || '').toUpperCase().trim().replace(/^B\/T\s+/, '').replace(/\s+/g, ' ');
+        if (clean.includes('BOMAR') || clean.includes('LYNX')) return 'MOQUEGUA';
+        return clean;
     }
 
     /**
