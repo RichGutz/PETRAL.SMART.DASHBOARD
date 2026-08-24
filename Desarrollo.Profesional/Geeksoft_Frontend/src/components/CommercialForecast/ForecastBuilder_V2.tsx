@@ -535,11 +535,11 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Select>
                     </div>
 
-                    {/* FUENTE: CIERRES | COTIZACIONES | PRESUPUESTOS (Angostado -30%: min-w-[92px] max-w-[108px]) */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[92px] max-w-[108px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all shrink-0">
+                    {/* FUENTE: CIERRES | COTIZACIONES | PRESUPUESTOS (Ampliado con espacio de Buque: min-w-[125px] max-w-[145px]) */}
+                    <div className="flex flex-col gap-1 flex-1 min-w-[125px] max-w-[145px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all shrink-0">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">FUENTE</Label>
                         <Select value={routeSource} onValueChange={(val: any) => setRouteSource(val)}>
-                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold px-1.5">
+                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold px-2">
                                 <SelectValue placeholder="Fuente" />
                             </SelectTrigger>
                             <SelectContent>
@@ -614,8 +614,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Select>
                     </div>
 
-                    {/* 6. Buque */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[140px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    {/* 6. Buque (Angostado -25%: min-w-[105px] max-w-[125px]) */}
+                    <div className="flex flex-col gap-1 flex-1 min-w-[105px] max-w-[125px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">6. Buque</Label>
                         <Select value={vessel} onValueChange={(val) => setVessel(val || '')} disabled={!route}>
                             <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold disabled:opacity-80">
