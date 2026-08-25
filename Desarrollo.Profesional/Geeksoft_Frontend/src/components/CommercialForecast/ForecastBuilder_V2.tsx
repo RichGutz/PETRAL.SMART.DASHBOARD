@@ -426,8 +426,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         />
                     </div>
 
-                    {/* 3. Meses a modelar (Crecido +50% de ancho: w-[205px]) */}
-                    <div className="flex flex-col gap-1 w-[205px] shrink-0 relative bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    {/* 3. Meses a modelar (Crecido +30% adicional: w-[265px]) */}
+                    <div className="flex flex-col gap-1 w-[265px] shrink-0 relative bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">3. Meses a modelar</Label>
                         <Popover>
                             <PopoverTrigger
