@@ -192,6 +192,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     fmtThousandSep
 }) => {
     const [hoveredDemurrage, setHoveredDemurrage] = useState<HoveredDemurrageState | null>(null);
+    const totalDescargas = liveCalc?.totalQuantity ?? puertosConfig.reduce((sum, p) => sum + (p.action === 'DESCARGAR' ? (Number(p.quantity) || 0) : 0), 0);
     const selectedVesselObj = (vessels || []).find(v => v.vessel_id === selectedVessel);
 
     const getSuggestedDemurrage = (portId: string, action: string) => {
