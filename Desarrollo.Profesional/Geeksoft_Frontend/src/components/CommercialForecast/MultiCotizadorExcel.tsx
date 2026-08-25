@@ -554,9 +554,12 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             addressCommPct,
             brokerCommPct,
             demurrageRate: Number(vesselParams?.demurrage_rate || demurrageRate || 20000),
-            refacturarMuellajeMap
+            refacturarMuellajeMap,
+            demurrageMode,
+            selectedVessel,
+            validFrom
         });
-    }, [calculatedTramosList, puertosConfig, vesselParams, bunkerPriceIfo, bunkerPriceMdo, addressCommPct, brokerCommPct, demurrageRate, refacturarMuellajeMap]);
+    }, [calculatedTramosList, puertosConfig, vesselParams, bunkerPriceIfo, bunkerPriceMdo, addressCommPct, brokerCommPct, demurrageRate, refacturarMuellajeMap, demurrageMode, selectedVessel, validFrom]);
 
     const handleCalculate = async () => {
         try {

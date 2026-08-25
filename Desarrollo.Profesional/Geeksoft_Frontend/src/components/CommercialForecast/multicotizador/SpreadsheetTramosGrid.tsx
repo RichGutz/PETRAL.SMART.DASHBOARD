@@ -59,25 +59,50 @@ const DemurrageStatsHoverPortal: React.FC<HoveredDemurrageState> = ({ portId, ve
     const cardWidth = 310;
     const cardHeight = 225;
 
-    // Posición horizontal centrada respecto a la celda
-    let left = rect.left + rect.width / 2 - cardWidth / 2;
+    // Posición horizontal: a la derecha de la celda con margen
+    let left = rect.right + 14;
     if (typeof window !== 'undefined') {
-        left = Math.max(10, Math.min(window.innerWidth - cardWidth - 10, left));
+        if (left + cardWidth > window.innerWidth - 12) {
+            // Si desborda por la derecha, ubicarlo a la izquierda de la celda
+            left = Math.max(10, rect.left - cardWidth - 14);
+        }
     }
 
-    // Posición vertical: arriba si hay espacio, de lo contrario abajo
+    // Posición vertical: arriba con margen, de lo contrario abajo
+    const isAbove = rect.top > cardHeight + 20;
     let top = 0;
-    if (rect.top > cardHeight + 25) {
-        top = rect.top - cardHeight - 8;
+    if (isAbove) {
+        top = rect.top - cardHeight + 10;
     } else {
-        top = rect.bottom + 8;
+        top = rect.bottom + 12;
     }
+
+    // Coordenadas de la línea conector (Callout Line)
+    const isPlacedRight = left > rect.left;
+    const startX = isPlacedRight ? rect.right : rect.left;
+    const startY = rect.top + rect.height / 2;
+    const endX = isPlacedRight ? left : (left + cardWidth);
+    const endY = isAbove ? (top + cardHeight - 20) : (top + 20);
 
     return createPortal(
-        <div
-            style={{ top: `${top}px`, left: `${left}px`, width: `${cardWidth}px` }}
-            className="fixed z-[99999] flex flex-col p-3 bg-white/98 backdrop-blur-md text-slate-800 border border-slate-300 rounded-xl shadow-2xl pointer-events-none select-none animate-in fade-in zoom-in-95 duration-100 font-sans"
-        >
+        <>
+            {/* Callout Line Conector Sutil y Delgado */}
+            <svg className="fixed inset-0 w-full h-full pointer-events-none z-[99998] overflow-visible">
+                <circle cx={startX} cy={startY} r="2.5" fill="#64748b" fillOpacity="0.5" />
+                <path
+                    d={`M ${startX} ${startY} Q ${(startX + endX) / 2} ${startY}, ${endX} ${endY}`}
+                    fill="none"
+                    stroke="rgba(100, 116, 139, 0.4)"
+                    strokeWidth="1"
+                    strokeDasharray="2.5 2.5"
+                />
+            </svg>
+
+            {/* Card Flotante Desplazado */}
+            <div
+                style={{ top: `${top}px`, left: `${left}px`, width: `${cardWidth}px` }}
+                className="fixed z-[99999] flex flex-col p-3 bg-white/98 backdrop-blur-md text-slate-800 border border-slate-300 rounded-xl shadow-2xl pointer-events-none select-none animate-in fade-in zoom-in-95 duration-100 font-sans"
+            >
             {/* Header: Buque y Puerto */}
             <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -142,7 +167,8 @@ const DemurrageStatsHoverPortal: React.FC<HoveredDemurrageState> = ({ portId, ve
                     </div>
                 </div>
             )}
-        </div>,
+        </div>
+        </>,
         document.body
     );
 };

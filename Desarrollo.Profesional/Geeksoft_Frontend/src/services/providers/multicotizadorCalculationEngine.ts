@@ -4,6 +4,8 @@
  * Función pura en memoria (0ms, determinística, libre de efectos secundarios).
  */
 
+import { PortDemurrageRatesService } from './portDemurrageRatesService';
+
 export interface CalculateVoyageParams {
     tramos: any[];
     puertosConfig: any[];
@@ -14,6 +16,9 @@ export interface CalculateVoyageParams {
     brokerCommPct?: number;
     demurrageRate?: number;
     refacturarMuellajeMap?: Record<number, boolean>;
+    demurrageMode?: 'P' | 'M' | 'C' | string;
+    selectedVessel?: string;
+    validFrom?: string;
 }
 
 export interface LegCalculationDetail {
@@ -119,7 +124,10 @@ export class MulticotizadorCalculationEngine {
             addressCommPct = 0,
             brokerCommPct = 0,
             demurrageRate = 0,
-            refacturarMuellajeMap = {}
+            refacturarMuellajeMap = {},
+            demurrageMode = 'P',
+            selectedVessel = '',
+            validFrom
         } = params;
 
         let totalDist = 0;
@@ -184,7 +192,16 @@ export class MulticotizadorCalculationEngine {
 
             // Demurrage en Fila 0 (Solo si CARGAR)
             if (pCfg0.action === 'CARGAR') {
-                demurrageDays0 = Number(pCfg0.demurrage_days || 0);
+                if (pCfg0.demurrage_days !== undefined && pCfg0.demurrage_days !== '' && pCfg0.demurrage_days !== null) {
+                    demurrageDays0 = Number(pCfg0.demurrage_days);
+                } else {
+                    demurrageDays0 = PortDemurrageRatesService.resolveDemurrageDays(
+                        originPort0,
+                        selectedVessel || vesselParams?.vessel_id || '',
+                        demurrageMode,
+                        validFrom
+                    );
+                }
                 totalDemurrageDays += demurrageDays0;
             }
 
@@ -219,6 +236,7 @@ export class MulticotizadorCalculationEngine {
             const calcSeaDays = distVal > 0 ? (distVal * (1 + (wfPct / 100))) / (speedVal * 24) : 0;
 
             const pCfg = puertosConfig[idx + 1] || {};
+            const destPortId = tr.destination_port_id || '';
             const qVal = pCfg.action === 'BUNKERING' ? 0 : Number(pCfg.quantity || 0);
             const rDefault = pCfg.action === 'DESCARGAR' ? 450 : 500;
             const rVal = Math.max(1, Number(pCfg.op_rate || rDefault));
@@ -233,7 +251,19 @@ export class MulticotizadorCalculationEngine {
 
             // Demurrage en tramos 1..N (Solo en CARGAR o DESCARGAR)
             const isCargoOp = pCfg.action === 'CARGAR' || pCfg.action === 'DESCARGAR';
-            const legDemurrageDays = isCargoOp ? Number(pCfg.demurrage_days || 0) : 0;
+            let legDemurrageDays = 0;
+            if (isCargoOp) {
+                if (pCfg.demurrage_days !== undefined && pCfg.demurrage_days !== '' && pCfg.demurrage_days !== null) {
+                    legDemurrageDays = Number(pCfg.demurrage_days);
+                } else {
+                    legDemurrageDays = PortDemurrageRatesService.resolveDemurrageDays(
+                        destPortId,
+                        selectedVessel || vesselParams?.vessel_id || '',
+                        demurrageMode,
+                        validFrom
+                    );
+                }
+            }
             totalDemurrageDays += legDemurrageDays;
 
             const opIfoRate = pCfg.action === 'DESCARGAR' ? ifoDischRatio : pCfg.action === 'CARGAR' ? ifoLoadRatio : ifoIdleRatio;
@@ -261,7 +291,6 @@ export class MulticotizadorCalculationEngine {
             const fRate = Number(pCfg.freight_rate || 0);
             const legFreight = pCfg.action === 'DESCARGAR' ? (qVal * fRate) : 0;
             
-            const destPortId = tr.destination_port_id || '';
             const isMejillonesDischarge = (destPortId || '').trim().toUpperCase() === 'MEJILLONES' && pCfg.action === 'DESCARGAR';
             const mVal = Number(pCfg.manual_port_cost) || 0;
             const muellVal = (pCfg.action === 'BUNKERING') ? 0 : (Number(pCfg.muellaje_cost) || (isMejillonesDischarge ? 33333 : 0));
