@@ -16,7 +16,7 @@ export interface CalculateVoyageParams {
     brokerCommPct?: number;
     demurrageRate?: number;
     refacturarMuellajeMap?: Record<number, boolean>;
-    demurrageMode?: 'P' | 'M' | 'C' | string;
+    demurrageMode?: 'O' | 'P' | 'M' | 'C' | string;
     selectedVessel?: string;
     validFrom?: string;
 }

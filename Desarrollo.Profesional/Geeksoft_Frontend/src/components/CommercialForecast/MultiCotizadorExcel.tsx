@@ -117,7 +117,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         'CONCON TRADER': 0,
         'CONCON': 0
     });
-    const [demurrageMode, setDemurrageMode] = useState<'P' | 'M' | 'C'>('P');
+    const [demurrageMode, setDemurrageMode] = useState<'O' | 'P' | 'M' | 'C'>('P');
+    const [originalDemurrageDaysMap, setOriginalDemurrageDaysMap] = useState<Record<number, number | string>>({});
     const [staticCostsData, setStaticCostsData] = useState<any[]>([]);
     const [refacturarMuellajeMap, setRefacturarMuellajeMap] = useState<Record<number, boolean>>({});
 
@@ -561,6 +562,22 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         });
     }, [calculatedTramosList, puertosConfig, vesselParams, bunkerPriceIfo, bunkerPriceMdo, addressCommPct, brokerCommPct, demurrageRate, refacturarMuellajeMap, demurrageMode, selectedVessel, validFrom]);
 
+    const handleDemurrageModeChange = (mode: 'O' | 'P' | 'C') => {
+        setDemurrageMode(mode);
+        if (mode === 'O') {
+            setPuertosConfig(prev => prev.map((p, idx) => {
+                if (originalDemurrageDaysMap[idx] !== undefined) {
+                    return { ...p, demurrage_days: originalDemurrageDaysMap[idx] };
+                }
+                return p;
+            }));
+        } else if (mode === 'P') {
+            setPuertosConfig(prev => prev.map(p => ({ ...p, demurrage_days: '' })));
+        } else if (mode === 'C') {
+            setPuertosConfig(prev => prev.map(p => ({ ...p, demurrage_days: '0.00' })));
+        }
+    };
+
     const handleCalculate = async () => {
         try {
             const calculatedTramos = getCalculatedTramos();
@@ -853,6 +870,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' },
             { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' }
         ]);
+        setDemurrageMode('P');
+        setOriginalDemurrageDaysMap({});
 
         const spotBunker = await BunkerProviderService.fetchLatestBunkerPrices();
         if (spotBunker.ifo > 0) setBunkerPriceIfo(spotBunker.ifo);
@@ -952,6 +971,26 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 ? unpacked.puertosConfig
                 : buildPuertosConfigFromTramos(enrichedTramos, extractedClient || selectedClient);
             setPuertosConfig(pConfig);
+
+            // Auto-Detección de Demora Original (Modo 'O' prioritario si trae demoras grabadas)
+            const origDays: Record<number, number | string> = {};
+            let hasSavedDemurrage = false;
+            if (pConfig && Array.isArray(pConfig)) {
+                pConfig.forEach((p: any, idx: number) => {
+                    if (p.demurrage_days !== undefined && p.demurrage_days !== '' && p.demurrage_days !== null) {
+                        origDays[idx] = p.demurrage_days;
+                        if (Number(p.demurrage_days) >= 0) {
+                            hasSavedDemurrage = true;
+                        }
+                    }
+                });
+            }
+            setOriginalDemurrageDaysMap(origDays);
+            if (hasSavedDemurrage) {
+                setDemurrageMode('O');
+            } else {
+                setDemurrageMode('P');
+            }
         }
 
         // 4. Buque (Paso 5)
@@ -1315,7 +1354,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     demurrageMode={demurrageMode}
                     staticCostsData={staticCostsData}
                     validFrom={validFrom}
-                    onDemurrageModeChange={setDemurrageMode}
+                    onDemurrageModeChange={handleDemurrageModeChange}
                     handleAddTramo={handleAddTramo}
                     handleRemoveLastTramo={handleRemoveLastTramo}
                     updateTramoField={updateTramoField}

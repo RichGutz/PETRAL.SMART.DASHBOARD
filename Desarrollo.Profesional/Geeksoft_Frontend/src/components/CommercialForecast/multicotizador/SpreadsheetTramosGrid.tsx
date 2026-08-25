@@ -16,10 +16,10 @@ export interface SpreadsheetTramosGridProps {
     refacturarMuellajeMap: Record<number, boolean>;
     calculatedTramosList: any[];
     liveCalc: any;
-    demurrageMode?: 'P' | 'M' | 'C';
+    demurrageMode?: 'O' | 'P' | 'M' | 'C';
     staticCostsData?: any[];
     validFrom?: string;
-    onDemurrageModeChange?: (mode: 'P' | 'M' | 'C') => void;
+    onDemurrageModeChange?: (mode: 'O' | 'P' | 'C') => void;
     handleAddTramo: () => void;
     handleRemoveLastTramo: () => void;
     updateTramoField: (idx: number, field: string, val: any) => void;
@@ -39,9 +39,12 @@ interface HoveredDemurrageState {
     rect: DOMRect;
 }
 
-const DemurrageStatsHoverPortal: React.FC<HoveredDemurrageState> = ({ portId, vesselId, action, rect }) => {
-    if (!portId || (action !== 'CARGAR' && action !== 'DESCARGAR')) return null;
-
+const DemurrageStatsHoverPortal: React.FC<{
+    portId: string;
+    vesselId: string;
+    action: string;
+    rect: DOMRect;
+}> = ({ portId, vesselId, rect }) => {
     const profile = PortDemurrageRatesService.getDemurrageProfile(portId, vesselId);
     if (!profile || profile.voyage_count === 0) return null;
 
@@ -59,16 +62,13 @@ const DemurrageStatsHoverPortal: React.FC<HoveredDemurrageState> = ({ portId, ve
     const cardWidth = 310;
     const cardHeight = 225;
 
-    // Posición horizontal: a la derecha de la celda con margen
     let left = rect.right + 14;
     if (typeof window !== 'undefined') {
         if (left + cardWidth > window.innerWidth - 12) {
-            // Si desborda por la derecha, ubicarlo a la izquierda de la celda
             left = Math.max(10, rect.left - cardWidth - 14);
         }
     }
 
-    // Posición vertical: arriba con margen, de lo contrario abajo
     const isAbove = rect.top > cardHeight + 20;
     let top = 0;
     if (isAbove) {
@@ -77,7 +77,6 @@ const DemurrageStatsHoverPortal: React.FC<HoveredDemurrageState> = ({ portId, ve
         top = rect.bottom + 12;
     }
 
-    // Coordenadas de la línea conector (Callout Line)
     const isPlacedRight = left > rect.left;
     const startX = isPlacedRight ? rect.right : rect.left;
     const startY = rect.top + rect.height / 2;
@@ -86,7 +85,6 @@ const DemurrageStatsHoverPortal: React.FC<HoveredDemurrageState> = ({ portId, ve
 
     return createPortal(
         <>
-            {/* Callout Line Conector Sutil y Delgado */}
             <svg className="fixed inset-0 w-full h-full pointer-events-none z-[99998] overflow-visible">
                 <circle cx={startX} cy={startY} r="2.5" fill="#64748b" fillOpacity="0.5" />
                 <path
@@ -98,41 +96,35 @@ const DemurrageStatsHoverPortal: React.FC<HoveredDemurrageState> = ({ portId, ve
                 />
             </svg>
 
-            {/* Card Flotante Desplazado */}
             <div
                 style={{ top: `${top}px`, left: `${left}px`, width: `${cardWidth}px` }}
                 className="fixed z-[99999] flex flex-col p-3 bg-white/98 backdrop-blur-md text-slate-800 border border-slate-300 rounded-xl shadow-2xl pointer-events-none select-none animate-in fade-in zoom-in-95 duration-100 font-sans"
             >
-            {/* Header: Buque y Puerto */}
             <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                 <div className="flex items-center gap-1.5 min-w-0">
                     <span className="text-xs">⚓</span>
                     <span className="text-[11px] font-black text-slate-800 uppercase tracking-tight truncate max-w-[185px]">
-                        {profile.vessel_id} ➔ {profile.port_id}
+                        PUERTO {profile.port_id}
                     </span>
                 </div>
                 <span className="px-2 py-0.5 bg-sky-50 text-sky-700 text-[9px] font-extrabold rounded-md border border-sky-200 uppercase tracking-wider shrink-0">
-                    24M MÓVIL
+                    24M PUERTO
                 </span>
             </div>
 
-            {/* 3 Bloques de KPIs Consolidados */}
             <div className="grid grid-cols-3 gap-1.5 py-2 border-b border-slate-100">
-                {/* Promedio */}
                 <div className="flex flex-col items-center bg-sky-50/70 border border-sky-200/80 p-1.5 rounded-lg text-center">
                     <span className="text-[8px] font-black text-sky-800 uppercase tracking-wider">PROMEDIO</span>
                     <span className="text-[12px] font-black font-mono text-sky-950">{avgD.toFixed(2)} d</span>
                     <span className="text-[8.5px] font-semibold font-mono text-sky-700">({avgH} h)</span>
                 </div>
 
-                {/* Mediana */}
                 <div className="flex flex-col items-center bg-emerald-50/70 border border-emerald-200/80 p-1.5 rounded-lg text-center">
                     <span className="text-[8px] font-black text-emerald-800 uppercase tracking-wider">MEDIANA</span>
                     <span className="text-[12px] font-black font-mono text-emerald-950">{medD.toFixed(2)} d</span>
                     <span className="text-[8.5px] font-semibold font-mono text-emerald-700">({medH} h)</span>
                 </div>
 
-                {/* Rango */}
                 <div className="flex flex-col items-center bg-slate-50 border border-slate-200 p-1.5 rounded-lg text-center">
                     <span className="text-[8px] font-black text-slate-600 uppercase tracking-wider">MIN – MAX</span>
                     <span className="text-[10px] font-black font-mono text-slate-800">{minD} – {maxD}</span>
@@ -140,13 +132,11 @@ const DemurrageStatsHoverPortal: React.FC<HoveredDemurrageState> = ({ portId, ve
                 </div>
             </div>
 
-            {/* Muestra & Despachos Status */}
             <div className="flex items-center justify-between py-1.5 text-[9px] text-slate-600 font-semibold border-b border-slate-100">
                 <span>🎯 Recaladas: <strong className="text-slate-900 font-mono">{totalVoyages}</strong></span>
                 <span>🟢 Despachos: <strong className="text-emerald-700 font-mono">{dispatches}</strong> (= 0.00 d)</span>
             </div>
 
-            {/* Desglose Anual */}
             {years.length > 0 && (
                 <div className="pt-1.5 flex flex-col gap-1">
                     <div className="flex items-center justify-between text-[8px] font-black text-slate-400 uppercase px-0.5">
@@ -179,12 +169,12 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     ports = [],
     vessels = [],
     selectedVessel,
-    bunkerPriceIfo: _bunkerPriceIfo,
-    bunkerPriceMdo: _bunkerPriceMdo,
+    bunkerPriceIfo = 0,
+    bunkerPriceMdo = 0,
     vesselParams: _vesselParams,
     result: _result,
     refacturarMuellajeMap = {},
-    calculatedTramosList: _calculatedTramosList,
+    calculatedTramosList = [],
     liveCalc,
     demurrageMode = 'P',
     staticCostsData = [],
@@ -202,7 +192,6 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     fmtThousandSep
 }) => {
     const [hoveredDemurrage, setHoveredDemurrage] = useState<HoveredDemurrageState | null>(null);
-    const totalDescargas = liveCalc?.totalQuantity ?? puertosConfig.reduce((sum, p) => sum + (p.action === 'DESCARGAR' ? (Number(p.quantity) || 0) : 0), 0);
     const selectedVesselObj = (vessels || []).find(v => v.vessel_id === selectedVessel);
 
     const getSuggestedDemurrage = (portId: string, action: string) => {
@@ -228,13 +217,13 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                     <col className="w-[65px]" />
                     <col className="w-[75px]" />
                     <col className="w-[75px]" />
-                    <col className="w-[85px]" /> {/* DEMURRAGE (D) */}
-                    <col className="w-[95px]" /> {/* TIME TO COUNT */}
-                    <col className="w-[75px]" /> {/* POSIC */}
+                    <col className="w-[135px]" />
                     <col className="w-[95px]" />
-                    <col className="w-[100px]" />
-                    <col className="w-[85px]" />
                     <col className="w-[75px]" />
+                    <col className="w-[95px]" />
+                    <col className="w-[80px]" />
+                    <col className="w-[68px]" />
+                    <col className="w-[60px]" />
                     <col className="w-[85px]" />
                     <col className="w-[95px]" />
                     <col className="w-[85px]" />
@@ -271,15 +260,22 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         <th className="border-r border-slate-300 text-right pr-2">DÍAS MAR</th>
                         <th className="border-r border-slate-300 text-right pr-2">DÍAS PTO</th>
                         
-                        {/* CABECERA DEMURRAGE CON SELECTOR P / C */}
-                        <th className="border-r border-slate-300 px-1 bg-sky-50/60">
-                            <div className="flex items-center justify-between gap-0.5 px-0.5">
-                                <span className="font-extrabold text-[9.5px] text-sky-950 uppercase tracking-tight">DEM (D)</span>
+                        <th className="border-r border-slate-300 px-1 bg-sky-50/70">
+                            <div className="flex items-center justify-between gap-1 px-0.5">
+                                <span className="font-extrabold text-[9px] text-sky-950 uppercase tracking-tight">DEM (D)</span>
                                 <div className="flex items-center rounded bg-slate-200/90 p-0.5 border border-slate-300 shadow-2xs gap-0.5">
                                     <button
                                         type="button"
+                                        onClick={() => onDemurrageModeChange && onDemurrageModeChange('O')}
+                                        title="O: Origen / Cotización Cargada (Demoras grabadas en la cotización)"
+                                        className={`px-1.5 py-0.5 text-[8.5px] font-black rounded cursor-pointer transition-colors ${demurrageMode === 'O' ? 'bg-amber-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
+                                    >
+                                        O
+                                    </button>
+                                    <button
+                                        type="button"
                                         onClick={() => onDemurrageModeChange && onDemurrageModeChange('P')}
-                                        title="P: Promedio Histórico 24 Meses (Sin Dispatch Contractual)"
+                                        title="P: Promedio Histórico 24 Meses del Puerto"
                                         className={`px-1.5 py-0.5 text-[8.5px] font-black rounded cursor-pointer transition-colors ${demurrageMode === 'P' ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
                                     >
                                         P

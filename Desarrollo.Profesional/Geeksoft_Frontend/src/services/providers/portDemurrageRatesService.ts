@@ -252,7 +252,7 @@ export class PortDemurrageRatesService {
             m07: 0, m08: 0, m09: 0, m10: 0, m11: 0, m12: 0
         };
 
-        if (!cleanPort || !cleanVessel) {
+        if (!cleanPort) {
             return {
                 port_id: cleanPort,
                 vessel_id: cleanVessel,
@@ -262,11 +262,10 @@ export class PortDemurrageRatesService {
             };
         }
 
-        // 1. Filtrar viajes del buque donde haya tocado el puerto
+        // 1. Filtrar viajes donde haya tocado el puerto (a nivel de forecast general por PUERTO)
         const matchingVoyagesRaw = allRecords.filter(r => {
-            const v = this.normalizeVesselKey(r.vessel);
             const hasPort = r.ports && r.ports[cleanPort] !== undefined && r.ports[cleanPort].days !== undefined;
-            return v === cleanVessel && hasPort;
+            return hasPort;
         });
 
         if (matchingVoyagesRaw.length === 0) {
@@ -388,24 +387,32 @@ export class PortDemurrageRatesService {
 
     /**
      * Resuelve el valor de Demurrage (en días) según el modo:
-     * - 'P' = Promedio Histórico Móvil 24 Meses (Negativos = 0.00 con dilución de recalada)
+     * - 'O' = Original de la cotización cargada (si trae demoras guardadas, sino fallback a 'P')
+     * - 'P' = Promedio Histórico Móvil 24 Meses (Negativos = 0.00 con dilución de recalada por PUERTO)
      * - 'C' = Cero estricto (0.00 d, permite sobreescritura manual libre)
      * - 'M' = (Compatibilidad legacy) Devuelve promedio o mes
      */
     public static resolveDemurrageDays(
         portId: string,
-        vesselId: string,
-        mode: 'P' | 'M' | 'C' | string,
+        vesselId: string = '',
+        mode: 'O' | 'P' | 'M' | 'C' | string = 'P',
         dateString?: string | undefined | null,
-        _unusedStaticCosts?: any[]
+        originalDays?: number | string | null
     ): number {
         if (mode === 'C') {
             return 0;
         }
 
+        if (mode === 'O') {
+            if (originalDays !== undefined && originalDays !== '' && originalDays !== null) {
+                const num = Number(originalDays);
+                if (!isNaN(num)) return num;
+            }
+        }
+
         const profile = this.getDemurrageProfile(portId, vesselId);
 
-        if (mode === 'P') {
+        if (mode === 'P' || mode === 'O') {
             return profile.annual_average;
         }
 
