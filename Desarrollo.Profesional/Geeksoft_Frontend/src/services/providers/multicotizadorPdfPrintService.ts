@@ -749,7 +749,7 @@ export class MulticotizadorPdfPrintService {
                         
                         <!-- REVENUE (FLETE) -->
                         <div class="flex justify-between items-center py-0.5 font-bold text-emerald-950 border-b border-emerald-200">
-                            <span class="font-sans">Revenue (${this.fmtNum(calc.totalQuantity, 0)} MT × ${this.fmtCur(calc.totalQuantity > 0 ? calc.totalFreight / calc.totalQuantity : 0)}/MT)</span>
+                            <span class="font-sans">Revenue (${this.fmtNum(calc.totalQuantity, 0)} MT × $${(calc.totalQuantity > 0 ? calc.totalFreight / calc.totalQuantity : 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/MT)</span>
                             <span>${this.fmtCur(calc.totalFreight)}</span>
                         </div>
 

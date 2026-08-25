@@ -137,6 +137,28 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
     const tceReal = calc.tceRealizado;
     const tceDiff = calc.tceDiff;
 
+    const cleanVesselName = (vName: string) => (vName || '').replace(/^(B\/T|M\/T|M\/V)\s+/i, '').trim();
+
+    const resolveActiveDemurrageRate = (): number => {
+        const vName = vesselParams?.vessel_name || vesselParams?.name || vesselParams?.vessel_id || _selectedVessel || 'MOQUEGUA';
+        if (demurrageRatesMap) {
+            const clean = cleanVesselName(vName);
+            const short = clean.split(' ')[0];
+            if (demurrageRatesMap[vName] !== undefined && demurrageRatesMap[vName] > 0) return demurrageRatesMap[vName];
+            if (demurrageRatesMap[clean] !== undefined && demurrageRatesMap[clean] > 0) return demurrageRatesMap[clean];
+            if (demurrageRatesMap[short] !== undefined && demurrageRatesMap[short] > 0) return demurrageRatesMap[short];
+            for (const [k, v] of Object.entries(demurrageRatesMap)) {
+                const kClean = cleanVesselName(k);
+                if ((k.toUpperCase() === vName.toUpperCase() || kClean.toUpperCase() === clean.toUpperCase() || kClean.toUpperCase().startsWith(short.toUpperCase())) && v > 0) {
+                    return v;
+                }
+            }
+        }
+        return Number(vesselParams?.demurrage_rate) || Number(_demurrageRate) || 20000;
+    };
+
+    const activeDemurrageRate = resolveActiveDemurrageRate();
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 flex-shrink-0 mt-3">
             
@@ -557,7 +579,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                     {(() => {
                                         const activeQty = Number(puertosConfig.find(p => (p.action === 'DESCARGAR' || p.action === 'CARGAR') && Number(p.quantity) > 0)?.quantity || 0);
                                         const activeRate = Number(puertosConfig.find(p => (p.action === 'DESCARGAR' || p.action === 'CARGAR') && Number(p.freight_rate) > 0)?.freight_rate || 0);
-                                        return `Revenue (${fmtThousandSep(activeQty)} MT × ${fmtCur(activeRate)}/MT)`;
+                                        return `REVENUE (${fmtThousandSep(activeQty)} MT × $${activeRate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/MT)`;
                                     })()}
                                 </td>
                                 <td className="text-right py-1 pr-1 font-black text-emerald-950 text-xs">
@@ -569,7 +591,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                             {totalDemurrageDays > 0 && (
                                 <tr className="border-b border-sky-100/60 bg-sky-50/50">
                                     <td className="py-0.5 pl-3 text-sky-900 font-sans text-[9.5px] font-semibold">
-                                        (+) Ingreso Demurrage ({fmtCur(vesselParams?.demurrage_rate || 0)}/d × {fmtDays(totalDemurrageDays)} d)
+                                        (+) Ingreso Demurrage ({fmtCur(activeDemurrageRate)}/d × {fmtDays(totalDemurrageDays)} d)
                                     </td>
                                     <td className="text-right py-0.5 pr-1 font-mono text-[9.5px] text-sky-900 font-bold">
                                         +{fmtCur(demurrageRevenue)}

@@ -757,8 +757,14 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                             step="0.01"
                                             value={puertosConfig[idx + 1]?.freight_rate !== undefined && puertosConfig[idx + 1]?.freight_rate !== '' ? puertosConfig[idx + 1]?.freight_rate : ''}
                                             onChange={(e) => updatePuertoConfigField(idx + 1, 'freight_rate', e.target.value)}
+                                            onBlur={(e) => {
+                                                const val = parseFloat(e.target.value);
+                                                if (!isNaN(val)) {
+                                                    updatePuertoConfigField(idx + 1, 'freight_rate', val.toFixed(2));
+                                                }
+                                            }}
                                             className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-600 text-xs"
-                                            placeholder="0.00"
+                                            placeholder="23.00"
                                         />
                                     ) : (
                                         <span className="text-slate-350 select-none pr-2">—</span>
