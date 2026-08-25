@@ -345,49 +345,49 @@ export class MulticotizadorPdfPrintService {
     <div class="a4-landscape-page">
 
         <!-- 1. CABECERA EJECUTIVA Y METADATA DE VIAJE -->
-        <div class="border-box bg-slate-900 text-white p-2 shadow-xs">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-1.5">
+        <div class="border-box bg-white text-slate-800 p-2 shadow-xs border border-slate-300">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-1.5 mb-1.5">
                 <div class="flex items-center gap-3">
                     <div class="flex items-center gap-2">
-                        <span class="text-xl">⚓</span>
+                        <span class="text-xl text-blue-900">⚓</span>
                         <div>
-                            <h1 class="text-sm font-black tracking-tight leading-none text-white">NAVIERA PETRAL S.A.</h1>
-                            <span class="text-[8px] text-sky-400 font-mono uppercase tracking-widest font-bold">COMMERCIAL ESTIMATING & VOYAGE PROJECTION</span>
+                            <h1 class="text-sm font-black tracking-tight leading-none text-slate-900">NAVIERA PETRAL S.A.</h1>
+                            <span class="text-[8px] text-blue-700 font-mono uppercase tracking-widest font-bold">COMMERCIAL ESTIMATING & VOYAGE PROJECTION</span>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Titulo de la Cotización -->
                 <div class="text-center">
-                    <h2 class="text-xs font-black uppercase text-amber-400 tracking-wider">
+                    <h2 class="text-xs font-black uppercase text-slate-800 tracking-wider">
                         COTIZACIÓN DE FLETE & ESTIMACIÓN DE VIAJE
                     </h2>
-                    <span class="text-[8.5px] font-mono text-slate-300">
-                        RUTA: <strong>${selectedRouteName || selectedRouteId || 'COTIZACIÓN PERSONALIZADA'}</strong>
+                    <span class="text-[8.5px] font-mono text-slate-600">
+                        RUTA: <strong class="text-slate-900">${selectedRouteName || selectedRouteId || 'COTIZACIÓN PERSONALIZADA'}</strong>
                     </span>
                 </div>
 
                 <!-- Badge Cliente y Buque -->
                 <div class="flex items-center gap-2">
                     <div class="text-right">
-                        <span class="text-[7.5px] text-slate-400 block uppercase">CLIENTE (${clientType})</span>
-                        <strong class="text-xs font-black text-white">${selectedClient || 'PROSPECTO COMERCIAL'}</strong>
+                        <span class="text-[7.5px] text-slate-500 block uppercase">CLIENTE (${clientType})</span>
+                        <strong class="text-xs font-black text-slate-900">${selectedClient || 'PROSPECTO COMERCIAL'}</strong>
                     </div>
-                    <div class="bg-slate-800 px-2 py-1 rounded border border-slate-700 text-right">
-                        <span class="text-[7.5px] text-sky-400 block uppercase">BUQUE ASIGNADO</span>
-                        <strong class="text-xs font-black text-amber-300 font-mono">${selectedVessel || 'TBN'}</strong>
+                    <div class="bg-slate-100 px-2 py-1 rounded border border-slate-300 text-right">
+                        <span class="text-[7.5px] text-blue-800 block uppercase font-bold">BUQUE ASIGNADO</span>
+                        <strong class="text-xs font-black text-slate-900 font-mono">${selectedVessel || 'TBN'}</strong>
                     </div>
                 </div>
             </div>
 
             <!-- Fila de Parámetros Clave -->
-            <div class="grid grid-cols-6 gap-2 text-[8.5px] font-mono bg-slate-950/60 p-1 rounded border border-slate-800">
-                <div><span class="text-slate-400">Validez:</span> <strong class="text-slate-200">${this.fmtDate(validFrom)} - ${this.fmtDate(validTo)}</strong></div>
-                <div><span class="text-slate-400">TCE Requerido:</span> <strong class="text-amber-300">${this.fmtCur(calc.tceReq)}/d</strong></div>
-                <div><span class="text-slate-400">IFO 380:</span> <strong class="text-white">${this.fmtCur(bunkerPriceIfo)}/T</strong></div>
-                <div><span class="text-slate-400">MDO / LSMGO:</span> <strong class="text-white">${this.fmtCur(bunkerPriceMdo)}/T</strong></div>
-                <div><span class="text-slate-400">Address Comm:</span> <strong class="text-slate-200">${addressCommPct}%</strong></div>
-                <div><span class="text-slate-400">Broker Comm:</span> <strong class="text-slate-200">${brokerCommPct}%</strong></div>
+            <div class="grid grid-cols-6 gap-2 text-[8.5px] font-mono bg-slate-50 p-1 rounded border border-slate-200">
+                <div><span class="text-slate-500">Validez:</span> <strong class="text-slate-800">${this.fmtDate(validFrom)} - ${this.fmtDate(validTo)}</strong></div>
+                <div><span class="text-slate-500">TCE Requerido:</span> <strong class="text-slate-900">${this.fmtCur(calc.tceReq)}/d</strong></div>
+                <div><span class="text-slate-500">IFO 380:</span> <strong class="text-slate-900">${this.fmtCur(bunkerPriceIfo)}/T</strong></div>
+                <div><span class="text-slate-500">MDO / LSMGO:</span> <strong class="text-slate-900">${this.fmtCur(bunkerPriceMdo)}/T</strong></div>
+                <div><span class="text-slate-500">Address Comm:</span> <strong class="text-slate-800">${addressCommPct}%</strong></div>
+                <div><span class="text-slate-500">Broker Comm:</span> <strong class="text-slate-800">${brokerCommPct}%</strong></div>
             </div>
         </div>
 
@@ -733,68 +733,82 @@ export class MulticotizadorPdfPrintService {
                         </span>
                     </div>
 
-                    <div class="flex flex-col gap-0.5 font-mono text-[9px]">
+                    <div class="flex flex-col gap-0.5 font-mono text-[8.5px]">
                         
                         <!-- REVENUE (FLETE) -->
                         <div class="flex justify-between items-center py-0.5 font-bold text-emerald-950 border-b border-emerald-200">
-                            <span class="font-sans">REVENUE (${this.fmtNum(calc.totalQuantity, 0)} MT)</span>
+                            <span class="font-sans">Revenue (${this.fmtNum(calc.totalQuantity, 0)} MT × ${this.fmtCur(calc.totalQuantity > 0 ? calc.totalFreight / calc.totalQuantity : 0)}/MT)</span>
                             <span>${this.fmtCur(calc.totalFreight)}</span>
                         </div>
 
                         <!-- INGRESO DEMURRAGE (SI HAY) -->
                         ${calc.demurrageRevenue > 0 ? `
-                            <div class="flex justify-between items-center text-emerald-800 text-[8.5px]">
-                                <span class="font-sans">(+) Ingreso Demurrage (${this.fmtNum(calc.totalDemurrageDays, 2)} d)</span>
+                            <div class="flex justify-between items-center text-emerald-800 text-[8px]">
+                                <span class="font-sans">(+) Ingreso Demurrage (${this.fmtCur(vesselParams?.demurrage_rate || 20000)}/d × ${this.fmtNum(calc.totalDemurrageDays, 2)} d)</span>
                                 <span>+${this.fmtCur(calc.demurrageRevenue)}</span>
                             </div>
                         ` : ''}
 
                         <!-- REFACTURACIÓN MUELLAJE -->
                         ${calc.refacturacionMuellaje > 0 ? `
-                            <div class="flex justify-between items-center text-blue-800 text-[8.5px]">
-                                <span class="font-sans">(+) Refacturación Muellaje</span>
+                            <div class="flex justify-between items-center text-emerald-800 text-[8px] italic">
+                                <span class="font-sans">(+) Refacturación Muellaje (al cliente)</span>
                                 <span>+${this.fmtCur(calc.refacturacionMuellaje)}</span>
                             </div>
                         ` : ''}
 
-                        <!-- INGRESO BRUTO SI HAY EXTRAS -->
-                        ${(calc.demurrageRevenue > 0 || calc.refacturacionMuellaje > 0) ? `
-                            <div class="flex justify-between items-center font-bold text-slate-800 text-[8.5px] border-b border-emerald-200/60 pb-0.5">
-                                <span class="font-sans">(=) Ingreso Bruto Total</span>
-                                <span>${this.fmtCur(calc.grossRevenueTotal)}</span>
-                            </div>
-                        ` : ''}
-
                         <!-- HIRE OPERATIVO -->
-                        <div class="flex justify-between items-center text-rose-800 text-[8.5px]">
-                            <span class="font-sans">(-) Hire Operativo (${this.fmtNum(calc.totalSeaDays + calc.totalPortDays, 2)} d)</span>
+                        <div class="flex justify-between items-center text-slate-700 text-[8px]">
+                            <span class="font-sans">(-) Hire (${this.fmtCur(calc.tceReq)}/d × ${this.fmtNum(calc.totalSeaDays + calc.totalPortDays, 2)} d)</span>
                             <span>-${this.fmtCur(calc.standardHireCost || calc.hireUsd)}</span>
                         </div>
 
                         <!-- HIRE DEMURRAGE (SI HAY) -->
                         ${calc.demurrageHireCost > 0 ? `
-                            <div class="flex justify-between items-center text-rose-800 text-[8.5px]">
-                                <span class="font-sans">(-) Hire Demurrage (${this.fmtNum(calc.totalDemurrageDays, 2)} d)</span>
+                            <div class="flex justify-between items-center text-rose-800 text-[8px]">
+                                <span class="font-sans">(-) Costo Demurrage (${this.fmtCur(calc.tceReq)}/d × ${this.fmtNum(calc.totalDemurrageDays, 2)} d)</span>
                                 <span>-${this.fmtCur(calc.demurrageHireCost)}</span>
                             </div>
                         ` : ''}
 
-                        <!-- BUNKER TOTAL -->
-                        <div class="flex justify-between items-center text-rose-800 text-[8.5px]">
-                            <span class="font-sans">(-) Bunker Total (IFO + MDO)</span>
-                            <span>-${this.fmtCur(calc.grandBunkerTotal)}</span>
+                        <!-- BUNKER IFO -->
+                        <div class="flex justify-between items-center text-slate-700 text-[8px]">
+                            <span class="font-sans">(-) Bunker IFO (${this.fmtNum(calc.totalIfoTons, 1)} T × ${this.fmtCur(bunkerPriceIfo)}/T)</span>
+                            <span>-${this.fmtCur(calc.ifoCost)}</span>
                         </div>
 
-                        <!-- GASTOS PUERTO TOTAL -->
-                        <div class="flex justify-between items-center text-rose-800 text-[8.5px]">
-                            <span class="font-sans">(-) Port Costs & Muellaje</span>
-                            <span>-${this.fmtCur(calc.totalPortCosts)}</span>
+                        <!-- BUNKER MDO -->
+                        <div class="flex justify-between items-center text-slate-700 text-[8px]">
+                            <span class="font-sans">(-) Bunker MDO (${this.fmtNum(calc.totalMdoTons, 1)} T × ${this.fmtCur(bunkerPriceMdo)}/T)</span>
+                            <span>-${this.fmtCur(calc.mdoCost)}</span>
                         </div>
+
+                        <!-- GASTOS PUERTO DESGLOSADOS (POL, POD, LOADING MASTER, MUELLAJE) -->
+                        ${(calc.portCostItems || []).map(item => `
+                            ${item.base_agency_cost >= 1 ? `
+                                <div class="flex justify-between items-center text-slate-700 text-[8px]">
+                                    <span class="font-sans">(-) ${item.action === 'BUNKERING' ? item.label : `Port Costs ${item.label}`}</span>
+                                    <span>-${this.fmtCur(item.base_agency_cost)}</span>
+                                </div>
+                            ` : ''}
+                            ${item.loading_master_cost >= 1 ? `
+                                <div class="flex justify-between items-center text-slate-700 text-[8px]">
+                                    <span class="font-sans">(-) Loading Master (${item.port_id})</span>
+                                    <span>-${this.fmtCur(item.loading_master_cost)}</span>
+                                </div>
+                            ` : ''}
+                            ${item.muellaje_cost >= 1 ? `
+                                <div class="flex justify-between items-center text-slate-700 text-[8px]">
+                                    <span class="font-sans">(-) Muellaje (${item.port_id})</span>
+                                    <span>-${this.fmtCur(item.muellaje_cost)}</span>
+                                </div>
+                            ` : ''}
+                        `).join('')}
 
                         <!-- COMISIONES TOTAL -->
-                        ${calc.totalCommUsd > 0 ? `
-                            <div class="flex justify-between items-center text-rose-800 text-[8.5px]">
-                                <span class="font-sans">(-) Comisiones de Viaje (${addressCommPct + brokerCommPct}%)</span>
+                        ${(calc.totalCommUsd > 0 || (addressCommPct + brokerCommPct) > 0) ? `
+                            <div class="flex justify-between items-center text-slate-700 text-[8px]">
+                                <span class="font-sans">(-) Comisiones (${(addressCommPct + brokerCommPct)}%)</span>
                                 <span>-${this.fmtCur(calc.totalCommUsd)}</span>
                             </div>
                         ` : ''}
@@ -832,37 +846,37 @@ export class MulticotizadorPdfPrintService {
                 </div>
 
                 <!-- FORMATO DE AUDITORÍA Y VALIDACIÓN COMERCIAL -->
-                <div class="mt-1.5 pt-1 border-t border-dashed border-slate-300">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-[8px] font-extrabold uppercase text-slate-800 tracking-wider">
+                <div class="mt-1 pt-0.5 border-t border-dashed border-slate-300">
+                    <div class="flex items-center justify-between mb-0.5">
+                        <span class="text-[7.5px] font-extrabold uppercase text-slate-800 tracking-wider">
                             ✍️ REGISTRO DE AUDITORÍA Y VALIDACIÓN MATEMÁTICA (V°B° COMERCIAL)
                         </span>
-                        <span class="text-[7.5px] font-bold text-slate-500 uppercase">
+                        <span class="text-[7px] font-bold text-slate-500 uppercase">
                             NAVIERA PETRAL S.A. · CONTROL COMERCIAL
                         </span>
                     </div>
                     
-                    <div class="grid grid-cols-4 gap-2 text-[8px] bg-slate-50/70 p-1 rounded border border-slate-200">
+                    <div class="grid grid-cols-4 gap-1.5 text-[7.5px] bg-slate-50/70 p-1 rounded border border-slate-200">
                         <div class="border border-slate-200 rounded p-1 bg-white">
-                            <span class="block text-[7px] font-bold text-slate-600 uppercase">Revisado / Auditado por:</span>
-                            <div class="border-b border-slate-400 h-3 mt-3"></div>
-                            <span class="block text-[6.5px] text-slate-400 mt-0.5">Nombre & Cargo</span>
+                            <span class="block text-[6.5px] font-bold text-slate-600 uppercase">Revisado / Auditado por:</span>
+                            <div class="border-b border-slate-400 h-2.5 mt-2.5"></div>
+                            <span class="block text-[6px] text-slate-400 mt-0.5">Nombre & Cargo</span>
                         </div>
                         <div class="border border-slate-200 rounded p-1 bg-white">
-                            <span class="block text-[7px] font-bold text-slate-600 uppercase">Firma de Conformidad:</span>
-                            <div class="border-b border-slate-400 h-3 mt-3"></div>
-                            <span class="block text-[6.5px] text-slate-400 mt-0.5">Firma / Sello Digital</span>
+                            <span class="block text-[6.5px] font-bold text-slate-600 uppercase">Firma de Conformidad:</span>
+                            <div class="border-b border-slate-400 h-2.5 mt-2.5"></div>
+                            <span class="block text-[6px] text-slate-400 mt-0.5">Firma / Sello Digital</span>
                         </div>
                         <div class="border border-slate-200 rounded p-1 bg-white">
-                            <span class="block text-[7px] font-bold text-slate-600 uppercase">Fecha de Auditoría:</span>
-                            <div class="border-b border-slate-400 h-3 mt-3"></div>
-                            <span class="block text-[6.5px] text-slate-400 mt-0.5">DD / MM / AAAA</span>
+                            <span class="block text-[6.5px] font-bold text-slate-600 uppercase">Fecha de Conformidad:</span>
+                            <div class="border-b border-slate-400 h-2.5 mt-2.5"></div>
+                            <span class="block text-[6px] text-slate-400 mt-0.5">DD / MM / AAAA</span>
                         </div>
                         <div class="border border-slate-200 rounded p-1 bg-white">
-                            <span class="block text-[7px] font-bold text-slate-600 uppercase">Dictamen:</span>
-                            <div class="flex items-center gap-2 mt-2.5 font-bold text-[7.5px]">
-                                <span class="text-emerald-700 flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 border border-emerald-600 rounded-sm"></span> APROBADO</span>
-                                <span class="text-amber-700 flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 border border-amber-600 rounded-sm"></span> OBSERVADO</span>
+                            <span class="block text-[6.5px] font-bold text-slate-600 uppercase">Dictamen:</span>
+                            <div class="flex items-center gap-2 mt-2 font-bold text-[7px]">
+                                <span class="text-emerald-700 flex items-center gap-1"><span class="inline-block w-2 h-2 border border-emerald-600 rounded-sm"></span> APROBADO</span>
+                                <span class="text-amber-700 flex items-center gap-1"><span class="inline-block w-2 h-2 border border-amber-600 rounded-sm"></span> OBSERVADO</span>
                             </div>
                         </div>
                     </div>

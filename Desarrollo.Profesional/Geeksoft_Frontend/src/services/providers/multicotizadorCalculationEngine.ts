@@ -225,6 +225,31 @@ export class MulticotizadorCalculationEngine {
                 totalQuantity += qVal0;
                 totalFreight += (qVal0 * fRate0);
             }
+
+            if (pCfg0.action === 'BUNKERING') {
+                portCostItems.push({
+                    port_id: originPort0,
+                    label: `Bunkering Costs (${originPort0})`,
+                    action: 'BUNKERING',
+                    base_agency_cost: totalCost0,
+                    loading_master_cost: 0,
+                    muellaje_cost: 0,
+                    total_cost: totalCost0
+                });
+            } else {
+                const isChile0 = this.CHILEAN_PORTS.includes((originPort0 || '').toUpperCase());
+                const lmCost0 = (isChile0 && totalCost0 >= 2500) ? 2500 : 0;
+                const baseAgencyCost0 = Math.max(0, totalCost0 - lmCost0 - muellVal0);
+                portCostItems.push({
+                    port_id: originPort0,
+                    label: pCfg0.action === 'CARGAR' ? `POL (${originPort0})` : `POD (${originPort0})`,
+                    action: pCfg0.action,
+                    base_agency_cost: baseAgencyCost0,
+                    loading_master_cost: lmCost0,
+                    muellaje_cost: muellVal0,
+                    total_cost: totalCost0
+                });
+            }
         }
 
         // Iterar tramos 1 .. N
