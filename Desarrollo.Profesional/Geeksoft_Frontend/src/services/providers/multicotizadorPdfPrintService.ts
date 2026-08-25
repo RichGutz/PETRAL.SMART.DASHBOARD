@@ -222,13 +222,15 @@ export class MulticotizadorPdfPrintService {
 <head>
     <meta charset="UTF-8">
     <title>PETRAL_MULTICOTIZADOR_${selectedClient}_${selectedVessel || 'BUQUE'}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- ESTILOS DE IMPRESIÓN FORZADOS (POST-TAILWIND PARA MÁXIMA PRIORIDAD) -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700;800&family=Geist:wght@400;500;600;700;800;900&display=swap');
         
         * {
-            box-sizing: border-box;
+            box-sizing: border-box !important;
             margin: 0;
             padding: 0;
         }
@@ -245,16 +247,20 @@ export class MulticotizadorPdfPrintService {
             font-family: 'Geist Mono', monospace;
         }
 
-        /* Dimensiones fijas A4 Horizontal (Landscape 297mm x 210mm) */
+        /* DIRECTIVA EXACTA PARA FORZAR HORIZONTAL Y ELIMINAR ENCABEZADOS/PIES DEL NAVEGADOR */
         @page {
-            size: A4 landscape;
-            margin: 0mm;
+            size: landscape !important;
+            margin: 0mm !important;
+        }
+
+        @page :first {
+            margin: 0mm !important;
         }
 
         @media print {
             @page {
-                size: A4 landscape;
-                margin: 0mm;
+                size: landscape !important;
+                margin: 0mm !important;
             }
             html, body {
                 width: 297mm !important;
@@ -262,7 +268,7 @@ export class MulticotizadorPdfPrintService {
                 max-width: 297mm !important;
                 max-height: 210mm !important;
                 margin: 0 !important;
-                padding: 3mm 4mm !important;
+                padding: 0 !important;
                 background-color: #ffffff !important;
                 overflow: hidden !important;
             }
@@ -271,18 +277,22 @@ export class MulticotizadorPdfPrintService {
             }
             .a4-landscape-page {
                 width: 290mm !important;
-                height: 204mm !important;
-                max-height: 204mm !important;
-                padding: 0 !important;
+                height: 200mm !important;
+                max-height: 200mm !important;
+                padding: 2mm 3mm !important;
                 margin: 0 auto !important;
                 overflow: hidden !important;
+                page-break-after: avoid !important;
+                page-break-inside: avoid !important;
+                break-after: avoid !important;
+                break-inside: avoid !important;
             }
         }
 
         .a4-landscape-page {
             width: 290mm;
-            height: 204mm;
-            max-height: 204mm;
+            height: 200mm;
+            max-height: 200mm;
             margin: 0 auto;
             background: #ffffff;
             box-sizing: border-box;
@@ -293,8 +303,8 @@ export class MulticotizadorPdfPrintService {
         }
 
         .dense-table th, .dense-table td {
-            padding: 1.5px 3px;
-            font-size: 8.5px;
+            padding: 1.2px 2.5px;
+            font-size: 8px;
             line-height: 1.1;
         }
 
@@ -330,7 +340,7 @@ export class MulticotizadorPdfPrintService {
         }
     </style>
 </head>
-<body class="p-2">
+<body class="p-1">
 
     <!-- BARRA DE ACCIÓN (SOLO PANTALLA) -->
     <div class="no-print mb-2 max-w-[290mm] mx-auto flex items-center justify-between bg-slate-900 text-white px-4 py-2 rounded-lg shadow-lg">
