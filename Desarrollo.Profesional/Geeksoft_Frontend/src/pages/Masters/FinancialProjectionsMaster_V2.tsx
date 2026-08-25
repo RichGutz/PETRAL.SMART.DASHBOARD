@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { TrendingUp, Calendar, FileSpreadsheet, FileDown, Layers, ChevronDown, ChevronRight, User, ShieldCheck, Plus, Sparkles, Building2, Anchor, DollarSign, RefreshCw, ExternalLink, Play, Trash2 } from 'lucide-react';
+import { TrendingUp, Calendar, FileSpreadsheet, FileDown, Layers, ChevronDown, ChevronRight, User, ShieldCheck, CheckCircle2, Building2, Anchor, DollarSign, RefreshCw, ExternalLink, Play, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
@@ -49,6 +49,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [selectedAuthor, setSelectedAuthor] = useState<string>('TODOS');
     const [openYears, setOpenYears] = useState<Record<string, boolean>>({});
+    const [expandedScenarioId, setExpandedScenarioId] = useState<string | null>(null);
 
     // Carga de escenarios desde Supabase (tabla commercial_forecasts)
     const loadData = async () => {
@@ -56,7 +57,6 @@ export const FinancialProjectionsMaster: React.FC = () => {
             setLoading(true);
             const list = await ForecastService.listForecasts();
             
-            // Para cada escenario en la lista, cargamos sus líneas de proyección completas
             const enriched = await Promise.all((list || []).map(async (item: any) => {
                 try {
                     const full = await ForecastService.loadForecast(item.id);
@@ -217,6 +217,10 @@ export const FinancialProjectionsMaster: React.FC = () => {
         setOpenYears(prev => ({ ...prev, [year]: !prev[year] }));
     };
 
+    const toggleScenarioExpansion = (scenarioId: string) => {
+        setExpandedScenarioId(prev => (prev === scenarioId ? null : scenarioId));
+    };
+
     // Función de Eliminación con Seguridad por Usuario
     const handleDeleteScenario = async (scenario: ScenarioCardItem) => {
         const currentUserEmail = (user?.email || '').toLowerCase();
@@ -276,7 +280,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
         >
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6 flex flex-col min-h-[calc(100vh-140px)]">
                 
-                {/* CABECERA: TÍTULO Y PESTAÑAS DE AUTORES */}
+                {/* CABECERA: TÍTULO Y PESTAÑAS DE AUTORES (LOOK AND FEEL IDÉNTICO A MAESTRO DE CIERRES) */}
                 <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4 shrink-0">
                     <div className="flex items-center gap-6">
                         <h2 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
@@ -284,7 +288,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                             Escenarios por Autor
                         </h2>
 
-                        {/* Pestañas de Autores */}
+                        {/* Pestañas Horizontales de Autores */}
                         <div className="flex bg-slate-200 p-1 rounded-lg gap-1 overflow-x-auto">
                             {authors.map(author => {
                                 const isSelected = selectedAuthor === author;
@@ -293,17 +297,20 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                 return (
                                     <button
                                         key={author}
-                                        onClick={() => setSelectedAuthor(author)}
-                                        className={`px-3.5 py-1.5 rounded-md text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
+                                        onClick={() => {
+                                            setSelectedAuthor(author);
+                                            setExpandedScenarioId(null);
+                                        }}
+                                        className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
                                             isSelected 
-                                                ? 'bg-blue-600 text-white shadow-xs' 
-                                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-300'
+                                                ? 'bg-white text-blue-700 shadow-sm' 
+                                                : 'text-slate-600 hover:text-slate-800 hover:bg-slate-300'
                                         }`}
                                     >
                                         <User size={13} />
                                         <span>{author === 'TODOS' ? 'Todos los Autores' : author.split('@')[0].toUpperCase()}</span>
-                                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
-                                            isSelected ? 'bg-blue-700 text-blue-100' : 'bg-slate-300 text-slate-700'
+                                        <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                                            isSelected ? 'bg-blue-100 text-blue-800' : 'bg-slate-300 text-slate-700'
                                         }`}>
                                             {count}
                                         </span>
@@ -313,104 +320,101 @@ export const FinancialProjectionsMaster: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={loadData}
-                            className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
-                            title="Recargar escenarios de Supabase"
-                        >
-                            <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
-                        </button>
-                        <span className="text-xs font-bold text-slate-500 font-mono">
-                            Total Escenarios en BD: <strong className="text-blue-700">{processedScenarios.length}</strong>
-                        </span>
-                    </div>
+                    <button
+                        onClick={loadData}
+                        className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-300 transition-colors cursor-pointer"
+                    >
+                        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                        Actualizar
+                    </button>
                 </div>
 
-                {/* CONTENIDO PRINCIPAL: ACORDEÓN POR AÑOS CON LAS 4 CARDS POR ESCENARIO */}
-                <div className="p-6 flex-1 bg-slate-50/50 flex flex-col gap-6 overflow-y-auto">
+                {/* CONTENIDO PRINCIPAL: ACORDEÓN POR AÑO (ORDEN DESCENDENTE - IDÉNTICO A CIERRES) */}
+                <div className="flex-1 p-6 bg-slate-100/60 overflow-y-auto space-y-4">
                     {loading ? (
-                        <div className="py-16 text-center text-slate-400 font-bold text-sm">
-                            <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-3"></div>
-                            Cargando Escenarios de commercial_forecasts...
+                        <div className="flex justify-center items-center h-64 text-slate-500 font-medium">
+                            <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mr-3"></div>
+                            Cargando proyecciones y escenarios de commercial_forecasts...
                         </div>
                     ) : groupedByYear.sortedYears.length === 0 ? (
-                        <div className="py-16 text-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-300">
-                            <TrendingUp size={36} className="mx-auto text-slate-300 mb-2" />
-                            <p className="font-bold text-slate-600 text-sm">No se encontraron escenarios para el autor {selectedAuthor}.</p>
-                            <p className="text-xs text-slate-400 mt-1">Guarda un nuevo escenario en la Matriz Financiera para verlo reflejado aquí.</p>
+                        <div className="bg-white rounded-xl p-8 text-center text-slate-500 border border-slate-200 shadow-sm">
+                            <Layers size={36} className="mx-auto text-slate-300 mb-2" />
+                            <p className="font-semibold text-sm">No hay escenarios registrados para el autor {selectedAuthor}.</p>
+                            <p className="text-xs text-slate-400 mt-1">Crea y guarda nuevos escenarios desde la Matriz Financiera para verlos aquí.</p>
                         </div>
                     ) : (
                         groupedByYear.sortedYears.map(year => {
+                            const isOpen = Boolean(openYears[year]);
                             const scenariosInYear = groupedByYear.groups[year] || [];
-                            const isOpen = openYears[year] ?? false;
 
                             return (
-                                <div key={year} className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden transition-all">
+                                <div key={year} className="bg-white rounded-xl border border-slate-250 shadow-sm overflow-hidden transition-all">
                                     
-                                    {/* Cabecera del Año (Acordeón) */}
-                                    <div 
+                                    {/* CABECERA HORIZONTAL DEL BLOQUE ANUAL (NIVEL 1/2 - ESTILO CIERRES) */}
+                                    <button
                                         onClick={() => toggleYear(year)}
-                                        className="bg-slate-100/80 hover:bg-slate-200/70 px-5 py-3.5 border-b border-slate-200 flex items-center justify-between cursor-pointer select-none transition-colors"
+                                        className="w-full bg-slate-800 hover:bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between transition-colors cursor-pointer"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="bg-blue-600 text-white p-1.5 rounded-lg shadow-2xs font-black text-xs font-mono">
-                                                {year}
-                                            </div>
-                                            <div>
-                                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center gap-2">
-                                                    Año {year} - Proyecciones Financieras
-                                                    <span className="text-xs font-bold text-blue-800 bg-blue-100 px-2 py-0.5 rounded-full font-mono">
-                                                        {scenariosInYear.length} {scenariosInYear.length === 1 ? 'Escenario' : 'Escenarios'}
-                                                    </span>
-                                                </h3>
-                                                <span className="text-[10px] text-slate-500 font-mono block">
-                                                    Filtro Autor: {selectedAuthor} | Origen: commercial_forecasts (Supabase)
-                                                </span>
-                                            </div>
+                                            <Calendar size={18} className="text-amber-400" />
+                                            <span className="text-sm font-black uppercase tracking-wider">
+                                                📅 AÑO DE VIGENCIA {year}
+                                            </span>
+                                            <span className="bg-slate-700 text-amber-300 text-xs font-bold px-2.5 py-0.5 rounded-full border border-slate-600">
+                                                {scenariosInYear.length} {scenariosInYear.length === 1 ? 'Escenario Registrado' : 'Escenarios Registrados'}
+                                            </span>
                                         </div>
-
-                                        <div className="flex items-center gap-2">
-                                            {isOpen ? <ChevronDown size={18} className="text-slate-500" /> : <ChevronRight size={18} className="text-slate-500" />}
+                                        <div className="flex items-center gap-2 text-slate-300 text-xs font-semibold">
+                                            <span>{isOpen ? 'Ocultar Año' : 'Desplegar Año'}</span>
+                                            {isOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                                         </div>
-                                    </div>
+                                    </button>
 
-                                    {/* Lista de Escenarios en el Año */}
+                                    {/* CONTENIDO DESPLEGABLE DEL AÑO: LISTADO DE ESCENARIOS (NIVEL 3) */}
                                     {isOpen && (
-                                        <div className="p-4 flex flex-col gap-4 bg-slate-50/30">
+                                        <div className="p-4 space-y-3 bg-slate-50 border-t border-slate-200">
                                             {scenariosInYear.map(scenario => {
+                                                const isExpanded = expandedScenarioId === scenario.id;
                                                 const s = scenario.summary;
                                                 const cabotagePct = s.totalTrips > 0 ? (s.cabotageTrips / s.totalTrips) * 100 : 50;
                                                 const exportPct = 100 - cabotagePct;
 
                                                 return (
-                                                    <div key={scenario.id} className="border border-slate-300 bg-white rounded-xl p-4 shadow-sm flex flex-col gap-3">
+                                                    <div key={scenario.id} className="bg-white rounded-lg border border-slate-300 shadow-sm overflow-hidden">
                                                         
-                                                        {/* BARRA SUPERIOR DE METADATOS DEL ESCENARIO */}
-                                                        <div className="bg-white px-3.5 py-2.5 rounded-lg border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs shadow-2xs">
+                                                        {/* FILA DE ESCENARIO (NIVEL 3) */}
+                                                        <div 
+                                                            onClick={() => toggleScenarioExpansion(scenario.id)}
+                                                            className="p-4 flex flex-wrap items-center justify-between gap-4 cursor-pointer hover:bg-slate-100/80 transition-colors"
+                                                        >
                                                             <div className="flex items-center gap-3">
-                                                                <span className="font-black text-slate-900 text-sm font-mono flex items-center gap-1.5">
-                                                                    <span>📊</span> {scenario.name}
-                                                                </span>
-                                                                <span className="text-slate-300">|</span>
-                                                                <span className="font-bold text-blue-900 flex items-center gap-1">
-                                                                    ⏳ <strong>Horizonte:</strong> {scenario.startDate} ➔ {scenario.endDate}
-                                                                </span>
-                                                                <span className="text-slate-300">|</span>
-                                                                <span className="text-slate-600">
-                                                                    👤 <strong>Autor:</strong> {scenario.userId}
-                                                                </span>
-                                                                {scenario.createdAt && (
-                                                                    <>
-                                                                        <span className="text-slate-300">|</span>
-                                                                        <span className="text-slate-400 font-mono text-[10.5px]">
-                                                                            📅 {new Date(scenario.createdAt).toLocaleDateString()}
+                                                                <button className="text-slate-500 hover:text-blue-600">
+                                                                    {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                                                                </button>
+                                                                <div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-mono font-bold text-xs text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                                                                            📊 {scenario.name}
                                                                         </span>
-                                                                    </>
-                                                                )}
+                                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 bg-emerald-100 text-emerald-800">
+                                                                            <CheckCircle2 size={10} /> PROYECCIÓN
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="text-xs font-semibold text-slate-600 mt-1 flex items-center gap-3">
+                                                                        <span>Autor: <strong className="text-slate-800 font-mono">{scenario.userId}</strong></span>
+                                                                        <span className="text-slate-400">|</span>
+                                                                        <span>Horizonte: <strong className="text-slate-700 font-mono">{scenario.startDate} ➔ {scenario.endDate}</strong></span>
+                                                                        {scenario.createdAt && (
+                                                                            <>
+                                                                                <span className="text-slate-400">|</span>
+                                                                                <span>Creación: <strong className="text-slate-500 font-mono">{new Date(scenario.createdAt).toLocaleDateString()}</strong></span>
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
                                                             </div>
 
-                                                            <div className="flex items-center gap-2">
+                                                            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
                                                                 <div className="flex items-center gap-1">
                                                                     {s.vesselsUsed.map(v => (
                                                                         <span key={v} className="bg-blue-50 text-blue-800 px-2 py-0.5 rounded border border-blue-200 font-mono text-[10px] font-bold">
@@ -419,131 +423,154 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                     ))}
                                                                 </div>
 
+                                                                <span className="bg-slate-100 px-2.5 py-1 rounded border border-slate-200 font-mono text-[11px]">
+                                                                    {s.totalTrips} Viajes
+                                                                </span>
+
                                                                 <button
-                                                                    onClick={() => handleOpenInMatrix(scenario)}
-                                                                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-md shadow-sm transition-all cursor-pointer"
-                                                                    title="Cargar este escenario en Matriz Financiera"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleOpenInMatrix(scenario);
+                                                                    }}
+                                                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-colors cursor-pointer shadow-xs"
+                                                                    title="Cargar y simular este escenario en Matriz Financiera"
                                                                 >
-                                                                    <Play size={12} fill="white" />
+                                                                    <Play size={12} fill="currentColor" />
                                                                     <span>Abrir en Matriz ➔</span>
                                                                 </button>
 
+                                                                <span 
+                                                                    className="text-slate-400 font-bold hover:underline cursor-pointer px-1"
+                                                                    onClick={() => toggleScenarioExpansion(scenario.id)}
+                                                                >
+                                                                    {isExpanded ? '▲ Ocultar Ficha' : '▼ Detalle Rápido'}
+                                                                </span>
+
                                                                 <button
-                                                                    onClick={() => handleDeleteScenario(scenario)}
-                                                                    className="p-1.5 rounded border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer transition-colors"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDeleteScenario(scenario);
+                                                                    }}
+                                                                    className="px-2.5 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-200 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer shadow-sm ml-1"
                                                                     title="Eliminar este escenario (solo creador o admin)"
                                                                 >
-                                                                    <Trash2 size={14} />
+                                                                    <Trash2 size={13} />
+                                                                    <span>Eliminar</span>
                                                                 </button>
                                                             </div>
                                                         </div>
 
-                                                        {/* GRID DE 4 CARDS EJECUTIVAS (MISMO LOOK AND FEEL) */}
-                                                        <div className="bg-slate-100/90 border border-slate-300 rounded-lg p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 text-xs shadow-inner">
-                                                            
-                                                            {/* CARD 1: ITINERARIO & TRÁFICO */}
-                                                            <div className="flex flex-col gap-1 bg-white p-2.5 rounded border border-slate-300 shadow-2xs">
-                                                                <span className="text-[10px] font-black text-slate-900 uppercase tracking-wider flex items-center justify-between">
-                                                                    <span>🧭 1. Itinerario & Tráfico</span>
-                                                                    <span className="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded text-[8.5px] font-mono font-bold">
-                                                                        {s.totalTrips} Viajes
-                                                                    </span>
-                                                                </span>
-                                                                <div className="flex flex-col gap-1 pt-1 divide-y divide-slate-100 max-h-36 overflow-y-auto font-mono text-[10px]">
-                                                                    <div className="flex items-center justify-between">
-                                                                        <span className="text-slate-600">Cabotaje:</span>
-                                                                        <span className="font-bold text-blue-900">{s.cabotageTrips} viajes ({cabotagePct.toFixed(0)}%)</span>
-                                                                    </div>
-                                                                    <div className="flex items-center justify-between pt-0.5">
-                                                                        <span className="text-slate-600">Exportación:</span>
-                                                                        <span className="font-bold text-indigo-900">{s.exportTrips} viajes ({exportPct.toFixed(0)}%)</span>
-                                                                    </div>
-                                                                    <div className="flex items-center justify-between pt-1 border-t border-slate-200 font-bold">
-                                                                        <span className="text-slate-800">Volumen Total:</span>
-                                                                        <span className="text-emerald-700 font-black">{s.totalVolumeTm.toLocaleString('en-US')} TM</span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* CARD 2: FLETE & GROSS REVENUE */}
-                                                            <div className="flex flex-col gap-1 bg-white p-2.5 rounded border border-blue-200 shadow-2xs">
-                                                                <span className="text-[10px] font-black text-blue-900 uppercase tracking-wider flex items-center justify-between">
-                                                                    <span>💰 2. Flete & Gross Rev</span>
-                                                                    <span className="bg-blue-100 text-blue-700 px-1 py-0.5 rounded text-[8.5px]">Ingresos</span>
-                                                                </span>
-                                                                <div className="text-[10px] text-slate-700 font-mono flex flex-col gap-1 pt-1">
-                                                                    <div className="flex items-center justify-between">
-                                                                        <span>Carga Modelada:</span>
-                                                                        <span className="font-bold text-slate-900">{s.totalVolumeTm.toLocaleString()} TM</span>
-                                                                    </div>
-                                                                    <div className="flex items-center justify-between">
-                                                                        <span>Flete Promedio Est.:</span>
-                                                                        <span className="font-bold text-blue-800">$28.50/TM</span>
-                                                                    </div>
-                                                                    <div className="text-[10px] font-bold text-blue-900 pt-1 border-t border-slate-200 flex items-center justify-between">
-                                                                        <span>Gross Revenue:</span>
-                                                                        <span className="font-black text-[11px] text-blue-700">
-                                                                            ${s.estimatedGrossRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                                                        {/* FICHA EXPANDIDA: GRID DE 4 CARDS (LOOK AND FEEL IDÉNTICO A CIERRES Y COTIZACIONES) */}
+                                                        {isExpanded && (
+                                                            <div className="p-4 bg-slate-50 border-t border-slate-200">
+                                                                <div className="bg-slate-100/90 border border-slate-300 rounded-lg p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 text-xs shadow-inner">
+                                                                    
+                                                                    {/* CARD 1: ITINERARIO & TRÁFICO */}
+                                                                    <div className="flex flex-col gap-1 bg-white p-2.5 rounded border border-slate-300 shadow-2xs">
+                                                                        <span className="text-[10px] font-black text-slate-900 uppercase tracking-wider flex items-center justify-between">
+                                                                            <span>🧭 1. Itinerario & Tráfico</span>
+                                                                            <span className="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded text-[8.5px] font-mono font-bold">
+                                                                                {s.totalTrips} Viajes
+                                                                            </span>
                                                                         </span>
+                                                                        <div className="flex flex-col gap-1 pt-1 divide-y divide-slate-100 max-h-36 overflow-y-auto font-mono text-[10px]">
+                                                                            <div className="flex items-center justify-between">
+                                                                                <span className="text-slate-600">Cabotaje:</span>
+                                                                                <span className="font-bold text-blue-900">{s.cabotageTrips} viajes ({cabotagePct.toFixed(0)}%)</span>
+                                                                            </div>
+                                                                            <div className="flex items-center justify-between pt-0.5">
+                                                                                <span className="text-slate-600">Exportación:</span>
+                                                                                <span className="font-bold text-indigo-900">{s.exportTrips} viajes ({exportPct.toFixed(0)}%)</span>
+                                                                            </div>
+                                                                            <div className="flex items-center justify-between pt-1 border-t border-slate-200 font-bold">
+                                                                                <span className="text-slate-800">Volumen Total:</span>
+                                                                                <span className="text-emerald-700 font-black">{s.totalVolumeTm.toLocaleString('en-US')} TM</span>
+                                                                            </div>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            </div>
 
-                                                            {/* CARD 3: BÚNKERES & PUERTOS */}
-                                                            <div className="flex flex-col gap-1 bg-white p-2.5 rounded border border-amber-200 shadow-2xs">
-                                                                <span className="text-[10px] font-black text-amber-900 uppercase tracking-wider flex items-center justify-between">
-                                                                    <span>⛽ 3. Búnkeres & Puertos</span>
-                                                                    <span className="bg-amber-100 text-amber-800 px-1 py-0.5 rounded text-[8.5px]">Costos Op</span>
-                                                                </span>
-                                                                <div className="text-[10px] text-slate-700 font-mono flex flex-col gap-0.5 pt-1">
-                                                                    <div className="flex items-center justify-between">
-                                                                        <span>Costo Búnker Est.:</span>
-                                                                        <span className="font-bold text-amber-900">${s.estimatedBunkerCost.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
-                                                                    </div>
-                                                                    <div className="flex items-center justify-between pt-0.5 border-t border-slate-100">
-                                                                        <span>Gastos Portuarios Est.:</span>
-                                                                        <span className="font-bold text-teal-700">${s.estimatedPortCosts.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
-                                                                    </div>
-                                                                    <div className="text-[10px] font-bold text-slate-900 pt-1 border-t border-slate-200 flex items-center justify-between">
-                                                                        <span>Costos Op Totales:</span>
-                                                                        <span className="font-black text-amber-800">
-                                                                            ${(s.estimatedBunkerCost + s.estimatedPortCosts).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                                                                    {/* CARD 2: FLETE & GROSS REVENUE */}
+                                                                    <div className="flex flex-col gap-1 bg-white p-2.5 rounded border border-blue-200 shadow-2xs">
+                                                                        <span className="text-[10px] font-black text-blue-900 uppercase tracking-wider flex items-center justify-between">
+                                                                            <span>💰 2. Flete & Gross Rev</span>
+                                                                            <span className="bg-blue-100 text-blue-700 px-1 py-0.5 rounded text-[8.5px]">Ingresos</span>
                                                                         </span>
+                                                                        <div className="text-[10px] text-slate-700 font-mono flex flex-col gap-1 pt-1">
+                                                                            <div className="flex items-center justify-between">
+                                                                                <span>Carga Modelada:</span>
+                                                                                <span className="font-bold text-slate-900">{s.totalVolumeTm.toLocaleString()} TM</span>
+                                                                            </div>
+                                                                            <div className="flex items-center justify-between">
+                                                                                <span>Flete Promedio Est.:</span>
+                                                                                <span className="font-bold text-blue-800">$28.50/TM</span>
+                                                                            </div>
+                                                                            <div className="text-[10px] font-bold text-blue-900 pt-1 border-t border-slate-200 flex items-center justify-between">
+                                                                                <span>Gross Revenue:</span>
+                                                                                <span className="font-black text-[11px] text-blue-700">
+                                                                                    ${s.estimatedGrossRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            </div>
 
-                                                            {/* CARD 4: RESULTADO & P&L */}
-                                                            <div className="flex flex-col gap-1 bg-emerald-50/90 p-2.5 rounded border border-emerald-300 shadow-2xs">
-                                                                <span className="text-[10px] font-black text-emerald-950 uppercase tracking-wider flex items-center justify-between">
-                                                                    <span>📈 4. Resultado & P&L</span>
-                                                                    <span className="bg-emerald-200 text-emerald-900 px-1 py-0.5 rounded text-[8.5px]">Margen Op</span>
-                                                                </span>
-                                                                <div className="text-[10px] text-emerald-950 font-mono flex flex-col gap-0.5 pt-1">
-                                                                    <div className="flex items-center justify-between">
-                                                                        <span>Margen Operativo Est.:</span>
-                                                                        <span className="font-black text-emerald-800 text-[11px]">
-                                                                            ${s.estimatedOperatingMargin.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                                                                    {/* CARD 3: BÚNKERES & PUERTOS */}
+                                                                    <div className="flex flex-col gap-1 bg-white p-2.5 rounded border border-amber-200 shadow-2xs">
+                                                                        <span className="text-[10px] font-black text-amber-900 uppercase tracking-wider flex items-center justify-between">
+                                                                            <span>⛽ 3. Búnkeres & Puertos</span>
+                                                                            <span className="bg-amber-100 text-amber-800 px-1 py-0.5 rounded text-[8.5px]">Costos Op</span>
                                                                         </span>
+                                                                        <div className="text-[10px] text-slate-700 font-mono flex flex-col gap-0.5 pt-1">
+                                                                            <div className="flex items-center justify-between">
+                                                                                <span>Costo Búnker Est.:</span>
+                                                                                <span className="font-bold text-amber-900">${s.estimatedBunkerCost.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                                                                            </div>
+                                                                            <div className="flex items-center justify-between pt-0.5 border-t border-slate-100">
+                                                                                <span>Gastos Portuarios Est.:</span>
+                                                                                <span className="font-bold text-teal-700">${s.estimatedPortCosts.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                                                                            </div>
+                                                                            <div className="text-[10px] font-bold text-slate-900 pt-1 border-t border-slate-200 flex items-center justify-between">
+                                                                                <span>Costos Op Totales:</span>
+                                                                                <span className="font-black text-amber-800">
+                                                                                    ${(s.estimatedBunkerCost + s.estimatedPortCosts).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
                                                                     </div>
-                                                                    <div className="flex items-center justify-between pt-0.5 border-t border-emerald-200">
-                                                                        <span>Días Ocupación:</span>
-                                                                        <span className="font-bold text-blue-900">{s.totalDaysOccupation} días</span>
+
+                                                                    {/* CARD 4: RESULTADO & P&L */}
+                                                                    <div className="flex flex-col gap-1 bg-emerald-50/90 p-2.5 rounded border border-emerald-300 shadow-2xs">
+                                                                        <span className="text-[10px] font-black text-emerald-950 uppercase tracking-wider flex items-center justify-between">
+                                                                            <span>📈 4. Resultado & P&L</span>
+                                                                            <span className="bg-emerald-200 text-emerald-900 px-1 py-0.5 rounded text-[8.5px]">Margen Op</span>
+                                                                        </span>
+                                                                        <div className="text-[10px] text-emerald-950 font-mono flex flex-col gap-0.5 pt-1">
+                                                                            <div className="flex items-center justify-between">
+                                                                                <span>Margen Operativo Est.:</span>
+                                                                                <span className="font-black text-emerald-800 text-[11px]">
+                                                                                    ${s.estimatedOperatingMargin.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                                                                                </span>
+                                                                            </div>
+                                                                            <div className="flex items-center justify-between pt-0.5 border-t border-emerald-200">
+                                                                                <span>Días Ocupación:</span>
+                                                                                <span className="font-bold text-blue-900">{s.totalDaysOccupation} días</span>
+                                                                            </div>
+                                                                            <div className="flex items-center justify-between pt-0.5 border-t border-emerald-200 font-bold">
+                                                                                <span>Días Disponibles:</span>
+                                                                                <span className="font-black text-emerald-700">{s.totalDaysAvailable} días</span>
+                                                                            </div>
+                                                                        </div>
                                                                     </div>
-                                                                    <div className="flex items-center justify-between pt-0.5 border-t border-emerald-200 font-bold">
-                                                                        <span>Días Disponibles:</span>
-                                                                        <span className="font-black text-emerald-700">{s.totalDaysAvailable} días</span>
-                                                                    </div>
+
                                                                 </div>
                                                             </div>
-
-                                                        </div>
+                                                        )}
 
                                                     </div>
                                                 );
                                             })}
                                         </div>
                                     )}
+
                                 </div>
                             );
                         })
