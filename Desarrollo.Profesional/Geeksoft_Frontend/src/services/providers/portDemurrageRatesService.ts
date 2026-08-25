@@ -102,7 +102,7 @@ export class PortDemurrageRatesService {
         }
 
         // Fallback a la data histórica sembrada
-        const seedData = (initialHistoricalData || []) as DemurrageRecord[];
+        const seedData = (initialHistoricalData || []) as unknown as DemurrageRecord[];
         this.saveRecords(seedData);
         return seedData;
     }
@@ -194,7 +194,7 @@ export class PortDemurrageRatesService {
      * Restaura los registros a la base de datos histórica original de 161 viajes.
      */
     public static resetToDefault(): DemurrageRecord[] {
-        const seedData = (initialHistoricalData || []) as DemurrageRecord[];
+        const seedData = (initialHistoricalData || []) as unknown as DemurrageRecord[];
         this.saveRecords(seedData);
         return seedData;
     }
@@ -225,15 +225,26 @@ export class PortDemurrageRatesService {
 
     /**
      * Calcula los perfiles consolidados por par (Buque, Puerto) en memoria a partir de los viajes.
+     * Aplica la Regla de Negocio Oficial:
+     * 1. Ventana móvil de los últimos 24 meses.
+     * 2. Despachos (valores negativos) se computan como 0.00 en la suma (sin dispatch contractual).
+     * 3. Cada recalada (incluyendo las de demora <= 0) suma al conteo del denominador para diluir el promedio.
      */
     public static getDemurrageProfile(
         portId: string,
         vesselId: string,
-        customRecords?: DemurrageRecord[]
-    ): PortVesselDemurrageProfile {
+        customRecords?: DemurrageRecord[],
+        monthsWindow: number = 24
+    ): PortVesselDemurrageProfile & {
+        raw_annual_average?: number;
+        negative_count?: number;
+        max_days?: number;
+        min_days?: number;
+        yearly_breakdown?: Record<number, { sum: number; count: number; avg: number }>;
+    } {
         const cleanPort = this.normalizePortKey(portId);
         const cleanVessel = this.normalizeVesselKey(vesselId);
-        const records = customRecords || this.getRecords();
+        const allRecords = customRecords || this.getRecords();
 
         const defaultMonths: Record<string, number> = {
             m01: 0, m02: 0, m03: 0, m04: 0, m05: 0, m06: 0,
@@ -250,14 +261,14 @@ export class PortDemurrageRatesService {
             };
         }
 
-        // Filtrar viajes del buque donde haya tocado el puerto
-        const matchingVoyages = records.filter(r => {
+        // 1. Filtrar viajes del buque donde haya tocado el puerto
+        const matchingVoyagesRaw = allRecords.filter(r => {
             const v = this.normalizeVesselKey(r.vessel);
             const hasPort = r.ports && r.ports[cleanPort] !== undefined && r.ports[cleanPort].days !== undefined;
             return v === cleanVessel && hasPort;
         });
 
-        if (matchingVoyages.length === 0) {
+        if (matchingVoyagesRaw.length === 0) {
             return {
                 port_id: cleanPort,
                 vessel_id: cleanVessel,
@@ -267,36 +278,76 @@ export class PortDemurrageRatesService {
             };
         }
 
-        // Agrupar días por mes (1-12)
+        // 2. Determinar ventana de los últimos 24 meses
+        // Encontrar la fecha más reciente registrada en los viajes
+        let maxYearMonth = 0;
+        matchingVoyagesRaw.forEach(r => {
+            const ym = (r.year || 2026) * 12 + (r.month >= 1 && r.month <= 12 ? r.month : 1);
+            if (ym > maxYearMonth) maxYearMonth = ym;
+        });
+        const minYearMonthCutoff = maxYearMonth > 0 ? (maxYearMonth - monthsWindow + 1) : 0;
+
+        const matchingVoyages = matchingVoyagesRaw.filter(r => {
+            const ym = (r.year || 2026) * 12 + (r.month >= 1 && r.month <= 12 ? r.month : 1);
+            return ym >= minYearMonthCutoff;
+        });
+
+        // 3. Agrupar días por mes (1-12) y acumular
         const monthSums: Record<number, { sum: number; count: number }> = {};
         for (let m = 1; m <= 12; m++) {
             monthSums[m] = { sum: 0, count: 0 };
         }
 
         let totalDaysSum = 0;
+        let totalRawDaysSum = 0;
         let totalPortTouches = 0;
+        let negativeCount = 0;
+        let maxDays = 0;
+        let minDays = Infinity;
+        const yearlyBreakdown: Record<number, { sum: number; count: number; avg: number }> = {};
 
         matchingVoyages.forEach(r => {
             const portInfo = r.ports[cleanPort];
-            const days = Number(portInfo?.days) || 0;
+            const rawDays = Number(portInfo?.days) || 0;
+            // Regla de Negocio: Todo valor negativo se computa como 0.00 en la suma
+            const effectiveDays = Math.max(0, rawDays);
             const mNum = r.month >= 1 && r.month <= 12 ? r.month : 1;
+            const yNum = r.year || 2026;
 
-            monthSums[mNum].sum += days;
+            if (rawDays < 0) negativeCount += 1;
+            if (effectiveDays > maxDays) maxDays = effectiveDays;
+            if (effectiveDays < minDays) minDays = effectiveDays;
+
+            monthSums[mNum].sum += effectiveDays;
             monthSums[mNum].count += 1;
 
-            totalDaysSum += days;
+            totalDaysSum += effectiveDays;
+            totalRawDaysSum += rawDays;
             totalPortTouches += 1;
+
+            if (!yearlyBreakdown[yNum]) yearlyBreakdown[yNum] = { sum: 0, count: 0, avg: 0 };
+            yearlyBreakdown[yNum].sum += effectiveDays;
+            yearlyBreakdown[yNum].count += 1;
+        });
+
+        // Calcular promedios por año
+        Object.keys(yearlyBreakdown).forEach(yStr => {
+            const y = Number(yStr);
+            if (yearlyBreakdown[y].count > 0) {
+                yearlyBreakdown[y].avg = Number((yearlyBreakdown[y].sum / yearlyBreakdown[y].count).toFixed(2));
+            }
         });
 
         const monthsResult = { ...defaultMonths };
         const overallAverage = totalPortTouches > 0 ? Number((totalDaysSum / totalPortTouches).toFixed(2)) : 0;
+        const rawAverage = totalPortTouches > 0 ? Number((totalRawDaysSum / totalPortTouches).toFixed(2)) : 0;
 
         for (let m = 1; m <= 12; m++) {
             const mKey = `m${String(m).padStart(2, '0')}`;
             if (monthSums[m].count > 0) {
                 monthsResult[mKey] = Number((monthSums[m].sum / monthSums[m].count).toFixed(2));
             } else {
-                // Si no hay viajes en ese mes específico, asigna el promedio global del buque en ese puerto
+                // Si no hay viajes en ese mes específico dentro de los 24m, asigna el promedio 24m general
                 monthsResult[mKey] = overallAverage;
             }
         }
@@ -306,21 +357,26 @@ export class PortDemurrageRatesService {
             vessel_id: cleanVessel,
             months: monthsResult as any,
             annual_average: overallAverage,
-            voyage_count: totalPortTouches
+            raw_annual_average: rawAverage,
+            voyage_count: totalPortTouches,
+            negative_count: negativeCount,
+            max_days: maxDays,
+            min_days: minDays === Infinity ? 0 : minDays,
+            yearly_breakdown: yearlyBreakdown
         };
     }
 
     /**
      * Resuelve el valor de Demurrage (en días) según el modo:
-     * - 'P' = Promedio Histórico para ese Buque y Puerto
-     * - 'M' = Mes Calendario según Fecha de Validez (validFrom)
-     * - 'C' = Cero estricto (0.00 d, sin sugerencia)
+     * - 'P' = Promedio Histórico Móvil 24 Meses (Negativos = 0.00 con dilución de recalada)
+     * - 'C' = Cero estricto (0.00 d, permite sobreescritura manual libre)
+     * - 'M' = (Compatibilidad legacy) Devuelve promedio o mes
      */
     public static resolveDemurrageDays(
         portId: string,
         vesselId: string,
         mode: 'P' | 'M' | 'C' | string,
-        dateString: string | undefined | null,
+        dateString?: string | undefined | null,
         _unusedStaticCosts?: any[]
     ): number {
         if (mode === 'C') {
@@ -333,19 +389,22 @@ export class PortDemurrageRatesService {
             return profile.annual_average;
         }
 
-        // Modo M: Determinar mes de la fecha (1 = Ene, 12 = Dic)
-        let monthNum = 1;
-        if (dateString) {
-            const parsedDate = new Date(dateString);
-            if (!isNaN(parsedDate.getTime())) {
-                monthNum = parsedDate.getMonth() + 1; // 1-12
+        if (mode === 'M') {
+            // Modo M (legacy): Determinar mes de la fecha
+            let monthNum = 1;
+            if (dateString) {
+                const parsedDate = new Date(dateString);
+                if (!isNaN(parsedDate.getTime())) {
+                    monthNum = parsedDate.getMonth() + 1; // 1-12
+                }
+            } else {
+                monthNum = new Date().getMonth() + 1;
             }
-        } else {
-            monthNum = new Date().getMonth() + 1;
+            const monthKey = `m${String(monthNum).padStart(2, '0')}` as keyof typeof profile.months;
+            return profile.months[monthKey] ?? profile.annual_average;
         }
 
-        const monthKey = `m${String(monthNum).padStart(2, '0')}` as keyof typeof profile.months;
-        return profile.months[monthKey] ?? profile.annual_average;
+        return profile.annual_average;
     }
 
     /**
@@ -432,7 +491,8 @@ export class PortDemurrageRatesService {
                         }
                     }
 
-                    const rawHeaders = (jsonData[headerRowIndex] || []).map(h => String(h || '').trim().toLowerCase());
+                    const _rawHeaders = (jsonData[headerRowIndex] || []).map(h => String(h || '').trim().toLowerCase());
+                    void _rawHeaders;
                     const dataRows = jsonData.slice(headerRowIndex + 1);
 
                     const parsedRecords: DemurrageRecord[] = [];

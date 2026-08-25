@@ -129,7 +129,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         <th className="border-r border-slate-300 text-right pr-2">DÍAS MAR</th>
                         <th className="border-r border-slate-300 text-right pr-2">DÍAS PTO</th>
                         
-                        {/* CABECERA DEMURRAGE CON SELECTOR P / M */}
+                        {/* CABECERA DEMURRAGE CON SELECTOR P / C */}
                         <th className="border-r border-slate-300 px-1 bg-sky-50/60">
                             <div className="flex items-center justify-between gap-0.5 px-0.5">
                                 <span className="font-extrabold text-[9.5px] text-sky-950 uppercase tracking-tight">DEM (D)</span>
@@ -137,24 +137,16 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                     <button
                                         type="button"
                                         onClick={() => onDemurrageModeChange && onDemurrageModeChange('P')}
-                                        title="P: Promedio Histórico para Buque y Puerto"
-                                        className={`px-1 py-0.2 text-[8px] font-black rounded cursor-pointer transition-colors ${demurrageMode === 'P' ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
+                                        title="P: Promedio Histórico 24 Meses (Sin Dispatch Contractual)"
+                                        className={`px-1.5 py-0.5 text-[8.5px] font-black rounded cursor-pointer transition-colors ${demurrageMode === 'P' ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
                                     >
                                         P
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => onDemurrageModeChange && onDemurrageModeChange('M')}
-                                        title="M: Mensual según Fecha de Cotización"
-                                        className={`px-1 py-0.2 text-[8px] font-black rounded cursor-pointer transition-colors ${demurrageMode === 'M' ? 'bg-purple-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
-                                    >
-                                        M
-                                    </button>
-                                    <button
-                                        type="button"
                                         onClick={() => onDemurrageModeChange && onDemurrageModeChange('C')}
-                                        title="C: Cero / Sin Demora Sugerida (0.00 d)"
-                                        className={`px-1 py-0.2 text-[8px] font-black rounded cursor-pointer transition-colors ${demurrageMode === 'C' ? 'bg-slate-800 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
+                                        title="C: Cero / Sin Demora Sugerida (0.00 d, permite sobreescribir)"
+                                        className={`px-1.5 py-0.5 text-[8.5px] font-black rounded cursor-pointer transition-colors ${demurrageMode === 'C' ? 'bg-slate-800 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
                                     >
                                         C
                                     </button>

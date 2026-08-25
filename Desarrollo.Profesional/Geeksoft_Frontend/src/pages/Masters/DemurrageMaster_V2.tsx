@@ -24,8 +24,6 @@ import type { DemurrageRecord, PortVesselDemurrageProfile } from '../../services
 import { DemurrageInteractiveChart } from '../../components/Masters/DemurrageInteractiveChart';
 import { ForecastService } from '../../services/api';
 
-const MONTH_NAMES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
-
 export const DemurrageMaster_V2: React.FC = () => {
     const [records, setRecords] = useState<DemurrageRecord[]>([]);
     const [vesselsMap, setVesselsMap] = useState<Record<string, { color_hex?: string; vessel_name?: string }>>({});
@@ -105,7 +103,7 @@ export const DemurrageMaster_V2: React.FC = () => {
         return Array.from(set).sort((a, b) => b - a);
     }, [records]);
 
-    // Estadísticas / KPIs Superiores
+    // Estadísticas / KPIs Superiores (Regla Negativos = 0.00 con Dilución de Recalada)
     const stats = useMemo(() => {
         const totalVoyages = records.length;
         const totalVessels = uniqueVessels.length;
@@ -117,7 +115,9 @@ export const DemurrageMaster_V2: React.FC = () => {
         records.forEach(r => {
             if (r.ports) {
                 Object.entries(r.ports).forEach(([pKey, pVal]) => {
-                    const d = Number(pVal.days) || 0;
+                    const rawD = Number(pVal.days) || 0;
+                    // Regla de Negocio: Todo valor negativo se computa como 0.00 en la suma
+                    const d = Math.max(0, rawD);
                     sumGlobalDays += d;
                     totalPortTouches += 1;
 
@@ -186,6 +186,55 @@ export const DemurrageMaster_V2: React.FC = () => {
             return matchesSearch && matchesVessel && matchesClient && matchesYear;
         });
     }, [records, searchQuery, selectedVesselFilter, selectedClientFilter, selectedYearFilter]);
+
+    // Subtotales Duales para la Grilla Histórica (Contractual Neg=0 vs Auditoría Raw Excel)
+    const gridSubtotals = useMemo(() => {
+        const portKeys = ['ILO', 'CALLAO', 'MARCONA', 'MATARANI', 'MEJILLONES'];
+        const pStats: Record<string, { contractualSum: number; rawSum: number; dispatchSum: number; touches: number; negCount: number }> = {};
+        portKeys.forEach(pk => {
+            pStats[pk] = { contractualSum: 0, rawSum: 0, dispatchSum: 0, touches: 0, negCount: 0 };
+        });
+
+        let totalContractualSum = 0;
+        let totalRawSum = 0;
+        let totalDispatchSum = 0;
+
+        filteredRecords.forEach(r => {
+            let rowContractual = 0;
+            let rowRaw = 0;
+
+            portKeys.forEach(pk => {
+                if (r.ports && r.ports[pk] !== undefined && r.ports[pk].days !== undefined) {
+                    const rawVal = Number(r.ports[pk].days) || 0;
+                    const contractVal = Math.max(0, rawVal);
+
+                    pStats[pk].contractualSum += contractVal;
+                    pStats[pk].rawSum += rawVal;
+                    pStats[pk].touches += 1;
+
+                    rowContractual += contractVal;
+                    rowRaw += rawVal;
+
+                    if (rawVal < 0) {
+                        pStats[pk].dispatchSum += rawVal;
+                        pStats[pk].negCount += 1;
+                        totalDispatchSum += rawVal;
+                    }
+                }
+            });
+
+            totalContractualSum += rowContractual;
+            totalRawSum += rowRaw;
+        });
+
+        return {
+            ports: pStats,
+            totalContractualSum,
+            totalRawSum,
+            totalDispatchSum,
+            voyagesCount: filteredRecords.length
+        };
+    }, [filteredRecords]);
 
     // Manejador de Descarga Excel
     const handleDownloadExcel = () => {
@@ -594,6 +643,31 @@ export const DemurrageMaster_V2: React.FC = () => {
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {filteredRecords.map((r) => {
+                                        const renderPortCell = (portData?: { days: number; hours: number }) => {
+                                            if (!portData || portData.days === undefined) return <span className="text-slate-400 select-none">—</span>;
+                                            const d = portData.days;
+                                            if (d < 0) {
+                                                return (
+                                                    <span 
+                                                        className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-emerald-50 text-emerald-800 font-mono font-bold text-[11px] border border-emerald-200 shadow-2xs"
+                                                        title={`DISPATCH / Pronto Despacho: ${portData.hours?.toFixed(2) ?? (d * 24).toFixed(2)} hrs (${d.toFixed(2)} d) - Computa como 0.00 contractual`}
+                                                    >
+                                                        <span className="text-[8px] font-black bg-emerald-200/80 text-emerald-900 px-0.5 rounded">D</span>
+                                                        {d.toFixed(2)}
+                                                    </span>
+                                                );
+                                            }
+                                            if (d === 0) {
+                                                return <span className="font-mono text-slate-400">0.00</span>;
+                                            }
+                                            return <span className="font-mono font-semibold text-slate-800">{d.toFixed(2)}</span>;
+                                        };
+
+                                        // Total Contractual del viaje (negativos a cero)
+                                        const rowContractualDays = r.ports 
+                                            ? Object.values(r.ports).reduce((acc, p) => acc + Math.max(0, Number(p.days) || 0), 0) 
+                                            : Math.max(0, r.total_days);
+
                                         return (
                                             <tr key={r.id} className="hover:bg-slate-50 transition-colors">
                                                 <td className="py-2 px-3 font-bold text-slate-800">
@@ -605,13 +679,18 @@ export const DemurrageMaster_V2: React.FC = () => {
                                                 <td className="py-2 px-2 font-mono text-slate-600">{r.date}</td>
                                                 <td className="py-2 px-3 font-bold text-slate-900">{r.vessel}</td>
                                                 <td className="py-2 px-2 text-center font-bold text-blue-600 font-mono">#{r.voyage}</td>
-                                                <td className="py-2 px-2 text-right font-mono text-slate-700">{r.ports?.ILO ? `${r.ports.ILO.days.toFixed(2)}` : '—'}</td>
-                                                <td className="py-2 px-2 text-right font-mono text-slate-700">{r.ports?.CALLAO ? `${r.ports.CALLAO.days.toFixed(2)}` : '—'}</td>
-                                                <td className="py-2 px-2 text-right font-mono text-slate-700">{r.ports?.MARCONA ? `${r.ports.MARCONA.days.toFixed(2)}` : '—'}</td>
-                                                <td className="py-2 px-2 text-right font-mono text-slate-700">{r.ports?.MATARANI ? `${r.ports.MATARANI.days.toFixed(2)}` : '—'}</td>
-                                                <td className="py-2 px-2 text-right font-mono text-slate-700">{r.ports?.MEJILLONES ? `${r.ports.MEJILLONES.days.toFixed(2)}` : '—'}</td>
+                                                <td className="py-2 px-2 text-right">{renderPortCell(r.ports?.ILO)}</td>
+                                                <td className="py-2 px-2 text-right">{renderPortCell(r.ports?.CALLAO)}</td>
+                                                <td className="py-2 px-2 text-right">{renderPortCell(r.ports?.MARCONA)}</td>
+                                                <td className="py-2 px-2 text-right">{renderPortCell(r.ports?.MATARANI)}</td>
+                                                <td className="py-2 px-2 text-right">{renderPortCell(r.ports?.MEJILLONES)}</td>
                                                 <td className="py-2 px-3 text-right font-mono font-black text-sky-900 bg-sky-50/40 border-x border-sky-100">
-                                                    {r.total_days.toFixed(2)} d
+                                                    <div>{rowContractualDays.toFixed(2)} d</div>
+                                                    {r.total_days !== rowContractualDays && (
+                                                        <div className="text-[9px] text-slate-400 font-normal" title="Total neto con despachos">
+                                                            Raw: {r.total_days.toFixed(2)} d
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 <td className="py-2 px-2 text-center">
                                                     <button
@@ -633,6 +712,66 @@ export const DemurrageMaster_V2: React.FC = () => {
                                         </tr>
                                     )}
                                 </tbody>
+                                <tfoot className="sticky bottom-0 bg-white border-t-2 border-slate-300 shadow-md">
+                                    {/* Fila 1: Resumen Oficial Contractual (Negativos = 0) */}
+                                    <tr className="bg-sky-50/95 text-sky-950 font-bold border-b border-sky-200">
+                                        <td colSpan={5} className="py-2.5 px-3">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="px-1.5 py-0.5 bg-sky-600 text-white text-[9px] font-black rounded uppercase tracking-wider">OFICIAL</span>
+                                                <span className="text-xs font-black">Resumen Contractual (Negativos = 0.00):</span>
+                                                <span className="text-[10px] text-sky-700 font-medium">({gridSubtotals.voyagesCount} viajes)</span>
+                                            </div>
+                                        </td>
+                                        {['ILO', 'CALLAO', 'MARCONA', 'MATARANI', 'MEJILLONES'].map(pk => {
+                                            const pData = gridSubtotals.ports[pk];
+                                            const avg = pData.touches > 0 ? (pData.contractualSum / pData.touches) : 0;
+                                            return (
+                                                <td key={pk} className="py-2 px-2 text-right font-mono">
+                                                    <div className="text-[11px] font-black text-sky-900">{pData.contractualSum.toFixed(2)} d</div>
+                                                    <div className="text-[9px] text-sky-600 font-semibold">Prom: {avg.toFixed(2)} d</div>
+                                                </td>
+                                            );
+                                        })}
+                                        <td className="py-2 px-3 text-right font-mono font-black text-sky-950 bg-sky-100/70 border-x border-sky-200">
+                                            <div className="text-xs">{gridSubtotals.totalContractualSum.toFixed(2)} d</div>
+                                            <div className="text-[9.5px] text-sky-700 font-semibold">
+                                                Prom: {gridSubtotals.voyagesCount > 0 ? (gridSubtotals.totalContractualSum / gridSubtotals.voyagesCount).toFixed(2) : '0.00'} d/vje
+                                            </div>
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                    {/* Fila 2: Subtotal Auditoría vs Excel (Raw con Negativos) */}
+                                    <tr className="bg-slate-100/95 text-slate-700 font-medium text-[11px]">
+                                        <td colSpan={5} className="py-2 px-3">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="px-1.5 py-0.5 bg-slate-600 text-white text-[9px] font-black rounded uppercase tracking-wider">AUDITORÍA</span>
+                                                <span className="text-[11px] font-bold text-slate-800">Cruce Raw / Excel (Con Despachos Reales):</span>
+                                            </div>
+                                        </td>
+                                        {['ILO', 'CALLAO', 'MARCONA', 'MATARANI', 'MEJILLONES'].map(pk => {
+                                            const pData = gridSubtotals.ports[pk];
+                                            return (
+                                                <td key={pk} className="py-1.5 px-2 text-right font-mono">
+                                                    <div className="text-[10.5px] font-bold text-slate-800">{pData.rawSum.toFixed(2)} d</div>
+                                                    {pData.dispatchSum < 0 && (
+                                                        <div className="text-[9px] text-emerald-700 font-bold">
+                                                            Disp: {pData.dispatchSum.toFixed(2)} d
+                                                        </div>
+                                                    )}
+                                                </td>
+                                            );
+                                        })}
+                                        <td className="py-1.5 px-3 text-right font-mono font-bold text-slate-900 bg-slate-200/60 border-x border-slate-300">
+                                            <div className="text-[11px]">{gridSubtotals.totalRawSum.toFixed(2)} d</div>
+                                            {gridSubtotals.totalDispatchSum < 0 && (
+                                                <div className="text-[9px] text-emerald-700 font-bold">
+                                                    Disp: {gridSubtotals.totalDispatchSum.toFixed(2)} d
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>

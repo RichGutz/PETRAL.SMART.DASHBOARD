@@ -167,10 +167,15 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                 // Filtro por Buque activo: Desglosar por cada PUERTO donde tuvo estadía en ese viaje
                 if (r.ports) {
                     Object.entries(r.ports).forEach(([pKey, pVal]) => {
-                        const pDays = Number(pVal.days) || 0;
-                        const pHrs = Number(pVal.hours) || 0;
+                        const rawDays = Number(pVal.days) || 0;
+                        const rawHrs = Number(pVal.hours) || 0;
+                        const pDays = Math.max(0, rawDays);
+                        const pHrs = Math.max(0, rawHrs);
+
+                        voyagePortTouches += 1;
+                        monthTotals[mIdx].totalPortTouches += 1;
+
                         if (pDays > 0 || pHrs > 0) {
-                            voyagePortTouches += 1;
                             const key = `V.${voyageNum} - ${pKey}`;
                             if (!voyageSeriesMap[key]) {
                                 voyageSeriesMap[key] = {
@@ -191,19 +196,22 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                             
                             monthTotals[mIdx].totalDays += pDays;
                             monthTotals[mIdx].totalHours += pHrs;
-                            monthTotals[mIdx].totalPortTouches += 1;
                         }
                     });
                 }
                 monthTotals[mIdx].totalVoyages += 1;
             } else if (isPortFiltered) {
                 // Filtro por Puerto activo: Desglosar por cada BUQUE en ese viaje
-                let pDays = 0;
-                let pHrs = 0;
+                let rawDays = 0;
+                let rawHrs = 0;
                 if (r.ports && r.ports[filterPort]) {
-                    pDays = Number(r.ports[filterPort].days) || 0;
-                    pHrs = Number(r.ports[filterPort].hours) || 0;
+                    rawDays = Number(r.ports[filterPort].days) || 0;
+                    rawHrs = Number(r.ports[filterPort].hours) || 0;
+                    monthTotals[mIdx].totalPortTouches += 1;
                 }
+                const pDays = Math.max(0, rawDays);
+                const pHrs = Math.max(0, rawHrs);
+
                 if (pDays > 0 || pHrs > 0) {
                     const key = `${vesselName} - V.${voyageNum}`;
                     if (!voyageSeriesMap[key]) {
@@ -225,25 +233,29 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
 
                     monthTotals[mIdx].totalDays += pDays;
                     monthTotals[mIdx].totalHours += pHrs;
-                    monthTotals[mIdx].totalPortTouches += 1;
-                    monthTotals[mIdx].totalVoyages += 1;
                 }
+                monthTotals[mIdx].totalVoyages += 1;
             } else {
                 // Vista General Flota / Petral Todo: Desglosar por Buque y Viaje
-                const totalDays = Number(r.total_days) || 0;
-                const totalHrs = Number(r.total_hours) || 0;
-                
-                // Contar puertos tocados con demora en este viaje
+                let vTouches = 0;
+                let sumEffectiveDays = 0;
+                let sumEffectiveHrs = 0;
+
                 if (r.ports) {
                     Object.values(r.ports).forEach(pVal => {
-                        if (Number(pVal.days) > 0 || Number(pVal.hours) > 0) {
-                            voyagePortTouches += 1;
-                        }
+                        vTouches += 1;
+                        const pDays = Math.max(0, Number(pVal.days) || 0);
+                        const pHrs = Math.max(0, Number(pVal.hours) || 0);
+                        sumEffectiveDays += pDays;
+                        sumEffectiveHrs += pHrs;
                     });
+                } else {
+                    vTouches = 2;
+                    sumEffectiveDays = Math.max(0, Number(r.total_days) || 0);
+                    sumEffectiveHrs = Math.max(0, Number(r.total_hours) || 0);
                 }
-                if (voyagePortTouches === 0 && totalDays > 0) voyagePortTouches = 2; // Default 2 recaladas si no están desglosados
 
-                if (totalDays > 0 || totalHrs > 0) {
+                if (sumEffectiveDays > 0 || sumEffectiveHrs > 0) {
                     const key = `${vesselName} - V.${voyageNum}`;
                     if (!voyageSeriesMap[key]) {
                         voyageSeriesMap[key] = {
@@ -259,14 +271,14 @@ export const DemurrageInteractiveChart: React.FC<DemurrageInteractiveChartProps>
                             hoursByMonth: Array(12).fill(0)
                         };
                     }
-                    (voyageSeriesMap[key].daysByMonth[mIdx]) += totalDays;
-                    (voyageSeriesMap[key].hoursByMonth[mIdx]) += totalHrs;
+                    (voyageSeriesMap[key].daysByMonth[mIdx]) += sumEffectiveDays;
+                    (voyageSeriesMap[key].hoursByMonth[mIdx]) += sumEffectiveHrs;
 
-                    monthTotals[mIdx].totalDays += totalDays;
-                    monthTotals[mIdx].totalHours += totalHrs;
-                    monthTotals[mIdx].totalPortTouches += voyagePortTouches;
-                    monthTotals[mIdx].totalVoyages += 1;
+                    monthTotals[mIdx].totalDays += sumEffectiveDays;
+                    monthTotals[mIdx].totalHours += sumEffectiveHrs;
                 }
+                monthTotals[mIdx].totalPortTouches += vTouches;
+                monthTotals[mIdx].totalVoyages += 1;
             }
         });
 
