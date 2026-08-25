@@ -205,14 +205,6 @@ export const FinancialProjectionsMaster: React.FC = () => {
         return { groups, sortedYears };
     }, [filteredScenarios]);
 
-    // Inicializar primer año desplegado
-    useEffect(() => {
-        if (groupedByYear.sortedYears.length > 0) {
-            const topYear = groupedByYear.sortedYears[0];
-            setOpenYears(prev => ({ ...prev, [topYear]: true }));
-        }
-    }, [groupedByYear.sortedYears]);
-
     const toggleYear = (year: string) => {
         setOpenYears(prev => ({ ...prev, [year]: !prev[year] }));
     };
@@ -299,6 +291,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                         key={author}
                                         onClick={() => {
                                             setSelectedAuthor(author);
+                                            setOpenYears({});
                                             setExpandedScenarioId(null);
                                         }}
                                         className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
