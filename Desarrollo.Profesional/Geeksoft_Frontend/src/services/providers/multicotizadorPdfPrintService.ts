@@ -222,11 +222,10 @@ export class MulticotizadorPdfPrintService {
 <head>
     <meta charset="UTF-8">
     <title>PETRAL_MULTICOTIZADOR_${selectedClient}_${selectedVessel || 'BUQUE'}</title>
-    <!-- Tailwind CSS & html2pdf.js -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <!-- ESTILOS DE IMPRESIÓN FORZADOS (POST-TAILWIND PARA MÁXIMA PRIORIDAD) -->
+    <!-- ESTILOS DE IMPRESIÓN FORZADOS -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700;800&family=Geist:wght@400;500;600;700;800;900&display=swap');
         
@@ -248,7 +247,6 @@ export class MulticotizadorPdfPrintService {
             font-family: 'Geist Mono', monospace;
         }
 
-        /* DIRECTIVA ESTÁNDAR VÁLIDA PARA FORZAR HORIZONTAL Y ELIMINAR ENCABEZADOS/PIES DEL NAVEGADOR */
         @page {
             size: A4 landscape;
             margin: 0;
@@ -346,11 +344,8 @@ export class MulticotizadorPdfPrintService {
             <span class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded font-mono">1 HOJA OFICIAL</span>
         </div>
         <div class="flex items-center gap-3">
-            <button id="btn-download-pdf" onclick="downloadDirectPdf()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-1.5 rounded flex items-center gap-1.5 shadow transition-colors cursor-pointer">
-                📥 Descargar PDF Directo (Foxit Ready)
-            </button>
-            <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-3 py-1.5 rounded flex items-center gap-1.5 shadow transition-colors cursor-pointer">
-                🖨️ Diálogo Navegador
+            <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-1.5 rounded flex items-center gap-1.5 shadow transition-colors cursor-pointer">
+                🖨️ Imprimir / Guardar como PDF
             </button>
             <button onclick="window.close()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs px-3 py-1.5 rounded transition-colors cursor-pointer">
                 Cerrar
@@ -359,7 +354,7 @@ export class MulticotizadorPdfPrintService {
     </div>
 
     <!-- DOCUMENTO A4 LANDSCAPE -->
-    <div id="pdf-content-page" class="a4-landscape-page">
+    <div class="a4-landscape-page">
 
         <!-- 1. CABECERA EJECUTIVA Y METADATA DE VIAJE -->
         <div class="border-box bg-white text-slate-800 p-2 shadow-xs border border-slate-300">
