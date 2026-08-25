@@ -130,6 +130,17 @@ def load_forecast(forecast_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.delete("/delete/{forecast_id}")
+def delete_forecast(forecast_id: str):
+    try:
+        from backend.database import get_supabase
+        sb = get_supabase()
+        
+        res = sb.table("commercial_forecasts").delete().eq("id", forecast_id).execute()
+        return {"status": "success", "message": f"Forecast {forecast_id} deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/benchmarks")
 def get_audit_benchmarks():
     try:

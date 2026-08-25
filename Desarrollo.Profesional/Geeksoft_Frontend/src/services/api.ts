@@ -37,6 +37,10 @@ export const ForecastService = {
         const response = await api.get(`/forecast/load/${id}`);
         return response.data;
     },
+    deleteForecast: async (id: string) => {
+        const response = await api.delete(`/forecast/delete/${id}`);
+        return response.data;
+    },
     getBenchmarks: async () => {
         const response = await api.get('/forecast/benchmarks');
         return response.data;
