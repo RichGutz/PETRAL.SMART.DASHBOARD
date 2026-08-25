@@ -1023,7 +1023,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             bunkerSource,
             bunkerPriceIfo,
             bunkerPriceMdo,
-            tramos,
+            tramos: calculatedTramosList,
             puertosConfig,
             ports,
             refacturarMuellajeMap,
@@ -1037,6 +1037,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             bafMdoBase,
             tariffTiers,
             demurrageRatesMap,
+            liveCalc: liveCalculation,
             printedBy: user?.full_name || user?.email || 'Usuario Comercial'
         });
     };
