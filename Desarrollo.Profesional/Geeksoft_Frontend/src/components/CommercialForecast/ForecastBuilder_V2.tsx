@@ -381,8 +381,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 {/* ========================================================================= */}
                 <div className="flex flex-row items-center gap-2.5 w-full overflow-x-auto pb-1 scrollbar-none shrink-0">
                     
-                    {/* 1. Inicio forecast (Angostado -20%: min-w-[105px]) */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[105px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    {/* 1. Inicio forecast */}
+                    <div className="flex flex-col gap-1 w-[120px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">1. Inicio forecast</Label>
                         <MonthPicker 
                             value={currentStartDate.slice(0, 7)}
@@ -403,8 +403,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         />
                     </div>
 
-                    {/* 2. Fin forecast (Angostado -20%: min-w-[105px]) */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[105px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    {/* 2. Fin forecast */}
+                    <div className="flex flex-col gap-1 w-[120px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">2. Fin forecast</Label>
                         <MonthPicker 
                             value={currentEndDate.slice(0, 7)}
@@ -427,7 +427,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* 3. Meses a modelar */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[130px] relative bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    <div className="flex flex-col gap-1 w-[130px] shrink-0 relative bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">3. Meses a modelar</Label>
                         <Popover>
                             <PopoverTrigger
@@ -496,8 +496,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Popover>
                     </div>
 
-                    {/* 4. Cliente (Reducido -30%: min-w-[95px] max-w-[110px]) */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[95px] max-w-[110px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all shrink-0">
+                    {/* 4. Cliente */}
+                    <div className="flex flex-col gap-1 w-[130px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <div className="flex items-center justify-between">
                             <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">4. Cliente</Label>
                             <div className="flex items-center gap-0.5 bg-white p-0.5 rounded border border-slate-200 text-[8px] font-black shadow-2xs">
@@ -518,7 +518,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                             </div>
                         </div>
                         <Select value={client} onValueChange={(val) => setClient(val || '')}>
-                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold px-1.5">
+                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold px-2">
                                 <SelectValue placeholder="Cliente">
                                     {client || undefined}
                                 </SelectValue>
@@ -535,8 +535,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Select>
                     </div>
 
-                    {/* FUENTE: CIERRES | COTIZACIONES | PRESUPUESTOS (Ampliado con mitad de Cliente: min-w-[145px] max-w-[165px]) */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[145px] max-w-[165px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all shrink-0">
+                    {/* FUENTE: CIERRES | COTIZACIONES | PRESUPUESTOS */}
+                    <div className="flex flex-col gap-1 w-[150px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">FUENTE</Label>
                         <Select value={routeSource} onValueChange={(val: any) => setRouteSource(val)}>
                             <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold px-2">
@@ -563,7 +563,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {client === 'SPOT' && (
-                        <div className="flex flex-col gap-1 flex-1 min-w-[120px] bg-red-50/80 border border-red-200 rounded-lg p-1.5 shadow-2xs">
+                        <div className="flex flex-col gap-1 w-[120px] shrink-0 bg-red-50/80 border border-red-200 rounded-lg p-1.5 shadow-2xs">
                             <Label className="text-[10px] font-extrabold text-red-600 uppercase tracking-tight whitespace-nowrap">Sufijo SPOT *</Label>
                             <Input 
                                 type="text" 
@@ -575,8 +575,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </div>
                     )}
 
-                    {/* 5. Ruta (Expandido: min-w-[220px] max-w-[340px]) */}
-                    <div className="flex flex-col gap-1 flex-2 min-w-[220px] max-w-[340px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all overflow-hidden">
+                    {/* 5. Ruta (Expansión flexible que absorbe todo el ancho restante) */}
+                    <div className="flex flex-col gap-1 flex-1 min-w-[200px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all overflow-hidden">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">
                             5. Ruta
                         </Label>
@@ -614,8 +614,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Select>
                     </div>
 
-                    {/* 6. Buque (Ampliado con mitad de Cliente: min-w-[125px] max-w-[145px]) */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[125px] max-w-[145px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    {/* 6. Buque */}
+                    <div className="flex flex-col gap-1 w-[145px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">6. Buque</Label>
                         <Select value={vessel} onValueChange={(val) => setVessel(val || '')} disabled={!route}>
                             <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold disabled:opacity-80">
