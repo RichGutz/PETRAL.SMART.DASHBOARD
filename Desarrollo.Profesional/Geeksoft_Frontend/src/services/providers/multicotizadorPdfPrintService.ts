@@ -247,17 +247,24 @@ export class MulticotizadorPdfPrintService {
 
         /* Dimensiones fijas A4 Horizontal (Landscape 297mm x 210mm) */
         @page {
-            size: 297mm 210mm;
-            margin: 3mm 4mm;
+            size: A4 landscape;
+            margin: 0mm;
         }
 
         @media print {
             @page {
-                size: 297mm 210mm;
-                margin: 3mm 4mm;
+                size: A4 landscape;
+                margin: 0mm;
             }
-            body {
-                background-color: #ffffff;
+            html, body {
+                width: 297mm !important;
+                height: 210mm !important;
+                max-width: 297mm !important;
+                max-height: 210mm !important;
+                margin: 0 !important;
+                padding: 3mm 4mm !important;
+                background-color: #ffffff !important;
+                overflow: hidden !important;
             }
             .no-print {
                 display: none !important;
@@ -852,32 +859,40 @@ export class MulticotizadorPdfPrintService {
                             ✍️ REGISTRO DE AUDITORÍA Y VALIDACIÓN MATEMÁTICA (V°B° COMERCIAL)
                         </span>
                         <span class="text-[7px] font-bold text-slate-500 uppercase">
-                            NAVIERA PETRAL S.A. · CONTROL COMERCIAL
+                            NAVIERA PETRAL S.A.
                         </span>
                     </div>
                     
-                    <div class="grid grid-cols-4 gap-1.5 text-[7.5px] bg-slate-50/70 p-1 rounded border border-slate-200">
-                        <div class="border border-slate-200 rounded p-1 bg-white">
-                            <span class="block text-[6.5px] font-bold text-slate-600 uppercase">Revisado / Auditado por:</span>
-                            <div class="border-b border-slate-400 h-2.5 mt-2.5"></div>
-                            <span class="block text-[6px] text-slate-400 mt-0.5">Nombre & Cargo</span>
+                    <div class="flex flex-col gap-0.5 text-[7.5px] bg-slate-50/80 p-1 rounded border border-slate-200 font-sans">
+                        <!-- Fila 1: Revisado por -->
+                        <div class="flex items-baseline justify-between gap-1">
+                            <span class="font-bold text-slate-700 whitespace-nowrap">Revisado por:</span>
+                            <div class="flex-1 border-b border-slate-400 border-dotted h-2"></div>
                         </div>
-                        <div class="border border-slate-200 rounded p-1 bg-white">
-                            <span class="block text-[6.5px] font-bold text-slate-600 uppercase">Firma de Conformidad:</span>
-                            <div class="border-b border-slate-400 h-2.5 mt-2.5"></div>
-                            <span class="block text-[6px] text-slate-400 mt-0.5">Firma / Sello Digital</span>
+
+                        <!-- Fila 2: Fecha -->
+                        <div class="flex items-baseline justify-between gap-1">
+                            <span class="font-bold text-slate-700 whitespace-nowrap">Fecha:</span>
+                            <div class="flex-1 border-b border-slate-400 border-dotted h-2"></div>
                         </div>
-                        <div class="border border-slate-200 rounded p-1 bg-white">
-                            <span class="block text-[6.5px] font-bold text-slate-600 uppercase">Fecha de Conformidad:</span>
-                            <div class="border-b border-slate-400 h-2.5 mt-2.5"></div>
-                            <span class="block text-[6px] text-slate-400 mt-0.5">DD / MM / AAAA</span>
-                        </div>
-                        <div class="border border-slate-200 rounded p-1 bg-white">
-                            <span class="block text-[6.5px] font-bold text-slate-600 uppercase">Dictamen:</span>
-                            <div class="flex items-center gap-2 mt-2 font-bold text-[7px]">
-                                <span class="text-emerald-700 flex items-center gap-1"><span class="inline-block w-2 h-2 border border-emerald-600 rounded-sm"></span> APROBADO</span>
-                                <span class="text-amber-700 flex items-center gap-1"><span class="inline-block w-2 h-2 border border-amber-600 rounded-sm"></span> OBSERVADO</span>
+
+                        <!-- Fila 3: Dictamen -->
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-700">Dictamen:</span>
+                            <div class="flex items-center gap-3 font-bold text-[7px]">
+                                <span class="text-emerald-700 flex items-center gap-1">
+                                    <span class="inline-block w-2 h-2 border border-emerald-600 rounded-sm bg-white"></span> APROBADO
+                                </span>
+                                <span class="text-amber-700 flex items-center gap-1">
+                                    <span class="inline-block w-2 h-2 border border-amber-600 rounded-sm bg-white"></span> OBSERVADO
+                                </span>
                             </div>
+                        </div>
+
+                        <!-- Fila 4: Firma -->
+                        <div class="flex items-baseline justify-between gap-1">
+                            <span class="font-bold text-slate-700 whitespace-nowrap">Firma:</span>
+                            <div class="flex-1 border-b border-slate-400 border-dotted h-2"></div>
                         </div>
                     </div>
                 </div>
