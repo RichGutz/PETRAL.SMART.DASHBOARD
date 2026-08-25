@@ -247,20 +247,16 @@ export class MulticotizadorPdfPrintService {
             font-family: 'Geist Mono', monospace;
         }
 
-        /* DIRECTIVA EXACTA PARA FORZAR HORIZONTAL Y ELIMINAR ENCABEZADOS/PIES DEL NAVEGADOR */
+        /* DIRECTIVA ESTÁNDAR VÁLIDA PARA FORZAR HORIZONTAL Y ELIMINAR ENCABEZADOS/PIES DEL NAVEGADOR */
         @page {
-            size: landscape !important;
-            margin: 0mm !important;
-        }
-
-        @page :first {
-            margin: 0mm !important;
+            size: A4 landscape;
+            margin: 0;
         }
 
         @media print {
             @page {
-                size: landscape !important;
-                margin: 0mm !important;
+                size: A4 landscape;
+                margin: 0;
             }
             html, body {
                 width: 297mm !important;
