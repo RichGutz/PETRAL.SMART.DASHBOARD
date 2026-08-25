@@ -218,13 +218,13 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                     <col className="w-[65px]" />
                     <col className="w-[75px]" />
                     <col className="w-[75px]" />
-                    <col className="w-[135px]" />
+                    <col className="w-[158px]" /> {/* DEMURRAGE (D) CON TEXTO COMPLETO */}
                     <col className="w-[95px]" />
                     <col className="w-[75px]" />
                     <col className="w-[95px]" />
-                    <col className="w-[80px]" />
-                    <col className="w-[68px]" />
-                    <col className="w-[60px]" />
+                    <col className="w-[72px]" /> {/* RITMO (C/D) -10% */}
+                    <col className="w-[61px]" /> {/* Q (MT) -10% */}
+                    <col className="w-[54px]" /> {/* F ($/T) -10% */}
                     <col className="w-[85px]" />
                     <col className="w-[95px]" />
                     <col className="w-[85px]" />
@@ -263,7 +263,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         
                         <th className="border-r border-slate-300 px-1 bg-sky-50/70">
                             <div className="flex items-center justify-between gap-1 px-0.5">
-                                <span className="font-extrabold text-[9px] text-sky-950 uppercase tracking-tight">DEM (D)</span>
+                                <span className="font-extrabold text-[9px] text-sky-950 uppercase tracking-tight whitespace-nowrap">DEMURRAGE (D)</span>
                                 <div className="flex items-center rounded bg-slate-200/90 p-0.5 border border-slate-300 shadow-2xs gap-0.5">
                                     <button
                                         type="button"
