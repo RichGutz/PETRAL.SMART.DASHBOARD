@@ -31,6 +31,102 @@ export interface SpreadsheetTramosGridProps {
     fmtThousandSep: (val: number | string | undefined | null) => string;
 }
 
+const DemurrageStatsHoverCard: React.FC<{
+    portId: string;
+    vesselId: string;
+    action: string;
+    position?: 'top' | 'bottom';
+}> = ({ portId, vesselId, action, position = 'top' }) => {
+    if (!portId || (action !== 'CARGAR' && action !== 'DESCARGAR')) return null;
+
+    const profile = PortDemurrageRatesService.getDemurrageProfile(portId, vesselId);
+    if (!profile || profile.voyage_count === 0) return null;
+
+    const avgD = profile.annual_average;
+    const avgH = (avgD * 24).toFixed(1);
+    const medD = profile.median_days ?? 0;
+    const medH = (medD * 24).toFixed(1);
+    const minD = profile.min_days?.toFixed(2) ?? '0.00';
+    const maxD = profile.max_days?.toFixed(2) ?? '0.00';
+    const totalVoyages = profile.voyage_count;
+    const dispatches = profile.negative_count ?? 0;
+    const yearly = profile.yearly_breakdown || {};
+    const years = Object.keys(yearly).map(Number).sort((a, b) => b - a);
+
+    const posClasses = position === 'bottom'
+        ? 'top-full mt-1.5'
+        : 'bottom-full mb-1.5';
+
+    return (
+        <div className={`absolute ${posClasses} left-1/2 -translate-x-1/2 hidden group-hover/dem:flex flex-col w-[295px] p-2.5 bg-slate-900/98 backdrop-blur-md text-white border border-slate-700/80 rounded-xl shadow-2xl z-50 pointer-events-none text-left select-none animate-in fade-in zoom-in-95 duration-150`}>
+            {/* Header */}
+            <div className="flex items-center justify-between pb-1.5 border-b border-slate-700/80">
+                <div className="flex items-center gap-1.5">
+                    <span className="text-[11px]">⚓</span>
+                    <span className="text-[10px] font-black text-sky-400 uppercase tracking-tight truncate max-w-[175px]">
+                        {profile.vessel_id} ➔ {profile.port_id}
+                    </span>
+                </div>
+                <span className="px-1.5 py-0.2 bg-sky-500/20 text-sky-300 text-[8px] font-black rounded border border-sky-500/30 uppercase">
+                    24M MÓVIL
+                </span>
+            </div>
+
+            {/* 3 KPIs Consolidados (Promedio, Mediana, Rango) */}
+            <div className="grid grid-cols-3 gap-1 py-1.5 border-b border-slate-800">
+                {/* Promedio */}
+                <div className="flex flex-col items-center bg-slate-800/80 p-1 rounded-lg border border-slate-700/50">
+                    <span className="text-[7.5px] font-extrabold text-slate-400 uppercase tracking-wider">PROMEDIO</span>
+                    <span className="text-[11px] font-black font-mono text-sky-400">{avgD.toFixed(2)} d</span>
+                    <span className="text-[8px] font-medium font-mono text-slate-400">({avgH} h)</span>
+                </div>
+
+                {/* Mediana */}
+                <div className="flex flex-col items-center bg-slate-800/80 p-1 rounded-lg border border-slate-700/50">
+                    <span className="text-[7.5px] font-extrabold text-slate-400 uppercase tracking-wider">MEDIANA</span>
+                    <span className="text-[11px] font-black font-mono text-emerald-400">{medD.toFixed(2)} d</span>
+                    <span className="text-[8px] font-medium font-mono text-slate-400">({medH} h)</span>
+                </div>
+
+                {/* Rango */}
+                <div className="flex flex-col items-center bg-slate-800/80 p-1 rounded-lg border border-slate-700/50">
+                    <span className="text-[7.5px] font-extrabold text-slate-400 uppercase tracking-wider">MIN – MAX</span>
+                    <span className="text-[9.5px] font-black font-mono text-amber-400">{minD} – {maxD}</span>
+                    <span className="text-[8px] font-medium font-mono text-slate-400">días</span>
+                </div>
+            </div>
+
+            {/* Muestra & Despachos Status */}
+            <div className="flex items-center justify-between py-1 text-[8.5px] text-slate-300 font-semibold border-b border-slate-800">
+                <span>🎯 Recaladas: <strong className="text-white font-mono">{totalVoyages}</strong></span>
+                <span>🟢 Despachos: <strong className="text-emerald-400 font-mono">{dispatches}</strong> (a 0.00 d)</span>
+            </div>
+
+            {/* Desglose Anual */}
+            {years.length > 0 && (
+                <div className="pt-1 flex flex-col gap-0.5">
+                    <div className="flex items-center justify-between text-[7.5px] font-black text-slate-400 uppercase px-0.5">
+                        <span>AÑO</span>
+                        <span>PROMEDIO</span>
+                        <span>MEDIANA</span>
+                        <span>RECALADAS</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                        {years.map(y => (
+                            <div key={y} className="flex items-center justify-between text-[9px] font-mono bg-slate-800/50 px-1 py-0.5 rounded border border-slate-700/30">
+                                <span className="font-bold text-slate-300">{y}</span>
+                                <span className="font-bold text-sky-400">{yearly[y].avg.toFixed(2)} d</span>
+                                <span className="font-bold text-emerald-400">{yearly[y].median.toFixed(2)} d</span>
+                                <span className="text-slate-400">{yearly[y].count} vjes</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     tramos = [],
     puertosConfig = [],
@@ -212,16 +308,24 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                         </td>
 
                         {/* Fila 0 Demurrage (Días) - Solo si CARGAR */}
-                        <td className="border-r border-slate-200 p-0 text-right bg-sky-50/30">
+                        <td className="border-r border-slate-200 p-0 text-right bg-sky-50/30 relative group/dem">
                             {puertosConfig[0]?.action === 'CARGAR' ? (
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    value={puertosConfig[0]?.demurrage_days !== undefined && puertosConfig[0]?.demurrage_days !== '' ? puertosConfig[0]?.demurrage_days : ''}
-                                    onChange={(e) => updatePuertoConfigField(0, 'demurrage_days', e.target.value)}
-                                    className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-sky-950 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                    placeholder={getSuggestedDemurrage(tramos[0]?.origin_port_id, 'CARGAR').toFixed(2)}
-                                />
+                                <>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={puertosConfig[0]?.demurrage_days !== undefined && puertosConfig[0]?.demurrage_days !== '' ? puertosConfig[0]?.demurrage_days : ''}
+                                        onChange={(e) => updatePuertoConfigField(0, 'demurrage_days', e.target.value)}
+                                        className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-sky-950 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        placeholder={getSuggestedDemurrage(tramos[0]?.origin_port_id, 'CARGAR').toFixed(2)}
+                                    />
+                                    <DemurrageStatsHoverCard
+                                        portId={tramos[0]?.origin_port_id}
+                                        vesselId={selectedVessel}
+                                        action={puertosConfig[0]?.action}
+                                        position="bottom"
+                                    />
+                                </>
                             ) : (
                                 <span className="text-slate-350 select-none pr-2">—</span>
                             )}
@@ -473,16 +577,24 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                 </td>
 
                                 {/* Demurrage Destino (Días) - Solo si CARGAR o DESCARGAR */}
-                                <td className="border-r border-slate-200 p-0 text-right bg-sky-50/30">
+                                <td className="border-r border-slate-200 p-0 text-right bg-sky-50/30 relative group/dem">
                                     {puertosConfig[idx + 1]?.action === 'CARGAR' || puertosConfig[idx + 1]?.action === 'DESCARGAR' ? (
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            value={puertosConfig[idx + 1]?.demurrage_days !== undefined && puertosConfig[idx + 1]?.demurrage_days !== '' ? puertosConfig[idx + 1]?.demurrage_days : ''}
-                                            onChange={(e) => updatePuertoConfigField(idx + 1, 'demurrage_days', e.target.value)}
-                                            className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-sky-950 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                            placeholder={getSuggestedDemurrage(tr.destination_port_id, puertosConfig[idx + 1]?.action).toFixed(2)}
-                                        />
+                                        <>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                value={puertosConfig[idx + 1]?.demurrage_days !== undefined && puertosConfig[idx + 1]?.demurrage_days !== '' ? puertosConfig[idx + 1]?.demurrage_days : ''}
+                                                onChange={(e) => updatePuertoConfigField(idx + 1, 'demurrage_days', e.target.value)}
+                                                className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-sky-950 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                placeholder={getSuggestedDemurrage(tr.destination_port_id, puertosConfig[idx + 1]?.action).toFixed(2)}
+                                            />
+                                            <DemurrageStatsHoverCard
+                                                portId={tr.destination_port_id}
+                                                vesselId={selectedVessel}
+                                                action={puertosConfig[idx + 1]?.action}
+                                                position="top"
+                                            />
+                                        </>
                                     ) : (
                                         <span className="text-slate-350 select-none pr-2">—</span>
                                     )}

@@ -264,11 +264,11 @@ export const FinancialProjectionsMaster: React.FC = () => {
 
     return (
         <MasterTemplate
-            title="Maestro de Proyecciones Financieras"
-            subtitle="Escenarios Comerciales Multianuales (commercial_forecasts)"
+            title="Maestro de Matrices"
+            subtitle="Matrices y Escenarios Comerciales Multianuales (commercial_forecasts)"
             activeTab="financial-projections"
-            onExportExcel={() => exportMasterToExcel('Maestro_Proyecciones_Financieras', exportColumns, filteredScenarios)}
-            onExportPDF={() => exportMasterToPDF('Maestro_Proyecciones_Financieras', exportColumns, filteredScenarios)}
+            onExportExcel={() => exportMasterToExcel('Maestro_Matrices', exportColumns, filteredScenarios)}
+            onExportPDF={() => exportMasterToPDF('Maestro_Matrices', exportColumns, filteredScenarios)}
         >
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6 flex flex-col min-h-[calc(100vh-140px)]">
                 

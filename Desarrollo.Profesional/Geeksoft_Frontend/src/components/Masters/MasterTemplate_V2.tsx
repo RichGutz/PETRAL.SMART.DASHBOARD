@@ -372,9 +372,9 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
                                                         <button 
                                                             onClick={() => navigate('/financial-projections')}
                                                             className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'financial-projections' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-                                                            title="Proyecciones Financieras Multianuales y Ocupación"
+                                                            title="Matrices Financieras Multianuales y Ocupación"
                                                         >
-                                                            <span className="text-xs">📈</span> Maestro de Proyecciones
+                                                            <span className="text-xs">📈</span> Maestro de Matrices
                                                         </button>
                                                     </>
                                                 )}

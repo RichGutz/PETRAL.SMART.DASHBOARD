@@ -240,7 +240,8 @@ export class PortDemurrageRatesService {
         negative_count?: number;
         max_days?: number;
         min_days?: number;
-        yearly_breakdown?: Record<number, { sum: number; count: number; avg: number }>;
+        median_days?: number;
+        yearly_breakdown?: Record<number, { sum: number; count: number; avg: number; median: number }>;
     } {
         const cleanPort = this.normalizePortKey(portId);
         const cleanVessel = this.normalizeVesselKey(vesselId);
@@ -279,7 +280,6 @@ export class PortDemurrageRatesService {
         }
 
         // 2. Determinar ventana de los últimos 24 meses
-        // Encontrar la fecha más reciente registrada en los viajes
         let maxYearMonth = 0;
         matchingVoyagesRaw.forEach(r => {
             const ym = (r.year || 2026) * 12 + (r.month >= 1 && r.month <= 12 ? r.month : 1);
@@ -304,7 +304,8 @@ export class PortDemurrageRatesService {
         let negativeCount = 0;
         let maxDays = 0;
         let minDays = Infinity;
-        const yearlyBreakdown: Record<number, { sum: number; count: number; avg: number }> = {};
+        const allEffectiveDays: number[] = [];
+        const yearlyValues: Record<number, number[]> = {};
 
         matchingVoyages.forEach(r => {
             const portInfo = r.ports[cleanPort];
@@ -318,24 +319,43 @@ export class PortDemurrageRatesService {
             if (effectiveDays > maxDays) maxDays = effectiveDays;
             if (effectiveDays < minDays) minDays = effectiveDays;
 
+            allEffectiveDays.push(effectiveDays);
+            if (!yearlyValues[yNum]) yearlyValues[yNum] = [];
+            yearlyValues[yNum].push(effectiveDays);
+
             monthSums[mNum].sum += effectiveDays;
             monthSums[mNum].count += 1;
 
             totalDaysSum += effectiveDays;
             totalRawDaysSum += rawDays;
             totalPortTouches += 1;
-
-            if (!yearlyBreakdown[yNum]) yearlyBreakdown[yNum] = { sum: 0, count: 0, avg: 0 };
-            yearlyBreakdown[yNum].sum += effectiveDays;
-            yearlyBreakdown[yNum].count += 1;
         });
 
-        // Calcular promedios por año
-        Object.keys(yearlyBreakdown).forEach(yStr => {
-            const y = Number(yStr);
-            if (yearlyBreakdown[y].count > 0) {
-                yearlyBreakdown[y].avg = Number((yearlyBreakdown[y].sum / yearlyBreakdown[y].count).toFixed(2));
+        // Función helper para mediana exacta
+        const calcMedian = (values: number[]): number => {
+            if (!values || values.length === 0) return 0;
+            const sorted = [...values].sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            if (sorted.length % 2 !== 0) {
+                return Number(sorted[mid].toFixed(2));
             }
+            return Number(((sorted[mid - 1] + sorted[mid]) / 2).toFixed(2));
+        };
+
+        const overallMedian = calcMedian(allEffectiveDays);
+
+        // Desglose por año con Promedio y Mediana
+        const yearlyBreakdown: Record<number, { sum: number; count: number; avg: number; median: number }> = {};
+        Object.keys(yearlyValues).forEach(yStr => {
+            const y = Number(yStr);
+            const vals = yearlyValues[y];
+            const sum = vals.reduce((a, b) => a + b, 0);
+            yearlyBreakdown[y] = {
+                sum: Number(sum.toFixed(2)),
+                count: vals.length,
+                avg: Number((sum / vals.length).toFixed(2)),
+                median: calcMedian(vals)
+            };
         });
 
         const monthsResult = { ...defaultMonths };
@@ -347,7 +367,6 @@ export class PortDemurrageRatesService {
             if (monthSums[m].count > 0) {
                 monthsResult[mKey] = Number((monthSums[m].sum / monthSums[m].count).toFixed(2));
             } else {
-                // Si no hay viajes en ese mes específico dentro de los 24m, asigna el promedio 24m general
                 monthsResult[mKey] = overallAverage;
             }
         }
@@ -362,6 +381,7 @@ export class PortDemurrageRatesService {
             negative_count: negativeCount,
             max_days: maxDays,
             min_days: minDays === Infinity ? 0 : minDays,
+            median_days: overallMedian,
             yearly_breakdown: yearlyBreakdown
         };
     }
