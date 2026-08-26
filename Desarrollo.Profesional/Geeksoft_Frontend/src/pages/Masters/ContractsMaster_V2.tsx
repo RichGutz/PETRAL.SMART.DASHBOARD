@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
-import { FileText, Calendar, ChevronDown, ChevronRight, Anchor, DollarSign, Ship, CheckCircle2, Layers, RefreshCw, Trash2, ExternalLink } from 'lucide-react';
+import { FileText, Calendar, ChevronDown, ChevronRight, Anchor, DollarSign, Ship, CheckCircle2, Clock, Layers, RefreshCw, Trash2, ExternalLink, ShieldCheck } from 'lucide-react';
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
 import { QuoteExecutiveCardSummary } from '../../components/CommercialForecast/QuoteExecutiveCardSummary';
+import { CierreApprovalModal } from '../../components/Masters/CierreApprovalModal';
 
 interface EnrichedRoute {
     route_id?: string;
@@ -18,6 +19,11 @@ interface EnrichedRoute {
     created_by?: string;
     valid_from?: string;
     valid_to?: string;
+    status?: string;
+    approved_by?: string;
+    approved_by_name?: string;
+    approved_at?: string;
+    approval_notes?: string;
     demurrage_rates?: Record<string, number>;
     demurrage_rate?: number;
     comments?: Array<{ text: string; date?: string; user?: string }>;
@@ -25,6 +31,11 @@ interface EnrichedRoute {
         is_multicotizador?: boolean;
         valid_from?: string;
         valid_to?: string;
+        status?: string;
+        approved_by?: string;
+        approved_by_name?: string;
+        approved_at?: string;
+        approval_notes?: string;
         bunker_price_ifo?: number;
         bunker_price_mdo?: number;
         tramos?: any[];
@@ -48,6 +59,11 @@ interface EnrichedRoute {
             valid_to?: string;
             validity_years?: number;
             contract_status?: string;
+            status?: string;
+            approved_by?: string;
+            approved_by_name?: string;
+            approved_at?: string;
+            approval_notes?: string;
             baf_formula?: string;
             baf_valid_from?: string;
             baf_valid_to?: string;
@@ -70,6 +86,7 @@ export const ContractsMaster: React.FC = () => {
     const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
     const [openYears, setOpenYears] = useState<Record<string, boolean>>({});
     const [expandedRouteName, setExpandedRouteName] = useState<string | null>(null);
+    const [approvalModalRoute, setApprovalModalRoute] = useState<EnrichedRoute | null>(null);
 
     // Carga de Datos desde Backend (Supabase / FastAPI)
     const loadData = async () => {
@@ -161,7 +178,7 @@ export const ContractsMaster: React.FC = () => {
             const ld = route.legs_data || {};
             const meta = ld.contract_metadata || {};
             // La fecha final de validez (valid_to) determina estrictamente el año de vigencia
-            const validToStr = route.valid_to || ld.valid_to || ld.validTo || meta.valid_to || meta.validTo || ld.baf_valid_to;
+            const validToStr = route.valid_to || ld.valid_to || (ld as any).validTo || meta.valid_to || (meta as any).validTo || ld.baf_valid_to;
             const nameStr = route.name || '';
 
             let year = '';
@@ -202,19 +219,13 @@ export const ContractsMaster: React.FC = () => {
         setExpandedRouteName(prev => (prev === routeName ? null : routeName));
     };
 
-    // Funciones de formateo numérico
-    const fmtCur = (v: any) => {
-        const num = Number(v) || 0;
-        return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    };
-    const fmtThousandSep = (v: any) => (Number(v) || 0).toLocaleString('en-US');
-
     // Exportaciones
     const exportColumns: ExportColumn[] = [
         { header: 'Contrato / Ruta', key: 'name', type: 'string' },
         { header: 'Cliente', key: 'client_id', type: 'string' },
         { header: 'Válido Desde', key: 'valid_from', type: 'string' },
         { header: 'Válido Hasta', key: 'valid_to', type: 'string' },
+        { header: 'Estado', key: 'status', type: 'string' },
         { header: 'Tabla Origen', key: 'table_source', type: 'string' }
     ];
 
@@ -294,12 +305,12 @@ export const ContractsMaster: React.FC = () => {
                             const routesInYear = groupedByYear.groups[year] || [];
 
                             return (
-                                <div key={year} className="bg-white rounded-xl border border-slate-250 shadow-sm overflow-hidden transition-all">
+                                <div key={year} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all">
                                     
-                                    {/* CABECERA HORIZONTAL DEL BLOQUE ANUAL (NIVEL 1/2) */}
+                                    {/* CABECERA HORIZONTAL DEL BLOQUE ANUAL */}
                                     <button
                                         onClick={() => toggleYear(year)}
-                                        className="w-full bg-slate-800 hover:bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between transition-colors"
+                                        className="w-full bg-slate-800 hover:bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between transition-colors cursor-pointer"
                                     >
                                         <div className="flex items-center gap-3">
                                             <Calendar size={18} className="text-amber-400" />
@@ -307,7 +318,7 @@ export const ContractsMaster: React.FC = () => {
                                                 📅 AÑO DE VIGENCIA {year}
                                             </span>
                                             <span className="bg-slate-700 text-amber-300 text-xs font-bold px-2.5 py-0.5 rounded-full border border-slate-600">
-                                                {routesInYear.length} {routesInYear.length === 1 ? 'Ruta Registrada' : 'Rutas Registradas'}
+                                                {routesInYear.length} {routesInYear.length === 1 ? 'Cierre Registrado' : 'Cierres Registrados'}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2 text-slate-300 text-xs font-semibold">
@@ -316,20 +327,20 @@ export const ContractsMaster: React.FC = () => {
                                         </div>
                                     </button>
 
-                                    {/* CONTENIDO DESPLEGABLE DEL AÑO: LISTADO DE RUTAS (NIVEL 3) */}
+                                    {/* LISTADO DE RUTAS DEL AÑO */}
                                     {isOpen && (
                                         <div className="p-4 space-y-3 bg-slate-50 border-t border-slate-200">
                                             {routesInYear.map(route => {
                                                 const isExpanded = expandedRouteName === route.name;
-                                                const tramos = route.legs_data?.tramos || [];
-                                                const puertosConfig = route.legs_data?.puertosConfig || [];
-                                                const meta = route.legs_data?.contract_metadata || {};
+                                                const legs = route.legs_data || {};
+                                                const meta = legs.contract_metadata || {};
+                                                const tramos = legs.tramos || [];
+                                                const validFrom = route.valid_from || legs.valid_from || meta.valid_from || '—';
+                                                const validTo = route.valid_to || legs.valid_to || meta.valid_to || '—';
                                                 
-                                                const validFrom = meta.valid_from || route.legs_data?.baf_valid_from || route.valid_from || '01/01/2026';
-                                                const validTo = meta.valid_to || route.legs_data?.baf_valid_to || route.valid_to || '31/12/2026';
-                                                const isContractActive = (meta.contract_status || 'ACTIVE') === 'ACTIVE';
+                                                const rawStatus = ((route as any).status || meta.status || meta.contract_status || 'BORRADOR').toUpperCase();
+                                                const isFirme = rawStatus === 'FIRME' || rawStatus === 'APROBADO' || rawStatus === 'ACTIVE';
 
-                                                // Generar secuencia visual de tramos (ej: PEMAR ➔ CLVAP ➔ PEILO)
                                                 const portsList: string[] = [];
                                                 tramos.forEach((tr: any) => {
                                                     if (tr.origin_port_id && !portsList.includes(tr.origin_port_id)) portsList.push(tr.origin_port_id);
@@ -339,8 +350,6 @@ export const ContractsMaster: React.FC = () => {
 
                                                 return (
                                                     <div key={route.name} className="bg-white rounded-lg border border-slate-300 shadow-sm overflow-hidden">
-                                                        
-                                                        {/* FILA DE RUTA (NIVEL 3) */}
                                                         <div 
                                                             onClick={() => toggleRouteExpansion(route.name)}
                                                             className="p-4 flex flex-wrap items-center justify-between gap-4 cursor-pointer hover:bg-slate-100/80 transition-colors"
@@ -354,8 +363,8 @@ export const ContractsMaster: React.FC = () => {
                                                                         <span className="font-mono font-bold text-xs text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
                                                                             📍 {route.name}
                                                                         </span>
-                                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${isContractActive ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                                                                            <CheckCircle2 size={10} /> {isContractActive ? 'ACTIVO' : 'INACTIVO'}
+                                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${isFirme ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                                                                            {isFirme ? <CheckCircle2 size={10} /> : <Clock size={10} />} {isFirme ? 'FIRME' : 'BORRADOR'}
                                                                         </span>
                                                                     </div>
                                                                     <div className="text-xs font-semibold text-slate-600 mt-1 flex items-center gap-3">
@@ -382,14 +391,43 @@ export const ContractsMaster: React.FC = () => {
                                                                         }
                                                                     }}
                                                                     className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-colors cursor-pointer shadow-xs"
-                                                                    title="Abrir esta ruta COA en vivo en el Multicotizador"
+                                                                    title="Abrir este cierre COA en vivo en el Multicotizador"
                                                                 >
                                                                     <ExternalLink size={12} />
                                                                     <span>Ver en Multicotizador ➔</span>
                                                                 </button>
-                                                                <span className="text-slate-400 font-bold hover:underline cursor-pointer px-1" onClick={() => toggleRouteExpansion(route.name)}>
+                                                                <span className="text-slate-400 font-bold hover:underline cursor-pointer px-1 text-xs" onClick={() => toggleRouteExpansion(route.name)}>
                                                                     {isExpanded ? '▲ Ocultar Ficha' : '▼ Detalle Rápido'}
                                                                 </span>
+
+                                                                {/* PAD DE ESTADO: BORRADOR vs FIRME */}
+                                                                {isFirme ? (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setApprovalModalRoute(route);
+                                                                        }}
+                                                                        className="px-2.5 py-1 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-800 hover:text-emerald-900 border border-emerald-300 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs ml-1"
+                                                                        title={`Aprobado por ${(route as any).approved_by_name || (route as any).approved_by || 'ADMIN'}. Clic para auditar.`}
+                                                                    >
+                                                                        <CheckCircle2 size={13} className="text-emerald-600" />
+                                                                        <span>FIRME</span>
+                                                                    </button>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setApprovalModalRoute(route);
+                                                                        }}
+                                                                        className="px-2.5 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 hover:text-amber-950 border border-amber-300 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs ml-1"
+                                                                        title="Cierre en estado BORRADOR. Clic para autorizar y pasar a FIRME (Solo Administrador con clave)"
+                                                                    >
+                                                                        <Clock size={13} className="text-amber-600" />
+                                                                        <span>BORRADOR</span>
+                                                                    </button>
+                                                                )}
+
+                                                                {/* PAD BORRAR */}
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
@@ -404,27 +442,35 @@ export const ContractsMaster: React.FC = () => {
                                                             </div>
                                                         </div>
 
-                                                        {/* FICHA EXPANDIDA: UI UNIFICADA MULTICOTIZADOR (4 CARDS + MOTOR PURO) */}
+                                                        {/* FICHA EXPANDIDA: UI UNIFICADA MULTICOTIZADOR */}
                                                         {isExpanded && (
                                                             <div className="p-4 bg-slate-50 border-t border-slate-200">
                                                                 <QuoteExecutiveCardSummary route={route} />
                                                             </div>
                                                         )}
-
                                                     </div>
                                                 );
                                             })}
                                         </div>
                                     )}
-
                                 </div>
                             );
                         })
                     )}
-
                 </div>
-
             </div>
+
+            {approvalModalRoute && (
+                <CierreApprovalModal
+                    route={approvalModalRoute}
+                    isOpen={Boolean(approvalModalRoute)}
+                    onClose={() => setApprovalModalRoute(null)}
+                    onSuccess={() => {
+                        setApprovalModalRoute(null);
+                        loadData();
+                    }}
+                />
+            )}
         </MasterTemplate>
     );
 };

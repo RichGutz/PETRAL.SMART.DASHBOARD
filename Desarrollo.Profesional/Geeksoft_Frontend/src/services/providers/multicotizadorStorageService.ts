@@ -88,13 +88,17 @@ export class MulticotizadorStorageService {
         const effectiveValidFrom = validFrom || bafValidFrom || undefined;
         const effectiveValidTo = validTo || bafValidTo || undefined;
 
+        const isCierreContract = (isContract === true || category === 'COA');
+        const resolvedStatus = isCierreContract ? (contractStatus || 'BORRADOR') : 'COTIZACION';
+
         const payload: any = {
             route_id: routeId,
             name: routeName,
             description,
             pais: 'PE',
             is_prospect: isClientProspect,
-            is_contract: (isContract === true || category === 'COA'),
+            is_contract: isCierreContract,
+            status: resolvedStatus,
             client_id: selectedClient,
             created_by: activeUserEmail,
             valid_from: effectiveValidFrom,
@@ -103,6 +107,7 @@ export class MulticotizadorStorageService {
                 is_multicotizador: true,
                 category: category || (isContract ? 'COA' : 'SPOT'),
                 is_budget: category === 'PRESUPUESTO',
+                status: resolvedStatus,
                 created_by: activeUserEmail,
                 vessel_id: selectedVessel,
                 bunker_price_ifo: bunkerPriceIfo,
@@ -125,12 +130,13 @@ export class MulticotizadorStorageService {
                 financial_summary: financialSummary || null,
                 refacturarMuellajeMap: refacturarMuellajeMap || null,
                 // Metadata de contrato COA (solo si aplica) dentro del JSONB
-                contract_metadata: (isContract || category === 'COA') ? {
+                contract_metadata: isCierreContract ? {
                     client_id: selectedClient,
                     valid_from: validFrom,
                     valid_to: validTo,
                     validity_years: validityYears || 1,
-                    contract_status: contractStatus || 'ACTIVE',
+                    contract_status: resolvedStatus,
+                    status: resolvedStatus,
                     baf_formula: bafFormula,
                     tariff_tiers: tariffTiers,
                     demurrage_rates: demurrageRatesMap,

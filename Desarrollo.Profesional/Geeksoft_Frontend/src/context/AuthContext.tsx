@@ -11,16 +11,25 @@ export interface User {
 export type PermissionLevel = 'Editor' | 'Visor' | 'Nulo';
 
 export interface UserPermissions {
-    multicotizador_spot: PermissionLevel;
-    matriz_financiera: PermissionLevel;
-    maestro_buques: PermissionLevel;
-    maestro_rutas: PermissionLevel;
-    maestro_puertos: PermissionLevel;
-    maestro_contratos: PermissionLevel;
-    maestro_tarifas: PermissionLevel;
-    maestro_costos_agencia: PermissionLevel;
-    maestro_bunker: PermissionLevel;
-    [key: string]: PermissionLevel; // Firma de índice para acceso dinámico
+    multicotizador_spot?: PermissionLevel;
+    matriz_financiera?: PermissionLevel;
+    analisis_grafico?: PermissionLevel;
+    spaghetti_map?: PermissionLevel;
+    analisis_liquidaciones?: PermissionLevel;
+    maestro_buques?: PermissionLevel;
+    maestro_puertos?: PermissionLevel;
+    maestro_rutas?: PermissionLevel;
+    maestro_tarifas?: PermissionLevel;
+    maestro_contratos?: PermissionLevel;
+    maestro_cotizaciones?: PermissionLevel;
+    maestro_presupuestos?: PermissionLevel;
+    maestro_matrices?: PermissionLevel;
+    maestro_tarifas_portuarias?: PermissionLevel;
+    maestro_costos_agencia?: PermissionLevel;
+    maestro_demoras?: PermissionLevel;
+    maestro_bunker?: PermissionLevel;
+    maestro_originacion?: PermissionLevel;
+    [key: string]: PermissionLevel | undefined; // Firma de índice para acceso dinámico
 }
 
 interface AuthContextType {
@@ -65,13 +74,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const devPerms: UserPermissions = {
                 multicotizador_spot: 'Editor',
                 matriz_financiera: 'Editor',
+                analisis_grafico: 'Editor',
+                spaghetti_map: 'Editor',
+                analisis_liquidaciones: 'Editor',
                 maestro_buques: 'Editor',
-                maestro_rutas: 'Editor',
                 maestro_puertos: 'Editor',
-                maestro_contratos: 'Editor',
+                maestro_rutas: 'Editor',
                 maestro_tarifas: 'Editor',
+                maestro_contratos: 'Editor',
+                maestro_cotizaciones: 'Editor',
+                maestro_presupuestos: 'Editor',
+                maestro_matrices: 'Editor',
+                maestro_tarifas_portuarias: 'Editor',
                 maestro_costos_agencia: 'Editor',
-                maestro_bunker: 'Editor'
+                maestro_demoras: 'Editor',
+                maestro_bunker: 'Editor',
+                maestro_originacion: 'Editor'
             };
             setUser(devUser);
             setPermissions(devPerms);

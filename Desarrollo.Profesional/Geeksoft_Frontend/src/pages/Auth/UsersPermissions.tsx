@@ -33,13 +33,22 @@ export const UsersPermissions: React.FC = () => {
     const [newPerms, setNewPerms] = useState<UserPermissions>({
         multicotizador_spot: 'Visor',
         matriz_financiera: 'Visor',
+        analisis_grafico: 'Visor',
+        spaghetti_map: 'Visor',
+        analisis_liquidaciones: 'Visor',
         maestro_buques: 'Visor',
-        maestro_rutas: 'Visor',
         maestro_puertos: 'Visor',
-        maestro_contratos: 'Visor',
+        maestro_rutas: 'Visor',
         maestro_tarifas: 'Visor',
+        maestro_contratos: 'Visor',
+        maestro_cotizaciones: 'Visor',
+        maestro_presupuestos: 'Visor',
+        maestro_matrices: 'Visor',
+        maestro_tarifas_portuarias: 'Visor',
         maestro_costos_agencia: 'Visor',
-        maestro_bunker: 'Visor'
+        maestro_demoras: 'Visor',
+        maestro_bunker: 'Visor',
+        maestro_originacion: 'Visor'
     });
 
     const loadUsers = async () => {
@@ -171,15 +180,29 @@ export const UsersPermissions: React.FC = () => {
     };
 
     const modulesList: { key: keyof UserPermissions; label: string }[] = [
-        { key: 'multicotizador_spot', label: 'Multicotizador' },
+        // Herramientas
+        { key: 'multicotizador_spot', label: 'Multicotizador Multirutas' },
         { key: 'matriz_financiera', label: 'Matriz Financiera' },
-        { key: 'maestro_buques', label: 'M. Buques' },
-        { key: 'maestro_rutas', label: 'M. Distancias' },
+        { key: 'analisis_grafico', label: 'Análisis Gráfico' },
+        { key: 'spaghetti_map', label: 'Spaghetti Map' },
+        { key: 'analisis_liquidaciones', label: 'Análisis Liquidaciones' },
+        // Maestros Físicos
+        { key: 'maestro_buques', label: 'M. Flota' },
         { key: 'maestro_puertos', label: 'M. Puertos' },
-        { key: 'maestro_contratos', label: 'M. Contratos' },
-        { key: 'maestro_tarifas', label: 'M. Tarifas/Clientes' },
+        { key: 'maestro_rutas', label: 'M. Distancias' },
+        // Maestros Comerciales
+        { key: 'maestro_tarifas', label: 'M. Clientes' },
+        { key: 'maestro_contratos', label: 'M. Cierres' },
+        { key: 'maestro_cotizaciones', label: 'M. Cotizaciones' },
+        { key: 'maestro_presupuestos', label: 'M. Presupuestos' },
+        { key: 'maestro_matrices', label: 'M. Matrices' },
+        // Maestros de Costos
+        { key: 'maestro_tarifas_portuarias', label: 'M. Tarifas Portuarias' },
         { key: 'maestro_costos_agencia', label: 'M. Gastos Portuarios' },
-        { key: 'maestro_bunker', label: 'M. Bunker ⛽' }
+        { key: 'maestro_demoras', label: 'M. Demoras' },
+        // Mercado & Originación
+        { key: 'maestro_bunker', label: 'M. Búnker ⛽' },
+        { key: 'maestro_originacion', label: 'M. Originación ⚙️' }
     ];
 
     return (
