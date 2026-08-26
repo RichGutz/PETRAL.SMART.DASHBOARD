@@ -319,3 +319,9 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-08-26 18:14:00] [BRANCH TAG PRE.MATRIZ.NAVITRANSO RE-GRABADO Y BLINDADO]
 - Branch `PRE.MATRIZ.NAVITRANSO` y Tag `PRE.MATRIZ.NAVITRANSO` actualizados y pusheados a GitHub.
 - Workspace en rama `main` al 100% sincronizado con `origin/main`.
+
+[2026-08-26 18:31:00] [IMPLEMENTACION & DESPLIEGUE ARTEFACTO INDEPENDIENTE MATRIZ NAVITRANSO]
+- Creado componente desacoplado FinancialMatrixNavitransoGridTable.tsx.
+- Añadido selector simetrico [Formato: PETRAL | NAVITRANSO] en ForecastBuilder_V2.tsx y ToolsLayout_V2.tsx.
+- Integrado boton [Ocultar / Mostrar Filas N/A] en la cabecera de la tabla.
+- Compilado con Vite (10.77s) y desplegado al VPS de produccion https://forecast.geeksoft.tech.
