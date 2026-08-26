@@ -278,3 +278,8 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Despliegue completado con exito.
 - Frontend actualizado con tipografia Consolas y centavos fijos en columna F ($/t).
 - Backend FastAPI reiniciado y certificado SSL verificado en vivo.
+
+[2026-08-26 16:54:00] [ELIMINACION DE CEROS PUNTEADOS Y DESPLIEGUE VPS]
+- Eliminados los ceros punteados ("dotted/slashed zeros") de fuentes monospace tipo IDE.
+- Aplicada tipografia limpia ejecutiva 'Segoe UI' / 'Inter' con 'tabular-nums' y regla global 'font-feature-settings: "zero" 0'.
+- Desplegado y verificado en vivo en Produccion https://forecast.geeksoft.tech.

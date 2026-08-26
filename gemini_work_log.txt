@@ -214,3 +214,8 @@ CONCURRENCY & QC SUMMARY:
 - Compilación Vite OK (14.44s).
 
 [2026-08-26 16:40:00] VPS Deployment to https://forecast.geeksoft.tech completed successfully.
+
+[2026-08-26 16:54:00] Eliminacion de Ceros Punteados & Despliegue VPS:
+- Configurada tipografia comercial ejecutiva Segoe UI / Inter con alineacion tabular limpia (tabular-nums) y regla font-feature-settings: "zero" 0 en index.css y componentes.
+- Ceros 100% redondos y limpios sin puntos ni barras interiores.
+- Despliegue completado a https://forecast.geeksoft.tech.
