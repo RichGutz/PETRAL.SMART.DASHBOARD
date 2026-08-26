@@ -381,8 +381,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 {/* ========================================================================= */}
                 <div className="flex flex-row items-center gap-2.5 w-full overflow-x-auto pb-1 scrollbar-none shrink-0">
                     
-                    {/* 1. Inicio forecast */}
-                    <div className="flex flex-col gap-1 w-[115px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    {/* 1. Inicio forecast (+20% ancho: w-[138px]) */}
+                    <div className="flex flex-col gap-1 w-[138px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">1. Inicio forecast</Label>
                         <MonthPicker 
                             value={currentStartDate.slice(0, 7)}
@@ -403,8 +403,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         />
                     </div>
 
-                    {/* 2. Fin forecast */}
-                    <div className="flex flex-col gap-1 w-[115px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                    {/* 2. Fin forecast (+20% ancho: w-[138px]) */}
+                    <div className="flex flex-col gap-1 w-[138px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">2. Fin forecast</Label>
                         <MonthPicker 
                             value={currentEndDate.slice(0, 7)}
