@@ -857,15 +857,45 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 puertos_cfg_list = legs_data.get("puertosConfig", [])
                 sum_muellaje = sum(float(p.get("muellaje_cost") or 0.0) for p in puertos_cfg_list) if puertos_cfg_list else 0.0
 
-                tot_freight_rev = float(consolidated.get("total_freight_revenue", 0))
-                tot_refact_muell = sum_muellaje if sum_muellaje > 0 else float(consolidated.get("total_refacturacion_muellaje", 0) or consolidated.get("refacturacion_muellaje", 0))
-                gross_revenue = float(tot_freight_rev + tot_refact_muell)
-                
-                total_commissions = gross_revenue * (total_comm_pct / 100)
-                net_revenue = gross_revenue - total_commissions
-                pnl_after_comm = net_revenue - consolidated.get("total_port_costs", 0) - consolidated.get("total_bunker_costs", 0)
-                total_days = consolidated.get("total_days", 0)
-                tce_real = (pnl_after_comm / total_days) if total_days > 0 else 0
+                # --- FIDELIDAD AL SNAPSHOT (Axioma 1: La Foto no se reinventa) ---
+                is_same_vessel = bool(vessel and original_vessel_id and vessel.strip().upper() == str(original_vessel_id).strip().upper())
+                has_bunker_override = bool((line.forecast_bunker_price_ifo and float(line.forecast_bunker_price_ifo) > 0) or (line.forecast_bunker_price_mdo and float(line.forecast_bunker_price_mdo) > 0))
+                fin_summary = legs_data.get("financial_summary") or {}
+                has_valid_snapshot = bool(fin_summary and float(fin_summary.get("grandBunkerTotal", 0)) > 0)
+
+                if is_same_vessel and not has_bunker_override and has_valid_snapshot:
+                    # Consumo directo e inmaculado de la Foto del Multicotizador
+                    tot_freight_rev = float(fin_summary.get("totalFreight", consolidated.get("total_freight_revenue", 0)))
+                    tot_refact_muell = float(fin_summary.get("refacturacionMuellaje", sum_muellaje))
+                    gross_revenue = float(fin_summary.get("grossRevenueTotal", tot_freight_rev + tot_refact_muell))
+                    total_commissions = float(fin_summary.get("totalCommUsd", gross_revenue * (total_comm_pct / 100)))
+                    net_revenue = gross_revenue - total_commissions
+                    tot_port_costs = float(fin_summary.get("totalPortCosts", consolidated.get("total_port_costs", 0)))
+                    tot_bunker_costs = float(fin_summary.get("grandBunkerTotal", consolidated.get("total_bunker_costs", 0)))
+                    total_days = float(fin_summary.get("totalDays", consolidated.get("total_days", 0)))
+                    tce_real = float(fin_summary.get("tceRealizado", 0))
+                    tce_req = float(fin_summary.get("tceReq", tce_req))
+                    pnl_after_comm = float(fin_summary.get("voyageResultPnl", net_revenue - tot_port_costs - tot_bunker_costs))
+                    sea_days_val = float(fin_summary.get("totalSeaDays", consolidated.get("total_sea_days", 0)))
+                    port_days_val = float(fin_summary.get("totalPortDays", consolidated.get("total_port_days", 0)))
+                    bunker_ifo_ton = float(fin_summary.get("grandIfoTons", consolidated.get("bunker_ifo_tonnage", 0)))
+                    bunker_mdo_ton = float(fin_summary.get("grandMdoTons", consolidated.get("bunker_mdo_tonnage", 0)))
+                else:
+                    # Recálculo para Buque Comodín u Override de Precios
+                    tot_freight_rev = float(consolidated.get("total_freight_revenue", 0))
+                    tot_refact_muell = sum_muellaje if sum_muellaje > 0 else float(consolidated.get("total_refacturacion_muellaje", 0) or consolidated.get("refacturacion_muellaje", 0))
+                    gross_revenue = float(tot_freight_rev + tot_refact_muell)
+                    total_commissions = gross_revenue * (total_comm_pct / 100)
+                    net_revenue = gross_revenue - total_commissions
+                    tot_port_costs = float(consolidated.get("total_port_costs", 0))
+                    tot_bunker_costs = float(consolidated.get("total_bunker_costs", 0))
+                    total_days = float(consolidated.get("total_days", 0))
+                    tce_real = (net_revenue - tot_port_costs - tot_bunker_costs) / total_days if total_days > 0 else 0
+                    pnl_after_comm = net_revenue - tot_port_costs - tot_bunker_costs
+                    sea_days_val = float(consolidated.get("total_sea_days", 0))
+                    port_days_val = float(consolidated.get("total_port_days", 0))
+                    bunker_ifo_ton = float(consolidated.get("bunker_ifo_tonnage", 0))
+                    bunker_mdo_ton = float(consolidated.get("bunker_mdo_tonnage", 0))
 
                 unit_result = {
                     "gross_income": round(tot_freight_rev if tot_freight_rev > 0 else gross_revenue, 2),
@@ -880,10 +910,10 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     "gross_revenue_total_unit": round(gross_revenue, 2),
                     "total_commissions": round(total_commissions, 2),
                     "net_income": round(net_revenue, 2),
-                    "total_port_costs": consolidated.get("total_port_costs", 0),
-                    "total_bunker_costs": consolidated.get("total_bunker_costs", 0),
-                    "bunker_price_ifo": consolidated.get("bunker_price_ifo", b_ifo),
-                    "bunker_price_mdo": consolidated.get("bunker_price_mdo", b_mdo),
+                    "total_port_costs": tot_port_costs,
+                    "total_bunker_costs": tot_bunker_costs,
+                    "bunker_price_ifo": b_ifo if b_ifo > 0 else float(consolidated.get("bunker_price_ifo") or 0),
+                    "bunker_price_mdo": b_mdo if b_mdo > 0 else float(consolidated.get("bunker_price_mdo") or 0),
                     "voyage_result": round(pnl_after_comm, 2),
                     "pl_vs_required": round(pnl_after_comm - (total_days * tce_req), 2),
                     "tce_real": round(tce_real, 2),
@@ -892,15 +922,15 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     "carga_unit": total_laden_qty if total_laden_qty > 0 else line.quantity,
                     "total_duration": total_days,
                     "total_distance": consolidated.get("total_distance", 0),
-                    "sea_days": consolidated.get("total_sea_days", 0),
-                    "port_days": consolidated.get("total_port_days", 0),
-                    "bunker_ifo_tonnage": consolidated.get("bunker_ifo_tonnage", 0),
-                    "bunker_mdo_tonnage": consolidated.get("bunker_mdo_tonnage", 0),
+                    "sea_days": sea_days_val,
+                    "port_days": port_days_val,
+                    "bunker_ifo_tonnage": bunker_ifo_ton,
+                    "bunker_mdo_tonnage": bunker_mdo_ton,
                     "pcm_projected": round(tce_real - tce_req, 2),
                     "audit_trail": {
                         "bunker_costs": {
                             "formula": "Multi-tramo: Suma de consumos por cada tramo (Laden/Ballast)",
-                            "values": f"IFO: {consolidated.get('bunker_ifo_tonnage', 0)} t, MDO: {consolidated.get('bunker_mdo_tonnage', 0)} t"
+                            "values": f"IFO: {bunker_ifo_ton} t, MDO: {bunker_mdo_ton} t"
                         },
                         "commissions": {
                             "formula": f"Gross Revenue × ({addr_comm_pct}% addr + {broker_comm_pct}% broker)",
@@ -1073,6 +1103,11 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "net_income": unit_result["net_income"] * freq,
             "total_port_costs": unit_result["total_port_costs"] * freq,
             "total_bunker_costs": unit_result["total_bunker_costs"] * freq,
+            "bunker_costs": unit_result["total_bunker_costs"] * freq,
+            "bunker_price_ifo": effective_p_ifo,
+            "bunker_price_mdo": effective_p_mdo,
+            "bunker_ifo_tonnage": unit_result["bunker_ifo_tonnage"] * freq,
+            "bunker_mdo_tonnage": unit_result["bunker_mdo_tonnage"] * freq,
             "voyage_result": unit_result["voyage_result"] * freq,
             "pl_vs_required": unit_result["pl_vs_required"] * freq,
             "tce_real": unit_result["tce_real"],

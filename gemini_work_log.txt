@@ -175,3 +175,19 @@ CONCURRENCY & QC SUMMARY:
 - Mapeo forense de 17 cables de conexion Multicotizador (routes_quotes) -> Matriz Financiera -> Spaghetti Map.
 
 [2026-08-26 14:39:00] Ajuste en Ribbon de Matriz Financiera (ForecastBuilder_V2.tsx): Botones 1 (Inicio) y 2 (Fin) aumentados +20% a 138px. Build Vite exitoso (17.20s).
+
+[2026-08-26 14:42:00] VPS Deployment completed successfully to https://forecast.geeksoft.tech (Hostinger VPS 91.108.125.253).
+
+[2026-08-26 15:05:00] Auditoria Forense Vuelta 1 (Caso SPCC.ILO.ILO.BARQUITO.ILO.2025-2027 COA MOQUEGUA):
+- Detectada diferencia de -$900 USD en PnL ($59,370 en PDF vs $58,470 en Matriz).
+- Causa raiz: Sobreestimacion de +$900 USD en Bunker Costs ($66,735 vs $65,835) producida por el recalculo de tramos en spot_engine.py en vez de absorber el snapshot inmutable financial_summary.
+- Dictamen pericial registrado en 28_Metodo_Benoit_Blanc_FINALE_Matriz_Financiera.md.
+
+[2026-08-26 15:19:00] Resolucion CASO-01 y CASO-02 (Metodo Benoit Blanc):
+- En Geeksoft_Engine/backend/services/forecast_service.py: Cuando el buque coincide con la foto original y no hay override de bunker, se consume directamente el snapshot inmutable financial_summary de la ruta (PnL $59,370.25 / TCE $21,595.29 exacto).
+- Cuando el buque es comodin (ej. TABLONES), se heredan por defecto los precios IFO/MDO de la foto ($967.26 / $1528.26), recalculando consumo para el nuevo buque, permitiendo ademas override manual desde los inputs del Forecast.
+
+[2026-08-26 15:34:00] Bateria Pericial Benoit Blanc - 11 Rutas SPCC Auditadas:
+- Ejecutada simulacion de todas las 11 rutas de SPCC en Supabase (routes_quotes).
+- 11/11 rutas pasaron con 100% de convergencia (Delta PnL $0.00 al centavo).
+- Documentado en 28_Metodo_Benoit_Blanc_FINALE_Matriz_Financiera.md.

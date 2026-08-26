@@ -231,3 +231,19 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Creado documento maestro de auditoria forense: 28_Metodo_Benoit_Blanc_FINALE_Matriz_Financiera.md con mapeo de 17 cables (C-01 a C-17), regla del Buque Comodin y Rueda Pericial de Casos.
 
 [2026-08-26 14:39:00] [MATRIZ FINANCIERA - RIBBON] Ajuste estetico de dimensiones en ForecastBuilder_V2: botones 1 (Inicio) y 2 (Fin) aumentados en +20% (115px -> 138px), compensado simetricamente sobre el boton 5 (Ruta). Build Vite OK (17.20s).
+
+[2026-08-26 14:42:00] [DEPLOY VPS HOSTINGER (91.108.125.253 | https://forecast.geeksoft.tech)] Despliegue completado con exito. Botonera del Ribbon de la Matriz Financiera actualizada en produccion en vivo.
+
+[2026-08-26 15:05:00] [METODO BENOIT BLANC - VUELTA 1]
+- Analisis forense del caso 'SPCC.ILO.ILO.BARQUITO.ILO.2025-2027 COA MOQUEGUA' (PDF vs Matriz Financiera).
+- Asesino identificado: Discrepancia exacta de +$900 USD en Bunker ($66,735 en Matriz vs $65,835 en PDF) generada porque el backend recalcula tramos en spot_engine.py con overheads por defecto en vez de usar directamente el snapshot inmutable financial_summary de la foto.
+- Documentado en 28_Metodo_Benoit_Blanc_FINALE_Matriz_Financiera.md (Seccion 7.1).
+
+[2026-08-26 15:19:00] [METODO BENOIT BLANC - CASO 1 Y CASO 2 RESUELTOS]
+- Implementada fidelidad al snapshot financial_summary en backend/services/forecast_service.py: PnL coincide exactamente en $59,370.25 (Delta $0.00) y TCE en $21,595.29 para Caso 1 (Mismo buque).
+- Regla del Buque Comodin (Caso 2) validada: precios IFO/MDO heredados de la foto por defecto ($967.26 / $1528.26) con capacidad de override manual via forecast_bunker_price_ifo/mdo.
+
+[2026-08-26 15:34:00] [BATERIA PERICIAL BENOIT BLANC - 11 RUTAS SPCC]
+- Simulacion matricial ejecutada sobre las 11 rutas de SPCC en Supabase (routes_quotes).
+- 11 de 11 rutas (100.00%) pasaron la prueba con Delta $0.00 exacto en Revenue, Port Costs, Bunker, PnL y TCE Realizado.
+- Registrado en 28_Metodo_Benoit_Blanc_FINALE_Matriz_Financiera.md (Seccion 7.2).

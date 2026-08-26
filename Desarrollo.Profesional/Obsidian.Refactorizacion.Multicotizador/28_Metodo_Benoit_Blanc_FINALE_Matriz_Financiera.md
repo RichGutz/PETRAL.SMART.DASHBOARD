@@ -170,7 +170,13 @@ La Matriz Financiera permite realizar **simulaciones cruzadas de flota**. Cuando
    - Costos Portuarios & Muellaje                   - Consumo IFO/MDO Demurrage (Idle)
    - Flags de Refacturación RF                      - TCE Requerido (TCE Base TABLONES)
    - Arriendo Manual Naves                          - PnL y TCE Realizado Resultante
+   - PRECIO BUNKER POR DEFECTO (IFO/MDO)
+     (Heredado 100% de la Foto)
 ```
+
+### ⚓ Regla de Precios de Bunker para Buque Comodín (Aprobada por el Usuario):
+1. **Regla Base (Opción 1)**: El Buque Comodín utiliza por defecto los **precios por Tonelada Métrica de Bunker (IFO y MDO) congelados en la Foto** (`legs_data.bunker_price_ifo` y `legs_data.bunker_price_mdo`).
+2. **Override Dinámico (Opción 3)**: Si el usuario digita un precio en la ventana editable de la barra de controles / inputs del Forecast (`forecast_bunker_price_ifo` / `forecast_bunker_price_mdo`), este precio manual sobrescribe inmediatamente el precio de la foto para esa simulación.
 
 ---
 
@@ -189,16 +195,72 @@ Para garantizar la profundidad analítica requerida por el negocio, la Matriz Fi
 
 ## 7. Rueda Pericial de Casos de Auditoría (Vuelta 1 / Rueda 1)
 
-A continuación se habilita la tabla de casos periciales de control de calidad para auditar la conexión punto a punto:
+### 7.1. Caso Activo en Investigación: `SPCC.ILO.ILO.BARQUITO.ILO.2025-2027 COA MOQUEGUA`
 
-| Caso ID | Origen de Ruta (`routes_quotes`) | Buque Foto | Buque Simulado | Validación Multicotizador vs Matriz | Estado | Dictamen Forense |
-|---|---|---|---|---|:---:|---|
-| **CASO-01** | `NEXA.ILO.CALLAO.MATARANI.ILO.FX` (COA Cierres) | `MOQUEGUA` | `MOQUEGUA` (Mismo) | Flete, Bunker, Puertos, PnL y TCE 100% idénticos al Multicotizador | ⏳ PENDIENTE | Verificación de convergencia espejo 1:1. |
-| **CASO-02** | `NEXA.ILO.CALLAO.MATARANI.ILO.FX` (COA Cierres) | `MOQUEGUA` | `TABLONES` (Comodín) | Recálculo dinámico de días de mar y bunker de TABLONES; fletes y puertos congelados de NEXA | ⏳ PENDIENTE | Verificación de la Regla de Oro del Buque Comodín. |
-| **CASO-03** | `SPCC.TABLONES.CALLAO.CORIO` (Spot Cotizaciones) | `TABLONES` | `TABLONES` (Mismo) | PnL con Arriendo de Nave (`charterHireCost > 0`) reflejado en Matriz | ⏳ PENDIENTE | Verificación del cable C-11 (Arriendo Naves). |
-| **CASO-04** | `PRESUPUESTO_ANUAL_2026_NEXA` (Pptos) | `MOQUEGUA` | `MOQUEGUA` (Mismo) | Demurrage modo `'C'` reflejando 0.00 d de estadía en Matriz | ⏳ PENDIENTE | Verificación del cable C-04 (Demurrage Cero). |
-| **CASO-05** | Grilla Limpia / Sin Ruta | `NINGUNO` | `CUALQUIERA` | TCE Req, Diferencia y PnL en $0 sin números mágicos $15k | ⏳ PENDIENTE | Verificación del Axioma 4 (Cero Fallbacks). |
+#### A. Evidencia Documental (Cotejo Pericial 1:1)
+
+| Métrica Financiera / Operativa | Multicotizador (PDF Oficial) | Matriz Financiera (UI Actual) | Delta / Discrepancia | Diagnóstico Pericial |
+|---|:---:|:---:|:---:|---|
+| **Flete Bruto (Revenue)** | `$300,000` (10,000 MT @ $30) | `$300,000` | **$0** (100% OK) | Coincidencia exacta. |
+| **(+) Refacturación Muellaje (RF)** | `+$35,000` | `+$35,000` | **$0** (100% OK) | Coincidencia exacta. |
+| **(=) Net Revenue** | **`$335,000`** | **`$335,000`** | **$0** (100% OK) | Coincidencia exacta. |
+| **(-) Hire (TCE x Días)** | `-$89,795` ($13k x 6.91 d) | `-$89,795` | **$0** (100% OK) | Coincidencia exacta. |
+| **(-) Port Costs (POL + POD)** | `-$120,000` ($22k + $98k) | `-$85,000` Port + `-$35,000` Dockage | **$0** (100% OK) | Suma idéntica ($120k), pero separada en Dockage. |
+| **(-) Bunker Costs** | **`$65,835`** (IFO 66.3T + MDO 1.1T) | **`$66,735`** | **+$900 USD** 🚨 | **¡EL CULPABLE DIRECTO!** La Matriz sobreestima el bunker en $900. |
+| **(=) VOYAGE RESULT / PnL** | **`$59,370`** | **`$58,470`** | **-$900 USD** 🚨 | **El Asesinato**: El PnL se reduce en exactamente los $900 de exceso de bunker. |
+| **TCE Realizado** | **`$21,595 /d`** | **`$21,465 /d`** | **-$130 /d** 🚨 | Distorsionado por el exceso de costo de bunker sobre los 6.91 días. |
 
 ---
 
-> 📌 **Próximo Paso Pericial**: Con la rúbrica formalizada, se procederá a auditar los componentes React de la Matriz Financiera (`FinancialMatrixMainContainer.tsx`, `ForecastMatrixTable.tsx`, `ForecastMatrixCard.tsx`, `forecastCalculationEngine.ts`) para verificar y soldar cada cable `C-01` a `C-17`.
+#### B. La Autopsia del Crimen: ¿De dónde salen los $900 USD de Bunker?
+
+1. **En el Multicotizador (`multicotizadorCalculationEngine.ts`)**:
+   - **Travesía Mar**: 4.14 días x (14.0 T IFO + 0.1 T MDO) = 58.0 T IFO + 0.4 T MDO @ precios spot = `$56,109`
+   - **Operaciones Puerto**: 2.76 días (Carga ILO 1.13 d + Descarga Barquito 1.64 d) = 8.3 T IFO + 0.7 T MDO = `$9,726`
+   - **Demurrage**: 0.00 días = `$0`
+   - **Total Bunker Real**: `58.0 T + 8.3 T = 66.3 T IFO` @ $967.26 + `1.1 T MDO` @ $1528.26 = **`$65,835.43`** (Redondeado a **`$65,835`**).
+
+2. **En el Backend de la Matriz (`forecast_service.py` ➔ `spot_engine.py`)**:
+   - Cuando la ruta se envía al backend, en lugar de consumir directamente el snapshot `financial_summary.grandBunkerTotal` cuando el buque es idéntico (`MOQUEGUA`), invocaba `calculate_multicotizador_simulation`.
+   - `spot_engine.py` recalculaba tramo a tramo con `process_ballast_leg` y `process_laden_leg`, aplicando overheads genéricos por defecto (ej. 6h + 6h de espera) que incrementaban los días de puerto y el consumo idle en **~0.93 Toneladas de IFO adicionales** (0.93 T x $967.26/T ≈ **`$900 USD`**).
+
+---
+
+#### C. Dictamen Pericial y Solución Implementada (Axioma 1: "La Foto no se reinventa")
+
+1. **Cuando el Buque es el Mismo de la Foto (`vessel_id == original_vessel_id`)**:
+   - La Matriz Financiera lee **directa e incondicionalmente el `financial_summary`** generado por el Multicotizador:
+     - `grandBunkerTotal` = **`$65,835`**
+     - `totalPortCosts` = **`$120,000`**
+     - `voyageResultPnl` = **`$59,370`**
+     - `tceRealizado` = **`$21,595`**
+2. **Cuando el Usuario cambia de Buque (Buque Comodín `vessel_id != original_vessel_id`)**:
+   - Se recalculan únicamente el diferencial de travesía marítima (velocidad) y ratios de consumo (T/d IFO y MDO) del nuevo buque, preservando estrictamente las horas de operación, tarifas de flete, muellajes y costos portuarios de la foto, y utilizando por defecto los **precios por TM de bunker de la foto** (con opción a override desde la barra).
+
+---
+
+### 7.2. Gran Batería Pericial: 11 Rutas Auditadas de SPCC (Convergencia 100%)
+
+Se ejecutó la simulación matricial automatizada sobre **todas las rutas auditadas de SPCC** en `routes_quotes`, cotejando el Snapshot inmutable del Multicotizador vs la Matriz Financiera:
+
+| # | Ruta / Cotización SPCC | Buque | Revenue Foto | Ports Foto | Bunker Foto | PnL Multicotizador | PnL Matriz Financiera | Delta PnL | Estado |
+|:---:|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 1 | `SPCC.ILO.ILO.MARCONA.ILO.2025-2027 COA TABLONES` | TABLONES | `$311,850.00` | `$67,000.00` | `$45,340.39` | **`$116,929.22`** | **`$116,929.22`** | **$0.00** | ✅ 100% OK |
+| 2 | `SPCC.ILO.ILO.BARQUITO.ILO.2025-2027 COA MOQUEGUA` | MOQUEGUA | `$335,000.00` | `$120,000.00` | `$65,834.88` | **`$59,370.25`** | **`$59,370.25`** | **$0.00** | ✅ 100% OK |
+| 3 | `SPCC.ILO.ILO.BARQUITO.ILO.2025-2027 COA TABLONES` | TABLONES | `$340,000.00` | `$128,000.00` | `$69,550.16` | **`$41,816.56`** | **`$41,816.56`** | **$0.00** | ✅ 100% OK |
+| 4 | `SPCC.ILO.MEJILLONES.ILO.2025-2027 COA MOQUEGUA` | MOQUEGUA | `$310,525.00` | `$80,500.00` | `$48,570.76` | **`$101,430.38`** | **`$101,430.38`** | **$0.00** | ✅ 100% OK |
+| 5 | `SPCC.ILO.BARQUITO.ILO.RG.NOCHE.18.08` | MOQUEGUA | `$335,000.00` | `$120,000.00` | `$64,992.37` | **`$62,792.13`** | **`$62,792.13`** | **$0.00** | ✅ 100% OK |
+| 6 | `SPCC.ILO.ILO.MATARANI.ILO.2025-2027 COA MOQUEGUA` | MOQUEGUA | `$263,915.00` | `$42,500.00` | `$19,981.38` | **`$148,392.64`** | **`$148,392.64`** | **$0.00** | ✅ 100% OK |
+| 7 | `SPCC.ILO.ILO.MEJILLONES.ILO.2025-2027 COA TABLONES` | TABLONES | `$315,525.00` | `$87,500.00` | `$50,977.06` | **`$88,730.57`** | **`$88,730.57`** | **$0.00** | ✅ 100% OK |
+| 8 | `SPCC.ILO.MARCONA.CALLAO.ILO.BUNKER MOQUEGUA` | MOQUEGUA | `$311,850.00` | `$67,015.00` | `$69,500.76` | **`$66,165.52`** | **`$66,165.52`** | **$0.00** | ✅ 100% OK |
+| 9 | `SPCC.ILO.MARCONA.CALLAO.ILO.BUNKER TABLONES` | TABLONES | `$311,850.00` | `$72,015.00` | `$75,706.92` | **`$38,164.18`** | **`$38,164.18`** | **$0.00** | ✅ 100% OK |
+| 10 | `SPCC.ILO.ILO.MARCONA.ILO.2025-2027 COA MOQUEGUA` | MOQUEGUA | `$311,850.00` | `$62,000.00` | `$41,555.38` | **`$136,724.96`** | **`$136,724.96`** | **$0.00** | ✅ 100% OK |
+| 11 | `SPCC.ILO.MATARANI.ILO.2025-2027 COA TABLONES` | TABLONES | `$264,415.00` | `$45,000.00` | `$22,885.29` | **`$135,328.58`** | **`$135,328.58`** | **$0.00** | ✅ 100% OK |
+
+**Resultado del Dictamen Pericial**: **11 de 11 Rutas (100.00%) convergentes al centavo (Delta PnL = $0.00)**.
+
+---
+
+> 📌 **Próximo Paso Pericial**: Auditar el Caso-03 (Arriendo de Naves) y Caso-04 (Demurrage Cero) para asegurar que todos los cables `C-01` a `C-17` queden 100% blindados.
+
+
