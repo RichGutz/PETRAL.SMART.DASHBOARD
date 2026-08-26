@@ -334,5 +334,9 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Eliminada la barra negra superior innecesaria de FinancialMatrixNavitransoGridTable.
 - Movido el boton [Ocultar N/A / Mostrar N/A] al Ribbon superior junto al selector de formato.
 - Corregido el calculo de `visibleRowsCount` mediante suma acumulativa explicita (inmune a descuadres de rowSpan en OPEX/Gastos de la Nave).
-- Respaldadas las dos capturas PNG en las carpetas oficiales.
-- Desplegado y verificado en vivo en https://forecast.geeksoft.tech.
+
+[2026-08-26 18:50:00] [ENRIQUECIMIENTO ERGONOMICO TOTAL: CELDAS VERTICALES, SUBTOTALES CLIENTE Y FLOTA CONSOLIDADA]
+- Implementadas las columnas laterales CLIENTE, RUTA y BUQUE con orientacion vertical ultra compacta (`writingMode: vertical-rl`), angostando el ancho a `w-9` / `w-10` y optimizando el espacio para los 12 meses.
+- Agregada fila destacada de SUBTOTAL CLIENTE por cada cliente (alineada con el control de Filtros `showSubtotals`).
+- Agregado bloque final de TOTAL FLOTA CONSOLIDADA (VENTAS, COSTOS DIRECTOS, TCE, MARGEN BRUTO) debajo de todos los clientes.
+- Compilado con Vite y re-desplegado a https://forecast.geeksoft.tech.

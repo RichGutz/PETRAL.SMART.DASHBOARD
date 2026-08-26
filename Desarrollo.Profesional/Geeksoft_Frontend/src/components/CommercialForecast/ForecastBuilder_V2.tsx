@@ -648,6 +648,20 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </Select>
                     </div>
 
+                    {/* 7. Nº Viajes (Movido a la derecha del botón 6 en Fila 1) */}
+                    <div className="flex flex-col gap-1 w-[80px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
+                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">7. Viajes</Label>
+                        <Input 
+                            type="number" 
+                            min="1"
+                            value={frequency} 
+                            onChange={e => setFrequency(e.target.value)}
+                            placeholder="1"
+                            title="Frecuencia Mensual de Viajes"
+                            className="w-full h-7.5 text-center text-xs font-bold bg-white border-slate-200 shadow-2xs"
+                        />
+                    </div>
+
                 </div>
                 {/* FIN FILA 1 */}
 
@@ -656,20 +670,6 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 {/* ====================================================================================== */}
                 <div className="flex flex-row items-center gap-2.5 w-full pt-2 border-t border-slate-200/80 overflow-x-auto">
                     
-                    {/* 7. Nº Viajes */}
-                    <div className="flex items-center gap-1.5 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs shrink-0">
-                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">7. Viajes:</Label>
-                        <Input 
-                            type="number" 
-                            min="1"
-                            value={frequency} 
-                            onChange={e => setFrequency(e.target.value)}
-                            placeholder="1"
-                            title="Frecuencia Mensual de Viajes"
-                            className="w-14 h-7 text-center text-xs font-bold bg-white border-slate-200 shadow-2xs"
-                        />
-                    </div>
-
                     {/* 8. Demurrage (%) */}
                     <div className="flex items-center gap-1.5 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs shrink-0">
                         <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">8. Demurrage (%):</Label>
