@@ -315,3 +315,7 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Sincronizados los 174 viajes oficiales de Supabase a `historicalDemurrageData.json`.
 - Migrado `STORAGE_KEY` a `'petral_demurrage_records_v2'` para invalidar la cache vieja local de 161 registros.
 - Desplegado a https://forecast.geeksoft.tech. Todos los usuarios ven 119 recaladas idénticas (1.86 d) en ILO.
+
+[2026-08-26 18:14:00] [BRANCH TAG PRE.MATRIZ.NAVITRANSO RE-GRABADO Y BLINDADO]
+- Branch `PRE.MATRIZ.NAVITRANSO` y Tag `PRE.MATRIZ.NAVITRANSO` actualizados y pusheados a GitHub.
+- Workspace en rama `main` al 100% sincronizado con `origin/main`.

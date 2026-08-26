@@ -40,6 +40,9 @@ interface ForecastContextType {
     displayMode: 'usd' | 'pct';
     setDisplayMode: (v: 'usd' | 'pct') => void;
 
+    matrixFormat: 'PETRAL' | 'NAVITRANSO';
+    setMatrixFormat: (v: 'PETRAL' | 'NAVITRANSO') => void;
+
     ports: any[];
     spotRoutes: any[];
     portCostMode: 'static' | 'matrix';
@@ -119,6 +122,16 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     const [savedForecasts, setSavedForecasts] = useState<any[]>([]);
 
     const [displayMode, setDisplayMode] = useState<'usd'|'pct'>('usd');
+    const [matrixFormat, setMatrixFormatState] = useState<'PETRAL'|'NAVITRANSO'>(() => {
+        const saved = sessionStorage.getItem('petral_matrix_format');
+        return (saved === 'NAVITRANSO' || saved === 'PETRAL') ? saved : 'PETRAL';
+    });
+
+    const setMatrixFormat = (val: 'PETRAL'|'NAVITRANSO') => {
+        setMatrixFormatState(val);
+        sessionStorage.setItem('petral_matrix_format', val);
+    };
+
     const [ports, setPorts] = useState<any[]>([]);
     const [spotRoutes, setSpotRoutes] = useState<any[]>([]);
 
@@ -550,7 +563,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             forecastName, setForecastName, userId, setUserId, loadedAuthor,
             showSaveModal, setShowSaveModal, showLoadModal, setShowLoadModal, savedForecasts,
             isDirty, handleManualRecalculate, handleClearSession,
-            displayMode, setDisplayMode, ports, spotRoutes, portCostMode, setPortCostMode: handlePortCostModeChange,
+            displayMode, setDisplayMode, matrixFormat, setMatrixFormat, ports, spotRoutes, portCostMode, setPortCostMode: handlePortCostModeChange,
             demurragePct, setDemurragePct, showDemurrage, setShowDemurrage, handleSetShowDemurrage,
             demurrageDays, setDemurrageDays, showDemurrageDays, setShowDemurrageDays, handleSetShowDemurrageDays,
             excludedDemurrages, setExcludedDemurrages, customDemurrages, setCustomDemurrages, customDemurrageDays, setCustomDemurrageDays,

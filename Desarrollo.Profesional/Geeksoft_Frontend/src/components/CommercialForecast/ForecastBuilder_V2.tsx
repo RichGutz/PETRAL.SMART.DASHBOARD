@@ -19,6 +19,8 @@ interface ForecastBuilderProps {
     hideInputs?: boolean;
     displayMode?: 'usd' | 'pct';
     onDisplayModeChange?: (mode: 'usd' | 'pct') => void;
+    matrixFormat?: 'PETRAL' | 'NAVITRANSO';
+    onMatrixFormatChange?: (format: 'PETRAL' | 'NAVITRANSO') => void;
     portCostMode?: 'static' | 'matrix';
     onPortCostModeChange?: (mode: 'static' | 'matrix') => void;
     forecastName?: string;
@@ -43,6 +45,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     hideInputs = false,
     displayMode = 'usd',
     onDisplayModeChange,
+    matrixFormat = 'PETRAL',
+    onMatrixFormatChange,
     forecastName,
     isAdding = false,
     demurragePct = '0',
@@ -765,16 +769,39 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5 h-7.5 w-28 border border-slate-200 shadow-2xs shrink-0">
                             <span className="text-[9.5px] uppercase font-black text-slate-500 px-1">Vista:</span>
                             <button
+                                type="button"
                                 onClick={() => onDisplayModeChange('usd')}
-                                className={`flex-1 text-center py-0.5 text-[9.5px] font-black rounded cursor-pointer transition-colors ${displayMode === 'usd' ? 'bg-white shadow-2xs text-sky-700' : 'text-slate-500 hover:bg-slate-200'}`}
+                                className={`flex-1 text-center py-0.5 text-[9.5px] font-black rounded cursor-pointer transition-colors ${displayMode === 'usd' ? 'bg-white shadow-2xs text-sky-700 font-extrabold' : 'text-slate-500 hover:bg-slate-200'}`}
                             >
                                 UND
                             </button>
                             <button
+                                type="button"
                                 onClick={() => onDisplayModeChange('pct')}
-                                className={`flex-1 text-center py-0.5 text-[9.5px] font-black rounded cursor-pointer transition-colors ${displayMode === 'pct' ? 'bg-white shadow-2xs text-sky-700' : 'text-slate-500 hover:bg-slate-200'}`}
+                                className={`flex-1 text-center py-0.5 text-[9.5px] font-black rounded cursor-pointer transition-colors ${displayMode === 'pct' ? 'bg-white shadow-2xs text-sky-700 font-extrabold' : 'text-slate-500 hover:bg-slate-200'}`}
                             >
                                 %
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Formato Matriz: PETRAL / NAVITRANSO */}
+                    {onMatrixFormatChange && (
+                        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5 h-7.5 border border-slate-200 shadow-2xs shrink-0">
+                            <span className="text-[9.5px] uppercase font-black text-slate-500 px-1">Formato:</span>
+                            <button
+                                type="button"
+                                onClick={() => onMatrixFormatChange('PETRAL')}
+                                className={`px-2 py-0.5 text-[9.5px] font-black rounded cursor-pointer transition-colors ${matrixFormat === 'PETRAL' ? 'bg-white shadow-2xs text-sky-800 font-black' : 'text-slate-500 hover:bg-slate-200'}`}
+                            >
+                                PETRAL
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => onMatrixFormatChange('NAVITRANSO')}
+                                className={`px-2 py-0.5 text-[9.5px] font-black rounded cursor-pointer transition-colors ${matrixFormat === 'NAVITRANSO' ? 'bg-emerald-600 shadow-2xs text-white font-black' : 'text-slate-500 hover:bg-slate-200'}`}
+                            >
+                                NAVITRANSO
                             </button>
                         </div>
                     )}

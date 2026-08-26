@@ -48,6 +48,8 @@ export const ToolsLayout_V2: React.FC = () => {
                         hideInputs={activeTab !== 'financial-matrix' || context.isRibbonCollapsed}
                         displayMode={context.displayMode}
                         onDisplayModeChange={context.setDisplayMode}
+                        matrixFormat={context.matrixFormat}
+                        onMatrixFormatChange={context.setMatrixFormat}
                         isAdding={context.loading}
                         demurragePct={context.demurragePct}
                         showDemurrage={context.showDemurrage}

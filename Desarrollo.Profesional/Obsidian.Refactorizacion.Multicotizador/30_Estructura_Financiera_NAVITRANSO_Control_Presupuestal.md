@@ -1,25 +1,28 @@
-# 🏛️ Especificación Técnica & Plan Maestro: Integración Estándar NAVITRANS en la Matriz Financiera
+# 🏛️ Especificación Técnica & Plan Maestro: Integración Estándar NAVITRANSO en la Matriz Financiera
 
-**Documento**: `30_Estructura_Financiera_NAVITRANS_Control_Presupuestal.md`  
+**Documento**: `30_Estructura_Financiera_NAVITRANSO_Control_Presupuestal.md`  
 **Fuente de Verdad Corporativa**: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Documentos.Petral\Control_Presupuestal_NAVITRANSO.xlsx`  
-**Estado**: 🟢 Aprobado para Implementación y Auditoría Pericial Benoit Blanc  
+**Estado**: 🟢 Aprobado para Implementación Desacoplada y Auditoría Pericial Benoit Blanc  
 **Fecha de Registro**: 26 de Agosto de 2026  
 
 ---
 
 ## 1. Contexto Estratégico y Objetivo
 
-NAVITRANS, como empresa matriz y dueña de NAVIERA PETRAL, rige el estándar contable y la presentación del Estado de Resultados (P&L) y Control Presupuestal.
+NAVITRANSO, como empresa matriz y dueña de NAVIERA PETRAL, rige el estándar contable y la presentación del Estado de Resultados (P&L) y Control Presupuestal.
 El objetivo de esta integración es:
-1. **Unificar el Wording y Agrupación Macro**: Que la Matriz Financiera de PETRAL refleje exactamente las mismas líneas, términos y jerarquía contable de Navitrans.
-2. **Arquitectura de Doble Nivel (Drill-Down)**:
-   - **Nivel 1 (Macro Navitrans)**: Líneas consolidadas para directorio y reportes corporativos.
-   - **Nivel 2 (Micro PETRAL)**: Acordeones desplegables por viaje, puerto, tramo y consumo de búnker.
-3. **Gestión de Filas N/A**: Conservar las filas que en el Excel están marcadas como `N/A` (`VENTA DE TERCEROS`, `OTROS INGRESOS`, `OTROS COSTOS DIRECTOS`) con un interruptor/botón interactivo para **ocultarlas o mostrarlas con un solo clic**.
+1. **Unificar el Wording y Agrupación Macro**: Que la Matriz Financiera de PETRAL refleje exactamente las mismas líneas, términos y jerarquía contable de Navitranso.
+2. **Arquitectura Desacoplada (Nuevo Artefacto Exclusivo)**:
+   - **`FinancialMatrixGridTable.tsx`** se mantiene 100% intacto para la vista clásica `PETRAL`.
+   - **`FinancialMatrixNavitransoGridTable.tsx`** se crea como un nuevo artefacto independiente para la vista `NAVITRANSO`.
+3. **Conmutador Simétrico en el Ribbon Superior**:
+   - Selector **`Formato: [ PETRAL | NAVITRANSO ]`** junto a `Vista: [ UND | % ]`.
+4. **Gestión de Filas N/A**:
+   - Botón interactivo **`[ 👁️ Ocultar Filas N/A ]` / `[ 👁️ Mostrar Filas N/A ]`** en la cabecera para alternar entre la plantilla corporativa completa y la vista operativa limpia.
 
 ---
 
-## 2. Wording y Estructura Literal 100% NAVITRANS
+## 2. Wording y Estructura Literal 100% NAVITRANSO
 
 A continuación se detalla la jerarquía exacta, su tipo contable y su conexión operativa con el motor de cálculo de PETRAL:
 
@@ -27,7 +30,7 @@ A continuación se detalla la jerarquía exacta, su tipo contable y su conexión
  ┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
  │ 🟢 1. BLOQUE VENTAS (Ingresos Totales en Positivo)                                              │
  ├────────────────────────────┬─────────────┬──────────────────────────────────────────────────────┤
- │ Línea Literal Navitrans    │ Tipo Fila   │ Conexión Operativa y Desplegable PETRAL              │
+ │ Línea Literal Navitranso   │ Tipo Fila   │ Conexión Operativa y Desplegable PETRAL              │
  ├────────────────────────────┼─────────────┼──────────────────────────────────────────────────────┤
  │ VENTAS                     │ SUBTOTAL    │ Suma de HIRE + VENTA TERCEROS + DEMORAS + ING. PUERTO│
  │   • HIRE                   │ Operativa   │ Flete de Carga: Q (MT) × F ($/t) por cada viaje      │
@@ -41,7 +44,7 @@ A continuación se detalla la jerarquía exacta, su tipo contable y su conexión
  ┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
  │ 🔴 2. BLOQUE COSTOS DIRECTOS (Gastos del Viaje en Negativo)                                     │
  ├────────────────────────────┬─────────────┬──────────────────────────────────────────────────────┤
- │ Línea Literal Navitrans    │ Tipo Fila   │ Conexión Operativa y Desplegable PETRAL              │
+ │ Línea Literal Navitranso   │ Tipo Fila   │ Conexión Operativa y Desplegable PETRAL              │
  ├────────────────────────────┼─────────────┼──────────────────────────────────────────────────────┤
  │ COSTOS DIRECTOS            │ SUBTOTAL    │ Suma de COMBUSTIBLE + GASTOS PTO + DEMORA + COMISIÓN │
  │   • COMBUSTIBLE            │ Operativa   │ Búnkers IFO + MDO (Navegación + Puerto + Demoras)    │
@@ -99,47 +102,16 @@ Del archivo `Control_Presupuestal_NAVITRANSO.xlsx`, se confirman las fórmulas y
 
 ---
 
-## 4. Diseño del Componente UI en la Matriz Financiera
+## 4. Plan de Ejecución Modular Desacoplado
 
-### 4.1. Barra de Herramientas y Controles
-- **Botón Toggle `[ 👁️ Ocultar Filas N/A ]` / `[ 👁️ Mostrar Filas N/A ]`**:  
-  Permite al analista financiero filtrar con 1 clic las filas que están en `$0` / sin imputación operacional (`VENTA DE TERCEROS`, `OTROS INGRESOS`, `OTROS COSTOS DIRECTOS`).
-- **Control de Frecuencia / Viajes**:  
-  El input de frecuencia mensual alimenta directamente la multiplicación de todos los componentes operacionales del mes.
-
-### 4.2. Acordeones Desplegables de Detalle Operativo (Micro PETRAL)
-Al hacer clic en cualquier fila macro se despliega la sub-grilla operativa:
-- **`HIRE`**: Tabla con lista de tramos, volumen en toneladas (`Q MT`), flete base (`F $/t`) y subtotal por tramo.
-- **`DEMORAS`**: Tabla con desglose por cada puerto de escala (`Puerto`, `Días Demora`, `Tarifa Demurrage $/d`, `Subtotal Demoras $`).
-- **`INGRESOS DE PUERTO`**: Detalle de los muellajes cobrados con bandera `[RF: Activo]`.
-- **`COMBUSTIBLE`**: Tabla con desglose de días y toneladas:
-  - Navegación Mar (días, consumo IFO/MDO, costo).
-  - Operación Puerto (días, consumo IFO/MDO, costo).
-  - Estadías Demoras (días, consumo IFO/MDO, costo).
-- **`GASTOS DE PUERTO`**: Tabla con desglose de costos por puerto (POL, PODs, Loading Master Chile, Muellaje pagado).
-- **`COSTOS DE DEMORA`**: Días totales de demora multiplicados por el TCE Requerido del buque (costo de nave detenida).
-
----
-
-## 5. Protocolo Benoit Blanc: Caso Pericial de Auditoría
-
-Para garantizar que la Matriz Financiera cumpla al 100% con los estándares periciales de auditoría:
-
-| Caso Pericial | Escenario de Prueba | Comprobación Pericial Benoit Blanc |
-|---|---|---|
-| **CASO-NAV-01** | **Estructura y Wording Literal** | Verificar que los 17 nombres de filas coincidan exactamente carácter por carácter con `Control_Presupuestal_NAVITRANSO.xlsx`. |
-| **CASO-NAV-02** | **Suma Algebraica TIME CHARTER EQUIVALENT** | Comprobar que `TIME CHARTER EQUIVALENT = VENTAS + COSTOS DIRECTOS` sin redondeos ni discrepancias de centavos. |
-| **CASO-NAV-03** | **Deducción de Arriendo de Naves** | Verificar que cuando `charterHireCost > 0`, `MARGEN BRUTO = TCE + COSTO DE ARRIENDO NAVES` refleje la deducción exacta. |
-| **CASO-NAV-04** | **Comportamiento del Toggle N/A** | Comprobar que al activar `Ocultar Filas N/A`, las filas de terceros y otros ingresos desaparezcan suavemente sin romper la alineación tabular. |
-| **CASO-NAV-05** | **Consistencia con Multicotizador** | Comprobar que una cotización exportada desde el Multicotizador (`MultiCotizadorExcel.tsx`) cargue sus valores idénticos en las columnas mensuales de la Matriz Financiera. |
-
----
-
-## 6. Plan de Ejecución
-
-1. **Paso 1**: Refactorizar `FinancialMatrixGridTable.tsx` para implementar la agrupación oficial de Navitrans con el toggle interactivo de filas `N/A`.
-2. **Paso 2**: Implementar los acordeones de detalle operativo (Micro PETRAL) en cada fila macro.
-3. **Paso 3**: Probar la compilación con `npx vite build`.
-4. **Paso 4**: Respaldar branch y tag de seguridad.
-5. **Paso 5**: Desplegar al VPS de Producción (`https://forecast.geeksoft.tech`).
-6. **Paso 6**: Ejecutar la auditoría Benoit Blanc punto por punto.
+1. **Paso 1**: Enriquecer `ForecastContext_V2.tsx` con el estado `matrixFormat: 'PETRAL' | 'NAVITRANSO'` (persistido en `sessionStorage`).
+2. **Paso 2**: Enriquecer `ForecastBuilder_V2.tsx` con el conmutador simétrico `Formato: [ PETRAL | NAVITRANSO ]` en el Ribbon superior.
+3. **Paso 3**: Crear el nuevo archivo independiente `FinancialMatrixNavitransoGridTable.tsx` con:
+   - Las 17 filas oficiales de Navitranso.
+   - Acordeones interactivos con desglose operativo PETRAL.
+   - Botón toggle de cabecera `[ 👁️ Ocultar Filas N/A ]` / `[ 👁️ Mostrar Filas N/A ]`.
+   - Compatibilidad total con edición de frecuencia mensual.
+4. **Paso 4**: Conmutar en `FinancialMatrixMainContainer.tsx` entre `FinancialMatrixGridTable` y `FinancialMatrixNavitransoGridTable`.
+5. **Paso 5**: Compilar con `npx vite build` y verificar cero errores.
+6. **Paso 6**: Respaldar branch y tag de seguridad.
+7. **Paso 7**: Desplegar al VPS de Producción (`https://forecast.geeksoft.tech`).

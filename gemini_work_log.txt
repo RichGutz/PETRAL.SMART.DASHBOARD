@@ -247,3 +247,7 @@ CONCURRENCY & QC SUMMARY:
 - Descargados los 174 viajes de Supabase al JSON semilla `historicalDemurrageData.json`.
 - Migrado localStorage a `petral_demurrage_records_v2`.
 - Desplegado y verificado en https://forecast.geeksoft.tech.
+
+[2026-08-26 18:14:00] Branch Tag PRE.MATRIZ.NAVITRANSO Re-grabado:
+- Branch y Tag actualizados en GitHub.
+- Listos para la implementación de la Matriz Financiera Navitrans.
