@@ -310,3 +310,8 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Documentada la Vuelta 31 en 07_Especificaciones_Comerciales_Grilla_y_Puertos.md.
 - Descubierta la causa raiz: Ventana movil de 24 meses (`minYearMonthCutoff = maxYearMonth - 24 + 1`) que en base a la fecha de referencia captura 25 vs 26 viajes de 2024.
 - Respaldadas las dos capturas PNG en las carpetas oficiales.
+
+[2026-08-26 18:01:00] [SINCRONIZACION TOTAL DE DEMORAS (174 VIAJES) & DESPLIEGUE VPS]
+- Sincronizados los 174 viajes oficiales de Supabase a `historicalDemurrageData.json`.
+- Migrado `STORAGE_KEY` a `'petral_demurrage_records_v2'` para invalidar la cache vieja local de 161 registros.
+- Desplegado a https://forecast.geeksoft.tech. Todos los usuarios ven 119 recaladas idénticas (1.86 d) en ILO.

@@ -587,6 +587,54 @@ Ante cualquier lógica de negocio, campo ambiguo o requerimiento de suma:
 
 ---
 
-*Caso cerrado y sellado en bitácora por Benoit Blanc y Sherlock Holmes — 18.08.2026.*
+## 15. Caso Pericial N° 05: El Misterio de las 118 vs 119 Recaladas en ILO (Desincronización de LocalStorage vs Supabase)
+
+**Fecha**: 26 de Agosto de 2026  
+**Investigador**: Detective Benoit Blanc  
+**Evidencia Física**: Dos capturas de pantalla simultáneas del Multicotizador donde dos usuarios mirando **la misma ruta, con las mismas fechas y el mismo puerto (ILO)** veían datos sutilmente discordantes:
+- **Usuario A**: `Promedio: 1.85 d (44.4 h) | Mediana: 0.58 d | Recaladas: 118` *(2026: 38 vjes, 2025: 55 vjes, 2024: 25 vjes)*.
+- **Usuario B**: `Promedio: 1.86 d (44.6 h) | Mediana: 0.63 d | Recaladas: 119` *(2026: 38 vjes, 2025: 55 vjes, 2024: 26 vjes)*.
+
+---
+
+### 🕵️‍♂️ 15.1. El Foco del Crimen: El Viaje Fantasma N° 26 de 2024
+Al desglosar las dos capturas, el detective descubrió un patrón revelador:
+1. **En 2026**: Ambos usuarios tenían **38 viajes** exactos (Meses 01 al 07).
+2. **En 2025**: Ambos usuarios tenían **55 viajes** exactos (12 meses completos).
+3. **En 2024**: El Usuario A tenía **25 viajes**, mientras que el Usuario B tenía **26 viajes** (+1 viaje adicional).
+
+$$\text{Usuario A: } 38 + 55 + 25 = \mathbf{118\text{ recaladas}} \quad \text{vs} \quad \text{Usuario B: } 38 + 55 + 26 = \mathbf{119\text{ recaladas}}$$
+
+---
+
+### 🔍 15.2. La Autopsia Técnica: ¿De dónde salió ese viaje extra?
+
+El peritaje del código en `PortDemurrageRatesService.ts` reveló una doble capa de persistencia:
+1. **Capa 1 (Semilla Inicial en Frontend)**:
+   - El archivo empaquetado `src/data/historicalDemurrageData.json` contenía una base inicial de **161 registros**.
+   - En esa base de 161 registros, la ventana móvil de 24 meses arrojaba exactamente **118 recaladas** para ILO.
+2. **Capa 2 (Base de Datos Central en la Nube - Supabase)**:
+   - Al consultar la tabla `demurrage_records` directamente en Supabase, el conteo real era de **174 registros**.
+   - Con los 174 registros, se incluía el viaje histórico adicional de 2024, arrojando **119 recaladas** para ILO.
+3. **El Crimen de la Caché Local (`localStorage`)**:
+   - `PortDemurrageRatesService.getRecords()` leía primero la clave `'petral_demurrage_records_v1'` en el navegador.
+   - El **Usuario A** tenía en su navegador la caché vieja de 161 viajes (118 recaladas).
+   - El **Usuario B** ya había sincronizado con Supabase y tenía en su navegador los 174 viajes (119 recaladas).
+
+---
+
+### 🛠️ 15.3. Cirugía Forense y Resolución Definitiva:
+
+1. **Sincronización Total del JSON Semilla**:
+   - Se descargaron los 174 registros completos de Supabase y se sobreescribió `historicalDemurrageData.json`.
+2. **Invalidación Universal de Caché (`v2`)**:
+   - Se migró la clave a `'petral_demurrage_records_v2'` en `PortDemurrageRatesService.ts`.
+   - Se programó una verificación que detecta si el navegador tiene menos registros que la semilla oficial para forzar la actualización inmediata.
+3. **Resultado**: Todos los usuarios y navegadores convergen ahora de forma 100% determinística y ven **119 recaladas (1.86 d)**.
+
+---
+
+*Caso cerrado y sellado en bitácora por Benoit Blanc — 26.08.2026.*
+
 
 

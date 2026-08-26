@@ -242,3 +242,8 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-26 17:50:00] Caso Benoit Blanc - Misterio 118 vs 119 Recaladas en Demurrage ILO:
 - Tabla independiente de auditoria Serie 31 insertada en 07_Especificaciones_Comerciales_Grilla_y_Puertos.md.
 - Descubierta la causa raiz matemática de la ventana móvil de 24 meses.
+
+[2026-08-26 18:01:00] Sincronización Total de Demoras (174 viajes) & Despliegue VPS:
+- Descargados los 174 viajes de Supabase al JSON semilla `historicalDemurrageData.json`.
+- Migrado localStorage a `petral_demurrage_records_v2`.
+- Desplegado y verificado en https://forecast.geeksoft.tech.
