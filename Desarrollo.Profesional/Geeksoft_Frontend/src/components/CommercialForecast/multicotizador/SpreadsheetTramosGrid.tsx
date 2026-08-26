@@ -195,8 +195,15 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     const totalDescargas = liveCalc?.totalQuantity ?? puertosConfig.reduce((sum, p) => sum + (p.action === 'DESCARGAR' ? (Number(p.quantity) || 0) : 0), 0);
     const selectedVesselObj = (vessels || []).find(v => v.vessel_id === selectedVessel);
 
-    const getSuggestedDemurrage = (portId: string, action: string) => {
+    const getSuggestedDemurrage = (portId: string, action: string, portIdx?: number) => {
         if (!portId || (action !== 'CARGAR' && action !== 'DESCARGAR')) return 0;
+        if (demurrageMode === 'O') {
+            const saved = portIdx !== undefined ? puertosConfig[portIdx]?.demurrage_days : undefined;
+            if (saved !== undefined && saved !== '' && saved !== null) {
+                return Number(saved) || 0;
+            }
+            return 0;
+        }
         return PortDemurrageRatesService.resolveDemurrageDays(
             portId,
             selectedVessel,
@@ -372,7 +379,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                     value={puertosConfig[0]?.demurrage_days !== undefined && puertosConfig[0]?.demurrage_days !== '' ? puertosConfig[0]?.demurrage_days : ''}
                                     onChange={(e) => updatePuertoConfigField(0, 'demurrage_days', e.target.value)}
                                     className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-sky-950 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                    placeholder={getSuggestedDemurrage(tramos[0]?.origin_port_id, 'CARGAR').toFixed(2)}
+                                    placeholder={getSuggestedDemurrage(tramos[0]?.origin_port_id, 'CARGAR', 0).toFixed(2)}
                                 />
                             ) : (
                                 <span className="text-slate-350 select-none pr-2">—</span>
@@ -647,7 +654,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                             value={puertosConfig[idx + 1]?.demurrage_days !== undefined && puertosConfig[idx + 1]?.demurrage_days !== '' ? puertosConfig[idx + 1]?.demurrage_days : ''}
                                             onChange={(e) => updatePuertoConfigField(idx + 1, 'demurrage_days', e.target.value)}
                                             className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-sky-950 focus:outline-none text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                            placeholder={getSuggestedDemurrage(tr.destination_port_id, puertosConfig[idx + 1]?.action).toFixed(2)}
+                                            placeholder={getSuggestedDemurrage(tr.destination_port_id, puertosConfig[idx + 1]?.action, idx + 1).toFixed(2)}
                                         />
                                     ) : (
                                         <span className="text-slate-350 select-none pr-2">—</span>

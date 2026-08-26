@@ -408,11 +408,12 @@ export class PortDemurrageRatesService {
                 const num = Number(originalDays);
                 if (!isNaN(num)) return num;
             }
+            return 0;
         }
 
         const profile = this.getDemurrageProfile(portId, vesselId);
 
-        if (mode === 'P' || mode === 'O') {
+        if (mode === 'P') {
             return profile.annual_average;
         }
 

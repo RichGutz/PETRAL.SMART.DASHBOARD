@@ -566,10 +566,9 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         setDemurrageMode(mode);
         if (mode === 'O') {
             setPuertosConfig(prev => prev.map((p, idx) => {
-                if (originalDemurrageDaysMap[idx] !== undefined) {
-                    return { ...p, demurrage_days: originalDemurrageDaysMap[idx] };
-                }
-                return p;
+                const saved = originalDemurrageDaysMap[idx];
+                const resolved = (saved !== undefined && saved !== null && saved !== '') ? String(saved) : '0.00';
+                return { ...p, demurrage_days: resolved };
             }));
         } else if (mode === 'P') {
             setPuertosConfig(prev => prev.map(p => ({ ...p, demurrage_days: '' })));
@@ -972,25 +971,23 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 : buildPuertosConfigFromTramos(enrichedTramos, extractedClient || selectedClient);
             setPuertosConfig(pConfig);
 
-            // Auto-Detección de Demora Original (Modo 'O' prioritario si trae demoras grabadas)
+            // Auto-Detección de Demora Original (Modo 'O' por defecto: respeta lo grabado o 0.00 si no se grabó nada)
             const origDays: Record<number, number | string> = {};
-            let hasSavedDemurrage = false;
             if (pConfig && Array.isArray(pConfig)) {
                 pConfig.forEach((p: any, idx: number) => {
                     if (p.demurrage_days !== undefined && p.demurrage_days !== '' && p.demurrage_days !== null) {
                         origDays[idx] = p.demurrage_days;
-                        if (Number(p.demurrage_days) >= 0) {
-                            hasSavedDemurrage = true;
-                        }
+                    } else {
+                        origDays[idx] = '0.00';
                     }
                 });
             }
             setOriginalDemurrageDaysMap(origDays);
-            if (hasSavedDemurrage) {
-                setDemurrageMode('O');
-            } else {
-                setDemurrageMode('P');
-            }
+            setDemurrageMode('O');
+            setPuertosConfig(pConfig.map((p: any, idx: number) => ({
+                ...p,
+                demurrage_days: (origDays[idx] !== undefined && origDays[idx] !== '') ? String(origDays[idx]) : '0.00'
+            })));
         }
 
         // 4. Buque (Paso 5)
