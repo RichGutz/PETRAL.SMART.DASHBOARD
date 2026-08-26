@@ -161,3 +161,7 @@ CONCURRENCY & QC SUMMARY:
 - Reseteo deterministico de TCE Req y TCE Diff a $0 en grilla limpia.
 - Desglose tripartito de auditoria en Bunker Expenses (Mar, Puerto, Demurrage).
 - Build Vite completado exitosamente (exit code 0).
+
+[2026-08-26 11:59:00] VPS Deployment completed successfully to https://forecast.geeksoft.tech (Hostinger VPS 91.108.125.253).
+
+[2026-08-26 12:07:00] Maestro de Cierres (ContractsMaster_V2.tsx) actualizado: Pestaña 'SPCC' siempre activa y prioritaria con nombre estandarizado 'SPCC' y filtrado/conteo consistente. Build Vite exitoso (8.56s).

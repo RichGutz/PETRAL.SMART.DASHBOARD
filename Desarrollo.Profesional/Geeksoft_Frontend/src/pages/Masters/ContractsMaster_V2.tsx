@@ -137,19 +137,43 @@ export const ContractsMaster: React.FC = () => {
         });
     }, [allRoutes]);
 
-    // 2. Clientes Activos que tienen contratos o presencia en catálogo
+    // Helper de normalización de cliente (SPCC, NEXA, etc.)
+    const normalizeClientId = (val?: string | null): string => {
+        if (!val) return '';
+        const upper = String(val).toUpperCase().trim();
+        if (upper.includes('SPCC') || upper.includes('SOUTHERN')) return 'SPCC';
+        if (upper.includes('NEXA')) return 'NEXA';
+        return upper;
+    };
+
+    // 2. Clientes Activos que tienen contratos o presencia en catálogo (SPCC siempre garantizado)
     const activeClients = useMemo(() => {
         const clientSet = new Set<string>();
+        
+        // Garantizar SPCC y NEXA siempre como opciones prioritarias fijas
+        clientSet.add("SPCC");
+        clientSet.add("NEXA");
+
         contractRoutesAll.forEach(r => {
-            const cid = r.client_id || r.legs_data?.contract_metadata?.client_id || (r.name.toUpperCase().startsWith("SPCC") ? "SPCC" : "NEXA");
-            if (cid) clientSet.add(cid.toUpperCase());
+            const rawCid = r.client_id || r.legs_data?.contract_metadata?.client_id || (r.name.toUpperCase().startsWith("SPCC") ? "SPCC" : (r.name.toUpperCase().startsWith("NEXA") ? "NEXA" : ""));
+            const cid = normalizeClientId(rawCid);
+            if (cid) clientSet.add(cid);
         });
+
         (clients || []).forEach((c: any) => {
-            const cid = typeof c === 'string' ? c : (c.client_id || c.name || c.id);
-            if (cid && c.is_active !== false) clientSet.add(cid.toString().toUpperCase());
+            const rawCid = typeof c === 'string' ? c : (c.client_id || c.client_name || c.name || c.id);
+            const cid = normalizeClientId(rawCid);
+            if (cid && c.is_active !== false) clientSet.add(cid);
         });
+
         const list = Array.from(clientSet).filter(Boolean);
-        return list.length > 0 ? list : ['NEXA', 'SPCC'];
+        return list.sort((a, b) => {
+            if (a === 'SPCC') return -1;
+            if (b === 'SPCC') return 1;
+            if (a === 'NEXA') return -1;
+            if (b === 'NEXA') return 1;
+            return a.localeCompare(b);
+        });
     }, [contractRoutesAll, clients]);
 
     // Auto-seleccionar primer cliente si no hay uno elegido
@@ -162,13 +186,40 @@ export const ContractsMaster: React.FC = () => {
     // 3. Filtrar rutas pertenecientes al cliente seleccionado
     const clientRoutes = useMemo(() => {
         if (!selectedClientId) return [];
-        const cidUpper = selectedClientId.toUpperCase();
+        const normSelected = normalizeClientId(selectedClientId);
         return contractRoutesAll.filter(r => {
-            const rCid = (r.client_id || r.legs_data?.contract_metadata?.client_id || (r.name.toUpperCase().startsWith("SPCC") ? "SPCC" : "NEXA")).toUpperCase();
+            const rawCid = r.client_id || r.legs_data?.contract_metadata?.client_id || (r.name.toUpperCase().startsWith("SPCC") ? "SPCC" : (r.name.toUpperCase().startsWith("NEXA") ? "NEXA" : ""));
+            const normCid = normalizeClientId(rawCid);
             const rName = (r.name || '').toUpperCase();
-            return rCid === cidUpper || rName.startsWith(cidUpper);
+            return normCid === normSelected || rName.startsWith(normSelected) || (normSelected === 'SPCC' && (rName.includes('SPCC') || rName.includes('SOUTHERN')));
         });
     }, [contractRoutesAll, selectedClientId]);
+
+    // Helper de visualización de nombres de pestañas
+    const getClientDisplayName = (cid: string): string => {
+        const norm = normalizeClientId(cid);
+        if (norm === 'SPCC') return 'SPCC';
+        if (norm === 'NEXA') return 'Nexa Resources';
+        const clientObj = (clients || []).find((c: any) => {
+            const id = typeof c === 'string' ? c : (c.client_id || c.client_name || c.name || c.id);
+            return id && normalizeClientId(String(id)) === norm;
+        });
+        if (clientObj && typeof clientObj !== 'string') {
+            return clientObj.client_name || clientObj.name || cid;
+        }
+        return cid;
+    };
+
+    // Helper de conteo de rutas por cliente
+    const getRouteCountForClient = (cid: string): number => {
+        const targetNorm = normalizeClientId(cid);
+        return contractRoutesAll.filter(r => {
+            const rawCid = r.client_id || r.legs_data?.contract_metadata?.client_id || (r.name.toUpperCase().startsWith("SPCC") ? "SPCC" : (r.name.toUpperCase().startsWith("NEXA") ? "NEXA" : ""));
+            const rCidNorm = normalizeClientId(rawCid);
+            const rName = (r.name || '').toUpperCase();
+            return rCidNorm === targetNorm || rName.startsWith(targetNorm) || (targetNorm === 'SPCC' && (rName.includes('SPCC') || rName.includes('SOUTHERN')));
+        }).length;
+    };
 
     // 4. Agrupar rutas por AÑO DE VIGENCIA (Orden Descendente)
     const groupedByYear = useMemo(() => {
@@ -249,13 +300,9 @@ export const ContractsMaster: React.FC = () => {
                         {/* Pestañas Horizontales de Clientes */}
                         <div className="flex bg-slate-200 p-1 rounded-lg gap-1 overflow-x-auto">
                             {activeClients.map(cid => {
-                                const isSelected = selectedClientId === cid;
-                                const clientObj = (clients || []).find((c: any) => (typeof c === 'string' ? c : (c.client_id || c.name || c.id)) === cid);
-                                const displayName = (clientObj && typeof clientObj !== 'string') ? (clientObj.client_name || clientObj.name || cid) : cid;
-                                const routeCount = contractRoutesAll.filter(r => {
-                                    const rCid = (r.client_id || r.legs_data?.contract_metadata?.client_id || (r.name.toUpperCase().startsWith("SPCC") ? "SPCC" : "NEXA")).toUpperCase();
-                                    return rCid === cid.toUpperCase() || (r.name || '').toUpperCase().startsWith(cid.toUpperCase());
-                                }).length;
+                                const isSelected = selectedClientId === cid || (selectedClientId && normalizeClientId(selectedClientId) === normalizeClientId(cid));
+                                const displayName = getClientDisplayName(cid);
+                                const routeCount = getRouteCountForClient(cid);
 
                                 return (
                                     <button
