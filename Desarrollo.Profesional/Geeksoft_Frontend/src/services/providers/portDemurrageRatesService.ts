@@ -46,7 +46,7 @@ export interface PortVesselDemurrageProfile {
     voyage_count: number;
 }
 
-const STORAGE_KEY = 'petral_demurrage_records_v1';
+const STORAGE_KEY = 'petral_demurrage_records_v2';
 
 export class PortDemurrageRatesService {
 
@@ -89,11 +89,12 @@ export class PortDemurrageRatesService {
      * Obtiene la lista completa de registros históricos de viajes.
      */
     public static getRecords(): DemurrageRecord[] {
+        const seedData = (initialHistoricalData || []) as unknown as DemurrageRecord[];
         try {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed) && parsed.length > 0) {
+                if (Array.isArray(parsed) && parsed.length >= seedData.length) {
                     return parsed;
                 }
             }
@@ -101,9 +102,8 @@ export class PortDemurrageRatesService {
             console.error('Error leyendo demoras de localStorage:', e);
         }
 
-        // Fallback a la data histórica sembrada
-        const seedData = (initialHistoricalData || []) as unknown as DemurrageRecord[];
-        this.saveRecords(seedData);
+        // Fallback e inicialización a la data histórica oficial sincronizada (174 viajes)
+        this.saveRecords(seedData, false);
         return seedData;
     }
 

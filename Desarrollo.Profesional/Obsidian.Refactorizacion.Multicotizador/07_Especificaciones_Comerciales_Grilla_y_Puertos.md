@@ -835,11 +835,25 @@ A partir de la auditoría pericial de Benoit Blanc (22.08.2026), se diseñó e i
 
 ---
 
+### 🕵️‍♂️ 5.31. Trigésima Primera Vuelta (Serie 31: El Misterio Pericial de las 118 vs 119 Recaladas en Demurrage ILO)
+
+A partir de la inspección pericial reportada en pantalla donde para el mismo **Puerto ILO** dos cotizaciones/rutas visualizaban estadísticas ligeramente distintas (**118 recaladas / 1.85 d** vs **119 recaladas / 1.86 d**):
+
+| # | Componente Auditado | Escenario A (118 Recaladas) | Escenario B (119 Recaladas) | Dictamen Pericial / Causa del Crimen | Estado |
+| :-: | :--- | :--- | :--- | :--- | :-: |
+| **31.1** | **`Total Recaladas 24M`** | **118 recaladas** | **119 recaladas** (+1 recalada) | **El Crimen del Viaje Limítrofe en la Ventana Móvil de 24 Meses:** `PortDemurrageRatesService.getDemurrageProfile` calcula el corte como `minYearMonthCutoff = maxYearMonth - 24 + 1`. Al cambiar la fecha base de cálculo entre Julio 2026 y Junio 2026 (o registros limítrofes en `localStorage`), la ventana captura 25 vs 26 viajes del año 2024. | 🔍 DETECTADO |
+| **31.2** | **`Promedio 24M (Días / Horas)`** | **1.85 d** (44.4 h) | **1.86 d** (44.6 h) | **Sensibilidad Estadística:** La inclusión del viaje adicional de 2024 altera la media ponderada en apenas $+0.01\text{ d}$ (+0.2 horas) sobre el universo total de recaladas. | 🔍 DETECTADO |
+| **31.3** | **`Mediana 24M`** | **0.58 d** (13.9 h) | **0.63 d** (15.1 h) | **Desplazamiento del Percentil 50:** El viaje número 119 desplaza el elemento central en el ordenamiento `calcMedian()`. | 🔍 DETECTADO |
+| **31.4** | **`Desglose por Años`** | 2026: 38 vjes<br>2025: 55 vjes<br>**2024: 25 vjes** | 2026: 38 vjes<br>2025: 55 vjes<br>**2024: 26 vjes** | **Foco del Crimen:** En 2026 y 2025 ambos escenarios son 100% idénticos (93 viajes). La diferencia de +1 viaje radica exclusivamente en el mes más antiguo de 2024. | 🔍 DETECTADO |
+
+---
+
 ## 📄 Archivos Relacionados
 * **Documento UI Cabecera y Búnker:** [`06_Especificaciones_Comerciales_UI_Header_y_Bunker.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/06_Especificaciones_Comerciales_UI_Header_y_Bunker.md)
 * **Documento Autopsia Pericial Benoit Blanc:** [`16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/16_Autopsia_Pericial_y_Metodologia_Benoit_Blanc_Estabilidad_Monolitica.md)
 * **Protocolo de Control de Calidad Triangular:** [`03_Protocolo_de_Control_de_Calidad_QC_Triangular_UI_Backend_Excel.md`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/03_Protocolo_de_Control_de_Calidad_QC_Triangular_UI_Backend_Excel.md)
 * **Script Flujograma Python:** [`FLUJOGRAMA_Arquitectura_Multicotizador_V1.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/FLUJOGRAMA_Arquitectura_Multicotizador_V1.py)
+
 
 
 

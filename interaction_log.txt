@@ -288,3 +288,25 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Sobrescrito `--font-mono` y la clase `.font-mono` en `index.css` para redirigir siempre a `'Segoe UI', 'Inter', sans-serif`.
 - Removida la importacion de `JetBrains Mono` de Google Fonts.
 - Desplegado a Produccion VPS (https://forecast.geeksoft.tech). Ceros 100% redondos y uniformes en toda la pantalla.
+
+[2026-08-26 17:10:00] [BRANCH TAG PRE.MATRIZ.NAVITRANSO RESPALDADO]
+- Branch `PRE.MATRIZ.NAVITRANSO` y Tag `PRE.MATRIZ.NAVITRANSO` creados y pusheados a GitHub.
+- Rama `main` sincronizada al 100% con `origin/main`.
+
+[2026-08-26 17:14:00] [ESTUDIO Y MAPEO FINANCIERO CONTROL PRESUPUESTAL NAVITRANS]
+- Analizado el archivo Excel `Control_Presupuestal_NAVITRANSO.xlsx`.
+- Documentado el mapeo 1:1 de formulas e ingresos/costos en 30_Estructura_Financiera_NAVITRANS_Control_Presupuestal.md.
+- Identificadas las equivalencias: HIRE = Flete, Demoras (Venta) vs Costo Demora (TCE Nave), Margen Bruto y Costo de Arriendo.
+
+[2026-08-26 17:21:00] [TABLA MAESTRA DE AGRUPACION DE RUBROS NAVITRANS]
+- Integrada la Seccion 4 y 5 en 30_Estructura_Financiera_NAVITRANS_Control_Presupuestal.md detallando que conceptos, formulas y variables se agrupan en cada rubro (Hire, Demoras, Muellaje, Bunkers, Port Costs, Costo Demora, Comisiones, TCE, Arriendo y Margen Bruto).
+
+[2026-08-26 17:40:00] [DOCUMENTACION COMPLETA Y PLAN MAESTRO BENOIT BLANC NAVITRANS]
+- Documentado el plan maestro integral en 30_Estructura_Financiera_NAVITRANS_Control_Presupuestal.md.
+- Definida la arquitectura de doble nivel (Macro Navitrans + Micro PETRAL con toggle N/A).
+- Definidos los 5 casos de auditoria pericial Benoit Blanc (CASO-NAV-01 al CASO-NAV-05).
+
+[2026-08-26 17:50:00] [AUTOPSIA PERICIAL BENOIT BLANC SERIE 31 - MISTERIO 118 VS 119 RECALADAS EN ILO]
+- Documentada la Vuelta 31 en 07_Especificaciones_Comerciales_Grilla_y_Puertos.md.
+- Descubierta la causa raiz: Ventana movil de 24 meses (`minYearMonthCutoff = maxYearMonth - 24 + 1`) que en base a la fecha de referencia captura 25 vs 26 viajes de 2024.
+- Respaldadas las dos capturas PNG en las carpetas oficiales.

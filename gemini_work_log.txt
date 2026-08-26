@@ -224,3 +224,21 @@ CONCURRENCY & QC SUMMARY:
 - Redefinida la variable `--font-mono` y clase `.font-mono` para forzar Segoe UI / Inter en toda la aplicacion.
 - Eliminada dependencia de JetBrains Mono.
 - Desplegado y verificado en vivo en https://forecast.geeksoft.tech.
+
+[2026-08-26 17:10:00] Branch & Tag PRE.MATRIZ.NAVITRANSO:
+- Guardado y pusheado a origin.
+- Workspace en rama main limpio y actualizado.
+
+[2026-08-26 17:14:00] Mapeo Control Presupuestal Navitrans:
+- Expediente 30_Estructura_Financiera_NAVITRANS_Control_Presupuestal.md creado con el analisis forense de Control_Presupuestal_NAVITRANSO.xlsx.
+- Reglas de negocio e integracion P&L Navitrans ➔ Matriz Financiera PETRAL 100% clarificadas.
+
+[2026-08-26 17:21:00] Tabla Maestra de Agrupacion de Rubros Navitrans:
+- Definida la matriz de agrupacion formal para HIRE, Demoras, Ingresos de Puerto, Combustible, Gastos de Puerto, Costo de Demoras, Comisiones, Time Charter Equivalent, Arriendo y Margen Bruto.
+
+[2026-08-26 17:40:00] Plan Maestro y Protocolo Benoit Blanc Navitrans:
+- Documentado expediente completo en 30_Estructura_Financiera_NAVITRANS_Control_Presupuestal.md con arquitectura de doble nivel, toggle interactivo de N/A y 5 casos periciales de auditoria.
+
+[2026-08-26 17:50:00] Caso Benoit Blanc - Misterio 118 vs 119 Recaladas en Demurrage ILO:
+- Tabla independiente de auditoria Serie 31 insertada en 07_Especificaciones_Comerciales_Grilla_y_Puertos.md.
+- Descubierta la causa raiz matemática de la ventana móvil de 24 meses.
