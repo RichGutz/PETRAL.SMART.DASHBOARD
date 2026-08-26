@@ -212,3 +212,5 @@ CONCURRENCY & QC SUMMARY:
 - Grilla de tramos e inputs actualizados a fuente `Consolas` / `JetBrains Mono` / `ui-monospace`.
 - Columna `F ($/t)` configurada con 2 decimales fijos obligatorios (centavos).
 - Compilación Vite OK (14.44s).
+
+[2026-08-26 16:40:00] VPS Deployment to https://forecast.geeksoft.tech completed successfully.

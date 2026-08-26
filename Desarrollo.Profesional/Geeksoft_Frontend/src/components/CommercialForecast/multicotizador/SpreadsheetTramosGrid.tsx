@@ -217,8 +217,8 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     return (
         <div className="overflow-x-auto border border-slate-300 rounded bg-white shadow-sm flex flex-col mb-1">
             <table 
-                className="w-full border-collapse text-[12px] font-mono table-fixed select-text"
-                style={{ fontFamily: "'Consolas', 'JetBrains Mono', 'Courier New', ui-monospace, monospace" }}
+                className="w-full border-collapse text-[12px] tabular-nums table-fixed select-text"
+                style={{ fontFamily: "'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif" }}
             >
                 <colgroup>
                     <col className="w-[50px]" />

@@ -15,6 +15,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #f8fafc; /* Slate 50 for clean minimal background */
+  font-feature-settings: "zero" 0;
+  font-variant-numeric: normal;
+}
+
+/* Forzar ceros redondos estándar (sin punto ni barra en el medio) */
+*, ::before, ::after {
+  font-feature-settings: "zero" 0;
 }
 
 /* AG-Grid Customizations for Minimalist UI */

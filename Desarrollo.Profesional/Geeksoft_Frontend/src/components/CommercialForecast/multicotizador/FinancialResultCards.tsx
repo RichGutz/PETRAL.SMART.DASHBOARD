@@ -166,8 +166,8 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
 
     return (
         <div 
-            className="grid grid-cols-1 lg:grid-cols-4 gap-3 flex-shrink-0 mt-3 font-mono"
-            style={{ fontFamily: "'Consolas', 'JetBrains Mono', 'Courier New', ui-monospace, monospace" }}
+            className="grid grid-cols-1 lg:grid-cols-4 gap-3 flex-shrink-0 mt-3 tabular-nums"
+            style={{ fontFamily: "'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif" }}
         >
             
             {/* BLOQUE IZQUIERDO: 3 TARJETAS EN 3 COLUMNAS */}

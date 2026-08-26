@@ -273,3 +273,8 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Aplicada tipografia tecnica `Consolas` / `JetBrains Mono` / `ui-monospace` en la grilla y tarjetas financieras.
 - Columna `F ($/t)` (Tarifa de Flete) configurada para mostrar siempre 2 decimales / centavos fijos (ej. `23.10` en vez de `23.1`).
 - Frontend compilado exitosamente con Vite (14.44s).
+
+[2026-08-26 16:40:00] [DEPLOY VPS HOSTINGER COMPLETADO (91.108.125.253 | https://forecast.geeksoft.tech)]
+- Despliegue completado con exito.
+- Frontend actualizado con tipografia Consolas y centavos fijos en columna F ($/t).
+- Backend FastAPI reiniciado y certificado SSL verificado en vivo.
