@@ -247,3 +247,23 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Simulacion matricial ejecutada sobre las 11 rutas de SPCC en Supabase (routes_quotes).
 - 11 de 11 rutas (100.00%) pasaron la prueba con Delta $0.00 exacto en Revenue, Port Costs, Bunker, PnL y TCE Realizado.
 - Registrado en 28_Metodo_Benoit_Blanc_FINALE_Matriz_Financiera.md (Seccion 7.2).
+
+[2026-08-26 15:45:00] [DEPLOY VPS HOSTINGER (91.108.125.253 | https://forecast.geeksoft.tech)]
+- Despliegue completado con exito.
+- Backend FastAPI actualizado con la fidelidad inmutable al snapshot financial_summary y regla buque comodin en produccion en vivo.
+
+[2026-08-26 15:49:00] [ARQUITECTURA DE TELEMETRIA THINKPAD + WOL UNIFI]
+- Disenado y documentado el sistema de monitoreo remoto por SSH en 29_Cron_JOB_VPS_HEALTH.md.
+- Script Python perfeccionado con sondas automaticas de RAM, CPU, Disco, Uptime, Servicios y URLs HTTPS para Hostinger (PETRAL) y Contabo (InAndes/APEFAC).
+- Generador de correo HTML responsivo con semaforo de alertas y envio SMTP diario.
+
+[2026-08-26 15:53:00] [SONDAS SUPABASE DOCKER INTEGRADAS]
+- Integradas sondas para la instancia de Supabase Docker en Contabo (PostgreSQL, pg_isready, pool de conexiones activas, Kong REST API Gateway y PostgREST) en 29_Cron_JOB_VPS_HEALTH.md.
+
+[2026-08-26 15:59:00] [SISTEMA RCLONE + AUTO-MANTENIMIENTO + BACKUP GDRIVE EMPRESA]
+- Integrado modulo de auto-mantenimiento preventivo (Inodos, Docker prune, Journalctl vacuum, PostgreSQL VACUUM ANALYZE).
+- Integrado modulo de extraccion pg_dumpall de Supabase y subida automatica a Google Drive Empresa con Rclone.
+- Guia completa de configuracion y script para ThinkPad documentado en 29_Cron_JOB_VPS_HEALTH.md.
+
+[2026-08-26 16:03:00] [PROCEDIMIENTO OPERATIVO RDP THINKPAD EN REPISA]
+- Agregada Seccion 6 en 29_Cron_JOB_VPS_HEALTH.md con el paso a paso detallado para conexion remota por mstsc (RDP), instalacion de Paramiko/Rclone, autenticacion con Google Workspace y activacion del Programador de Tareas.
