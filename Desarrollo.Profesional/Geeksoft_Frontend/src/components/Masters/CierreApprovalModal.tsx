@@ -25,7 +25,10 @@ export const CierreApprovalModal: React.FC<CierreApprovalModalProps> = ({
 
     if (!isOpen || !route) return null;
 
-    const isAdmin = user?.role === 'ADMIN';
+    const isAuthorized = user?.role === 'ADMIN' || 
+                         user?.email?.toLowerCase().includes('fharten') || 
+                         user?.full_name?.toLowerCase().includes('harten') ||
+                         (user as any)?.username?.toLowerCase()?.includes('fharten');
     const unpacked = MulticotizadorRetrieverService.unpackQuoteData(route);
     const legs = route.legs_data || {};
     const meta = legs.contract_metadata || {};
@@ -39,13 +42,13 @@ export const CierreApprovalModal: React.FC<CierreApprovalModalProps> = ({
     const approvalNotes = route.approval_notes || legs.approval_notes || meta.approval_notes || '';
 
     const handleAction = async (newStatus: 'FIRME' | 'BORRADOR') => {
-        if (!isAdmin) {
-            setErrorMsg('Acción denegada: Solo los administradores pueden autorizar o cambiar el estado de este cierre.');
+        if (!isAuthorized) {
+            setErrorMsg('Acción denegada: Solo los administradores o personal autorizado pueden autorizar o cambiar el estado de este cierre.');
             return;
         }
 
         if (!password.trim()) {
-            setErrorMsg('Debe ingresar su contraseña de Administrador como firma de seguridad.');
+            setErrorMsg('Debe ingresar su contraseña de usuario como firma de seguridad.');
             return;
         }
 
@@ -190,12 +193,12 @@ export const CierreApprovalModal: React.FC<CierreApprovalModalProps> = ({
                         </div>
                     )}
 
-                    {/* Formulario de Firma (Exclusivo para ADMIN) */}
-                    {isAdmin ? (
+                    {/* Formulario de Firma (Exclusivo para ADMIN / Personal Autorizado) */}
+                    {isAuthorized ? (
                         <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 flex flex-col gap-3">
                             <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                                 <ShieldCheck size={15} className="text-blue-600" />
-                                <span>Firma de Seguridad del Administrador</span>
+                                <span>Firma de Seguridad y Autorización</span>
                             </h4>
                             
                             <div className="flex flex-col gap-1">
@@ -213,7 +216,7 @@ export const CierreApprovalModal: React.FC<CierreApprovalModalProps> = ({
 
                             <div className="flex flex-col gap-1">
                                 <label className="text-[10px] font-bold text-slate-600 uppercase tracking-tight flex items-center justify-between">
-                                    <span>Contraseña de Administrador ({user?.email}):</span>
+                                    <span>Contraseña de Ingreso ({user?.email}):</span>
                                     <span className="text-[9px] font-mono text-slate-400">Requerida para firmar</span>
                                 </label>
                                 <input
@@ -229,7 +232,7 @@ export const CierreApprovalModal: React.FC<CierreApprovalModalProps> = ({
                         <div className="bg-slate-100 border border-slate-200 rounded-xl p-4 flex items-center gap-3 text-xs text-slate-600 font-medium">
                             <Lock size={20} className="text-slate-400 shrink-0" />
                             <span>
-                                Esta operación requiere privilegios de <strong>Administrador</strong>. Los usuarios con rol estándar pueden visualizar la información del cierre pero no modificar su estado.
+                                Esta operación requiere privilegios de <strong>Administrador o Personal Autorizado</strong>. Los usuarios estándar pueden visualizar la información del cierre pero no modificar su estado.
                             </span>
                         </div>
                     )}
@@ -246,7 +249,7 @@ export const CierreApprovalModal: React.FC<CierreApprovalModalProps> = ({
                         Cerrar
                     </button>
 
-                    {isAdmin && (
+                    {isAuthorized && (
                         <div className="flex items-center gap-2">
                             {isFirme ? (
                                 <button

@@ -115,12 +115,13 @@ Campos guardados en cada registro de Cierre/COA:
     ```
 
 ### 3.3. Modal de Diálogo de Aprobación (`CierreApprovalModal.tsx`)
-1. **Validación de Rol Inicial:**
-   * Si el usuario logueado NO es `ADMIN`, el modal o botón bloquea la acción y avisa: *"Acción restringida: Solo un Administrador puede autorizar y firmar el paso a estado FIRME."*
+1. **Validación de Rol y Usuarios Autorizados:**
+   * Usuarios facultados para aprobar: Rol `ADMIN` o usuario Fernando Harten (`fharten@petral.com.pe` / `fharten`).
+   * Si el usuario logueado NO cuenta con dicha autorización, el modal restringe la firma y muestra el resumen en modo solo lectura.
 2. **Formulario de Firma y Validación de Contraseña:**
    * Muestra resumen ejecutivo del Cierre (Cliente, Ruta, Buque, Margen / P&L).
    * Input de texto para **Notas / Observaciones de Aprobación**.
-   * Input tipo **Password**: *"Ingrese su contraseña de Administrador para firmar"*.
+   * Input tipo **Password**: *"Ingrese su contraseña de acceso para firmar"*.
    * Al presionar **`Autorizar y Pasar a FIRME`**:
      1. Llama a `AuthService.login({ email: user.email, password })`.
      2. Si la clave es correcta: Ejecuta la actualización en BD guardando `status='FIRME'`, `approved_by=user.email`, `approved_by_name=user.full_name`, `approved_at=NOW()`.
@@ -133,6 +134,6 @@ Campos guardados en cada registro de Cierre/COA:
 
 1. **Fase 1:** Actualizar `UserPermissions` en `AuthContext.tsx` y la matriz de `UsersPermissions.tsx` con los 18 módulos exactos del VPS.
 2. **Fase 2:** En `MulticotizadorStorageService.ts`, garantizar que todo Cierre guardado viaje con `status: 'BORRADOR'` y campos de auditoría limpios.
-3. **Fase 3:** Crear el componente `CierreApprovalModal.tsx` con validación de clave de administrador e integrarlo en `ContractsMaster_V2.tsx`.
+3. **Fase 3:** Crear el componente `CierreApprovalModal.tsx` con validación de clave de administrador / fharten e integrarlo en `ContractsMaster_V2.tsx`.
 4. **Fase 4:** Actualizar `ContractsMaster_V2.tsx` para renderizar el **Pad de Estado** a la izquierda de Eliminar, soportar los estados `BORRADOR` y `FIRME`, y mostrar el tooltip con la firma del aprobador.
 5. **Fase 5:** Compilación (`npx vite build`) y despliegue a producción vía `deploy_forecast_kickoff.py`.
