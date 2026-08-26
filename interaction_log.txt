@@ -329,3 +329,10 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Detectada causa raiz: FinancialMatrix_V2.tsx renderizaba ForecastGrid sin evaluar context.matrixFormat.
 - Corregido: Condicionada la renderizacion a context.matrixFormat === 'NAVITRANSO' ? <FinancialMatrixNavitransoGridTable /> : <ForecastGrid />.
 - Compilado con Vite y re-desplegado a https://forecast.geeksoft.tech.
+
+[2026-08-26 18:43:00] [LIMPIEZA DE HEADER Y CUADRATURA EXACTA DE ROWSPAN EN NAVITRANSO]
+- Eliminada la barra negra superior innecesaria de FinancialMatrixNavitransoGridTable.
+- Movido el boton [Ocultar N/A / Mostrar N/A] al Ribbon superior junto al selector de formato.
+- Corregido el calculo de `visibleRowsCount` mediante suma acumulativa explicita (inmune a descuadres de rowSpan en OPEX/Gastos de la Nave).
+- Respaldadas las dos capturas PNG en las carpetas oficiales.
+- Desplegado y verificado en vivo en https://forecast.geeksoft.tech.

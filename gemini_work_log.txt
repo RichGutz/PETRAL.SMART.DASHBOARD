@@ -259,3 +259,8 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-26 18:34:00] Fix Conexión FinancialMatrix_V2 & Despliegue VPS:
 - Conectado el conmutador dinámico en FinancialMatrix_V2.tsx.
 - Desplegado y verificado en https://forecast.geeksoft.tech.
+
+[2026-08-26 18:43:00] Limpieza Header y Cuadratura RowSpan:
+- Eliminada barra negra y pasado botón toggle N/A al Ribbon superior.
+- Cuadrado al 100.00% el rowSpan de Gastos de la Nave.
+- Desplegado a https://forecast.geeksoft.tech.
