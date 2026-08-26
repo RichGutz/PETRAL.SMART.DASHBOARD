@@ -53,7 +53,10 @@ export const VesselFactSheetHeader: React.FC<VesselFactSheetProps> = ({
 
     return (
         <div className="bg-slate-50/50 border border-slate-200 rounded p-1 flex-shrink-0 mb-1">
-            <table className="w-full border-collapse border border-slate-250 bg-white font-mono text-[11px] table-fixed">
+            <table 
+                className="w-full border-collapse border border-slate-250 bg-white font-mono text-[11px] table-fixed"
+                style={{ fontFamily: "'Consolas', 'JetBrains Mono', 'Courier New', ui-monospace, monospace" }}
+            >
                 <thead>
                     <tr className="bg-slate-100 border-b border-slate-250 font-sans text-[9.5px] text-slate-500 font-bold uppercase tracking-wider h-7">
                         <th className="border-r border-slate-200 text-left pl-1.5 font-extrabold uppercase text-[9.5px] text-slate-700 truncate" style={{ width: '8.5%' }} title={`Buque: ${selectedVessel || 'SELECCIONAR'}`}>

@@ -267,3 +267,9 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 
 [2026-08-26 16:03:00] [PROCEDIMIENTO OPERATIVO RDP THINKPAD EN REPISA]
 - Agregada Seccion 6 en 29_Cron_JOB_VPS_HEALTH.md con el paso a paso detallado para conexion remota por mstsc (RDP), instalacion de Paramiko/Rclone, autenticacion con Google Workspace y activacion del Programador de Tareas.
+
+[2026-08-26 16:35:00] [BRANCH TAG DE SEGURIDAD & MEJORAS VISUALES MULTICOTIZADOR]
+- Creado branch y tag: `benoit-blanc-caso1-caso2-ok-26-08` y tag `BENOIT.BLANC.CASO1.CASO2.OK.26.08.26` pusheados a GitHub.
+- Aplicada tipografia tecnica `Consolas` / `JetBrains Mono` / `ui-monospace` en la grilla y tarjetas financieras.
+- Columna `F ($/t)` (Tarifa de Flete) configurada para mostrar siempre 2 decimales / centavos fijos (ej. `23.10` en vez de `23.1`).
+- Frontend compilado exitosamente con Vite (14.44s).

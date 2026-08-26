@@ -830,8 +830,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
             const qVal = hasAction ? (tr.quantity || tr.desc_tons || 13500) : 0;
             const fVal = (tr.freight_rate !== undefined && tr.freight_rate !== null && tr.freight_rate !== '')
-                ? Number(tr.freight_rate)
-                : (isDescargar ? 30 : 0);
+                ? Number(tr.freight_rate).toFixed(2)
+                : (isDescargar ? '30.00' : '0.00');
 
             // PURIFICACIÓN DE COSTOS DE PUERTO (CERO FALLBACK 20000 BACKEND LEGACY)
             const rawManualCost = tr.manual_agency_cost_dest ?? tr.manual_port_cost;

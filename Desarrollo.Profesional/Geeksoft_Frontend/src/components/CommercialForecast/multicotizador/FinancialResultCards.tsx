@@ -165,7 +165,10 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
     const activeDemurrageRate = resolveActiveDemurrageRate();
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 flex-shrink-0 mt-3">
+        <div 
+            className="grid grid-cols-1 lg:grid-cols-4 gap-3 flex-shrink-0 mt-3 font-mono"
+            style={{ fontFamily: "'Consolas', 'JetBrains Mono', 'Courier New', ui-monospace, monospace" }}
+        >
             
             {/* BLOQUE IZQUIERDO: 3 TARJETAS EN 3 COLUMNAS */}
             <div className="col-span-1 lg:col-span-3 flex flex-col gap-3">

@@ -192,6 +192,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     fmtThousandSep
 }) => {
     const [hoveredDemurrage, setHoveredDemurrage] = useState<HoveredDemurrageState | null>(null);
+    const [editingFreightIdx, setEditingFreightIdx] = useState<number | null>(null);
     const totalDescargas = liveCalc?.totalQuantity ?? puertosConfig.reduce((sum, p) => sum + (p.action === 'DESCARGAR' ? (Number(p.quantity) || 0) : 0), 0);
     const selectedVesselObj = (vessels || []).find(v => v.vessel_id === selectedVessel);
 
@@ -215,7 +216,10 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
 
     return (
         <div className="overflow-x-auto border border-slate-300 rounded bg-white shadow-sm flex flex-col mb-1">
-            <table className="w-full border-collapse text-[12px] font-mono table-fixed select-text">
+            <table 
+                className="w-full border-collapse text-[12px] font-mono table-fixed select-text"
+                style={{ fontFamily: "'Consolas', 'JetBrains Mono', 'Courier New', ui-monospace, monospace" }}
+            >
                 <colgroup>
                     <col className="w-[50px]" />
                     <col className="w-[85px]" />
@@ -757,18 +761,28 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
                                 <td className="border-r border-slate-200 p-0 text-right">
                                     {puertosConfig[idx + 1]?.action === 'DESCARGAR' ? (
                                         <input
-                                            type="number"
-                                            step="0.01"
-                                            value={puertosConfig[idx + 1]?.freight_rate !== undefined && puertosConfig[idx + 1]?.freight_rate !== '' ? puertosConfig[idx + 1]?.freight_rate : ''}
+                                            type="text"
+                                            inputMode="decimal"
+                                            value={
+                                                puertosConfig[idx + 1]?.freight_rate !== undefined && puertosConfig[idx + 1]?.freight_rate !== ''
+                                                    ? (editingFreightIdx === idx + 1
+                                                        ? puertosConfig[idx + 1].freight_rate
+                                                        : (isNaN(Number(puertosConfig[idx + 1].freight_rate))
+                                                            ? puertosConfig[idx + 1].freight_rate
+                                                            : Number(puertosConfig[idx + 1].freight_rate).toFixed(2)))
+                                                    : ''
+                                            }
+                                            onFocus={() => setEditingFreightIdx(idx + 1)}
                                             onChange={(e) => updatePuertoConfigField(idx + 1, 'freight_rate', e.target.value)}
                                             onBlur={(e) => {
+                                                setEditingFreightIdx(null);
                                                 const val = parseFloat(e.target.value);
                                                 if (!isNaN(val)) {
                                                     updatePuertoConfigField(idx + 1, 'freight_rate', val.toFixed(2));
                                                 }
                                             }}
                                             className="w-full h-full bg-white border-0 px-1.5 text-right font-mono font-bold text-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-600 text-xs"
-                                            placeholder="23.00"
+                                            placeholder="0.00"
                                         />
                                     ) : (
                                         <span className="text-slate-350 select-none pr-2">—</span>

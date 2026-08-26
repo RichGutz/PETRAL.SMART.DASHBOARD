@@ -206,3 +206,9 @@ CONCURRENCY & QC SUMMARY:
 
 [2026-08-26 16:03:00] Procedimiento Despliegue Remoto ThinkPad (RDP):
 - Documentado protocolo operativo completo en la Seccion 6 de 29_Cron_JOB_VPS_HEALTH.md.
+
+[2026-08-26 16:35:00] Seguridad Git & Mejoras Multicotizador:
+- Branch `benoit-blanc-caso1-caso2-ok-26-08` y tag `BENOIT.BLANC.CASO1.CASO2.OK.26.08.26` creados y pusheados.
+- Grilla de tramos e inputs actualizados a fuente `Consolas` / `JetBrains Mono` / `ui-monospace`.
+- Columna `F ($/t)` configurada con 2 decimales fijos obligatorios (centavos).
+- Compilación Vite OK (14.44s).
