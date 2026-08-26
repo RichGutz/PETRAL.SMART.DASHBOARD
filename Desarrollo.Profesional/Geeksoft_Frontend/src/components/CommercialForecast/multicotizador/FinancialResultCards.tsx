@@ -23,10 +23,12 @@ export interface FinancialResultCardsProps {
     tariffTiers?: Array<{ label?: string; min?: number; max?: number; rate: number }>;
     demurrageRatesMap?: Record<string, number>;
     refacturarMuellajeMap: Record<number, boolean>;
+    charterHireCost?: number;
     setAddressCommPct: (val: number) => void;
     setBrokerCommPct: (val: number) => void;
     setDemurrageRate: (val: number) => void;
     setCommentsText: (val: string) => void;
+    setCharterHireCost?: (val: number) => void;
     setBafFormula?: (val: string) => void;
     setBafValidFrom?: (val: string) => void;
     setBafValidTo?: (val: string) => void;
@@ -65,6 +67,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
     brokerCommPct,
     demurrageRate: _demurrageRate,
     commentsText,
+    charterHireCost,
     bafFormula,
     bafValidFrom,
     bafValidTo,
@@ -77,6 +80,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
     setBrokerCommPct,
     setDemurrageRate,
     setCommentsText,
+    setCharterHireCost,
     setBafFormula,
     setBafValidFrom,
     setBafValidTo,
@@ -99,7 +103,8 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
         bunkerPriceMdo,
         addressCommPct,
         brokerCommPct,
-        refacturarMuellajeMap
+        refacturarMuellajeMap,
+        charterHireCost
     });
 
     const ifoT = calc.totalIfoTons;
@@ -169,7 +174,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     
                     {/* 1. Bunker Expenses */}
-                    <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
+                    <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between h-full">
                         <div>
                             <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans flex items-center justify-between">
                                 <span>Bunker Expenses (Combustible)</span>
@@ -213,11 +218,36 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                     </tr>
                                 </tbody>
                             </table>
+
+                            {/* Desglose / Auditoría de Fórmulas Bunker */}
+                            <div className="border-t border-slate-200 mt-1.5 pt-1 flex flex-col gap-0.5 text-[8.5px] font-mono bg-slate-50/80 rounded p-1.5 border border-slate-200/60">
+                                <div className="flex items-center justify-between font-sans text-[8px] font-bold text-slate-500 uppercase border-b border-slate-200/80 pb-0.5 mb-0.5">
+                                    <span>🔍 Auditoría Bunker (Días × T/d @ $/T)</span>
+                                </div>
+                                <div className="flex items-center justify-between text-slate-700">
+                                    <span className="truncate">
+                                        🌊 <strong className="text-slate-800">1. Mar ({fmtDays(calc.totalSeaDays)} d):</strong> {fmtNum(seaIfoT)}T IFO + {fmtNum(seaMdoT)}T MDO
+                                    </span>
+                                    <span className="font-bold text-slate-900 ml-1 shrink-0">{fmtCur(seaBunkerCost)}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-slate-700">
+                                    <span className="truncate">
+                                        ⚓ <strong className="text-slate-800">2. Pto ({fmtDays(calc.totalPortDays)} d):</strong> {fmtNum(portIfoT)}T IFO + {fmtNum(portMdoT)}T MDO
+                                    </span>
+                                    <span className="font-bold text-slate-900 ml-1 shrink-0">{fmtCur(portBunkerCost)}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-sky-900">
+                                    <span className="truncate">
+                                        ⏱️ <strong className="text-sky-950">3. Dem ({fmtDays(totalDemurrageDays)} d):</strong> {fmtNum(demIfoT)}T IFO + {fmtNum(demMdoT)}T MDO
+                                    </span>
+                                    <span className="font-bold text-sky-950 ml-1 shrink-0">{fmtCur(demBunkerCost)}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     {/* 2. Port Costs */}
-                    <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
+                    <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between h-full">
                         <div>
                             <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans">
                                 Port Costs (Gastos de Puerto)
@@ -291,7 +321,7 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                     </div>
 
                     {/* 3. Comisiones de Viaje */}
-                    <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
+                    <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between h-full">
                         <div>
                             <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1 flex items-center justify-between font-sans">
                                 <span>Comisiones de Viaje</span>
@@ -360,18 +390,46 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                 {/* FILA INFERIOR: COMMENTS + BAF + DEMURRAGE (3 CARDS ALINEADAS DE 1 COLUMNA) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-1 items-stretch">
                     
-                    {/* CARD 1: COMMENTS (DEBAJO DE BUNKER) */}
-                    <div className="col-span-1 bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col flex-1 h-full">
-                        <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1.5 font-sans flex items-center justify-between">
-                            <span>Comments (Observaciones)</span>
-                            <span className="text-[9.5px] font-mono text-slate-400 font-normal">Notas comerciales</span>
-                        </h3>
-                        <textarea
-                            value={commentsText}
-                            onChange={(e) => setCommentsText(e.target.value)}
-                            placeholder="Ingrese comentarios u observaciones de la cotización..."
-                            className="w-full flex-1 p-2 text-xs font-sans bg-slate-50 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700 resize-none min-h-[60px]"
-                        />
+                    {/* COLUMNA 1 (DEBAJO DE BUNKER): 2 CARDS SEPARADAS (ARRIENDO NAVES ARRIBA, COMMENTS ABAJO) */}
+                    <div className="col-span-1 flex flex-col gap-2 justify-between flex-1 h-full">
+                        
+                        {/* CARD 1A: COSTO ARRIENDO NAVES */}
+                        <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between">
+                            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1 font-sans flex items-center justify-between">
+                                <span>Costo Arriendo Naves</span>
+                                <span className="text-[9.5px] font-mono text-emerald-700 font-bold">USD Total</span>
+                            </h3>
+                            <div className="pt-0.5">
+                                <div className="flex items-center gap-1 bg-slate-50 border border-slate-300 rounded p-1">
+                                    <span className="text-xs font-bold text-emerald-800 pl-1">$</span>
+                                    <input
+                                        type="text"
+                                        value={charterHireCost ? Number(charterHireCost).toLocaleString('en-US') : ''}
+                                        onChange={(e) => {
+                                            const raw = e.target.value.replace(/,/g, '');
+                                            const val = Math.max(0, parseFloat(raw) || 0);
+                                            setCharterHireCost && setCharterHireCost(val);
+                                        }}
+                                        placeholder="0"
+                                        className="w-full h-5 text-right font-mono font-bold bg-white border border-slate-300 rounded px-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* CARD 1B: COMMENTS (OBSERVACIONES) */}
+                        <div className="bg-white border border-slate-350 rounded p-2 shadow-sm flex flex-col justify-between flex-1">
+                            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1 mb-1 font-sans flex items-center justify-between">
+                                <span>Comments (Observaciones)</span>
+                                <span className="text-[9px] font-mono text-slate-400 font-normal">Notas</span>
+                            </h3>
+                            <textarea
+                                value={commentsText}
+                                onChange={(e) => setCommentsText(e.target.value)}
+                                placeholder="Ingrese comentarios u observaciones de la cotización..."
+                                className="w-full flex-1 p-1.5 text-[11px] font-sans bg-slate-50 border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700 resize-none min-h-[50px]"
+                            />
+                        </div>
                     </div>
 
                     {/* CARD 2: BAF (DEBAJO DE PORT COSTS) */}
@@ -629,6 +687,18 @@ export const FinancialResultCards: React.FC<FinancialResultCardsProps> = ({
                                     </td>
                                     <td className="text-right py-0.5 pr-1 text-rose-900 font-mono text-[9.5px] font-medium">
                                         -{fmtCur(demurrageHireCost)}
+                                    </td>
+                                </tr>
+                            )}
+
+                            {/* 2.b Costo Arriendo Naves */}
+                            {Number(calc.charterHireCost || charterHireCost || 0) > 0 && (
+                                <tr className="border-b border-purple-100/60 bg-purple-50/40">
+                                    <td className="py-0.5 pl-3 text-purple-900 font-sans text-[10px] font-semibold">
+                                        (-) Arriendo Nave (Charter)
+                                    </td>
+                                    <td className="text-right py-0.5 pr-1 text-purple-950 font-mono text-[10.5px] font-bold">
+                                        -{fmtCur(calc.charterHireCost || charterHireCost)}
                                     </td>
                                 </tr>
                             )}

@@ -152,3 +152,12 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-22 18:21:30] [DEPLOY VPS PRODUCCION (91.108.125.253 | https://forecast.geeksoft.tech)] Despliegue exitoso con SSH/SFTP del frontend bundle con Demurrage Dual, Maestro de Demoras Mensuales 3x4 y Casilla Verde P&L. Servicio backend FastAPI reiniciado y certificado SSL activo.
 
 
+[2026-08-25 21:24:00] [AUDITORIA HORAS & SUSTENTO ALCANCE] Ejecucion de algoritmo summarize_real_hours.py (434.77 hrs reales auditadas en 101 dias vs 100 hrs cotizadas). Transcripcion Whisper de ALCANCE.NUEVOS.COSTOS.PETRAL.ogg y redaccion completa del esqueleto PPT de 8 slides mas Anexo Tecnico en Nota 26 de Obsidian (26_Modificacion_Alcance_Costos_HUEVOS_PASCUA.md).
+
+[2026-08-26 11:55:00] [MULTICOTIZADOR - PLAN 27] Implementacion de los 5 puntos del plan 27_Modificaciones_Multicotizador_26.08.26.md:
+- DemurrageMode default 'C' (Cero) en creacion y SpreadsheetTramosGrid.
+- Card 'Costo Arriendo Naves' con input en USD y reduccion de PnL / recalculo TCE.
+- Comments (Observaciones) redimensionado simetricamente.
+- Reseteo deterministico de TCE Req y TCE Diff a $0 en grilla limpia.
+- Desglose tripartito de auditoria en Bunker Expenses (Mar, Puerto, Demurrage).
+- Build Vite completado exitosamente (exit code 0).

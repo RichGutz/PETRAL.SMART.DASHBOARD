@@ -16,6 +16,7 @@ export interface CalculateVoyageParams {
     brokerCommPct?: number;
     demurrageRate?: number;
     refacturarMuellajeMap?: Record<number, boolean>;
+    charterHireCost?: number;
     demurrageMode?: 'O' | 'P' | 'M' | 'C' | string;
     selectedVessel?: string;
     validFrom?: string;
@@ -90,6 +91,7 @@ export interface VoyageCalculationResult {
     totalPortCosts: number;
     tceReq: number;
     hireUsd: number;
+    charterHireCost: number;
     addressCommUsd: number;
     brokerCommUsd: number;
     totalCommUsd: number;
@@ -125,6 +127,7 @@ export class MulticotizadorCalculationEngine {
             brokerCommPct = 0,
             demurrageRate = 0,
             refacturarMuellajeMap = {},
+            charterHireCost = 0,
             demurrageMode = 'P',
             selectedVessel = '',
             validFrom
@@ -398,13 +401,17 @@ export class MulticotizadorCalculationEngine {
         const grandBunkerTotal = ifoCost + mdoCost;
 
         const totalDays = totalSeaDays + totalPortDays + totalDemurrageDays;
-        const tceReq = Number(vesselParams?.tce_required || 15000);
+        const rawCharterHireCost = Number(charterHireCost) || 0;
+
+        // Si la grilla está limpia o en cero (0 días de viaje y 0 flete), no deviene TCE requerido
+        const isCleanState = totalDays <= 0 && totalFreight <= 0 && totalDist <= 0;
+        const tceReq = isCleanState ? 0 : Number(vesselParams?.tce_required || 15000);
 
         // Ingresos y Costos de Demurrage
         const demurrageRevenue = totalDemurrageDays * Number(demurrageRate || 0);
         const demurrageHireCost = totalDemurrageDays * tceReq;
-        const standardHireCost = (totalSeaDays + totalPortDays) * tceReq;
-        const hireUsd = standardHireCost + demurrageHireCost;
+        const standardHireCost = isCleanState ? 0 : ((totalSeaDays + totalPortDays) * tceReq);
+        const hireUsd = standardHireCost + demurrageHireCost + rawCharterHireCost;
 
         const grossRevenueTotal = totalFreight + liveRefacturacionMuellaje + demurrageRevenue;
 
@@ -412,9 +419,15 @@ export class MulticotizadorCalculationEngine {
         const brokerCommUsd = totalFreight * (brokerCommPct / 100);
         const totalCommUsd = addressCommUsd + brokerCommUsd;
 
-        const voyageResultPnl = grossRevenueTotal - (hireUsd + grandBunkerTotal + totalPortCosts + totalCommUsd);
-        const tceRealizado = totalDays > 0 ? ((grossRevenueTotal - (grandBunkerTotal + totalPortCosts + totalCommUsd)) / totalDays) : 0;
-        const tceDiff = tceRealizado - tceReq;
+        const voyageResultPnl = isCleanState && rawCharterHireCost === 0
+            ? 0
+            : (grossRevenueTotal - (hireUsd + grandBunkerTotal + totalPortCosts + totalCommUsd));
+            
+        const tceRealizado = totalDays > 0 
+            ? ((grossRevenueTotal - (grandBunkerTotal + totalPortCosts + totalCommUsd + rawCharterHireCost)) / totalDays) 
+            : 0;
+            
+        const tceDiff = isCleanState ? 0 : (tceRealizado - tceReq);
 
         return {
             totalDist,
@@ -447,6 +460,7 @@ export class MulticotizadorCalculationEngine {
             totalPortCosts,
             tceReq,
             hireUsd,
+            charterHireCost: rawCharterHireCost,
             addressCommUsd,
             brokerCommUsd,
             totalCommUsd,

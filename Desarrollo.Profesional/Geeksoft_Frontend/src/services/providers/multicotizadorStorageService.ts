@@ -29,6 +29,7 @@ export interface SaveQuoteParams {
     tariffTiers?: any[];
     demurrageRatesMap?: Record<string, number>;
     commentsText?: string;
+    charterHireCost?: number;
     financialSummary?: any;
     refacturarMuellajeMap?: Record<number, boolean>;
     createdBy?: string;
@@ -51,6 +52,7 @@ export class MulticotizadorStorageService {
             isContract, category, validFrom, validTo, validityYears, contractStatus,
             bafFormula, bafValidFrom, bafValidTo, bafIfoBase, bafMdoBase, tariffTiers, demurrageRatesMap,
             commentsText,
+            charterHireCost,
             financialSummary,
             refacturarMuellajeMap,
             createdBy
@@ -127,6 +129,8 @@ export class MulticotizadorStorageService {
                 tariff_tiers: tariffTiers,
                 demurrage_rates: demurrageRatesMap,
                 comments_text: commentsText,
+                charter_hire_cost: Number(charterHireCost) || 0,
+                charterHireCost: Number(charterHireCost) || 0,
                 financial_summary: financialSummary || null,
                 refacturarMuellajeMap: refacturarMuellajeMap || null,
                 // Metadata de contrato COA (solo si aplica) dentro del JSONB

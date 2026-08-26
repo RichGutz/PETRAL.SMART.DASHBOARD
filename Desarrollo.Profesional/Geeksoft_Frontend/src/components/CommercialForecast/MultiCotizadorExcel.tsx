@@ -117,7 +117,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         'CONCON TRADER': 0,
         'CONCON': 0
     });
-    const [demurrageMode, setDemurrageMode] = useState<'O' | 'P' | 'M' | 'C'>('P');
+    const [demurrageMode, setDemurrageMode] = useState<'O' | 'P' | 'M' | 'C'>('C');
+    const [charterHireCost, setCharterHireCost] = useState<number>(0);
     const [originalDemurrageDaysMap, setOriginalDemurrageDaysMap] = useState<Record<number, number | string>>({});
     const [staticCostsData, setStaticCostsData] = useState<any[]>([]);
     const [refacturarMuellajeMap, setRefacturarMuellajeMap] = useState<Record<number, boolean>>({});
@@ -556,11 +557,12 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             brokerCommPct,
             demurrageRate: Number(vesselParams?.demurrage_rate || demurrageRate || 20000),
             refacturarMuellajeMap,
+            charterHireCost,
             demurrageMode,
             selectedVessel,
             validFrom
         });
-    }, [calculatedTramosList, puertosConfig, vesselParams, bunkerPriceIfo, bunkerPriceMdo, addressCommPct, brokerCommPct, demurrageRate, refacturarMuellajeMap, demurrageMode, selectedVessel, validFrom]);
+    }, [calculatedTramosList, puertosConfig, vesselParams, bunkerPriceIfo, bunkerPriceMdo, addressCommPct, brokerCommPct, demurrageRate, refacturarMuellajeMap, charterHireCost, demurrageMode, selectedVessel, validFrom]);
 
     const handleDemurrageModeChange = (mode: 'O' | 'P' | 'C') => {
         setDemurrageMode(mode);
@@ -694,7 +696,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 bunkerPriceMdo,
                 addressCommPct,
                 brokerCommPct,
-                refacturarMuellajeMap
+                refacturarMuellajeMap,
+                charterHireCost
             });
 
             await MulticotizadorStorageService.saveQuote({
@@ -723,6 +726,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 tariffTiers,
                 demurrageRatesMap,
                 commentsText,
+                charterHireCost,
                 financialSummary,
                 refacturarMuellajeMap,
                 createdBy: activeUserEmail
@@ -869,7 +873,8 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' },
             { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' }
         ]);
-        setDemurrageMode('P');
+        setDemurrageMode('C');
+        setCharterHireCost(0);
         setOriginalDemurrageDaysMap({});
 
         const spotBunker = await BunkerProviderService.fetchLatestBunkerPrices();
@@ -1043,6 +1048,13 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
 
         // Comentarios guardados
         if (unpacked.comments_text !== undefined) setCommentsText(unpacked.comments_text);
+
+        // Costo Arriendo Naves guardado
+        if (unpacked.charter_hire_cost !== undefined || unpacked.charterHireCost !== undefined) {
+            setCharterHireCost(Number(unpacked.charter_hire_cost || unpacked.charterHireCost || 0));
+        } else {
+            setCharterHireCost(0);
+        }
 
         setShowLoadModal(false);
     };
@@ -1379,6 +1391,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     brokerCommPct={brokerCommPct}
                     demurrageRate={demurrageRate}
                     commentsText={commentsText}
+                    charterHireCost={charterHireCost}
                     bafFormula={bafFormula}
                     bafValidFrom={bafValidFrom}
                     bafValidTo={bafValidTo}
@@ -1391,6 +1404,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                     setBrokerCommPct={setBrokerCommPct}
                     setDemurrageRate={setDemurrageRate}
                     setCommentsText={setCommentsText}
+                    setCharterHireCost={setCharterHireCost}
                     setBafFormula={setBafFormula}
                     setBafValidFrom={setBafValidFrom}
                     setBafValidTo={setBafValidTo}
