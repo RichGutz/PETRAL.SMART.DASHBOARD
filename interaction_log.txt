@@ -283,3 +283,8 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Eliminados los ceros punteados ("dotted/slashed zeros") de fuentes monospace tipo IDE.
 - Aplicada tipografia limpia ejecutiva 'Segoe UI' / 'Inter' con 'tabular-nums' y regla global 'font-feature-settings: "zero" 0'.
 - Desplegado y verificado en vivo en Produccion https://forecast.geeksoft.tech.
+
+[2026-08-26 17:05:00] [UNIFICACION TOTAL DE FUENTES A SEGOE UI / INTER (CERO CERO-TACHADO)]
+- Sobrescrito `--font-mono` y la clase `.font-mono` en `index.css` para redirigir siempre a `'Segoe UI', 'Inter', sans-serif`.
+- Removida la importacion de `JetBrains Mono` de Google Fonts.
+- Desplegado a Produccion VPS (https://forecast.geeksoft.tech). Ceros 100% redondos y uniformes en toda la pantalla.

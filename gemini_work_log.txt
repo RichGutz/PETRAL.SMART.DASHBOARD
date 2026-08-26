@@ -219,3 +219,8 @@ CONCURRENCY & QC SUMMARY:
 - Configurada tipografia comercial ejecutiva Segoe UI / Inter con alineacion tabular limpia (tabular-nums) y regla font-feature-settings: "zero" 0 en index.css y componentes.
 - Ceros 100% redondos y limpios sin puntos ni barras interiores.
 - Despliegue completado a https://forecast.geeksoft.tech.
+
+[2026-08-26 17:05:00] Unificacion Total de Fuentes a Segoe UI / Inter:
+- Redefinida la variable `--font-mono` y clase `.font-mono` para forzar Segoe UI / Inter en toda la aplicacion.
+- Eliminada dependencia de JetBrains Mono.
+- Desplegado y verificado en vivo en https://forecast.geeksoft.tech.
