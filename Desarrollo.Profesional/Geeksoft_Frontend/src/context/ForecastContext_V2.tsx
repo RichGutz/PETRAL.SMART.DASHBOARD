@@ -42,6 +42,9 @@ interface ForecastContextType {
 
     matrixFormat: 'PETRAL' | 'NAVITRANSO';
     setMatrixFormat: (v: 'PETRAL' | 'NAVITRANSO') => void;
+    hideNaRows: boolean;
+    setHideNaRows: (v: boolean) => void;
+    toggleHideNaRows: () => void;
 
     ports: any[];
     spotRoutes: any[];
@@ -130,6 +133,19 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     const setMatrixFormat = (val: 'PETRAL'|'NAVITRANSO') => {
         setMatrixFormatState(val);
         sessionStorage.setItem('petral_matrix_format', val);
+    };
+
+    const [hideNaRows, setHideNaRowsState] = useState<boolean>(() => {
+        return sessionStorage.getItem('petral_hide_na_rows') === 'true';
+    });
+
+    const setHideNaRows = (val: boolean) => {
+        setHideNaRowsState(val);
+        sessionStorage.setItem('petral_hide_na_rows', String(val));
+    };
+
+    const toggleHideNaRows = () => {
+        setHideNaRows(!hideNaRows);
     };
 
     const [ports, setPorts] = useState<any[]>([]);
@@ -563,7 +579,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             forecastName, setForecastName, userId, setUserId, loadedAuthor,
             showSaveModal, setShowSaveModal, showLoadModal, setShowLoadModal, savedForecasts,
             isDirty, handleManualRecalculate, handleClearSession,
-            displayMode, setDisplayMode, matrixFormat, setMatrixFormat, ports, spotRoutes, portCostMode, setPortCostMode: handlePortCostModeChange,
+            displayMode, setDisplayMode, matrixFormat, setMatrixFormat, hideNaRows, setHideNaRows, toggleHideNaRows, ports, spotRoutes, portCostMode, setPortCostMode: handlePortCostModeChange,
             demurragePct, setDemurragePct, showDemurrage, setShowDemurrage, handleSetShowDemurrage,
             demurrageDays, setDemurrageDays, showDemurrageDays, setShowDemurrageDays, handleSetShowDemurrageDays,
             excludedDemurrages, setExcludedDemurrages, customDemurrages, setCustomDemurrages, customDemurrageDays, setCustomDemurrageDays,

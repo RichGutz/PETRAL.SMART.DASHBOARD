@@ -324,4 +324,8 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Creado componente desacoplado FinancialMatrixNavitransoGridTable.tsx.
 - Añadido selector simetrico [Formato: PETRAL | NAVITRANSO] en ForecastBuilder_V2.tsx y ToolsLayout_V2.tsx.
 - Integrado boton [Ocultar / Mostrar Filas N/A] en la cabecera de la tabla.
-- Compilado con Vite (10.77s) y desplegado al VPS de produccion https://forecast.geeksoft.tech.
+
+[2026-08-26 18:34:00] [FIX AUTOPSIA PERICIAL: CONEXION DE RUTA EN FINANCIALMATRIX_V2]
+- Detectada causa raiz: FinancialMatrix_V2.tsx renderizaba ForecastGrid sin evaluar context.matrixFormat.
+- Corregido: Condicionada la renderizacion a context.matrixFormat === 'NAVITRANSO' ? <FinancialMatrixNavitransoGridTable /> : <ForecastGrid />.
+- Compilado con Vite y re-desplegado a https://forecast.geeksoft.tech.

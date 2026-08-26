@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronRight, ChevronDown, Save, RotateCcw, Trash2, Eye, EyeOff } from 'lucide-react';
+import { ChevronRight, ChevronDown, Save, RotateCcw, Trash2 } from 'lucide-react';
 import { useForecastContext_V2 } from '../../../context/ForecastContext_V2';
 
 interface FinancialMatrixNavitransoGridTableProps {
@@ -14,11 +14,9 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
 }) => {
     const {
         handleFrequencyChange,
-        handleDeleteNode
+        handleDeleteNode,
+        hideNaRows
     } = useForecastContext_V2();
-
-    // Toggle para mostrar u ocultar filas N/A
-    const [hideNaRows, setHideNaRows] = useState<boolean>(false);
 
     // Acordeones por rubro
     const [expandedHire, setExpandedHire] = useState<Record<string, boolean>>({});
@@ -110,25 +108,8 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
 
     return (
         <div className="glass-card bg-white border border-slate-200 rounded-xl shadow-xs overflow-x-auto">
-            {/* Barra de Herramientas Superior de la Matriz Navitranso */}
-            <div className="bg-slate-900 text-white px-4 py-2 flex items-center justify-between border-b border-slate-800">
-                <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-black tracking-wider uppercase text-emerald-400">🏛️ ESTADO DE RESULTADOS — ESTÁNDAR NAVITRANSO</span>
-                    <span className="text-[10px] bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-slate-300">Control Presupuestal P&L</span>
-                </div>
-                <button
-                    type="button"
-                    onClick={() => setHideNaRows(!hideNaRows)}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[10.5px] font-bold transition-all cursor-pointer border ${hideNaRows ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 hover:bg-amber-500/30' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'}`}
-                    title="Alternar visibilidad de filas N/A (Venta de terceros, otros ingresos/gastos)"
-                >
-                    {hideNaRows ? <EyeOff size={13} /> : <Eye size={13} />}
-                    <span>{hideNaRows ? 'Mostrar Filas N/A' : 'Ocultar Filas N/A'}</span>
-                </button>
-            </div>
-
             <table className="w-full text-xs text-left border-collapse" style={{ fontFamily: "'Segoe UI', 'Inter', sans-serif", fontVariantNumeric: 'tabular-nums' }}>
-                <thead className="bg-slate-800 text-slate-100 text-[10px] font-black uppercase tracking-wider sticky top-0 z-10 select-none shadow-xs">
+                <thead className="bg-slate-900 text-slate-100 text-[10.5px] font-black uppercase tracking-wider sticky top-0 z-10 select-none shadow-xs">
                     <tr>
                         <th className="p-2 border-r border-slate-700 w-20 text-center">CLIENTE</th>
                         <th className="p-2 border-r border-slate-700 w-28 text-center">RUTA</th>
@@ -217,18 +198,34 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                             totNave += -naveVal;
                         });
 
-                        // Recuento de filas visibles para el rowSpan lateral
-                        let visibleRowsCount = 13; // Frecuencia + Ventas (Subtotal) + 3 Operativas + Costos Directos (Subtotal) + 4 Operativas + TCE + Margen Bruto + 2 OPEX
-                        if (!hideNaRows) {
-                            visibleRowsCount += 4; // Venta Terceros, Otros Ingresos, Otros Costos, Arriendo
-                        }
+                        // Cálculo matemático dinámico 100% exacto del rowSpan
+                        let visibleRowsCount = 1; // 1. Frecuencia
+                        visibleRowsCount += 1; // 2. VENTAS (Subtotal)
+                        visibleRowsCount += 1; // 3. HIRE
                         if (expandedHire[lineKey]) visibleRowsCount += 1;
+                        if (!hideNaRows) visibleRowsCount += 1; // 4. VENTA DE TERCEROS
+                        visibleRowsCount += 1; // 5. DEMORAS
                         if (expandedDemurrageRev[lineKey]) visibleRowsCount += 1;
+                        visibleRowsCount += 1; // 6. INGRESOS DE PUERTO
                         if (expandedPortRev[lineKey]) visibleRowsCount += 1;
+                        if (!hideNaRows) visibleRowsCount += 1; // 7. OTROS INGRESOS
+
+                        visibleRowsCount += 1; // 8. COSTOS DIRECTOS (Subtotal)
+                        visibleRowsCount += 1; // 9. COMBUSTIBLE
                         if (expandedBunker[lineKey]) visibleRowsCount += 3;
+                        visibleRowsCount += 1; // 10. GASTOS DE PUERTO
                         if (expandedPortCosts[lineKey]) visibleRowsCount += 2;
+                        visibleRowsCount += 1; // 11. COSTOS DE DEMORA
                         if (expandedDemurrageCost[lineKey]) visibleRowsCount += 1;
+                        visibleRowsCount += 1; // 12. COMISIONES VARIAS
                         if (expandedCommissions[lineKey]) visibleRowsCount += 1;
+                        if (!hideNaRows) visibleRowsCount += 1; // 13. OTROS COSTOS DIRECTOS
+
+                        visibleRowsCount += 1; // 14. TIME CHARTER EQUIVALENT
+                        if (!hideNaRows) visibleRowsCount += 1; // 15. COSTO DE ARRIENDO NAVES
+                        visibleRowsCount += 1; // 16. MARGEN BRUTO
+                        visibleRowsCount += 1; // 17. GTOS. PERSONAL A BORDO
+                        visibleRowsCount += 1; // 18. GASTOS DE LA NAVE
 
                         const rowBgClass = isModified ? 'bg-amber-50/50' : 'hover:bg-slate-50/80';
 

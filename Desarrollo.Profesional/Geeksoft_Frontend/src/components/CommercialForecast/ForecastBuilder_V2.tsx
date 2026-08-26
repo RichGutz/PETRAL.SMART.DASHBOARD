@@ -21,6 +21,8 @@ interface ForecastBuilderProps {
     onDisplayModeChange?: (mode: 'usd' | 'pct') => void;
     matrixFormat?: 'PETRAL' | 'NAVITRANSO';
     onMatrixFormatChange?: (format: 'PETRAL' | 'NAVITRANSO') => void;
+    hideNaRows?: boolean;
+    onToggleHideNaRows?: () => void;
     portCostMode?: 'static' | 'matrix';
     onPortCostModeChange?: (mode: 'static' | 'matrix') => void;
     forecastName?: string;
@@ -47,6 +49,8 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     onDisplayModeChange,
     matrixFormat = 'PETRAL',
     onMatrixFormatChange,
+    hideNaRows = false,
+    onToggleHideNaRows,
     forecastName,
     isAdding = false,
     demurragePct = '0',
@@ -804,6 +808,18 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                                 NAVITRANSO
                             </button>
                         </div>
+                    )}
+
+                    {/* Botón Filtro Filas N/A (Solo visible en modo NAVITRANSO) */}
+                    {matrixFormat === 'NAVITRANSO' && onToggleHideNaRows && (
+                        <button
+                            type="button"
+                            onClick={onToggleHideNaRows}
+                            className={`h-7.5 px-2.5 rounded-lg border text-[10px] font-extrabold flex items-center gap-1 transition-colors shrink-0 shadow-2xs cursor-pointer ${hideNaRows ? 'bg-amber-100 border-amber-300 text-amber-900 font-black' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                            title="Ocultar o mostrar las filas de la plantilla sin movimiento (N/A)"
+                        >
+                            <span>{hideNaRows ? '👁️ Mostrar N/A' : '👁️ Ocultar N/A'}</span>
+                        </button>
                     )}
 
                     {/* Spacer para empujar Recalcular / Guardar / Cargar a la derecha */}

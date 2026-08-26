@@ -50,6 +50,8 @@ export const ToolsLayout_V2: React.FC = () => {
                         onDisplayModeChange={context.setDisplayMode}
                         matrixFormat={context.matrixFormat}
                         onMatrixFormatChange={context.setMatrixFormat}
+                        hideNaRows={context.hideNaRows}
+                        onToggleHideNaRows={context.toggleHideNaRows}
                         isAdding={context.loading}
                         demurragePct={context.demurragePct}
                         showDemurrage={context.showDemurrage}
