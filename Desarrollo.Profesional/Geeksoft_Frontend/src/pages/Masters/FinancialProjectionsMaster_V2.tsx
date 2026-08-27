@@ -58,8 +58,8 @@ export const FinancialProjectionsMaster: React.FC = () => {
     const [quotesList, setQuotesList] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedAuthor, setSelectedAuthor] = useState<string>('TODOS');
-    const [openYears, setOpenYears] = useState<Record<string, boolean>>({});
-    const [expandedScenarioId, setExpandedScenarioId] = useState<string | null>(null);
+    const [openYears, setOpenYears] = useState<Record<string, boolean>>({ '2027': true, '2026': true });
+    const [expandedScenarios, setExpandedScenarios] = useState<Record<string, boolean>>({});
 
     // Carga de escenarios y catálogo de cotizaciones desde Supabase
     const loadData = async () => {
@@ -83,13 +83,16 @@ export const FinancialProjectionsMaster: React.FC = () => {
 
             setRawForecasts(enriched);
 
-            // Auto-expandir todos los años registrados para máxima visibilidad
+            // Auto-expandir todos los años y todos los escenarios registrados para máxima visibilidad inmediata
             const autoYears: Record<string, boolean> = { '2027': true, '2026': true };
+            const autoExpanded: Record<string, boolean> = {};
             (enriched || []).forEach((item: any) => {
                 const y = (item.start_date || '2027').substring(0, 4);
                 autoYears[y] = true;
+                if (item.id) autoExpanded[item.id] = true;
             });
             setOpenYears(autoYears);
+            setExpandedScenarios(autoExpanded);
 
         } catch (err) {
             console.error("Error cargando maestro de proyecciones:", err);
@@ -313,7 +316,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
     };
 
     const toggleScenarioExpansion = (scenarioId: string) => {
-        setExpandedScenarioId(prev => (prev === scenarioId ? null : scenarioId));
+        setExpandedScenarios(prev => ({ ...prev, [scenarioId]: !prev[scenarioId] }));
     };
 
     // Función de Eliminación
@@ -856,7 +859,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                     {isOpen && (
                                         <div className="p-4 space-y-4 bg-slate-50 border-t border-slate-200">
                                             {scenariosInYear.map(scenario => {
-                                                const isExpanded = expandedScenarioId === scenario.id;
+                                                const isExpanded = Boolean(expandedScenarios[scenario.id]);
                                                 const mec = scenario.mec;
 
                                                 return (
