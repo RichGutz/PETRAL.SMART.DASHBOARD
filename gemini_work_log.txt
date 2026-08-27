@@ -411,3 +411,7 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-27 17:33:00] P/L POR VIAJE FORMATEADO SIN DECIMALES:
 - P/L x Viaje redondeado a entero limpio en tabla React UI, exportacion Excel (.xlsx) y PDF Foxit Ready.
 - Desplegado en vivo al VPS https://forecast.geeksoft.tech/financial-projections.
+
+[2026-08-27 17:35:00] ETIQUETA GIT CREADA:
+- Tag oficial: TAG.BENOIT.MAESTRO.MATRICES.REPORTE.MEC.OK
+- Estado: Maestro de Matrices, Reporte MEC 1:1, Escenario SINTETICO 60 viajes, Estandarizacion de Formatos y Clasificacion Internacional OK.
