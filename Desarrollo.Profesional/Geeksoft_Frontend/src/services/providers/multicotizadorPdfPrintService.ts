@@ -821,6 +821,14 @@ export class MulticotizadorPdfPrintService {
                             </div>
                         ` : ''}
 
+                        <!-- ARRIENDO NAVE (CHARTER) -->
+                        ${((calc.charterHireCost || charterHireCost || 0) > 0) ? `
+                            <div class="flex justify-between items-center text-purple-900 font-semibold text-[8px]">
+                                <span class="font-sans">(-) Arriendo Nave (Charter)</span>
+                                <span>-${this.fmtCur(calc.charterHireCost || charterHireCost)}</span>
+                            </div>
+                        ` : ''}
+
                         <!-- BUNKER IFO -->
                         <div class="flex justify-between items-center text-slate-700 text-[8px]">
                             <span class="font-sans">(-) Bunker IFO (${this.fmtNum(calc.totalIfoTons, 1)} T × ${this.fmtCur(bunkerPriceIfo)}/T)</span>
