@@ -172,6 +172,22 @@ En cumplimiento del **Protocolo Benoit Blanc de Auditoría Pericial**, cada vuel
      * **Tag**: `TAG.BENOIT.NEXA.CHARTER.67500.OK`
 * **Veredicto**: ✅ **100% RESUELTO Y OPERATIVO EN PRODUCCIÓN.**
 
+### 7.7. Vuelta 7: La Línea Fantasma de Arriendo de Nave en el PDF (Financial Voyage Result)
+* **Fecha**: 27.08.2026 (01:42 PM)
+* **Síntoma Reportado**: En la UI de React, la card *FINANCIAL VOYAGE RESULT* muestra explícitamente la línea púrpura `(-) Arriendo Nave (Charter): -$67,500` y totaliza `$125,101`. Sin embargo, en el documento PDF generado, la tarjeta de la Columna 4 totaliza `$125,101` pero **omite listar visualmente la fila de deducción de los `-$67,500`**.
+* **Hallazgo Forense**:
+  * En `multicotizadorPdfPrintService.ts` (Columna 4), el bloque HTML listaba:
+    1. `REVENUE`
+    2. `(+) Refacturación Muellaje`
+    3. `(-) Hire`
+    4. `(-) Bunker IFO / MDO`
+    5. `(-) Port Costs`
+    6. `(-) Comisiones`
+  * **Omitía el bloque condicional** `${(calc.charterHireCost > 0) ? ... : ''}` entre *Hire* y *Bunker*.
+* **Cirugía Prevista**:
+  * Insertar la fila estilizada `(-) Arriendo Nave (Charter)` en `multicotizadorPdfPrintService.ts` dentro de la tarjeta de la Columna 4 con el color púrpura corporativo `text-purple-900 font-semibold`.
+  * Checkpoint de Git fijado: `TAG.BENOIT.PRE.PDF.CHARTER.LINE.FIX` y branch `release/pre-pdf-charter-line-fix`.
+
 ---
 
 *Documento actualizado y sellado para trazabilidad permanente en Obsidian — 27.08.2026.*
