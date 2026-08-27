@@ -152,15 +152,9 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
 
                         <button
                             onClick={handlePrintPDF}
-                            disabled={isExportingPdf}
-                            className={`h-7 text-xs font-bold rounded px-3 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm whitespace-nowrap ${
-                                isExportingPdf 
-                                    ? 'bg-amber-100 text-amber-900 border border-amber-300 animate-pulse cursor-wait' 
-                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
-                            }`}
-                            title="Descargar PDF Oficial A4 Horizontal (Foxit Ready)"
+                            className="h-7 text-xs font-bold rounded px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm whitespace-nowrap"
                         >
-                            {isExportingPdf ? '⏳ Generando PDF...' : '🖨️ Export PDF'}
+                            🖨️ Export PDF
                         </button>
                     </div>
                 </div>

@@ -37,7 +37,6 @@ export interface MulticotizadorPrintData {
     bafMdoBase?: number;
     tariffTiers?: Array<{ label?: string; min?: number; max?: number; rate: number }>;
     demurrageRatesMap?: Record<string, number>;
-    charterHireCost?: number;
     liveCalc?: VoyageCalculationResult | any;
     printedBy?: string;
 }
@@ -73,55 +72,6 @@ export class MulticotizadorPdfPrintService {
     }
 
     /**
-     * Descarga directa e instantánea del PDF oficial A4 Landscape mediante WeasyPrint desde la ventana principal (Foxit Ready)
-     */
-    public static async downloadPdf(data: MulticotizadorPrintData): Promise<void> {
-        const html = this.buildHtmlDocument(data);
-
-        // 1. Extraer estilos limpios sin @import url que bloquean WeasyPrint
-        let cleanStyles = '';
-        const styleMatches = html.match(/<style[\s\S]*?<\/style>/gi) || [];
-        styleMatches.forEach(s => {
-            cleanStyles += s.replace(/<\/?style[^>]*>/gi, '').replace(/@import\s+url\([^)]+\);?/gi, '') + '\n';
-        });
-
-        // 2. Extraer cuerpo limpio sin barras de control no-print ni scripts
-        const bodyContent = html
-            .replace(/^[\s\S]*?<body[^>]*>/i, '')
-            .replace(/<\/body>[\s\S]*$/i, '');
-        
-        const cleanBody = bodyContent
-            .replace(/<div class="no-print[\s\S]*?<\/div>\s*<\/div>/i, '')
-            .replace(/<script[\s\S]*?<\/script>/gi, '');
-
-        const printHtml = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>PETRAL_MULTICOTIZADOR</title><style>${cleanStyles}</style></head><body style="margin:0;padding:0;background:#ffffff;">${cleanBody}</body></html>`;
-
-        const filename = `PETRAL_MULTICOTIZADOR_${(data.selectedClient || 'CLIENTE').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(data.selectedVessel || 'BUQUE').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
-
-        const apiBase = import.meta.env.VITE_API_URL || '/api/v1';
-        const response = await fetch(`${apiBase}/utils/generate-pdf`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ html: printHtml, filename: filename }),
-        });
-
-        if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.detail || `Error ${response.status} del servidor`);
-        }
-
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 10000);
-    }
-
-    /**
      * Construye el documento HTML ejecutivo A4 Landscape y lanza el diálogo de impresión
      */
     public static printDocument(data: MulticotizadorPrintData): void {
@@ -146,7 +96,7 @@ export class MulticotizadorPdfPrintService {
             validFrom, validTo, vessels, vesselParams, bunkerSource, bunkerPriceIfo, bunkerPriceMdo,
             tramos, puertosConfig, refacturarMuellajeMap, addressCommPct, brokerCommPct,
             commentsText, bafFormula, bafValidFrom, bafValidTo, bafIfoBase, bafMdoBase,
-            tariffTiers, demurrageRatesMap, charterHireCost, liveCalc, printedBy
+            tariffTiers, demurrageRatesMap, liveCalc, printedBy
         } = data;
 
         // ÚNICA FUENTE DE VERDAD: Si liveCalc viene de la pantalla se usa directamente, sino se calcula vía Engine
@@ -274,8 +224,6 @@ export class MulticotizadorPdfPrintService {
     <title>PETRAL_MULTICOTIZADOR_${selectedClient}_${selectedVessel || 'BUQUE'}</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- html2pdf.js — genera PDF binario nativo landscape para Foxit Reader -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <!-- ESTILOS DE IMPRESIÓN FORZADOS -->
     <style>
@@ -396,8 +344,8 @@ export class MulticotizadorPdfPrintService {
             <span class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded font-mono">1 HOJA OFICIAL</span>
         </div>
         <div class="flex items-center gap-3">
-            <button id="btn-download-pdf" onclick="downloadDirectPdf()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-1.5 rounded flex items-center gap-1.5 shadow transition-colors cursor-pointer">
-                🖨️ Guardar PDF (A4 Horizontal)
+            <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-1.5 rounded flex items-center gap-1.5 shadow transition-colors cursor-pointer">
+                🖨️ Imprimir / Guardar como PDF
             </button>
             <button onclick="window.close()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs px-3 py-1.5 rounded transition-colors cursor-pointer">
                 Cerrar
@@ -406,7 +354,7 @@ export class MulticotizadorPdfPrintService {
     </div>
 
     <!-- DOCUMENTO A4 LANDSCAPE -->
-    <div id="pdf-content-page" class="a4-landscape-page">
+    <div class="a4-landscape-page">
 
         <!-- 1. CABECERA EJECUTIVA Y METADATA DE VIAJE -->
         <div class="border-box bg-white text-slate-800 p-2 shadow-xs border border-slate-300">
@@ -865,14 +813,6 @@ export class MulticotizadorPdfPrintService {
                             <span>-${this.fmtCur(calc.standardHireCost || calc.hireUsd)}</span>
                         </div>
 
-                        <!-- ARRIENDO NAVE (CHARTER) SI HAY -->
-                        ${(Number(calc.charterHireCost || charterHireCost || 0) > 0) ? `
-                            <div class="flex justify-between items-center text-slate-700 text-[8px]">
-                                <span class="font-sans">(-) Arriendo Nave (Charter)</span>
-                                <span>-${this.fmtCur(calc.charterHireCost || charterHireCost)}</span>
-                            </div>
-                        ` : ''}
-
                         <!-- HIRE DEMURRAGE (SI HAY) -->
                         ${calc.demurrageHireCost > 0 ? `
                             <div class="flex justify-between items-center text-rose-800 text-[8px]">
@@ -1013,54 +953,38 @@ export class MulticotizadorPdfPrintService {
     </div>
     
     <script>
-        async function downloadDirectPdf() {
+        function downloadDirectPdf() {
             const btn = document.getElementById('btn-download-pdf');
             if (btn) {
-                btn.innerText = '⏳ Generando PDF A4 Horizontal...';
+                btn.innerText = '⏳ Generando PDF...';
                 btn.disabled = true;
             }
-            try {
-                const element = document.getElementById('pdf-content-page');
-                
-                // Extraer estilos eliminando @import url que bloquean WeasyPrint con timeouts
-                let cleanStyles = '';
-                document.querySelectorAll('style').forEach(function(s) {
-                    cleanStyles += s.innerHTML.replace(/@import\s+url\([^)]+\);?/gi, '') + '\n';
+            const element = document.getElementById('pdf-content-page');
+            const opt = {
+                margin: 0,
+                filename: 'PETRAL_MULTICOTIZADOR_${(selectedClient || 'CLIENTE').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(selectedVessel || 'BUQUE').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            
+            if (window.html2pdf) {
+                window.html2pdf().set(opt).from(element).save().then(function() {
+                    if (btn) {
+                        btn.innerText = '📥 Descargar PDF Directo (Foxit Ready)';
+                        btn.disabled = false;
+                    }
+                }).catch(function(err) {
+                    console.error('Error al generar PDF directo:', err);
+                    if (btn) {
+                        btn.innerText = '📥 Descargar PDF Directo (Foxit Ready)';
+                        btn.disabled = false;
+                    }
                 });
-
-                const fullHtml = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>PETRAL_MULTICOTIZADOR</title><style>' + cleanStyles + '</style></head><body style="margin:0;padding:0;background:#ffffff;">' + element.outerHTML + '</body></html>';
-                const filename = 'PETRAL_MULTICOTIZADOR_${(selectedClient || 'CLIENTE').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(selectedVessel || 'BUQUE').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf';
-                
-                const origin = (window.opener && window.opener.location && window.opener.location.origin && window.opener.location.origin !== 'null' && !window.opener.location.origin.startsWith('about:'))
-                    ? window.opener.location.origin
-                    : (window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('about:') ? window.location.origin : 'https://forecast.geeksoft.tech');
-                const endpoint = origin + '/api/v1/utils/generate-pdf';
-
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ html: fullHtml, filename: filename })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Servidor retornó estado: ' + response.status);
-                }
-
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(function() { URL.revokeObjectURL(url); }, 10000);
-            } catch (err) {
-                console.warn('Backend WeasyPrint no disponible, recurriendo a impresión nativa:', err);
+            } else {
                 window.print();
-            } finally {
                 if (btn) {
-                    btn.innerText = '🖨️ Guardar PDF (A4 Horizontal)';
+                    btn.innerText = '📥 Descargar PDF Directo (Foxit Ready)';
                     btn.disabled = false;
                 }
             }

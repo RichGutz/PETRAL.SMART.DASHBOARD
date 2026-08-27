@@ -1050,80 +1050,38 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
     };
 
 
-    const [isExportingPdf, setIsExportingPdf] = React.useState(false);
-
-    const handlePrintPDF = async () => {
-        if (isExportingPdf) return;
-        setIsExportingPdf(true);
-        try {
-            await MulticotizadorPdfPrintService.downloadPdf({
-                clientType,
-                selectedClient,
-                selectedRouteName: loadedRouteName || selectedRouteId,
-                selectedRouteId: loadedRouteId || selectedRouteId,
-                selectedVessel,
-                validFrom,
-                validTo,
-                vessels,
-                vesselParams,
-                bunkerSource,
-                bunkerPriceIfo,
-                bunkerPriceMdo,
-                tramos: calculatedTramosList,
-                puertosConfig,
-                ports,
-                refacturarMuellajeMap,
-                addressCommPct,
-                brokerCommPct,
-                commentsText,
-                bafFormula,
-                bafValidFrom,
-                bafValidTo,
-                bafIfoBase,
-                bafMdoBase,
-                tariffTiers,
-                demurrageRatesMap,
-                charterHireCost,
-                liveCalc: liveCalculation,
-                printedBy: user?.full_name || user?.email || 'Usuario Comercial'
-            });
-        } catch (err: any) {
-            console.error('Error al generar PDF oficial:', err);
-            // Fallback a printDocument si el backend fallase
-            MulticotizadorPdfPrintService.printDocument({
-                clientType,
-                selectedClient,
-                selectedRouteName: loadedRouteName || selectedRouteId,
-                selectedRouteId: loadedRouteId || selectedRouteId,
-                selectedVessel,
-                validFrom,
-                validTo,
-                vessels,
-                vesselParams,
-                bunkerSource,
-                bunkerPriceIfo,
-                bunkerPriceMdo,
-                tramos: calculatedTramosList,
-                puertosConfig,
-                ports,
-                refacturarMuellajeMap,
-                addressCommPct,
-                brokerCommPct,
-                commentsText,
-                bafFormula,
-                bafValidFrom,
-                bafValidTo,
-                bafIfoBase,
-                bafMdoBase,
-                tariffTiers,
-                demurrageRatesMap,
-                charterHireCost,
-                liveCalc: liveCalculation,
-                printedBy: user?.full_name || user?.email || 'Usuario Comercial'
-            });
-        } finally {
-            setIsExportingPdf(false);
-        }
+    const handlePrintPDF = () => {
+        MulticotizadorPdfPrintService.printDocument({
+            clientType,
+            selectedClient,
+            selectedRouteName: loadedRouteName || selectedRouteId,
+            selectedRouteId: loadedRouteId || selectedRouteId,
+            selectedVessel,
+            validFrom,
+            validTo,
+            vessels,
+            vesselParams,
+            bunkerSource,
+            bunkerPriceIfo,
+            bunkerPriceMdo,
+            tramos: calculatedTramosList,
+            puertosConfig,
+            ports,
+            refacturarMuellajeMap,
+            addressCommPct,
+            brokerCommPct,
+            commentsText,
+            bafFormula,
+            bafValidFrom,
+            bafValidTo,
+            bafIfoBase,
+            bafMdoBase,
+            tariffTiers,
+            demurrageRatesMap,
+            charterHireCost,
+            liveCalc: liveCalculation,
+            printedBy: user?.full_name || user?.email || 'Usuario Comercial'
+        });
     };
 
     const filteredRoutes = React.useMemo(() => {
