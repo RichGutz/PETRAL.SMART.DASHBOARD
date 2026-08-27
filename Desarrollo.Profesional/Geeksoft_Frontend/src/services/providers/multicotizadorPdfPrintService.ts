@@ -73,6 +73,55 @@ export class MulticotizadorPdfPrintService {
     }
 
     /**
+     * Descarga directa e instantánea del PDF oficial A4 Landscape mediante WeasyPrint desde la ventana principal (Foxit Ready)
+     */
+    public static async downloadPdf(data: MulticotizadorPrintData): Promise<void> {
+        const html = this.buildHtmlDocument(data);
+
+        // 1. Extraer estilos limpios sin @import url que bloquean WeasyPrint
+        let cleanStyles = '';
+        const styleMatches = html.match(/<style[\s\S]*?<\/style>/gi) || [];
+        styleMatches.forEach(s => {
+            cleanStyles += s.replace(/<\/?style[^>]*>/gi, '').replace(/@import\s+url\([^)]+\);?/gi, '') + '\n';
+        });
+
+        // 2. Extraer cuerpo limpio sin barras de control no-print ni scripts
+        const bodyContent = html
+            .replace(/^[\s\S]*?<body[^>]*>/i, '')
+            .replace(/<\/body>[\s\S]*$/i, '');
+        
+        const cleanBody = bodyContent
+            .replace(/<div class="no-print[\s\S]*?<\/div>\s*<\/div>/i, '')
+            .replace(/<script[\s\S]*?<\/script>/gi, '');
+
+        const printHtml = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>PETRAL_MULTICOTIZADOR</title><style>${cleanStyles}</style></head><body style="margin:0;padding:0;background:#ffffff;">${cleanBody}</body></html>`;
+
+        const filename = `PETRAL_MULTICOTIZADOR_${(data.selectedClient || 'CLIENTE').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(data.selectedVessel || 'BUQUE').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+
+        const apiBase = import.meta.env.VITE_API_URL || '/api/v1';
+        const response = await fetch(`${apiBase}/utils/generate-pdf`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ html: printHtml, filename: filename }),
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.detail || `Error ${response.status} del servidor`);
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+    }
+
+    /**
      * Construye el documento HTML ejecutivo A4 Landscape y lanza el diálogo de impresión
      */
     public static printDocument(data: MulticotizadorPrintData): void {
