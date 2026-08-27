@@ -339,4 +339,9 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Implementadas las columnas laterales CLIENTE, RUTA y BUQUE con orientacion vertical ultra compacta (`writingMode: vertical-rl`), angostando el ancho a `w-9` / `w-10` y optimizando el espacio para los 12 meses.
 - Agregada fila destacada de SUBTOTAL CLIENTE por cada cliente (alineada con el control de Filtros `showSubtotals`).
 - Agregado bloque final de TOTAL FLOTA CONSOLIDADA (VENTAS, COSTOS DIRECTOS, TCE, MARGEN BRUTO) debajo de todos los clientes.
+
+[2026-08-26 18:55:00] [REORGANIZACION RIBBON: CAMPO 7 (VIAJES) MOVIDO A FILA 1]
+- Movido el campo `7. Viajes` a la Fila 1 a la derecha de `6. Buque`.
+- El campo `5. Ruta` absorbe el ajuste flexible de ancho.
+- Fila 2 liberada y despejada.
 - Compilado con Vite y re-desplegado a https://forecast.geeksoft.tech.

@@ -267,4 +267,8 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-26 18:50:00] Columnas Verticales, Subtotales Cliente y Agregado Total Flota:
 - Incorporada tipografía vertical compacta en CLI, RUTA y BUQ (w-9 / w-10).
 - Agregados subtotales por cliente y bloque consolidado total de flota Navitranso.
+
+[2026-08-26 18:55:00] Reorganización Ribbon: Campo 7 a Fila 1:
+- Movido `7. Viajes` a la Fila 1 a la derecha de `6. Buque`.
+- Ajuste elástico de `5. Ruta`.
 - Desplegado a https://forecast.geeksoft.tech.
