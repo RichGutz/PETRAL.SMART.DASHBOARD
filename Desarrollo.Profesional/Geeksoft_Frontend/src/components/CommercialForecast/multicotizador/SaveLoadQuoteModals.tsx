@@ -221,7 +221,7 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                             </label>
                             
                             <div className="grid grid-cols-3 gap-2">
-                                {/* Opción 1: Ruta Cierres (Solo si activo, o deshabilitada si prospecto) */}
+                                {/* Opción 1: Ruta Cierre (Solo si activo, o deshabilitada si prospecto) */}
                                 <button
                                     type="button"
                                     onClick={() => setRecordCategory('COA')}
@@ -232,28 +232,28 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
                                             : (recordCategory === 'COA' ? 'bg-blue-700 text-white border-blue-800 shadow-sm ring-1 ring-blue-500' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100')
                                     }`}
                                 >
-                                    <span>📜 Ruta Cierres</span>
+                                    <span>📜 Ruta Cierre</span>
                                     <span className={`text-[8px] font-normal ${recordCategory === 'COA' && targetClientType !== 'PROSPECTOS' ? 'text-blue-100' : 'text-slate-400'}`}>(Paso 2)</span>
                                 </button>
 
-                                {/* Opción 2: Cotizaciones */}
+                                {/* Opción 2: Ruta Cotización */}
                                 <button
                                     type="button"
                                     onClick={() => setRecordCategory('SPOT')}
                                     className={`py-1.5 px-1.5 text-[10.5px] font-extrabold rounded border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${recordCategory === 'SPOT' ? 'bg-purple-700 text-white border-purple-800 shadow-sm ring-1 ring-purple-500' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
                                 >
-                                    <span>📄 Cotizaciones</span>
+                                    <span>📄 Ruta Cotización</span>
                                     <span className={`text-[8px] font-normal ${recordCategory === 'SPOT' ? 'text-purple-100' : 'text-slate-400'}`}>(Paso 3)</span>
                                 </button>
 
-                                {/* Opción 3: Presupuesto (Nuevo) */}
+                                {/* Opción 3: Ruta Presupuesto */}
                                 <button
                                     type="button"
                                     onClick={() => setRecordCategory('PRESUPUESTO')}
                                     className={`py-1.5 px-1.5 text-[10.5px] font-extrabold rounded border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${recordCategory === 'PRESUPUESTO' ? 'bg-emerald-700 text-white border-emerald-800 shadow-sm ring-1 ring-emerald-500' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}
                                 >
-                                    <span>📊 Presupuesto</span>
-                                    <span className={`text-[8px] font-normal ${recordCategory === 'PRESUPUESTO' ? 'text-emerald-100' : 'text-slate-400'}`}>(PPTOS)</span>
+                                    <span>📊 Ruta Presupuesto</span>
+                                    <span className={`text-[8px] font-normal ${recordCategory === 'PRESUPUESTO' ? 'text-emerald-100' : 'text-slate-400'}`}>(Paso 4)</span>
                                 </button>
                             </div>
                         </div>
