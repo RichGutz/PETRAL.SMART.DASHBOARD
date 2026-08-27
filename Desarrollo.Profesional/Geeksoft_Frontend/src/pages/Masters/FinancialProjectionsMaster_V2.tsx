@@ -4,7 +4,7 @@ import { ForecastService } from '../../services/api';
 import { MulticotizadorRetrieverService } from '../../services/providers/multicotizadorRetrieverService';
 import { MulticotizadorCalculationEngine } from '../../services/providers/multicotizadorCalculationEngine';
 import { useAuth } from '../../context/AuthContext';
-import { TrendingUp, Calendar, FileSpreadsheet, Layers, ChevronDown, ChevronRight, User, CheckCircle2, RefreshCw, Play, Trash2, Printer } from 'lucide-react';
+import { TrendingUp, Calendar, FileSpreadsheet, Layers, ChevronDown, ChevronRight, User, CheckCircle2, RefreshCw, Play, Trash2, Printer, Plus, X, Sparkles, Filter, Check, ArrowRight, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
@@ -61,6 +61,13 @@ export const FinancialProjectionsMaster: React.FC = () => {
     const [openYears, setOpenYears] = useState<Record<string, boolean>>({ '2027': true, '2026': true });
     const [expandedScenarios, setExpandedScenarios] = useState<Record<string, boolean>>({});
 
+    // Estado para Informe Consolidado Multi-Escenario (Gran Finale)
+    const [selectedMultiScenarioIds, setSelectedMultiScenarioIds] = useState<string[]>([]);
+    const [scenarioToAddId, setScenarioToAddId] = useState<string>('');
+    const [premisasNotes, setPremisasNotes] = useState<string>(
+        "a) P/L: Se ha considerado el P/L del último ajuste de bunker y cotizaciones aprobadas.\nb) Proyecciones multianuales SPCC, NEXA y clientes clave.\nc) Estimación de capacidad de flota en base a 360 días por buque."
+    );
+
     // Carga de escenarios y catálogo de cotizaciones desde Supabase
     const loadData = async () => {
         try {
@@ -86,13 +93,19 @@ export const FinancialProjectionsMaster: React.FC = () => {
             // Auto-expandir todos los años y todos los escenarios registrados para máxima visibilidad inmediata
             const autoYears: Record<string, boolean> = { '2027': true, '2026': true };
             const autoExpanded: Record<string, boolean> = {};
+            const multiIds: string[] = [];
             (enriched || []).forEach((item: any) => {
                 const y = (item.start_date || '2027').substring(0, 4);
                 autoYears[y] = true;
-                if (item.id) autoExpanded[item.id] = true;
+                if (item.id) {
+                    autoExpanded[item.id] = true;
+                    multiIds.push(item.id);
+                }
             });
             setOpenYears(autoYears);
             setExpandedScenarios(autoExpanded);
+            setSelectedMultiScenarioIds(multiIds);
+            if (multiIds.length > 0) setScenarioToAddId(multiIds[0]);
 
         } catch (err) {
             console.error("Error cargando maestro de proyecciones:", err);
@@ -768,6 +781,431 @@ export const FinancialProjectionsMaster: React.FC = () => {
         printWindow.document.close();
     };
 
+    // =========================================================================
+    // LÓGICA Y EXPORTACIÓN DEL INFORME MULTI-ESCENARIO CONSOLIDADO (GRAN FINALE)
+    // =========================================================================
+    const handleAddMultiScenario = () => {
+        if (!scenarioToAddId) return;
+        if (!selectedMultiScenarioIds.includes(scenarioToAddId)) {
+            setSelectedMultiScenarioIds(prev => [...prev, scenarioToAddId]);
+        }
+    };
+
+    const handleRemoveMultiScenario = (id: string) => {
+        setSelectedMultiScenarioIds(prev => prev.filter(sId => sId !== id));
+    };
+
+    const handleSelectAllMultiScenarios = () => {
+        setSelectedMultiScenarioIds(processedScenarios.map(p => p.id));
+    };
+
+    const handleClearMultiScenarios = () => {
+        setSelectedMultiScenarioIds([]);
+    };
+
+    const multiSelectedScenarios = useMemo(() => {
+        return selectedMultiScenarioIds
+            .map(id => processedScenarios.find(p => p.id === id))
+            .filter(Boolean) as ScenarioCardItem[];
+    }, [selectedMultiScenarioIds, processedScenarios]);
+
+    // Paleta de colores distintivos por sección apilada (igual a la referencia ejecutiva)
+    const scenarioThemeColors = [
+        { bgHeader: '#d9ead3', textHeader: '#274e13', borderColor: '#b6d7a8', tag: 'bg-emerald-100 text-emerald-900 border-emerald-300' },
+        { bgHeader: '#fff2cc', textHeader: '#7f6000', borderColor: '#ffe599', tag: 'bg-amber-100 text-amber-900 border-amber-300' },
+        { bgHeader: '#fce5cd', textHeader: '#783f04', borderColor: '#f9cb9c', tag: 'bg-orange-100 text-orange-900 border-orange-300' },
+        { bgHeader: '#cfe2f3', textHeader: '#0b5394', borderColor: '#9fc5e8', tag: 'bg-blue-100 text-blue-900 border-blue-300' }
+    ];
+
+    // EXPORTACIÓN A EXCEL MULTI-ESCENARIO
+    const handleExportMultiMecExcel = (scenariosToExport: ScenarioCardItem[]) => {
+        if (scenariosToExport.length === 0) return alert('Por favor selecciona al menos un escenario para exportar.');
+        const wb = XLSX.utils.book_new();
+
+        // Hoja Consolidada Apilada
+        const masterData: any[][] = [
+            ['NAVIERA PETRAL S.A. - INFORME EJECUTIVO MULTI-ESCENARIO CONSOLIDADO'],
+            [`Fecha de Emisión: ${new Date().toLocaleDateString('es-PE')} ${new Date().toLocaleTimeString('es-PE')}`],
+            ['Premisas:'],
+            ...premisasNotes.split('\n').map(line => [line]),
+            []
+        ];
+
+        scenariosToExport.forEach((scenario, sIdx) => {
+            const mec = scenario.mec;
+            masterData.push([`========================================================================================`]);
+            masterData.push([`SECCIÓN ${sIdx + 1}: ${scenario.name.toUpperCase()} (Año ${scenario.year} | Autor: ${scenario.userId})`]);
+            masterData.push([`========================================================================================`]);
+            masterData.push(['', 'Nº viajes', 'Volumen TM', '%']);
+            masterData.push(['Viajes cabotaje', mec.cabotageTrips, mec.cabotageVolumeTm, `${mec.cabotageSharePct.toFixed(2)}%`]);
+            masterData.push(['Viajes exportación', mec.exportTrips, mec.exportVolumeTm, `${mec.exportSharePct.toFixed(2)}%`]);
+            masterData.push(['Total', mec.totalTrips, mec.totalVolumeTm, '100.00%']);
+            masterData.push([]);
+            masterData.push(['Puertos / Ruta', 'TM Anual', 'Full load', 'Nº viajes', 'P/L x Viaje', 'Total Margen Operativo', '%', 'Dias ocupación', 'Dias disponibles']);
+
+            mec.routes.forEach(r => {
+                masterData.push([
+                    r.route,
+                    r.annualTons,
+                    Math.round(r.fullLoad),
+                    r.annualTrips,
+                    Math.round(r.pnlPerTrip),
+                    Math.round(r.totalGrossMargin),
+                    `${r.volumeSharePct.toFixed(2)}%`,
+                    Math.round(r.daysOccupation),
+                    ''
+                ]);
+            });
+
+            masterData.push([
+                'Total',
+                mec.totalVolumeTm,
+                '',
+                mec.totalTrips,
+                '',
+                Math.round(mec.totalGrossMargin),
+                '100.00%',
+                Math.round(mec.totalDaysOccupation),
+                Math.round(mec.totalDaysAvailable)
+            ]);
+            masterData.push([]);
+            masterData.push([]);
+        });
+
+        const masterWs = XLSX.utils.aoa_to_sheet(masterData);
+        XLSX.utils.book_append_sheet(wb, masterWs, "INFORME_CONSOLIDADO");
+
+        // Hojas individuales por escenario
+        scenariosToExport.forEach((scenario) => {
+            const mec = scenario.mec;
+            const wsData: any[][] = [
+                [`Año ${scenario.year} - ${scenario.name}`],
+                ['', 'Nº viajes', 'Volumen TM', '%'],
+                ['Viajes cabotaje', mec.cabotageTrips, mec.cabotageVolumeTm, `${mec.cabotageSharePct.toFixed(2)}%`],
+                ['Viajes exportación', mec.exportTrips, mec.exportVolumeTm, `${mec.exportSharePct.toFixed(2)}%`],
+                ['Total', mec.totalTrips, mec.totalVolumeTm, '100.00%'],
+                [],
+                ['Ruta', 'TM Anual', 'Full load', 'Nº viajes', 'P/L x Viaje', 'Total Gross Margin', '%', 'Dias ocupación', 'Dias disponibles']
+            ];
+
+            mec.routes.forEach(r => {
+                wsData.push([
+                    r.route,
+                    r.annualTons,
+                    Math.round(r.fullLoad),
+                    r.annualTrips,
+                    Math.round(r.pnlPerTrip),
+                    Math.round(r.totalGrossMargin),
+                    `${r.volumeSharePct.toFixed(2)}%`,
+                    Math.round(r.daysOccupation),
+                    ''
+                ]);
+            });
+
+            wsData.push([
+                'Total',
+                mec.totalVolumeTm,
+                '',
+                mec.totalTrips,
+                '',
+                Math.round(mec.totalGrossMargin),
+                '100.00%',
+                Math.round(mec.totalDaysOccupation),
+                Math.round(mec.totalDaysAvailable)
+            ]);
+
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            const cleanName = (scenario.name || 'Escenario').replace(/[:\\/?*\[\]]/g, '').substring(0, 28);
+            XLSX.utils.book_append_sheet(wb, ws, cleanName);
+        });
+
+        XLSX.writeFile(wb, `PETRAL_INFORME_CONSOLIDADO_MULTI_ESCENARIOS_MEC.xlsx`);
+    };
+
+    // EXPORTACIÓN A PDF EJECUTIVO MULTI-ESCENARIO (FORMATO EJECUTIVO DE HOJA CONTINUA FOXIT READY)
+    const handleExportMultiMecPDF = (scenariosToExport: ScenarioCardItem[]) => {
+        if (scenariosToExport.length === 0) return alert('Por favor selecciona al menos un escenario para generar el informe PDF.');
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return alert('Por favor habilita ventanas emergentes para generar el PDF.');
+
+        const sectionsHtml = scenariosToExport.map((scenario, sIdx) => {
+            const mec = scenario.mec;
+            const theme = scenarioThemeColors[sIdx % scenarioThemeColors.length];
+
+            const routesHtml = mec.routes.map(r => `
+                <tr>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #1e293b; background: #ffffff;">${r.route}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${r.annualTons.toLocaleString('en-US')}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${Math.round(r.fullLoad).toLocaleString('en-US')}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #0f172a;">${r.annualTrips}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">$${Math.round(r.pnlPerTrip).toLocaleString('en-US')}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; font-weight: bold; color: #0f172a;">$${Math.round(r.totalGrossMargin).toLocaleString('en-US')}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 600; color: #0369a1;">${r.volumeSharePct.toFixed(2)}%</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #334155;">${Math.round(r.daysOccupation)}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; color: #94a3b8;">-</td>
+                </tr>
+            `).join('');
+
+            return `
+                <div class="scenario-section" style="margin-bottom: 22px; page-break-inside: avoid;">
+                    
+                    <!-- TABLA 1: CABOTAJE VS EXPORTACION CON CABECERA TEMÁTICA -->
+                    <table style="max-width: 480px; margin-bottom: 8px;">
+                        <thead>
+                            <tr>
+                                <th colspan="4" style="background-color: ${theme.bgHeader}; color: ${theme.textHeader}; text-align: center; font-size: 11.5px; font-weight: 800; padding: 5px 8px; border: 1px solid #cbd5e1; letter-spacing: 0.2px;">
+                                    ${scenario.name.toUpperCase()} — AÑO ${scenario.year}
+                                </th>
+                            </tr>
+                            <tr>
+                                <th style="text-align: left; width: 160px; font-size: 9.5px; padding: 3px 6px;">Tipo Tráfico</th>
+                                <th style="text-align: center; width: 80px; font-size: 9.5px; padding: 3px 6px;">Nº viajes</th>
+                                <th style="text-align: right; width: 120px; font-size: 9.5px; padding: 3px 6px;">Volumen TM</th>
+                                <th style="text-align: center; width: 80px; font-size: 9.5px; padding: 3px 6px;">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; font-weight: 600; color: #334155;">Viajes cabotaje</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold;">${mec.cabotageTrips}</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.cabotageVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 700; color: #0369a1;">${mec.cabotageSharePct.toFixed(2)}%</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; font-weight: 600; color: #334155;">Viajes exportación</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold;">${mec.exportTrips}</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.exportVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 700; color: #0369a1;">${mec.exportSharePct.toFixed(2)}%</td>
+                            </tr>
+                            <tr class="total-row" style="background: #f8fafc; font-weight: 800;">
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1;">Total</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${mec.totalTrips}</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.totalVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 3px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">100.00%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- TABLA 2: MATRIZ DE RUTAS / PUERTOS -->
+                    <table style="width: 100%; margin-bottom: 0;">
+                        <thead>
+                            <tr style="background: #f1f5f9;">
+                                <th style="text-align: left; font-size: 9.5px; padding: 4px 6px;">Puertos / Ruta</th>
+                                <th style="text-align: right; font-size: 9.5px; padding: 4px 6px;">TM Anual</th>
+                                <th style="text-align: right; font-size: 9.5px; padding: 4px 6px;">Full load</th>
+                                <th style="text-align: center; font-size: 9.5px; padding: 4px 6px;">Nº viajes</th>
+                                <th style="text-align: right; font-size: 9.5px; padding: 4px 6px;">P/L</th>
+                                <th style="text-align: right; font-size: 9.5px; padding: 4px 6px;">Total Margen Operativo</th>
+                                <th style="text-align: center; font-size: 9.5px; padding: 4px 6px;">%</th>
+                                <th style="text-align: center; font-size: 9.5px; padding: 4px 6px;">Dias ocupación</th>
+                                <th style="text-align: center; font-size: 9.5px; padding: 4px 6px;">Dias disponibles</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${routesHtml}
+                            <tr class="total-row" style="background: #f8fafc; font-weight: 800; border-top: 2px solid #94a3b8;">
+                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1;">Total</td>
+                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.totalVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right;">-</td>
+                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${mec.totalTrips}</td>
+                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right;">-</td>
+                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #047857;">$${Math.round(mec.totalGrossMargin).toLocaleString('en-US')}</td>
+                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">100.00%</td>
+                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${Math.round(mec.totalDaysOccupation)}</td>
+                                <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${Math.round(mec.totalDaysAvailable)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }).join('');
+
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="utf-8">
+                <title>PETRAL_INFORME_CONSOLIDADO_MULTI_ESCENARIO</title>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+                <style>
+                    @page {
+                        size: A4 portrait;
+                        margin: 8mm 8mm 8mm 8mm;
+                    }
+                    body {
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+                        color: #1e293b;
+                        background: #f8fafc;
+                        margin: 0;
+                        padding: 15px;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                        font-size: 10px;
+                    }
+                    .no-print {
+                        position: fixed;
+                        top: 15px;
+                        right: 20px;
+                        z-index: 9999;
+                        display: flex;
+                        gap: 10px;
+                        background: rgba(15, 23, 42, 0.9);
+                        padding: 8px 16px;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    }
+                    .btn-action {
+                        background: #2563eb;
+                        color: #fff;
+                        border: none;
+                        padding: 7px 14px;
+                        border-radius: 6px;
+                        font-weight: bold;
+                        font-size: 12px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                    }
+                    .btn-secondary {
+                        background: #475569;
+                    }
+                    .page-container {
+                        max-width: 900px;
+                        margin: 0 auto;
+                        background: #ffffff;
+                        padding: 16px 20px;
+                        border-radius: 8px;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                        border: 1px solid #e2e8f0;
+                    }
+                    .header-main-title {
+                        text-align: center;
+                        font-size: 13px;
+                        font-weight: 800;
+                        color: #0f172a;
+                        margin: 0 0 12px 0;
+                        text-decoration: underline;
+                        letter-spacing: 0.3px;
+                    }
+                    .premisas-box {
+                        border: 1px solid #94a3b8;
+                        background: #ffffff;
+                        padding: 8px 12px;
+                        margin-bottom: 16px;
+                        border-radius: 4px;
+                        font-size: 9.5px;
+                        line-height: 1.4;
+                        color: #334155;
+                    }
+                    .premisas-title {
+                        font-weight: bold;
+                        text-decoration: underline;
+                        margin-bottom: 4px;
+                        color: #0f172a;
+                    }
+                    table {
+                        border-collapse: collapse;
+                        font-size: 9.5px;
+                    }
+                    th {
+                        border: 1px solid #cbd5e1;
+                        font-weight: bold;
+                    }
+                    .footer-box {
+                        margin-top: 20px;
+                        padding-top: 8px;
+                        border-top: 1px solid #cbd5e1;
+                        font-size: 9px;
+                        color: #64748b;
+                        display: flex;
+                        justify-content: space-between;
+                    }
+                    @media print {
+                        .no-print { display: none !important; }
+                        body { background: #fff; padding: 0; }
+                        .page-container { border: none; box-shadow: none; padding: 0; max-width: 100%; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="no-print">
+                    <button class="btn-action" id="btn-download-pdf" onclick="downloadDirectPdf()">
+                        <span>📥 Descargar PDF Consolidado (Foxit Ready)</span>
+                    </button>
+                    <button class="btn-action btn-secondary" onclick="window.print()">
+                        <span>🖨️ Imprimir / Guardar PDF</span>
+                    </button>
+                </div>
+
+                <div class="page-container" id="pdf-content-page">
+                    <div class="header-main-title">
+                        Proyecciones Comerciales & Contratos Multianuales — NAVIERA PETRAL S.A.
+                    </div>
+
+                    <!-- CAJA DE PREMISAS -->
+                    <div class="premisas-box">
+                        <div class="premisas-title">Premisas:</div>
+                        ${premisasNotes.split('\n').map(line => `<div>${line}</div>`).join('')}
+                    </div>
+
+                    <!-- SECCIONES DE ESCENARIOS APILADAS 1:1 -->
+                    ${sectionsHtml}
+
+                    <!-- FOOTER -->
+                    <div class="footer-box">
+                        <div>Fecha: ${new Date().toLocaleDateString('es-PE')}</div>
+                        <div>Elaborado por: Área Comercial & Operaciones / NAVIERA PETRAL S.A.</div>
+                    </div>
+                </div>
+
+                <script>
+                    function downloadDirectPdf() {
+                        const btn = document.getElementById('btn-download-pdf');
+                        if (btn) {
+                            btn.innerText = '⏳ Generando PDF...';
+                            btn.disabled = true;
+                        }
+                        const element = document.getElementById('pdf-content-page');
+                        const opt = {
+                            margin: [6, 6, 6, 6],
+                            filename: 'PETRAL_INFORME_CONSOLIDADO_MULTI_ESCENARIO.pdf',
+                            image: { type: 'jpeg', quality: 0.98 },
+                            html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                        };
+                        
+                        if (window.html2pdf) {
+                            window.html2pdf().set(opt).from(element).save().then(function() {
+                                if (btn) {
+                                    btn.innerText = '📥 Descargar PDF Consolidado (Foxit Ready)';
+                                    btn.disabled = false;
+                                }
+                            }).catch(function(err) {
+                                console.error('Error al generar PDF directo:', err);
+                                if (btn) {
+                                    btn.innerText = '📥 Descargar PDF Consolidado (Foxit Ready)';
+                                    btn.disabled = false;
+                                }
+                            });
+                        } else {
+                            window.print();
+                            if (btn) {
+                                btn.innerText = '📥 Descargar PDF Consolidado (Foxit Ready)';
+                                btn.disabled = false;
+                            }
+                        }
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+
+        printWindow.document.open();
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+    };
+
     return (
         <MasterTemplate
             title="Maestro de Matrices"
@@ -1096,6 +1534,295 @@ export const FinancialProjectionsMaster: React.FC = () => {
                             );
                         })
                     )}
+                </div>
+
+                {/* ========================================================================= */}
+                {/* SECCIÓN GRAN FINALE: INFORME MULTI-ESCENARIO CONSOLIDADO (FORMATO MEC)    */}
+                {/* ========================================================================= */}
+                <div className="bg-slate-50 border-t-2 border-slate-300 p-6 space-y-6">
+                    
+                    {/* CABECERA Y BARRA DE CONTROL DEL INFORME CONSOLIDADO */}
+                    <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h3 className="text-base font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                <BookOpen size={20} className="text-indigo-600" />
+                                INFORME EJECUTIVO MULTI-ESCENARIO (FORMATO MEC CONSOLIDADO)
+                            </h3>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                                Consolida y apila varios escenarios anuales en un solo reporte ejecutivo para visualización continua y exportación Foxit Ready.
+                            </p>
+                        </div>
+
+                        {/* BOTONES DE EXPORTACIÓN CONSOLIDADA */}
+                        <div className="flex items-center gap-2 shrink-0">
+                            <button
+                                onClick={() => handleExportMultiMecExcel(multiSelectedScenarios)}
+                                disabled={multiSelectedScenarios.length === 0}
+                                className="flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition-colors cursor-pointer shadow-xs"
+                                title="Descargar libro Excel con resumen consolidado y pestañas individuales"
+                            >
+                                <FileSpreadsheet size={15} />
+                                <span>Descargar Excel Consolidado</span>
+                            </button>
+
+                            <button
+                                onClick={() => handleExportMultiMecPDF(multiSelectedScenarios)}
+                                disabled={multiSelectedScenarios.length === 0}
+                                className="flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition-colors cursor-pointer shadow-xs"
+                                title="Generar e imprimir PDF de varias páginas o continuo Foxit Ready"
+                            >
+                                <Printer size={15} />
+                                <span>Descargar PDF Consolidado (Foxit Ready)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* BARRA DE FILTROS, SELECTORES Y AGREGADOR DE ESCENARIOS */}
+                    <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                                    <Filter size={14} className="text-slate-500" />
+                                    Seleccionar Escenario:
+                                </span>
+
+                                <select
+                                    value={scenarioToAddId}
+                                    onChange={(e) => setScenarioToAddId(e.target.value)}
+                                    className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-hidden focus:ring-2 focus:ring-blue-500 text-slate-800 min-w-[240px]"
+                                >
+                                    {processedScenarios.map(sc => (
+                                        <option key={sc.id} value={sc.id}>
+                                            Año {sc.year} — {sc.name} ({sc.userId})
+                                        </option>
+                                    ))}
+                                </select>
+
+                                <button
+                                    onClick={handleAddMultiScenario}
+                                    className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs"
+                                >
+                                    <Plus size={14} />
+                                    <span>Agregar al Informe</span>
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handleSelectAllMultiScenarios}
+                                    className="text-xs font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer border border-blue-200"
+                                >
+                                    🔄 Seleccionar Todos ({processedScenarios.length})
+                                </button>
+                                <button
+                                    onClick={handleClearMultiScenarios}
+                                    className="text-xs font-bold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer border border-rose-200"
+                                >
+                                    🗑️ Limpiar Lista
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* CHIPS / ETIQUETAS DE ESCENARIOS ACTIVOS EN EL INFORME */}
+                        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+                            <span className="text-[11px] font-bold text-slate-500">Escenarios en el reporte ({multiSelectedScenarios.length}):</span>
+                            {multiSelectedScenarios.length === 0 ? (
+                                <span className="text-xs text-slate-400 italic">Ningún escenario seleccionado. Selecciona uno en el desplegable y haz clic en "Agregar al Informe".</span>
+                            ) : (
+                                multiSelectedScenarios.map((sc, idx) => {
+                                    const theme = scenarioThemeColors[idx % scenarioThemeColors.length];
+                                    return (
+                                        <span 
+                                            key={sc.id}
+                                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shadow-2xs ${theme.tag}`}
+                                        >
+                                            <span>Año {sc.year} — {sc.name}</span>
+                                            <button
+                                                onClick={() => handleRemoveMultiScenario(sc.id)}
+                                                className="hover:bg-black/10 rounded-full p-0.5 transition-colors cursor-pointer"
+                                                title="Quitar este escenario del informe"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </span>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+
+                    {/* CAJA EDITABLE DE PREMISAS */}
+                    <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-2">
+                        <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                            <span className="flex items-center gap-1.5">
+                                <Sparkles size={14} className="text-amber-500" />
+                                Premisas del Informe (Editables para impresión):
+                            </span>
+                            <span className="text-[11px] font-normal text-slate-400">Estas notas se imprimirán en el encabezado del PDF y Excel</span>
+                        </label>
+                        <textarea
+                            value={premisasNotes}
+                            onChange={(e) => setPremisasNotes(e.target.value)}
+                            rows={3}
+                            className="w-full text-xs font-mono bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                            placeholder="Escribe aquí las premisas del informe..."
+                        />
+                    </div>
+
+                    {/* LIENZO DE VISTA PREVIA DEL INFORME CONSOLIDADO (IDÉNTICO A LA REFERENCIA) */}
+                    <div className="bg-white rounded-xl border border-slate-300 shadow-md p-8 space-y-8 max-w-5xl mx-auto">
+                        
+                        {/* ENCABEZADO PRINCIPAL */}
+                        <div className="text-center pb-4 border-b border-slate-200">
+                            <h2 className="text-base font-extrabold text-slate-900 tracking-tight underline">
+                                Proyecciones Comerciales & Contratos Multianuales — NAVIERA PETRAL S.A.
+                            </h2>
+                            <p className="text-xs text-slate-500 mt-1">
+                                Informe Ejecutivo Consolidado de Formatos MEC por Escenario y Año
+                            </p>
+                        </div>
+
+                        {/* BLOQUE DE PREMISAS VISUAL */}
+                        <div className="border border-slate-400 rounded p-3 bg-slate-50/70 text-xs text-slate-800 space-y-1">
+                            <div className="font-bold underline text-slate-900">Premisas:</div>
+                            {premisasNotes.split('\n').map((line, lIdx) => (
+                                <div key={lIdx} className="font-mono text-[11px] text-slate-700">{line}</div>
+                            ))}
+                        </div>
+
+                        {/* SECCIONES APILADAS (UNA ENCIMA DE LA OTRA) */}
+                        {multiSelectedScenarios.length === 0 ? (
+                            <div className="text-center py-12 text-slate-400 font-semibold text-sm">
+                                <Layers size={40} className="mx-auto text-slate-300 mb-2" />
+                                No hay escenarios seleccionados para visualizar. Agrega escenarios desde la barra superior.
+                            </div>
+                        ) : (
+                            multiSelectedScenarios.map((scenario, sIdx) => {
+                                const mec = scenario.mec;
+                                const theme = scenarioThemeColors[sIdx % scenarioThemeColors.length];
+
+                                return (
+                                    <div key={scenario.id} className="space-y-4 pt-4 border-t-2 border-slate-300 first:border-t-0 first:pt-0">
+                                        
+                                        {/* TABLA 1: CABOTAJE VS EXPORTACIÓN CON CABECERA TEMÁTICA */}
+                                        <div className="overflow-x-auto max-w-md">
+                                            <table className="w-full text-xs text-left border-collapse border border-slate-300 shadow-2xs">
+                                                <thead>
+                                                    <tr>
+                                                        <th 
+                                                            colSpan={4} 
+                                                            style={{ backgroundColor: theme.bgHeader, color: theme.textHeader }}
+                                                            className="py-1.5 px-3 text-center font-extrabold text-xs border border-slate-300 tracking-wide"
+                                                        >
+                                                            Año {scenario.year} — {scenario.name}
+                                                        </th>
+                                                    </tr>
+                                                    <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-300 text-[11px]">
+                                                        <th className="py-1 px-2.5 border border-slate-300">Tipo Tráfico</th>
+                                                        <th className="py-1 px-2.5 text-center border border-slate-300">Nº viajes</th>
+                                                        <th className="py-1 px-2.5 text-right border border-slate-300">Volumen TM</th>
+                                                        <th className="py-1 px-2.5 text-center border border-slate-300">%</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-200 font-mono text-[11px]">
+                                                    <tr>
+                                                        <td className="py-1 px-2.5 font-sans font-semibold text-slate-800 border border-slate-300">Viajes cabotaje</td>
+                                                        <td className="py-1 px-2.5 text-center border border-slate-300 text-slate-800">{mec.cabotageTrips}</td>
+                                                        <td className="py-1 px-2.5 text-right border border-slate-300 text-slate-800">{mec.cabotageVolumeTm.toLocaleString('en-US')}</td>
+                                                        <td className="py-1 px-2.5 text-center border border-slate-300 font-bold text-blue-900">{mec.cabotageSharePct.toFixed(2)}%</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="py-1 px-2.5 font-sans font-semibold text-slate-800 border border-slate-300">Viajes exportación</td>
+                                                        <td className="py-1 px-2.5 text-center border border-slate-300 text-slate-800">{mec.exportTrips}</td>
+                                                        <td className="py-1 px-2.5 text-right border border-slate-300 text-slate-800">{mec.exportVolumeTm.toLocaleString('en-US')}</td>
+                                                        <td className="py-1 px-2.5 text-center border border-slate-300 font-bold text-blue-900">{mec.exportSharePct.toFixed(2)}%</td>
+                                                    </tr>
+                                                    <tr className="bg-slate-100 font-bold">
+                                                        <td className="py-1 px-2.5 font-sans border border-slate-300 text-slate-900">Total</td>
+                                                        <td className="py-1 px-2.5 text-center border border-slate-300 text-slate-900">{mec.totalTrips}</td>
+                                                        <td className="py-1 px-2.5 text-right border border-slate-300 text-slate-900">{mec.totalVolumeTm.toLocaleString('en-US')}</td>
+                                                        <td className="py-1 px-2.5 text-center border border-slate-300 text-slate-900 font-black">100.00%</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        {/* TABLA 2: MATRIZ DE RUTAS / PUERTOS */}
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-xs text-left border-collapse border border-slate-300 shadow-2xs">
+                                                <thead className="bg-slate-100 text-slate-800 font-bold border-b border-slate-300 text-[11px]">
+                                                    <tr>
+                                                        <th className="py-1.5 px-2.5 border border-slate-300">Puertos / Ruta</th>
+                                                        <th className="py-1.5 px-2.5 text-right border border-slate-300">TM Anual</th>
+                                                        <th className="py-1.5 px-2.5 text-right border border-slate-300">Full load</th>
+                                                        <th className="py-1.5 px-2.5 text-center border border-slate-300">Nº viajes</th>
+                                                        <th className="py-1.5 px-2.5 text-right border border-slate-300">P/L</th>
+                                                        <th className="py-1.5 px-2.5 text-right border border-slate-300">Total Margen Operativo</th>
+                                                        <th className="py-1.5 px-2.5 text-center border border-slate-300">%</th>
+                                                        <th className="py-1.5 px-2.5 text-center border border-slate-300">Dias ocupación</th>
+                                                        <th className="py-1.5 px-2.5 text-center border border-slate-300">Dias disponibles</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-200 font-mono text-[11px]">
+                                                    {mec.routes.map((r, idx) => (
+                                                        <tr key={idx} className="hover:bg-slate-50">
+                                                            <td className="py-1 px-2.5 font-sans font-semibold text-slate-900 border border-slate-300">
+                                                                {r.route}
+                                                            </td>
+                                                            <td className="py-1 px-2.5 text-right border border-slate-300 text-slate-800">
+                                                                {r.annualTons.toLocaleString('en-US')}
+                                                            </td>
+                                                            <td className="py-1 px-2.5 text-right border border-slate-300 text-slate-800">
+                                                                {Math.round(r.fullLoad).toLocaleString('en-US')}
+                                                            </td>
+                                                            <td className="py-1 px-2.5 text-center border border-slate-300 text-slate-800 font-bold">
+                                                                {r.annualTrips}
+                                                            </td>
+                                                            <td className="py-1 px-2.5 text-right border border-slate-300 text-slate-800">
+                                                                ${Math.round(r.pnlPerTrip).toLocaleString('en-US')}
+                                                            </td>
+                                                            <td className="py-1 px-2.5 text-right border border-slate-300 text-slate-800 font-bold">
+                                                                ${Math.round(r.totalGrossMargin).toLocaleString('en-US')}
+                                                            </td>
+                                                            <td className="py-1 px-2.5 text-center border border-slate-300 font-semibold text-blue-900">
+                                                                {r.volumeSharePct.toFixed(2)}%
+                                                            </td>
+                                                            <td className="py-1 px-2.5 text-center border border-slate-300 text-slate-800 font-bold">
+                                                                {Math.round(r.daysOccupation)}
+                                                            </td>
+                                                            <td className="py-1 px-2.5 text-center border border-slate-300 text-slate-400">
+                                                                -
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                    <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
+                                                        <td className="py-1.5 px-2.5 font-sans border border-slate-300">Total</td>
+                                                        <td className="py-1.5 px-2.5 text-right border border-slate-300">{mec.totalVolumeTm.toLocaleString('en-US')}</td>
+                                                        <td className="py-1.5 px-2.5 text-right border border-slate-300">-</td>
+                                                        <td className="py-1.5 px-2.5 text-center border border-slate-300">{mec.totalTrips}</td>
+                                                        <td className="py-1.5 px-2.5 text-right border border-slate-300">-</td>
+                                                        <td className="py-1.5 px-2.5 text-right border border-slate-300 text-emerald-800">${Math.round(mec.totalGrossMargin).toLocaleString('en-US')}</td>
+                                                        <td className="py-1.5 px-2.5 text-center border border-slate-300 font-black">100.00%</td>
+                                                        <td className="py-1.5 px-2.5 text-center border border-slate-300">{Math.round(mec.totalDaysOccupation)}</td>
+                                                        <td className="py-1.5 px-2.5 text-center border border-slate-300">{Math.round(mec.totalDaysAvailable)}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                    </div>
+                                );
+                            })
+                        )}
+
+                        {/* PIE DEL INFORME CON FECHA Y FIRMA */}
+                        <div className="pt-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+                            <div>Fecha: <strong>{new Date().toLocaleDateString('es-PE')}</strong></div>
+                            <div>Elaborado por: <strong>Área Comercial & Operaciones / NAVIERA PETRAL S.A.</strong></div>
+                        </div>
+
+                    </div>
+
                 </div>
 
             </div>
