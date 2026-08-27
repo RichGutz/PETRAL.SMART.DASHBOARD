@@ -385,3 +385,8 @@ CONCURRENCY & QC SUMMARY:
 - Ejecutado script Loop QC pericial con 100% de convergencia.
 - Documentado en Obsidian 31_Reporte_MEC_Matriz_Matrices.md.
 - Disponible en Maestro de Matrices / Proyecciones Financieras en vivo https://forecast.geeksoft.tech/financial-projections.
+
+[2026-08-27 17:03:00] MAESTRO DE MATRICES DESPLEGADO CON AUTO-EXPANSION TOTAL:
+- Auto-expandidas las tablas del Formato MEC y bloques de anio al cargar la pantalla.
+- Escenarios 'SINTETICO' (60 viajes) y '2027 Base MEC' visibles de inmediato.
+- Despliegue en vivo completado https://forecast.geeksoft.tech/financial-projections.
