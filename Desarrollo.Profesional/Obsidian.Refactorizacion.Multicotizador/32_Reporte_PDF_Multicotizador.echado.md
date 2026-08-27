@@ -157,6 +157,21 @@ En cumplimiento del **Protocolo Benoit Blanc de Auditoría Pericial**, cada vuel
   4. **Descarga Automática**: El backend responde en 100ms retornando el archivo `PETRAL_MULTICOTIZADOR_CLIENTE_BUQUE.pdf` con `MediaBox [0 0 841.89 595.28]` (A4 Landscape nativo), disparando la descarga inmediata en el navegador.
 * **Veredicto Esperado**: ✅ Descarga instantánea de 1 solo clic + Apertura 100% horizontal en Foxit Reader en 1 sola hoja A4.
 
+### 7.6. Vuelta 6: El Misterio del Arriendo de Naves en Cotizaciones Guardadas (Caso NEXA $67,500)
+* **Fecha**: 27.08.2026 (01:25 PM)
+* **Síntoma Reportado**: Al cargar la cotización de cliente `NEXA.ILO.CALLAO.MATARANI.ILO.FX 2026.05.12`, los comentarios indicaban un arriendo de naves de `$67,500`, pero la casilla de Costo Arriendo de Naves en la UI se reseteaba a `$0`.
+* **Hallazgo Forense**:
+  1. En la base de datos (Supabase `routes_quotes`), la cotización sí tenía guardado `charter_hire_cost: 67500` dentro de `legs_data`.
+  2. Sin embargo, el método `MulticotizadorRetrieverService.unpackQuoteData` omitía extraer `charter_hire_cost` en su objeto de retorno.
+  3. Al llegar `undefined` al desempacador, `MultiCotizadorExcel.tsx` ejecutaba el fallback `setCharterHireCost(0)`.
+* **Cirugía Aplicada**:
+  1. Se agregó la extracción de `charter_hire_cost` y `charterHireCost` en `unpackQuoteData`.
+  2. Se limpiaron referencias huérfanas a `isExportingPdf`.
+  3. Creación de Branch y Tag oficial de Git:
+     * **Branch**: `feature/nexa-charter-67500-ok`
+     * **Tag**: `TAG.BENOIT.NEXA.CHARTER.67500.OK`
+* **Veredicto**: ✅ **100% RESUELTO Y OPERATIVO EN PRODUCCIÓN.**
+
 ---
 
 *Documento actualizado y sellado para trazabilidad permanente en Obsidian — 27.08.2026.*
