@@ -371,4 +371,9 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Removidas definitivamente las lineas `GTOS. PERSONAL A BORDO` y `GASTOS DE LA NAVE`.
 - La estructura de cada nodo ahora finaliza formal y exactamente en `🏆 MARGEN BRUTO (P&L)`.
 - El motor de `rowSpan` se recalibro dinamicamente sin ningun descuadre en las columnas verticales.
+
+[2026-08-26 21:05:00] [INCORPORACION DE SUBFILA 'DIAS DE DEMORA' EN DESPLEGABLE DE VIAJES]
+- Incorporada la subfila `↳ Días de Demora` dentro del acordeon desplegable de `Viajes (freq)` en `ForecastGrid.tsx`.
+- Ajustado `numSubRows = 25` para garantizar la cuadratura matematica perfecta del `rowSpan` de buque, ruta y cliente.
+- Vinculado dinamicamente a `demurrage_days_unit` (mostrando 0 si no hay demora activa o los dias reales configurados).
 - Compilado con Vite y re-desplegado a https://forecast.geeksoft.tech.

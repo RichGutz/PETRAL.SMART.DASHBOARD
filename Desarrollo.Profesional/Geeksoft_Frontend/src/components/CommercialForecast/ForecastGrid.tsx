@@ -274,6 +274,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         };
 
         const globalTrips = new Array(months.length).fill(0);
+        const globalShipDays = new Array(months.length).fill(0);
         const globalTons = new Array(months.length).fill(0);
         const globalFreightRevenues = new Array(months.length).fill(0);
         const globalRevenues = new Array(months.length).fill(0);
@@ -290,6 +291,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             const level1RowSpanRef = { value: 0 };
             let isFirstLevel1Row = true;
 
+            const level1ShipDays = new Array(months.length).fill(0);
             const level1FreightRevenue = new Array(months.length).fill(0);
             const level1GrossRevenue = new Array(months.length).fill(0);
             const level1PortCosts = new Array(months.length).fill(0);
@@ -460,6 +462,12 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     const tonsTotal = months.map((_, i) => unitCargos[i] * trips[i]);
                     tonsTotal.forEach((v, i) => level1TonsTotal[i] += v);
 
+                    const nodeShipDays = months.map((_, i) => (trips[i] > 0 ? (totalDaysArr[i] || 0) * trips[i] : 0));
+                    nodeShipDays.forEach((v, i) => {
+                        level1ShipDays[i] += v;
+                        globalShipDays[i] += v;
+                    });
+
                     const calcPct = (arr: number[]) => arr.map((v, i) => grossRevenues[i] ? (v / grossRevenues[i]) * 100 : 0);
                     const calcTotalPct = (totalVal: number, totalRev: number) => totalRev ? (totalVal / totalRev) * 100 : 0;
 
@@ -468,6 +476,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
                     const metrics: any[] = [
                         { name: "Viajes (freq)", values: trips, total: sum(trips), pct: null, totalPct: null, isCurrency: false, isTotal: false, isExpandable: true, isFrequencyEditable: true, rowKey, isExpanded },
+                        { name: "Días-Buque", values: nodeShipDays, total: sum(nodeShipDays), pct: null, totalPct: null, isCurrency: false, isTotal: false },
                         { name: "Toneladas", values: tonsTotal, total: sum(tonsTotal), pct: null, totalPct: null, isCurrency: false, isTotal: false },
                         { name: "Net Revenue", values: netRevenues, total: sum(netRevenues), pct: calcPct(netRevenues), totalPct: calcTotalPct(sum(netRevenues), sum(grossRevenues)), isCurrency: true, isTotal: false, isExpandableGrossRevenue: true, rowKey, isExpanded: isExpandedGross },
                         { name: "(-) Hire (TCE x días)", values: tceCostTotal, total: sum(tceCostTotal), pct: calcPct(tceCostTotal), totalPct: calcTotalPct(sum(tceCostTotal), sum(grossRevenues)), isCurrency: true, isTotal: false },
@@ -753,6 +762,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             const level1GrossPlusDem = level1FreightRevenue.map((fRev, i) => fRev + (level1Demurrage[i] || 0));
             const totalGrossPlusDem = sum(level1GrossPlusDem);
             const totalLevel1Tons = sum(level1TonsTotal);
+            const totalLevel1ShipDays = sum(level1ShipDays);
             const level1Yield = level1TonsTotal.map((tons, i) => tons ? level1GrossPlusDem[i] / tons : 0);
             const totalLevel1Yield = totalLevel1Tons ? totalGrossPlusDem / totalLevel1Tons : 0;
             const level1YieldFlete = level1TonsTotal.map((tons, i) => tons ? level1FreightRevenue[i] / tons : 0);
@@ -760,6 +770,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
             const subMetrics = [
                 { name: "P/L", values: level1PlVsRequired, total: sum(level1PlVsRequired), pct: level1CalcPct(level1PlVsRequired), totalPct: level1CalcTotalPct(sum(level1PlVsRequired), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "Días-Buque", values: level1ShipDays, total: totalLevel1ShipDays, pct: null, totalPct: null, isCurrency: false, isTotal: false },
                 { name: "Toneladas", values: level1TonsTotal, total: totalLevel1Tons, pct: null, totalPct: null, isCurrency: false, isTotal: false },
                 { name: "Gross Revenue", values: level1GrossRevenue, total: sum(level1GrossRevenue), pct: level1GrossRevenue.map(r => r ? 100 : 0), totalPct: sum(level1GrossRevenue) ? 100 : 0, isCurrency: true, isTotal: false },
                 { name: "Demurrage", values: level1Demurrage, total: sum(level1Demurrage), pct: level1CalcPct(level1Demurrage), totalPct: level1CalcTotalPct(sum(level1Demurrage), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
@@ -806,6 +817,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const globalGrossPlusDem = globalFreightRevenues.map((fRev, i) => fRev + (globalDemurrage[i] || 0));
         const totalGlobalGrossPlusDem = sum(globalGrossPlusDem);
         const totalGlobalTons = sum(globalTons);
+        const totalGlobalShipDays = sum(globalShipDays);
         const globalYield = globalTons.map((tons, i) => tons ? globalGrossPlusDem[i] / tons : 0);
         const totalGlobalYield = totalGlobalTons ? totalGlobalGrossPlusDem / totalGlobalTons : 0;
         const globalYieldFlete = globalTons.map((tons, i) => tons ? globalFreightRevenues[i] / tons : 0);
@@ -813,6 +825,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
         const globalMetrics = [
             { name: "P/L", values: globalPlVsRequired, total: sum(globalPlVsRequired), pct: globalCalcPct(globalPlVsRequired), totalPct: globalCalcTotalPct(sum(globalPlVsRequired), sum(globalRevenues)), isCurrency: true, isTotal: false },
+            { name: "Días-Buque", values: globalShipDays, total: totalGlobalShipDays, pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Toneladas", values: globalTons, total: totalGlobalTons, pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Gross Revenue", values: globalRevenues, total: sum(globalRevenues), pct: globalRevenues.map(r => r ? 100 : 0), totalPct: sum(globalRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
             { name: "Demurrage", values: globalDemurrage, total: sum(globalDemurrage), pct: globalCalcPct(globalDemurrage), totalPct: globalCalcTotalPct(sum(globalDemurrage), sum(globalRevenues)), isCurrency: true, isTotal: false },
@@ -849,6 +862,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             let running = 0;
             return arr.map(v => { running += v; return running; });
         };
+        const accumShipDays = accumArray(globalShipDays);
         const accumTons = accumArray(globalTons);
         const accumFreightRevenues = accumArray(globalFreightRevenues);
         const accumRevenues = accumArray(globalRevenues);
@@ -864,6 +878,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
         const accumMetrics = [
             { name: "P/L", values: accumPlVsRequired, total: lastVal(accumPlVsRequired), pct: accumCalcPct(accumPlVsRequired), totalPct: globalCalcTotalPct(lastVal(accumPlVsRequired), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
+            { name: "Días-Buque", values: accumShipDays, total: lastVal(accumShipDays), pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Toneladas", values: accumTons, total: lastVal(accumTons), pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Gross Revenue", values: accumRevenues, total: lastVal(accumRevenues), pct: accumRevenues.map(r => r ? 100 : 0), totalPct: sum(accumRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
             { name: "Demurrage", values: accumDemurrage, total: lastVal(accumDemurrage), pct: accumCalcPct(accumDemurrage), totalPct: globalCalcTotalPct(lastVal(accumDemurrage), lastVal(accumRevenues)), isCurrency: true, isTotal: false },

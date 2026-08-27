@@ -290,4 +290,8 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-26 19:39:00] Eliminación de OPEX (Personal y Gastos Nave):
 - Removidas líneas `GTOS. PERSONAL A BORDO` y `GASTOS DE LA NAVE`.
 - El reporte concluye limpiamente en `MARGEN BRUTO`.
+
+[2026-08-26 21:05:00] Inclusión de 'Días de Demora' en Desplegable Petral:
+- Agregada la fila `↳ Días de Demora` en el acordeón de Viajes.
+- Calibrado `rowSpan = 25` sin descuadre visual.
 - Desplegado a https://forecast.geeksoft.tech.
