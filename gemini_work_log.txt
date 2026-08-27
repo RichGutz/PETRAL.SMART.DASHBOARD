@@ -286,4 +286,8 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-26 19:35:00] Estandarización Total P&L Navitranso:
 - Estandarizado orden de métricas en Subtotales y Total Flota: Ventas -> Costos Directos -> TCE -> Arriendo -> Margen Bruto.
 - Configurado arranque inicial en blanco / formato PETRAL.
+
+[2026-08-26 19:39:00] Eliminación de OPEX (Personal y Gastos Nave):
+- Removidas líneas `GTOS. PERSONAL A BORDO` y `GASTOS DE LA NAVE`.
+- El reporte concluye limpiamente en `MARGEN BRUTO`.
 - Desplegado a https://forecast.geeksoft.tech.

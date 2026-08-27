@@ -318,7 +318,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
                     const rowKey = `${client}-${route}-${vessel}`;
                     const isExpanded = !!expandedRows[rowKey];
-                    const numSubRows = isExpanded ? 24 : 0;
+                    const numSubRows = isExpanded ? 25 : 0;
                     const isDemurrageExcluded = excludedDemurrages.includes(rowKey);
                     const isDemurrageVisible = showDemurrage && demurragePct !== '' && !isDemurrageExcluded;
                     const isDemurrageDaysVisible = showDemurrageDays && demurrageDays !== '' && !isDemurrageExcluded;
@@ -346,6 +346,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 if (metricKey === "distancia_total") val = monthData[m]?.["total_distance"] || monthData[m]?.["distancia"];
                                 if (metricKey === "sea_days_unit") val = monthData[m]?.["sea_days"] || monthData[m]?.["tot_sea_days"];
                                 if (metricKey === "port_days_unit") val = monthData[m]?.["port_days"] || monthData[m]?.["tot_port_days"];
+                                if (metricKey === "demurrage_days_unit") val = (customDemurrageDays[rowKey] && customDemurrageDays[rowKey][idx] !== undefined) ? parseFloat(customDemurrageDays[rowKey][idx]) : (demurrageDays !== '' ? parseFloat(demurrageDays) : (monthData[m]?.["demurrage_days"] || 0));
                                 if (metricKey === "total_duration_unit") val = monthData[m]?.["total_duration"] || monthData[m]?.["total_days"];
                                 if (metricKey === "bunker_ifo_tonnage_unit") val = monthData[m]?.["bunker_ifo_tonnage"] || monthData[m]?.["ifo_tons"];
                                 if (metricKey === "bunker_mdo_tonnage_unit") val = monthData[m]?.["bunker_mdo_tonnage"] || monthData[m]?.["mdo_tons"];
@@ -689,6 +690,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 { name: "↳ Flete Neto (USD)", key: "net_income_unit", curr: true, isPct: false },
                                 { name: "↳ Días de Mar", key: "sea_days_unit", curr: false, isPct: false },
                                 { name: "↳ Días de Puerto", key: "port_days_unit", curr: false, isPct: false },
+                                { name: "↳ Días de Demora", key: "demurrage_days_unit", curr: false, isPct: false },
                                 { name: "↳ Duración Total (Días)", key: "total_duration_unit", curr: false, isPct: false },
                                 { name: "↳ Precio IFO (USD/MT)", key: "price_ifo_unit", curr: true, isPct: false },
                                 { name: "↳ Consumo Bunker IFO (MT)", key: "bunker_ifo_tonnage_unit", curr: false, isPct: false },

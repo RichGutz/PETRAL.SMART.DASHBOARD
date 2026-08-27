@@ -366,5 +366,9 @@ TAREAS Y MODIFICACIONES REALIZADAS:
   4. ⚪ COSTO DE ARRIENDO NAVES (si no esta activo ocultar N/A)
   5. 🏆 MARGEN BRUTO (P&L)
 - Configurado arranque por defecto en formato `PETRAL` y pantalla en blanco (placeholder elegante) cuando no hay lineas en el modelo.
-- Respaldada la captura en los repositorios locales obligatorios.
+
+[2026-08-26 19:39:00] [ELIMINACION DE FILAS OPEX (PERSONAL Y GASTOS DE LA NAVE)]
+- Removidas definitivamente las lineas `GTOS. PERSONAL A BORDO` y `GASTOS DE LA NAVE`.
+- La estructura de cada nodo ahora finaliza formal y exactamente en `🏆 MARGEN BRUTO (P&L)`.
+- El motor de `rowSpan` se recalibro dinamicamente sin ningun descuadre en las columnas verticales.
 - Compilado con Vite y re-desplegado a https://forecast.geeksoft.tech.
