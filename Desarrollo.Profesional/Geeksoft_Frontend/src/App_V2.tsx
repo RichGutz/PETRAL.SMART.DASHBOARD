@@ -88,7 +88,7 @@ function App_V2() {
               <Route path="/spot-routes" element={<ProtectedRoute module="maestro_rutas"><RouteMaster_V2 mode="routes" /></ProtectedRoute>} />
               <Route path="/quotes" element={<ProtectedRoute module="maestro_rutas"><RouteMaster_V2 mode="quotes" /></ProtectedRoute>} />
               <Route path="/budgets" element={<ProtectedRoute module="maestro_contratos"><BudgetsMaster /></ProtectedRoute>} />
-              <Route path="/financial-projections" element={<ProtectedRoute module="maestro_contratos"><FinancialProjectionsMaster /></ProtectedRoute>} />
+              <Route path="/financial-projections" element={<ProtectedRoute><FinancialProjectionsMaster /></ProtectedRoute>} />
 
               <Route path="/clients" element={<ProtectedRoute module="maestro_tarifas"><ClientsMaster /></ProtectedRoute>} />
               <Route path="/contracts" element={<ProtectedRoute module="maestro_contratos"><ContractsMaster /></ProtectedRoute>} />

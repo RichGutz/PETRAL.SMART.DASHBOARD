@@ -67,7 +67,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
             setLoading(true);
             const [list, quotes] = await Promise.all([
                 ForecastService.listForecasts(),
-                ForecastService.listSpotQuotes().catch(() => [])
+                ForecastService.listSpots().catch(() => [])
             ]);
 
             setQuotesList(quotes || []);
