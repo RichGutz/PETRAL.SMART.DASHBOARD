@@ -356,3 +356,9 @@ CONCURRENCY & QC SUMMARY:
 - Filtrado reactivo de presupuestos con filteredBudgets.
 - Modal de Guardar estandarizado con: Ruta Cierre (Paso 2), Ruta Cotizacion (Paso 3), Ruta Presupuesto (Paso 4).
 - Compilacion Vite y despliegue exitoso al VPS https://forecast.geeksoft.tech.
+
+[2026-08-27 14:15:00] CONCILIACION DE CARDS EJECUTIVOS CON RUTAS Y ARRIENDO DE NAVES:
+- Actualizado QuoteExecutiveCardSummary.tsx para soportar charterHireCost en calculo y render en Card 3.
+- Generado y ejecutado script loop_qc_cards_maestros.py en terminal (18/18 rutas con 100% de convergencia).
+- Documentado protocolo pericial completo en Obsidian 33_Conciliacion_artefacto_cards_compartido_con_rutas.md.
+- Compilacion y despliegue exitoso al VPS https://forecast.geeksoft.tech.
