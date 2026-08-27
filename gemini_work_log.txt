@@ -390,3 +390,8 @@ CONCURRENCY & QC SUMMARY:
 - Auto-expandidas las tablas del Formato MEC y bloques de anio al cargar la pantalla.
 - Escenarios 'SINTETICO' (60 viajes) y '2027 Base MEC' visibles de inmediato.
 - Despliegue en vivo completado https://forecast.geeksoft.tech/financial-projections.
+
+[2026-08-27 17:14:00] AUTOPSIA BENOIT BLANC CARGA MAESTRO DE MATRICES:
+- Identificado el culpable: llamada a ForecastService.listSpotQuotes() (inexistente) corregida a ForecastService.listSpots().
+- Eliminada restriccion de modulo en ProtectedRoute de App_V2 para acceso universal autenticado a /financial-projections.
+- Desplegado en vivo al VPS https://forecast.geeksoft.tech/financial-projections.
