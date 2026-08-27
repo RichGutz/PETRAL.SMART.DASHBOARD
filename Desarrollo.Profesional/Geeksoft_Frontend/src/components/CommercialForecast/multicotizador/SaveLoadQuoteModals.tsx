@@ -27,7 +27,6 @@ export interface SaveLoadQuoteModalsProps {
         finalName?: string;
     }) => void;
     handleLoadRoute: (route: any) => void;
-    isExportingPdf?: boolean;
     handlePrintPDF: () => void;
     getSuggestedRoutePrefix: (client: string) => string;
 }
@@ -44,7 +43,6 @@ export const SaveLoadQuoteModals: React.FC<SaveLoadQuoteModalsProps> = ({
     isSaving,
     isLoadingRoutes,
     savedRoutes,
-    isExportingPdf = false,
     setShowSaveModal,
     setShowLoadModal,
     setRouteSuffix,

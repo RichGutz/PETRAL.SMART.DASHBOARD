@@ -1453,7 +1453,6 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 setSaveMode={setSaveMode}
                 handleSaveRoute={handleSaveRoute}
                 handleLoadRoute={handleLoadRoute}
-                isExportingPdf={isExportingPdf}
                 handlePrintPDF={handlePrintPDF}
                 getSuggestedRoutePrefix={getSuggestedRoutePrefix}
             />
