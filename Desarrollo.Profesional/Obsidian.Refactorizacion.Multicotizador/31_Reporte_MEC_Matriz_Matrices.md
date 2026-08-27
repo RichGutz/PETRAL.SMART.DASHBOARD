@@ -91,24 +91,50 @@ El PDF debe replicar el formato corporativo de PETRAL: fondo blanco, cabeceras e
 
 ---
 
-## 4. Matriz Forense de Mapeo y Fórmulas 1:1
+## 4. Matriz Forense de Mapeo y Fórmulas Matemáticas 1:1
 
-### Bloque 1: Distribución Macro de Tráfico
+### 4.1. Bloque 1: Distribución Macro de Tráfico (Cabotaje vs. Exportación)
 
-| Concepto | Nº Viajes | Volumen TM | % Participación | Formato Requerido |
-| :--- | :---: | :---: | :---: | :---: |
-| **Viajes cabotaje** | $29$ | $391,500$ | $49.1\%$ | `XX.X%` |
-| **Viajes exportación** | $30$ | $405,000$ | $50.9\%$ | `XX.X%` |
-| **Total** | **$59$** | **$796,500$** | **$100.0\%$** | **`100.0%`** |
+| Concepto | Nº Viajes | Volumen TM | % Participación | Fórmula de Cálculo |
+| :--- | :---: | :---: | :---: | :--- |
+| **Viajes cabotaje** | $29$ | $391,500$ | **`49.15%`** | $\sum \text{Viajes (Rutas Nacionales)}$ &nbsp;\|&nbsp; $\frac{\text{TM Cabotaje}}{\text{Total TM}} \times 100$ |
+| **Viajes exportación** | $30$ | $405,000$ | **`50.85%`** | $\sum \text{Viajes (Rutas Internacionales)}$ &nbsp;\|&nbsp; $\frac{\text{TM Export}}{\text{Total TM}} \times 100$ |
+| **TOTAL** | **$59$** | **$796,500$** | **`100.00%`** | $\sum \text{Nº Viajes}$ &nbsp;\|&nbsp; $\sum \text{Volumen TM}$ &nbsp;\|&nbsp; $\mathbf{100.00\%}$ |
 
-### Bloque 2: Matriz Anual de Rutas y Rendimiento
+---
+
+### 4.2. Bloque 2: Matriz Anual de Desglose por Ruta y Rendimiento
 
 | Ruta | TM Anual | Full Load | Nº Viajes | P/L x Viaje | Total Gross Margin | % Volumen | Días Ocupación | Días Disponibles |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **ILO-MATARANI** | $135,000$ | $13,500$ | $10$ | $\$248,250.00$ | $\$2,482,500.00$ | **$16.95\%$** | $55.0$ | — |
 | **ILO-MARCONA** | $256,500$ | $13,500$ | $19$ | $\$248,250.00$ | $\$4,716,750.00$ | **$32.20\%$** | $104.5$ | — |
 | **ILO-MEJILLONES** | $405,000$ | $13,500$ | $30$ | $\$146,750.00$ | $\$4,402,500.00$ | **$50.85\%$** | $300.0$ | — |
-| **TOTAL** | **$796,500$** | — | **$59$** | — | **$\$11,601,750.00$** | **$100.0\%$** | **$459.5$** | **$0$** |
+| **TOTAL GENERAL** | **$796,500$** | **—** | **$59$** | **—** | **$\$11,601,750.00$** | **$100.00\%$** | **$459.5$** | **$0$** |
+
+---
+
+### 4.3. 🧮 Reglas Matemáticas Inviolables de Mapeo y Ponderación
+
+#### Regla A: P/L por Viaje Ponderado (Casos Multi-Buque)
+Cuando una misma ruta es atendida por dos o más buques ($b_1, b_2, \dots$) con diferentes costos y rendimientos por viaje:
+$$\overline{\text{P/L}}_{\text{ruta}} = \frac{\sum_{b} (\text{P/L}_{b} \times N_{b})}{\sum_{b} N_{b}} \equiv \frac{\mathbf{Total\ Gross\ Margin\ de\ la\ Ruta}}{\mathbf{Total\ Viajes\ de\ la\ Ruta}}$$
+
+#### Regla B: Full Load Ponderado (Casos Multi-Tonelaje)
+Cuando en una misma ruta los viajes se realizan con diferentes cargas ($Q_1, Q_2, \dots$):
+$$\overline{\text{Full Load}}_{\text{ruta}} = \frac{\text{TM Anual Total de la Ruta}}{\text{Total Viajes de la Ruta}} \equiv \frac{\sum_{i} (Q_i \times N_i)}{\sum_{i} N_i}$$
+
+#### Regla C: Total Gross Margin (Margen Bruto de la Ruta)
+Para cada ruta individual:
+$$\text{Total Gross Margin (Ruta)} = \sum_{\text{meses}} \text{P\&L Real del Viaje} \equiv \overline{\text{P/L}}_{\text{ruta}} \times N_{\text{viajes}}$$
+
+#### Regla D: Total Gross Margin Anual (Fila TOTAL General del Pie de Tabla)
+La celda final de Margen Bruto Anual de la Flota es la **suma directa de los márgenes brutos de todas las rutas del escenario**:
+$$\mathbf{Total\ Gross\ Margin\ General} = \sum_{\text{todas las rutas}} \mathbf{Total\ Gross\ Margin\ (Ruta)}$$
+
+#### Regla E: Conservación de Días y Balance de Flota
+$$\text{Días Ocupación Total} = \sum (\text{Días Duración por Viaje} \times N_{\text{viajes}})$$
+$$\text{Días Disponibles Remanentes} = \max\Big(0,\; (\text{Nº Buques en Flota} \times 360) - \text{Días Ocupación Total}\Big)$$
 
 ---
 
