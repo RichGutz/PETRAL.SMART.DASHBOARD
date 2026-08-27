@@ -305,4 +305,43 @@ El PDF incluye:
 
 ---
 
+## 8. Escenario Sintético de Prueba y Stress Test: `SINTETICO` (60 Viajes, 2 Buques)
+
+### 8.1. Parámetros del Escenario Sintético
+* **Nombre**: `SINTETICO`
+* **ID en Base de Datos**: `5a31cc8f-fca5-4b7c-af5b-3a422dec96f8`
+* **Flota**: 2 buques en paralelo (`BT MOQUEGUA` y `BT TABLONES`).
+* **Total Viajes**: **$60\text{ viajes}$** anuales (tope operativo de flota).
+* **Distribución de Rutas y Buques**:
+  * `BT MOQUEGUA` ($30\text{ viajes}$):
+    * `ILO-MATARANI`: $8\text{ viajes}$
+    * `ILO-MARCONA`: $10\text{ viajes}$
+    * `ILO-MEJILLONES`: $12\text{ viajes}$ (Exportación)
+  * `BT TABLONES` ($30\text{ viajes}$):
+    * `ILO-MATARANI`: $6\text{ viajes}$
+    * `ILO-MARCONA`: $10\text{ viajes}$
+    * `ILO-BARQUITO`: $14\text{ viajes}$ (Exportación)
+
+---
+
+### 8.2. Resultados del Loop QC Pericial (`loop_qc_matriz_vs_mec.py`)
+
+#### Bloque 1: Distribución Macro
+| Categoría de Tráfico | Nº Viajes | Volumen TM | % Participación | Estado |
+| :--- | :---: | :---: | :---: | :---: |
+| **Viajes Cabotaje** | **$34$** | $459,000\text{ MT}$ | **`60.32%`** | ✅ OK |
+| **Viajes Exportación** | **$26$** | $302,000\text{ MT}$ | **`39.68%`** | ✅ OK |
+| **TOTAL FLOTA** | **$60$** | **$761,000\text{ MT}$** | **`100.00%`** | ✅ OK |
+
+#### Bloque 2: Matriz de Rutas y Rendimiento
+| Ruta | TM Anual | Full Load Ponderado | Nº Viajes | P/L x Viaje Ponderado | Total Gross Margin | % Volumen | Días Ocupación |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **`ILO-MATARANI`** | $189,000\text{ MT}$ | $13,500\text{ MT}$ | $14$ | $\$212,087.01$ | $\$2,969,218.14$ | **`24.84%`** | $34.2\text{ d}$ |
+| **`ILO-MARCONA`** | $270,000\text{ MT}$ | $13,500\text{ MT}$ | $20$ | $\$240,522.01$ | $\$4,810,440.20$ | **`35.48%`** | $86.8\text{ d}$ |
+| **`ILO-MEJILLONES`** | $162,000\text{ MT}$ | $13,500\text{ MT}$ | $12$ | $\$204,197.01$ | $\$2,450,364.12$ | **`21.29%`** | $56.9\text{ d}$ |
+| **`ILO-BARQUITO`** | $140,000\text{ MT}$ | $10,000\text{ MT}$ | $14$ | $\$300,000.00$ | $\$4,200,000.00$ | **`18.40%`** | $58.0\text{ d}$ |
+| **TOTAL GENERAL** | **$761,000\text{ MT}$** | **—** | **$60$** | **—** | **`$14,430,022.46`** | **`100.00%`** | **`235.9 d`** |
+
+---
+
 *Documento registrado bajo el Protocolo Forense Benoit Blanc — PETRAL Smart Dashboard — 27.08.2026.*
