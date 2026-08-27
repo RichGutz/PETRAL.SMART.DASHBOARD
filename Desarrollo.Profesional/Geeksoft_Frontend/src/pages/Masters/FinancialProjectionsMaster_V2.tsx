@@ -299,9 +299,9 @@ export const FinancialProjectionsMaster: React.FC = () => {
         const wsData: any[][] = [
             [`Año ${scenario.year} - Proyectado`],
             ['', 'Nº viajes', 'Volumen TM', '%'],
-            ['Viajes cabotaje', mec.cabotageTrips, mec.cabotageVolumeTm, (mec.cabotageSharePct / 100)],
-            ['Viajes exportación', mec.exportTrips, mec.exportVolumeTm, (mec.exportSharePct / 100)],
-            ['Total', mec.totalTrips, mec.totalVolumeTm, 1.0],
+            ['Viajes cabotaje', mec.cabotageTrips, mec.cabotageVolumeTm, `${mec.cabotageSharePct.toFixed(1)}%`],
+            ['Viajes exportación', mec.exportTrips, mec.exportVolumeTm, `${mec.exportSharePct.toFixed(1)}%`],
+            ['Total', mec.totalTrips, mec.totalVolumeTm, '100.0%'],
             [],
             ['Ruta', 'TM Anual', 'Full load', 'Nº viajes', 'P/L x Viaje', 'Total Gross Margin', '%', 'Dias ocupación', 'Dias disponibles']
         ];
@@ -314,7 +314,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                 r.annualTrips,
                 r.pnlPerTrip,
                 r.totalGrossMargin,
-                (r.volumeSharePct / 100),
+                `${r.volumeSharePct.toFixed(2)}%`,
                 r.daysOccupation,
                 ''
             ]);
@@ -327,7 +327,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
             mec.totalTrips,
             '',
             mec.totalGrossMargin,
-            1.0,
+            '100.0%',
             mec.totalDaysOccupation,
             mec.totalDaysAvailable
         ]);
@@ -339,7 +339,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
         XLSX.writeFile(wb, fileName);
     };
 
-    // EXPORTACIÓN A PDF EJECUTIVO OFICIAL (FORMATO HOJA EXCEL)
+    // EXPORTACIÓN A PDF EJECUTIVO OFICIAL (FORMATO HOJA EXCEL FOXIT READY)
     const handleExportMecPDF = (scenario: ScenarioCardItem) => {
         const mec = scenario.mec;
         const printWindow = window.open('', '_blank');
@@ -347,106 +347,337 @@ export const FinancialProjectionsMaster: React.FC = () => {
 
         const routesHtml = mec.routes.map(r => `
             <tr>
-                <td style="padding: 5px 8px; border: 1px solid #94a3b8; font-weight: bold; color: #000;">${r.route}</td>
-                <td style="padding: 5px 8px; border: 1px solid #94a3b8; text-align: right; font-family: monospace;">${r.annualTons.toLocaleString('en-US')}</td>
-                <td style="padding: 5px 8px; border: 1px solid #94a3b8; text-align: right; font-family: monospace;">${r.fullLoad.toLocaleString('en-US')}</td>
-                <td style="padding: 5px 8px; border: 1px solid #94a3b8; text-align: center; font-family: monospace; font-weight: bold;">${r.annualTrips}</td>
-                <td style="padding: 5px 8px; border: 1px solid #94a3b8; text-align: right; font-family: monospace;">${r.pnlPerTrip.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td style="padding: 5px 8px; border: 1px solid #94a3b8; text-align: right; font-family: monospace; font-weight: bold;">${r.totalGrossMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td style="padding: 5px 8px; border: 1px solid #94a3b8; text-align: center; font-family: monospace;">${r.volumeSharePct.toFixed(2)}%</td>
-                <td style="padding: 5px 8px; border: 1px solid #94a3b8; text-align: center; font-family: monospace; font-weight: bold;">${r.daysOccupation}</td>
-                <td style="padding: 5px 8px; border: 1px solid #94a3b8; text-align: center; font-family: monospace;"></td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #1e293b; background: #ffffff;">${r.route}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${r.annualTons.toLocaleString('en-US')}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${r.fullLoad.toLocaleString('en-US')}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #0f172a;">${r.annualTrips}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">$${r.pnlPerTrip.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; font-weight: bold; color: #0f172a;">$${r.totalGrossMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 600; color: #0369a1;">${r.volumeSharePct.toFixed(2)}%</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #334155;">${r.daysOccupation}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; color: #94a3b8;">-</td>
             </tr>
         `).join('');
 
         const htmlContent = `
             <!DOCTYPE html>
-            <html>
+            <html lang="es">
             <head>
                 <meta charset="utf-8">
-                <title>FORMATO.MEC.BUDGETS.${scenario.year}</title>
+                <title>PETRAL_FORMATO_MEC_BUDGETS_${scenario.year}</title>
+                <!-- Librería html2pdf para descarga directa -->
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
                 <style>
-                    body { font-family: Calibri, Arial, sans-serif; color: #000; padding: 25px; margin: 0; background: #fff; }
-                    .main-title { font-size: 14px; font-weight: bold; margin-bottom: 12px; }
-                    table { border-collapse: collapse; margin-bottom: 22px; font-size: 11px; }
-                    th { background-color: #f1f5f9; color: #000; font-size: 11px; padding: 5px 8px; border: 1px solid #94a3b8; font-weight: bold; }
-                    td { padding: 5px 8px; border: 1px solid #94a3b8; }
-                    .total-row { font-weight: bold; background-color: #f8fafc; }
+                    @page {
+                        size: A4 landscape;
+                        margin: 10mm 10mm 10mm 10mm;
+                    }
+                    body {
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                        color: #1e293b;
+                        background: #f8fafc;
+                        margin: 0;
+                        padding: 20px;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .no-print {
+                        position: fixed;
+                        top: 15px;
+                        right: 20px;
+                        z-index: 9999;
+                        display: flex;
+                        gap: 10px;
+                        background: rgba(15, 23, 42, 0.9);
+                        padding: 8px 16px;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    }
+                    .btn-action {
+                        background: #2563eb;
+                        color: #fff;
+                        border: none;
+                        padding: 7px 14px;
+                        border-radius: 6px;
+                        font-weight: bold;
+                        font-size: 12px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        transition: background 0.2s;
+                    }
+                    .btn-action:hover {
+                        background: #1d4ed8;
+                    }
+                    .btn-secondary {
+                        background: #475569;
+                    }
+                    .btn-secondary:hover {
+                        background: #334155;
+                    }
+                    .page-container {
+                        max-width: 1060px;
+                        margin: 0 auto;
+                        background: #ffffff;
+                        padding: 30px 35px;
+                        border-radius: 6px;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                        border: 1px solid #e2e8f0;
+                    }
+                    .header-box {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-start;
+                        border-bottom: 2px solid #0284c7;
+                        padding-bottom: 12px;
+                        margin-bottom: 20px;
+                    }
+                    .header-title {
+                        font-size: 18px;
+                        font-weight: 800;
+                        color: #0f172a;
+                        margin: 0 0 4px 0;
+                        letter-spacing: -0.5px;
+                    }
+                    .header-subtitle {
+                        font-size: 11px;
+                        font-weight: 600;
+                        color: #64748b;
+                        margin: 0;
+                    }
+                    .badge-pill {
+                        background: #f0f9ff;
+                        color: #0369a1;
+                        border: 1px solid #bae6fd;
+                        padding: 4px 10px;
+                        border-radius: 4px;
+                        font-size: 11px;
+                        font-weight: 700;
+                        font-family: 'Courier New', monospace;
+                    }
+                    .section-label {
+                        font-size: 13px;
+                        font-weight: 700;
+                        color: #334155;
+                        margin: 0 0 8px 0;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-size: 11px;
+                        margin-bottom: 22px;
+                    }
+                    th {
+                        background-color: #f1f5f9;
+                        color: #1e293b;
+                        font-weight: 700;
+                        padding: 7px 10px;
+                        border: 1px solid #cbd5e1;
+                        font-size: 10.5px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.3px;
+                    }
+                    .total-row td {
+                        font-weight: 800;
+                        background-color: #f1f5f9;
+                        color: #0f172a;
+                        border-top: 2px solid #64748b;
+                        border-bottom: 2px solid #64748b;
+                    }
+                    .footer-box {
+                        margin-top: 25px;
+                        padding-top: 15px;
+                        border-top: 1px solid #e2e8f0;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        font-size: 9.5px;
+                        color: #64748b;
+                    }
+                    .signature-grid {
+                        display: grid;
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 40px;
+                        margin-top: 30px;
+                        margin-bottom: 10px;
+                    }
+                    .sig-line {
+                        border-top: 1px solid #94a3b8;
+                        padding-top: 5px;
+                        text-align: center;
+                        font-size: 10px;
+                        font-weight: bold;
+                        color: #475569;
+                    }
                     @media print {
-                        body { padding: 10px; }
+                        body {
+                            background: #ffffff;
+                            padding: 0;
+                        }
+                        .no-print {
+                            display: none !important;
+                        }
+                        .page-container {
+                            border: none;
+                            box-shadow: none;
+                            padding: 10px 0;
+                            max-width: 100%;
+                        }
                     }
                 </style>
             </head>
             <body>
-                <div class="main-title">Año ${scenario.year} - Proyectado</div>
 
-                <!-- TABLA 1: CABOTAJE VS EXPORTACION -->
-                <table style="min-width: 450px;">
-                    <thead>
-                        <tr>
-                            <th style="border: none; background: transparent;"></th>
-                            <th style="text-align: center; width: 100px;">Nº viajes</th>
-                            <th style="text-align: right; width: 140px;">Volumen TM</th>
-                            <th style="text-align: center; width: 80px;">%</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style="font-weight: bold;">Viajes cabotaje</td>
-                            <td style="text-align: center; font-family: monospace;">${mec.cabotageTrips}</td>
-                            <td style="text-align: right; font-family: monospace;">${mec.cabotageVolumeTm.toLocaleString('en-US')}</td>
-                            <td style="text-align: center; font-family: monospace;">${(mec.cabotageSharePct / 100).toFixed(2)}</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: bold;">Viajes exportación</td>
-                            <td style="text-align: center; font-family: monospace;">${mec.exportTrips}</td>
-                            <td style="text-align: right; font-family: monospace;">${mec.exportVolumeTm.toLocaleString('en-US')}</td>
-                            <td style="text-align: center; font-family: monospace;">${(mec.exportSharePct / 100).toFixed(2)}</td>
-                        </tr>
-                        <tr class="total-row">
-                            <td>Total</td>
-                            <td style="text-align: center; font-family: monospace;">${mec.totalTrips}</td>
-                            <td style="text-align: right; font-family: monospace;">${mec.totalVolumeTm.toLocaleString('en-US')}</td>
-                            <td style="text-align: center; font-family: monospace;">1</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- BARRA FLOTANTE DE ACCIÓN (SOLO PANTALLA) -->
+                <div class="no-print">
+                    <button class="btn-action" id="btn-download-pdf" onclick="downloadDirectPdf()">
+                        <span>📥 Descargar PDF Directo (Foxit Ready)</span>
+                    </button>
+                    <button class="btn-action btn-secondary" onclick="window.print()">
+                        <span>🖨️ Imprimir / Guardar PDF</span>
+                    </button>
+                </div>
 
-                <!-- TABLA 2: MATRIZ DE RUTAS -->
-                <table style="width: 100%;">
-                    <thead>
-                        <tr>
-                            <th style="text-align: left;">Ruta</th>
-                            <th style="text-align: right;">TM Anual</th>
-                            <th style="text-align: right;">Full load</th>
-                            <th style="text-align: center;">Nº viajes</th>
-                            <th style="text-align: right;">P/L x Viaje</th>
-                            <th style="text-align: right;">Total Gross Margin</th>
-                            <th style="text-align: center;">%</th>
-                            <th style="text-align: center;">Dias ocupación</th>
-                            <th style="text-align: center;">Dias disponibles</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${routesHtml}
-                        <tr class="total-row">
-                            <td>Total</td>
-                            <td style="text-align: right; font-family: monospace;">${mec.totalVolumeTm.toLocaleString('en-US')}</td>
-                            <td style="text-align: right;"></td>
-                            <td style="text-align: center; font-family: monospace;">${mec.totalTrips}</td>
-                            <td style="text-align: right;"></td>
-                            <td style="text-align: right; font-family: monospace;">${mec.totalGrossMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                            <td style="text-align: center; font-family: monospace;">1</td>
-                            <td style="text-align: center; font-family: monospace;">${mec.totalDaysOccupation}</td>
-                            <td style="text-align: center; font-family: monospace;">${mec.totalDaysAvailable}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="page-container" id="pdf-content-page">
+                    
+                    <!-- CABECERA EJECUTIVA -->
+                    <div class="header-box">
+                        <div>
+                            <h1 class="header-title">NAVIERA PETRAL S.A.</h1>
+                            <p class="header-subtitle">REPORTE EJECUTIVO DE CONTROL PRESUPUESTAL & ASIGNACIÓN DE CAPACIDAD (FORMATO MEC)</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="badge-pill">AÑO ${scenario.year} - PROYECTADO</div>
+                            <div style="font-size: 10px; color: #64748b; margin-top: 4px;">Escenario: <strong>${scenario.name}</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- BLOQUE 1: RESUMEN MACRO DE TRÁFICO -->
+                    <div class="section-label">1. Distribución Macro por Tipo de Tráfico</div>
+                    <table style="max-width: 520px;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; width: 180px;">Tipo de Tráfico</th>
+                                <th style="text-align: center; width: 90px;">Nº viajes</th>
+                                <th style="text-align: right; width: 140px;">Volumen TM</th>
+                                <th style="text-align: center; width: 90px;">% Participación</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #334155; background: #fff;">Viajes cabotaje</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold;">${mec.cabotageTrips}</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.cabotageVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 700; color: #0369a1;">${mec.cabotageSharePct.toFixed(1)}%</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #334155; background: #fff;">Viajes exportación</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold;">${mec.exportTrips}</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.exportVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 700; color: #0369a1;">${mec.exportSharePct.toFixed(1)}%</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: 800;">TOTAL</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${mec.totalTrips}</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.totalVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 800;">100.0%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- BLOQUE 2: MATRIZ DE RUTAS Y RENDIMIENTO -->
+                    <div class="section-label" style="margin-top: 15px;">2. Matriz Anual de Desglose por Ruta y Rendimiento Operativo</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align: left;">Ruta</th>
+                                <th style="text-align: right;">TM Anual</th>
+                                <th style="text-align: right;">Full load</th>
+                                <th style="text-align: center;">Nº viajes</th>
+                                <th style="text-align: right;">P/L x Viaje</th>
+                                <th style="text-align: right;">Total Gross Margin</th>
+                                <th style="text-align: center;">%</th>
+                                <th style="text-align: center;">Dias ocupación</th>
+                                <th style="text-align: center;">Dias disponibles</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${routesHtml}
+                            <tr class="total-row">
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1;">TOTAL GENERAL</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.totalVolumeTm.toLocaleString('en-US')}</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: right;">-</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${mec.totalTrips}</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: right;">-</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #047857;">$${mec.totalGrossMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 800;">100.0%</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${mec.totalDaysOccupation}</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${mec.totalDaysAvailable}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- SECCIÓN DE FIRMAS Y VALIDACIÓN GERENCIAL -->
+                    <div class="signature-grid">
+                        <div class="sig-line">
+                            <div>Elaborado por: Área Comercial / Operaciones</div>
+                            <div style="font-size: 8.5px; font-weight: normal; color: #94a3b8; margin-top: 3px;">PETRAL SMART DASHBOARD</div>
+                        </div>
+                        <div class="sig-line">
+                            <div>Aprobado por: Gerencia General / Directorio</div>
+                            <div style="font-size: 8.5px; font-weight: normal; color: #94a3b8; margin-top: 3px;">NAVIERA PETRAL S.A.</div>
+                        </div>
+                    </div>
+
+                    <!-- FOOTER CORPORATIVO -->
+                    <div class="footer-box">
+                        <div>Documento emitido conforme a FORMATO.MEC.BUDGETS.2026.xlsx | NAVIERA PETRAL S.A.</div>
+                        <div>Fecha de Impresión: ${new Date().toLocaleDateString('es-PE')} ${new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}</div>
+                    </div>
+
+                </div>
 
                 <script>
-                    window.onload = function() {
-                        window.print();
-                    };
+                    function downloadDirectPdf() {
+                        const btn = document.getElementById('btn-download-pdf');
+                        if (btn) {
+                            btn.innerText = '⏳ Generando PDF...';
+                            btn.disabled = true;
+                        }
+                        const element = document.getElementById('pdf-content-page');
+                        const opt = {
+                            margin: 0,
+                            filename: 'PETRAL_FORMATO_MEC_BUDGETS_${scenario.year}.pdf',
+                            image: { type: 'jpeg', quality: 0.98 },
+                            html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+                        };
+                        
+                        if (window.html2pdf) {
+                            window.html2pdf().set(opt).from(element).save().then(function() {
+                                if (btn) {
+                                    btn.innerText = '📥 Descargar PDF Directo (Foxit Ready)';
+                                    btn.disabled = false;
+                                }
+                            }).catch(function(err) {
+                                console.error('Error al generar PDF directo:', err);
+                                if (btn) {
+                                    btn.innerText = '📥 Descargar PDF Directo (Foxit Ready)';
+                                    btn.disabled = false;
+                                }
+                            });
+                        } else {
+                            window.print();
+                            if (btn) {
+                                btn.innerText = '📥 Descargar PDF Directo (Foxit Ready)';
+                                btn.disabled = false;
+                            }
+                        }
+                    }
                 </script>
             </body>
             </html>
@@ -691,19 +922,19 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                                 <td className="py-1.5 px-3 font-sans font-bold text-slate-800 border border-slate-300">Viajes cabotaje</td>
                                                                                 <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-800">{mec.cabotageTrips}</td>
                                                                                 <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-800">{mec.cabotageVolumeTm.toLocaleString('en-US')}</td>
-                                                                                <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-800">{(mec.cabotageSharePct / 100).toFixed(2)}</td>
+                                                                                <td className="py-1.5 px-3 text-center border border-slate-300 font-bold text-blue-900">{mec.cabotageSharePct.toFixed(1)}%</td>
                                                                             </tr>
                                                                             <tr>
                                                                                 <td className="py-1.5 px-3 font-sans font-bold text-slate-800 border border-slate-300">Viajes exportación</td>
                                                                                 <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-800">{mec.exportTrips}</td>
                                                                                 <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-800">{mec.exportVolumeTm.toLocaleString('en-US')}</td>
-                                                                                <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-800">{(mec.exportSharePct / 100).toFixed(2)}</td>
+                                                                                <td className="py-1.5 px-3 text-center border border-slate-300 font-bold text-blue-900">{mec.exportSharePct.toFixed(1)}%</td>
                                                                             </tr>
                                                                             <tr className="bg-slate-100 font-bold">
                                                                                 <td className="py-1.5 px-3 font-sans border border-slate-300 text-slate-900">Total</td>
                                                                                 <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-900">{mec.totalTrips}</td>
                                                                                 <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-900">{mec.totalVolumeTm.toLocaleString('en-US')}</td>
-                                                                                <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-900">1</td>
+                                                                                <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-900 font-black">100.0%</td>
                                                                             </tr>
                                                                         </tbody>
                                                                     </table>
@@ -741,30 +972,30 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                                         {r.annualTrips}
                                                                                     </td>
                                                                                     <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-800">
-                                                                                        {r.pnlPerTrip.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                                        ${r.pnlPerTrip.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                                                     </td>
                                                                                     <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-800 font-bold">
-                                                                                        {r.totalGrossMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                                        ${r.totalGrossMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                                                     </td>
-                                                                                    <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-800">
-                                                                                        {(r.volumeSharePct / 100).toFixed(4)}
+                                                                                    <td className="py-1.5 px-3 text-center border border-slate-300 font-semibold text-blue-900">
+                                                                                        {r.volumeSharePct.toFixed(2)}%
                                                                                     </td>
                                                                                     <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-800 font-bold">
                                                                                         {r.daysOccupation}
                                                                                     </td>
                                                                                     <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-400">
-                                                                                        
+                                                                                        -
                                                                                     </td>
                                                                                 </tr>
                                                                             ))}
                                                                             <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
                                                                                 <td className="py-2 px-3 font-sans border border-slate-300">Total</td>
                                                                                 <td className="py-2 px-3 text-right border border-slate-300">{mec.totalVolumeTm.toLocaleString('en-US')}</td>
-                                                                                <td className="py-2 px-3 text-right border border-slate-300"></td>
+                                                                                <td className="py-2 px-3 text-right border border-slate-300">-</td>
                                                                                 <td className="py-2 px-3 text-center border border-slate-300">{mec.totalTrips}</td>
-                                                                                <td className="py-2 px-3 text-right border border-slate-300"></td>
-                                                                                <td className="py-2 px-3 text-right border border-slate-300">{mec.totalGrossMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                                                <td className="py-2 px-3 text-center border border-slate-300">1</td>
+                                                                                <td className="py-2 px-3 text-right border border-slate-300">-</td>
+                                                                                <td className="py-2 px-3 text-right border border-slate-300 text-emerald-800">${mec.totalGrossMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                                                <td className="py-2 px-3 text-center border border-slate-300 font-black">100.0%</td>
                                                                                 <td className="py-2 px-3 text-center border border-slate-300">{mec.totalDaysOccupation}</td>
                                                                                 <td className="py-2 px-3 text-center border border-slate-300">{mec.totalDaysAvailable}</td>
                                                                             </tr>
