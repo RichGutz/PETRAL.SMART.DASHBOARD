@@ -710,3 +710,62 @@ El peritaje del código en `PortDemurrageRatesService.ts` reveló una doble capa
 ---
 
 *Caso cerrado y sellado en bitácora por Benoit Blanc — 27.08.2026.*
+
+*Caso cerrado y sellado en bitácora por Benoit Blanc — 27.08.2026.*
+
+---
+
+## 18. Caso Pericial N° 08: El PDF Que Sigue Saliendo Parado en Foxit — Historial de Intentos (27.08.2026)
+
+**Fecha**: 27 de Agosto de 2026  
+**Investigador**: Claude (Antigravity)  
+**Estado**: 🔴 SIN RESOLVER — Documentado para próxima sesión  
+**Evidencia**: Al abrir el PDF descargado desde el explorador de Windows, Foxit Reader lo abre en orientación **vertical (portrait)**. En el diálogo de impresión de Chrome sí se ve echado, pero el archivo guardado sale parado.
+
+---
+
+### 🕵️ 18.1. Contexto: ¿Qué detonó el bug?
+
+El agente anterior (Gemini) fue instruido para agregar el campo `charterHireCost` (Costo Arriendo Naves) al PDF del Multicotizador. Al hacer esa modificación introdujo regresiones en el mecanismo de generación del PDF que previamente funcionaba.
+
+---
+
+### 📋 18.2. Tabla de Intentos — Sesión 27.08.2026 (Claude)
+
+| Intento | Qué se hizo | Resultado | Commit |
+|---|---|---|---|
+| **1 — Análisis forense** | `git diff PRE.PDF.PERFECTO.MULTI HEAD` — el agente anterior había eliminado el script `downloadDirectPdf()` del body y la tarjeta de Arriendo Naves rompía el DOM. | Diagnóstico correcto pero insuficiente. | — |
+| **2 — CDN html2pdf + botón azul** | Agregado CDN de html2pdf.js en `<head>` y botón `📥 Descargar PDF Directo (Foxit Ready)`. | Build ✅ Deploy ✅ — Foxit sigue abriendo parado ❌ | `db7bffb` |
+| **3 — SMOKING GUN id=** | Al comparar commit `f2b661c` vs HEAD, se detectó que `id="pdf-content-page"` fue eliminado del div principal. Sin el ID, `getElementById` devuelve null, html2pdf falla silenciosamente y cae al fallback `window.print()`. Se restauró el ID. | Build ✅ Deploy ✅ Branch tag `PDF.LANDSCAPE.FOXIT.READY.OK.27.08.26` ✅ — Foxit **sigue abriendo parado** ❌ | `ecb1fcb` |
+
+---
+
+### 🔍 18.3. Hipótesis No Descartadas para Próxima Sesión
+
+1. **html2pdf.js no funciona en ventana popup**: La ventana abre con `window.open` + `document.write`. Es posible que html2pdf no tenga acceso correcto al DOM en ese contexto y genere igualmente un PDF portrait.
+
+2. **CORS bloqueado**: Las imágenes del buque (`.jpg`) se cargan con `useCORS: true`. Si fallan por CORS en producción, html2pdf puede abortar silenciosamente.
+
+3. **El MediaBox del binario es portrait**: Verificar con editor hex si el PDF tiene `MediaBox [0 0 841.89 595.28]` (landscape correcto) o `[0 0 595.28 841.89]` (portrait). Si es portrait puro, el problema es de jsPDF. Si es landscape y Foxit lo muestra parado, es bug de Foxit.
+
+4. **Alternativa backend no explorada**: Generar el PDF desde el servidor Python con Chromium headless, garantizando el binario correcto independientemente del cliente.
+
+---
+
+### 📐 18.4. Estado Actual HEAD (commit ecb1fcb)
+
+```
+multicotizadorPdfPrintService.ts — HEAD:
+✅ CDN html2pdf.js en <head>
+✅ @page { size: A4 landscape; margin: 0; }  (sin !important)
+✅ id="pdf-content-page" en el div principal
+✅ Botón azul que llama downloadDirectPdf()
+✅ Script downloadDirectPdf() con jsPDF { orientation: 'landscape' }
+❌ Foxit sigue abriendo el PDF descargado en portrait
+```
+
+Branch tags de referencia:
+- `PRE.PDF.PERFECTO.MULTI` (0ef99d7) — estado base antes de la crisis
+- `PDF.LANDSCAPE.FOXIT.READY.OK.27.08.26` (ecb1fcb) — último intento, sigue parado
+
+*Caso suspendido sin resolver — 27.08.2026. Retomar en próxima sesión.*
