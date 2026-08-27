@@ -251,13 +251,13 @@ export class MulticotizadorPdfPrintService {
         }
 
         @page {
-            size: A4 landscape;
+            size: 297mm 210mm;
             margin: 0;
         }
 
         @media print {
             @page {
-                size: A4 landscape;
+                size: 297mm 210mm;
                 margin: 0;
             }
             html, body {
