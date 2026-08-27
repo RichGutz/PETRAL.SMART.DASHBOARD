@@ -125,10 +125,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     const [savedForecasts, setSavedForecasts] = useState<any[]>([]);
 
     const [displayMode, setDisplayMode] = useState<'usd'|'pct'>('usd');
-    const [matrixFormat, setMatrixFormatState] = useState<'PETRAL'|'NAVITRANSO'>(() => {
-        const saved = sessionStorage.getItem('petral_matrix_format');
-        return (saved === 'NAVITRANSO' || saved === 'PETRAL') ? saved : 'PETRAL';
-    });
+    const [matrixFormat, setMatrixFormatState] = useState<'PETRAL'|'NAVITRANSO'>('PETRAL');
 
     const setMatrixFormat = (val: 'PETRAL'|'NAVITRANSO') => {
         setMatrixFormatState(val);

@@ -353,5 +353,8 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Calibradas las clases del `<thead>` y `<tbody>` para igualar exactamente el ancho compacto de Petral (`w-12` para col1, col2, col3 y `w-36 min-w-[120px]` para Métrica).
 - Corregido el desfase de columnas en `showSubtotals` (inyectadas las celdas `col2` y `col3` en lugar de saltarlas).
 - Corregido el bloque de `TOTAL FLOTA` (renderizado idéntico al estilo `bg-indigo-50/20 font-bold` de Petral, con valores anuales y acumulados claramente legibles).
-- Respaldadas las 3 nuevas capturas en los repositorios locales.
-- Desplegado y verificado en vivo en https://forecast.geeksoft.tech.
+
+[2026-08-26 19:27:00] [LIMPIEZA DE CONTROLES: RETIRO DEL BOTON REDUNDANTE RECALCULAR]
+- Retirado el boton `Recalcular` de `ToolsLayout_V2.tsx` gracias a la reactividad automatica en tiempo real de `ForecastContext_V2.tsx`.
+- El Ribbon superior ahora presenta unicamente: `[ Limpiar ]`, `[ Guardar ]` y `[ Abrir... ]`.
+- Compilado con Vite y re-desplegado a https://forecast.geeksoft.tech.

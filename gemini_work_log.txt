@@ -279,4 +279,7 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-26 19:18:00] Calibración Proporciones 1:1, Subtotales y Totales de Flota:
 - Ajustados anchos de columna a `w-12` para CLI/RUTA/BUQ y `w-36` para Métrica.
 - Corregida la alineación de Subtotales por cliente y bloque TOTAL FLOTA.
+
+[2026-08-26 19:27:00] Retiro de Botón Recalcular:
+- Eliminado el botón Recalcular del Ribbon superior.
 - Desplegado a https://forecast.geeksoft.tech.

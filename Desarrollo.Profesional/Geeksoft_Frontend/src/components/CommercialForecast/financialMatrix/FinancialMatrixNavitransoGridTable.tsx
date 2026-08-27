@@ -241,6 +241,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
             const level1Ventas = new Array(months.length).fill(0);
             const level1CostosDirectos = new Array(months.length).fill(0);
             const level1Tce = new Array(months.length).fill(0);
+            const level1Arriendo = new Array(months.length).fill(0);
             const level1MargenBruto = new Array(months.length).fill(0);
 
             const level2List = sortKeys(Object.keys(level2Data), groupOrder[1], groupOrder[0] === 'client' ? level1Name : undefined);
@@ -359,6 +360,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                         globalTce[i] += v;
                     });
                     arriendo.forEach((v, i) => {
+                        level1Arriendo[i] += v;
                         globalArriendo[i] += v;
                     });
                     margenBruto.forEach((v, i) => {
@@ -622,12 +624,30 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
 
             // Subtotal por cliente
             if (showSubtotals) {
-                const subMetrics = [
-                    { name: "MARGEN BRUTO (P&L)", values: level1MargenBruto, total: sum(level1MargenBruto), isCurrency: true, isTotal: true },
-                    { name: "VENTAS", values: level1Ventas, total: sum(level1Ventas), isCurrency: true, isTotal: false },
-                    { name: "COSTOS DIRECTOS", values: level1CostosDirectos, total: sum(level1CostosDirectos), isCurrency: true, isTotal: false },
-                    { name: "TIME CHARTER EQUIVALENT", values: level1Tce, total: sum(level1Tce), isCurrency: true, isTotal: false }
+                const subMetrics: any[] = [
+                    { name: "🟢 VENTAS", values: level1Ventas, total: sum(level1Ventas), isCurrency: true, isTotal: false, isNavSubtotal: 'ventas' },
+                    { name: "🔴 COSTOS DIRECTOS", values: level1CostosDirectos, total: sum(level1CostosDirectos), isCurrency: true, isTotal: false, isNavSubtotal: 'costos' },
+                    { name: "🔵 TIME CHARTER EQUIVALENT", values: level1Tce, total: sum(level1Tce), isCurrency: true, isTotal: false, isNavSubtotal: 'tce' }
                 ];
+
+                if (!hideNaRows) {
+                    subMetrics.push({
+                        name: "  COSTO DE ARRIENDO NAVES",
+                        values: level1Arriendo,
+                        total: sum(level1Arriendo),
+                        isCurrency: true,
+                        isTotal: false
+                    });
+                }
+
+                subMetrics.push({
+                    name: "🏆 MARGEN BRUTO (P&L)",
+                    values: level1MargenBruto,
+                    total: sum(level1MargenBruto),
+                    isCurrency: true,
+                    isTotal: true,
+                    isNavSubtotal: 'margenBruto'
+                });
 
                 level1RowSpanRef.value += subMetrics.length;
                 const subtotalRouteRowSpanRef = { value: subMetrics.length };
@@ -650,12 +670,30 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
 
         // Bloque Global de Flota Acumulada
         if (showAccumulatedTotal) {
-            const globalMetrics = [
-                { name: "🏆 MARGEN BRUTO (P&L)", values: globalMargenBruto, total: sum(globalMargenBruto), isCurrency: true, isTotal: true },
-                { name: "🟢 VENTAS CONSOLIDADAS", values: globalVentas, total: sum(globalVentas), isCurrency: true, isTotal: false },
-                { name: "🔴 COSTOS DIRECTOS", values: globalCostosDirectos, total: sum(globalCostosDirectos), isCurrency: true, isTotal: false },
-                { name: "🔵 TIME CHARTER EQUIVALENT", values: globalTce, total: sum(globalTce), isCurrency: true, isTotal: false }
+            const globalMetrics: any[] = [
+                { name: "🟢 VENTAS CONSOLIDADAS", values: globalVentas, total: sum(globalVentas), isCurrency: true, isTotal: false, isNavSubtotal: 'ventas' },
+                { name: "🔴 COSTOS DIRECTOS", values: globalCostosDirectos, total: sum(globalCostosDirectos), isCurrency: true, isTotal: false, isNavSubtotal: 'costos' },
+                { name: "🔵 TIME CHARTER EQUIVALENT", values: globalTce, total: sum(globalTce), isCurrency: true, isTotal: false, isNavSubtotal: 'tce' }
             ];
+
+            if (!hideNaRows) {
+                globalMetrics.push({
+                    name: "  COSTO DE ARRIENDO NAVES",
+                    values: globalArriendo,
+                    total: sum(globalArriendo),
+                    isCurrency: true,
+                    isTotal: false
+                });
+            }
+
+            globalMetrics.push({
+                name: "🏆 MARGEN BRUTO (P&L)",
+                values: globalMargenBruto,
+                total: sum(globalMargenBruto),
+                isCurrency: true,
+                isTotal: true,
+                isNavSubtotal: 'margenBruto'
+            });
 
             const globalRouteRowSpanRef = { value: globalMetrics.length };
 
@@ -696,7 +734,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
         if (key === 'port') setExpandedPortCosts(p => ({ ...p, [rowKey]: !p[rowKey] }));
     };
 
-    if (!data || !data.aggregated_data) {
+    if (!data || !data.aggregated_data || projectionLines.length === 0) {
         return (
             <div className="flex items-center justify-center h-64 bg-slate-50 border border-slate-200 rounded-lg">
                 <p className="text-slate-500">No hay proyecciones para mostrar. Usa el constructor de arriba.</p>
