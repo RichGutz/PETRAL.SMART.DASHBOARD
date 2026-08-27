@@ -428,3 +428,9 @@ CONCURRENCY & QC SUMMARY:
 - Separadas las dos tarjetas en contenedores independientes (Bloque 1: Catalogo de Escenarios, Bloque 2: Informe Multi-Escenario Consolidado).
 - Eliminado min-h artificial y overflow que aplastaba el ribbon de vigencia del anio.
 - Desplegado y verificado en produccion en vivo https://forecast.geeksoft.tech/financial-projections.
+
+[2026-08-27 18:16:00] TAG PRE.ARTEFACTO.DRAG.DROP CREADO Y PLAN DOCUMENTO 34 PULIDO:
+- Tag fijado: PRE.ARTEFACTO.DRAG.DROP.
+- Creado Documento 34 en Obsidian: 34_Artefacto_Drag_and_Drop.persistente.md.
+- Plan detallado para estandarizar Look & Feel en Cierres, Cotizaciones y Presupuestos con tabs de clientes, acordeones de anios y doble nivel de Drag & Drop persistente (anios y rutas).
+- Listo en rama main para aprobacion de ejecucion.
