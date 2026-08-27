@@ -344,4 +344,9 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Movido el campo `7. Viajes` a la Fila 1 a la derecha de `6. Buque`.
 - El campo `5. Ruta` absorbe el ajuste flexible de ancho.
 - Fila 2 liberada y despejada.
+
+[2026-08-26 19:03:00] [CLONACION ARQUITECTONICA 1:1 DE FORECASTGRID PARA NAVITRANSO]
+- Creado respaldo de seguridad en `FinancialMatrixNavitransoGridTable_backup.tsx`.
+- Rehecho `FinancialMatrixNavitransoGridTable.tsx` como un clon estructural idéntico de `ForecastGrid.tsx` (mismos headers, anchos de columna, menús contextuales, selectores de buque en celda, swap de columnas y motor `rowSpanRef`).
+- Adaptado el motor de métricas para renderizar exclusivamente las 17 líneas oficiales de NAVITRANSO con subtotales coloreados y acordes a la norma P&L.
 - Compilado con Vite y re-desplegado a https://forecast.geeksoft.tech.

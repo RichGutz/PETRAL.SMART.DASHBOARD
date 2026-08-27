@@ -184,7 +184,6 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
             regroupedTree[l1][l2][l3] = monthData;
         });
 
-        // Mapeador para resolver los IDs originales según la jerarquía actual
         const getOriginalKeys = (l1: string, l2: string, l3: string) => {
             const keys: Record<string, string> = {};
             keys[groupOrder[0]] = l1;
@@ -623,53 +622,55 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
 
             // Subtotal por cliente
             if (showSubtotals) {
-                result.push({
-                    col1: null, col2: null, col3: null,
-                    clientName: level1Name,
-                    routeName: "",
-                    vesselName: "",
-                    metric: {
-                        name: `SUBTOTAL ${level1Name} (MARGEN BRUTO)`,
-                        values: level1MargenBruto,
-                        total: sum(level1MargenBruto),
-                        isCurrency: true,
-                        isTotal: true
-                    },
-                    isSubRow: false,
-                    isClientSubtotal: true
+                const subMetrics = [
+                    { name: "MARGEN BRUTO (P&L)", values: level1MargenBruto, total: sum(level1MargenBruto), isCurrency: true, isTotal: true },
+                    { name: "VENTAS", values: level1Ventas, total: sum(level1Ventas), isCurrency: true, isTotal: false },
+                    { name: "COSTOS DIRECTOS", values: level1CostosDirectos, total: sum(level1CostosDirectos), isCurrency: true, isTotal: false },
+                    { name: "TIME CHARTER EQUIVALENT", values: level1Tce, total: sum(level1Tce), isCurrency: true, isTotal: false }
+                ];
+
+                level1RowSpanRef.value += subMetrics.length;
+                const subtotalRouteRowSpanRef = { value: subMetrics.length };
+
+                subMetrics.forEach((metric, index) => {
+                    result.push({
+                        col1: null,
+                        col2: index === 0 ? { name: "Σ SUBTOTAL", rowSpanRef: subtotalRouteRowSpanRef, isSubtotal: true } : null,
+                        col3: index === 0 ? { name: `TOTAL ${level1Name}`, rowSpan: subMetrics.length, isSubtotal: true } : null,
+                        clientName: level1Name,
+                        routeName: "",
+                        vesselName: "",
+                        metric: metric,
+                        isSubRow: false,
+                        isClientSubtotal: true
+                    });
                 });
             }
         });
 
         // Bloque Global de Flota Acumulada
         if (showAccumulatedTotal) {
-            result.push({
-                col1: { name: "TOTAL FLOTA (VENTAS)", rowSpan: 1, isSubtotal: true, color: "bg-emerald-800 text-white" },
-                col2: null, col3: null,
-                clientName: "TOTAL FLOTA", routeName: "", vesselName: "",
-                metric: { name: "🟢 TOTAL VENTAS CONSOLIDADAS", values: globalVentas, total: sum(globalVentas), isCurrency: true, isTotal: true },
-                isSubRow: false, isGlobalTotal: true
-            });
-            result.push({
-                col1: { name: "TOTAL FLOTA (COSTOS)", rowSpan: 1, isSubtotal: true, color: "bg-rose-800 text-white" },
-                col2: null, col3: null,
-                clientName: "TOTAL FLOTA", routeName: "", vesselName: "",
-                metric: { name: "🔴 TOTAL COSTOS DIRECTOS", values: globalCostosDirectos, total: sum(globalCostosDirectos), isCurrency: true, isTotal: true },
-                isSubRow: false, isGlobalTotal: true
-            });
-            result.push({
-                col1: { name: "TOTAL FLOTA (TCE)", rowSpan: 1, isSubtotal: true, color: "bg-blue-800 text-white" },
-                col2: null, col3: null,
-                clientName: "TOTAL FLOTA", routeName: "", vesselName: "",
-                metric: { name: "🔵 TOTAL TIME CHARTER EQUIVALENT", values: globalTce, total: sum(globalTce), isCurrency: true, isTotal: true },
-                isSubRow: false, isGlobalTotal: true
-            });
-            result.push({
-                col1: { name: "TOTAL FLOTA (MARGEN)", rowSpan: 1, isSubtotal: true, color: "bg-emerald-950 text-white" },
-                col2: null, col3: null,
-                clientName: "TOTAL FLOTA", routeName: "", vesselName: "",
-                metric: { name: "🏆 TOTAL MARGEN BRUTO (P&L)", values: globalMargenBruto, total: sum(globalMargenBruto), isCurrency: true, isTotal: true },
-                isSubRow: false, isGlobalTotal: true
+            const globalMetrics = [
+                { name: "🏆 MARGEN BRUTO (P&L)", values: globalMargenBruto, total: sum(globalMargenBruto), isCurrency: true, isTotal: true },
+                { name: "🟢 VENTAS CONSOLIDADAS", values: globalVentas, total: sum(globalVentas), isCurrency: true, isTotal: false },
+                { name: "🔴 COSTOS DIRECTOS", values: globalCostosDirectos, total: sum(globalCostosDirectos), isCurrency: true, isTotal: false },
+                { name: "🔵 TIME CHARTER EQUIVALENT", values: globalTce, total: sum(globalTce), isCurrency: true, isTotal: false }
+            ];
+
+            const globalRouteRowSpanRef = { value: globalMetrics.length };
+
+            globalMetrics.forEach((metric, index) => {
+                result.push({
+                    col1: index === 0 ? { name: "TOTAL FLOTA", rowSpanRef: globalRouteRowSpanRef, isSubtotal: true, color: "bg-slate-800 text-white" } : null,
+                    col2: null,
+                    col3: null,
+                    clientName: "TOTAL FLOTA",
+                    routeName: "",
+                    vesselName: "",
+                    metric: metric,
+                    isSubRow: false,
+                    isGlobalTotal: true
+                });
             });
         }
 
@@ -752,13 +753,13 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                                     <span className="truncate">{getColumnHeaderLabel(groupOrder[2])}</span>
                                 </div>
                             </th>
-                            <th className="py-1 px-2 border border-slate-700 bg-slate-800 text-left font-bold text-xs tracking-wider w-44 min-w-[150px]">
-                                Estructura NAVITRANSO
+                            <th className="py-1 px-2 border border-slate-700 bg-slate-800 text-center font-bold text-xs tracking-wider w-36 min-w-[120px]">
+                                Métrica
                             </th>
                             {months.filter(m => !hiddenMonths.includes(m)).map((m, idx) => (
                                 <th key={idx} className="py-1 px-2 border border-slate-700 bg-slate-800 text-center font-extrabold text-xs tracking-wider min-w-[60px] w-16">{m}</th>
                             ))}
-                            <th className="py-1 px-2 border border-emerald-800 bg-emerald-900 text-emerald-100 text-center font-black text-[11px] tracking-wider min-w-[70px] w-20 shadow-2xs">TOTAL ACUM</th>
+                            <th className="py-1 px-2 border border-sky-800 bg-sky-900 text-sky-100 text-center font-black text-[11px] tracking-wider min-w-[70px] w-20 shadow-2xs">TOTAL ACUM</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -775,11 +776,11 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                             if (isCostosSub) rowStyleClass = 'bg-rose-100/70 font-extrabold text-rose-950';
                             if (isTceSub) rowStyleClass = 'bg-blue-100/80 font-black text-blue-950';
                             if (isMbSub) rowStyleClass = 'bg-emerald-200/90 font-black text-emerald-950 border-y-2 border-emerald-400';
-                            if (row.isClientSubtotal) rowStyleClass = 'bg-amber-100/80 font-extrabold text-amber-950';
-                            if (row.isGlobalTotal) rowStyleClass = 'bg-slate-900 font-bold text-white';
+                            if (row.isClientSubtotal) rowStyleClass = 'bg-amber-50/30 font-semibold';
+                            if (row.isGlobalTotal) rowStyleClass = 'bg-indigo-50/20 font-bold';
 
                             return (
-                                <tr key={i} className={`border border-slate-200 transition-colors ${rowStyleClass}`}>
+                                <tr key={i} className={`border border-slate-200 transition-colors ${rowStyleClass} ${row.metric.isTotal ? 'bg-slate-100 font-semibold' : ''}`}>
                                     {row.col1 && (
                                         <td rowSpan={row.col1.rowSpanRef ? row.col1.rowSpanRef.value : row.col1.rowSpan} colSpan={row.isGlobalTotal ? 3 : 1}
                                             onContextMenu={(e) => { 
@@ -811,7 +812,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                                                     </select>
                                                 </div>
                                             ) : (
-                                                <div className={`vertical-text mx-auto px-2 ${row.isGlobalTotal ? 'text-xs tracking-wider transform rotate-0 writing-mode-unset flex items-center justify-center h-full font-bold' : ''}`} style={row.isGlobalTotal ? { writingMode: 'unset', transform: 'none' } : {}}>{row.col1.name}</div>
+                                                <div className={`vertical-text mx-auto px-2 ${row.isGlobalTotal ? 'text-sm tracking-wider transform rotate-0 writing-mode-unset flex items-center justify-center h-full font-bold' : ''}`} style={row.isGlobalTotal ? { writingMode: 'unset', transform: 'none' } : {}}>{row.col1.name}</div>
                                             )}
                                         </td>
                                     )}
