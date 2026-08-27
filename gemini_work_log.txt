@@ -362,3 +362,10 @@ CONCURRENCY & QC SUMMARY:
 - Generado y ejecutado script loop_qc_cards_maestros.py en terminal (18/18 rutas con 100% de convergencia).
 - Documentado protocolo pericial completo en Obsidian 33_Conciliacion_artefacto_cards_compartido_con_rutas.md.
 - Compilacion y despliegue exitoso al VPS https://forecast.geeksoft.tech.
+
+[2026-08-27 14:32:00] REPORTE EJECUTIVO MEC BUDGETS (PROYECCIONES FINANCIERAS):
+- Corregido formato de porcentajes en UI, Excel y PDF a valores explicitos (49.1%, 16.95%, 100.0%).
+- Implementado generador PDF formal Foxit Ready con cabecera corporativa y firmas gerenciales.
+- Ejecutado script loop_qc_mec_budgets.py con 100% de convergencia.
+- Documentado informe pericial en Obsidian 31_Reporte_MEC_Matriz_Matrices.md.
+- Despliegue en vivo exitoso al VPS https://forecast.geeksoft.tech/financial-projections.
