@@ -379,3 +379,9 @@ CONCURRENCY & QC SUMMARY:
 - Sincronizado FinancialProjectionsMaster_V2.tsx con los calculos puros de cotizaciones y simulacion.
 - Documentado reporte pericial en Obsidian 31_Reporte_MEC_Matriz_Matrices.md.
 - Desplegado a produccion VPS https://forecast.geeksoft.tech/financial-projections.
+
+[2026-08-27 16:49:00] ESCENARIO SINTETICO DE 60 VIAJES GUARDADO EN SUPABASE:
+- Creado escenario 'SINTETICO' (ID: 5a31cc8f-fca5-4b7c-af5b-3a422dec96f8) con 60 viajes (30 MOQUEGUA + 30 TABLONES).
+- Ejecutado script Loop QC pericial con 100% de convergencia.
+- Documentado en Obsidian 31_Reporte_MEC_Matriz_Matrices.md.
+- Disponible en Maestro de Matrices / Proyecciones Financieras en vivo https://forecast.geeksoft.tech/financial-projections.
