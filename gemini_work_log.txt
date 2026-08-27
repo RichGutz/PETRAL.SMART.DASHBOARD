@@ -395,3 +395,10 @@ CONCURRENCY & QC SUMMARY:
 - Identificado el culpable: llamada a ForecastService.listSpotQuotes() (inexistente) corregida a ForecastService.listSpots().
 - Eliminada restriccion de modulo en ProtectedRoute de App_V2 para acceso universal autenticado a /financial-projections.
 - Desplegado en vivo al VPS https://forecast.geeksoft.tech/financial-projections.
+
+[2026-08-27 17:21:00] FORMATEO 1:1 REPORTE MEC ESTANDARIZADO:
+- Porcentajes a 2 decimales exactos (XX.XX% y 100.00%) en Bloques 1 y 2.
+- Total Gross Margin sin decimales (,XXX,XXX).
+- Dias de Ocupacion y Disponibles como enteros redondeados (Math.round) sin colas de punto flotante.
+- Sincronizado en UI React, exportacion Excel (.xlsx) y PDF Foxit Ready.
+- Desplegado en vivo a https://forecast.geeksoft.tech/financial-projections.
