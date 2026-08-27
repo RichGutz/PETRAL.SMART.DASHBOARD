@@ -386,7 +386,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
 
                     // Bloque 1: VENTAS
                     nodeMetrics.push({
-                        name: "🟢 VENTAS",
+                        name: "VENTAS",
                         values: subtotalVentas,
                         total: sum(subtotalVentas),
                         isCurrency: true,
@@ -466,7 +466,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
 
                     // Bloque 2: COSTOS DIRECTOS
                     nodeMetrics.push({
-                        name: "🔴 COSTOS DIRECTOS",
+                        name: "COSTOS DIRECTOS",
                         values: subtotalCostosDirectos,
                         total: sum(subtotalCostosDirectos),
                         isCurrency: true,
@@ -551,7 +551,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
 
                     // Bloque 3: TIME CHARTER EQUIVALENT
                     nodeMetrics.push({
-                        name: "🔵 TIME CHARTER EQUIVALENT",
+                        name: "TIME CHARTER EQUIVALENT",
                         values: tce,
                         total: sum(tce),
                         isCurrency: true,
@@ -571,7 +571,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
 
                     // Bloque 4: MARGEN BRUTO
                     nodeMetrics.push({
-                        name: "🏆 MARGEN BRUTO",
+                        name: "MARGEN BRUTO",
                         values: margenBruto,
                         total: sum(margenBruto),
                         isCurrency: true,
@@ -604,9 +604,9 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
             // Subtotal por cliente
             if (showSubtotals) {
                 const subMetrics: any[] = [
-                    { name: "🟢 VENTAS", values: level1Ventas, total: sum(level1Ventas), isCurrency: true, isTotal: false, isNavSubtotal: 'ventas' },
-                    { name: "🔴 COSTOS DIRECTOS", values: level1CostosDirectos, total: sum(level1CostosDirectos), isCurrency: true, isTotal: false, isNavSubtotal: 'costos' },
-                    { name: "🔵 TIME CHARTER EQUIVALENT", values: level1Tce, total: sum(level1Tce), isCurrency: true, isTotal: false, isNavSubtotal: 'tce' }
+                    { name: "VENTAS", values: level1Ventas, total: sum(level1Ventas), isCurrency: true, isTotal: false, isNavSubtotal: 'ventas' },
+                    { name: "COSTOS DIRECTOS", values: level1CostosDirectos, total: sum(level1CostosDirectos), isCurrency: true, isTotal: false, isNavSubtotal: 'costos' },
+                    { name: "TIME CHARTER EQUIVALENT", values: level1Tce, total: sum(level1Tce), isCurrency: true, isTotal: false, isNavSubtotal: 'tce' }
                 ];
 
                 if (!hideNaRows) {
@@ -620,7 +620,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                 }
 
                 subMetrics.push({
-                    name: "🏆 MARGEN BRUTO (P&L)",
+                    name: "MARGEN BRUTO (P&L)",
                     values: level1MargenBruto,
                     total: sum(level1MargenBruto),
                     isCurrency: true,
@@ -650,9 +650,9 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
         // Bloque Global de Flota Acumulada
         if (showAccumulatedTotal) {
             const globalMetrics: any[] = [
-                { name: "🟢 VENTAS CONSOLIDADAS", values: globalVentas, total: sum(globalVentas), isCurrency: true, isTotal: false, isNavSubtotal: 'ventas' },
-                { name: "🔴 COSTOS DIRECTOS", values: globalCostosDirectos, total: sum(globalCostosDirectos), isCurrency: true, isTotal: false, isNavSubtotal: 'costos' },
-                { name: "🔵 TIME CHARTER EQUIVALENT", values: globalTce, total: sum(globalTce), isCurrency: true, isTotal: false, isNavSubtotal: 'tce' }
+                { name: "VENTAS CONSOLIDADAS", values: globalVentas, total: sum(globalVentas), isCurrency: true, isTotal: false, isNavSubtotal: 'ventas' },
+                { name: "COSTOS DIRECTOS", values: globalCostosDirectos, total: sum(globalCostosDirectos), isCurrency: true, isTotal: false, isNavSubtotal: 'costos' },
+                { name: "TIME CHARTER EQUIVALENT", values: globalTce, total: sum(globalTce), isCurrency: true, isTotal: false, isNavSubtotal: 'tce' }
             ];
 
             if (!hideNaRows) {
@@ -666,7 +666,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
             }
 
             globalMetrics.push({
-                name: "🏆 MARGEN BRUTO (P&L)",
+                name: "MARGEN BRUTO (P&L)",
                 values: globalMargenBruto,
                 total: sum(globalMargenBruto),
                 isCurrency: true,
@@ -787,14 +787,14 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                             const isMbSub = row.metric.isNavSubtotal === 'margenBruto';
 
                             let rowStyleClass = 'hover:bg-slate-50';
-                            if (row.isSubRow) rowStyleClass = 'bg-slate-50/60 italic text-xs text-slate-500';
+                            if (row.isSubRow) rowStyleClass = 'bg-slate-50/60 text-xs text-slate-500';
                             if (row.metric.isNaRow) rowStyleClass = 'bg-slate-50/40 text-slate-400 text-xs';
-                            if (isVentasSub) rowStyleClass = 'bg-emerald-100/70 font-extrabold text-emerald-950';
-                            if (isCostosSub) rowStyleClass = 'bg-rose-100/70 font-extrabold text-rose-950';
-                            if (isTceSub) rowStyleClass = 'bg-blue-100/80 font-black text-blue-950';
-                            if (isMbSub) rowStyleClass = 'bg-emerald-200/90 font-black text-emerald-950 border-y-2 border-emerald-400';
-                            if (row.isClientSubtotal) rowStyleClass = 'bg-amber-50/30 font-semibold';
-                            if (row.isGlobalTotal) rowStyleClass = 'bg-indigo-50/20 font-bold';
+                            if (isVentasSub) rowStyleClass = 'bg-slate-100/90 font-bold text-slate-800 border-t border-slate-300';
+                            if (isCostosSub) rowStyleClass = 'bg-slate-100/90 font-bold text-slate-800 border-t border-slate-300';
+                            if (isTceSub) rowStyleClass = 'bg-slate-100/90 font-bold text-slate-800 border-t border-slate-300';
+                            if (isMbSub) rowStyleClass = 'bg-slate-200/80 font-bold text-slate-900 border-y border-slate-400';
+                            if (row.isClientSubtotal) rowStyleClass = 'bg-slate-100 font-bold text-slate-800';
+                            if (row.isGlobalTotal) rowStyleClass = 'bg-slate-200 font-black text-slate-900';
 
                             return (
                                 <tr key={i} className={`border border-slate-200 transition-colors ${rowStyleClass} ${row.metric.isTotal ? 'bg-slate-100 font-semibold' : ''}`}>
@@ -945,7 +945,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                                     })}
 
                                     {/* Celda TOTAL ACUM */}
-                                    <td className={`py-1 px-2 border border-slate-200 text-right text-xs font-bold bg-slate-100 ${row.metric.isNavSubtotal ? 'font-black bg-emerald-100/50' : ''}`}>
+                                    <td className={`py-1 px-2 border border-slate-200 text-right text-xs font-bold bg-slate-100 ${row.metric.isNavSubtotal ? 'font-black bg-slate-200/60' : ''}`}>
                                         {row.metric.isCurrency ? formatCurrency(row.metric.total) : formatNumber(row.metric.total)}
                                     </td>
                                 </tr>

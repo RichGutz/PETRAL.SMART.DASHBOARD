@@ -35,11 +35,11 @@ graph TD
 
 Este bloque consolida el balance operativo de la flota agrupando las rutas según su régimen comercial:
 
-| Tipo de Tráfico | Nº Viajes ($N$) | Volumen Anual ($TM$) | Participación ($\%$) |
+| Tipo de Tráfico | Nº Viajes | Volumen TM | % |
 | :--- | :---: | :---: | :---: |
-| **Viajes Cabotaje** | $33$ | $400,000\text{ TM}$ | $50.00\%$ |
-| **Viajes Exportación** | $30$ | $400,000\text{ TM}$ | $50.00\%$ |
-| **TOTAL GENERAL CONSOLIDADO** | **$63$** | **$800,000\text{ TM}$** | **$100.00\%$** |
+| **Viajes cabotaje** | $29$ | $391,500$ | $0.49$ |
+| **Viajes exportación** | $30$ | $405,000$ | $0.51$ |
+| **Total** | **$59$** | **$796,500$** | **$1$** |
 
 ### 📐 Lógica de Clasificación en PETRAL:
 - **Cabotaje:** Puertos de Origen y Destino situados en el litoral peruano (ej. `ILO-MATARANI`, `CALLAO-BAYOVAR`, `PISCO-CALLAO`).
@@ -51,20 +51,21 @@ Este bloque consolida el balance operativo de la flota agrupando las rutas segú
 
 A continuación se detalla la matriz exacta del Excel `FORMATO.MEC.BUDGETS.2026.xlsx` y su homologación matemática 1:1 con las métricas del motor PETRAL:
 
-| Parámetro MEC | Fila 1 (Ruta 1) | Fila 2 (Ruta 2) | Fila 3 (Ruta 3) | Fila 4 (Ruta 4) | TOTAL BUDGET 2026 |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **TM Anual** | $138,000$ | $250,000$ | $12,000$ | $400,000$ | **$800,000\text{ TM}$** |
-| **Full Load (TM/Viaje)** | $13,500$ | $13,500$ | $3,000$ | $13,500$ | **$12,698\text{ TM (prom)}$** |
-| **Nº Viajes** | $10$ | $19$ | $4$ | $30$ | **$63\text{ Viajes}$** |
-| **P/L x Viaje (USD)** | $\$144,587.20$ | $\$129,998.05$ | $\$85,191.00$ | $\$104,138.27$ | **$\$117,154.72\text{ (prom)}$** |
-| **Total Gross Margin (USD)** | **$\$1,445,872.00$** | **$\$2,469,962.96$** | **$\$340,764.00$** | **$\$3,124,148.15$** | **$\$7,380,747.11$** |
-| **$\%$ Participación** | $17.25\%$ | $31.25\%$ | $1.50\%$ | $50.00\%$ | **$100.00\%$** |
-| **Días Ocupación (Días-Buque)** | $51\text{ días}$ | $148\text{ días}$ | $24\text{ días}$ | $207\text{ días}$ | **$431\text{ Días-Buque}$** |
-| **Días Disponibles** | — | — | — | — | **$289\text{ Días Libres}$** |
+| Ruta | TM Anual | Full load | Nº viajes | P/L x Viaje | Total Gross Margin | % | Dias ocupación | Dias disponibles |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **ILO-MATARANI** | $135,000$ | $13,500$ | $10$ | $\$148,393.00$ | $\$1,483,930.00$ | $0.1695$ | $55.0$ | |
+| **ILO-MARCONA** | $256,500$ | $13,500$ | $19$ | $\$136,725.00$ | $\$2,597,775.00$ | $0.3220$ | $104.5$ | |
+| **ILO-MEJILLONES** | $405,000$ | $13,500$ | $30$ | $\$101,430.00$ | $\$3,042,900.00$ | $0.5085$ | $300.0$ | |
+| **Total** | **$796,500$** | — | **$59$** | — | **$\$7,124,605.00$** | **$1$** | **$459.5$** | **$0$** |
 
-> **Nota sobre Capacidad de Flota:**  
-> Para una flota de 2 buques operativos ($2 \times 360\text{ días} = 720\text{ días-buque/año}$):  
-> $$\text{Días Disponibles} = 720 - 431 = 289\text{ días libres para mantenimiento o viajes Spot}.$$
+### 🧮 Regla de Negocio: P/L Ponderado en Rutas Multi-Buque
+Cuando una misma ruta es operada por **dos o más buques** (con diferentes costos diarios de Hire, consumos de bunker o capacidades de carga):
+1. **P/L x Viaje Ponderado:**
+   $$\overline{\text{P/L}}_{\text{ruta}} = \frac{\sum_{b} \left( \text{P/L}_{b} \times N_{b} \right)}{\sum_{b} N_{b}} = \frac{\text{Total Gross Margin de la Ruta}}{\text{Total Viajes de la Ruta}}$$
+   *(donde $N_b$ son los viajes realizados por el buque $b$ y $\text{P/L}_b$ es su resultado por viaje).*
+
+2. **Full Load Ponderado:**
+   $$\overline{\text{Full Load}}_{\text{ruta}} = \frac{\sum_{b} \left( \text{Capacidad}_{b} \times N_{b} \right)}{\text{Total Viajes de la Ruta}} = \frac{\text{TM Anual de la Ruta}}{\text{Total Viajes de la Ruta}}$$
 
 ---
 

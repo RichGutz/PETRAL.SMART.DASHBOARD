@@ -1088,6 +1088,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             bafMdoBase,
             tariffTiers,
             demurrageRatesMap,
+            charterHireCost,
             liveCalc: liveCalculation,
             printedBy: user?.full_name || user?.email || 'Usuario Comercial'
         });

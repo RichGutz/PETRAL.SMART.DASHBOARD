@@ -37,6 +37,7 @@ export interface MulticotizadorPrintData {
     bafMdoBase?: number;
     tariffTiers?: Array<{ label?: string; min?: number; max?: number; rate: number }>;
     demurrageRatesMap?: Record<string, number>;
+    charterHireCost?: number;
     liveCalc?: VoyageCalculationResult | any;
     printedBy?: string;
 }
@@ -96,7 +97,7 @@ export class MulticotizadorPdfPrintService {
             validFrom, validTo, vessels, vesselParams, bunkerSource, bunkerPriceIfo, bunkerPriceMdo,
             tramos, puertosConfig, refacturarMuellajeMap, addressCommPct, brokerCommPct,
             commentsText, bafFormula, bafValidFrom, bafValidTo, bafIfoBase, bafMdoBase,
-            tariffTiers, demurrageRatesMap, liveCalc, printedBy
+            tariffTiers, demurrageRatesMap, charterHireCost, liveCalc, printedBy
         } = data;
 
         // ÚNICA FUENTE DE VERDAD: Si liveCalc viene de la pantalla se usa directamente, sino se calcula vía Engine
@@ -568,8 +569,19 @@ export class MulticotizadorPdfPrintService {
                                 </tr>
                             </tbody>
                         </table>
+                       <!-- COSTO ARRIENDO NAVES (SI HAY VALOR) -->
+                ${(Number(calc.charterHireCost || charterHireCost || 0) > 0) ? `
+                <div class="border-box bg-purple-50/50 border-purple-200 p-1.5 shadow-xs flex flex-col justify-between">
+                    <h4 class="text-[9px] font-bold text-purple-900 uppercase tracking-wide border-b border-purple-200 pb-0.5 mb-1 font-sans flex items-center justify-between">
+                        <span>Costo Arriendo Naves</span>
+                        <span class="text-[8px] font-mono text-purple-700 font-bold">USD Total</span>
+                    </h4>
+                    <div class="bg-white p-1 rounded border border-purple-200 flex justify-between items-center text-[9px] font-mono font-bold text-purple-950">
+                        <span>Monto Charter:</span>
+                        <span>${this.fmtCur(calc.charterHireCost || charterHireCost)}</span>
                     </div>
                 </div>
+                ` : ''}
 
                 <!-- COMMENTS -->
                 <div class="border-box bg-white p-1.5 shadow-xs flex-1 flex flex-col justify-between">
@@ -763,7 +775,7 @@ export class MulticotizadorPdfPrintService {
 
                         <!-- REFACTURACIÓN MUELLAJE -->
                         ${calc.refacturacionMuellaje > 0 ? `
-                            <div class="flex justify-between items-center text-emerald-800 text-[8px] italic">
+                            <div class="flex justify-between items-center text-emerald-800 text-[8px]">
                                 <span class="font-sans">(+) Refacturación Muellaje (al cliente)</span>
                                 <span>+${this.fmtCur(calc.refacturacionMuellaje)}</span>
                             </div>
@@ -780,6 +792,14 @@ export class MulticotizadorPdfPrintService {
                             <div class="flex justify-between items-center text-rose-800 text-[8px]">
                                 <span class="font-sans">(-) Costo Demurrage (${this.fmtCur(calc.tceReq)}/d × ${this.fmtNum(calc.totalDemurrageDays, 2)} d)</span>
                                 <span>-${this.fmtCur(calc.demurrageHireCost)}</span>
+                            </div>
+                        ` : ''}
+
+                        <!-- COSTO ARRIENDO NAVES (CHARTER) -->
+                        ${(Number(calc.charterHireCost || charterHireCost || 0) > 0) ? `
+                            <div class="flex justify-between items-center text-purple-900 text-[8px] bg-purple-100/70 px-1 py-0.5 rounded border border-purple-200 font-semibold">
+                                <span class="font-sans">(-) Arriendo Nave (Charter)</span>
+                                <span>-${this.fmtCur(calc.charterHireCost || charterHireCost)}</span>
                             </div>
                         ` : ''}
 
