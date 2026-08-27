@@ -338,3 +338,10 @@ CONCURRENCY & QC SUMMARY:
 - Restaurada la arquitectura original de impresion con motor Tailwind a todo color.
 - Se preservan intactas las lineas de Auditoria Bunker (1. Mar, 2. Pto, 3. Dem) y Costo Arriendo Naves con full estilos visuales.
 - Despliegue completado con exito en VPS https://forecast.geeksoft.tech.
+
+[2026-08-27 13:38:00] INTEGRACION DE ARRIENDO DE NAVES EN MATRIZ FINANCIERA:
+- Insertada la fila '(-) Arriendo de Naves' exactamente debajo de '(-) Dockage' en ForecastGrid.tsx.
+- Deducido el monto en la cascada de Voyage Result / P&L.
+- Backend forecast_service.py actualizado para mapear charter_hire_cost.
+- Loop QC Benoit Blanc ejecutado y 100% aprobado.
+- Despliegue completado en produccion VPS https://forecast.geeksoft.tech.
