@@ -5,6 +5,7 @@ import { FileText, Calendar, ChevronDown, ChevronRight, Anchor, DollarSign, Ship
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
 import { QuoteExecutiveCardSummary } from '../../components/CommercialForecast/QuoteExecutiveCardSummary';
+import { SharedYearlyRouteList } from '../../components/CommercialForecast/SharedYearlyRouteList';
 
 interface EnrichedBudgetRoute {
     route_id?: string;
@@ -264,129 +265,21 @@ export const BudgetsMaster: React.FC = () => {
                     </div>
                 </div>
 
-                {/* CONTENIDO PRINCIPAL: ACORDEÓN POR AÑOS */}
+                {/* CONTENIDO PRINCIPAL: ACORDEÓN POR AÑOS Y RUTAS CON DOBLE DRAG & DROP PERSISTENTE */}
                 <div className="p-6 flex-1 bg-slate-50/50 flex flex-col gap-5 overflow-y-auto">
                     {loading ? (
                         <div className="py-16 text-center text-slate-400 font-bold text-sm">
                             <div className="animate-spin h-6 w-6 border-2 border-emerald-600 border-t-transparent rounded-full mx-auto mb-3"></div>
                             Cargando Presupuestos de Supabase...
                         </div>
-                    ) : groupedByYear.sortedYears.length === 0 ? (
-                        <div className="py-16 text-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-300">
-                            <PieChart size={36} className="mx-auto text-slate-300 mb-2" />
-                            <p className="font-bold text-slate-600 text-sm">No se encontraron presupuestos registrados para {selectedClientId}.</p>
-                            <p className="text-xs text-slate-400 mt-1">Guarda una cotización con la categoría "Presupuesto" en el Multicotizador para verla aquí.</p>
-                        </div>
                     ) : (
-                        groupedByYear.sortedYears.map(year => {
-                            const routesInYear = groupedByYear.groups[year] || [];
-                            const isOpen = openYears[year] ?? false;
-
-                            return (
-                                <div key={year} className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden transition-all">
-                                    {/* Cabecera del Año (Acordeón) */}
-                                    <div 
-                                        onClick={() => toggleYear(year)}
-                                        className="bg-slate-100/80 hover:bg-slate-200/70 px-5 py-3.5 border-b border-slate-200 flex items-center justify-between cursor-pointer select-none transition-colors"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="bg-emerald-600 text-white p-1.5 rounded-lg shadow-2xs">
-                                                <Calendar size={16} />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center gap-2">
-                                                    Año {year} - Presupuestos Proyectados
-                                                    <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full font-mono">
-                                                        {routesInYear.length} {routesInYear.length === 1 ? 'Ruta' : 'Rutas'}
-                                                    </span>
-                                                </h3>
-                                                <span className="text-[10px] text-slate-500 font-mono block">
-                                                    Cliente: {selectedClientId} | Categoría: PRESUPUESTO OFICIAL
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-2">
-                                            {isOpen ? <ChevronDown size={18} className="text-slate-500" /> : <ChevronRight size={18} className="text-slate-500" />}
-                                        </div>
-                                    </div>
-
-                                    {/* Lista de Rutas en el Año */}
-                                    {isOpen && (
-                                        <div className="p-4 flex flex-col gap-3 bg-slate-50/30">
-                                            {routesInYear.map(route => {
-                                                const isExpanded = expandedRouteName === route.name;
-                                                const tramos = route.legs_data?.tramos || [];
-                                                const firstLaden = tramos.find((t: any) => t.type?.toUpperCase() === 'LADEN') || tramos[0];
-                                                const origin = firstLaden?.origin_port_id || route.legs_data?.puertosConfig?.[0]?.port_id || 'ORIGEN';
-                                                const destination = firstLaden?.destination_port_id || route.legs_data?.puertosConfig?.[route.legs_data?.puertosConfig?.length - 1]?.port_id || 'DESTINO';
-                                                const vessel = route.legs_data?.vessel_id || route.legs_data?.vesselParams?.vessel_id || 'FLOTA';
-                                                const freightRate = Number(firstLaden?.freight_rate || 0);
-
-                                                return (
-                                                    <div key={route.name} className="border border-slate-200 bg-white rounded-lg p-3.5 shadow-2xs hover:border-emerald-300 transition-all flex flex-col gap-2.5">
-                                                        <div className="flex flex-wrap items-center justify-between gap-3">
-                                                            <div className="flex items-center gap-2.5">
-                                                                <span className="text-base">📊</span>
-                                                                <div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <h4 className="text-xs font-black text-slate-900 font-mono tracking-tight">{route.name}</h4>
-                                                                        <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                                                            PRESUPUESTO
-                                                                        </span>
-                                                                    </div>
-                                                                    <span className="text-[10px] text-slate-500 font-mono flex items-center gap-2 mt-0.5">
-                                                                        <span>🚢 Buque: <strong className="text-slate-700">{vessel}</strong></span>
-                                                                        <span>•</span>
-                                                                        <span>⚓ Tramo: <strong className="text-slate-700">{origin} → {destination}</strong></span>
-                                                                        {freightRate > 0 && (
-                                                                            <>
-                                                                                <span>•</span>
-                                                                                <span>💰 Flete: <strong className="text-emerald-700">${freightRate.toFixed(2)}/TM</strong></span>
-                                                                            </>
-                                                                        )}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="flex items-center gap-2">
-                                                                <button
-                                                                    onClick={() => toggleRouteExpansion(route.name)}
-                                                                    className="px-2.5 py-1 text-xs font-bold rounded border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 cursor-pointer flex items-center gap-1"
-                                                                >
-                                                                    {isExpanded ? "Ocultar Detalle" : "Ver Detalle Financiero"}
-                                                                    {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleDeleteRoute(route)}
-                                                                    className="p-1.5 rounded border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 cursor-pointer"
-                                                                    title="Eliminar este presupuesto"
-                                                                >
-                                                                    <Trash2 size={14} />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Tarjeta Ejecutiva Expandible */}
-                                                        {isExpanded && (
-                                                            <div className="pt-3 border-t border-slate-100 animate-in fade-in duration-150">
-                                                                <QuoteExecutiveCardSummary
-                                                                    quote={{
-                                                                        name: route.name,
-                                                                        description: route.description || 'Presupuesto Comercial Anual',
-                                                                        legs_data: route.legs_data
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })
+                        <SharedYearlyRouteList
+                            storageKey="budgets"
+                            clientId={selectedClientId || 'ALL'}
+                            routes={clientRoutes as any}
+                            onDeleteRoute={handleDeleteRoute}
+                            emptyMessage={`No se encontraron presupuestos registrados para ${selectedClientId}.`}
+                        />
                     )}
                 </div>
 

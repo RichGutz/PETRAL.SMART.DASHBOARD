@@ -5,6 +5,7 @@ import { FileText, Calendar, ChevronDown, ChevronRight, Anchor, DollarSign, Ship
 import { exportMasterToExcel, exportMasterToPDF } from '../../lib/masterExport';
 import type { ExportColumn } from '../../lib/masterExport';
 import { QuoteExecutiveCardSummary } from '../../components/CommercialForecast/QuoteExecutiveCardSummary';
+import { SharedYearlyRouteList } from '../../components/CommercialForecast/SharedYearlyRouteList';
 import { CierreApprovalModal } from '../../components/Masters/CierreApprovalModal';
 
 interface EnrichedRoute {
@@ -333,176 +334,22 @@ export const ContractsMaster: React.FC = () => {
                     </button>
                 </div>
 
-                {/* CONTENIDO PRINCIPAL: ACORDEON POR AÑO (ORDEN DESCENDENTE) */}
+                {/* CONTENIDO PRINCIPAL: ACORDEON POR AÑO Y RUTAS CON DOBLE DRAG & DROP PERSISTENTE */}
                 <div className="flex-1 p-6 bg-slate-100/60 overflow-y-auto space-y-4">
-                    
                     {loading ? (
                         <div className="flex justify-center items-center h-64 text-slate-500 font-medium">
+                            <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mr-3"></div>
                             Cargando maestro de contratos y rutas del multicotizador...
                         </div>
-                    ) : groupedByYear.sortedYears.length === 0 ? (
-                        <div className="bg-white rounded-xl p-8 text-center text-slate-500 border border-slate-200 shadow-sm">
-                            <Layers size={36} className="mx-auto text-slate-300 mb-2" />
-                            <p className="font-semibold text-sm">No hay contratos o rutas registradas para el cliente {selectedClientId}.</p>
-                            <p className="text-xs text-slate-400 mt-1">Crea o guarda rutas desde el Multicotizador asignadas a este cliente para verlas aquí.</p>
-                        </div>
                     ) : (
-                        groupedByYear.sortedYears.map(year => {
-                            const isOpen = Boolean(openYears[year]);
-                            const routesInYear = groupedByYear.groups[year] || [];
-
-                            return (
-                                <div key={year} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all">
-                                    
-                                    {/* CABECERA HORIZONTAL DEL BLOQUE ANUAL */}
-                                    <button
-                                        onClick={() => toggleYear(year)}
-                                        className="w-full bg-slate-800 hover:bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between transition-colors cursor-pointer"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <Calendar size={18} className="text-amber-400" />
-                                            <span className="text-sm font-black uppercase tracking-wider">
-                                                📅 AÑO DE VIGENCIA {year}
-                                            </span>
-                                            <span className="bg-slate-700 text-amber-300 text-xs font-bold px-2.5 py-0.5 rounded-full border border-slate-600">
-                                                {routesInYear.length} {routesInYear.length === 1 ? 'Cierre Registrado' : 'Cierres Registrados'}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-slate-300 text-xs font-semibold">
-                                            <span>{isOpen ? 'Ocultar Año' : 'Desplegar Año'}</span>
-                                            {isOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                                        </div>
-                                    </button>
-
-                                    {/* LISTADO DE RUTAS DEL AÑO */}
-                                    {isOpen && (
-                                        <div className="p-4 space-y-3 bg-slate-50 border-t border-slate-200">
-                                            {routesInYear.map(route => {
-                                                const isExpanded = expandedRouteName === route.name;
-                                                const legs = route.legs_data || {};
-                                                const meta = legs.contract_metadata || {};
-                                                const tramos = legs.tramos || [];
-                                                const validFrom = route.valid_from || legs.valid_from || meta.valid_from || '—';
-                                                const validTo = route.valid_to || legs.valid_to || meta.valid_to || '—';
-                                                
-                                                const rawStatus = ((route as any).status || meta.status || meta.contract_status || 'BORRADOR').toUpperCase();
-                                                const isFirme = rawStatus === 'FIRME' || rawStatus === 'APROBADO' || rawStatus === 'ACTIVE';
-
-                                                const portsList: string[] = [];
-                                                tramos.forEach((tr: any) => {
-                                                    if (tr.origin_port_id && !portsList.includes(tr.origin_port_id)) portsList.push(tr.origin_port_id);
-                                                    if (tr.destination_port_id && !portsList.includes(tr.destination_port_id)) portsList.push(tr.destination_port_id);
-                                                });
-                                                const portsSequence = portsList.length > 0 ? portsList.join(' ➔ ') : 'Ruta Multicotizador';
-
-                                                return (
-                                                    <div key={route.name} className="bg-white rounded-lg border border-slate-300 shadow-sm overflow-hidden">
-                                                        <div 
-                                                            onClick={() => toggleRouteExpansion(route.name)}
-                                                            className="p-4 flex flex-wrap items-center justify-between gap-4 cursor-pointer hover:bg-slate-100/80 transition-colors"
-                                                        >
-                                                            <div className="flex items-center gap-3">
-                                                                <button className="text-slate-500 hover:text-blue-600">
-                                                                    {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                                                                </button>
-                                                                <div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="font-mono font-bold text-xs text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                                                                            📍 {route.name}
-                                                                        </span>
-                                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${isFirme ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                                                                            {isFirme ? <CheckCircle2 size={10} /> : <Clock size={10} />} {isFirme ? 'FIRME' : 'BORRADOR'}
-                                                                        </span>
-                                                                    </div>
-                                                                    <div className="text-xs font-semibold text-slate-600 mt-1 flex items-center gap-3">
-                                                                        <span>Secuencia: <strong className="text-slate-800 font-mono">[{portsSequence}]</strong></span>
-                                                                        <span className="text-slate-400">|</span>
-                                                                        <span>Vigencia: <strong className="text-slate-700 font-mono">{validFrom} ➔ {validTo}</strong></span>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                                                                <span className="bg-slate-100 px-2.5 py-1 rounded border border-slate-200 font-mono text-[11px]">
-                                                                    {tramos.length} Tramos
-                                                                </span>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        try {
-                                                                            sessionStorage.setItem('petral_load_quote', JSON.stringify(route));
-                                                                            window.open('/multicotizador', '_blank');
-                                                                        } catch (err) {
-                                                                            console.error("Error opening quote:", err);
-                                                                            window.open('/multicotizador', '_blank');
-                                                                        }
-                                                                    }}
-                                                                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-colors cursor-pointer shadow-xs"
-                                                                    title="Abrir este cierre COA en vivo en el Multicotizador"
-                                                                >
-                                                                    <ExternalLink size={12} />
-                                                                    <span>Ver en Multicotizador ➔</span>
-                                                                </button>
-                                                                <span className="text-slate-400 font-bold hover:underline cursor-pointer px-1 text-xs" onClick={() => toggleRouteExpansion(route.name)}>
-                                                                    {isExpanded ? '▲ Ocultar Ficha' : '▼ Detalle Rápido'}
-                                                                </span>
-
-                                                                {/* PAD DE ESTADO: BORRADOR vs FIRME */}
-                                                                {isFirme ? (
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            setApprovalModalRoute(route);
-                                                                        }}
-                                                                        className="px-2.5 py-1 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-800 hover:text-emerald-900 border border-emerald-300 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs ml-1"
-                                                                        title={`Aprobado por ${(route as any).approved_by_name || (route as any).approved_by || 'ADMIN'}. Clic para auditar.`}
-                                                                    >
-                                                                        <CheckCircle2 size={13} className="text-emerald-600" />
-                                                                        <span>FIRME</span>
-                                                                    </button>
-                                                                ) : (
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            setApprovalModalRoute(route);
-                                                                        }}
-                                                                        className="px-2.5 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 hover:text-amber-950 border border-amber-300 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs ml-1"
-                                                                        title="Cierre en estado BORRADOR. Clic para autorizar y pasar a FIRME (Solo Administrador con clave)"
-                                                                    >
-                                                                        <Clock size={13} className="text-amber-600" />
-                                                                        <span>BORRADOR</span>
-                                                                    </button>
-                                                                )}
-
-                                                                {/* PAD BORRAR */}
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleDeleteRoute(route);
-                                                                    }}
-                                                                    className="px-2.5 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-200 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer shadow-sm ml-1"
-                                                                    title="Eliminar ruta de contrato COA"
-                                                                >
-                                                                    <Trash2 size={13} />
-                                                                    <span>Eliminar</span>
-                                                                </button>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* FICHA EXPANDIDA: UI UNIFICADA MULTICOTIZADOR */}
-                                                        {isExpanded && (
-                                                            <div className="p-4 bg-slate-50 border-t border-slate-200">
-                                                                <QuoteExecutiveCardSummary route={route} />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })
+                        <SharedYearlyRouteList
+                            storageKey="contracts"
+                            clientId={selectedClientId || 'ALL'}
+                            routes={clientRoutes}
+                            onDeleteRoute={handleDeleteRoute}
+                            onStatusClick={(route) => setApprovalModalRoute(route as any)}
+                            emptyMessage={`No hay contratos o rutas registradas para el cliente ${selectedClientId}.`}
+                        />
                     )}
                 </div>
             </div>
