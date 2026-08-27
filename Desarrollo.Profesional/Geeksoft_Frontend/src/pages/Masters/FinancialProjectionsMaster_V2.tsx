@@ -82,6 +82,15 @@ export const FinancialProjectionsMaster: React.FC = () => {
             }));
 
             setRawForecasts(enriched);
+
+            // Auto-expandir todos los años registrados para máxima visibilidad
+            const autoYears: Record<string, boolean> = { '2027': true, '2026': true };
+            (enriched || []).forEach((item: any) => {
+                const y = (item.start_date || '2027').substring(0, 4);
+                autoYears[y] = true;
+            });
+            setOpenYears(autoYears);
+
         } catch (err) {
             console.error("Error cargando maestro de proyecciones:", err);
         } finally {
