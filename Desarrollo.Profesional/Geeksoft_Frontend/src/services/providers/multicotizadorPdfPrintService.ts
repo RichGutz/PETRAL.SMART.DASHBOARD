@@ -348,7 +348,7 @@ export class MulticotizadorPdfPrintService {
         </div>
         <div class="flex items-center gap-3">
             <button id="btn-download-pdf" onclick="downloadDirectPdf()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-1.5 rounded flex items-center gap-1.5 shadow transition-colors cursor-pointer">
-                🖨️ Imprimir / Guardar como PDF
+                🖨️ Guardar PDF (A4 Horizontal)
             </button>
             <button onclick="window.close()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs px-3 py-1.5 rounded transition-colors cursor-pointer">
                 Cerrar
@@ -972,9 +972,14 @@ export class MulticotizadorPdfPrintService {
             }
             try {
                 const element = document.getElementById('pdf-content-page');
-                const styles = Array.from(document.querySelectorAll('style')).map(s => s.outerHTML).join('\n');
-                const headContent = '<meta charset="UTF-8"><title>PETRAL_MULTICOTIZADOR</title>' + styles;
-                const fullHtml = '<!DOCTYPE html><html lang="es"><head>' + headContent + '</head><body style="margin:0;padding:0;background:#ffffff;">' + element.outerHTML + '</body></html>';
+                
+                // Extraer estilos eliminando @import url que bloquean WeasyPrint con timeouts
+                let cleanStyles = '';
+                document.querySelectorAll('style').forEach(function(s) {
+                    cleanStyles += s.innerHTML.replace(/@import\s+url\([^)]+\);?/gi, '') + '\n';
+                });
+
+                const fullHtml = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>PETRAL_MULTICOTIZADOR</title><style>' + cleanStyles + '</style></head><body style="margin:0;padding:0;background:#ffffff;">' + element.outerHTML + '</body></html>';
                 const filename = 'PETRAL_MULTICOTIZADOR_${(selectedClient || 'CLIENTE').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(selectedVessel || 'BUQUE').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf';
                 
                 const origin = (window.opener && window.opener.location && window.opener.location.origin && window.opener.location.origin !== 'null' && !window.opener.location.origin.startsWith('about:'))
@@ -1000,13 +1005,13 @@ export class MulticotizadorPdfPrintService {
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 10000);
+                setTimeout(function() { URL.revokeObjectURL(url); }, 10000);
             } catch (err) {
                 console.warn('Backend WeasyPrint no disponible, recurriendo a impresión nativa:', err);
                 window.print();
             } finally {
                 if (btn) {
-                    btn.innerText = '🖨️ Imprimir / Guardar como PDF';
+                    btn.innerText = '🖨️ Guardar PDF (A4 Horizontal)';
                     btn.disabled = false;
                 }
             }

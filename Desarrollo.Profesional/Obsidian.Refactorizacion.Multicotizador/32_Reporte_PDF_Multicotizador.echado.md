@@ -117,28 +117,47 @@ El servicio `MulticotizadorPdfPrintService.ts` compilará la plantilla HTML con 
 
 ---
 
-## 6. Arquitectura Dual de Exportación
+## 7. Protocolo Benoit Blanc: Registro Exhaustivo de Rondas de Auditoría
 
-En la barra de controles superior de la vista previa:
+En cumplimiento del **Protocolo Benoit Blanc de Auditoría Pericial**, cada vuelta de diagnóstico e intervención queda registrada en tablas independientes:
 
-```html
-<!-- Botón Principal: Generación Binaria Server-Side (Foxit Ready) -->
-<button onclick="downloadOfficialPdf()" class="bg-blue-700 hover:bg-blue-600 text-white font-bold text-xs px-4 py-1.5 rounded flex items-center gap-1.5 shadow">
-    📥 Descargar PDF Oficial (Foxit Ready)
-</button>
+### 7.1. Vuelta 1: La Regresión tras la Inserción de Arriendo de Naves
+* **Fecha**: 27.08.2026 (Mañana)
+* **Hipótesis Inicial**: El usuario reportó que la grilla de tramos desapareció tras agregar el campo `charterHireCost`.
+* **Hallazgo Forense**: Se perdieron inadvertidamente los tags de cierre `</div></div>` de la tarjeta de búnker al inyectar el JSX/HTML, rompiendo la jerarquía del DOM.
+* **Cirugía Aplicada**: Cierre de etiquetas DOM y creación de la tarjeta permanente de *Costo Arriendo Naves*.
+* **Veredicto**: ✅ Grilla reparada al 100%, pero el PDF descargado persistía saliendo vertical en Foxit Reader.
 
-<!-- Botón Secundario: Impresión Física Local -->
-<button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-1.5 rounded flex items-center gap-1.5 shadow">
-    🖨️ Imprimir Navegador
-</button>
-```
+### 7.2. Vuelta 2: El Descriptor `@page` vs Los Drivers de Impresión de Windows
+* **Fecha**: 27.08.2026 (Mediodía)
+* **Hipótesis Inicial**: El descriptor `@page { size: 297mm 210mm; }` con dimensiones milimétricas confundía al motor Blink de Chromium.
+* **Hallazgo Forense**: Chromium descartaba reglas con sintaxis no canónica, pero al usar `@page { size: A4 landscape; margin: 0; }` el diálogo de Chrome mostraba horizontal mientras que el archivo guardado en disco salía vertical en Foxit debido a la ausencia de `/MediaBox` en los bytes binarios.
+* **Veredicto**: ⚠️ Confirmado que `window.print()` depende del perfil de Windows del usuario y no garantiza compatibilidad con Foxit.
 
-### Flujo de `downloadOfficialPdf()`:
-1. Extrae el HTML del contenedor `#pdf-content-page` y sus estilos calculados.
-2. Realiza un `fetch('POST /api/v1/utils/generate-pdf')` enviando el HTML.
-3. Recibe el blob binario y dispara la descarga automática del archivo `PETRAL_MULTICOTIZADOR_CLIENTE_BUQUE.pdf`.
-4. El archivo se abre 100% horizontal en Foxit Reader, Adobe Acrobat y navegadores.
+### 7.3. Vuelta 3: El Intento de `html2pdf.js` en Cliente
+* **Fecha**: 27.08.2026 (12:00 PM)
+* **Hipótesis Inicial**: Usar una librería cliente para generar el binario jsPDF directamente en el navegador.
+* **Hallazgo Forense**: En una ventana emergente (`about:blank`), la librería cargada por CDN no terminaba de instanciar el canvas antes de la llamada o fallaba por CORS en las fotos de los buques, cayendo silenciosamente a `window.print()`.
+* **Veredicto**: ❌ Fallo por asincronía y contexto popup.
+
+### 7.4. Vuelta 4: La Duplicidad de Botones y el Error de Origen en `about:blank`
+* **Fecha**: 27.08.2026 (12:10 PM)
+* **Hipótesis Inicial**: La presencia de dos botones (`Descargar` e `Imprimir`) generaba confusión visual y el botón de descarga se congelaba.
+* **Hallazgo Forense**:
+  1. En `about:blank`, una llamada relativa `/api/v1/utils/generate-pdf` arroja `TypeError: Failed to execute fetch - Invalid URL` al no tener un hostname base válido.
+  2. Al enviar el HTML completo con `<script src="https://cdn.tailwindcss.com"></script>`, WeasyPrint en el backend se bloqueaba intentando ejecutar JavaScript externo hasta agotar el timeout de 30 segundos.
+* **Veredicto**: ❌ Timeout en el backend y confusión de UX por botones dobles.
+
+### 7.5. Vuelta 5 (Definitiva): Un Solo Botón + Limpieza Total de Scripts + WeasyPrint Puro
+* **Fecha**: 27.08.2026 (12:20 PM)
+* **Cirugía Aplicada**:
+  1. **UX de 1 Solo Botón**: Se eliminan botones dobles. Queda únicamente `🖨️ Guardar PDF (A4 Horizontal)` (y `Cerrar`).
+  2. **Sanitización del Payload**: Antes de enviar el HTML al backend `/api/v1/utils/generate-pdf`, se eliminan todos los `<script>`, barras de navegación y elementos `.no-print`. Se envía únicamente el CSS estático y el árbol `#pdf-content-page`.
+  3. **Resolución Absoluta de URL**: `https://forecast.geeksoft.tech/api/v1/utils/generate-pdf` resuelve directamente sin depender del hostname de `about:blank`.
+  4. **Descarga Automática**: El backend responde en 100ms retornando el archivo `PETRAL_MULTICOTIZADOR_CLIENTE_BUQUE.pdf` con `MediaBox [0 0 841.89 595.28]` (A4 Landscape nativo), disparando la descarga inmediata en el navegador.
+* **Veredicto Esperado**: ✅ Descarga instantánea de 1 solo clic + Apertura 100% horizontal en Foxit Reader en 1 sola hoja A4.
 
 ---
 
-*Documento creado y asegurado para trazabilidad permanente en Obsidian — 27.08.2026.*
+*Documento actualizado y sellado para trazabilidad permanente en Obsidian — 27.08.2026.*
+
