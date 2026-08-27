@@ -360,7 +360,7 @@ export class MulticotizadorPdfPrintService {
     </div>
 
     <!-- DOCUMENTO A4 LANDSCAPE -->
-    <div class="a4-landscape-page">
+    <div id="pdf-content-page" class="a4-landscape-page">
 
         <!-- 1. CABECERA EJECUTIVA Y METADATA DE VIAJE -->
         <div class="border-box bg-white text-slate-800 p-2 shadow-xs border border-slate-300">
