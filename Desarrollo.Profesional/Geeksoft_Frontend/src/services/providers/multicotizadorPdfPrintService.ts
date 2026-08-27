@@ -225,8 +225,10 @@ export class MulticotizadorPdfPrintService {
     <title>PETRAL_MULTICOTIZADOR_${selectedClient}_${selectedVessel || 'BUQUE'}</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2pdf.js — genera PDF binario nativo landscape para Foxit Reader -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <!-- ESTILOS DE IMPRESIÓN FORZADOS A4 LANDSCAPE -->
+    <!-- ESTILOS DE IMPRESIÓN FORZADOS -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700;800&family=Geist:wght@400;500;600;700;800;900&display=swap');
         
@@ -345,6 +347,9 @@ export class MulticotizadorPdfPrintService {
             <span class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded font-mono">1 HOJA OFICIAL</span>
         </div>
         <div class="flex items-center gap-3">
+            <button id="btn-download-pdf" onclick="downloadDirectPdf()" class="bg-blue-700 hover:bg-blue-600 text-white font-bold text-xs px-4 py-1.5 rounded flex items-center gap-1.5 shadow transition-colors cursor-pointer">
+                📥 Descargar PDF Directo (Foxit Ready)
+            </button>
             <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-1.5 rounded flex items-center gap-1.5 shadow transition-colors cursor-pointer">
                 🖨️ Imprimir / Guardar como PDF
             </button>
@@ -572,15 +577,15 @@ export class MulticotizadorPdfPrintService {
                     </div>
                 </div>
 
-                <!-- COSTO ARRIENDO NAVES (IDÉNTICO A LA PANTALLA, SIEMPRE VISIBLE) -->
-                <div class="border-box bg-white p-1.5 shadow-xs flex flex-col justify-between">
+                <!-- COSTO ARRIENDO NAVES (CHARTER) -->
+                <div class="border-box bg-white p-1.5 shadow-xs">
                     <h4 class="text-[9px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-0.5 mb-1 font-sans flex items-center justify-between">
                         <span>Costo Arriendo Naves</span>
-                        <span class="text-[8px] font-mono text-emerald-700 font-bold">USD Total</span>
+                        <span class="text-[8px] font-mono text-slate-400 font-normal">Charter Hire Cost</span>
                     </h4>
-                    <div class="bg-slate-50 p-1 rounded border border-slate-200 flex justify-between items-center text-[9px] font-mono font-bold text-slate-800">
-                        <span class="text-slate-500 font-sans">Monto Arriendo:</span>
-                        <span class="text-emerald-800 font-black">${this.fmtCur(calc.charterHireCost || charterHireCost || 0)}</span>
+                    <div class="flex justify-between items-center bg-slate-50 px-2 py-1 rounded border border-slate-200 text-[8.5px] font-mono">
+                        <span class="font-sans text-slate-600 font-bold">Monto Asignado:</span>
+                        <strong class="font-black text-slate-900">${this.fmtCur(calc.charterHireCost || charterHireCost || 0)}</strong>
                     </div>
                 </div>
 
@@ -762,7 +767,7 @@ export class MulticotizadorPdfPrintService {
                         
                         <!-- REVENUE (FLETE) -->
                         <div class="flex justify-between items-center py-0.5 font-bold text-emerald-950 border-b border-emerald-200">
-                            <span class="font-sans">Revenue (${this.fmtNum(calc.totalQuantity, 0)} MT × $${(calc.totalQuantity > 0 ? calc.totalFreight / calc.totalQuantity : 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/MT)</span>
+                            <span class="font-sans">Revenue (${this.fmtNum(calc.totalQuantity, 0)} MT × ${this.fmtCur(calc.totalQuantity > 0 ? calc.totalFreight / calc.totalQuantity : 0)}/MT)</span>
                             <span>${this.fmtCur(calc.totalFreight)}</span>
                         </div>
 
@@ -776,7 +781,7 @@ export class MulticotizadorPdfPrintService {
 
                         <!-- REFACTURACIÓN MUELLAJE -->
                         ${calc.refacturacionMuellaje > 0 ? `
-                            <div class="flex justify-between items-center text-emerald-800 text-[8px]">
+                            <div class="flex justify-between items-center text-emerald-800 text-[8px] italic">
                                 <span class="font-sans">(+) Refacturación Muellaje (al cliente)</span>
                                 <span>+${this.fmtCur(calc.refacturacionMuellaje)}</span>
                             </div>
@@ -788,19 +793,19 @@ export class MulticotizadorPdfPrintService {
                             <span>-${this.fmtCur(calc.standardHireCost || calc.hireUsd)}</span>
                         </div>
 
+                        <!-- ARRIENDO NAVE (CHARTER) SI HAY -->
+                        ${(Number(calc.charterHireCost || charterHireCost || 0) > 0) ? `
+                            <div class="flex justify-between items-center text-slate-700 text-[8px]">
+                                <span class="font-sans">(-) Arriendo Nave (Charter)</span>
+                                <span>-${this.fmtCur(calc.charterHireCost || charterHireCost)}</span>
+                            </div>
+                        ` : ''}
+
                         <!-- HIRE DEMURRAGE (SI HAY) -->
                         ${calc.demurrageHireCost > 0 ? `
                             <div class="flex justify-between items-center text-rose-800 text-[8px]">
                                 <span class="font-sans">(-) Costo Demurrage (${this.fmtCur(calc.tceReq)}/d × ${this.fmtNum(calc.totalDemurrageDays, 2)} d)</span>
                                 <span>-${this.fmtCur(calc.demurrageHireCost)}</span>
-                            </div>
-                        ` : ''}
-
-                        <!-- COSTO ARRIENDO NAVES (CHARTER) -->
-                        ${(Number(calc.charterHireCost || charterHireCost || 0) > 0) ? `
-                            <div class="flex justify-between items-center text-purple-900 text-[8px] bg-purple-100/70 px-1 py-0.5 rounded border border-purple-200 font-semibold">
-                                <span class="font-sans">(-) Arriendo Nave (Charter)</span>
-                                <span>-${this.fmtCur(calc.charterHireCost || charterHireCost)}</span>
                             </div>
                         ` : ''}
 
@@ -934,6 +939,45 @@ export class MulticotizadorPdfPrintService {
         </div>
 
     </div>
+    
+    <script>
+        function downloadDirectPdf() {
+            const btn = document.getElementById('btn-download-pdf');
+            if (btn) {
+                btn.innerText = '⏳ Generando PDF...';
+                btn.disabled = true;
+            }
+            const element = document.getElementById('pdf-content-page');
+            const opt = {
+                margin: 0,
+                filename: 'PETRAL_MULTICOTIZADOR_${(selectedClient || 'CLIENTE').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(selectedVessel || 'BUQUE').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            
+            if (window.html2pdf) {
+                window.html2pdf().set(opt).from(element).save().then(function() {
+                    if (btn) {
+                        btn.innerText = '📥 Descargar PDF Directo (Foxit Ready)';
+                        btn.disabled = false;
+                    }
+                }).catch(function(err) {
+                    console.error('Error al generar PDF directo:', err);
+                    if (btn) {
+                        btn.innerText = '📥 Descargar PDF Directo (Foxit Ready)';
+                        btn.disabled = false;
+                    }
+                });
+            } else {
+                window.print();
+                if (btn) {
+                    btn.innerText = '📥 Descargar PDF Directo (Foxit Ready)';
+                    btn.disabled = false;
+                }
+            }
+        }
+    </script>
 
 </body>
 </html>`;
