@@ -673,3 +673,40 @@ El peritaje del código en `PortDemurrageRatesService.ts` reveló una doble capa
 ---
 
 *Caso cerrado y sellado en bitácora por Benoit Blanc — 27.08.2026.*
+
+---
+
+## 17. Caso Pericial N° 07: El Misterio del PDF Parado y el Descriptor `@page { size: landscape }` en Chromium
+
+**Fecha**: 27 de Agosto de 2026  
+**Investigador**: Detective Benoit Blanc  
+**Evidencia Física**: El usuario reporta que al guardar el PDF mediante el navegador, Foxit Reader abre el documento en vertical ("parado"), requiriendo rotación manual.
+
+---
+
+### 🕵️‍♂️ 17.1. La Autopsia del Crimen
+
+1. **La Trampa de los Milímetros en `@page`**:
+   - En Chromium (Blink), declarar `@page { size: 297mm 210mm; }` NO activa la bandera booleana interna de orientación horizontal en el diálogo de impresión nativo de Windows si no está presente la palabra reservada estándar `landscape`.
+   - Chromium interpretaba las dimensiones como un formato de papel personalizado, pero dejaba el radio button de orientación en **"Vertical" (Portrait)** por omisión del sistema operativo.
+
+2. **La Ausencia de la Biblioteca de Exportación Binaria**:
+   - La llamada a `html2pdf.js` fallaba silenciosamente al no estar cargado el script en el `<head>`, forzando al usuario al diálogo de impresión del navegador.
+
+---
+
+### 🛠️ 17.2. Cirugía Forense y Resolución Definitiva:
+
+1. **Restauración de la Directiva Canónica `@page { size: A4 landscape; margin: 0; }`**:
+   - Se restableció la regla CSS estándar en la cabecera `<style>` (post-Tailwind) y en `@media print`.
+   - Con esta directiva válida y sin propiedades experimentales de dimensiones métricas, Chromium reconoce automáticamente el descriptor de página como **A4 Horizontal (Landscape)** y elimina encabezados y pies de página (`about:blank`, numeración `1/2`).
+
+2. **UX Ejecutivo de 1 Solo Botón Oficial**:
+   - Se eliminaron librerías secundarias y botones redundantes, preservando la experiencia sobria e intuitiva de PETRAL:
+     - **Botón Único:** `🖨️ Imprimir / Guardar como PDF` (`window.print()`).
+     - **Botón Auxiliar:** `Cerrar` (`window.close()`).
+   - El layout de 1 hoja A4 Landscape queda perfectamente confinado a `290mm × 200mm` con cero desbordes.
+
+---
+
+*Caso cerrado y sellado en bitácora por Benoit Blanc — 27.08.2026.*
