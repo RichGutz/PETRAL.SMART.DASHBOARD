@@ -379,9 +379,9 @@ export const FinancialProjectionsMaster: React.FC = () => {
         const wsData: any[][] = [
             [`Año ${scenario.year} - Proyectado`],
             ['', 'Nº viajes', 'Volumen TM', '%'],
-            ['Viajes cabotaje', mec.cabotageTrips, mec.cabotageVolumeTm, `${mec.cabotageSharePct.toFixed(1)}%`],
-            ['Viajes exportación', mec.exportTrips, mec.exportVolumeTm, `${mec.exportSharePct.toFixed(1)}%`],
-            ['Total', mec.totalTrips, mec.totalVolumeTm, '100.0%'],
+            ['Viajes cabotaje', mec.cabotageTrips, mec.cabotageVolumeTm, `${mec.cabotageSharePct.toFixed(2)}%`],
+            ['Viajes exportación', mec.exportTrips, mec.exportVolumeTm, `${mec.exportSharePct.toFixed(2)}%`],
+            ['Total', mec.totalTrips, mec.totalVolumeTm, '100.00%'],
             [],
             ['Ruta', 'TM Anual', 'Full load', 'Nº viajes', 'P/L x Viaje', 'Total Gross Margin', '%', 'Dias ocupación', 'Dias disponibles']
         ];
@@ -392,7 +392,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                 r.annualTons,
                 Math.round(r.fullLoad),
                 r.annualTrips,
-                r.pnlPerTrip,
+                Math.round(r.pnlPerTrip),
                 Math.round(r.totalGrossMargin),
                 `${r.volumeSharePct.toFixed(2)}%`,
                 Math.round(r.daysOccupation),
@@ -431,7 +431,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${r.annualTons.toLocaleString('en-US')}</td>
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${Math.round(r.fullLoad).toLocaleString('en-US')}</td>
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #0f172a;">${r.annualTrips}</td>
-                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">$${r.pnlPerTrip.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">$${Math.round(r.pnlPerTrip).toLocaleString('en-US')}</td>
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; font-weight: bold; color: #0f172a;">$${Math.round(r.totalGrossMargin).toLocaleString('en-US')}</td>
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 600; color: #0369a1;">${r.volumeSharePct.toFixed(2)}%</td>
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #334155;">${Math.round(r.daysOccupation)}</td>
@@ -1052,7 +1052,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                                         {r.annualTrips}
                                                                                     </td>
                                                                                     <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-800">
-                                                                                        ${r.pnlPerTrip.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                                        ${Math.round(r.pnlPerTrip).toLocaleString('en-US')}
                                                                                     </td>
                                                                                     <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-800 font-bold">
                                                                                         ${Math.round(r.totalGrossMargin).toLocaleString('en-US')}
