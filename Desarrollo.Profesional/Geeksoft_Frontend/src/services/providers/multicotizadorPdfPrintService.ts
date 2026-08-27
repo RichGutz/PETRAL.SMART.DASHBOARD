@@ -347,10 +347,7 @@ export class MulticotizadorPdfPrintService {
             <span class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded font-mono">1 HOJA OFICIAL</span>
         </div>
         <div class="flex items-center gap-3">
-            <button id="btn-download-pdf" onclick="downloadDirectPdf()" class="bg-blue-700 hover:bg-blue-600 text-white font-bold text-xs px-4 py-1.5 rounded flex items-center gap-1.5 shadow transition-colors cursor-pointer">
-                📥 Descargar PDF Directo (Foxit Ready)
-            </button>
-            <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-1.5 rounded flex items-center gap-1.5 shadow transition-colors cursor-pointer">
+            <button id="btn-download-pdf" onclick="downloadDirectPdf()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-1.5 rounded flex items-center gap-1.5 shadow transition-colors cursor-pointer">
                 🖨️ Imprimir / Guardar como PDF
             </button>
             <button onclick="window.close()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs px-3 py-1.5 rounded transition-colors cursor-pointer">
@@ -970,7 +967,7 @@ export class MulticotizadorPdfPrintService {
         async function downloadDirectPdf() {
             const btn = document.getElementById('btn-download-pdf');
             if (btn) {
-                btn.innerText = '⏳ Generando PDF Oficial...';
+                btn.innerText = '⏳ Generando PDF A4 Horizontal...';
                 btn.disabled = true;
             }
             try {
@@ -980,7 +977,12 @@ export class MulticotizadorPdfPrintService {
                 const fullHtml = '<!DOCTYPE html><html lang="es"><head>' + headContent + '</head><body style="margin:0;padding:0;background:#ffffff;">' + element.outerHTML + '</body></html>';
                 const filename = 'PETRAL_MULTICOTIZADOR_${(selectedClient || 'CLIENTE').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(selectedVessel || 'BUQUE').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf';
                 
-                const response = await fetch('/api/v1/utils/generate-pdf', {
+                const origin = (window.opener && window.opener.location && window.opener.location.origin && window.opener.location.origin !== 'null' && !window.opener.location.origin.startsWith('about:'))
+                    ? window.opener.location.origin
+                    : (window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('about:') ? window.location.origin : 'https://forecast.geeksoft.tech');
+                const endpoint = origin + '/api/v1/utils/generate-pdf';
+
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ html: fullHtml, filename: filename })
@@ -1000,23 +1002,11 @@ export class MulticotizadorPdfPrintService {
                 document.body.removeChild(a);
                 setTimeout(() => URL.revokeObjectURL(url), 10000);
             } catch (err) {
-                console.warn('Backend PDF endpoint no disponible, recurriendo a exportación en cliente:', err);
-                if (window.html2pdf) {
-                    const element = document.getElementById('pdf-content-page');
-                    const opt = {
-                        margin: 0,
-                        filename: 'PETRAL_MULTICOTIZADOR_${(selectedClient || 'CLIENTE').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(selectedVessel || 'BUQUE').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf',
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
-                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-                    };
-                    window.html2pdf().set(opt).from(element).save();
-                } else {
-                    window.print();
-                }
+                console.warn('Backend WeasyPrint no disponible, recurriendo a impresión nativa:', err);
+                window.print();
             } finally {
                 if (btn) {
-                    btn.innerText = '📥 Descargar PDF Directo (Foxit Ready)';
+                    btn.innerText = '🖨️ Imprimir / Guardar como PDF';
                     btn.disabled = false;
                 }
             }
