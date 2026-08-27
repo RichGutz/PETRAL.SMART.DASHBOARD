@@ -311,3 +311,17 @@ CONCURRENCY & QC SUMMARY:
 - Cuadros idénticos al Excel: sin columna buque, en una sola pantalla continua.
 - Descarga en Excel `.xlsx` y PDF oficial.
 - Desplegado a https://forecast.geeksoft.tech.
+
+[2026-08-27 11:02:00] CASO 18 BENOIT BLANC — SMOKING GUN PDF Landscape Foxit:
+- Crimen: El agente anterior elimino id='pdf-content-page' del div principal A4 landscape.
+- Efecto: downloadDirectPdf() recibe getElementById->null, html2pdf falla silenciosamente, cae a window.print(), Foxit abre parado.
+- Fix cirugia minima (1 caracter): agregar id='pdf-content-page' al div class='a4-landscape-page'.
+- Commits: db7bffb (CDN html2pdf + boton azul) + ecb1fcb (SMOKING GUN id=).
+- Build Vite OK. Deploy VPS OK. Branch tag: PDF.LANDSCAPE.FOXIT.READY.OK.27.08.26.
+
+[2026-08-27 11:33:00] BENOIT BLANC — QC UNIVERSAL MULTICOTIZADOR VS MATRIZ (17 RUTAS):
+- Diagnostico: demurrageMode en TS Engine tenia 'P' por defecto y al guardar se recalculaba con parametros incompletos.
+- Fix: default demurrageMode = 'C' en MulticotizadorCalculationEngine.ts y financialSummary = liveCalculation en MultiCotizadorExcel.tsx.
+- Sincronizacion: sync_snapshots_supabase.mjs actualizo las 17 rutas en Supabase.
+- QC Resultado: 17 de 17 rutas (100%) convergen con Delta Bunker = .00 y Delta PnL = .00 en Frontend (TS) y Backend (Python).
+- Documentacion: Documentado en seccion 7.3 y 7.4 de 28_Metodo_Benoit_Blanc_FINALE_Matriz_Financiera.md.

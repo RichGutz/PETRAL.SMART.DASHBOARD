@@ -128,7 +128,7 @@ export class MulticotizadorCalculationEngine {
             demurrageRate = 0,
             refacturarMuellajeMap = {},
             charterHireCost = 0,
-            demurrageMode = 'P',
+            demurrageMode = 'C',
             selectedVessel = '',
             validFrom
         } = params;

@@ -688,17 +688,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 ? (JSON.parse(localStorage.getItem('petral_user')!).email || 'izavala@petral.com.pe')
                 : 'izavala@petral.com.pe';
 
-            const financialSummary = MulticotizadorCalculationEngine.calculateVoyage({
-                tramos: calculatedTramos,
-                puertosConfig,
-                vesselParams,
-                bunkerPriceIfo,
-                bunkerPriceMdo,
-                addressCommPct,
-                brokerCommPct,
-                refacturarMuellajeMap,
-                charterHireCost
-            });
+            const financialSummary = liveCalculation;
 
             await MulticotizadorStorageService.saveQuote({
                 routeId: (saveMode === 'OVERWRITE' && effectiveClient === selectedClient) ? loadedRouteId : undefined,
