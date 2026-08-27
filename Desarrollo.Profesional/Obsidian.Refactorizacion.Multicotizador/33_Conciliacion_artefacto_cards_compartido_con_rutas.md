@@ -195,30 +195,11 @@ if __name__ == "__main__":
 
 ## 7. Protocolo de Cirugía y Sellado
 
-1. ✅ `QuoteExecutiveCardSummary.tsx` actualizado para soportar `charterHireCost` en cálculo y render visual.
+1. ✅ `QuoteExecutiveCardSummary.tsx` actualizado para soportar `charterHireCost` en cálculo y render visual en Card 3.
 2. ✅ Script `loop_qc_cards_maestros.py` ejecutado en terminal con 18/18 rutas aprobadas.
-3. ✅ Compilación `npx vite build` y despliegue al VPS de producción.
-4. ✅ Sellado en Git de branch y tag oficial.
+3. ✅ Compilación `npx vite build` y despliegue exitoso al VPS de producción (`https://forecast.geeksoft.tech`).
+4. ✅ Sellado en Git con Branch `feature/cards-reconciliation-charter-ok` y Tag `TAG.BENOIT.CARDS.RECONCILIATION.CHARTER.OK`.
 
 ---
 
 *Documento creado bajo el Protocolo Forense Benoit Blanc — PETRAL Smart Dashboard — 27.08.2026.*
-
----
-
-## 7. Protocolo de Cirugía y Sellado
-
-1. **Inspección de `QuoteExecutiveCardSummary.tsx`**:
-   * Asegurar que `unpacked.charter_hire_cost` sea leído de forma inequívoca.
-   * Mostrar el badge/línea púrpura `(-) Arriendo Nave: -$XX,XXX` en la Card 3 o Card 4.
-2. **Ejecución del Script en Terminal**:
-   * Correr `python scratch/loop_qc_cards_maestros.py` y verificar el reporte de salida.
-3. **Compilación y Despliegue**:
-   * `npx vite build` en `Geeksoft_Frontend`.
-   * `python deploy_forecast_kickoff.py` en `Push.VPS`.
-4. **Sellado Git**:
-   * Creación de Branch y Tag conmemorativo para el hito de conciliación de cards.
-
----
-
-*Documento creado bajo el Protocolo Forense Benoit Blanc — PETRAL Smart Dashboard.*
