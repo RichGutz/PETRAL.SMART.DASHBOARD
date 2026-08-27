@@ -342,10 +342,6 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                     });
                     const margenBruto = months.map((_, i) => tce[i] + arriendo[i]);
 
-                    // 4. OPEX
-                    const personal = months.map((m) => -Number(monthData[m]?.personal_cost || 0));
-                    const nave = months.map((m) => -Number(monthData[m]?.ship_cost || 0));
-
                     // Acumulaciones de niveles
                     subtotalVentas.forEach((v, i) => {
                         level1Ventas[i] += v;
@@ -581,23 +577,6 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                         isCurrency: true,
                         isTotal: true,
                         isNavSubtotal: 'margenBruto'
-                    });
-
-                    // Bloque 5: OPEX
-                    nodeMetrics.push({
-                        name: "  GTOS. PERSONAL A BORDO",
-                        values: personal,
-                        total: sum(personal),
-                        isCurrency: true,
-                        isTotal: false
-                    });
-
-                    nodeMetrics.push({
-                        name: "  GASTOS DE LA NAVE",
-                        values: nave,
-                        total: sum(nave),
-                        isCurrency: true,
-                        isTotal: false
                     });
 
                     const vesselRowSpan = nodeMetrics.length;

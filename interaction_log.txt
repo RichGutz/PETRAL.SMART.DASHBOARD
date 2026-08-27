@@ -357,4 +357,14 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-08-26 19:27:00] [LIMPIEZA DE CONTROLES: RETIRO DEL BOTON REDUNDANTE RECALCULAR]
 - Retirado el boton `Recalcular` de `ToolsLayout_V2.tsx` gracias a la reactividad automatica en tiempo real de `ForecastContext_V2.tsx`.
 - El Ribbon superior ahora presenta unicamente: `[ Limpiar ]`, `[ Guardar ]` y `[ Abrir... ]`.
+
+[2026-08-26 19:35:00] [ESTANDARIZACION TOTAL P&L NAVITRANSO Y ARRANQUE LIMPIO]
+- Estandarizado el orden jerarquico contable tanto en Subtotal de Cliente como en Total de Flota:
+  1. 🟢 VENTAS (o VENTAS CONSOLIDADAS)
+  2. 🔴 COSTOS DIRECTOS
+  3. 🔵 TIME CHARTER EQUIVALENT
+  4. ⚪ COSTO DE ARRIENDO NAVES (si no esta activo ocultar N/A)
+  5. 🏆 MARGEN BRUTO (P&L)
+- Configurado arranque por defecto en formato `PETRAL` y pantalla en blanco (placeholder elegante) cuando no hay lineas en el modelo.
+- Respaldada la captura en los repositorios locales obligatorios.
 - Compilado con Vite y re-desplegado a https://forecast.geeksoft.tech.
