@@ -149,34 +149,62 @@ A continuación se detalla la correspondencia exacta de cables entre lo generado
 
 ---
 
-## 5. La Regla de Oro del Buque Comodín
+## 5. El Manifiesto Sagrado: ¿Qué Recalcula y Qué Congela la Matriz Financiera?
 
-La Matriz Financiera permite realizar **simulaciones cruzadas de flota**. Cuando el usuario cambia el buque en una fila cargada desde una foto:
+> ⚠️ **REGLA SAGRADA DE ARQUITECTURA (AXIOMA 1: "LA FOTO NO SE REINVENTA")**:  
+> Dado que el **Multicotizador genera FOTOS estáticas e inmutables** de todo su cálculo en `routes_quotes.legs_data.financial_summary`, **la Matriz Financiera NO debe reinventar ni recalcular fórmulas comerciales**.  
+> El **ÚNICO caso donde la Matriz Financiera ejecuta un recálculo dinámico** es cuando el usuario activa la simulación de **Buque Comodín**.
+
+---
+
+### 🛑 ESCENARIO 1: Buque Original de la Foto (`vessel_id == buque_original_foto`)
+> **LA MATRIZ NO RECALCULA ABSOLUTAMENTE NADA.**  
+> Lee directamente los cables del Snapshot (`financial_summary`) grabado en `routes_quotes`:
+
+| Concepto Financiero / Operativo | Origen en la Matriz Financiera | Comportamiento & Regla Pericial |
+|---|---|:---:|
+| **Itinerario y Puertos** | Viene de la Foto (`tramos[]`, `puertosConfig[]`) | 🧊 **100% CONGELADO** |
+| **Volumen Carga (MT) y Tarifa Flete ($/MT)** | Viene de la Foto (`totalFreight`) | 🧊 **100% CONGELADO** |
+| **Refacturación de Muellaje (RF)** | Viene de la Foto (`refacturacionMuellaje`) | 🧊 **100% CONGELADO** |
+| **Gastos de Puerto (Port Costs)** | Viene de la Foto (`totalPortCosts`) | 🧊 **100% CONGELADO** |
+| **Consumo y Costo de Búnker (IFO + MDO)** | Viene de la Foto (`grandBunkerTotal`) | 🧊 **100% CONGELADO** |
+| **Días de Travesía, Puerto y Totales** | Viene de la Foto (`totalDays`) | 🧊 **100% CONGELADO** |
+| **Costo de Arriendo Base (Hire)** | Viene de la Foto (`hireUsd`) | 🧊 **100% CONGELADO** |
+| **Costo Arriendo Naves (Charter Hire)** | Viene de la Foto (`charter_hire_cost`) | 🧊 **100% CONGELADO** |
+| **Comisiones Comerciales (Address + Broker)** | Viene de la Foto (`addressCommUsd` + `brokerCommUsd`) | 🧊 **100% CONGELADO** |
+| **Resultado del Viaje (PnL) y TCE Realizado** | Viene de la Foto (`voyageResultPnl`, `tceRealizado`) | 🧊 **100% CONGELADO** |
+
+---
+
+### ⚓ ESCENARIO 2: El Buque Comodín (`vessel_id != buque_original_foto`)
+> **ÚNICO CASO donde la Matriz Financiera recalcula.**  
+> Ocurre cuando el usuario cambia el selector de barco en una fila (ej: la ruta fue cotizada con `MOQUEGUA` y el usuario selecciona `TABLONES` para simular disponibilidad de flota):
 
 ```
-                      FOTO ORIGINAL EN routes_quotes
-                      [ Buque Original: MOQUEGUA ]
-                                   │
-                                   ▼
-                   USUARIO SELECCIONA OTRO BUQUE EN MATRIZ
-                      [ Nuevo Buque: TABLONES ]
-                                   │
-         ┌─────────────────────────┴─────────────────────────┐
-         ▼                                                   ▼
-   DATOS CONGELADOS (FOTO)                          DATOS RECALCULADOS (VIVO)
-   - Secuencia de Puertos (POL ➔ PODs)              - Días de Mar (Velocidad TABLONES)
-   - Volúmenes Carga (MT)                           - Consumo IFO/MDO Mar (T/d TABLONES)
-   - Tarifas Flete (USD/MT)                         - Consumo IFO/MDO Puerto (T/d TABLONES)
-   - Costos Portuarios & Muellaje                   - Consumo IFO/MDO Demurrage (Idle)
-   - Flags de Refacturación RF                      - TCE Requerido (TCE Base TABLONES)
-   - Arriendo Manual Naves                          - PnL y TCE Realizado Resultante
-   - PRECIO BUNKER POR DEFECTO (IFO/MDO)
-     (Heredado 100% de la Foto)
+                   FOTO ORIGINAL EN routes_quotes
+                   [ Buque de Cotización: MOQUEGUA ]
+                                 │
+                                 ▼
+             EL USUARIO CAMBIA DE BUQUE EN LA MATRIZ
+                   [ Buque Comodín: TABLONES ]
+                                 │
+       ┌─────────────────────────┴─────────────────────────┐
+       ▼                                                   ▼
+ 🧊 DATOS CONGELADOS DE LA FOTO                  ⚡ LO ÚNICO QUE SE RECALCULA
+ • Secuencia de Puertos (POL ➔ PODs)               1. Días de Mar (Velocidad TABLONES)
+ • Carga Cajas/Granel (13,500 MT)                  2. Consumo IFO/MDO Mar (T/d TABLONES)
+ • Tarifa Flete ($21.15 USD/MT)                    3. Consumo IFO/MDO Puerto (T/d TABLONES)
+ • Gastos de Puerto ($55,500 USD)                  4. Consumo IFO/MDO Demurrage (Idle)
+ • Refacturación Muellaje ($25,000 USD)            5. TCE Requerido ($/d de TABLONES)
+ • Costo Arriendo Naves ($0 USD)                   6. PnL y TCE Realizado Resultante
+ • Precios Bunker IFO/MDO ($/TM de la Foto)
 ```
 
-### ⚓ Regla de Precios de Bunker para Buque Comodín (Aprobada por el Usuario):
+---
+
+### 🎛️ Único Override Adicional Permitido (Sensibilidad de Precios de Bunker):
 1. **Regla Base (Opción 1)**: El Buque Comodín utiliza por defecto los **precios por Tonelada Métrica de Bunker (IFO y MDO) congelados en la Foto** (`legs_data.bunker_price_ifo` y `legs_data.bunker_price_mdo`).
-2. **Override Dinámico (Opción 3)**: Si el usuario digita un precio en la ventana editable de la barra de controles / inputs del Forecast (`forecast_bunker_price_ifo` / `forecast_bunker_price_mdo`), este precio manual sobrescribe inmediatamente el precio de la foto para esa simulación.
+2. **Override Dinámico en Barra (Opción 3)**: Si el usuario digita un precio en la ventana editable de la barra de controles / inputs del Forecast (`forecast_bunker_price_ifo` / `forecast_bunker_price_mdo`), ese precio nuevo multiplica a las toneladas de bunker calculadas para ver el impacto de sensibilidad en el PnL de toda la matriz. Si la barra está limpia, **hereda 100% el precio congelado en la Foto**.
 
 ---
 
