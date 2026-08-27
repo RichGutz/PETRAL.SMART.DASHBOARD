@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MasterTemplate } from '../../components/Masters/MasterTemplate_V2';
 import { ForecastService } from '../../services/api';
+import { MulticotizadorRetrieverService } from '../../services/providers/multicotizadorRetrieverService';
+import { MulticotizadorCalculationEngine } from '../../services/providers/multicotizadorCalculationEngine';
 import { useAuth } from '../../context/AuthContext';
 import { TrendingUp, Calendar, FileSpreadsheet, Layers, ChevronDown, ChevronRight, User, CheckCircle2, RefreshCw, Play, Trash2, Printer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -53,16 +55,22 @@ export const FinancialProjectionsMaster: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [rawForecasts, setRawForecasts] = useState<any[]>([]);
+    const [quotesList, setQuotesList] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedAuthor, setSelectedAuthor] = useState<string>('TODOS');
     const [openYears, setOpenYears] = useState<Record<string, boolean>>({});
     const [expandedScenarioId, setExpandedScenarioId] = useState<string | null>(null);
 
-    // Carga de escenarios desde Supabase (tabla commercial_forecasts)
+    // Carga de escenarios y catálogo de cotizaciones desde Supabase
     const loadData = async () => {
         try {
             setLoading(true);
-            const list = await ForecastService.listForecasts();
+            const [list, quotes] = await Promise.all([
+                ForecastService.listForecasts(),
+                ForecastService.listSpotQuotes().catch(() => [])
+            ]);
+
+            setQuotesList(quotes || []);
             
             const enriched = await Promise.all((list || []).map(async (item: any) => {
                 try {
@@ -108,27 +116,69 @@ export const FinancialProjectionsMaster: React.FC = () => {
                 const vId = (line.vessel_id || 'MOQUEGUA').replace('_', ' ').toUpperCase();
                 vesselSet.add(vId);
 
-                const qty = Number(line.quantity || 13500);
+                let qty = Number(line.quantity || 13500);
                 const freq = Number(line.monthly_frequency || 0);
+                const isExport = dest.includes('MEJILLONES') || dest.includes('ANT') || dest.includes('EXP') || dest.includes('CHILE');
 
-                const isExport = dest.includes('MEJILLONES') || dest.includes('ANT') || dest.includes('EXP') || orig.includes('CALLAO');
+                // Vincular con la cotización / cierre real para extraer P&L y Días exactos
+                const matchedQuote = (quotesList || []).find((q: any) => 
+                    q.name === line.quote_id || 
+                    q.id === line.quote_id || 
+                    (q.name && line.quote_id && q.name.toLowerCase().includes(String(line.quote_id).toLowerCase())) ||
+                    (q.name && q.name.toUpperCase().includes(orig) && q.name.toUpperCase().includes(dest))
+                );
 
-                const fRate = Number(line.freight_rate || 28.5);
-                const grossTrip = qty * fRate;
-                const hirePerDay = 15000;
-                const seaDays = isExport ? 5.5 : 2.2;
-                const portDays = isExport ? 4.5 : 3.3;
-                const tripDurationDays = seaDays + portDays;
-                const bunkerTrip = isExport ? 62000 : 38000;
-                const portTrip = isExport ? 26000 : 16000;
-                const hireCostTrip = hirePerDay * tripDurationDays;
-                const voyagePnlTrip = grossTrip - (hireCostTrip + bunkerTrip + portTrip);
+                let voyagePnlTrip = 0;
+                let tripDurationDays = 0;
 
-                const routeKey = `${rName}__${vId}`;
+                if (matchedQuote) {
+                    try {
+                        const unpacked = MulticotizadorRetrieverService.unpackQuoteData(matchedQuote);
+                        const fs = unpacked.financial_summary;
+                        if (fs && Number(fs.grossRevenueTotal || 0) > 0) {
+                            voyagePnlTrip = Number(fs.voyageResultPnl || 0);
+                            tripDurationDays = Number(fs.totalDays || 0);
+                            if (Number(fs.totalQuantity || 0) > 0) qty = Number(fs.totalQuantity);
+                        } else {
+                            const calc = MulticotizadorCalculationEngine.calculateVoyage({
+                                tramos: unpacked.tramos,
+                                puertosConfig: unpacked.puertosConfig,
+                                vesselParams: unpacked.vesselParams,
+                                bunkerPriceIfo: unpacked.bunker_price_ifo,
+                                bunkerPriceMdo: unpacked.bunker_price_mdo,
+                                addressCommPct: unpacked.addressCommPct,
+                                brokerCommPct: unpacked.brokerCommPct,
+                                charterHireCost: unpacked.charter_hire_cost
+                            });
+                            voyagePnlTrip = calc.voyageResultPnl;
+                            tripDurationDays = calc.totalDays;
+                            if (calc.totalQuantity > 0) qty = calc.totalQuantity;
+                        }
+                    } catch {
+                        voyagePnlTrip = 0;
+                        tripDurationDays = 0;
+                    }
+                }
+
+                // Fallback si no hubiese cotización enlazada
+                if (voyagePnlTrip === 0) {
+                    const fRate = Number(line.custom_tariff || line.freight_rate || (isExport ? 21.15 : (dest.includes('MAT') ? 19.29 : 23.10)));
+                    const grossTrip = qty * fRate;
+                    const hirePerDay = 13000;
+                    const seaDays = isExport ? 2.61 : (dest.includes('MAT') ? 0.54 : 2.21);
+                    const portDays = isExport ? 2.13 : (dest.includes('MAT') ? 3.54 : 2.13);
+                    tripDurationDays = seaDays + portDays;
+                    const bunkerTrip = isExport ? 48088 : (dest.includes('MAT') ? 19981 : 41555);
+                    const portTrip = isExport ? 80500 : (dest.includes('MAT') ? 42500 : 62000);
+                    const hireCostTrip = hirePerDay * tripDurationDays;
+                    voyagePnlTrip = grossTrip - (hireCostTrip + bunkerTrip + portTrip);
+                }
+
+                const routeKey = `${orig}-${dest}`;
                 if (!routesMap[routeKey]) {
                     routesMap[routeKey] = {
                         client,
-                        route: rName,
+                        route: routeKey,
                         vessel: vId,
                         isExport,
                         annualTons: 0,
@@ -150,16 +200,22 @@ export const FinancialProjectionsMaster: React.FC = () => {
 
             const routesList = Object.values(routesMap);
 
+            // Calcular P/L y Full Load ponderados por ruta
+            routesList.forEach(r => {
+                if (r.annualTrips > 0) {
+                    r.pnlPerTrip = r.totalGrossMargin / r.annualTrips;
+                    r.fullLoad = r.annualTons / r.annualTrips;
+                }
+            });
+
             if (routesList.length === 0 || routesList.reduce((acc, r) => acc + r.annualTrips, 0) === 0) {
                 const defaultRoutes: MecRouteRow[] = [
-                    { client: 'SPCC', route: 'ILO-MATARANI', vessel: 'MOQUEGUA', isExport: false, annualTons: 138000, fullLoad: 13500, annualTrips: 10, pnlPerTrip: 144587.20, totalGrossMargin: 1445872.00, volumeSharePct: 17.25, daysOccupation: 51, daysAvailable: 0 },
-                    { client: 'SPCC', route: 'ILO-MARCONA', vessel: 'MOQUEGUA', isExport: false, annualTons: 250000, fullLoad: 13500, annualTrips: 19, pnlPerTrip: 129998.05, totalGrossMargin: 2469962.96, volumeSharePct: 31.25, daysOccupation: 148, daysAvailable: 0 },
-                    { client: 'SPCC', route: 'CALLAO-BAYOVAR', vessel: 'TABLONES', isExport: false, annualTons: 12000, fullLoad: 3000, annualTrips: 4, pnlPerTrip: 85191.00, totalGrossMargin: 340764.00, volumeSharePct: 1.50, daysOccupation: 24, daysAvailable: 0 },
-                    { client: 'SPCC', route: 'ILO-MEJILLONES', vessel: 'MOQUEGUA', isExport: true, annualTons: 400000, fullLoad: 13500, annualTrips: 30, pnlPerTrip: 104138.27, totalGrossMargin: 3124148.15, volumeSharePct: 50.00, daysOccupation: 207, daysAvailable: 0 }
+                    { client: 'SPCC', route: 'ILO-MATARANI', vessel: 'MOQUEGUA', isExport: false, annualTons: 135000, fullLoad: 13500, annualTrips: 10, pnlPerTrip: 148392.64, totalGrossMargin: 1483926.38, volumeSharePct: 16.95, daysOccupation: 40.8, daysAvailable: 0 },
+                    { client: 'SPCC', route: 'ILO-MARCONA', vessel: 'MOQUEGUA', isExport: false, annualTons: 256500, fullLoad: 13500, annualTrips: 19, pnlPerTrip: 136724.96, totalGrossMargin: 2597774.24, volumeSharePct: 32.20, daysOccupation: 104.7, daysAvailable: 0 },
+                    { client: 'SPCC', route: 'ILO-MEJILLONES', vessel: 'MOQUEGUA', isExport: true, annualTons: 405000, fullLoad: 13500, annualTrips: 30, pnlPerTrip: 101912.65, totalGrossMargin: 3057379.50, volumeSharePct: 50.85, daysOccupation: 184.8, daysAvailable: 0 }
                 ];
                 routesList.push(...defaultRoutes);
                 vesselSet.add('MOQUEGUA');
-                vesselSet.add('TABLONES');
             }
 
             const totalVol = routesList.reduce((acc, r) => acc + r.annualTons, 0);
