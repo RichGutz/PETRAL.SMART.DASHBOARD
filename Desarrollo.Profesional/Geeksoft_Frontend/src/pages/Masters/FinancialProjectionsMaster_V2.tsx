@@ -1212,60 +1212,61 @@ export const FinancialProjectionsMaster: React.FC = () => {
             subtitle="Matrices y Escenarios Comerciales Multianuales (commercial_forecasts)"
             activeTab="financial-projections"
         >
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6 flex flex-col min-h-[calc(100vh-140px)]">
+            <div className="space-y-6 pb-16">
                 
-                {/* CABECERA: TÍTULO Y PESTAÑAS DE AUTORES */}
-                <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4 shrink-0">
-                    <div className="flex items-center gap-6">
-                        <h2 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                            <TrendingUp size={18} className="text-blue-600" />
-                            Escenarios por Autor
-                        </h2>
+                {/* BLOQUE 1: CATÁLOGO DE ESCENARIOS POR AÑO Y AUTOR */}
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    
+                    {/* CABECERA: TÍTULO Y PESTAÑAS DE AUTORES */}
+                    <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-6">
+                            <h2 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                <TrendingUp size={18} className="text-blue-600" />
+                                Escenarios por Autor
+                            </h2>
 
-                        {/* Pestañas Horizontales de Autores */}
-                        <div className="flex bg-slate-200 p-1 rounded-lg gap-1 overflow-x-auto">
-                            {authors.map(author => {
-                                const isSelected = selectedAuthor === author;
-                                const count = author === 'TODOS' ? processedScenarios.length : processedScenarios.filter(p => p.userId === author).length;
+                            {/* Pestañas Horizontales de Autores */}
+                            <div className="flex bg-slate-200 p-1 rounded-lg gap-1 overflow-x-auto">
+                                {authors.map(author => {
+                                    const isSelected = selectedAuthor === author;
+                                    const count = author === 'TODOS' ? processedScenarios.length : processedScenarios.filter(p => p.userId === author).length;
 
-                                return (
-                                    <button
-                                        key={author}
-                                        onClick={() => {
-                                            setSelectedAuthor(author);
-                                            setOpenYears({});
-                                            setExpandedScenarioId(null);
-                                        }}
-                                        className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-                                            isSelected 
-                                                ? 'bg-white text-blue-700 shadow-sm' 
-                                                : 'text-slate-600 hover:text-slate-800 hover:bg-slate-300'
-                                        }`}
-                                    >
-                                        <User size={13} />
-                                        <span>{author === 'TODOS' ? 'Todos los Autores' : author.split('@')[0].toUpperCase()}</span>
-                                        <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                                            isSelected ? 'bg-blue-100 text-blue-800' : 'bg-slate-300 text-slate-700'
-                                        }`}>
-                                            {count}
-                                        </span>
-                                    </button>
-                                );
-                            })}
+                                    return (
+                                        <button
+                                            key={author}
+                                            onClick={() => {
+                                                setSelectedAuthor(author);
+                                            }}
+                                            className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                                                isSelected 
+                                                    ? 'bg-white text-blue-700 shadow-sm' 
+                                                    : 'text-slate-600 hover:text-slate-800 hover:bg-slate-300'
+                                            }`}
+                                        >
+                                            <User size={13} />
+                                            <span>{author === 'TODOS' ? 'Todos los Autores' : author.split('@')[0].toUpperCase()}</span>
+                                            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                                                isSelected ? 'bg-blue-100 text-blue-800' : 'bg-slate-300 text-slate-700'
+                                            }`}>
+                                                {count}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
+
+                        <button
+                            onClick={loadData}
+                            className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-300 transition-colors cursor-pointer"
+                        >
+                            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                            Actualizar
+                        </button>
                     </div>
 
-                    <button
-                        onClick={loadData}
-                        className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-300 transition-colors cursor-pointer"
-                    >
-                        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-                        Actualizar
-                    </button>
-                </div>
-
-                {/* CONTENIDO PRINCIPAL: ACORDEÓN POR AÑO */}
-                <div className="flex-1 p-6 bg-slate-100/60 overflow-y-auto space-y-4">
+                    {/* CONTENIDO DEL ACORDEÓN POR AÑO */}
+                    <div className="p-6 bg-slate-100/60 space-y-4">
                     {loading ? (
                         <div className="flex justify-center items-center h-64 text-slate-500 font-medium">
                             <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mr-3"></div>
@@ -1535,14 +1536,15 @@ export const FinancialProjectionsMaster: React.FC = () => {
                         })
                     )}
                 </div>
+            </div>
 
-                {/* ========================================================================= */}
-                {/* SECCIÓN GRAN FINALE: INFORME MULTI-ESCENARIO CONSOLIDADO (FORMATO MEC)    */}
-                {/* ========================================================================= */}
-                <div className="bg-slate-50 border-t-2 border-slate-300 p-6 space-y-6">
-                    
-                    {/* CABECERA Y BARRA DE CONTROL DEL INFORME CONSOLIDADO */}
-                    <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* ========================================================================= */}
+            {/* BLOQUE 2: INFORME MULTI-ESCENARIO CONSOLIDADO (FORMATO MEC CONSOLIDADO)   */}
+            {/* ========================================================================= */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden p-6 space-y-6">
+                
+                {/* CABECERA Y BARRA DE CONTROL DEL INFORME CONSOLIDADO */}
+                <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
                             <h3 className="text-base font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
                                 <BookOpen size={20} className="text-indigo-600" />
