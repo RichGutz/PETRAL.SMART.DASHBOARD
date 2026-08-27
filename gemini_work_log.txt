@@ -299,5 +299,10 @@ CONCURRENCY & QC SUMMARY:
 - Agregada fila `Días-Buque` en cada nodo, Subtotal Cliente, Total Flota y Acumulado.
 
 [2026-08-26 21:21:00] Arranque Limpio en Blanco:
-- Forzada la vista en blanco con placeholder cuando no hay rutas proyectadas (`projectionLines.length === 0 || rows.length === 0`).
+- Eliminada la auto-restauración residual de sesiones previas en `sessionStorage`.
+- Al abrir o recargar `/dashboard`, la pantalla siempre arranca 100% limpia en blanco sin esqueletos ni líneas pre-cargadas.
 - Desplegado a https://forecast.geeksoft.tech.
+
+[2026-08-26 21:34:00] Documentación Formato MEC Budgets 2026 vs Matriz Financiera:
+- Redactado el archivo `31_Reporte_MEC_Matriz_Matrices.md` en Obsidian.
+- Mapeadas las métricas de tráfico (Cabotaje/Exportación), rendimiento por ruta y control de días-buque de la flota.

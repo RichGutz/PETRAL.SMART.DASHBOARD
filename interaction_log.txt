@@ -382,5 +382,10 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 
 [2026-08-26 21:21:00] [GARANTIA DE ARRANQUE EN BLANCO / PANTALLA LIMPIA EN DASHBOARD]
 - Condicionado el renderizado de la tabla (`ForecastGrid` y `NavitransoGrid`) para verificar estrictamente `projectionLines.length === 0 || rows.length === 0`.
-- Si no hay rutas activas proyectadas, la vista se presenta 100% limpia en blanco con su placeholder, sin columnas vacías residuales.
-- Compilado con Vite y re-desplegado a https://forecast.geeksoft.tech.
+- Eliminada la auto-restauracion residual de `sessionStorage` que cargaba el esqueleto de `2027 Base MEC`.
+- Al abrir o recargar `https://forecast.geeksoft.tech/dashboard`, el dashboard arranca 100% limpio en blanco sin lineas ni esqueletos.
+
+[2026-08-26 21:34:00] [DOCUMENTACION DE HOMOLOGACION FORMATO MEC BUDGETS 2026 VS MATRIZ FINANCIERA]
+- Creado el documento `31_Reporte_MEC_Matriz_Matrices.md` en Obsidian.
+- Documentada la correlación matemática 1:1 entre las variables del archivo Excel `FORMATO.MEC.BUDGETS.2026.xlsx` y el motor de proyección PETRAL (TM Anual, Full Load, Nº Viajes, P/L x Viaje, Total Gross Margin, % y Días Ocupación / Días-Buque).
+- Planteadas las alternativas de integración en frontend (Tercer modo en switch de formato o Widget de Resumen Anual).
