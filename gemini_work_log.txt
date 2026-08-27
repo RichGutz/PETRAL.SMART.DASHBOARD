@@ -434,3 +434,11 @@ CONCURRENCY & QC SUMMARY:
 - Creado Documento 34 en Obsidian: 34_Artefacto_Drag_and_Drop.persistente.md.
 - Plan detallado para estandarizar Look & Feel en Cierres, Cotizaciones y Presupuestos con tabs de clientes, acordeones de anios y doble nivel de Drag & Drop persistente (anios y rutas).
 - Listo en rama main para aprobacion de ejecucion.
+
+[2026-08-27 18:26:00] ARTEFACTO COMPARTIDO DRAG & DROP INTEGRADO Y DESPLEGADO:
+- Creado SharedYearlyRouteList.tsx con soporte de Doble Nivel de Drag & Drop persistente.
+- Nivel 1: Reordenamiento de bloques de anios mediante arrastre y persistencia en localStorage.
+- Nivel 2: Reordenamiento de ribbons individuales dentro de cada anio con persistencia.
+- Estandarizado el Look & Feel de Maestro de Cierres (/contracts), Maestro de Cotizaciones (/quotes) y Maestro de Presupuestos (/budgets).
+- Preservadas copias _legacy de seguridad: ContractsMaster_legacy.tsx, RouteMaster_legacy.tsx, BudgetsMaster_legacy.tsx.
+- Desplegado y verificado en produccion en vivo https://forecast.geeksoft.tech.
