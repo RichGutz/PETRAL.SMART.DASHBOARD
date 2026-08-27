@@ -345,3 +345,8 @@ CONCURRENCY & QC SUMMARY:
 - Backend forecast_service.py actualizado para mapear charter_hire_cost.
 - Loop QC Benoit Blanc ejecutado y 100% aprobado.
 - Despliegue completado en produccion VPS https://forecast.geeksoft.tech.
+
+[2026-08-27 13:48:00] INSERCION DE LINEA ARRIENDO DE NAVE EN PDF MULTICOTIZADOR:
+- Insertada la linea visual '(-) Arriendo Nave (Charter)' en la tarjeta Financial Voyage Result (Columna 4) de multicotizadorPdfPrintService.ts.
+- Verificado que solo se renderice cuando el costo sea > 0.
+- Compilacion y despliegue exitoso al VPS https://forecast.geeksoft.tech.
