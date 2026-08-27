@@ -369,3 +369,7 @@ CONCURRENCY & QC SUMMARY:
 - Ejecutado script loop_qc_mec_budgets.py con 100% de convergencia.
 - Documentado informe pericial en Obsidian 31_Reporte_MEC_Matriz_Matrices.md.
 - Despliegue en vivo exitoso al VPS https://forecast.geeksoft.tech/financial-projections.
+
+[2026-08-27 16:35:00] MAPEO MATEMATICO FORMULADO REPORTE MEC EN OBSIDIAN 31:
+- Registradas las 5 reglas inviolables de cálculo (P/L Ponderado multi-buque, Full Load Ponderado multi-tonelaje, Total Gross Margin por ruta, Total Gross Margin Anual y Conservación de Días).
+- Sincronizado en Git y actualizado en Obsidian 31.
