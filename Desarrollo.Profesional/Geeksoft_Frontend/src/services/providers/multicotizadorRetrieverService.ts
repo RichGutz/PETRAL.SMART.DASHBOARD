@@ -102,7 +102,9 @@ export class MulticotizadorRetrieverService {
                 demurrage_rates: null,
                 comments_text: '',
                 financial_summary: null,
-                refacturarMuellajeMap: null
+                refacturarMuellajeMap: null,
+                charter_hire_cost: 0,
+                charterHireCost: 0
             };
         }
 
@@ -176,7 +178,9 @@ export class MulticotizadorRetrieverService {
             baf_mdo_base: Number(legsData.baf_mdo_base || 0),
             tariff_tiers: tariffTiers,
             demurrage_rates: demurrageRates,
-            comments_text: legsData.comments_text || '',
+            comments_text: legsData.comments_text || quote.comments || legsData.comments || meta.comments_text || '',
+            charter_hire_cost: Number(legsData.charter_hire_cost ?? legsData.charterHireCost ?? quote.charter_hire_cost ?? quote.charterHireCost ?? meta.charter_hire_cost ?? 0),
+            charterHireCost: Number(legsData.charter_hire_cost ?? legsData.charterHireCost ?? quote.charter_hire_cost ?? quote.charterHireCost ?? meta.charter_hire_cost ?? 0),
             financial_summary: legsData.financial_summary || meta.financial_summary || null,
             refacturarMuellajeMap: legsData.refacturarMuellajeMap || null
         };
