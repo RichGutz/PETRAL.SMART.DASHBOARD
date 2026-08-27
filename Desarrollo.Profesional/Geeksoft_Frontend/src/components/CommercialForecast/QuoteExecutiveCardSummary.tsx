@@ -43,6 +43,7 @@ export const QuoteExecutiveCardSummary: React.FC<QuoteExecutiveCardSummaryProps>
                 addressCommUsd: Number(fs.addressCommUsd || 0),
                 brokerCommUsd: Number(fs.brokerCommUsd || 0),
                 totalCommUsd: Number(fs.totalCommUsd || 0),
+                charterHireCost: Number(fs.charterHireCost || fs.charter_hire_cost || unpacked.charter_hire_cost || unpacked.charterHireCost || 0),
                 voyageResultPnl: Number(fs.voyageResultPnl || 0),
                 tceRealizado: Number(fs.tceRealizado || 0),
                 tceDiff: Number(fs.tceDiff || 0),
@@ -60,7 +61,8 @@ export const QuoteExecutiveCardSummary: React.FC<QuoteExecutiveCardSummaryProps>
                 bunkerPriceMdo: unpacked.bunker_price_mdo,
                 addressCommPct: unpacked.addressCommPct,
                 brokerCommPct: unpacked.brokerCommPct,
-                refacturarMuellajeMap: unpacked.refacturarMuellajeMap
+                refacturarMuellajeMap: unpacked.refacturarMuellajeMap,
+                charterHireCost: unpacked.charter_hire_cost || unpacked.charterHireCost || 0
             });
         } catch (err) {
             console.error("Error al calcular resumen de cotización:", err);
@@ -82,6 +84,7 @@ export const QuoteExecutiveCardSummary: React.FC<QuoteExecutiveCardSummaryProps>
                 totalPortCosts: 0,
                 tceReq: 0,
                 hireUsd: 0,
+                charterHireCost: 0,
                 addressCommUsd: 0,
                 brokerCommUsd: 0,
                 totalCommUsd: 0,
@@ -234,6 +237,12 @@ export const QuoteExecutiveCardSummary: React.FC<QuoteExecutiveCardSummaryProps>
                             <span>Puertos + Agencias:</span>
                             <span className="font-bold text-teal-700">${calc.totalPortCosts.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
                         </div>
+                        {calc.charterHireCost > 0 && (
+                            <div className="flex items-center justify-between text-[10px] font-bold text-purple-900 pt-0.5 border-t border-slate-100">
+                                <span>(-) Arriendo Nave:</span>
+                                <span className="font-bold text-purple-700">-${calc.charterHireCost.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
