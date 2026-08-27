@@ -897,6 +897,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     bunker_ifo_ton = float(consolidated.get("bunker_ifo_tonnage", 0))
                     bunker_mdo_ton = float(consolidated.get("bunker_mdo_tonnage", 0))
 
+                charter_hire_cost_val = float(fin_summary.get("charterHireCost", legs_data.get("charter_hire_cost") or legs_data.get("charterHireCost") or 0))
+
                 unit_result = {
                     "gross_income": round(tot_freight_rev if tot_freight_rev > 0 else gross_revenue, 2),
                     "gross_income_unit": round(tot_freight_rev if tot_freight_rev > 0 else gross_revenue, 2),
@@ -906,6 +908,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     "refacturacion_muellaje_unit": round(tot_refact_muell, 2),
                     "dockage_revenue": round(tot_refact_muell, 2),
                     "dockage_revenue_unit": round(tot_refact_muell, 2),
+                    "charter_hire_cost": charter_hire_cost_val,
+                    "charter_hire_cost_unit": charter_hire_cost_val,
                     "gross_revenue_total": round(gross_revenue, 2),
                     "gross_revenue_total_unit": round(gross_revenue, 2),
                     "total_commissions": round(total_commissions, 2),
@@ -1098,6 +1102,8 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "freight_revenue": unit_result.get("freight_revenue", unit_result.get("gross_income", inputs["quantity"] * inputs["freight_rate"])) * freq,
             "dockage_revenue": unit_result.get("dockage_revenue", 0.0) * freq,
             "refacturacion_muellaje": unit_result.get("refacturacion_muellaje", 0.0) * freq,
+            "charter_hire_cost": unit_result.get("charter_hire_cost", 0.0) * freq,
+            "charter_hire_cost_unit": unit_result.get("charter_hire_cost_unit", 0.0),
             "gross_revenue_total": unit_result.get("gross_revenue_total", unit_result.get("net_income", 0)) * freq,
             "total_commissions": unit_result.get("total_commissions", 0.0) * freq,
             "net_income": unit_result["net_income"] * freq,
@@ -1576,6 +1582,7 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
         if demurrage_rate_val <= 0 and contract:
             demurrage_rate_val = get_demurrage_from_dict(contract.get("demurrage_rates"), vessel)
 
+        charter_hire_cost_val = float(safe_legs.get("charter_hire_cost") or safe_legs.get("charterHireCost") or (spot_route.get("charter_hire_cost") if spot_route else None) or 0.0)
         hire_cost_val = unit_result.get("hire_cost", unit_result.get("total_duration", 0) * float(v_data.get("tce_required", 15000.0))) * freq
         freight_rev_val = unit_result.get("freight_revenue", unit_result.get("gross_income", inputs["quantity"] * inputs["freight_rate"])) * freq
         refact_muell_val = unit_result.get("refacturacion_muellaje", 0.0) * freq
@@ -1589,14 +1596,16 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             "gross_revenue_total": gross_rev_total_val,
             "refacturacion_muellaje": refact_muell_val,
             "dockage_revenue": refact_muell_val,
+            "charter_hire_cost": charter_hire_cost_val * freq,
+            "charter_hire_cost_unit": charter_hire_cost_val,
             "hire_cost": hire_cost_val,
             "total_commissions": unit_result.get("total_commissions", 0.0) * freq,
             "net_income": unit_result["net_income"] * freq,
             "total_port_costs": unit_result["total_port_costs"] * freq,
             "total_bunker_costs": unit_result["total_bunker_costs"] * freq,
-            "voyage_result": unit_result["voyage_result"] * freq,
-            "pl_vs_required": unit_result.get("pl_vs_required", unit_result["voyage_result"] - hire_cost_val) * freq,
-            "tce_real": unit_result["tce_real"],
+            "voyage_result": (unit_result["voyage_result"] - charter_hire_cost_val) * freq,
+            "pl_vs_required": (unit_result.get("pl_vs_required", unit_result["voyage_result"] - hire_cost_val) - charter_hire_cost_val) * freq,
+            "tce_real": (unit_result["voyage_result"] - charter_hire_cost_val) / unit_result["total_duration"] if unit_result["total_duration"] > 0 else 0.0,
             "total_duration": unit_result["total_duration"] * freq,
             "sea_days": unit_result.get("sea_days", 0) * freq,
             "port_days": unit_result.get("port_days", 0) * freq,
@@ -1626,8 +1635,8 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             "bunker_mdo_cost_unit": float(unit_result.get("bunker_mdo_tonnage", 0.0) * float(unit_result.get("bunker_price_mdo", p_mdo))),
             "total_bunker_costs_unit": unit_result["total_bunker_costs"],
             "total_port_costs_unit": unit_result["total_port_costs"],
-            "voyage_result_unit": unit_result["voyage_result"],
-            "tce_real_unit": unit_result["tce_real"],
+            "voyage_result_unit": unit_result["voyage_result"] - charter_hire_cost_val,
+            "tce_real_unit": (unit_result["voyage_result"] - charter_hire_cost_val) / unit_result["total_duration"] if unit_result["total_duration"] > 0 else 0.0,
             "tce_required_unit": float(v_data.get("tce_required", 15000.0)),
             "tce_cost_total_unit": float(unit_result["total_duration"] * float(v_data.get("tce_required", 15000.0))),
             "pcm_projected": unit_result["pcm_projected"],

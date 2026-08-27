@@ -280,6 +280,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const globalRevenues = new Array(months.length).fill(0);
         const globalPortCosts = new Array(months.length).fill(0);
         const globalBunkerCosts = new Array(months.length).fill(0);
+        const globalCharterHire = new Array(months.length).fill(0);
         const globalVoyageResult = new Array(months.length).fill(0);
         const globalPlVsRequired = new Array(months.length).fill(0);
         const globalDemurrage = new Array(months.length).fill(0);
@@ -296,6 +297,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             const level1GrossRevenue = new Array(months.length).fill(0);
             const level1PortCosts = new Array(months.length).fill(0);
             const level1BunkerCosts = new Array(months.length).fill(0);
+            const level1CharterHire = new Array(months.length).fill(0);
             const level1VoyageResult = new Array(months.length).fill(0);
             const level1PlVsRequired = new Array(months.length).fill(0);
             const level1Demurrage = new Array(months.length).fill(0);
@@ -367,6 +369,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 if (metricKey === "tce_required_unit") val = monthData[m]?.["tce_required_unit"] ?? monthData[m]?.["tce_required"] ?? 0;
                                 if (metricKey === "tce_cost_total_unit") val = monthData[m]?.["tce_cost_total_unit"] ?? ((monthData[m]?.["total_duration_unit"] && monthData[m]?.["tce_required_unit"]) ? monthData[m]?.["total_duration_unit"] * monthData[m]?.["tce_required_unit"] : 0);
                                 if (metricKey === "flete_unit") val = monthData[m]?.["flete_unit"] || monthData[m]?.["freight_rate"];
+                                if (metricKey === "charter_hire_cost_unit") val = monthData[m]?.["charter_hire_cost_unit"] ?? monthData[m]?.["charter_hire_cost"] ?? monthData[m]?.["charterHireCost"] ?? monthData[m]?.["charter_hire"] ?? 0;
                                 if (metricKey === "pl_vs_required_unit") val = monthData[m]?.["pl_vs_required_unit"] || monthData[m]?.["pl_vs_required"] || monthData[m]?.["pl_neto"];
                             }
                             return val;
@@ -393,7 +396,16 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     const dockageCosts = refacturacionMuellaje;
                     const portCosts = months.map((_, i) => Math.max(0, (portCostsTotal[i] || 0) - (dockageCosts[i] || 0)));
                     const bunker = getMonthlyValues("total_bunker_costs");
-                    const voyageResult = months.map((_, i) => (trips[i] > 0 ? (netRevenues[i] || 0) - (portCosts[i] || 0) - (dockageCosts[i] || 0) - (bunker[i] || 0) : 0));
+
+                    // ARRIENDO DE NAVES (CHARTER HIRE)
+                    const charterHireCosts = months.map((m, i) => {
+                        const tripCount = trips[i] || 0;
+                        if (tripCount <= 0) return 0;
+                        const cUnit = monthData[m]?.["charter_hire_cost_unit"] ?? monthData[m]?.["charter_hire_cost"] ?? monthData[m]?.["charterHireCost"] ?? monthData[m]?.["charter_hire"] ?? 0;
+                        return Number(cUnit) * tripCount;
+                    });
+
+                    const voyageResult = months.map((_, i) => (trips[i] > 0 ? (netRevenues[i] || 0) - (portCosts[i] || 0) - (dockageCosts[i] || 0) - (bunker[i] || 0) - (charterHireCosts[i] || 0) : 0));
                     
                     const totalDaysArr = getMonthlyValues("total_duration_unit");
                     const tceReq = getMonthlyValues("tce_required_unit");
@@ -422,6 +434,10 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     bunker.forEach((v, i) => {
                         level1BunkerCosts[i] += v;
                         globalBunkerCosts[i] += v;
+                    });
+                    charterHireCosts.forEach((v, i) => {
+                        level1CharterHire[i] += v;
+                        globalCharterHire[i] += v;
                     });
                     voyageResult.forEach((v, i) => {
                         level1VoyageResult[i] += v;
@@ -483,6 +499,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         { name: "(-) Bunker Costs", values: bunker, total: sum(bunker), pct: calcPct(bunker), totalPct: calcTotalPct(sum(bunker), sum(grossRevenues)), isCurrency: true, isTotal: false },
                         { name: "(-) Port Costs", values: portCosts, total: sum(portCosts), pct: calcPct(portCosts), totalPct: calcTotalPct(sum(portCosts), sum(grossRevenues)), isCurrency: true, isTotal: false },
                         { name: "(-) Dockage", values: dockageCosts, total: sum(dockageCosts), pct: calcPct(dockageCosts), totalPct: calcTotalPct(sum(dockageCosts), sum(grossRevenues)), isCurrency: true, isTotal: false },
+                        { name: "(-) Arriendo de Naves", values: charterHireCosts, total: sum(charterHireCosts), pct: calcPct(charterHireCosts), totalPct: calcTotalPct(sum(charterHireCosts), sum(grossRevenues)), isCurrency: true, isTotal: false },
                         { name: "(=) VOYAGE RESULT / P&L", values: plVsRequired, total: sum(plVsRequired), pct: calcPct(plVsRequired), totalPct: calcTotalPct(sum(plVsRequired), sum(grossRevenues)), isCurrency: true, isTotal: true },
                         { name: "▶ Métricas TCE ($/d)", values: tceReal, total: null, pct: null, totalPct: null, isCurrency: false, isTotal: false, isExpandableTce: true, rowKey, isExpanded: isExpandedTceRow }
                     ];
