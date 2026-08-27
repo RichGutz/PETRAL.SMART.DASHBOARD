@@ -423,3 +423,8 @@ CONCURRENCY & QC SUMMARY:
 - Caja de Premisas editable para notas ejecutivas.
 - Generador PDF Foxit Ready (A4 portrait continuo) y Excel consolidado multi-hoja.
 - Desplegado en produccion en vivo https://forecast.geeksoft.tech/financial-projections.
+
+[2026-08-27 17:55:00] FIX DE CONTENEDOR Y LAYOUT FLUIDO:
+- Separadas las dos tarjetas en contenedores independientes (Bloque 1: Catalogo de Escenarios, Bloque 2: Informe Multi-Escenario Consolidado).
+- Eliminado min-h artificial y overflow que aplastaba el ribbon de vigencia del anio.
+- Desplegado y verificado en produccion en vivo https://forecast.geeksoft.tech/financial-projections.
