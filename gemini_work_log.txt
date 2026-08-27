@@ -407,3 +407,7 @@ CONCURRENCY & QC SUMMARY:
 - Barquito, Mejillones, Antofagasta, Quintero, Patillos, etc. clasificados automaticamente como Exportacion.
 - Distribucion Bloque 1 en SINTETICO: 34 Cabotaje (60.32%) vs 26 Exportacion (39.68%).
 - Desplegado en vivo al VPS https://forecast.geeksoft.tech/financial-projections.
+
+[2026-08-27 17:33:00] P/L POR VIAJE FORMATEADO SIN DECIMALES:
+- P/L x Viaje redondeado a entero limpio en tabla React UI, exportacion Excel (.xlsx) y PDF Foxit Ready.
+- Desplegado en vivo al VPS https://forecast.geeksoft.tech/financial-projections.
