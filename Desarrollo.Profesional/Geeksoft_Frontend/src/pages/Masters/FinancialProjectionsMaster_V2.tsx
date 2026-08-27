@@ -130,7 +130,19 @@ export const FinancialProjectionsMaster: React.FC = () => {
 
                 let qty = Number(line.quantity || 13500);
                 const freq = Number(line.monthly_frequency || 0);
-                const isExport = dest.includes('MEJILLONES') || dest.includes('ANT') || dest.includes('EXP') || dest.includes('CHILE');
+
+                // Detección automática Cabotaje vs Exportación por Maestro de Puertos (Chile, Ecuador, etc.)
+                const foreignPorts = [
+                    'BARQUITO', 'MEJILLONES', 'ANTOFAGASTA', 'QUINTERO', 'PATILLOS', 
+                    'VENTANAS', 'SAN VICENTE', 'ARICA', 'IQUIQUE', 'CORONEL', 
+                    'COQUIMBO', 'VALPARAISO', 'HUASCO', 'MICHILLA', 'GUAYACAN', 
+                    'CALETA COLOSO', 'TOCOPILLA', 'PUERTO ANGAMOS', 'LIRQUEN', 'SAN ANTONIO',
+                    'GUAYAQUIL', 'ESMERALDAS', 'MANTA', 'BUENAVENTURA', 'LAZARO CARDENAS'
+                ];
+                const isExport = foreignPorts.some(p => dest.includes(p) || orig.includes(p)) 
+                    || dest.includes('EXP') 
+                    || dest.includes('CHILE')
+                    || line.is_export === true;
 
                 // Vincular con la cotización / cierre real para extraer P&L y Días exactos
                 const matchedQuote = (quotesList || []).find((q: any) => 
