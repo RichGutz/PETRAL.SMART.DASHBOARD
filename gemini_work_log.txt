@@ -350,3 +350,9 @@ CONCURRENCY & QC SUMMARY:
 - Insertada la linea visual '(-) Arriendo Nave (Charter)' en la tarjeta Financial Voyage Result (Columna 4) de multicotizadorPdfPrintService.ts.
 - Verificado que solo se renderice cuando el costo sea > 0.
 - Compilacion y despliegue exitoso al VPS https://forecast.geeksoft.tech.
+
+[2026-08-27 14:02:00] AGREGADO BOTON 4 RUTA PRESUPUESTO Y ESTANDARIZACION DE PASOS:
+- Barra superior de MultiCotizadorExcel.tsx estructurada en 6 Pasos: 1. CLIENTE, 2. RUTA CIERRE, 3. RUTA COTIZACION, 4. RUTA PRESUPUESTO, 5. VALIDEZ, 6. BUQUE.
+- Filtrado reactivo de presupuestos con filteredBudgets.
+- Modal de Guardar estandarizado con: Ruta Cierre (Paso 2), Ruta Cotizacion (Paso 3), Ruta Presupuesto (Paso 4).
+- Compilacion Vite y despliegue exitoso al VPS https://forecast.geeksoft.tech.
