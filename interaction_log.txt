@@ -379,5 +379,8 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-08-26 21:14:00] [INCORPORACION DE METRICA 'DIAS-BUQUE' EN NODOS, SUBTOTALES Y TOTALES]
 - Agregada la fila principal `Días-Buque` inmediatamente debajo de `Viajes (freq)` en cada nodo de proyección.
 - Integrada la acumulación de `Días-Buque` en el Subtotal de cada Cliente (`subMetrics`), en el Total de Flota (`globalMetrics`) y en el Total Acumulado Anual (`accumMetrics`).
-- Permite la auditoría instantánea de ocupación mensual de la flota respecto al techo físico de 30 días/buque.
+
+[2026-08-26 21:21:00] [GARANTIA DE ARRANQUE EN BLANCO / PANTALLA LIMPIA EN DASHBOARD]
+- Condicionado el renderizado de la tabla (`ForecastGrid` y `NavitransoGrid`) para verificar estrictamente `projectionLines.length === 0 || rows.length === 0`.
+- Si no hay rutas activas proyectadas, la vista se presenta 100% limpia en blanco con su placeholder, sin columnas vacías residuales.
 - Compilado con Vite y re-desplegado a https://forecast.geeksoft.tech.

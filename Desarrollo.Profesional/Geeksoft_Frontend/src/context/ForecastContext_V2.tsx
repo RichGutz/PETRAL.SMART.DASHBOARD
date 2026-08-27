@@ -159,28 +159,11 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
                 setPorts(portsData || []);
                 setSpotRoutes(routesData || []);
 
-                // Restaurar sesión activa de memoria de pestaña (sessionStorage) si el usuario presionó F5
-                const savedLinesStr = sessionStorage.getItem('petral_active_projection_lines');
-
-                const savedName = sessionStorage.getItem('petral_active_forecast_name');
-                const savedId = sessionStorage.getItem('petral_active_forecast_id');
-
-                if (savedLinesStr) {
-                    try {
-                        const lines = JSON.parse(savedLinesStr);
-                        if (Array.isArray(lines) && lines.length > 0) {
-                            setProjectionLines(lines);
-                            if (savedName) setForecastName(savedName);
-                            if (savedId) setCurrentForecastId(savedId);
-                            // Re-ejecutar simulación fresca con backend en vivo para garantizar cero caché obsoleta
-                            setTimeout(() => {
-                                runSimulationWith(lines, startDate, endDate, true);
-                            }, 100);
-                        }
-                    } catch (e) {
-                        console.error("Error al restaurar sesión activa:", e);
-                    }
-                }
+                // El dashboard siempre inicia limpio en blanco (sin auto-cargar sesiones anteriores)
+                sessionStorage.removeItem('petral_active_projection_lines');
+                sessionStorage.removeItem('petral_active_data');
+                sessionStorage.removeItem('petral_active_forecast_name');
+                sessionStorage.removeItem('petral_active_forecast_id');
             } catch (e) {
                 console.error("Error loading initial context data:", e);
             } finally {

@@ -297,4 +297,7 @@ CONCURRENCY & QC SUMMARY:
 
 [2026-08-26 21:14:00] Inclusión de Métrica 'Días-Buque' en PETRAL:
 - Agregada fila `Días-Buque` en cada nodo, Subtotal Cliente, Total Flota y Acumulado.
+
+[2026-08-26 21:21:00] Arranque Limpio en Blanco:
+- Forzada la vista en blanco con placeholder cuando no hay rutas proyectadas (`projectionLines.length === 0 || rows.length === 0`).
 - Desplegado a https://forecast.geeksoft.tech.
