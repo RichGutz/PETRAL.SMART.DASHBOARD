@@ -442,3 +442,8 @@ CONCURRENCY & QC SUMMARY:
 - Estandarizado el Look & Feel de Maestro de Cierres (/contracts), Maestro de Cotizaciones (/quotes) y Maestro de Presupuestos (/budgets).
 - Preservadas copias _legacy de seguridad: ContractsMaster_legacy.tsx, RouteMaster_legacy.tsx, BudgetsMaster_legacy.tsx.
 - Desplegado y verificado en produccion en vivo https://forecast.geeksoft.tech.
+
+[2026-08-27 18:35:00] TAG OK.DRAG.DROP.IZ CREADO Y DOCUMENTO 34 COMPLETADO AL MAXIMO DETALLE:
+- Tag oficial fijado y subido: OK.DRAG.DROP.IZ.
+- Documento 34 de Obsidian (34_Artefacto_Drag_and_Drop.persistente.md) completado al maximo detalle con arquitectura, flujo de persistencia resiliente, mapeo de llaves de localStorage y codigo fuente integro de SharedYearlyRouteList.tsx.
+- Rama main actualizada y verificada en produccion.
