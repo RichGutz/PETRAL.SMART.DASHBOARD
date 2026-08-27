@@ -325,3 +325,11 @@ CONCURRENCY & QC SUMMARY:
 - Sincronizacion: sync_snapshots_supabase.mjs actualizo las 17 rutas en Supabase.
 - QC Resultado: 17 de 17 rutas (100%) convergen con Delta Bunker = .00 y Delta PnL = .00 en Frontend (TS) y Backend (Python).
 - Documentacion: Documentado en seccion 7.3 y 7.4 de 28_Metodo_Benoit_Blanc_FINALE_Matriz_Financiera.md.
+
+[2026-08-27 12:07:00] BENOIT BLANC — PDF MULTICOTIZADOR 100% FIEL A LA UI Y FOXIT READY:
+- Espejo 1:1 UI: Integrada la seccion 'Auditoria Bunker (Dias x T/d @ $/T)' con Mar, Pto y Dem debajo de la tabla de combustible.
+- Tarjeta Permanente: Costo Arriendo Naves con formato sobrio encima de Comments.
+- Deduccion P&L: Resta visible de Arriendo Nave (Charter) en casilla verde de Voyage Result.
+- Motor Binario: Conectado a /api/v1/utils/generate-pdf (WeasyPrint) para descarga directa A4 Landscape (297mm x 210mm) Foxit Ready.
+- Documentacion: Documentado en 24_Como_imprimir_buenos_pdfs.md y 32_Reporte_PDF_Multicotizador.echado.md.
+- Despliegue: Publicado exitosamente en VPS https://forecast.geeksoft.tech.
