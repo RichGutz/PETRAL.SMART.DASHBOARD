@@ -275,4 +275,8 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-26 19:03:00] Clonación Arquitectura ForecastGrid 1:1 para NAVITRANSO:
 - Creado `FinancialMatrixNavitransoGridTable_backup.tsx`.
 - Rehecha la tabla Navitranso heredando el 100% del layout, estilos y comportamientos de ForecastGrid.
+
+[2026-08-26 19:18:00] Calibración Proporciones 1:1, Subtotales y Totales de Flota:
+- Ajustados anchos de columna a `w-12` para CLI/RUTA/BUQ y `w-36` para Métrica.
+- Corregida la alineación de Subtotales por cliente y bloque TOTAL FLOTA.
 - Desplegado a https://forecast.geeksoft.tech.

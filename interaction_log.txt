@@ -347,6 +347,11 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 
 [2026-08-26 19:03:00] [CLONACION ARQUITECTONICA 1:1 DE FORECASTGRID PARA NAVITRANSO]
 - Creado respaldo de seguridad en `FinancialMatrixNavitransoGridTable_backup.tsx`.
-- Rehecho `FinancialMatrixNavitransoGridTable.tsx` como un clon estructural idéntico de `ForecastGrid.tsx` (mismos headers, anchos de columna, menús contextuales, selectores de buque en celda, swap de columnas y motor `rowSpanRef`).
-- Adaptado el motor de métricas para renderizar exclusivamente las 17 líneas oficiales de NAVITRANSO con subtotales coloreados y acordes a la norma P&L.
-- Compilado con Vite y re-desplegado a https://forecast.geeksoft.tech.
+- Rehecho `FinancialMatrixNavitransoGridTable.tsx` como un clon estructural idéntico de `ForecastGrid.tsx`.
+
+[2026-08-26 19:18:00] [CALIBRACION PROPORCIONES 1:1 Y CUADRATURA DE TOTALES GLOBALES/SUBTOTALES]
+- Calibradas las clases del `<thead>` y `<tbody>` para igualar exactamente el ancho compacto de Petral (`w-12` para col1, col2, col3 y `w-36 min-w-[120px]` para Métrica).
+- Corregido el desfase de columnas en `showSubtotals` (inyectadas las celdas `col2` y `col3` en lugar de saltarlas).
+- Corregido el bloque de `TOTAL FLOTA` (renderizado idéntico al estilo `bg-indigo-50/20 font-bold` de Petral, con valores anuales y acumulados claramente legibles).
+- Respaldadas las 3 nuevas capturas en los repositorios locales.
+- Desplegado y verificado en vivo en https://forecast.geeksoft.tech.

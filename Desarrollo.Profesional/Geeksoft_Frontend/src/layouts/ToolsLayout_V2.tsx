@@ -76,30 +76,7 @@ export const ToolsLayout_V2: React.FC = () => {
                                         <span>Limpiar</span>
                                     </button>
                                     <button 
-                                        onClick={context.handleManualRecalculate} 
-                                        disabled={context.loading}
-                                        className={`flex items-center justify-center gap-1.5 h-7.5 px-3.5 rounded-lg font-extrabold text-[11px] transition-all duration-300 shadow-2xs cursor-pointer ${
-                                            context.loading
-                                                ? 'bg-slate-400 text-white cursor-not-allowed'
-                                                : context.isDirty 
-                                                    ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
-                                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200'
-                                        }`}
-                                    >
-                                        {context.loading ? (
-                                            <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full"></div>
-                                        ) : (
-                                            <RefreshCw size={13} className="text-sky-600" />
-                                        )}
-                                        <span>{context.loading ? 'Calculando...' : context.isDirty ? '¡Recalcular!' : 'Recalcular'}</span>
-                                    </button>
-                                    <button 
-                                        onClick={async () => {
-                                            if (context.isDirty) {
-                                                await context.handleManualRecalculate();
-                                            }
-                                            context.setShowSaveModal(true);
-                                        }} 
+                                        onClick={() => context.setShowSaveModal(true)} 
                                         className="flex items-center justify-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white h-7.5 px-4 rounded-lg font-extrabold text-[11px] transition-all shadow-2xs cursor-pointer"
                                     >
                                         <Save size={14} /> Guardar
