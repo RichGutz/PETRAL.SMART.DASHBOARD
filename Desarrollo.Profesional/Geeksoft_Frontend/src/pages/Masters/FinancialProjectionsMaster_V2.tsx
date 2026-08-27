@@ -378,12 +378,12 @@ export const FinancialProjectionsMaster: React.FC = () => {
             wsData.push([
                 r.route,
                 r.annualTons,
-                r.fullLoad,
+                Math.round(r.fullLoad),
                 r.annualTrips,
                 r.pnlPerTrip,
-                r.totalGrossMargin,
+                Math.round(r.totalGrossMargin),
                 `${r.volumeSharePct.toFixed(2)}%`,
-                r.daysOccupation,
+                Math.round(r.daysOccupation),
                 ''
             ]);
         });
@@ -394,10 +394,10 @@ export const FinancialProjectionsMaster: React.FC = () => {
             '',
             mec.totalTrips,
             '',
-            mec.totalGrossMargin,
-            '100.0%',
-            mec.totalDaysOccupation,
-            mec.totalDaysAvailable
+            Math.round(mec.totalGrossMargin),
+            '100.00%',
+            Math.round(mec.totalDaysOccupation),
+            Math.round(mec.totalDaysAvailable)
         ]);
 
         const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -417,12 +417,12 @@ export const FinancialProjectionsMaster: React.FC = () => {
             <tr>
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #1e293b; background: #ffffff;">${r.route}</td>
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${r.annualTons.toLocaleString('en-US')}</td>
-                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${r.fullLoad.toLocaleString('en-US')}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${Math.round(r.fullLoad).toLocaleString('en-US')}</td>
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #0f172a;">${r.annualTrips}</td>
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">$${r.pnlPerTrip.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; font-weight: bold; color: #0f172a;">$${r.totalGrossMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; font-weight: bold; color: #0f172a;">$${Math.round(r.totalGrossMargin).toLocaleString('en-US')}</td>
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 600; color: #0369a1;">${r.volumeSharePct.toFixed(2)}%</td>
-                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #334155;">${r.daysOccupation}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #334155;">${Math.round(r.daysOccupation)}</td>
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; color: #94a3b8;">-</td>
             </tr>
         `).join('');
@@ -640,19 +640,19 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #334155; background: #fff;">Viajes cabotaje</td>
                                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold;">${mec.cabotageTrips}</td>
                                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.cabotageVolumeTm.toLocaleString('en-US')}</td>
-                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 700; color: #0369a1;">${mec.cabotageSharePct.toFixed(1)}%</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 700; color: #0369a1;">${mec.cabotageSharePct.toFixed(2)}%</td>
                             </tr>
                             <tr>
                                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #334155; background: #fff;">Viajes exportación</td>
                                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold;">${mec.exportTrips}</td>
                                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.exportVolumeTm.toLocaleString('en-US')}</td>
-                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 700; color: #0369a1;">${mec.exportSharePct.toFixed(1)}%</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 700; color: #0369a1;">${mec.exportSharePct.toFixed(2)}%</td>
                             </tr>
                             <tr class="total-row">
                                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: 800;">TOTAL</td>
                                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${mec.totalTrips}</td>
                                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${mec.totalVolumeTm.toLocaleString('en-US')}</td>
-                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 800;">100.0%</td>
+                                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 800;">100.00%</td>
                             </tr>
                         </tbody>
                     </table>
@@ -681,10 +681,10 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                 <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: right;">-</td>
                                 <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${mec.totalTrips}</td>
                                 <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: right;">-</td>
-                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #047857;">$${mec.totalGrossMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 800;">100.0%</td>
-                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${mec.totalDaysOccupation}</td>
-                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${mec.totalDaysAvailable}</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #047857;">$${Math.round(mec.totalGrossMargin).toLocaleString('en-US')}</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 800;">100.00%</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${Math.round(mec.totalDaysOccupation)}</td>
+                                <td style="padding: 7px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace;">${Math.round(mec.totalDaysAvailable)}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -990,19 +990,19 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                                 <td className="py-1.5 px-3 font-sans font-bold text-slate-800 border border-slate-300">Viajes cabotaje</td>
                                                                                 <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-800">{mec.cabotageTrips}</td>
                                                                                 <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-800">{mec.cabotageVolumeTm.toLocaleString('en-US')}</td>
-                                                                                <td className="py-1.5 px-3 text-center border border-slate-300 font-bold text-blue-900">{mec.cabotageSharePct.toFixed(1)}%</td>
+                                                                                <td className="py-1.5 px-3 text-center border border-slate-300 font-bold text-blue-900">{mec.cabotageSharePct.toFixed(2)}%</td>
                                                                             </tr>
                                                                             <tr>
                                                                                 <td className="py-1.5 px-3 font-sans font-bold text-slate-800 border border-slate-300">Viajes exportación</td>
                                                                                 <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-800">{mec.exportTrips}</td>
                                                                                 <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-800">{mec.exportVolumeTm.toLocaleString('en-US')}</td>
-                                                                                <td className="py-1.5 px-3 text-center border border-slate-300 font-bold text-blue-900">{mec.exportSharePct.toFixed(1)}%</td>
+                                                                                <td className="py-1.5 px-3 text-center border border-slate-300 font-bold text-blue-900">{mec.exportSharePct.toFixed(2)}%</td>
                                                                             </tr>
                                                                             <tr className="bg-slate-100 font-bold">
                                                                                 <td className="py-1.5 px-3 font-sans border border-slate-300 text-slate-900">Total</td>
                                                                                 <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-900">{mec.totalTrips}</td>
                                                                                 <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-900">{mec.totalVolumeTm.toLocaleString('en-US')}</td>
-                                                                                <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-900 font-black">100.0%</td>
+                                                                                <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-900 font-black">100.00%</td>
                                                                             </tr>
                                                                         </tbody>
                                                                     </table>
@@ -1034,7 +1034,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                                         {r.annualTons.toLocaleString('en-US')}
                                                                                     </td>
                                                                                     <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-800">
-                                                                                        {r.fullLoad.toLocaleString('en-US')}
+                                                                                        {Math.round(r.fullLoad).toLocaleString('en-US')}
                                                                                     </td>
                                                                                     <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-800 font-bold">
                                                                                         {r.annualTrips}
@@ -1043,13 +1043,13 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                                         ${r.pnlPerTrip.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                                                     </td>
                                                                                     <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-800 font-bold">
-                                                                                        ${r.totalGrossMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                                        ${Math.round(r.totalGrossMargin).toLocaleString('en-US')}
                                                                                     </td>
                                                                                     <td className="py-1.5 px-3 text-center border border-slate-300 font-semibold text-blue-900">
                                                                                         {r.volumeSharePct.toFixed(2)}%
                                                                                     </td>
                                                                                     <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-800 font-bold">
-                                                                                        {r.daysOccupation}
+                                                                                        {Math.round(r.daysOccupation)}
                                                                                     </td>
                                                                                     <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-400">
                                                                                         -
@@ -1062,10 +1062,10 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                                 <td className="py-2 px-3 text-right border border-slate-300">-</td>
                                                                                 <td className="py-2 px-3 text-center border border-slate-300">{mec.totalTrips}</td>
                                                                                 <td className="py-2 px-3 text-right border border-slate-300">-</td>
-                                                                                <td className="py-2 px-3 text-right border border-slate-300 text-emerald-800">${mec.totalGrossMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                                                <td className="py-2 px-3 text-center border border-slate-300 font-black">100.0%</td>
-                                                                                <td className="py-2 px-3 text-center border border-slate-300">{mec.totalDaysOccupation}</td>
-                                                                                <td className="py-2 px-3 text-center border border-slate-300">{mec.totalDaysAvailable}</td>
+                                                                                <td className="py-2 px-3 text-right border border-slate-300 text-emerald-800">${Math.round(mec.totalGrossMargin).toLocaleString('en-US')}</td>
+                                                                                <td className="py-2 px-3 text-center border border-slate-300 font-black">100.00%</td>
+                                                                                <td className="py-2 px-3 text-center border border-slate-300">{Math.round(mec.totalDaysOccupation)}</td>
+                                                                                <td className="py-2 px-3 text-center border border-slate-300">{Math.round(mec.totalDaysAvailable)}</td>
                                                                             </tr>
                                                                         </tbody>
                                                                     </table>
