@@ -530,50 +530,76 @@ export class MulticotizadorPdfPrintService {
 
             <!-- COLUMNA 1: BUNKER EXPENSES & COMMENTS -->
             <div class="flex flex-col gap-1.5 h-full">
-                <!-- BUNKER EXPENSES (TRIPARTITO) -->
+                <!-- BUNKER EXPENSES (COMBUSTIBLE) -->
                 <div class="border-box bg-white p-1.5 shadow-xs flex-1 flex flex-col justify-between">
                     <div>
-                        <h4 class="text-[9px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-0.5 mb-1 font-sans">
-                            Gastos de Búnker (Tripartito)
+                        <h4 class="text-[9px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-0.5 mb-1 font-sans flex items-center justify-between">
+                            <span>Bunker Expenses (Combustible)</span>
+                            ${(calc.totalDemurrageDays || 0) > 0 ? `
+                                <span class="text-[7.5px] font-mono text-sky-700 bg-sky-50 px-1 rounded border border-sky-200">
+                                    Dem: ${this.fmtNum(calc.totalDemurrageDays, 2)} d
+                                </span>
+                            ` : ''}
                         </h4>
-                        <table class="w-full border-collapse font-mono text-[8.5px]">
+                        <table class="w-full border-collapse font-mono text-[8px]">
                             <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200 font-sans text-slate-500 font-bold">
-                                    <th class="text-left py-0.5 pl-1">Régimen</th>
-                                    <th class="text-right py-0.5 pr-1">IFO (T)</th>
-                                    <th class="text-right py-0.5 pr-1">MDO (T)</th>
-                                    <th class="text-right py-0.5 pr-1">Costo (USD)</th>
+                                <tr class="bg-slate-50 border-b border-slate-200 font-sans text-[7.5px] text-slate-500 font-bold">
+                                    <th class="text-left py-0.5 pl-1">Fuel</th>
+                                    <th class="text-right py-0.5 pr-0.5" title="Travesía en Mar">1. Mar</th>
+                                    <th class="text-right py-0.5 pr-0.5" title="Operaciones Puerto">2. Pto</th>
+                                    <th class="text-right py-0.5 pr-0.5" title="Estadías en Demurrage">3. Dem</th>
+                                    <th class="text-right py-0.5 pr-1 font-black text-slate-700">Total ($)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr class="border-b border-slate-100">
-                                    <td class="py-0.5 pl-1 text-slate-600 font-sans">Navegación</td>
-                                    <td class="text-right py-0.5 pr-1">${this.fmtNum(calc.seaIfoTons, 1)}</td>
-                                    <td class="text-right py-0.5 pr-1">${this.fmtNum(calc.seaMdoTons, 1)}</td>
-                                    <td class="text-right py-0.5 pr-1 font-bold">${this.fmtCur(calc.seaBunkerCost)}</td>
+                                    <td class="py-0.5 pl-1 text-slate-600 font-sans">IFO</td>
+                                    <td class="text-right py-0.5 pr-0.5 text-slate-500">${this.fmtNum(calc.seaIfoTons, 1)}</td>
+                                    <td class="text-right py-0.5 pr-0.5 text-slate-500">${this.fmtNum(calc.portIfoTons, 1)}</td>
+                                    <td class="text-right py-0.5 pr-0.5 text-sky-800 font-semibold">${this.fmtNum(calc.demurrageIfoTons || 0, 1)}</td>
+                                    <td class="text-right py-0.5 pr-1 font-bold text-slate-800">${this.fmtCur(calc.ifoCost)}</td>
                                 </tr>
                                 <tr class="border-b border-slate-100">
-                                    <td class="py-0.5 pl-1 text-slate-600 font-sans">Operación Puerto</td>
-                                    <td class="text-right py-0.5 pr-1">${this.fmtNum(calc.portIfoTons, 1)}</td>
-                                    <td class="text-right py-0.5 pr-1">${this.fmtNum(calc.portMdoTons, 1)}</td>
-                                    <td class="text-right py-0.5 pr-1 font-bold">${this.fmtCur(calc.portBunkerCost)}</td>
+                                    <td class="py-0.5 pl-1 text-slate-600 font-sans">MDO</td>
+                                    <td class="text-right py-0.5 pr-0.5 text-slate-500">${this.fmtNum(calc.seaMdoTons, 1)}</td>
+                                    <td class="text-right py-0.5 pr-0.5 text-slate-500">${this.fmtNum(calc.portMdoTons, 1)}</td>
+                                    <td class="text-right py-0.5 pr-0.5 text-sky-800 font-semibold">${this.fmtNum(calc.demurrageMdoTons || 0, 1)}</td>
+                                    <td class="text-right py-0.5 pr-1 font-bold text-slate-800">${this.fmtCur(calc.mdoCost)}</td>
                                 </tr>
-                                ${calc.demurrageBunkerCost > 0 ? `
-                                <tr class="border-b border-slate-100 bg-amber-50/40">
-                                    <td class="py-0.5 pl-1 text-amber-900 font-sans font-semibold">Demora (${this.fmtNum(calc.totalDemurrageDays, 2)} d)</td>
-                                    <td class="text-right py-0.5 pr-1 font-mono">${this.fmtNum(calc.demurrageIfoTons, 1)}</td>
-                                    <td class="text-right py-0.5 pr-1 font-mono">${this.fmtNum(calc.demurrageMdoTons, 1)}</td>
-                                    <td class="text-right py-0.5 pr-1 font-bold text-amber-900">${this.fmtCur(calc.demurrageBunkerCost)}</td>
-                                </tr>
-                                ` : ''}
                                 <tr class="bg-slate-50 font-bold text-slate-800 border-t border-slate-200">
-                                    <td class="py-0.5 pl-1 font-sans uppercase text-[8px]">Total Búnker</td>
-                                    <td class="text-right py-0.5 pr-1">${this.fmtNum(calc.totalIfoTons, 1)}</td>
-                                    <td class="text-right py-0.5 pr-1">${this.fmtNum(calc.totalMdoTons, 1)}</td>
-                                    <td class="text-right py-0.5 pr-1 text-sky-900 font-black">${this.fmtCur(calc.grandBunkerTotal)}</td>
+                                    <td class="py-0.5 pl-1 font-sans text-[7.5px] uppercase">Total</td>
+                                    <td class="text-right py-0.5 pr-0.5 font-sans text-[7.5px] text-slate-600">${this.fmtCur(calc.seaBunkerCost)}</td>
+                                    <td class="text-right py-0.5 pr-0.5 font-sans text-[7.5px] text-slate-600">${this.fmtCur(calc.portBunkerCost)}</td>
+                                    <td class="text-right py-0.5 pr-0.5 font-sans text-[7.5px] text-sky-800">${this.fmtCur(calc.demurrageBunkerCost || 0)}</td>
+                                    <td class="text-right py-0.5 pr-1 font-black text-amber-950">${this.fmtCur(calc.grandBunkerTotal)}</td>
                                 </tr>
                             </tbody>
                         </table>
+
+                        <!-- AUDITORÍA BÚNKER (DÍAS × T/D × P.U.) -->
+                        <div class="border-t border-slate-200 mt-1 pt-0.5 flex flex-col gap-0.5 text-[7.5px] font-mono bg-slate-50/80 rounded p-1 border border-slate-200/60">
+                            <div class="flex items-center justify-between font-sans text-[7px] font-bold text-slate-500 uppercase border-b border-slate-200/80 pb-0.5 mb-0.5">
+                                <span>🔍 Auditoría Bunker (Días × T/d @ $/T)</span>
+                            </div>
+                            <div class="flex items-center justify-between text-slate-700">
+                                <span class="truncate">
+                                    🌊 <strong class="text-slate-800">1. Mar (${this.fmtNum(calc.totalSeaDays, 2)} d):</strong> ${this.fmtNum(calc.seaIfoTons, 1)}T IFO + ${this.fmtNum(calc.seaMdoTons, 1)}T MDO
+                                </span>
+                                <span class="font-bold text-slate-900 ml-1 shrink-0">${this.fmtCur(calc.seaBunkerCost)}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-slate-700">
+                                <span class="truncate">
+                                    ⚓ <strong class="text-slate-800">2. Pto (${this.fmtNum(calc.totalPortDays, 2)} d):</strong> ${this.fmtNum(calc.portIfoTons, 1)}T IFO + ${this.fmtNum(calc.portMdoTons, 1)}T MDO
+                                </span>
+                                <span class="font-bold text-slate-900 ml-1 shrink-0">${this.fmtCur(calc.portBunkerCost)}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sky-900">
+                                <span class="truncate">
+                                    ⏱️ <strong class="text-sky-950">3. Dem (${this.fmtNum(calc.totalDemurrageDays || 0, 2)} d):</strong> ${this.fmtNum(calc.demurrageIfoTons || 0, 1)}T IFO + ${this.fmtNum(calc.demurrageMdoTons || 0, 1)}T MDO
+                                </span>
+                                <span class="font-bold text-sky-950 ml-1 shrink-0">${this.fmtCur(calc.demurrageBunkerCost || 0)}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -581,10 +607,10 @@ export class MulticotizadorPdfPrintService {
                 <div class="border-box bg-white p-1.5 shadow-xs">
                     <h4 class="text-[9px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-0.5 mb-1 font-sans flex items-center justify-between">
                         <span>Costo Arriendo Naves</span>
-                        <span class="text-[8px] font-mono text-slate-400 font-normal">Charter Hire Cost</span>
+                        <span class="text-[8px] font-mono text-slate-400 font-normal">USD TOTAL</span>
                     </h4>
                     <div class="flex justify-between items-center bg-slate-50 px-2 py-1 rounded border border-slate-200 text-[8.5px] font-mono">
-                        <span class="font-sans text-slate-600 font-bold">Monto Asignado:</span>
+                        <span class="font-sans text-slate-600 font-bold">$</span>
                         <strong class="font-black text-slate-900">${this.fmtCur(calc.charterHireCost || charterHireCost || 0)}</strong>
                     </div>
                 </div>
@@ -595,7 +621,7 @@ export class MulticotizadorPdfPrintService {
                         <span>Comments (Observaciones)</span>
                         <span class="text-[8px] font-mono text-slate-400 font-normal">Notas comerciales</span>
                     </h4>
-                    <div class="bg-slate-50 p-1.5 rounded border border-slate-200 text-[8.5px] text-slate-700 font-sans h-12 overflow-hidden italic">
+                    <div class="bg-slate-50 p-1.5 rounded border border-slate-200 text-[8px] text-slate-700 font-sans h-10 overflow-hidden italic">
                         ${commentsText || 'Sin observaciones adicionales registradas para este viaje.'}
                     </div>
                 </div>
@@ -941,36 +967,54 @@ export class MulticotizadorPdfPrintService {
     </div>
     
     <script>
-        function downloadDirectPdf() {
+        async function downloadDirectPdf() {
             const btn = document.getElementById('btn-download-pdf');
             if (btn) {
-                btn.innerText = '⏳ Generando PDF...';
+                btn.innerText = '⏳ Generando PDF Oficial...';
                 btn.disabled = true;
             }
-            const element = document.getElementById('pdf-content-page');
-            const opt = {
-                margin: 0,
-                filename: 'PETRAL_MULTICOTIZADOR_${(selectedClient || 'CLIENTE').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(selectedVessel || 'BUQUE').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-            };
-            
-            if (window.html2pdf) {
-                window.html2pdf().set(opt).from(element).save().then(function() {
-                    if (btn) {
-                        btn.innerText = '📥 Descargar PDF Directo (Foxit Ready)';
-                        btn.disabled = false;
-                    }
-                }).catch(function(err) {
-                    console.error('Error al generar PDF directo:', err);
-                    if (btn) {
-                        btn.innerText = '📥 Descargar PDF Directo (Foxit Ready)';
-                        btn.disabled = false;
-                    }
+            try {
+                const element = document.getElementById('pdf-content-page');
+                const styles = Array.from(document.querySelectorAll('style')).map(s => s.outerHTML).join('\n');
+                const headContent = '<meta charset="UTF-8"><title>PETRAL_MULTICOTIZADOR</title>' + styles;
+                const fullHtml = '<!DOCTYPE html><html lang="es"><head>' + headContent + '</head><body style="margin:0;padding:0;background:#ffffff;">' + element.outerHTML + '</body></html>';
+                const filename = 'PETRAL_MULTICOTIZADOR_${(selectedClient || 'CLIENTE').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(selectedVessel || 'BUQUE').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf';
+                
+                const response = await fetch('/api/v1/utils/generate-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ html: fullHtml, filename: filename })
                 });
-            } else {
-                window.print();
+
+                if (!response.ok) {
+                    throw new Error('Servidor retornó estado: ' + response.status);
+                }
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+            } catch (err) {
+                console.warn('Backend PDF endpoint no disponible, recurriendo a exportación en cliente:', err);
+                if (window.html2pdf) {
+                    const element = document.getElementById('pdf-content-page');
+                    const opt = {
+                        margin: 0,
+                        filename: 'PETRAL_MULTICOTIZADOR_${(selectedClient || 'CLIENTE').replace(/[^a-zA-Z0-9_-]/g, '_')}_${(selectedVessel || 'BUQUE').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf',
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+                    };
+                    window.html2pdf().set(opt).from(element).save();
+                } else {
+                    window.print();
+                }
+            } finally {
                 if (btn) {
                     btn.innerText = '📥 Descargar PDF Directo (Foxit Ready)';
                     btn.disabled = false;
