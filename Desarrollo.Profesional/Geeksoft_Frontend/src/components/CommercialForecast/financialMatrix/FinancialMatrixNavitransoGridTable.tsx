@@ -814,15 +814,17 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                                             </div>
                                             )}
                                             {row.col1.type === 'vessel' && !row.isGlobalTotal ? (
-                                                <div className="flex items-center justify-center w-full h-full p-0.5">
+                                                <div className="w-full h-full flex items-center justify-center relative min-h-[60px]">
+                                                    <div className="vertical-text mx-auto px-2 pointer-events-none text-white font-extrabold text-xs">
+                                                        {row.col1.name}
+                                                    </div>
                                                     <select
                                                         value={row.col1.name}
                                                         onChange={(e) => handleVesselChange(row.clientName, row.routeName, row.col1.name, e.target.value)}
-                                                        className="bg-transparent text-white font-extrabold text-[10px] text-center border-0 focus:outline-none focus:ring-0 cursor-pointer w-full py-2"
-                                                        style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', WebkitAppearance: 'none' }}
+                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                                     >
                                                         {vesselsList.map(v => (
-                                                            <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-[10px]">
+                                                            <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-xs">
                                                                 {v.vessel_id}
                                                             </option>
                                                         ))}
@@ -849,15 +851,17 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                                                 </div>
                                             )}
                                             {row.col2.type === 'vessel' && !row.col2.isSubtotal ? (
-                                                <div className="flex items-center justify-center w-full h-full p-0.5">
+                                                <div className="w-full h-full flex items-center justify-center relative min-h-[60px]">
+                                                    <div className="vertical-text mx-auto px-2 pointer-events-none text-white font-extrabold text-xs">
+                                                        {row.col2.name}
+                                                    </div>
                                                     <select
                                                         value={row.col2.name}
                                                         onChange={(e) => handleVesselChange(row.clientName, row.routeName, row.col2.name, e.target.value)}
-                                                        className="bg-transparent text-white font-extrabold text-[10px] text-center border-0 focus:outline-none focus:ring-0 cursor-pointer w-full py-2"
-                                                        style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', WebkitAppearance: 'none' }}
+                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                                     >
                                                         {vesselsList.map(v => (
-                                                            <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-[10px]">
+                                                            <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-xs">
                                                                 {v.vessel_id}
                                                             </option>
                                                         ))}
@@ -884,15 +888,17 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                                                 </div>
                                             )}
                                             {row.col3.type === 'vessel' && !row.col3.isSubtotal ? (
-                                                <div className="flex items-center justify-center w-full h-full p-0.5">
+                                                <div className="w-full h-full flex items-center justify-center relative min-h-[60px]">
+                                                    <div className="vertical-text mx-auto px-2 pointer-events-none text-white font-extrabold text-xs">
+                                                        {row.col3.name}
+                                                    </div>
                                                     <select
                                                         value={row.col3.name}
                                                         onChange={(e) => handleVesselChange(row.clientName, row.routeName, row.col3.name, e.target.value)}
-                                                        className="bg-transparent text-white font-extrabold text-[10px] text-center border-0 focus:outline-none focus:ring-0 cursor-pointer w-full py-2"
-                                                        style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', WebkitAppearance: 'none' }}
+                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                                     >
                                                         {vesselsList.map(v => (
-                                                            <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-[10px]">
+                                                            <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-xs">
                                                                 {v.vessel_id}
                                                             </option>
                                                         ))}
@@ -905,7 +911,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                                     )}
 
                                     {/* Celda de Métrica */}
-                                    <td className={`py-1 px-2 border border-slate-200 text-xs font-semibold whitespace-nowrap ${row.metric.isNavSubtotal ? 'font-bold' : ''}`}>
+                                    <td className={`py-1 px-2 border border-slate-200 whitespace-nowrap ${row.isSubRow ? 'text-xs text-slate-500' : 'font-semibold text-slate-800'} ${row.metric.isNavSubtotal ? 'font-bold' : ''}`}>
                                         <div className="flex items-center gap-1.5 justify-between">
                                             <div className="flex items-center gap-1">
                                                 {row.metric.isExpandableNav && (
@@ -928,7 +934,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                                     {months.filter(m => !hiddenMonths.includes(m)).map((m, idx) => {
                                         const val = row.metric.values ? row.metric.values[idx] : undefined;
                                         return (
-                                            <td key={idx} className={`py-1 px-2 border border-slate-200 text-right text-xs ${row.metric.isNavSubtotal ? 'font-bold' : ''}`}>
+                                            <td key={idx} className={`py-1 px-2 border border-slate-200 text-right tabular-nums ${row.isSubRow ? 'text-xs text-slate-500' : val === 0 ? 'text-slate-400' : 'text-slate-800'} ${row.metric.isNavSubtotal ? 'font-bold' : ''}`}>
                                                 {row.metric.isFrequencyEditable && onFrequencyChange ? (
                                                     <input
                                                         type="number"
@@ -945,7 +951,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                                     })}
 
                                     {/* Celda TOTAL ACUM */}
-                                    <td className={`py-1 px-2 border border-slate-200 text-right text-xs font-bold bg-slate-100 ${row.metric.isNavSubtotal ? 'font-black bg-slate-200/60' : ''}`}>
+                                    <td className={`py-1 px-2 border border-slate-200 text-right tabular-nums font-bold bg-slate-100 ${row.metric.isNavSubtotal ? 'font-black bg-slate-200/60' : ''}`}>
                                         {row.metric.isCurrency ? formatCurrency(row.metric.total) : formatNumber(row.metric.total)}
                                     </td>
                                 </tr>

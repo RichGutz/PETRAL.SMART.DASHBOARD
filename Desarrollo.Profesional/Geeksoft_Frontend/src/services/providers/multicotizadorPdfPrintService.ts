@@ -569,7 +569,10 @@ export class MulticotizadorPdfPrintService {
                                 </tr>
                             </tbody>
                         </table>
-                       <!-- COSTO ARRIENDO NAVES (SI HAY VALOR) -->
+                    </div>
+                </div>
+
+                <!-- COSTO ARRIENDO NAVES (SI HAY VALOR) -->
                 ${(Number(calc.charterHireCost || charterHireCost || 0) > 0) ? `
                 <div class="border-box bg-purple-50/50 border-purple-200 p-1.5 shadow-xs flex flex-col justify-between">
                     <h4 class="text-[9px] font-bold text-purple-900 uppercase tracking-wide border-b border-purple-200 pb-0.5 mb-1 font-sans flex items-center justify-between">
