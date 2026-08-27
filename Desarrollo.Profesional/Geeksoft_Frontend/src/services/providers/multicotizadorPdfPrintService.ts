@@ -572,19 +572,17 @@ export class MulticotizadorPdfPrintService {
                     </div>
                 </div>
 
-                <!-- COSTO ARRIENDO NAVES (SI HAY VALOR) -->
-                ${(Number(calc.charterHireCost || charterHireCost || 0) > 0) ? `
-                <div class="border-box bg-purple-50/50 border-purple-200 p-1.5 shadow-xs flex flex-col justify-between">
-                    <h4 class="text-[9px] font-bold text-purple-900 uppercase tracking-wide border-b border-purple-200 pb-0.5 mb-1 font-sans flex items-center justify-between">
+                <!-- COSTO ARRIENDO NAVES (IDÉNTICO A LA PANTALLA, SIEMPRE VISIBLE) -->
+                <div class="border-box bg-white p-1.5 shadow-xs flex flex-col justify-between">
+                    <h4 class="text-[9px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-0.5 mb-1 font-sans flex items-center justify-between">
                         <span>Costo Arriendo Naves</span>
-                        <span class="text-[8px] font-mono text-purple-700 font-bold">USD Total</span>
+                        <span class="text-[8px] font-mono text-emerald-700 font-bold">USD Total</span>
                     </h4>
-                    <div class="bg-white p-1 rounded border border-purple-200 flex justify-between items-center text-[9px] font-mono font-bold text-purple-950">
-                        <span>Monto Charter:</span>
-                        <span>${this.fmtCur(calc.charterHireCost || charterHireCost)}</span>
+                    <div class="bg-slate-50 p-1 rounded border border-slate-200 flex justify-between items-center text-[9px] font-mono font-bold text-slate-800">
+                        <span class="text-slate-500 font-sans">Monto Arriendo:</span>
+                        <span class="text-emerald-800 font-black">${this.fmtCur(calc.charterHireCost || charterHireCost || 0)}</span>
                     </div>
                 </div>
-                ` : ''}
 
                 <!-- COMMENTS -->
                 <div class="border-box bg-white p-1.5 shadow-xs flex-1 flex flex-col justify-between">

@@ -636,5 +636,40 @@ El peritaje del código en `PortDemurrageRatesService.ts` reveló una doble capa
 
 *Caso cerrado y sellado en bitácora por Benoit Blanc — 26.08.2026.*
 
+---
 
+## 16. Caso Pericial N° 06: El Misterio del Tag Huérfano y la Tarjeta Oculta de Arriendo de Naves en el PDF
 
+**Fecha**: 27 de Agosto de 2026  
+**Investigador**: Detective Benoit Blanc  
+**Evidencia Física**: Captura del PDF generado por el Multicotizador donde la grilla central de tramos e itinerario desaparecía por completo y la tarjeta de *Costo Arriendo Naves* no se imprimía encima de *Comments*.
+
+---
+
+### 🕵️‍♂️ 16.1. La Autopsia del Crimen (Doble Sospechoso)
+
+1. **Sospechoso 1: La Condición Restrictiva (`> 0`)**:
+   - En `multicotizadorPdfPrintService.ts`, la tarjeta de Arriendo de Naves estaba envuelta en:
+     ```typescript
+     ${(Number(calc.charterHireCost || charterHireCost || 0) > 0) ? `...` : ''}
+     ```
+   - Mientras en la pantalla del Multicotizador la tarjeta **siempre es visible** encima de Comments (mostrando `$0` si no hay arriendo asignado), en el PDF se destruía si el valor era `$0`, rompiendo la simetría 1:1 con la interfaz.
+
+2. **Sospechoso 2: El Tag Huérfano (Crimen de la Estructura DOM)**:
+   - Al inyectar el código de la tarjeta en una versión previa, se eliminaron inadvertidamente las etiquetas de cierre `</div></div>` de la tarjeta superior de **Gastos de Búnker**.
+   - El motor de renderizado HTML del navegador consideró que todas las secciones subsiguientes (BAF, Comisiones, P/L y Grilla de Tramos) formaban parte del cuerpo de la tabla de búnker, colapsando el DOM y empujando los elementos fuera de la página imprimible.
+
+---
+
+### 🛠️ 16.2. Cirugía Forense y Resolución Definitiva:
+
+1. **Restauración del Árbol DOM**:
+   - Se cerró la tarjeta de búnker con sus etiquetas `</div></div>` completas antes de iniciar la tarjeta de Arriendo de Naves.
+2. **Tarjeta 100% Permanente en PDF**:
+   - Se removió la condición `> 0`. Ahora la tarjeta **Costo Arriendo Naves** se imprime siempre en la Columna 1 del PDF (arriba de *Comments*), mostrando `$0` o el valor asignado con el estilo sobrio idéntico a la pantalla.
+3. **Deducción en Casilla Verde (P/L)**:
+   - La fila `(-) Arriendo Nave (Charter)` se deduce y concilia directamente en el bloque financiero de P/L y TCE.
+
+---
+
+*Caso cerrado y sellado en bitácora por Benoit Blanc — 27.08.2026.*
