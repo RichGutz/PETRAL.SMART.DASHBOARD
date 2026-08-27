@@ -294,4 +294,7 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-26 21:05:00] Inclusión de 'Días de Demora' en Desplegable Petral:
 - Agregada la fila `↳ Días de Demora` en el acordeón de Viajes.
 - Calibrado `rowSpan = 25` sin descuadre visual.
+
+[2026-08-26 21:14:00] Inclusión de Métrica 'Días-Buque' en PETRAL:
+- Agregada fila `Días-Buque` en cada nodo, Subtotal Cliente, Total Flota y Acumulado.
 - Desplegado a https://forecast.geeksoft.tech.

@@ -930,7 +930,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         return new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(val);
     };
 
-    if (!data || !data.aggregated_data) {
+    if (!data || !data.aggregated_data || projectionLines.length === 0 || rows.length === 0) {
         return (
             <div className="flex items-center justify-center h-64 bg-slate-50 border border-slate-200 rounded-lg">
                 <p className="text-slate-500">No hay proyecciones para mostrar. Usa el constructor de arriba.</p>

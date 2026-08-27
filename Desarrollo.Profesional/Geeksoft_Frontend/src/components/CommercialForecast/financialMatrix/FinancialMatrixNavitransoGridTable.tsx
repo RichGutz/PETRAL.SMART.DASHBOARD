@@ -713,7 +713,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
         if (key === 'port') setExpandedPortCosts(p => ({ ...p, [rowKey]: !p[rowKey] }));
     };
 
-    if (!data || !data.aggregated_data || projectionLines.length === 0) {
+    if (!data || !data.aggregated_data || projectionLines.length === 0 || rows.length === 0) {
         return (
             <div className="flex items-center justify-center h-64 bg-slate-50 border border-slate-200 rounded-lg">
                 <p className="text-slate-500">No hay proyecciones para mostrar. Usa el constructor de arriba.</p>
