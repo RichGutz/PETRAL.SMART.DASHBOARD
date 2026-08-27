@@ -391,7 +391,9 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 
 [2026-08-26 21:46:00] [IMPLEMENTACION DE CUADROS OFICIALES FORMATO MEC EN MAESTRO DE MATRICES]
 - Eliminadas por completo las 4 cards genericas previas en `/financial-projections` (`FinancialProjectionsMaster_V2.tsx`).
-- Incorporado el Bloque 1 (Distribucion Macro Cabotaje vs Exportacion) y el Bloque 2 (Matriz Anual Oficial MEC de 10 columnas por ruta).
-- Implementado el selector de vista: `🏢 Por Empresa (Consolidado)` y `👥 Por Cliente (Segmentado con Subtotales)`.
-- Integrada la exportacion directa a Excel `.xlsx` estructurado como el formato oficial y descarga de PDF ejecutivo para presentacion a Directorio.
+- Tablas calcadas 1:1 con `FORMATO.MEC.BUDGETS.2026.xlsx`:
+  - Sin pestañas ni switches: ambas tablas en la misma pantalla.
+  - Eliminada la columna `Buque` (no existe en el formato MEC).
+  - Columnas exactas: `Ruta | TM Anual | Full load | Nº viajes | P/L x Viaje | Total Gross Margin | % | Dias ocupación | Dias disponibles`.
+- Exportación directa a Excel `.xlsx` y PDF de impresión ejecutiva.
 - Compilado con Vite y desplegado a https://forecast.geeksoft.tech.

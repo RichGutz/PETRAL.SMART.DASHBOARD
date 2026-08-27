@@ -306,7 +306,8 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-26 21:34:00] Documentación Formato MEC Budgets 2026 vs Matriz Financiera:
 - Redactado el archivo `31_Reporte_MEC_Matriz_Matrices.md` en Obsidian.
 
-[2026-08-26 21:46:00] Implementación de Cuadros Oficiales MEC en Maestro de Matrices:
-- Eliminadas las 4 cards antiguas de `/financial-projections`.
-- Desplegados los cuadros oficiales (Bloque 1 Tráfico y Bloque 2 Matriz Anual) con vista Empresa/Cliente y descarga en Excel y PDF.
+[2026-08-26 21:46:00] Implementación 1:1 de Cuadros MEC en Maestro de Matrices:
+- Eliminadas las 4 cards y eliminados los TABs.
+- Cuadros idénticos al Excel: sin columna buque, en una sola pantalla continua.
+- Descarga en Excel `.xlsx` y PDF oficial.
 - Desplegado a https://forecast.geeksoft.tech.
