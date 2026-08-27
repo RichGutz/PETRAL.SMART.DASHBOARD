@@ -218,16 +218,95 @@ Para garantizar un formato de aprobación impecable y compacto que no consuma al
 
 ---
 
-## 5. Tabla de Reglas de Oro para Futuras Pantallas de Reporte
+## 6. Crónica Forense de Commits y Branch Tags (Auditoría 25–27 de Agosto de 2026)
 
-| Parámetro | Valor Correcto | Valor Erróneo / Prohibido | Motivo Técnico |
-|---|---|---|---|
-| **Declaración `@page`** | `size: A4 landscape; margin: 0;` | `size: landscape !important;` | `!important` en descriptores `@page` invalida toda la regla en Blink. |
-| **Margen `@page`** | `margin: 0;` | `margin: 5mm;` o por omisión | Si el margen es > 0, Chromium inyecta `about:blank`, fecha y `1/2`. |
-| **Alto Contenedor A4** | `height: 200mm; max-height: 200mm;` | `height: 210mm;` o `height: 100vh;` | 200mm deja 10mm de buffer contra saltos de página espurios. |
-| **Box Sizing** | `box-sizing: border-box !important;` | `content-box` | Los bordes y paddings se suman al alto y desbordan a página 2. |
-| **Saltos de Página** | `page-break-after: avoid; break-after: avoid;` | Por omisión | Obliga al motor de impresión a mantener todo en 1 solo plano. |
-| **Color del Fondo** | `-webkit-print-color-adjust: exact !important;` | Por omisión | Si se omite, los navegadores eliminan fondos de colores y bordes claros. |
+Para evitar que futuros agentes pierdan el contexto histórico o inventen soluciones ya descartadas, se documenta la cronología pericial completa de los commits, tags y ramas involucradas en la exportación de PDFs:
+
+### 📋 Tabla Maestra de Commits y Tags
+
+| Fecha | Commit / Tag | Rama / Tag | Descripción y Cirugía Aplicada | Comportamiento en Foxit Reader |
+|---|---|---|---|:---:|
+| **25.08.2026** | `05bf857` / `0ef99d7` | `PRE.PDF.PERFECTO.MULTI` | **Baseline Estable Original**: Redacción de la guía `24_Como_imprimir_buenos_pdfs.md`. Layout confinado a `290mm × 200mm`, supresión de headers y `@page { size: A4 landscape; margin: 0; }`. | ⚠️ Diálogo de Chrome se ve echado; al guardar en disco, Foxit puede abrirlo parado según el driver de Windows. |
+| **25.08.2026** | `5a93aa9` | `main` | Intento de exportación binaria en cliente usando librería `html2pdf.js` vía CDN. | ❌ CORS / popup bloqueaba la captura silenciosamente. |
+| **27.08.2026** | `6fe97f1` | `main` | Inserción del nuevo campo comercial `charterHireCost` (Costo Arriendo Naves) en el Multicotizador y en la plantilla del PDF. | ❌ Error involuntario en el DOM: se removieron etiquetas `</div>` en la tarjeta de búnker, rompiendo la grilla. |
+| **27.08.2026** | `cd062ff` | `main` | **Caso 16 Benoit Blanc**: Reparación del árbol DOM, cierre de etiquetas huérfanas y tarjeta permanente de Arriendo Naves arriba de Comments. | ✅ Grilla y tarjeta Arriendo Naves reparadas 100% visualmente. |
+| **27.08.2026** | `0ca40c5` | `main` | **Caso 17 Benoit Blanc**: Retiro de botones redundantes, restauración del descriptor canónico `@page { size: A4 landscape; margin: 0; }` sin `!important`. | ⚠️ Chrome print preview OK, pero archivo guardado en disco persiste parado en Foxit Reader. |
+| **27.08.2026** | `db7bffb` | `main` | Reincorporación de CDN de `html2pdf.js` en `<head>` y botón azul `📥 Descargar PDF Directo (Foxit Ready)`. | ❌ Fallo silencioso de html2pdf en ventana popup. |
+| **27.08.2026** | `ecb1fcb` | `PDF.LANDSCAPE.FOXIT.READY.OK.27.08.26` | Inyección de `id="pdf-content-page"` en el contenedor A4. | ❌ Foxit sigue abriendo en portrait porque `html2pdf.js` no logra instanciar el canvas en el popup y cae a `window.print()`. |
+| **27.08.2026** | `7313c93` | `main` | **Caso 18 Benoit Blanc**: Suspensión formal del caso en `17_El_Metodo_Benoit_Blanc_Detective_de_Bugs_React.md` para iniciar investigación forense profunda. | 🔴 Documentado para resolución definitiva. |
 
 ---
-*Documento guardado para trazabilidad permanente en Obsidian del proyecto PETRAL SMART DASHBOARD.*
+
+## 7. El "Smoking Gun" Físico: Chromium Print Dialog vs Generación Binaria WeasyPrint
+
+### 🕵️‍♂️ ¿Por qué `window.print()` falla al abrir el archivo en Foxit Reader?
+1. **La Trampa de los Drivers de Impresión del Sistema Operativo**:
+   Cuando un usuario ejecuta `window.print()` y selecciona *"Guardar como PDF"*, el motor de renderizado de Chrome delega la generación del archivo al subsistema de impresión del OS. Si el driver predeterminado del sistema tiene asignado *Portrait* por defecto, Chrome puede omitir la rotación física en el diccionario del PDF.
+2. **La Ausencia del Descriptor Físico `/MediaBox`**:
+   Un visor nativo como **Foxit Reader** o **Adobe Acrobat** no lee reglas CSS (`@page`); lee **únicamente los bytes del encabezado PDF**. Si el PDF no contiene explícitamente:
+   $$\text{MediaBox} = [0 \quad 0 \quad 841.89 \quad 595.28] \quad (\text{Ancho } 297\text{mm} \times \text{Alto } 210\text{mm})$$
+   Foxit interpretará la página como vertical ($595.28 \times 841.89\text{ pt}$) y la mostrará parada.
+
+---
+
+### 🧪 La Prueba Pericial del Endpoint Backend WeasyPrint
+
+En el módulo de **Liquidaciones** (`LiquidationsExecutivePdfAudit.tsx`), el equipo resolvió este mismo desafío implementando un endpoint backend en FastAPI:
+* **Archivo Backend**: `backend/api/routers/utils.py`
+* **Endpoint**: `POST /api/v1/utils/generate-pdf`
+* **Motor**: **WeasyPrint** (Librería estándar de Python para renderizado W3C a PDF binario).
+
+#### Evidencia de Medición en Terminal con `pypdf`:
+Se envió una solicitud de prueba con el layout A4 Landscape al servidor de producción (`https://forecast.geeksoft.tech/api/v1/utils/generate-pdf`) y se analizaron los bytes generados:
+
+```text
+========================================================================================
+🔍 ANÁLISIS FORENSE DE MEDIDAS FÍSICAS (pypdf en test_vps_weasyprint.pdf)
+========================================================================================
+STATUS HTTP:             200 OK (5,815 bytes)
+Ancho Físico (Width):    841.889764 pt  -->  297.0000 mm (A4)
+Alto Físico (Height):    595.275591 pt  -->  210.0000 mm (A4)
+Relación de Aspecto:     Width > Height (1.414)
+Orientación Binaria:     LANDSCAPE (100% ECHADO NATIVO INMUTABLE)
+========================================================================================
+```
+
+> 🎯 **Conclusión Pericial**:  
+> Cuando el PDF es generado por **WeasyPrint en el backend**, el binario lleva impreso el `MediaBox` horizontal exacto. **Foxit Reader lo abre 100% echado y horizontal desde el explorador de Windows, sin depender del navegador ni de la configuración de la PC del usuario.**
+
+---
+
+## 8. Arquitectura Definitiva del Exportador Multicotizador (Foxit Ready)
+
+Para blindar la exportación del Multicotizador uniendo la verdad comercial con la orientación física perfecta:
+
+```
+                  PANTALLA MULTICOTIZADOR (Paso 3)
+                  [ Botón: 📄 Exportar PDF ]
+                               │
+                               ▼
+            VENTANA MODAL / SERVICIO EXPORTADOR
+       (MulticotizadorPdfPrintService.buildHtmlDocument)
+                               │
+        ┌──────────────────────┴──────────────────────┐
+        ▼                                             ▼
+  [ 📥 Descargar PDF Oficial ]                  [ 🖨️ Imprimir Navegador ]
+     (Foxit Ready - WeasyPrint)                     (window.print())
+        │                                             │
+        ▼                                             ▼
+  POST /api/v1/utils/generate-pdf               Diálogo nativo de Chrome
+  - Retorna Blob binario 297x210 mm             Para envío directo a
+  - MediaBox [0 0 841.89 595.28]                impresoras de papel.
+  - Foxit lo abre 100% ECHADO.
+```
+
+### 🧩 Elementos Comerciales Integrados en la Plantilla:
+1. **Costo Arriendo Naves (Charter Hire)**: Tarjeta permanente en Columna 1 arriba de *Comments* con desglose numérico `${this.fmtCur(charterHireCost)}`.
+2. **Deducción Financiera**: Fila `(-) Arriendo Nave (Charter)` visible y deducida en la casilla verde de *Voyage Result / P&L*.
+3. **Box de Auditoría y V°B° Comercial**: 4 filas estandarizadas (*Revisado por*, *Fecha*, *Dictamen*, *Firma*).
+4. **Grilla de Tramos e Itinerario**: 19 columnas ejecutivas con badges de estado y muellaje `RF`.
+
+---
+
+*Documento actualizado y sellado para trazabilidad permanente en Obsidian del proyecto PETRAL SMART DASHBOARD — 27 de Agosto de 2026.*
+
