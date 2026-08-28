@@ -270,52 +270,15 @@ export const CommercialForecast: React.FC = () => {
         }));
     };
 
-    const [saveMode, setSaveMode] = useState<'NEW' | 'OVERWRITE'>('NEW');
-    const [targetOverwriteId, setTargetOverwriteId] = useState<string>('');
-
-    const handleOpenSaveModal = async () => {
-        try {
-            const list = await ForecastService.listForecasts();
-            setSavedForecasts(list || []);
-            if (currentForecastId) {
-                setSaveMode('OVERWRITE');
-                setTargetOverwriteId(currentForecastId);
-                const found = (list || []).find((f: any) => f.id === currentForecastId);
-                if (found) setForecastName(found.name);
-            } else {
-                setSaveMode('NEW');
-            }
-        } catch (err) {
-            console.error("Error loading forecast list for save modal", err);
-        }
-        setShowSaveModal(true);
-    };
-
-    const handleSaveForecast = async () => {
-        const isNew = saveMode === 'NEW';
-        const targetId = isNew ? null : (targetOverwriteId || currentForecastId);
-
-        if (isNew && !forecastName.trim()) {
-            alert("Ingrese un nombre para el nuevo escenario");
+    const handleSaveForecast = async (isNew: boolean = false) => {
+        if (!forecastName) {
+            alert("Ingrese un nombre para el forecast");
             return;
         }
-        if (!isNew && !targetId) {
-            alert("Seleccione el escenario que desea sobrescribir");
-            return;
-        }
-
         try {
             setActionLoading('save');
             
-            let finalName = forecastName;
-            if (!isNew && targetId) {
-                const found = savedForecasts.find(f => f.id === targetId);
-                if (found && (!forecastName || forecastName.trim() === '')) {
-                    finalName = found.name;
-                }
-            }
-
-            // Enriquecer cada línea con las variables globales de demurrage para persistencia fiel
+            // Enriquecer cada línea con las variables globales de demurrage para persistencia
             const enrichedLines = projectionLines.map(line => ({
                 ...line,
                 metadata_demurrage_pct: demurragePct,
@@ -328,8 +291,8 @@ export const CommercialForecast: React.FC = () => {
             }));
 
             const payload = {
-                id: targetId,
-                name: finalName || forecastName || "Escenario Comercial",
+                id: isNew ? null : currentForecastId,
+                name: forecastName,
                 user_id: userId,
                 start_date: startDate,
                 end_date: endDate,
@@ -337,11 +300,10 @@ export const CommercialForecast: React.FC = () => {
             };
             const result = await ForecastService.saveForecast(payload);
             setCurrentForecastId(result.id);
-            setLoadedAuthor(userId);
-            setForecastName(finalName || forecastName);
+            setLoadedAuthor(userId); // Ahora somos los dueños
             setShowSaveModal(false);
         } catch(e) {
-            alert("Error al guardar el escenario");
+            alert("Error al guardar el forecast");
         } finally {
             setActionLoading('none');
         }
@@ -351,7 +313,7 @@ export const CommercialForecast: React.FC = () => {
         try {
             setActionLoading('loadList');
             const list = await ForecastService.listForecasts();
-            setSavedForecasts(list || []);
+            setSavedForecasts(list);
             setShowLoadModal(true);
         } catch(e) {
             alert("Error al cargar la lista de forecasts");
@@ -369,9 +331,6 @@ export const CommercialForecast: React.FC = () => {
             const newEndDate = loadedData.end_date || endDate;
             setStartDate(newStartDate);
             setEndDate(newEndDate);
-            setCurrentForecastId(loadedData.id);
-            setForecastName(loadedData.name || '');
-            setLoadedAuthor(loadedData.user_id || '');
             
             const loadedLines = loadedData.projection_lines || [];
             if (loadedLines.length > 0) {
@@ -399,7 +358,7 @@ export const CommercialForecast: React.FC = () => {
                 }
             }
 
-            // Limpiar las líneas de metadatos y normalizar tipos numéricos (respetando 0 viajes)
+            // Limpiar las líneas de metadatos y normalizar tipos numéricos
             const cleanedLines = loadedLines.map((line: any) => {
                 const {
                     metadata_demurrage_pct,
@@ -411,10 +370,11 @@ export const CommercialForecast: React.FC = () => {
                     metadata_custom_demurrage_days,
                     ...rest
                 } = line;
+                // Normalizar campos numéricos que podrían venir como strings desde la BD
                 return {
                     ...rest,
                     quantity: parseFloat(rest.quantity) || 0,
-                    monthly_frequency: (rest.monthly_frequency !== undefined && rest.monthly_frequency !== null && !isNaN(Number(rest.monthly_frequency))) ? Number(rest.monthly_frequency) : 1,
+                    monthly_frequency: parseFloat(rest.monthly_frequency) || 1,
                     custom_tariff: rest.custom_tariff != null ? parseFloat(rest.custom_tariff) : undefined,
                     forecast_bunker_price_ifo: rest.forecast_bunker_price_ifo != null ? parseFloat(rest.forecast_bunker_price_ifo) : undefined,
                     forecast_bunker_price_mdo: rest.forecast_bunker_price_mdo != null ? parseFloat(rest.forecast_bunker_price_mdo) : undefined,
@@ -585,7 +545,7 @@ export const CommercialForecast: React.FC = () => {
                             activeTab !== 'ledger' && activeTab !== 'ledger_universal' && activeTab !== 'multicotizador_excel' && (
                                 <>
                                     <div className="flex items-center gap-2 w-full justify-end">
-                                        <button onClick={handleOpenSaveModal} className="flex items-center justify-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white h-7.5 px-4 rounded-lg font-extrabold text-[11px] transition-all shadow-2xs cursor-pointer">
+                                        <button onClick={() => setShowSaveModal(true)} className="flex items-center justify-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white h-7.5 px-4 rounded-lg font-extrabold text-[11px] transition-all shadow-2xs cursor-pointer">
                                             <Save size={14} /> Guardar
                                         </button>
                                         <button 
@@ -671,152 +631,43 @@ export const CommercialForecast: React.FC = () => {
                 )}
             </main>
 
-            {/* Save Modal (APEFAC Enterprise Light - Look & Feel Multicotizador) */}
+            {/* Save Modal */}
             {showSaveModal && activeTab !== 'multicotizador_excel' && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg w-96 shadow-xl relative">
+                        <button onClick={() => setShowSaveModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={20}/></button>
+                        <h3 className="text-lg font-bold text-slate-800 mb-4">Guardar Escenario</h3>
                         
-                        {/* Header */}
-                        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-black text-xs shadow-2xs">
-                                    💾
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Guardar Escenario Comercial</h3>
-                                    <p className="text-[11px] text-slate-500 font-medium">Persistencia integral de matriz, viajes y demoras</p>
-                                </div>
+                        <div className="flex flex-col gap-4">
+                            <div>
+                                <label className="text-sm font-semibold text-slate-600 mb-1 block">Nombre del Forecast</label>
+                                <input type="text" value={forecastName} onChange={(e) => setForecastName(e.target.value)} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-petral-teal focus:outline-none" placeholder="Ej. Escenario Conservador H2" />
                             </div>
-                            <button 
-                                onClick={() => setShowSaveModal(false)} 
-                                className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors"
-                            >
-                                <X size={16}/>
-                            </button>
-                        </div>
-                        
-                        <div className="p-5 flex flex-col gap-4">
-                            
-                            {/* Selector de Modalidad: Nuevo vs Sobrescribir */}
-                            <div className="grid grid-cols-2 gap-2.5">
-                                <button
-                                    type="button"
-                                    onClick={() => setSaveMode('NEW')}
-                                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 ${saveMode === 'NEW' ? 'bg-sky-50 border-sky-300 ring-2 ring-sky-500/20 shadow-2xs' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${saveMode === 'NEW' ? 'border-sky-600 bg-sky-600' : 'border-slate-300'}`}>
-                                            {saveMode === 'NEW' && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
-                                        </div>
-                                        <span className="text-xs font-black text-slate-800">Nuevo Escenario</span>
-                                    </div>
-                                    <span className="text-[10px] text-slate-500 pl-5.5 font-medium">Crear registro independiente</span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setSaveMode('OVERWRITE');
-                                        if (savedForecasts.length > 0 && !targetOverwriteId) {
-                                            setTargetOverwriteId(currentForecastId || savedForecasts[0].id);
-                                            const found = savedForecasts.find(f => f.id === (currentForecastId || savedForecasts[0].id));
-                                            if (found) setForecastName(found.name);
-                                        }
-                                    }}
-                                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 ${saveMode === 'OVERWRITE' ? 'bg-amber-50 border-amber-300 ring-2 ring-amber-500/20 shadow-2xs' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${saveMode === 'OVERWRITE' ? 'border-amber-600 bg-amber-600' : 'border-slate-300'}`}>
-                                            {saveMode === 'OVERWRITE' && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
-                                        </div>
-                                        <span className="text-xs font-black text-slate-800">Sobrescribir</span>
-                                    </div>
-                                    <span className="text-[10px] text-slate-500 pl-5.5 font-medium">Actualizar existente en BD</span>
-                                </button>
+                            <div>
+                                <label className="text-sm font-semibold text-slate-600 mb-1 block">Usuario / Autor</label>
+                                <input type="text" value={userId} onChange={(e) => setUserId(e.target.value)} className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-slate-50 focus:outline-none" />
                             </div>
-
-                            {/* Campo de Selección en modo Sobrescribir */}
-                            {saveMode === 'OVERWRITE' && (
-                                <div className="flex flex-col gap-1.5 bg-amber-50/60 border border-amber-200 rounded-xl p-3">
-                                    <label className="text-[10.5px] font-black text-amber-900 uppercase tracking-tight">Escenario a Sobrescribir:</label>
-                                    <select
-                                        value={targetOverwriteId}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            setTargetOverwriteId(val);
-                                            const found = savedForecasts.find(f => f.id === val);
-                                            if (found) setForecastName(found.name);
-                                        }}
-                                        className="h-8 text-xs font-bold border border-amber-300 rounded-lg px-2.5 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer shadow-2xs"
-                                    >
-                                        {savedForecasts.map(f => (
-                                            <option key={f.id} value={f.id}>
-                                                {f.name} ({f.start_date} ~ {f.end_date})
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
-
-                            {/* Nombre del Forecast */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[10.5px] font-black text-slate-700 uppercase tracking-tight">Nombre del Escenario / Versión</label>
-                                <input 
-                                    type="text" 
-                                    value={forecastName} 
-                                    onChange={(e) => setForecastName(e.target.value)} 
-                                    className="w-full h-8 border border-slate-200 rounded-lg px-3 text-xs font-bold text-slate-800 focus:border-sky-500 focus:outline-none shadow-2xs" 
-                                    placeholder="Ej. Escenario Base 2026 H2" 
-                                />
-                            </div>
-
-                            {/* Usuario / Autor */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[10.5px] font-black text-slate-700 uppercase tracking-tight">Usuario / Autor</label>
-                                <input 
-                                    type="text" 
-                                    value={userId} 
-                                    onChange={(e) => setUserId(e.target.value)} 
-                                    className="w-full h-8 border border-slate-200 rounded-lg px-3 text-xs font-bold text-slate-700 bg-slate-50 focus:outline-none shadow-2xs" 
-                                />
-                            </div>
-
-                            {/* Acciones */}
-                            <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                            <div className="flex flex-col gap-2 mt-2">
                                 <button 
-                                    type="button"
-                                    onClick={() => setShowSaveModal(false)}
-                                    className="flex-1 h-8 rounded-lg font-bold text-xs text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                                <button 
-                                    type="button"
-                                    onClick={handleSaveForecast} 
+                                    onClick={() => handleSaveForecast(true)} 
                                     disabled={actionLoading === 'save'}
-                                    className={`relative overflow-hidden flex-1 h-8 rounded-lg font-black text-xs text-white transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 ${
-                                        actionLoading === 'save' 
-                                            ? 'bg-slate-400 cursor-not-allowed' 
-                                            : saveMode === 'OVERWRITE' 
-                                                ? 'bg-amber-600 hover:bg-amber-700' 
-                                                : 'bg-sky-600 hover:bg-sky-700'
-                                    }`}
+                                    className={`relative overflow-hidden w-full font-bold py-2 rounded-full transition-colors ${actionLoading === 'save' ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-petral-teal hover:bg-teal-600 text-white shadow-md'}`}
                                 >
                                     {actionLoading === 'save' && <div className="absolute inset-0 bg-white/20 animate-pulse" style={{ width: '100%' }}></div>}
-                                    <span className="relative z-10 flex items-center justify-center gap-1.5">
-                                        {actionLoading === 'save' ? (
-                                            <>
-                                                <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></div>
-                                                <span>Guardando...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Save size={13} />
-                                                <span>{saveMode === 'OVERWRITE' ? 'Sobrescribir Escenario' : 'Guardar Nuevo'}</span>
-                                            </>
-                                        )}
+                                    <span className="relative z-10 flex items-center justify-center gap-2">
+                                        {actionLoading === 'save' ? 'Procesando...' : 'Guardar Nuevo (Clonar)'}
                                     </span>
                                 </button>
+                                
+                                {currentForecastId && (loadedAuthor === userId || !loadedAuthor) && (
+                                    <button 
+                                        onClick={() => handleSaveForecast(false)} 
+                                        disabled={actionLoading === 'save'}
+                                        className={`w-full font-bold py-2 rounded-full transition-colors text-sm border-2 ${actionLoading === 'save' ? 'border-slate-200 text-slate-400 cursor-not-allowed' : 'border-slate-300 text-slate-600 hover:border-petral-teal hover:text-petral-teal'}`}
+                                    >
+                                        Sobrescribir Mi Escenario
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

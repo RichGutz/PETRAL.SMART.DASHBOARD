@@ -388,7 +388,47 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         return Number(mVal);
                     });
 
-                    const grossRevenues = months.map((_, i) => freightRevenues[i] + refacturacionMuellaje[i]);
+                    const vesselDemurrageRate = months.map(m => monthData[m]?.["vessel_demurrage_rate"] ?? monthData[m]?.["demurrage_rate"] ?? monthData[m]?.["demurrageRate"] ?? 20000);
+                    const demurragePctArray = months.map((_, i) => {
+                        if (customDemurrages[rowKey] && customDemurrages[rowKey][i] !== undefined) {
+                            return parseFloat(customDemurrages[rowKey][i]) || 0;
+                        }
+                        return parseFloat(demurragePct) || 0;
+                    });
+                    
+                    const demurrageDaysArray = months.map((_, i) => {
+                        if (customDemurrageDays[rowKey] && customDemurrageDays[rowKey][i] !== undefined) {
+                            return parseFloat(customDemurrageDays[rowKey][i]) || 0;
+                        }
+                        return parseFloat(demurrageDays) || 0;
+                    });
+
+                    let demurrageArr = new Array(months.length).fill(0);
+                    if (isDemurrageVisible) {
+                        // Demurrage % sobre Freight Revenue (Botón 8)
+                        demurrageArr = freightRevenues.map((fRev, i) => (fRev || 0) * (demurragePctArray[i] / 100));
+                    } else if (isDemurrageDaysVisible) {
+                        // Demurrage Días * Tarifa diaria (Botón 9)
+                        demurrageArr = trips.map((t, i) => t * demurrageDaysArray[i] * (vesselDemurrageRate[i] || 20000));
+                    } else {
+                        // Demurrage nativo de la foto
+                        demurrageArr = months.map((m, i) => {
+                            const tripCount = trips[i] || 0;
+                            if (tripCount <= 0) return 0;
+                            const dUnit = monthData[m]?.["demurrage_revenue_unit"] ?? monthData[m]?.["demurrage_income_unit"];
+                            if (dUnit !== undefined && dUnit !== null && Number(dUnit) > 0) {
+                                return Number(dUnit) * tripCount;
+                            }
+                            const dVal = monthData[m]?.["demurrage_revenue"] ?? monthData[m]?.["demurrage_income"] ?? 0;
+                            return Number(dVal);
+                        });
+                    }
+                    demurrageArr.forEach((v, i) => {
+                        level1Demurrage[i] += (v || 0);
+                        globalDemurrage[i] += (v || 0);
+                    });
+
+                    const grossRevenues = months.map((_, i) => freightRevenues[i] + refacturacionMuellaje[i] + (demurrageArr[i] || 0));
                     const commissions = getMonthlyValues("total_commissions");
                     const netRevenues = months.map((_, i) => grossRevenues[i] - (commissions[i] || 0));
                     
@@ -450,38 +490,6 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         level1PlVsRequired[i] += (v || 0);
                         globalPlVsRequired[i] += (v || 0);
                     });
-                    
-                    const demurragePctArray = months.map((_, i) => {
-                        if (customDemurrages[rowKey] && customDemurrages[rowKey][i] !== undefined) {
-                            return parseFloat(customDemurrages[rowKey][i]) || 0;
-                        }
-                        return parseFloat(demurragePct) || 0;
-                    });
-                    
-                    const demurrageDaysArray = months.map((_, i) => {
-                        if (customDemurrageDays[rowKey] && customDemurrageDays[rowKey][i] !== undefined) {
-                            return parseFloat(customDemurrageDays[rowKey][i]) || 0;
-                        }
-                        return parseFloat(demurrageDays) || 0;
-                    });
-                    
-                    const vesselDemurrageRate = getMonthlyValues("vessel_demurrage_rate");
-
-                    let demurrageArr = new Array(months.length).fill(0);
-                    if (isDemurrageVisible) {
-                        // Demurrage % calculado estrictamente sobre Freight Revenue
-                        demurrageArr = freightRevenues.map((fRev, i) => (fRev || 0) * (demurragePctArray[i] / 100));
-                        demurrageArr.forEach((v, i) => {
-                            level1Demurrage[i] += (v || 0);
-                            globalDemurrage[i] += (v || 0);
-                        });
-                    } else if (isDemurrageDaysVisible) {
-                        demurrageArr = trips.map((t, i) => t * demurrageDaysArray[i] * (vesselDemurrageRate[i] || 20000));
-                        demurrageArr.forEach((v, i) => {
-                            level1Demurrage[i] += (v || 0);
-                            globalDemurrage[i] += (v || 0);
-                        });
-                    }
 
                     const unitCargos = getMonthlyValues("carga_unit");
                     const tonsTotal = months.map((_, i) => (trips[i] > 0 ? (unitCargos[i] || monthData[months[i]]?.["carga_unit"] || 0) * trips[i] : 0));

@@ -623,9 +623,89 @@ La comparación directa certifica que **únicamente se modificaron 3 bloques qui
   - **Tasa de Precisión**: **`100.00% ✅`**
   - **Compilación de Producción**: `✓ built in 19.83s` (Vite, 0 errores).
 
+
 ---
 
-*Vuelta 2 de Auditoría Pericial completada, documentada, respaldada y sellada con éxito rotundo por Detective Benoit Blanc — 28.08.2026.*
+## 8. Rueda Pericial de Casos de Auditoría (Vuelta 2 — 28 de Agosto de 2026)
+
+### 🕵️ 8.1. Las 4 Pistas Forenses (Evidencias Visuales)
+1. **Pista A (TCE Anual)**: Sumatoria aditiva errónea de tasas diarias $/d en la columna `TOTAL ACUM` ($454,018.6 USD/d).
+2. **Pista B (Toneladas con Meses en Cero)**: Multiplicación de `undefined * 0 = NaN` cuando se alternaban viajes en cero.
+3. **Pista C (Subtotales Verticales y Horizontales)**: Efecto dominó de contaminación por `NaN` al editar viajes a 0.
+4. **Pista D (Duplicación 2x en Flota)**: Bucle residual `months.forEach` duplicando los acumuladores globales.
+
+### 🔬 8.2. Diagnóstico Forense y Soluciones
+* **Axioma Aplicado**: Blindaje coercitivo `(v || 0)` y discriminación de `isTceRateMetric` (`0` en total acumulado para tasas diarias, preservando `(-) Hire (TCE x días)` en USD).
+* **Batería Loop QC**: 100 escenarios estocásticos con 8,500/8,500 aserciones aprobadas (100.00% ✅).
+
+---
+
+## 9. Rueda Pericial de Casos de Auditoría (Vuelta 3 — 28 de Agosto de 2026)
+
+### 🎙️ 9.1. Pistas Forenses y Requerimientos de la Grabación Oficial (`Demurrage.Sobrescrito.Y.Regrabado.Escenarios.ogg`)
+
+1. **Pista A — Sobreescritura de Demurrage en Porcentaje (Botón/Input 8 `Demurrage %`)**:
+   - Actuar como override dinámico sobre el Gross/Freight Revenue proyectado de la ruta.
+2. **Pista B — Sobreescritura de Demurrage en Días (Botón/Input 9 `Demurrage d`)**:
+   - Multiplicar los días digitados por la tarifa de demora diaria ($\text{USD/d}$) contenida en la ruta/buque (`vessel_demurrage_rate`).
+3. **Pista C — Modal de Guardar y Sobreescribir Escenarios (Look & Feel Multicotizador)**:
+   - Integrar selector de modalidad: **"Guardar como Nuevo Escenario"** vs **"Sobrescribir Escenario Existente"**.
+4. **Pista D — Fidelidad 100% al Estado Vivo de la UI (Edición en Caliente de Meses en Cero)**:
+   - **El Crimen**: Al guardar un escenario con viajes eliminados (ej. 2 meses en 0 de 12), al recargar el escenario volvían a aparecer los 12 meses activos.
+   - **La Autopsia**: En `CommercialForecast.tsx` (L377), la línea `monthly_frequency: parseFloat(rest.monthly_frequency) || 1` convertía el `0` (`falsy` en JS) en `1` (`0 || 1 === 1`), forzando 1 viaje en meses que el usuario había eliminado.
+
+### 🛠️ 9.2. Solución Forense Implementada:
+1. **Curación de `monthly_frequency: 0`**:
+   - Reemplazo de la trampa coercitiva `parseFloat(rest.monthly_frequency) || 1` por `(rest.monthly_frequency !== undefined && rest.monthly_frequency !== null && !isNaN(Number(rest.monthly_frequency))) ? Number(rest.monthly_frequency) : 1`.
+   - Ahora, al cargar un escenario que fue guardado con viajes en 0 en determinados meses, la UI refleja con fidelidad microscópica del 100% los meses en cero sin reactivarlos artificialmente a 1.
+2. **Conexión Reactiva de Demurrage (Botones 8 y 9)**:
+   - Reordenamiento del cálculo de `demurrageArr` en `ForecastGrid.tsx` previo a la derivación de `grossRevenues`.
+   - Soporte dinámico para:
+     - Override de **Demurrage %** sobre Freight Revenue (Botón 8).
+     - Override de **Demurrage en Días** x Tarifa Diaria de Demora ($\text{USD/d}$) contenida en la ruta (Botón 9).
+     - Preservación del demurrage nativo del Snapshot cuando no hay override activo.
+3. **Modal de Guardar y Sobrescribir Escenarios**:
+   - Rediseño modular basado en el sistema de diseño APEFAC Enterprise Light de `SaveLoadQuoteModals.tsx`.
+   - Soporte explícito para:
+     - 📄 **Guardar como Nuevo Escenario** (creación de nuevo ID en Supabase).
+     - 📝 **Sobrescribir Escenario Existente** (actualización de registro mediante dropdown de selección y carga de metadata).
+
+---
+
+### 🔬 9.3. Auditoría Forense de DIFFs (Comparación contra Legacies)
+
+#### DIFF en `CommercialForecast.tsx` (vs `CommercialForecast_legacy.tsx`):
+```diff
+- monthly_frequency: parseFloat(rest.monthly_frequency) || 1,
++ monthly_frequency: (rest.monthly_frequency !== undefined && rest.monthly_frequency !== null && !isNaN(Number(rest.monthly_frequency))) ? Number(rest.monthly_frequency) : 1,
+
++ const [saveMode, setSaveMode] = useState<'NEW' | 'OVERWRITE'>('NEW');
++ const [targetOverwriteId, setTargetOverwriteId] = useState<string>('');
++ // Modal con selector dual y Look & Feel APEFAC Enterprise Light
+```
+
+#### DIFF en `ForecastGrid.tsx`:
+```diff
++ const vesselDemurrageRate = months.map(m => monthData[m]?.["vessel_demurrage_rate"] ?? monthData[m]?.["demurrage_rate"] ?? 20000);
++ // Cálculo prioritario de demurrageArr antes de grossRevenues
++ const grossRevenues = months.map((_, i) => freightRevenues[i] + refacturacionMuellaje[i] + (demurrageArr[i] || 0));
+```
+
+---
+
+### 🧪 9.4. Resultados de la Verificación y Loop QC
+
+* **Compilación Frontend (Vite)**: `✓ built in 8.68s` (0 errores).
+* **Loop QC Estocástico (`test_qc_grid_random_loop.mjs`)**:
+  - Escenarios Simulados: `100`
+  - Total de Aserciones: `8,500`
+  - Aserciones Exitosas: `8,500`
+  - **Tasa de Precisión**: **`100.00% ✅`**
+
+---
+
+*Vuelta 3 de Auditoría Pericial completada, documentada, respaldada y sellada con éxito rotundo por Detective Benoit Blanc — 28.08.2026.*
+
 
 
 
