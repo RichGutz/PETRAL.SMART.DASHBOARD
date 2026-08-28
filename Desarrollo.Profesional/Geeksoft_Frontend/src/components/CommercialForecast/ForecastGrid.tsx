@@ -419,33 +419,36 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     });
                     const tceDiff = months.map((_, i) => (trips[i] > 0 ? (tceReal[i] - (tceReq[i] || 13000)) : 0));
 
+                    trips.forEach((v, i) => {
+                        globalTrips[i] += (v || 0);
+                    });
                     freightRevenues.forEach((v, i) => {
-                        level1FreightRevenue[i] += v;
-                        globalFreightRevenues[i] += v;
+                        level1FreightRevenue[i] += (v || 0);
+                        globalFreightRevenues[i] += (v || 0);
                     });
                     grossRevenues.forEach((v, i) => {
-                        level1GrossRevenue[i] += v;
-                        globalRevenues[i] += v;
+                        level1GrossRevenue[i] += (v || 0);
+                        globalRevenues[i] += (v || 0);
                     });
                     portCostsTotal.forEach((v, i) => {
-                        level1PortCosts[i] += v;
-                        globalPortCosts[i] += v;
+                        level1PortCosts[i] += (v || 0);
+                        globalPortCosts[i] += (v || 0);
                     });
                     bunker.forEach((v, i) => {
-                        level1BunkerCosts[i] += v;
-                        globalBunkerCosts[i] += v;
+                        level1BunkerCosts[i] += (v || 0);
+                        globalBunkerCosts[i] += (v || 0);
                     });
                     charterHireCosts.forEach((v, i) => {
-                        level1CharterHire[i] += v;
-                        globalCharterHire[i] += v;
+                        level1CharterHire[i] += (v || 0);
+                        globalCharterHire[i] += (v || 0);
                     });
                     voyageResult.forEach((v, i) => {
-                        level1VoyageResult[i] += v;
-                        globalVoyageResult[i] += v;
+                        level1VoyageResult[i] += (v || 0);
+                        globalVoyageResult[i] += (v || 0);
                     });
                     plVsRequired.forEach((v, i) => {
-                        level1PlVsRequired[i] += v;
-                        globalPlVsRequired[i] += v;
+                        level1PlVsRequired[i] += (v || 0);
+                        globalPlVsRequired[i] += (v || 0);
                     });
                     
                     const demurragePctArray = months.map((_, i) => {
@@ -468,20 +471,29 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     if (isDemurrageVisible) {
                         // Demurrage % calculado estrictamente sobre Freight Revenue
                         demurrageArr = freightRevenues.map((fRev, i) => (fRev || 0) * (demurragePctArray[i] / 100));
-                        demurrageArr.forEach((v, i) => level1Demurrage[i] += v);
+                        demurrageArr.forEach((v, i) => {
+                            level1Demurrage[i] += (v || 0);
+                            globalDemurrage[i] += (v || 0);
+                        });
                     } else if (isDemurrageDaysVisible) {
                         demurrageArr = trips.map((t, i) => t * demurrageDaysArray[i] * (vesselDemurrageRate[i] || 20000));
-                        demurrageArr.forEach((v, i) => level1Demurrage[i] += v);
+                        demurrageArr.forEach((v, i) => {
+                            level1Demurrage[i] += (v || 0);
+                            globalDemurrage[i] += (v || 0);
+                        });
                     }
 
                     const unitCargos = getMonthlyValues("carga_unit");
-                    const tonsTotal = months.map((_, i) => unitCargos[i] * trips[i]);
-                    tonsTotal.forEach((v, i) => level1TonsTotal[i] += v);
+                    const tonsTotal = months.map((_, i) => (trips[i] > 0 ? (unitCargos[i] || monthData[months[i]]?.["carga_unit"] || 0) * trips[i] : 0));
+                    tonsTotal.forEach((v, i) => {
+                        level1TonsTotal[i] += (v || 0);
+                        globalTons[i] += (v || 0);
+                    });
 
                     const nodeShipDays = months.map((_, i) => (trips[i] > 0 ? (totalDaysArr[i] || 0) * trips[i] : 0));
                     nodeShipDays.forEach((v, i) => {
-                        level1ShipDays[i] += v;
-                        globalShipDays[i] += v;
+                        level1ShipDays[i] += (v || 0);
+                        globalShipDays[i] += (v || 0);
                     });
 
                     const calcPct = (arr: number[]) => arr.map((v, i) => grossRevenues[i] ? (v / grossRevenues[i]) * 100 : 0);
@@ -754,17 +766,6 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 });
                             });
                         }
-                    });
-
-                    months.forEach((_, i) => {
-                        globalTrips[i] += trips[i] || 0;
-                        globalTons[i] += tonsTotal[i] || 0;
-                        globalRevenues[i] += grossRevenues[i] || 0;
-                        globalPortCosts[i] += portCosts[i] || 0;
-                        globalBunkerCosts[i] += bunker[i] || 0;
-                        globalVoyageResult[i] += voyageResult[i] || 0;
-                        globalPlVsRequired[i] += plVsRequired[i] || 0;
-                        globalDemurrage[i] += demurrageArr[i] || 0;
                     });
 
                     isFirstLevel2Row = false;
@@ -1324,13 +1325,16 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                         .filter(({ m }) => !hiddenMonths.includes(m))
                                         .map(({ i }) => i);
                                     const isYieldMetric = row.metric.name.includes("Flete") || row.metric.name.includes("Yield") || row.metric.name.includes("Tarifa");
-                                    const visibleValues = visibleIndices.map(i => row.metric.values[i] ?? 0).filter(v => v !== null);
+                                    const isTceMetric = row.metric.isExpandableTce || row.metric.isTceDay || row.metric.isTceDiff || row.metric.name.includes("TCE");
+                                    const visibleValues = visibleIndices.map(i => row.metric.values[i] ?? 0).filter(v => v !== null && !isNaN(v));
                                     const isAccumMetric = row.metric.globalType === 'accum';
-                                    const visibleTotal = isAccumMetric
-                                        ? (visibleValues.length > 0 ? visibleValues[visibleValues.length - 1] : 0)
-                                        : isYieldMetric
-                                            ? (visibleValues.length > 0 ? visibleValues.reduce((a, b) => a + b, 0) / visibleValues.length : 0)
-                                            : visibleValues.reduce((a, b) => a + b, 0);
+                                    const visibleTotal = isTceMetric
+                                        ? 0
+                                        : isAccumMetric
+                                            ? (visibleValues.length > 0 ? visibleValues[visibleValues.length - 1] : 0)
+                                            : isYieldMetric
+                                                ? (visibleValues.length > 0 ? visibleValues.reduce((a, b) => a + b, 0) / visibleValues.length : 0)
+                                                : visibleValues.reduce((a, b) => a + b, 0);
 
                                     return row.metric.isCurrency ? (
                                         <div className="flex items-center justify-end w-full min-w-[50px]">

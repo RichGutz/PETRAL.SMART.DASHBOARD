@@ -397,3 +397,7 @@ TAREAS Y MODIFICACIONES REALIZADAS:
   - Columnas exactas: `Ruta | TM Anual | Full load | Nº viajes | P/L x Viaje | Total Gross Margin | % | Dias ocupación | Dias disponibles`.
 - Exportación directa a Excel `.xlsx` y PDF de impresión ejecutiva.
 - Compilado con Vite y desplegado a https://forecast.geeksoft.tech.
+[2026-08-28 09:17:53] Inicio de sesion de trabajo 28.08.26. Creacion de Tag y Branch TAG.28.08.26.I y push a origin.
+[2026-08-28 09:40:28] Resolucion quirurgica de Casos 1-4 en Matriz PETRAL (ForecastGrid.tsx), respaldo legacy creado, vite build OK y documentacion en nota 28 de Obsidian.
+[2026-08-28 09:44:38] Bateria Loop QC Estocastica (100 escenarios, 8500 aserciones, 100% exitoso) completada y documentada en nota 28 de Obsidian.
+[2026-08-28 09:47:14] Documentacion forense completa de la Vuelta 2 finalizada y sellada en 28_Metodo_Benoit_Blanc_FINALE_Matriz_Financiera.md.
