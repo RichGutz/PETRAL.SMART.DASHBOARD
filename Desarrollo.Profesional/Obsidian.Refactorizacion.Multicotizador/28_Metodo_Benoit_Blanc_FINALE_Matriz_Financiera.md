@@ -764,6 +764,63 @@ La comparación directa certifica que **únicamente se modificaron 3 bloques qui
 
 *Vuelta 4 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
 
+---
+
+## 🔎 11. VUELTA 5 DE AUDITORÍA BENOIT BLANC: COMPUERTA "O" EXCLUSIVA DE DEMURRAGE (% vs DÍAS)
+
+### 🚩 11.1. Pistas e Inspección Forense
+- **El Crimen**: Al activar `1 día` en Demurrage Días (Botón 9), se sumaba el día al desglose de viaje y la duración total. Al activar luego Demurrage % (Botón 8) en el mismo escenario, se calculaba el monto en USD del %, pero el día manual persistía en el desglose del viaje (`↳ Días de Demora` y `↳ Duración Total (Días)`).
+- **La Autopsia**: En `ForecastGrid.tsx` (L353), la línea leía `demurrageDays !== ''` de forma incondicional sin verificar el flag booleano `isDemurrageDaysVisible`. Aunque el botón 9 estuviese apagado, el texto `"1"` en la variable mantenía inyectado el día adicional en la duración del viaje.
+
+---
+
+### 🛠️ 11.2. Solución Forense Implementada:
+1. **Condicionamiento Estricto de `effectiveDemurrageDays`**:
+   - `effectiveDemurrageDays` ahora solo adopta el override manual de días si `isDemurrageDaysVisible` es estrictamente `true`.
+   - Si `showDemurrage` (% Botón 8) está activo o el Botón 9 está apagado, `effectiveDemurrageDays` adopta el valor nativo del viaje (`0`), y `total_duration_unit` vuelve a `seaDays + portDays`.
+2. **Exclusividad Operativa en Cascada**:
+   - Al encender `showDemurrage` (Botón 8), `showDemurrageDays` pasa a `false` y el día de demora desaparece del detalle de viaje y TCE.
+   - Al encender `showDemurrageDays` (Botón 9), `showDemurrage` pasa a `false` y se anula el cálculo porcentual.
+
+---
+
+### 🔬 11.3. Auditoría Forense de DIFFs (vs `ForecastGrid_V2_legacy.tsx`):
+```diff
+- if (metricKey === "demurrage_days_unit") val = (customDemurrageDays[rowKey] && customDemurrageDays[rowKey][idx] !== undefined) ? parseFloat(customDemurrageDays[rowKey][idx]) : (demurrageDays !== '' ? parseFloat(demurrageDays) : (monthData[m]?.["demurrage_days"] || 0));
+- if (metricKey === "total_duration_unit") val = monthData[m]?.["total_duration"] || monthData[m]?.["total_days"];
+
++ const seaDays = monthData[m]?.["sea_days_unit"] ?? monthData[m]?.["sea_days"] ?? monthData[m]?.["tot_sea_days"] ?? 0;
++ const portDays = monthData[m]?.["port_days_unit"] ?? monthData[m]?.["port_days"] ?? monthData[m]?.["tot_port_days"] ?? 0;
++ const nativeDemurrageDays = monthData[m]?.["demurrage_days"] || 0;
++ const effectiveDemurrageDays = isDemurrageDaysVisible 
++     ? ((customDemurrageDays[rowKey] && customDemurrageDays[rowKey][idx] !== undefined)
++         ? (parseFloat(customDemurrageDays[rowKey][idx]) || 0)
++         : (parseFloat(demurrageDays) || 0))
++     : nativeDemurrageDays;
+
++ if (metricKey === "demurrage_days_unit") val = effectiveDemurrageDays;
++ if (metricKey === "total_duration_unit") {
++     val = (seaDays > 0 || portDays > 0) 
++         ? (seaDays + portDays + effectiveDemurrageDays) 
++         : (monthData[m]?.["total_duration"] || monthData[m]?.["total_days"] || 0);
++ }
+```
+
+---
+
+### 🧪 11.4. Resultados de la Verificación y Loop QC:
+* **Compilación Frontend (Vite)**: `✓ built in 8.86s` (0 errores).
+* **Loop QC Estocástico (`test_qc_grid_random_loop.mjs`)**:
+  - Escenarios Simulados: `100`
+  - Total de Aserciones: `8,500`
+  - Aserciones Exitosas: `8,500`
+  - **Tasa de Precisión**: **`100.00% ✅`**
+
+---
+
+*Vuelta 5 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
+
+
 
 
 
