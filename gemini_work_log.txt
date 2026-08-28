@@ -460,3 +460,4 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-28 09:44:38] Loop QC estocastico completado: 8,500/8,500 aserciones matematicas aprobadas (100.00% precision). Nota 28 de Obsidian actualizada.
 [2026-08-28 09:47:14] Documentacion forense completa de la Vuelta 2 (Pistas A-D, Diagnostico JS, DIFF Legacy y Loop QC Estocastico) sellada en documento 28.
 [2026-08-28 09:53:32] Despliegue completado con exito al VPS (91.108.125.253). Frontend y Backend en vivo en https://forecast.geeksoft.tech.
+[2026-08-28 10:00:18] Total de Hire en USD restaurado y desplegado al VPS. Métricas de tasa diaria TCE ($/d) se mantienen en 0/-.
