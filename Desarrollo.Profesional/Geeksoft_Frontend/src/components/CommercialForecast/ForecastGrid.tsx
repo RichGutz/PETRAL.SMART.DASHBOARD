@@ -1325,10 +1325,10 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                         .filter(({ m }) => !hiddenMonths.includes(m))
                                         .map(({ i }) => i);
                                     const isYieldMetric = row.metric.name.includes("Flete") || row.metric.name.includes("Yield") || row.metric.name.includes("Tarifa");
-                                    const isTceMetric = row.metric.isExpandableTce || row.metric.isTceDay || row.metric.isTceDiff || row.metric.name.includes("TCE");
+                                    const isTceRateMetric = row.metric.isExpandableTce || row.metric.isTceDay || row.metric.isTceDiff || row.metric.name.includes("Métricas TCE") || (row.metric.name.includes("TCE") && row.metric.name.includes("$/d"));
                                     const visibleValues = visibleIndices.map(i => row.metric.values[i] ?? 0).filter(v => v !== null && !isNaN(v));
                                     const isAccumMetric = row.metric.globalType === 'accum';
-                                    const visibleTotal = isTceMetric
+                                    const visibleTotal = isTceRateMetric
                                         ? 0
                                         : isAccumMetric
                                             ? (visibleValues.length > 0 ? visibleValues[visibleValues.length - 1] : 0)

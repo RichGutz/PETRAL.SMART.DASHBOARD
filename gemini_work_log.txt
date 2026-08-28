@@ -459,3 +459,4 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-28 09:40:28] Casos 1 al 4 de la Vuelta 2 de Auditoria resueltos en ForecastGrid.tsx. Build exitoso en 19.83s. Documento 28 actualizado.
 [2026-08-28 09:44:38] Loop QC estocastico completado: 8,500/8,500 aserciones matematicas aprobadas (100.00% precision). Nota 28 de Obsidian actualizada.
 [2026-08-28 09:47:14] Documentacion forense completa de la Vuelta 2 (Pistas A-D, Diagnostico JS, DIFF Legacy y Loop QC Estocastico) sellada en documento 28.
+[2026-08-28 09:53:32] Despliegue completado con exito al VPS (91.108.125.253). Frontend y Backend en vivo en https://forecast.geeksoft.tech.
