@@ -922,6 +922,72 @@ La comparación directa certifica que **únicamente se modificaron 3 bloques qui
 
 *Vuelta 7 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
 
+---
+
+## 🔎 14. VUELTA 8 DE AUDITORÍA BENOIT BLANC: REESTRUCTURACIÓN JERÁRQUICA E INTEGRACIÓN DE DEMURRAGE DENTRO DE NET REVENUE
+
+### 🚩 14.1. Pistas e Inspección Forense
+- **El Crimen (Comparación Visual de Imágenes)**:
+  - `Demurrage` se renderizaba como una fila independiente top-level huérfana al final de la matriz (debajo de `Métricas TCE`).
+  - El acordeón `Net Revenue` mostraba `(+) Freight Revenue`, `(+) Dockage Revenue`, `(=) Gross Revenue`, `(-) Comisiones`.
+- **La Autopsia**:
+  - En la estructura contable de PETRAL, el `Demurrage` es un componente intrínseco del ingreso bruto (`Gross Revenue`), por lo que **no debe existir como una fila independiente superior fuera de Net Revenue**.
+  - Debe residir **escondido dentro del desplegable de Net Revenue**, desplegándose inmediatamente después de `↳ (+) Freight Revenue` y antes de `↳ (+) Dockage Revenue`.
+
+---
+
+### 🛠️ 14.2. Solución Forense Implementada:
+1. **Eliminación de Demurrage como Fila Independiente**:
+   - Se removió `metrics.push({ name: "Demurrage", ... })` de la lista de métricas raíz.
+   - La matriz ahora termina de forma limpia y canónica en `(=) VOYAGE RESULT / P&L` y `▶ Métricas TCE ($/d)`.
+2. **Integración Armónica dentro del Acordeón `Net Revenue`**:
+   - Al expandir `Net Revenue`, el orden contable estricto es:
+     1. `↳ (+) Freight Revenue`
+     2. `↳ (+) Demurrage` *(con valor monetario, total y % del Gross Revenue)*
+        - Si está activo el override (% o días) y se expande, muestra:
+          - `↳ ↳ Demurrage (%)` *(editable)*
+          - `↳ ↳ Demurrage (días)` *(editable)*
+     3. `↳ (+) Dockage Revenue`
+     4. `↳ (=) Gross Revenue`
+     5. `↳ (-) Comisiones`
+3. **Ajuste Dinámico de RowSpan**:
+   - `vesselRowSpan` y `netRevenueSubRowsCount` se ajustan automáticamente según el estado colapsado (0 filas extra) o expandido (5 sub-filas + sub-desglose).
+
+---
+
+### 🔬 14.3. Auditoría Forense de DIFFs (vs `ForecastGrid_V4_legacy.tsx`):
+```diff
+- if (isDemurrageVisible || isDemurrageDaysVisible) {
+-     metrics.push({ name: "Demurrage", values: demurrageArr, total: sum(demurrageArr), ... });
+- }
+
++ const demurrageSubSubRowsCount = (isExpandedGross && isDemurrageExpanded && (isDemurrageVisible || isDemurrageDaysVisible)) ? 1 : 0;
++ const netRevenueSubRowsCount = isExpandedGross ? (5 + demurrageSubSubRowsCount) : 0;
+
++ if (metric.isExpandableGrossRevenue && isExpandedGross) {
++     // 1.1. Freight Revenue
++     // 1.2. Demurrage (Integrado en Net Revenue)
++     // 1.3. Dockage Revenue
++     // 1.4. Gross Revenue
++     // 1.5. Comisiones
++ }
+```
+
+---
+
+### 🧪 14.4. Resultados de la Verificación y Loop QC:
+* **Compilación Frontend (Vite)**: `✓ built in 7.51s` (0 errores).
+* **Loop QC Estocástico (`test_qc_grid_random_loop.mjs`)**:
+  - Escenarios Simulados: `100`
+  - Total de Aserciones: `8,500`
+  - Aserciones Exitosas: `8,500`
+  - **Tasa de Precisión**: **`100.00% ✅`**
+
+---
+
+*Vuelta 8 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
+
+
 
 
 

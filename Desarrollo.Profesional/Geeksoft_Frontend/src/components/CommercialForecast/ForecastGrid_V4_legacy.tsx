@@ -548,11 +548,15 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         { name: "▶ Métricas TCE ($/d)", values: tceReal, total: null, pct: null, totalPct: null, isCurrency: false, isTotal: false, isExpandableTce: true, rowKey, isExpanded: isExpandedTceRow }
                     ];
 
-                    const demurrageSubSubRowsCount = (isExpandedGross && isDemurrageExpanded && (isDemurrageVisible || isDemurrageDaysVisible)) ? 1 : 0;
-                    const netRevenueSubRowsCount = isExpandedGross ? (5 + demurrageSubSubRowsCount) : 0;
-                    const tceSubRowsCount = isExpandedTceRow ? 3 : 0;
+                    if (isDemurrageVisible || isDemurrageDaysVisible) {
+                        metrics.push({ name: "Demurrage", values: demurrageArr, total: sum(demurrageArr), pct: calcPct(demurrageArr), totalPct: calcTotalPct(sum(demurrageArr), sum(grossRevenues)), isCurrency: true, isTotal: false, isExpandableDemurrage: true, rowKey, isExpanded: isDemurrageExpanded });
+                    }
 
-                    const vesselRowSpan = metrics.length + numSubRows + netRevenueSubRowsCount + tceSubRowsCount;
+                    const netRevenueSubRowsCount = isExpandedGross ? 4 : 0;
+                    const tceSubRowsCount = isExpandedTceRow ? 3 : 0;
+                    const demurrageSubRowsCount = (isDemurrageVisible || isDemurrageDaysVisible) ? (isDemurrageExpanded ? 2 : 0) : 0;
+
+                    const vesselRowSpan = metrics.length + numSubRows + netRevenueSubRowsCount + tceSubRowsCount + demurrageSubRowsCount;
                     
                     level1RowSpanRef.value += vesselRowSpan;
                     level2RowSpanRef.value += vesselRowSpan;
@@ -569,9 +573,8 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 isSubRow: false
                             });
 
-                        // 1. Acordeón de Net Revenue (5 sub-filas ordenadas con Demurrage)
+                        // 1. Acordeón de Net Revenue (4 sub-filas fijas)
                         if (metric.isExpandableGrossRevenue && isExpandedGross) {
-                            // 1.1. Freight Revenue
                             result.push({
                                 col1: null, col2: null, col3: null,
                                 clientName: client, routeName: route, vesselName: vessel,
@@ -588,66 +591,6 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 isSubRow: true
                             });
 
-                            // 1.2. Demurrage (Integrado en Net Revenue)
-                            result.push({
-                                col1: null, col2: null, col3: null,
-                                clientName: client, routeName: route, vesselName: vessel,
-                                metric: {
-                                    name: "↳ (+) Demurrage",
-                                    values: demurrageArr,
-                                    total: sum(demurrageArr),
-                                    pct: calcPct(demurrageArr),
-                                    totalPct: calcTotalPct(sum(demurrageArr), sum(grossRevenues)),
-                                    isCurrency: true,
-                                    isTotal: false,
-                                    isSubRowMetric: true,
-                                    isExpandableDemurrage: (isDemurrageVisible || isDemurrageDaysVisible),
-                                    rowKey,
-                                    isExpanded: isDemurrageExpanded
-                                },
-                                isSubRow: true
-                            });
-
-                            // Desglose interactivo si Demurrage está expandido
-                            if (isDemurrageExpanded) {
-                                if (isDemurrageVisible) {
-                                    result.push({
-                                        col1: null, col2: null, col3: null,
-                                        clientName: client, routeName: route, vesselName: vessel,
-                                        metric: {
-                                            name: "    ↳ Demurrage (%)",
-                                            values: demurragePctArray,
-                                            total: 0,
-                                            pct: null,
-                                            totalPct: null,
-                                            isCurrency: false,
-                                            isTotal: false,
-                                            isDemurragePctEditable: true,
-                                            rowKey
-                                        },
-                                        isSubRow: true
-                                    });
-                                } else if (isDemurrageDaysVisible) {
-                                    result.push({
-                                        col1: null, col2: null, col3: null,
-                                        clientName: client, routeName: route, vesselName: vessel,
-                                        metric: {
-                                            name: "    ↳ Demurrage (días)",
-                                            values: demurrageDaysArray,
-                                            total: 0,
-                                            pct: null,
-                                            totalPct: null,
-                                            isCurrency: false,
-                                            isTotal: false,
-                                            isDemurrageDaysEditable: true,
-                                            rowKey
-                                        },
-                                        isSubRow: true
-                                    });
-                                }
-                            }
-
-                            // 1.3. Dockage Revenue
                             result.push({
                                 col1: null, col2: null, col3: null,
                                 clientName: client, routeName: route, vesselName: vessel,
@@ -664,7 +607,6 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 isSubRow: true
                             });
 
-                            // 1.4. Gross Revenue
                             result.push({
                                 col1: null, col2: null, col3: null,
                                 clientName: client, routeName: route, vesselName: vessel,
@@ -681,7 +623,6 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 isSubRow: true
                             });
 
-                            // 1.5. Comisiones
                             result.push({
                                 col1: null, col2: null, col3: null,
                                 clientName: client, routeName: route, vesselName: vessel,
@@ -753,7 +694,58 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                             });
                         }
 
-
+                        // 3. Acordeón de Demurrage
+                        if (metric.name === "Demurrage" && isDemurrageExpanded) {
+                            if (isDemurrageVisible) {
+                                result.push({
+                                    col1: null, col2: null, col3: null,
+                                    clientName: client, routeName: route, vesselName: vessel,
+                                    metric: {
+                                        name: "↳ Demurrage (%)",
+                                        values: demurragePctArray,
+                                        total: 0,
+                                        pct: null,
+                                        totalPct: null,
+                                        isCurrency: false,
+                                        isTotal: false,
+                                        isDemurragePctEditable: true,
+                                        rowKey
+                                    },
+                                    isSubRow: true
+                                });
+                            } else if (isDemurrageDaysVisible) {
+                                result.push({
+                                    col1: null, col2: null, col3: null,
+                                    clientName: client, routeName: route, vesselName: vessel,
+                                    metric: {
+                                        name: "↳ Demurrage (días)",
+                                        values: demurrageDaysArray,
+                                        total: 0,
+                                        pct: null,
+                                        totalPct: null,
+                                        isCurrency: false,
+                                        isTotal: false,
+                                        isDemurrageDaysEditable: true,
+                                        rowKey
+                                    },
+                                    isSubRow: true
+                                });
+                            }
+                            result.push({
+                                col1: null, col2: null, col3: null,
+                                clientName: client, routeName: route, vesselName: vessel,
+                                metric: {
+                                    name: "↳ Demurrage (USD)",
+                                    values: demurrageArr,
+                                    total: sum(demurrageArr),
+                                    pct: null,
+                                    totalPct: null,
+                                    isCurrency: true,
+                                    isTotal: false
+                                },
+                                isSubRow: true
+                            });
+                        }
 
 
                         if (metric.isExpandable && isExpanded) {
