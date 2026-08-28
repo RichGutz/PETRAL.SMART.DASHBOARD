@@ -8,6 +8,7 @@ import { MonthPicker } from '../ui/month-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { PlusCircle, Filter } from 'lucide-react';
 import { ForecastGridFilters } from './ForecastGridFilters';
+import { ForecastService } from '../../services/api';
 
 interface ForecastBuilderProps {
     onHorizonChange: (start: string, end: string) => void;
@@ -80,6 +81,58 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     const [prospectClients, setProspectClients] = useState<string[]>([]);
     const [spotRoutes, setSpotRoutes] = useState<any[]>([]);
 
+    // Carga de datos iniciales desde la API
+    useEffect(() => {
+        let isMounted = true;
+        const loadInitialData = async () => {
+            try {
+                const [routesList, clientsList, spots] = await Promise.all([
+                    ForecastService.getRoutesMaster(),
+                    ForecastService.getClients(),
+                    ForecastService.getSpotVoyages()
+                ]);
+
+                if (!isMounted) return;
+
+                // 1. Clientes Activos
+                const clientNames = (routesList || []).map((r: any) => {
+                    const name = r.name || "";
+                    const firstPart = name.split('.')[0] || "";
+                    return firstPart.trim().toUpperCase();
+                }).filter((name: string) => name && name !== 'SPOT');
+
+                const spotClientNames = (spots || []).map((s: any) => {
+                    const name = (s.name || "").trim().toUpperCase();
+                    const cid = (s.client_id || "").trim().toUpperCase();
+                    if (cid) return cid;
+                    if (name.includes('.')) return name.split('.')[0].trim();
+                    return "";
+                }).filter(Boolean);
+
+                const uniqueActive = Array.from(new Set(['SPCC', 'NEXA', ...clientNames, ...spotClientNames]));
+                uniqueActive.sort();
+                setActiveClients(uniqueActive);
+
+                // 2. Clientes Prospectos
+                const prospects = (clientsList || [])
+                    .filter((c: any) => c.is_prospect === true)
+                    .map((c: any) => c.client_id?.toUpperCase())
+                    .filter(Boolean);
+                const uniqueProspects = Array.from(new Set(prospects)) as string[];
+                uniqueProspects.sort();
+                setProspectClients(uniqueProspects);
+
+                // 3. Rutas Spot / Quotes / Multicotizador
+                setSpotRoutes(spots || []);
+            } catch (err) {
+                console.error("Error cargando catálogos en ForecastBuilder:", err);
+            }
+        };
+
+        loadInitialData();
+        return () => { isMounted = false; };
+    }, []);
+
     // Resetear ruta al cambiar de cliente o de fuente para evitar colisiones
     useEffect(() => {
         setRoute('');
@@ -126,34 +179,33 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                route.startsWith('QUOTE:');
     }, [matchedSpot, route]);
 
-    // Filtrar las rutas disponibles por la LLAVE COMPUESTA CLIENTE + FUENTE
+    // Filtrar las rutas disponibles por la LLAVE COMPUESTA CLIENTE + FUENTE (Idéntico a Multicotizador)
     const clientRoutes = useMemo(() => {
         if (!client) return [];
         const cleanClient = client.trim().toUpperCase();
         const routesList: Array<{ key: string; label: string; isQuote?: boolean; category?: string }> = [];
         const addedKeys = new Set<string>();
 
-        // Carga Dinámica desde routes_quotes filtrando por CLIENTE + FUENTE
         spotRoutes.forEach(s => {
             const name = (s.name || "").trim().toUpperCase();
-            let qClient = (s.client_id || s.client_name || "").trim().toUpperCase();
-            if (!qClient) {
-                if (name.includes('.')) {
-                    qClient = name.split('.')[0].trim();
-                } else if (name.includes('-')) {
-                    qClient = name.split('-')[0].trim();
-                }
-            }
+            const cid = (s.client_id || "").trim().toUpperCase();
+            const desc = (s.description || '').trim();
+            const descUpper = desc.toUpperCase();
 
-            const isClientMatch = (qClient === cleanClient || name.startsWith(`${cleanClient}.`) || name.startsWith(`${cleanClient}_`));
-            if (!isClientMatch) return;
+            // Calce de cliente tolerante
+            const matchesClient = (
+                cid === cleanClient ||
+                name.startsWith(`${cleanClient}.`) ||
+                name.startsWith(`${cleanClient}_`) ||
+                name.startsWith(cleanClient) ||
+                descUpper.includes(cleanClient)
+            );
+            if (!matchesClient) return;
 
             // Clasificación por Fuente (CIERRES vs COTIZACIONES vs PRESUPUESTOS)
-            const desc = (s.description || '').toUpperCase();
-            const cat = (s.legs_data?.category || '').toUpperCase();
-            const isBudget = desc.includes('PRESUPUESTO') || cat === 'PRESUPUESTO' || s.legs_data?.is_budget === true;
-            const isCoa = desc.includes('COA') || cat === 'COA' || s.is_contract === true;
-            const isSpot = (!isBudget && !isCoa) || desc.includes('COTIZACI') || cat === 'SPOT';
+            const isBudget = descUpper.includes('PRESUPUESTO') || descUpper.includes('PPTO') || name.includes(' DM ') || s.legs_data?.is_budget === true;
+            const isCoa = descUpper.includes('COA') || desc === 'COA Cliente Activo' || s.is_contract === true || name.includes(' COA ') || name.includes('.FX ');
+            const isSpot = (!isBudget && !isCoa) || descUpper.includes('COTIZACI') || descUpper.includes('PROSPECTO') || name.includes('SPOT');
 
             let isSourceMatch = false;
             if (routeSource === 'PRESUPUESTOS') {
@@ -193,7 +245,6 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
         return routesList;
     }, [client, routeSource, spotRoutes]);
-
 
     // Lógica reactiva para autocompletar buque, cantidad y flete (yield)
     useEffect(() => {
@@ -238,42 +289,6 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         const month = date.toLocaleString('es-ES', { month: 'short' }).replace('.', '');
         return `${month.charAt(0).toUpperCase() + month.slice(1)} ${y.slice(2)}`;
     };
-
-    useEffect(() => {
-        import('../../services/api').then(({ ForecastService }) => {
-            // 1. Clientes Activos
-            ForecastService.getRoutesMaster().then(routesList => {
-                const clientNames = (routesList || []).map((r: any) => {
-                    const name = r.name || "";
-                    const firstPart = name.split('.')[0] || "";
-                    return firstPart.trim().toUpperCase();
-                }).filter((name: string) => name && name !== 'SPOT');
-
-                const uniqueActive = Array.from(new Set(['SPCC', 'NEXA', ...clientNames]));
-                uniqueActive.sort();
-                setActiveClients(uniqueActive);
-            }).catch(err => {
-                console.error("Failed to load routes master for clients:", err);
-                setActiveClients(['SPCC', 'NEXA']);
-            });
-
-            // 2. Clientes Prospectos
-            ForecastService.getClients().then(clientsList => {
-                const prospects = (clientsList || [])
-                    .filter((c: any) => c.is_prospect === true)
-                    .map((c: any) => c.client_id?.toUpperCase())
-                    .filter(Boolean);
-                const uniqueProspects = Array.from(new Set(prospects)) as string[];
-                uniqueProspects.sort();
-                setProspectClients(uniqueProspects);
-            }).catch(err => console.error("Failed to fetch prospect clients:", err));
-
-            // 3. Rutas Spot / Quotes / Multicotizador
-            ForecastService.getSpotVoyages().then(spots => {
-                setSpotRoutes(spots || []);
-            }).catch(err => console.error("Failed to fetch spot routes:", err));
-        });
-    }, []);
 
     // Limpiar cliente al cambiar de pestaña
     const handleTabChange = (tab: 'activos' | 'prospectos') => {
@@ -375,352 +390,405 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
         return `${prefix}${selectedRouteObj.label}`;
     }, [selectedRouteObj, routeSource]);
 
-    // SERIE 33: Guarda DESPUÉS de todos los hooks (Fix React Error #300)
     if (hideInputs) {
         return null;
     }
 
     return (
-        <Card className="glass-card bg-white border border-slate-200 shadow-xs relative overflow-visible rounded-xl">
-            <CardContent className="py-2.5 px-4 flex flex-col gap-3">
+        <div className="bg-white border border-slate-200 rounded-xl p-2.5 mb-2.5 select-none flex-shrink-0 overflow-x-auto shadow-xs">
+            <div className="flex flex-col gap-2.5 w-full">
                 
                 {/* ========================================================================= */}
-                {/* FILA 1: HORIZONTE, CLIENTE, FUENTE, RUTA Y BUQUE */}
+                {/* FILA 1: HORIZONTE, CLIENTE, FUENTE, RUTA, BUQUE Y VIAJES (APEFAC ENTERPRISE LOOK) */}
                 {/* ========================================================================= */}
-                <div className="flex flex-row items-center gap-2.5 w-full overflow-x-auto pb-1 scrollbar-none shrink-0">
+                <div className="flex items-center gap-2.5 flex-nowrap min-w-max">
                     
-                    {/* 1. Inicio forecast (+20% ancho: w-[138px]) */}
-                    <div className="flex flex-col gap-1 w-[138px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
-                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">1. Inicio forecast</Label>
-                        <MonthPicker 
-                            value={currentStartDate.slice(0, 7)}
-                            onChange={(val) => {
-                                const newStartVal = val || '';
-                                const currentEndVal = currentEndDate.slice(0, 7);
-                                if (newStartVal > currentEndVal) {
-                                    const y = parseInt(newStartVal.split('-')[0]);
-                                    const m = parseInt(newStartVal.split('-')[1]);
-                                    const lastDay = new Date(y, m, 0).getDate();
-                                    onHorizonChange(`${newStartVal}-01`, `${newStartVal}-${lastDay}`);
-                                } else {
-                                    onHorizonChange(`${newStartVal}-01`, currentEndDate);
-                                }
-                            }}
-                            placeholder="Inicio"
-                            className="border-slate-200 bg-white shadow-2xs h-7.5 text-xs font-bold"
-                        />
-                    </div>
-
-                    {/* 2. Fin forecast (+20% ancho: w-[138px]) */}
-                    <div className="flex flex-col gap-1 w-[138px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
-                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">2. Fin forecast</Label>
-                        <MonthPicker 
-                            value={currentEndDate.slice(0, 7)}
-                            onChange={(val) => {
-                                if (!val) return;
-                                const currentStartVal = currentStartDate.slice(0, 7);
-                                let finalStart = currentStartDate;
-                                if (val < currentStartVal) {
-                                    finalStart = `${val}-01`;
-                                }
-                                const year = parseInt(val.split('-')[0]);
-                                const month = parseInt(val.split('-')[1]);
-                                const lastDay = new Date(year, month, 0).getDate();
-                                onHorizonChange(finalStart, `${val}-${lastDay}`);
-                            }}
-                            minDate={currentStartDate.slice(0, 7)}
-                            placeholder="Fin"
-                            className="border-slate-200 bg-white shadow-2xs h-7.5 text-xs font-bold"
-                        />
-                    </div>
-
-                    {/* 3. Meses a modelar (Crecido +30% adicional: w-[265px]) */}
-                    <div className="flex flex-col gap-1 w-[265px] shrink-0 relative bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
-                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">3. Meses a modelar</Label>
-                        <Popover>
-                            <PopoverTrigger
-                                className="w-full flex items-center justify-between px-2.5 h-7.5 text-xs bg-white border border-sky-300 shadow-2xs rounded-md hover:border-sky-500 focus:outline-none transition-all text-sky-900 font-extrabold"
-                            >
-                                <span className="truncate text-left w-full">
-                                    {selectedMonths.length === 0 ? "Seleccionar..." : 
-                                     selectedMonths.length === dynamicMonths.length ? `Todos (${dynamicMonths.length})` :
-                                     selectedMonths.length === 1 ? formatMonthPill(selectedMonths[0]) : 
-                                     `${selectedMonths.length} meses`}
-                                </span>
-                                <span className="text-[10px] text-sky-600 shrink-0 ml-1">▼</span>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[320px] p-4" side="bottom" align="start">
-                                <div className="text-[11px] uppercase font-bold tracking-wider text-slate-400 mb-3 border-b pb-1.5 flex justify-between items-center">
-                                    <span>Horizonte ({dynamicMonths.length} meses)</span>
-                                    <span className="text-[10px] text-slate-500 font-mono font-bold">{selectedMonths.length} marcados</span>
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className="flex-1 max-h-[220px] overflow-y-auto pr-1 grid grid-cols-3 gap-2 custom-scrollbar">
-                                        {dynamicMonths.length === 0 ? (
-                                            <div className="col-span-3 text-xs text-slate-500 italic py-2 text-center">Falta definir horizonte</div>
-                                        ) : (
-                                            dynamicMonths.map(m => (
-                                                 <button
-                                                    key={m}
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        if (selectedMonths.includes(m)) setSelectedMonths(prev => prev.filter(x => x !== m));
-                                                        else setSelectedMonths(prev => [...prev, m].sort());
-                                                    }}
-                                                    className={`px-1.5 py-1.5 rounded-full text-[10px] font-bold transition-all border outline-none truncate cursor-pointer ${
-                                                        selectedMonths.includes(m) 
-                                                        ? 'bg-petral-teal text-white border-petral-teal shadow-md transform scale-[1.02]' 
-                                                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-700'
-                                                    }`}
-                                                >
-                                                    {formatMonthPill(m)}
-                                                </button>
-                                            ))
-                                        )}
-                                    </div>
-                                    {dynamicMonths.length > 0 && (
-                                        <div className="flex flex-col gap-2 border-l pl-3 justify-start pt-1">
-                                            <button 
-                                                type="button" 
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    setSelectedMonths([...dynamicMonths]);
-                                                }}
-                                                className="text-[10px] w-[64px] py-1.5 bg-blue-600 rounded text-white font-black hover:bg-blue-700 shadow-sm cursor-pointer transition-colors"
-                                            >Todos</button>
-                                            <button 
-                                                type="button" 
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    setSelectedMonths([]);
-                                                }}
-                                                className="text-[10px] w-[64px] py-1.5 bg-slate-100 rounded text-slate-600 font-bold hover:bg-slate-200 shadow-sm border border-slate-200 cursor-pointer"
-                                            >Ninguno</button>
-                                        </div>
-                                    )}
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-                    </div>
-
-                    {/* 4. Cliente (Ancho 175px para albergar con holgura título + ACT./PROSP. + nombres largos) */}
-                    <div className="flex flex-col gap-1 w-[175px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
-                        <div className="flex items-center justify-between">
-                            <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">4. Cliente</Label>
-                            <div className="flex items-center gap-0.5 bg-white p-0.5 rounded border border-slate-200 text-[8px] font-black shadow-2xs">
-                                <button
-                                    type="button"
-                                    onClick={() => handleTabChange('activos')}
-                                    className={`px-1.5 py-0.2 rounded transition-colors ${clientTab === 'activos' ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'}`}
-                                >
-                                    ACT.
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => handleTabChange('prospectos')}
-                                    className={`px-1.5 py-0.2 rounded transition-colors ${clientTab === 'prospectos' ? 'bg-purple-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'}`}
-                                >
-                                    PROSP.
-                                </button>
-                            </div>
+                    {/* PASO 1: INICIO FORECAST */}
+                    <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-black text-xs shadow-2xs shrink-0">
+                            1
                         </div>
-                        <Select value={client} onValueChange={(val) => setClient(val || '')}>
-                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold px-2">
-                                <SelectValue placeholder="Cliente">
-                                    {client || undefined}
-                                </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                                {currentClientList.map(c => (
-                                    <SelectItem key={c} value={c}>
-                                        <div className="flex items-center gap-2">
-                                            <div className={`w-2.5 h-2.5 rounded-full ${clientTab === 'activos' ? 'bg-sky-600' : 'bg-purple-600'}`}></div>{c}
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                             </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* FUENTE: CIERRES | COTIZACIONES | PRESUPUESTOS (Ancho 175px para que PRESUPUESTOS entre completo) */}
-                    <div className="flex flex-col gap-1 w-[175px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
-                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">FUENTE</Label>
-                        <Select value={routeSource} onValueChange={(val: any) => setRouteSource(val)}>
-                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold px-2">
-                                <SelectValue placeholder="Fuente" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="CIERRES">
-                                    <div className="flex items-center gap-1.5 font-bold text-blue-700 text-xs">
-                                        <span>📜</span> CIERRES
-                                    </div>
-                                </SelectItem>
-                                <SelectItem value="COTIZACIONES">
-                                    <div className="flex items-center gap-1.5 font-bold text-purple-700 text-xs">
-                                        <span>📄</span> COTIZACIONES
-                                    </div>
-                                </SelectItem>
-                                <SelectItem value="PRESUPUESTOS">
-                                    <div className="flex items-center gap-1.5 font-bold text-emerald-700 text-xs">
-                                        <span>📊</span> PRESUPUESTOS
-                                    </div>
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    {client === 'SPOT' && (
-                        <div className="flex flex-col gap-1 w-[120px] shrink-0 bg-red-50/80 border border-red-200 rounded-lg p-1.5 shadow-2xs">
-                            <Label className="text-[10px] font-extrabold text-red-600 uppercase tracking-tight whitespace-nowrap">Sufijo SPOT *</Label>
-                            <Input 
-                                type="text" 
-                                value={spotSuffix} 
-                                onChange={e => setSpotSuffix(e.target.value)}
-                                placeholder="Ej: NEXA"
-                                className="w-full h-7.5 border-red-300 bg-white uppercase text-xs font-bold"
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                                INICIO
+                            </span>
+                            <MonthPicker 
+                                value={currentStartDate.slice(0, 7)}
+                                onChange={(val) => {
+                                    const newStartVal = val || '';
+                                    const currentEndVal = currentEndDate.slice(0, 7);
+                                    if (newStartVal > currentEndVal) {
+                                        const y = parseInt(newStartVal.split('-')[0]);
+                                        const m = parseInt(newStartVal.split('-')[1]);
+                                        const lastDay = new Date(y, m, 0).getDate();
+                                        onHorizonChange(`${newStartVal}-01`, `${newStartVal}-${lastDay}`);
+                                    } else {
+                                        onHorizonChange(`${newStartVal}-01`, currentEndDate);
+                                    }
+                                }}
+                                placeholder="Inicio"
+                                className="border-slate-200 bg-white shadow-2xs h-7 text-xs font-bold w-[105px]"
                             />
                         </div>
-                    )}
+                    </div>
 
-                    {/* 5. Ruta (Expansión flexible en el espacio central) */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-[200px] bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all overflow-hidden">
-                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">
-                            5. Ruta
-                        </Label>
-                        <Select value={route} onValueChange={(val) => setRoute(val || '')} disabled={!client}>
-                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold overflow-hidden">
-                                <SelectValue placeholder="Seleccionar ruta..." className="block truncate max-w-full">
-                                    {selectedRouteDisplay || undefined}
-                                </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent className="w-auto min-w-[max-content] max-h-[300px] overflow-y-auto">
-                                {clientRoutes.length === 0 ? (
-                                    <SelectItem value="" disabled>
-                                        No hay {routeSource.toLowerCase()} para {client}
+                    {/* PASO 2: FIN FORECAST */}
+                    <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-black text-xs shadow-2xs shrink-0">
+                            2
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                                FIN
+                            </span>
+                            <MonthPicker 
+                                value={currentEndDate.slice(0, 7)}
+                                onChange={(val) => {
+                                    if (!val) return;
+                                    const currentStartVal = currentStartDate.slice(0, 7);
+                                    let finalStart = currentStartDate;
+                                    if (val < currentStartVal) {
+                                        finalStart = `${val}-01`;
+                                    }
+                                    const year = parseInt(val.split('-')[0]);
+                                    const month = parseInt(val.split('-')[1]);
+                                    const lastDay = new Date(year, month, 0).getDate();
+                                    onHorizonChange(finalStart, `${val}-${lastDay}`);
+                                }}
+                                minDate={currentStartDate.slice(0, 7)}
+                                placeholder="Fin"
+                                className="border-slate-200 bg-white shadow-2xs h-7 text-xs font-bold w-[105px]"
+                            />
+                        </div>
+                    </div>
+
+                    {/* PASO 3: MESES A MODELAR */}
+                    <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-black text-xs shadow-2xs shrink-0">
+                            3
+                        </div>
+                        <div className="flex flex-col gap-1 w-[165px]">
+                            <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                                MESES A MODELAR
+                            </span>
+                            <Popover>
+                                <PopoverTrigger
+                                    className="w-full flex items-center justify-between px-2 h-7 text-xs bg-white border border-sky-300 shadow-2xs rounded-md hover:border-sky-500 focus:outline-none transition-all text-sky-900 font-extrabold cursor-pointer"
+                                >
+                                    <span className="truncate text-left w-full">
+                                        {selectedMonths.length === 0 ? "Seleccionar..." : 
+                                         selectedMonths.length === dynamicMonths.length ? `Todos (${dynamicMonths.length})` :
+                                         selectedMonths.length === 1 ? formatMonthPill(selectedMonths[0]) : 
+                                         `${selectedMonths.length} meses`}
+                                    </span>
+                                    <span className="text-[10px] text-sky-600 shrink-0 ml-1">▼</span>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[320px] p-4 z-50 bg-white shadow-xl rounded-xl border border-slate-200" side="bottom" align="start">
+                                    <div className="text-[11px] uppercase font-bold tracking-wider text-slate-400 mb-3 border-b pb-1.5 flex justify-between items-center">
+                                        <span>Horizonte ({dynamicMonths.length} meses)</span>
+                                        <span className="text-[10px] text-slate-500 font-mono font-bold">{selectedMonths.length} marcados</span>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <div className="flex-1 max-h-[220px] overflow-y-auto pr-1 grid grid-cols-3 gap-2 custom-scrollbar">
+                                            {dynamicMonths.length === 0 ? (
+                                                <div className="col-span-3 text-xs text-slate-500 italic py-2 text-center">Falta definir horizonte</div>
+                                            ) : (
+                                                dynamicMonths.map(m => (
+                                                     <button
+                                                        key={m}
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            if (selectedMonths.includes(m)) setSelectedMonths(prev => prev.filter(x => x !== m));
+                                                            else setSelectedMonths(prev => [...prev, m].sort());
+                                                        }}
+                                                        className={`px-1.5 py-1.5 rounded-full text-[10px] font-bold transition-all border outline-none truncate cursor-pointer ${
+                                                            selectedMonths.includes(m) 
+                                                            ? 'bg-sky-600 text-white border-sky-600 shadow-xs' 
+                                                            : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-700'
+                                                        }`}
+                                                    >
+                                                        {formatMonthPill(m)}
+                                                    </button>
+                                                ))
+                                            )}
+                                        </div>
+                                        {dynamicMonths.length > 0 && (
+                                            <div className="flex flex-col gap-2 border-l pl-3 justify-start pt-1">
+                                                <button 
+                                                    type="button" 
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        setSelectedMonths([...dynamicMonths]);
+                                                    }}
+                                                    className="text-[10px] w-[64px] py-1.5 bg-sky-600 rounded text-white font-black hover:bg-sky-700 shadow-2xs cursor-pointer transition-colors"
+                                                >Todos</button>
+                                                <button 
+                                                    type="button" 
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        setSelectedMonths([]);
+                                                    }}
+                                                    className="text-[10px] w-[64px] py-1.5 bg-slate-100 rounded text-slate-600 font-bold hover:bg-slate-200 shadow-2xs border border-slate-200 cursor-pointer"
+                                                >Ninguno</button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                    </div>
+
+                    {/* PASO 4: CLIENTE */}
+                    <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-black text-xs shadow-2xs shrink-0">
+                            4
+                        </div>
+                        <div className="flex flex-col gap-1 w-[165px]">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                                    CLIENTE
+                                </span>
+                                <div className="flex rounded bg-white p-0.5 border border-slate-200 shadow-2xs">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleTabChange('activos')}
+                                        className={`px-1.5 py-0.2 text-[8px] font-black uppercase rounded cursor-pointer transition-colors ${clientTab === 'activos' ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'}`}
+                                    >
+                                        ACT.
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleTabChange('prospectos')}
+                                        className={`px-1.5 py-0.2 text-[8px] font-black uppercase rounded cursor-pointer transition-colors ${clientTab === 'prospectos' ? 'bg-purple-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'}`}
+                                    >
+                                        PROSP.
+                                    </button>
+                                </div>
+                            </div>
+                            <Select value={client} onValueChange={(val) => setClient(val || '')}>
+                                <SelectTrigger className="w-full h-7 bg-white border border-slate-200 shadow-2xs text-xs font-extrabold px-2 cursor-pointer">
+                                    <SelectValue placeholder="[SELECCIONAR CLIENTE]">
+                                        {client || undefined}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent className="z-50 bg-white border border-slate-200 shadow-xl rounded-xl">
+                                    {currentClientList.map(c => (
+                                        <SelectItem key={c} value={c}>
+                                            <div className="flex items-center gap-2 font-bold">
+                                                <div className={`w-2 h-2 rounded-full ${clientTab === 'activos' ? 'bg-sky-600' : 'bg-purple-600'}`}></div>{c}
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                 </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* FUENTE: CIERRES | COTIZACIONES | PRESUPUESTOS */}
+                    <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-black text-xs shadow-2xs shrink-0">
+                            ⚙️
+                        </div>
+                        <div className="flex flex-col gap-1 w-[145px]">
+                            <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                                FUENTE
+                            </span>
+                            <Select value={routeSource} onValueChange={(val: any) => setRouteSource(val)}>
+                                <SelectTrigger className="w-full h-7 bg-white border border-slate-200 shadow-2xs text-xs font-extrabold px-2 cursor-pointer">
+                                    <SelectValue placeholder="Fuente" />
+                                </SelectTrigger>
+                                <SelectContent className="z-50 bg-white border border-slate-200 shadow-xl rounded-xl">
+                                    <SelectItem value="CIERRES">
+                                        <div className="flex items-center gap-1.5 font-bold text-blue-700 text-xs">
+                                            <span>📜</span> CIERRES
+                                        </div>
                                     </SelectItem>
-                                ) : (
-                                    clientRoutes.map(rObj => {
-                                        const key = rObj.key;
-                                        const label = rObj.label;
-                                        const isQuote = rObj.isQuote;
-                                        const color = label.includes('MATARANI') ? '#06B6D4' :
-                                                      label.includes('MARCONA') ? '#A855F7' :
-                                                      label.includes('MEJILLONES') ? '#D946EF' :
-                                                      label.includes('CALLAO') ? '#F59E0B' : '#64748B';
-                                        return (
-                                            <SelectItem key={key} value={key}>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }}></div>
-                                                    {routeSource === 'PRESUPUESTOS' ? `📊 ${label}` : routeSource === 'CIERRES' ? `📜 ${label}` : `💬 ${label}`}
-                                                </div>
-                                            </SelectItem>
-                                        );
-                                    })
-                                )}
-                            </SelectContent>
-                        </Select>
+                                    <SelectItem value="COTIZACIONES">
+                                        <div className="flex items-center gap-1.5 font-bold text-purple-700 text-xs">
+                                            <span>📄</span> COTIZACIONES
+                                        </div>
+                                    </SelectItem>
+                                    <SelectItem value="PRESUPUESTOS">
+                                        <div className="flex items-center gap-1.5 font-bold text-emerald-700 text-xs">
+                                            <span>📊</span> PRESUPUESTOS
+                                        </div>
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
-                    {/* 6. Buque (Ancho 175px para que CONCON TRADER y dot de color entren completos) */}
-                    <div className="flex flex-col gap-1 w-[175px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
-                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">6. Buque</Label>
-                        <Select value={vessel} onValueChange={(val) => setVessel(val || '')} disabled={!route}>
-                            <SelectTrigger className="w-full h-7.5 bg-white border border-slate-200 shadow-2xs text-xs font-bold disabled:opacity-80 px-2">
-                                <SelectValue placeholder="Buque">
-                                    {vessel ? vessel.replace('_', ' ') : undefined}
-                                </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="MOQUEGUA">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-600"></div>MOQUEGUA</div>
-                                </SelectItem>
-                                <SelectItem value="TABLONES">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-rose-600"></div>TABLONES</div>
-                                </SelectItem>
-                                <SelectItem value="CONCON_TRADER">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-slate-600"></div>CONCON TRADER</div>
-                                </SelectItem>
-                                <SelectItem value="HUEMUL">
-                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-indigo-600"></div>HUEMUL</div>
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
+                    {/* PASO 5: RUTA */}
+                    <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-black text-xs shadow-2xs shrink-0">
+                            5
+                        </div>
+                        <div className="flex flex-col gap-1 w-[260px]">
+                            <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                                RUTA ({routeSource})
+                            </span>
+                            <Select value={route} onValueChange={(val) => setRoute(val || '')} disabled={!client}>
+                                <SelectTrigger className="w-full h-7 bg-white border border-slate-200 shadow-2xs text-xs font-bold overflow-hidden cursor-pointer">
+                                    <SelectValue placeholder={!client ? "[SELECCIONAR CLIENTE]" : "[SELECCIONAR RUTA]"} className="block truncate max-w-full">
+                                        {selectedRouteDisplay || undefined}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent className="w-auto min-w-[max-content] max-h-[300px] overflow-y-auto z-50 bg-white border border-slate-200 shadow-xl rounded-xl">
+                                    {clientRoutes.length === 0 ? (
+                                        <SelectItem value="__empty__" disabled>
+                                            No hay {routeSource.toLowerCase()} para {client}
+                                        </SelectItem>
+                                    ) : (
+                                        clientRoutes.map(rObj => {
+                                            const key = rObj.key;
+                                            const label = rObj.label;
+                                            const color = label.includes('MATARANI') ? '#06B6D4' :
+                                                          label.includes('MARCONA') ? '#A855F7' :
+                                                          label.includes('MEJILLONES') ? '#D946EF' :
+                                                          label.includes('CALLAO') ? '#F59E0B' : '#64748B';
+                                            return (
+                                                <SelectItem key={key} value={key}>
+                                                    <div className="flex items-center gap-2 font-bold text-xs">
+                                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }}></div>
+                                                        {routeSource === 'PRESUPUESTOS' ? `📊 ${label}` : routeSource === 'CIERRES' ? `📜 ${label}` : `💬 ${label}`}
+                                                    </div>
+                                                </SelectItem>
+                                            );
+                                        })
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
-                    {/* 7. Nº Viajes (Movido a la derecha del botón 6 en Fila 1) */}
-                    <div className="flex flex-col gap-1 w-[80px] shrink-0 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs hover:border-slate-300 transition-all">
-                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">7. Viajes</Label>
-                        <Input 
-                            type="number" 
-                            min="1"
-                            value={frequency} 
-                            onChange={e => setFrequency(e.target.value)}
-                            placeholder="1"
-                            title="Frecuencia Mensual de Viajes"
-                            className="w-full h-7.5 text-center text-xs font-bold bg-white border-slate-200 shadow-2xs"
-                        />
+                    {/* PASO 6: BUQUE */}
+                    <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xs shadow-2xs shrink-0">
+                            6
+                        </div>
+                        <div className="flex flex-col gap-1 w-[155px]">
+                            <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                                BUQUE
+                            </span>
+                            <Select value={vessel} onValueChange={(val) => setVessel(val || '')} disabled={!route}>
+                                <SelectTrigger className="w-full h-7 bg-white border border-slate-200 shadow-2xs text-xs font-bold disabled:opacity-80 px-2 cursor-pointer">
+                                    <SelectValue placeholder="[SELECCIONAR BUQUE]">
+                                        {vessel ? vessel.replace('_', ' ') : undefined}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent className="z-50 bg-white border border-slate-200 shadow-xl rounded-xl">
+                                    <SelectItem value="MOQUEGUA">
+                                        <div className="flex items-center gap-2 font-bold"><div className="w-2.5 h-2.5 rounded-full bg-emerald-600"></div>MOQUEGUA</div>
+                                    </SelectItem>
+                                    <SelectItem value="TABLONES">
+                                        <div className="flex items-center gap-2 font-bold"><div className="w-2.5 h-2.5 rounded-full bg-rose-600"></div>TABLONES</div>
+                                    </SelectItem>
+                                    <SelectItem value="CONCON_TRADER">
+                                        <div className="flex items-center gap-2 font-bold"><div className="w-2.5 h-2.5 rounded-full bg-slate-600"></div>CONCON TRADER</div>
+                                    </SelectItem>
+                                    <SelectItem value="HUEMUL">
+                                        <div className="flex items-center gap-2 font-bold"><div className="w-2.5 h-2.5 rounded-full bg-indigo-600"></div>HUEMUL</div>
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* PASO 7: Nº VIAJES */}
+                    <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-black text-xs shadow-2xs shrink-0">
+                            7
+                        </div>
+                        <div className="flex flex-col gap-1 w-[65px]">
+                            <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                                VIAJES
+                            </span>
+                            <Input 
+                                type="number" 
+                                min="1"
+                                value={frequency} 
+                                onChange={e => setFrequency(e.target.value)}
+                                placeholder="1"
+                                title="Frecuencia Mensual de Viajes"
+                                className="w-full h-7 text-center text-xs font-bold bg-white border-slate-200 shadow-2xs"
+                            />
+                        </div>
                     </div>
 
                 </div>
                 {/* FIN FILA 1 */}
 
                 {/* ====================================================================================== */}
-                {/* FILA 2: PARÁMETROS OPERATIVOS, BOTÓN AÑADIR, ESCENARIOS Y ACCIONES (APEFAC ENTERPRISE) */}
+                {/* FILA 2: PARÁMETROS OPERATIVOS (8 y 9), BOTÓN AÑADIR, ESCENARIOS Y ACCIONES */}
                 {/* ====================================================================================== */}
-                <div className="flex flex-row items-center gap-2.5 w-full pt-2 border-t border-slate-200/80 overflow-x-auto">
+                <div className="flex items-center gap-2.5 w-full pt-1.5 border-t border-slate-200/80 overflow-x-auto">
                     
-                    {/* 8. Demurrage (%) */}
-                    <div className="flex items-center gap-1.5 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs shrink-0">
-                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">8. Demurrage (%):</Label>
-                        <div className="flex gap-1 h-7">
-                            <Input 
-                                type="number" 
-                                min="0"
-                                value={demurragePct} 
-                                onChange={e => onDemurragePctChange?.(e.target.value)}
-                                placeholder="%"
-                                className="w-14 h-7 text-xs text-center font-bold bg-white border-slate-200 shadow-2xs"
-                            />
-                            <button 
-                                type="button"
-                                onClick={() => onShowDemurrageChange?.(!showDemurrage)}
-                                className={`px-2 text-[10px] font-black rounded-md transition-colors border ${showDemurrage ? 'bg-amber-100 border-amber-300 text-amber-900 shadow-2xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
-                                title="Mostrar Demurrage Porcentual en la Matriz Financiera"
-                            >
-                                Mostrar
-                            </button>
+                    {/* PASO 8: DEMURRAGE (%) */}
+                    <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-1.5 px-3 shadow-2xs shrink-0">
+                        <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-black text-[11px] shadow-2xs shrink-0">
+                            8
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                                DEMURRAGE (%):
+                            </span>
+                            <div className="flex gap-1 h-7">
+                                <Input 
+                                    type="number" 
+                                    min="0"
+                                    value={demurragePct} 
+                                    onChange={e => onDemurragePctChange?.(e.target.value)}
+                                    placeholder="%"
+                                    className="w-14 h-7 text-xs text-center font-bold bg-white border-slate-200 shadow-2xs"
+                                />
+                                <button 
+                                    type="button"
+                                    onClick={() => onShowDemurrageChange?.(!showDemurrage)}
+                                    className={`px-2 text-[10px] font-black rounded-md transition-colors border cursor-pointer ${showDemurrage ? 'bg-amber-100 border-amber-300 text-amber-900 shadow-2xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
+                                    title="Mostrar Demurrage Porcentual en la Matriz Financiera"
+                                >
+                                    Mostrar
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    {/* 9. Demurrage (días) */}
-                    <div className="flex items-center gap-1.5 bg-slate-50/80 border border-slate-200 rounded-lg p-1.5 shadow-2xs shrink-0">
-                        <Label className="text-[10px] font-extrabold text-slate-800 uppercase tracking-tight whitespace-nowrap">9. Demurrage (d):</Label>
-                        <div className="flex gap-1 h-7">
-                            <Input 
-                                type="number" 
-                                min="0"
-                                value={demurrageDays} 
-                                onChange={e => onDemurrageDaysChange?.(e.target.value)}
-                                placeholder="días"
-                                className="w-14 h-7 text-xs text-center font-bold bg-white border-slate-200 shadow-2xs"
-                            />
-                            <button 
-                                type="button"
-                                onClick={() => onShowDemurrageDaysChange?.(!showDemurrageDays)}
-                                className={`px-2 text-[10px] font-black rounded-md transition-colors border ${showDemurrageDays ? 'bg-amber-100 border-amber-300 text-amber-900 shadow-2xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
-                                title="Mostrar Demurrage en Días (toma tarifa diaria de la quote/buque)"
-                            >
-                                Mostrar
-                            </button>
+                    {/* PASO 9: DEMURRAGE (DÍAS) */}
+                    <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-1.5 px-3 shadow-2xs shrink-0">
+                        <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-black text-[11px] shadow-2xs shrink-0">
+                            9
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                                DEMURRAGE (D):
+                            </span>
+                            <div className="flex gap-1 h-7">
+                                <Input 
+                                    type="number" 
+                                    min="0"
+                                    value={demurrageDays} 
+                                    onChange={e => onDemurrageDaysChange?.(e.target.value)}
+                                    placeholder="días"
+                                    className="w-14 h-7 text-xs text-center font-bold bg-white border-slate-200 shadow-2xs"
+                                />
+                                <button 
+                                    type="button"
+                                    onClick={() => onShowDemurrageDaysChange?.(!showDemurrageDays)}
+                                    className={`px-2 text-[10px] font-black rounded-md transition-colors border cursor-pointer ${showDemurrageDays ? 'bg-amber-100 border-amber-300 text-amber-900 shadow-2xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
+                                    title="Mostrar Demurrage en Días (toma tarifa diaria $/d de la ruta/buque)"
+                                >
+                                    Mostrar
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    {/* ➕ Botón Añadir al Modelo con Burbuja de Validación */}
+                    {/* ➕ Botón Añadir al Modelo */}
                     <div className="relative group shrink-0">
                         <Button 
                             onClick={handleAdd} 
-                            className={`relative h-7.5 px-4 overflow-hidden transition-all rounded-lg shadow-2xs ${isAdding ? 'bg-sky-600 text-white pointer-events-none' : isFormValid ? 'bg-sky-600 hover:bg-sky-700 text-white font-extrabold' : 'bg-slate-200 text-slate-400 cursor-not-allowed hover:bg-slate-200'}`}
+                            className={`relative h-7.5 px-4 overflow-hidden transition-all rounded-lg shadow-2xs cursor-pointer ${isAdding ? 'bg-sky-600 text-white pointer-events-none' : isFormValid ? 'bg-sky-600 hover:bg-sky-700 text-white font-extrabold' : 'bg-slate-200 text-slate-400 cursor-not-allowed hover:bg-slate-200'}`}
                             disabled={isAdding || !isFormValid}
                         >
                             {isAdding && (
@@ -751,7 +819,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         )}
                     </div>
 
-                    {/* Indicador de Escenario */}
+                    {/* Indicador de Escenario Activo */}
                     <div className="flex items-center gap-1.5 font-extrabold text-sky-800 bg-sky-50 border border-sky-200 px-3 h-7.5 rounded-lg shadow-2xs text-[11px] shrink-0">
                         📁 Escenario: {forecastName || 'Sin guardar'}
                     </div>
@@ -833,7 +901,7 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 </div>
                 {/* FIN FILA 2 */}
 
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 };

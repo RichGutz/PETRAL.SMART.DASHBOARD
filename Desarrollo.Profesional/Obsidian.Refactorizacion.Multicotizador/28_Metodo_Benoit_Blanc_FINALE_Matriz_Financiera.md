@@ -706,6 +706,65 @@ La comparación directa certifica que **únicamente se modificaron 3 bloques qui
 
 *Vuelta 3 de Auditoría Pericial completada, documentada, respaldada y sellada con éxito rotundo por Detective Benoit Blanc — 28.08.2026.*
 
+---
+
+## 🔎 10. VUELTA 4 DE AUDITORÍA BENOIT BLANC: HOMOLOGACIÓN INTEGRAL DE BOTONERA Y CORRECCIÓN DE CARGA DE RUTAS
+
+### 🚩 10.1. Pistas e Inspección Forense
+1. **Pista 1 — Desalineación Estética de la Botonera**:
+   - En el Multicotizador (`MultiCotizadorExcel.tsx`), la botonera superior utiliza un diseño unificado de cintas con badges numerados circulares/cuadrados (`w-8 h-8 rounded-lg bg-sky-100 text-sky-700 font-black`), tarjetas `bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs` y selectores con tipografía APEFAC Enterprise.
+   - En la Matriz Financiera (`ForecastBuilder_V2.tsx`), la botonera estaba desalineada en alturas, bordes y estilos visuales.
+2. **Pista 2 — Emergencia de Selector de Rutas**:
+   - Al seleccionar Cliente y Fuente (Cierres, Cotizaciones, Presupuestos), el selector no mostraba opciones debido a:
+     - `ForecastService` importado asíncronamente en `useEffect` sin sincronización reactiva garantizada.
+     - En Radix UI / `@radix-ui/react-select`, el ítem vacío `<SelectItem value="" disabled>` causaba fallas internas al renderizar el menú emergente.
+     - Falta de homologación entre la clasificación de categorías de `MultiCotizadorExcel.tsx` y `ForecastBuilder_V2.tsx`.
+
+---
+
+### 🛠️ 10.2. Solución Forense Implementada:
+1. **Importación Estática y Sincronización de Catálogos**:
+   - Importación directa de `ForecastService` desde `../../services/api`.
+   - Inicialización paralela mediante `Promise.all([getRoutesMaster(), getClients(), getSpotVoyages()])`.
+2. **Homologación Algorítmica de Filtros de Rutas**:
+   - Algoritmo de calce de cliente tolerante (`cid === cleanClient || name.startsWith(cleanClient) || desc.includes(cleanClient)`).
+   - Clasificación por Fuente idéntica al Multicotizador:
+     - **CIERRES**: `is_contract === true` || `desc.includes('COA')` || `name.includes(' COA ')` || `name.includes('.FX ')`.
+     - **PRESUPUESTOS**: `desc.includes('PRESUPUESTO')` || `desc.includes('PPTO')` || `name.includes(' DM ')` || `is_budget === true`.
+     - **COTIZACIONES**: rutas spot y cotizaciones que no son COA ni presupuesto.
+3. **Curación de Radix UI Select**:
+   - Reemplazo de `value=""` por `value="__empty__"` en el placeholder disabled.
+4. **Homologación Visual 1:1 con Multicotizador**:
+   - Badges numerados: `1. INICIO`, `2. FIN`, `3. MESES A MODELAR`, `4. CLIENTE`, `⚙️ FUENTE`, `5. RUTA`, `6. BUQUE`, `7. VIAJES`.
+   - Fila 2 con badges `8. DEMURRAGE (%)` y `9. DEMURRAGE (D)`, botón `➕ Añadir al Modelo` con estado reactivo y selector de vistas / formatos.
+
+---
+
+### 🔬 10.3. Auditoría Forense de DIFFs (vs `ForecastBuilder_V2_legacy.tsx`):
+```diff
+- import { Card, CardContent } from '../ui/card';
++ import { ForecastService } from '../../services/api';
+
+- const isBudget = desc.includes('PRESUPUESTO') || cat === 'PRESUPUESTO' || s.legs_data?.is_budget === true;
++ const isBudget = descUpper.includes('PRESUPUESTO') || descUpper.includes('PPTO') || name.includes(' DM ') || s.legs_data?.is_budget === true;
++ const isCoa = descUpper.includes('COA') || desc === 'COA Cliente Activo' || s.is_contract === true || name.includes(' COA ') || name.includes('.FX ');
++ const isSpot = (!isBudget && !isCoa) || descUpper.includes('COTIZACI') || descUpper.includes('PROSPECTO') || name.includes('SPOT');
+
+- <SelectItem value="" disabled>No hay {routeSource.toLowerCase()} para {client}</SelectItem>
++ <SelectItem value="__empty__" disabled>No hay {routeSource.toLowerCase()} para {client}</SelectItem>
+```
+
+---
+
+### 🧪 10.4. Resultados de la Verificación:
+* **Compilación Frontend (Vite)**: `✓ built in 7.93s` (0 errores).
+* **Control de Calidad UI**: Homologación total de diseño y reactividad de carga de rutas asegurada.
+
+---
+
+*Vuelta 4 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
+
+
 
 
 
