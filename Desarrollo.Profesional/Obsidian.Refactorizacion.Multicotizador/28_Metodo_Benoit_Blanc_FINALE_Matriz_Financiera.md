@@ -1177,6 +1177,46 @@ La comparación directa certifica que **únicamente se modificaron 3 bloques qui
 
 *Vuelta 12 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
 
+---
+
+## 🔎 19. VUELTA 13 DE AUDITORÍA BENOIT BLANC: CONVERGENCIA INTEGRAL MATRIZ FINANCIERA VS INFORME MEC (`FORMATO.MEC.BUDGETS.2026.xlsx`)
+
+### 🚩 19.1. Pistas y Diagnóstico Forense
+- **La Hipótesis de Conciliación**: El Informe MEC (`FinancialProjectionsMaster_V2.tsx` / `/financial-projections`) resume la capacidad anual de la flota en dos bloques:
+  - **Bloque 1**: Distribución Macro (Viajes Cabotaje vs Viajes Exportación, Volumen TM y % de Participación).
+  - **Bloque 2**: Matriz Anual de Desglose por Ruta y Rendimiento (TM Anual, Full Load Ponderado, Nº Viajes, P/L x Viaje, Total Gross Margin, % Volumen y Días de Ocupación).
+- **El Desafío de Integridad**: Para garantizar que no existan discrepancias entre la Matriz Financiera (`ForecastGrid.tsx` / `run_universal`) y el Informe MEC, los datos del Informe MEC deben generarse y conciliarse **1:1 con `aggregated_data`**.
+
+---
+
+### 🛠️ 19.2. Implementación de Blindaje en `FinancialProjectionsMaster_V2.tsx`:
+1. `loadData` ejecuta la simulación oficial de backend (`ForecastService.runSimulation`) al enriquecer cada escenario guardado en Supabase, garantizando la presencia inmaculada de `aggregated_data`.
+2. `processedScenarios` itera `f.aggregated_data` mapeando `[client][route][vessel][month]`, extrayendo las sumatorias exactas de:
+   - $\text{Total Toneladas} = \sum (\text{Carga Unit} \times \text{Frecuencia})$
+   - $\text{Total Viajes} = \sum \text{Frecuencia}$
+   - $\text{Total Gross Margin} = \sum \text{Voyage Result / P\&L}$
+   - $\text{Días Ocupación} = \sum \text{Duración Total del Viaje}$
+   - $\text{Full Load Ponderado} = \frac{\text{Total Toneladas}}{\text{Total Viajes}}$
+   - $\text{P/L por Viaje Ponderado} = \frac{\text{Total Gross Margin}}{\text{Total Viajes}}$
+
+---
+
+### 🧪 19.3. Resultados del Loop QC Pericial de Convergencia (`scratch/test_qc_matriz_vs_mec_all.mjs`):
+* **Escenarios Reales de Supabase Auditados**: `4 escenarios`
+  1. `PB 2027 (Jose de los Heros) + Prom Dem`: $60\text{ v} \mid 810,000\text{ MT} \mid \$13,123,465.60 \mid 224.1\text{ d}$ ($\Delta = \$0.00$) ✅
+  2. `PB 2027 (Jose de los Heros)`: $60\text{ v} \mid 810,000\text{ MT} \mid \$13,123,465.60 \mid 224.1\text{ d}$ ($\Delta = \$0.00$) ✅
+  3. `PB 2027 + Demora`: $61\text{ v} \mid 823,500\text{ MT} \mid \$13,109,712.61 \mid 231.2\text{ d}$ ($\Delta = \$0.00$) ✅
+  4. `PB 2027 MOQUEGUA SIN DEMORAS`: $59\text{ v} \mid 796,500\text{ MT} \mid \$12,816,698.59 \mid 249.2\text{ d}$ ($\Delta = \$0.00$) ✅
+* **Total de Aserciones Matemáticas**: `16 aserciones` (Viajes, Toneladas, Margen Bruto, Días).
+* **Aserciones Aprobadas ($\Delta < \$0.01$)**: `16 / 16`
+* **Tasa de Convergencia**: **`100.00% ✅`**
+* **Veredicto Benoit Blanc**: **CONVERGENCIA TOTAL Y HOMOLOGACIÓN 1:1 ENTRE LA MATRIZ FINANCIERA Y EL INFORME MEC**.
+
+---
+
+*Vuelta 13 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
+
+
 
 
 

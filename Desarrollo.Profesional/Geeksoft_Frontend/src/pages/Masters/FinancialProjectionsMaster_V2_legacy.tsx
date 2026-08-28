@@ -82,24 +82,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
             const enriched = await Promise.all((list || []).map(async (item: any) => {
                 try {
                     const full = await ForecastService.loadForecast(item.id);
-                    const sc = full || item;
-                    if (sc && sc.projection_lines && sc.projection_lines.length > 0 && !sc.aggregated_data) {
-                        try {
-                            const sDate = sc.start_date && sc.start_date.length === 7 ? `${sc.start_date}-01` : (sc.start_date || '2027-01-01');
-                            const eDate = sc.end_date && sc.end_date.length === 7 ? `${sc.end_date}-28` : (sc.end_date || '2027-12-31');
-                            const sim = await ForecastService.runSimulation({
-                                start_date: sDate,
-                                end_date: eDate,
-                                projection_lines: sc.projection_lines
-                            });
-                            if (sim && sim.aggregated_data) {
-                                sc.aggregated_data = sim.aggregated_data;
-                            }
-                        } catch (simErr) {
-                            console.warn("No se pudo ejecutar simulación automática para", item.name, simErr);
-                        }
-                    }
-                    return sc;
+                    return full || item;
                 } catch {
                     return item;
                 }
@@ -150,160 +133,107 @@ export const FinancialProjectionsMaster: React.FC = () => {
             const vesselSet = new Set<string>();
             const routesMap: Record<string, MecRouteRow> = {};
 
-            const foreignPorts = [
-                'BARQUITO', 'MEJILLONES', 'ANTOFAGASTA', 'QUINTERO', 'PATILLOS', 
-                'VENTANAS', 'SAN VICENTE', 'ARICA', 'IQUIQUE', 'CORONEL', 
-                'COQUIMBO', 'VALPARAISO', 'HUASCO', 'MICHILLA', 'GUAYACAN', 
-                'CALETA COLOSO', 'TOCOPILLA', 'PUERTO ANGAMOS', 'LIRQUEN', 'SAN ANTONIO',
-                'GUAYAQUIL', 'ESMERALDAS', 'MANTA', 'BUENAVENTURA', 'LAZARO CARDENAS'
-            ];
+            lines.forEach((line: any) => {
+                const client = (line.client_id || line.client || 'SPCC').toUpperCase();
+                const orig = (line.origin_port_id || 'ILO').toUpperCase();
+                const dest = (line.destination_port_id || 'MATARANI').toUpperCase();
+                const rName = (line.route_id || `${orig}-${dest}`).toUpperCase();
+                const vId = (line.vessel_id || 'MOQUEGUA').replace('_', ' ').toUpperCase();
+                vesselSet.add(vId);
 
-            if (f.aggregated_data && Object.keys(f.aggregated_data).length > 0) {
-                // PARSEO 1:1 DIRECTO DESDE LA SIMULACIÓN OFICIAL DE LA MATRIZ FINANCIERA
-                for (const [client, routesDict] of Object.entries(f.aggregated_data as Record<string, any>)) {
-                    for (const [rName, vesselsDict] of Object.entries(routesDict as Record<string, any>)) {
-                        for (const [vName, monthsDict] of Object.entries(vesselsDict as Record<string, any>)) {
-                            const cleanVessel = vName.replace('_', ' ').toUpperCase();
-                            vesselSet.add(cleanVessel);
+                let qty = Number(line.quantity || 13500);
+                const freq = Number(line.monthly_frequency || 0);
 
-                            let totTm = 0;
-                            let totTrips = 0;
-                            let totPnl = 0;
-                            let totDays = 0;
-                            let lastUnitQty = 13500;
+                // Detección automática Cabotaje vs Exportación por Maestro de Puertos (Chile, Ecuador, etc.)
+                const foreignPorts = [
+                    'BARQUITO', 'MEJILLONES', 'ANTOFAGASTA', 'QUINTERO', 'PATILLOS', 
+                    'VENTANAS', 'SAN VICENTE', 'ARICA', 'IQUIQUE', 'CORONEL', 
+                    'COQUIMBO', 'VALPARAISO', 'HUASCO', 'MICHILLA', 'GUAYACAN', 
+                    'CALETA COLOSO', 'TOCOPILLA', 'PUERTO ANGAMOS', 'LIRQUEN', 'SAN ANTONIO',
+                    'GUAYAQUIL', 'ESMERALDAS', 'MANTA', 'BUENAVENTURA', 'LAZARO CARDENAS'
+                ];
+                const isExport = foreignPorts.some(p => dest.includes(p) || orig.includes(p)) 
+                    || dest.includes('EXP') 
+                    || dest.includes('CHILE')
+                    || line.is_export === true;
 
-                            for (const [_, mVal] of Object.entries(monthsDict as Record<string, any>)) {
-                                const freq = Number(mVal.freq || 0);
-                                if (freq <= 0) continue;
-                                const qtyUnit = Number(mVal.carga_unit || 13500);
-                                const pnl = Number(mVal.voyage_result || 0);
-                                const dur = Number(mVal.total_duration || 0);
+                // Vincular con la cotización / cierre real para extraer P&L y Días exactos
+                const matchedQuote = (quotesList || []).find((q: any) => 
+                    q.name === line.quote_id || 
+                    q.id === line.quote_id || 
+                    (q.name && line.quote_id && q.name.toLowerCase().includes(String(line.quote_id).toLowerCase())) ||
+                    (q.name && q.name.toUpperCase().includes(orig) && q.name.toUpperCase().includes(dest))
+                );
 
-                                totTrips += freq;
-                                totTm += (qtyUnit * freq);
-                                totPnl += pnl;
-                                totDays += dur;
-                                lastUnitQty = qtyUnit;
-                            }
+                let voyagePnlTrip = 0;
+                let tripDurationDays = 0;
 
-                            if (totTrips <= 0) continue;
-
-                            const routeUpper = rName.toUpperCase();
-                            const isExport = foreignPorts.some(p => routeUpper.includes(p)) || routeUpper.includes('EXP') || routeUpper.includes('CHILE');
-                            const routeKey = `${client}__${rName}__${cleanVessel}`;
-
-                            routesMap[routeKey] = {
-                                client: client.toUpperCase(),
-                                route: rName.toUpperCase(),
-                                vessel: cleanVessel,
-                                isExport,
-                                annualTons: totTm,
-                                fullLoad: totTrips > 0 ? (totTm / totTrips) : lastUnitQty,
-                                annualTrips: totTrips,
-                                pnlPerTrip: totTrips > 0 ? (totPnl / totTrips) : 0,
-                                totalGrossMargin: totPnl,
-                                volumeSharePct: 0,
-                                daysOccupation: totDays,
-                                daysAvailable: 0
-                            };
+                if (matchedQuote) {
+                    try {
+                        const unpacked = MulticotizadorRetrieverService.unpackQuoteData(matchedQuote);
+                        const fs = unpacked.financial_summary;
+                        if (fs && Number(fs.grossRevenueTotal || 0) > 0) {
+                            voyagePnlTrip = Number(fs.voyageResultPnl || 0);
+                            tripDurationDays = Number(fs.totalDays || 0);
+                            if (Number(fs.totalQuantity || 0) > 0) qty = Number(fs.totalQuantity);
+                        } else {
+                            const calc = MulticotizadorCalculationEngine.calculateVoyage({
+                                tramos: unpacked.tramos,
+                                puertosConfig: unpacked.puertosConfig,
+                                vesselParams: unpacked.vesselParams,
+                                bunkerPriceIfo: unpacked.bunker_price_ifo,
+                                bunkerPriceMdo: unpacked.bunker_price_mdo,
+                                addressCommPct: unpacked.addressCommPct,
+                                brokerCommPct: unpacked.brokerCommPct,
+                                charterHireCost: unpacked.charter_hire_cost
+                            });
+                            voyagePnlTrip = calc.voyageResultPnl;
+                            tripDurationDays = calc.totalDays;
+                            if (calc.totalQuantity > 0) qty = calc.totalQuantity;
                         }
+                    } catch {
+                        voyagePnlTrip = 0;
+                        tripDurationDays = 0;
                     }
                 }
-            } else {
-                lines.forEach((line: any) => {
-                    const client = (line.client_id || line.client || 'SPCC').toUpperCase();
-                    const orig = (line.origin_port_id || 'ILO').toUpperCase();
-                    const dest = (line.destination_port_id || 'MATARANI').toUpperCase();
-                    const rName = (line.route_id || `${orig}-${dest}`).toUpperCase();
-                    const vId = (line.vessel_id || 'MOQUEGUA').replace('_', ' ').toUpperCase();
-                    vesselSet.add(vId);
 
-                    let qty = Number(line.quantity || 13500);
-                    const freq = Number(line.monthly_frequency || 0);
+                // Fallback si no hubiese cotización enlazada
+                if (voyagePnlTrip === 0) {
+                    const fRate = Number(line.custom_tariff || line.freight_rate || (isExport ? 21.15 : (dest.includes('MAT') ? 19.29 : 23.10)));
+                    const grossTrip = qty * fRate;
+                    const hirePerDay = 13000;
+                    const seaDays = isExport ? 2.61 : (dest.includes('MAT') ? 0.54 : 2.21);
+                    const portDays = isExport ? 2.13 : (dest.includes('MAT') ? 3.54 : 2.13);
+                    tripDurationDays = seaDays + portDays;
+                    const bunkerTrip = isExport ? 48088 : (dest.includes('MAT') ? 19981 : 41555);
+                    const portTrip = isExport ? 80500 : (dest.includes('MAT') ? 42500 : 62000);
+                    const hireCostTrip = hirePerDay * tripDurationDays;
+                    voyagePnlTrip = grossTrip - (hireCostTrip + bunkerTrip + portTrip);
+                }
 
-                    const isExport = foreignPorts.some(p => dest.includes(p) || orig.includes(p)) 
-                        || dest.includes('EXP') 
-                        || dest.includes('CHILE')
-                        || line.is_export === true;
+                const routeKey = `${orig}-${dest}`;
+                if (!routesMap[routeKey]) {
+                    routesMap[routeKey] = {
+                        client,
+                        route: routeKey,
+                        vessel: vId,
+                        isExport,
+                        annualTons: 0,
+                        fullLoad: qty,
+                        annualTrips: 0,
+                        pnlPerTrip: voyagePnlTrip,
+                        totalGrossMargin: 0,
+                        volumeSharePct: 0,
+                        daysOccupation: 0,
+                        daysAvailable: 0
+                    };
+                }
 
-                    // Vincular con la cotización / cierre real para extraer P&L y Días exactos
-                    const matchedQuote = (quotesList || []).find((q: any) => 
-                        q.name === line.quote_id || 
-                        q.id === line.quote_id || 
-                        (q.name && line.quote_id && q.name.toLowerCase().includes(String(line.quote_id).toLowerCase())) ||
-                        (q.name && q.name.toUpperCase().includes(orig) && q.name.toUpperCase().includes(dest))
-                    );
-
-                    let voyagePnlTrip = 0;
-                    let tripDurationDays = 0;
-
-                    if (matchedQuote) {
-                        try {
-                            const unpacked = MulticotizadorRetrieverService.unpackQuoteData(matchedQuote);
-                            const fs = unpacked.financial_summary;
-                            if (fs && Number(fs.grossRevenueTotal || 0) > 0) {
-                                voyagePnlTrip = Number(fs.voyageResultPnl || 0);
-                                tripDurationDays = Number(fs.totalDays || 0);
-                                if (Number(fs.totalQuantity || 0) > 0) qty = Number(fs.totalQuantity);
-                            } else {
-                                const calc = MulticotizadorCalculationEngine.calculateVoyage({
-                                    tramos: unpacked.tramos,
-                                    puertosConfig: unpacked.puertosConfig,
-                                    vesselParams: unpacked.vesselParams,
-                                    bunkerPriceIfo: unpacked.bunker_price_ifo,
-                                    bunkerPriceMdo: unpacked.bunker_price_mdo,
-                                    addressCommPct: unpacked.addressCommPct,
-                                    brokerCommPct: unpacked.brokerCommPct,
-                                    charterHireCost: unpacked.charter_hire_cost
-                                });
-                                voyagePnlTrip = calc.voyageResultPnl;
-                                tripDurationDays = calc.totalDays;
-                                if (calc.totalQuantity > 0) qty = calc.totalQuantity;
-                            }
-                        } catch {
-                            voyagePnlTrip = 0;
-                            tripDurationDays = 0;
-                        }
-                    }
-
-                    // Fallback si no hubiese cotización enlazada
-                    if (voyagePnlTrip === 0) {
-                        const fRate = Number(line.custom_tariff || line.freight_rate || (isExport ? 21.15 : (dest.includes('MAT') ? 19.29 : 23.10)));
-                        const grossTrip = qty * fRate;
-                        const hirePerDay = 13000;
-                        const seaDays = isExport ? 2.61 : (dest.includes('MAT') ? 0.54 : 2.21);
-                        const portDays = isExport ? 2.13 : (dest.includes('MAT') ? 3.54 : 2.13);
-                        tripDurationDays = seaDays + portDays;
-                        const bunkerTrip = isExport ? 48088 : (dest.includes('MAT') ? 19981 : 41555);
-                        const portTrip = isExport ? 80500 : (dest.includes('MAT') ? 42500 : 62000);
-                        const hireCostTrip = hirePerDay * tripDurationDays;
-                        voyagePnlTrip = grossTrip - (hireCostTrip + bunkerTrip + portTrip);
-                    }
-
-                    const routeKey = `${orig}-${dest}`;
-                    if (!routesMap[routeKey]) {
-                        routesMap[routeKey] = {
-                            client,
-                            route: routeKey,
-                            vessel: vId,
-                            isExport,
-                            annualTons: 0,
-                            fullLoad: qty,
-                            annualTrips: 0,
-                            pnlPerTrip: voyagePnlTrip,
-                            totalGrossMargin: 0,
-                            volumeSharePct: 0,
-                            daysOccupation: 0,
-                            daysAvailable: 0
-                        };
-                    }
-
-                    routesMap[routeKey].annualTrips += freq;
-                    routesMap[routeKey].annualTons += (qty * freq);
-                    routesMap[routeKey].daysOccupation += (tripDurationDays * freq);
-                    routesMap[routeKey].totalGrossMargin += (voyagePnlTrip * freq);
-                });
-            }
+                routesMap[routeKey].annualTrips += freq;
+                routesMap[routeKey].annualTons += (qty * freq);
+                routesMap[routeKey].daysOccupation += (tripDurationDays * freq);
+                routesMap[routeKey].totalGrossMargin += (voyagePnlTrip * freq);
+            });
 
             const routesList = Object.values(routesMap);
 
