@@ -1126,6 +1126,34 @@ La comparación directa certifica que **únicamente se modificaron 3 bloques qui
 
 *Vuelta 10 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
 
+---
+
+## 🔎 17. VUELTA 11 DE AUDITORÍA BENOIT BLANC: BLINDAJE MATEMÁTICO CRUZADO (MULTICOTIZADOR VS MATRIZ FINANCIERA ANTE VARIACIONES DE DEMORAS)
+
+### 🚩 17.1. Pistas e Inspección Forense
+- **La Hipótesis Pericial**: Si una ruta limpia (sin demora) es calculada en el Multicotizador inyectándole $N$ días de demora, el resultado de `Voyage Result / P&L` debe ser **100.00% idéntico** al que produce la Matriz Financiera al aplicarle la función de sobreescritura de $N$ días de demora sobre esa misma ruta base.
+- **La Autopsia de Variables Comparadas**:
+  1. **Ingresos por Demora**: $\text{Demurrage USD} = \text{Días Demora} \times \text{Tarifa Diaria}$.
+  2. **Net Revenue**: $\text{Gross Revenue} - \text{Comisiones}$.
+  3. **Combustible de Espera**: $\text{Búnker Demora} = \text{Días Demora} \times (\text{Consumo Idle IFO} \times P_{\text{IFO}} + \text{Consumo Idle MDO} \times P_{\text{MDO}})$.
+  4. **Duración y Hire**: $\text{Días Totales} \times \text{TCE Requerido} + \text{Charter Hire}$.
+  5. **Voyage Result y P&L**: $\text{Net Revenue} - (\text{Costos Puerto} + \text{Dockage} + \text{Búnker Total} + \text{Charter Hire} + \text{Hire Total})$.
+
+---
+
+### 🧪 17.2. Resultados del Loop de Auditoría Cruzada (`scratch/test_qc_demurrage_loop_cross_check.mjs`):
+* **Rutas Oficiales en Vivo Auditadas**: `28 rutas`
+* **Casos de Días de Demora Evaluados**: `8 casos por ruta` ($[0.0, 0.5, 1.0, 1.5, 2.0, 3.0, 4.5, 5.0]$ días).
+* **Total de Aserciones Matemáticas Cruzadas**: `224 aserciones`
+* **Aserciones Exitosas ($\Delta < \$0.01$)**: `224 / 224`
+* **Tasa de Convergencia**: **`100.00% ✅`**
+* **Veredicto Benoit Blanc**: **BLINDAJE MATEMÁTICO TOTAL CONVERGENTE**.
+
+---
+
+*Vuelta 11 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
+
+
 
 
 
