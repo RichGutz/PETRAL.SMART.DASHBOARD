@@ -278,10 +278,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const globalTons = new Array(months.length).fill(0);
         const globalFreightRevenues = new Array(months.length).fill(0);
         const globalRevenues = new Array(months.length).fill(0);
-        const globalNetRevenues = new Array(months.length).fill(0);
-        const globalHire = new Array(months.length).fill(0);
         const globalPortCosts = new Array(months.length).fill(0);
-        const globalDockageCosts = new Array(months.length).fill(0);
         const globalBunkerCosts = new Array(months.length).fill(0);
         const globalCharterHire = new Array(months.length).fill(0);
         const globalVoyageResult = new Array(months.length).fill(0);
@@ -295,14 +292,10 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             const level1RowSpanRef = { value: 0 };
             let isFirstLevel1Row = true;
 
-            const level1Trips = new Array(months.length).fill(0);
             const level1ShipDays = new Array(months.length).fill(0);
             const level1FreightRevenue = new Array(months.length).fill(0);
             const level1GrossRevenue = new Array(months.length).fill(0);
-            const level1NetRevenue = new Array(months.length).fill(0);
-            const level1Hire = new Array(months.length).fill(0);
             const level1PortCosts = new Array(months.length).fill(0);
-            const level1DockageCosts = new Array(months.length).fill(0);
             const level1BunkerCosts = new Array(months.length).fill(0);
             const level1CharterHire = new Array(months.length).fill(0);
             const level1VoyageResult = new Array(months.length).fill(0);
@@ -491,7 +484,6 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     const tceDiff = months.map((_, i) => (trips[i] > 0 ? (tceReal[i] - (tceReq[i] || 13000)) : 0));
 
                     trips.forEach((v, i) => {
-                        level1Trips[i] += (v || 0);
                         globalTrips[i] += (v || 0);
                     });
                     freightRevenues.forEach((v, i) => {
@@ -502,21 +494,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         level1GrossRevenue[i] += (v || 0);
                         globalRevenues[i] += (v || 0);
                     });
-                    netRevenues.forEach((v, i) => {
-                        level1NetRevenue[i] += (v || 0);
-                        globalNetRevenues[i] += (v || 0);
-                    });
-                    tceCostTotal.forEach((v, i) => {
-                        level1Hire[i] += (v || 0);
-                        globalHire[i] += (v || 0);
-                    });
-                    portCosts.forEach((v, i) => {
+                    portCostsTotal.forEach((v, i) => {
                         level1PortCosts[i] += (v || 0);
                         globalPortCosts[i] += (v || 0);
-                    });
-                    dockageCosts.forEach((v, i) => {
-                        level1DockageCosts[i] += (v || 0);
-                        globalDockageCosts[i] += (v || 0);
                     });
                     bunker.forEach((v, i) => {
                         level1BunkerCosts[i] += (v || 0);
@@ -841,18 +821,20 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             const totalGrossPlusDem = sum(level1GrossPlusDem);
             const totalLevel1Tons = sum(level1TonsTotal);
             const totalLevel1ShipDays = sum(level1ShipDays);
+            const level1Yield = level1TonsTotal.map((tons, i) => tons ? level1GrossPlusDem[i] / tons : 0);
+            const totalLevel1Yield = totalLevel1Tons ? totalGrossPlusDem / totalLevel1Tons : 0;
+            const level1YieldFlete = level1TonsTotal.map((tons, i) => tons ? level1FreightRevenue[i] / tons : 0);
+            const totalLevel1YieldFlete = totalLevel1Tons ? totalLevel1FreightRevenue / totalLevel1Tons : 0;
 
             const subMetrics = [
-                { name: "Viajes", values: level1Trips, total: sum(level1Trips), pct: null, totalPct: null, isCurrency: false, isTotal: false },
+                { name: "P/L", values: level1PlVsRequired, total: sum(level1PlVsRequired), pct: level1CalcPct(level1PlVsRequired), totalPct: level1CalcTotalPct(sum(level1PlVsRequired), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
                 { name: "Días-Buque", values: level1ShipDays, total: totalLevel1ShipDays, pct: null, totalPct: null, isCurrency: false, isTotal: false },
                 { name: "Toneladas", values: level1TonsTotal, total: totalLevel1Tons, pct: null, totalPct: null, isCurrency: false, isTotal: false },
-                { name: "Net Revenue", values: level1NetRevenue, total: sum(level1NetRevenue), pct: level1CalcPct(level1NetRevenue), totalPct: level1CalcTotalPct(sum(level1NetRevenue), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
-                { name: "(-) Hire (TCE x días)", values: level1Hire, total: sum(level1Hire), pct: level1CalcPct(level1Hire), totalPct: level1CalcTotalPct(sum(level1Hire), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
-                { name: "(-) Bunker Costs", values: level1BunkerCosts, total: sum(level1BunkerCosts), pct: level1CalcPct(level1BunkerCosts), totalPct: level1CalcTotalPct(sum(level1BunkerCosts), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
-                { name: "(-) Port Costs", values: level1PortCosts, total: sum(level1PortCosts), pct: level1CalcPct(level1PortCosts), totalPct: level1CalcTotalPct(sum(level1PortCosts), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
-                { name: "(-) Dockage", values: level1DockageCosts, total: sum(level1DockageCosts), pct: level1CalcPct(level1DockageCosts), totalPct: level1CalcTotalPct(sum(level1DockageCosts), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
-                { name: "(-) Arriendo de Naves", values: level1CharterHire, total: sum(level1CharterHire), pct: level1CalcPct(level1CharterHire), totalPct: level1CalcTotalPct(sum(level1CharterHire), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
-                { name: "(=) VOYAGE RESULT / P&L", values: level1PlVsRequired, total: sum(level1PlVsRequired), pct: level1CalcPct(level1PlVsRequired), totalPct: level1CalcTotalPct(sum(level1PlVsRequired), sum(level1GrossRevenue)), isCurrency: true, isTotal: true }
+                { name: "Gross Revenue", values: level1GrossRevenue, total: sum(level1GrossRevenue), pct: level1GrossRevenue.map(r => r ? 100 : 0), totalPct: sum(level1GrossRevenue) ? 100 : 0, isCurrency: true, isTotal: false },
+                { name: "Demurrage", values: level1Demurrage, total: sum(level1Demurrage), pct: level1CalcPct(level1Demurrage), totalPct: level1CalcTotalPct(sum(level1Demurrage), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "Gross + Demurrage", values: level1GrossPlusDem, total: totalGrossPlusDem, pct: level1CalcPct(level1GrossPlusDem), totalPct: level1CalcTotalPct(totalGrossPlusDem, sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "Yield Flete (USD/MT)", values: level1YieldFlete, total: totalLevel1YieldFlete, pct: null, totalPct: null, isCurrency: true, isTotal: true },
+                { name: "Yield (USD/MT)", values: level1Yield, total: totalLevel1Yield, pct: null, totalPct: null, isCurrency: true, isTotal: true }
             ];
 
             if (showSubtotals) {
@@ -863,7 +845,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                 const subtotalRouteRowSpanRef = { value: visibleSubMetrics.length };
 
                 visibleSubMetrics.forEach((metric, index) => {
-                    const isExpandableRow = index === 0;
+                    const isExpandableRow = metric.name === "P/L";
                     
                     result.push({
                         col1: null,
@@ -889,27 +871,32 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const globalCalcPct = (arr: number[]) => arr.map((v, i) => globalRevenues[i] ? (v / globalRevenues[i]) * 100 : 0);
         const globalCalcTotalPct = (totalVal: number, totalRev: number) => totalRev ? (totalVal / totalRev) * 100 : 0;
 
+        const totalGlobalFreight = sum(globalFreightRevenues);
+        const globalGrossPlusDem = globalFreightRevenues.map((fRev, i) => fRev + (globalDemurrage[i] || 0));
+        const totalGlobalGrossPlusDem = sum(globalGrossPlusDem);
         const totalGlobalTons = sum(globalTons);
         const totalGlobalShipDays = sum(globalShipDays);
+        const globalYield = globalTons.map((tons, i) => tons ? globalGrossPlusDem[i] / tons : 0);
+        const totalGlobalYield = totalGlobalTons ? totalGlobalGrossPlusDem / totalGlobalTons : 0;
+        const globalYieldFlete = globalTons.map((tons, i) => tons ? globalFreightRevenues[i] / tons : 0);
+        const totalGlobalYieldFlete = totalGlobalTons ? totalGlobalFreight / totalGlobalTons : 0;
 
         const globalMetrics = [
-            { name: "Viajes", values: globalTrips, total: sum(globalTrips), pct: null, totalPct: null, isCurrency: false, isTotal: false },
+            { name: "P/L", values: globalPlVsRequired, total: sum(globalPlVsRequired), pct: globalCalcPct(globalPlVsRequired), totalPct: globalCalcTotalPct(sum(globalPlVsRequired), sum(globalRevenues)), isCurrency: true, isTotal: false },
             { name: "Días-Buque", values: globalShipDays, total: totalGlobalShipDays, pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Toneladas", values: globalTons, total: totalGlobalTons, pct: null, totalPct: null, isCurrency: false, isTotal: false },
-            { name: "Net Revenue", values: globalNetRevenues, total: sum(globalNetRevenues), pct: globalCalcPct(globalNetRevenues), totalPct: globalCalcTotalPct(sum(globalNetRevenues), sum(globalRevenues)), isCurrency: true, isTotal: false },
-            { name: "(-) Hire (TCE x días)", values: globalHire, total: sum(globalHire), pct: globalCalcPct(globalHire), totalPct: globalCalcTotalPct(sum(globalHire), sum(globalRevenues)), isCurrency: true, isTotal: false },
-            { name: "(-) Bunker Costs", values: globalBunkerCosts, total: sum(globalBunkerCosts), pct: globalCalcPct(globalBunkerCosts), totalPct: globalCalcTotalPct(sum(globalBunkerCosts), sum(globalRevenues)), isCurrency: true, isTotal: false },
-            { name: "(-) Port Costs", values: globalPortCosts, total: sum(globalPortCosts), pct: globalCalcPct(globalPortCosts), totalPct: globalCalcTotalPct(sum(globalPortCosts), sum(globalRevenues)), isCurrency: true, isTotal: false },
-            { name: "(-) Dockage", values: globalDockageCosts, total: sum(globalDockageCosts), pct: globalCalcPct(globalDockageCosts), totalPct: globalCalcTotalPct(sum(globalDockageCosts), sum(globalRevenues)), isCurrency: true, isTotal: false },
-            { name: "(-) Arriendo de Naves", values: globalCharterHire, total: sum(globalCharterHire), pct: globalCalcPct(globalCharterHire), totalPct: globalCalcTotalPct(sum(globalCharterHire), sum(globalRevenues)), isCurrency: true, isTotal: false },
-            { name: "(=) VOYAGE RESULT / P&L", values: globalPlVsRequired, total: sum(globalPlVsRequired), pct: globalCalcPct(globalPlVsRequired), totalPct: globalCalcTotalPct(sum(globalPlVsRequired), sum(globalRevenues)), isCurrency: true, isTotal: true }
+            { name: "Gross Revenue", values: globalRevenues, total: sum(globalRevenues), pct: globalRevenues.map(r => r ? 100 : 0), totalPct: sum(globalRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
+            { name: "Demurrage", values: globalDemurrage, total: sum(globalDemurrage), pct: globalCalcPct(globalDemurrage), totalPct: globalCalcTotalPct(sum(globalDemurrage), sum(globalRevenues)), isCurrency: true, isTotal: false },
+            { name: "Gross + Demurrage", values: globalGrossPlusDem, total: totalGlobalGrossPlusDem, pct: globalCalcPct(globalGrossPlusDem), totalPct: globalCalcTotalPct(totalGlobalGrossPlusDem, sum(globalRevenues)), isCurrency: true, isTotal: false },
+            { name: "Yield Flete (USD/MT)", values: globalYieldFlete, total: totalGlobalYieldFlete, pct: null, totalPct: null, isCurrency: true, isTotal: true },
+            { name: "Yield (USD/MT)", values: globalYield, total: totalGlobalYield, pct: null, totalPct: null, isCurrency: true, isTotal: true }
         ];
 
         const visibleGlobalMetrics = isGlobalTotalCollapsed ? [globalMetrics[0]] : globalMetrics;
         const globalRouteRowSpanRef = { value: visibleGlobalMetrics.length };
 
         visibleGlobalMetrics.forEach((metric, index) => {
-            const isExpandableRow = index === 0;
+            const isExpandableRow = metric.name === "P/L";
             result.push({
                 col1: index === 0 ? { name: "TOTAL FLOTA", rowSpanRef: globalRouteRowSpanRef, isSubtotal: true, color: "bg-slate-800 text-white" } : null,
                 col2: null,
@@ -933,32 +920,29 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             let running = 0;
             return arr.map(v => { running += v; return running; });
         };
-        const accumTrips = accumArray(globalTrips);
         const accumShipDays = accumArray(globalShipDays);
         const accumTons = accumArray(globalTons);
-        const accumNetRevenues = accumArray(globalNetRevenues);
-        const accumHire = accumArray(globalHire);
-        const accumBunkerCosts = accumArray(globalBunkerCosts);
-        const accumPortCosts = accumArray(globalPortCosts);
-        const accumDockageCosts = accumArray(globalDockageCosts);
-        const accumCharterHire = accumArray(globalCharterHire);
-        const accumPlVsRequired = accumArray(globalPlVsRequired);
+        const accumFreightRevenues = accumArray(globalFreightRevenues);
         const accumRevenues = accumArray(globalRevenues);
+        const accumPlVsRequired = accumArray(globalPlVsRequired);
+        const accumDemurrage = accumArray(globalDemurrage);
 
         const accumCalcPct = (arr: number[]) => arr.map((v, i) => accumRevenues[i] ? (v / accumRevenues[i]) * 100 : 0);
         const lastVal = (arr: number[]) => arr.length > 0 ? arr[arr.length - 1] : 0;
 
+        const accumGrossPlusDem = accumFreightRevenues.map((fRev, i) => fRev + (accumDemurrage[i] || 0));
+        const accumYield = accumTons.map((tons, i) => tons ? accumGrossPlusDem[i] / tons : 0);
+        const accumYieldFlete = accumTons.map((tons, i) => tons ? accumFreightRevenues[i] / tons : 0);
+
         const accumMetrics = [
-            { name: "Viajes", values: accumTrips, total: lastVal(accumTrips), pct: null, totalPct: null, isCurrency: false, isTotal: false },
+            { name: "P/L", values: accumPlVsRequired, total: lastVal(accumPlVsRequired), pct: accumCalcPct(accumPlVsRequired), totalPct: globalCalcTotalPct(lastVal(accumPlVsRequired), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
             { name: "Días-Buque", values: accumShipDays, total: lastVal(accumShipDays), pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Toneladas", values: accumTons, total: lastVal(accumTons), pct: null, totalPct: null, isCurrency: false, isTotal: false },
-            { name: "Net Revenue", values: accumNetRevenues, total: lastVal(accumNetRevenues), pct: accumCalcPct(accumNetRevenues), totalPct: globalCalcTotalPct(lastVal(accumNetRevenues), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
-            { name: "(-) Hire (TCE x días)", values: accumHire, total: lastVal(accumHire), pct: accumCalcPct(accumHire), totalPct: globalCalcTotalPct(lastVal(accumHire), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
-            { name: "(-) Bunker Costs", values: accumBunkerCosts, total: lastVal(accumBunkerCosts), pct: accumCalcPct(accumBunkerCosts), totalPct: globalCalcTotalPct(lastVal(accumBunkerCosts), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
-            { name: "(-) Port Costs", values: accumPortCosts, total: lastVal(accumPortCosts), pct: accumCalcPct(accumPortCosts), totalPct: globalCalcTotalPct(lastVal(accumPortCosts), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
-            { name: "(-) Dockage", values: accumDockageCosts, total: lastVal(accumDockageCosts), pct: accumCalcPct(accumDockageCosts), totalPct: globalCalcTotalPct(lastVal(accumDockageCosts), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
-            { name: "(-) Arriendo de Naves", values: accumCharterHire, total: lastVal(accumCharterHire), pct: accumCalcPct(accumCharterHire), totalPct: globalCalcTotalPct(lastVal(accumCharterHire), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
-            { name: "(=) VOYAGE RESULT / P&L", values: accumPlVsRequired, total: lastVal(accumPlVsRequired), pct: accumCalcPct(accumPlVsRequired), totalPct: globalCalcTotalPct(lastVal(accumPlVsRequired), lastVal(accumRevenues)), isCurrency: true, isTotal: true }
+            { name: "Gross Revenue", values: accumRevenues, total: lastVal(accumRevenues), pct: accumRevenues.map(r => r ? 100 : 0), totalPct: sum(accumRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
+            { name: "Demurrage", values: accumDemurrage, total: lastVal(accumDemurrage), pct: accumCalcPct(accumDemurrage), totalPct: globalCalcTotalPct(lastVal(accumDemurrage), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
+            { name: "Gross + Demurrage", values: accumGrossPlusDem, total: lastVal(accumGrossPlusDem), pct: accumCalcPct(accumGrossPlusDem), totalPct: globalCalcTotalPct(lastVal(accumGrossPlusDem), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
+            { name: "Yield Flete (USD/MT)", values: accumYieldFlete, total: lastVal(accumYieldFlete), pct: null, totalPct: null, isCurrency: true, isTotal: true },
+            { name: "Yield (USD/MT)", values: accumYield, total: lastVal(accumYield), pct: null, totalPct: null, isCurrency: true, isTotal: true }
         ];
 
         if (showAccumulatedTotal) {
@@ -966,7 +950,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             const accumRouteRowSpanRef = { value: visibleAccumMetrics.length };
 
             visibleAccumMetrics.forEach((metric, index) => {
-                const isExpandableRow = index === 0;
+                const isExpandableRow = metric.name === "P/L";
                 result.push({
                     col1: index === 0 ? { name: "TOTAL ACUMULADO", rowSpanRef: accumRouteRowSpanRef, isSubtotal: true, color: "bg-petral-teal text-white" } : null,
                     col2: null,

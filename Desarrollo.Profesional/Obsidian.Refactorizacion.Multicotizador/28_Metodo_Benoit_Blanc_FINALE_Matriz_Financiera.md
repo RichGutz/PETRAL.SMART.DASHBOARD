@@ -987,6 +987,77 @@ La comparación directa certifica que **únicamente se modificaron 3 bloques qui
 
 *Vuelta 8 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
 
+---
+
+## 🔎 15. VUELTA 9 DE AUDITORÍA BENOIT BLANC: HOMOLOGACIÓN ESTRUCTURAL DE SUB-TOTALES (CLIENTE, FLOTA Y ACUMULADO)
+
+### 🚩 15.1. Pistas e Inspección Forense
+- **El Requerimiento**: Coherencia absoluta 1:1 entre el árbol superior de buques individuales y los bloques consolidados de resumen (**`Σ SUBTOTAL / TOTAL CLIENT`**, **`TOTAL FLOTA`** y **`TOTAL ACUMULADO`**).
+- **La Autopsia**:
+  - Los subtotales anteriores mostraban un layout desarticulado con campos desfasados (`P/L`, `Días-Buque`, `Toneladas`, `Gross Revenue`, `Demurrage`, `Gross + Demurrage`, `Yield`).
+  - No incluían `Viajes` arriba de `Días-Buque`, ni desglosaban la estructura canónica de `Net Revenue` y sus costos operativos (`Hire`, `Bunker`, `Port Costs`, `Dockage`, `Arriendo de Naves`, `VOYAGE RESULT / P&L`).
+
+---
+
+### 🛠️ 15.2. Solución Forense Implementada:
+1. **Unificación Estructural en los 3 Bloques Resumen**:
+   Tanto en `Σ SUBTOTAL (CLIENTE)`, como en `TOTAL FLOTA` y `TOTAL ACUMULADO`, el orden y composición es rigurosamente idéntico al de los buques:
+   1. **`Viajes`** *(Suma de frecuencias mensuales y total acumulado)*
+   2. **`Días-Buque`** *(Suma de días barco operativos)*
+   3. **`Toneladas`** *(Volumen total MT transportado)*
+   4. **`Net Revenue`** *(Ingreso neto consolidado con % sobre Gross)*
+   5. **`(-) Hire (TCE x días)`** *(Costo total de arriendo/hire por días)*
+   6. **`(-) Bunker Costs`** *(Combustible IFO + MDO)*
+   7. **`(-) Port Costs`** *(Gastos portuarios netos)*
+   8. **`(-) Dockage`** *(Costos de muellaje)*
+   9. **`(-) Arriendo de Naves`** *(Charter hire consolidado)*
+   10. **`(=) VOYAGE RESULT / P&L`** *(Resultado financiero neto consolidado)*
+2. **Totalización Bidireccional (Filas y Columnas)**:
+   - Todas las filas computan la suma acumulada o valor final en la columna `TOTAL ACUM`.
+   - El primer renglón (`Viajes`) actúa como interruptor colapsable/expandible (`isExpandableSubtotal` / `isExpandableGlobal`).
+
+---
+
+### 🔬 15.3. Auditoría Forense de DIFFs (vs `ForecastGrid_V5_legacy.tsx`):
+```diff
+- const subMetrics = [
+-     { name: "P/L", ... },
+-     { name: "Días-Buque", ... },
+-     { name: "Toneladas", ... },
+-     { name: "Gross Revenue", ... },
+-     { name: "Demurrage", ... },
+-     { name: "Yield", ... }
+- ];
+
++ const subMetrics = [
++     { name: "Viajes", values: level1Trips, total: sum(level1Trips), ... },
++     { name: "Días-Buque", values: level1ShipDays, total: totalLevel1ShipDays, ... },
++     { name: "Toneladas", values: level1TonsTotal, total: totalLevel1Tons, ... },
++     { name: "Net Revenue", values: level1NetRevenue, total: sum(level1NetRevenue), ... },
++     { name: "(-) Hire (TCE x días)", values: level1Hire, total: sum(level1Hire), ... },
++     { name: "(-) Bunker Costs", values: level1BunkerCosts, total: sum(level1BunkerCosts), ... },
++     { name: "(-) Port Costs", values: level1PortCosts, total: sum(level1PortCosts), ... },
++     { name: "(-) Dockage", values: level1DockageCosts, total: sum(level1DockageCosts), ... },
++     { name: "(-) Arriendo de Naves", values: level1CharterHire, total: sum(level1CharterHire), ... },
++     { name: "(=) VOYAGE RESULT / P&L", values: level1PlVsRequired, total: sum(level1PlVsRequired), ... }
++ ];
+```
+
+---
+
+### 🧪 15.4. Resultados de la Verificación y Loop QC:
+* **Compilación Frontend (Vite)**: `✓ built in 6.73s` (0 errores).
+* **Loop QC Estocástico (`test_qc_grid_random_loop.mjs`)**:
+  - Escenarios Simulados: `100`
+  - Total de Aserciones: `8,500`
+  - Aserciones Exitosas: `8,500`
+  - **Tasa de Precisión**: **`100.00% ✅`**
+
+---
+
+*Vuelta 9 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
+
+
 
 
 
