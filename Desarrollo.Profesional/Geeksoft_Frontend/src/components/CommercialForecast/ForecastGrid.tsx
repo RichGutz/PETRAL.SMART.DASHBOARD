@@ -1094,15 +1094,19 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                     </div>
                                     )}
                                     {row.col1.type === 'vessel' && !row.isGlobalTotal ? (
-                                        <div className="flex items-center justify-center w-full h-full p-0.5">
+                                        <div className="w-full h-full flex items-center justify-center relative min-h-[60px] p-0.5">
+                                            <div className="vertical-text mx-auto px-2 pointer-events-none text-white font-extrabold text-xs tracking-wider uppercase flex items-center justify-center">
+                                                {row.col1.name}
+                                            </div>
                                             <select
                                                 value={row.col1.name}
                                                 onChange={(e) => handleVesselChange(row.clientName, row.routeName, row.col1.name, e.target.value)}
-                                                className="bg-transparent text-white font-extrabold text-[10px] text-center border-0 focus:outline-none focus:ring-0 cursor-pointer w-full py-2"
-                                                style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', WebkitAppearance: 'none' }}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                title="Cambiar Buque"
+                                                style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
                                             >
                                                 {vesselsList.map(v => (
-                                                    <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-[10px]">
+                                                    <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-xs">
                                                         {v.vessel_id}
                                                     </option>
                                                 ))}
@@ -1129,15 +1133,19 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                         </div>
                                     )}
                                     {row.col2.type === 'vessel' && !row.col2.isSubtotal ? (
-                                        <div className="flex items-center justify-center w-full h-full p-0.5">
+                                        <div className="w-full h-full flex items-center justify-center relative min-h-[60px] p-0.5">
+                                            <div className="vertical-text mx-auto px-2 pointer-events-none text-white font-extrabold text-xs tracking-wider uppercase flex items-center justify-center">
+                                                {row.col2.name}
+                                            </div>
                                             <select
                                                 value={row.col2.name}
                                                 onChange={(e) => handleVesselChange(row.clientName, row.routeName, row.col2.name, e.target.value)}
-                                                className="bg-transparent text-white font-extrabold text-[10px] text-center border-0 focus:outline-none focus:ring-0 cursor-pointer w-full py-2"
-                                                style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', WebkitAppearance: 'none' }}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                title="Cambiar Buque"
+                                                style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
                                             >
                                                 {vesselsList.map(v => (
-                                                    <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-[10px]">
+                                                    <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-xs">
                                                         {v.vessel_id}
                                                     </option>
                                                 ))}
@@ -1164,15 +1172,19 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                         </div>
                                     )}
                                     {row.col3.type === 'vessel' && !row.col3.isSubtotal ? (
-                                        <div className="flex items-center justify-center w-full h-full p-0.5">
+                                        <div className="w-full h-full flex items-center justify-center relative min-h-[60px] p-0.5">
+                                            <div className="vertical-text mx-auto px-2 pointer-events-none text-white font-extrabold text-xs tracking-wider uppercase flex items-center justify-center">
+                                                {row.col3.name}
+                                            </div>
                                             <select
                                                 value={row.col3.name}
                                                 onChange={(e) => handleVesselChange(row.clientName, row.routeName, row.col3.name, e.target.value)}
-                                                className="bg-transparent text-white font-extrabold text-[10px] text-center border-0 focus:outline-none focus:ring-0 cursor-pointer w-full py-2"
-                                                style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', WebkitAppearance: 'none' }}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                title="Cambiar Buque"
+                                                style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
                                             >
                                                 {vesselsList.map(v => (
-                                                    <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-[10px]">
+                                                    <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-xs">
                                                         {v.vessel_id}
                                                     </option>
                                                 ))}
