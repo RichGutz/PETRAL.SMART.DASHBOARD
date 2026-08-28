@@ -339,55 +339,32 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         return line ? (line.monthly_frequency || 0) : 0;
                     });
 
-                    const vesselDemurrageRate = months.map(m => monthData[m]?.["vessel_demurrage_rate"] ?? monthData[m]?.["demurrage_rate"] ?? monthData[m]?.["demurrageRate"] ?? 20000);
-                    const demurragePctArray = months.map((_, i) => {
-                        if (customDemurrages[rowKey] && customDemurrages[rowKey][i] !== undefined) {
-                            return parseFloat(customDemurrages[rowKey][i]) || 0;
-                        }
-                        return parseFloat(demurragePct) || 0;
-                    });
-                    
-                    const demurrageDaysArray = months.map((_, i) => {
-                        if (customDemurrageDays[rowKey] && customDemurrageDays[rowKey][i] !== undefined) {
-                            return parseFloat(customDemurrageDays[rowKey][i]) || 0;
-                        }
-                        return parseFloat(demurrageDays) || 0;
-                    });
-
                     const getMonthlyValues = (metricKey: string) => {
                         return months.map((m, idx) => {
                             const tripCount = trips[idx] || 0;
                             if (tripCount <= 0) {
                                 return undefined;
                             }
-
-                            const seaDays = Number(monthData[m]?.["sea_days_unit"] ?? monthData[m]?.["sea_days"] ?? monthData[m]?.["tot_sea_days"] ?? 0);
-                            const portDays = Number(monthData[m]?.["port_days_unit"] ?? monthData[m]?.["port_days"] ?? monthData[m]?.["tot_port_days"] ?? 0);
-                            const nativeDemurrageDays = Number(monthData[m]?.["demurrage_days"] ?? 0);
-                            const dailyRate = Number(vesselDemurrageRate[idx] || 20000);
-
-                            let effectiveDemurrageDays = nativeDemurrageDays;
-                            if (isDemurrageVisible) {
-                                // Opción B: Demurrage % convertido a días equivalentes (Demurrage USD / Tarifa Diaria)
-                                const unitFreight = Number(monthData[m]?.["freight_revenue_unit"] ?? monthData[m]?.["gross_income"] ?? ((monthData[m]?.["carga_unit"] || 0) * (monthData[m]?.["flete_unit"] || 0)) ?? 0);
-                                const unitDemurrageUsd = unitFreight * (demurragePctArray[idx] / 100);
-                                effectiveDemurrageDays = dailyRate > 0 ? (unitDemurrageUsd / dailyRate) : 0;
-                            } else if (isDemurrageDaysVisible) {
-                                effectiveDemurrageDays = demurrageDaysArray[idx] || 0;
-                            }
-
-                            const dynamicTotalDuration = (seaDays > 0 || portDays > 0)
-                                ? (seaDays + portDays + effectiveDemurrageDays)
-                                : (Number(monthData[m]?.["total_duration"] ?? monthData[m]?.["total_days"] ?? 0) + (isDemurrageDaysVisible || isDemurrageVisible ? effectiveDemurrageDays : 0));
-
-                            if (metricKey === "distancia_total") return monthData[m]?.["total_distance"] || monthData[m]?.["distancia"];
-                            if (metricKey === "sea_days_unit") return seaDays;
-                            if (metricKey === "port_days_unit") return portDays;
-                            if (metricKey === "demurrage_days_unit") return effectiveDemurrageDays;
-                            if (metricKey === "total_duration_unit") return dynamicTotalDuration;
-
                             let val = monthData[m]?.[metricKey];
                             if (val === undefined || val === null || val === 0) {
+                                const seaDays = monthData[m]?.["sea_days_unit"] ?? monthData[m]?.["sea_days"] ?? monthData[m]?.["tot_sea_days"] ?? 0;
+                                const portDays = monthData[m]?.["port_days_unit"] ?? monthData[m]?.["port_days"] ?? monthData[m]?.["tot_port_days"] ?? 0;
+                                const nativeDemurrageDays = monthData[m]?.["demurrage_days"] || 0;
+                                const effectiveDemurrageDays = isDemurrageDaysVisible 
+                                    ? ((customDemurrageDays[rowKey] && customDemurrageDays[rowKey][idx] !== undefined)
+                                        ? (parseFloat(customDemurrageDays[rowKey][idx]) || 0)
+                                        : (parseFloat(demurrageDays) || 0))
+                                    : nativeDemurrageDays;
+
+                                if (metricKey === "distancia_total") val = monthData[m]?.["total_distance"] || monthData[m]?.["distancia"];
+                                if (metricKey === "sea_days_unit") val = seaDays;
+                                if (metricKey === "port_days_unit") val = portDays;
+                                if (metricKey === "demurrage_days_unit") val = effectiveDemurrageDays;
+                                if (metricKey === "total_duration_unit") {
+                                    val = (seaDays > 0 || portDays > 0) 
+                                        ? (seaDays + portDays + effectiveDemurrageDays) 
+                                        : (monthData[m]?.["total_duration"] || monthData[m]?.["total_days"] || 0);
+                                }
                                 if (metricKey === "bunker_ifo_tonnage_unit") val = monthData[m]?.["bunker_ifo_tonnage"] || monthData[m]?.["ifo_tons"];
                                 if (metricKey === "bunker_mdo_tonnage_unit") val = monthData[m]?.["bunker_mdo_tonnage"] || monthData[m]?.["mdo_tons"];
                                 if (metricKey === "total_port_costs_unit") val = monthData[m]?.["total_port_costs"] || monthData[m]?.["port_costs"];
@@ -403,13 +380,10 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 if (metricKey === "voyage_result_unit") val = monthData[m]?.["voyage_result"] || monthData[m]?.["voyage_result_unit"];
                                 if (metricKey === "tce_real_unit") val = monthData[m]?.["tce_real"] || monthData[m]?.["tce"];
                                 if (metricKey === "tce_required_unit") val = monthData[m]?.["tce_required_unit"] ?? monthData[m]?.["tce_required"] ?? 0;
-                                if (metricKey === "tce_cost_total_unit") val = dynamicTotalDuration * Number(monthData[m]?.["tce_required_unit"] ?? monthData[m]?.["tce_required"] ?? 0);
+                                if (metricKey === "tce_cost_total_unit") val = monthData[m]?.["tce_cost_total_unit"] ?? ((monthData[m]?.["total_duration_unit"] && monthData[m]?.["tce_required_unit"]) ? monthData[m]?.["total_duration_unit"] * monthData[m]?.["tce_required_unit"] : 0);
                                 if (metricKey === "flete_unit") val = monthData[m]?.["flete_unit"] || monthData[m]?.["freight_rate"];
                                 if (metricKey === "charter_hire_cost_unit") val = monthData[m]?.["charter_hire_cost_unit"] ?? monthData[m]?.["charter_hire_cost"] ?? monthData[m]?.["charterHireCost"] ?? monthData[m]?.["charter_hire"] ?? 0;
                                 if (metricKey === "pl_vs_required_unit") val = monthData[m]?.["pl_vs_required_unit"] || monthData[m]?.["pl_vs_required"] || monthData[m]?.["pl_neto"];
-                            }
-                            if (metricKey === "tce_cost_total_unit") {
-                                val = dynamicTotalDuration * Number(monthData[m]?.["tce_required_unit"] ?? monthData[m]?.["tce_required"] ?? 0);
                             }
                             return val;
                         });
@@ -425,6 +399,21 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         }
                         const mVal = monthData[m]?.["dockage_revenue"] ?? monthData[m]?.["refacturacion_muellaje"] ?? monthData[m]?.["total_refacturacion_muellaje"] ?? monthData[m]?.["muellaje_refacturado"] ?? monthData[m]?.["muellaje"] ?? 0;
                         return Number(mVal);
+                    });
+
+                    const vesselDemurrageRate = months.map(m => monthData[m]?.["vessel_demurrage_rate"] ?? monthData[m]?.["demurrage_rate"] ?? monthData[m]?.["demurrageRate"] ?? 20000);
+                    const demurragePctArray = months.map((_, i) => {
+                        if (customDemurrages[rowKey] && customDemurrages[rowKey][i] !== undefined) {
+                            return parseFloat(customDemurrages[rowKey][i]) || 0;
+                        }
+                        return parseFloat(demurragePct) || 0;
+                    });
+                    
+                    const demurrageDaysArray = months.map((_, i) => {
+                        if (customDemurrageDays[rowKey] && customDemurrageDays[rowKey][i] !== undefined) {
+                            return parseFloat(customDemurrageDays[rowKey][i]) || 0;
+                        }
+                        return parseFloat(demurrageDays) || 0;
                     });
 
                     let demurrageArr = new Array(months.length).fill(0);

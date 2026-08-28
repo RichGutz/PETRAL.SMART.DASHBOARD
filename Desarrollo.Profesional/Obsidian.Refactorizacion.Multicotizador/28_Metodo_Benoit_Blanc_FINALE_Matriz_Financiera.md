@@ -864,6 +864,65 @@ La comparación directa certifica que **únicamente se modificaron 3 bloques qui
 
 *Vuelta 6 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
 
+---
+
+## 🔎 13. VUELTA 7 DE AUDITORÍA BENOIT BLANC: DURACIÓN TOTAL DINÁMICA E IMPACTO DE DEMURRAGE EN DÍAS BUQUE, HIRE Y TCE (OPCIÓN B)
+
+### 🚩 13.1. Pistas e Inspección Forense
+- **El Crimen (Visualizado en Captura)**:
+  - `↳ Días de Mar`: **2.2**
+  - `↳ Días de Puerto`: **3.3**
+  - `↳ Días de Demora`: **4.0**
+  - `↳ Duración Total (Días)`: **5.5** *(¡Error crítico: mostraba 5.5 en lugar de $2.2 + 3.3 + 4.0 = 9.5$ días!)*
+- **La Autopsia**:
+  - En `ForecastGrid.tsx` (L348-L349), la evaluación `let val = monthData[m]?.[metricKey]; if (val === undefined || val === 0) { ... }` leía el valor estático congelado `5.5` que venía en el snapshot de la BD, saltando por completo la sumatoria dinámica de los días de demora inyectados.
+  - Al no impactar en la duración total, el costo de **Hire** (`(-) Hire TCE x días`) y el **TCE Realizado** se calculaban sobre 5.5 días en vez de 9.5 días, deformando la rentabilidad del buque.
+
+---
+
+### 🛠️ 13.2. Solución Forense Implementada (Opción B):
+1. **Recálculo Dinámico e Incondicional de Duración Total**:
+   - `total_duration_unit` ahora se calcula siempre como:
+   $$\text{Duración Total} = \text{Días de Mar} + \text{Días de Puerto} + \text{Días de Demora Efectivos}$$
+2. **Homologación de Demurrage % (Botón 8) a Días Equivalentes (Opción B)**:
+   - Para **Demurrage % (Botón 8)**:
+     $$\text{Demurrage USD (unitario)} = \text{Freight Revenue (unitario)} \times \frac{\%}{100}$$
+     $$\text{Días Equivalentes de Demora} = \frac{\text{Demurrage USD (unitario)}}{\text{Tarifa Diaria de Demora (USD/d)}}$$
+     - Se muestran los días equivalentes en `↳ Días de Demora` y se suman a `↳ Duración Total (Días)`.
+3. **Impacto en Cadena Financiera**:
+   - `(-) Hire (TCE x Días)`: $\text{Duración Total} \times \text{N° Viajes} \times \text{TCE Requerido (USD/d)}$.
+   - `TCE Real`: $\frac{\text{Voyage Result}}{\text{Duración Total} \times \text{N° Viajes}}$.
+
+---
+
+### 🔬 13.3. Auditoría Forense de DIFFs (vs `ForecastGrid_V3_legacy.tsx`):
+```diff
+- if (metricKey === "total_duration_unit") {
+-     val = (seaDays > 0 || portDays > 0) ? (seaDays + portDays + effectiveDemurrageDays) : (monthData[m]?.["total_duration"] || monthData[m]?.["total_days"] || 0);
+- }
+
++ const dynamicTotalDuration = (seaDays > 0 || portDays > 0)
++     ? (seaDays + portDays + effectiveDemurrageDays)
++     : (Number(monthData[m]?.["total_duration"] ?? monthData[m]?.["total_days"] ?? 0) + (isDemurrageDaysVisible || isDemurrageVisible ? effectiveDemurrageDays : 0));
++ if (metricKey === "total_duration_unit") return dynamicTotalDuration;
++ if (metricKey === "tce_cost_total_unit") return dynamicTotalDuration * Number(monthData[m]?.["tce_required_unit"] ?? monthData[m]?.["tce_required"] ?? 0);
+```
+
+---
+
+### 🧪 13.4. Resultados de la Verificación y Loop QC:
+* **Compilación Frontend (Vite)**: `✓ built in 7.17s` (0 errores).
+* **Loop QC Estocástico (`test_qc_grid_random_loop.mjs`)**:
+  - Escenarios Simulados: `100`
+  - Total de Aserciones: `8,500`
+  - Aserciones Exitosas: `8,500`
+  - **Tasa de Precisión**: **`100.00% ✅`**
+
+---
+
+*Vuelta 7 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
+
+
 
 
 
