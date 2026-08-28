@@ -1053,9 +1053,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                     }}
                                     className={`p-0 border border-slate-200 align-middle ${row.col1.color || getCellColor(row.col1.type, row.col1.name)} relative group cursor-context-menu`}>
                                     {!row.isGlobalTotal && row.col1.type && (
-                                    <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => handleMove(row.col1.type, row.clientName, row.routeName, row.vesselName, 'up')} className="text-slate-300 hover:text-white"><ChevronUp size={14} /></button>
-                                        <button onClick={() => handleMove(row.col1.type, row.clientName, row.routeName, row.vesselName, 'down')} className="text-slate-300 hover:text-white"><ChevronDown size={14} /></button>
+                                    <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); handleMove(row.col1.type, row.clientName, row.routeName, row.vesselName, 'up'); }} className="text-slate-300 hover:text-white cursor-pointer"><ChevronUp size={14} /></button>
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); handleMove(row.col1.type, row.clientName, row.routeName, row.vesselName, 'down'); }} className="text-slate-300 hover:text-white cursor-pointer"><ChevronDown size={14} /></button>
                                     </div>
                                     )}
                                     {row.col1.type === 'vessel' && !row.isGlobalTotal ? (
@@ -1088,9 +1088,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                     }}
                                     className={`p-0 border border-slate-200 align-middle relative group ${row.col2.isSubtotal ? 'bg-slate-800 text-amber-400 font-bold' : getCellColor(row.col2.type, row.col2.name) + ' cursor-context-menu'}`}>
                                     {!row.col2.isSubtotal && row.col2.type && (
-                                        <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                            <button onClick={() => handleMove(row.col2.type, row.clientName, row.routeName, row.vesselName, 'up')} className="text-slate-400 hover:text-white"><ChevronUp size={14} /></button>
-                                            <button onClick={() => handleMove(row.col2.type, row.clientName, row.routeName, row.vesselName, 'down')} className="text-slate-400 hover:text-white"><ChevronDown size={14} /></button>
+                                        <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                                            <button type="button" onClick={(e) => { e.stopPropagation(); handleMove(row.col2.type, row.clientName, row.routeName, row.vesselName, 'up'); }} className="text-slate-300 hover:text-white cursor-pointer"><ChevronUp size={14} /></button>
+                                            <button type="button" onClick={(e) => { e.stopPropagation(); handleMove(row.col2.type, row.clientName, row.routeName, row.vesselName, 'down'); }} className="text-slate-300 hover:text-white cursor-pointer"><ChevronDown size={14} /></button>
                                         </div>
                                     )}
                                     {row.col2.type === 'vessel' && !row.col2.isSubtotal ? (
@@ -1123,21 +1123,18 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                     }}
                                     className={`p-0 border border-slate-200 align-middle relative group ${row.col3.isSubtotal ? 'bg-amber-100 text-amber-900 font-bold' : getCellColor(row.col3.type, row.col3.name) + ' cursor-context-menu'}`}>
                                     {!row.col3.isSubtotal && row.col3.type && (
-                                        <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                            <button onClick={() => handleMove(row.col3.type, row.clientName, row.routeName, row.vesselName, 'up')} className="text-slate-400 hover:text-petral-blue"><ChevronUp size={14} /></button>
-                                            <button onClick={() => handleMove(row.col3.type, row.clientName, row.routeName, row.vesselName, 'down')} className="text-slate-400 hover:text-petral-blue"><ChevronDown size={14} /></button>
+                                        <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                                            <button type="button" onClick={(e) => { e.stopPropagation(); handleMove(row.col3.type, row.clientName, row.routeName, row.vesselName, 'up'); }} className="text-slate-300 hover:text-white cursor-pointer"><ChevronUp size={14} /></button>
+                                            <button type="button" onClick={(e) => { e.stopPropagation(); handleMove(row.col3.type, row.clientName, row.routeName, row.vesselName, 'down'); }} className="text-slate-300 hover:text-white cursor-pointer"><ChevronDown size={14} /></button>
                                         </div>
                                     )}
                                     {row.col3.type === 'vessel' && !row.col3.isSubtotal ? (
-                                        <div className="w-full h-full flex items-center justify-center relative min-h-[60px]">
-                                            <div className="vertical-text mx-auto px-2 pointer-events-none text-white">
-                                                {row.col3.name}
-                                            </div>
+                                        <div className="flex items-center justify-center w-full h-full p-0.5">
                                             <select
                                                 value={row.col3.name}
                                                 onChange={(e) => handleVesselChange(row.clientName, row.routeName, row.col3.name, e.target.value)}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
+                                                className="bg-transparent text-white font-extrabold text-[10px] text-center border-0 focus:outline-none focus:ring-0 cursor-pointer w-full py-2"
+                                                style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', WebkitAppearance: 'none' }}
                                             >
                                                 {vesselsList.map(v => (
                                                     <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-[10px]">

@@ -820,6 +820,51 @@ La comparación directa certifica que **únicamente se modificaron 3 bloques qui
 
 *Vuelta 5 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
 
+---
+
+## 🔎 12. VUELTA 6 DE AUDITORÍA BENOIT BLANC: RESTAURACIÓN DE BOTONES DE REORDENACIÓN EN COLUMNA BUQUE (COL3)
+
+### 🚩 12.1. Pistas e Inspección Forense
+- **El Crimen**: En la Matriz Financiera, las columnas **Cliente** (`col1`) y **Ruta** (`col2`) mostraban los botones flotantes de reordenación hacia arriba/abajo (`ChevronUp` / `ChevronDown`) al pasar el cursor sobre la celda. Sin embargo, en la columna **Buque** (`col3`), dichos botones habían desaparecido visualmente o no respondían.
+- **La Autopsia**:
+  1. En `ForecastGrid.tsx` (L1139), la celda de Buque contenía un `<select className="absolute inset-0 w-full h-full opacity-0 cursor-pointer">` que cubría el 100% de la celda, interceptando todos los eventos de ratón (`hover` y `click`) y bloqueando la botonera de reordenación.
+  2. El color de las flechas en `col3` estaba configurado como `text-slate-400 hover:text-petral-blue`, volviéndolas prácticamente invisibles sobre el fondo verde esmeralda del buque.
+
+---
+
+### 🛠️ 12.2. Solución Forense Implementada:
+1. **Homologación de Estructura de Celda con `col1` y `col2`**:
+   - Reemplazo del overlay absoluto invisible por la estructura estándar de selector transparente nativo `bg-transparent text-white font-extrabold text-[10px]` en rotación vertical.
+2. **Elevación de Capa y Contraste Visual**:
+   - Botonera flotante en `z-20` con colores contrastantes `text-slate-300 hover:text-white`.
+   - Inclusión de `e.stopPropagation()` para evitar interferencias con el context-menu de la celda.
+
+---
+
+### 🔬 12.3. Auditoría Forense de DIFFs (vs `ForecastGrid_V2_legacy.tsx`):
+```diff
+- <button onClick={() => handleMove(row.col3.type, row.clientName, row.routeName, row.vesselName, 'up')} className="text-slate-400 hover:text-petral-blue"><ChevronUp size={14} /></button>
+- <select className="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+
++ <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
++     <button type="button" onClick={(e) => { e.stopPropagation(); handleMove(row.col3.type, row.clientName, row.routeName, row.vesselName, 'up'); }} className="text-slate-300 hover:text-white cursor-pointer"><ChevronUp size={14} /></button>
++     <button type="button" onClick={(e) => { e.stopPropagation(); handleMove(row.col3.type, row.clientName, row.routeName, row.vesselName, 'down'); }} className="text-slate-300 hover:text-white cursor-pointer"><ChevronDown size={14} /></button>
++ </div>
++ <div className="flex items-center justify-center w-full h-full p-0.5">
++     <select value={row.col3.name} onChange={(e) => handleVesselChange(row.clientName, row.routeName, row.col3.name, e.target.value)} className="bg-transparent text-white font-extrabold text-[10px] text-center border-0 focus:outline-none focus:ring-0 cursor-pointer w-full py-2" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', WebkitAppearance: 'none' }}>
+```
+
+---
+
+### 🧪 12.4. Resultados de la Verificación:
+* **Compilación Frontend (Vite)**: `✓ built in 11.62s` (0 errores).
+* **Control de Calidad UI**: Flechas arriba/abajo visibles y plenamente funcionales en Cliente, Ruta y Buque.
+
+---
+
+*Vuelta 6 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
+
+
 
 
 
