@@ -867,9 +867,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     # Consumo directo e inmaculado de la Foto del Multicotizador
                     tot_freight_rev = float(fin_summary.get("totalFreight", consolidated.get("total_freight_revenue", 0)))
                     tot_refact_muell = float(fin_summary.get("refacturacionMuellaje", sum_muellaje))
-                    tot_demurrage_rev = float(fin_summary.get("demurrageRevenue", consolidated.get("demurrage_revenue", 0.0)))
-                    tot_demurrage_days = float(fin_summary.get("totalDemurrageDays", consolidated.get("demurrage_days", 0.0)))
-                    gross_revenue = float(fin_summary.get("grossRevenueTotal", tot_freight_rev + tot_refact_muell + tot_demurrage_rev))
+                    gross_revenue = float(fin_summary.get("grossRevenueTotal", tot_freight_rev + tot_refact_muell))
                     total_commissions = float(fin_summary.get("totalCommUsd", gross_revenue * (total_comm_pct / 100)))
                     net_revenue = gross_revenue - total_commissions
                     tot_port_costs = float(fin_summary.get("totalPortCosts", consolidated.get("total_port_costs", 0)))
@@ -886,9 +884,7 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     # Recálculo para Buque Comodín u Override de Precios
                     tot_freight_rev = float(consolidated.get("total_freight_revenue", 0))
                     tot_refact_muell = sum_muellaje if sum_muellaje > 0 else float(consolidated.get("total_refacturacion_muellaje", 0) or consolidated.get("refacturacion_muellaje", 0))
-                    tot_demurrage_rev = float(consolidated.get("demurrage_revenue", 0.0))
-                    tot_demurrage_days = float(consolidated.get("demurrage_days", 0.0))
-                    gross_revenue = float(tot_freight_rev + tot_refact_muell + tot_demurrage_rev)
+                    gross_revenue = float(tot_freight_rev + tot_refact_muell)
                     total_commissions = gross_revenue * (total_comm_pct / 100)
                     net_revenue = gross_revenue - total_commissions
                     tot_port_costs = float(consolidated.get("total_port_costs", 0))
@@ -912,10 +908,6 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                     "refacturacion_muellaje_unit": round(tot_refact_muell, 2),
                     "dockage_revenue": round(tot_refact_muell, 2),
                     "dockage_revenue_unit": round(tot_refact_muell, 2),
-                    "demurrage_revenue": round(tot_demurrage_rev, 2),
-                    "demurrage_revenue_unit": round(tot_demurrage_rev, 2),
-                    "demurrage_days": tot_demurrage_days,
-                    "demurrage_days_unit": tot_demurrage_days,
                     "charter_hire_cost": charter_hire_cost_val,
                     "charter_hire_cost_unit": charter_hire_cost_val,
                     "gross_revenue_total": round(gross_revenue, 2),
@@ -1110,10 +1102,6 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "freight_revenue": unit_result.get("freight_revenue", unit_result.get("gross_income", inputs["quantity"] * inputs["freight_rate"])) * freq,
             "dockage_revenue": unit_result.get("dockage_revenue", 0.0) * freq,
             "refacturacion_muellaje": unit_result.get("refacturacion_muellaje", 0.0) * freq,
-            "demurrage_revenue": float(unit_result.get("demurrage_revenue", 0.0)) * freq,
-            "demurrage_revenue_unit": float(unit_result.get("demurrage_revenue_unit", unit_result.get("demurrage_revenue", 0.0))),
-            "demurrage_days": float(unit_result.get("demurrage_days", 0.0)) * freq,
-            "demurrage_days_unit": float(unit_result.get("demurrage_days_unit", unit_result.get("demurrage_days", 0.0))),
             "charter_hire_cost": unit_result.get("charter_hire_cost", 0.0) * freq,
             "charter_hire_cost_unit": unit_result.get("charter_hire_cost_unit", 0.0),
             "gross_revenue_total": unit_result.get("gross_revenue_total", unit_result.get("net_income", 0)) * freq,
@@ -1126,8 +1114,6 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
             "bunker_price_mdo": effective_p_mdo,
             "bunker_ifo_tonnage": unit_result["bunker_ifo_tonnage"] * freq,
             "bunker_mdo_tonnage": unit_result["bunker_mdo_tonnage"] * freq,
-            "consumption_idle_ifo": float(v_data.get("consumption_idle_ifo", 0.0) if 'v_data' in locals() and isinstance(v_data, dict) else (vparams.get("consumption_idle_ifo", 0.0) if 'vparams' in locals() and isinstance(vparams, dict) else 1.5)),
-            "consumption_idle_mdo": float(v_data.get("consumption_idle_mdo", 0.0) if 'v_data' in locals() and isinstance(v_data, dict) else (vparams.get("consumption_idle_mdo", 0.0) if 'vparams' in locals() and isinstance(vparams, dict) else 0.8)),
             "voyage_result": unit_result["voyage_result"] * freq,
             "pl_vs_required": unit_result["pl_vs_required"] * freq,
             "tce_real": unit_result["tce_real"],
@@ -1610,10 +1596,6 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             "gross_revenue_total": gross_rev_total_val,
             "refacturacion_muellaje": refact_muell_val,
             "dockage_revenue": refact_muell_val,
-            "demurrage_revenue": float(unit_result.get("demurrage_revenue", 0.0)) * freq,
-            "demurrage_revenue_unit": float(unit_result.get("demurrage_revenue_unit", unit_result.get("demurrage_revenue", 0.0))),
-            "demurrage_days": float(unit_result.get("demurrage_days", 0.0)) * freq,
-            "demurrage_days_unit": float(unit_result.get("demurrage_days_unit", unit_result.get("demurrage_days", 0.0))),
             "charter_hire_cost": charter_hire_cost_val * freq,
             "charter_hire_cost_unit": charter_hire_cost_val,
             "hire_cost": hire_cost_val,
@@ -1621,8 +1603,6 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
             "net_income": unit_result["net_income"] * freq,
             "total_port_costs": unit_result["total_port_costs"] * freq,
             "total_bunker_costs": unit_result["total_bunker_costs"] * freq,
-            "consumption_idle_ifo": float(v_data.get("consumption_idle_ifo", 0.0) if 'v_data' in locals() and isinstance(v_data, dict) else (vparams.get("consumption_idle_ifo", 0.0) if 'vparams' in locals() and isinstance(vparams, dict) else 1.5)),
-            "consumption_idle_mdo": float(v_data.get("consumption_idle_mdo", 0.0) if 'v_data' in locals() and isinstance(v_data, dict) else (vparams.get("consumption_idle_mdo", 0.0) if 'vparams' in locals() and isinstance(vparams, dict) else 0.8)),
             "voyage_result": (unit_result["voyage_result"] - charter_hire_cost_val) * freq,
             "pl_vs_required": (unit_result.get("pl_vs_required", unit_result["voyage_result"] - hire_cost_val) - charter_hire_cost_val) * freq,
             "tce_real": (unit_result["voyage_result"] - charter_hire_cost_val) / unit_result["total_duration"] if unit_result["total_duration"] > 0 else 0.0,

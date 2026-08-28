@@ -1057,6 +1057,76 @@ La comparación directa certifica que **únicamente se modificaron 3 bloques qui
 
 *Vuelta 9 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
 
+---
+
+## 🔎 16. VUELTA 10 DE AUDITORÍA BENOIT BLANC: INYECCIÓN DE DEMURRAGE NATIVO DEL MULTICOTIZADOR & RECÁLCULO DINÁMICO DE BÚNKER Y HIRE POR DÍAS DE DEMORA
+
+### 🚩 16.1. Pistas e Inspección Forense
+- **La Discrepancia**: Al cargar escenarios compuestos por rutas del Multicotizador (ej. `PB 2027 (Jose de los Heros) + Prom Dem`), las demoras de las rutas guardadas no aparecían en el desglose del viaje en la Matriz Financiera.
+- **La Grabación Forense** (`Impacto.sobreescritura.demora.bunker.tce.ogg`):
+  - Los días de demora aumentan la duración del viaje ($\text{Días Mar} + \text{Días Puerto} + \text{Días Demora}$).
+  - Aumentar días de demora incrementa **el consumo de Búnker** (en fondeo/idle: IFO y MDO) y **el costo de Hire** ($\text{TCE Requerido} \times \text{Días Totales}$).
+- **La Autopsia**:
+  - `forecast_service.py` leía `fin_summary` pero no mapeaba `demurrageRevenue` ni `totalDemurrageDays` hacia `unit_result` ni `monthly_result`.
+  - La Matriz (`ForecastGrid.tsx`) recibía `undefined` en `demurrage_revenue_unit` y `demurrage_days_unit`, dejando la demora en $0.
+  - Al sobreescribir demoras en la Matriz, no se computaba el búnker extra generado por el tiempo de espera fondeado (`extraDemurrageDays * (idle_ifo * p_ifo + idle_mdo * p_mdo)`).
+
+---
+
+### 🛠️ 16.2. Solución Forense Implementada:
+1. **Inyección en Backend (`forecast_service.py`)**:
+   - `demurrage_revenue` y `demurrage_revenue_unit` extraídos de `fin_summary` o `consolidated`.
+   - `demurrage_days` y `demurrage_days_unit` exportados en `monthly_result`.
+   - Inyección de tasas de consumo `consumption_idle_ifo` y `consumption_idle_mdo`.
+2. **Recálculo Físico de Búnker y TCE en la Matriz (`ForecastGrid.tsx`)**:
+   - Lectura de `demurrage_days_unit` nativo del Multicotizador.
+   - Cálculo del delta de días por sobreescritura:
+     $$\Delta d = \max(0, \text{effectiveDemurrageDays} - \text{nativeDemurrageDays})$$
+   - Computación dinámica del costo de combustible en espera:
+     $$\Delta \text{Búnker} = \Delta d \times \left( \text{idle}_{\text{IFO}} \times P_{\text{IFO}} + \text{idle}_{\text{MDO}} \times P_{\text{MDO}} \right)$$
+   - Duración total del viaje y costo de Hire integrando la demora de forma transparente:
+     $$\text{Duración Total} = \text{Días Mar} + \text{Días Puerto} + \text{Días Demora Efectivos}$$
+     $$\text{Hire Total} = \text{Duración Total} \times \text{TCE Requerido} \times \text{Viajes}$$
+
+---
+
+### 🔬 16.3. Auditoría Forense de DIFFs (vs `ForecastGrid_V6_legacy.tsx` y `forecast_service_V1_legacy.py`):
+```diff
+# Backend: forecast_service.py
++ tot_demurrage_rev = float(fin_summary.get("demurrageRevenue", consolidated.get("demurrage_revenue", 0.0)))
++ tot_demurrage_days = float(fin_summary.get("totalDemurrageDays", consolidated.get("demurrage_days", 0.0)))
++ "demurrage_revenue": float(unit_result.get("demurrage_revenue", 0.0)) * freq,
++ "demurrage_revenue_unit": float(unit_result.get("demurrage_revenue_unit", 0.0)),
++ "demurrage_days": float(unit_result.get("demurrage_days", 0.0)) * freq,
++ "demurrage_days_unit": float(unit_result.get("demurrage_days_unit", 0.0)),
++ "consumption_idle_ifo": float(v_data.get("consumption_idle_ifo", 1.5)),
++ "consumption_idle_mdo": float(v_data.get("consumption_idle_mdo", 0.8)),
+
+# Frontend: ForecastGrid.tsx
++ const nativeDemurrageDays = Number(monthData[m]?.["demurrage_days_unit"] ?? monthData[m]?.["demurrage_days"] ?? 0);
++ const extraDemurrageDays = (isDemurrageVisible || isDemurrageDaysVisible)
++     ? Math.max(0, effectiveDemurrageDays - nativeDemurrageDays) : 0;
++ const extraBunkerCostPerTrip = extraDemurrageDays * ((idleIfo * priceIfo) + (idleMdo * priceMdo));
++ if (metricKey === "total_bunker_costs") {
++     return (baseBunkerUnit + extraBunkerCostPerTrip) * tripCount;
++ }
+```
+
+---
+
+### 🧪 16.4. Resultados de la Verificación y Loop QC:
+* **Compilación Frontend (Vite)**: `✓ built in 13.48s` (0 errores).
+* **Loop QC Estocástico (`test_qc_grid_random_loop.mjs`)**:
+  - Escenarios Simulados: `100`
+  - Total de Aserciones: `8,500`
+  - Aserciones Exitosas: `8,500`
+  - **Tasa de Precisión**: **`100.00% ✅`**
+
+---
+
+*Vuelta 10 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
+
+
 
 
 

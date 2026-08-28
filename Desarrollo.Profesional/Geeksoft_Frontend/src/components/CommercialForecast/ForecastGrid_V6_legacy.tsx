@@ -370,7 +370,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
                             const seaDays = Number(monthData[m]?.["sea_days_unit"] ?? monthData[m]?.["sea_days"] ?? monthData[m]?.["tot_sea_days"] ?? 0);
                             const portDays = Number(monthData[m]?.["port_days_unit"] ?? monthData[m]?.["port_days"] ?? monthData[m]?.["tot_port_days"] ?? 0);
-                            const nativeDemurrageDays = Number(monthData[m]?.["demurrage_days_unit"] ?? monthData[m]?.["demurrage_days"] ?? 0);
+                            const nativeDemurrageDays = Number(monthData[m]?.["demurrage_days"] ?? 0);
                             const dailyRate = Number(vesselDemurrageRate[idx] || 20000);
 
                             let effectiveDemurrageDays = nativeDemurrageDays;
@@ -385,17 +385,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
                             const dynamicTotalDuration = (seaDays > 0 || portDays > 0)
                                 ? (seaDays + portDays + effectiveDemurrageDays)
-                                : (Number(monthData[m]?.["total_duration"] ?? monthData[m]?.["total_days"] ?? 0) + (isDemurrageDaysVisible || isDemurrageVisible ? (effectiveDemurrageDays - nativeDemurrageDays) : 0));
-
-                            // Delta de búnker por días extras de demora (si se sobreescribió en la matriz)
-                            const extraDemurrageDays = (isDemurrageVisible || isDemurrageDaysVisible)
-                                ? Math.max(0, effectiveDemurrageDays - nativeDemurrageDays)
-                                : 0;
-                            const idleIfo = Number(monthData[m]?.["consumption_idle_ifo"] ?? 1.5);
-                            const idleMdo = Number(monthData[m]?.["consumption_idle_mdo"] ?? 0.8);
-                            const priceIfo = Number(monthData[m]?.["price_ifo_unit"] ?? monthData[m]?.["bunker_price_ifo"] ?? 650);
-                            const priceMdo = Number(monthData[m]?.["price_mdo_unit"] ?? monthData[m]?.["bunker_price_mdo"] ?? 950);
-                            const extraBunkerCostPerTrip = extraDemurrageDays * ((idleIfo * priceIfo) + (idleMdo * priceMdo));
+                                : (Number(monthData[m]?.["total_duration"] ?? monthData[m]?.["total_days"] ?? 0) + (isDemurrageDaysVisible || isDemurrageVisible ? effectiveDemurrageDays : 0));
 
                             if (metricKey === "distancia_total") return monthData[m]?.["total_distance"] || monthData[m]?.["distancia"];
                             if (metricKey === "sea_days_unit") return seaDays;
@@ -403,20 +393,12 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                             if (metricKey === "demurrage_days_unit") return effectiveDemurrageDays;
                             if (metricKey === "total_duration_unit") return dynamicTotalDuration;
 
-                            if (metricKey === "total_bunker_costs_unit") {
-                                const baseBunkerUnit = Number(monthData[m]?.["total_bunker_costs_unit"] ?? monthData[m]?.["total_bunker_costs"] ?? monthData[m]?.["bunker_costs"] ?? 0);
-                                return baseBunkerUnit + extraBunkerCostPerTrip;
-                            }
-                            if (metricKey === "total_bunker_costs") {
-                                const baseBunkerUnit = Number(monthData[m]?.["total_bunker_costs_unit"] ?? monthData[m]?.["total_bunker_costs"] ?? monthData[m]?.["bunker_costs"] ?? 0);
-                                return (baseBunkerUnit + extraBunkerCostPerTrip) * tripCount;
-                            }
-
                             let val = monthData[m]?.[metricKey];
                             if (val === undefined || val === null || val === 0) {
                                 if (metricKey === "bunker_ifo_tonnage_unit") val = monthData[m]?.["bunker_ifo_tonnage"] || monthData[m]?.["ifo_tons"];
                                 if (metricKey === "bunker_mdo_tonnage_unit") val = monthData[m]?.["bunker_mdo_tonnage"] || monthData[m]?.["mdo_tons"];
                                 if (metricKey === "total_port_costs_unit") val = monthData[m]?.["total_port_costs"] || monthData[m]?.["port_costs"];
+                                if (metricKey === "total_bunker_costs_unit") val = monthData[m]?.["total_bunker_costs"] || monthData[m]?.["bunker_costs"];
                                 if (metricKey === "gross_income_unit") val = monthData[m]?.["freight_revenue_unit"] ?? monthData[m]?.["freight_revenue"] ?? monthData[m]?.["gross_income"] ?? (monthData[m]?.["carga_unit"] && monthData[m]?.["flete_unit"] ? monthData[m]?.["carga_unit"] * monthData[m]?.["flete_unit"] : undefined);
                                 if (metricKey === "address_comm_pct") val = monthData[m]?.["address_comm_pct"];
                                 if (metricKey === "broker_comm_pct") val = monthData[m]?.["broker_comm_pct"];
