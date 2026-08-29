@@ -8,6 +8,17 @@ import { TrendingUp, Calendar, FileSpreadsheet, Layers, ChevronDown, ChevronRigh
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
+interface MecVesselDetail {
+    vessel: string;
+    annualTons: number;
+    fullLoad: number;
+    annualTrips: number;
+    pnlPerTrip: number;
+    totalGrossMargin: number;
+    volumeSharePct: number;
+    daysOccupation: number;
+}
+
 interface MecRouteRow {
     client: string;
     route: string;
@@ -21,6 +32,7 @@ interface MecRouteRow {
     volumeSharePct: number;
     daysOccupation: number;
     daysAvailable: number;
+    vesselDetails: MecVesselDetail[];
 }
 
 interface MecCalculatedSummary {
@@ -60,6 +72,12 @@ export const FinancialProjectionsMaster: React.FC = () => {
     const [selectedAuthor, setSelectedAuthor] = useState<string>('TODOS');
     const [openYears, setOpenYears] = useState<Record<string, boolean>>({ '2027': true, '2026': true });
     const [expandedScenarios, setExpandedScenarios] = useState<Record<string, boolean>>({});
+    const [expandedMecRoutes, setExpandedMecRoutes] = useState<Record<string, boolean>>({});
+
+    const toggleMecRoute = (scenarioId: string, routeName: string) => {
+        const key = `${scenarioId}__${routeName}`;
+        setExpandedMecRoutes(prev => ({ ...prev, [key]: !prev[key] }));
+    };
 
     // Estado para Informe Consolidado Multi-Escenario (Gran Finale)
     const [selectedMultiScenarioIds, setSelectedMultiScenarioIds] = useState<string[]>([]);
@@ -190,22 +208,45 @@ export const FinancialProjectionsMaster: React.FC = () => {
 
                             const routeUpper = rName.toUpperCase();
                             const isExport = foreignPorts.some(p => routeUpper.includes(p)) || routeUpper.includes('EXP') || routeUpper.includes('CHILE');
-                            const routeKey = `${client}__${rName}__${cleanVessel}`;
+                            const routeKey = `${client.toUpperCase()}__${routeUpper}`;
 
-                            routesMap[routeKey] = {
-                                client: client.toUpperCase(),
-                                route: rName.toUpperCase(),
+                            const vesselDetailItem: MecVesselDetail = {
                                 vessel: cleanVessel,
-                                isExport,
                                 annualTons: totTm,
                                 fullLoad: totTrips > 0 ? (totTm / totTrips) : lastUnitQty,
                                 annualTrips: totTrips,
                                 pnlPerTrip: totTrips > 0 ? (totPnl / totTrips) : 0,
                                 totalGrossMargin: totPnl,
                                 volumeSharePct: 0,
-                                daysOccupation: totDays,
-                                daysAvailable: 0
+                                daysOccupation: totDays
                             };
+
+                            if (!routesMap[routeKey]) {
+                                routesMap[routeKey] = {
+                                    client: client.toUpperCase(),
+                                    route: routeUpper,
+                                    vessel: cleanVessel,
+                                    isExport,
+                                    annualTons: totTm,
+                                    fullLoad: totTrips > 0 ? (totTm / totTrips) : lastUnitQty,
+                                    annualTrips: totTrips,
+                                    pnlPerTrip: totTrips > 0 ? (totPnl / totTrips) : 0,
+                                    totalGrossMargin: totPnl,
+                                    volumeSharePct: 0,
+                                    daysOccupation: totDays,
+                                    daysAvailable: 0,
+                                    vesselDetails: [vesselDetailItem]
+                                };
+                            } else {
+                                routesMap[routeKey].annualTons += totTm;
+                                routesMap[routeKey].annualTrips += totTrips;
+                                routesMap[routeKey].totalGrossMargin += totPnl;
+                                routesMap[routeKey].daysOccupation += totDays;
+                                routesMap[routeKey].vesselDetails.push(vesselDetailItem);
+                                if (!routesMap[routeKey].vessel.includes(cleanVessel)) {
+                                    routesMap[routeKey].vessel += `, ${cleanVessel}`;
+                                }
+                            }
                         }
                     }
                 }
@@ -281,45 +322,78 @@ export const FinancialProjectionsMaster: React.FC = () => {
                     }
 
                     const routeKey = `${orig}-${dest}`;
+                    const vesselDetailItem: MecVesselDetail = {
+                        vessel: vId,
+                        annualTons: qty * freq,
+                        fullLoad: qty,
+                        annualTrips: freq,
+                        pnlPerTrip: voyagePnlTrip,
+                        totalGrossMargin: voyagePnlTrip * freq,
+                        volumeSharePct: 0,
+                        daysOccupation: tripDurationDays * freq
+                    };
+
                     if (!routesMap[routeKey]) {
                         routesMap[routeKey] = {
                             client,
                             route: routeKey,
                             vessel: vId,
                             isExport,
-                            annualTons: 0,
+                            annualTons: qty * freq,
                             fullLoad: qty,
-                            annualTrips: 0,
+                            annualTrips: freq,
                             pnlPerTrip: voyagePnlTrip,
-                            totalGrossMargin: 0,
+                            totalGrossMargin: voyagePnlTrip * freq,
                             volumeSharePct: 0,
-                            daysOccupation: 0,
-                            daysAvailable: 0
+                            daysOccupation: tripDurationDays * freq,
+                            daysAvailable: 0,
+                            vesselDetails: [vesselDetailItem]
                         };
+                    } else {
+                        routesMap[routeKey].annualTrips += freq;
+                        routesMap[routeKey].annualTons += (qty * freq);
+                        routesMap[routeKey].daysOccupation += (tripDurationDays * freq);
+                        routesMap[routeKey].totalGrossMargin += (voyagePnlTrip * freq);
+                        routesMap[routeKey].vesselDetails.push(vesselDetailItem);
+                        if (!routesMap[routeKey].vessel.includes(vId)) {
+                            routesMap[routeKey].vessel += `, ${vId}`;
+                        }
                     }
-
-                    routesMap[routeKey].annualTrips += freq;
-                    routesMap[routeKey].annualTons += (qty * freq);
-                    routesMap[routeKey].daysOccupation += (tripDurationDays * freq);
-                    routesMap[routeKey].totalGrossMargin += (voyagePnlTrip * freq);
                 });
             }
 
             const routesList = Object.values(routesMap);
 
-            // Calcular P/L y Full Load ponderados por ruta
+            // Calcular P/L y Full Load ponderados por ruta y sus sub-buques
             routesList.forEach(r => {
                 if (r.annualTrips > 0) {
                     r.pnlPerTrip = r.totalGrossMargin / r.annualTrips;
                     r.fullLoad = r.annualTons / r.annualTrips;
                 }
+                if (r.vesselDetails) {
+                    r.vesselDetails.forEach(v => {
+                        if (v.annualTrips > 0) {
+                            v.pnlPerTrip = v.totalGrossMargin / v.annualTrips;
+                            v.fullLoad = v.annualTons / v.annualTrips;
+                        }
+                    });
+                }
             });
 
             if (routesList.length === 0 || routesList.reduce((acc, r) => acc + r.annualTrips, 0) === 0) {
                 const defaultRoutes: MecRouteRow[] = [
-                    { client: 'SPCC', route: 'ILO-MATARANI', vessel: 'MOQUEGUA', isExport: false, annualTons: 135000, fullLoad: 13500, annualTrips: 10, pnlPerTrip: 148392.64, totalGrossMargin: 1483926.38, volumeSharePct: 16.95, daysOccupation: 40.8, daysAvailable: 0 },
-                    { client: 'SPCC', route: 'ILO-MARCONA', vessel: 'MOQUEGUA', isExport: false, annualTons: 256500, fullLoad: 13500, annualTrips: 19, pnlPerTrip: 136724.96, totalGrossMargin: 2597774.24, volumeSharePct: 32.20, daysOccupation: 104.7, daysAvailable: 0 },
-                    { client: 'SPCC', route: 'ILO-MEJILLONES', vessel: 'MOQUEGUA', isExport: true, annualTons: 405000, fullLoad: 13500, annualTrips: 30, pnlPerTrip: 101912.65, totalGrossMargin: 3057379.50, volumeSharePct: 50.85, daysOccupation: 184.8, daysAvailable: 0 }
+                    { 
+                        client: 'SPCC', route: 'ILO-MATARANI', vessel: 'MOQUEGUA', isExport: false, annualTons: 135000, fullLoad: 13500, annualTrips: 10, pnlPerTrip: 148392.64, totalGrossMargin: 1483926.38, volumeSharePct: 16.95, daysOccupation: 40.8, daysAvailable: 0,
+                        vesselDetails: [{ vessel: 'MOQUEGUA', annualTons: 135000, fullLoad: 13500, annualTrips: 10, pnlPerTrip: 148392.64, totalGrossMargin: 1483926.38, volumeSharePct: 16.95, daysOccupation: 40.8 }]
+                    },
+                    { 
+                        client: 'SPCC', route: 'ILO-MARCONA', vessel: 'MOQUEGUA', isExport: false, annualTons: 256500, fullLoad: 13500, annualTrips: 19, pnlPerTrip: 136724.96, totalGrossMargin: 2597774.24, volumeSharePct: 32.20, daysOccupation: 104.7, daysAvailable: 0,
+                        vesselDetails: [{ vessel: 'MOQUEGUA', annualTons: 256500, fullLoad: 13500, annualTrips: 19, pnlPerTrip: 136724.96, totalGrossMargin: 2597774.24, volumeSharePct: 32.20, daysOccupation: 104.7 }]
+                    },
+                    { 
+                        client: 'SPCC', route: 'ILO-MEJILLONES', vessel: 'MOQUEGUA', isExport: true, annualTons: 405000, fullLoad: 13500, annualTrips: 30, pnlPerTrip: 101912.65, totalGrossMargin: 3057379.50, volumeSharePct: 50.85, daysOccupation: 184.8, daysAvailable: 0,
+                        vesselDetails: [{ vessel: 'MOQUEGUA', annualTons: 405000, fullLoad: 13500, annualTrips: 30, pnlPerTrip: 101912.65, totalGrossMargin: 3057379.50, volumeSharePct: 50.85, daysOccupation: 184.8 }]
+                    }
                 ];
                 routesList.push(...defaultRoutes);
                 vesselSet.add('MOQUEGUA');
@@ -341,6 +415,11 @@ export const FinancialProjectionsMaster: React.FC = () => {
             routesList.forEach(r => {
                 r.volumeSharePct = totalVol > 0 ? (r.annualTons / totalVol) * 100 : 0;
                 r.daysAvailable = totalDaysAvail;
+                if (r.vesselDetails) {
+                    r.vesselDetails.forEach(v => {
+                        v.volumeSharePct = totalVol > 0 ? (v.annualTons / totalVol) * 100 : 0;
+                    });
+                }
 
                 if (r.isExport) {
                     exportTrips += r.annualTrips;
@@ -454,7 +533,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
         }
     };
 
-    // EXPORTACIÓN A EXCEL 1:1 IGUAL AL ARCHIVO FORMATO.MEC.BUDGETS.2026.xlsx
+    // EXPORTACIÓN A EXCEL 1:1 IGUAL AL ARCHIVO FORMATO.MEC.BUDGETS.2026.xlsx (WYSIWYG: LO QUE VES ES LO QUE SE EXPORTA)
     const handleExportMecExcel = (scenario: ScenarioCardItem) => {
         const mec = scenario.mec;
         const wb = XLSX.utils.book_new();
@@ -470,6 +549,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
         ];
 
         mec.routes.forEach(r => {
+            const isRouteExpanded = !!expandedMecRoutes[`${scenario.id}__${r.route}`];
             wsData.push([
                 r.route,
                 r.annualTons,
@@ -481,6 +561,22 @@ export const FinancialProjectionsMaster: React.FC = () => {
                 Math.round(r.daysOccupation),
                 ''
             ]);
+
+            if (isRouteExpanded && r.vesselDetails && r.vesselDetails.length > 1) {
+                r.vesselDetails.forEach(v => {
+                    wsData.push([
+                        `  ↳ ${v.vessel}`,
+                        v.annualTons,
+                        Math.round(v.fullLoad),
+                        v.annualTrips,
+                        Math.round(v.pnlPerTrip),
+                        Math.round(v.totalGrossMargin),
+                        `${v.volumeSharePct.toFixed(2)}%`,
+                        Math.round(v.daysOccupation),
+                        ''
+                    ]);
+                });
+            }
         });
 
         wsData.push([
@@ -502,15 +598,19 @@ export const FinancialProjectionsMaster: React.FC = () => {
         XLSX.writeFile(wb, fileName);
     };
 
-    // EXPORTACIÓN A PDF EJECUTIVO OFICIAL (FORMATO HOJA EXCEL FOXIT READY)
+    // EXPORTACIÓN A PDF EJECUTIVO OFICIAL (WYSIWYG: LO QUE VES ES LO QUE SE IMPRIME)
     const handleExportMecPDF = (scenario: ScenarioCardItem) => {
         const mec = scenario.mec;
         const printWindow = window.open('', '_blank');
         if (!printWindow) return alert('Por favor habilita ventanas emergentes para generar el PDF.');
 
-        const routesHtml = mec.routes.map(r => `
+        const routesHtml = mec.routes.map(r => {
+            const isRouteExpanded = !!expandedMecRoutes[`${scenario.id}__${r.route}`];
+            let rowHtml = `
             <tr>
-                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #1e293b; background: #ffffff;">${r.route}</td>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: bold; color: #1e293b; background: #ffffff;">
+                    ${r.route} ${r.vesselDetails && r.vesselDetails.length > 1 ? `<span style="font-size: 10px; color: #0284c7; font-weight: normal;">(${r.vesselDetails.length} buques)</span>` : ''}
+                </td>
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${r.annualTons.toLocaleString('en-US')}</td>
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${Math.round(r.fullLoad).toLocaleString('en-US')}</td>
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #0f172a;">${r.annualTrips}</td>
@@ -520,7 +620,29 @@ export const FinancialProjectionsMaster: React.FC = () => {
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #334155;">${Math.round(r.daysOccupation)}</td>
                 <td style="padding: 6px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; color: #94a3b8;">-</td>
             </tr>
-        `).join('');
+            `;
+
+            if (isRouteExpanded && r.vesselDetails && r.vesselDetails.length > 1) {
+                r.vesselDetails.forEach(v => {
+                    rowHtml += `
+                    <tr style="background: #f0fdf4; color: #334155; font-size: 11px;">
+                        <td style="padding: 4px 10px 4px 28px; border: 1px solid #cbd5e1; font-style: italic; color: #475569;">
+                            ↳ <span style="font-weight: bold; font-style: normal; color: #0f172a; background: #ffffff; padding: 1px 5px; border: 1px solid #cbd5e1; border-radius: 3px; font-family: monospace;">${v.vessel}</span>
+                        </td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${v.annualTons.toLocaleString('en-US')}</td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${Math.round(v.fullLoad).toLocaleString('en-US')}</td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 600;">${v.annualTrips}</td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">$${Math.round(v.pnlPerTrip).toLocaleString('en-US')}</td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; font-weight: 600;">$${Math.round(v.totalGrossMargin).toLocaleString('en-US')}</td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; color: #0369a1;">${v.volumeSharePct.toFixed(2)}%</td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 600;">${Math.round(v.daysOccupation)}</td>
+                        <td style="padding: 4px 10px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; color: #94a3b8;">-</td>
+                    </tr>
+                    `;
+                });
+            }
+            return rowHtml;
+        }).join('');
 
         const htmlContent = `
             <!DOCTYPE html>
@@ -914,6 +1036,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
             masterData.push(['Puertos / Ruta', 'TM Anual', 'Full load', 'Nº viajes', 'P/L x Viaje', 'Total Margen Operativo', '%', 'Dias ocupación', 'Dias disponibles']);
 
             mec.routes.forEach(r => {
+                const isRouteExpanded = !!expandedMecRoutes[`${scenario.id}__${r.route}`];
                 masterData.push([
                     r.route,
                     r.annualTons,
@@ -925,6 +1048,22 @@ export const FinancialProjectionsMaster: React.FC = () => {
                     Math.round(r.daysOccupation),
                     ''
                 ]);
+
+                if (isRouteExpanded && r.vesselDetails && r.vesselDetails.length > 1) {
+                    r.vesselDetails.forEach(v => {
+                        masterData.push([
+                            `  ↳ ${v.vessel}`,
+                            v.annualTons,
+                            Math.round(v.fullLoad),
+                            v.annualTrips,
+                            Math.round(v.pnlPerTrip),
+                            Math.round(v.totalGrossMargin),
+                            `${v.volumeSharePct.toFixed(2)}%`,
+                            Math.round(v.daysOccupation),
+                            ''
+                        ]);
+                    });
+                }
             });
 
             masterData.push([
@@ -959,6 +1098,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
             ];
 
             mec.routes.forEach(r => {
+                const isRouteExpanded = !!expandedMecRoutes[`${scenario.id}__${r.route}`];
                 wsData.push([
                     r.route,
                     r.annualTons,
@@ -970,6 +1110,22 @@ export const FinancialProjectionsMaster: React.FC = () => {
                     Math.round(r.daysOccupation),
                     ''
                 ]);
+
+                if (isRouteExpanded && r.vesselDetails && r.vesselDetails.length > 1) {
+                    r.vesselDetails.forEach(v => {
+                        wsData.push([
+                            `  ↳ ${v.vessel}`,
+                            v.annualTons,
+                            Math.round(v.fullLoad),
+                            v.annualTrips,
+                            Math.round(v.pnlPerTrip),
+                            Math.round(v.totalGrossMargin),
+                            `${v.volumeSharePct.toFixed(2)}%`,
+                            Math.round(v.daysOccupation),
+                            ''
+                        ]);
+                    });
+                }
             });
 
             wsData.push([
@@ -1002,9 +1158,13 @@ export const FinancialProjectionsMaster: React.FC = () => {
             const mec = scenario.mec;
             const theme = scenarioThemeColors[sIdx % scenarioThemeColors.length];
 
-            const routesHtml = mec.routes.map(r => `
+            const routesHtml = mec.routes.map(r => {
+                const isRouteExpanded = !!expandedMecRoutes[`${scenario.id}__${r.route}`];
+                let rowHtml = `
                 <tr>
-                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #1e293b; background: #ffffff;">${r.route}</td>
+                    <td style="padding: 4px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #1e293b; background: #ffffff;">
+                        ${r.route} ${r.vesselDetails && r.vesselDetails.length > 1 ? `<span style="font-size: 9.5px; color: #0284c7; font-weight: normal;">(${r.vesselDetails.length} buques)</span>` : ''}
+                    </td>
                     <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${r.annualTons.toLocaleString('en-US')}</td>
                     <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; color: #334155;">${Math.round(r.fullLoad).toLocaleString('en-US')}</td>
                     <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #0f172a;">${r.annualTrips}</td>
@@ -1014,7 +1174,29 @@ export const FinancialProjectionsMaster: React.FC = () => {
                     <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: bold; color: #334155;">${Math.round(r.daysOccupation)}</td>
                     <td style="padding: 4px 8px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; color: #94a3b8;">-</td>
                 </tr>
-            `).join('');
+                `;
+
+                if (isRouteExpanded && r.vesselDetails && r.vesselDetails.length > 1) {
+                    r.vesselDetails.forEach(v => {
+                        rowHtml += `
+                        <tr style="background: #f0fdf4; color: #334155; font-size: 10.5px;">
+                            <td style="padding: 3px 6px 3px 22px; border: 1px solid #cbd5e1; font-style: italic; color: #475569;">
+                                ↳ <span style="font-weight: bold; font-style: normal; color: #0f172a; background: #ffffff; padding: 1px 4px; border: 1px solid #cbd5e1; border-radius: 3px; font-family: monospace;">${v.vessel}</span>
+                            </td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${v.annualTons.toLocaleString('en-US')}</td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">${Math.round(v.fullLoad).toLocaleString('en-US')}</td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 600;">${v.annualTrips}</td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace;">$${Math.round(v.pnlPerTrip).toLocaleString('en-US')}</td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: right; font-family: 'Courier New', monospace; font-weight: 600;">$${Math.round(v.totalGrossMargin).toLocaleString('en-US')}</td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; color: #0369a1;">${v.volumeSharePct.toFixed(2)}%</td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; font-weight: 600;">${Math.round(v.daysOccupation)}</td>
+                            <td style="padding: 3px 6px; border: 1px solid #cbd5e1; text-align: center; font-family: 'Courier New', monospace; color: #94a3b8;">-</td>
+                        </tr>
+                        `;
+                    });
+                }
+                return rowHtml;
+            }).join('');
 
             return `
                 <div class="scenario-section" style="margin-bottom: 22px; page-break-inside: avoid;">
@@ -1546,37 +1728,106 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody className="divide-y divide-slate-200 font-mono text-[11px]">
-                                                                            {mec.routes.map((r, idx) => (
-                                                                                <tr key={idx} className="hover:bg-slate-50">
-                                                                                    <td className="py-1.5 px-3 font-sans font-semibold text-slate-900 border border-slate-300">
-                                                                                        {r.route}
-                                                                                    </td>
-                                                                                    <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-800">
-                                                                                        {r.annualTons.toLocaleString('en-US')}
-                                                                                    </td>
-                                                                                    <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-800">
-                                                                                        {Math.round(r.fullLoad).toLocaleString('en-US')}
-                                                                                    </td>
-                                                                                    <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-800 font-bold">
-                                                                                        {r.annualTrips}
-                                                                                    </td>
-                                                                                    <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-800">
-                                                                                        ${Math.round(r.pnlPerTrip).toLocaleString('en-US')}
-                                                                                    </td>
-                                                                                    <td className="py-1.5 px-3 text-right border border-slate-300 text-slate-800 font-bold">
-                                                                                        ${Math.round(r.totalGrossMargin).toLocaleString('en-US')}
-                                                                                    </td>
-                                                                                    <td className="py-1.5 px-3 text-center border border-slate-300 font-semibold text-blue-900">
-                                                                                        {r.volumeSharePct.toFixed(2)}%
-                                                                                    </td>
-                                                                                    <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-800 font-bold">
-                                                                                        {Math.round(r.daysOccupation)}
-                                                                                    </td>
-                                                                                    <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-400">
-                                                                                        -
-                                                                                    </td>
-                                                                                </tr>
-                                                                            ))}
+                                                                            {mec.routes.map((r, idx) => {
+                                                                                const isRouteExpanded = !!expandedMecRoutes[`${scenario.id}__${r.route}`];
+                                                                                const hasMultipleVessels = r.vesselDetails && r.vesselDetails.length > 1;
+
+                                                                                return (
+                                                                                    <React.Fragment key={idx}>
+                                                                                        <tr className={`hover:bg-slate-50 transition-colors ${isRouteExpanded ? 'bg-slate-50/80' : ''}`}>
+                                                                                            <td className="py-1.5 px-3 font-sans font-semibold text-slate-900 border border-slate-300">
+                                                                                                <div className="flex items-center gap-1.5">
+                                                                                                    {hasMultipleVessels ? (
+                                                                                                        <button
+                                                                                                            type="button"
+                                                                                                            onClick={() => toggleMecRoute(scenario.id, r.route)}
+                                                                                                            className="flex items-center gap-1 text-slate-800 hover:text-blue-700 font-bold cursor-pointer transition-colors focus:outline-none"
+                                                                                                            title={isRouteExpanded ? "Ocultar desglose por buque" : "Ver qué buques operaron esta ruta"}
+                                                                                                        >
+                                                                                                            {isRouteExpanded ? <ChevronDown size={14} className="text-blue-600 shrink-0" /> : <ChevronRight size={14} className="text-slate-400 shrink-0" />}
+                                                                                                            <span>{r.route}</span>
+                                                                                                            <span className="text-[9.5px] bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.2 rounded font-medium ml-1">
+                                                                                                                {r.vesselDetails.length} buques
+                                                                                                            </span>
+                                                                                                        </button>
+                                                                                                    ) : (
+                                                                                                        <div className="flex items-center gap-1.5">
+                                                                                                            <span>{r.route}</span>
+                                                                                                            {r.vessel && (
+                                                                                                                <span className="text-[9.5px] text-slate-400 font-normal">
+                                                                                                                    ({r.vessel})
+                                                                                                                </span>
+                                                                                                            )}
+                                                                                                        </div>
+                                                                                                    )}
+                                                                                                </div>
+                                                                                            </td>
+                                                                                            <td className="py-1 px-2.5 text-right border border-slate-300 text-slate-800">
+                                                                                                {r.annualTons.toLocaleString('en-US')}
+                                                                                            </td>
+                                                                                            <td className="py-1 px-2.5 text-right border border-slate-300 text-slate-800">
+                                                                                                {Math.round(r.fullLoad).toLocaleString('en-US')}
+                                                                                            </td>
+                                                                                            <td className="py-1 px-2.5 text-center border border-slate-300 text-slate-800 font-bold">
+                                                                                                {r.annualTrips}
+                                                                                            </td>
+                                                                                            <td className="py-1 px-2.5 text-right border border-slate-300 text-slate-800">
+                                                                                                ${Math.round(r.pnlPerTrip).toLocaleString('en-US')}
+                                                                                            </td>
+                                                                                            <td className="py-1 px-2.5 text-right border border-slate-300 text-slate-800 font-bold">
+                                                                                                ${Math.round(r.totalGrossMargin).toLocaleString('en-US')}
+                                                                                            </td>
+                                                                                            <td className="py-1 px-2.5 text-center border border-slate-300 font-semibold text-blue-900">
+                                                                                                {r.volumeSharePct.toFixed(2)}%
+                                                                                            </td>
+                                                                                            <td className="py-1 px-2.5 text-center border border-slate-300 text-slate-800 font-bold">
+                                                                                                {Math.round(r.daysOccupation)}
+                                                                                            </td>
+                                                                                            <td className="py-1.5 px-3 text-center border border-slate-300 text-slate-400">
+                                                                                                -
+                                                                                            </td>
+                                                                                        </tr>
+
+                                                                                        {/* SUBFILAS DESPLEGABLES POR BUQUE */}
+                                                                                        {isRouteExpanded && hasMultipleVessels && r.vesselDetails.map((v, vIdx) => (
+                                                                                            <tr key={`v_${vIdx}`} className="bg-sky-50/50 hover:bg-sky-50 transition-colors">
+                                                                                                <td className="py-1 px-3 pl-7 font-sans border border-slate-300">
+                                                                                                    <div className="flex items-center gap-1.5 text-xs">
+                                                                                                        <span className="text-sky-500 font-bold">↳</span>
+                                                                                                        <span className="font-bold text-slate-800 bg-white px-1.5 py-0.5 rounded border border-slate-200 shadow-2xs font-mono text-[10.5px]">
+                                                                                                            {v.vessel}
+                                                                                                        </span>
+                                                                                                    </div>
+                                                                                                </td>
+                                                                                                <td className="py-1 px-3 text-right border border-slate-300 text-slate-700">
+                                                                                                    {v.annualTons.toLocaleString('en-US')}
+                                                                                                </td>
+                                                                                                <td className="py-1 px-3 text-right border border-slate-300 text-slate-700">
+                                                                                                    {Math.round(v.fullLoad).toLocaleString('en-US')}
+                                                                                                </td>
+                                                                                                <td className="py-1 px-3 text-center border border-slate-300 text-slate-800 font-semibold">
+                                                                                                    {v.annualTrips}
+                                                                                                </td>
+                                                                                                <td className="py-1 px-3 text-right border border-slate-300 text-slate-700">
+                                                                                                    ${Math.round(v.pnlPerTrip).toLocaleString('en-US')}
+                                                                                                </td>
+                                                                                                <td className="py-1 px-3 text-right border border-slate-300 text-slate-800 font-semibold">
+                                                                                                    ${Math.round(v.totalGrossMargin).toLocaleString('en-US')}
+                                                                                                </td>
+                                                                                                <td className="py-1 px-3 text-center border border-slate-300 text-sky-800 font-medium">
+                                                                                                    {v.volumeSharePct.toFixed(2)}%
+                                                                                                </td>
+                                                                                                <td className="py-1 px-3 text-center border border-slate-300 text-slate-700 font-semibold">
+                                                                                                    {Math.round(v.daysOccupation)}
+                                                                                                </td>
+                                                                                                <td className="py-1 px-3 text-center border border-slate-300 text-slate-400">
+                                                                                                    -
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                        ))}
+                                                                                    </React.Fragment>
+                                                                                );
+                                                                            })}
                                                                             <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
                                                                                 <td className="py-2 px-3 font-sans border border-slate-300">Total</td>
                                                                                 <td className="py-2 px-3 text-right border border-slate-300">{mec.totalVolumeTm.toLocaleString('en-US')}</td>

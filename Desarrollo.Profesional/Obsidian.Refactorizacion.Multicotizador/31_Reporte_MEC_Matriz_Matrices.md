@@ -344,4 +344,55 @@ El PDF incluye:
 
 ---
 
-*Documento registrado bajo el Protocolo Forense Benoit Blanc — PETRAL Smart Dashboard — 27.08.2026.*
+## 9. Caso Pericial N° 15: Consolidación de Rutas Multi-Buque con Acordeón Interactivo y Filosofía WYSIWYG en Exportación
+
+**Fecha**: 29 de Agosto de 2026  
+**Investigador**: Detective Benoit Blanc  
+**Método Pericial Aplicado**: `BEN / LEG / DIFF / NOTA`  
+**Evidencia Física**: Captura de pantalla de la tabla MEC del escenario `PB 2027 (Jose de los Heros) + Prom Dem` donde las rutas `ILO-MATARANI`, `ILO-MARCONA` e `ILO-MEJILLONES` aparecían duplicadas en 6 filas independientes debido a que fueron atendidas por 2 buques distintos (`TABLONES` y `MOQUEGUA`).
+
+---
+
+### 9.1. BEN (Personificación del Detective Benoit Blanc)
+> *"Un informe ejecutivo de alta dirección no puede permitirse la cacofonía visual de fragmentar una misma arteria marítima en múltiples filas sin consolidar. El ojo del armador exige ver el gran total de la ruta de inmediato, pero la mente del perito exige poder abrir el compartimiento secreto para inspeccionar exactamente qué barco transportó cada tonelada métrica."*
+
+---
+
+### 9.2. LEG (Estado Previo / Escena del Crimen)
+* **Clave de Agrupación Legacy**:
+  $$\text{routeKey} = \text{Client} + \text{Route} + \mathbf{Vessel}$$
+* **Resultado Legacy en Escenario `PB 2027` (6 filas)**:
+  * Fila 1: `ILO-MATARANI` (Tablones): 19 viajes | 256,500 TM | $3,133,252
+  * Fila 2: `ILO-MATARANI` (Moquegua): 4 viajes | 54,000 TM | $561,954
+  * Fila 3: `ILO-MARCONA` (Moquegua): 7 viajes | 94,500 TM | $1,095,935
+  * Fila 4: `ILO-MARCONA` (Tablones): 12 viajes | 162,000 TM | $1,477,525
+  * Fila 5: `ILO-MEJILLONES` (Moquegua): 5 viajes | 67,500 TM | $600,796
+  * Fila 6: `ILO-MEJILLONES` (Tablones): 13 viajes | 175,500 TM | $1,227,609
+
+---
+
+### 9.3. DIFF (Diferencias & Requerimiento Comercial Real)
+1. **Fila Maestra Consolidada (Ruta Única)**:
+   * Cada ruta aparece una sola vez con la suma total de volumen, viajes, margen bruto y días, junto con el promedio ponderado de $P/L$ por viaje y $Full\ Load$.
+2. **Subfilas Desplegables Interactivas (Acordeón `▶` / `▼` por Buque)**:
+   * Botón interactivo en la celda de ruta que al desplegarse revela las subfilas con sangría `↳ Buque` y métricas individuales.
+3. **Axioma WYSIWYG ("What You See Is What You Get") en Impresión/Exportación**:
+   * Si el usuario tiene desplegado el acordeón en pantalla, el PDF y Excel exportan el detalle de buques.
+   * Si el usuario tiene la ruta colapsada, el PDF y Excel exportan únicamente el resumen consolidado de la ruta.
+
+---
+
+### 9.4. NOTA (Matriz Pericial Consolidada y Validación QC)
+
+#### Tabla de Convergencia Consolidada (Escenario `PB 2027` - 60 Viajes):
+| Ruta | TM Anual | Full Load | Nº Viajes | P/L x Viaje (USD) | Total Gross Margin (USD) | % Volumen | Días Ocupación | Buques Desplegables (`↳`) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **`ILO-MATARANI`** | **310,500 TM** | 13,500 TM | **23** | $160,661.16 | **$3,695,206.59** | **`38.33%`** | 175.0 d | `↳ MOQUEGUA` (19 vjes), `↳ TABLONES` (4 vjes) |
+| **`ILO-MARCONA`** | **256,500 TM** | 13,500 TM | **19** | $135,445.27 | **$2,573,460.04** | **`31.67%`** | 185.2 d | `↳ MOQUEGUA` (7 vjes), `↳ TABLONES` (12 vjes) |
+| **`ILO-MEJILLONES`** | **243,000 TM** | 13,500 TM | **18** | $101,578.02 | **$1,828,404.35** | **`30.00%`** | 177.5 d | `↳ MOQUEGUA` (5 vjes), `↳ TABLONES` (13 vjes) |
+| **TOTAL CONSOLIDADO** | **810,000 TM** | **—** | **60** | **—** | **`$8,097,070.98`** | **`100.00%`** | **537.7 d** (538d) | **Flota Completa (2 Buques)** |
+
+---
+
+*Documento registrado bajo el Protocolo Forense Benoit Blanc — PETRAL Smart Dashboard — 29.08.2026.*
+
