@@ -837,3 +837,119 @@ El peritaje con el usuario estableció la tríada de reglas determinísticas inn
 ---
 
 *Caso N° 09 cerrado y certificado por Benoit Blanc — 29.08.2026.*
+
+---
+
+## 20. Caso Pericial N° 10: El Misterio de las Demoras Desvanecidas al Cargar Rutas DM en el Multicotizador (Modo 'O')
+
+**Fecha**: 29 de Agosto de 2026  
+**Investigador**: Detective Benoit Blanc  
+**Método Pericial Aplicado**: `BEN / LEG / DIFF / NOTA`  
+**Evidencia Física**: Al cargar en el Multicotizador cualquier ruta grabada con demoras (sufijo `DM`, como `SPCC.ILO.MARCONA.CALLAO.ILO.2026 DM MOQUEGUA`), el selector de la cabecera marcaba correctamente resaltado el botón **`[ O ]` (Original)**, pero **las celdas de demoras se mostraban en blanco o con `0.00`**, borrando los días de estadía calculados y guardados en el snapshot.
+
+---
+
+### 🕵️‍♂️ 20.1. La Escena del Crimen (LEG - Legacy)
+
+1. **La Fuga en la Deserialización de `handleLoadRoute` (`MultiCotizadorExcel.tsx`)**:
+   * Al cargar la ruta, el código intentaba reconstruir el mapa de días originales (`originalDemurrageDaysMap`) inspeccionando únicamente `puertosConfig`:
+     ```typescript
+     // 🩸 LA TRAMPA EN MultiCotizadorExcel.tsx (L970):
+     const origDays: Record<number, number | string> = {};
+     if (pConfig && Array.isArray(pConfig)) {
+         pConfig.forEach((p: any, idx: number) => {
+             if (p.demurrage_days !== undefined && p.demurrage_days !== '' && p.demurrage_days !== null) {
+                 origDays[idx] = p.demurrage_days;
+             } else {
+                 origDays[idx] = '0.00'; // ❌ SI ESTABA EN BLANCO, MUTABA A CERO
+             }
+         });
+     }
+     ```
+
+2. **La Autopsia del Objeto Guardado en Supabase**:
+   * Las rutas históricas y cotizaciones guardadas con promedio de 24M almacenaban los días calculados dentro de:
+     * `financial_summary.calculatedTramos[idx - 1].demurrage_days` (ej. `1.86 d` en ILO, `2.38 d` en MARCONA).
+     * `legs_data.calculatedTramos[idx - 1].demurrage_days`.
+   * En `puertosConfig`, `p.demurrage_days` permanecía como cadena vacía `''`.
+   * Al ejecutar `else { origDays[idx] = '0.00'; }`, el Frontend **sobrescribía destructivamente los días con `'0.00'`**, recalculando el viaje con $0.00\text{ demoras}$ en vez de los $4.24\text{ días}$ y $\$84,800\text{ USD}$ reales.
+
+---
+
+### ⚖️ 20.2. Autopsia de Diferencias (DIFF - La Verdad del Negocio)
+
+| Ruta / Tramo | Días en Snapshot de Supabase | Comportamiento Legacy (Error) | Comportamiento Sanitizado (Solución) |
+| :--- | :---: | :---: | :---: |
+| **`SPCC.ILO.MARCONA...DM` (ILO - Carga)** | `1.86 d` | `0.00 d` ❌ | **`1.86 d`** ✅ |
+| **`SPCC.ILO.MARCONA...DM` (MARCONA - Descarga)** | `2.38 d` | `0.00 d` ❌ | **`2.38 d`** ✅ |
+| **TOTAL DÍAS DEMORA** | **4.24 d ($84,800 USD)** | **0.00 d ($0 USD)** ❌ | **4.24 d ($84,800 USD)** ✅ |
+| **DURACIÓN TOTAL VIAJE** | **12.6 d (4.1 Mar + 4.3 Pto + 4.2 Dem)** | **8.4 d** ❌ | **12.6 d (Homologado con Matriz)** ✅ |
+
+---
+
+### 🛠️ 20.3. Resolución Quirúrgica & Toma de Nota (NOTA)
+
+Se reescribió el motor de recuperación en `MultiCotizadorExcel.tsx` con búsqueda en cascada profunda:
+
+```typescript
+// ✅ RECUPERACIÓN PERICIAL EN CASCADA:
+const calcTramos = unpacked.financial_summary?.calculatedTramos 
+    || clonedQuote.legs_data?.financial_summary?.calculatedTramos 
+    || clonedQuote.legs_data?.calculatedTramos 
+    || [];
+
+const origDays: Record<number, number | string> = {};
+if (pConfig && Array.isArray(pConfig)) {
+    pConfig.forEach((p: any, idx: number) => {
+        let recoveredDays: any = '';
+        if (p.demurrage_days !== undefined && p.demurrage_days !== '' && p.demurrage_days !== null && Number(p.demurrage_days) >= 0) {
+            recoveredDays = p.demurrage_days;
+        } else if (idx === 0) {
+            const d0 = unpacked.financial_summary?.demurrageDays0 ?? clonedQuote.legs_data?.financial_summary?.demurrageDays0;
+            if (d0 !== undefined && d0 !== null && d0 !== '') recoveredDays = d0;
+        } else if (idx > 0 && calcTramos[idx - 1]) {
+            const trDem = calcTramos[idx - 1].demurrage_days;
+            if (trDem !== undefined && trDem !== null && trDem !== '') recoveredDays = trDem;
+        }
+        
+        origDays[idx] = (recoveredDays !== undefined && recoveredDays !== '' && recoveredDays !== null)
+            ? String(recoveredDays)
+            : '0.00';
+    });
+}
+setOriginalDemurrageDaysMap(origDays);
+setDemurrageMode('O');
+```
+
+---
+
+### 🧪 20.4. Batería de Loop QC: Verificación de las 10 Rutas DM en Supabase
+
+* **Script Oficial de Auditoría**: `scratch/qc_multicotizador_dm_routes.py`
+* **Resultados Auditados en Terminal**:
+
+```text
+================================================================================
+BATERIA QC BENOIT BLANC: RECUPERACION DE DEMORAS ORIGINALES (MODO 'O') EN MULTICOTIZADOR
+================================================================================
+Total rutas DM encontradas en BD: 10
+
+1. SPCC.ILO.MARCONA.CALLAO.ILO.2026 DM TABLONES  -> Recup: 4.24 d | Snapshot: 4.24 d (Diff: 0.0000) [OK]
+2. SPCC.ILO.MATARANI.ILO.DM 2026 MOQUEGUA        -> Recup: 3.53 d | Snapshot: 3.53 d (Diff: 0.0000) [OK]
+3. SPCC.ILO.MARCONA.ILO.DM 2026 TABLONES         -> Recup: 4.24 d | Snapshot: 4.24 d (Diff: 0.0000) [OK]
+4. SPCC.ILO.MATARANI.ILO.DM 2026 TABLONES        -> Recup: 3.53 d | Snapshot: 3.53 d (Diff: 0.0000) [OK]
+5. SPCC.ILO.BARQUITO.ILO.DM 2026 MOQUEGUA        -> Recup: 1.86 d | Snapshot: 1.86 d (Diff: 0.0000) [OK]
+6. SPCC.ILO.BARQUITO.ILO.DM 2026 TABLONES        -> Recup: 1.86 d | Snapshot: 1.86 d (Diff: 0.0000) [OK]
+7. SPCC.ILO.MARCONA.ILO.DM 2026 MOQUEGUA         -> Recup: 4.24 d | Snapshot: 4.24 d (Diff: 0.0000) [OK]
+8. SPCC.ILO.MEJILLONES.ILO.DM 2026 MOQUEGUA      -> Recup: 3.90 d | Snapshot: 3.90 d (Diff: 0.0000) [OK]
+9. SPCC.ILO.MEJILLONES.ILO.DM 2026 TABLONES      -> Recup: 3.90 d | Snapshot: 3.90 d (Diff: 0.0000) [OK]
+10. SPCC.ILO.MARCONA.CALLAO.ILO.2026 DM MOQUEGUA -> Recup: 4.24 d | Snapshot: 4.24 d (Diff: 0.0000) [OK]
+
+================================================================================
+RESULTADO QC: 10/10 RUTAS DM RECUPERADAS CON ÉXITO (100% DE CONVERGENCIA)
+================================================================================
+```
+
+---
+
+*Caso N° 10 cerrado y certificado por Detective Benoit Blanc — 29.08.2026.*

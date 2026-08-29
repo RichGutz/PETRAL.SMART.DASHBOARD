@@ -966,12 +966,28 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
                 : buildPuertosConfigFromTramos(enrichedTramos, extractedClient || selectedClient);
             setPuertosConfig(pConfig);
 
-            // Auto-Detección de Demora Original (Modo 'O' por defecto: respeta lo grabado o 0.00 si no se grabó nada)
+            // Auto-Detección de Demora Original (Modo 'O' por defecto: respeta lo grabado en puertosConfig o calculatedTramos/financial_summary)
+            const calcTramos = unpacked.financial_summary?.calculatedTramos 
+                || clonedQuote.legs_data?.financial_summary?.calculatedTramos 
+                || clonedQuote.legs_data?.calculatedTramos 
+                || [];
+
             const origDays: Record<number, number | string> = {};
             if (pConfig && Array.isArray(pConfig)) {
                 pConfig.forEach((p: any, idx: number) => {
-                    if (p.demurrage_days !== undefined && p.demurrage_days !== '' && p.demurrage_days !== null) {
-                        origDays[idx] = p.demurrage_days;
+                    let recoveredDays: any = '';
+                    if (p.demurrage_days !== undefined && p.demurrage_days !== '' && p.demurrage_days !== null && Number(p.demurrage_days) >= 0) {
+                        recoveredDays = p.demurrage_days;
+                    } else if (idx === 0) {
+                        const d0 = unpacked.financial_summary?.demurrageDays0 ?? clonedQuote.legs_data?.financial_summary?.demurrageDays0;
+                        if (d0 !== undefined && d0 !== null && d0 !== '') recoveredDays = d0;
+                    } else if (idx > 0 && calcTramos[idx - 1]) {
+                        const trDem = calcTramos[idx - 1].demurrage_days;
+                        if (trDem !== undefined && trDem !== null && trDem !== '') recoveredDays = trDem;
+                    }
+                    
+                    if (recoveredDays !== undefined && recoveredDays !== '' && recoveredDays !== null) {
+                        origDays[idx] = String(recoveredDays);
                     } else {
                         origDays[idx] = '0.00';
                     }
