@@ -374,7 +374,7 @@ export const CommercialForecast: React.FC = () => {
                 return {
                     ...rest,
                     quantity: parseFloat(rest.quantity) || 0,
-                    monthly_frequency: parseFloat(rest.monthly_frequency) || 1,
+                    monthly_frequency: (rest.monthly_frequency !== undefined && rest.monthly_frequency !== null && !isNaN(Number(rest.monthly_frequency))) ? Number(rest.monthly_frequency) : 0,
                     custom_tariff: rest.custom_tariff != null ? parseFloat(rest.custom_tariff) : undefined,
                     forecast_bunker_price_ifo: rest.forecast_bunker_price_ifo != null ? parseFloat(rest.forecast_bunker_price_ifo) : undefined,
                     forecast_bunker_price_mdo: rest.forecast_bunker_price_mdo != null ? parseFloat(rest.forecast_bunker_price_mdo) : undefined,

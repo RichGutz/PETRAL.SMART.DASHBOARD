@@ -462,3 +462,15 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-28 09:53:32] Despliegue completado con exito al VPS (91.108.125.253). Frontend y Backend en vivo en https://forecast.geeksoft.tech.
 [2026-08-28 10:00:18] Total de Hire en USD restaurado y desplegado al VPS. Métricas de tasa diaria TCE ($/d) se mantienen en 0/-.
 [2026-08-28 11:22:19] Despliegue al VPS completado con exito tras sincronizacion y build en 7.42s.
+[2026-08-28 11:33:37] Vuelta 3 finalizada y desplegada al VPS. Aserciones QC 8,500/8,500 OK. Documentacion sellada en Obsidian 28.
+[2026-08-28 11:42:44] Vuelta 4 completada y documentada en Obsidian 28. Capturas respaldadas en PNGs y PORT.COSTS.PATRICIA.
+[2026-08-28 11:52:31] Vuelta 5 finalizada. Backups ForecastGrid_V2_legacy y CommercialForecast_V2_legacy creados. Documentado en Obsidian 28.
+[2026-08-28 11:59:36] Vuelta 6 finalizada. Botonera de buques alineada y funcional. Documentado en Obsidian 28.
+[2026-08-28 12:26:50] Vuelta 7 finalizada. Backups ForecastGrid_V3_legacy y CommercialForecast_V3_legacy creados. Documentado en Obsidian 28.
+[2026-08-28 12:34:10] Vuelta 8 finalizada. Backups ForecastGrid_V4_legacy y CommercialForecast_V4_legacy creados. Documentado en Obsidian 28.
+[2026-08-28 12:57:59] Vuelta 9 finalizada. Backups ForecastGrid_V5_legacy y CommercialForecast_V5_legacy creados. Documentado en Obsidian 28.
+[2026-08-28 13:08:33] Tag v1.0.0-matriz-consolidada creado. Tipografia vertical de buques homologada con div vertical-text centrado y overlay select z-10.
+[2026-08-28 13:27:26] Vuelta 10 finalizada. Backups ForecastGrid_V6_legacy, CommercialForecast_V6_legacy y forecast_service_V1_legacy creados. Documentado en Obsidian 28.
+[2026-08-28 13:30:00] Vuelta 11 completada. Blindaje matematico total verificado entre Multicotizador y Matriz Financiera. Documentado en Obsidian 28.
+[2026-08-28 13:32:01] Vuelta 12 completada. Blindaje matematico cruzado verificado para Demora % vs Dias Equivalentes en Multicotizador. Documentado en Obsidian 28.
+[2026-08-28 14:08:26] Vuelta 13 completada. Homologacion matematica entre ForecastGrid y FinancialProjectionsMaster_V2 implementada con exito. Documentado en Obsidian 28 y 31.

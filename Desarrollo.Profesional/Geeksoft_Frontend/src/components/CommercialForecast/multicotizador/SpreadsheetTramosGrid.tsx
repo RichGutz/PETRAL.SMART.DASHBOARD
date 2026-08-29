@@ -176,7 +176,7 @@ export const SpreadsheetTramosGrid: React.FC<SpreadsheetTramosGridProps> = ({
     refacturarMuellajeMap = {},
     calculatedTramosList = [],
     liveCalc,
-    demurrageMode = 'C',
+    demurrageMode = 'P',
     staticCostsData = [],
     validFrom,
     onDemurrageModeChange,

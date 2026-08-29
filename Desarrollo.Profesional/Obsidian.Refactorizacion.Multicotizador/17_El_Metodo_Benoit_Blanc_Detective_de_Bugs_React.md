@@ -769,3 +769,71 @@ Branch tags de referencia:
 - `PDF.LANDSCAPE.FOXIT.READY.OK.27.08.26` (ecb1fcb) — último intento, sigue parado
 
 *Caso suspendido sin resolver — 27.08.2026. Retomar en próxima sesión.*
+
+---
+
+## 19. Caso Pericial N° 09: El Comportamiento Determinístico y Resaltado de los Modos de Demurrage (O - P - C) en la Grilla Live
+
+**Fecha**: 29 de Agosto de 2026  
+**Investigador**: Detective Benoit Blanc  
+**Método Pericial Aplicado**: `BEN / LEG / DIFF / NOTA`  
+**Evidencia Física**: En la columna `DEMURRAGE (D)` de la grilla live del Multicotizador, el grupo de botones `[ O | P | C ]` presentaba ambigüedad en cuál botón debía figurar activo/resaltado al cargar rutas existentes vs. al iniciar cotizaciones, cierres o presupuestos nuevos.
+
+---
+
+### 🕵️‍♂️ 19.1. La Escena del Crimen (LEG - Legacy)
+
+1. **El Crimen del Cero por Defecto en Nuevas Rutas:**
+   * En `MultiCotizadorExcel.tsx`, tanto el hook de estado inicial como la función de reseteo `handleCreateNewGrid()` ejecutaban:
+     ```typescript
+     setDemurrageMode('C'); // ❌ Forzaba 'C' (Cero demoras) por defecto
+     ```
+   * Esto apagaba la inteligencia del maestro de demoras al crear una nueva ruta desde cero, privando al analista comercial del promedio estadístico sugerido.
+
+2. **Falta de Certeza Determinística en la Carga de Rutas:**
+   * Aunque `handleLoadRoute()` contenía `setDemurrageMode('O')`, el default en `SpreadsheetTramosGrid.tsx` estaba fijado en `'C'` y no existía un contrato determinístico blindado entre el estado de la ruta y el botón resaltado.
+
+---
+
+### ⚖️ 19.2. Autopsia de Diferencias (DIFF - La Verdad del Negocio)
+
+El peritaje con el usuario estableció la tríada de reglas determinísticas innegociables:
+
+| Modo | Botón | Significado Comercial | Cuándo se Activa / Resalta | Comportamiento en Celdas |
+| :---: | :---: | :--- | :--- | :--- |
+| **`O`** | 🟠 **`[ O ]`** | **Original / Grabado en BD** | **Al cargar cualquier ruta existente** (Cierre Paso 2, Cotización Paso 3 o Presupuesto Paso 4). | Muestra exactamente los días de estadía persistidos en `legs_data`. |
+| **`P`** | 🔵 **`[ P ]`** | **Promedio Histórico 24M** | **Al pulsar `➕ NUEVA RUTA` (Cierre, Cotización o Presupuesto limpio).** | Consulta y sugiere en gris la media histórica de 24 meses del puerto. |
+| **`C`** | ⚫ **`[ C ]`** | **Cero Estadías (0.00 d)** | **ÚNICAMENTE a pedido expreso del usuario** (clic manual sobre `[ C ]`). | Fuerza las estadías en `0.00 d` si el analista decide prescindir de demoras para esa ruta. |
+
+---
+
+### 🛠️ 19.3. Resolución Quirúrgica & Toma de Nota (NOTA)
+
+1. **`MultiCotizadorExcel.tsx`**:
+   * Estado React inicial fijado en `'P'`:
+     ```typescript
+     const [demurrageMode, setDemurrageMode] = useState<'O' | 'P' | 'M' | 'C'>('P');
+     ```
+   * En `handleCreateNewGrid()`:
+     ```typescript
+     setPuertosConfig(prev => prev.map(p => ({ ...p, demurrage_days: '' })));
+     setDemurrageMode('P'); // ✅ Sugiere Promedio Histórico
+     ```
+   * En `handleLoadRoute()`:
+     ```typescript
+     setDemurrageMode('O'); // ✅ Mantiene y resalta Original Grabado
+     ```
+
+2. **`SpreadsheetTramosGrid.tsx`**:
+   * Default prop actualizado a `demurrageMode = 'P'`.
+   * Resaltado visual inequívoco en el selector de la cabecera:
+     * `demurrageMode === 'O'` ➔ `bg-amber-600 text-white shadow-2xs`
+     * `demurrageMode === 'P'` ➔ `bg-sky-600 text-white shadow-2xs`
+     * `demurrageMode === 'C'` ➔ `bg-slate-800 text-white shadow-2xs`
+
+3. **Verificación de Compilación en Terminal**:
+   * Ejecutado `npx vite build` en `Geeksoft_Frontend`: **`✓ built in 18.73s`** (Código de salida `0`, sin errores).
+
+---
+
+*Caso N° 09 cerrado y certificado por Benoit Blanc — 29.08.2026.*

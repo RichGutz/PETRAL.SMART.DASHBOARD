@@ -1,0 +1,90 @@
+--- PRE.PDF.PERFECTO.MULTI
++++ HEAD
+@@ -37,6 +37,7 @@
+     bafMdoBase?: number;
+     tariffTiers?: Array<{ label?: string; min?: number; max?: number; rate: number }>;
+     demurrageRatesMap?: Record<string, number>;
++    charterHireCost?: number;
+     liveCalc?: VoyageCalculationResult | any;
+     printedBy?: string;
+ }
+@@ -96,7 +97,7 @@
+             validFrom, validTo, vessels, vesselParams, bunkerSource, bunkerPriceIfo, bunkerPriceMdo,
+             tramos, puertosConfig, refacturarMuellajeMap, addressCommPct, brokerCommPct,
+             commentsText, bafFormula, bafValidFrom, bafValidTo, bafIfoBase, bafMdoBase,
+-            tariffTiers, demurrageRatesMap, liveCalc, printedBy
++            tariffTiers, demurrageRatesMap, charterHireCost, liveCalc, printedBy
+         } = data;
+ 
+         // ÚNICA FUENTE DE VERDAD: Si liveCalc viene de la pantalla se usa directamente, sino se calcula vía Engine
+@@ -224,6 +225,8 @@
+     <title>PETRAL_MULTICOTIZADOR_${selectedClient}_${selectedVessel || 'BUQUE'}</title>
+     <!-- Tailwind CSS -->
+     <script src="https://cdn.tailwindcss.com"></script>
++    <!-- html2pdf.js — genera PDF binario nativo landscape para Foxit Reader -->
++    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+ 
+     <!-- ESTILOS DE IMPRESIÓN FORZADOS -->
+     <style>
+@@ -344,6 +347,9 @@
+             <span class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded font-mono">1 HOJA OFICIAL</span>
+         </div>
+         <div class="flex items-center gap-3">
++            <button id="btn-download-pdf" onclick="downloadDirectPdf()" class="bg-blue-700 hover:bg-blue-600 text-white font-bold text-xs px-4 py-1.5 rounded flex items-center gap-1.5 shadow transition-colors cursor-pointer">
++                📥 Descargar PDF Directo (Foxit Ready)
++            </button>
+             <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-1.5 rounded flex items-center gap-1.5 shadow transition-colors cursor-pointer">
+                 🖨️ Imprimir / Guardar como PDF
+             </button>
+@@ -354,7 +360,7 @@
+     </div>
+ 
+     <!-- DOCUMENTO A4 LANDSCAPE -->
+-    <div class="a4-landscape-page">
++    <div id="pdf-content-page" class="a4-landscape-page">
+ 
+         <!-- 1. CABECERA EJECUTIVA Y METADATA DE VIAJE -->
+         <div class="border-box bg-white text-slate-800 p-2 shadow-xs border border-slate-300">
+@@ -571,6 +577,18 @@
+                     </div>
+                 </div>
+ 
++                <!-- COSTO ARRIENDO NAVES (CHARTER) -->
++                <div class="border-box bg-white p-1.5 shadow-xs">
++                    <h4 class="text-[9px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-0.5 mb-1 font-sans flex items-center justify-between">
++                        <span>Costo Arriendo Naves</span>
++                        <span class="text-[8px] font-mono text-slate-400 font-normal">Charter Hire Cost</span>
++                    </h4>
++                    <div class="flex justify-between items-center bg-slate-50 px-2 py-1 rounded border border-slate-200 text-[8.5px] font-mono">
++                        <span class="font-sans text-slate-600 font-bold">Monto Asignado:</span>
++                        <strong class="font-black text-slate-900">${this.fmtCur(calc.charterHireCost || charterHireCost || 0)}</strong>
++                    </div>
++                </div>
++
+                 <!-- COMMENTS -->
+                 <div class="border-box bg-white p-1.5 shadow-xs flex-1 flex flex-col justify-between">
+                     <h4 class="text-[9px] font-bold text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-0.5 mb-1 font-sans flex items-center justify-between">
+@@ -749,7 +767,7 @@
+                         
+                         <!-- REVENUE (FLETE) -->
+                         <div class="flex justify-between items-center py-0.5 font-bold text-emerald-950 border-b border-emerald-200">
+-                            <span class="font-sans">Revenue (${this.fmtNum(calc.totalQuantity, 0)} MT × $${(calc.totalQuantity > 0 ? calc.totalFreight / calc.totalQuantity : 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/MT)</span>
++                            <span class="font-sans">Revenue (${this.fmtNum(calc.totalQuantity, 0)} MT × ${this.fmtCur(calc.totalQuantity > 0 ? calc.totalFreight / calc.totalQuantity : 0)}/MT)</span>
+                             <span>${this.fmtCur(calc.totalFreight)}</span>
+                         </div>
+ 
+@@ -774,6 +792,14 @@
+                             <span class="font-sans">(-) Hire (${this.fmtCur(calc.tceReq)}/d × ${this.fmtNum(calc.totalSeaDays + calc.totalPortDays, 2)} d)</span>
+                             <span>-${this.fmtCur(calc.standardHireCost || calc.hireUsd)}</span>
+                         </div>
++
++                        <!-- ARRIENDO NAVE (CHARTER) SI HAY -->
++                        ${(Number(calc.charterHireCost || charterHireCost || 0) > 0) ? `
++                            <div class="flex justify-between items-center text-slate-700 text-[8px]">
++                                <span class="font-sans">(-) Arriendo Nave (Charter)</span>
++                                <span>-${this.fmtCur(calc.charterHireCost || charterHireCost)}</span>
++                            </div>
++                        ` : ''}
+ 
+                         <!-- HIRE DEMURRAGE (SI HAY) -->
+                         ${calc.demurrageHireCost > 0 ? `

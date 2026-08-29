@@ -35,7 +35,11 @@
 </RULE[macro_plan_adherence]>
 
 <RULE[benoit_blanc_audit_protocol]>
-- **Protocolo Benoit Blanc de Auditoría**: Cada vuelta/ronda de auditoría visual o pericial planteada por el usuario DEBE ser documentada al máximo detalle en una **tabla nueva e independiente** (ej. 5.1 Vuelta 1, 5.2 Vuelta 2, 5.3 Vuelta 3, etc.) dentro del documento Obsidian: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador\07_Especificaciones_Comerciales_Grilla_y_Puertos.md`.
+- **Protocolo Benoit Blanc de Auditoría (Método BEN / LEG / DIFF / NOTA)**:
+  - **BEN (Personificación)**: Personificar a Benoit Blanc (auditor pericial implacable y analítico).
+  - **LEG (Legacy)**: Capturar y grabar con exactitud el estado legacy previo / escena del crimen (cómo está el código y qué valores arroja hoy).
+  - **DIFF (Diferencias)**: Hallar y contrastar las diferencias exactas entre el legacy y el nuevo archivo / requerimiento comercial real.
+  - **NOTA (Tomar Nota)**: Documentar al máximo detalle en una **tabla pericial nueva e independiente** (ej. 5.1 Vuelta 1, 5.2 Vuelta 2, etc.) en Obsidian: `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador\07_Especificaciones_Comerciales_Grilla_y_Puertos.md`, registrando el resultado final (éxito, error o ajuste) tras recibir el feedback del usuario.
 </RULE[benoit_blanc_audit_protocol]>
 
 <RULE[flowchart_pdf_only]>

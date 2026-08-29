@@ -117,7 +117,7 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
         'CONCON TRADER': 0,
         'CONCON': 0
     });
-    const [demurrageMode, setDemurrageMode] = useState<'O' | 'P' | 'M' | 'C'>('C');
+    const [demurrageMode, setDemurrageMode] = useState<'O' | 'P' | 'M' | 'C'>('P');
     const [charterHireCost, setCharterHireCost] = useState<number>(0);
     const [originalDemurrageDaysMap, setOriginalDemurrageDaysMap] = useState<Record<number, number | string>>({});
     const [staticCostsData, setStaticCostsData] = useState<any[]>([]);
@@ -859,11 +859,11 @@ export const MultiCotizadorExcel: React.FC<MultiCotizadorExcelProps> = () => {
             { type: 'LADEN', origin_port_id: '', destination_port_id: '', quantity: 0, freight_rate: 0, port_delay_hours_loading: 0, port_delay_hours_discharging: 0, route_distance: 0, weather_factor: 3.0, speed: 0 }
         ]);
         setPuertosConfig([
-            { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' },
-            { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' },
-            { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '' }
+            { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '', demurrage_days: '' },
+            { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '', demurrage_days: '' },
+            { action: 'NONE', quantity: 0, freight_rate: 0, op_rate: '', rate_unit: 'TH', time_to_count: 0, positioning: 0, manual_port_cost: '', demurrage_days: '' }
         ]);
-        setDemurrageMode('C');
+        setDemurrageMode('P');
         setCharterHireCost(0);
         setOriginalDemurrageDaysMap({});
 

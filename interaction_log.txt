@@ -404,3 +404,15 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-08-28 09:53:32] Despliegue exitoso al VPS de Produccion https://forecast.geeksoft.tech con las correcciones de la Vuelta 2 Benoit Blanc.
 [2026-08-28 10:00:18] Despliegue de correccion de Total Acum de (-) Hire (TCE x dias) en USD al VPS https://forecast.geeksoft.tech completado con exito.
 [2026-08-28 11:22:19] Despliegue al VPS https://forecast.geeksoft.tech completado con exito.
+[2026-08-28 11:33:37] Despliegue de Vuelta 3 (Demurrage override 8 y 9, Fidelidad de meses en 0 y Modal de Sobreescritura de Escenarios) al VPS https://forecast.geeksoft.tech completado con exito.
+[2026-08-28 11:42:44] Vuelta 4 de Benoit Blanc (Homologacion total de botonera de Matriz Financiera con Multicotizador y solucion integral al selector de rutas) desplegada en Produccion VPS https://forecast.geeksoft.tech
+[2026-08-28 11:52:31] Vuelta 5 de Benoit Blanc (Compuerta O Exclusiva de Demurrage y eliminacion de dias fantasma en desglose de viaje) desplegada con exito en VPS https://forecast.geeksoft.tech
+[2026-08-28 11:59:36] Vuelta 6 de Benoit Blanc (Restauracion de botones de reordenacion hacia arriba/abajo en columna Buque col3 de la Matriz) desplegada en Produccion VPS https://forecast.geeksoft.tech
+[2026-08-28 12:26:50] Vuelta 7 de Benoit Blanc (Duracion Total Dinamica e impacto de demoras en dias buque, Hire y TCE segun Opcion B) desplegada en Produccion VPS https://forecast.geeksoft.tech
+[2026-08-28 12:34:10] Vuelta 8 de Benoit Blanc (Reestructuracion jerarquica e integracion de Demurrage dentro de Net Revenue sin fila independiente) desplegada en VPS https://forecast.geeksoft.tech
+[2026-08-28 12:57:59] Vuelta 9 de Benoit Blanc (Homologacion estructural de Subtotales Cliente, Total Flota y Total Acumulado con la matriz superior) desplegada en VPS https://forecast.geeksoft.tech
+[2026-08-28 13:08:33] Correccion de centrado horizontal y tamano de letra de buques desplegada en VPS https://forecast.geeksoft.tech (Tag: v1.0.0-matriz-consolidada)
+[2026-08-28 13:27:26] Vuelta 10 de Benoit Blanc (Inyeccion de Demurrage Nativo y Recalculo Dinamico de Bunker / Hire por Dias de Demora) desplegada en VPS https://forecast.geeksoft.tech
+[2026-08-28 13:30:00] Vuelta 11 de Benoit Blanc (Loop de Auditoria Cruzada Multicotizador vs Matriz ante variaciones de Demora) finalizada con 224/224 aserciones exitosas (100.00% convergencia)
+[2026-08-28 13:32:01] Vuelta 12 de Benoit Blanc (Loop de Auditoria Cruzada para Demora en % - Opcion B) finalizada con 196/196 aserciones exitosas (100.00% convergencia)
+[2026-08-28 14:08:26] Vuelta 13 de Benoit Blanc (Convergencia 1:1 Matriz Financiera vs Informe MEC) finalizada y desplegada en VPS. 16/16 aserciones exitosas (100.00% convergencia)

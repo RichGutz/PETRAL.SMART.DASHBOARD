@@ -1216,6 +1216,92 @@ La comparación directa certifica que **únicamente se modificaron 3 bloques qui
 
 *Vuelta 13 de Auditoría Pericial sellada y documentada por Detective Benoit Blanc — 28.08.2026.*
 
+---
+
+## 20. Caso Pericial N° 14: El Crimen del Cortocircuito `|| 1` y la Preservación de Meses en Cero en la Matriz Financiera
+
+**Fecha**: 29 de Agosto de 2026  
+**Investigador**: Detective Benoit Blanc  
+**Método Pericial Aplicado**: `BEN / LEG / DIFF / NOTA`  
+**Evidencia Física**: Al cargar el escenario oficial `PB 2027 (Jose de los Heros) + Prom Dem` en la Matriz Financiera, la ruta `SPCC.ILO.MARCONA.ILO.DM 2026 MOQUEGUA` aparecía con **1 viaje en todos los meses del año (12 viajes)**, a pesar de que el usuario había guardado en Supabase únicamente **7 viajes** (Enero a Julio con 1 viaje, y Agosto a Diciembre con 0 viajes).
+
+---
+
+### 🕵️‍♂️ 20.1. La Escena del Crimen (LEG - Legacy)
+
+1. **La Fuga en el Deserializador de React (`ForecastContext_V2.tsx`)**:
+   * Al hacer clic en **Cargar Escenario**, la función `handleLoadSelected` procesaba cada línea del payload de Supabase:
+     ```typescript
+     // 🩸 LA TRAMPA MORTAL EN ForecastContext_V2.tsx (L523):
+     const cleanedLines = loadedLines.map((line: any) => {
+         return {
+             ...rest,
+             quantity: parseFloat(rest.quantity) || 0,
+             monthly_frequency: parseFloat(rest.monthly_frequency) || 1, // ❌ ASESINO DETECTADO
+         };
+     });
+     ```
+
+2. **La Autopsia del Veneno en JavaScript**:
+   * Cuando la base de datos entregaba legítimamente `monthly_frequency: 0`:
+     $$\text{parseFloat}(0) \longrightarrow 0 \quad (\text{Valor Falsy})$$
+   * El operador lógico de cortocircuito `0 || 1` descartaba el cero e **inyectaba destructivamente un `1`**.
+   * El Frontend transmitía a la simulación backend las 12 líneas mensuales con frecuencia `1`, forzando a la Matriz a computar 12 viajes en vez de 7.
+
+---
+
+### ⚖️ 20.2. Autopsia de Diferencias (DIFF - La Verdad del Negocio)
+
+| Mes del Año | Frecuencia en Supabase (Verdad BD) | Comportamiento Legacy (Error) | Comportamiento Sanitizado (Solución) |
+| :---: | :---: | :---: | :---: |
+| **Ene 2027 .. Jul 2027** | `1 viaje` por mes | `1 viaje` | **`1 viaje` ($311,850.00 / mes)** ✅ |
+| **Ago 2027 .. Dic 2027** | **`0 viajes`** por mes | **`1 viaje`** ❌ *(Mutado por `\|\| 1`)* | **`0 viajes` ($0.00 Ingreso / $0.00 Búnker / 0.00d)** ✅ |
+| **TOTAL ANUAL** | **7 Viajes** | **12 Viajes** | **7 Viajes Exactos (100% Fiel a BD)** ✅ |
+
+---
+
+### 🛠️ 20.3. Resolución Quirúrgica & Vacuna (NOTA)
+
+Se erradicó el antipatrón `|| 1` implementando la evaluación numérica explícita y segura:
+
+```typescript
+// ✅ VACUNA CONTRA EL CORTOCIRCUITO:
+monthly_frequency: (rest.monthly_frequency !== undefined && rest.monthly_frequency !== null && !isNaN(Number(rest.monthly_frequency)))
+    ? Number(rest.monthly_frequency)
+    : 0,
+```
+
+Aplicada de forma homogénea en:
+* [`ForecastContext_V2.tsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/context/ForecastContext_V2.tsx#L523)
+* [`ForecastContext_monolitico.tsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/context/ForecastContext_monolitico.tsx#L430)
+* [`CommercialForecast_monolitico.tsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/pages/CommercialForecast/CommercialForecast_monolitico.tsx#L377)
+* [`CommercialForecast_legacy.tsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/pages/CommercialForecast/CommercialForecast_legacy.tsx#L377)
+
+---
+
+### 🧪 20.4. Batería de Loop QC Extremo: Ceros Alternados en un Año Completo
+
+* **Script Oficial de Auditoría**: `scratch/qc_zero_frequency_alternated_year.py`
+* **Resultados Auditados en Terminal**:
+
+#### Test 1 — Verificación con Escenario Real de Supabase:
+* **Escenario**: `PB 2027 (Jose de los Heros) + Prom Dem` (`57f506fd-6da4-44c0-92c8-2b9d5644fb6e`)
+* **Ruta Auditada**: `SPCC.ILO.MARCONA.ILO.DM 2026 MOQUEGUA`
+* **Meses Ene ➔ Jul**: $1.0\text{ v} \mid \$311,850.00 \mid 9.75\text{ d}$
+* **Meses Ago ➔ Dic**: $0.0\text{ v} \mid \$0.00 \mid 0.00\text{ d}$
+* **Total Viajes**: **`7.0 viajes exactos`** (Aserción aprobada ✅).
+
+#### Test 2 — Vector Sintético de Ceros Alternados en 12 Meses:
+* **Patrón Mensual**: $[1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0]$
+* **Viajes Totales**: **`10.0 viajes esperados / 10.0 calculados`**
+* **Comportamiento en Meses Cero**: Ingresos = $\$0.00$, Búnker = $\$0.00$, Gastos de Puerto = $\$0.00$, PnL = $\$0.00$, Días = $0.00\text{d}$.
+* **Comportamiento en Meses Activos**: Escalamiento lineal proporcional exacto al flete contractual.
+* **Tasa de Aprobación**: **`100.00% ✅`**
+
+---
+
+*Caso N° 14 cerrado y certificado por Detective Benoit Blanc — 29.08.2026.*
+
 
 
 
