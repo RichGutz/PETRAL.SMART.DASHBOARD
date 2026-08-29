@@ -474,3 +474,27 @@ CONCURRENCY & QC SUMMARY:
 [2026-08-28 13:30:00] Vuelta 11 completada. Blindaje matematico total verificado entre Multicotizador y Matriz Financiera. Documentado en Obsidian 28.
 [2026-08-28 13:32:01] Vuelta 12 completada. Blindaje matematico cruzado verificado para Demora % vs Dias Equivalentes en Multicotizador. Documentado en Obsidian 28.
 [2026-08-28 14:08:26] Vuelta 13 completada. Homologacion matematica entre ForecastGrid y FinancialProjectionsMaster_V2 implementada con exito. Documentado en Obsidian 28 y 31.
+[2026-08-29 09:30:15] CASO PERICIAL N° 14: PRESERVACIÓN DE MESES EN CERO EN MATRIZ FINANCIERA:
+- Causa Raiz: Operador `|| 1` en ForecastContext_V2.tsx forzaba a 1 los meses vacios/ceros.
+- Solucion: Validacion estricta `typeof !== undefined && !isNaN(Number(val)) ? Number(val) : 0` en 4 contextos/vistas.
+- QC: Bateria de 12 meses alternados [1,0,2,0,1,0,3,0,1,0,2,0] y escenario PB 2027 validado con 7 viajes exactos.
+- Documentacion: Sellado Caso N° 14 en 28_Metodo_Benoit_Blanc_FINALE_Matriz_Financiera.md.
+- Despliegue: VPS Produccion https://forecast.geeksoft.tech (Commit 377f702).
+
+[2026-08-29 10:15:30] CASO PERICIAL N° 10: RECUPERACIÓN DE DÍAS DE DEMORA EN MULTICOTIZADOR (MODO O):
+- Causa Raiz: handleLoadRoute leia unicamente `puertosConfig.demurrage_days` (vacio ''), cayendo a 0.00 d.
+- Solucion: Busqueda en cascada desde `financial_summary.calculatedTramos` o `legs_data.calculatedTramos`.
+- QC: Suite automatizada de 10 rutas DM en Supabase (`scratch/qc_multicotizador_dm_routes.py`) al 100% de convergencia (Delta = 0.0000).
+- Documentacion: Sellado Caso N° 10 en 17_El_Metodo_Benoit_Blanc_Detective_de_Bugs_React.md.
+- Despliegue: VPS Produccion https://forecast.geeksoft.tech (Commit 65ca8fd).
+
+[2026-08-29 10:48:00] CASO PERICIAL N° 15: CONSOLIDACIÓN DE RUTAS MULTI-BUQUE Y EXPORTACIÓN WYSIWYG EN INFORME MEC:
+- Causa Raiz: Clave `client__route__vessel` fragmentaba rutas operadas por multiples barcos en 6 filas separadas.
+- Solucion en FinancialProjectionsMaster_V2.tsx:
+  1. Consolidacion a nivel de ruta unica con agregacion de TM, viajes, margen bruto y dias de ocupacion.
+  2. Acordeon interactivo `[ ▶ ]` / `[ ▼ ]` por ruta con subfilas `↳ Buque` que calculan de forma especifica TM, full load, viajes, P/L unitario y margen para cada buque.
+  3. Filosofia WYSIWYG en descargas Excel (.xlsx) y PDF (Foxit Ready): exporta con detalle si el usuario expandio la ruta, o en resumen si la mantuvo colapsada.
+  4. Formato numerico estandarizado para Toneladas Metricas (TM) sin signo de dolar `$`.
+- Documentacion: Sellado Caso N° 15 en 31_Reporte_MEC_Matriz_Matrices.md.
+- Despliegue: VPS Produccion https://forecast.geeksoft.tech (Commit a7dbd2e).
+- Sesion pericial finalizada y sellada con 100% de exito.

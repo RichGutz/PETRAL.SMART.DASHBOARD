@@ -415,4 +415,27 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-08-28 13:27:26] Vuelta 10 de Benoit Blanc (Inyeccion de Demurrage Nativo y Recalculo Dinamico de Bunker / Hire por Dias de Demora) desplegada en VPS https://forecast.geeksoft.tech
 [2026-08-28 13:30:00] Vuelta 11 de Benoit Blanc (Loop de Auditoria Cruzada Multicotizador vs Matriz ante variaciones de Demora) finalizada con 224/224 aserciones exitosas (100.00% convergencia)
 [2026-08-28 13:32:01] Vuelta 12 de Benoit Blanc (Loop de Auditoria Cruzada para Demora en % - Opcion B) finalizada con 196/196 aserciones exitosas (100.00% convergencia)
-[2026-08-28 14:08:26] Vuelta 13 de Benoit Blanc (Convergencia 1:1 Matriz Financiera vs Informe MEC) finalizada y desplegada en VPS. 16/16 aserciones exitosas (100.00% convergencia)
+[2026-08-29 09:30:15] [CASO PERICIAL N° 14 - MATRIZ FINANCIERA: PRESERVACIÓN DE MESES EN CERO]
+- Diagnóstico: El cortocircuito destructivo `monthly_frequency: parseFloat(rest.monthly_frequency) || 1` convertía ceros legítimos a 1 viaje.
+- Solución: Sanitizado seguro `(rest.monthly_frequency !== undefined && rest.monthly_frequency !== null && !isNaN(Number(rest.monthly_frequency))) ? Number(rest.monthly_frequency) : 0` en `ForecastContext_V2.tsx`, `ForecastContext_monolitico.tsx`, `CommercialForecast_monolitico.tsx` y `CommercialForecast_legacy.tsx`.
+- QC: Validado escenario real `PB 2027 (Jose de los Heros) + Prom Dem` con 7 viajes exactos y prueba estocástica de 12 meses alternados [1,0,2,0,1,0,3,0,1,0,2,0].
+- Documentado en `28_Metodo_Benoit_Blanc_FINALE_Matriz_Financiera.md` (Caso N° 14).
+- Desplegado a Producción VPS https://forecast.geeksoft.tech (Commit 377f702).
+
+[2026-08-29 10:15:30] [CASO PERICIAL N° 10 - MULTICOTIZADOR: RECUPERACIÓN DE DÍAS DE DEMORA EN MODO O]
+- Diagnóstico: `handleLoadRoute` en `MultiCotizadorExcel.tsx` leía `puertosConfig.demurrage_days` (que estaba vacío `''` en rutas guardadas con promedio 24M), forzando `0.00` d a pesar de resaltar `[ O ]`.
+- Solución: Búsqueda en cascada recuperando días desde `financial_summary.calculatedTramos` o `legs_data.calculatedTramos`.
+- QC: Test de 10 rutas DM en Supabase (`scratch/qc_multicotizador_dm_routes.py`) alcanzando 10/10 rutas al 100% de convergencia (Delta = 0.0000).
+- Documentado en `17_El_Metodo_Benoit_Blanc_Detective_de_Bugs_React.md` (Caso N° 10).
+- Desplegado a Producción VPS https://forecast.geeksoft.tech (Commit 65ca8fd).
+
+[2026-08-29 10:48:00] [CASO PERICIAL N° 15 - INFORME MEC: CONSOLIDACIÓN MULTI-BUQUE Y EXPORTACIÓN WYSIWYG]
+- Diagnóstico: La clave de agrupación `client__route__vessel` fragmentaba una misma ruta en múltiples filas si era operada por varios buques (6 filas en lugar de 3 en `PB 2027`).
+- Solución en `FinancialProjectionsMaster_V2.tsx`:
+  - Consolidación a nivel de ruta única (`routeKey = client__route`).
+  - Acordeón interactivo con estado `expandedMecRoutes` y subfilas `↳ Buque` (`MOQUEGUA`, `TABLONES`) con métricas calculadas específicamente para esa combinación buque-ruta.
+  - Filosofía WYSIWYG ("What You See Is What You Get") en descargas Excel (.xlsx) y PDF (Foxit Ready).
+  - Formato numérico estandarizado de Toneladas Métricas (`TM`) sin signo `$`.
+- Documentado en `31_Reporte_MEC_Matriz_Matrices.md` (Caso N° 15).
+- Desplegado a Producción VPS https://forecast.geeksoft.tech (Commit a7dbd2e).
+- Sesión pericial cerrada al 100% de éxito.
