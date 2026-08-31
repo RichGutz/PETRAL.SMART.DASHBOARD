@@ -1,31 +1,51 @@
-# 📑 ESTRUCTURA & ESQUELETO DE PRESENTACIÓN (PPT)
+# 📑 ESTRUCTURA & ESQUELETO DE PRESENTACIÓN V2 (PPT)
 ## SUSTENTO DE MODIFICACIÓN DE ALCANCE, CONSULTORÍA DE PROCESOS Y AUDITORÍA DE HORAS DEVENGADAS
 **Proyecto:** PETRAL SMART DASHBOARD & MOTOR MULTICOTIZADOR  
 **Proveedor / Consultor:** GEEKSOFT (Richard Gutiérrez)  
 **Cliente:** NAVIERA PETRAL S.A.  
-**Fecha de Emisión:** Agosto 2026  
+**Fecha de Emisión:** Agosto 2026 (Actualización Dinámica al 31 de Agosto)  
 **Documento Fuente:** [`COTIZACION_MODULAR_PETRAL_V10.RG.pdf`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/COTIZACION_MODULAR_PETRAL_V10.RG.pdf)  
-**Entregable Interactivo (Slider HTML):** [`presentation.html`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/presentation.html) | [`Informe_Sustento_Modificacion_Alcance_Petral.html`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/Informe_Sustento_Modificacion_Alcance_Petral.html)  
-**Script Generador:** [`generar_sustento_slide_by_slide.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/scratch/generar_sustento_slide_by_slide.py)  
+**Entregables Interactivos (Sliders HTML):** 
+- Versión V2: [`Informe_Sustento_Modificacion_Alcance_Petral_V2.html`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/Informe_Sustento_Modificacion_Alcance_Petral_V2.html) | [`presentation.html`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/presentation.html)
+- Versión V1 (Histórica 25-Ago): [`Informe_Sustento_Modificacion_Alcance_Petral.html`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/Informe_Sustento_Modificacion_Alcance_Petral.html)  
+**Script Generador Dinámico V2:** [`generar_sustento_slide_by_slide_v2.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/scratch/generar_sustento_slide_by_slide_v2.py)  
 
 ---
 
 ## 🎯 OBJETIVO DE LA PRESENTACIÓN
-Presentar a la Gerencia y Dirección de Naviera Petral el sustento técnico, operativo y forense del **desborde del alcance inicial**, evidenciando que el proyecto evolucionó de una **hoja de cálculo inteligente** a una **Plataforma Integral de Inteligencia Comercial + Consultoría de Reingeniería de Procesos + Bases de un ERP de Gestión de Flota**, respaldado por una auditoría digital inalterable de **434.77 horas reales de trabajo**.
+Presentar a la Gerencia y Dirección de Naviera Petral el sustento técnico, operativo y forense del **desborde del alcance inicial**, evidenciando que el proyecto evolucionó de una **hoja de cálculo inteligente** a una **Plataforma Integral de Inteligencia Comercial + Consultoría de Reingeniería de Procesos + Bases de un ERP de Gestión de Flota**, respaldado por una auditoría digital inalterable de **469.50 horas reales de trabajo** (actualizadas al 31 de Agosto de 2026).
 
 ---
 
-## 📽️ ESTRUCTURA DIAPOSITIVA POR DIAPOSITIVA (SLIDE BY SLIDE)
+## ⚡ PROTOCOLO DE ACTUALIZACIÓN EN VIVO (MIENTRAS EL PROYECTO SIGUE EN CURSO)
+
+Dado que el desarrollo continúa activo, las horas y los eventos de Git/IDE aumentan con cada jornada. Para regenerar y actualizar toda la presentación HTML con los números exactos al segundo, se ejecuta un único comando en terminal:
+
+```powershell
+python "C:\Users\rguti\PETRAL.SMART.DASHBOARD\scratch\generar_sustento_slide_by_slide_v2.py"
+```
+
+**¿Qué hace este script automáticamente en 5 segundos?**
+1. Escanea todos los commits y ramas de Git en el repositorio.
+2. Lee los timestamps de modificación de todos los archivos (`.tsx`, `.py`, `.sql`, `.md`, `.html`).
+3. Agrupa las sesiones continuas con corte de inactividad de 2.5h y buffer de 30 min de warmup.
+4. Totaliza las jornadas, eventos, horas devengadas y montos valorizados en USD.
+5. Inyecta los KPIs actualizados directamente en `Informe_Sustento_Modificacion_Alcance_Petral_V2.html` y `presentation.html`.
+
+---
+
+## 📽️ ESTRUCTURA DIAPOSITIVA POR DIAPOSITIVA (9 SLIDES)
 
 ```mermaid
 graph TD
     S1["Slide 1: Portada & Resumen Ejecutivo"] --> S2["Slide 2: La Premisa Inicial vs. La Realidad Encontrada"]
     S2 --> S3["Slide 3: El Salto Tecnológico (Huevos de Pascua)"]
     S3 --> S4["Slide 4: Consultoría de Procesos & Reingeniería (MOF Oculto)"]
-    S4 --> S5["Slide 5: Valor Ganado: Cimientos del Futuro Módulo de Liquidaciones Dinámicas"]
-    S5 --> S6["Slide 6: Auditoría Digital Forense de Horas (100h vs. 434.77h)"]
-    S6 --> S7["Slide 7: Liquidación Económica & Propuesta de Regularización"]
-    S7 --> S8["Slide 8: Roadmap Inmediato & Pase a Producción (VPS)"]
+    S4 --> S5["Slide 5: Valor Ganado: Cimientos del Módulo de Liquidaciones"]
+    S5 --> S6["Slide 6: Metodología de Auditoría Digital & Log de Trabajo (Pair Programming)"]
+    S6 --> S7["Slide 7: Auditoría Digital Forense de Horas (100h vs. 469.50h)"]
+    S7 --> S8["Slide 8: Liquidación Económica & Propuesta de Regularización"]
+    S8 --> S9["Slide 9: Roadmap Inmediato & Pase a Producción (VPS)"]
 ```
 
 ---
@@ -34,11 +54,11 @@ graph TD
 * **Título:** Navigating the Future: Inteligencia Comercial
 * **Subtítulo:** Sustento de Modificación de Alcance, Consultoría de Procesos y Auditoría Forense de Horas Devengadas.
 * **Mensaje Clave del Dictamen:**
-  * Presentar a la Gerencia y Dirección de **Naviera Petral S.A.** el sustento del desborde del alcance inicial: el proyecto evolucionó de una **hoja de cálculo inteligente** a una **Plataforma Integral de Inteligencia Comercial + Consultoría de Reingeniería de Procesos + Bases de un ERP de Gestión de Flota**, respaldada por una auditoría digital forense inalterable de **434.77 horas reales ejecutadas** en IDE/Git.
-* **Métricas Principales (KPI Boxes):**
+  * Presentar a la Gerencia y Dirección de **Naviera Petral S.A.** el sustento del desborde del alcance inicial: el proyecto evolucionó de una **hoja de cálculo inteligente** a una **Plataforma Integral de Inteligencia Comercial + Consultoría de Reingeniería de Procesos + Bases de un ERP de Gestión de Flota**, respaldada por una auditoría digital forense inalterable de **469.50 horas reales ejecutadas** en IDE/Git.
+* **Métricas Principales (KPI Boxes al 31/08/2026):**
   * **Contrato Estimado:** 100.00 hrs (Cotización Base Junio 2026).
-  * **Horas Reales Auditadas:** 434.77 hrs (Algoritmo inalterable IDE Git / 3,063 eventos en 101 jornadas).
-  * **Sobreesfuerzo Devengado:** +334.77 hrs (+334.8% de valor incremental entregado).
+  * **Horas Reales Auditadas:** 469.50 hrs (Algoritmo inalterable IDE Git / 3,414 eventos en 107 jornadas).
+  * **Sobreesfuerzo Devengado:** +369.50 hrs (+369.5% de valor incremental entregado).
   * **Estado de Producción:** 100% VIVO en `https://forecast.geeksoft.tech` (VPS Contabo).
 
 ---
@@ -93,28 +113,38 @@ graph TD
 
 ---
 
-### 🔹 SLIDE 6: Auditoría Forense de Actividad Digital (Evidencia Inalterable)
+### 🔹 SLIDE 6 (NUEVO): Metodología de Auditoría Digital: Registro de Sesiones & Pair Programming
+* **Título:** Metodología de Auditoría: Registro de Sesiones & Pair Programming con IA.
+* **Subtítulo:** Cómo se audita matemáticamente el tiempo efectivo de interacción y desarrollo continuo con el agente.
+* **Pilares Metodológicos:**
+  1. **Sesión Activa Humano + IA:** El consultor formula requerimientos de negocio, revisa modelos comerciales de Petral, diseña especificaciones y valida la ejecución en tiempo real.
+  2. **Triple Evidencia Inmutable:** Cada instrucción genera **Git Commits** (hashes SHA inmutables), **MTime IDE** (timestamps a milisegundos) y **Logs de Trabajo** cronológicos.
+  3. **Clustering de Sesiones Activas:** Ventana móvil con corte de inactividad a 2.5h + buffer de 30 min por warmup y análisis previo. Si no hay interacción, el reloj se detiene automáticamente.
+
+---
+
+### 🔹 SLIDE 7: Auditoría Forense de Actividad Digital (Evidencia Inalterable)
 * **Título:** Trazabilidad y Transparencia: Registro de Actividad frente a la Plataforma.
-* **Subtítulo:** Trazabilidad matemática e inalterable basada en logs de Git y sesiones continuas de IDE.
+* **Subtítulo:** Trazabilidad matemática e inalterable basada en logs de Git y sesiones continuas de IDE al 31 de Agosto de 2026.
 * **Métricas Auditadas (Algoritmo Forense de Sesiones):**
-  * **Total de Jornadas:** 101 días de trabajo continuo.
-  * **Total de Eventos / Commits Git:** 3,063 eventos registrados.
-  * **Horas Reales de Programación & Consultoría:** **434.77 horas**.
+  * **Total de Jornadas:** 107 días de trabajo continuo.
+  * **Total de Eventos / Commits Git:** 3,414 eventos registrados.
+  * **Horas Reales de Programación & Consultoría:** **469.50 horas**.
   * **Horas Ofrecidas en Cotización:** 100.00 horas.
-  * **Horas Adicionales Dedicadas:** **+334.77 horas (+334.8% de sobreesfuerzo).**
+  * **Horas Adicionales Dedicadas:** **+369.50 horas (+369.5% de sobreesfuerzo).**
 * **Algoritmo de Cálculo:** Ventana móvil de inactividad de 2.5 horas + buffer de 30 minutos de warmup por sesión de planificación.
 
 ---
 
-### 🔹 SLIDE 7: Balance Económico & Propuesta de Regularización
+### 🔹 SLIDE 8: Balance Económico & Propuesta de Regularización
 * **Título:** Valorización Económica y Esquema de Cierre Comercial.
-* **Subtítulo:** Valorización formal del servicio entregado y esquema comercial de regularización.
+* **Subtítulo:** Valorización formal del servicio entregado y esquema comercial de regularización al 31 de Agosto de 2026.
 
 | Concepto / Entregable | Horas | Tarifa Ref. | Subtotal (USD) | Estado Operativo |
 | :--- | :---: | :---: | :---: | :---: |
 | **Presupuesto Inicial Aprobado (One-Timers)**<br><small>Módulos 1, 2, 3, 4 + Carga de Datos y Onboarding</small> | 150.00 hrs | $50 - $100 | **$9,100.00** | <span style="color: #1E40AF; font-weight: bold;">Base Contratada</span> |
-| **Horas Adicionales Devengadas (Sobreesfuerzo)**<br><small>Consultoría de Procesos, Algoritmos SPOT, Seguridad VPS & Reingeniería</small> | 334.77 hrs | $60.00 | **$20,086.20** | <span style="color: #B45309; font-weight: bold;">Valor Entregado</span> |
-| **VALOR TOTAL REAL ENTREGADO A NAVIERA PETRAL** | **484.77 hrs** | — | **$29,186.20** | <span style="color: #15803D; font-weight: bold;">En Operación</span> |
+| **Horas Adicionales Devengadas (Sobreesfuerzo)**<br><small>Consultoría de Procesos, Algoritmos SPOT, Seguridad VPS & Reingeniería</small> | 369.50 hrs | $60.00 | **$22,169.77** | <span style="color: #B45309; font-weight: bold;">Valor Entregado</span> |
+| **VALOR TOTAL REAL ENTREGADO A NAVIERA PETRAL** | **519.50 hrs** | — | **$31,269.77** | <span style="color: #15803D; font-weight: bold;">En Operación</span> |
 
 * **Propuesta de Acuerdo Comercial (Opciones de Regularización):**
   * **Opción A (Paquete Cerrado por Hitos Adicionales):** Regularización de un monto pactado por la consultoría de procesos, auditorías forenses y módulos enterprise no previstos.
@@ -122,7 +152,7 @@ graph TD
 
 ---
 
-### 🔹 SLIDE 8: Conclusiones & Próximos Pasos (Go-Live)
+### 🔹 SLIDE 9: Conclusiones & Próximos Pasos (Go-Live)
 * **Título:** Estado Actual: Sistema Listo para Producción.
 * **Subtítulo:** Hitos de cierre, puesta en marcha y soporte continuo para Naviera Petral.
 * **Hitos Inmediatos:**
