@@ -611,6 +611,7 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             demurragePct, setDemurragePct, showDemurrage, setShowDemurrage, handleSetShowDemurrage,
             demurrageDays, setDemurrageDays, showDemurrageDays, setShowDemurrageDays, handleSetShowDemurrageDays,
             excludedDemurrages, setExcludedDemurrages, customDemurrages, setCustomDemurrages, customDemurrageDays, setCustomDemurrageDays,
+            hiddenClients, setHiddenClients, hiddenRoutes, setHiddenRoutes, hiddenVessels, setHiddenVessels, hiddenMonths, setHiddenMonths,
             isFiltersCollapsed, setIsFiltersCollapsed,
             showSubtotals, setShowSubtotals, showAccumulatedTotal, setShowAccumulatedTotal,
             saveMode, setSaveMode, targetOverwriteId, setTargetOverwriteId,

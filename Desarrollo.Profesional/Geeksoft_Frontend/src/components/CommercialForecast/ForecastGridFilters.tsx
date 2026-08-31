@@ -409,7 +409,7 @@ export const ForecastGridFilters: React.FC = () => {
                         <div className="flex items-center justify-between border-b border-slate-200 pb-1">
                             <div className="flex items-center gap-1.5">
                                 <UserCheck size={13} className="text-sky-600" />
-                                <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">Clientes ({clientList.length - hiddenClients.length}/{clientList.length})</span>
+                                <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">Clientes ({clientList.length - safeHiddenClients.length}/{clientList.length})</span>
                             </div>
                             <div className="flex gap-1 text-[10px]">
                                 <button type="button" onClick={() => setHiddenClients([])} className="text-sky-600 hover:text-sky-800 font-bold px-1 rounded hover:bg-sky-50 cursor-pointer">Todos</button>
@@ -419,14 +419,14 @@ export const ForecastGridFilters: React.FC = () => {
                         </div>
                         <div className="max-h-44 overflow-y-auto border border-slate-200 rounded-lg p-1.5 bg-slate-50 flex flex-col gap-1 shadow-2xs">
                             {clientList.map(c => {
-                                const isChecked = !hiddenClients.includes(c);
+                                const isChecked = !safeHiddenClients.includes(c);
                                 return (
                                     <div key={c} className="flex items-center justify-between group px-1 py-0.5 hover:bg-white rounded transition-colors">
                                         <label className="flex items-center gap-2 text-[12px] font-semibold text-slate-800 cursor-pointer truncate flex-1">
                                             <input 
                                                 type="checkbox" 
                                                 checked={isChecked} 
-                                                onChange={() => toggleFilter(c, hiddenClients, setHiddenClients)} 
+                                                onChange={() => toggleFilter(c, safeHiddenClients, setHiddenClients)} 
                                                 className="rounded text-sky-600 focus:ring-sky-500" 
                                             />
                                             <span className="truncate">{c}</span>
@@ -451,7 +451,7 @@ export const ForecastGridFilters: React.FC = () => {
                         <div className="flex items-center justify-between border-b border-slate-200 pb-1">
                             <div className="flex items-center gap-1.5">
                                 <Navigation size={13} className="text-sky-600" />
-                                <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">Rutas ({routeList.length - hiddenRoutes.length}/{routeList.length})</span>
+                                <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">Rutas ({routeList.length - safeHiddenRoutes.length}/{routeList.length})</span>
                             </div>
                             <div className="flex gap-1 text-[10px]">
                                 <button type="button" onClick={() => setHiddenRoutes([])} className="text-sky-600 hover:text-sky-800 font-bold px-1 rounded hover:bg-sky-50 cursor-pointer">Todas</button>
@@ -461,14 +461,14 @@ export const ForecastGridFilters: React.FC = () => {
                         </div>
                         <div className="max-h-44 overflow-y-auto border border-slate-200 rounded-lg p-1.5 bg-slate-50 flex flex-col gap-1 shadow-2xs">
                             {routeList.map(r => {
-                                const isChecked = !hiddenRoutes.includes(r);
+                                const isChecked = !safeHiddenRoutes.includes(r);
                                 return (
                                     <div key={r} className="flex items-center justify-between group px-1 py-0.5 hover:bg-white rounded transition-colors">
                                         <label className="flex items-center gap-2 text-[12px] font-semibold text-slate-800 cursor-pointer truncate flex-1">
                                             <input 
                                                 type="checkbox" 
                                                 checked={isChecked} 
-                                                onChange={() => toggleFilter(r, hiddenRoutes, setHiddenRoutes)} 
+                                                onChange={() => toggleFilter(r, safeHiddenRoutes, setHiddenRoutes)} 
                                                 className="rounded text-sky-600 focus:ring-sky-500" 
                                             />
                                             <span className="truncate" title={r}>{r}</span>
@@ -493,7 +493,7 @@ export const ForecastGridFilters: React.FC = () => {
                         <div className="flex items-center justify-between border-b border-slate-200 pb-1">
                             <div className="flex items-center gap-1.5">
                                 <Anchor size={13} className="text-sky-600" />
-                                <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">Buques ({vesselList.length - hiddenVessels.length}/{vesselList.length})</span>
+                                <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">Buques ({vesselList.length - safeHiddenVessels.length}/{vesselList.length})</span>
                             </div>
                             <div className="flex gap-1 text-[10px]">
                                 <button type="button" onClick={() => setHiddenVessels([])} className="text-sky-600 hover:text-sky-800 font-bold px-1 rounded hover:bg-sky-50 cursor-pointer">Todos</button>
@@ -503,14 +503,14 @@ export const ForecastGridFilters: React.FC = () => {
                         </div>
                         <div className="max-h-44 overflow-y-auto border border-slate-200 rounded-lg p-1.5 bg-slate-50 flex flex-col gap-1 shadow-2xs">
                             {vesselList.map(v => {
-                                const isChecked = !hiddenVessels.includes(v);
+                                const isChecked = !safeHiddenVessels.includes(v);
                                 return (
                                     <div key={v} className="flex items-center justify-between group px-1 py-0.5 hover:bg-white rounded transition-colors">
                                         <label className="flex items-center gap-2 text-[12px] font-semibold text-slate-800 cursor-pointer truncate flex-1">
                                             <input 
                                                 type="checkbox" 
                                                 checked={isChecked} 
-                                                onChange={() => toggleFilter(v, hiddenVessels, setHiddenVessels)} 
+                                                onChange={() => toggleFilter(v, safeHiddenVessels, setHiddenVessels)} 
                                                 className="rounded text-sky-600 focus:ring-sky-500" 
                                             />
                                             <span className="truncate">{v}</span>
