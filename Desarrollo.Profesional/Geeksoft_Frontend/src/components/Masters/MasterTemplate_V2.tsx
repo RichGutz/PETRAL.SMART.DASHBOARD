@@ -464,13 +464,13 @@ export const MasterTemplate: React.FC<MasterTemplateProps> = ({
 
                             {isHerramientasOpen && (
                                 <nav className="flex flex-col gap-1 transition-all">
-                                    {/* 1. Multicotizador Multirutas */}
+                                    {/* 1. Voyage Calculator */}
                                     {hasPermission('multicotizador_spot', 'Visor') && (
                                         <button 
                                             onClick={() => navigate('/multicotizador')}
                                             className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2.5 transition-all ${activeTab === 'multicotizador' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                                         >
-                                            <span className="text-sm">⛴️</span> Multicotizador Multirutas
+                                            <span className="text-sm">⛴️</span> Voyage Calculator
                                         </button>
                                     )}
                                     

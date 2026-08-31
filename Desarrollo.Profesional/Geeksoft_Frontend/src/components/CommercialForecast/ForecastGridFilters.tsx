@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
-import { Download, FileText } from 'lucide-react';
+import { Download, FileText, RotateCcw, Filter, UserCheck, Navigation, Anchor, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import logoPetral from '../../assets/Logo.Petral.png';
 import logoGeeksoft from '../../assets/Logo.Geeksoft.png';
@@ -49,6 +49,56 @@ export const ForecastGridFilters: React.FC = () => {
         else setHiddenList([...hiddenList, item]);
     };
 
+    // Funciones "Solo este" para aislamiento inmediato
+    const isolateClient = (client: string) => {
+        setHiddenClients(clientList.filter(c => c !== client));
+        setHiddenRoutes([]);
+        setHiddenVessels([]);
+    };
+
+    const isolateRoute = (route: string) => {
+        setHiddenRoutes(routeList.filter(r => r !== route));
+        setHiddenClients([]);
+        setHiddenVessels([]);
+    };
+
+    const isolateVessel = (vessel: string) => {
+        setHiddenVessels(vesselList.filter(v => v !== vessel));
+        setHiddenClients([]);
+        setHiddenRoutes([]);
+    };
+
+    const resetAllFilters = () => {
+        setHiddenClients([]);
+        setHiddenRoutes([]);
+        setHiddenVessels([]);
+        setHiddenMonths([]);
+    };
+
+    const isAnyFilterActive = hiddenClients.length > 0 || hiddenRoutes.length > 0 || hiddenVessels.length > 0 || hiddenMonths.length > 0;
+
+    const activeFilterSummary = useMemo(() => {
+        const activeC = clientList.filter(c => !hiddenClients.includes(c));
+        const activeR = routeList.filter(r => !hiddenRoutes.includes(r));
+        const activeV = vesselList.filter(v => !hiddenVessels.includes(v));
+        const activeM = months.filter(m => !hiddenMonths.includes(m));
+
+        const summaries: string[] = [];
+        if (hiddenClients.length > 0) {
+            summaries.push(activeC.length === 1 ? `Cliente: ${activeC[0]}` : `${activeC.length}/${clientList.length} Clientes`);
+        }
+        if (hiddenRoutes.length > 0) {
+            summaries.push(activeR.length === 1 ? `Ruta: ${activeR[0]}` : `${activeR.length}/${routeList.length} Rutas`);
+        }
+        if (hiddenVessels.length > 0) {
+            summaries.push(activeV.length === 1 ? `Buque: ${activeV[0]}` : `${activeV.length}/${vesselList.length} Buques`);
+        }
+        if (hiddenMonths.length > 0) {
+            summaries.push(`${activeM.length}/${months.length} Meses`);
+        }
+        return summaries.join(' • ');
+    }, [clientList, routeList, vesselList, months, hiddenClients, hiddenRoutes, hiddenVessels, hiddenMonths]);
+
     const handleExportExcel = () => {
         const table = document.getElementById('forecast-grid-table');
         if (!table) return alert('No se encontró la tabla para exportar.');
@@ -73,7 +123,6 @@ export const ForecastGridFilters: React.FC = () => {
         if (ws) {
             const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
             for (let r = range.s.r; r <= range.e.r; r++) {
-                // 1. Buscar la métrica de esta fila en las columnas 0 a 4
                 let metricName = '';
                 for (let c = 0; c <= 4; c++) {
                     const cellRef = XLSX.utils.encode_cell({ r, c });
@@ -92,13 +141,11 @@ export const ForecastGridFilters: React.FC = () => {
 
                 if (!metricName) continue;
 
-                // 2. Limpiar y formatear las celdas numéricas de la fila
                 for (let c = 0; c <= range.e.c; c++) {
                     const cellRef = XLSX.utils.encode_cell({ r, c });
                     const cell = ws[cellRef];
                     if (!cell) continue;
 
-                    // Si fue parseado como string pero representa un número
                     if (cell.t === 's' && cell.v) {
                         const cleanVal = String(cell.v).replace(/[\$,]/g, '').trim();
                         const num = parseFloat(cleanVal);
@@ -108,7 +155,6 @@ export const ForecastGridFilters: React.FC = () => {
                         }
                     }
 
-                    // Aplicar formato de acuerdo a la métrica
                     if (cell.t === 'n') {
                         if (metricName.includes('%')) {
                             cell.z = '0.0%';
@@ -135,7 +181,6 @@ export const ForecastGridFilters: React.FC = () => {
 
         const clone = table.cloneNode(true) as HTMLTableElement;
         
-        // Reemplazar inputs con sus valores
         const inputs = clone.querySelectorAll('input');
         inputs.forEach(input => {
             const val = input.value;
@@ -143,7 +188,6 @@ export const ForecastGridFilters: React.FC = () => {
             if (parent) parent.textContent = val;
         });
 
-        // Reemplazar botones (expandibles, etc.) con spans para evitar que se oculten en la impresión
         const buttons = clone.querySelectorAll('button');
         buttons.forEach(btn => {
             const val = btn.textContent || '';
@@ -152,11 +196,9 @@ export const ForecastGridFilters: React.FC = () => {
             btn.parentNode?.replaceChild(span, btn);
         });
 
-        // Asignar clases fijas a las columnas del clon para que no se desfacen por rowspan
         const visibleMonthsCount = months.filter(m => !hiddenMonths.includes(m)).length;
         const trs = clone.querySelectorAll('tr');
         trs.forEach(tr => {
-            // Procesar cabeceras th
             const ths = tr.querySelectorAll('th');
             if (ths.length > 0) {
                 if (ths.length >= 4) {
@@ -176,14 +218,11 @@ export const ForecastGridFilters: React.FC = () => {
                 }
             }
 
-            // Procesar celdas de datos td
             const tds = tr.querySelectorAll('td');
             if (tds.length === 0) return;
             
-            // Total (último td)
             tds[tds.length - 1].classList.add('col-total');
             
-            // Meses (los td precedentes al total)
             for (let j = 1; j <= visibleMonthsCount; j++) {
                 const idx = tds.length - 1 - j;
                 if (idx >= 0) {
@@ -191,19 +230,16 @@ export const ForecastGridFilters: React.FC = () => {
                 }
             }
             
-            // Métrica (el td justo antes de los meses)
             const metricIdx = tds.length - visibleMonthsCount - 2;
             if (metricIdx >= 0) {
                 tds[metricIdx].classList.add('col-metric');
             }
             
-            // Columnas de navegación (Cliente, Ruta, Buque)
             for (let idx = 0; idx < metricIdx; idx++) {
                 tds[idx].classList.add('col-nav-cell');
             }
         });
 
-        // Dynamic absolute image paths with safe URL resolution
         const getAbsoluteUrl = (path: string) => {
             if (!path) return '';
             if (path.startsWith('http://') || path.startsWith('https://')) {
@@ -215,7 +251,6 @@ export const ForecastGridFilters: React.FC = () => {
         const absolutePetralLogo = getAbsoluteUrl(logoPetral);
         const absoluteGeeksoftLogo = getAbsoluteUrl(logoGeeksoft);
 
-        // Add Petral logo logic
         const html = `
             <html>
             <head>
@@ -227,7 +262,6 @@ export const ForecastGridFilters: React.FC = () => {
                     .subtitle { font-size: 10px; color: #475569; margin-top: 4px; }
                     .logo-img { height: 35px; object-fit: contain; }
                     
-                    /* Table base print config */
                     table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 7px; table-layout: fixed; }
                     th, td { border: 1px solid #cbd5e1; padding: 3px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
                     th { background-color: #1e293b; color: white; text-transform: uppercase; font-size: 7px; text-align: center; }
@@ -235,7 +269,6 @@ export const ForecastGridFilters: React.FC = () => {
                     .text-center { text-align: center; }
                     .font-bold { font-weight: bold; }
                     
-                    /* Vertical text support in PDF */
                     .vertical-text {
                         writing-mode: vertical-rl;
                         transform: rotate(180deg);
@@ -247,155 +280,71 @@ export const ForecastGridFilters: React.FC = () => {
                         padding: 4px 0;
                     }
                     
-                    /* Hide UI actions on print */
-                    button, .absolute { display: none !important; }
-                    
-                    /* Estilo específico para cabeceras de columnas */
-                    .col-header-client, .col-header-route, .col-header-vessel {
-                        width: 25px !important;
-                        min-width: 25px !important;
-                        max-width: 25px !important;
-                        font-size: 7px !important;
-                    }
-                    .col-header-metric {
-                        width: 70px !important;
-                        min-width: 70px !important;
-                        max-width: 70px !important;
-                        font-size: 7px !important;
-                        text-align: left !important;
-                    }
-                    .col-header-month {
-                        font-size: 7px !important;
-                    }
-                    .col-header-total {
-                        width: 45px !important;
-                        min-width: 45px !important;
-                        max-width: 45px !important;
-                        font-size: 7px !important;
-                    }
-
-                    /* Ancho de celdas de navegación (Cliente, Ruta, Buque) */
-                    td.col-nav-cell {
-                        width: 25px !important;
-                        min-width: 25px !important;
-                        max-width: 25px !important;
-                    }
-
-                    /* Columna Métricas: Ancho reducido a 70px y contenido alineado a la izquierda */
-                    td.col-metric, td.col-metric * {
-                        width: 70px !important;
-                        min-width: 70px !important;
-                        max-width: 70px !important;
-                        text-align: left !important;
-                        justify-content: flex-start !important;
-                    }
-                    
-                    /* Cifras mensuales: Fuente reducida en 1pt (de 8px a 7px) y alineadas a la derecha */
-                    td.col-month, td.col-month * {
-                        font-size: 7px !important;
-                        text-align: right !important;
-                        justify-content: flex-end !important;
-                    }
-                    
-                    /* Columna de Total: Ancho de 45px y alineada a la derecha */
-                    td.col-total, td.col-total * {
-                        width: 45px !important;
-                        min-width: 45px !important;
-                        max-width: 45px !important;
-                        font-size: 7px !important;
-                        font-weight: bold !important;
-                        text-align: right !important;
-                        justify-content: flex-end !important;
-                    }
-                    
-                    /* Force background colors to print */
-                    th, td, tr, table {
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                    }
-
-                    /* Tailwind Background Color mapping for print */
-                    .bg-slate-800 { background-color: #1e293b !important; color: white !important; }
-                    .bg-petral-teal { background-color: #0f766e !important; color: white !important; }
-                    .bg-slate-200 { background-color: #e2e8f0 !important; }
+                    td[class*="border-t-2"], td[class*="border-b-2"] { border-top: 2px solid #334155 !important; border-bottom: 2px solid #334155 !important; }
                     .bg-slate-100 { background-color: #f1f5f9 !important; }
                     .bg-slate-50 { background-color: #f8fafc !important; }
-                    .bg-amber-50\/30 { background-color: #fffdf5 !important; }
-                    .bg-indigo-50\/20 { background-color: #fcfbfe !important; }
-                    .bg-indigo-50\/50 { background-color: #e0e7ff !important; }
-                    .bg-slate-100\/50 { background-color: #f8fafc !important; }
+                    .bg-blue-50 { background-color: #eff6ff !important; }
+                    .bg-amber-50 { background-color: #fffbeb !important; }
+                    .bg-emerald-50 { background-color: #ecfdf5 !important; }
+                    .bg-slate-800 { background-color: #1e293b !important; color: white !important; }
+                    .text-slate-900 { color: #0f172a !important; }
                     
-                    /* Tailwind Text Color mapping for print */
-                    .text-slate-300 { color: #cbd5e1 !important; }
-                    .text-slate-400 { color: #94a3b8 !important; }
-                    .text-slate-500 { color: #64748b !important; }
-                    .text-slate-700 { color: #334155 !important; }
-                    .text-teal-700 { color: #0f766e !important; }
-                    .text-red-600 { color: #dc2626 !important; }
-
-                    .footer-container { margin-top: 40px; border-top: 1px solid #cbd5e1; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 8px; color: #64748b; }
-                    .footer-logo { height: 28px; object-fit: contain; vertical-align: middle; margin-left: 5px; }
+                    /* Anchos fijos por tipo de columna */
+                    .col-header-client, .col-header-route, .col-header-vessel { width: 35px !important; max-width: 35px !important; }
+                    .col-header-metric { width: 120px !important; min-width: 120px !important; }
+                    .col-header-month { width: auto !important; }
+                    .col-header-total { width: 65px !important; min-width: 65px !important; }
+                    
+                    .col-nav-cell { width: 35px !important; max-width: 35px !important; }
+                    .col-metric { width: 120px !important; min-width: 120px !important; }
+                    .col-month { width: auto !important; }
+                    .col-total { width: 65px !important; min-width: 65px !important; }
+                    
                     @media print {
-                        @page { size: ${orientation}; margin: 8mm; }
+                        @page { size: ${orientation}; margin: 10mm; }
                         body { padding: 0; }
-                        table { page-break-inside: auto; }
-                        tr { page-break-inside: avoid; page-break-after: auto; }
-                        thead { display: table-header-group; }
-                        tfoot { display: table-footer-group; }
                     }
                 </style>
             </head>
             <body>
                 <div class="header-container">
                     <div>
-                        <div class="title">Matriz de Forecast Comercial</div>
-                        <div class="subtitle">Generado el: ${new Date().toLocaleString('es-PE')}</div>
+                        <div class="title">NAVIERA PETRAL S.A.</div>
+                        <div class="subtitle">MATRIZ COMERCIAL DE ESTIMACIONES Y PROYECCIÓN FINANCIERA</div>
                     </div>
-                    <img src="${absolutePetralLogo}" alt="PETRAL" class="logo-img" />
+                    <div>
+                        <img src="${absolutePetralLogo}" class="logo-img" alt="Logo Petral" />
+                    </div>
                 </div>
-                
                 ${clone.outerHTML}
-
-                <div class="footer-container">
-                    <div>Generado por Shipping Soft</div>
-                    <div style="display: flex; align-items: center; gap: 4px;">
-                        <span>Desarrollado por</span>
-                        <a href="https://www.geeksoft.tech" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; text-decoration: none;">
-                            <img src="${absoluteGeeksoftLogo}" alt="Geeksoft" class="footer-logo" />
-                        </a>
-                    </div>
+                <div style="margin-top: 20px; font-size: 8px; color: #64748b; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 8px;">
+                    Reporte generado automáticamente por Geeksoft Forecast Platform &bull; PETRAL S.A.
                 </div>
-                
                 <script>
-                    Promise.all(
-                        Array.from(document.querySelectorAll('img')).map(img => {
-                            if (img.complete) return Promise.resolve();
-                            return new Promise(resolve => {
-                                img.onload = resolve;
-                                img.onerror = resolve;
-                            });
-                        })
-                    ).then(() => {
-                        setTimeout(() => {
-                            window.print();
-                        }, 500);
-                    });
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(function() { window.close(); }, 500);
+                    };
                 </script>
             </body>
             </html>
         `;
 
-        const pw = window.open('', '_blank');
-        if (pw) {
-            pw.document.write(html);
-            pw.document.close();
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+            printWindow.document.open();
+            printWindow.document.write(html);
+            printWindow.document.close();
         } else {
-            alert('El navegador bloqueó la ventana emergente. Por favor, habilítala para exportar el PDF.');
+            alert('Por favor, permite las ventanas emergentes para poder imprimir el PDF.');
         }
     };
 
-    const monthNames = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
-    
+    const monthNames = [
+        'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+        'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'
+    ];
+
     const quarters = useMemo(() => {
         const qMap: Record<string, string[]> = {};
         months.forEach(m => {
@@ -412,156 +361,249 @@ export const ForecastGridFilters: React.FC = () => {
 
     return (
         <div className="w-full bg-white flex flex-col">
-            <div className="p-4 flex flex-col gap-4 bg-white">
+            <div className="p-3.5 flex flex-col gap-3 bg-white">
                 
-                {/* Filtros de Datos en Cascada */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    
-                    {/* Clientes */}
-                    <div className="flex flex-col gap-2 col-span-1 md:col-span-2">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={hiddenClients.length === 0}
-                                ref={el => { if (el) el.indeterminate = hiddenClients.length > 0 && hiddenClients.length < clientList.length; }}
-                                onChange={() => setHiddenClients(hiddenClients.length === 0 ? clientList : [])}
-                                className="rounded text-petral-teal focus:ring-petral-teal"
-                            />
-                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Clientes</span>
-                        </label>
-                        <div className="max-h-40 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50 flex flex-col gap-1.5">
-                            {clientList.map(c => (
-                                <label key={c} className="flex items-center gap-2 text-[13px] font-medium text-slate-700 cursor-pointer hover:text-petral-teal transition-colors">
-                                    <input type="checkbox" checked={!hiddenClients.includes(c)} onChange={() => toggleFilter(c, hiddenClients, setHiddenClients)} className="rounded text-petral-teal focus:ring-petral-teal" />
-                                    {c}
-                                </label>
-                            ))}
-                            {clientList.length === 0 && <span className="text-[13px] text-slate-400 italic">No hay clientes</span>}
-                        </div>
+                {/* BARRA SUPERIOR DE RESUMEN Y RESTABLECER */}
+                <div className="flex items-center justify-between bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs">
+                    <div className="flex items-center gap-2">
+                        <Filter size={14} className="text-sky-600 shrink-0" />
+                        <span className="font-extrabold text-slate-700">Filtros Multidimensionales:</span>
+                        {isAnyFilterActive ? (
+                            <span className="bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-bold text-[11px] border border-amber-300">
+                                🎯 {activeFilterSummary}
+                            </span>
+                        ) : (
+                            <span className="text-slate-500 font-medium text-[11px]">
+                                Mostrando todos los clientes, rutas, buques y meses
+                            </span>
+                        )}
                     </div>
 
-                    {/* Rutas (2 columnas) */}
-                    <div className="flex flex-col gap-2 col-span-1 md:col-span-3">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={hiddenRoutes.length === 0}
-                                ref={el => { if (el) el.indeterminate = hiddenRoutes.length > 0 && hiddenRoutes.length < routeList.length; }}
-                                onChange={() => setHiddenRoutes(hiddenRoutes.length === 0 ? routeList : [])}
-                                className="rounded text-petral-teal focus:ring-petral-teal"
-                            />
-                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Rutas</span>
-                        </label>
-                        <div className="max-h-40 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50">
-                            <div className="grid grid-cols-2 gap-x-2 gap-y-1.5">
-                                {routeList.map(r => (
-                                    <label key={r} className="flex items-center gap-2 text-[13px] font-medium text-slate-700 cursor-pointer hover:text-petral-teal transition-colors">
-                                        <input type="checkbox" checked={!hiddenRoutes.includes(r)} onChange={() => toggleFilter(r, hiddenRoutes, setHiddenRoutes)} className="rounded text-petral-teal focus:ring-petral-teal" />
-                                        <span className="truncate">{r}</span>
-                                    </label>
-                                ))}
-                            </div>
-                            {routeList.length === 0 && <span className="text-[13px] text-slate-400 italic">No hay rutas</span>}
-                        </div>
-                    </div>
-
-                    {/* Buques */}
-                    <div className="flex flex-col gap-2 col-span-1 md:col-span-2">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={hiddenVessels.length === 0}
-                                ref={el => { if (el) el.indeterminate = hiddenVessels.length > 0 && hiddenVessels.length < vesselList.length; }}
-                                onChange={() => setHiddenVessels(hiddenVessels.length === 0 ? vesselList : [])}
-                                className="rounded text-petral-teal focus:ring-petral-teal"
-                            />
-                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Buques</span>
-                        </label>
-                        <div className="max-h-40 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50 flex flex-col gap-1.5">
-                            {vesselList.map(v => (
-                                <label key={v} className="flex items-center gap-2 text-[13px] font-medium text-slate-700 cursor-pointer hover:text-petral-teal transition-colors">
-                                    <input type="checkbox" checked={!hiddenVessels.includes(v)} onChange={() => toggleFilter(v, hiddenVessels, setHiddenVessels)} className="rounded text-petral-teal focus:ring-petral-teal" />
-                                    {v}
-                                </label>
-                            ))}
-                            {vesselList.length === 0 && <span className="text-[13px] text-slate-400 italic">No hay buques</span>}
-                        </div>
-                    </div>
-
-                    {/* Meses (Quarters en Filas) */}
-                    <div className="flex flex-col gap-2 col-span-1 md:col-span-5">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={hiddenMonths.length === 0}
-                                ref={el => { if (el) el.indeterminate = hiddenMonths.length > 0 && hiddenMonths.length < months.length; }}
-                                onChange={() => setHiddenMonths(hiddenMonths.length === 0 ? [...months] : [])}
-                                className="rounded text-petral-teal focus:ring-petral-teal"
-                            />
-                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Meses</span>
-                        </label>
-                        <div className="max-h-40 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50 grid grid-cols-2 gap-x-4 gap-y-2">
-                            {Object.entries(quarters).map(([qKey, qMonths]) => (
-                                <div key={qKey} className="flex flex-wrap items-center gap-2">
-                                    <span className="text-[12px] font-bold text-slate-800 w-16 shrink-0">{qKey}:</span>
-                                    {qMonths.map(m => {
-                                        const monthIdx = parseInt(m.split('-')[1], 10) - 1;
-                                        const mName = monthNames[monthIdx];
-                                        return (
-                                            <label key={m} className="flex items-center gap-1.5 text-[12px] font-medium text-slate-700 cursor-pointer hover:text-petral-teal transition-colors">
-                                                <input type="checkbox" checked={!hiddenMonths.includes(m)} onChange={() => toggleFilter(m, hiddenMonths, setHiddenMonths)} className="rounded text-petral-teal focus:ring-petral-teal" />
-                                                <span>{mName}</span>
-                                            </label>
-                                        );
-                                    })}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    {isAnyFilterActive && (
+                        <button
+                            type="button"
+                            onClick={resetAllFilters}
+                            className="flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-1 rounded text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
+                        >
+                            <RotateCcw size={12} className="text-sky-600" />
+                            Mostrar Todo (Restablecer)
+                        </button>
+                    )}
                 </div>
 
-                {/* Forma de la Tabla y Acciones en una sola linea horizontal */}
-                <div className="flex flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-6">
-                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-2">Estructura:</span>
-                            <label className="flex items-center gap-2 cursor-pointer group">
-                                <div className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors ${showSubtotals ? 'bg-petral-teal' : 'bg-slate-300'}`}>
-                                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${showSubtotals ? 'translate-x-4' : 'translate-x-1'}`} />
-                                </div>
-                                <input type="checkbox" className="hidden" checked={showSubtotals} onChange={(e) => setShowSubtotals(e.target.checked)} />
-                                <span className="text-[12px] font-medium text-slate-700 group-hover:text-petral-blue transition-colors">Subtotales Cliente</span>
-                            </label>
-                            
-                            <label className="flex items-center gap-2 cursor-pointer group">
-                                <div className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors ${showAccumulatedTotal ? 'bg-indigo-600' : 'bg-slate-300'}`}>
-                                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${showAccumulatedTotal ? 'translate-x-4' : 'translate-x-1'}`} />
-                                </div>
-                                <input type="checkbox" className="hidden" checked={showAccumulatedTotal} onChange={(e) => setShowAccumulatedTotal(e.target.checked)} />
-                                <span className="text-[12px] font-medium text-slate-700 group-hover:text-indigo-800 transition-colors">Acumulado Global</span>
-                            </label>
+                {/* FILTROS EN 4 COLUMNAS */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    
+                    {/* 1. Clientes */}
+                    <div className="flex flex-col gap-1.5 col-span-1 md:col-span-3">
+                        <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                            <div className="flex items-center gap-1.5">
+                                <UserCheck size={13} className="text-sky-600" />
+                                <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">Clientes ({clientList.length - hiddenClients.length}/{clientList.length})</span>
+                            </div>
+                            <div className="flex gap-1 text-[10px]">
+                                <button type="button" onClick={() => setHiddenClients([])} className="text-sky-600 hover:text-sky-800 font-bold px-1 rounded hover:bg-sky-50 cursor-pointer">Todos</button>
+                                <span className="text-slate-300">|</span>
+                                <button type="button" onClick={() => setHiddenClients([...clientList])} className="text-slate-500 hover:text-slate-700 font-bold px-1 rounded hover:bg-slate-100 cursor-pointer">Ninguno</button>
+                            </div>
                         </div>
+                        <div className="max-h-44 overflow-y-auto border border-slate-200 rounded-lg p-1.5 bg-slate-50 flex flex-col gap-1 shadow-2xs">
+                            {clientList.map(c => {
+                                const isChecked = !hiddenClients.includes(c);
+                                return (
+                                    <div key={c} className="flex items-center justify-between group px-1 py-0.5 hover:bg-white rounded transition-colors">
+                                        <label className="flex items-center gap-2 text-[12px] font-semibold text-slate-800 cursor-pointer truncate flex-1">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={isChecked} 
+                                                onChange={() => toggleFilter(c, hiddenClients, setHiddenClients)} 
+                                                className="rounded text-sky-600 focus:ring-sky-500" 
+                                            />
+                                            <span className="truncate">{c}</span>
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => isolateClient(c)}
+                                            title={`Aislar solo ${c}`}
+                                            className="text-[10px] font-black text-sky-700 bg-sky-50 hover:bg-sky-600 hover:text-white border border-sky-200 px-1.5 py-0.2 rounded transition-colors cursor-pointer shrink-0 ml-1"
+                                        >
+                                            Solo
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                            {clientList.length === 0 && <span className="text-[12px] text-slate-400 italic p-1">No hay clientes</span>}
+                        </div>
+                    </div>
+
+                    {/* 2. Rutas */}
+                    <div className="flex flex-col gap-1.5 col-span-1 md:col-span-3">
+                        <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                            <div className="flex items-center gap-1.5">
+                                <Navigation size={13} className="text-sky-600" />
+                                <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">Rutas ({routeList.length - hiddenRoutes.length}/{routeList.length})</span>
+                            </div>
+                            <div className="flex gap-1 text-[10px]">
+                                <button type="button" onClick={() => setHiddenRoutes([])} className="text-sky-600 hover:text-sky-800 font-bold px-1 rounded hover:bg-sky-50 cursor-pointer">Todas</button>
+                                <span className="text-slate-300">|</span>
+                                <button type="button" onClick={() => setHiddenRoutes([...routeList])} className="text-slate-500 hover:text-slate-700 font-bold px-1 rounded hover:bg-slate-100 cursor-pointer">Ninguna</button>
+                            </div>
+                        </div>
+                        <div className="max-h-44 overflow-y-auto border border-slate-200 rounded-lg p-1.5 bg-slate-50 flex flex-col gap-1 shadow-2xs">
+                            {routeList.map(r => {
+                                const isChecked = !hiddenRoutes.includes(r);
+                                return (
+                                    <div key={r} className="flex items-center justify-between group px-1 py-0.5 hover:bg-white rounded transition-colors">
+                                        <label className="flex items-center gap-2 text-[12px] font-semibold text-slate-800 cursor-pointer truncate flex-1">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={isChecked} 
+                                                onChange={() => toggleFilter(r, hiddenRoutes, setHiddenRoutes)} 
+                                                className="rounded text-sky-600 focus:ring-sky-500" 
+                                            />
+                                            <span className="truncate" title={r}>{r}</span>
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => isolateRoute(r)}
+                                            title={`Aislar solo ${r}`}
+                                            className="text-[10px] font-black text-sky-700 bg-sky-50 hover:bg-sky-600 hover:text-white border border-sky-200 px-1.5 py-0.2 rounded transition-colors cursor-pointer shrink-0 ml-1"
+                                        >
+                                            Solo
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                            {routeList.length === 0 && <span className="text-[12px] text-slate-400 italic p-1">No hay rutas</span>}
+                        </div>
+                    </div>
+
+                    {/* 3. Buques */}
+                    <div className="flex flex-col gap-1.5 col-span-1 md:col-span-2">
+                        <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                            <div className="flex items-center gap-1.5">
+                                <Anchor size={13} className="text-sky-600" />
+                                <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">Buques ({vesselList.length - hiddenVessels.length}/{vesselList.length})</span>
+                            </div>
+                            <div className="flex gap-1 text-[10px]">
+                                <button type="button" onClick={() => setHiddenVessels([])} className="text-sky-600 hover:text-sky-800 font-bold px-1 rounded hover:bg-sky-50 cursor-pointer">Todos</button>
+                                <span className="text-slate-300">|</span>
+                                <button type="button" onClick={() => setHiddenVessels([...vesselList])} className="text-slate-500 hover:text-slate-700 font-bold px-1 rounded hover:bg-slate-100 cursor-pointer">Ninguno</button>
+                            </div>
+                        </div>
+                        <div className="max-h-44 overflow-y-auto border border-slate-200 rounded-lg p-1.5 bg-slate-50 flex flex-col gap-1 shadow-2xs">
+                            {vesselList.map(v => {
+                                const isChecked = !hiddenVessels.includes(v);
+                                return (
+                                    <div key={v} className="flex items-center justify-between group px-1 py-0.5 hover:bg-white rounded transition-colors">
+                                        <label className="flex items-center gap-2 text-[12px] font-semibold text-slate-800 cursor-pointer truncate flex-1">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={isChecked} 
+                                                onChange={() => toggleFilter(v, hiddenVessels, setHiddenVessels)} 
+                                                className="rounded text-sky-600 focus:ring-sky-500" 
+                                            />
+                                            <span className="truncate">{v}</span>
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => isolateVessel(v)}
+                                            title={`Aislar solo ${v}`}
+                                            className="text-[10px] font-black text-sky-700 bg-sky-50 hover:bg-sky-600 hover:text-white border border-sky-200 px-1.5 py-0.2 rounded transition-colors cursor-pointer shrink-0 ml-1"
+                                        >
+                                            Solo
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                            {vesselList.length === 0 && <span className="text-[12px] text-slate-400 italic p-1">No hay buques</span>}
+                        </div>
+                    </div>
+
+                    {/* 4. Meses */}
+                    <div className="flex flex-col gap-1.5 col-span-1 md:col-span-4">
+                        <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                            <div className="flex items-center gap-1.5">
+                                <Calendar size={13} className="text-sky-600" />
+                                <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">Meses ({months.length - hiddenMonths.length}/{months.length})</span>
+                            </div>
+                            <div className="flex gap-1 text-[10px]">
+                                <button type="button" onClick={() => setHiddenMonths([])} className="text-sky-600 hover:text-sky-800 font-bold px-1 rounded hover:bg-sky-50 cursor-pointer">Todos</button>
+                                <span className="text-slate-300">|</span>
+                                <button type="button" onClick={() => setHiddenMonths([...months])} className="text-slate-500 hover:text-slate-700 font-bold px-1 rounded hover:bg-slate-100 cursor-pointer">Ninguno</button>
+                            </div>
+                        </div>
+                        <div className="max-h-44 overflow-y-auto border border-slate-200 rounded-lg p-2 bg-slate-50 flex flex-col gap-2 shadow-2xs">
+                            {Object.entries(quarters).map(([qKey, qMonths]) => (
+                                <div key={qKey} className="flex flex-wrap items-center gap-1.5">
+                                    <span className="text-[11px] font-black text-slate-700 w-14 shrink-0 font-mono">{qKey}:</span>
+                                    <div className="flex flex-wrap gap-1">
+                                        {qMonths.map(m => {
+                                            const monthIdx = parseInt(m.split('-')[1], 10) - 1;
+                                            const mName = monthNames[monthIdx];
+                                            const isChecked = !hiddenMonths.includes(m);
+                                            return (
+                                                <button
+                                                    key={m}
+                                                    type="button"
+                                                    onClick={() => toggleFilter(m, hiddenMonths, setHiddenMonths)}
+                                                    className={`px-2 py-0.5 text-[11px] font-bold rounded border transition-colors cursor-pointer ${isChecked ? 'bg-sky-600 text-white border-sky-700 shadow-2xs' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-100'}`}
+                                                >
+                                                    {mName}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                </div>
+
+                {/* ESTRUCTURA DE MATRIZ Y BOTONES DE EXPORTACIÓN */}
+                <div className="flex flex-row items-center justify-between gap-4 pt-2 border-t border-slate-200">
+                    <div className="flex items-center gap-6">
+                        <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">Estructura Matriz:</span>
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                            <div className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors ${showSubtotals ? 'bg-sky-600' : 'bg-slate-300'}`}>
+                                <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${showSubtotals ? 'translate-x-4' : 'translate-x-1'}`} />
+                            </div>
+                            <input type="checkbox" className="hidden" checked={showSubtotals} onChange={(e) => setShowSubtotals(e.target.checked)} />
+                            <span className="text-[11.5px] font-bold text-slate-700 group-hover:text-sky-800 transition-colors">Subtotales Cliente</span>
+                        </label>
+                        
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                            <div className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors ${showAccumulatedTotal ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                                <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${showAccumulatedTotal ? 'translate-x-4' : 'translate-x-1'}`} />
+                            </div>
+                            <input type="checkbox" className="hidden" checked={showAccumulatedTotal} onChange={(e) => setShowAccumulatedTotal(e.target.checked)} />
+                            <span className="text-[11.5px] font-bold text-slate-700 group-hover:text-indigo-800 transition-colors">Acumulado Global</span>
+                        </label>
                     </div>
 
                     <div className="flex items-center gap-2">
                         <button 
+                            type="button"
                             onClick={() => handlePrintPDF('portrait')}
-                            className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-md text-[11px] font-bold shadow-sm transition-all hover:shadow-md"
+                            className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-extrabold shadow-2xs transition-all cursor-pointer"
                         >
-                            <FileText size={14} /> PDF Vertical
+                            <FileText size={13} /> PDF Vertical
                         </button>
                         <button 
+                            type="button"
                             onClick={() => handlePrintPDF('landscape')}
-                            className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-md text-[11px] font-bold shadow-sm transition-all hover:shadow-md"
+                            className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-extrabold shadow-2xs transition-all cursor-pointer"
                         >
-                            <FileText size={14} /> PDF Horizontal
+                            <FileText size={13} /> PDF Horizontal
                         </button>
                         <button 
+                            type="button"
                             onClick={handleExportExcel}
                             id="btn-export-excel"
-                            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-md text-[11px] font-bold shadow-sm transition-all hover:shadow-md"
+                            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-extrabold shadow-2xs transition-all cursor-pointer"
                         >
-                            <Download size={14} /> a Excel
+                            <Download size={13} /> Exportar Excel
                         </button>
                     </div>
                 </div>

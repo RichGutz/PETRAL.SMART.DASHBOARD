@@ -278,7 +278,10 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const globalTons = new Array(months.length).fill(0);
         const globalFreightRevenues = new Array(months.length).fill(0);
         const globalRevenues = new Array(months.length).fill(0);
+        const globalNetRevenues = new Array(months.length).fill(0);
+        const globalHire = new Array(months.length).fill(0);
         const globalPortCosts = new Array(months.length).fill(0);
+        const globalDockageCosts = new Array(months.length).fill(0);
         const globalBunkerCosts = new Array(months.length).fill(0);
         const globalCharterHire = new Array(months.length).fill(0);
         const globalVoyageResult = new Array(months.length).fill(0);
@@ -292,10 +295,14 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             const level1RowSpanRef = { value: 0 };
             let isFirstLevel1Row = true;
 
+            const level1Trips = new Array(months.length).fill(0);
             const level1ShipDays = new Array(months.length).fill(0);
             const level1FreightRevenue = new Array(months.length).fill(0);
             const level1GrossRevenue = new Array(months.length).fill(0);
+            const level1NetRevenue = new Array(months.length).fill(0);
+            const level1Hire = new Array(months.length).fill(0);
             const level1PortCosts = new Array(months.length).fill(0);
+            const level1DockageCosts = new Array(months.length).fill(0);
             const level1BunkerCosts = new Array(months.length).fill(0);
             const level1CharterHire = new Array(months.length).fill(0);
             const level1VoyageResult = new Array(months.length).fill(0);
@@ -339,23 +346,77 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         return line ? (line.monthly_frequency || 0) : 0;
                     });
 
+                    const vesselDemurrageRate = months.map(m => monthData[m]?.["vessel_demurrage_rate"] ?? monthData[m]?.["demurrage_rate"] ?? monthData[m]?.["demurrageRate"] ?? 20000);
+                    const demurragePctArray = months.map((_, i) => {
+                        if (customDemurrages[rowKey] && customDemurrages[rowKey][i] !== undefined) {
+                            return parseFloat(customDemurrages[rowKey][i]) || 0;
+                        }
+                        return parseFloat(demurragePct) || 0;
+                    });
+                    
+                    const demurrageDaysArray = months.map((_, i) => {
+                        if (customDemurrageDays[rowKey] && customDemurrageDays[rowKey][i] !== undefined) {
+                            return parseFloat(customDemurrageDays[rowKey][i]) || 0;
+                        }
+                        return parseFloat(demurrageDays) || 0;
+                    });
+
                     const getMonthlyValues = (metricKey: string) => {
                         return months.map((m, idx) => {
                             const tripCount = trips[idx] || 0;
                             if (tripCount <= 0) {
                                 return undefined;
                             }
+
+                            const seaDays = Number(monthData[m]?.["sea_days_unit"] ?? monthData[m]?.["sea_days"] ?? monthData[m]?.["tot_sea_days"] ?? 0);
+                            const portDays = Number(monthData[m]?.["port_days_unit"] ?? monthData[m]?.["port_days"] ?? monthData[m]?.["tot_port_days"] ?? 0);
+                            const nativeDemurrageDays = Number(monthData[m]?.["demurrage_days_unit"] ?? monthData[m]?.["demurrage_days"] ?? 0);
+                            const dailyRate = Number(vesselDemurrageRate[idx] || 20000);
+
+                            let effectiveDemurrageDays = nativeDemurrageDays;
+                            if (isDemurrageVisible) {
+                                // Opción B: Demurrage % convertido a días equivalentes (Demurrage USD / Tarifa Diaria)
+                                const unitFreight = Number(monthData[m]?.["freight_revenue_unit"] ?? monthData[m]?.["gross_income"] ?? ((monthData[m]?.["carga_unit"] || 0) * (monthData[m]?.["flete_unit"] || 0)) ?? 0);
+                                const unitDemurrageUsd = unitFreight * (demurragePctArray[idx] / 100);
+                                effectiveDemurrageDays = dailyRate > 0 ? (unitDemurrageUsd / dailyRate) : 0;
+                            } else if (isDemurrageDaysVisible) {
+                                effectiveDemurrageDays = demurrageDaysArray[idx] || 0;
+                            }
+
+                            const dynamicTotalDuration = (seaDays > 0 || portDays > 0)
+                                ? (seaDays + portDays + effectiveDemurrageDays)
+                                : (Number(monthData[m]?.["total_duration"] ?? monthData[m]?.["total_days"] ?? 0) + (isDemurrageDaysVisible || isDemurrageVisible ? (effectiveDemurrageDays - nativeDemurrageDays) : 0));
+
+                            // Delta de búnker por días extras de demora (si se sobreescribió en la matriz)
+                            const extraDemurrageDays = (isDemurrageVisible || isDemurrageDaysVisible)
+                                ? Math.max(0, effectiveDemurrageDays - nativeDemurrageDays)
+                                : 0;
+                            const idleIfo = Number(monthData[m]?.["consumption_idle_ifo"] ?? 1.5);
+                            const idleMdo = Number(monthData[m]?.["consumption_idle_mdo"] ?? 0.8);
+                            const priceIfo = Number(monthData[m]?.["price_ifo_unit"] ?? monthData[m]?.["bunker_price_ifo"] ?? 650);
+                            const priceMdo = Number(monthData[m]?.["price_mdo_unit"] ?? monthData[m]?.["bunker_price_mdo"] ?? 950);
+                            const extraBunkerCostPerTrip = extraDemurrageDays * ((idleIfo * priceIfo) + (idleMdo * priceMdo));
+
+                            if (metricKey === "distancia_total") return monthData[m]?.["total_distance"] || monthData[m]?.["distancia"];
+                            if (metricKey === "sea_days_unit") return seaDays;
+                            if (metricKey === "port_days_unit") return portDays;
+                            if (metricKey === "demurrage_days_unit") return effectiveDemurrageDays;
+                            if (metricKey === "total_duration_unit") return dynamicTotalDuration;
+
+                            if (metricKey === "total_bunker_costs_unit") {
+                                const baseBunkerUnit = Number(monthData[m]?.["total_bunker_costs_unit"] ?? monthData[m]?.["total_bunker_costs"] ?? monthData[m]?.["bunker_costs"] ?? 0);
+                                return baseBunkerUnit + extraBunkerCostPerTrip;
+                            }
+                            if (metricKey === "total_bunker_costs") {
+                                const baseBunkerUnit = Number(monthData[m]?.["total_bunker_costs_unit"] ?? monthData[m]?.["total_bunker_costs"] ?? monthData[m]?.["bunker_costs"] ?? 0);
+                                return (baseBunkerUnit + extraBunkerCostPerTrip) * tripCount;
+                            }
+
                             let val = monthData[m]?.[metricKey];
                             if (val === undefined || val === null || val === 0) {
-                                if (metricKey === "distancia_total") val = monthData[m]?.["total_distance"] || monthData[m]?.["distancia"];
-                                if (metricKey === "sea_days_unit") val = monthData[m]?.["sea_days"] || monthData[m]?.["tot_sea_days"];
-                                if (metricKey === "port_days_unit") val = monthData[m]?.["port_days"] || monthData[m]?.["tot_port_days"];
-                                if (metricKey === "demurrage_days_unit") val = (customDemurrageDays[rowKey] && customDemurrageDays[rowKey][idx] !== undefined) ? parseFloat(customDemurrageDays[rowKey][idx]) : (demurrageDays !== '' ? parseFloat(demurrageDays) : (monthData[m]?.["demurrage_days"] || 0));
-                                if (metricKey === "total_duration_unit") val = monthData[m]?.["total_duration"] || monthData[m]?.["total_days"];
                                 if (metricKey === "bunker_ifo_tonnage_unit") val = monthData[m]?.["bunker_ifo_tonnage"] || monthData[m]?.["ifo_tons"];
                                 if (metricKey === "bunker_mdo_tonnage_unit") val = monthData[m]?.["bunker_mdo_tonnage"] || monthData[m]?.["mdo_tons"];
                                 if (metricKey === "total_port_costs_unit") val = monthData[m]?.["total_port_costs"] || monthData[m]?.["port_costs"];
-                                if (metricKey === "total_bunker_costs_unit") val = monthData[m]?.["total_bunker_costs"] || monthData[m]?.["bunker_costs"];
                                 if (metricKey === "gross_income_unit") val = monthData[m]?.["freight_revenue_unit"] ?? monthData[m]?.["freight_revenue"] ?? monthData[m]?.["gross_income"] ?? (monthData[m]?.["carga_unit"] && monthData[m]?.["flete_unit"] ? monthData[m]?.["carga_unit"] * monthData[m]?.["flete_unit"] : undefined);
                                 if (metricKey === "address_comm_pct") val = monthData[m]?.["address_comm_pct"];
                                 if (metricKey === "broker_comm_pct") val = monthData[m]?.["broker_comm_pct"];
@@ -367,10 +428,13 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 if (metricKey === "voyage_result_unit") val = monthData[m]?.["voyage_result"] || monthData[m]?.["voyage_result_unit"];
                                 if (metricKey === "tce_real_unit") val = monthData[m]?.["tce_real"] || monthData[m]?.["tce"];
                                 if (metricKey === "tce_required_unit") val = monthData[m]?.["tce_required_unit"] ?? monthData[m]?.["tce_required"] ?? 0;
-                                if (metricKey === "tce_cost_total_unit") val = monthData[m]?.["tce_cost_total_unit"] ?? ((monthData[m]?.["total_duration_unit"] && monthData[m]?.["tce_required_unit"]) ? monthData[m]?.["total_duration_unit"] * monthData[m]?.["tce_required_unit"] : 0);
+                                if (metricKey === "tce_cost_total_unit") val = dynamicTotalDuration * Number(monthData[m]?.["tce_required_unit"] ?? monthData[m]?.["tce_required"] ?? 0);
                                 if (metricKey === "flete_unit") val = monthData[m]?.["flete_unit"] || monthData[m]?.["freight_rate"];
                                 if (metricKey === "charter_hire_cost_unit") val = monthData[m]?.["charter_hire_cost_unit"] ?? monthData[m]?.["charter_hire_cost"] ?? monthData[m]?.["charterHireCost"] ?? monthData[m]?.["charter_hire"] ?? 0;
                                 if (metricKey === "pl_vs_required_unit") val = monthData[m]?.["pl_vs_required_unit"] || monthData[m]?.["pl_vs_required"] || monthData[m]?.["pl_neto"];
+                            }
+                            if (metricKey === "tce_cost_total_unit") {
+                                val = dynamicTotalDuration * Number(monthData[m]?.["tce_required_unit"] ?? monthData[m]?.["tce_required"] ?? 0);
                             }
                             return val;
                         });
@@ -388,7 +452,32 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         return Number(mVal);
                     });
 
-                    const grossRevenues = months.map((_, i) => freightRevenues[i] + refacturacionMuellaje[i]);
+                    let demurrageArr = new Array(months.length).fill(0);
+                    if (isDemurrageVisible) {
+                        // Demurrage % sobre Freight Revenue (Botón 8)
+                        demurrageArr = freightRevenues.map((fRev, i) => (fRev || 0) * (demurragePctArray[i] / 100));
+                    } else if (isDemurrageDaysVisible) {
+                        // Demurrage Días * Tarifa diaria (Botón 9)
+                        demurrageArr = trips.map((t, i) => t * demurrageDaysArray[i] * (vesselDemurrageRate[i] || 20000));
+                    } else {
+                        // Demurrage nativo de la foto
+                        demurrageArr = months.map((m, i) => {
+                            const tripCount = trips[i] || 0;
+                            if (tripCount <= 0) return 0;
+                            const dUnit = monthData[m]?.["demurrage_revenue_unit"] ?? monthData[m]?.["demurrage_income_unit"];
+                            if (dUnit !== undefined && dUnit !== null && Number(dUnit) > 0) {
+                                return Number(dUnit) * tripCount;
+                            }
+                            const dVal = monthData[m]?.["demurrage_revenue"] ?? monthData[m]?.["demurrage_income"] ?? 0;
+                            return Number(dVal);
+                        });
+                    }
+                    demurrageArr.forEach((v, i) => {
+                        level1Demurrage[i] += (v || 0);
+                        globalDemurrage[i] += (v || 0);
+                    });
+
+                    const grossRevenues = months.map((_, i) => freightRevenues[i] + refacturacionMuellaje[i] + (demurrageArr[i] || 0));
                     const commissions = getMonthlyValues("total_commissions");
                     const netRevenues = months.map((_, i) => grossRevenues[i] - (commissions[i] || 0));
                     
@@ -419,69 +508,62 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     });
                     const tceDiff = months.map((_, i) => (trips[i] > 0 ? (tceReal[i] - (tceReq[i] || 13000)) : 0));
 
+                    trips.forEach((v, i) => {
+                        level1Trips[i] += (v || 0);
+                        globalTrips[i] += (v || 0);
+                    });
                     freightRevenues.forEach((v, i) => {
-                        level1FreightRevenue[i] += v;
-                        globalFreightRevenues[i] += v;
+                        level1FreightRevenue[i] += (v || 0);
+                        globalFreightRevenues[i] += (v || 0);
                     });
                     grossRevenues.forEach((v, i) => {
-                        level1GrossRevenue[i] += v;
-                        globalRevenues[i] += v;
+                        level1GrossRevenue[i] += (v || 0);
+                        globalRevenues[i] += (v || 0);
                     });
-                    portCostsTotal.forEach((v, i) => {
-                        level1PortCosts[i] += v;
-                        globalPortCosts[i] += v;
+                    netRevenues.forEach((v, i) => {
+                        level1NetRevenue[i] += (v || 0);
+                        globalNetRevenues[i] += (v || 0);
+                    });
+                    tceCostTotal.forEach((v, i) => {
+                        level1Hire[i] += (v || 0);
+                        globalHire[i] += (v || 0);
+                    });
+                    portCosts.forEach((v, i) => {
+                        level1PortCosts[i] += (v || 0);
+                        globalPortCosts[i] += (v || 0);
+                    });
+                    dockageCosts.forEach((v, i) => {
+                        level1DockageCosts[i] += (v || 0);
+                        globalDockageCosts[i] += (v || 0);
                     });
                     bunker.forEach((v, i) => {
-                        level1BunkerCosts[i] += v;
-                        globalBunkerCosts[i] += v;
+                        level1BunkerCosts[i] += (v || 0);
+                        globalBunkerCosts[i] += (v || 0);
                     });
                     charterHireCosts.forEach((v, i) => {
-                        level1CharterHire[i] += v;
-                        globalCharterHire[i] += v;
+                        level1CharterHire[i] += (v || 0);
+                        globalCharterHire[i] += (v || 0);
                     });
                     voyageResult.forEach((v, i) => {
-                        level1VoyageResult[i] += v;
-                        globalVoyageResult[i] += v;
+                        level1VoyageResult[i] += (v || 0);
+                        globalVoyageResult[i] += (v || 0);
                     });
                     plVsRequired.forEach((v, i) => {
-                        level1PlVsRequired[i] += v;
-                        globalPlVsRequired[i] += v;
+                        level1PlVsRequired[i] += (v || 0);
+                        globalPlVsRequired[i] += (v || 0);
                     });
-                    
-                    const demurragePctArray = months.map((_, i) => {
-                        if (customDemurrages[rowKey] && customDemurrages[rowKey][i] !== undefined) {
-                            return parseFloat(customDemurrages[rowKey][i]) || 0;
-                        }
-                        return parseFloat(demurragePct) || 0;
-                    });
-                    
-                    const demurrageDaysArray = months.map((_, i) => {
-                        if (customDemurrageDays[rowKey] && customDemurrageDays[rowKey][i] !== undefined) {
-                            return parseFloat(customDemurrageDays[rowKey][i]) || 0;
-                        }
-                        return parseFloat(demurrageDays) || 0;
-                    });
-                    
-                    const vesselDemurrageRate = getMonthlyValues("vessel_demurrage_rate");
-
-                    let demurrageArr = new Array(months.length).fill(0);
-                    if (isDemurrageVisible) {
-                        // Demurrage % calculado estrictamente sobre Freight Revenue
-                        demurrageArr = freightRevenues.map((fRev, i) => (fRev || 0) * (demurragePctArray[i] / 100));
-                        demurrageArr.forEach((v, i) => level1Demurrage[i] += v);
-                    } else if (isDemurrageDaysVisible) {
-                        demurrageArr = trips.map((t, i) => t * demurrageDaysArray[i] * (vesselDemurrageRate[i] || 20000));
-                        demurrageArr.forEach((v, i) => level1Demurrage[i] += v);
-                    }
 
                     const unitCargos = getMonthlyValues("carga_unit");
-                    const tonsTotal = months.map((_, i) => unitCargos[i] * trips[i]);
-                    tonsTotal.forEach((v, i) => level1TonsTotal[i] += v);
+                    const tonsTotal = months.map((_, i) => (trips[i] > 0 ? (unitCargos[i] || monthData[months[i]]?.["carga_unit"] || 0) * trips[i] : 0));
+                    tonsTotal.forEach((v, i) => {
+                        level1TonsTotal[i] += (v || 0);
+                        globalTons[i] += (v || 0);
+                    });
 
                     const nodeShipDays = months.map((_, i) => (trips[i] > 0 ? (totalDaysArr[i] || 0) * trips[i] : 0));
                     nodeShipDays.forEach((v, i) => {
-                        level1ShipDays[i] += v;
-                        globalShipDays[i] += v;
+                        level1ShipDays[i] += (v || 0);
+                        globalShipDays[i] += (v || 0);
                     });
 
                     const calcPct = (arr: number[]) => arr.map((v, i) => grossRevenues[i] ? (v / grossRevenues[i]) * 100 : 0);
@@ -504,15 +586,11 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         { name: "▶ Métricas TCE ($/d)", values: tceReal, total: null, pct: null, totalPct: null, isCurrency: false, isTotal: false, isExpandableTce: true, rowKey, isExpanded: isExpandedTceRow }
                     ];
 
-                    if (isDemurrageVisible || isDemurrageDaysVisible) {
-                        metrics.push({ name: "Demurrage", values: demurrageArr, total: sum(demurrageArr), pct: calcPct(demurrageArr), totalPct: calcTotalPct(sum(demurrageArr), sum(grossRevenues)), isCurrency: true, isTotal: false, isExpandableDemurrage: true, rowKey, isExpanded: isDemurrageExpanded });
-                    }
-
-                    const netRevenueSubRowsCount = isExpandedGross ? 4 : 0;
+                    const demurrageSubSubRowsCount = (isExpandedGross && isDemurrageExpanded && (isDemurrageVisible || isDemurrageDaysVisible)) ? 1 : 0;
+                    const netRevenueSubRowsCount = isExpandedGross ? (5 + demurrageSubSubRowsCount) : 0;
                     const tceSubRowsCount = isExpandedTceRow ? 3 : 0;
-                    const demurrageSubRowsCount = (isDemurrageVisible || isDemurrageDaysVisible) ? (isDemurrageExpanded ? 2 : 0) : 0;
 
-                    const vesselRowSpan = metrics.length + numSubRows + netRevenueSubRowsCount + tceSubRowsCount + demurrageSubRowsCount;
+                    const vesselRowSpan = metrics.length + numSubRows + netRevenueSubRowsCount + tceSubRowsCount;
                     
                     level1RowSpanRef.value += vesselRowSpan;
                     level2RowSpanRef.value += vesselRowSpan;
@@ -529,8 +607,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 isSubRow: false
                             });
 
-                        // 1. Acordeón de Net Revenue (4 sub-filas fijas)
+                        // 1. Acordeón de Net Revenue (5 sub-filas ordenadas con Demurrage)
                         if (metric.isExpandableGrossRevenue && isExpandedGross) {
+                            // 1.1. Freight Revenue
                             result.push({
                                 col1: null, col2: null, col3: null,
                                 clientName: client, routeName: route, vesselName: vessel,
@@ -547,6 +626,66 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 isSubRow: true
                             });
 
+                            // 1.2. Demurrage (Integrado en Net Revenue)
+                            result.push({
+                                col1: null, col2: null, col3: null,
+                                clientName: client, routeName: route, vesselName: vessel,
+                                metric: {
+                                    name: "↳ (+) Demurrage",
+                                    values: demurrageArr,
+                                    total: sum(demurrageArr),
+                                    pct: calcPct(demurrageArr),
+                                    totalPct: calcTotalPct(sum(demurrageArr), sum(grossRevenues)),
+                                    isCurrency: true,
+                                    isTotal: false,
+                                    isSubRowMetric: true,
+                                    isExpandableDemurrage: (isDemurrageVisible || isDemurrageDaysVisible),
+                                    rowKey,
+                                    isExpanded: isDemurrageExpanded
+                                },
+                                isSubRow: true
+                            });
+
+                            // Desglose interactivo si Demurrage está expandido
+                            if (isDemurrageExpanded) {
+                                if (isDemurrageVisible) {
+                                    result.push({
+                                        col1: null, col2: null, col3: null,
+                                        clientName: client, routeName: route, vesselName: vessel,
+                                        metric: {
+                                            name: "    ↳ Demurrage (%)",
+                                            values: demurragePctArray,
+                                            total: 0,
+                                            pct: null,
+                                            totalPct: null,
+                                            isCurrency: false,
+                                            isTotal: false,
+                                            isDemurragePctEditable: true,
+                                            rowKey
+                                        },
+                                        isSubRow: true
+                                    });
+                                } else if (isDemurrageDaysVisible) {
+                                    result.push({
+                                        col1: null, col2: null, col3: null,
+                                        clientName: client, routeName: route, vesselName: vessel,
+                                        metric: {
+                                            name: "    ↳ Demurrage (días)",
+                                            values: demurrageDaysArray,
+                                            total: 0,
+                                            pct: null,
+                                            totalPct: null,
+                                            isCurrency: false,
+                                            isTotal: false,
+                                            isDemurrageDaysEditable: true,
+                                            rowKey
+                                        },
+                                        isSubRow: true
+                                    });
+                                }
+                            }
+
+                            // 1.3. Dockage Revenue
                             result.push({
                                 col1: null, col2: null, col3: null,
                                 clientName: client, routeName: route, vesselName: vessel,
@@ -563,6 +702,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 isSubRow: true
                             });
 
+                            // 1.4. Gross Revenue
                             result.push({
                                 col1: null, col2: null, col3: null,
                                 clientName: client, routeName: route, vesselName: vessel,
@@ -579,6 +719,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 isSubRow: true
                             });
 
+                            // 1.5. Comisiones
                             result.push({
                                 col1: null, col2: null, col3: null,
                                 clientName: client, routeName: route, vesselName: vessel,
@@ -650,58 +791,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                             });
                         }
 
-                        // 3. Acordeón de Demurrage
-                        if (metric.name === "Demurrage" && isDemurrageExpanded) {
-                            if (isDemurrageVisible) {
-                                result.push({
-                                    col1: null, col2: null, col3: null,
-                                    clientName: client, routeName: route, vesselName: vessel,
-                                    metric: {
-                                        name: "↳ Demurrage (%)",
-                                        values: demurragePctArray,
-                                        total: 0,
-                                        pct: null,
-                                        totalPct: null,
-                                        isCurrency: false,
-                                        isTotal: false,
-                                        isDemurragePctEditable: true,
-                                        rowKey
-                                    },
-                                    isSubRow: true
-                                });
-                            } else if (isDemurrageDaysVisible) {
-                                result.push({
-                                    col1: null, col2: null, col3: null,
-                                    clientName: client, routeName: route, vesselName: vessel,
-                                    metric: {
-                                        name: "↳ Demurrage (días)",
-                                        values: demurrageDaysArray,
-                                        total: 0,
-                                        pct: null,
-                                        totalPct: null,
-                                        isCurrency: false,
-                                        isTotal: false,
-                                        isDemurrageDaysEditable: true,
-                                        rowKey
-                                    },
-                                    isSubRow: true
-                                });
-                            }
-                            result.push({
-                                col1: null, col2: null, col3: null,
-                                clientName: client, routeName: route, vesselName: vessel,
-                                metric: {
-                                    name: "↳ Demurrage (USD)",
-                                    values: demurrageArr,
-                                    total: sum(demurrageArr),
-                                    pct: null,
-                                    totalPct: null,
-                                    isCurrency: true,
-                                    isTotal: false
-                                },
-                                isSubRow: true
-                            });
-                        }
+
 
 
                         if (metric.isExpandable && isExpanded) {
@@ -756,17 +846,6 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         }
                     });
 
-                    months.forEach((_, i) => {
-                        globalTrips[i] += trips[i] || 0;
-                        globalTons[i] += tonsTotal[i] || 0;
-                        globalRevenues[i] += grossRevenues[i] || 0;
-                        globalPortCosts[i] += portCosts[i] || 0;
-                        globalBunkerCosts[i] += bunker[i] || 0;
-                        globalVoyageResult[i] += voyageResult[i] || 0;
-                        globalPlVsRequired[i] += plVsRequired[i] || 0;
-                        globalDemurrage[i] += demurrageArr[i] || 0;
-                    });
-
                     isFirstLevel2Row = false;
                     isFirstLevel1Row = false;
                 });
@@ -780,20 +859,18 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             const totalGrossPlusDem = sum(level1GrossPlusDem);
             const totalLevel1Tons = sum(level1TonsTotal);
             const totalLevel1ShipDays = sum(level1ShipDays);
-            const level1Yield = level1TonsTotal.map((tons, i) => tons ? level1GrossPlusDem[i] / tons : 0);
-            const totalLevel1Yield = totalLevel1Tons ? totalGrossPlusDem / totalLevel1Tons : 0;
-            const level1YieldFlete = level1TonsTotal.map((tons, i) => tons ? level1FreightRevenue[i] / tons : 0);
-            const totalLevel1YieldFlete = totalLevel1Tons ? totalLevel1FreightRevenue / totalLevel1Tons : 0;
 
             const subMetrics = [
-                { name: "P/L", values: level1PlVsRequired, total: sum(level1PlVsRequired), pct: level1CalcPct(level1PlVsRequired), totalPct: level1CalcTotalPct(sum(level1PlVsRequired), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "Viajes", values: level1Trips, total: sum(level1Trips), pct: null, totalPct: null, isCurrency: false, isTotal: false },
                 { name: "Días-Buque", values: level1ShipDays, total: totalLevel1ShipDays, pct: null, totalPct: null, isCurrency: false, isTotal: false },
                 { name: "Toneladas", values: level1TonsTotal, total: totalLevel1Tons, pct: null, totalPct: null, isCurrency: false, isTotal: false },
-                { name: "Gross Revenue", values: level1GrossRevenue, total: sum(level1GrossRevenue), pct: level1GrossRevenue.map(r => r ? 100 : 0), totalPct: sum(level1GrossRevenue) ? 100 : 0, isCurrency: true, isTotal: false },
-                { name: "Demurrage", values: level1Demurrage, total: sum(level1Demurrage), pct: level1CalcPct(level1Demurrage), totalPct: level1CalcTotalPct(sum(level1Demurrage), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
-                { name: "Gross + Demurrage", values: level1GrossPlusDem, total: totalGrossPlusDem, pct: level1CalcPct(level1GrossPlusDem), totalPct: level1CalcTotalPct(totalGrossPlusDem, sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
-                { name: "Yield Flete (USD/MT)", values: level1YieldFlete, total: totalLevel1YieldFlete, pct: null, totalPct: null, isCurrency: true, isTotal: true },
-                { name: "Yield (USD/MT)", values: level1Yield, total: totalLevel1Yield, pct: null, totalPct: null, isCurrency: true, isTotal: true }
+                { name: "Net Revenue", values: level1NetRevenue, total: sum(level1NetRevenue), pct: level1CalcPct(level1NetRevenue), totalPct: level1CalcTotalPct(sum(level1NetRevenue), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "(-) Hire (TCE x días)", values: level1Hire, total: sum(level1Hire), pct: level1CalcPct(level1Hire), totalPct: level1CalcTotalPct(sum(level1Hire), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "(-) Bunker Costs", values: level1BunkerCosts, total: sum(level1BunkerCosts), pct: level1CalcPct(level1BunkerCosts), totalPct: level1CalcTotalPct(sum(level1BunkerCosts), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "(-) Port Costs", values: level1PortCosts, total: sum(level1PortCosts), pct: level1CalcPct(level1PortCosts), totalPct: level1CalcTotalPct(sum(level1PortCosts), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "(-) Dockage", values: level1DockageCosts, total: sum(level1DockageCosts), pct: level1CalcPct(level1DockageCosts), totalPct: level1CalcTotalPct(sum(level1DockageCosts), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "(-) Arriendo de Naves", values: level1CharterHire, total: sum(level1CharterHire), pct: level1CalcPct(level1CharterHire), totalPct: level1CalcTotalPct(sum(level1CharterHire), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
+                { name: "(=) VOYAGE RESULT / P&L", values: level1PlVsRequired, total: sum(level1PlVsRequired), pct: level1CalcPct(level1PlVsRequired), totalPct: level1CalcTotalPct(sum(level1PlVsRequired), sum(level1GrossRevenue)), isCurrency: true, isTotal: true }
             ];
 
             if (showSubtotals) {
@@ -804,7 +881,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                 const subtotalRouteRowSpanRef = { value: visibleSubMetrics.length };
 
                 visibleSubMetrics.forEach((metric, index) => {
-                    const isExpandableRow = metric.name === "P/L";
+                    const isExpandableRow = index === 0;
                     
                     result.push({
                         col1: null,
@@ -830,32 +907,27 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const globalCalcPct = (arr: number[]) => arr.map((v, i) => globalRevenues[i] ? (v / globalRevenues[i]) * 100 : 0);
         const globalCalcTotalPct = (totalVal: number, totalRev: number) => totalRev ? (totalVal / totalRev) * 100 : 0;
 
-        const totalGlobalFreight = sum(globalFreightRevenues);
-        const globalGrossPlusDem = globalFreightRevenues.map((fRev, i) => fRev + (globalDemurrage[i] || 0));
-        const totalGlobalGrossPlusDem = sum(globalGrossPlusDem);
         const totalGlobalTons = sum(globalTons);
         const totalGlobalShipDays = sum(globalShipDays);
-        const globalYield = globalTons.map((tons, i) => tons ? globalGrossPlusDem[i] / tons : 0);
-        const totalGlobalYield = totalGlobalTons ? totalGlobalGrossPlusDem / totalGlobalTons : 0;
-        const globalYieldFlete = globalTons.map((tons, i) => tons ? globalFreightRevenues[i] / tons : 0);
-        const totalGlobalYieldFlete = totalGlobalTons ? totalGlobalFreight / totalGlobalTons : 0;
 
         const globalMetrics = [
-            { name: "P/L", values: globalPlVsRequired, total: sum(globalPlVsRequired), pct: globalCalcPct(globalPlVsRequired), totalPct: globalCalcTotalPct(sum(globalPlVsRequired), sum(globalRevenues)), isCurrency: true, isTotal: false },
+            { name: "Viajes", values: globalTrips, total: sum(globalTrips), pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Días-Buque", values: globalShipDays, total: totalGlobalShipDays, pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Toneladas", values: globalTons, total: totalGlobalTons, pct: null, totalPct: null, isCurrency: false, isTotal: false },
-            { name: "Gross Revenue", values: globalRevenues, total: sum(globalRevenues), pct: globalRevenues.map(r => r ? 100 : 0), totalPct: sum(globalRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
-            { name: "Demurrage", values: globalDemurrage, total: sum(globalDemurrage), pct: globalCalcPct(globalDemurrage), totalPct: globalCalcTotalPct(sum(globalDemurrage), sum(globalRevenues)), isCurrency: true, isTotal: false },
-            { name: "Gross + Demurrage", values: globalGrossPlusDem, total: totalGlobalGrossPlusDem, pct: globalCalcPct(globalGrossPlusDem), totalPct: globalCalcTotalPct(totalGlobalGrossPlusDem, sum(globalRevenues)), isCurrency: true, isTotal: false },
-            { name: "Yield Flete (USD/MT)", values: globalYieldFlete, total: totalGlobalYieldFlete, pct: null, totalPct: null, isCurrency: true, isTotal: true },
-            { name: "Yield (USD/MT)", values: globalYield, total: totalGlobalYield, pct: null, totalPct: null, isCurrency: true, isTotal: true }
+            { name: "Net Revenue", values: globalNetRevenues, total: sum(globalNetRevenues), pct: globalCalcPct(globalNetRevenues), totalPct: globalCalcTotalPct(sum(globalNetRevenues), sum(globalRevenues)), isCurrency: true, isTotal: false },
+            { name: "(-) Hire (TCE x días)", values: globalHire, total: sum(globalHire), pct: globalCalcPct(globalHire), totalPct: globalCalcTotalPct(sum(globalHire), sum(globalRevenues)), isCurrency: true, isTotal: false },
+            { name: "(-) Bunker Costs", values: globalBunkerCosts, total: sum(globalBunkerCosts), pct: globalCalcPct(globalBunkerCosts), totalPct: globalCalcTotalPct(sum(globalBunkerCosts), sum(globalRevenues)), isCurrency: true, isTotal: false },
+            { name: "(-) Port Costs", values: globalPortCosts, total: sum(globalPortCosts), pct: globalCalcPct(globalPortCosts), totalPct: globalCalcTotalPct(sum(globalPortCosts), sum(globalRevenues)), isCurrency: true, isTotal: false },
+            { name: "(-) Dockage", values: globalDockageCosts, total: sum(globalDockageCosts), pct: globalCalcPct(globalDockageCosts), totalPct: globalCalcTotalPct(sum(globalDockageCosts), sum(globalRevenues)), isCurrency: true, isTotal: false },
+            { name: "(-) Arriendo de Naves", values: globalCharterHire, total: sum(globalCharterHire), pct: globalCalcPct(globalCharterHire), totalPct: globalCalcTotalPct(sum(globalCharterHire), sum(globalRevenues)), isCurrency: true, isTotal: false },
+            { name: "(=) VOYAGE RESULT / P&L", values: globalPlVsRequired, total: sum(globalPlVsRequired), pct: globalCalcPct(globalPlVsRequired), totalPct: globalCalcTotalPct(sum(globalPlVsRequired), sum(globalRevenues)), isCurrency: true, isTotal: true }
         ];
 
         const visibleGlobalMetrics = isGlobalTotalCollapsed ? [globalMetrics[0]] : globalMetrics;
         const globalRouteRowSpanRef = { value: visibleGlobalMetrics.length };
 
         visibleGlobalMetrics.forEach((metric, index) => {
-            const isExpandableRow = metric.name === "P/L";
+            const isExpandableRow = index === 0;
             result.push({
                 col1: index === 0 ? { name: "TOTAL FLOTA", rowSpanRef: globalRouteRowSpanRef, isSubtotal: true, color: "bg-slate-800 text-white" } : null,
                 col2: null,
@@ -879,29 +951,32 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             let running = 0;
             return arr.map(v => { running += v; return running; });
         };
+        const accumTrips = accumArray(globalTrips);
         const accumShipDays = accumArray(globalShipDays);
         const accumTons = accumArray(globalTons);
-        const accumFreightRevenues = accumArray(globalFreightRevenues);
-        const accumRevenues = accumArray(globalRevenues);
+        const accumNetRevenues = accumArray(globalNetRevenues);
+        const accumHire = accumArray(globalHire);
+        const accumBunkerCosts = accumArray(globalBunkerCosts);
+        const accumPortCosts = accumArray(globalPortCosts);
+        const accumDockageCosts = accumArray(globalDockageCosts);
+        const accumCharterHire = accumArray(globalCharterHire);
         const accumPlVsRequired = accumArray(globalPlVsRequired);
-        const accumDemurrage = accumArray(globalDemurrage);
+        const accumRevenues = accumArray(globalRevenues);
 
         const accumCalcPct = (arr: number[]) => arr.map((v, i) => accumRevenues[i] ? (v / accumRevenues[i]) * 100 : 0);
         const lastVal = (arr: number[]) => arr.length > 0 ? arr[arr.length - 1] : 0;
 
-        const accumGrossPlusDem = accumFreightRevenues.map((fRev, i) => fRev + (accumDemurrage[i] || 0));
-        const accumYield = accumTons.map((tons, i) => tons ? accumGrossPlusDem[i] / tons : 0);
-        const accumYieldFlete = accumTons.map((tons, i) => tons ? accumFreightRevenues[i] / tons : 0);
-
         const accumMetrics = [
-            { name: "P/L", values: accumPlVsRequired, total: lastVal(accumPlVsRequired), pct: accumCalcPct(accumPlVsRequired), totalPct: globalCalcTotalPct(lastVal(accumPlVsRequired), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
+            { name: "Viajes", values: accumTrips, total: lastVal(accumTrips), pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Días-Buque", values: accumShipDays, total: lastVal(accumShipDays), pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Toneladas", values: accumTons, total: lastVal(accumTons), pct: null, totalPct: null, isCurrency: false, isTotal: false },
-            { name: "Gross Revenue", values: accumRevenues, total: lastVal(accumRevenues), pct: accumRevenues.map(r => r ? 100 : 0), totalPct: sum(accumRevenues) ? 100 : 0, isCurrency: true, isTotal: false },
-            { name: "Demurrage", values: accumDemurrage, total: lastVal(accumDemurrage), pct: accumCalcPct(accumDemurrage), totalPct: globalCalcTotalPct(lastVal(accumDemurrage), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
-            { name: "Gross + Demurrage", values: accumGrossPlusDem, total: lastVal(accumGrossPlusDem), pct: accumCalcPct(accumGrossPlusDem), totalPct: globalCalcTotalPct(lastVal(accumGrossPlusDem), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
-            { name: "Yield Flete (USD/MT)", values: accumYieldFlete, total: lastVal(accumYieldFlete), pct: null, totalPct: null, isCurrency: true, isTotal: true },
-            { name: "Yield (USD/MT)", values: accumYield, total: lastVal(accumYield), pct: null, totalPct: null, isCurrency: true, isTotal: true }
+            { name: "Net Revenue", values: accumNetRevenues, total: lastVal(accumNetRevenues), pct: accumCalcPct(accumNetRevenues), totalPct: globalCalcTotalPct(lastVal(accumNetRevenues), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
+            { name: "(-) Hire (TCE x días)", values: accumHire, total: lastVal(accumHire), pct: accumCalcPct(accumHire), totalPct: globalCalcTotalPct(lastVal(accumHire), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
+            { name: "(-) Bunker Costs", values: accumBunkerCosts, total: lastVal(accumBunkerCosts), pct: accumCalcPct(accumBunkerCosts), totalPct: globalCalcTotalPct(lastVal(accumBunkerCosts), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
+            { name: "(-) Port Costs", values: accumPortCosts, total: lastVal(accumPortCosts), pct: accumCalcPct(accumPortCosts), totalPct: globalCalcTotalPct(lastVal(accumPortCosts), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
+            { name: "(-) Dockage", values: accumDockageCosts, total: lastVal(accumDockageCosts), pct: accumCalcPct(accumDockageCosts), totalPct: globalCalcTotalPct(lastVal(accumDockageCosts), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
+            { name: "(-) Arriendo de Naves", values: accumCharterHire, total: lastVal(accumCharterHire), pct: accumCalcPct(accumCharterHire), totalPct: globalCalcTotalPct(lastVal(accumCharterHire), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
+            { name: "(=) VOYAGE RESULT / P&L", values: accumPlVsRequired, total: lastVal(accumPlVsRequired), pct: accumCalcPct(accumPlVsRequired), totalPct: globalCalcTotalPct(lastVal(accumPlVsRequired), lastVal(accumRevenues)), isCurrency: true, isTotal: true }
         ];
 
         if (showAccumulatedTotal) {
@@ -909,7 +984,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             const accumRouteRowSpanRef = { value: visibleAccumMetrics.length };
 
             visibleAccumMetrics.forEach((metric, index) => {
-                const isExpandableRow = metric.name === "P/L";
+                const isExpandableRow = index === 0;
                 result.push({
                     col1: index === 0 ? { name: "TOTAL ACUMULADO", rowSpanRef: accumRouteRowSpanRef, isSubtotal: true, color: "bg-petral-teal text-white" } : null,
                     col2: null,
@@ -1031,21 +1106,25 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                     }}
                                     className={`p-0 border border-slate-200 align-middle ${row.col1.color || getCellColor(row.col1.type, row.col1.name)} relative group cursor-context-menu`}>
                                     {!row.isGlobalTotal && row.col1.type && (
-                                    <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => handleMove(row.col1.type, row.clientName, row.routeName, row.vesselName, 'up')} className="text-slate-300 hover:text-white"><ChevronUp size={14} /></button>
-                                        <button onClick={() => handleMove(row.col1.type, row.clientName, row.routeName, row.vesselName, 'down')} className="text-slate-300 hover:text-white"><ChevronDown size={14} /></button>
+                                    <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); handleMove(row.col1.type, row.clientName, row.routeName, row.vesselName, 'up'); }} className="text-slate-300 hover:text-white cursor-pointer"><ChevronUp size={14} /></button>
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); handleMove(row.col1.type, row.clientName, row.routeName, row.vesselName, 'down'); }} className="text-slate-300 hover:text-white cursor-pointer"><ChevronDown size={14} /></button>
                                     </div>
                                     )}
                                     {row.col1.type === 'vessel' && !row.isGlobalTotal ? (
-                                        <div className="flex items-center justify-center w-full h-full p-0.5">
+                                        <div className="w-full h-full flex items-center justify-center relative min-h-[60px] p-0.5">
+                                            <div className="vertical-text mx-auto px-2 pointer-events-none text-white font-extrabold text-xs tracking-wider uppercase flex items-center justify-center">
+                                                {row.col1.name}
+                                            </div>
                                             <select
                                                 value={row.col1.name}
                                                 onChange={(e) => handleVesselChange(row.clientName, row.routeName, row.col1.name, e.target.value)}
-                                                className="bg-transparent text-white font-extrabold text-[10px] text-center border-0 focus:outline-none focus:ring-0 cursor-pointer w-full py-2"
-                                                style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', WebkitAppearance: 'none' }}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                title="Cambiar Buque"
+                                                style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
                                             >
                                                 {vesselsList.map(v => (
-                                                    <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-[10px]">
+                                                    <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-xs">
                                                         {v.vessel_id}
                                                     </option>
                                                 ))}
@@ -1066,21 +1145,25 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                     }}
                                     className={`p-0 border border-slate-200 align-middle relative group ${row.col2.isSubtotal ? 'bg-slate-800 text-amber-400 font-bold' : getCellColor(row.col2.type, row.col2.name) + ' cursor-context-menu'}`}>
                                     {!row.col2.isSubtotal && row.col2.type && (
-                                        <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                            <button onClick={() => handleMove(row.col2.type, row.clientName, row.routeName, row.vesselName, 'up')} className="text-slate-400 hover:text-white"><ChevronUp size={14} /></button>
-                                            <button onClick={() => handleMove(row.col2.type, row.clientName, row.routeName, row.vesselName, 'down')} className="text-slate-400 hover:text-white"><ChevronDown size={14} /></button>
+                                        <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                                            <button type="button" onClick={(e) => { e.stopPropagation(); handleMove(row.col2.type, row.clientName, row.routeName, row.vesselName, 'up'); }} className="text-slate-300 hover:text-white cursor-pointer"><ChevronUp size={14} /></button>
+                                            <button type="button" onClick={(e) => { e.stopPropagation(); handleMove(row.col2.type, row.clientName, row.routeName, row.vesselName, 'down'); }} className="text-slate-300 hover:text-white cursor-pointer"><ChevronDown size={14} /></button>
                                         </div>
                                     )}
                                     {row.col2.type === 'vessel' && !row.col2.isSubtotal ? (
-                                        <div className="flex items-center justify-center w-full h-full p-0.5">
+                                        <div className="w-full h-full flex items-center justify-center relative min-h-[60px] p-0.5">
+                                            <div className="vertical-text mx-auto px-2 pointer-events-none text-white font-extrabold text-xs tracking-wider uppercase flex items-center justify-center">
+                                                {row.col2.name}
+                                            </div>
                                             <select
                                                 value={row.col2.name}
                                                 onChange={(e) => handleVesselChange(row.clientName, row.routeName, row.col2.name, e.target.value)}
-                                                className="bg-transparent text-white font-extrabold text-[10px] text-center border-0 focus:outline-none focus:ring-0 cursor-pointer w-full py-2"
-                                                style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', WebkitAppearance: 'none' }}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                title="Cambiar Buque"
+                                                style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
                                             >
                                                 {vesselsList.map(v => (
-                                                    <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-[10px]">
+                                                    <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-xs">
                                                         {v.vessel_id}
                                                     </option>
                                                 ))}
@@ -1101,24 +1184,25 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                     }}
                                     className={`p-0 border border-slate-200 align-middle relative group ${row.col3.isSubtotal ? 'bg-amber-100 text-amber-900 font-bold' : getCellColor(row.col3.type, row.col3.name) + ' cursor-context-menu'}`}>
                                     {!row.col3.isSubtotal && row.col3.type && (
-                                        <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                            <button onClick={() => handleMove(row.col3.type, row.clientName, row.routeName, row.vesselName, 'up')} className="text-slate-400 hover:text-petral-blue"><ChevronUp size={14} /></button>
-                                            <button onClick={() => handleMove(row.col3.type, row.clientName, row.routeName, row.vesselName, 'down')} className="text-slate-400 hover:text-petral-blue"><ChevronDown size={14} /></button>
+                                        <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                                            <button type="button" onClick={(e) => { e.stopPropagation(); handleMove(row.col3.type, row.clientName, row.routeName, row.vesselName, 'up'); }} className="text-slate-300 hover:text-white cursor-pointer"><ChevronUp size={14} /></button>
+                                            <button type="button" onClick={(e) => { e.stopPropagation(); handleMove(row.col3.type, row.clientName, row.routeName, row.vesselName, 'down'); }} className="text-slate-300 hover:text-white cursor-pointer"><ChevronDown size={14} /></button>
                                         </div>
                                     )}
                                     {row.col3.type === 'vessel' && !row.col3.isSubtotal ? (
-                                        <div className="w-full h-full flex items-center justify-center relative min-h-[60px]">
-                                            <div className="vertical-text mx-auto px-2 pointer-events-none text-white">
+                                        <div className="w-full h-full flex items-center justify-center relative min-h-[60px] p-0.5">
+                                            <div className="vertical-text mx-auto px-2 pointer-events-none text-white font-extrabold text-xs tracking-wider uppercase flex items-center justify-center">
                                                 {row.col3.name}
                                             </div>
                                             <select
                                                 value={row.col3.name}
                                                 onChange={(e) => handleVesselChange(row.clientName, row.routeName, row.col3.name, e.target.value)}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                title="Cambiar Buque"
                                                 style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
                                             >
                                                 {vesselsList.map(v => (
-                                                    <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-[10px]">
+                                                    <option key={v.vessel_id} value={v.vessel_id} className="bg-slate-800 text-white text-xs">
                                                         {v.vessel_id}
                                                     </option>
                                                 ))}
@@ -1324,13 +1408,16 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                         .filter(({ m }) => !hiddenMonths.includes(m))
                                         .map(({ i }) => i);
                                     const isYieldMetric = row.metric.name.includes("Flete") || row.metric.name.includes("Yield") || row.metric.name.includes("Tarifa");
-                                    const visibleValues = visibleIndices.map(i => row.metric.values[i] ?? 0).filter(v => v !== null);
+                                    const isTceRateMetric = row.metric.isExpandableTce || row.metric.isTceDay || row.metric.isTceDiff || row.metric.name.includes("Métricas TCE") || (row.metric.name.includes("TCE") && row.metric.name.includes("$/d"));
+                                    const visibleValues = visibleIndices.map(i => row.metric.values[i] ?? 0).filter(v => v !== null && !isNaN(v));
                                     const isAccumMetric = row.metric.globalType === 'accum';
-                                    const visibleTotal = isAccumMetric
-                                        ? (visibleValues.length > 0 ? visibleValues[visibleValues.length - 1] : 0)
-                                        : isYieldMetric
-                                            ? (visibleValues.length > 0 ? visibleValues.reduce((a, b) => a + b, 0) / visibleValues.length : 0)
-                                            : visibleValues.reduce((a, b) => a + b, 0);
+                                    const visibleTotal = isTceRateMetric
+                                        ? 0
+                                        : isAccumMetric
+                                            ? (visibleValues.length > 0 ? visibleValues[visibleValues.length - 1] : 0)
+                                            : isYieldMetric
+                                                ? (visibleValues.length > 0 ? visibleValues.reduce((a, b) => a + b, 0) / visibleValues.length : 0)
+                                                : visibleValues.reduce((a, b) => a + b, 0);
 
                                     return row.metric.isCurrency ? (
                                         <div className="flex items-center justify-end w-full min-w-[50px]">

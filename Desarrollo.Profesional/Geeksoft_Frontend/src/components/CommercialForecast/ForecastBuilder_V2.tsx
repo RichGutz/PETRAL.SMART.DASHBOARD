@@ -826,17 +826,18 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
                     {/* Botón de Filtros */}
                     <div className="shrink-0">
-                        <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 h-7.5 rounded-lg text-[11px] font-extrabold shadow-2xs transition-colors">
-                            <Filter size={13} className="text-sky-600" /> Filtros de Tabla y Exportación
+                        <button 
+                            type="button"
+                            onClick={() => setShowFilters(!showFilters)} 
+                            className={`flex items-center gap-1.5 border px-3 h-7.5 rounded-lg text-[11px] font-extrabold shadow-2xs transition-colors cursor-pointer ${showFilters ? 'bg-sky-50 border-sky-300 text-sky-800' : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'}`}
+                        >
+                            <Filter size={13} className={showFilters ? "text-sky-700 font-black" : "text-sky-600"} /> 
+                            Filtros de Tabla y Exportación
                         </button>
                     </div>
-                    {showFilters && (
-                        <div className="absolute top-[100%] left-0 w-full z-50 mt-1 shadow-2xl rounded-xl border border-slate-200 overflow-hidden bg-white">
-                            <ForecastGridFilters />
-                        </div>
-                    )}
 
                     {/* Vista ($ / %) */}
+
                     {displayMode && onDisplayModeChange && (
                         <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5 h-7.5 w-28 border border-slate-200 shadow-2xs shrink-0">
                             <span className="text-[9.5px] uppercase font-black text-slate-500 px-1">Vista:</span>
@@ -900,6 +901,15 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
 
                 </div>
                 {/* FIN FILA 2 */}
+
+                {/* ====================================================================================== */}
+                {/* PANEL DESPLEGABLE: FILTROS DE TABLA Y EXPORTACIÓN */}
+                {/* ====================================================================================== */}
+                {showFilters && (
+                    <div className="w-full mt-2 pt-2 border-t border-slate-200 shadow-md rounded-xl overflow-hidden bg-white">
+                        <ForecastGridFilters />
+                    </div>
+                )}
 
             </div>
         </div>

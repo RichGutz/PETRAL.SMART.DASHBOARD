@@ -181,7 +181,7 @@ export const UsersPermissions: React.FC = () => {
 
     const modulesList: { key: keyof UserPermissions; label: string }[] = [
         // Herramientas
-        { key: 'multicotizador_spot', label: 'Multicotizador Multirutas' },
+        { key: 'multicotizador_spot', label: 'Voyage Calculator' },
         { key: 'matriz_financiera', label: 'Matriz Financiera' },
         { key: 'analisis_grafico', label: 'Análisis Gráfico' },
         { key: 'spaghetti_map', label: 'Spaghetti Map' },
