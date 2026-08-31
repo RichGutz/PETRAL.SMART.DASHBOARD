@@ -37,6 +37,7 @@ export interface MulticotizadorPrintData {
     bafMdoBase?: number;
     tariffTiers?: Array<{ label?: string; min?: number; max?: number; rate: number }>;
     demurrageRatesMap?: Record<string, number>;
+    charterHireCost?: number;
     liveCalc?: VoyageCalculationResult | any;
     printedBy?: string;
 }
@@ -96,8 +97,10 @@ export class MulticotizadorPdfPrintService {
             validFrom, validTo, vessels, vesselParams, bunkerSource, bunkerPriceIfo, bunkerPriceMdo,
             tramos, puertosConfig, refacturarMuellajeMap, addressCommPct, brokerCommPct,
             commentsText, bafFormula, bafValidFrom, bafValidTo, bafIfoBase, bafMdoBase,
-            tariffTiers, demurrageRatesMap, liveCalc, printedBy
+            tariffTiers, demurrageRatesMap, charterHireCost, liveCalc, printedBy
         } = data;
+
+        const safeCharterHireCost = Number(charterHireCost) || 0;
 
         // ÚNICA FUENTE DE VERDAD: Si liveCalc viene de la pantalla se usa directamente, sino se calcula vía Engine
         const calc: VoyageCalculationResult = liveCalc || MulticotizadorCalculationEngine.calculateVoyage({
@@ -605,7 +608,7 @@ export class MulticotizadorPdfPrintService {
                     </h4>
                     <div class="flex justify-between items-center bg-slate-50 px-2 py-1 rounded border border-slate-200 text-[8.5px] font-mono">
                         <span class="font-sans text-slate-600 font-bold">$</span>
-                        <strong class="font-black text-slate-900">${this.fmtCur(calc.charterHireCost || charterHireCost || 0)}</strong>
+                        <strong class="font-black text-slate-900">${this.fmtCur(calc.charterHireCost || safeCharterHireCost)}</strong>
                     </div>
                 </div>
 
@@ -822,10 +825,10 @@ export class MulticotizadorPdfPrintService {
                         ` : ''}
 
                         <!-- ARRIENDO NAVE (CHARTER) -->
-                        ${((calc.charterHireCost || charterHireCost || 0) > 0) ? `
+                        ${((calc.charterHireCost || safeCharterHireCost) > 0) ? `
                             <div class="flex justify-between items-center text-purple-900 font-semibold text-[8px]">
                                 <span class="font-sans">(-) Arriendo Nave (Charter)</span>
-                                <span>-${this.fmtCur(calc.charterHireCost || charterHireCost)}</span>
+                                <span>-${this.fmtCur(calc.charterHireCost || safeCharterHireCost)}</span>
                             </div>
                         ` : ''}
 
