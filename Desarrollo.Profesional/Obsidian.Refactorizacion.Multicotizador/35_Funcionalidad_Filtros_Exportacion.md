@@ -154,7 +154,18 @@ Los bloques de Clientes, Rutas y Buques son **controladores de profundidad y agr
 
 ---
 
-*Despliegue de Vuelta 3 completado en producción (`https://forecast.geeksoft.tech`) — 30 de Agosto de 2026.*
+## 12. 📦 CIERRE DE PROTOCOLO GIT Y REGISTRO DE TAG
+
+* **Branch Creado**: `FILTROS.MATRIZ.90.PERCENT`
+* **Git Tag Creado**: `FILTROS.MATRIZ.90.PERCENT`
+* **Sincronización Remota**: Pusheado exitosamente a GitHub (`origin/FILTROS.MATRIZ.90.PERCENT` y `refs/tags/FILTROS.MATRIZ.90.PERCENT`).
+* **Branch Actual de Trabajo**: `main` (Merge completado y `origin/main` sincronizado).
+* **Estado en Producción**: `https://forecast.geeksoft.tech` 100% operativo con todas las mejoras.
+
+---
+
+*Caso cerrado y documentado pericialmente — 30 de Agosto de 2026.*
+
 
 
 
