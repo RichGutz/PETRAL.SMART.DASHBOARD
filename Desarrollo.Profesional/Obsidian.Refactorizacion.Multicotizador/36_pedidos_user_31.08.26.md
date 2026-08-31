@@ -236,4 +236,21 @@ A continuación se detalla la matriz de contraste pericial entre los indicadores
 2. **Homologación del Motor de Cálculo:**
    - Utilizar las mismas fórmulas matemáticas de agregación mensual y acumulada que ya operan en `ForecastGrid.tsx` para garantizar **coherencia del 100% al centavo** entre la tabla numérica y las curvas de ECharts.
 
+---
+
+## 8. Resolución y Despliegue en Vivo al VPS de Producción
+
+1. **Integración en [`InteractiveChart.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/components/CommercialForecast/InteractiveChart.tsx):**
+   - Implementado el catálogo completo de 22 métricas auditales agrupadas por categorías visuales (*Revenue, Costos, Resultados, TCE, Operativas*).
+   - Motor de cálculo y ratios sincronizados al 100% con `ForecastGrid.tsx`.
+   - Propagación de propiedades dinámicas de días de demora y líneas de proyección desde [`GraphicAnalysis_V2.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/pages/Tools/GraphicAnalysis_V2.tsx).
+2. **Control de Calidad (QC):**
+   - `npx vite build` completado con éxito (0 errores).
+3. **Versionado Git & Tagging:**
+   - Sobreescrito y actualizado tag y branch **`PRE.GRAND.FINALE.31.08.26`** en GitHub (`origin`).
+   - Sincronizado en rama `main`.
+4. **Despliegue a Producción (VPS):**
+   - Servidor: `91.108.125.253` vía `Push.VPS/deploy_forecast_kickoff.py`.
+   - Producción en vivo: **`https://forecast.geeksoft.tech`**.
+
 
