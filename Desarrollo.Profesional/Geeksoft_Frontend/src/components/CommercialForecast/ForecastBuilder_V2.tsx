@@ -6,7 +6,7 @@ import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { MonthPicker } from '../ui/month-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { PlusCircle, Filter } from 'lucide-react';
+import { PlusCircle, Filter, Trash2, Save, FolderOpen } from 'lucide-react';
 import { ForecastGridFilters } from './ForecastGridFilters';
 import { ForecastService } from '../../services/api';
 
@@ -36,6 +36,10 @@ interface ForecastBuilderProps {
     showDemurrageDays?: boolean;
     onDemurrageDaysChange?: (val: string) => void;
     onShowDemurrageDaysChange?: (val: boolean) => void;
+    onClearSession?: () => void;
+    onSaveScenario?: () => void;
+    onLoadScenario?: () => void;
+    actionLoading?: string | null;
 }
 
 export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({ 
@@ -54,14 +58,18 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
     onToggleHideNaRows,
     forecastName,
     isAdding = false,
-    demurragePct = '0',
+    demurragePct = '',
     showDemurrage = false,
     onDemurragePctChange,
     onShowDemurrageChange,
-    demurrageDays = '0',
+    demurrageDays = '',
     showDemurrageDays = false,
     onDemurrageDaysChange,
     onShowDemurrageDaysChange,
+    onClearSession,
+    onSaveScenario,
+    onLoadScenario,
+    actionLoading
 }) => {
     // Form State
     const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
@@ -784,61 +792,12 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </div>
                     </div>
 
-                    {/* ➕ Botón Añadir al Modelo */}
-                    <div className="relative group shrink-0">
-                        <Button 
-                            onClick={handleAdd} 
-                            className={`relative h-7.5 px-4 overflow-hidden transition-all rounded-lg shadow-2xs cursor-pointer ${isAdding ? 'bg-sky-600 text-white pointer-events-none' : isFormValid ? 'bg-sky-600 hover:bg-sky-700 text-white font-extrabold' : 'bg-slate-200 text-slate-400 cursor-not-allowed hover:bg-slate-200'}`}
-                            disabled={isAdding || !isFormValid}
-                        >
-                            {isAdding && (
-                                <div className="absolute inset-0 bg-white/20 animate-pulse" style={{ width: '100%' }}></div>
-                            )}
-                            <span className="relative flex items-center justify-center z-10 gap-1.5 text-[11px] font-extrabold">
-                                {isAdding ? (
-                                    <>
-                                        <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></div>
-                                        <span>Procesando...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <PlusCircle className="h-3.5 w-3.5" />
-                                        <span>Añadir al Modelo</span>
-                                    </>
-                                )}
-                            </span>
-                        </Button>
-                        {!isFormValid && (
-                            <div className="absolute bottom-[115%] left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-50 pointer-events-none">
-                                <div className="bg-slate-800 text-white text-[10px] font-medium py-1.5 px-3 rounded shadow-xl whitespace-nowrap border border-slate-700">
-                                    <span className="text-amber-400 font-bold">⚠️ Falta completar: </span>
-                                    {missingFields.join(' • ')}
-                                </div>
-                                <div className="w-2 h-2 bg-slate-800 rotate-45 -mt-1 border-r border-b border-slate-700"></div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Indicador de Escenario Activo */}
-                    <div className="flex items-center gap-1.5 font-extrabold text-sky-800 bg-sky-50 border border-sky-200 px-3 h-7.5 rounded-lg shadow-2xs text-[11px] shrink-0">
-                        📁 Escenario: {forecastName || 'Sin guardar'}
-                    </div>
-
-                    {/* Botón de Filtros */}
-                    <div className="shrink-0">
-                        <button 
-                            type="button"
-                            onClick={() => setShowFilters(!showFilters)} 
-                            className={`flex items-center gap-1.5 border px-3 h-7.5 rounded-lg text-[11px] font-extrabold shadow-2xs transition-colors cursor-pointer ${showFilters ? 'bg-sky-50 border-sky-300 text-sky-800' : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'}`}
-                        >
-                            <Filter size={13} className={showFilters ? "text-sky-700 font-black" : "text-sky-600"} /> 
-                            Filtros de Tabla y Exportación
-                        </button>
-                    </div>
-
-                    {/* Vista (USD / %) - Doble Fila */}
+                    {/* PASO 10: VISTA (USD / %) - Doble Fila */}
                     {displayMode && onDisplayModeChange && (
-                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                        <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                            <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-black text-xs shadow-2xs shrink-0">
+                                10
+                            </div>
                             <div className="flex flex-col gap-1">
                                 <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
                                     VISTA
@@ -863,9 +822,12 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </div>
                     )}
 
-                    {/* Formato Matriz: PETRAL / NAVITRANSO - Doble Fila */}
+                    {/* PASO 11: FORMATO (PETRAL / NAVITRANSO) - Doble Fila */}
                     {onMatrixFormatChange && (
-                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                        <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                            <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-black text-xs shadow-2xs shrink-0">
+                                11
+                            </div>
                             <div className="flex flex-col gap-1">
                                 <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
                                     FORMATO
@@ -890,11 +852,35 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </div>
                     )}
 
+                    {/* Indicador de Escenario Activo - Doble Fila */}
+                    <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                                ESCENARIO
+                            </span>
+                            <div className="flex items-center gap-1.5 font-extrabold text-sky-800 bg-sky-50 border border-sky-200 px-2.5 h-7 rounded-md shadow-2xs text-[10.5px]">
+                                <span>📁 {forecastName || 'Sin guardar'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Botón de Filtros */}
+                    <div className="shrink-0">
+                        <button 
+                            type="button"
+                            onClick={() => setShowFilters(!showFilters)} 
+                            className={`flex items-center gap-1.5 border px-3 h-7.5 rounded-lg text-[11px] font-extrabold shadow-2xs transition-colors cursor-pointer ${showFilters ? 'bg-sky-50 border-sky-300 text-sky-800' : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'}`}
+                        >
+                            <Filter size={13} className={showFilters ? "text-sky-700 font-black" : "text-sky-600"} /> 
+                            Filtros de Tabla y Exportación
+                        </button>
+                    </div>
+
                     {/* Botón Filtro Filas N/A (Solo visible en modo NAVITRANSO) */}
                     {matrixFormat === 'NAVITRANSO' && onToggleHideNaRows && (
-                        <button
+                        <button 
                             type="button"
-                            onClick={onToggleHideNaRows}
+                            onClick={onToggleHideNaRows} 
                             className={`h-7.5 px-2.5 rounded-lg border text-[10px] font-extrabold flex items-center gap-1 transition-colors shrink-0 shadow-2xs cursor-pointer ${hideNaRows ? 'bg-amber-100 border-amber-300 text-amber-900 font-black' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
                             title="Ocultar o mostrar las filas de la plantilla sin movimiento (N/A)"
                         >
@@ -902,13 +888,100 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </button>
                     )}
 
-                    {/* Spacer para empujar Recalcular / Guardar / Cargar a la derecha */}
+                    {/* Spacer para empujar la matriz 2x2 a la derecha */}
                     <div className="flex-1"></div>
 
-                    {/* Guardar / Cargar / Recalcular (bottomRightContent) */}
-                    <div className="shrink-0">
-                        {bottomRightContent}
+                    {/* ACCIONES DEL MODELO (MATRIZ 2x2: Añadir, Limpiar / Guardar, Cargar) */}
+                    <div className="flex items-center gap-1.5 p-1 bg-slate-50 border border-slate-200 rounded-xl shadow-2xs shrink-0">
+                        <div className="grid grid-cols-2 gap-1">
+                            {/* Fila 1: Añadir & Limpiar */}
+                            <div className="relative group">
+                                <Button 
+                                    type="button"
+                                    onClick={handleAdd} 
+                                    className={`relative h-7 w-20 px-1.5 overflow-hidden transition-all rounded-md shadow-2xs cursor-pointer ${isAdding ? 'bg-sky-600 text-white pointer-events-none' : isFormValid ? 'bg-sky-600 hover:bg-sky-700 text-white font-extrabold' : 'bg-slate-200 text-slate-400 cursor-not-allowed hover:bg-slate-200'}`}
+                                    disabled={isAdding || !isFormValid}
+                                >
+                                    {isAdding && (
+                                        <div className="absolute inset-0 bg-white/20 animate-pulse" style={{ width: '100%' }}></div>
+                                    )}
+                                    <span className="relative flex items-center justify-center z-10 gap-1 text-[10.5px] font-black">
+                                        {isAdding ? (
+                                            <>
+                                                <div className="animate-spin h-2.5 w-2.5 border-2 border-white border-t-transparent rounded-full"></div>
+                                                <span>...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <PlusCircle className="h-3 w-3" />
+                                                <span>Añadir</span>
+                                            </>
+                                        )}
+                                    </span>
+                                </Button>
+                                {!isFormValid && (
+                                    <div className="absolute bottom-[115%] left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-50 pointer-events-none">
+                                        <div className="bg-slate-800 text-white text-[10px] font-medium py-1.5 px-3 rounded shadow-xl whitespace-nowrap border border-slate-700">
+                                            <span className="text-amber-400 font-bold">⚠️ Falta completar: </span>
+                                            {missingFields.join(' • ')}
+                                        </div>
+                                        <div className="w-2 h-2 bg-slate-800 rotate-45 -mt-1 border-r border-b border-slate-700"></div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <button 
+                                type="button"
+                                onClick={onClearSession} 
+                                disabled={isAdding}
+                                className="flex items-center justify-center gap-1 h-7 w-20 px-1.5 rounded-md font-extrabold text-[10.5px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-all shadow-2xs cursor-pointer"
+                                title="Limpiar sesión y volver a pantalla en blanco"
+                            >
+                                <Trash2 size={12} className="text-rose-600" />
+                                <span>Limpiar</span>
+                            </button>
+
+                            {/* Fila 2: Guardar & Cargar */}
+                            <button 
+                                type="button"
+                                onClick={onSaveScenario} 
+                                disabled={actionLoading === 'loadList'}
+                                className="flex items-center justify-center gap-1 bg-sky-600 hover:bg-sky-700 text-white h-7 w-20 px-1.5 rounded-md font-extrabold text-[10.5px] transition-all shadow-2xs cursor-pointer"
+                            >
+                                <Save size={12} />
+                                <span>Guardar</span>
+                            </button>
+
+                            <button 
+                                type="button"
+                                onClick={onLoadScenario} 
+                                disabled={actionLoading === 'loadList'}
+                                className={`relative overflow-hidden flex items-center justify-center gap-1 h-7 w-20 px-1.5 rounded-md font-extrabold text-[10.5px] transition-all shadow-2xs cursor-pointer ${actionLoading === 'loadList' ? 'bg-slate-100 text-slate-400 pointer-events-none' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
+                            >
+                                {actionLoading === 'loadList' && <div className="absolute inset-0 bg-slate-200/50 animate-pulse" style={{ width: '100%' }}></div>}
+                                <span className="relative flex items-center justify-center z-10 w-full gap-1">
+                                    {actionLoading === 'loadList' ? (
+                                        <>
+                                            <div className="animate-spin h-2.5 w-2.5 border-2 border-sky-600 border-t-transparent rounded-full"></div>
+                                            <span>...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FolderOpen size={12} className="text-sky-600" />
+                                            <span>Cargar</span>
+                                        </>
+                                    )}
+                                </span>
+                            </button>
+                        </div>
                     </div>
+
+                    {/* Si viene contenido extra en bottomRightContent */}
+                    {bottomRightContent && (
+                        <div className="shrink-0">
+                            {bottomRightContent}
+                        </div>
+                    )}
 
                 </div>
                 {/* FIN FILA 2 */}
