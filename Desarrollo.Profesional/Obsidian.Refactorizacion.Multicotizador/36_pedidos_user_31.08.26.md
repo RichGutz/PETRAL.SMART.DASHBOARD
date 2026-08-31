@@ -300,4 +300,25 @@ A continuación se detalla la matriz de contraste pericial entre los indicadores
 - **Git & Tagging:** Publicada rama y tag `PRE.GRAND.FINALE.31.08.26.2` en GitHub.
 - **Despliegue al VPS:** Desplegado con éxito a `https://forecast.geeksoft.tech`.
 
+---
+
+## 11. Traslado del Paso 7 y Rediseño de Doble Fila para Vista y Formato (`ForecastBuilder_V2.tsx`)
+
+### 11.1 Requerimientos Visuales Implementados
+1. **Paso 7 (VIAJES):**
+   - Trasladado desde el final de la fila 1 al inicio de la **fila 2**, precediendo a los pasos 8 y 9.
+2. **Control VISTA (USD / %):**
+   - Convertido a tarjeta vertical de **2 filas**:
+     - Fila superior: `VISTA` en mayúsculas negrita.
+     - Fila inferior: Conmutadores `USD` y `%`.
+3. **Control FORMATO (PETRAL / NAVITRANSO):**
+   - Convertido a tarjeta vertical de **2 filas**:
+     - Fila superior: `FORMATO` en mayúsculas negrita.
+     - Fila inferior: Conmutadores `PETRAL` y `NAVITRANSO`.
+
+### 11.2 Control de Calidad y Despliegue
+- **Compilación Frontend:** `npx vite build` completado en **7.94s (0 errores)**.
+- **Git & Tagging:** Rama y tag `PRE.GRAND.FINALE.31.08.26.2` sincronizados en GitHub.
+- **Despliegue al VPS:** `https://forecast.geeksoft.tech` publicado con éxito.
+
 
