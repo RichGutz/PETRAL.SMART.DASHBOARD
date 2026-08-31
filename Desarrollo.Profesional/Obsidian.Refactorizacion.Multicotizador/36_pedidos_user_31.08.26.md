@@ -117,3 +117,57 @@ Conforme a las reglas del proyecto, las 3 capturas enviadas han sido respaldadas
 4. **Despliegue Directo al VPS (`91.108.125.253`):**
    - Ejecutado mediante `Push.VPS/deploy_forecast_kickoff.py`.
    - Producción en vivo verificada en: **`https://forecast.geeksoft.tech`**.
+
+---
+
+## 5. Plan Macro de Cierre: Convergencia de Matriz Financiera con Análisis Gráfico y Spaghetti Map
+
+**Origen del Requerimiento:** Audio [`conexion.final.matriz.an.graf.spa.ogg`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/audio_transcrip/conexion.final.matriz.an.graf.spa.ogg)  
+**Procesado con:** Whisper Model (Base) en [`transcribe_whisper.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/audio_transcrip/transcribe_whisper.py)  
+
+### 5.1. Transcripción Literal del Audio
+
+> *"Gemini, nos toca el gran final del proyecto. El user ya probó Voyage Calculator, que genera todas las rutas. Luego la consolidación de las rutas se da en matriz financiera, que ya está produciendo los resultados adecuados, matriz financiera graba escenarios y esos escenarios se replican en análisis gráfico y en spaghetti map. Dado que Voyage está ok y matriz está ok, tenemos que coger la data mostrada como escenario cargado en matriz financiera y replicarla exactamente en análisis gráfico y spaghetti map. Entonces solamente es un ejercicio de en el caso de análisis gráfico, fijarse en las categorías de los indicadores que están en el eje primario y en el eje secundario y que sigan la lógica que ya estaba allí, no hay que inventar una lógica, la lógica ya estaba allí, ok, entonces utilizamos el método de siempre, que es el método clonar el legacy etc., y hallar las diferencias control de calidad, ese es el método que vamos a hacer."*
+
+---
+
+### 5.2. Diagnóstico de la Cadena de Valor del Sistema PETRAL
+
+```
++---------------------------------------------------------------------------------------------------+
+| 1. VOYAGE CALCULATOR        -> Generación de rutas individuales, fletes base y costos (100% OK)   |
+| 2. MATRIZ FINANCIERA        -> Consolidación multi-ruta, multi-buque y guardado de Escenarios     |
+|                                (100% OK y Desplegado en VPS)                                      |
+| 3. ANÁLISIS GRÁFICO (ECharts)-> Consumir el escenario cargado en Matriz Financiera respetando      |
+|                                Eje Primario (Montos/TM) y Eje Secundario (TCE/Días/%)             |
+| 4. SPAGHETTI MAP            -> Visualización geoespacial sincronizada con el escenario de Matriz  |
++---------------------------------------------------------------------------------------------------+
+```
+
+---
+
+### 5.3. Plan de Acción Metodológico (Método BEN / LEG / DIFF / QC / VPS)
+
+#### Paso 1: LEG (Captura del Estado Legacy)
+- Inspeccionar [`src/pages/Tools/GraphicAnalysis_V2.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/pages/Tools/GraphicAnalysis_V2.tsx) y [`src/pages/Tools/SpaghettiMap_V2.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/pages/Tools/SpaghettiMap_V2.tsx).
+- Registrar cómo consumen actualmente el contexto `useForecastContext_V2` o los servicios de escenarios guardados.
+
+#### Paso 2: DIFF (Alineación de Datos y Parámetros)
+1. **Análisis Gráfico (Apache ECharts):**
+   - Asegurar que la fuente de datos provenga idénticamente de `aggregated_data` y las proyecciones del escenario activo de la Matriz Financiera.
+   - Respetar la parametrización de ejes ya existente:
+     - **Eje Primario (Izquierdo):** Ingresos Netos (USD), Costos Operativos (USD), Toneladas Transportadas (MT).
+     - **Eje Secundario (Derecho):** TCE Realizado ($/d), Días-Buque, Margen / P&L (%).
+   - CERO reinvención de lógica: apego estricto a las series e indicadores ya definidos en el legacy.
+2. **Spaghetti Map (Mapbox / GeoJSON):**
+   - Conectar las líneas de ruta, puertos de origen/destino y frecuencias mensuales directamente con las rutas del escenario cargado en la Matriz.
+
+#### Paso 3: QC (Control de Calidad en Terminal)
+- Ejecutar `npx vite build` para validar que no existan errores de tipos, dependencias o sintaxis.
+- Verificar consistencia numérica entre los totales de la Matriz Financiera y los valores renderizados en las series de gráficos.
+
+#### Paso 4: VPS (Despliegue a Producción)
+- Merge a `main` y Git Push.
+- Despliegue automatizado SFTP/SSH con `Push.VPS/deploy_forecast_kickoff.py` (Cero Railway).
+- Validación final en vivo en `https://forecast.geeksoft.tech`.
+
