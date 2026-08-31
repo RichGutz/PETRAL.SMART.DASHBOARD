@@ -344,4 +344,21 @@ A continuación se detalla la matriz de contraste pericial entre los indicadores
 - **Git & Tagging:** Tag y rama `PRE.GRAND.FINALE.31.08.26.2` sincronizados en GitHub.
 - **Despliegue al VPS:** Desplegado con éxito a `https://forecast.geeksoft.tech`.
 
+---
+
+## 13. Corrección y Blindaje de Filtros de Tabla y Exportación (`ForecastGridFilters.tsx`)
+
+### 13.1 Diagnóstico Forense
+- Al abrir el desplegable de **Filtros de Tabla y Exportación**, `quarters` y `activeFilterSummary` intentaban iterar `months.forEach` y `months.filter` cuando `dynamicMonths` aún no contenía datos o era `undefined`, bloqueando el renderizado del componente.
+
+### 13.2 Blindaje Implementado
+- Definidas variables seguras con arrays vacíos por defecto: `safeMonths`, `safeHiddenClients`, `safeHiddenRoutes`, `safeHiddenVessels`, `safeHiddenMonths`.
+- Protección en `quarters` asegurando validación de strings antes del `split('-')`.
+- Conteo y resúmenes protegidos contra `undefined`.
+
+### 13.3 Control de Calidad y Despliegue
+- **Compilación Frontend:** `npx vite build` completado en **8.33s (0 errores)**.
+- **Git & Tagging:** Tag y rama `PRE.GRAND.FINALE.31.08.26.2` sincronizados en GitHub.
+- **Despliegue al VPS:** Desplegado con éxito a `https://forecast.geeksoft.tech`.
+
 
