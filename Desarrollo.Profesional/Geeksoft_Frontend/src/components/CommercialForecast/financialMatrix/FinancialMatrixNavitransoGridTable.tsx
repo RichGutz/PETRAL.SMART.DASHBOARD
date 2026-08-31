@@ -47,21 +47,21 @@ interface FinancialMatrixNavitransoGridTableProps {
 
 export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitransoGridTableProps> = ({
     data,
-    months,
+    months = [],
     projectionLines = []
 }) => {
     const { 
-        hiddenClients, 
-        hiddenRoutes, 
-        hiddenVessels, 
-        hiddenMonths, 
-        showSubtotals, 
-        showAccumulatedTotal, 
-        setProjectionLines,
-        hideNaRows,
+        hiddenClients = [], 
+        hiddenRoutes = [], 
+        hiddenVessels = [], 
+        hiddenMonths = [], 
+        showSubtotals = true, 
+        showAccumulatedTotal = true, 
+        setProjectionLines = (() => {}),
+        hideNaRows = false,
         handleFrequencyChange: onFrequencyChange,
         handleDeleteNode: onDeleteNode
-    } = useForecastContext_V2();
+    } = useForecastContext_V2() || {};
 
     const [expandedHire, setExpandedHire] = useState<Record<string, boolean>>({});
     const [expandedDemurrage, setExpandedDemurrage] = useState<Record<string, boolean>>({});
@@ -147,7 +147,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
     };
 
     const rows = useMemo(() => {
-        if (!data || !data.aggregated_data) return [];
+        if (!data || !data.aggregated_data || !months || !Array.isArray(months) || months.length === 0) return [];
         
         const result: any[] = [];
         const sum = (arr: number[]) => arr.reduce((a, b) => a + (isNaN(b) ? 0 : b), 0);

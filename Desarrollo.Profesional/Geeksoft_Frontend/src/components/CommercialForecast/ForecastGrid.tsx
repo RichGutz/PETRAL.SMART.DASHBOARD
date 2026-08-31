@@ -61,13 +61,13 @@ interface ForecastGridProps {
 }
 
 export const ForecastGrid: React.FC<ForecastGridProps> = ({ 
-    data, months, projectionLines, onFrequencyChange, onTariffChange, onBunkerPriceChange, onDeleteNode, displayMode, 
+    data, months = [], projectionLines = [], onFrequencyChange, onTariffChange, onBunkerPriceChange, onDeleteNode, displayMode, 
     demurragePct = '', showDemurrage = false,
     excludedDemurrages = [], customDemurrages = {}, onExcludeDemurrage, onCustomDemurrageChange,
     demurrageDays = '', showDemurrageDays = false,
     customDemurrageDays = {}, onCustomDemurrageDaysChange
 }) => {
-    const { hiddenClients, hiddenRoutes, hiddenVessels, hiddenMonths, showSubtotals, showAccumulatedTotal, setProjectionLines } = useForecastContext_V2();
+    const { hiddenClients = [], hiddenRoutes = [], hiddenVessels = [], hiddenMonths = [], showSubtotals = true, showAccumulatedTotal = true, setProjectionLines = (() => {}) } = useForecastContext_V2() || {};
     
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
     const [expandedDemurrages, setExpandedDemurrages] = useState<Record<string, boolean>>({});
@@ -220,9 +220,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
     }, [data]);
 
     // Determinar qué dimensiones están activas según los filtros (si están todos desmarcados = roll-up de esa dimensión)
-    const isClientActive = allClientsList.length === 0 || hiddenClients.length < allClientsList.length;
-    const isRouteActive = allRoutesList.length > 0 && hiddenRoutes.length < allRoutesList.length;
-    const isVesselActive = allVesselsList.length > 0 && hiddenVessels.length < allVesselsList.length;
+    const isClientActive = (allClientsList?.length || 0) === 0 || (hiddenClients?.length || 0) < (allClientsList?.length || 0);
+    const isRouteActive = (allRoutesList?.length || 0) > 0 && (hiddenRoutes?.length || 0) < (allRoutesList?.length || 0);
+    const isVesselActive = (allVesselsList?.length || 0) > 0 && (hiddenVessels?.length || 0) < (allVesselsList?.length || 0);
 
     // Dimensiones que se mostrarán en columnas (mínimo 1)
     const activeDimensions: ('client' | 'route' | 'vessel')[] = useMemo(() => {
@@ -236,7 +236,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
     }, [groupOrder, isClientActive, isRouteActive, isVesselActive]);
 
     const rows = useMemo(() => {
-        if (!data || !data.aggregated_data) return [];
+        if (!data || !data.aggregated_data || !months || !Array.isArray(months) || months.length === 0) return [];
         
         const result: any[] = [];
         const sum = (arr: number[]) => arr.reduce((a,b) => a+b, 0);

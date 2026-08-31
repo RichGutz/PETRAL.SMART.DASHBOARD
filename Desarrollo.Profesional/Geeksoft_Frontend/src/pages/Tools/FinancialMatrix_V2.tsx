@@ -11,14 +11,14 @@ export const FinancialMatrix_V2: React.FC = () => {
             {context.matrixFormat === 'NAVITRANSO' ? (
                 <FinancialMatrixNavitransoGridTable
                     data={context.data}
-                    months={context.dynamicMonths}
-                    projectionLines={context.projectionLines}
+                    months={context.dynamicMonths || []}
+                    projectionLines={context.projectionLines || []}
                 />
             ) : (
                 <ForecastGrid 
                     data={context.data} 
-                    months={context.dynamicMonths} 
-                    projectionLines={context.projectionLines} 
+                    months={context.dynamicMonths || []} 
+                    projectionLines={context.projectionLines || []} 
                     onFrequencyChange={context.handleFrequencyChange} 
                     onTariffChange={context.handleTariffChange} 
                     onDeleteNode={context.handleDeleteNode} 
