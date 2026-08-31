@@ -253,4 +253,35 @@ A continuación se detalla la matriz de contraste pericial entre los indicadores
    - Servidor: `91.108.125.253` vía `Push.VPS/deploy_forecast_kickoff.py`.
    - Producción en vivo: **`https://forecast.geeksoft.tech`**.
 
+---
+
+## 9. Integración del Modal de Guardado y Sobreescritura de Escenarios (`ToolsLayout_V2.tsx` & `ForecastContext_V2.tsx`)
+
+### 9.1 Diagnóstico y Requerimiento
+- Replicar en la barra de herramientas superior de la **Matriz Financiera / Tools Layout** el modal interactivo con selectores de **Nuevo Escenario (NEW)** vs **Sobrescribir (OVERWRITE)** del Multicotizador.
+- Garantizar que cualquier edición en inputs de celdas (frecuencias, tarifas, demoras % o días) se consolide de forma inmediata antes de empaquetar el payload hacia la base de datos.
+- Permitir tanto la sobreescritura del escenario actualmente cargado como la selección de cualquier otro escenario existente del catálogo de BD, permitiendo también modificar o conservar el nombre del escenario.
+
+### 9.2 Implementación Forense
+1. **En [`ForecastContext_V2.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/context/ForecastContext_V2.tsx):**
+   - Incorporados estados `saveMode` (`'NEW' | 'OVERWRITE'`) y `targetOverwriteId`.
+   - Función `handleOpenSaveModal()`:
+     - Ejecuta `document.activeElement?.blur()` para forzar el commit de cualquier input en foco.
+     - Consulta la lista actualizada de escenarios de la BD (`listForecasts()`).
+     - Si hay un escenario activo (`currentForecastId`), preselecciona `OVERWRITE` apuntando a dicho ID y asegurando su nombre; si no, configura `NEW`.
+     - Abre el modal (`setShowSaveModal(true)`).
+   - Función `handleSaveForecast()`:
+     - Ejecuta `document.activeElement?.blur()`.
+     - Empaqueta el 100% de los metadatos en vivo (`metadata_demurrage_pct`, `metadata_show_demurrage`, `metadata_excluded_demurrages`, `metadata_custom_demurrages`, `metadata_demurrage_days`, `metadata_show_demurrage_days`, `metadata_custom_demurrage_days`).
+     - Envía `id: targetId` (si es `OVERWRITE`) o `id: null` (si es `NEW`).
+     - Actualiza `currentForecastId`, `sessionStorage` y `localStorage` tras guardar.
+2. **En [`ToolsLayout_V2.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/layouts/ToolsLayout_V2.tsx):**
+   - El botón **Guardar** ejecuta `context.handleOpenSaveModal()`.
+   - Implementado el modal estilizado de 2 columnas con tarjetas interactivas (**Nuevo Escenario** y **Sobrescribir**), selector `<select>` de escenarios en BD, inputs editables de nombre y autor, y botón dinámico con spinner.
+
+### 9.3 Control de Calidad y Despliegue
+- **Compilación:** `npx vite build` exitoso (0 errores).
+- **Git & Tagging:** Tag y rama `PRE.GRAND.FINALE.31.08.26` sobreescritos en GitHub (`origin`).
+- **VPS Deploy:** `https://forecast.geeksoft.tech` en vivo y verificado.
+
 
