@@ -171,3 +171,69 @@ Conforme a las reglas del proyecto, las 3 capturas enviadas han sido respaldadas
 - Despliegue automatizado SFTP/SSH con `Push.VPS/deploy_forecast_kickoff.py` (Cero Railway).
 - Validación final en vivo en `https://forecast.geeksoft.tech`.
 
+---
+
+## 6. Tabla Pericial de Indicadores: Análisis Gráfico (Legacy vs Nueva Matriz Financiera)
+
+A continuación se detalla la matriz de contraste pericial entre los indicadores que existían previamente en `InteractiveChart.tsx` (Legacy) y los **nuevos campos y métricas auditales** generados por la nueva versión de la **Matriz Financiera**, especificando su asignación de eje y la acción técnica requerida para la integración:
+
+```
++---------------------------------------------------------------------------------------------------------------------------------------+
+| CATEGORÍA / INDICADOR           | EJE SUGERIDO | UNIDAD  | ESTADO EN LEGACY (Gráfico Antiguo) | ESTADO ACTUAL (Nueva Matriz) | ACCIÓN DE CONEXIÓN REQUERIDA             |
++---------------------------------+--------------+---------+------------------------------------+------------------------------+------------------------------------------+
+| 1. INGRESOS Y REVENUE           |              |         |                                    |                              |                                          |
+| • Net Revenue                   | Primario     | USD     | No existía (Confundido c/ Flete)   | Métrica Oficial (Gross-Com)  | [CONECTAR NUEVO] net_revenue             |
+| • Freight Revenue (Flete Puro)  | Primario     | USD     | Llamado 'net_income' (Ambiguo)     | Flete Base Puro (P x Q x F)  | [HOMOLOGAR] freight_revenue              |
+| • Demurrage Revenue             | Primario     | USD     | Calculado solo con % global        | Nativo + % + Días x Tarifa   | [HOMOLOGAR] demurrageArr sincronizado    |
+| • Dockage Revenue (Refacturado) | Primario     | USD     | No existía                         | Refacturación de Muellaje    | [CONECTAR NUEVO] refacturacionMuellaje   |
+| • Gross Revenue                 | Primario     | USD     | Nombrado 'gross_plus_dem'          | Flete + Demurrage + Dockage  | [HOMOLOGAR] grossRevenues consolidado    |
+| • Comisiones (Address + Broker) | Primario     | USD     | No existía                         | Total Comisiones en USD      | [CONECTAR NUEVO] commissions             |
++---------------------------------+--------------+---------+------------------------------------+------------------------------+------------------------------------------+
+| 2. COSTOS OPERATIVOS            |              |         |                                    |                              |                                          |
+| • Hire (TCE x días)             | Primario     | USD     | No existía en el selector          | Costo Hire (TCE_req x Días)  | [CONECTAR NUEVO] tceCostTotal / hire     |
+| • Bunker Costs Total            | Primario     | USD     | Soportado ('total_bunker_costs')   | Soportado con delta demora   | [MANTENER / HOMOLOGAR] total_bunker_costs|
+|   - Bunker IFO Cost             | Primario     | USD     | No disponible en selector          | Disponible en hoja mensual   | [OPCIONAL] bunker_ifo_cost               |
+|   - Bunker MDO Cost             | Primario     | USD     | No disponible en selector          | Disponible en hoja mensual   | [OPCIONAL] bunker_mdo_cost               |
+| • Port Costs Netos (Sin Dockage)| Primario     | USD     | Incluía muellaje ('total_port')    | Neto sin muellaje            | [HOMOLOGAR] portCosts (deducido dockage) |
+| • Dockage Cost (Muellaje)       | Primario     | USD     | No desglosado                      | Gasto de muellaje            | [CONECTAR NUEVO] dockageCosts            |
+| • Arriendo de Naves             | Primario     | USD     | No existía                         | Gasto Charter Hire           | [CONECTAR NUEVO] charterHireCosts        |
++---------------------------------+--------------+---------+------------------------------------+------------------------------+------------------------------------------+
+| 3. RESULTADOS ECONÓMICOS        |              |         |                                    |                              |                                          |
+| • Voyage Result (P&L Operativo) | Primario     | USD     | Soportado ('voyage_result')        | Net Rev - Port - Bunk - Arr  | [HOMOLOGAR FÓRMULA] voyageResult         |
+| • P/L Neto vs Requerido         | Primario     | USD     | Soportado ('pl_vs_required')       | Voyage Result - Hire TCE     | [HOMOLOGAR FÓRMULA] plVsRequired         |
+| • Margen P/L (%)                | Secundario   | %       | Soportado ('pl_percentage')        | Ratio P/L sobre Ingreso      | [MANTENER / HOMOLOGAR] pl_percentage     |
++---------------------------------+--------------+---------+------------------------------------+------------------------------+------------------------------------------+
+| 4. MÉTRICAS DE EFICIENCIA (TCE) |              |         |                                    |                              |                                          |
+| • TCE Realizado                 | Secundario   | USD/día | No existía                         | Voyage Result / Días Totales | [CONECTAR NUEVO] tceReal ($/d)           |
+| • TCE Requerido                 | Secundario   | USD/día | No existía                         | Tarifa Requerida de Nave     | [CONECTAR NUEVO] tceReq ($/d)            |
+| • Diferencial TCE (+/-)         | Secundario   | USD/día | No existía                         | TCE Real - TCE Requerido     | [CONECTAR NUEVO] tceDiff ($/d)           |
++---------------------------------+--------------+---------+------------------------------------+------------------------------+------------------------------------------+
+| 5. OPERATIVAS Y RENDIMIENTO     |              |         |                                    |                              |                                          |
+| • Viajes (Frecuencia Mensual)   | Secundario   | viajes  | Soportado ('viajes')               | Frecuencia mensual           | [MANTENER] trips                         |
+| • Toneladas Transportadas       | Primario     | MT      | Soportado ('total_cargo')          | Carga Q x Frecuencia         | [MANTENER] tonsTotal                     |
+| • Días-Buque / Duración Total   | Secundario   | días    | Soportado ('total_duration')       | Días dinámicos c/ demora     | [HOMOLOGAR] nodeShipDays                 |
+| • Yield Flete                   | Secundario   | USD/MT  | Soportado ('yield_flete')          | Flete / Toneladas            | [MANTENER] yield_flete                   |
+| • Yield Total                   | Secundario   | USD/MT  | Soportado ('yield')                | Gross / Toneladas            | [MANTENER] yield                         |
++---------------------------------+--------------+---------+------------------------------------+------------------------------+------------------------------------------+
+```
+
+---
+
+## 7. Plan de Implementación de Nuevos Selectores en `InteractiveChart.tsx`
+
+1. **Ampliación de `metricOptions`:**
+   - Incorporar los nuevos indicadores en el dropdown interactivo con iconos y descripciones contextuales:
+     - 💎 **`net_revenue`**: *"Net Revenue (Gross - Comisiones)"* [USD]
+     - 🚢 **`freight_revenue`**: *"Freight Revenue (Flete Base)"* [USD]
+     - ⚓ **`dockage_revenue`**: *"Dockage Revenue (Refacturación Muellaje)"* [USD]
+     - 💼 **`commissions`**: *"Comisiones Totales (Address + Broker)"* [USD]
+     - ⏱️ **`tce_cost_hire`**: *"Costo Hire (TCE x Días)"* [USD]
+     - 🏗️ **`dockage_cost`**: *"Costo de Muellaje (Puerto)"* [USD]
+     - 🛳️ **`charter_hire`**: *"Arriendo de Naves (Charter Hire)"* [USD]
+     - 🧭 **`tce_real`**: *"TCE Realizado ($/d)"* [USD/día]
+     - 🎯 **`tce_required`**: *"TCE Requerido ($/d)"* [USD/día]
+     - 📊 **`tce_diff`**: *"Diferencial TCE (+/- $/d)"* [USD/día]
+2. **Homologación del Motor de Cálculo:**
+   - Utilizar las mismas fórmulas matemáticas de agregación mensual y acumulada que ya operan en `ForecastGrid.tsx` para garantizar **coherencia del 100% al centavo** entre la tabla numérica y las curvas de ECharts.
+
+
