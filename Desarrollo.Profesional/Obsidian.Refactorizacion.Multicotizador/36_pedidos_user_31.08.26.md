@@ -321,4 +321,27 @@ A continuación se detalla la matriz de contraste pericial entre los indicadores
 - **Git & Tagging:** Rama y tag `PRE.GRAND.FINALE.31.08.26.2` sincronizados en GitHub.
 - **Despliegue al VPS:** `https://forecast.geeksoft.tech` publicado con éxito.
 
+---
+
+## 12. Badges 10 y 11, Escenario en Doble Fila y Matriz 2x2 de Acciones (`ForecastBuilder_V2.tsx`)
+
+### 12.1 Requerimientos Implementados
+1. **Paso 10 (VISTA):**
+   - Incorporado badge numerado `[10]` (`w-8 h-8 rounded-lg bg-sky-100 text-sky-700`).
+   - Mantiene diseño vertical de doble fila (Label `VISTA` arriba, botones `USD` y `%` abajo).
+2. **Paso 11 (FORMATO):**
+   - Incorporado badge numerado `[11]` (`w-8 h-8 rounded-lg bg-sky-100 text-sky-700`).
+   - Mantiene diseño vertical de doble fila (Label `FORMATO` arriba, botones `PETRAL` y `NAVITRANSO` abajo).
+3. **Indicador de ESCENARIO:**
+   - Rediseñado en tarjeta de **2 filas**: Label `ESCENARIO` en fila superior y valor `📁 {forecastName}` en fila inferior.
+4. **Matriz de Acciones 2x2 en el Extremo Derecho:**
+   - Compactada en una tarjeta de acciones con grid 2x2:
+     - Fila superior: `[➕ Añadir]` y `[🗑️ Limpiar]`.
+     - Fila inferior: `[💾 Guardar]` y `[📂 Cargar]`.
+
+### 12.2 Control de Calidad y Despliegue
+- **Compilación Frontend:** `npx vite build` completado en **8.28s (0 errores)**.
+- **Git & Tagging:** Tag y rama `PRE.GRAND.FINALE.31.08.26.2` sincronizados en GitHub.
+- **Despliegue al VPS:** Desplegado con éxito a `https://forecast.geeksoft.tech`.
+
 
