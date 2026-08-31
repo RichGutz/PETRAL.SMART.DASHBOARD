@@ -281,7 +281,23 @@ A continuación se detalla la matriz de contraste pericial entre los indicadores
 
 ### 9.3 Control de Calidad y Despliegue
 - **Compilación:** `npx vite build` exitoso (0 errores).
-- **Git & Tagging:** Tag y rama `PRE.GRAND.FINALE.31.08.26` sobreescritos en GitHub (`origin`).
+- **Git & Tagging:** Tag y rama `PRE.GRAND.FINALE.31.08.26.2` sobreescritos en GitHub (`origin`).
 - **VPS Deploy:** `https://forecast.geeksoft.tech` en vivo y verificado.
+
+---
+
+## 10. Ajuste Visual de Layout en Bloques 8 y 9 del Constructor (`ForecastBuilder_V2.tsx`)
+
+### 10.1 Requerimiento Visual
+- Convertir la disposición horizontal de los bloques **8 (Demurrage %)** y **9 (Demurrage Días)** a la estructura vertical de **2 filas** de los botones de la primera fila (ej. Inicio, Fin, Meses a Modelar):
+  - **Fila Superior:** Label en negrita (`DEMURRAGE (%)` y `DEMURRAGE (DÍAS)`).
+  - **Fila Inferior:** Controles de input + botón `Mostrar`.
+  - **Badge:** Contenedor `w-8 h-8 rounded-lg` idéntico a los pasos de la fila 1.
+
+### 10.2 Control de Calidad y Despliegue
+- **Captura respaldada:** Copiada a `Obsidian.Maestro.Costos.Portuarios/PNGs` y `Exceles.Petral/PORT.COSTS.PATRICIA`.
+- **Compilación Frontend:** `npx vite build` completado en **8.49s (0 errores)**.
+- **Git & Tagging:** Publicada rama y tag `PRE.GRAND.FINALE.31.08.26.2` en GitHub.
+- **Despliegue al VPS:** Desplegado con éxito a `https://forecast.geeksoft.tech`.
 
 
