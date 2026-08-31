@@ -382,4 +382,14 @@ A continuación se detalla la matriz de contraste pericial entre los indicadores
 - **Git & Tagging:** Tag y rama `PRE.GRAND.FINALE.31.08.26.2` sincronizados en GitHub.
 - **Despliegue al VPS:** Desplegado con éxito a `https://forecast.geeksoft.tech`.
 
+---
+
+## 15. Hito de Respaldo y Versionamiento — Branch & Tag Web
+
+- **Nuevo Tag:** `PRE.GRAND.FINALE.31.08.26.3`
+- **Nueva Rama:** `PRE.GRAND.FINALE.31.08.26.3`
+- **Commit Base:** `9d8e3ff` (Reactividad total de Filtros de Tabla y Exportación, Badges 10 y 11, Escenario y Matriz de Acciones 2x2).
+- **Repositorio Remoto:** GitHub (`origin`) sincronizado y actualizado.
+- **Estado de Producción:** VPS `https://forecast.geeksoft.tech` 100% operativo.
+
 
