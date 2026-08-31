@@ -151,9 +151,9 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     }, [data]);
 
     // Filtros efectivos calculados inline
-    const effectiveFilterClient = (filterClient !== 'ALL' && filterOptions.clients.includes(filterClient)) ? filterClient : 'ALL';
-    const effectiveFilterRoute = (filterRoute !== 'ALL' && filterOptions.routes.includes(filterRoute)) ? filterRoute : 'ALL';
-    const effectiveFilterVessel = (filterVessel !== 'ALL' && filterOptions.vessels.includes(filterVessel)) ? filterVessel : 'ALL';
+    const effectiveFilterClient = (filterClient !== 'ALL' && filterOptions?.clients?.includes(filterClient)) ? filterClient : 'ALL';
+    const effectiveFilterRoute = (filterRoute !== 'ALL' && filterOptions?.routes?.includes(filterRoute)) ? filterRoute : 'ALL';
+    const effectiveFilterVessel = (filterVessel !== 'ALL' && filterOptions?.vessels?.includes(filterVessel)) ? filterVessel : 'ALL';
 
     const activeMonths = useMemo(() => {
         if (months && Array.isArray(months) && months.length > 0) return months;
@@ -1050,14 +1050,15 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         title: string
     ) => {
         const handleToggle = (opt: string) => {
-            if (selectedVals.includes(opt)) {
-                onChange(selectedVals.filter(v => v !== opt));
+            const current = selectedVals || [];
+            if (current.includes(opt)) {
+                onChange(current.filter(v => v !== opt));
             } else {
-                onChange([...selectedVals, opt]);
+                onChange([...current, opt]);
             }
         };
 
-        const isAllSelected = selectedVals.length === optionsList.length;
+        const isAllSelected = (selectedVals?.length || 0) === (optionsList?.length || 0);
 
         return (
             <div className="relative flex-1" onClick={(e) => e.stopPropagation()}>
@@ -1073,7 +1074,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                     className="w-full flex items-center justify-between gap-1 px-2 py-1.5 text-xs bg-white border border-slate-200 rounded hover:border-slate-350 focus:outline-none transition-all cursor-pointer text-slate-700 font-bold"
                 >
                     <span className="truncate">
-                        {isAllSelected ? 'Todos' : (selectedVals.length === 0 ? 'Ninguno' : selectedVals.join(', '))}
+                        {isAllSelected ? 'Todos' : ((selectedVals?.length || 0) === 0 ? 'Ninguno' : (selectedVals || []).join(', '))}
                     </span>
                     <span className="text-[8px] text-slate-400 shrink-0">{isOpen ? '▲' : '▼'}</span>
                 </button>
@@ -1089,7 +1090,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                                 if (isAllSelected) {
                                     onChange([]);
                                 } else {
-                                    onChange([...optionsList]);
+                                    onChange([...(optionsList || [])]);
                                 }
                             }}
                             className={`text-left text-[11px] p-1.5 rounded transition-all cursor-pointer border flex items-center gap-2 ${
@@ -1106,8 +1107,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             />
                             <span>Todos</span>
                         </button>
-                        {optionsList.map((opt) => {
-                            const isSel = selectedVals.includes(opt);
+                        {(optionsList || []).map((opt) => {
+                            const isSel = (selectedVals || []).includes(opt);
                             return (
                                 <button
                                     key={opt}
@@ -1134,7 +1135,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         );
     };
 
-    if (!data || !data.aggregated_data || activeMonths.length === 0) {
+    if (!data || !data.aggregated_data || !activeMonths || activeMonths.length === 0) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full bg-white rounded-lg border border-slate-200">
                 <p className="text-slate-500 font-medium text-lg">Ingresar o cargar escenario para mostrar herramienta.</p>

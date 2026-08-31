@@ -7,7 +7,7 @@ import { ForecastService } from '../../services/api';
 
 export const SpaghettiMap_V2: React.FC = () => {
     const context = useForecastContext_V2();
-    const months = context.dynamicMonths;
+    const months = context.dynamicMonths || [];
     const [selectedMonths, setSelectedMonths] = useState<string[]>(() => context.dynamicMonths || []);
     const [selectedPortId, setSelectedPortId] = useState<string | null>(null);
     const [, setForceRender] = useState(0);
@@ -41,14 +41,14 @@ export const SpaghettiMap_V2: React.FC = () => {
 
     useEffect(() => {
         // En el Spaghetti Map solo mostramos los clientes activos
-        const activeClients = rawClients.filter(c => c.is_active !== false);
+        const activeClients = (rawClients || []).filter(c => c.is_active !== false);
         setClients(activeClients);
     }, [rawClients]);
 
     // Seleccionar por defecto todos los meses activos modelados en la grilla
     const monthsStr = months ? months.join(',') : '';
     useEffect(() => {
-        if (months && months.length > 0 && selectedMonths.length === 0 && !isPlaying) {
+        if (months && months.length > 0 && (!selectedMonths || selectedMonths.length === 0) && !isPlaying) {
             setSelectedMonths([...months]);
         }
     }, [monthsStr, isPlaying]);
@@ -58,7 +58,7 @@ export const SpaghettiMap_V2: React.FC = () => {
     // Animación automática de la línea de tiempo
     useEffect(() => {
         let interval: any;
-        if (isPlaying && months.length > 0) {
+        if (isPlaying && months && months.length > 0) {
             interval = setInterval(() => {
                 setAnimationIndex(prev => {
                     const next = prev + 1;
@@ -85,7 +85,7 @@ export const SpaghettiMap_V2: React.FC = () => {
     const handlePlayAnimation = () => {
         if (!isPlaying) {
             setAnimationIndex(0);
-            if (months.length > 0) {
+            if (months && months.length > 0) {
                 setSelectedMonths([months[0]]);
             }
             setIsPlaying(true);
@@ -102,22 +102,22 @@ export const SpaghettiMap_V2: React.FC = () => {
     };
 
     const toggleMonth = (m: string) => {
-        if (selectedMonths.includes(m)) {
-            if (selectedMonths.length > 1) {
+        if ((selectedMonths || []).includes(m)) {
+            if ((selectedMonths || []).length > 1) {
                 setSelectedMonths(selectedMonths.filter(x => x !== m));
             }
         } else {
-            setSelectedMonths([...selectedMonths, m]);
+            setSelectedMonths([...(selectedMonths || []), m]);
         }
     };
 
     const toggleAllMonths = () => {
-        if (selectedMonths.length === months.length) {
+        if ((selectedMonths || []).length === (months || []).length) {
             // Si todos están marcados, desmarcar todos y dejar solo el primero
-            setSelectedMonths([months[0]]);
+            setSelectedMonths(months && months.length > 0 ? [months[0]] : []);
         } else {
             // Marcar todos
-            setSelectedMonths([...months]);
+            setSelectedMonths([...(months || [])]);
         }
     };
 
@@ -257,7 +257,7 @@ export const SpaghettiMap_V2: React.FC = () => {
                     </div>
                     
                     {/* List of Months Header */}
-                    {months.length > 0 && (
+                    {months && months.length > 0 && (
                         <div className="flex items-center pb-2 mb-2 border-b border-slate-200 px-1">
                             <div className="w-[45%]">
                                 <button
@@ -267,7 +267,7 @@ export const SpaghettiMap_V2: React.FC = () => {
                                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                     </svg>
-                                    {selectedMonths.length === months.length ? 'Desmarcar Todos' : 'Marcar Todos'}
+                                    {(selectedMonths || []).length === (months || []).length ? 'Desmarcar Todos' : 'Marcar Todos'}
                                 </button>
                             </div>
                             <div className="w-[20%] text-center">
@@ -280,7 +280,7 @@ export const SpaghettiMap_V2: React.FC = () => {
                     )}
                     
                     <div className="flex flex-col gap-1 relative mt-1">
-                        {months.length === 0 && (
+                        {(!months || months.length === 0) && (
                             <p className="text-slate-500 text-[10px] text-center italic mt-10">Sin horizonte</p>
                         )}
                         
