@@ -154,17 +154,27 @@ Los bloques de Clientes, Rutas y Buques son **controladores de profundidad y agr
 
 ---
 
-## 12. 📦 CIERRE DE PROTOCOLO GIT Y REGISTRO DE TAG
+## 13. 🏁 CIERRE FINAL DE SESIÓN & ESTADO DE ENTREGA
 
-* **Branch Creado**: `FILTROS.MATRIZ.90.PERCENT`
-* **Git Tag Creado**: `FILTROS.MATRIZ.90.PERCENT`
-* **Sincronización Remota**: Pusheado exitosamente a GitHub (`origin/FILTROS.MATRIZ.90.PERCENT` y `refs/tags/FILTROS.MATRIZ.90.PERCENT`).
-* **Branch Actual de Trabajo**: `main` (Merge completado y `origin/main` sincronizado).
-* **Estado en Producción**: `https://forecast.geeksoft.tech` 100% operativo con todas las mejoras.
+### 13.1. Hitos Alcanzados en la Sesión
+1. **Autopsia y Fallback de Multicotizador PDF**: Solución al `about:blank` y desacople de variables de arriendo.
+2. **Corrección de Overflow en Filtros**: Despliegue libre del panel de filtros fuera del contenedor `overflow-x-auto`.
+3. **Filtros Rápidos en Cascada (Vuelta 1)**: Botones `Solo` y `Todos / Ninguno` para aislar cualquier dimensión con 1 clic.
+4. **Motor de Agregación Dinámica (Roll-Up) & Ocultamiento Inteligente de Columnas (Vuelta 2)**:
+   * Cuando se desmarcan dimensiones completas (ej. Rutas 0/3, Buques 0/2), las columnas se ocultan dinámicamente (`<th>` y `<td>`).
+   * La tabla ejecuta un roll-up automático consolidando todos los datos financieros al nivel activo superior (ej. `SPCC`).
+5. **Prevalencia de Resumen Ejecutivo y Renombre (Vuelta 3)**:
+   * En vistas consolidadas (`activeDimensions < 3`), la métrica `Viajes` se presenta sin cajas de edición y se omiten los subtotales duplicados.
+   * Renombrado oficial de `Multicotizador Multirutas` a **`Voyage Calculator`** en toda la plataforma.
+6. **Protocolo Git y Despliegue VPS**:
+   * Branch y Tag registrados: **`FILTROS.MATRIZ.90.PERCENT`**.
+   * Retorno y sincronización en **`main`**.
+   * Producción activa y verificada en **`https://forecast.geeksoft.tech`**.
 
 ---
 
-*Caso cerrado y documentado pericialmente — 30 de Agosto de 2026.*
+*Sesión cerrada exitosamente — 30 de Agosto de 2026.*
+
 
 
 
