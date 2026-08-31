@@ -8,14 +8,20 @@ import logoGeeksoft from '../../assets/Logo.Geeksoft.png';
 export const ForecastGridFilters: React.FC = () => {
     const { 
         data, 
-        dynamicMonths: months,
-        hiddenClients, setHiddenClients,
-        hiddenRoutes, setHiddenRoutes,
-        hiddenVessels, setHiddenVessels,
-        hiddenMonths, setHiddenMonths,
-        showSubtotals, setShowSubtotals,
-        showAccumulatedTotal, setShowAccumulatedTotal
-    } = useForecastContext_V2();
+        dynamicMonths: months = [],
+        hiddenClients = [], setHiddenClients = (() => {}),
+        hiddenRoutes = [], setHiddenRoutes = (() => {}),
+        hiddenVessels = [], setHiddenVessels = (() => {}),
+        hiddenMonths = [], setHiddenMonths = (() => {}),
+        showSubtotals = true, setShowSubtotals = (() => {}),
+        showAccumulatedTotal = true, setShowAccumulatedTotal = (() => {})
+    } = useForecastContext_V2() || {};
+
+    const safeMonths = months || [];
+    const safeHiddenClients = hiddenClients || [];
+    const safeHiddenRoutes = hiddenRoutes || [];
+    const safeHiddenVessels = hiddenVessels || [];
+    const safeHiddenMonths = hiddenMonths || [];
 
     const { clientList, routeList, vesselList } = useMemo(() => {
         const allClients = new Set<string>();
@@ -45,8 +51,9 @@ export const ForecastGridFilters: React.FC = () => {
     }, [data]);
 
     const toggleFilter = (item: string, hiddenList: string[], setHiddenList: React.Dispatch<React.SetStateAction<string[]>>) => {
-        if (hiddenList.includes(item)) setHiddenList(hiddenList.filter(i => i !== item));
-        else setHiddenList([...hiddenList, item]);
+        const list = hiddenList || [];
+        if (list.includes(item)) setHiddenList(list.filter(i => i !== item));
+        else setHiddenList([...list, item]);
     };
 
     // Funciones "Solo este" para aislamiento inmediato
@@ -75,29 +82,29 @@ export const ForecastGridFilters: React.FC = () => {
         setHiddenMonths([]);
     };
 
-    const isAnyFilterActive = hiddenClients.length > 0 || hiddenRoutes.length > 0 || hiddenVessels.length > 0 || hiddenMonths.length > 0;
+    const isAnyFilterActive = safeHiddenClients.length > 0 || safeHiddenRoutes.length > 0 || safeHiddenVessels.length > 0 || safeHiddenMonths.length > 0;
 
     const activeFilterSummary = useMemo(() => {
-        const activeC = clientList.filter(c => !hiddenClients.includes(c));
-        const activeR = routeList.filter(r => !hiddenRoutes.includes(r));
-        const activeV = vesselList.filter(v => !hiddenVessels.includes(v));
-        const activeM = months.filter(m => !hiddenMonths.includes(m));
+        const activeC = clientList.filter(c => !safeHiddenClients.includes(c));
+        const activeR = routeList.filter(r => !safeHiddenRoutes.includes(r));
+        const activeV = vesselList.filter(v => !safeHiddenVessels.includes(v));
+        const activeM = safeMonths.filter(m => !safeHiddenMonths.includes(m));
 
         const summaries: string[] = [];
-        if (hiddenClients.length > 0) {
+        if (safeHiddenClients.length > 0) {
             summaries.push(activeC.length === 1 ? `Cliente: ${activeC[0]}` : `${activeC.length}/${clientList.length} Clientes`);
         }
-        if (hiddenRoutes.length > 0) {
+        if (safeHiddenRoutes.length > 0) {
             summaries.push(activeR.length === 1 ? `Ruta: ${activeR[0]}` : `${activeR.length}/${routeList.length} Rutas`);
         }
-        if (hiddenVessels.length > 0) {
+        if (safeHiddenVessels.length > 0) {
             summaries.push(activeV.length === 1 ? `Buque: ${activeV[0]}` : `${activeV.length}/${vesselList.length} Buques`);
         }
-        if (hiddenMonths.length > 0) {
-            summaries.push(`${activeM.length}/${months.length} Meses`);
+        if (safeHiddenMonths.length > 0) {
+            summaries.push(`${activeM.length}/${safeMonths.length} Meses`);
         }
         return summaries.join(' • ');
-    }, [clientList, routeList, vesselList, months, hiddenClients, hiddenRoutes, hiddenVessels, hiddenMonths]);
+    }, [clientList, routeList, vesselList, safeMonths, safeHiddenClients, safeHiddenRoutes, safeHiddenVessels, safeHiddenMonths]);
 
     const handleExportExcel = () => {
         const table = document.getElementById('forecast-grid-table');
@@ -347,17 +354,20 @@ export const ForecastGridFilters: React.FC = () => {
 
     const quarters = useMemo(() => {
         const qMap: Record<string, string[]> = {};
-        months.forEach(m => {
+        (safeMonths || []).forEach(m => {
+            if (!m || typeof m !== 'string') return;
             const parts = m.split('-');
+            if (parts.length < 2) return;
             const year = parts[0];
             const monthNum = parseInt(parts[1], 10);
+            if (isNaN(monthNum)) return;
             const q = Math.ceil(monthNum / 3);
             const key = `Q${q} ${year}`;
             if (!qMap[key]) qMap[key] = [];
             qMap[key].push(m);
         });
         return qMap;
-    }, [months]);
+    }, [safeMonths]);
 
     return (
         <div className="w-full bg-white flex flex-col">
@@ -525,12 +535,12 @@ export const ForecastGridFilters: React.FC = () => {
                         <div className="flex items-center justify-between border-b border-slate-200 pb-1">
                             <div className="flex items-center gap-1.5">
                                 <Calendar size={13} className="text-sky-600" />
-                                <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">Meses ({months.length - hiddenMonths.length}/{months.length})</span>
+                                <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">Meses ({safeMonths.length - safeHiddenMonths.length}/{safeMonths.length})</span>
                             </div>
                             <div className="flex gap-1 text-[10px]">
                                 <button type="button" onClick={() => setHiddenMonths([])} className="text-sky-600 hover:text-sky-800 font-bold px-1 rounded hover:bg-sky-50 cursor-pointer">Todos</button>
                                 <span className="text-slate-300">|</span>
-                                <button type="button" onClick={() => setHiddenMonths([...months])} className="text-slate-500 hover:text-slate-700 font-bold px-1 rounded hover:bg-slate-100 cursor-pointer">Ninguno</button>
+                                <button type="button" onClick={() => setHiddenMonths([...safeMonths])} className="text-slate-500 hover:text-slate-700 font-bold px-1 rounded hover:bg-slate-100 cursor-pointer">Ninguno</button>
                             </div>
                         </div>
                         <div className="max-h-44 overflow-y-auto border border-slate-200 rounded-lg p-2 bg-slate-50 flex flex-col gap-2 shadow-2xs">
@@ -541,12 +551,12 @@ export const ForecastGridFilters: React.FC = () => {
                                         {qMonths.map(m => {
                                             const monthIdx = parseInt(m.split('-')[1], 10) - 1;
                                             const mName = monthNames[monthIdx];
-                                            const isChecked = !hiddenMonths.includes(m);
+                                            const isChecked = !safeHiddenMonths.includes(m);
                                             return (
                                                 <button
                                                     key={m}
                                                     type="button"
-                                                    onClick={() => toggleFilter(m, hiddenMonths, setHiddenMonths)}
+                                                    onClick={() => toggleFilter(m, safeHiddenMonths, setHiddenMonths)}
                                                     className={`px-2 py-0.5 text-[11px] font-bold rounded border transition-colors cursor-pointer ${isChecked ? 'bg-sky-600 text-white border-sky-700 shadow-2xs' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-100'}`}
                                                 >
                                                     {mName}
