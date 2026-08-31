@@ -103,7 +103,17 @@ Conforme a las reglas del proyecto, las 3 capturas enviadas han sido respaldadas
 
 ---
 
-## 4. Próximos Pasos para Implementación (En Espera de Orden)
-1. **Inspección de Estado en Frontend:** Revisar el esquema de renderizado de filas de totales y subtotales en `FinancialMatrix.jsx` / `financialMatrixRows.js`.
-2. **Propagación del Árbol de Acordeones:** Integrar el estado `expandedRows` / `isExpanded` en los generadores de filas de `SUBTOTAL_CLIENT`, `TOTAL_FLOTA` y `TOTAL_ACUMULADO`.
-3. **Cálculo de Agregación Parcial:** Implementar los reducers para sumar los 5 componentes hijos en cada nivel de agregación mensual y en la columna de total anual acumulado.
+## 4. Resolución Forense Implementada y QC en Producción
+
+### Acciones Aplicadas en [`ForecastGrid.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/components/CommercialForecast/ForecastGrid.tsx):
+1. **Acordeones y Sub-filas Integradas en Todos los Niveles:**
+   - **Subtotal Cliente (`SUBTOTAL / TOTAL CLIENT`):** Se añadió el control interactivo (`>` / `v`) a `Net Revenue` (`subtotal-gross-${level1Name}`) y se implementó la inyección de los 5 parciales consolidados (`Freight`, `Demurrage`, `Dockage`, `Gross` y `Comisiones`) ajustando dinámicamente el `rowSpan` del cliente.
+   - **Total Flota (`TOTAL FLOTA`):** Se integró el control desplegable (`global-total-gross`) y sus 5 sub-filas de desglose global con ajuste dinámico de `rowSpan`.
+   - **Total Acumulado (`TOTAL ACUMULADO`):** Se integró el control desplegable (`global-acum-gross`) y la progresión acumulada mes a mes de cada parcial.
+2. **Totalización de Parciales en `TOTAL ACUM`:**
+   - Se removió la condición que forzaba `-` en las sub-filas hijas y se implementó la suma horizontal de visible months (`visibleTotal`) formateada como moneda para todas las métricas de ingreso y costo.
+3. **Compilación y Build:**
+   - `npx vite build` completado con éxito (0 errores).
+4. **Despliegue Directo al VPS (`91.108.125.253`):**
+   - Ejecutado mediante `Push.VPS/deploy_forecast_kickoff.py`.
+   - Producción en vivo verificada en: **`https://forecast.geeksoft.tech`**.
