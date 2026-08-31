@@ -267,7 +267,9 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     <div className="flex-[1.2]">
                         <CardTitle className="text-base text-slate-800 flex items-center gap-2">
                             <img src="/Logo.Petral.png" alt="Naviera Petral" className="h-6 object-contain" />
-                            <span className="font-black tracking-tight uppercase">SHIPPING.SOFT</span>
+                            <div className="flex items-center border-l border-slate-200 pl-2">
+                                <img src="/LOGO.DELFOS.BUENO.HORIZONTAL.png" alt="DELFOS" className="h-6 object-contain" />
+                            </div>
                         </CardTitle>
                     </div>
 
