@@ -85,12 +85,18 @@ interface ForecastContextType {
     showAccumulatedTotal: boolean;
     setShowAccumulatedTotal: (v: boolean) => void;
 
+    saveMode: 'NEW' | 'OVERWRITE';
+    setSaveMode: (mode: 'NEW' | 'OVERWRITE') => void;
+    targetOverwriteId: string;
+    setTargetOverwriteId: (id: string) => void;
+
     // Actions
     handleAddLine: (newLine: any) => void;
     handleFrequencyChange: (client_id: string, route_key: string, vessel_id: string, month_index: string, newFrequency: number) => void;
     handleTariffChange: (client_id: string, route_key: string, vessel_id: string, month_index: string, newTariff: number) => void;
     handleDeleteNode: (type: 'client' | 'route' | 'vessel', client_id: string, route_key?: string, vessel_id?: string) => void;
-    handleSaveForecast: (isNew?: boolean) => Promise<void>;
+    handleOpenSaveModal: () => Promise<void>;
+    handleSaveForecast: (overrideMode?: 'NEW' | 'OVERWRITE') => Promise<void>;
     handleLoadClick: () => Promise<void>;
     handleLoadSelected: (id: string) => Promise<void>;
     runSimulationWith: (lines: any[], sDate: string, eDate: string) => Promise<void>;
@@ -123,6 +129,9 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [showLoadModal, setShowLoadModal] = useState(false);
     const [savedForecasts, setSavedForecasts] = useState<any[]>([]);
+
+    const [saveMode, setSaveMode] = useState<'NEW' | 'OVERWRITE'>('NEW');
+    const [targetOverwriteId, setTargetOverwriteId] = useState<string>('');
 
     const [displayMode, setDisplayMode] = useState<'usd'|'pct'>('usd');
     const [matrixFormat, setMatrixFormatState] = useState<'PETRAL'|'NAVITRANSO'>('PETRAL');
@@ -442,11 +451,46 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
         }));
     };
 
-    const handleSaveForecast = async (isNew: boolean = false) => {
-        if (!forecastName) {
-            alert("Ingrese un nombre para el forecast");
+    const handleOpenSaveModal = async () => {
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
+        try {
+            setActionLoading('loadList');
+            const list = await ForecastService.listForecasts();
+            setSavedForecasts(list || []);
+            if (currentForecastId) {
+                setSaveMode('OVERWRITE');
+                setTargetOverwriteId(currentForecastId);
+                const current = (list || []).find((f: any) => f.id === currentForecastId);
+                if (current && !forecastName) {
+                    setForecastName(current.name);
+                }
+            } else {
+                setSaveMode('NEW');
+                if (list && list.length > 0) {
+                    setTargetOverwriteId(list[0].id);
+                }
+            }
+        } catch (e) {
+            console.error("Error al cargar lista de forecasts para modal guardar:", e);
+        } finally {
+            setActionLoading('none');
+        }
+        setShowSaveModal(true);
+    };
+
+    const handleSaveForecast = async (overrideMode?: 'NEW' | 'OVERWRITE') => {
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
+        if (!forecastName || !forecastName.trim()) {
+            alert("Ingrese un nombre para el escenario");
             return;
         }
+        const mode = overrideMode || saveMode;
+        const targetId = mode === 'OVERWRITE' ? (targetOverwriteId || currentForecastId) : null;
+
         try {
             setActionLoading('save');
             const enrichedLines = projectionLines.map(line => ({
@@ -461,8 +505,8 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             }));
 
             const payload = {
-                id: isNew ? null : currentForecastId,
-                name: forecastName,
+                id: targetId,
+                name: forecastName.trim(),
                 user_id: userId,
                 start_date: startDate,
                 end_date: endDate,
@@ -471,9 +515,13 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             const result = await ForecastService.saveForecast(payload);
             setCurrentForecastId(result.id);
             setLoadedAuthor(userId);
+            sessionStorage.setItem('petral_active_forecast_id', result.id);
+            sessionStorage.setItem('petral_active_forecast_name', forecastName.trim());
+            localStorage.setItem('petral_last_forecast_id', result.id);
+            setIsDirty(false);
             setShowSaveModal(false);
         } catch(e) {
-            alert("Error al guardar el forecast");
+            alert("Error al guardar el escenario");
         } finally {
             setActionLoading('none');
         }
@@ -563,12 +611,11 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
             demurragePct, setDemurragePct, showDemurrage, setShowDemurrage, handleSetShowDemurrage,
             demurrageDays, setDemurrageDays, showDemurrageDays, setShowDemurrageDays, handleSetShowDemurrageDays,
             excludedDemurrages, setExcludedDemurrages, customDemurrages, setCustomDemurrages, customDemurrageDays, setCustomDemurrageDays,
-            hiddenClients, setHiddenClients, hiddenRoutes, setHiddenRoutes,
-            hiddenVessels, setHiddenVessels, hiddenMonths, setHiddenMonths,
             isFiltersCollapsed, setIsFiltersCollapsed,
             showSubtotals, setShowSubtotals, showAccumulatedTotal, setShowAccumulatedTotal,
+            saveMode, setSaveMode, targetOverwriteId, setTargetOverwriteId,
             handleAddLine, handleFrequencyChange, handleTariffChange, handleDeleteNode,
-            handleSaveForecast, handleLoadClick, handleLoadSelected, runSimulationWith
+            handleOpenSaveModal, handleSaveForecast, handleLoadClick, handleLoadSelected, runSimulationWith
         }}>
             {children}
         </ForecastContext.Provider>

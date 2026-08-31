@@ -76,7 +76,8 @@ export const ToolsLayout_V2: React.FC = () => {
                                         <span>Limpiar</span>
                                     </button>
                                     <button 
-                                        onClick={() => context.setShowSaveModal(true)} 
+                                        onClick={context.handleOpenSaveModal} 
+                                        disabled={context.actionLoading === 'loadList'}
                                         className="flex items-center justify-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white h-7.5 px-4 rounded-lg font-extrabold text-[11px] transition-all shadow-2xs cursor-pointer"
                                     >
                                         <Save size={14} /> Guardar
@@ -121,41 +122,151 @@ export const ToolsLayout_V2: React.FC = () => {
 
             {/* Save Modal */}
             {context.showSaveModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg w-96 shadow-xl relative">
-                        <button onClick={() => context.setShowSaveModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={20}/></button>
-                        <h3 className="text-lg font-bold text-slate-800 mb-4">Guardar Escenario</h3>
+                <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl w-full max-w-[480px] shadow-2xl border border-slate-200/80 overflow-hidden">
                         
-                        <div className="flex flex-col gap-4">
-                            <div>
-                                <label className="text-sm font-semibold text-slate-600 mb-1 block">Nombre del Forecast</label>
-                                <input type="text" value={context.forecastName} onChange={(e) => context.setForecastName(e.target.value)} className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-petral-teal focus:outline-none" placeholder="Ej. Escenario Conservador H2" />
+                        {/* Header */}
+                        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-black text-xs shadow-2xs">
+                                    💾
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Guardar Escenario Comercial</h3>
+                                    <p className="text-[11px] text-slate-500 font-medium">Persistencia integral de matriz, viajes y demoras</p>
+                                </div>
                             </div>
-                            <div>
-                                <label className="text-sm font-semibold text-slate-600 mb-1 block">Usuario / Autor</label>
-                                <input type="text" value={context.userId} onChange={(e) => context.setUserId(e.target.value)} className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-slate-50 focus:outline-none" />
+                            <button 
+                                onClick={() => context.setShowSaveModal(false)} 
+                                className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
+                            >
+                                <X size={16}/>
+                            </button>
+                        </div>
+                        
+                        <div className="p-5 flex flex-col gap-4">
+                            
+                            {/* Selector de Modalidad: Nuevo vs Sobrescribir */}
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <button
+                                    type="button"
+                                    onClick={() => context.setSaveMode('NEW')}
+                                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 ${context.saveMode === 'NEW' ? 'bg-sky-50 border-sky-300 ring-2 ring-sky-500/20 shadow-2xs' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${context.saveMode === 'NEW' ? 'border-sky-600 bg-sky-600' : 'border-slate-300'}`}>
+                                            {context.saveMode === 'NEW' && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
+                                        </div>
+                                        <span className="text-xs font-black text-slate-800">Nuevo Escenario</span>
+                                    </div>
+                                    <span className="text-[10px] text-slate-500 pl-5.5 font-medium">Crear registro independiente</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        context.setSaveMode('OVERWRITE');
+                                        if (context.savedForecasts.length > 0 && !context.targetOverwriteId) {
+                                            const targetId = context.currentForecastId || context.savedForecasts[0].id;
+                                            context.setTargetOverwriteId(targetId);
+                                            const found = context.savedForecasts.find((f: any) => f.id === targetId);
+                                            if (found) context.setForecastName(found.name);
+                                        }
+                                    }}
+                                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 ${context.saveMode === 'OVERWRITE' ? 'bg-amber-50 border-amber-300 ring-2 ring-amber-500/20 shadow-2xs' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${context.saveMode === 'OVERWRITE' ? 'border-amber-600 bg-amber-600' : 'border-slate-300'}`}>
+                                            {context.saveMode === 'OVERWRITE' && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
+                                        </div>
+                                        <span className="text-xs font-black text-slate-800">Sobrescribir</span>
+                                    </div>
+                                    <span className="text-[10px] text-slate-500 pl-5.5 font-medium">Actualizar existente en BD</span>
+                                </button>
                             </div>
-                            <div className="flex flex-col gap-2 mt-2">
+
+                            {/* Campo de Selección en modo Sobrescribir */}
+                            {context.saveMode === 'OVERWRITE' && (
+                                <div className="flex flex-col gap-1.5 bg-amber-50/60 border border-amber-200 rounded-xl p-3">
+                                    <label className="text-[10.5px] font-black text-amber-900 uppercase tracking-tight">Escenario a Sobrescribir:</label>
+                                    <select
+                                        value={context.targetOverwriteId || (context.savedForecasts.length > 0 ? context.savedForecasts[0].id : '')}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            context.setTargetOverwriteId(val);
+                                            const found = context.savedForecasts.find((f: any) => f.id === val);
+                                            if (found) context.setForecastName(found.name);
+                                        }}
+                                        className="h-8 text-xs font-bold border border-amber-300 rounded-lg px-2.5 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer shadow-2xs"
+                                    >
+                                        {context.savedForecasts.map((f: any) => (
+                                            <option key={f.id} value={f.id}>
+                                                {f.name} ({f.start_date} ~ {f.end_date})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
+                            {/* Nombre del Forecast */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-[10.5px] font-black text-slate-700 uppercase tracking-tight">Nombre del Escenario / Versión</label>
+                                <input 
+                                    type="text" 
+                                    value={context.forecastName} 
+                                    onChange={(e) => context.setForecastName(e.target.value)} 
+                                    className="w-full h-8 border border-slate-200 rounded-lg px-3 text-xs font-bold text-slate-800 focus:border-sky-500 focus:outline-none shadow-2xs" 
+                                    placeholder="Ej. Escenario Base 2026 H2" 
+                                />
+                            </div>
+
+                            {/* Usuario / Autor */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-[10.5px] font-black text-slate-700 uppercase tracking-tight">Usuario / Autor</label>
+                                <input 
+                                    type="text" 
+                                    value={context.userId} 
+                                    onChange={(e) => context.setUserId(e.target.value)} 
+                                    className="w-full h-8 border border-slate-200 rounded-lg px-3 text-xs font-bold text-slate-700 bg-slate-50 focus:outline-none shadow-2xs" 
+                                />
+                            </div>
+
+                            {/* Acciones */}
+                            <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
                                 <button 
-                                    onClick={() => context.handleSaveForecast(true)} 
+                                    type="button"
+                                    onClick={() => context.setShowSaveModal(false)} 
+                                    className="flex-1 h-8 rounded-lg font-bold text-xs text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer"
+                                >
+                                    Cancelar
+                                </button>
+                                <button 
+                                    type="button"
+                                    onClick={() => context.handleSaveForecast()} 
                                     disabled={context.actionLoading === 'save'}
-                                    className={`relative overflow-hidden w-full font-bold py-2 rounded-full transition-colors ${context.actionLoading === 'save' ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-petral-teal hover:bg-teal-600 text-white shadow-md'}`}
+                                    className={`relative overflow-hidden flex-1 h-8 rounded-lg font-black text-xs text-white transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 ${
+                                        context.actionLoading === 'save' 
+                                            ? 'bg-slate-400 cursor-not-allowed' 
+                                            : context.saveMode === 'OVERWRITE' 
+                                                ? 'bg-amber-600 hover:bg-amber-700' 
+                                                : 'bg-sky-600 hover:bg-sky-700'
+                                    }`}
                                 >
                                     {context.actionLoading === 'save' && <div className="absolute inset-0 bg-white/20 animate-pulse" style={{ width: '100%' }}></div>}
-                                    <span className="relative z-10 flex items-center justify-center gap-2">
-                                        {context.actionLoading === 'save' ? 'Procesando...' : 'Guardar Nuevo (Clonar)'}
+                                    <span className="relative z-10 flex items-center justify-center gap-1.5">
+                                        {context.actionLoading === 'save' ? (
+                                            <>
+                                                <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></div>
+                                                <span>Guardando...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Save size={13} />
+                                                <span>{context.saveMode === 'OVERWRITE' ? 'Sobrescribir Escenario' : 'Guardar Nuevo'}</span>
+                                            </>
+                                        )}
                                     </span>
                                 </button>
-                                
-                                {context.currentForecastId && (context.loadedAuthor === context.userId || !context.loadedAuthor) && (
-                                    <button 
-                                        onClick={() => context.handleSaveForecast(false)} 
-                                        disabled={context.actionLoading === 'save'}
-                                        className={`w-full font-bold py-2 rounded-full transition-colors text-sm border-2 ${context.actionLoading === 'save' ? 'border-slate-200 text-slate-400 cursor-not-allowed' : 'border-slate-300 text-slate-600 hover:border-petral-teal hover:text-petral-teal'}`}
-                                    >
-                                        Sobrescribir Mi Escenario
-                                    </button>
-                                )}
                             </div>
                         </div>
                     </div>
