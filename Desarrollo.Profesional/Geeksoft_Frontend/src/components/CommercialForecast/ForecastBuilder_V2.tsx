@@ -725,13 +725,13 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                 <div className="flex items-center gap-2.5 w-full pt-1.5 border-t border-slate-200/80 overflow-x-auto">
                     
                     {/* PASO 8: DEMURRAGE (%) */}
-                    <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-1.5 px-3 shadow-2xs shrink-0">
-                        <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-black text-[11px] shadow-2xs shrink-0">
+                    <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-black text-xs shadow-2xs shrink-0">
                             8
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex flex-col gap-1">
                             <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
-                                DEMURRAGE (%):
+                                DEMURRAGE (%)
                             </span>
                             <div className="flex gap-1 h-7">
                                 <Input 
@@ -755,13 +755,13 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                     </div>
 
                     {/* PASO 9: DEMURRAGE (DÍAS) */}
-                    <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-1.5 px-3 shadow-2xs shrink-0">
-                        <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-black text-[11px] shadow-2xs shrink-0">
+                    <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-black text-xs shadow-2xs shrink-0">
                             9
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex flex-col gap-1">
                             <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
-                                DEMURRAGE (D):
+                                DEMURRAGE (DÍAS)
                             </span>
                             <div className="flex gap-1 h-7">
                                 <Input 
