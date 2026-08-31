@@ -365,6 +365,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const globalTons = new Array(months.length).fill(0);
         const globalFreightRevenues = new Array(months.length).fill(0);
         const globalRevenues = new Array(months.length).fill(0);
+        const globalCommissions = new Array(months.length).fill(0);
         const globalNetRevenues = new Array(months.length).fill(0);
         const globalHire = new Array(months.length).fill(0);
         const globalPortCosts = new Array(months.length).fill(0);
@@ -386,6 +387,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             const level1ShipDays = new Array(months.length).fill(0);
             const level1FreightRevenue = new Array(months.length).fill(0);
             const level1GrossRevenue = new Array(months.length).fill(0);
+            const level1Commissions = new Array(months.length).fill(0);
             const level1NetRevenue = new Array(months.length).fill(0);
             const level1Hire = new Array(months.length).fill(0);
             const level1PortCosts = new Array(months.length).fill(0);
@@ -611,6 +613,10 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     grossRevenues.forEach((v, i) => {
                         level1GrossRevenue[i] += (v || 0);
                         globalRevenues[i] += (v || 0);
+                    });
+                    commissions.forEach((v, i) => {
+                        level1Commissions[i] += (v || 0);
+                        globalCommissions[i] += (v || 0);
                     });
                     netRevenues.forEach((v, i) => {
                         level1NetRevenue[i] += (v || 0);
@@ -966,11 +972,24 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             const totalLevel1Tons = sum(level1TonsTotal);
             const totalLevel1ShipDays = sum(level1ShipDays);
 
+            const isExpandedSubtotalGross = !!expandedGrossRevenue[`subtotal-gross-${level1Name}`];
+
             const subMetrics = [
                 { name: "Viajes", values: level1Trips, total: sum(level1Trips), pct: null, totalPct: null, isCurrency: false, isTotal: false },
                 { name: "Días-Buque", values: level1ShipDays, total: totalLevel1ShipDays, pct: null, totalPct: null, isCurrency: false, isTotal: false },
                 { name: "Toneladas", values: level1TonsTotal, total: totalLevel1Tons, pct: null, totalPct: null, isCurrency: false, isTotal: false },
-                { name: "Net Revenue", values: level1NetRevenue, total: sum(level1NetRevenue), pct: level1CalcPct(level1NetRevenue), totalPct: level1CalcTotalPct(sum(level1NetRevenue), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
+                { 
+                    name: "Net Revenue", 
+                    values: level1NetRevenue, 
+                    total: sum(level1NetRevenue), 
+                    pct: level1CalcPct(level1NetRevenue), 
+                    totalPct: level1CalcTotalPct(sum(level1NetRevenue), sum(level1GrossRevenue)), 
+                    isCurrency: true, 
+                    isTotal: false,
+                    isExpandableGrossRevenue: true,
+                    rowKey: `subtotal-gross-${level1Name}`,
+                    isExpanded: isExpandedSubtotalGross
+                },
                 { name: "(-) Hire (TCE x días)", values: level1Hire, total: sum(level1Hire), pct: level1CalcPct(level1Hire), totalPct: level1CalcTotalPct(sum(level1Hire), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
                 { name: "(-) Bunker Costs", values: level1BunkerCosts, total: sum(level1BunkerCosts), pct: level1CalcPct(level1BunkerCosts), totalPct: level1CalcTotalPct(sum(level1BunkerCosts), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
                 { name: "(-) Port Costs", values: level1PortCosts, total: sum(level1PortCosts), pct: level1CalcPct(level1PortCosts), totalPct: level1CalcTotalPct(sum(level1PortCosts), sum(level1GrossRevenue)), isCurrency: true, isTotal: false },
@@ -982,10 +1001,12 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
             // Solo agregar bloque de subtotales si la tabla está en desglose total a 3 niveles (para no duplicar en modo Rollup)
             if (showSubtotals && activeDimensions.length === 3) {
                 const isSubtotalCollapsed = !!collapsedSubtotals[level1Name];
+                const subtotalNetRevenueSubRowsCount = isExpandedSubtotalGross && !isSubtotalCollapsed ? 5 : 0;
                 const visibleSubMetrics = isSubtotalCollapsed ? [subMetrics[0]] : subMetrics;
+                const totalSubtotalRows = visibleSubMetrics.length + subtotalNetRevenueSubRowsCount;
 
-                level1RowSpanRef.value += visibleSubMetrics.length;
-                const subtotalRouteRowSpanRef = { value: visibleSubMetrics.length };
+                level1RowSpanRef.value += totalSubtotalRows;
+                const subtotalRouteRowSpanRef = { value: totalSubtotalRows };
 
                 visibleSubMetrics.forEach((metric, index) => {
                     const isExpandableRow = index === 0;
@@ -993,7 +1014,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     result.push({
                         col1: null,
                         col2: dim1 && index === 0 ? { name: "Σ SUBTOTAL", rowSpanRef: subtotalRouteRowSpanRef, isSubtotal: true } : null,
-                        col3: dim2 && index === 0 ? { name: `TOTAL ${dim0.toUpperCase()}`, rowSpan: visibleSubMetrics.length, isSubtotal: true } : (!dim1 && index === 0 ? { name: `TOTAL ${dim0.toUpperCase()}`, rowSpan: visibleSubMetrics.length, isSubtotal: true } : null),
+                        col3: dim2 && index === 0 ? { name: `TOTAL ${dim0.toUpperCase()}`, rowSpan: totalSubtotalRows, isSubtotal: true } : (!dim1 && index === 0 ? { name: `TOTAL ${dim0.toUpperCase()}`, rowSpan: totalSubtotalRows, isSubtotal: true } : null),
                         clientName: level1Name,
                         routeName: "",
                         vesselName: "",
@@ -1006,6 +1027,95 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                         isSubRow: false,
                         isClientSubtotal: true
                     });
+
+                    // Si se expande Net Revenue en Subtotal Cliente
+                    if (metric.isExpandableGrossRevenue && isExpandedSubtotalGross && !isSubtotalCollapsed) {
+                        // 1.1 Freight Revenue
+                        result.push({
+                            col1: null, col2: null, col3: null,
+                            clientName: level1Name, routeName: "", vesselName: "",
+                            metric: {
+                                name: "↳ (+) Freight Revenue",
+                                values: level1FreightRevenue,
+                                total: sum(level1FreightRevenue),
+                                pct: level1CalcPct(level1FreightRevenue),
+                                totalPct: level1CalcTotalPct(sum(level1FreightRevenue), sum(level1GrossRevenue)),
+                                isCurrency: true,
+                                isTotal: false,
+                                isSubRowMetric: true
+                            },
+                            isSubRow: true,
+                            isClientSubtotal: true
+                        });
+                        // 1.2 Demurrage
+                        result.push({
+                            col1: null, col2: null, col3: null,
+                            clientName: level1Name, routeName: "", vesselName: "",
+                            metric: {
+                                name: "↳ (+) Demurrage",
+                                values: level1Demurrage,
+                                total: sum(level1Demurrage),
+                                pct: level1CalcPct(level1Demurrage),
+                                totalPct: level1CalcTotalPct(sum(level1Demurrage), sum(level1GrossRevenue)),
+                                isCurrency: true,
+                                isTotal: false,
+                                isSubRowMetric: true
+                            },
+                            isSubRow: true,
+                            isClientSubtotal: true
+                        });
+                        // 1.3 Dockage Revenue
+                        result.push({
+                            col1: null, col2: null, col3: null,
+                            clientName: level1Name, routeName: "", vesselName: "",
+                            metric: {
+                                name: "↳ (+) Dockage Revenue",
+                                values: level1DockageCosts,
+                                total: sum(level1DockageCosts),
+                                pct: level1CalcPct(level1DockageCosts),
+                                totalPct: level1CalcTotalPct(sum(level1DockageCosts), sum(level1GrossRevenue)),
+                                isCurrency: true,
+                                isTotal: false,
+                                isSubRowMetric: true
+                            },
+                            isSubRow: true,
+                            isClientSubtotal: true
+                        });
+                        // 1.4 Gross Revenue
+                        result.push({
+                            col1: null, col2: null, col3: null,
+                            clientName: level1Name, routeName: "", vesselName: "",
+                            metric: {
+                                name: "↳ (=) Gross Revenue",
+                                values: level1GrossRevenue,
+                                total: sum(level1GrossRevenue),
+                                pct: level1GrossRevenue.map(r => r ? 100 : 0),
+                                totalPct: sum(level1GrossRevenue) ? 100 : 0,
+                                isCurrency: true,
+                                isTotal: false,
+                                isSubRowMetric: true
+                            },
+                            isSubRow: true,
+                            isClientSubtotal: true
+                        });
+                        // 1.5 Comisiones
+                        result.push({
+                            col1: null, col2: null, col3: null,
+                            clientName: level1Name, routeName: "", vesselName: "",
+                            metric: {
+                                name: "↳ (-) Comisiones",
+                                values: level1Commissions,
+                                total: sum(level1Commissions),
+                                pct: level1CalcPct(level1Commissions),
+                                totalPct: level1CalcTotalPct(sum(level1Commissions), sum(level1GrossRevenue)),
+                                isCurrency: true,
+                                isTotal: false,
+                                isSubRowMetric: true
+                            },
+                            isSubRow: true,
+                            isClientSubtotal: true
+                        });
+                    }
                 });
             }
         });
@@ -1017,11 +1127,24 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const totalGlobalTons = sum(globalTons);
         const totalGlobalShipDays = sum(globalShipDays);
 
+        const isExpandedGlobalTotalGross = !isGlobalTotalCollapsed && !!expandedGrossRevenue['global-total-gross'];
+
         const globalMetrics = [
             { name: "Viajes", values: globalTrips, total: sum(globalTrips), pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Días-Buque", values: globalShipDays, total: totalGlobalShipDays, pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Toneladas", values: globalTons, total: totalGlobalTons, pct: null, totalPct: null, isCurrency: false, isTotal: false },
-            { name: "Net Revenue", values: globalNetRevenues, total: sum(globalNetRevenues), pct: globalCalcPct(globalNetRevenues), totalPct: globalCalcTotalPct(sum(globalNetRevenues), sum(globalRevenues)), isCurrency: true, isTotal: false },
+            { 
+                name: "Net Revenue", 
+                values: globalNetRevenues, 
+                total: sum(globalNetRevenues), 
+                pct: globalCalcPct(globalNetRevenues), 
+                totalPct: globalCalcTotalPct(sum(globalNetRevenues), sum(globalRevenues)), 
+                isCurrency: true, 
+                isTotal: false,
+                isExpandableGrossRevenue: true,
+                rowKey: 'global-total-gross',
+                isExpanded: isExpandedGlobalTotalGross
+            },
             { name: "(-) Hire (TCE x días)", values: globalHire, total: sum(globalHire), pct: globalCalcPct(globalHire), totalPct: globalCalcTotalPct(sum(globalHire), sum(globalRevenues)), isCurrency: true, isTotal: false },
             { name: "(-) Bunker Costs", values: globalBunkerCosts, total: sum(globalBunkerCosts), pct: globalCalcPct(globalBunkerCosts), totalPct: globalCalcTotalPct(sum(globalBunkerCosts), sum(globalRevenues)), isCurrency: true, isTotal: false },
             { name: "(-) Port Costs", values: globalPortCosts, total: sum(globalPortCosts), pct: globalCalcPct(globalPortCosts), totalPct: globalCalcTotalPct(sum(globalPortCosts), sum(globalRevenues)), isCurrency: true, isTotal: false },
@@ -1031,7 +1154,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         ];
 
         const visibleGlobalMetrics = isGlobalTotalCollapsed ? [globalMetrics[0]] : globalMetrics;
-        const globalRouteRowSpanRef = { value: visibleGlobalMetrics.length };
+        const globalTotalSubRowsCount = (!isGlobalTotalCollapsed && isExpandedGlobalTotalGross) ? 5 : 0;
+        const totalGlobalRows = visibleGlobalMetrics.length + globalTotalSubRowsCount;
+        const globalRouteRowSpanRef = { value: totalGlobalRows };
 
         visibleGlobalMetrics.forEach((metric, index) => {
             const isExpandableRow = index === 0;
@@ -1051,6 +1176,94 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                 isSubRow: false,
                 isGlobalTotal: true
             });
+
+            if (metric.isExpandableGrossRevenue && isExpandedGlobalTotalGross) {
+                // 1.1 Freight
+                result.push({
+                    col1: null, col2: null, col3: null,
+                    clientName: "TOTAL FLOTA", routeName: "", vesselName: "",
+                    metric: {
+                        name: "↳ (+) Freight Revenue",
+                        values: globalFreightRevenues,
+                        total: sum(globalFreightRevenues),
+                        pct: globalCalcPct(globalFreightRevenues),
+                        totalPct: globalCalcTotalPct(sum(globalFreightRevenues), sum(globalRevenues)),
+                        isCurrency: true,
+                        isTotal: false,
+                        isSubRowMetric: true
+                    },
+                    isSubRow: true,
+                    isGlobalTotal: true
+                });
+                // 1.2 Demurrage
+                result.push({
+                    col1: null, col2: null, col3: null,
+                    clientName: "TOTAL FLOTA", routeName: "", vesselName: "",
+                    metric: {
+                        name: "↳ (+) Demurrage",
+                        values: globalDemurrage,
+                        total: sum(globalDemurrage),
+                        pct: globalCalcPct(globalDemurrage),
+                        totalPct: globalCalcTotalPct(sum(globalDemurrage), sum(globalRevenues)),
+                        isCurrency: true,
+                        isTotal: false,
+                        isSubRowMetric: true
+                    },
+                    isSubRow: true,
+                    isGlobalTotal: true
+                });
+                // 1.3 Dockage
+                result.push({
+                    col1: null, col2: null, col3: null,
+                    clientName: "TOTAL FLOTA", routeName: "", vesselName: "",
+                    metric: {
+                        name: "↳ (+) Dockage Revenue",
+                        values: globalDockageCosts,
+                        total: sum(globalDockageCosts),
+                        pct: globalCalcPct(globalDockageCosts),
+                        totalPct: globalCalcTotalPct(sum(globalDockageCosts), sum(globalRevenues)),
+                        isCurrency: true,
+                        isTotal: false,
+                        isSubRowMetric: true
+                    },
+                    isSubRow: true,
+                    isGlobalTotal: true
+                });
+                // 1.4 Gross
+                result.push({
+                    col1: null, col2: null, col3: null,
+                    clientName: "TOTAL FLOTA", routeName: "", vesselName: "",
+                    metric: {
+                        name: "↳ (=) Gross Revenue",
+                        values: globalRevenues,
+                        total: sum(globalRevenues),
+                        pct: globalRevenues.map(r => r ? 100 : 0),
+                        totalPct: sum(globalRevenues) ? 100 : 0,
+                        isCurrency: true,
+                        isTotal: false,
+                        isSubRowMetric: true
+                    },
+                    isSubRow: true,
+                    isGlobalTotal: true
+                });
+                // 1.5 Comisiones
+                result.push({
+                    col1: null, col2: null, col3: null,
+                    clientName: "TOTAL FLOTA", routeName: "", vesselName: "",
+                    metric: {
+                        name: "↳ (-) Comisiones",
+                        values: globalCommissions,
+                        total: sum(globalCommissions),
+                        pct: globalCalcPct(globalCommissions),
+                        totalPct: globalCalcTotalPct(sum(globalCommissions), sum(globalRevenues)),
+                        isCurrency: true,
+                        isTotal: false,
+                        isSubRowMetric: true
+                    },
+                    isSubRow: true,
+                    isGlobalTotal: true
+                });
+            }
         });
 
         // TOTAL ACUMULADO
@@ -1069,15 +1282,31 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const accumCharterHire = accumArray(globalCharterHire);
         const accumPlVsRequired = accumArray(globalPlVsRequired);
         const accumRevenues = accumArray(globalRevenues);
+        const accumFreight = accumArray(globalFreightRevenues);
+        const accumDemurrage = accumArray(globalDemurrage);
+        const accumCommissions = accumArray(globalCommissions);
 
         const accumCalcPct = (arr: number[]) => arr.map((v, i) => accumRevenues[i] ? (v / accumRevenues[i]) * 100 : 0);
         const lastVal = (arr: number[]) => arr.length > 0 ? arr[arr.length - 1] : 0;
+
+        const isExpandedGlobalAcumGross = !isGlobalAcumCollapsed && !!expandedGrossRevenue['global-acum-gross'];
 
         const accumMetrics = [
             { name: "Viajes", values: accumTrips, total: lastVal(accumTrips), pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Días-Buque", values: accumShipDays, total: lastVal(accumShipDays), pct: null, totalPct: null, isCurrency: false, isTotal: false },
             { name: "Toneladas", values: accumTons, total: lastVal(accumTons), pct: null, totalPct: null, isCurrency: false, isTotal: false },
-            { name: "Net Revenue", values: accumNetRevenues, total: lastVal(accumNetRevenues), pct: accumCalcPct(accumNetRevenues), totalPct: globalCalcTotalPct(lastVal(accumNetRevenues), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
+            { 
+                name: "Net Revenue", 
+                values: accumNetRevenues, 
+                total: lastVal(accumNetRevenues), 
+                pct: accumCalcPct(accumNetRevenues), 
+                totalPct: globalCalcTotalPct(lastVal(accumNetRevenues), lastVal(accumRevenues)), 
+                isCurrency: true, 
+                isTotal: false,
+                isExpandableGrossRevenue: true,
+                rowKey: 'global-acum-gross',
+                isExpanded: isExpandedGlobalAcumGross
+            },
             { name: "(-) Hire (TCE x días)", values: accumHire, total: lastVal(accumHire), pct: accumCalcPct(accumHire), totalPct: globalCalcTotalPct(lastVal(accumHire), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
             { name: "(-) Bunker Costs", values: accumBunkerCosts, total: lastVal(accumBunkerCosts), pct: accumCalcPct(accumBunkerCosts), totalPct: globalCalcTotalPct(lastVal(accumBunkerCosts), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
             { name: "(-) Port Costs", values: accumPortCosts, total: lastVal(accumPortCosts), pct: accumCalcPct(accumPortCosts), totalPct: globalCalcTotalPct(lastVal(accumPortCosts), lastVal(accumRevenues)), isCurrency: true, isTotal: false },
@@ -1088,7 +1317,9 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
         if (showAccumulatedTotal) {
             const visibleAccumMetrics = isGlobalAcumCollapsed ? [accumMetrics[0]] : accumMetrics;
-            const accumRouteRowSpanRef = { value: visibleAccumMetrics.length };
+            const accumTotalSubRowsCount = (!isGlobalAcumCollapsed && isExpandedGlobalAcumGross) ? 5 : 0;
+            const totalAccumRows = visibleAccumMetrics.length + accumTotalSubRowsCount;
+            const accumRouteRowSpanRef = { value: totalAccumRows };
 
             visibleAccumMetrics.forEach((metric, index) => {
                 const isExpandableRow = index === 0;
@@ -1108,6 +1339,94 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                     isSubRow: false,
                     isGlobalTotal: true
                 });
+
+                if (metric.isExpandableGrossRevenue && isExpandedGlobalAcumGross) {
+                    // 1.1 Freight
+                    result.push({
+                        col1: null, col2: null, col3: null,
+                        clientName: "TOTAL ACUMULADO", routeName: "", vesselName: "",
+                        metric: {
+                            name: "↳ (+) Freight Revenue",
+                            values: accumFreight,
+                            total: lastVal(accumFreight),
+                            pct: accumCalcPct(accumFreight),
+                            totalPct: globalCalcTotalPct(lastVal(accumFreight), lastVal(accumRevenues)),
+                            isCurrency: true,
+                            isTotal: false,
+                            isSubRowMetric: true
+                        },
+                        isSubRow: true,
+                        isGlobalTotal: true
+                    });
+                    // 1.2 Demurrage
+                    result.push({
+                        col1: null, col2: null, col3: null,
+                        clientName: "TOTAL ACUMULADO", routeName: "", vesselName: "",
+                        metric: {
+                            name: "↳ (+) Demurrage",
+                            values: accumDemurrage,
+                            total: lastVal(accumDemurrage),
+                            pct: accumCalcPct(accumDemurrage),
+                            totalPct: globalCalcTotalPct(lastVal(accumDemurrage), lastVal(accumRevenues)),
+                            isCurrency: true,
+                            isTotal: false,
+                            isSubRowMetric: true
+                        },
+                        isSubRow: true,
+                        isGlobalTotal: true
+                    });
+                    // 1.3 Dockage
+                    result.push({
+                        col1: null, col2: null, col3: null,
+                        clientName: "TOTAL ACUMULADO", routeName: "", vesselName: "",
+                        metric: {
+                            name: "↳ (+) Dockage Revenue",
+                            values: accumDockageCosts,
+                            total: lastVal(accumDockageCosts),
+                            pct: accumCalcPct(accumDockageCosts),
+                            totalPct: globalCalcTotalPct(lastVal(accumDockageCosts), lastVal(accumRevenues)),
+                            isCurrency: true,
+                            isTotal: false,
+                            isSubRowMetric: true
+                        },
+                        isSubRow: true,
+                        isGlobalTotal: true
+                    });
+                    // 1.4 Gross
+                    result.push({
+                        col1: null, col2: null, col3: null,
+                        clientName: "TOTAL ACUMULADO", routeName: "", vesselName: "",
+                        metric: {
+                            name: "↳ (=) Gross Revenue",
+                            values: accumGross,
+                            total: lastVal(accumGross),
+                            pct: accumGross.map(r => r ? 100 : 0),
+                            totalPct: lastVal(accumGross) ? 100 : 0,
+                            isCurrency: true,
+                            isTotal: false,
+                            isSubRowMetric: true
+                        },
+                        isSubRow: true,
+                        isGlobalTotal: true
+                    });
+                    // 1.5 Comisiones
+                    result.push({
+                        col1: null, col2: null, col3: null,
+                        clientName: "TOTAL ACUMULADO", routeName: "", vesselName: "",
+                        metric: {
+                            name: "↳ (-) Comisiones",
+                            values: accumCommissions,
+                            total: lastVal(accumCommissions),
+                            pct: accumCalcPct(accumCommissions),
+                            totalPct: globalCalcTotalPct(lastVal(accumCommissions), lastVal(accumRevenues)),
+                            isCurrency: true,
+                            isTotal: false,
+                            isSubRowMetric: true
+                        },
+                        isSubRow: true,
+                        isGlobalTotal: true
+                    });
+                }
             });
         }
 
@@ -1468,8 +1787,13 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                 </td>
                                 );
                             })}
-                            <td className={`py-1.5 px-2 text-right tabular-nums font-black font-mono text-xs border border-slate-200 border-l-2 border-l-sky-300 ${row.metric.isTotal ? 'bg-sky-100/90 text-sky-950 shadow-2xs' : 'bg-sky-50/80 text-sky-900'} ${row.isSubRow ? 'text-slate-400' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
-                                {row.metric.isCategoryHeader ? '' : (row.metric.isSubRowMetric ? '-' : (() => {
+                            <td className={`py-1.5 px-2 text-right tabular-nums font-black font-mono text-xs border border-slate-200 border-l-2 border-l-sky-300 ${row.metric.isTotal ? 'bg-sky-100/90 text-sky-950 shadow-2xs' : 'bg-sky-50/80 text-sky-900'} ${row.isSubRow ? 'text-slate-600' : ''} ${row.metric.isCategoryHeader ? 'bg-slate-100/50' : ''}`}>
+                                {row.metric.isCategoryHeader ? '' : (() => {
+                                    // Sub-filas editables de parámetros (días o %) no totalizan horizontalmente
+                                    if (row.metric.isDemurragePctEditable || row.metric.isDemurrageDaysEditable) {
+                                        return '-';
+                                    }
+
                                     // Recalculate total using only visible months
                                     const visibleIndices = months
                                         .map((m, i) => ({ m, i }))
@@ -1478,7 +1802,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                     const isYieldMetric = row.metric.name.includes("Flete") || row.metric.name.includes("Yield") || row.metric.name.includes("Tarifa");
                                     const isTceRateMetric = row.metric.isExpandableTce || row.metric.isTceDay || row.metric.isTceDiff || row.metric.name.includes("Métricas TCE") || (row.metric.name.includes("TCE") && row.metric.name.includes("$/d"));
                                     const visibleValues = visibleIndices.map(i => row.metric.values[i] ?? 0).filter(v => v !== null && !isNaN(v));
-                                    const isAccumMetric = row.metric.globalType === 'accum';
+                                    const isAccumMetric = row.metric.globalType === 'accum' || row.clientName === 'TOTAL ACUMULADO';
                                     const visibleTotal = isTceRateMetric
                                         ? 0
                                         : isAccumMetric
@@ -1486,6 +1810,13 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                             : isYieldMetric
                                                 ? (visibleValues.length > 0 ? visibleValues.reduce((a, b) => a + b, 0) / visibleValues.length : 0)
                                                 : visibleValues.reduce((a, b) => a + b, 0);
+
+                                    if (row.metric.isSubRowMetric && !row.metric.isCurrency && !row.metric.isPct && !row.metric.isTotal) {
+                                        if (row.metric.name.includes("Tarifa") || row.metric.name.includes("Precio")) {
+                                            return formatYield(visibleTotal);
+                                        }
+                                        if (visibleTotal === 0 && row.metric.total === 0) return '-';
+                                    }
 
                                     return row.metric.isCurrency ? (
                                         <div className="flex items-center justify-end w-full min-w-[50px]">
@@ -1499,10 +1830,14 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                 </span>
                                             )}
                                         </div>
+                                    ) : row.metric.isPct ? (
+                                        <span className="font-semibold text-slate-700 font-mono">
+                                            {row.metric.totalPct !== null && row.metric.totalPct !== undefined ? `${Number(row.metric.totalPct).toFixed(1)}%` : '-'}
+                                        </span>
                                     ) : (
                                         <span className="font-bold">{formatNumber(visibleTotal)}</span>
                                     );
-                                })())}
+                                })()}
                             </td>
                         </tr>
                     ))}
