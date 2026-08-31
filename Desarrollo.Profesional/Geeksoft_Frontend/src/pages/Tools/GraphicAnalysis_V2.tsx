@@ -21,8 +21,12 @@ export const GraphicAnalysis_V2: React.FC = () => {
                 months={context.dynamicMonths || []}
                 demurragePct={context.demurragePct || ''}
                 showDemurrage={context.showDemurrage || false}
+                demurrageDays={context.demurrageDays || ''}
+                showDemurrageDays={context.showDemurrageDays || false}
+                customDemurrageDays={context.customDemurrageDays || {}}
                 excludedDemurrages={context.excludedDemurrages || []}
                 customDemurrages={context.customDemurrages || {}}
+                projectionLines={context.projectionLines || []}
             />
 
         </section>

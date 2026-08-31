@@ -6,15 +6,45 @@ interface InteractiveChartProps {
     months: string[];
     demurragePct?: string;
     showDemurrage?: boolean;
+    demurrageDays?: string;
+    showDemurrageDays?: boolean;
+    customDemurrageDays?: Record<string, Record<number, string>>;
     excludedDemurrages?: string[];
     customDemurrages?: Record<string, Record<number, string>>;
+    projectionLines?: any[];
 }
 
 type GroupBy = 'vessel' | 'route' | 'client' | 'petral' | 'tradeType';
-type PlotMetric = 'viajes' | 'net_income' | 'total_port_costs' | 'total_bunker_costs' | 'voyage_result' | 'pl_vs_required' | 'pl_percentage' | 'total_cargo' | 'demurrage' | 'gross_plus_dem' | 'yield' | 'yield_flete' | 'total_duration' | 'none';
+export type PlotMetric = 
+    | 'viajes' 
+    | 'net_revenue' 
+    | 'freight_revenue' 
+    | 'demurrage' 
+    | 'dockage_revenue' 
+    | 'gross_revenue' 
+    | 'commissions' 
+    | 'tce_cost_hire' 
+    | 'total_bunker_costs' 
+    | 'total_port_costs' 
+    | 'port_costs' 
+    | 'dockage_cost' 
+    | 'charter_hire' 
+    | 'voyage_result' 
+    | 'pl_vs_required' 
+    | 'pl_percentage' 
+    | 'tce_real' 
+    | 'tce_required' 
+    | 'tce_diff' 
+    | 'total_cargo' 
+    | 'total_duration' 
+    | 'yield' 
+    | 'yield_flete' 
+    | 'gross_plus_dem' 
+    | 'net_income' 
+    | 'none';
 
 const getHexColor = (name: string, type: GroupBy) => {
-    if (type === 'petral') return '#0089CF'; // Petral Blue (RGB 0-137-207)
+    if (type === 'petral') return '#0089CF'; // Petral Blue
     if (type === 'tradeType') {
         if (name === 'Chile') return '#D946EF'; // Magenta
         return '#06B6D4'; // Cabotaje / Perú
@@ -46,8 +76,12 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     months = [], 
     demurragePct = '', 
     showDemurrage = false, 
+    demurrageDays = '',
+    showDemurrageDays = false,
+    customDemurrageDays = {},
     excludedDemurrages = [], 
-    customDemurrages = {} 
+    customDemurrages = {},
+    projectionLines = []
 }) => {
     const [groupBy, setGroupBy] = useState<GroupBy>('vessel');
     const [filterClient, setFilterClient] = useState<string>('ALL');
@@ -61,7 +95,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     const [isTradeTypeFilterOpen, setIsTradeTypeFilterOpen] = useState(false);
 
     // Eje Primario
-    const [primaryMetric, setPrimaryMetric] = useState<PlotMetric | 'gross_and_gross_plus_dem'>('viajes');
+    const [primaryMetric, setPrimaryMetric] = useState<PlotMetric | 'gross_and_gross_plus_dem'>('net_revenue');
     const [primaryGraphType, setPrimaryGraphType] = useState<string>('bar_stack');
     const [isPriOpen, setIsPriOpen] = useState(false);
     const [primaryLabelPos, setPrimaryLabelPos] = useState<'none' | 'top' | 'inside'>('none');
@@ -116,7 +150,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         };
     }, [data]);
 
-    // Filtros efectivos calculados inline (sin disparar re-renders en useEffect)
+    // Filtros efectivos calculados inline
     const effectiveFilterClient = (filterClient !== 'ALL' && filterOptions.clients.includes(filterClient)) ? filterClient : 'ALL';
     const effectiveFilterRoute = (filterRoute !== 'ALL' && filterOptions.routes.includes(filterRoute)) ? filterRoute : 'ALL';
     const effectiveFilterVessel = (filterVessel !== 'ALL' && filterOptions.vessels.includes(filterVessel)) ? filterVessel : 'ALL';
@@ -142,9 +176,45 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         return Array.from(setM).sort();
     }, [data, months]);
 
+    const metricOptions = [
+        { value: 'none', label: 'Ninguno', icon: '🚫', desc: 'No graficar', category: 'General' },
+        
+        // 1. Ingresos y Revenue
+        { value: 'net_revenue', label: 'Net Revenue', icon: '💎', desc: 'USD / Ingreso Neto (Gross - Comisiones)', category: 'Revenue' },
+        { value: 'freight_revenue', label: 'Freight Revenue', icon: '🚢', desc: 'USD / Flete Base Puro (P x Q x F)', category: 'Revenue' },
+        { value: 'demurrage', label: 'Demurrage Revenue', icon: '⏳', desc: 'USD / Demoras y Estadías Facturadas', category: 'Revenue' },
+        { value: 'dockage_revenue', label: 'Dockage Revenue', icon: '⚓', desc: 'USD / Refacturación de Muellaje', category: 'Revenue' },
+        { value: 'gross_revenue', label: 'Gross Revenue', icon: '📊', desc: 'USD / Flete + Demurrage + Dockage', category: 'Revenue' },
+        { value: 'commissions', label: 'Comisiones', icon: '💼', desc: 'USD / Address & Broker Commissions', category: 'Revenue' },
+
+        // 2. Costos Operativos
+        { value: 'tce_cost_hire', label: 'Hire (TCE x Días)', icon: '⏱️', desc: 'USD / Costo Fletamento Buque', category: 'Costos' },
+        { value: 'total_bunker_costs', label: 'Bunker Costs', icon: '⛽', desc: 'USD / Combustible IFO + MDO', category: 'Costos' },
+        { value: 'total_port_costs', label: 'Port Costs (Neto)', icon: '⚓', desc: 'USD / Gastos de Puerto sin Muellaje', category: 'Costos' },
+        { value: 'dockage_cost', label: 'Dockage Cost', icon: '🏗️', desc: 'USD / Gasto Portuario Muellaje', category: 'Costos' },
+        { value: 'charter_hire', label: 'Arriendo de Naves', icon: '🛳️', desc: 'USD / Costo Charter Hire Fijo/Spot', category: 'Costos' },
+
+        // 3. Resultados Económicos
+        { value: 'voyage_result', label: 'Voyage Result', icon: '💰', desc: 'USD / Resultado Operativo de Viaje', category: 'Resultados' },
+        { value: 'pl_vs_required', label: 'P/L vs Requerido', icon: '⚖️', desc: 'USD / Resultado Neto vs Hire TCE', category: 'Resultados' },
+        { value: 'pl_percentage', label: 'Margen P/L (%)', icon: '📈', desc: 'Porcentaje / Margen sobre Net Revenue', category: 'Resultados' },
+
+        // 4. Métricas TCE
+        { value: 'tce_real', label: 'TCE Realizado ($/d)', icon: '🧭', desc: 'USD/día / Rendimiento Diario Real', category: 'TCE' },
+        { value: 'tce_required', label: 'TCE Requerido ($/d)', icon: '🎯', desc: 'USD/día / Tarifa Presupuesto Buque', category: 'TCE' },
+        { value: 'tce_diff', label: 'Diferencial TCE ($/d)', icon: '📊', desc: 'USD/día / Diferencial vs Requerido', category: 'TCE' },
+
+        // 5. Operativas y Rendimiento
+        { value: 'viajes', label: 'Viajes (Frecuencia)', icon: '📅', desc: 'freq / Cantidad de Viajes Mensuales', category: 'Operativas' },
+        { value: 'total_cargo', label: 'Toneladas (MT)', icon: '🚢', desc: 'MT / Volumen Total Transportado', category: 'Operativas' },
+        { value: 'total_duration', label: 'Días-Buque', icon: '⏱️', desc: 'días / Días Totales de Ocupación', category: 'Operativas' },
+        { value: 'yield_flete', label: 'Yield Flete (USD/MT)', icon: '🏅', desc: 'USD/MT / Rendimiento Flete Unitario', category: 'Operativas' },
+        { value: 'yield', label: 'Yield Total (USD/MT)', icon: '🏆', desc: 'USD/MT / Rendimiento Total Unitario', category: 'Operativas' },
+        { value: 'gross_and_gross_plus_dem', label: 'Gross & Gross+Dem', icon: '📈', desc: 'USD / Comparativa Histórica', category: 'Revenue' },
+    ];
+
     const options = useMemo(() => {
         if (!data || !data.aggregated_data || !activeMonths || activeMonths.length === 0) return null;
-
 
         const seriesMapPri: { [key: string]: { [month: string]: number } } = {};
         const seriesMapPri2: { [key: string]: { [month: string]: number } } = {};
@@ -155,80 +225,152 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         const totalSecMap: { [month: string]: number } = {};
         const totalSecMap2: { [month: string]: number } = {};
         
-        // For Yield Calculation
-        const totalTonsMap: { [key: string]: { [month: string]: number } } = {};
-        const totalPLMap: { [key: string]: { [month: string]: number } } = {};
-        const globalPLMap: { [month: string]: number } = {};
-        const totalGrossDemMap: { [key: string]: { [month: string]: number } } = {};
-        const totalGrossRevenueMap: { [key: string]: { [month: string]: number } } = {};
+        // Base mapping dictionaries for Ratio and Aggregation Calculations
+        const tonsMap: { [key: string]: { [month: string]: number } } = {};
+        const freightMap: { [key: string]: { [month: string]: number } } = {};
+        const grossMap: { [key: string]: { [month: string]: number } } = {};
+        const netRevMap: { [key: string]: { [month: string]: number } } = {};
+        const plMap: { [key: string]: { [month: string]: number } } = {};
+        const hireCostMap: { [key: string]: { [month: string]: number } } = {};
+        const durationMap: { [key: string]: { [month: string]: number } } = {};
+
         const globalTonsMap: { [month: string]: number } = {};
-        const globalGrossDemMap: { [month: string]: number } = {};
-        const globalGrossRevenueMap: { [month: string]: number } = {};
+        const globalFreightMap: { [month: string]: number } = {};
+        const globalGrossMap: { [month: string]: number } = {};
+        const globalNetRevMap: { [month: string]: number } = {};
+        const globalPLMap: { [month: string]: number } = {};
+        const globalHireCostMap: { [month: string]: number } = {};
+        const globalDurationMap: { [month: string]: number } = {};
 
         const getMetricLabel = (m: PlotMetric | 'gross_and_gross_plus_dem') => {
-            switch (m) {
-                case 'viajes': return 'Viajes';
-                case 'voyage_result': return 'Voyage Result';
-                case 'pl_vs_required': return 'P/L';
-                case 'pl_percentage': return 'P/L (%)';
-                case 'net_income': return 'Gross Revenue';
-                case 'total_port_costs': return 'Port Costs';
-                case 'total_bunker_costs': return 'Bunker Costs';
-                case 'total_cargo': return 'Toneladas';
-                case 'demurrage': return 'Demurrage';
-                case 'gross_plus_dem': return 'Gross + Demurrage';
-                case 'gross_and_gross_plus_dem': return 'Gross & Gross+Dem';
-                case 'yield': return 'Yield (USD/MT)';
-                case 'yield_flete': return 'Yield Flete (USD/MT)';
-                case 'total_duration': return 'Duración Total (Días)';
-                case 'none': return '';
-                default: return m;
-            }
+            const found = metricOptions.find(o => o.value === m);
+            if (found) return found.label;
+            return m;
         };
 
         const getMetricValue = (metrics: any, m: PlotMetric, client: string, route: string, vessel: string, month: string) => {
             if (!metrics || m === 'none') return 0;
             const safeNum = (v: any) => { const n = Number(v); return isNaN(n) || !isFinite(n) ? 0 : n; };
             
-            const rawFreq = metrics?.['raw_inputs']?.['monthly_frequency'];
+            const rawFreq = metrics?.['raw_inputs']?.['monthly_frequency'] ?? metrics?.['trips'] ?? metrics?.['monthly_frequency'];
             const freq = safeNum(rawFreq !== undefined ? rawFreq : metrics?.['freq']);
             
             if (m === 'viajes') return freq;
-            
-            if (m === 'total_duration') {
-                const duration_unit = safeNum(metrics?.['total_duration_unit']);
-                return duration_unit * freq;
-            }
-            
-            const carga_unit = safeNum(metrics?.['carga_unit']);
-            const tons = carga_unit * freq;
-            if (m === 'total_cargo') return tons;
+            if (freq <= 0) return 0;
 
-            const revenue = safeNum(metrics?.['net_income']);
-            
-            if (m === 'demurrage' || m === 'gross_plus_dem' || m === 'yield' || m === 'yield_flete') {
-                const rowKey = `${client}-${route}-${vessel}`;
-                const isDemurrageExcluded = Array.isArray(excludedDemurrages) ? excludedDemurrages.includes(rowKey) : false;
-                const isDemurrageVisible = showDemurrage && demurragePct !== '' && !isDemurrageExcluded;
-                
-                let demurrage = 0;
-                if (isDemurrageVisible) {
-                    const monthIndex = activeMonths.indexOf(month);
-                    let customPct = safeNum(demurragePct);
-                    if (customDemurrages && customDemurrages[rowKey] && customDemurrages[rowKey][monthIndex] !== undefined) {
-                        customPct = safeNum(customDemurrages[rowKey][monthIndex]);
-                    }
-                    demurrage = revenue * (customPct / 100);
+            const rowKey = `${client}-${route}-${vessel}`;
+            const isDemurrageExcluded = Array.isArray(excludedDemurrages) ? excludedDemurrages.includes(rowKey) : false;
+            const isDemurrageVisible = showDemurrage && demurragePct !== '' && !isDemurrageExcluded;
+            const isDemurrageDaysVisible = showDemurrageDays && demurrageDays !== '' && !isDemurrageExcluded;
+
+            const seaDays = safeNum(metrics?.['sea_days_unit'] ?? metrics?.['sea_days'] ?? metrics?.['tot_sea_days'] ?? 0);
+            const portDays = safeNum(metrics?.['port_days_unit'] ?? metrics?.['port_days'] ?? metrics?.['tot_port_days'] ?? 0);
+            const nativeDemurrageDays = safeNum(metrics?.['demurrage_days_unit'] ?? metrics?.['demurrage_days'] ?? 0);
+            const dailyRate = safeNum(metrics?.['vessel_demurrage_rate'] ?? metrics?.['demurrage_rate'] ?? metrics?.['demurrageRate'] ?? 20000);
+
+            const monthIndex = activeMonths.indexOf(month);
+            let effectiveDemurrageDays = nativeDemurrageDays;
+            if (isDemurrageVisible) {
+                let customPct = safeNum(demurragePct);
+                if (customDemurrages && customDemurrages[rowKey] && customDemurrages[rowKey][monthIndex] !== undefined) {
+                    customPct = safeNum(customDemurrages[rowKey][monthIndex]);
                 }
-                
-                if (m === 'demurrage') return safeNum(demurrage);
-                if (m === 'gross_plus_dem') return safeNum(revenue + demurrage);
-                if (m === 'yield' || m === 'yield_flete') return 0; 
+                const unitFreight = safeNum(metrics?.['freight_revenue_unit'] ?? metrics?.['gross_income'] ?? ((metrics?.['carga_unit'] || 0) * (metrics?.['flete_unit'] || 0)));
+                const unitDemurrageUsd = unitFreight * (customPct / 100);
+                effectiveDemurrageDays = dailyRate > 0 ? (unitDemurrageUsd / dailyRate) : 0;
+            } else if (isDemurrageDaysVisible) {
+                let customDays = safeNum(demurrageDays);
+                if (customDemurrageDays && customDemurrageDays[rowKey] && customDemurrageDays[rowKey][monthIndex] !== undefined) {
+                    customDays = safeNum(customDemurrageDays[rowKey][monthIndex]);
+                }
+                effectiveDemurrageDays = customDays;
+            }
+
+            const dynamicTotalDuration = (seaDays > 0 || portDays > 0)
+                ? (seaDays + portDays + effectiveDemurrageDays)
+                : (safeNum(metrics?.['total_duration'] ?? metrics?.['total_days'] ?? 0) + (isDemurrageDaysVisible || isDemurrageVisible ? (effectiveDemurrageDays - nativeDemurrageDays) : 0));
+
+            if (m === 'total_duration') {
+                return dynamicTotalDuration * freq;
+            }
+
+            const extraDemurrageDays = (isDemurrageVisible || isDemurrageDaysVisible)
+                ? Math.max(0, effectiveDemurrageDays - nativeDemurrageDays)
+                : 0;
+            const idleIfo = safeNum(metrics?.['consumption_idle_ifo'] ?? 1.5);
+            const idleMdo = safeNum(metrics?.['consumption_idle_mdo'] ?? 0.8);
+            const priceIfo = safeNum(metrics?.['price_ifo_unit'] ?? metrics?.['bunker_price_ifo'] ?? 650);
+            const priceMdo = safeNum(metrics?.['price_mdo_unit'] ?? metrics?.['bunker_price_mdo'] ?? 950);
+            const extraBunkerCostPerTrip = extraDemurrageDays * ((idleIfo * priceIfo) + (idleMdo * priceMdo));
+
+            const cargaUnit = safeNum(metrics?.['carga_unit'] ?? metrics?.['cargo_tons'] ?? metrics?.['tons'] ?? 0);
+            const fleteUnit = safeNum(metrics?.['flete_unit'] ?? metrics?.['freight_rate'] ?? 0);
+            const freightUnit = safeNum(metrics?.['freight_revenue_unit'] ?? metrics?.['gross_income'] ?? (cargaUnit * fleteUnit));
+            const freightRevenueTotal = freightUnit * freq;
+
+            if (m === 'total_cargo') return cargaUnit * freq;
+            if (m === 'freight_revenue') return freightRevenueTotal;
+
+            const demurrageUnit = effectiveDemurrageDays * dailyRate;
+            const demurrageTotal = demurrageUnit * freq;
+            if (m === 'demurrage') return demurrageTotal;
+
+            const dockageRevUnit = safeNum(metrics?.['refacturacion_muellaje_unit'] ?? metrics?.['dockage_revenue_unit'] ?? metrics?.['refacturacion_muellaje'] ?? 0);
+            const dockageRevTotal = dockageRevUnit * freq;
+            if (m === 'dockage_revenue') return dockageRevTotal;
+
+            const grossRevenueTotal = freightRevenueTotal + demurrageTotal + dockageRevTotal;
+            if (m === 'gross_revenue' || m === 'gross_plus_dem' || m === 'net_income') return grossRevenueTotal;
+
+            const addrCommPct = safeNum(metrics?.['address_comm_pct'] ?? metrics?.['address_commission_pct'] ?? 0);
+            const brokerCommPct = safeNum(metrics?.['broker_comm_pct'] ?? metrics?.['broker_commission_pct'] ?? 0);
+            const commissionsTotal = grossRevenueTotal * ((addrCommPct + brokerCommPct) / 100);
+            if (m === 'commissions') return commissionsTotal;
+
+            const netRevenueTotal = grossRevenueTotal - commissionsTotal;
+            if (m === 'net_revenue') return netRevenueTotal;
+
+            const baseBunkerUnit = safeNum(metrics?.['total_bunker_costs_unit'] ?? metrics?.['total_bunker_costs'] ?? metrics?.['bunker_costs'] ?? 0);
+            const bunkerCostsTotal = (baseBunkerUnit + extraBunkerCostPerTrip) * freq;
+            if (m === 'total_bunker_costs') return bunkerCostsTotal;
+
+            const portCostsUnit = safeNum(metrics?.['total_port_costs_unit'] ?? metrics?.['total_port_costs'] ?? metrics?.['port_costs'] ?? 0);
+            const portCostsTotal = portCostsUnit * freq;
+            if (m === 'total_port_costs' || m === 'port_costs') return portCostsTotal;
+
+            const dockageCostUnit = safeNum(metrics?.['dockage_costs_unit'] ?? metrics?.['dockage_cost_unit'] ?? metrics?.['muellaje_unit'] ?? metrics?.['muellaje_cost'] ?? 0);
+            const dockageCostTotal = dockageCostUnit * freq;
+            if (m === 'dockage_cost') return dockageCostTotal;
+
+            const charterHireUnit = safeNum(metrics?.['charter_hire_cost_unit'] ?? metrics?.['charter_hire_unit'] ?? metrics?.['charter_hire'] ?? 0);
+            const charterHireTotal = charterHireUnit * freq;
+            if (m === 'charter_hire') return charterHireTotal;
+
+            const tceReqUnit = safeNum(metrics?.['tce_required_unit'] ?? metrics?.['tce_required'] ?? metrics?.['vessel_daily_rate'] ?? 0);
+            const hireCostTotal = tceReqUnit * dynamicTotalDuration * freq;
+            if (m === 'tce_cost_hire') return hireCostTotal;
+
+            const voyageResultTotal = netRevenueTotal - portCostsTotal - bunkerCostsTotal - charterHireTotal;
+            if (m === 'voyage_result') return voyageResultTotal;
+
+            const plVsRequiredTotal = voyageResultTotal - hireCostTotal;
+            if (m === 'pl_vs_required') return plVsRequiredTotal;
+
+            const totalShipDays = dynamicTotalDuration * freq;
+
+            if (m === 'tce_real') {
+                return totalShipDays > 0 ? (voyageResultTotal / totalShipDays) : 0;
+            }
+            if (m === 'tce_required') {
+                return tceReqUnit;
+            }
+            if (m === 'tce_diff') {
+                const tceReal = totalShipDays > 0 ? (voyageResultTotal / totalShipDays) : 0;
+                return tceReal - tceReqUnit;
             }
 
             return safeNum(metrics?.[m]);
         };
-
 
         // Extract and aggregate
         Object.entries(data.aggregated_data).forEach(([client, routes]: any) => {
@@ -253,31 +395,43 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             seriesMapPri2[key] = {};
                             seriesMapSec[key] = {};
                             seriesMapSec2[key] = {};
-                            totalTonsMap[key] = {};
-                            totalPLMap[key] = {};
-                            totalGrossDemMap[key] = {};
-                            totalGrossRevenueMap[key] = {};
+                            tonsMap[key] = {};
+                            freightMap[key] = {};
+                            grossMap[key] = {};
+                            netRevMap[key] = {};
+                            plMap[key] = {};
+                            hireCostMap[key] = {};
+                            durationMap[key] = {};
                         }
                         
-                        // Accumulate base variables for Yield and P/L %
+                        // Accumulate base variables for ratios
                         const tons = getMetricValue(metrics, 'total_cargo', client, route, vessel, month);
-                        const grossDem = getMetricValue(metrics, 'gross_plus_dem', client, route, vessel, month);
-                        const grossRev = getMetricValue(metrics, 'net_income', client, route, vessel, month);
+                        const freight = getMetricValue(metrics, 'freight_revenue', client, route, vessel, month);
+                        const gross = getMetricValue(metrics, 'gross_revenue', client, route, vessel, month);
+                        const netRev = getMetricValue(metrics, 'net_revenue', client, route, vessel, month);
                         const pl = getMetricValue(metrics, 'voyage_result', client, route, vessel, month);
+                        const hire = getMetricValue(metrics, 'tce_cost_hire', client, route, vessel, month);
+                        const dur = getMetricValue(metrics, 'total_duration', client, route, vessel, month);
                         
-                        totalTonsMap[key][month] = (totalTonsMap[key][month] || 0) + tons;
-                        totalPLMap[key][month] = (totalPLMap[key][month] || 0) + pl;
-                        totalGrossDemMap[key][month] = (totalGrossDemMap[key][month] || 0) + grossDem;
-                        totalGrossRevenueMap[key][month] = (totalGrossRevenueMap[key][month] || 0) + grossRev;
+                        tonsMap[key][month] = (tonsMap[key][month] || 0) + tons;
+                        freightMap[key][month] = (freightMap[key][month] || 0) + freight;
+                        grossMap[key][month] = (grossMap[key][month] || 0) + gross;
+                        netRevMap[key][month] = (netRevMap[key][month] || 0) + netRev;
+                        plMap[key][month] = (plMap[key][month] || 0) + pl;
+                        hireCostMap[key][month] = (hireCostMap[key][month] || 0) + hire;
+                        durationMap[key][month] = (durationMap[key][month] || 0) + dur;
                         
                         globalTonsMap[month] = (globalTonsMap[month] || 0) + tons;
+                        globalFreightMap[month] = (globalFreightMap[month] || 0) + freight;
+                        globalGrossMap[month] = (globalGrossMap[month] || 0) + gross;
+                        globalNetRevMap[month] = (globalNetRevMap[month] || 0) + netRev;
                         globalPLMap[month] = (globalPLMap[month] || 0) + pl;
-                        globalGrossDemMap[month] = (globalGrossDemMap[month] || 0) + grossDem;
-                        globalGrossRevenueMap[month] = (globalGrossRevenueMap[month] || 0) + grossRev;
+                        globalHireCostMap[month] = (globalHireCostMap[month] || 0) + hire;
+                        globalDurationMap[month] = (globalDurationMap[month] || 0) + dur;
                         
                         if (primaryMetric === 'gross_and_gross_plus_dem') {
-                            const priResult1 = getMetricValue(metrics, 'net_income', client, route, vessel, month);
-                            const priResult2 = getMetricValue(metrics, 'gross_plus_dem', client, route, vessel, month);
+                            const priResult1 = getMetricValue(metrics, 'freight_revenue', client, route, vessel, month);
+                            const priResult2 = getMetricValue(metrics, 'gross_revenue', client, route, vessel, month);
                             seriesMapPri[key][month] = (seriesMapPri[key][month] || 0) + priResult1;
                             seriesMapPri2[key][month] = (seriesMapPri2[key][month] || 0) + priResult2;
                             totalPriMap[month] = (totalPriMap[month] || 0) + priResult1;
@@ -290,8 +444,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
                         if (secondaryMetric !== 'none') {
                             if (secondaryMetric === 'gross_and_gross_plus_dem') {
-                                const secResult1 = getMetricValue(metrics, 'net_income', client, route, vessel, month);
-                                const secResult2 = getMetricValue(metrics, 'gross_plus_dem', client, route, vessel, month);
+                                const secResult1 = getMetricValue(metrics, 'freight_revenue', client, route, vessel, month);
+                                const secResult2 = getMetricValue(metrics, 'gross_revenue', client, route, vessel, month);
                                 seriesMapSec[key][month] = (seriesMapSec[key][month] || 0) + secResult1;
                                 seriesMapSec2[key][month] = (seriesMapSec2[key][month] || 0) + secResult2;
                                 totalSecMap[month] = (totalSecMap[month] || 0) + secResult1;
@@ -331,22 +485,28 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             
             const isPLPct = metric === 'pl_percentage';
             const isYield = metric === 'yield' || metric === 'yield_flete';
-            const isRatio = isYield || isPLPct;
-            const baseMap = isPLPct ? totalPLMap : (metric === 'yield' ? totalGrossDemMap : (metric === 'yield_flete' ? totalGrossRevenueMap : seriesMap));
-            
-            return Object.entries(baseMap).map(([name, mData]: [string, any]) => {
+            const isTceRatio = metric === 'tce_real' || metric === 'tce_required' || metric === 'tce_diff';
+            const isRatio = isYield || isPLPct || isTceRatio;
+
+            return Object.entries(seriesMap).map(([name, mData]: [string, any]) => {
                 let runningTotal = 0;
                 let runningTotalOfTotals = 0;
                 
-                let runningGrossDem = 0;
                 let runningTons = 0;
-                let globalRunningGrossDem = 0;
-                let globalRunningTons = 0;
-
+                let runningFreight = 0;
+                let runningGross = 0;
+                let runningNetRev = 0;
                 let runningPL = 0;
-                let runningRevenue = 0;
+                let runningHire = 0;
+                let runningDuration = 0;
+
+                let globalRunningTons = 0;
+                let globalRunningFreight = 0;
+                let globalRunningGross = 0;
+                let globalRunningNetRev = 0;
                 let globalRunningPL = 0;
-                let globalRunningRevenue = 0;
+                let globalRunningHire = 0;
+                let globalRunningDuration = 0;
 
                 const dataArr = activeMonths.map(m => {
                     const val = mData[m] || 0;
@@ -359,29 +519,68 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                     let finalTot = isCumulative ? runningTotalOfTotals : tot;
 
                     if (isYield) {
-                        const localTons = totalTonsMap[name]?.[m] || 0;
-                        const localValue = val;
+                        const localTons = tonsMap[name]?.[m] || 0;
+                        const localVal = metric === 'yield_flete' ? (freightMap[name]?.[m] || 0) : (grossMap[name]?.[m] || 0);
                         runningTons += localTons;
-                        runningGrossDem += localValue;
-                        finalVal = isCumulative ? (runningTons ? runningGrossDem / runningTons : 0) : (localTons ? localValue / localTons : 0);
+                        if (metric === 'yield_flete') runningFreight += localVal;
+                        else runningGross += localVal;
+
+                        finalVal = isCumulative 
+                            ? (runningTons ? (metric === 'yield_flete' ? runningFreight / runningTons : runningGross / runningTons) : 0)
+                            : (localTons ? localVal / localTons : 0);
                         
                         const globTons = globalTonsMap[m] || 0;
-                        const globValue = metric === 'yield' ? globalGrossDemMap[m] : globalGrossRevenueMap[m];
+                        const globVal = metric === 'yield_flete' ? (globalFreightMap[m] || 0) : (globalGrossMap[m] || 0);
                         globalRunningTons += globTons;
-                        globalRunningGrossDem += globValue;
-                        finalTot = isCumulative ? (globalRunningTons ? globalRunningGrossDem / globalRunningTons : 0) : (globTons ? globValue / globTons : 0);
-                    } else if (isPLPct) {
-                        const localRevenue = totalGrossRevenueMap[name]?.[m] || 0;
-                        const localPL = val;
-                        runningPL += localPL;
-                        runningRevenue += localRevenue;
-                        finalVal = isCumulative ? (runningRevenue ? (runningPL / runningRevenue) * 100 : 0) : (localRevenue ? (localPL / localRevenue) * 100 : 0);
+                        if (metric === 'yield_flete') globalRunningFreight += globVal;
+                        else globalRunningGross += globVal;
 
-                        const globRevenue = globalGrossRevenueMap[m] || 0;
+                        finalTot = isCumulative 
+                            ? (globalRunningTons ? (metric === 'yield_flete' ? globalRunningFreight / globalRunningTons : globalRunningGross / globalRunningTons) : 0)
+                            : (globTons ? globVal / globTons : 0);
+                    } else if (isPLPct) {
+                        const localNetRev = netRevMap[name]?.[m] || 0;
+                        const localPL = plMap[name]?.[m] || 0;
+                        runningNetRev += localNetRev;
+                        runningPL += localPL;
+                        finalVal = isCumulative ? (runningNetRev ? (runningPL / runningNetRev) * 100 : 0) : (localNetRev ? (localPL / localNetRev) * 100 : 0);
+
+                        const globNetRev = globalNetRevMap[m] || 0;
                         const globPL = globalPLMap[m] || 0;
+                        globalRunningNetRev += globNetRev;
                         globalRunningPL += globPL;
-                        globalRunningRevenue += globRevenue;
-                        finalTot = isCumulative ? (globalRunningRevenue ? (globalRunningPL / globalRunningRevenue) * 100 : 0) : (globRevenue ? (globPL / globRevenue) * 100 : 0);
+                        finalTot = isCumulative ? (globalRunningNetRev ? (globalRunningPL / globalRunningNetRev) * 100 : 0) : (globNetRev ? (globPL / globNetRev) * 100 : 0);
+                    } else if (isTceRatio) {
+                        const localDur = durationMap[name]?.[m] || 0;
+                        const localPL = plMap[name]?.[m] || 0;
+                        const localHire = hireCostMap[name]?.[m] || 0;
+
+                        runningDuration += localDur;
+                        runningPL += localPL;
+                        runningHire += localHire;
+
+                        if (metric === 'tce_real') {
+                            finalVal = isCumulative ? (runningDuration ? runningPL / runningDuration : 0) : (localDur ? localPL / localDur : 0);
+                        } else if (metric === 'tce_required') {
+                            finalVal = isCumulative ? (runningDuration ? runningHire / runningDuration : 0) : (localDur ? localHire / localDur : 0);
+                        } else if (metric === 'tce_diff') {
+                            finalVal = isCumulative ? (runningDuration ? (runningPL - runningHire) / runningDuration : 0) : (localDur ? (localPL - localHire) / localDur : 0);
+                        }
+
+                        const globDur = globalDurationMap[m] || 0;
+                        const globPL = globalPLMap[m] || 0;
+                        const globHire = globalHireCostMap[m] || 0;
+                        globalRunningDuration += globDur;
+                        globalRunningPL += globPL;
+                        globalRunningHire += globHire;
+
+                        if (metric === 'tce_real') {
+                            finalTot = isCumulative ? (globalRunningDuration ? globalRunningPL / globalRunningDuration : 0) : (globDur ? globPL / globDur : 0);
+                        } else if (metric === 'tce_required') {
+                            finalTot = isCumulative ? (globalRunningDuration ? globalRunningHire / globalRunningDuration : 0) : (globDur ? globHire / globDur : 0);
+                        } else if (metric === 'tce_diff') {
+                            finalTot = isCumulative ? (globalRunningDuration ? (globalRunningPL - globalRunningHire) / globalRunningDuration : 0) : (globDur ? (globPL - globHire) / globDur : 0);
+                        }
                     }
 
                     const pct = isCumulative ? (grandTotal ? (finalVal / grandTotal) * 100 : 0) : (finalTot ? (finalVal / finalTot) * 100 : 0);
@@ -428,6 +627,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                                 if (metric === 'viajes') return val.toString();
                                 if (metric === 'total_duration') return `${val.toFixed(0)} d`;
                                 if (metric === 'yield' || metric === 'yield_flete') return `$${val.toFixed(2)}`;
+                                if (metric === 'tce_real' || metric === 'tce_required' || metric === 'tce_diff') return `$${(val/1000).toFixed(1)}k/d`;
                                 if (metric === 'total_cargo') return `${(val/1000).toFixed(0)}k`;
                                 return val >= 1000 ? `$${(val/1000).toFixed(0)}k` : `$${val.toFixed(0)}`;
                             }
@@ -442,13 +642,13 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
         let seriesPri: any[] = [];
         if (primaryMetric === 'gross_and_gross_plus_dem') {
-            const pri1 = buildSeries(seriesMapPri, totalPriMap, 'net_income', primaryGraphType, false, false, 0);
-            pri1.forEach(s => { s.name = `${s.name.replace('(Pri)', '').trim()} Gross`; });
+            const pri1 = buildSeries(seriesMapPri, totalPriMap, 'freight_revenue', primaryGraphType, false, false, 0);
+            pri1.forEach(s => { s.name = `${s.name.replace('(Pri)', '').trim()} Flete`; });
             
-            const pri2 = buildSeries(seriesMapPri2, totalPriMap2, 'gross_plus_dem', primaryGraphType, false, false, 0);
+            const pri2 = buildSeries(seriesMapPri2, totalPriMap2, 'gross_revenue', primaryGraphType, false, false, 0);
             pri2.forEach(s => { 
-                s.name = `${s.name.replace('(Pri)', '').trim()} Gross+Dem`; 
-                s.itemStyle.color = '#F59E0B'; // Distinct color
+                s.name = `${s.name.replace('(Pri)', '').trim()} Gross`; 
+                s.itemStyle.color = '#F59E0B';
             });
             
             seriesPri = [...pri1, ...pri2];
@@ -461,13 +661,13 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         let seriesSec: any[] = [];
         if (showSecIndividual) {
             if (secondaryMetric === 'gross_and_gross_plus_dem') {
-                const sec1 = buildSeries(seriesMapSec, totalSecMap, 'net_income', secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryPercentage, 1);
-                sec1.forEach(s => { s.name = `${s.name.replace('(Sec)', '').trim()} Gross`; });
+                const sec1 = buildSeries(seriesMapSec, totalSecMap, 'freight_revenue', secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryPercentage, 1);
+                sec1.forEach(s => { s.name = `${s.name.replace('(Sec)', '').trim()} Flete`; });
                 
-                const sec2 = buildSeries(seriesMapSec2, totalSecMap2, 'gross_plus_dem', secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryPercentage, 1);
+                const sec2 = buildSeries(seriesMapSec2, totalSecMap2, 'gross_revenue', secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryPercentage, 1);
                 sec2.forEach(s => { 
-                    s.name = `${s.name.replace('(Sec)', '').trim()} Gross+Dem`; 
-                    s.itemStyle.color = '#F59E0B'; // Distinct color
+                    s.name = `${s.name.replace('(Sec)', '').trim()} Gross`; 
+                    s.itemStyle.color = '#F59E0B';
                 });
                 
                 seriesSec = [...sec1, ...sec2];
@@ -525,6 +725,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                                 if (secondaryMetric === 'viajes') return val.toString();
                                 if (secondaryMetric === 'total_duration') return `${val.toFixed(0)} d`;
                                 if (secondaryMetric === 'yield' || secondaryMetric === 'yield_flete') return `$${val.toFixed(2)}`;
+                                if (secondaryMetric === 'tce_real' || secondaryMetric === 'tce_required' || secondaryMetric === 'tce_diff') return `$${(val/1000).toFixed(1)}k/d`;
                                 if (secondaryMetric === 'total_cargo') return `${(val/1000).toFixed(0)}k`;
                                 return val >= 1000 ? `$${(val/1000).toFixed(0)}k` : `$${val.toFixed(0)}`;
                             }
@@ -537,8 +738,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             };
             
             if (secondaryMetric === 'gross_and_gross_plus_dem') {
-                globalSeries.push(buildGlobalSeries(seriesMapSec, totalSecMap, 'Gross'));
-                globalSeries.push(buildGlobalSeries(seriesMapSec2, totalSecMap2, 'Gross+Dem', '#F59E0B'));
+                globalSeries.push(buildGlobalSeries(seriesMapSec, totalSecMap, 'Flete'));
+                globalSeries.push(buildGlobalSeries(seriesMapSec2, totalSecMap2, 'Gross', '#F59E0B'));
             } else {
                 globalSeries.push(buildGlobalSeries(seriesMapSec, totalSecMap, '(Sec)'));
             }
@@ -549,9 +750,10 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         const getAxisFormatter = (metric: PlotMetric | 'gross_and_gross_plus_dem', isPct: boolean) => {
             if (isPct || metric === 'pl_percentage') return '{value}%';
             if (metric === 'viajes') return '{value}';
-            if (metric === 'total_duration') return '{value}';
+            if (metric === 'total_duration') return '{value} d';
             if (metric === 'yield' || metric === 'yield_flete') return (v: number) => `$${(Number(v) || 0).toFixed(2)}`;
-            if (metric === 'total_cargo') return (v: number) => `${((Number(v) || 0)/1000).toFixed(0)}k`;
+            if (metric === 'tce_real' || metric === 'tce_required' || metric === 'tce_diff') return (v: number) => `$${((Number(v) || 0)/1000).toFixed(0)}k/d`;
+            if (metric === 'total_cargo') return (v: number) => `${((Number(v) || 0)/1000).toFixed(0)}k MT`;
             return (v: number) => `$${((Number(v) || 0)/1000).toFixed(0)}k`;
         };
 
@@ -575,7 +777,8 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                         } else {
                             if (m === 'viajes') valStr = numVal.toString();
                             else if (m === 'total_duration') valStr = `${Math.round(numVal).toLocaleString()} d`;
-                            else if (m === 'yield' || m === 'yield_flete') valStr = `$${numVal.toFixed(2)}`;
+                            else if (m === 'yield' || m === 'yield_flete') valStr = `$${numVal.toFixed(2)}/MT`;
+                            else if (m === 'tce_real' || m === 'tce_required' || m === 'tce_diff') valStr = `$${Math.round(numVal).toLocaleString()}/d`;
                             else if (m === 'total_cargo') valStr = `${Math.round(numVal).toLocaleString()} MT`;
                             else if (m === 'pl_percentage') valStr = `${numVal.toFixed(1)}%`;
                             else valStr = `$${Math.round(numVal).toLocaleString()}`;
@@ -628,12 +831,12 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
             series,
             color: ['#0EA5E9', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#14B8A6', '#10B981']
         };
-    }, [data, groupBy, activeMonths, filterClient, filterRoute, filterVessel, filterTradeType, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryCumulativeGlobal, isSecondaryPercentage, demurragePct, showDemurrage, excludedDemurrages, customDemurrages, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
+    }, [data, groupBy, activeMonths, filterClient, filterRoute, filterVessel, filterTradeType, primaryMetric, primaryGraphType, secondaryMetric, secondaryGraphType, isSecondaryCumulativeSeries, isSecondaryCumulativeGlobal, isSecondaryPercentage, demurragePct, showDemurrage, demurrageDays, showDemurrageDays, customDemurrageDays, excludedDemurrages, customDemurrages, primaryLabelPos, primaryLabelColor, secondaryLabelPos, secondaryLabelColor]);
 
     const echartsRef = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Auto-resize de ECharts con ResizeObserver para garantizar dimensiones en transiciones de React Router sin F5
+    // Auto-resize de ECharts con ResizeObserver
     useEffect(() => {
         const handleResize = () => {
             if (echartsRef.current && options && options.series && Array.isArray(options.series) && options.series.length > 0) {
@@ -642,9 +845,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                     if (chartInstance && typeof chartInstance.resize === 'function' && !chartInstance.isDisposed()) {
                         chartInstance.resize();
                     }
-                } catch (e) {
-                    // Prevenir que errores de layout internos de ECharts en opciones intermedias rompan el árbol de React
-                }
+                } catch (e) {}
             }
         };
 
@@ -666,32 +867,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         };
     }, []);
 
-
-
-
     const hasValidOptions = options && options.series && Array.isArray(options.series) && options.series.length > 0;
-
-
-
-
-
-    const metricOptions = [
-        { value: 'none', label: 'Ninguno', icon: '🚫', desc: 'No graficar' },
-        { value: 'pl_vs_required', label: 'P/L', icon: '⚖️', desc: 'USD / Resultado neto real vs requerido' },
-        { value: 'pl_percentage', label: 'P/L (%)', icon: '📈', desc: 'Porcentaje / Margen P/L sobre Ingreso Flete' },
-        { value: 'voyage_result', label: 'Voyage Result', icon: '💰', desc: 'USD / Resultado Viaje' },
-        { value: 'net_income', label: 'Gross Revenue', icon: '💸', desc: 'USD / Flete Bruto' },
-        { value: 'demurrage', label: 'Demurrage', icon: '⏳', desc: 'USD / Estadía' },
-        { value: 'gross_plus_dem', label: 'Gross + Demurrage', icon: '📊', desc: 'USD / Total Bruto' },
-        { value: 'gross_and_gross_plus_dem', label: 'Gross & Gross+Dem', icon: '📈', desc: 'USD / Comparativa' },
-        { value: 'yield', label: 'Yield (USD/MT)', icon: '🏆', desc: 'USD/MT / Rendimiento Total' },
-        { value: 'yield_flete', label: 'Yield Flete (USD/MT)', icon: '🏅', desc: 'USD/MT / Rendimiento Flete' },
-        { value: 'total_port_costs', label: 'Port Costs', icon: '⚓', desc: 'USD / Gastos Puerto' },
-        { value: 'total_bunker_costs', label: 'Bunker Costs', icon: '⛽', desc: 'USD / Combustible' },
-        { value: 'total_cargo', label: 'Toneladas', icon: '🚢', desc: 'MT / Carga Total' },
-        { value: 'viajes', label: 'Viajes', icon: '📅', desc: 'freq / Cantidad Viajes' },
-        { value: 'total_duration', label: 'Duración Total', icon: '⏱️', desc: 'días / Días Ocupados' }
-    ];
 
     const renderCustomDropdown = (
         selectedVal: string, 
@@ -702,6 +878,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
         isSecondary: boolean
     ) => {
         const selectedOption = metricOptions.find(o => o.value === selectedVal) || metricOptions[0];
+        const categories = ['Revenue', 'Costos', 'Resultados', 'TCE', 'Operativas'];
         
         return (
             <div className="relative w-full" onClick={(e) => e.stopPropagation()}>
@@ -725,38 +902,68 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                 </button>
 
                 {isOpen && (
-                    <div className="absolute left-[208px] top-1/2 -translate-y-1/2 bg-white border border-slate-200 rounded-lg shadow-xl z-50 w-[420px] p-2 grid grid-cols-2 gap-1.5 animate-in fade-in slide-in-from-left-2 duration-150">
-                        <div className="col-span-2 px-1 py-0.5 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
+                    <div className="absolute left-[208px] top-1/2 -translate-y-1/2 bg-white border border-slate-200 rounded-lg shadow-xl z-50 w-[460px] max-h-[460px] overflow-y-auto p-2.5 flex flex-col gap-2 animate-in fade-in slide-in-from-left-2 duration-150">
+                        <div className="px-1 py-0.5 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5 flex items-center justify-between">
                             <span>Métricas ({isSecondary ? 'Eje Secundario' : 'Eje Primario'})</span>
                             <button onClick={() => setIsOpen(false)} className="text-[11px] text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer">✕</button>
                         </div>
-                        {metricOptions.map((opt) => {
-                            const isSel = opt.value === selectedVal;
-                            if (!isSecondary && opt.value === 'none') return null;
-                            
+
+                        {isSecondary && (
+                            <button
+                                onClick={() => {
+                                    onSelect('none');
+                                    setIsOpen(false);
+                                }}
+                                className={`text-left p-1.5 rounded transition-all cursor-pointer border flex items-center gap-2 ${
+                                    selectedVal === 'none' 
+                                        ? 'bg-slate-100 border-slate-300 font-bold text-slate-900' 
+                                        : 'border-slate-100 bg-slate-50/50 hover:bg-slate-100 text-slate-600'
+                                }`}
+                            >
+                                <span className="text-sm">🚫</span>
+                                <span className="text-xs font-bold">Ninguno (Desactivar Eje Secundario)</span>
+                            </button>
+                        )}
+
+                        {categories.map(cat => {
+                            const items = metricOptions.filter(o => o.category === cat);
+                            if (items.length === 0) return null;
+
                             return (
-                                <button
-                                    key={opt.value}
-                                    onClick={() => {
-                                        onSelect(opt.value);
-                                        setIsOpen(false);
-                                    }}
-                                    className={`text-left p-1.5 flex flex-col gap-0.5 rounded hover:bg-slate-50 transition-all cursor-pointer border ${
-                                        isSel 
-                                            ? (colorClass === 'blue' ? 'bg-blue-50/70 border-blue-200 hover:bg-blue-50' : 'bg-emerald-50/70 border-emerald-200 hover:bg-emerald-50') 
-                                            : 'border-slate-100/50 bg-slate-50/20'
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="text-sm shrink-0">{opt.icon}</span>
-                                        <span className={`text-[11px] ${isSel ? 'font-bold' : 'font-semibold'} ${isSel ? (colorClass === 'blue' ? 'text-blue-900' : 'text-emerald-900') : 'text-slate-700'} truncate`}>
-                                            {opt.label}
-                                        </span>
+                                <div key={cat} className="flex flex-col gap-1">
+                                    <div className="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-400 px-1 pt-1 border-t border-slate-100">
+                                        {cat}
                                     </div>
-                                    <span className="text-[9px] text-slate-400 font-medium pl-5 truncate block">
-                                        {opt.desc}
-                                    </span>
-                                </button>
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                        {items.map(opt => {
+                                            const isSel = opt.value === selectedVal;
+                                            return (
+                                                <button
+                                                    key={opt.value}
+                                                    onClick={() => {
+                                                        onSelect(opt.value);
+                                                        setIsOpen(false);
+                                                    }}
+                                                    className={`text-left p-1.5 flex flex-col gap-0.5 rounded hover:bg-slate-50 transition-all cursor-pointer border ${
+                                                        isSel 
+                                                            ? (colorClass === 'blue' ? 'bg-blue-50/70 border-blue-200 hover:bg-blue-50' : 'bg-emerald-50/70 border-emerald-200 hover:bg-emerald-50') 
+                                                            : 'border-slate-100/60 bg-slate-50/20'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="text-sm shrink-0">{opt.icon}</span>
+                                                        <span className={`text-[11px] ${isSel ? 'font-bold' : 'font-semibold'} ${isSel ? (colorClass === 'blue' ? 'text-blue-900' : 'text-emerald-900') : 'text-slate-700'} truncate`}>
+                                                            {opt.label}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-[9px] text-slate-400 font-medium pl-5 truncate block">
+                                                        {opt.desc}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
                             );
                         })}
                     </div>
@@ -928,7 +1135,6 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     };
 
     if (!data || !data.aggregated_data || activeMonths.length === 0) {
-
         return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] w-full bg-white rounded-lg border border-slate-200">
                 <p className="text-slate-500 font-medium text-lg">Ingresar o cargar escenario para mostrar herramienta.</p>
@@ -937,7 +1143,6 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
     }
 
     return (
-
         <div className="w-full glass-card bg-white p-5 rounded-xl shadow-xs border border-slate-200 flex flex-row gap-6 items-stretch min-h-[calc(100vh-220px)]">
             {/* Sidebar de Controles (Left) */}
             <div className="flex flex-col gap-3 shrink-0 min-w-[245px] w-fit">
@@ -1015,36 +1220,36 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             'blue',
                             false
                         )}
-<div className="flex flex-row gap-4 pt-2 border-t border-blue-200/40 mt-1">
-                            {/* Columna Izquierda: Tipo de Gráfico (Iconos apilados) */}
+                        <div className="flex flex-row gap-4 pt-2 border-t border-blue-200/40 mt-1">
+                            {/* Columna Izquierda: Tipo de Gráfico */}
                             <div className="flex flex-col gap-1 w-9 shrink-0">
                                 <button 
                                     onClick={() => setPrimaryGraphType('bar_stack')}
                                     className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'bar_stack' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
                                     title="Barras Stack"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="13" width="10" height="4" rx="1"/><rect x="7" y="7" width="10" height="4" rx="1"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><rect x="7" y="13" width="10" height="4" rx="1"/><rect x="7" y="7" width="10" height="4" rx="1"/></svg>
                                 </button>
                                 <button 
                                     onClick={() => setPrimaryGraphType('bar_group')}
                                     className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'bar_group' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
                                     title="Barras Adjuntas"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 17v-6"/><path d="M11 17V9"/><path d="M15 17v-4"/><path d="M19 17V5"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 17v-6"/><path d="M11 17V9"/><path d="M15 17v-4"/><path d="M19 17V5"/></svg>
                                 </button>
                                 <button 
                                     onClick={() => setPrimaryGraphType('line')}
                                     className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'line' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
                                     title="Línea Suavizada"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 17c2-5 4-10 8-10s6 5 8 5"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 17c2-5 4-10 8-10s6 5 8 5"/></svg>
                                 </button>
                                 <button 
                                     onClick={() => setPrimaryGraphType('line_straight')}
                                     className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${primaryGraphType === 'line_straight' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
                                     title="Línea Recta"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l5-8 5 6 4-6"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 15l5-8 5 6 4-6"/></svg>
                                 </button>
                             </div>
 
@@ -1087,7 +1292,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                             'emerald',
                             true
                         )}
-<div className="flex flex-col gap-1.5 mt-1 border-t border-slate-200/50 pt-2">
+                        <div className="flex flex-col gap-1.5 mt-1 border-t border-slate-200/50 pt-2">
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" className="w-3 h-3" checked={isSecondaryCumulativeSeries} onChange={(e) => setIsSecondaryCumulativeSeries(e.target.checked)} />
                                 <span className="text-[11px] font-medium text-slate-700">Acumular por serie</span>
@@ -1103,28 +1308,28 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                         </div>
                         
                         <div className="flex flex-row gap-4 pt-2 border-t border-emerald-200/40 mt-1">
-                            {/* Columna Izquierda: Tipo de Gráfico (Iconos apilados) */}
+                            {/* Columna Izquierda: Tipo de Gráfico */}
                             <div className="flex flex-col gap-1 w-9 shrink-0">
                                 <button 
                                     onClick={() => setSecondaryGraphType('bar')}
                                     className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${secondaryGraphType === 'bar' ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
                                     title="Barras"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 17v-6"/><path d="M11 17V9"/><path d="M15 17v-4"/><path d="M19 17V5"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 17v-6"/><path d="M11 17V9"/><path d="M15 17v-4"/><path d="M19 17V5"/></svg>
                                 </button>
                                 <button 
                                     onClick={() => setSecondaryGraphType('line')}
                                     className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${secondaryGraphType === 'line' ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
                                     title="Línea Suavizada"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 17c2-5 4-10 8-10s6 5 8 5"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 17c2-5 4-10 8-10s6 5 8 5"/></svg>
                                 </button>
                                 <button 
                                     onClick={() => setSecondaryGraphType('line_straight')}
                                     className={`p-1.5 rounded border flex items-center justify-center transition-all cursor-pointer ${secondaryGraphType === 'line_straight' ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-55'}`}
                                     title="Línea Recta"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l5-8 5 6 4-6"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 15l5-8 5 6 4-6"/></svg>
                                 </button>
                             </div>
 
@@ -1142,7 +1347,7 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
                                         <button
                                             key={pos}
                                             onClick={() => setSecondaryLabelPos(pos)}
-                                            className={`text-[9px] font-bold py-1 px-1 transition-all cursor-pointer border-b last:border-0 border-slate-100 ${secondaryLabelPos === pos ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                                            className={`text-[9px] font-bold py-1 px-1 transition-all cursor-pointer border-b last:border-0 border-slate-100 ${secondaryLabelPos === pos ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-55'}`}
                                         >
                                             {pos === 'none' ? 'Ocultar' : (pos === 'top' ? 'Encima' : 'Centro')}
                                         </button>
@@ -1155,19 +1360,18 @@ export const InteractiveChart: React.FC<InteractiveChartProps> = ({
 
             </div>
 
-                {/* Contenedor del Gráfico (Right) */}
-                <div ref={containerRef} className="flex-1 flex flex-col min-h-[650px]">
-                    {hasValidOptions ? (
-                        <ReactECharts ref={echartsRef} option={options} style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} notMerge={true} />
-                    ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center min-h-[650px] w-full bg-slate-50 rounded border border-slate-200">
-                            <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mb-2"></div>
-                            <p className="text-slate-500 text-xs font-semibold">Procesando gráficos ECharts...</p>
-                        </div>
-                    )}
-                </div>
-
-
+            {/* Contenedor del Gráfico (Right) */}
+            <div ref={containerRef} className="flex-1 flex flex-col min-h-[650px]">
+                {hasValidOptions ? (
+                    <ReactECharts ref={echartsRef} option={options} style={{ flex: 1, height: '100%', minHeight: '650px', width: '100%' }} notMerge={true} />
+                ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center min-h-[650px] w-full bg-slate-50 rounded border border-slate-200">
+                        <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full mb-2"></div>
+                        <p className="text-slate-500 text-xs font-semibold">Procesando gráficos ECharts...</p>
+                    </div>
+                )}
             </div>
+
+        </div>
     );
 };
