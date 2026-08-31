@@ -361,4 +361,25 @@ A continuación se detalla la matriz de contraste pericial entre los indicadores
 - **Git & Tagging:** Tag y rama `PRE.GRAND.FINALE.31.08.26.2` sincronizados en GitHub.
 - **Despliegue al VPS:** Desplegado con éxito a `https://forecast.geeksoft.tech`.
 
+---
+
+## 14. Corrección de Reactividad e Interactividad en Filtros (`ForecastContext_V2.tsx`)
+
+### 14.1 Diagnóstico Forense
+- Los estados `hiddenClients`, `hiddenRoutes`, `hiddenVessels`, `hiddenMonths` y sus respectivos setters (`setHiddenClients`, `setHiddenRoutes`, etc.) estaban declarados en `ForecastContext_V2.tsx` pero habían sido omitidos del objeto exportado en el `<ForecastContext.Provider value={{ ... }}>`.
+- Al renderizar `ForecastGridFilters.tsx`, el hook `useForecastContext_V2()` devolvía callbacks vacíos `(() => {})` por fallback, impidiendo que los clicks en los checkboxes, "Todos", "Ninguno" y "Solo" mutaran el estado global de la grilla.
+
+### 14.2 Corrección Aplicada
+- Exportados formalmente en el `value` de `ForecastContext.Provider`:
+  - `hiddenClients`, `setHiddenClients`
+  - `hiddenRoutes`, `setHiddenRoutes`
+  - `hiddenVessels`, `setHiddenVessels`
+  - `hiddenMonths`, `setHiddenMonths`
+- Estandarizadas las llamadas a `safeHiddenClients`, `safeHiddenRoutes`, `safeHiddenVessels` en `ForecastGridFilters.tsx`.
+
+### 14.3 Control de Calidad y Despliegue
+- **Compilación Frontend:** `npx vite build` completado en **8.87s (0 errores)**.
+- **Git & Tagging:** Tag y rama `PRE.GRAND.FINALE.31.08.26.2` sincronizados en GitHub.
+- **Despliegue al VPS:** Desplegado con éxito a `https://forecast.geeksoft.tech`.
+
 
