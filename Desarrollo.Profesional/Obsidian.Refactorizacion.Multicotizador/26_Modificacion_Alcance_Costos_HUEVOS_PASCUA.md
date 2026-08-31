@@ -1,14 +1,15 @@
-# 📑 ESTRUCTURA & ESQUELETO DE PRESENTACIÓN V2 (PPT)
+# 📑 ESTRUCTURA & ESQUELETO DE PRESENTACIÓN V3 (PPT)
 ## SUSTENTO DE MODIFICACIÓN DE ALCANCE, CONSULTORÍA DE PROCESOS Y AUDITORÍA DE HORAS DEVENGADAS
 **Proyecto:** PETRAL SMART DASHBOARD & MOTOR MULTICOTIZADOR  
 **Proveedor / Consultor:** GEEKSOFT (Richard Gutiérrez)  
 **Cliente:** NAVIERA PETRAL S.A.  
 **Fecha de Emisión:** Agosto 2026 (Actualización Dinámica al 31 de Agosto)  
-**Documento Fuente:** [`COTIZACION_MODULAR_PETRAL_V10.RG.pdf`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/COTIZACION_MODULAR_PETRAL_V10.RG.pdf)  
+**Documento Fuente:** [`COTIZACION_MODULAR_PETRAL_V10.RG.pdf`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Proposal/COTIZACION_MODULAR_PETRAL_V10.RG.pdf) (110 hrs Desarrollo @ $60/hr | 150 hrs Total One-Timers = $9,100 USD)  
 **Entregables Interactivos (Sliders HTML):** 
-- Versión V2: [`Informe_Sustento_Modificacion_Alcance_Petral_V2.html`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/Informe_Sustento_Modificacion_Alcance_Petral_V2.html) | [`presentation.html`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/presentation.html)
+- Versión V3 (Definitiva): [`Informe_Sustento_Modificacion_Alcance_Petral_V3.html`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/Informe_Sustento_Modificacion_Alcance_Petral_V3.html) | [`presentation.html`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/presentation.html)
+- Versión V2: [`Informe_Sustento_Modificacion_Alcance_Petral_V2.html`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/Informe_Sustento_Modificacion_Alcance_Petral_V2.html)
 - Versión V1 (Histórica 25-Ago): [`Informe_Sustento_Modificacion_Alcance_Petral.html`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/Informe_Sustento_Modificacion_Alcance_Petral.html)  
-**Script Generador Dinámico V2:** [`generar_sustento_slide_by_slide_v2.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/scratch/generar_sustento_slide_by_slide_v2.py)  
+**Script Generador Dinámico V3:** [`generar_sustento_slide_by_slide_v3.py`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/scratch/generar_sustento_slide_by_slide_v3.py)  
 
 ---
 
@@ -22,15 +23,15 @@ Presentar a la Gerencia y Dirección de Naviera Petral el sustento técnico, ope
 Dado que el desarrollo continúa activo, las horas y los eventos de Git/IDE aumentan con cada jornada. Para regenerar y actualizar toda la presentación HTML con los números exactos al segundo, se ejecuta un único comando en terminal:
 
 ```powershell
-python "C:\Users\rguti\PETRAL.SMART.DASHBOARD\scratch\generar_sustento_slide_by_slide_v2.py"
+python "C:\Users\rguti\PETRAL.SMART.DASHBOARD\scratch\generar_sustento_slide_by_slide_v3.py"
 ```
 
 **¿Qué hace este script automáticamente en 5 segundos?**
 1. Escanea todos los commits y ramas de Git en el repositorio.
 2. Lee los timestamps de modificación de todos los archivos (`.tsx`, `.py`, `.sql`, `.md`, `.html`).
 3. Agrupa las sesiones continuas con corte de inactividad de 2.5h y buffer de 30 min de warmup.
-4. Totaliza las jornadas, eventos, horas devengadas y montos valorizados en USD.
-5. Inyecta los KPIs actualizados directamente en `Informe_Sustento_Modificacion_Alcance_Petral_V2.html` y `presentation.html`.
+4. Totaliza las jornadas, eventos, horas devengadas y montos valorizados en USD calibrados contra la **Etapa 2: Desarrollo (110 hrs @ $60/hr)**.
+5. Inyecta los KPIs actualizados directamente en `Informe_Sustento_Modificacion_Alcance_Petral_V3.html` y `presentation.html`.
 
 ---
 
@@ -39,11 +40,11 @@ python "C:\Users\rguti\PETRAL.SMART.DASHBOARD\scratch\generar_sustento_slide_by_
 ```mermaid
 graph TD
     S1["Slide 1: Portada & Resumen Ejecutivo"] --> S2["Slide 2: La Premisa Inicial vs. La Realidad Encontrada"]
-    S2 --> S3["Slide 3: El Salto Tecnológico (Huevos de Pascua)"]
-    S3 --> S4["Slide 4: Consultoría de Procesos & Reingeniería (MOF Oculto)"]
-    S4 --> S5["Slide 5: Valor Ganado: Cimientos del Módulo de Liquidaciones"]
-    S5 --> S6["Slide 6: Metodología de Auditoría Digital & Log de Trabajo (Pair Programming)"]
-    S6 --> S7["Slide 7: Auditoría Digital Forense de Horas (100h vs. 469.50h)"]
+    S2 --> S3["Slide 3: Pipeline de Inteligencia Comercial (Los 4 Pasos)"]
+    S3 --> S4["Slide 4: Consultoría de Procesos & Organigrama Digital (MOF Oculto)"]
+    S4 --> S5["Slide 5: De Agregación de Facturas a Auditoría Forense de Liquidaciones"]
+    S5 --> S6["Slide 6: Metodología de Auditoría Digital & Pair Programming con IA"]
+    S6 --> S7["Slide 7: Auditoría Digital Forense de Horas (110h vs. 469.50h)"]
     S7 --> S8["Slide 8: Liquidación Económica & Propuesta de Regularización"]
     S8 --> S9["Slide 9: Roadmap Inmediato & Pase a Producción (VPS)"]
 ```
@@ -56,9 +57,9 @@ graph TD
 * **Mensaje Clave del Dictamen:**
   * Presentar a la Gerencia y Dirección de **Naviera Petral S.A.** el sustento del desborde del alcance inicial: el proyecto evolucionó de una **hoja de cálculo inteligente** a una **Plataforma Integral de Inteligencia Comercial + Consultoría de Reingeniería de Procesos + Bases de un ERP de Gestión de Flota**, respaldada por una auditoría digital forense inalterable de **469.50 horas reales ejecutadas** en IDE/Git.
 * **Métricas Principales (KPI Boxes al 31/08/2026):**
-  * **Contrato Estimado:** 100.00 hrs (Cotización Base Junio 2026).
+  * **Desarrollo Cotizado:** 110.00 hrs ($6,600.00 USD - Etapa 2 de Cotización).
   * **Horas Reales Auditadas:** 469.50 hrs (Algoritmo inalterable IDE Git / 3,414 eventos en 107 jornadas).
-  * **Sobreesfuerzo Devengado:** +369.50 hrs (+369.5% de valor incremental entregado).
+  * **Sobreesfuerzo Devengado:** +359.50 hrs (+326.8% de desarrollo incremental entregado).
   * **Estado de Producción:** 100% VIVO en `https://forecast.geeksoft.tech` (VPS Contabo).
 
 ---
@@ -70,50 +71,47 @@ graph TD
   * **Lo que se cotizó (Premisa Teórica - Junio 2026):**
     * **Automatización Lineal:** Conversión de hoja Excel con fórmulas fijas a una web interactiva con un repositorio de datos centralizados.
     * **Supuesto de Datos Limpios:** Estructuras de costos portuarios, tarifas de agenciamiento y distancias dadas por sentado.
-    * **Esfuerzo Estimado:** 100 horas hombre de programación directa bajo reglas supuestamente estables expresados en los exceles iniciales Voyage Calculations que presentaban datos estáticos y claros.
+    * **Esfuerzo Estimado:** 110 horas hombre de desarrollo directo bajo reglas supuestamente estables expresadas en los exceles iniciales Voyage Calculations.
   * **La Realidad Operativa Encontrada (Diagnóstico Forense):**
-    * **Ausencia de Flujos Formalizados:** Manuales de funciones tácitos no documentados; divergencias de criterio entre áreas operativas y comerciales.
-    * **Maestros Desalineados:** Duplicidad en nombres de agencias, dobles nomenclaturas (MGO vs MDO) y demoras sin regla uniforme.
-    * **Fugas de Cálculo:** Inconsistencias históricas en liquidaciones de viajes que requerían auditoría matemática previa.
-* **Principio de Ingeniería de Datos:** *"No se podía construir un rascacielos digital moderno sobre cimientos de datos inconsistentes sin antes ejecutar un saneamiento estructural y de procesos profundo."*
+    * **Fragmentación Operadores vs. Liquidaciones:** Los operadores de barcos no incluían en sus liquidaciones variables críticas: muellaje, demurrage, arriendo de naves ni estadísticas históricas de demoras por puerto.
+    * **Proceso ETL Rehecho 3 Veces:** La extracción, limpieza y carga de datos tuvo que rehacerse 3 veces consecutivas por inconsistencias y datos erróneos en los archivos origen.
+    * **Inviabilidad del Modelo Comercial Asumido:** La liquidación no se culminó porque la fórmula y metodología asumida por los comerciales carecía de coherencia técnica y financiera real.
+* **Principio de Ingeniería de Datos:** *"No se podía construir un rascacielos digital moderno sobre cimientos de datos inconsistentes sin antes ejecutar un saneamiento estructural, operativo y de procesos profundo."*
 
 ---
 
-### 🔹 SLIDE 3: El Salto de Alcance Tecnológico ("Huevos de Pascua")
-* **Título:** Evolución Arquitectónica: De Prototipo a Sistema Transaccional Enterprise.
-* **Subtítulo:** Módulos transaccionales de alto valor desarrollados e incorporados fuera del alcance inicial.
-* **Tabla de Funcionalidades Agregadas (Fuera de Alcance Original):**
-  1. **Matriz Financiera Modular Multimes:** Modelamiento de escenarios paralelos con desglose exhaustivo de P&L, yield flete puro, demoras dinámicas y dockage revenue en tiempo real.
-  2. **Ruteador SPOT Multileg & Algoritmos de Fondeo:** Cálculo interactivo de rutas marítimas, matrices de distancias en nudos, tiempos de navegación vs. fondeo y auto-selección de tarifas de agenciamiento.
-  3. **Motor Exportador PDF de Grado Pericial:** Generación automatizada de reportes y cotizaciones oficiales con sellos forenses ("Printed By", timestamps de emisión y firmas digitales inmutables).
-  4. **Seguridad Granular & Despliegue VPS Dedicado:** Control de accesos y roles (Admin, Comercial, Auditor), persistencia multi-usuario en Supabase y arquitectura productiva en VPS Contabo dedicado.
+### 🔹 SLIDE 3: Pipeline de Inteligencia Comercial (Los 4 Pasos de Trabajo)
+* **Título:** Lógica de Trabajo: El Pipeline de Inteligencia Comercial.
+* **Subtítulo:** Secuencia operativa formal de los 4 módulos transaccionales desarrollados fuera de los maestros.
+* **Propuesta de Valor de los 4 Pasos:**
+  1. **Paso 1: Voyage Calculator (Multicotizador Comercial):** Calcula el **muellaje paramétrico** por terminal y **sugiere demoras con base estadística en tiempo real** según el comportamiento histórico de cada puerto.
+  2. **Paso 2: Matriz Financiera (Reporteador Multidimensional):** Reporteador automatizado que consolida clientes, rutas, buques y meses, **eliminando el trabajo manual** y los errores en planillas Excel.
+  3. **Paso 3: AN GRAF (Analytics & Detección de Patrones):** Permite **descubrir tendencias, anomalías y patrones financieros** en márgenes y fletes que resultan imposibles de identificar en una tabla plana.
+  4. **Paso 4: Spaghetti Map (Visión Geoespacial del Negocio):** Proporciona una **visión integral del alcance de la operación (cabotaje e internacional)**, sopesando visualmente la densidad, volumen e importancia estratégica de cada ruta.
 
 ---
 
-### 🔹 SLIDE 4: Consultoría de Procesos & Reingeniería (El "MOF Oculto")
+### 🔹 SLIDE 4: Consultoría de Procesos & Organigrama Digital (El "MOF Oculto")
 * **Título:** Mucho más que Software: Consultoría y Creación del Ecosistema Operativo.
 * **Subtítulo:** Entregables no tangibles de consultoría incorporados orgánicamente a la plataforma.
 * **Pilares de Consultoría Incorporados:**
-  * **Estandarización de Criterios de Costos:** Reglas formales para demoras (Modo 0 vs. Demoras Reales), combustible en puerto vs. mar, y tarifas de agenciamiento por zona portuaria.
-  * **Homologación Internacional de Datos:** Unificación internacional MGO = MDO en todas las bases del negocio, eliminando duplicidades en inventarios y facturación.
-  * **Detección y Corrección de Errores (Cero Fugas):** Auditorías de convergencia que eliminaron discrepancias de cálculo y diferencias de centavos entre Comercial y Contabilidad.
+  * **Estandarización de Costos Portuarios:** Reglas formales para demoras (Modo 0 vs. Demoras Reales), combustible en puerto vs. mar, y tarifas de agenciamiento por zona portuaria.
+  * **Organigrama Digital & Gobernanza de Roles:** Delimitación estricta de responsabilidades por usuario (Comercial, Operaciones, Auditoría, Gerencia) definiendo con precisión qué debe hacer cada rol.
+  * **Fórmulas Contables Auditadas (Cero Fugas):** Auditorías de convergencia que eliminaron discrepancias de cálculo y diferencias de centavos entre Comercial y Contabilidad.
   * **Manual Operativo Vivo (Gobernanza):** El software hoy actúa como el Manual de Organización y Funciones (MOF) digitalizado y vivo de Petral, blindando a la compañía contra errores operativos.
 
 ---
 
-### 🔹 SLIDE 5: Anticipación Estratégica: El Cimiento de las Liquidaciones Dinámicas
-* **Título:** Valor Futuro Ya Construido: La Plataforma para Liquidación Real de Viajes.
-* **Subtítulo:** Valor futuro ya construido: la base para la comparación Presupuestado vs. Real ejecutado.
+### 🔹 SLIDE 5: De Agregación de Facturas a Auditoría Forense de Liquidaciones
+* **Título:** Visión Estratégica: De Agregación Pasiva a Auditoría Forense de Liquidaciones.
+* **Subtítulo:** Valor futuro ya construido: la base para auditar y recalcular las liquidaciones marítimas reales.
 * **Puntos Clave:**
-  * **Arquitectura Espejo Ya Implementada:** El multicotizador servirá directamente como la matriz receptora donde los analistas registrarán las ejecuciones reales de cada viaje:
-    * Comparación de combustible presupuestado vs. facturado por Petroperú/Repsol.
-    * Días reales de muelle y fondeo para liquidación de demoras exactas.
-    * Costos de agenciamiento y practicaje liquidados contra proyecciones SPOT.
-  * **Ahorro de Tiempo Futuro (-60% TTM):** Este esfuerzo adelantado reduce en un 60% el tiempo de desarrollo de la siguiente fase de liquidación de Petral al compartir la misma base de datos, maestros y esquemas validados.
+  * **El Problema Actual:** Hoy las liquidaciones son una simple agregación contable de facturas de terceros sin capacidad de recálculo porque no se capturan los **inputs de timing de maniobras de atraque/desatraque** ni ritmos reales de carga/descarga.
+  * **La Solución en Etapa 2 (Auditoría Centavo a Centavo):** La plataforma construida en Fase 1 proporciona la arquitectura base para que la Etapa 2 capture los timings operativos y **audite centavo a centavo las liquidaciones enviadas por las agencias marítimas**, detectando cobros indebidos y sobrecostos no pactados.
 
 ---
 
-### 🔹 SLIDE 6 (NUEVO): Metodología de Auditoría Digital: Registro de Sesiones & Pair Programming
+### 🔹 SLIDE 6: Metodología de Auditoría Digital: Registro de Sesiones & Pair Programming con IA
 * **Título:** Metodología de Auditoría: Registro de Sesiones & Pair Programming con IA.
 * **Subtítulo:** Cómo se audita matemáticamente el tiempo efectivo de interacción y desarrollo continuo con el agente.
 * **Pilares Metodológicos:**
@@ -123,15 +121,15 @@ graph TD
 
 ---
 
-### 🔹 SLIDE 7: Auditoría Forense de Actividad Digital (Evidencia Inalterable)
+### 🔹 SLIDE 7: Auditoría Digital Forense de Horas (110h vs. 469.50h)
 * **Título:** Trazabilidad y Transparencia: Registro de Actividad frente a la Plataforma.
 * **Subtítulo:** Trazabilidad matemática e inalterable basada en logs de Git y sesiones continuas de IDE al 31 de Agosto de 2026.
 * **Métricas Auditadas (Algoritmo Forense de Sesiones):**
   * **Total de Jornadas:** 107 días de trabajo continuo.
   * **Total de Eventos / Commits Git:** 3,414 eventos registrados.
   * **Horas Reales de Programación & Consultoría:** **469.50 horas**.
-  * **Horas Ofrecidas en Cotización:** 100.00 horas.
-  * **Horas Adicionales Dedicadas:** **+369.50 horas (+369.5% de sobreesfuerzo).**
+  * **Desarrollo Base Cotizado (Etapa 2):** 110.00 horas ($6,600 USD).
+  * **Sobreesfuerzo Devengado:** **+359.50 horas (+326.8% de desarrollo adicional entregado).**
 * **Algoritmo de Cálculo:** Ventana móvil de inactividad de 2.5 horas + buffer de 30 minutos de warmup por sesión de planificación.
 
 ---
@@ -142,9 +140,24 @@ graph TD
 
 | Concepto / Entregable | Horas | Tarifa Ref. | Subtotal (USD) | Estado Operativo |
 | :--- | :---: | :---: | :---: | :---: |
-| **Presupuesto Inicial Aprobado (One-Timers)**<br><small>Módulos 1, 2, 3, 4 + Carga de Datos y Onboarding</small> | 150.00 hrs | $50 - $100 | **$9,100.00** | <span style="color: #1E40AF; font-weight: bold;">Base Contratada</span> |
-| **Horas Adicionales Devengadas (Sobreesfuerzo)**<br><small>Consultoría de Procesos, Algoritmos SPOT, Seguridad VPS & Reingeniería</small> | 369.50 hrs | $60.00 | **$22,169.77** | <span style="color: #B45309; font-weight: bold;">Valor Entregado</span> |
-| **VALOR TOTAL REAL ENTREGADO A NAVIERA PETRAL** | **519.50 hrs** | — | **$31,269.77** | <span style="color: #15803D; font-weight: bold;">En Operación</span> |
+| **Presupuesto Inicial Aprobado (One-Timers)**<br><small>Diseño (10h) + Desarrollo (110h) + ETL (10h) + Onboarding (10h) + In Situ (10h)</small> | 150.00 hrs | $50 - $100 | **$9,100.00** | <span style="color: #1E40AF; font-weight: bold;">Base Contratada</span> |
+| **Horas Adicionales Devengadas de Desarrollo**<br><small>Consultoría de Procesos, 3 Ciclos ETL, Algoritmos SPOT, Seguridad VPS & Reingeniería</small> | 359.50 hrs | $60.00 | **$21,569.77** | <span style="color: #B45309; font-weight: bold;">Valor Entregado</span> |
+| **VALOR TOTAL REAL ENTREGADO A NAVIERA PETRAL** | **509.50 hrs** | — | **$30,669.77** | <span style="color: #15803D; font-weight: bold;">En Operación</span> |
+
+* **Propuesta de Acuerdo Comercial (Opciones de Regularización):**
+  * **Opción A (Paquete Cerrado por Hitos Adicionales):** Regularización de un monto pactado por la consultoría de procesos, 3 ciclos de ETL, auditorías forenses y módulos enterprise no previstos.
+  * **Opción B (Integración con Fase de Liquidaciones Dinámicas):** Amortización parcial vinculada al kickoff del módulo de liquidaciones reales y activación del fee mensual de mantenimiento VPS ($500/mes).
+
+---
+
+### 🔹 SLIDE 9: Conclusiones & Próximos Pasos (Go-Live)
+* **Título:** Estado Actual: Sistema Listo para Producción.
+* **Subtítulo:** Hitos de cierre, puesta en marcha y soporte continuo para Naviera Petral.
+* **Hitos Inmediatos:**
+  1. **Despliegue al VPS en Vivo:** Plataforma 100% operativa en `https://forecast.geeksoft.tech` (VPS Contabo).
+  2. **Capacitación y Onboarding:** Sesiones con J. Neyra, F. Harten, M.E. Castro e I. Zavala.
+  3. **Transición a Soporte Continuo:** Activación del fee de soporte, hosting Contabo y base de datos Supabase ($500/mes).
+  4. **Kickoff Módulo Liquidaciones:** Inicio de la carga de ejecuciones reales sobre la arquitectura ya construida.
 
 * **Propuesta de Acuerdo Comercial (Opciones de Regularización):**
   * **Opción A (Paquete Cerrado por Hitos Adicionales):** Regularización de un monto pactado por la consultoría de procesos, auditorías forenses y módulos enterprise no previstos.

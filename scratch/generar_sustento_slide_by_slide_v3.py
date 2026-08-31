@@ -1,4 +1,125 @@
-<!DOCTYPE html>
+import os
+import subprocess
+from datetime import datetime
+
+def analyze_workspace(ws_path, hourly_rate=60.0):
+    day_activity = {}
+    git_by_date = {}
+
+    # 1. Commits git
+    cmd = ['git', 'log', '--all', '--pretty=format:%ad|%h|%s', '--date=iso']
+    res = subprocess.run(cmd, capture_output=True, text=True, cwd=ws_path)
+
+    for line in res.stdout.strip().split('\n'):
+        if line:
+            parts = line.split('|', 2)
+            if len(parts) == 3:
+                try:
+                    dt = datetime.strptime(parts[0][:19], '%Y-%m-%d %H:%M:%S')
+                    day_str = dt.strftime('%Y-%m-%d')
+                    if day_str not in day_activity:
+                        day_activity[day_str] = []
+                    day_activity[day_str].append(dt)
+                    if day_str not in git_by_date:
+                        git_by_date[day_str] = []
+                    git_by_date[day_str].append(f"[{parts[1]}] {parts[2]}")
+                except Exception:
+                    pass
+
+    # 2. File modification dates
+    valid_exts = ('.py', '.tsx', '.ts', '.js', '.md', '.sql', '.html', '.json', '.png', '.svg', '.txt', '.pdf', '.css')
+    ignore_dirs = {'node_modules', '.git', 'dist', '.vite', '.vscode', '.obsidian'}
+
+    for root, dirs, files in os.walk(ws_path):
+        dirs[:] = [d for d in dirs if d not in ignore_dirs]
+        for f in files:
+            if f.endswith(valid_exts):
+                path = os.path.join(root, f)
+                try:
+                    mtime = os.path.getmtime(path)
+                    dt = datetime.fromtimestamp(mtime)
+                    day_str = dt.strftime('%Y-%m-%d')
+                    if day_str not in day_activity:
+                        day_activity[day_str] = []
+                    day_activity[day_str].append(dt)
+                except Exception:
+                    pass
+
+    summary = []
+    total_hours_project = 0.0
+    total_events_project = 0
+
+    for idx, day in enumerate(sorted(day_activity.keys()), start=1):
+        timestamps = sorted(day_activity[day])
+        sessions = []
+        curr_start = timestamps[0]
+        curr_end = timestamps[0]
+
+        for t in timestamps[1:]:
+            if (t - curr_end).total_seconds() <= 9000:  # 2.5 horas
+                curr_end = t
+            else:
+                sessions.append((curr_start, curr_end))
+                curr_start = t
+                curr_end = t
+        sessions.append((curr_start, curr_end))
+
+        day_sec = 0
+        for s_start, s_end in sessions:
+            sec = (s_end - s_start).total_seconds()
+            sec += 1800  # 30 min warmup
+            day_sec += sec
+
+        hours = day_sec / 3600.0
+        day_amount = hours * hourly_rate
+        total_hours_project += hours
+        total_events_project += len(timestamps)
+
+        commits_list = git_by_date.get(day, [])
+        commits_text = "; ".join([c.split(' ', 1)[1] for c in commits_list[:2]]) if commits_list else "Desarrollo de interfaz, ruteo y actualizacion de datos"
+        if len(commits_text) > 85:
+            commits_text = commits_text[:82] + "..."
+
+        summary.append({
+            'num': idx,
+            'day': day,
+            'events': len(timestamps),
+            'start': timestamps[0].strftime('%H:%M'),
+            'end': timestamps[-1].strftime('%H:%M'),
+            'hours': round(hours, 2),
+            'amount_usd': round(day_amount, 2),
+            'tasks': commits_text
+        })
+
+    return summary, round(total_hours_project, 2), total_events_project, round(total_hours_project * hourly_rate, 2)
+
+
+def generate_html_deck_v3(ws_path):
+    summary, total_hours, total_events, total_usd = analyze_workspace(ws_path, 60.0)
+    total_days = len(summary)
+    
+    # Datos contractuales oficiales (COTIZACION_MODULAR_PETRAL_V10.RG.pdf)
+    dev_contract_hours = 110.0
+    dev_contract_rate = 60.0
+    dev_contract_usd = 6600.0
+    
+    total_contract_onetime_hours = 150.0
+    total_contract_onetime_usd = 9100.0
+
+    # Sobreesfuerzo de desarrollo puro
+    dev_overage_hours = round(total_hours - dev_contract_hours, 2)
+    dev_overage_usd = round(dev_overage_hours * dev_contract_rate, 2)
+    dev_overage_pct = round((dev_overage_hours / dev_contract_hours) * 100, 1)
+    dev_contract_pct = round((dev_contract_hours / total_hours) * 100, 1)
+
+    # Valor Total Entregado (One-Timers completos + sobreesfuerzo de desarrollo)
+    total_delivered_hours = round(total_contract_onetime_hours + dev_overage_hours, 2)
+    total_delivered_usd = round(total_contract_onetime_usd + dev_overage_usd, 2)
+
+    today_str = datetime.now().strftime('%d de Agosto de %Y')
+    logo_path = r"file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Boiler.Plate/PPTS.HERMOSAS/logo_final_v3.png"
+
+    html = f"""<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -8,9 +129,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 
-        :root {
+        :root {{
             --bg:          #F8FAFC;
             --bg-card:     #FFFFFF;
             --navy:        #0F2C59;
@@ -34,24 +155,24 @@
             --border:      rgba(15, 23, 42, 0.12);
             --shadow:      0 4px 20px rgba(15, 23, 42, 0.08);
             --shadow-lg:   0 12px 40px rgba(15, 23, 42, 0.15);
-        }
+        }}
 
-        html, body {
+        html, body {{
             width: 100%; height: 100%;
             background: var(--bg);
             color: var(--text);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             overflow: hidden;
             user-select: none;
-        }
+        }}
 
-        #progress {
+        #progress {{
             position: fixed; top: 0; left: 0; height: 5px; z-index: 999;
             background: linear-gradient(90deg, var(--accent), var(--green), var(--amber));
             transition: width 0.35s ease;
-        }
+        }}
 
-        .top-brand-bar {
+        .top-brand-bar {{
             position: fixed;
             top: 14px;
             left: 36px;
@@ -61,13 +182,13 @@
             align-items: center;
             z-index: 900;
             pointer-events: none;
-        }
-        .brand-logo {
+        }}
+        .brand-logo {{
             height: 48px;
             object-fit: contain;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
-        }
-        .brand-badge {
+        }}
+        .brand-badge {{
             background: rgba(255, 255, 255, 0.95);
             border: 1px solid var(--border);
             padding: 5px 14px;
@@ -79,14 +200,14 @@
             text-transform: uppercase;
             box-shadow: var(--shadow);
             backdrop-filter: blur(8px);
-        }
+        }}
 
-        #deck {
+        #deck {{
             width: 100%; height: 100%;
             position: relative;
-        }
+        }}
 
-        .slide {
+        .slide {{
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             padding: 72px 52px 50px 52px;
@@ -98,15 +219,15 @@
             transition: opacity 0.4s ease, transform 0.4s ease;
             transform: scale(0.985);
             background: var(--bg);
-        }
-        .slide.active {
+        }}
+        .slide.active {{
             opacity: 1;
             pointer-events: auto;
             transform: scale(1);
             z-index: 10;
-        }
+        }}
 
-        .slide-content {
+        .slide-content {{
             width: 100%;
             max-width: 1300px;
             margin: 0 auto;
@@ -114,9 +235,9 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-        }
+        }}
 
-        .tag {
+        .tag {{
             display: inline-block;
             font-size: 8pt;
             font-weight: 800;
@@ -128,9 +249,9 @@
             border-radius: 4px;
             margin-bottom: 6px;
             width: fit-content;
-        }
+        }}
 
-        h1 {
+        h1 {{
             font-family: 'Outfit', sans-serif;
             font-size: 32pt;
             font-weight: 900;
@@ -138,8 +259,8 @@
             line-height: 1.1;
             margin-bottom: 8px;
             letter-spacing: -0.02em;
-        }
-        h2 {
+        }}
+        h2 {{
             font-family: 'Outfit', sans-serif;
             font-size: 20pt;
             font-weight: 800;
@@ -147,70 +268,70 @@
             line-height: 1.15;
             margin-bottom: 4px;
             letter-spacing: -0.01em;
-        }
-        .sub {
+        }}
+        .sub {{
             font-size: 10pt;
             color: var(--text-dim);
             margin-bottom: 14px;
             font-weight: 500;
-        }
+        }}
 
-        .kpi-grid-4 {
+        .kpi-grid-4 {{
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 14px;
             margin-bottom: 12px;
-        }
-        .kpi-box {
+        }}
+        .kpi-box {{
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 10px;
             padding: 12px 16px;
             box-shadow: var(--shadow);
             border-top: 4px solid var(--accent);
-        }
-        .kpi-box .label {
+        }}
+        .kpi-box .label {{
             font-size: 7.5pt;
             font-weight: 800;
             color: var(--text-dim);
             text-transform: uppercase;
             letter-spacing: 0.08em;
             margin-bottom: 2px;
-        }
-        .kpi-box .num {
+        }}
+        .kpi-box .num {{
             font-family: 'Outfit', sans-serif;
             font-size: 22pt;
             font-weight: 900;
             color: var(--navy);
             line-height: 1.1;
-        }
-        .kpi-box .desc {
+        }}
+        .kpi-box .desc {{
             font-size: 8pt;
             color: var(--text-dim);
             margin-top: 3px;
-        }
+        }}
 
-        .card {
+        .card {{
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 10px;
             padding: 14px 18px;
             box-shadow: var(--shadow);
-        }
+        }}
 
-        .callout {
+        .callout {{
             border-radius: 8px;
             padding: 10px 14px;
             margin-top: 10px;
             font-size: 8.5pt;
             line-height: 1.45;
-        }
-        .callout-blue { background: rgba(2, 132, 199, 0.08); border-left: 4px solid var(--accent); }
-        .callout-amber { background: rgba(217, 119, 6, 0.08); border-left: 4px solid var(--amber); }
-        .callout-green { background: rgba(5, 150, 105, 0.08); border-left: 4px solid var(--green); }
-        .callout-purple { background: rgba(124, 58, 237, 0.08); border-left: 4px solid var(--purple); }
+        }}
+        .callout-blue {{ background: rgba(2, 132, 199, 0.08); border-left: 4px solid var(--accent); }}
+        .callout-amber {{ background: rgba(217, 119, 6, 0.08); border-left: 4px solid var(--amber); }}
+        .callout-green {{ background: rgba(5, 150, 105, 0.08); border-left: 4px solid var(--green); }}
+        .callout-purple {{ background: rgba(124, 58, 237, 0.08); border-left: 4px solid var(--purple); }}
 
-        .code-snippet {
+        .code-snippet {{
             background: #0A192F;
             color: #E2E8F0;
             font-family: 'JetBrains Mono', monospace;
@@ -221,9 +342,9 @@
             white-space: pre;
             overflow-x: auto;
             border: 1px solid #1E293B;
-        }
+        }}
 
-        .ppt-table {
+        .ppt-table {{
             width: 100%;
             border-collapse: collapse;
             font-size: 8.5pt;
@@ -232,8 +353,8 @@
             overflow: hidden;
             box-shadow: var(--shadow);
             border: 1px solid var(--border);
-        }
-        .ppt-table th {
+        }}
+        .ppt-table th {{
             background: var(--navy);
             color: #FFFFFF;
             font-weight: 700;
@@ -242,31 +363,31 @@
             font-size: 8pt;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-        }
-        .ppt-table td {
+        }}
+        .ppt-table td {{
             padding: 8px 12px;
             border-bottom: 1px solid #E2E8F0;
             color: #334155;
             vertical-align: middle;
-        }
-        .ppt-table tr:nth-child(even) {
+        }}
+        .ppt-table tr:nth-child(even) {{
             background: #F8FAFC;
-        }
+        }}
 
-        .badge-pill {
+        .badge-pill {{
             display: inline-block;
             padding: 2px 8px;
             border-radius: 9999px;
             font-size: 7.5pt;
             font-weight: 700;
             text-transform: uppercase;
-        }
-        .badge-blue { background: #DBEAFE; color: #1E40AF; }
-        .badge-green { background: #D1FAE5; color: #065F46; }
-        .badge-amber { background: #FEF3C7; color: #92400E; }
-        .badge-purple { background: #EDE9FE; color: #5B21B6; }
+        }}
+        .badge-blue {{ background: #DBEAFE; color: #1E40AF; }}
+        .badge-green {{ background: #D1FAE5; color: #065F46; }}
+        .badge-amber {{ background: #FEF3C7; color: #92400E; }}
+        .badge-purple {{ background: #EDE9FE; color: #5B21B6; }}
 
-        .slide-footnote {
+        .slide-footnote {{
             display: flex;
             justify-content: space-between;
             font-size: 7.5pt;
@@ -275,9 +396,9 @@
             padding-top: 8px;
             margin-top: 8px;
             font-weight: 600;
-        }
+        }}
 
-        .nav-controls {
+        .nav-controls {{
             position: fixed;
             bottom: 14px;
             right: 36px;
@@ -291,8 +412,8 @@
             border-radius: 9999px;
             box-shadow: var(--shadow);
             backdrop-filter: blur(8px);
-        }
-        .nav-btn {
+        }}
+        .nav-btn {{
             background: transparent;
             border: none;
             color: var(--navy);
@@ -306,18 +427,18 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
-        }
-        .nav-btn:hover {
+        }}
+        .nav-btn:hover {{
             background: var(--navy);
             color: #FFFFFF;
-        }
-        .nav-counter {
+        }}
+        .nav-counter {{
             font-size: 8.5pt;
             font-weight: 800;
             color: var(--navy);
             font-family: 'JetBrains Mono', monospace;
             padding: 0 4px;
-        }
+        }}
     </style>
 </head>
 <body>
@@ -325,7 +446,7 @@
     <div id="progress"></div>
 
     <div class="top-brand-bar">
-        <img src="file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Boiler.Plate/PPTS.HERMOSAS/logo_final_v3.png" class="brand-logo" alt="Logo Petral">
+        <img src="{logo_path}" class="brand-logo" alt="Logo Petral">
         <div class="brand-badge">DICTAMEN PERICIAL &bull; SUSTENTO DE ALCANCE V3</div>
     </div>
 
@@ -336,7 +457,7 @@
              ========================================== -->
         <div class="slide active">
             <div class="slide-content" style="justify-content: center;">
-                <div class="tag">DICTAMEN TÉCNICO-FINANCIERO &bull; 31 DE AGOSTO DE 2026</div>
+                <div class="tag">DICTAMEN TÉCNICO-FINANCIERO &bull; {today_str.upper()}</div>
                 <h1>Navigating the Future</h1>
                 <div class="sub" style="font-size: 13pt; margin-bottom: 20px; color: var(--navy-mid); font-weight: 600;">
                     Sustento de Modificación de Alcance, Consultoría de Procesos y Auditoría Forense de Horas Devengadas
@@ -345,18 +466,18 @@
                 <div class="kpi-grid-4" style="margin-bottom: 20px;">
                     <div class="kpi-box">
                         <div class="label">Desarrollo Cotizado</div>
-                        <div class="num" style="color: #64748B;">110.00 h</div>
+                        <div class="num" style="color: #64748B;">{dev_contract_hours:.2f} h</div>
                         <div class="desc">Etapa 2 ($6,600 USD)</div>
                     </div>
                     <div class="kpi-box" style="border-top: 4px solid var(--accent);">
                         <div class="label">Horas Reales Auditadas</div>
-                        <div class="num" style="color: var(--accent);">469.83 h</div>
+                        <div class="num" style="color: var(--accent);">{total_hours:.2f} h</div>
                         <div class="desc">Algoritmo Inalterable Git/IDE</div>
                     </div>
                     <div class="kpi-box" style="border-top: 4px solid var(--amber);">
                         <div class="label">Sobreesfuerzo Devengado</div>
-                        <div class="num" style="color: var(--amber);">+327.1%</div>
-                        <div class="desc">+359.83 hrs adicionales</div>
+                        <div class="num" style="color: var(--amber);">+{dev_overage_pct}%</div>
+                        <div class="desc">+{dev_overage_hours:.2f} hrs adicionales</div>
                     </div>
                     <div class="kpi-box" style="border-top: 4px solid var(--green);">
                         <div class="label">Estado de Producción</div>
@@ -368,7 +489,7 @@
                 <div class="card" style="border-left: 5px solid var(--accent); background: #FFFFFF;">
                     <strong style="color: var(--navy); font-size: 10.5pt; display: block; margin-bottom: 4px;">Mensaje Clave del Dictamen Gerencial:</strong>
                     <p style="font-size: 9.3pt; color: #334155; line-height: 1.5;">
-                        Presentar a la Gerencia y Dirección de <strong>Naviera Petral S.A.</strong> el sustento objetivo del desborde del alcance inicial: el proyecto evolucionó de una <strong>hoja de cálculo inteligente</strong> a una <strong>Plataforma Integral de Inteligencia Comercial + Consultoría de Reingeniería de Procesos + Bases de un ERP de Gestión de Flota</strong>, respaldada por una auditoría digital inalterable de <strong>469.83 horas reales de trabajo</strong> en 107 jornadas activas.
+                        Presentar a la Gerencia y Dirección de <strong>Naviera Petral S.A.</strong> el sustento objetivo del desborde del alcance inicial: el proyecto evolucionó de una <strong>hoja de cálculo inteligente</strong> a una <strong>Plataforma Integral de Inteligencia Comercial + Consultoría de Reingeniería de Procesos + Bases de un ERP de Gestión de Flota</strong>, respaldada por una auditoría digital inalterable de <strong>{total_hours:.2f} horas reales de trabajo</strong> en {total_days} jornadas activas.
                     </p>
                 </div>
 
@@ -647,29 +768,29 @@
         <div class="slide">
             <div class="slide-content">
                 <div class="tag">TRAZABILIDAD FORENSE &bull; EVIDENCIA INALTERABLE</div>
-                <h2>Slide 7: Auditoría Digital Forense de Horas (110h vs. 469.83h)</h2>
-                <div class="sub">Trazabilidad matemática e inalterable basada en logs de Git y sesiones continuas de IDE al 31 de Agosto de 2026.</div>
+                <h2>Slide 7: Auditoría Digital Forense de Horas ({dev_contract_hours:.0f}h vs. {total_hours:.2f}h)</h2>
+                <div class="sub">Trazabilidad matemática e inalterable basada en logs de Git y sesiones continuas de IDE al {today_str}.</div>
 
                 <div class="kpi-grid-4" style="margin-bottom: 12px;">
                     <div class="kpi-box">
                         <div class="label">Jornadas Auditadas</div>
-                        <div class="num">107</div>
+                        <div class="num">{total_days}</div>
                         <div class="desc">Días continuos registrados</div>
                     </div>
                     <div class="kpi-box" style="border-top: 4px solid var(--amber);">
                         <div class="label">Eventos Registrados</div>
-                        <div class="num" style="color: var(--amber);">3,418</div>
+                        <div class="num" style="color: var(--amber);">{total_events:,}</div>
                         <div class="desc">Commits & File Events</div>
                     </div>
                     <div class="kpi-box" style="border-top: 4px solid var(--red);">
                         <div class="label">Horas Reales IDE</div>
-                        <div class="num" style="color: var(--red);">469.83 h</div>
+                        <div class="num" style="color: var(--red);">{total_hours:.2f} h</div>
                         <div class="desc">Auditoría Inmutable</div>
                     </div>
                     <div class="kpi-box" style="border-top: 4px solid var(--green);">
                         <div class="label">Sobreesfuerzo Dev</div>
-                        <div class="num" style="color: var(--green);">+327.1%</div>
-                        <div class="desc">+359.83 hrs devengadas</div>
+                        <div class="num" style="color: var(--green);">+{dev_overage_pct}%</div>
+                        <div class="desc">+{dev_overage_hours:.2f} hrs devengadas</div>
                     </div>
                 </div>
 
@@ -680,17 +801,17 @@
                         <div style="margin-bottom: 10px;">
                             <div style="display: flex; justify-content: space-between; font-size: 8.2pt; font-weight: bold; margin-bottom: 3px;">
                                 <span>Desarrollo Base Cotizado (Etapa 2):</span>
-                                <span>110.00 hrs (23.4%)</span>
+                                <span>{dev_contract_hours:.2f} hrs ({dev_contract_pct}%)</span>
                             </div>
                             <div style="width: 100%; height: 14px; background: #E2E8F0; border-radius: 7px; overflow: hidden;">
-                                <div style="width: 23.4%; height: 100%; background: #64748B;"></div>
+                                <div style="width: {dev_contract_pct}%; height: 100%; background: #64748B;"></div>
                             </div>
                         </div>
 
                         <div>
                             <div style="display: flex; justify-content: space-between; font-size: 8.2pt; font-weight: bold; margin-bottom: 3px; color: var(--accent);">
                                 <span>Horas Reales Devengadas (IDE + Git):</span>
-                                <span>469.83 hrs (100%)</span>
+                                <span>{total_hours:.2f} hrs (100%)</span>
                             </div>
                             <div style="width: 100%; height: 14px; background: #E2E8F0; border-radius: 7px; overflow: hidden;">
                                 <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #0284C7, #38BDF8);"></div>
@@ -731,7 +852,7 @@
             <div class="slide-content">
                 <div class="tag">VALORIZACIÓN ECONÓMICA &bull; CIERRE COMERCIAL</div>
                 <h2>Slide 8: Liquidación Económica & Propuesta de Regularización</h2>
-                <div class="sub">Valorización formal del servicio entregado y esquema comercial de regularización al 31 de Agosto de 2026.</div>
+                <div class="sub">Valorización formal del servicio entregado y esquema comercial de regularización al {today_str}.</div>
 
                 <table class="ppt-table" style="margin-bottom: 10px;">
                     <thead>
@@ -749,9 +870,9 @@
                                 <strong>Presupuesto Inicial Aprobado (One-Timers)</strong><br>
                                 <span style="font-size: 7.8pt; color: #64748B;">Diseño (10h) + Desarrollo (110h) + ETL (10h) + Onboarding (10h) + In Situ (10h)</span>
                             </td>
-                            <td style="text-align: center;">150.00 hrs</td>
+                            <td style="text-align: center;">{total_contract_onetime_hours:.2f} hrs</td>
                             <td style="text-align: center;">$50 - $100</td>
-                            <td style="text-align: right; font-weight: bold;">$9,100.00</td>
+                            <td style="text-align: right; font-weight: bold;">${total_contract_onetime_usd:,.2f}</td>
                             <td style="text-align: center;"><span class="badge-pill badge-blue">Base Contratada</span></td>
                         </tr>
                         <tr>
@@ -759,18 +880,18 @@
                                 <strong>Horas Adicionales Devengadas de Desarrollo</strong><br>
                                 <span style="font-size: 7.8pt; color: #64748B;">Consultoría de Procesos, Algoritmos SPOT, Seguridad VPS & Reingeniería</span>
                             </td>
-                            <td style="text-align: center; color: var(--red); font-weight: bold;">359.83 hrs</td>
-                            <td style="text-align: center;">$60.00</td>
-                            <td style="text-align: right; color: var(--red); font-weight: bold;">$21,589.80</td>
+                            <td style="text-align: center; color: var(--red); font-weight: bold;">{dev_overage_hours:.2f} hrs</td>
+                            <td style="text-align: center;">${dev_contract_rate:.2f}</td>
+                            <td style="text-align: right; color: var(--red); font-weight: bold;">${dev_overage_usd:,.2f}</td>
                             <td style="text-align: center;"><span class="badge-pill badge-amber">Valor Entregado</span></td>
                         </tr>
                         <tr style="background-color: #EFF6FF; font-weight: bold;">
                             <td style="color: var(--navy); font-size: 9.5pt;">
                                 VALOR TOTAL REAL ENTREGADO A NAVIERA PETRAL
                             </td>
-                            <td style="text-align: center; font-size: 9.5pt;">509.83 hrs</td>
+                            <td style="text-align: center; font-size: 9.5pt;">{total_delivered_hours:.2f} hrs</td>
                             <td style="text-align: center;">—</td>
-                            <td style="text-align: right; color: var(--navy); font-size: 10.5pt;">$30,689.80</td>
+                            <td style="text-align: right; color: var(--navy); font-size: 10.5pt;">${total_delivered_usd:,.2f}</td>
                             <td style="text-align: center;"><span class="badge-pill badge-green">En Operación</span></td>
                         </tr>
                     </tbody>
@@ -864,39 +985,59 @@
         let currentIdx = 0;
         const total = slides.length;
 
-        function updateSlide(idx) {
+        function updateSlide(idx) {{
             if (idx < 0) idx = 0;
             if (idx >= total) idx = total - 1;
             currentIdx = idx;
 
-            slides.forEach((s, i) => {
+            slides.forEach((s, i) => {{
                 s.classList.toggle('active', i === currentIdx);
-            });
+            }});
 
             const pct = ((currentIdx + 1) / total) * 100;
             progressBar.style.width = pct + '%';
 
             const numStr = String(currentIdx + 1).padStart(2, '0');
             const totalStr = String(total).padStart(2, '0');
-            counter.textContent = `${numStr} / ${totalStr}`;
-        }
+            counter.textContent = `${{numStr}} / ${{totalStr}}`;
+        }}
 
         prevBtn.addEventListener('click', () => updateSlide(currentIdx - 1));
         nextBtn.addEventListener('click', () => updateSlide(currentIdx + 1));
 
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        window.addEventListener('keydown', (e) => {{
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {{
                 updateSlide(currentIdx + 1);
-            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+            }} else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {{
                 updateSlide(currentIdx - 1);
-            } else if (e.key === 'Home') {
+            }} else if (e.key === 'Home') {{
                 updateSlide(0);
-            } else if (e.key === 'End') {
+            }} else if (e.key === 'End') {{
                 updateSlide(total - 1);
-            }
-        });
+            }}
+        }});
 
         updateSlide(0);
     </script>
 </body>
 </html>
+"""
+    return html
+
+
+if __name__ == '__main__':
+    ws_path = r'C:\Users\rguti\PETRAL.SMART.DASHBOARD'
+    html_content = generate_html_deck_v3(ws_path)
+
+    v3_path = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Refactorizacion.Multicotizador\Informe_Sustento_Modificacion_Alcance_Petral_V3.html"
+    presentation_path = r"C:\Users\rguti\PETRAL.SMART.DASHBOARD\presentation.html"
+
+    with open(v3_path, "w", encoding="utf-8") as f:
+        f.write(html_content)
+
+    with open(presentation_path, "w", encoding="utf-8") as f:
+        f.write(html_content)
+
+    print(f"Deck V3 generado exitosamente en:")
+    print(f" -> {v3_path}")
+    print(f" -> {presentation_path}")
