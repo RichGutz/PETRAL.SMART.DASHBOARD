@@ -695,6 +695,14 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </div>
                     </div>
 
+                </div>
+                {/* FIN FILA 1 */}
+
+                {/* ====================================================================================== */}
+                {/* FILA 2: PARÁMETROS OPERATIVOS (7, 8 y 9), BOTÓN AÑADIR, ESCENARIOS Y ACCIONES */}
+                {/* ====================================================================================== */}
+                <div className="flex items-center gap-2.5 w-full pt-1.5 border-t border-slate-200/80 overflow-x-auto">
+                    
                     {/* PASO 7: Nº VIAJES */}
                     <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
                         <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-black text-xs shadow-2xs shrink-0">
@@ -716,14 +724,6 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </div>
                     </div>
 
-                </div>
-                {/* FIN FILA 1 */}
-
-                {/* ====================================================================================== */}
-                {/* FILA 2: PARÁMETROS OPERATIVOS (8 y 9), BOTÓN AÑADIR, ESCENARIOS Y ACCIONES */}
-                {/* ====================================================================================== */}
-                <div className="flex items-center gap-2.5 w-full pt-1.5 border-t border-slate-200/80 overflow-x-auto">
-                    
                     {/* PASO 8: DEMURRAGE (%) */}
                     <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
                         <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-black text-xs shadow-2xs shrink-0">
@@ -836,46 +836,57 @@ export const ForecastBuilder: React.FC<ForecastBuilderProps> = ({
                         </button>
                     </div>
 
-                    {/* Vista ($ / %) */}
-
+                    {/* Vista (USD / %) - Doble Fila */}
                     {displayMode && onDisplayModeChange && (
-                        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5 h-7.5 w-28 border border-slate-200 shadow-2xs shrink-0">
-                            <span className="text-[9.5px] uppercase font-black text-slate-500 px-1">Vista:</span>
-                            <button
-                                type="button"
-                                onClick={() => onDisplayModeChange('usd')}
-                                className={`flex-1 text-center py-0.5 text-[9.5px] font-black rounded cursor-pointer transition-colors ${displayMode === 'usd' ? 'bg-white shadow-2xs text-sky-700 font-extrabold' : 'text-slate-500 hover:bg-slate-200'}`}
-                            >
-                                UND
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => onDisplayModeChange('pct')}
-                                className={`flex-1 text-center py-0.5 text-[9.5px] font-black rounded cursor-pointer transition-colors ${displayMode === 'pct' ? 'bg-white shadow-2xs text-sky-700 font-extrabold' : 'text-slate-500 hover:bg-slate-200'}`}
-                            >
-                                %
-                            </button>
+                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                                    VISTA
+                                </span>
+                                <div className="flex items-center gap-1 bg-slate-100 rounded-md p-0.5 h-7 border border-slate-200 shadow-2xs">
+                                    <button
+                                        type="button"
+                                        onClick={() => onDisplayModeChange('usd')}
+                                        className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded cursor-pointer transition-colors ${displayMode === 'usd' ? 'bg-white shadow-2xs text-sky-700 font-black' : 'text-slate-500 hover:bg-slate-200'}`}
+                                    >
+                                        USD
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onDisplayModeChange('pct')}
+                                        className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded cursor-pointer transition-colors ${displayMode === 'pct' ? 'bg-white shadow-2xs text-sky-700 font-black' : 'text-slate-500 hover:bg-slate-200'}`}
+                                    >
+                                        %
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
 
-                    {/* Formato Matriz: PETRAL / NAVITRANSO */}
+                    {/* Formato Matriz: PETRAL / NAVITRANSO - Doble Fila */}
                     {onMatrixFormatChange && (
-                        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5 h-7.5 border border-slate-200 shadow-2xs shrink-0">
-                            <span className="text-[9.5px] uppercase font-black text-slate-500 px-1">Formato:</span>
-                            <button
-                                type="button"
-                                onClick={() => onMatrixFormatChange('PETRAL')}
-                                className={`px-2 py-0.5 text-[9.5px] font-black rounded cursor-pointer transition-colors ${matrixFormat === 'PETRAL' ? 'bg-white shadow-2xs text-sky-800 font-black' : 'text-slate-500 hover:bg-slate-200'}`}
-                            >
-                                PETRAL
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => onMatrixFormatChange('NAVITRANSO')}
-                                className={`px-2 py-0.5 text-[9.5px] font-black rounded cursor-pointer transition-colors ${matrixFormat === 'NAVITRANSO' ? 'bg-emerald-600 shadow-2xs text-white font-black' : 'text-slate-500 hover:bg-slate-200'}`}
-                            >
-                                NAVITRANSO
-                            </button>
+                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 shadow-2xs shrink-0 hover:border-slate-300 transition-all">
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
+                                    FORMATO
+                                </span>
+                                <div className="flex items-center gap-1 bg-slate-100 rounded-md p-0.5 h-7 border border-slate-200 shadow-2xs">
+                                    <button
+                                        type="button"
+                                        onClick={() => onMatrixFormatChange('PETRAL')}
+                                        className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded cursor-pointer transition-colors ${matrixFormat === 'PETRAL' ? 'bg-white shadow-2xs text-sky-800 font-black' : 'text-slate-500 hover:bg-slate-200'}`}
+                                    >
+                                        PETRAL
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onMatrixFormatChange('NAVITRANSO')}
+                                        className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded cursor-pointer transition-colors ${matrixFormat === 'NAVITRANSO' ? 'bg-emerald-600 shadow-2xs text-white font-black' : 'text-slate-500 hover:bg-slate-200'}`}
+                                    >
+                                        NAVITRANSO
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
 
