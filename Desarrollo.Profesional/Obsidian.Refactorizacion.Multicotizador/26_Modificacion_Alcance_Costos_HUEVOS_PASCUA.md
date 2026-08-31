@@ -159,21 +159,6 @@ graph TD
   3. **Transición a Soporte Continuo:** Activación del fee de soporte, hosting Contabo y base de datos Supabase ($500/mes).
   4. **Kickoff Módulo Liquidaciones:** Inicio de la carga de ejecuciones reales sobre la arquitectura ya construida.
 
-* **Propuesta de Acuerdo Comercial (Opciones de Regularización):**
-  * **Opción A (Paquete Cerrado por Hitos Adicionales):** Regularización de un monto pactado por la consultoría de procesos, auditorías forenses y módulos enterprise no previstos.
-  * **Opción B (Integración con Fase de Liquidaciones Dinámicas):** Amortización parcial vinculada al kickoff del módulo de liquidaciones reales y activación del fee mensual de mantenimiento VPS ($500/mes).
-
----
-
-### 🔹 SLIDE 9: Conclusiones & Próximos Pasos (Go-Live)
-* **Título:** Estado Actual: Sistema Listo para Producción.
-* **Subtítulo:** Hitos de cierre, puesta en marcha y soporte continuo para Naviera Petral.
-* **Hitos Inmediatos:**
-  1. **Despliegue al VPS en Vivo:** Plataforma 100% operativa en `https://forecast.geeksoft.tech` (VPS Contabo).
-  2. **Capacitación y Onboarding:** Sesiones con J. Neyra, F. Harten, M.E. Castro e I. Zavala.
-  3. **Transición a Soporte Continuo:** Activación del fee de soporte, hosting Contabo y base de datos Supabase ($500/mes).
-  4. **Kickoff Módulo Liquidaciones:** Inicio de la carga de ejecuciones reales sobre la arquitectura ya construida.
-
 ---
 
 ## 🛠️ ANEXO TÉCNICO: SCRIPT DE AUDITORÍA FORENSE DE HORAS
