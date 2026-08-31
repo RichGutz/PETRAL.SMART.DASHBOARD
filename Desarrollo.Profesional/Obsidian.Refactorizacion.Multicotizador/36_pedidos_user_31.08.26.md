@@ -392,4 +392,31 @@ A continuación se detalla la matriz de contraste pericial entre los indicadores
 - **Repositorio Remoto:** GitHub (`origin`) sincronizado y actualizado.
 - **Estado de Producción:** VPS `https://forecast.geeksoft.tech` 100% operativo.
 
+---
+
+## 16. Dictamen Pericial V3: Sustento de Modificación de Alcance & Auditoría Forense (469.50 hrs)
+
+### 16.1 Hitos y Ajustes Estratégicos Incorporados
+1. **Calibración Contractual Oficial:**
+   - Establecida la base contractual de **Desarrollo de Software** según [`COTIZACION_MODULAR_PETRAL_V10.RG.pdf`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Proposal/COTIZACION_MODULAR_PETRAL_V10.RG.pdf) en **110.00 hrs @ $60/hr = $6,600.00 USD** (Presupuesto One-Timers total: 150 hrs = $9,100.00 USD).
+   - Horas reales auditadas devengadas al 31/08/2026: **469.50 hrs** en 107 jornadas y 3,414 eventos inmutables.
+   - Sobreesfuerzo neto de desarrollo: **+359.50 hrs (+326.8%)** equivalentes a **+$21,569.77 USD** devengados.
+2. **Reingeniería de Contenidos por Slide (9 Diapositivas):**
+   - **Slide 2 (Realidad Operativa):** Fragmentación operadores vs. liquidaciones (omisión de muellaje, demurrage, arriendo de naves y demoras por puerto); 3 ciclos de ETL completos; inviabilidad del modelo comercial previo.
+   - **Slide 3 (Pipeline 4 Pasos):** Voyage Calculator (muellaje + demoras estadísticas en tiempo real), Matriz Financiera (reporteador multidimensional sin trabajo manual), AN GRAF (descubrimiento de patrones ocultos) y Spaghetti Map (visión geoespacial de rutas).
+   - **Slide 4 (Organigrama Digital):** Eliminado `MGO = MDO`; incorporada la delimitación estricta de responsabilidades y segregación de roles por usuario.
+   - **Slide 5 (Visión Liquidaciones):** De agregación pasiva de facturas a auditoría forense centavo a centavo mediante captura de inputs de maniobras operativas.
+   - **Slide 6 (Metodología de Auditoría):** Explicación del modelo de pair programming continuo, triple registro inmutable y clustering de sesiones con corte a 2.5h y warmup de 30 min.
+   - **Slide 7 (Auditoría Forense de Horas):** Comparativa visual 110h vs 469.50h.
+   - **Slide 8 (Liquidación Económica):** Opciones comerciales A y B.
+   - **Slide 9 (Roadmap VPS):** Cierre y pase a producción.
+3. **Mecanismo de Actualización en Tiempo Real:**
+   - Script dinámico `scratch/generar_sustento_slide_by_slide_v3.py` autoejecutable en 5 segundos.
+   - HTMLs sincronizados: [`Informe_Sustento_Modificacion_Alcance_Petral_V3.html`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Obsidian.Refactorizacion.Multicotizador/Informe_Sustento_Modificacion_Alcance_Petral_V3.html) y [`presentation.html`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/presentation.html).
+
+### 16.2 Versionado Git & Tagging
+- **Nuevo Tag:** `PRE.GRAND.FINALE.31.08.26.4`
+- **Nueva Rama:** `PRE.GRAND.FINALE.31.08.26.4`
+- **Repositorio Remoto:** Sincronizado en GitHub (`origin`).
+
 
