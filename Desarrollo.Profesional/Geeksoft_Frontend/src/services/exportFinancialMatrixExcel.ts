@@ -168,11 +168,12 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                 const cSpan = parseInt(td.getAttribute('colspan') || '1', 10);
                 const tdClass = td.className || '';
 
-                // Extraer el texto real evitando artefactos de <select> o botones
+                // Extraer el texto real evitando artefactos de <select>, svg o badges parásitos
                 let textValue = '';
                 const selectEl = td.querySelector('select');
                 const inputEl = td.querySelector('input');
                 const vertDiv = td.querySelector('.vertical-text');
+                const btnEl = td.querySelector('button');
 
                 if (selectEl) {
                     textValue = selectEl.value || (vertDiv ? vertDiv.textContent?.trim() : '') || '';
@@ -180,33 +181,28 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                     textValue = inputEl.value;
                 } else if (vertDiv) {
                     textValue = vertDiv.textContent?.trim() || '';
+                } else if (btnEl) {
+                    // Extraer texto del botón sanitizando iconos svg y badges de tipo "Net" o "TCE $/d"
+                    const btnClone = btnEl.cloneNode(true) as HTMLElement;
+                    btnClone.querySelectorAll('svg, .font-mono, [class*="text-[9px]"]').forEach(el => el.remove());
+                    textValue = btnClone.textContent?.trim() || '';
                 } else {
                     const clone = td.cloneNode(true) as HTMLElement;
-                    clone.querySelectorAll('button, svg, select').forEach(el => el.remove());
+                    clone.querySelectorAll('svg, select, input, [class*="text-[9px]"]').forEach(el => el.remove());
                     textValue = clone.textContent?.trim() || '';
                 }
 
                 const isDimensionCol = tdClass.includes('vertical-text') || td.querySelector('.vertical-text') !== null;
                 const cell = ws.getCell(currentRow, currentCol);
 
-                // Detectar si esta celda define la métrica de la fila (columna de métricas)
-                const upperText = textValue.toUpperCase();
-                if (
-                    upperText.includes('P/L') || upperText.includes('TONELADAS') || upperText.includes('REVENUE') || 
-                    upperText.includes('COSTS') || upperText.includes('BUNKER') || upperText.includes('MARGEN') || 
-                    upperText.includes('YIELD') || upperText.includes('DEMURRAGE') || upperText.includes('DEMORAS') || 
-                    upperText.includes('FLETE') || upperText.includes('VIAJES') || upperText.includes('VENTAS') || 
-                    upperText.includes('HIRE') || upperText.includes('COMBUSTIBLE') || upperText.includes('PUERTO') || 
-                    upperText.includes('ARRIENDO') || upperText.includes('TCY') || upperText.includes('TCE') || 
-                    upperText.includes('GASTOS') || upperText.includes('CANAL') || upperText.includes('TARIFA') ||
-                    upperText.includes('DÍAS-BUQUE')
-                ) {
-                    currentMetricName = upperText;
+                // La columna 4 siempre contiene el nombre de la métrica
+                if (currentCol === 4 && !isDimensionCol && textValue !== '') {
+                    currentMetricName = textValue.toUpperCase().trim();
                 }
 
                 // Identificar y parsear valores numéricos
                 const rawClean = textValue.replace(/[\$,\s]/g, '');
-                const isPercent = textValue.includes('%') || currentMetricName.includes('%') || currentMetricName.includes('MARGEN');
+                const isPercent = textValue.includes('%') || currentMetricName.includes('%') || currentMetricName.includes('MARGEN') || currentMetricName.includes('YIELD %');
                 const cleanNumStr = rawClean.replace('%', '');
 
                 let isNumeric = false;
@@ -216,25 +212,43 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                     parsedNum = parseFloat(cleanNumStr);
                 }
 
-                // Asignar valor y formato
+                // Asignar valor y formato numérico estricto
                 if (isNumeric) {
                     if (isPercent) {
                         cell.value = parsedNum > 1 ? parsedNum / 100 : parsedNum;
                         cell.numFmt = '0.0%';
                     } else if (
-                        currentMetricName.includes('YIELD') || currentMetricName.includes('USD/MT') || 
-                        currentMetricName.includes('FLETE') || currentMetricName.includes('TARIFA') || 
-                        currentMetricName.includes('TCE') || currentMetricName.includes('TCY')
+                        currentMetricName.includes('VIAJE') || currentMetricName.includes('FREQ') || 
+                        currentMetricName.includes('FREQUENCY')
                     ) {
+                        // NO MONETARIO: Viajes
                         cell.value = parsedNum;
-                        cell.numFmt = '$#,##0.00';
-                    } else if (currentMetricName.includes('VIAJES') || currentMetricName.includes('FREQ') || currentMetricName.includes('DÍAS')) {
+                        cell.numFmt = Number.isInteger(parsedNum) ? '#,##0' : '0.0';
+                    } else if (
+                        currentMetricName.includes('DÍA') || currentMetricName.includes('DAYS') || 
+                        currentMetricName.includes('DÍAS') || currentMetricName.includes('DURACIÓN')
+                    ) {
+                        // NO MONETARIO: Días de operación
                         cell.value = parsedNum;
                         cell.numFmt = '0.0';
-                    } else if (currentMetricName.includes('TONELADAS') || currentMetricName.includes('BASE FLETE')) {
+                    } else if (
+                        currentMetricName.includes('TONELADA') || currentMetricName.includes('TONS') || 
+                        currentMetricName.includes('CARGA') || currentMetricName.includes('BASE FLETE') || 
+                        currentMetricName.includes('VOLUMEN') || currentMetricName.includes('MT')
+                    ) {
+                        // NO MONETARIO: Toneladas de carga
                         cell.value = parsedNum;
                         cell.numFmt = '#,##0';
+                    } else if (
+                        currentMetricName.includes('USD/MT') || currentMetricName.includes('TARIFA') || 
+                        currentMetricName.includes('TCE') || currentMetricName.includes('TCY') || 
+                        currentMetricName.includes('$/D') || currentMetricName.includes('$/DÍA')
+                    ) {
+                        // MONETARIO UNITARIO: Tarifas y TCE con centavos
+                        cell.value = parsedNum;
+                        cell.numFmt = '$#,##0.00';
                     } else {
+                        // MONETARIO GLOBAL: Net Revenue, Bunker, Puertos, P&L, etc.
                         cell.value = parsedNum;
                         cell.numFmt = '$#,##0';
                     }
