@@ -112,18 +112,25 @@ flowchart TD
 
 ---
 
-## 6. QC (Control de Calidad Multi-Escenario sobre Base de Datos Real)
+---
 
-Se extrajeron y verificaron los 6 escenarios oficiales guardados en producción, comprobando fila por fila que **las filas de Subtotales, Total Flota y Total Acumulado están 100% presentes con sus datos reales**:
+## 7. Hallazgo Pericial: Extracción de Métricas y Máscaras No Monetarias
 
-| N° | Escenario Oficial en Base de Datos | Clientes Activos | Total Filas | Total Viajes | Net Revenue Total | Voyage Margin (P/L) | Archivo XLSX Generado y Verificado |
-|:--:|---|:---:|:---:|:---:|:---:|:---:|---|
-| **1** | **PB 2027 (Jose de los Heros) + Prom Dem + Nexa.RG** | SPCC, NEXA | **96** | 66.0 | **$25,076,745** | **$9,257,013** | [`Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem__NexaRG.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem__NexaRG.xlsx) |
-| **2** | **PB 2027 (Jose de los Heros) + Prom Dem + Nexa** | SPCC, NEXA | **96** | 72.0 | **$27,862,845** | **$10,416,955** | [`Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem__Nexa.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem__Nexa.xlsx) |
-| **3** | **PB 2027 (Jose de los Heros) + Prom Dem** | SPCC | **79** | 60.0 | **$22,290,645** | **$8,097,071** | [`Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem.xlsx) |
-| **4** | **PB 2027 (Jose de los Heros)** | SPCC | **79** | 60.0 | **$17,651,645** | **$7,384,060** | [`Matriz_PB_2027_Jose_de_los_Heros.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027_Jose_de_los_Heros.xlsx) |
-| **5** | **PB 2027 + Demora** | SPCC | **52** | 61.0 | **$17,887,220** | **$7,738,271** | [`Matriz_PB_2027__Demora.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027__Demora.xlsx) |
-| **6** | **PB 2027 MOQUEGUA SIN DEMORAS** | SPCC | **52** | 59.0 | **$17,880,050** | **$7,139,080** | [`Matriz_PB_2027_MOQUEGUA_SIN_DEMORAS.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027_MOQUEGUA_SIN_DEMORAS.xlsx) |
+### A. Diagnóstico de Celdas de Métrica Vacías:
+- **Causa Raíz:** En la interfaz web, las métricas expandibles (`Net Revenue`, `Métricas TCE ($/d)`, etc.) renderizan su texto dentro de un elemento `<button>` con insignias complementarias (ej. `<span className="font-mono">Net</span>`).
+- **El Fallo:** La rutina de sanitización ejecutaba `clone.querySelectorAll('button').remove()`, lo que eliminaba el botón entero y dejaba la celda de la métrica en blanco (`""`).
+- **Solución Pericial:** Se preserva el contenedor del botón y se eliminan únicamente los elementos SVG y badges parásitos (`.font-mono`, `[class*="text-[9px]"]`).
+
+### B. Reglas Estrictas de Formato Numérico (Monetario vs No Monetario):
+
+| Tipo de Métrica | Métricas Incluidas | Máscara Excel (`numFmt`) | ¿Lleva Símbolo de Dólar ($)? |
+|---|---|:---:|:---:|
+| **Viajes / Frecuencia** | `Viajes (freq)`, `Viajes`, `Frequency` | `#,##0` / `0.0` | **NO ($ prohibido)** |
+| **Días Operativos** | `Días-Buque`, `Demurrage Days`, `Duración Total` | `0.0` | **NO ($ prohibido)** |
+| **Tonelaje de Carga** | `Toneladas`, `Base Flete (MT)`, `Carga`, `MT` | `#,##0` | **NO ($ prohibido)** |
+| **Porcentajes de Margen** | `Margen %`, `Margen Operativo %`, `Yield %` | `0.0%` | **NO ($ prohibido)** |
+| **Tarifas y Fletes Unitarios** | `Tarifa Base (USD/MT)`, `Flete (USD/MT)`, `TCE ($/d)` | `$#,##0.00` | **SÍ (con 2 decimales)** |
+| **Totales Monetarios** | `Net Revenue`, `Bunker Costs`, `Port Costs`, `P/L` | `$#,##0` | **SÍ (entero con comas)** |
 
 ---
 *Firma Pericial: Benoit Blanc - Detective Auditor*
