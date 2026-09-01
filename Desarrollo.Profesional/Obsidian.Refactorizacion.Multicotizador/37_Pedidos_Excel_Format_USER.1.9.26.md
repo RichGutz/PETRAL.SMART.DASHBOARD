@@ -93,11 +93,21 @@ flowchart TD
    - Rotación de texto `textRotation: 90` para las columnas de dimensiones.
    - Sanitización del DOM: extracción de `select.value` y eliminación de etiquetas `<button>` y `<svg>`.
    - Formateo numérico nativo de Excel (`$#,##0`, `0.0%`, `$#,##0.00`, `#,##0`).
-3. **Validación Ejecutable Headless**:
-   - Archivo validado y contrastado con `openpyxl`: `Exceles.Petral/test_qc_matriz_financiera_verified.xlsx`.
-   - Verificado: 21 rangos combinados, 100% libre de selectores concatenados, fechas limpias y rotación activa.
-4. **Despliegue a Producción (VPS)**:
-   - Desplegado en vivo a [https://forecast.geeksoft.tech](https://forecast.geeksoft.tech) con Nginx y FastAPI reiniciados.
+
+---
+
+## 5. Auditoría Pericial Cruzada de los 6 Escenarios de Base de Datos
+
+Se extrajeron los 6 escenarios oficiales guardados en producción, ejecutando la simulación matemática completa y generando sus libros `.xlsx` estilizados con datos reales:
+
+| N° | Nombre del Escenario | Clientes Activos | Filas | Total Viajes | Net Revenue Total | Voyage Margin (P/L) | Archivo XLSX Generado y Verificado |
+|:--:|---|:---:|:---:|:---:|:---:|:---:|---|
+| **1** | **PB 2027 (Jose de los Heros) + Prom Dem + Nexa.RG** | SPCC, NEXA | 64 | 66.0 | **$25,076,745** | **$9,257,013** | [`Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem__NexaRG.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem__NexaRG.xlsx) |
+| **2** | **PB 2027 (Jose de los Heros) + Prom Dem + Nexa** | SPCC, NEXA | 64 | 72.0 | **$27,862,845** | **$10,416,955** | [`Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem__Nexa.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem__Nexa.xlsx) |
+| **3** | **PB 2027 (Jose de los Heros) + Prom Dem** | SPCC | 55 | 60.0 | **$22,290,645** | **$8,097,071** | [`Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem.xlsx) |
+| **4** | **PB 2027 (Jose de los Heros)** | SPCC | 55 | 60.0 | **$17,651,645** | **$7,384,060** | [`Matriz_PB_2027_Jose_de_los_Heros.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027_Jose_de_los_Heros.xlsx) |
+| **5** | **PB 2027 + Demora** | SPCC | 28 | 61.0 | **$17,887,220** | **$7,738,271** | [`Matriz_PB_2027__Demora.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027__Demora.xlsx) |
+| **6** | **PB 2027 MOQUEGUA SIN DEMORAS** | SPCC | 28 | 59.0 | **$17,880,050** | **$7,139,080** | [`Matriz_PB_2027_MOQUEGUA_SIN_DEMORAS.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027_MOQUEGUA_SIN_DEMORAS.xlsx) |
 
 ---
 *Firma Pericial: Benoit Blanc - Detective Auditor*
