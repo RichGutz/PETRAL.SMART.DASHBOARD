@@ -18,6 +18,7 @@ const COLOR_MAP: Record<string, { bg: string; fg: string }> = {
     'bg-indigo-600': { bg: 'FF4F46E5', fg: 'FFFFFFFF' },
     'bg-slate-800': { bg: 'FF1E293B', fg: 'FFFFFFFF' },
     'bg-amber-100': { bg: 'FFFEF3C7', fg: 'FF78350F' },
+    'bg-petral-teal': { bg: 'FF0D9488', fg: 'FFFFFFFF' },
 };
 
 function getCellArgb(className: string, text: string, isHeader: boolean, isTotalAcumHeader: boolean) {
@@ -39,14 +40,15 @@ function getCellArgb(className: string, text: string, isHeader: boolean, isTotal
     const upper = text.toUpperCase();
     if (upper.includes('NEXA')) return { bg: 'FF0F4C81', fg: 'FFFFFFFF' };
     if (upper.includes('SPCC')) return { bg: 'FF0369A1', fg: 'FFFFFFFF' };
-    if (upper.includes('MATARANI')) return { bg: 'FF06B6D4', fg: 'FFFFFFFF' };
-    if (upper.includes('MARCONA')) return { bg: 'FFA855F7', fg: 'FFFFFFFF' };
-    if (upper.includes('MEJILLONES')) return { bg: 'FFD946EF', fg: 'FFFFFFFF' };
+    if (upper.includes('MATARANI')) return { bg: 'FF06B6D4', fg: 'FFFFFFFF' }; // Cyan
+    if (upper.includes('MARCONA')) return { bg: 'FFA855F7', fg: 'FFFFFFFF' }; // Purple
+    if (upper.includes('MEJILLONES')) return { bg: 'FFD946EF', fg: 'FFFFFFFF' }; // Fuchsia
     if (upper.includes('TABLONES')) return { bg: 'FFDC2626', fg: 'FFFFFFFF' };
     if (upper.includes('MOQUEGUA')) return { bg: 'FF16A34A', fg: 'FFFFFFFF' };
     if (upper.includes('CONCON')) return { bg: 'FF475569', fg: 'FFFFFFFF' };
     if (upper.includes('HUEMUL')) return { bg: 'FF4F46E5', fg: 'FFFFFFFF' };
-    if (upper.includes('TOTAL ACUMULADO') || upper.includes('TOTAL FLOTA')) return { bg: 'FF312E81', fg: 'FFFFFFFF' }; // Indigo 900
+    if (upper.includes('TOTAL ACUMULADO')) return { bg: 'FF0D9488', fg: 'FFFFFFFF' }; // Teal
+    if (upper.includes('TOTAL FLOTA')) return { bg: 'FF1E293B', fg: 'FFFFFFFF' }; // Slate 800
     if (upper.includes('SUBTOTAL') || upper.includes('TOTAL CLIENT')) return { bg: 'FF1E293B', fg: 'FFFBBF24' }; // Slate 800 + Amber
 
     return null;
