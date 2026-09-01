@@ -145,4 +145,14 @@ flowchart TD
   - Resultado: Hoja de cálculo limpia, ejecutiva y legible a primer golpe de vista.
 
 ---
+
+## 9. Blindaje Pericial: Preservación Absoluta de Títulos en Columna Métrica
+
+### A. Diagnóstico de la Desaparición de Títulos:
+- **Causa:** Al implementar la regla de ocultar ceros, la condición `if (!isDimensionCol && parsedNum === 0)` evaluó la columna 4 (Métrica) como no numérica (`parsedNum = 0`), borrando erróneamente los títulos de texto de las métricas.
+- **Acción Correctiva:**
+  - Se blindó la **Columna 4 (`isMetricCol = currentCol === 4`)** y las **Columnas de Dimensión (1..3)** para que **SIEMPRE preserven su texto íntegro**.
+  - La regla de blanqueo de ceros y guiones se restringió estrictamente a las **Columnas de Datos (`currentCol >= 5`)**.
+
+---
 *Firma Pericial: Benoit Blanc - Detective Auditor*
