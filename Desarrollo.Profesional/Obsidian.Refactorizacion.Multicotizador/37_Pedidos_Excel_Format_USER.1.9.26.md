@@ -133,4 +133,16 @@ flowchart TD
 | **Totales Monetarios** | `Net Revenue`, `Bunker Costs`, `Port Costs`, `P/L` | `$#,##0` | **SÍ (entero con comas)** |
 
 ---
+
+## 8. Refinamiento Final: Erradicación Total de Ceros y Guiones
+
+### A. Diagnóstico y Pedido del Usuario:
+- **Observación:** *"Ceros y guiones que desaparezcan y con eso estamos listos."*
+- **Problema:** En los meses donde una ruta o buque no opera (ej. meses alternos de frecuencia bimestral), aparecían valores `$0`, `0.0` o `"-"` que ensuciaban visualmente la cuadrícula.
+- **Acción Pericial Aplicada:**
+  - En `exportFinancialMatrixExcel.ts`: Toda celda con valor `0`, `0.0`, `$0` o `"-"` se transforma en una **celda vacía (`""`)**.
+  - Solo los meses con operación activa y cifras reales contienen valores numéricos con sus respectivos formatos (`$#,##0`, `0.0%`, `$#,##0.00`, `#,##0`).
+  - Resultado: Hoja de cálculo limpia, ejecutiva y legible a primer golpe de vista.
+
+---
 *Firma Pericial: Benoit Blanc - Detective Auditor*
