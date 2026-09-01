@@ -1,158 +1,131 @@
-# 37. Libreta Pericial de Benoit Blanc - Auditoría de Exportación a Excel (01.09.2026)
+# 37. Libreta Pericial de Benoit Blanc - Auditoría Integral de Exportación a Excel (01.09.2026)
 
 **Auditor a Cargo:** Benoit Blanc (Auditor Pericial Implacable)  
-**Caso:** "El Asesino en la Grilla - Discrepancia Forense del Excel Descargado"  
-**Archivo de la Escena del Crimen:** `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\Petral_Forecast_Matriz_2026-09-01.xlsx`  
-**Escenario de Evaluación:** `PB 2027 (Jose de los Heros) + Prom Dem + Nexa.RG`  
-**Fecha de Registro:** 01 de Septiembre de 2026  
+**Caso Oficial:** "El Asesino en la Grilla - De la Corrupción de SheetJS al Motor Canónico ExcelJS"  
+**Hito Oficial Git:** `EXCEL.PEDIDO.IZ.1.9.26` (Tag y Branch sincronizados en GitHub)  
+**URL Producción en Vivo:** `https://forecast.geeksoft.tech`  
+**Servidor VPS:** `91.108.125.253` (Ubuntu Linux / Nginx / FastAPI / Systemd)  
+**Fecha de Cierre:** 01 de Septiembre de 2026  
 
 ---
 
-## 1. BEN (Personificación y Declaración Pericial)
+## 1. BEN (Declaración Pericial y Filosofía del Método)
 
-> *"Permítanme observar la escena del crimen con la agudeza que el caso amerita. Cuando un analista financiero presiona el botón 'Exportar Excel', espera que el archivo descargado sea un espejo exacto, noble y pulcro de la obra maestra que contempla en su monitor. Procedo a levantar el acta pericial con el método **BEN / LEG / CLONAR / DIFF / NOTA / QC** para garantizar que no retrocederemos un solo milímetro de lo avanzado."*
+> *"Permítanme asentar en los anales del proyecto la travesía completa. Cuando un analista financiero en Petral descarga la Matriz Financiera, el archivo resultante debe ser un gemelo perfecto de la interfaz gráfica: con sus dimensiones en vertical a 90°, sus colores corporativos inconfundibles, sus subtotales dorados, su consolidado de flota, su acumulado de cierre y, por encima de todo, una limpieza quirúrgica donde los meses sin viajes no se vean contaminados por ceros o guiones parásitos. A continuación, documento cada paso, cada descubrimiento y cada script que nos condujo a la versión definitiva del tag `EXCEL.PEDIDO.IZ.1.9.26`."*
 
 ---
 
 ## 2. LEG (Legacy - La Escena del Crimen en el Archivo Original)
 
-Se inspeccionaron las **100 filas x 17 columnas** del archivo `Petral_Forecast_Matriz_2026-09-01.xlsx`. Los hallazgos forenses son categóricos:
+### Archivo Auditado:
+`C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\Petral_Forecast_Matriz_2026-09-01.xlsx` (100 filas x 17 columnas).
 
+### Cuadro Forense de Patologías Detectadas:
 ```
-+----------------------------------------------------------------------------------------------------------------------------------+
-| #   | ELEMENTO / COLUMNA         | EVIDENCIA EXTRAÍDA DE LA ESCENA (LEGACY)             | PATOLOGÍA FORENSE                      |
-+-----+----------------------------+------------------------------------------------------+----------------------------------------+
-| 1   | Cabecera de Fechas (Row 1) | 46387.79125 | 46418.79125 | 46446.79125 ...          | SheetJS convirtió "Ene 2027" en floats |
-| 2   | Columna Buque (Col C)      | MOQUEGUAMOQUEGUATABLONESCONCON_TRADERHUEMUL          | Concatenación ciega de todo el <select>|
-| 3   | Métrica Net Revenue (Col D)| "Net RevenueNet"                                     | Arrastró el texto del botón <button>Net|
-| 4   | Métrica TCE (Col D)        | "Métricas TCE ($/d)TCE $/d"                          | Duplicación de etiquetas UI del grupo  |
-| 5   | Celdas de 0 Viajes         | "-" (texto plano) o "0" desalineado                  | No eran números nativos                |
-| 6   | Dimensiones Combinadas     | Celdas A3..A12, B3..B12, C3..C12 vacías (sin merge)  | rowSpan de HTML ignorado en el XLS     |
-| 7   | Estilos y Colores          | Fondo blanco plano en el 100% de la grilla           | Cero colores corporativos de la UI     |
-| 8   | Rotación de Texto          | Texto horizontal plano, cortado e ilegible           | Ausencia de textRotation a 90°         |
-| 9   | Filas de Totales/Subtotales| Omitidas o desalineadas en la exportación plana      | Subtotales y Totales no mapeados       |
-+----------------------------------------------------------------------------------------------------------------------------------+
-```
-
----
-
-## 3. CLONAR (Clonación y Respaldo del Estado Funcional)
-
-- **Branch / Tag de Respaldo:** `PRE.ULTIMOS.FEEDBACKS.IZ.01.09.26` y `PRE_ULTIMOS.FEEDBACKS.IZ.01.09.26` fijados en git.
-- **Capturas de Pantalla PNG Respaldadas:**
-  1. `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\`
-  2. `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\PORT.COSTS.PATRICIA\`
-
----
-
-## 4. DIFF (Diferencias Críticas y Matriz de Homologación Visual)
-
-```mermaid
-flowchart TD
-    subgraph UI_En_Vivo["🖥️ Interfaz Web (UI)"]
-        U1["Cabecera Slate 800 + Meses 'Ene 2027'"]
-        U2["Cliente NEXA / SPCC con fondo Azul y Texto Vertical 90°"]
-        U3["Rutas por Color: Matarani=Cyan, Marcona=Purple, Mejillones=Fuchsia"]
-        U4["Buques por Color: Moquegua=Verde, Tablones=Rojo, Concon=Slate"]
-        U5["Subtotal Cliente: Slate 800 + Texto Ámbar 400 + Datos Amber 50"]
-        U6["Total Flota (Empresa): Slate 800 + Datos Slate 100"]
-        U7["Total Acumulado Global: Teal 600 + Datos Indigo 50"]
-    end
-
-    subgraph Error_Legacy["❌ Archivo Excel Defectuoso (Legacy)"]
-        E1["Fechas corruptas: 46387.79125..."]
-        E2["Dimensiones sin combinar (celdas vacías)"]
-        E3["Buque mutante: 'MOQUEGUAMOQUEGUATABLONES...'"]
-        E4["Rutas todas del mismo color o blancas"]
-        E5["Subtotales y Totales ausentes o sin estilo"]
-    end
-
-    subgraph Motor_ExcelJS["✅ Nuevo Motor ExcelJS (Corregido)"]
-        M1["Cabecera 'ENE 2027' en Slate 800 + 'TOTAL ACUM' en Sky 900"]
-        M2["ws.mergeCells con textRotation: 90° y fondos ARGB exactos"]
-        M3["Rutas con color específico: Matarani=Cyan, Marcona=Purple, Mejillones=Fuchsia"]
-        M4["Selectores limpios: select.value = 'MOQUEGUA'"]
-        M5["Subtotales Cliente (Slate 800 + Amber 50)"]
-        M6["Total Flota Empresa (Slate 800 + Slate 100)"]
-        M7["Total Acumulado Cierre (Teal 600 + Indigo 50)"]
-    end
-
-    UI_En_Vivo -->|Rompe en| Error_Legacy
-    UI_En_Vivo -->|Replica 1:1 en| Motor_ExcelJS
++-----+----------------------------+------------------------------------------------------+------------------------------------------------+
+| #   | LUGAR DEL CRIMEN           | EVIDENCIA EXTRAÍDA DE LA ESCENA (LEGACY)             | CAUSA TÉCNICA RAÍZ                             |
++-----+----------------------------+------------------------------------------------------+------------------------------------------------+
+| 1   | Cabecera Fila 1 (Meses)    | 46387.79125 | 46418.79125 | 46446.79125 ...          | SheetJS convirtió "Ene 2027" en floats seriales|
+| 2   | Celdas de Buque (Col C)    | MOQUEGUAMOQUEGUATABLONESCONCON_TRADERHUEMUL          | Concatenación ciega de todo el <select> HTML   |
+| 3   | Métrica Net Revenue (Col D)| "Net RevenueNet"                                     | Arrastró el texto del botón UI <button>Net     |
+| 4   | Métrica TCE (Col D)        | "Métricas TCE ($/d)TCE $/d"                          | Duplicación de etiquetas UI del grupo          |
+| 5   | Celdas Inactivas           | "-" (texto plano) o "0" desalineado                  | Celdas sin formato nativo                      |
+| 6   | Dimensiones Combinadas     | Celdas A3..A12, B3..B12, C3..C12 vacías (sin merge)  | rowSpan de HTML ignorado por SheetJS básico    |
+| 7   | Estilos Visuales           | Fondo blanco plano en el 100% de la grilla           | SheetJS Community no soporta fills ni bordes   |
+| 8   | Rotación de Texto          | Texto horizontal plano, cortado e ilegible           | Ausencia de textRotation a 90°                 |
+| 9   | Filas de Agregación        | Subtotales y Totales de Flota/Acumulado ausentes     | No se mapeaban los bloques de consolidación    |
++-----+----------------------------+------------------------------------------------------+------------------------------------------------+
 ```
 
-### Matriz de Colores y Formatos Homologados:
+---
 
-| Nivel de Fila / Dimensión | Color de Fondo (ARGB) | Color de Fuente | Orientación | Formato de Celdas de Datos |
-|---|:---:|:---:|:---:|---|
-| **Cabecera THEAD (A1..P1)** | `#1E293B` (`FF1E293B`) | Blanco Bold (`FFFFFFFF`) | Horizontal Centrado | N/A |
-| **Cabecera TOTAL ACUM (Q1)** | `#0C4A6E` (`FF0C4A6E`) | Blanco Bold (`FFFFFFFF`) | Horizontal Centrado | N/A |
-| **Cliente NEXA** | `#0F4C81` (`FF0F4C81`) | Blanco Bold | **Vertical 90°** | Merge filas del cliente |
-| **Cliente SPCC** | `#0369A1` (`FF0369A1`) | Blanco Bold | **Vertical 90°** | Merge filas del cliente |
-| **Ruta MATARANI** | `#06B6D4` (`FF06B6D4`) Cyan | Blanco Bold | **Vertical 90°** | Merge filas de la ruta |
-| **Ruta MARCONA** | `#A855F7` (`FFA855F7`) Purple | Blanco Bold | **Vertical 90°** | Merge filas de la ruta |
-| **Ruta MEJILLONES** | `#D946EF` (`FFD946EF`) Fuchsia| Blanco Bold | **Vertical 90°** | Merge filas de la ruta |
-| **Buque MOQUEGUA** | `#16A34A` (`FF16A34A`) Verde | Blanco Bold | **Vertical 90°** | Solo texto del select activo |
-| **Buque TABLONES** | `#DC2626` (`FFDC2626`) Rojo | Blanco Bold | **Vertical 90°** | Solo texto del select activo |
-| **Subtotal Cliente (Cols 2-3)**| `#1E293B` (`FF1E293B`) Slate| Ámbar Bold (`FFFBBF24`)| Horizontal Centrado | Celdas en `#FFFFFBEB` (Amber 50) |
-| **Total Flota Empresa (Cols 1-3)**| `#1E293B` (`FF1E293B`)| Blanco Bold | Horizontal Centrado | Celdas en `#FFF1F5F9` (Slate 100) |
-| **Total Acumulado (Cols 1-3)** | `#0D9488` (`FF0D9488`) Teal | Blanco Bold | Horizontal Centrado | Celdas en `#FFEEF2FF` (Indigo 50) |
+## 3. CLONAR (Protocolo de Respaldo y Protección de Estado Funcional)
+
+Previo a cualquier intervención en el código fuente, se ejecutaron las directivas de seguridad:
+1. **Branch y Tags de Seguridad:**
+   - `git tag -a "PRE.ULTIMOS.FEEDBACKS.IZ.01.09.26"`
+   - `git tag -a "PRE_ULTIMOS.FEEDBACKS.IZ.01.09.26"`
+2. **Respaldo Inmediato de Capturas PNG:**
+   - `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Obsidian.Maestro.Costos.Portuarios\PNGs\excel_matriz_defectuoso_01_09_2026.png`
+   - `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Exceles.Petral\PORT.COSTS.PATRICIA\excel_matriz_defectuoso_01_09_2026.png`
+   - `matriz_financiera_filtros_export_01_09_2026.png`
 
 ---
 
-## 5. NOTA (Acciones Periciales y Estado de Corrección)
+## 4. CRONOLOGÍA DE ITERACIONES TÉCNICAS HACIA EL TAG FINAL
 
-1. **Reemplazo del Motor**: Se erradicó el clonador plano de SheetJS y se implementó [`exportFinancialMatrixExcel.ts`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixExcel.ts) basado en **ExcelJS**.
-2. **Inclusión de Todos los Bloques Agregados**:
-   - Subtotales por Cliente con desglose de viajes, días, toneladas, ingresos y P/L.
-   - Bloque `TOTAL FLOTA (EMPRESA)` consolidado mes a mes.
-   - Bloque `TOTAL ACUMULADO (CIERRE)` con suma progresiva mensual.
-3. **Mapeo Dinámico de Colores de Ruta y Buque**:
-   - Detección precisa de clases Tailwind (`bg-cyan-500`, `bg-purple-500`, `bg-fuchsia-500`, `bg-petral-teal`) e inyección de sus ARGB correspondientes.
+### Iteración 1: Migración Arquitectural de SheetJS a ExcelJS
+- **Inspiración Canónica:** Módulo de InAndes ERP (`excelGeneratorValorCuotaV31.ts`).
+- **Implementación:**
+  - Archivo Creado: [`Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixExcel.ts`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixExcel.ts).
+  - Algoritmo de Matriz de Ocupación (`occupied[r][c]`) para resolver `rowSpan` y `colSpan` con `ws.mergeCells(rStart, cStart, rEnd, cEnd)`.
+  - Inyección de `alignment: { textRotation: 90, vertical: 'middle', horizontal: 'center' }`.
 
----
+### Iteración 2: Detección Dinámica de Colores y Estilos de Ruta / Buque
+- **Homologación con Clases Tailwind de la UI:**
+  - **Cliente SPCC:** `#0369A1` (`FF0369A1` Sky 700) con texto blanco bold.
+  - **Cliente NEXA:** `#0F4C81` (`FF0F4C81` Petral Blue) con texto blanco bold.
+  - **Ruta MATARANI:** `#06B6D4` (`FF06B6D4` Cyan 500) con texto blanco bold.
+  - **Ruta MARCONA:** `#A855F7` (`FFA855F7` Purple 500) con texto blanco bold.
+  - **Ruta MEJILLONES:** `#D946EF` (`FFD946EF` Fuchsia 500) con texto blanco bold.
+  - **Buque MOQUEGUA:** `#16A34A` (`FF16A34A` Green 600) con texto blanco bold.
+  - **Buque TABLONES:** `#DC2626` (`FFDC2626` Red 600) con texto blanco bold.
 
----
+### Iteración 3: Incorporación de Filas de Subtotales, Empresa y Acumulado
+- **Subtotal Cliente:** Cabecera en `#1E293B` (Slate 800) con texto `#FBBF24` (Ámbar), celdas de datos en `#FFFFFBEB` (Amber 50).
+- **Total Flota (Empresa):** Cabecera en `#1E293B` (Slate 800) combinando 3 columnas, celdas de datos en `#FFF1F5F9` (Slate 100).
+- **Total Acumulado (Cierre):** Cabecera en `#0D9488` (Teal 600) combinando 3 columnas, celdas de datos en `#FFEEF2FF` (Indigo 50).
 
-## 7. Hallazgo Pericial: Extracción de Métricas y Máscaras No Monetarias
+### Iteración 4: Hallazgo y Rescate de Títulos de Métrica y Formateo No Monetario
+- **El Fallo Descubierto:** `clone.querySelectorAll('button').remove()` eliminaba el texto de métricas expandibles (`Net Revenue`, `Métricas TCE ($/d)`).
+- **La Solución:** Sanitizar únicamente iconos SVG y badges (`.font-mono`, `[class*="text-[9px]"]`).
+- **Máscaras Estrictas:**
+  - Viajes / Días / Toneladas / Margen % $\rightarrow$ **CERO símbolos de dólar (`$`)**.
+  - Tarifas / TCE $\rightarrow$ `$#,##0.00`.
+  - Totales Monetarios $\rightarrow$ `$#,##0`.
 
-### A. Diagnóstico de Celdas de Métrica Vacías:
-- **Causa Raíz:** En la interfaz web, las métricas expandibles (`Net Revenue`, `Métricas TCE ($/d)`, etc.) renderizan su texto dentro de un elemento `<button>` con insignias complementarias (ej. `<span className="font-mono">Net</span>`).
-- **El Fallo:** La rutina de sanitización ejecutaba `clone.querySelectorAll('button').remove()`, lo que eliminaba el botón entero y dejaba la celda de la métrica en blanco (`""`).
-- **Solución Pericial:** Se preserva el contenedor del botón y se eliminan únicamente los elementos SVG y badges parásitos (`.font-mono`, `[class*="text-[9px]"]`).
-
-### B. Reglas Estrictas de Formato Numérico (Monetario vs No Monetario):
-
-| Tipo de Métrica | Métricas Incluidas | Máscara Excel (`numFmt`) | ¿Lleva Símbolo de Dólar ($)? |
-|---|---|:---:|:---:|
-| **Viajes / Frecuencia** | `Viajes (freq)`, `Viajes`, `Frequency` | `#,##0` / `0.0` | **NO ($ prohibido)** |
-| **Días Operativos** | `Días-Buque`, `Demurrage Days`, `Duración Total` | `0.0` | **NO ($ prohibido)** |
-| **Tonelaje de Carga** | `Toneladas`, `Base Flete (MT)`, `Carga`, `MT` | `#,##0` | **NO ($ prohibido)** |
-| **Porcentajes de Margen** | `Margen %`, `Margen Operativo %`, `Yield %` | `0.0%` | **NO ($ prohibido)** |
-| **Tarifas y Fletes Unitarios** | `Tarifa Base (USD/MT)`, `Flete (USD/MT)`, `TCE ($/d)` | `$#,##0.00` | **SÍ (con 2 decimales)** |
-| **Totales Monetarios** | `Net Revenue`, `Bunker Costs`, `Port Costs`, `P/L` | `$#,##0` | **SÍ (entero con comas)** |
-
----
-
-## 8. Refinamiento Final: Erradicación Total de Ceros y Guiones
-
-### A. Diagnóstico y Pedido del Usuario:
-- **Observación:** *"Ceros y guiones que desaparezcan y con eso estamos listos."*
-- **Problema:** En los meses donde una ruta o buque no opera (ej. meses alternos de frecuencia bimestral), aparecían valores `$0`, `0.0` o `"-"` que ensuciaban visualmente la cuadrícula.
-- **Acción Pericial Aplicada:**
-  - En `exportFinancialMatrixExcel.ts`: Toda celda con valor `0`, `0.0`, `$0` o `"-"` se transforma en una **celda vacía (`""`)**.
-  - Solo los meses con operación activa y cifras reales contienen valores numéricos con sus respectivos formatos (`$#,##0`, `0.0%`, `$#,##0.00`, `#,##0`).
-  - Resultado: Hoja de cálculo limpia, ejecutiva y legible a primer golpe de vista.
+### Iteración 5: Erradicación Total de Ceros y Guiones y Blindaje de Columna 4
+- **El Riesgo Detectado:** La condición de limpieza afectó inicialmente a la Columna 4 porque `parsedNum` de texto era 0.
+- **Blindaje Definitivo:**
+  - **Columnas 1..4 (Dimensiones y Métricas):** Inmunes a limpieza (`cell.value = textValue`).
+  - **Columnas 5..17 (Datos):** Todo valor `0`, `0.0`, `$0` o `"-"` se convierte en celda vacía (`""`).
 
 ---
 
-## 9. Blindaje Pericial: Preservación Absoluta de Títulos en Columna Métrica
+## 5. LOCALIZACIÓN EXHAUSTIVA DE SCRIPTS Y RECURSOS FORENSES
 
-### A. Diagnóstico de la Desaparición de Títulos:
-- **Causa:** Al implementar la regla de ocultar ceros, la condición `if (!isDimensionCol && parsedNum === 0)` evaluó la columna 4 (Métrica) como no numérica (`parsedNum = 0`), borrando erróneamente los títulos de texto de las métricas.
-- **Acción Correctiva:**
-  - Se blindó la **Columna 4 (`isMetricCol = currentCol === 4`)** y las **Columnas de Dimensión (1..3)** para que **SIEMPRE preserven su texto íntegro**.
-  - La regla de blanqueo de ceros y guiones se restringió estrictamente a las **Columnas de Datos (`currentCol >= 5`)**.
+| Script / Archivo | Ruta Absoluta Local | Propósito y Tecnología | Salida / Artefacto |
+|---|---|---|---|
+| **Motor Exportación Frontend** | [`Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixExcel.ts`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixExcel.ts) | Servicio TypeScript con `ExcelJS` que lee el DOM `#forecast-grid-table` y genera el XLSX. | Archivo descargado en browser |
+| **Componente de Filtros UI** | [`Desarrollo.Profesional/Geeksoft_Frontend/src/components/CommercialForecast/ForecastGridFilters.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/components/CommercialForecast/ForecastGridFilters.tsx) | Botón verde "Exportar Excel" conectado al servicio `exportFinancialMatrixExcel`. | Evento click de usuario |
+| **Script Auditor Multi-Escenario** | [`audit_all_scenarios_qc.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/audit_all_scenarios_qc.py) | Script Python con `requests` y `openpyxl` que descarga los 6 escenarios de la BD, simula y genera 6 excels completos. | 6 archivos en `Exceles.Petral/QC_Auditoria_Escenarios/` |
+| **Script Auditor de Métricas** | [`audit_metrics_qc.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/audit_metrics_qc.py) | Script Python de auditoría pericial fila por fila (96 filas) para verificar que no haya métricas vacías ni dólares indebidos. | Reporte terminal con 0 fallos |
+| **Script Auditor Headless DOM** | [`Desarrollo.Profesional/Geeksoft_Frontend/scratch_qc_runner.mjs`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/scratch_qc_runner.mjs) | Runner Node.js con `jsdom` y `exceljs` para probar la exportación sin abrir navegador. | `test_qc_matriz_financiera_verified.xlsx` |
+| **Script Despliegue VPS** | [`Push.VPS/deploy_forecast_kickoff.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Push.VPS/deploy_forecast_kickoff.py) | Script Python de automatización SFTP/SSH que compila, sube `dist` a `/var/www/` y reinicia FastAPI y Nginx. | Publicación en `https://forecast.geeksoft.tech` |
+| **Carpeta de Excels Auditados** | [`Exceles.Petral/QC_Auditoria_Escenarios/`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/) | Directorio con los 6 libros XLSX generados y verificados con datos reales. | 6 archivos XLSX oficiales |
+
+---
+
+## 6. QC (Cuadro Pericial de Control de Calidad Multi-Escenario Real)
+
+A continuación, la evidencia irrefutable de los 6 escenarios de producción auditados con datos reales:
+
+| N° | Escenario Oficial en Base de Datos | Clientes | Total Filas | Total Viajes | Net Revenue Total | Voyage Margin (P/L) | Archivo XLSX Generado y Verificado |
+|:--:|---|:---:|:---:|:---:|:---:|:---:|---|
+| **1** | **PB 2027 (Jose de los Heros) + Prom Dem + Nexa.RG** | SPCC, NEXA | **96** | 66.0 | **$25,076,745** | **$9,257,013** | [`Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem__NexaRG.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem__NexaRG.xlsx) |
+| **2** | **PB 2027 (Jose de los Heros) + Prom Dem + Nexa** | SPCC, NEXA | **96** | 72.0 | **$27,862,845** | **$10,416,955** | [`Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem__Nexa.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem__Nexa.xlsx) |
+| **3** | **PB 2027 (Jose de los Heros) + Prom Dem** | SPCC | **79** | 60.0 | **$22,290,645** | **$8,097,071** | [`Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027_Jose_de_los_Heros__Prom_Dem.xlsx) |
+| **4** | **PB 2027 (Jose de los Heros)** | SPCC | **79** | 60.0 | **$17,651,645** | **$7,384,060** | [`Matriz_PB_2027_Jose_de_los_Heros.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027_Jose_de_los_Heros.xlsx) |
+| **5** | **PB 2027 + Demora** | SPCC | **52** | 61.0 | **$17,887,220** | **$7,738,271** | [`Matriz_PB_2027__Demora.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027__Demora.xlsx) |
+| **6** | **PB 2027 MOQUEGUA SIN DEMORAS** | SPCC | **52** | 59.0 | **$17,880,050** | **$7,139,080** | [`Matriz_PB_2027_MOQUEGUA_SIN_DEMORAS.xlsx`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/Matriz_PB_2027_MOQUEGUA_SIN_DEMORAS.xlsx) |
+
+---
+
+## 7. DICTAMEN FINAL Y CIERRE PERICIAL
+
+1. **Estado Git:** Tag y Branch `EXCEL.PEDIDO.IZ.1.9.26` sincronizados en GitHub; rama `main` al día.
+2. **Estado Producción:** Desplegado con SSL y activo en [https://forecast.geeksoft.tech](https://forecast.geeksoft.tech).
+3. **Calidad de Salida:** Celdas combinadas perfectas, rotación vertical a 90°, colores de ruta/buque idénticos a la web, subtotales, totales de flota, acumulados anuales, nombres de métricas completos y ceros/guiones eliminados de los meses inactivos.
 
 ---
 *Firma Pericial: Benoit Blanc - Detective Auditor*
