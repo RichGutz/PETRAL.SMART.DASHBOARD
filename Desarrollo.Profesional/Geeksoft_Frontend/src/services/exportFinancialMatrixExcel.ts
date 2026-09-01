@@ -192,69 +192,77 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                     textValue = clone.textContent?.trim() || '';
                 }
 
-                const isDimensionCol = tdClass.includes('vertical-text') || td.querySelector('.vertical-text') !== null;
+                const isDimensionCol = tdClass.includes('vertical-text') || td.querySelector('.vertical-text') !== null || currentCol <= 3;
+                const isMetricCol = currentCol === 4;
+                const isDataCol = currentCol >= 5;
                 const cell = ws.getCell(currentRow, currentCol);
 
                 // La columna 4 siempre contiene el nombre de la métrica
-                if (currentCol === 4 && !isDimensionCol && textValue !== '') {
+                if (isMetricCol && textValue !== '') {
                     currentMetricName = textValue.toUpperCase().trim();
                 }
 
-                // Identificar y parsear valores numéricos
+                // Identificar y parsear valores numéricos (solo en columnas de datos)
                 const rawClean = textValue.replace(/[\$,\s]/g, '');
                 const isPercent = textValue.includes('%') || currentMetricName.includes('%') || currentMetricName.includes('MARGEN') || currentMetricName.includes('YIELD %');
                 const cleanNumStr = rawClean.replace('%', '');
 
                 let isNumeric = false;
                 let parsedNum = 0;
-                if (textValue !== '-' && textValue !== '' && !isDimensionCol && !isNaN(Number(cleanNumStr)) && cleanNumStr !== '') {
+                if (isDataCol && textValue !== '-' && textValue !== '' && !isNaN(Number(cleanNumStr)) && cleanNumStr !== '') {
                     isNumeric = true;
                     parsedNum = parseFloat(cleanNumStr);
                 }
 
-                // Asignar valor y formato numérico estricto (eliminando ceros y guiones)
-                if (isNumeric && parsedNum !== 0) {
-                    if (isPercent) {
-                        cell.value = parsedNum > 1 ? parsedNum / 100 : parsedNum;
-                        cell.numFmt = '0.0%';
-                    } else if (
-                        currentMetricName.includes('VIAJE') || currentMetricName.includes('FREQ') || 
-                        currentMetricName.includes('FREQUENCY')
-                    ) {
-                        // NO MONETARIO: Viajes
-                        cell.value = parsedNum;
-                        cell.numFmt = Number.isInteger(parsedNum) ? '#,##0' : '0.0';
-                    } else if (
-                        currentMetricName.includes('DÍA') || currentMetricName.includes('DAYS') || 
-                        currentMetricName.includes('DÍAS') || currentMetricName.includes('DURACIÓN')
-                    ) {
-                        // NO MONETARIO: Días de operación
-                        cell.value = parsedNum;
-                        cell.numFmt = '0.0';
-                    } else if (
-                        currentMetricName.includes('TONELADA') || currentMetricName.includes('TONS') || 
-                        currentMetricName.includes('CARGA') || currentMetricName.includes('BASE FLETE') || 
-                        currentMetricName.includes('VOLUMEN') || currentMetricName.includes('MT')
-                    ) {
-                        // NO MONETARIO: Toneladas de carga
-                        cell.value = parsedNum;
-                        cell.numFmt = '#,##0';
-                    } else if (
-                        currentMetricName.includes('USD/MT') || currentMetricName.includes('TARIFA') || 
-                        currentMetricName.includes('TCE') || currentMetricName.includes('TCY') || 
-                        currentMetricName.includes('$/D') || currentMetricName.includes('$/DÍA')
-                    ) {
-                        // MONETARIO UNITARIO: Tarifas y TCE con centavos
-                        cell.value = parsedNum;
-                        cell.numFmt = '$#,##0.00';
+                // Asignar valor y formato según la columna
+                if (isDimensionCol || isMetricCol) {
+                    // Dimensiones y Métricas: SIEMPRE preservan su texto íntegro
+                    cell.value = textValue;
+                } else if (isDataCol) {
+                    // Columnas de datos (Meses y Total Acum): números reales o vacío si es 0 / guión
+                    if (isNumeric && parsedNum !== 0) {
+                        if (isPercent) {
+                            cell.value = parsedNum > 1 ? parsedNum / 100 : parsedNum;
+                            cell.numFmt = '0.0%';
+                        } else if (
+                            currentMetricName.includes('VIAJE') || currentMetricName.includes('FREQ') || 
+                            currentMetricName.includes('FREQUENCY')
+                        ) {
+                            // NO MONETARIO: Viajes
+                            cell.value = parsedNum;
+                            cell.numFmt = Number.isInteger(parsedNum) ? '#,##0' : '0.0';
+                        } else if (
+                            currentMetricName.includes('DÍA') || currentMetricName.includes('DAYS') || 
+                            currentMetricName.includes('DÍAS') || currentMetricName.includes('DURACIÓN')
+                        ) {
+                            // NO MONETARIO: Días de operación
+                            cell.value = parsedNum;
+                            cell.numFmt = '0.0';
+                        } else if (
+                            currentMetricName.includes('TONELADA') || currentMetricName.includes('TONS') || 
+                            currentMetricName.includes('CARGA') || currentMetricName.includes('BASE FLETE') || 
+                            currentMetricName.includes('VOLUMEN') || currentMetricName.includes('MT')
+                        ) {
+                            // NO MONETARIO: Toneladas de carga
+                            cell.value = parsedNum;
+                            cell.numFmt = '#,##0';
+                        } else if (
+                            currentMetricName.includes('USD/MT') || currentMetricName.includes('TARIFA') || 
+                            currentMetricName.includes('TCE') || currentMetricName.includes('TCY') || 
+                            currentMetricName.includes('$/D') || currentMetricName.includes('$/DÍA')
+                        ) {
+                            // MONETARIO UNITARIO: Tarifas y TCE con centavos
+                            cell.value = parsedNum;
+                            cell.numFmt = '$#,##0.00';
+                        } else {
+                            // MONETARIO GLOBAL: Net Revenue, Bunker, Puertos, P&L, etc.
+                            cell.value = parsedNum;
+                            cell.numFmt = '$#,##0';
+                        }
                     } else {
-                        // MONETARIO GLOBAL: Net Revenue, Bunker, Puertos, P&L, etc.
-                        cell.value = parsedNum;
-                        cell.numFmt = '$#,##0';
+                        // Ceros, guiones y vacíos en meses inactivos: celda limpia y vacía
+                        cell.value = '';
                     }
-                } else if (!isDimensionCol && (parsedNum === 0 || textValue === '-' || textValue === '0' || textValue === '$0' || textValue === '')) {
-                    // Ceros y guiones desaparecen: celda limpia y vacía
-                    cell.value = '';
                 } else {
                     cell.value = textValue;
                 }
