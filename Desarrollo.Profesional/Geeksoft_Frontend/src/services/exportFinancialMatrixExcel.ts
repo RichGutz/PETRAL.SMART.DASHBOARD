@@ -212,8 +212,8 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                     parsedNum = parseFloat(cleanNumStr);
                 }
 
-                // Asignar valor y formato numérico estricto
-                if (isNumeric) {
+                // Asignar valor y formato numérico estricto (eliminando ceros y guiones)
+                if (isNumeric && parsedNum !== 0) {
                     if (isPercent) {
                         cell.value = parsedNum > 1 ? parsedNum / 100 : parsedNum;
                         cell.numFmt = '0.0%';
@@ -252,8 +252,11 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                         cell.value = parsedNum;
                         cell.numFmt = '$#,##0';
                     }
+                } else if (!isDimensionCol && (parsedNum === 0 || textValue === '-' || textValue === '0' || textValue === '$0' || textValue === '')) {
+                    // Ceros y guiones desaparecen: celda limpia y vacía
+                    cell.value = '';
                 } else {
-                    cell.value = textValue === '-' ? '-' : textValue;
+                    cell.value = textValue;
                 }
 
                 // Aplicar estilos según tipo de celda

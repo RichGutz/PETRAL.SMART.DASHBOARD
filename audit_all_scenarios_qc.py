@@ -225,18 +225,21 @@ for idx, sc in enumerate(scenarios, 1):
                 ]
 
                 for m_name, vals, tot_val, num_fmt, is_bold in node_metrics:
+                    clean_vals = [v if (v is not None and v != 0) else '' for v in vals]
+                    clean_tot = tot_val if (tot_val is not None and tot_val != 0) else ''
                     row_vals = [
                         client if current_row == client_start_row else '',
                         route if current_row == route_start_row else '',
                         vessel if current_row == vessel_start_row else '',
                         m_name
-                    ] + vals + [tot_val]
+                    ] + clean_vals + [clean_tot]
                     ws.append(row_vals)
                     ws.row_dimensions[current_row].height = 19
 
                     for c_idx in range(5, len(header_cols) + 1):
                         cell = ws.cell(row=current_row, column=c_idx)
-                        cell.number_format = num_fmt
+                        if cell.value != '':
+                            cell.number_format = num_fmt
                         cell.font = Font(name='Segoe UI', size=8.5, bold=is_bold or c_idx == len(header_cols))
                         cell.alignment = Alignment(horizontal='right', vertical='center')
                         cell.border = thin_border
@@ -280,19 +283,22 @@ for idx, sc in enumerate(scenarios, 1):
         ]
 
         for s_idx, (m_name, vals, tot_val, num_fmt) in enumerate(cl_metrics):
+            clean_vals = [v if (v is not None and v != 0) else '' for v in vals]
+            clean_tot = tot_val if (tot_val is not None and tot_val != 0) else ''
             row_vals = [
                 client if current_row == client_start_row else '',
                 'Σ SUBTOTAL' if s_idx == 0 else '',
                 'TOTAL CLIENT' if s_idx == 0 else '',
                 m_name
-            ] + vals + [tot_val]
+            ] + clean_vals + [clean_tot]
             ws.append(row_vals)
             ws.row_dimensions[current_row].height = 20
 
             # Celdas de datos con fondo Amber 50
             for c_idx in range(5, len(header_cols) + 1):
                 cell = ws.cell(row=current_row, column=c_idx)
-                cell.number_format = num_fmt
+                if cell.value != '':
+                    cell.number_format = num_fmt
                 cell.font = Font(name='Segoe UI', size=8.5, bold=True, color='FF78350F')
                 cell.fill = PatternFill(start_color=PALETTE['SUBTOTAL_DATA'], end_color=PALETTE['SUBTOTAL_DATA'], fill_type='solid')
                 cell.alignment = Alignment(horizontal='right', vertical='center')
@@ -339,18 +345,21 @@ for idx, sc in enumerate(scenarios, 1):
     ]
 
     for f_idx, (m_name, vals, tot_val, num_fmt) in enumerate(fleet_metrics):
+        clean_vals = [v if (v is not None and v != 0) else '' for v in vals]
+        clean_tot = tot_val if (tot_val is not None and tot_val != 0) else ''
         row_vals = [
             'TOTAL FLOTA' if f_idx == 0 else '',
             '',
             '',
             m_name
-        ] + vals + [tot_val]
+        ] + clean_vals + [clean_tot]
         ws.append(row_vals)
         ws.row_dimensions[current_row].height = 20
 
         for c_idx in range(5, len(header_cols) + 1):
             cell = ws.cell(row=current_row, column=c_idx)
-            cell.number_format = num_fmt
+            if cell.value != '':
+                cell.number_format = num_fmt
             cell.font = Font(name='Segoe UI', size=8.5, bold=True, color='FF1E293B')
             cell.fill = PatternFill(start_color=PALETTE['FLOTA_DATA'], end_color=PALETTE['FLOTA_DATA'], fill_type='solid')
             cell.alignment = Alignment(horizontal='right', vertical='center')
@@ -398,18 +407,21 @@ for idx, sc in enumerate(scenarios, 1):
     ]
 
     for a_idx, (m_name, vals, tot_val, num_fmt) in enumerate(acum_metrics):
+        clean_vals = [v if (v is not None and v != 0) else '' for v in vals]
+        clean_tot = tot_val if (tot_val is not None and tot_val != 0) else ''
         row_vals = [
             'TOTAL ACUMULADO' if a_idx == 0 else '',
             '',
             '',
             m_name
-        ] + vals + [tot_val]
+        ] + clean_vals + [clean_tot]
         ws.append(row_vals)
         ws.row_dimensions[current_row].height = 20
 
         for c_idx in range(5, len(header_cols) + 1):
             cell = ws.cell(row=current_row, column=c_idx)
-            cell.number_format = num_fmt
+            if cell.value != '':
+                cell.number_format = num_fmt
             cell.font = Font(name='Segoe UI', size=8.5, bold=True, color='FF1E1B4B')
             cell.fill = PatternFill(start_color=PALETTE['ACUM_DATA'], end_color=PALETTE['ACUM_DATA'], fill_type='solid')
             cell.alignment = Alignment(horizontal='right', vertical='center')
