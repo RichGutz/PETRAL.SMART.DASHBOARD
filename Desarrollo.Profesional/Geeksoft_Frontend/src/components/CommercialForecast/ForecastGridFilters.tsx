@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 import { Download, FileText, RotateCcw, Filter, UserCheck, Navigation, Anchor, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { exportFinancialMatrixExcel } from '../../services/exportFinancialMatrixExcel';
 import logoPetral from '../../assets/Logo.Petral.png';
 import logoGeeksoft from '../../assets/Logo.Geeksoft.png';
 
@@ -106,136 +107,13 @@ export const ForecastGridFilters: React.FC = () => {
         return summaries.join(' • ');
     }, [clientList, routeList, vesselList, safeMonths, safeHiddenClients, safeHiddenRoutes, safeHiddenVessels, safeHiddenMonths]);
 
-    const handleExportExcel = () => {
-        const table = document.getElementById('forecast-grid-table');
-        if (!table) return alert('No se encontró la tabla para exportar.');
-        
-        // Clonar la tabla para sanitizar y preparar datos limpios para Excel
-        const clone = table.cloneNode(true) as HTMLTableElement;
-        
-        // 1. Reemplazar inputs editables con su valor numérico o texto limpio
-        const inputs = clone.querySelectorAll('input');
-        inputs.forEach(input => {
-            const val = input.value;
-            const parent = input.parentElement;
-            if (parent) {
-                parent.textContent = val;
-            }
-        });
-
-        // 2. Limpiar botones interactivos (reordenamiento, contexto, chevron) dejando solo texto relevante
-        const buttons = clone.querySelectorAll('button');
-        buttons.forEach(btn => {
-            const text = (btn.textContent || '').replace(/[◀▶▲▼✕✖]/g, '').trim();
-            if (text) {
-                btn.replaceWith(document.createTextNode(text));
-            } else {
-                btn.remove();
-            }
-        });
-
-        // 3. Eliminar iconos SVG y artefactos visuales flotantes
-        const svgs = clone.querySelectorAll('svg');
-        svgs.forEach(s => s.remove());
-
-        // 4. Crear libro de trabajo a partir de la tabla limpia
-        const wb = XLSX.utils.table_to_book(clone, { sheet: "Forecast" });
-        const ws = wb.Sheets["Forecast"];
-        
-        if (ws) {
-            const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
-            
-            // Recorrer filas para identificar la métrica/rubro y aplicar formatos numéricos nativos
-            for (let r = range.s.r; r <= range.e.r; r++) {
-                let metricName = '';
-                
-                // Buscar en las primeras 6 columnas el nombre del rubro / métrica
-                for (let c = 0; c <= Math.min(5, range.e.c); c++) {
-                    const cellRef = XLSX.utils.encode_cell({ r, c });
-                    const cell = ws[cellRef];
-                    if (cell && cell.v) {
-                        const valStr = String(cell.v).trim().toUpperCase();
-                        if (
-                            valStr.includes('P/L') || valStr.includes('TONELADAS') || valStr.includes('REVENUE') || 
-                            valStr.includes('COSTS') || valStr.includes('BUNKER') || valStr.includes('MARGEN') || 
-                            valStr.includes('YIELD') || valStr.includes('DEMURRAGE') || valStr.includes('DEMORAS') || 
-                            valStr.includes('FLETE') || valStr.includes('VIAJES') || valStr.includes('VENTAS') || 
-                            valStr.includes('HIRE') || valStr.includes('COMBUSTIBLE') || valStr.includes('PUERTO') || 
-                            valStr.includes('ARRIENDO') || valStr.includes('TCY') || valStr.includes('TCE') || 
-                            valStr.includes('GASTOS') || valStr.includes('CANAL') || valStr.includes('IFO') || 
-                            valStr.includes('MGO') || valStr.includes('MDO') || valStr.includes('TARIFA')
-                        ) {
-                            metricName = valStr;
-                            break;
-                        }
-                    }
-                }
-
-                // Formatear todas las celdas numéricas de la fila
-                for (let c = 0; c <= range.e.c; c++) {
-                    const cellRef = XLSX.utils.encode_cell({ r, c });
-                    const cell = ws[cellRef];
-                    if (!cell) continue;
-
-                    if (cell.t === 's' && cell.v !== undefined && cell.v !== null) {
-                        const rawStr = String(cell.v).trim();
-                        const isPercentStr = rawStr.includes('%');
-                        const cleanVal = rawStr.replace(/[\$,\s]/g, '').replace('%', '').trim();
-                        
-                        // Validar si es un número válido
-                        if (cleanVal !== '' && !isNaN(Number(cleanVal))) {
-                            let num = parseFloat(cleanVal);
-                            cell.t = 'n';
-                            cell.v = isPercentStr ? num / 100 : num;
-                        }
-                    }
-
-                    // Aplicar máscara de formato Excel según tipo de métrica
-                    if (cell.t === 'n') {
-                        const mUpper = metricName.toUpperCase();
-                        if (mUpper.includes('%') || mUpper.includes('MARGEN')) {
-                            cell.z = '0.0%';
-                        } else if (
-                            mUpper.includes('YIELD') || mUpper.includes('USD/MT') || 
-                            mUpper.includes('FLETE') || mUpper.includes('TARIFA') || 
-                            mUpper.includes('TCE') || mUpper.includes('TCY')
-                        ) {
-                            cell.z = '$#,##0.00';
-                        } else if (mUpper.includes('VIAJES') || mUpper.includes('FREQ')) {
-                            cell.z = '0.0';
-                        } else if (mUpper.includes('TONELADAS') || mUpper.includes('BASE FLETE (TM')) {
-                            cell.z = '#,##0';
-                        } else {
-                            // Por defecto para rubros monetarios (Revenue, Bunker, Puerto, Hire, P/L, etc.)
-                            cell.z = '$#,##0';
-                        }
-                    }
-                }
-            }
-
-            // 5. Cálculo dinámico de ancho de columnas (Auto-Fit Columns)
-            const colWidths: { wch: number }[] = [];
-            for (let c = range.s.c; c <= range.e.c; c++) {
-                let maxLen = 12;
-                for (let r = range.s.r; r <= range.e.r; r++) {
-                    const cellRef = XLSX.utils.encode_cell({ r, c });
-                    const cell = ws[cellRef];
-                    if (cell && cell.v !== undefined && cell.v !== null) {
-                        const strLen = String(cell.v).length;
-                        if (strLen > maxLen) {
-                            maxLen = Math.min(strLen + 3, 42);
-                        }
-                    }
-                }
-                // Si es una de las primeras columnas de dimensiones (Cliente/Ruta/Buque/Métrica), asegurar buen espacio
-                if (c <= 3) maxLen = Math.max(maxLen, 18);
-                colWidths.push({ wch: maxLen });
-            }
-            ws['!cols'] = colWidths;
+    const handleExportExcel = async () => {
+        try {
+            await exportFinancialMatrixExcel('forecast-grid-table');
+        } catch (err: any) {
+            console.error('Error exportando Excel con ExcelJS:', err);
+            alert(`Error al exportar Excel: ${err?.message || err}`);
         }
-
-        const fileName = `Petral_Forecast_Matriz_${new Date().toISOString().slice(0, 10)}.xlsx`;
-        XLSX.writeFile(wb, fileName);
     };
 
     const handlePrintPDF = (orientation: 'portrait' | 'landscape') => {
