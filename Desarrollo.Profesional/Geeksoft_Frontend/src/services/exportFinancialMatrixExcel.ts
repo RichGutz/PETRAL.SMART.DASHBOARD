@@ -67,8 +67,9 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
     wb.created = new Date();
 
     const ws = wb.addWorksheet('Matriz Financiera', {
-        views: [{ showGridLines: true, state: 'frozen', ySplit: 1, xSplit: 0, zoomScale: 65 }]
+        views: [{ showGridLines: true, state: 'frozen', ySplit: 1, xSplit: 0, zoomScale: 65, zoomScaleNormal: 65 }]
     });
+    ws.views = [{ showGridLines: true, state: 'frozen', ySplit: 1, xSplit: 0, zoomScale: 65, zoomScaleNormal: 65 }];
 
     // Matriz de ocupación para resolver rowSpan y colSpan
     const occupied: boolean[][] = [];
@@ -325,7 +326,8 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
     }
 
     // 3. Ajustar Ancho Automático de Columnas (Calibrado al dígito más ancho)
-    ws.columns.forEach((col, colIdx) => {
+    for (let colNum = 1; colNum <= ws.columnCount; colNum++) {
+        const col = ws.getColumn(colNum);
         let maxVisualLen = 0;
         col.eachCell?.({ includeEmpty: false }, (cell, rowIdx) => {
             if (rowIdx === 1) {
@@ -349,7 +351,7 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                     }
                 } else {
                     const str = String(cell.value || '').trim();
-                    if (colIdx >= 4 && (str === '-' || str === '')) {
+                    if (colNum >= 5 && (str === '-' || str === '')) {
                         visualLen = 0;
                     } else {
                         visualLen = str.length;
@@ -357,9 +359,9 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                 }
 
                 // Las dimensiones verticales no deben agrandar las columnas de meses
-                if (colIdx < 3 && visualLen > 15) {
+                if (colNum <= 3 && visualLen > 15) {
                     maxVisualLen = Math.max(maxVisualLen, 6.5);
-                } else if (colIdx === 3) {
+                } else if (colNum === 4) {
                     maxVisualLen = Math.max(maxVisualLen, visualLen);
                 } else {
                     maxVisualLen = Math.max(maxVisualLen, visualLen);
@@ -367,15 +369,15 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
             }
         });
 
-        if (colIdx < 3) {
+        if (colNum <= 3) {
             col.width = 6.5; // Columnas de dimensiones verticales compactas
-        } else if (colIdx === 3) {
+        } else if (colNum === 4) {
             col.width = 33;  // Columna de Nombres de Métricas
         } else {
             // Ancho neto calibrado exactamente al número de dígitos más largo + padding ergonómico de 2.5
             col.width = Math.max(maxVisualLen + 2.5, 11);
         }
-    });
+    }
 
     // 4. Descargar archivo XLSX
     const buffer = await wb.xlsx.writeBuffer();

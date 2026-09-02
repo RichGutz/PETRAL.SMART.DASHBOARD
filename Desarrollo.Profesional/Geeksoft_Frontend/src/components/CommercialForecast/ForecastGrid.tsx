@@ -172,8 +172,8 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
 
     // Context Menu
     const [contextMenu, setContextMenu] = useState<{ x: number, y: number, type: 'client'|'route'|'vessel'|'demurrage', client?: string, route?: string, vessel?: string, rowKey?: string } | null>(null);
-    const [isGlobalTotalCollapsed, setIsGlobalTotalCollapsed] = useState(true);
-    const [isGlobalAcumCollapsed, setIsGlobalAcumCollapsed] = useState(true);
+    const [isGlobalTotalCollapsed, setIsGlobalTotalCollapsed] = useState(false);
+    const [isGlobalAcumCollapsed, setIsGlobalAcumCollapsed] = useState(false);
 
     useEffect(() => {
         const handleClick = () => setContextMenu(null);

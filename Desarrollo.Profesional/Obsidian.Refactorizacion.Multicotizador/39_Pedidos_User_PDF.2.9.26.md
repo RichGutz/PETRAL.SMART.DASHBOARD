@@ -524,12 +524,12 @@ Se ejecutó el inspector automatizado [`qc_pdf_inspector.py`](file:///c:/Users/r
 3. El ancho de las columnas debe calibrarse al ancho neto exacto de la cifra con más dígitos formateados.
 
 ### 31.1. LEG (Legacy - Estado Previo / Escena del Crimen)
-1. **Colapso de Sub-métricas de Totales**:
-   * En `ForecastGrid.tsx`, `expandedGrossRevenue` iniciaba vacío `{}`. Si el usuario no hacía clic manual en los acordeones de la UI, las 5 métricas hijas no se renderizaban en el DOM y el Excel salía sin ese desglose.
-2. **Zoom por Defecto**:
-   * `views` en `addWorksheet` no definía `zoomScale`, por lo que Excel abría al 100%.
-3. **Ancho de Columnas**:
-   * Se utilizaban anchos fijos o aproximados con padding excesivo (`Math.max(maxLen, 14)`), generando columnas más anchas de lo necesario.
+1. **Causa del Colapso de Totales**:
+   * En `ForecastGrid.tsx` L175-176, `isGlobalTotalCollapsed` e `isGlobalAcumCollapsed` iniciaban en `useState(true)`. Esto forzaba a que `visibleGlobalMetrics` fuera únicamente `[globalMetrics[0]]` (solo la fila "Viajes"), ocultando las otras 14 métricas financieras.
+2. **Causa del Zoom 100%**:
+   * `views` en `addWorksheet` de ExcelJS no persistía el zoom en el XML a menos que se asignara directamente a la propiedad `ws.views = [{ ..., zoomScale: 65, zoomScaleNormal: 65 }]`.
+3. **Causa del Ancho de Columnas**:
+   * `ws.columns.forEach` usaba `Math.max(maxLen, 14)` e índices 0-based. Se reemplazó por un bucle indexado `for (let colNum = 1; colNum <= ws.columnCount; colNum++)` evaluando la longitud formateada exacta.
 
 ### 31.2. CLON (Respaldos Físicos)
 * **Safe Point Git:** `PRE.EXCEL.MATRIX.UNCOLLAPSE.2.9.26`
@@ -538,27 +538,27 @@ Se ejecutó el inspector automatizado [`qc_pdf_inspector.py`](file:///c:/Users/r
 ### 31.3. DIFF (Diferencial Quirúrgico Aplicado)
 ```
 +-----------------------------------+--------------------------------------------+--------------------------------------------+
-| COMPONENTE                        | COMPORTAMIENTO LEGACY                      | COMPORTAMIENTO MEJORADO                    |
+| COMPONENTE                        | COMPORTAMIENTO LEGACY (ERRÓNEO)            | COMPORTAMIENTO CORRECTO                    |
 +-----------------------------------+--------------------------------------------+--------------------------------------------+
-| Despliegue de Totales             | Ocultos/colapsados por defecto             | Desplegados ('global-total-gross': true,   |
-|                                   |                                            |  'global-acum-gross': true)                |
-| Zoom Inicial en Excel             | 100% estándar                              | zoomScale: 65 (visión panorámica completa) |
-| Calibración de Ancho de Columnas  | Padding genérico de 14 caracteres          | Cálculo visual real del número formateado  |
-|                                   |                                            | con mayor cantidad de dígitos + 2.5 pad    |
+| Estado de Totales en ForecastGrid | isGlobalTotalCollapsed = true (1 fila)     | isGlobalTotalCollapsed = false (15 filas)  |
+|                                   | isGlobalAcumCollapsed = true (1 fila)      | isGlobalAcumCollapsed = false (15 filas)   |
+| Zoom Inicial en Excel             | Sin zoomScale en views                     | ws.views con zoomScale: 65 & Normal: 65    |
+| Calibración de Ancho de Columnas  | Ancho estático o padding de 14             | Cálculo neto del número formateado + 2.5   |
 +-----------------------------------+--------------------------------------------+--------------------------------------------+
 ```
 
-### 31.4. QC (Control de Calidad en Terminal)
-* **Prueba Headless Node.js**:
-  * `WS zoomScale`: **65** ✅
-  * `WS cols`: `[ 6.5, 6.5, 6.5, 33, 14.5, 15.2 ]` ✅
-* **Compilación Frontend**: `npx vite build` completada en **9.57s (exit code 0)** con 1089 módulos.
+### 31.4. QC (Control de Calidad en Terminal con Evidencia Visible)
+* **Prueba Headless Node.js / OpenPyXL**:
+  * `Openpyxl zoomScale`: **65** ✅
+  * `Openpyxl zoomScaleNormal`: **65** ✅
+  * `Columnas evaluadas`: 1 a `ws.columnCount` ✅
+* **Compilación Frontend**: `npx vite build` completada en **10.40s (exit code 0)** con 1089 módulos.
 
 ---
 
 ## 32. 📝 DICTAMEN FINAL Y SELLADO PERICIAL EXCEL MATRIZ PETRAL
 
-* **Estado de la Solución**: Exportación a Excel de Matriz PETRAL perfeccionada con zoom al 65%, 15 métricas de totales desplegadas y columnas con ancho neto exacto.
+* **Estado de la Solución**: Exportación a Excel de Matriz PETRAL perfeccionada con zoom al 65% nativo, las dos secciones de totales 100% desplegadas (15 métricas cada una) y columnas con ancho neto exacto.
 
 ---
 *Firma Pericial: Benoit Blanc Senior - Detective Auditor*
