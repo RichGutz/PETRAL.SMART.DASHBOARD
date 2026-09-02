@@ -526,3 +526,4 @@ CONCURRENCY & QC SUMMARY:
 [2026-09-02 15:05] Despliegue completado al VPS de producción (91.108.125.253) en https://forecast.geeksoft.tech. Ronda 10 (Benoit Blanc Senior: desglose de 15 filas en Total Flota/Acumulado y anchos recalibrados: Metrica a 145px, 12 meses a 56px, Total Acum a 70px) publicada en vivo.
 [2026-09-02 15:12] Caso Pericial Multicotizador: Corrección de truncamiento de flete decimal (20.50 -> 21) en multicotizadorPdfPrintService.ts implementando fmtCurDec y fmtNum(val, 2).
 [2026-09-02 15:16] Despliegue completado al VPS de producción (91.108.125.253) en https://forecast.geeksoft.tech. Caso Multicotizador (preservación de 2 decimales en flete $/T, revenue formula y bandas) publicado en vivo.
+[2026-09-02 15:20] Tag y Branch creados y sincronizados en GitHub: MULTICOTIZADOR.PDF.DECIMALES.2.9.26 (Hito oficial de fidelidad decimal en PDF de Multicotizador).
