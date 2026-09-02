@@ -1322,6 +1322,7 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
         const accumCharterHire = accumArray(globalCharterHire);
         const accumPlVsRequired = accumArray(globalPlVsRequired);
         const accumRevenues = accumArray(globalRevenues);
+        const accumGross = accumArray(globalRevenues);
         const accumFreight = accumArray(globalFreightRevenues);
         const accumDemurrage = accumArray(globalDemurrage);
         const accumCommissions = accumArray(globalCommissions);
