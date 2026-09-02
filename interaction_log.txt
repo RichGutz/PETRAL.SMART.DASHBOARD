@@ -480,3 +480,4 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-09-02 16:51] Despliegue exitoso de Exportación Excel Matriz PETRAL al VPS https://forecast.geeksoft.tech.
 [2026-09-02 17:09] Despliegue exitoso de corrección accumGross al VPS https://forecast.geeksoft.tech.
 [2026-09-02 17:25] Despliegue exitoso de servicios NAVITRANSO PDF y Excel al VPS https://forecast.geeksoft.tech.
+[2026-09-02 17:47] Despliegue exitoso de corrección de PDF NAVITRANSO al VPS https://forecast.geeksoft.tech.
