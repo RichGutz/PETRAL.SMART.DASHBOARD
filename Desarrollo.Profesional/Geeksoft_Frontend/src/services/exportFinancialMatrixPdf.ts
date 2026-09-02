@@ -86,7 +86,7 @@ export function generateFinancialMatrixPdfHtml(
     ];
     const totalHeader = headerCols[headerCols.length - 1] || 'TOTAL ACUM';
 
-    // 2. Extraer todas las filas con Matriz de Ocupación para resolver rowSpan
+    // 2. Extraer todas las filas con Matriz de Ocupación
     const occupied: boolean[][] = [];
     const setOccupied = (r: number, c: number, rSpan: number, cSpan: number) => {
         for (let row = r; row < r + rSpan; row++) {
@@ -190,7 +190,7 @@ export function generateFinancialMatrixPdfHtml(
         });
     }
 
-    // 3. Formateo Numérico Estricto: CERO CENTAVOS ($#,##0) en todas las cifras monetarias
+    // 3. Formateo Numérico Estricto: CERO CENTAVOS ($#,##0)
     const formatNumericCell = (valStr: string, metricName: string): string => {
         const rawClean = valStr.replace(/[\$,\s]/g, '');
         const upperMetric = metricName.toUpperCase();
@@ -216,11 +216,10 @@ export function generateFinancialMatrixPdfHtml(
         if (upperMetric.includes('TONELADA') || upperMetric.includes('TONS') || upperMetric.includes('MT') || upperMetric.includes('CARGA')) {
             return Math.round(parsedNum).toLocaleString('en-US');
         }
-        // Todas las cifras monetarias (incluyendo TCE y Tarifas) redondeadas a entero SIN CENTAVOS
         return '$' + Math.round(parsedNum).toLocaleString('en-US');
     };
 
-    // 4. Agrupación Atómica Estricta: Cada buque es UN SOLO BLOQUE indivisible de 9 filas
+    // 4. Agrupación Atómica Estricta: Cada buque es UN SOLO BLOQUE indivisible de 9 a 11 filas
     interface AtomicBlock {
         client: string;
         route: string;
@@ -279,8 +278,8 @@ export function generateFinancialMatrixPdfHtml(
         });
     });
 
-    // 5. Paginación Atómica: Ningún bloque de 9 filas se parte (Límite: 20 filas por hoja)
-    const MAX_ROWS_PER_PAGE = 20;
+    // 5. Paginación Óptima: 2 a 3 buques completos por hoja (Límite: 30 filas por hoja)
+    const MAX_ROWS_PER_PAGE = 30;
     interface PageStructure {
         blocks: AtomicBlock[];
         totalRows: number;
@@ -303,7 +302,7 @@ export function generateFinancialMatrixPdfHtml(
     const totalPagesCount = pages.length;
     const formattedDate = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-    // 6. Renderizado de Páginas con Fusión Vertical Jerárquica y Textos Verticales
+    // 6. Renderizado de Páginas con Fusión Vertical Jerárquica y Rotación Vertical Sin De Cabeza
     const pagesHtml = pages.map((p, pageIdx) => {
         const clientSpanMap = new Map<string, number>();
         const routeSpanMap = new Map<string, number>();
@@ -563,15 +562,14 @@ export function generateFinancialMatrixPdfHtml(
             padding: 0 !important;
         }
         .pdf-vertical-text {
-            writing-mode: vertical-rl !important;
-            transform: rotate(180deg) !important;
+            transform: rotate(-90deg) !important;
+            display: inline-block !important;
+            white-space: nowrap !important;
             font-weight: 700;
             font-size: 8.5px;
             letter-spacing: 0.5px;
             text-align: center;
             margin: auto;
-            white-space: nowrap;
-            display: inline-block;
             line-height: 1;
         }
 

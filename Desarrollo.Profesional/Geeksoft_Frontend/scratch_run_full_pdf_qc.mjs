@@ -222,7 +222,7 @@ rawRows.forEach(r => {
     });
 });
 
-const MAX_ROWS_PER_PAGE = 20;
+const MAX_ROWS_PER_PAGE = 30;
 const pages = [];
 let activePage = { blocks: [], totalRows: 0 };
 
@@ -351,7 +351,7 @@ const fullHtml = `<!DOCTYPE html>
         table.data-table th.th-total { background-color: #0d9488 !important; color: #ffffff !important; }
         table.data-table td { border: 1px solid #cbd5e1; padding: 2px 3px; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: normal !important; }
         td.td-dimension { width: 24px !important; max-width: 24px !important; min-width: 24px !important; text-align: center !important; vertical-align: middle !important; padding: 0 !important; }
-        .pdf-vertical-text { writing-mode: vertical-rl !important; transform: rotate(180deg) !important; font-weight: 700; font-size: 8.5px; letter-spacing: 0.5px; text-align: center; margin: auto; white-space: nowrap; display: inline-block; line-height: 1; }
+        .pdf-vertical-text { transform: rotate(-90deg) !important; display: inline-block !important; white-space: nowrap !important; font-weight: 700; font-size: 8.5px; letter-spacing: 0.5px; text-align: center; margin: auto; line-height: 1; }
         td.td-metric-name { width: 165px !important; min-width: 165px !important; max-width: 165px !important; text-align: left !important; font-weight: normal !important; color: #0f172a; padding-left: 5px; writing-mode: horizontal-tb !important; transform: none !important; white-space: nowrap !important; font-size: 9.5px !important; }
         td.td-num { width: 53px !important; max-width: 53px !important; text-align: right !important; font-size: 9px !important; font-weight: normal !important; color: #1e293b; padding-right: 3px; }
         td.td-empty { width: 53px !important; max-width: 53px !important; text-align: center; color: #cbd5e1; }
@@ -365,4 +365,4 @@ const fullHtml = `<!DOCTYPE html>
 </html>`;
 
 fs.writeFileSync('./scratch_atomic_full.html', fullHtml, 'utf-8');
-console.log(`✅ Paginación y bloques atómicos de 9 filas validados (${totalPagesCount} páginas A4 Landscape).`);
+console.log(`✅ Paginación de 30 filas por hoja validada (${totalPagesCount} páginas A4 Landscape).`);
