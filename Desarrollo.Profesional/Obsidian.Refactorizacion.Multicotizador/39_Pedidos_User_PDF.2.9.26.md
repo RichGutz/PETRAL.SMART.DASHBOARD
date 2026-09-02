@@ -406,10 +406,45 @@ Se ejecutó el inspector automatizado [`qc_pdf_inspector.py`](file:///c:/Users/r
 
 ---
 
-## 24. 📝 DICTAMEN FINAL Y SELLADO PERICIAL RONDA 10
+## 25. 🕵️‍♂️ CASO PERICIAL MULTICOTIZADOR (PROTOCOLO BEN / LEG / DIFF / NOTA): FLETE DECIMAL TRUNCADO (20.50 -> 21)
 
-* **Compilación Frontend**: `npx vite build` completado en **32.67s (exit code 0)** con 1089 módulos.
-* **Estado de la Solución**: Masterpiece ampliada y calibrada al milímetro.
+**Fecha:** 02 de Septiembre de 2026 (03:10 PM)  
+**Módulo Afectado:** Multicotizador (Voyage Calculator & Exportación PDF A4 Horizontal)  
+**Evidencia Física Evaluada:** Capturas comparativas de UI (`F/T = 20.50`, `Revenue 13,500 MT x $20.50/MT`) vs Impresión PDF (`F/T = 21`, `Revenue 13,500 MT x $21/MT`).
+
+### 25.1. LEG (Legacy - Estado Previo / Escena del Crimen)
+* En [`multicotizadorPdfPrintService.ts`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/services/providers/multicotizadorPdfPrintService.ts):
+  * **Línea 194**: `this.fmtNum(tr.freight_rate, 0)` formateaba el flete por tonelada con **0 decimales** forzando el redondeo entero (`20.50` $\rightarrow$ `21`).
+  * **Línea 800**: `${this.fmtCur(calc.totalFreight / calc.totalQuantity)}/MT` utilizaba el formateador general `fmtCur` que aplica `Math.round()` arrojando `$21/MT`.
+  * **Bandas y Precios Búnker**: Bandas tarifarias y precios unitarios utilizaban `fmtCur` entero.
+
+### 25.2. DIFF (Diferencias Forenses)
+```
++-----------------------------+------------------------------------+------------------------------------+--------------------------+
+| VARIABLE / CELDA            | ESTADO LEGACY (ERRÓNEO)            | VALOR REAL UI / NEGOCIO            | ACCIÓN CORRECTIVA        |
++-----------------------------+------------------------------------+------------------------------------+--------------------------+
+| F/T ($/T) en Tabla Tramos   | 21 (redondeo a 0 decimales)        | 20.50 (2 decimales exactos)        | this.fmtNum(val, 2)      |
+| Tarjeta Revenue Fórmula     | $21/MT                             | $20.50/MT                          | this.fmtCurDec(val, 2)   |
+| Bandas Tarifarias ($/MT)    | $0, $21                            | $20.50                             | this.fmtCurDec(val, 2)   |
+| Precios Unitarios Búnker    | $567/T, $1,530/T                   | $567.26/T, $1,530.26/T             | this.fmtCurDec(val, 2)   |
++-----------------------------+------------------------------------+------------------------------------+--------------------------+
+```
+
+### 25.3. NOTA (Cirugía Forense & Resolución Técnica)
+1. **Nuevo Helper Decimal de Moneda `fmtCurDec(val, decimals = 2)`**:
+   * Creado en `MulticotizadorPdfPrintService` para preservar siempre 2 cifras decimales en fletes, tarifas y precios unitarios.
+2. **Corrección de la Tabla de Itinerario (Tramos)**:
+   * Columna `F/T ($/T)` actualizada a `this.fmtNum(tr.freight_rate, 2)`.
+3. **Corrección de la Tarjeta `Financial Voyage Result`**:
+   * Encabezado de Revenue: `Revenue (${calc.totalQuantity} MT × ${fmtCurDec(rate, 2)}/MT)`.
+   * Bandas tarifarias y búnker IFO/MDO unitarios formateados a 2 decimales exactos.
+
+---
+
+## 26. 📝 DICTAMEN FINAL Y SELLADO PERICIAL CASO MULTICOTIZADOR
+
+* **Compilación Frontend**: `npx vite build` completado en **13.48s (exit code 0)** con 1089 módulos.
+* **Estado de la Solución**: Fidelidad matemática del 100% entre pantalla e impresión PDF.
 
 ---
 *Firma Pericial: Benoit Blanc Senior - Detective Auditor*

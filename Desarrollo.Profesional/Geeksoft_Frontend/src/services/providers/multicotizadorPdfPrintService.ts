@@ -52,6 +52,13 @@ export class MulticotizadorPdfPrintService {
         return `$${Math.round(num).toLocaleString('en-US')}`;
     }
 
+    private static fmtCurDec(val: any, decimals: number = 2): string {
+        if (val === undefined || val === null || val === '') return '$0.00';
+        const num = Number(val);
+        if (isNaN(num)) return '$0.00';
+        return `$${num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
+    }
+
     private static fmtNum(val: any, decimals: number = 1): string {
         if (val === undefined || val === null || val === '') return '0.0';
         const num = Number(val);
@@ -184,7 +191,7 @@ export class MulticotizadorPdfPrintService {
                     <td class="text-center font-extrabold ${tr.action === 'CARGAR' ? 'text-blue-700' : tr.action === 'DESCARGAR' ? 'text-emerald-700' : 'text-slate-500'}">${tr.action || 'NONE'}</td>
                     <td class="text-center">${tr.action !== 'NONE' ? `${tr.op_rate} ${tr.rate_unit === 'TH' ? 'T/H' : 'T/D'}` : '-'}</td>
                     <td class="text-right font-semibold">${tr.quantity > 0 ? this.fmtNum(tr.quantity, 0) : '-'}</td>
-                    <td class="text-right font-semibold">${tr.freight_rate > 0 ? this.fmtNum(tr.freight_rate, 0) : '-'}</td>
+                    <td class="text-right font-semibold">${tr.freight_rate > 0 ? this.fmtNum(tr.freight_rate, 2) : '-'}</td>
                     <td class="text-right font-bold text-slate-800">${tr.port_cost > 0 ? this.fmtCur(tr.port_cost) : '$0'}</td>
                     <td class="text-right font-bold text-blue-900">${tr.freight_revenue > 0 ? this.fmtCur(tr.freight_revenue) : '$0'}</td>
                     <td class="text-right font-bold text-amber-900">${tr.bunker_cost > 0 ? this.fmtCur(tr.bunker_cost) : '$0'}</td>
@@ -755,19 +762,19 @@ export class MulticotizadorPdfPrintService {
                         <div class="grid grid-cols-4 gap-1 text-center font-mono text-[8px]">
                             <div class="bg-slate-50 p-0.5 rounded border border-slate-200">
                                 <div class="text-slate-400 text-[7px]">10K-11.4K</div>
-                                <div class="font-bold text-slate-700">${this.fmtCur(tariffTiers?.[0]?.rate || 0)}</div>
+                                <div class="font-bold text-slate-700">${this.fmtCurDec(tariffTiers?.[0]?.rate || 0, 2)}</div>
                             </div>
                             <div class="bg-slate-50 p-0.5 rounded border border-slate-200">
                                 <div class="text-slate-400 text-[7px]">11.5K-12K</div>
-                                <div class="font-bold text-slate-700">${this.fmtCur(tariffTiers?.[1]?.rate || 0)}</div>
+                                <div class="font-bold text-slate-700">${this.fmtCurDec(tariffTiers?.[1]?.rate || 0, 2)}</div>
                             </div>
                             <div class="bg-slate-50 p-0.5 rounded border border-slate-200">
                                 <div class="text-slate-400 text-[7px]">12K-12.5K</div>
-                                <div class="font-bold text-slate-700">${this.fmtCur(tariffTiers?.[2]?.rate || 0)}</div>
+                                <div class="font-bold text-slate-700">${this.fmtCurDec(tariffTiers?.[2]?.rate || 0, 2)}</div>
                             </div>
                             <div class="bg-slate-50 p-0.5 rounded border border-slate-200">
                                 <div class="text-slate-400 text-[7px]">12.5K-14.5K</div>
-                                <div class="font-bold text-slate-700">${this.fmtCur(tariffTiers?.[3]?.rate || 0)}</div>
+                                <div class="font-bold text-slate-700">${this.fmtCurDec(tariffTiers?.[3]?.rate || 0, 2)}</div>
                             </div>
                         </div>
                     </div>
@@ -790,7 +797,7 @@ export class MulticotizadorPdfPrintService {
                         
                         <!-- REVENUE (FLETE) -->
                         <div class="flex justify-between items-center py-0.5 font-bold text-emerald-950 border-b border-emerald-200">
-                            <span class="font-sans">Revenue (${this.fmtNum(calc.totalQuantity, 0)} MT × ${this.fmtCur(calc.totalQuantity > 0 ? calc.totalFreight / calc.totalQuantity : 0)}/MT)</span>
+                            <span class="font-sans">Revenue (${this.fmtNum(calc.totalQuantity, 0)} MT × ${this.fmtCurDec(calc.totalQuantity > 0 ? calc.totalFreight / calc.totalQuantity : 0, 2)}/MT)</span>
                             <span>${this.fmtCur(calc.totalFreight)}</span>
                         </div>
 
@@ -834,13 +841,13 @@ export class MulticotizadorPdfPrintService {
 
                         <!-- BUNKER IFO -->
                         <div class="flex justify-between items-center text-slate-700 text-[8px]">
-                            <span class="font-sans">(-) Bunker IFO (${this.fmtNum(calc.totalIfoTons, 1)} T × ${this.fmtCur(bunkerPriceIfo)}/T)</span>
+                            <span class="font-sans">(-) Bunker IFO (${this.fmtNum(calc.totalIfoTons, 1)} T × ${this.fmtCurDec(bunkerPriceIfo, 2)}/T)</span>
                             <span>-${this.fmtCur(calc.ifoCost)}</span>
                         </div>
 
                         <!-- BUNKER MDO -->
                         <div class="flex justify-between items-center text-slate-700 text-[8px]">
-                            <span class="font-sans">(-) Bunker MDO (${this.fmtNum(calc.totalMdoTons, 1)} T × ${this.fmtCur(bunkerPriceMdo)}/T)</span>
+                            <span class="font-sans">(-) Bunker MDO (${this.fmtNum(calc.totalMdoTons, 1)} T × ${this.fmtCurDec(bunkerPriceMdo, 2)}/T)</span>
                             <span>-${this.fmtCur(calc.mdoCost)}</span>
                         </div>
 
