@@ -50,11 +50,11 @@ function getNavitransoDimensionColor(className: string, text: string): { bg: str
 }
 
 function createVerticalSvg(text: string, rowSpan: number, fill: string = '#ffffff'): string {
-    const height = Math.max(35, rowSpan * 18);
+    const height = Math.max(30, rowSpan * 16.5);
     const midY = -height / 2;
     return `
-    <svg width="24" height="${height}" viewBox="0 0 24 ${height}" style="display: block; margin: 0 auto; overflow: visible;">
-        <text x="${midY}" y="15" transform="rotate(-90)" text-anchor="middle" fill="${fill}" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">${text}</text>
+    <svg width="20" height="${height}" viewBox="0 0 20 ${height}" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="${midY}" y="13.5" transform="rotate(-90)" text-anchor="middle" fill="${fill}" font-family="Consolas, 'Courier New', monospace" font-size="8" font-weight="bold" letter-spacing="0.3">${text}</text>
     </svg>
     `;
 }
@@ -170,7 +170,6 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                 const selectEl = td.querySelector('select');
                 const inputEl = td.querySelector('input');
                 const vertDiv = td.querySelector('.vertical-text');
-                const btnEl = td.querySelector('button');
 
                 if (selectEl) {
                     textValue = selectEl.value || (vertDiv ? vertDiv.textContent?.trim() : '') || '';
@@ -178,13 +177,9 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                     textValue = inputEl.value;
                 } else if (vertDiv) {
                     textValue = vertDiv.textContent?.trim() || '';
-                } else if (btnEl) {
-                    const btnClone = btnEl.cloneNode(true) as HTMLElement;
-                    btnClone.querySelectorAll('svg, select, input').forEach(el => el.remove());
-                    textValue = btnClone.textContent?.trim() || '';
                 } else {
                     const cellClone = td.cloneNode(true) as HTMLElement;
-                    cellClone.querySelectorAll('svg, select, input').forEach(el => el.remove());
+                    cellClone.querySelectorAll('svg, select, input, button').forEach(el => el.remove());
                     textValue = cellClone.textContent?.trim() || '';
                 }
 
@@ -324,7 +319,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                                       r.metric.toUpperCase().includes('TIME CHARTER EQUIVALENT');
                 const isSubRow = r.metric.includes('↳') || r.metric.startsWith('  ');
 
-                let rowStyle = 'height: 18px;';
+                let rowStyle = 'height: 16.5px;';
                 if (isMargenBruto) rowStyle += ' background-color: #eef2ff; font-weight: 700; color: #312e81;';
                 else if (isHeaderBlock) rowStyle += ' background-color: #f8fafc; font-weight: 700; color: #0f172a;';
                 else if (b.isAccum) rowStyle += ' background-color: #f0fdfa; font-weight: 600;';
@@ -335,44 +330,46 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                 if (isFirstRow) {
                     if (b.isFleet) {
                         dimCellsHtml = `
-                        <td rowspan="${blockRowCount}" class="dim-cell" style="background-color: #1e293b; color: #ffffff; width: 72px;" colspan="3">
-                            <div style="color: #ffffff; font-weight: 900; font-size: 8.5px; text-align: center;">TOTAL FLOTA</div>
+                        <td rowspan="${blockRowCount}" class="dim-cell" style="background-color: #1e293b; color: #ffffff; width: 60px;" colspan="3">
+                            <div style="color: #ffffff; font-weight: 900; font-size: 8px; text-align: center;">TOTAL FLOTA</div>
                         </td>
                         `;
                     } else if (b.isAccum) {
                         dimCellsHtml = `
-                        <td rowspan="${blockRowCount}" class="dim-cell" style="background-color: #0d9488; color: #ffffff; width: 72px;" colspan="3">
-                            <div style="color: #ffffff; font-weight: 900; font-size: 8.5px; text-align: center;">TOTAL ACUMULADO</div>
+                        <td rowspan="${blockRowCount}" class="dim-cell" style="background-color: #0d9488; color: #ffffff; width: 60px;" colspan="3">
+                            <div style="color: #ffffff; font-weight: 900; font-size: 8px; text-align: center;">TOTAL ACUMULADO</div>
                         </td>
                         `;
                     } else if (b.isSubtotal) {
+                        const subTitle = b.client.includes('SUBTOTAL') ? b.client : `Σ SUBTOTAL ${b.client}`;
                         dimCellsHtml = `
-                        <td rowspan="${blockRowCount}" class="dim-cell" style="background-color: #1e293b; color: #fbbf24; width: 72px;" colspan="3">
-                            <div style="color: #fbbf24; font-weight: 900; font-size: 8.5px; text-align: center;">Σ SUBTOTAL ${b.client}</div>
+                        <td rowspan="${blockRowCount}" class="dim-cell" style="background-color: #1e293b; color: #fbbf24; width: 60px;" colspan="3">
+                            <div style="color: #fbbf24; font-weight: 900; font-size: 8px; text-align: center;">${subTitle}</div>
                         </td>
                         `;
                     } else {
                         dimCellsHtml = `
-                        <td rowspan="${blockRowCount}" class="dim-cell" style="background-color: ${cCol.bg}; width: 24px;">
+                        <td rowspan="${blockRowCount}" class="dim-cell" style="background-color: ${cCol.bg}; width: 20px;">
                             ${createVerticalSvg(b.client, blockRowCount, cCol.fg)}
                         </td>
-                        <td rowspan="${blockRowCount}" class="dim-cell" style="background-color: ${rCol.bg}; width: 24px;">
+                        <td rowspan="${blockRowCount}" class="dim-cell" style="background-color: ${rCol.bg}; width: 20px;">
                             ${createVerticalSvg(b.route, blockRowCount, rCol.fg)}
                         </td>
-                        <td rowspan="${blockRowCount}" class="dim-cell" style="background-color: ${vCol.bg}; width: 24px;">
+                        <td rowspan="${blockRowCount}" class="dim-cell" style="background-color: ${vCol.bg}; width: 20px;">
                             ${createVerticalSvg(b.vessel, blockRowCount, vCol.fg)}
                         </td>
                         `;
                     }
                 }
 
-                const metricIndent = isSubRow ? 'padding-left: 12px; color: #475569; font-size: 7.5px;' : 'font-size: 8px; font-weight: 600; padding-left: 4px;';
-                const metricCellHtml = `<td class="metric-cell" style="${metricIndent} width: 135px; text-align: left;">${r.metric}</td>`;
+                const metricIndent = isSubRow ? 'padding-left: 10px; color: #475569; font-size: 7px;' : 'font-size: 7.5px; font-weight: 600; padding-left: 4px;';
+                const metricCellHtml = `<td class="metric-cell" style="${metricIndent} width: 140px; text-align: left;">${r.metric}</td>`;
 
                 const valCellsHtml = r.values.map((v, valIdx) => {
                     const isTotalCol = valIdx === r.values.length - 1;
                     const totalStyle = isTotalCol ? 'background-color: #e0f2fe; font-weight: 700; color: #0369a1;' : '';
-                    return `<td class="val-cell" style="${totalStyle} text-align: right; width: ${isTotalCol ? '64px' : '56px'}; padding-right: 3px;">${v}</td>`;
+                    const cellCls = isTotalCol ? 'val-total-cell' : 'val-cell';
+                    return `<td class="${cellCls}" style="${totalStyle} text-align: right; padding-right: 3px;">${v}</td>`;
                 }).join('');
 
                 tbodyHtml += `
@@ -386,15 +383,16 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         });
 
         const headerColsHtml = `
-        <tr style="background-color: #1e293b; color: #ffffff; height: 22px; font-size: 8px; font-weight: bold;">
-            <th style="width: 24px; text-align: center; border: 1px solid #334155;">CLI</th>
-            <th style="width: 24px; text-align: center; border: 1px solid #334155;">RUT</th>
-            <th style="width: 24px; text-align: center; border: 1px solid #334155;">BUQ</th>
-            <th style="width: 135px; text-align: left; padding-left: 6px; border: 1px solid #334155;">MÉTRICA NAVITRANSO</th>
+        <tr style="background-color: #1e293b; color: #ffffff; height: 20px; font-size: 7.5px; font-weight: bold;">
+            <th style="width: 20px; text-align: center; border: 1px solid #334155;">CLI</th>
+            <th style="width: 20px; text-align: center; border: 1px solid #334155;">RUT</th>
+            <th style="width: 20px; text-align: center; border: 1px solid #334155;">BUQ</th>
+            <th style="width: 140px; text-align: left; padding-left: 6px; border: 1px solid #334155;">MÉTRICA NAVITRANSO</th>
             ${monthCols.map((m, mIdx) => {
                 const isTotal = mIdx === monthCols.length - 1;
                 const bg = isTotal ? '#0d9488' : '#1e293b';
-                return `<th style="width: ${isTotal ? '64px' : '56px'}; text-align: center; background-color: ${bg}; border: 1px solid #334155;">${m}</th>`;
+                const w = isTotal ? '75px' : '63px';
+                return `<th style="width: ${w}; text-align: center; background-color: ${bg}; border: 1px solid #334155;">${m}</th>`;
             }).join('')}
         </tr>
         `;
@@ -408,10 +406,10 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                             <img src="${LOGO_PETRAL_BASE64}" style="height: 20px; width: auto; object-fit: contain;" alt="Petral Logo" />
                         </td>
                         <td style="width: 60%; text-align: center; vertical-align: middle;">
-                            <div style="font-size: 12px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.4px;">
+                            <div style="font-size: 11px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.4px;">
                                 MATRIZ FINANCIERA — FORMATO NAVITRANSO
                             </div>
-                            <div style="font-size: 8.5px; font-weight: 600; color: #0284c7; margin-top: 1px;">
+                            <div style="font-size: 8px; font-weight: 600; color: #0284c7; margin-top: 1px;">
                                 ${scenarioName}
                             </div>
                         </td>
@@ -457,7 +455,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
     <style>
         @page {
             size: A4 landscape;
-            margin: 8mm 6mm 8mm 6mm;
+            margin: 6mm 5mm 6mm 5mm;
         }
         * {
             box-sizing: border-box;
@@ -472,8 +470,8 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             padding: 0 !important;
             background-color: #ffffff !important;
             color: #0f172a;
-            font-size: 8px;
-            line-height: 1.15;
+            font-size: 7.5px;
+            line-height: 1.1;
         }
         .report-page {
             width: 100%;
@@ -486,6 +484,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         }
         .matrix-table {
             border: 1px solid #cbd5e1;
+            border-collapse: collapse !important;
             table-layout: fixed;
             width: 100%;
         }
@@ -495,24 +494,47 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            height: 16.5px !important;
+            max-height: 16.5px !important;
+            vertical-align: middle;
         }
         .dim-cell {
             padding: 0 !important;
             text-align: center;
             vertical-align: middle;
+            width: 20px !important;
+            max-width: 20px !important;
         }
         .metric-cell {
             font-family: Consolas, "Courier New", monospace;
+            width: 140px !important;
+            max-width: 140px !important;
+            min-width: 140px !important;
+            font-size: 7.5px !important;
+            font-weight: 600;
         }
         .val-cell {
             font-family: Consolas, "Courier New", monospace;
+            font-size: 7.5px !important;
+            letter-spacing: -0.2px;
+            width: 63px !important;
+            min-width: 63px !important;
+            max-width: 63px !important;
+        }
+        .val-total-cell {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 7.5px !important;
+            font-weight: 700;
+            width: 75px !important;
+            min-width: 75px !important;
+            max-width: 75px !important;
         }
         .page-footer {
             width: 100%;
-            margin-top: 4px;
+            margin-top: 3px;
             border-top: 1px solid #cbd5e1;
             padding-top: 2px;
-            font-size: 7.5px;
+            font-size: 7px;
             font-weight: 600;
             color: #64748b;
             display: table;
