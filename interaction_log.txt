@@ -483,3 +483,4 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-09-02 17:47] Despliegue exitoso de corrección de PDF NAVITRANSO al VPS https://forecast.geeksoft.tech.
 [2026-09-02 18:01] Despliegue exitoso de correcciones críticas de PDF NAVITRANSO al VPS.
 [2026-09-02 18:08] Despliegue exitoso de homologación de PDF NAVITRANSO al VPS.
+[2026-09-02 18:28] Despliegue exitoso de desglose completo NAVITRANSO y compaginación de 2 combos al VPS.
