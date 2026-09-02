@@ -1,9 +1,10 @@
 /**
  * SERVICIO DEDICADO DE EXPORTACIÓN A PDF PARA MATRIZ NAVITRANSO (100% AISLADO)
  * 
- * Basado en el motor canónico de paginación atómica y compaginación de 30 filas por hoja,
- * fusión vertical jerárquica de dimensiones (CLI, RUT, BUQ), formato A4 Landscape (margin 4mm 5mm),
- * rotación vectorial SVG y paridad visual con la Matriz PETRAL.
+ * Basado en el motor canónico de paginación atómica y compaginación de 35 filas por hoja (2 combos/página),
+ * preservación del orden contable por cliente (subtotales inmediatamente tras sus buques),
+ * desglose contable completo de 15 métricas de Navitranso, fusión jerárquica blindada,
+ * eliminación de desfases de columnas, y márgenes A4 Landscape (4mm 5mm).
  */
 
 import { LOGO_PETRAL_BASE64, LOGO_GEEKSOFT_BASE64 } from '../assets/logosBase64';
@@ -52,11 +53,11 @@ function getDimensionColor(className: string, text: string): { bg: string; fg: s
 }
 
 function createVerticalSvg(text: string, rowSpan: number, fill: string = '#ffffff'): string {
-    const height = Math.max(35, rowSpan * 18);
+    const height = Math.max(30, rowSpan * 15);
     const midY = -height / 2;
     return `
-    <svg width="24" height="${height}" viewBox="0 0 24 ${height}" style="display: block; margin: 0 auto; overflow: visible;">
-        <text x="${midY}" y="15" transform="rotate(-90)" text-anchor="middle" fill="${fill}" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">${text}</text>
+    <svg width="20" height="${height}" viewBox="0 0 20 ${height}" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="${midY}" y="13.5" transform="rotate(-90)" text-anchor="middle" fill="${fill}" font-family="Consolas, 'Courier New', monospace" font-size="8" font-weight="bold" letter-spacing="0.4">${text}</text>
     </svg>
     `;
 }
@@ -116,7 +117,6 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         'JUL 2027', 'AGO 2027', 'SET 2027', 'OCT 2027', 'NOV 2027', 'DIC 2027'
     ];
     const totalHeader = headerCols[headerCols.length - 1] || 'TOTAL ACUM';
-    const numMonths = safeMonths.length;
 
     // 2. Extraer todas las filas con Matriz de Ocupación 2D
     const occupied: boolean[][] = [];
@@ -177,7 +177,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                     textValue = vertDiv.textContent?.trim() || '';
                 } else {
                     const cellClone = td.cloneNode(true) as HTMLElement;
-                    cellClone.querySelectorAll('svg, select, input, button').forEach(el => el.remove());
+                    cellClone.querySelectorAll('svg, select, input, button, [class*="text-[8.5px]"], [class*="bg-slate-200"]').forEach(el => el.remove());
                     textValue = cellClone.textContent?.trim() || '';
                 }
 
@@ -195,7 +195,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             if (rowRoute) { lastRoute = rowRoute; lastRouteCls = routeCls; }
             if (rowVessel) { lastVessel = rowVessel; lastVesselCls = vesselCls; }
 
-            const isSub = lastRoute.toUpperCase().includes('SUBTOTAL') || lastVessel.toUpperCase().includes('TOTAL CLIENT') || lastClient.toUpperCase().includes('SUBTOTAL');
+            const isSub = lastRoute.toUpperCase().includes('SUBTOTAL') || lastVessel.toUpperCase().includes('TOTAL CLIENT') || lastClient.toUpperCase().includes('SUBTOTAL') || lastVessel.toUpperCase().includes('TOTAL ');
             const isFleet = lastClient.toUpperCase().includes('TOTAL FLOTA');
             const isAccum = lastClient.toUpperCase().includes('TOTAL ACUMULADO');
 
@@ -246,23 +246,22 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         return '$' + Math.round(parsedNum).toLocaleString('en-US');
     };
 
-    // 4. Agrupación Atómica: Buques Estándar y Subtotales
-    const vesselBlocks: NavAtomicBlock[] = [];
-    const subtotalBlocks: NavAtomicBlock[] = [];
+    // 4. Agrupación Atómica en Orden Contable Canónico (Los subtotales van inmediatamente tras sus buques)
+    const allOrderedBlocks: NavAtomicBlock[] = [];
     let currentBlock: NavAtomicBlock | null = null;
 
     rawRows.forEach(r => {
-        if (r.isFleet || r.isAccum) return;
-
         const isSubtotalBlock = r.isSubtotal;
+        const isFleetBlock = r.isFleet;
+        const isAccumBlock = r.isAccum;
         const isStartOfVessel = r.metric.toUpperCase().includes('VIAJES') || r.metric.toUpperCase().includes('FREQ');
 
         let shouldStartNewBlock = false;
         if (!currentBlock) {
             shouldStartNewBlock = true;
-        } else if (isSubtotalBlock !== currentBlock.isSubtotal) {
+        } else if (isFleetBlock !== currentBlock.isFleet || isAccumBlock !== currentBlock.isAccum || isSubtotalBlock !== currentBlock.isSubtotal) {
             shouldStartNewBlock = true;
-        } else if (!isSubtotalBlock) {
+        } else if (!isSubtotalBlock && !isFleetBlock && !isAccumBlock) {
             if (isStartOfVessel && currentBlock.rows.length >= 7) {
                 shouldStartNewBlock = true;
             } else if (r.vessel !== currentBlock.vessel || r.route !== currentBlock.route || r.client !== currentBlock.client) {
@@ -279,15 +278,11 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                 routeCls: r.routeCls,
                 vesselCls: r.vesselCls,
                 isSubtotal: isSubtotalBlock,
-                isFleet: false,
-                isAccum: false,
+                isFleet: isFleetBlock,
+                isAccum: isAccumBlock,
                 rows: []
             };
-            if (isSubtotalBlock) {
-                subtotalBlocks.push(currentBlock);
-            } else {
-                vesselBlocks.push(currentBlock);
-            }
+            allOrderedBlocks.push(currentBlock);
         }
 
         currentBlock.rows.push({
@@ -296,49 +291,8 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         });
     });
 
-    // 5. Bloques Globales TOTAL FLOTA y TOTAL ACUMULADO
-    const fleetRows = rawRows.filter(r => r.isFleet);
-    const accumRows = rawRows.filter(r => r.isAccum);
-
-    const fleetBlock: NavAtomicBlock = {
-        client: 'TOTAL FLOTA',
-        route: 'FLOTA',
-        vessel: 'TODOS',
-        clientCls: 'bg-slate-800 text-white',
-        routeCls: 'bg-slate-800 text-white',
-        vesselCls: 'bg-slate-800 text-white',
-        isSubtotal: false,
-        isFleet: true,
-        isAccum: false,
-        rows: fleetRows.length > 0 ? fleetRows.map(r => ({
-            metric: r.metric,
-            values: r.values.map(v => formatNumericCell(v, r.metric))
-        })) : []
-    };
-
-    const accumBlock: NavAtomicBlock = {
-        client: 'TOTAL ACUMULADO',
-        route: 'ACUMULADO',
-        vessel: 'TODOS',
-        clientCls: 'bg-petral-teal text-white',
-        routeCls: 'bg-petral-teal text-white',
-        vesselCls: 'bg-petral-teal text-white',
-        isSubtotal: false,
-        isFleet: false,
-        isAccum: true,
-        rows: accumRows.length > 0 ? accumRows.map(r => ({
-            metric: r.metric,
-            values: r.values.map(v => formatNumericCell(v, r.metric))
-        })) : []
-    };
-
-    // Unir todos los bloques
-    const allBlocks: NavAtomicBlock[] = [...vesselBlocks, ...subtotalBlocks];
-    if (fleetBlock.rows.length > 0) allBlocks.push(fleetBlock);
-    if (accumBlock.rows.length > 0) allBlocks.push(accumBlock);
-
-    // 6. Paginación Óptima (Límite: 30 filas por hoja)
-    const MAX_ROWS_PER_PAGE = 30;
+    // 5. Paginación Óptima (Límite: 35 filas por hoja para albergar exactamente 2 COMBOS por página)
+    const MAX_ROWS_PER_PAGE = 35;
     interface PageStructure {
         blocks: NavAtomicBlock[];
         totalRows: number;
@@ -347,7 +301,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
     const pages: PageStructure[] = [];
     let activePage: PageStructure = { blocks: [], totalRows: 0 };
 
-    allBlocks.forEach(block => {
+    allOrderedBlocks.forEach(block => {
         const count = block.rows.length;
         if (activePage.totalRows + count > MAX_ROWS_PER_PAGE && activePage.blocks.length > 0) {
             pages.push(activePage);
@@ -361,30 +315,26 @@ export function generateFinancialMatrixNavitransoPdfHtml(
     const totalPagesCount = pages.length;
     const formattedDate = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-    // 7. Renderizado de Páginas con Rotación Vectorial SVG y Fusión Vertical Jerárquica
+    // 6. Renderizado de Páginas con Fusión Jerárquica y Cero Desfase de Columnas
     const pagesHtml = pages.map((p, pageIdx) => {
         const clientSpanMap = new Map<string, number>();
         const routeSpanMap = new Map<string, number>();
 
         p.blocks.forEach(b => {
             const rowCount = b.rows.length;
-            const cKey = b.client;
-            const rKey = `${b.client}____${b.route}`;
-
-            clientSpanMap.set(cKey, (clientSpanMap.get(cKey) || 0) + rowCount);
-            routeSpanMap.set(rKey, (routeSpanMap.get(rKey) || 0) + rowCount);
+            if (!b.isSubtotal && !b.isFleet && !b.isAccum) {
+                const cKey = b.client;
+                const rKey = `${b.client}____${b.route}`;
+                clientSpanMap.set(cKey, (clientSpanMap.get(cKey) || 0) + rowCount);
+                routeSpanMap.set(rKey, (routeSpanMap.get(rKey) || 0) + rowCount);
+            }
         });
 
         const renderedClients = new Set<string>();
         const renderedRoutes = new Set<string>();
 
         const tbodyHtml = p.blocks.map(b => {
-            const cKey = b.client;
-            const rKey = `${b.client}____${b.route}`;
-            const clientSpan = clientSpanMap.get(cKey) || b.rows.length;
-            const routeSpan = routeSpanMap.get(rKey) || b.rows.length;
-            const vesselSpan = b.rows.length;
-
+            const rowCount = b.rows.length;
             const isFleet = b.isFleet;
             const isAccum = b.isAccum;
             const isSub = b.isSubtotal;
@@ -392,6 +342,98 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             const cColor = isAccum ? { bg: '#0d9488', fg: '#ffffff' } : (isFleet ? { bg: '#1e293b', fg: '#fbbf24' } : (getDimensionColor(b.clientCls, b.client) || { bg: '#0369a1', fg: '#ffffff' }));
             const rColor = isAccum ? { bg: '#0d9488', fg: '#ccfbf1' } : (isFleet ? { bg: '#1e293b', fg: '#94a3b8' } : (getDimensionColor(b.routeCls, b.route) || { bg: '#a855f7', fg: '#ffffff' }));
             const vColor = isAccum ? { bg: '#0d9488', fg: '#ccfbf1' } : (isFleet ? { bg: '#1e293b', fg: '#94a3b8' } : (getDimensionColor(b.vesselCls, b.vessel) || { bg: '#16a34a', fg: '#ffffff' }));
+
+            if (isFleet) {
+                return b.rows.map((row, rIdx) => {
+                    const isFirst = rIdx === 0;
+                    const isMargen = row.metric.toUpperCase().includes('MARGEN BRUTO');
+                    const isHeader = row.metric.toUpperCase().includes('VENTAS') || row.metric.toUpperCase().includes('COSTOS DIRECTOS') || row.metric.toUpperCase().includes('TIME CHARTER EQUIVALENT');
+                    const trClass = isMargen ? 'tr-nav-margen' : (isHeader ? 'tr-fleet-total' : 'tr-data-row');
+
+                    return `
+                    <tr class="${trClass}">
+                        ${isFirst ? `
+                            <td colspan="3" rowspan="${rowCount}" class="td-dimension" style="background-color: #1e293b !important; color: #ffffff !important; font-weight: 900; font-size: 8px; text-align: center; vertical-align: middle;">
+                                TOTAL FLOTA
+                            </td>
+                        ` : ''}
+                        <td class="td-metric-name ${row.metric.startsWith('↳') || row.metric.startsWith('  ') ? 'pl-subrow' : ''}">
+                            ${row.metric}
+                        </td>
+                        ${row.values.map((v, valIdx) => {
+                            const isTotalCol = valIdx === row.values.length - 1;
+                            return `<td class="${v ? 'td-num' : 'td-empty'} ${isTotalCol ? 'td-total-cell' : ''}">${v}</td>`;
+                        }).join('')}
+                    </tr>
+                    `;
+                }).join('');
+            }
+
+            if (isAccum) {
+                return b.rows.map((row, rIdx) => {
+                    const isFirst = rIdx === 0;
+                    const isMargen = row.metric.toUpperCase().includes('MARGEN BRUTO');
+                    const isHeader = row.metric.toUpperCase().includes('VENTAS') || row.metric.toUpperCase().includes('COSTOS DIRECTOS') || row.metric.toUpperCase().includes('TIME CHARTER EQUIVALENT');
+                    const trClass = isMargen ? 'tr-nav-margen' : (isHeader ? 'tr-global-accum' : 'tr-data-row');
+
+                    return `
+                    <tr class="${trClass}">
+                        ${isFirst ? `
+                            <td colspan="3" rowspan="${rowCount}" class="td-dimension" style="background-color: #0d9488 !important; color: #ffffff !important; font-weight: 900; font-size: 8px; text-align: center; vertical-align: middle;">
+                                TOTAL ACUMULADO
+                            </td>
+                        ` : ''}
+                        <td class="td-metric-name ${row.metric.startsWith('↳') || row.metric.startsWith('  ') ? 'pl-subrow' : ''}">
+                            ${row.metric}
+                        </td>
+                        ${row.values.map((v, valIdx) => {
+                            const isTotalCol = valIdx === row.values.length - 1;
+                            return `<td class="${v ? 'td-num' : 'td-empty'} ${isTotalCol ? 'td-total-cell' : ''}">${v}</td>`;
+                        }).join('')}
+                    </tr>
+                    `;
+                }).join('');
+            }
+
+            if (isSub) {
+                const subClientName = b.client.replace(/Σ|SUBTOTAL|TOTAL/gi, '').trim() || 'CLIENTE';
+                return b.rows.map((row, rIdx) => {
+                    const isFirst = rIdx === 0;
+                    const isMargen = row.metric.toUpperCase().includes('MARGEN BRUTO');
+                    const isHeader = row.metric.toUpperCase().includes('VENTAS') || row.metric.toUpperCase().includes('COSTOS DIRECTOS') || row.metric.toUpperCase().includes('TIME CHARTER EQUIVALENT');
+                    const trClass = isMargen ? 'tr-nav-margen' : (isHeader ? 'tr-subtotal' : 'tr-data-row');
+
+                    return `
+                    <tr class="${trClass}">
+                        ${isFirst ? `
+                            <td rowspan="${rowCount}" class="td-dimension" style="background-color: ${cColor.bg} !important;">
+                                ${createVerticalSvg(subClientName, rowCount, cColor.fg)}
+                            </td>
+                            <td rowspan="${rowCount}" class="td-dimension" style="background-color: #1e293b !important;">
+                                ${createVerticalSvg('Σ SUBTOTAL', rowCount, '#fbbf24')}
+                            </td>
+                            <td rowspan="${rowCount}" class="td-dimension" style="background-color: #1e293b !important;">
+                                ${createVerticalSvg('TOTAL ' + subClientName, rowCount, '#fbbf24')}
+                            </td>
+                        ` : ''}
+                        <td class="td-metric-name ${row.metric.startsWith('↳') || row.metric.startsWith('  ') ? 'pl-subrow' : ''}">
+                            ${row.metric}
+                        </td>
+                        ${row.values.map((v, valIdx) => {
+                            const isTotalCol = valIdx === row.values.length - 1;
+                            return `<td class="${v ? 'td-num' : 'td-empty'} ${isTotalCol ? 'td-total-cell' : ''}">${v}</td>`;
+                        }).join('')}
+                    </tr>
+                    `;
+                }).join('');
+            }
+
+            // Bloque Regular de Buque (Vessel)
+            const cKey = b.client;
+            const rKey = `${b.client}____${b.route}`;
+            const clientSpan = clientSpanMap.get(cKey) || rowCount;
+            const routeSpan = routeSpanMap.get(rKey) || rowCount;
+            const vesselSpan = rowCount;
 
             const isClientFirst = !renderedClients.has(cKey);
             if (isClientFirst) renderedClients.add(cKey);
@@ -409,10 +451,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                 const isSubRow = row.metric.startsWith('↳') || row.metric.startsWith('  ');
 
                 let trClass = 'tr-data-row';
-                if (isAccum) trClass = 'tr-global-accum';
-                else if (isFleet) trClass = 'tr-fleet-total';
-                else if (isSub) trClass = 'tr-subtotal';
-                else if (isMargen) trClass = 'tr-nav-margen';
+                if (isMargen) trClass = 'tr-nav-margen';
                 else if (isHeaderBlock) trClass = 'tr-nav-block-header';
 
                 return `
@@ -470,10 +509,10 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th class="th-dim" style="width: 24px;">CLI</th>
-                        <th class="th-dim" style="width: 24px;">RUT</th>
-                        <th class="th-dim" style="width: 24px;">BUQ</th>
-                        <th class="th-metric" style="width: 135px;">MÉTRICA NAVITRANSO</th>
+                        <th class="th-dim" style="width: 20px;">CLI</th>
+                        <th class="th-dim" style="width: 20px;">RUT</th>
+                        <th class="th-dim" style="width: 20px;">BUQ</th>
+                        <th class="th-metric" style="width: 140px;">MÉTRICA NAVITRANSO</th>
                         ${safeMonths.map(m => `<th class="th-month" style="width: 58px;">${m}</th>`).join('')}
                         <th class="th-total" style="width: 66px;">${totalHeader}</th>
                     </tr>
@@ -521,7 +560,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             padding: 0 !important;
             background-color: #ffffff !important;
             color: #0f172a;
-            font-size: 8.5px !important;
+            font-size: 8px !important;
             font-weight: normal !important;
             line-height: 1.15;
         }
@@ -542,7 +581,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         .top-header-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
         .top-header-table td {
             border: none !important;
@@ -550,18 +589,18 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             vertical-align: middle;
         }
         .logo-geeksoft {
-            height: 44px;
+            height: 38px;
             width: auto;
             object-fit: contain;
         }
         .logo-petral {
-            height: 18px;
+            height: 16px;
             width: auto;
             object-fit: contain;
         }
         .report-main-title {
             font-weight: 700;
-            font-size: 13px;
+            font-size: 12px;
             color: #0f172a;
             margin: 0;
             text-transform: uppercase;
@@ -570,7 +609,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             line-height: 1.1;
         }
         .report-sub-title {
-            font-size: 9.5px;
+            font-size: 8.5px;
             font-weight: 600;
             color: #334155;
             text-align: center;
@@ -581,12 +620,12 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             background-color: #0f4c81;
             color: #ffffff;
             font-weight: 700;
-            font-size: 8.5px;
+            font-size: 8px;
             text-transform: uppercase;
             padding: 2px 8px;
             border-radius: 3px;
             text-align: center;
-            margin: 2px auto 3px auto;
+            margin: 2px auto 2px auto;
             width: fit-content;
             max-width: 95%;
             letter-spacing: 0.2px;
@@ -598,17 +637,17 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             border-collapse: collapse;
             margin-bottom: 2px;
             table-layout: fixed;
-            font-size: 8.5px !important;
+            font-size: 8px !important;
             font-weight: normal !important;
-            line-height: 1.15;
+            line-height: 1.1;
         }
         table.data-table th {
             background-color: #1e293b !important;
             color: #ffffff !important;
             font-weight: 700;
             text-transform: uppercase;
-            font-size: 8.5px;
-            padding: 2px 2px;
+            font-size: 8px;
+            padding: 2px 1px;
             border: 1px solid #334155;
             text-align: center;
             letter-spacing: 0.1px;
@@ -619,20 +658,21 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         }
         table.data-table td {
             border: 1px solid #cbd5e1;
-            padding: 1.5px 2px;
+            padding: 1px 2px;
             vertical-align: middle;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             font-weight: normal !important;
-            height: 16px !important;
+            height: 15px !important;
+            max-height: 15px !important;
         }
         
         /* Celdas de Dimensiones Verticales (CLI, RUT, BUQ) */
         td.td-dimension {
-            width: 24px !important;
-            max-width: 24px !important;
-            min-width: 24px !important;
+            width: 20px !important;
+            max-width: 20px !important;
+            min-width: 20px !important;
             text-align: center !important;
             vertical-align: middle !important;
             padding: 0 !important;
@@ -640,22 +680,22 @@ export function generateFinancialMatrixNavitransoPdfHtml(
 
         /* Columna 4: Nombres de Métricas */
         td.td-metric-name {
-            width: 135px !important;
-            min-width: 135px !important;
-            max-width: 135px !important;
+            width: 140px !important;
+            min-width: 140px !important;
+            max-width: 140px !important;
             text-align: left !important;
             font-weight: normal !important;
             color: #0f172a;
-            padding-left: 5px;
+            padding-left: 4px;
             writing-mode: horizontal-tb !important;
             transform: none !important;
             white-space: nowrap !important;
-            font-size: 8.5px !important;
+            font-size: 7.5px !important;
         }
         .pl-subrow {
-            padding-left: 12px !important;
+            padding-left: 10px !important;
             color: #475569 !important;
-            font-size: 8px !important;
+            font-size: 7px !important;
         }
 
         /* Columnas de Datos */
@@ -663,10 +703,11 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             width: 58px !important;
             max-width: 58px !important;
             text-align: right !important;
-            font-size: 8.5px !important;
+            font-size: 7.5px !important;
             font-weight: normal !important;
             color: #1e293b;
-            padding-right: 3px;
+            padding-right: 2px;
+            letter-spacing: -0.2px;
         }
         td.td-empty {
             width: 58px !important;
@@ -679,17 +720,18 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             width: 66px !important;
             max-width: 66px !important;
             min-width: 66px !important;
-            font-size: 8.5px !important;
+            font-size: 7.5px !important;
             font-weight: 700 !important;
             color: #0f172a !important;
+            letter-spacing: -0.2px;
         }
 
         /* Filas Especiales */
         tr.tr-subtotal td {
             background-color: #fffbeb !important;
             color: #1e293b;
-            border-top: 1.5px solid #fbbf24;
-            border-bottom: 1.5px solid #fbbf24;
+            border-top: 1px solid #fbbf24;
+            border-bottom: 1px solid #fbbf24;
             font-weight: 600 !important;
         }
         tr.tr-fleet-total td {
@@ -702,8 +744,8 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         tr.tr-global-accum td {
             background-color: #eef2ff !important;
             color: #1e1b4b;
-            border-top: 2px solid #0d9488;
-            border-bottom: 2px solid #0d9488;
+            border-top: 1.5px solid #0d9488;
+            border-bottom: 1.5px solid #0d9488;
             font-weight: 700 !important;
         }
         tr.tr-nav-margen td {
@@ -723,10 +765,10 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         /* 3. Pie de Página Institucional */
         .page-footer {
             width: 100%;
-            margin-top: 3px;
+            margin-top: 2px;
             border-top: 1px solid #cbd5e1;
-            padding-top: 2px;
-            font-size: 7.5px;
+            padding-top: 1.5px;
+            font-size: 7px;
             font-weight: 600;
             color: #64748b;
             display: table;

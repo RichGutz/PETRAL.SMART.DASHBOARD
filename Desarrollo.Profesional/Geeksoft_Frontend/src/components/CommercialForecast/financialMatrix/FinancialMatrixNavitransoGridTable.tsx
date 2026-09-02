@@ -225,8 +225,20 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
         };
 
         // Totales globales para el acumulado de flota
+        const globalHire = new Array(months.length).fill(0);
+        const globalVentaTerc = new Array(months.length).fill(0);
+        const globalDemRev = new Array(months.length).fill(0);
+        const globalIngPto = new Array(months.length).fill(0);
+        const globalOtrosIng = new Array(months.length).fill(0);
         const globalVentas = new Array(months.length).fill(0);
+
+        const globalCombustible = new Array(months.length).fill(0);
+        const globalGastosPuerto = new Array(months.length).fill(0);
+        const globalCostosDemora = new Array(months.length).fill(0);
+        const globalComisiones = new Array(months.length).fill(0);
+        const globalOtrosCostos = new Array(months.length).fill(0);
         const globalCostosDirectos = new Array(months.length).fill(0);
+
         const globalTce = new Array(months.length).fill(0);
         const globalArriendo = new Array(months.length).fill(0);
         const globalMargenBruto = new Array(months.length).fill(0);
@@ -238,8 +250,20 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
             const level1RowSpanRef = { value: 0 };
             let isFirstLevel1Row = true;
 
+            const level1Hire = new Array(months.length).fill(0);
+            const level1VentaTerc = new Array(months.length).fill(0);
+            const level1DemRev = new Array(months.length).fill(0);
+            const level1IngPto = new Array(months.length).fill(0);
+            const level1OtrosIng = new Array(months.length).fill(0);
             const level1Ventas = new Array(months.length).fill(0);
+
+            const level1Combustible = new Array(months.length).fill(0);
+            const level1GastosPuerto = new Array(months.length).fill(0);
+            const level1CostosDemora = new Array(months.length).fill(0);
+            const level1Comisiones = new Array(months.length).fill(0);
+            const level1OtrosCostos = new Array(months.length).fill(0);
             const level1CostosDirectos = new Array(months.length).fill(0);
+
             const level1Tce = new Array(months.length).fill(0);
             const level1Arriendo = new Array(months.length).fill(0);
             const level1MargenBruto = new Array(months.length).fill(0);
@@ -279,55 +303,43 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                         if (freq <= 0) return 0;
                         return (Number(mD.gross_income) || (Number(mD.carga_unit || 13500) * Number(mD.flete_unit || 30) * freq));
                     });
-
+                    const ventaTerc = new Array(months.length).fill(0);
                     const demRev = months.map((m, i) => {
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return Number(mD.demurrage_revenue || mD.demurrage_income || 0) * freq;
+                        return (Number(mD.demurrage_revenue) || 0) * freq;
                     });
-
                     const ingPto = months.map((m, i) => {
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return Number(mD.refacturacion_muellaje || mD.dockage_revenue || 0) * freq;
+                        return (Number(mD.port_rebate_income) || (Number(mD.costos_puerto_total || 0) * 0.10)) * freq;
                     });
-
-                    const ventaTerc = new Array(months.length).fill(0);
                     const otrosIng = new Array(months.length).fill(0);
 
-                    const subtotalVentas = months.map((_, i) => hire[i] + demRev[i] + ingPto[i] + ventaTerc[i] + otrosIng[i]);
+                    const subtotalVentas = months.map((_, i) => hire[i] + ventaTerc[i] + demRev[i] + ingPto[i] + otrosIng[i]);
 
-                    // 2. COSTOS DIRECTOS (en negativo)
+                    // 2. COSTOS DIRECTOS
                     const combustible = months.map((m, i) => {
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return -Number(mD.total_bunker_costs || 0) * (mD.total_bunker_costs_unit ? freq : 1);
+                        return -Number(mD.bunker_cost || 0) * freq;
                     });
-
                     const gastosPuerto = months.map((m, i) => {
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return -Number(mD.total_port_costs || 0) * (mD.total_port_costs_unit ? freq : 1);
+                        return -Number(mD.costos_puerto_total || 0) * freq;
                     });
-
                     const costosDemora = months.map((m, i) => {
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return -Number(mD.demurrage_hire_cost || mD.costos_demora || 0) * freq;
+                        return -Number(mD.demurrage_cost || 0) * freq;
                     });
-
-                    const comisiones = months.map((m, i) => {
-                        const mD = monthData[m] || {};
-                        const freq = trips[i] || 0;
-                        if (freq <= 0) return 0;
-                        return -Number(mD.commissions_cost || mD.total_commissions || 0) * freq;
-                    });
-
+                    const comisiones = new Array(months.length).fill(0);
                     const otrosCostos = new Array(months.length).fill(0);
 
                     const subtotalCostosDirectos = months.map((_, i) => combustible[i] + gastosPuerto[i] + costosDemora[i] + comisiones[i] + otrosCostos[i]);
@@ -343,26 +355,23 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                     const margenBruto = months.map((_, i) => tce[i] + arriendo[i]);
 
                     // Acumulaciones de niveles
-                    subtotalVentas.forEach((v, i) => {
-                        level1Ventas[i] += v;
-                        globalVentas[i] += v;
-                    });
-                    subtotalCostosDirectos.forEach((v, i) => {
-                        level1CostosDirectos[i] += v;
-                        globalCostosDirectos[i] += v;
-                    });
-                    tce.forEach((v, i) => {
-                        level1Tce[i] += v;
-                        globalTce[i] += v;
-                    });
-                    arriendo.forEach((v, i) => {
-                        level1Arriendo[i] += v;
-                        globalArriendo[i] += v;
-                    });
-                    margenBruto.forEach((v, i) => {
-                        level1MargenBruto[i] += v;
-                        globalMargenBruto[i] += v;
-                    });
+                    hire.forEach((v, i) => { level1Hire[i] += v; globalHire[i] += v; });
+                    ventaTerc.forEach((v, i) => { level1VentaTerc[i] += v; globalVentaTerc[i] += v; });
+                    demRev.forEach((v, i) => { level1DemRev[i] += v; globalDemRev[i] += v; });
+                    ingPto.forEach((v, i) => { level1IngPto[i] += v; globalIngPto[i] += v; });
+                    otrosIng.forEach((v, i) => { level1OtrosIng[i] += v; globalOtrosIng[i] += v; });
+                    subtotalVentas.forEach((v, i) => { level1Ventas[i] += v; globalVentas[i] += v; });
+
+                    combustible.forEach((v, i) => { level1Combustible[i] += v; globalCombustible[i] += v; });
+                    gastosPuerto.forEach((v, i) => { level1GastosPuerto[i] += v; globalGastosPuerto[i] += v; });
+                    costosDemora.forEach((v, i) => { level1CostosDemora[i] += v; globalCostosDemora[i] += v; });
+                    comisiones.forEach((v, i) => { level1Comisiones[i] += v; globalComisiones[i] += v; });
+                    otrosCostos.forEach((v, i) => { level1OtrosCostos[i] += v; globalOtrosCostos[i] += v; });
+                    subtotalCostosDirectos.forEach((v, i) => { level1CostosDirectos[i] += v; globalCostosDirectos[i] += v; });
+
+                    tce.forEach((v, i) => { level1Tce[i] += v; globalTce[i] += v; });
+                    arriendo.forEach((v, i) => { level1Arriendo[i] += v; globalArriendo[i] += v; });
+                    margenBruto.forEach((v, i) => { level1MargenBruto[i] += v; globalMargenBruto[i] += v; });
 
                     // Construir array de métricas del nodo en formato Navitranso
                     const isExpHire = !!expandedHire[rowKey];
@@ -489,14 +498,14 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                         nodeMetrics.push({
                             name: "  ↳ Búnker Mar (Navegación)",
                             values: combustible.map(v => v * 0.75),
-                            total: sum(combustible.map(v => v * 0.75)),
+                            total: sum(combustible) * 0.75,
                             isCurrency: true,
                             isSubRowMetric: true
                         });
                         nodeMetrics.push({
                             name: "  ↳ Búnker Puerto (Operación)",
                             values: combustible.map(v => v * 0.25),
-                            total: sum(combustible.map(v => v * 0.25)),
+                            total: sum(combustible) * 0.25,
                             isCurrency: true,
                             isSubRowMetric: true
                         });
@@ -559,15 +568,13 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                         isNavSubtotal: 'tce'
                     });
 
-                    if (!hideNaRows) {
-                        nodeMetrics.push({
-                            name: "  COSTO DE ARRIENDO NAVES",
-                            values: arriendo,
-                            total: sum(arriendo),
-                            isCurrency: true,
-                            isTotal: false
-                        });
-                    }
+                    nodeMetrics.push({
+                        name: "  COSTO DE ARRIENDO NAVES",
+                        values: arriendo,
+                        total: sum(arriendo),
+                        isCurrency: true,
+                        isTotal: false
+                    });
 
                     // Bloque 4: MARGEN BRUTO
                     nodeMetrics.push({
@@ -601,24 +608,47 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                 });
             });
 
-            // Subtotal por cliente
+            // Subtotal por cliente con Desglose Completo NAVITRANSO
             if (showSubtotals) {
                 const subMetrics: any[] = [
+                    // 1. VENTAS
                     { name: "VENTAS", values: level1Ventas, total: sum(level1Ventas), isCurrency: true, isTotal: false, isNavSubtotal: 'ventas' },
-                    { name: "COSTOS DIRECTOS", values: level1CostosDirectos, total: sum(level1CostosDirectos), isCurrency: true, isTotal: false, isNavSubtotal: 'costos' },
-                    { name: "TIME CHARTER EQUIVALENT", values: level1Tce, total: sum(level1Tce), isCurrency: true, isTotal: false, isNavSubtotal: 'tce' }
+                    { name: "  HIRE", values: level1Hire, total: sum(level1Hire), isCurrency: true, isTotal: false },
                 ];
 
                 if (!hideNaRows) {
-                    subMetrics.push({
-                        name: "  COSTO DE ARRIENDO NAVES",
-                        values: level1Arriendo,
-                        total: sum(level1Arriendo),
-                        isCurrency: true,
-                        isTotal: false
-                    });
+                    subMetrics.push({ name: "  VENTA DE TERCEROS", values: level1VentaTerc, total: sum(level1VentaTerc), isCurrency: true, isNaRow: true });
                 }
 
+                subMetrics.push(
+                    { name: "  DEMORAS", values: level1DemRev, total: sum(level1DemRev), isCurrency: true, isTotal: false },
+                    { name: "  INGRESOS DE PUERTO", values: level1IngPto, total: sum(level1IngPto), isCurrency: true, isTotal: false }
+                );
+
+                if (!hideNaRows) {
+                    subMetrics.push({ name: "  OTROS INGRESOS", values: level1OtrosIng, total: sum(level1OtrosIng), isCurrency: true, isNaRow: true });
+                }
+
+                // 2. COSTOS DIRECTOS
+                subMetrics.push(
+                    { name: "COSTOS DIRECTOS", values: level1CostosDirectos, total: sum(level1CostosDirectos), isCurrency: true, isTotal: false, isNavSubtotal: 'costos' },
+                    { name: "  COMBUSTIBLE", values: level1Combustible, total: sum(level1Combustible), isCurrency: true, isTotal: false },
+                    { name: "  GASTOS DE PUERTO", values: level1GastosPuerto, total: sum(level1GastosPuerto), isCurrency: true, isTotal: false },
+                    { name: "  COSTOS DE DEMORA", values: level1CostosDemora, total: sum(level1CostosDemora), isCurrency: true, isTotal: false },
+                    { name: "  COMISIONES VARIAS", values: level1Comisiones, total: sum(level1Comisiones), isCurrency: true, isTotal: false }
+                );
+
+                if (!hideNaRows) {
+                    subMetrics.push({ name: "  OTROS COSTOS DIRECTOS", values: level1OtrosCostos, total: sum(level1OtrosCostos), isCurrency: true, isNaRow: true });
+                }
+
+                // 3. TIME CHARTER EQUIVALENT
+                subMetrics.push(
+                    { name: "TIME CHARTER EQUIVALENT", values: level1Tce, total: sum(level1Tce), isCurrency: true, isTotal: false, isNavSubtotal: 'tce' },
+                    { name: "  COSTO DE ARRIENDO NAVES", values: level1Arriendo, total: sum(level1Arriendo), isCurrency: true, isTotal: false }
+                );
+
+                // 4. MARGEN BRUTO
                 subMetrics.push({
                     name: "MARGEN BRUTO (P&L)",
                     values: level1MargenBruto,
@@ -647,24 +677,47 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
             }
         });
 
-        // Bloque Global de Flota Acumulada
+        // Bloque Global de Flota Acumulada con Desglose Completo NAVITRANSO
         if (showAccumulatedTotal) {
             const globalMetrics: any[] = [
+                // 1. VENTAS
                 { name: "VENTAS CONSOLIDADAS", values: globalVentas, total: sum(globalVentas), isCurrency: true, isTotal: false, isNavSubtotal: 'ventas' },
-                { name: "COSTOS DIRECTOS", values: globalCostosDirectos, total: sum(globalCostosDirectos), isCurrency: true, isTotal: false, isNavSubtotal: 'costos' },
-                { name: "TIME CHARTER EQUIVALENT", values: globalTce, total: sum(globalTce), isCurrency: true, isTotal: false, isNavSubtotal: 'tce' }
+                { name: "  HIRE", values: globalHire, total: sum(globalHire), isCurrency: true, isTotal: false },
             ];
 
             if (!hideNaRows) {
-                globalMetrics.push({
-                    name: "  COSTO DE ARRIENDO NAVES",
-                    values: globalArriendo,
-                    total: sum(globalArriendo),
-                    isCurrency: true,
-                    isTotal: false
-                });
+                globalMetrics.push({ name: "  VENTA DE TERCEROS", values: globalVentaTerc, total: sum(globalVentaTerc), isCurrency: true, isNaRow: true });
             }
 
+            globalMetrics.push(
+                { name: "  DEMORAS", values: globalDemRev, total: sum(globalDemRev), isCurrency: true, isTotal: false },
+                { name: "  INGRESOS DE PUERTO", values: globalIngPto, total: sum(globalIngPto), isCurrency: true, isTotal: false }
+            );
+
+            if (!hideNaRows) {
+                globalMetrics.push({ name: "  OTROS INGRESOS", values: globalOtrosIng, total: sum(globalOtrosIng), isCurrency: true, isNaRow: true });
+            }
+
+            // 2. COSTOS DIRECTOS
+            globalMetrics.push(
+                { name: "COSTOS DIRECTOS", values: globalCostosDirectos, total: sum(globalCostosDirectos), isCurrency: true, isTotal: false, isNavSubtotal: 'costos' },
+                { name: "  COMBUSTIBLE", values: globalCombustible, total: sum(globalCombustible), isCurrency: true, isTotal: false },
+                { name: "  GASTOS DE PUERTO", values: globalGastosPuerto, total: sum(globalGastosPuerto), isCurrency: true, isTotal: false },
+                { name: "  COSTOS DE DEMORA", values: globalCostosDemora, total: sum(globalCostosDemora), isCurrency: true, isTotal: false },
+                { name: "  COMISIONES VARIAS", values: globalComisiones, total: sum(globalComisiones), isCurrency: true, isTotal: false }
+            );
+
+            if (!hideNaRows) {
+                globalMetrics.push({ name: "  OTROS COSTOS DIRECTOS", values: globalOtrosCostos, total: sum(globalOtrosCostos), isCurrency: true, isNaRow: true });
+            }
+
+            // 3. TIME CHARTER EQUIVALENT
+            globalMetrics.push(
+                { name: "TIME CHARTER EQUIVALENT", values: globalTce, total: sum(globalTce), isCurrency: true, isTotal: false, isNavSubtotal: 'tce' },
+                { name: "  COSTO DE ARRIENDO NAVES", values: globalArriendo, total: sum(globalArriendo), isCurrency: true, isTotal: false }
+            );
+
+            // 4. MARGEN BRUTO
             globalMetrics.push({
                 name: "MARGEN BRUTO (P&L)",
                 values: globalMargenBruto,
