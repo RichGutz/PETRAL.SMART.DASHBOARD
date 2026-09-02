@@ -112,10 +112,44 @@ Se ejecutó el inspector automatizado [`qc_pdf_inspector.py`](file:///c:/Users/r
 
 ---
 
-## 8. 📝 DICTAMEN FINAL RONDA 2
+## 9. 🕵️‍♂️ RONDA 3: COMPAGINACIÓN ATÓMICA INTELIGENTE, ANCHOS ÓPTIMOS Y CALIBRACIÓN DE LOGOS
 
-* **Compilación Frontend**: `npx vite build` completado en **20.43s (exit code 0)** con 1089 módulos.
-* **Estado de la Exportación**: 100% convergencia con la solicitud del usuario (Landscape forzado, Consolas 11, métricas en horizontal, 1 solo botón PDF en UI).
+**Fecha:** 02 de Septiembre de 2026 (11:15 AM)  
+**Safe Point:** `PRE.PDF.PAGINACION.ATOMICA.2.9.26` (Branch y Tag sincronizados en GitHub)  
+**Evidencia Física Evaluada:** Captura `celdas_blancas_y_quiebre_bloque_02_09_2026.png` que demostraba quiebres de `rowSpan` con rectángulos blancos y páginas desalineadas.
+
+### 9.1. La Autopsia del Quiebre de Bloques y Celdas en Blanco
+1. **El Problema**: El navegador/motor PDF partía arbitrariamente la tabla en medio de un `rowSpan="18"` (Cliente SPCC), dejando un vacío blanco en la página 1 y despojando a la página 2 de sus encabezados (`CLIENTE`, `RUTA`, `BUQUE`, `MÉTRICA`, `Meses`).
+2. **La Solución Arquitectónica (Inspirada en InAndes ERP)**:
+   * El generador ahora parsea la tabla en **Bloques Atómicos Indivisibles (`TableBlock`)**:
+     * **Bloque Buque**: 9 filas indivisibles.
+     * **Bloque Subtotal**: 8 filas indivisibles.
+     * **Bloque Total Flota / Acumulado**: 9 filas indivisibles.
+   * **Paginador Atómico de Bloques**: Con presupuesto máximo de 21 filas por hoja A4 Landscape. Si un bloque de 9 filas excede el espacio de la hoja actual, se genera una **nueva `.report-page` independiente**.
+   * **Repetición Obligatoria**: Cada hoja generada incluye su propia cabecera institucional, logos calibrados, banner de escenario `(Parte X de Y)` y `<thead>` completo.
+
+### 9.2. Ajustes Visuales de Alta Precisión
+* **Fuente**: Consolas `10px` estricto en datos y métricas (`line-height: 1.15`).
+* **Anchos de Meses**: Calibrados a la cifra máxima (`58px` por columna de mes $\times 13 = 754\text{px}$).
+* **Ancho Remanente a Métrica**: Columna 4 ampliada a `170px` fijos, permitiendo lectura horizontal sin desbordes.
+* **Calibración de Logos**:
+  * **Logo Geeksoft**: Duplicado a `height: 48px`.
+  * **Logo Petral**: Reducido a la mitad a `height: 18px`.
+
+### 9.3. Loop QC de Análisis Forense de PDF Binario
+* **Script Inspector**: [`qc_pdf_inspector.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/qc_pdf_inspector.py) ejecutado con `PyMuPDF (fitz)` y `WeasyPrint`.
+* **Resultado**:
+  * 4 páginas A4 Landscape (`841.9pt x 595.3pt`) 100% homogéneas.
+  * THEAD y cabecera repetidos con éxito en las 4 páginas.
+  * 0 celdas en blanco y 0 bloques partidos.
+  * Métricas horizontales confirmadas en todas las páginas.
+
+---
+
+## 10. 📝 DICTAMEN FINAL Y SELLADO PERICIAL RONDA 3
+
+* **Compilación Frontend**: `npx vite build` completado en **12.38s (exit code 0)** con 1089 módulos.
+* **Estado del Sistema**: Convergencia 100% con los requerimientos del usuario.
 
 ---
 *Firma Pericial: Benoit Blanc - Detective Auditor*

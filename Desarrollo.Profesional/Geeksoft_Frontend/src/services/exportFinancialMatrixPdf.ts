@@ -1,6 +1,6 @@
 import { LOGO_PETRAL_BASE64, LOGO_GEEKSOFT_BASE64 } from '../assets/logosBase64';
 
-// Paleta de colores homologada con el Excel canónico
+// Paleta corporativa oficial homologada con el Excel canónico
 const COLOR_MAP: Record<string, { bg: string; fg: string }> = {
     // Clientes
     'bg-sky-700': { bg: '#0369a1', fg: '#ffffff' },
@@ -43,6 +43,25 @@ function getDimensionColor(className: string, text: string): { bg: string; fg: s
     return null;
 }
 
+interface MetricRowData {
+    name: string;
+    formattedValues: string[];
+    formattedTotal: string;
+    isNumeric: boolean;
+    isSubRowMetric?: boolean;
+}
+
+interface TableBlock {
+    type: 'vessel' | 'subtotal' | 'fleet' | 'accum';
+    clientName: string;
+    routeName: string;
+    vesselName: string;
+    clientColor?: { bg: string; fg: string } | null;
+    routeColor?: { bg: string; fg: string } | null;
+    vesselColor?: { bg: string; fg: string } | null;
+    rows: MetricRowData[];
+}
+
 export function generateFinancialMatrixPdfHtml(
     tableId: string = 'forecast-grid-table',
     _orientation: 'portrait' | 'landscape' = 'landscape',
@@ -53,19 +72,28 @@ export function generateFinancialMatrixPdfHtml(
         throw new Error('No se encontró la tabla de Matriz Financiera en el DOM.');
     }
 
-    // Clonar la tabla para procesamiento no destructivo
-    const clone = table.cloneNode(true) as HTMLTableElement;
+    // 1. Extraer Nombres de Columnas del THEAD
+    const headerCols: string[] = [];
+    const thead = table.querySelector('thead');
+    if (thead) {
+        const ths = thead.querySelectorAll('th');
+        ths.forEach(th => {
+            const span = th.querySelector('span');
+            let clean = (span && span.textContent ? span.textContent : th.textContent || '').trim().toUpperCase();
+            clean = clean.replace(/[\n\r]+/g, ' ').trim();
+            headerCols.push(clean);
+        });
+    }
 
-    // Métricas Resumen para Cajas KPI de Cabecera
-    let kpiTrips = '-';
-    let kpiTons = '-';
-    let kpiNetRev = '-';
-    let kpiBunker = '-';
-    let kpiPort = '-';
-    let kpiHire = '-';
-    let kpiPL = '-';
+    // Si no hay thead explícito, defaults canónicos
+    const safeHeaderCols = headerCols.length >= 5 ? headerCols : [
+        'CLIENTE', 'RUTA', 'BUQUE', 'MÉTRICA',
+        'ENE 2027', 'FEB 2027', 'MAR 2027', 'ABR 2027', 'MAY 2027', 'JUN 2027',
+        'JUL 2027', 'AGO 2027', 'SET 2027', 'OCT 2027', 'NOV 2027', 'DIC 2027',
+        'TOTAL ACUM'
+    ];
 
-    // 1. Matriz de Ocupación para THEAD y TBODY
+    // 2. Extraer Filas y reconstruir Bloques Atómicos usando Matriz de Ocupación
     const occupied: boolean[][] = [];
     const setOccupied = (r: number, c: number, rSpan: number, cSpan: number) => {
         for (let row = r; row < r + rSpan; row++) {
@@ -80,45 +108,13 @@ export function generateFinancialMatrixPdfHtml(
     };
 
     let currentRow = 1;
+    const blocks: TableBlock[] = [];
+    let currentBlock: TableBlock | null = null;
+    let lastClientName = '';
+    let lastRouteName = '';
+    let lastVesselName = '';
 
-    // 1. Procesar THEAD
-    const thead = clone.querySelector('thead');
-    if (thead) {
-        const trs = thead.querySelectorAll('tr');
-        trs.forEach(tr => {
-            let currentCol = 1;
-            const ths = tr.querySelectorAll('th');
-            ths.forEach(th => {
-                while (isOccupied(currentRow, currentCol)) {
-                    currentCol++;
-                }
-
-                const rSpan = parseInt(th.getAttribute('rowspan') || '1', 10);
-                const cSpan = parseInt(th.getAttribute('colspan') || '1', 10);
-
-                const span = th.querySelector('span');
-                let cleanText = (span && span.textContent ? span.textContent : th.textContent || '').trim().toUpperCase();
-                // Limpiar botones e iconos
-                cleanText = cleanText.replace(/[\n\r]+/g, ' ').trim();
-
-                th.innerHTML = cleanText;
-                th.removeAttribute('style');
-
-                if (cleanText.includes('TOTAL ACUM')) {
-                    th.className = 'th-total-acum';
-                } else {
-                    th.className = 'th-header-cell';
-                }
-
-                setOccupied(currentRow, currentCol, rSpan, cSpan);
-                currentCol += cSpan;
-            });
-            currentRow++;
-        });
-    }
-
-    // 2. Procesar TBODY con la Matriz de Ocupación canónica
-    const tbody = clone.querySelector('tbody');
+    const tbody = table.querySelector('tbody');
     if (tbody) {
         const trs = tbody.querySelectorAll('tr');
         trs.forEach(tr => {
@@ -128,15 +124,14 @@ export function generateFinancialMatrixPdfHtml(
             const isSubtotalRow = trClass.includes('font-semibold') || trClass.includes('bg-amber-50') || trClass.includes('bg-slate-100');
             const isGlobalTotalRow = trClass.includes('bg-indigo-50') || trClass.includes('TOTAL ACUMULADO') || trClass.includes('TOTAL FLOTA');
 
-            if (isGlobalTotalRow) {
-                tr.className = 'tr-global-total';
-            } else if (isSubtotalRow) {
-                tr.className = 'tr-subtotal';
-            } else {
-                tr.className = 'tr-data-row';
-            }
-
-            let rowMetricName = '';
+            let rowClient = '';
+            let rowRoute = '';
+            let rowVessel = '';
+            let rowMetric = '';
+            let clientCls = '';
+            let routeCls = '';
+            let vesselCls = '';
+            const rowValues: string[] = [];
 
             tds.forEach(td => {
                 while (isOccupied(currentRow, currentCol)) {
@@ -147,7 +142,6 @@ export function generateFinancialMatrixPdfHtml(
                 const cSpan = parseInt(td.getAttribute('colspan') || '1', 10);
                 const tdClass = td.className || '';
 
-                // Extraer texto limpio evitando artefactos de UI
                 let textValue = '';
                 const selectEl = td.querySelector('select');
                 const inputEl = td.querySelector('input');
@@ -170,106 +164,244 @@ export function generateFinancialMatrixPdfHtml(
                     textValue = cellClone.textContent?.trim() || '';
                 }
 
-                // Determinación determinística de la columna vía currentCol
-                const isDimensionCol = currentCol <= 3;
-                const isMetricCol = currentCol === 4;
-                const isDataCol = currentCol >= 5;
-
-                if (isMetricCol && textValue !== '') {
-                    rowMetricName = textValue.toUpperCase().trim();
-                }
-
-                // Limpieza numérica
-                const rawClean = textValue.replace(/[\$,\s]/g, '');
-                const isPercent = textValue.includes('%') || rowMetricName.includes('%') || rowMetricName.includes('MARGEN') || rowMetricName.includes('YIELD %');
-                const cleanNumStr = rawClean.replace('%', '');
-
-                let isNumeric = false;
-                let parsedNum = 0;
-                if (isDataCol && textValue !== '-' && textValue !== '' && !isNaN(Number(cleanNumStr)) && cleanNumStr !== '') {
-                    isNumeric = true;
-                    parsedNum = parseFloat(cleanNumStr);
-                }
-
-                // Asignar clases y contenido según tipo de columna
-                if (isDimensionCol) {
-                    const colors = getDimensionColor(tdClass, textValue);
-                    td.className = 'td-dimension';
-                    if (colors) {
-                        td.setAttribute('style', `background-color: ${colors.bg} !important; color: ${colors.fg} !important;`);
-                    }
-                    // Solo las columnas 1 a 3 llevan rotación vertical 90°
-                    td.innerHTML = `<div class="pdf-vertical-text">${textValue}</div>`;
-                } else if (isMetricCol) {
-                    // Columna 4: 100% HORIZONTAL
-                    td.className = 'td-metric-name';
-                    td.removeAttribute('style');
-                    td.innerHTML = `<span class="pdf-metric-text">${textValue}</span>`;
-                } else if (isDataCol) {
-                    td.className = isNumeric ? 'td-num' : 'td-empty';
-                    td.removeAttribute('style');
-
-                    if (isNumeric && parsedNum !== 0) {
-                        if (isPercent) {
-                            td.textContent = (parsedNum > 1 ? parsedNum : parsedNum * 100).toFixed(1) + '%';
-                        } else if (
-                            rowMetricName.includes('VIAJE') || rowMetricName.includes('FREQ') || 
-                            rowMetricName.includes('FREQUENCY')
-                        ) {
-                            td.textContent = Number.isInteger(parsedNum) ? parsedNum.toLocaleString('en-US') : parsedNum.toFixed(1);
-                        } else if (
-                            !rowMetricName.includes('HIRE') && (
-                                rowMetricName.includes('DÍA') || rowMetricName.includes('DAYS') || 
-                                rowMetricName.includes('DÍAS') || rowMetricName.includes('DURACIÓN')
-                            )
-                        ) {
-                            td.textContent = parsedNum.toFixed(1);
-                        } else if (
-                            rowMetricName.includes('TONELADA') || rowMetricName.includes('TONS') || 
-                            rowMetricName.includes('CARGA') || rowMetricName.includes('BASE FLETE') || 
-                            rowMetricName.includes('VOLUMEN') || rowMetricName.includes('MT')
-                        ) {
-                            td.textContent = Math.round(parsedNum).toLocaleString('en-US');
-                        } else if (
-                            !rowMetricName.includes('HIRE') && (
-                                rowMetricName.includes('USD/MT') || rowMetricName.includes('TARIFA') || 
-                                rowMetricName.includes('TCE') || rowMetricName.includes('TCY') || 
-                                rowMetricName.includes('$/D') || rowMetricName.includes('$/DÍA')
-                            )
-                        ) {
-                            td.textContent = '$' + parsedNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        } else {
-                            // Monetario Global: Net Revenue, Hire, Bunker, Port, P&L
-                            td.textContent = '$' + Math.round(parsedNum).toLocaleString('en-US');
-                        }
-
-                        // Capturar KPI de totales
-                        if (isGlobalTotalRow) {
-                            const lastTd = tds[tds.length - 1];
-                            if (td === lastTd) {
-                                if (rowMetricName.includes('VIAJE')) kpiTrips = td.textContent || '-';
-                                else if (rowMetricName.includes('TON')) kpiTons = td.textContent || '-';
-                                else if (rowMetricName.includes('NET REV')) kpiNetRev = td.textContent || '-';
-                                else if (rowMetricName.includes('BUNKER')) kpiBunker = td.textContent || '-';
-                                else if (rowMetricName.includes('PORT')) kpiPort = td.textContent || '-';
-                                else if (rowMetricName.includes('HIRE')) kpiHire = td.textContent || '-';
-                                else if (rowMetricName.includes('VOYAGE RESULT') || rowMetricName.includes('P/L')) kpiPL = td.textContent || '-';
-                            }
-                        }
-                    } else {
-                        td.textContent = '';
-                    }
+                if (currentCol === 1 && textValue) {
+                    rowClient = textValue;
+                    clientCls = tdClass;
+                } else if (currentCol === 2 && textValue) {
+                    rowRoute = textValue;
+                    routeCls = tdClass;
+                } else if (currentCol === 3 && textValue) {
+                    rowVessel = textValue;
+                    vesselCls = tdClass;
+                } else if (currentCol === 4) {
+                    rowMetric = textValue;
+                } else if (currentCol >= 5) {
+                    rowValues.push(textValue);
                 }
 
                 setOccupied(currentRow, currentCol, rSpan, cSpan);
                 currentCol += cSpan;
             });
 
+            // Si es nueva combinación de Buque/Ruta/Cliente o Subtotal, iniciar nuevo Bloque Atómico
+            if (rowClient) lastClientName = rowClient;
+            if (rowRoute) lastRouteName = rowRoute;
+            if (rowVessel) lastVesselName = rowVessel;
+
+            const isSubtotalBlock = isSubtotalRow || lastRouteName.toUpperCase().includes('SUBTOTAL') || lastVesselName.toUpperCase().includes('TOTAL CLIENT');
+            const isFleetTotalBlock = isGlobalTotalRow && lastClientName.toUpperCase().includes('TOTAL FLOTA');
+            const isAccumBlock = isGlobalTotalRow && lastClientName.toUpperCase().includes('TOTAL ACUMULADO');
+
+            let blockType: 'vessel' | 'subtotal' | 'fleet' | 'accum' = 'vessel';
+            if (isAccumBlock) blockType = 'accum';
+            else if (isFleetTotalBlock) blockType = 'fleet';
+            else if (isSubtotalBlock) blockType = 'subtotal';
+
+            // Detectar inicio de bloque
+            const isNewBlock = !currentBlock || 
+                (blockType !== currentBlock.type) || 
+                (blockType === 'vessel' && (rowVessel !== '' || rowRoute !== '' || rowClient !== ''));
+
+            if (isNewBlock) {
+                currentBlock = {
+                    type: blockType,
+                    clientName: lastClientName,
+                    routeName: lastRouteName,
+                    vesselName: lastVesselName,
+                    clientColor: getDimensionColor(clientCls, lastClientName),
+                    routeColor: getDimensionColor(routeCls, lastRouteName),
+                    vesselColor: getDimensionColor(vesselCls, lastVesselName),
+                    rows: []
+                };
+                blocks.push(currentBlock);
+            }
+
+            // Formatear valores numéricos idéntico a Excel
+            const formattedVals: string[] = [];
+            let formattedTot = '';
+            const rawMetric = rowMetric.toUpperCase();
+
+            rowValues.forEach((valStr, idx) => {
+                const rawClean = valStr.replace(/[\$,\s]/g, '');
+                const isPercent = valStr.includes('%') || rawMetric.includes('%') || rawMetric.includes('MARGEN') || rawMetric.includes('YIELD %');
+                const cleanNumStr = rawClean.replace('%', '');
+
+                let formatted = '';
+                if (valStr !== '-' && valStr !== '' && !isNaN(Number(cleanNumStr)) && cleanNumStr !== '') {
+                    const parsedNum = parseFloat(cleanNumStr);
+                    if (parsedNum !== 0) {
+                        if (isPercent) {
+                            formatted = (parsedNum > 1 ? parsedNum : parsedNum * 100).toFixed(1) + '%';
+                        } else if (
+                            rawMetric.includes('VIAJE') || rawMetric.includes('FREQ') || rawMetric.includes('FREQUENCY')
+                        ) {
+                            formatted = Number.isInteger(parsedNum) ? parsedNum.toLocaleString('en-US') : parsedNum.toFixed(1);
+                        } else if (
+                            !rawMetric.includes('HIRE') && (
+                                rawMetric.includes('DÍA') || rawMetric.includes('DAYS') || 
+                                rawMetric.includes('DÍAS') || rawMetric.includes('DURACIÓN')
+                            )
+                        ) {
+                            formatted = parsedNum.toFixed(1);
+                        } else if (
+                            rawMetric.includes('TONELADA') || rawMetric.includes('TONS') || 
+                            rawMetric.includes('CARGA') || rawMetric.includes('BASE FLETE') || 
+                            rawMetric.includes('VOLUMEN') || rawMetric.includes('MT')
+                        ) {
+                            formatted = Math.round(parsedNum).toLocaleString('en-US');
+                        } else if (
+                            !rawMetric.includes('HIRE') && (
+                                rawMetric.includes('USD/MT') || rawMetric.includes('TARIFA') || 
+                                rawMetric.includes('TCE') || rawMetric.includes('TCY') || 
+                                rawMetric.includes('$/D') || rawMetric.includes('$/DÍA')
+                            )
+                        ) {
+                            formatted = '$' + parsedNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        } else {
+                            // Monetario Global
+                            formatted = '$' + Math.round(parsedNum).toLocaleString('en-US');
+                        }
+                    }
+                }
+
+                if (idx === rowValues.length - 1) {
+                    formattedTot = formatted;
+                } else {
+                    formattedVals.push(formatted);
+                }
+            });
+
+            currentBlock.rows.push({
+                name: rowMetric,
+                formattedValues: formattedVals,
+                formattedTotal: formattedTot,
+                isNumeric: true,
+                isSubRowMetric: rowMetric.startsWith('↳')
+            });
+
             currentRow++;
         });
     }
 
+    // 3. Paginador Atómico: Distribuir Bloques en Páginas A4 Landscape (Límite: 20-22 filas/hoja)
+    const MAX_ROWS_PER_PAGE = 21;
+    interface PageStructure {
+        blocks: TableBlock[];
+        totalRows: number;
+    }
+
+    const pages: PageStructure[] = [];
+    let activePage: PageStructure = { blocks: [], totalRows: 0 };
+
+    blocks.forEach(block => {
+        const blockRowCount = block.rows.length;
+        // Si agregar este bloque completo supera el presupuesto de la página, abrir nueva página
+        if (activePage.totalRows + blockRowCount > MAX_ROWS_PER_PAGE && activePage.blocks.length > 0) {
+            pages.push(activePage);
+            activePage = { blocks: [], totalRows: 0 };
+        }
+        activePage.blocks.push(block);
+        activePage.totalRows += blockRowCount;
+    });
+
+    if (activePage.blocks.length > 0) {
+        pages.push(activePage);
+    }
+
+    const totalPagesCount = pages.length;
     const formattedDate = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    // 4. Renderizar cada Página A4 Landscape con Cabecera Oficial y Grilla Repetida
+    const pagesHtml = pages.map((p, pageIdx) => {
+        return `
+        <div class="report-page">
+            <!-- 1. Cabecera Institucional Oficial con Proporción de Logos Corregida -->
+            <table class="top-header-table">
+                <tr>
+                    <td style="width: 25%; text-align: left;">
+                        <img src="${LOGO_GEEKSOFT_BASE64}" class="logo-geeksoft" alt="Geeksoft Logo" />
+                    </td>
+                    <td style="width: 50%; text-align: center;">
+                        <div class="report-main-title">NAVIERA PETRAL S.A.</div>
+                        <div class="report-sub-title">MATRIZ FINANCIERA • VOYAGE CALCULATOR & PROYECCIÓN COMERCIAL</div>
+                    </td>
+                    <td style="width: 25%; text-align: right;">
+                        <img src="${LOGO_PETRAL_BASE64}" class="logo-petral" alt="Petral Logo" />
+                    </td>
+                </tr>
+            </table>
+
+            <div class="scenario-badge-banner">
+                ESCENARIO: ${scenarioName} &bull; MONEDA: USD &bull; (Parte ${pageIdx + 1} de ${totalPagesCount})
+            </div>
+
+            <!-- 2. Grilla Contable con THEAD Repetido en Cada Página -->
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th class="th-dim" style="width: 22px;">CLI</th>
+                        <th class="th-dim" style="width: 22px;">RUTA</th>
+                        <th class="th-dim" style="width: 22px;">BUQ</th>
+                        <th class="th-metric" style="width: 170px;">MÉTRICA</th>
+                        ${safeHeaderCols.slice(4, -1).map(h => `<th class="th-month" style="width: 58px;">${h}</th>`).join('')}
+                        <th class="th-total" style="width: 62px;">${safeHeaderCols[safeHeaderCols.length - 1] || 'TOTAL ACUM'}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${p.blocks.map(b => {
+                        const rowCount = b.rows.length;
+                        const isSubtotal = b.type === 'subtotal';
+                        const isFleet = b.type === 'fleet';
+                        const isAccum = b.type === 'accum';
+
+                        const cColor = b.clientColor ? `background-color: ${b.clientColor.bg} !important; color: ${b.clientColor.fg} !important;` : 'background-color: #0369a1 !important; color: #fff !important;';
+                        const rColor = b.routeColor ? `background-color: ${b.routeColor.bg} !important; color: ${b.routeColor.fg} !important;` : 'background-color: #a855f7 !important; color: #fff !important;';
+                        const vColor = b.vesselColor ? `background-color: ${b.vesselColor.bg} !important; color: ${b.vesselColor.fg} !important;` : 'background-color: #16a34a !important; color: #fff !important;';
+
+                        return b.rows.map((row, rIdx) => {
+                            const isFirst = rIdx === 0;
+                            const trClass = isAccum ? 'tr-global-accum' : (isFleet ? 'tr-fleet-total' : (isSubtotal ? 'tr-subtotal' : 'tr-data-row'));
+
+                            return `
+                            <tr class="${trClass}">
+                                ${isFirst ? `
+                                    <td rowspan="${rowCount}" class="td-dimension" style="${cColor}">
+                                        <div class="pdf-vertical-text">${b.clientName}</div>
+                                    </td>
+                                    <td rowspan="${rowCount}" class="td-dimension" style="${rColor}">
+                                        <div class="pdf-vertical-text">${b.routeName}</div>
+                                    </td>
+                                    <td rowspan="${rowCount}" class="td-dimension" style="${vColor}">
+                                        <div class="pdf-vertical-text">${b.vesselName}</div>
+                                    </td>
+                                ` : ''}
+                                <td class="td-metric-name ${row.isSubRowMetric ? 'pl-subrow' : ''}">
+                                    ${row.name}
+                                </td>
+                                ${row.formattedValues.map(v => `<td class="${v ? 'td-num' : 'td-empty'}">${v}</td>`).join('')}
+                                <td class="${row.formattedTotal ? 'td-num font-bold' : 'td-empty'}">${row.formattedTotal}</td>
+                            </tr>
+                            `;
+                        }).join('');
+                    }).join('')}
+                </tbody>
+            </table>
+
+            <!-- 3. Pie de Página Oficial -->
+            <div class="page-footer">
+                <div class="page-footer-cell" style="text-align: left;">
+                    Petral Forecast Engine &copy; 2026 &mdash; Sistema de Inteligencia Comercial y Proyecciones Marítimas
+                </div>
+                <div class="page-footer-cell" style="text-align: center;">
+                    Página ${pageIdx + 1} de ${totalPagesCount}
+                </div>
+                <div class="page-footer-cell" style="text-align: right;">
+                    Emisión: ${formattedDate}
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
 
     return `
 <!DOCTYPE html>
@@ -293,132 +425,103 @@ export function generateFinancialMatrixPdfHtml(
             padding: 0 !important;
             background-color: #ffffff !important;
             color: #0f172a;
-            font-size: 11px !important;
-            line-height: 1.2;
+            font-size: 10px !important;
+            line-height: 1.15;
         }
         
-        .report-container {
+        .report-page {
             width: 100%;
             margin: 0;
             padding: 0;
+            page-break-after: always;
+            page-break-inside: avoid;
+            box-sizing: border-box;
+        }
+        .report-page:last-child {
+            page-break-after: avoid;
         }
 
-        /* 1. Cabecera Institucional Oficial */
+        /* 1. Cabecera Institucional Oficial con Logos Calibrados */
         .top-header-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
         .top-header-table td {
             border: none !important;
             padding: 0 !important;
             vertical-align: middle;
         }
+        /* Logo Geeksoft Duplicado */
         .logo-geeksoft {
-            height: 32px;
+            height: 48px;
             width: auto;
             object-fit: contain;
         }
+        /* Logo Petral Reducido a la Mitad */
         .logo-petral {
-            height: 36px;
+            height: 18px;
             width: auto;
             object-fit: contain;
         }
         .report-main-title {
             font-weight: 900;
-            font-size: 14px;
+            font-size: 13px;
             color: #0f172a;
             margin: 0;
             text-transform: uppercase;
             text-align: center;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
             line-height: 1.1;
         }
         .report-sub-title {
-            font-size: 11px;
+            font-size: 9.5px;
             font-weight: 700;
             color: #334155;
             text-align: center;
-            margin-top: 2px;
+            margin-top: 1px;
             letter-spacing: 0.2px;
         }
         .scenario-badge-banner {
             background-color: #0f4c81;
             color: #ffffff;
             font-weight: 800;
-            font-size: 10.5px;
+            font-size: 9.5px;
             text-transform: uppercase;
-            padding: 2px 10px;
-            border-radius: 4px;
+            padding: 2px 8px;
+            border-radius: 3px;
             text-align: center;
-            margin: 3px auto 4px auto;
+            margin: 2px auto 3px auto;
             width: fit-content;
             max-width: 95%;
-            letter-spacing: 0.3px;
-        }
-
-        /* 2. Cajas KPI Horizontales */
-        table.kpi-cards-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 3px 0;
-            margin-bottom: 4px;
-            table-layout: fixed;
-        }
-        table.kpi-cards-table td.kpi-card {
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            padding: 2px 4px;
-            text-align: center;
-            vertical-align: middle;
-        }
-        .kpi-title {
-            font-size: 8.5px;
-            font-weight: 800;
-            color: #475569;
-            text-transform: uppercase;
-            margin-bottom: 1px;
             letter-spacing: 0.2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
-        .kpi-value {
-            font-size: 11.5px;
-            font-weight: 900;
-            color: #0f172a;
-            white-space: nowrap;
-        }
-        .kpi-green { color: #059669; }
-        .kpi-blue { color: #0284c7; }
-        .kpi-red { color: #dc2626; }
 
-        /* 3. Tabla Contable Matriz */
-        table#forecast-grid-table, table.data-table {
+        /* 2. Tabla Contable Matriz 100% Nativa */
+        table.data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             table-layout: fixed;
-            font-size: 10px;
-            line-height: 1.18;
+            font-size: 10px !important;
+            line-height: 1.15;
         }
-        table th {
+        table.data-table th {
             background-color: #1e293b !important;
             color: #ffffff !important;
             font-weight: 800;
             text-transform: uppercase;
-            font-size: 9.5px;
+            font-size: 9px;
             padding: 3px 2px;
             border: 1px solid #334155;
             text-align: center;
-            letter-spacing: 0.2px;
+            letter-spacing: 0.1px;
         }
-        table th.th-total-acum {
+        table.data-table th.th-total {
             background-color: #0d9488 !important;
             color: #ffffff !important;
         }
-        table td {
+        table.data-table td {
             border: 1px solid #cbd5e1;
             padding: 2px 3px;
             vertical-align: middle;
@@ -440,47 +543,49 @@ export function generateFinancialMatrixPdfHtml(
             writing-mode: vertical-rl;
             transform: rotate(180deg);
             font-weight: 800;
-            font-size: 9px;
-            letter-spacing: 0.3px;
+            font-size: 8.5px;
+            letter-spacing: 0.2px;
             text-align: center;
             margin: auto;
             white-space: nowrap;
             line-height: 1;
         }
 
-        /* Columna 4: Nombres de Métricas 100% HORIZONTAL */
+        /* Columna 4: Nombres de Métricas 100% HORIZONTAL con Ancho Holgado */
         td.td-metric-name {
-            width: 135px !important;
-            min-width: 135px !important;
-            max-width: 135px !important;
+            width: 170px !important;
+            min-width: 170px !important;
+            max-width: 170px !important;
             text-align: left !important;
             font-weight: 700;
             color: #0f172a;
-            padding-left: 4px;
+            padding-left: 5px;
             writing-mode: horizontal-tb !important;
             transform: none !important;
             white-space: nowrap !important;
             font-size: 10px !important;
         }
-        .pdf-metric-text {
-            display: inline-block;
-            text-align: left;
-            writing-mode: horizontal-tb !important;
-            transform: none !important;
-            white-space: nowrap;
+        .pl-subrow {
+            padding-left: 14px !important;
+            color: #334155;
+            font-weight: 600;
         }
 
-        /* Columnas de Datos (Meses y Totales) */
+        /* Columnas de Datos (Meses y Totales) Calibradas al Dígito Máximo */
         td.td-num {
+            width: 58px !important;
+            max-width: 58px !important;
             text-align: right !important;
-            font-size: 10px;
+            font-size: 10px !important;
             font-weight: 600;
             color: #1e293b;
             padding-right: 3px;
         }
         td.td-empty {
+            width: 58px !important;
+            max-width: 58px !important;
             text-align: center;
-            color: #e2e8f0;
+            color: #cbd5e1;
         }
 
         /* Filas Especiales */
@@ -491,7 +596,14 @@ export function generateFinancialMatrixPdfHtml(
             border-top: 1.5px solid #fbbf24;
             border-bottom: 1.5px solid #fbbf24;
         }
-        tr.tr-global-total td {
+        tr.tr-fleet-total td {
+            background-color: #f1f5f9 !important;
+            font-weight: 900;
+            color: #0f172a;
+            border-top: 1.5px solid #334155;
+            border-bottom: 1.5px solid #334155;
+        }
+        tr.tr-global-accum td {
             background-color: #eef2ff !important;
             font-weight: 900;
             color: #1e1b4b;
@@ -502,13 +614,13 @@ export function generateFinancialMatrixPdfHtml(
             background-color: #f8fafc;
         }
 
-        /* 4. Pie de Página Institucional */
+        /* 3. Pie de Página Institucional */
         .page-footer {
             width: 100%;
-            margin-top: 4px;
+            margin-top: 3px;
             border-top: 1px solid #cbd5e1;
             padding-top: 2px;
-            font-size: 8.5px;
+            font-size: 8px;
             font-weight: 700;
             color: #64748b;
             display: table;
@@ -521,79 +633,7 @@ export function generateFinancialMatrixPdfHtml(
     </style>
 </head>
 <body>
-    <div class="report-container">
-        <!-- 1. Cabecera Institucional con Logos -->
-        <table class="top-header-table">
-            <tr>
-                <td style="width: 25%; text-align: left;">
-                    <img src="${LOGO_GEEKSOFT_BASE64}" class="logo-geeksoft" alt="Geeksoft Logo" />
-                </td>
-                <td style="width: 50%; text-align: center;">
-                    <div class="report-main-title">NAVIERA PETRAL S.A.</div>
-                    <div class="report-sub-title">MATRIZ FINANCIERA • VOYAGE CALCULATOR & PROYECCIÓN COMERCIAL</div>
-                </td>
-                <td style="width: 25%; text-align: right;">
-                    <img src="${LOGO_PETRAL_BASE64}" class="logo-petral" alt="Petral Logo" />
-                </td>
-            </tr>
-        </table>
-
-        <div class="scenario-badge-banner">
-            ESCENARIO: ${scenarioName} &bull; MONEDA: USD &bull; GENERADO: ${formattedDate}
-        </div>
-
-        <!-- 2. Tarjetas KPI Ejecutivas -->
-        ${kpiNetRev !== '-' ? `
-        <table class="kpi-cards-table">
-            <tr>
-                <td class="kpi-card">
-                    <div class="kpi-title">Viajes Totales</div>
-                    <div class="kpi-value kpi-blue">${kpiTrips}</div>
-                </td>
-                <td class="kpi-card">
-                    <div class="kpi-title">Toneladas (MT)</div>
-                    <div class="kpi-value">${kpiTons}</div>
-                </td>
-                <td class="kpi-card">
-                    <div class="kpi-title">Net Revenue</div>
-                    <div class="kpi-value kpi-green">${kpiNetRev}</div>
-                </td>
-                <td class="kpi-card">
-                    <div class="kpi-title">(-) Bunker Costs</div>
-                    <div class="kpi-value kpi-red">${kpiBunker}</div>
-                </td>
-                <td class="kpi-card">
-                    <div class="kpi-title">(-) Port Costs</div>
-                    <div class="kpi-value kpi-red">${kpiPort}</div>
-                </td>
-                <td class="kpi-card">
-                    <div class="kpi-title">(-) Hire / Charter</div>
-                    <div class="kpi-value kpi-red">${kpiHire}</div>
-                </td>
-                <td class="kpi-card">
-                    <div class="kpi-title">Voyage Result (P/L)</div>
-                    <div class="kpi-value kpi-green">${kpiPL}</div>
-                </td>
-            </tr>
-        </table>
-        ` : ''}
-
-        <!-- 3. Grilla de la Matriz Financiera -->
-        ${clone.outerHTML}
-
-        <!-- 4. Pie de Página Oficial -->
-        <div class="page-footer">
-            <div class="page-footer-cell" style="text-align: left;">
-                Petral Forecast Engine &copy; 2026 &mdash; Sistema de Inteligencia Comercial y Proyecciones Marítimas
-            </div>
-            <div class="page-footer-cell" style="text-align: center;">
-                Documento Oficial de Auditoría Financiera
-            </div>
-            <div class="page-footer-cell" style="text-align: right;">
-                Emisión: ${formattedDate}
-            </div>
-        </div>
-    </div>
+    ${pagesHtml}
 </body>
 </html>
     `;
