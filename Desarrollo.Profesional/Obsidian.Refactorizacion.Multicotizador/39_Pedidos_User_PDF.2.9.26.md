@@ -548,10 +548,15 @@ Se ejecutó el inspector automatizado [`qc_pdf_inspector.py`](file:///c:/Users/r
 ```
 
 ### 31.4. QC (Control de Calidad en Terminal con Evidencia Visible)
-* **Prueba Headless Node.js / OpenPyXL**:
+* **Prueba Headless Node.js / OpenPyXL (`qc_test_excel_generator.mjs`)**:
   * `Openpyxl zoomScale`: **65** ✅
   * `Openpyxl zoomScaleNormal`: **65** ✅
-  * `Columnas evaluadas`: 1 a `ws.columnCount` ✅
+  * `Total Filas Generadas`: **35 Filas** (1 Cabecera + Datos + 15 Filas TOTAL FLOTA + 15 Filas TOTAL ACUMULADO) ✅
+  * `Inspección de Totales`:
+    * Fila 6 a 20: `TOTAL FLOTA` (Viajes, Días, Tons, Net Revenue, 5 sub-métricas de Gross Revenue, Hire, Bunker, Port, Dockage, Arriendo, Voyage Result) ✅
+    * Fila 21 a 35: `TOTAL ACUMULADO` (Viajes, Días, Tons, Net Revenue, 5 sub-métricas de Gross Revenue, Hire, Bunker, Port, Dockage, Arriendo, Voyage Result) ✅
+  * `Ancho de Columnas`:
+    * Col A: `6.5` | Col D: `33.0` | Cols E a Q: `12.5` a `13.5` (ancho neto adaptado a la cifra más ancha + 2.5) ✅
 * **Compilación Frontend**: `npx vite build` completada en **10.40s (exit code 0)** con 1089 módulos.
 
 ---
