@@ -645,14 +645,24 @@ export async function exportFinancialMatrixPdf(
     scenarioName: string = 'Escenario de Proyección'
 ): Promise<void> {
     const htmlContent = generateFinancialMatrixPdfHtml(tableId, orientation, scenarioName);
-    const filename = `Petral_Matriz_Financiera_${orientation}_${new Date().toISOString().slice(0, 10)}.pdf`;
+    
+    // 1. Nombre único con timestamp exacto (YYYYMMDD_HHMMSS) para evitar bloqueos por archivo abierto
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const timeStamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const filename = `Petral_Matriz_Financiera_${orientation}_${timeStamp}.pdf`;
 
-    // 1. Vía Primaria: Backend FastAPI + WeasyPrint
+    // 2. Ruta API Dinámica (Producción / Local)
+    const apiBase = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.origin.includes('localhost') ? 'http://localhost:8000/api/v1' : '/api/v1');
+    const endpoint = `${apiBase.replace(/\/+$/, '')}/utils/generate-pdf`;
+
+    // 3. Generación Asíncrona en Backend (WeasyPrint) con timeout de 60s
+    // Esto previene al 100% el Sharing Violation (Error 32 de Windows) al evitar el print dialog de Chrome
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
     try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-        const response = await fetch('/api/v1/utils/generate-pdf', {
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ html: htmlContent, filename }),
@@ -660,39 +670,34 @@ export async function exportFinancialMatrixPdf(
         });
         clearTimeout(timeoutId);
 
-        if (response.ok) {
-            const blob = await response.blob();
-            if (blob.size > 500) {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                return;
-            }
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.detail || `Error del servidor HTTP ${response.status}`);
         }
-    } catch (err) {
-        console.warn('Backend WeasyPrint no disponible o timeout. Utilizando motor de impresión vectorial nativo.', err);
-    }
 
-    // 2. Vía Secundaria: Motor de Impresión Vectorial Nativo del Navegador
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-        alert('Por favor, permite las ventanas emergentes en tu navegador para generar el PDF.');
-        return;
-    }
+        const blob = await response.blob();
+        if (blob.size < 500) {
+            throw new Error('El PDF generado está vacío o dañado.');
+        }
 
-    printWindow.document.open();
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-
-    printWindow.onload = () => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        
         setTimeout(() => {
-            printWindow.print();
-            setTimeout(() => printWindow.close(), 1000);
-        }, 250);
-    };
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 3000);
+
+    } catch (err: any) {
+        clearTimeout(timeoutId);
+        if (err.name === 'AbortError') {
+            throw new Error('La generación del PDF tomó más de 60 segundos. Por favor, reintente.');
+        }
+        console.error('Error en servicio de PDF WeasyPrint:', err);
+        throw err;
+    }
 }

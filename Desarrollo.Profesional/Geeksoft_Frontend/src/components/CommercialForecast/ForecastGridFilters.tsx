@@ -1,11 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
-import { Download, FileText, RotateCcw, Filter, UserCheck, Navigation, Anchor, Calendar } from 'lucide-react';
+import { Download, FileText, RotateCcw, Filter, UserCheck, Navigation, Anchor, Calendar, Loader2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { exportFinancialMatrixExcel } from '../../services/exportFinancialMatrixExcel';
 import { exportFinancialMatrixPdf } from '../../services/exportFinancialMatrixPdf';
 
 export const ForecastGridFilters: React.FC = () => {
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const { 
         data, 
         dynamicMonths: months = [],
@@ -116,12 +117,16 @@ export const ForecastGridFilters: React.FC = () => {
     };
 
     const handlePrintPDF = async (orientation: 'portrait' | 'landscape') => {
+        if (isGeneratingPdf) return;
+        setIsGeneratingPdf(true);
         try {
             const scenarioName = data?.name || data?.scenario_name || 'Escenario Base 2027';
             await exportFinancialMatrixPdf('forecast-grid-table', orientation, scenarioName);
         } catch (err: any) {
             console.error('Error generando PDF de la Matriz Financiera:', err);
             alert(`Error al generar PDF: ${err?.message || err}`);
+        } finally {
+            setIsGeneratingPdf(false);
         }
     };
 
@@ -375,9 +380,21 @@ export const ForecastGridFilters: React.FC = () => {
                             type="button"
                             onClick={() => handlePrintPDF('landscape')}
                             id="btn-export-pdf"
-                            className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-extrabold shadow-2xs transition-all cursor-pointer"
+                            disabled={isGeneratingPdf}
+                            className={`flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-extrabold shadow-2xs transition-all ${isGeneratingPdf ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                            title="Genera y descarga el PDF en el servidor con WeasyPrint (Anti Sharing Violation)"
                         >
-                            <FileText size={13} /> PDF Horizontal
+                            {isGeneratingPdf ? (
+                                <>
+                                    <Loader2 size={13} className="animate-spin" />
+                                    Generando PDF...
+                                </>
+                            ) : (
+                                <>
+                                    <FileText size={13} />
+                                    PDF Horizontal
+                                </>
+                            )}
                         </button>
                         <button 
                             type="button"
