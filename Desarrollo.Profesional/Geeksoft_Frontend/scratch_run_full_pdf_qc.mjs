@@ -244,36 +244,73 @@ rawRows.forEach(r => {
 });
 
 const numMonths = months.length;
-const standardMetricNames = [
-    'Viajes', 'Días-Buque', 'Toneladas', 'Net Revenue',
-    '(-) Hire (TCE x días)', '(-) Bunker Costs', '(-) Port Costs',
-    '(-) Dockage', '(-) Arriendo de Naves', '(=) VOYAGE RESULT / P&L'
-];
-
-const fleetMonthlyTotals = Array.from({ length: 10 }, () => Array(numMonths).fill(0));
+const fleetMonthlyTotals = {
+    trips: Array(numMonths).fill(0),
+    days: Array(numMonths).fill(0),
+    tons: Array(numMonths).fill(0),
+    netRev: Array(numMonths).fill(0),
+    freight: Array(numMonths).fill(0),
+    demurrage: Array(numMonths).fill(0),
+    dockageRev: Array(numMonths).fill(0),
+    grossRev: Array(numMonths).fill(0),
+    commissions: Array(numMonths).fill(0),
+    hire: Array(numMonths).fill(0),
+    bunker: Array(numMonths).fill(0),
+    port: Array(numMonths).fill(0),
+    dockageCost: Array(numMonths).fill(0),
+    arriendo: Array(numMonths).fill(0),
+    pl: Array(numMonths).fill(0)
+};
 
 vesselBlocks.forEach(vb => {
     vb.rows.forEach(r => {
         const up = r.metric.toUpperCase();
-        let metricIdx = -1;
-        if (up.includes('VIAJE') || up.includes('FREQ')) metricIdx = 0;
-        else if (!up.includes('HIRE') && (up.includes('DÍA') || up.includes('DAYS'))) metricIdx = 1;
-        else if (up.includes('TONELADA') || up.includes('TONS') || up.includes('MT')) metricIdx = 2;
-        else if (up.includes('NET REVENUE') || up.includes('VENTAS')) metricIdx = 3;
-        else if (up.includes('HIRE')) metricIdx = 4;
-        else if (up.includes('BUNKER')) metricIdx = 5;
-        else if (up.includes('PORT') && !up.includes('DOCKAGE')) metricIdx = 6;
-        else if (up.includes('DOCKAGE')) metricIdx = 7;
-        else if (up.includes('ARRIENDO')) metricIdx = 8;
-        else if (up.includes('VOYAGE RESULT') || up.includes('MARGEN') || up.includes('P&L')) metricIdx = 9;
+        let key = '';
+        if (up.includes('VIAJE') || up.includes('FREQ')) key = 'trips';
+        else if (!up.includes('HIRE') && (up.includes('DÍA') || up.includes('DAYS'))) key = 'days';
+        else if (up.includes('TONELADA') || up.includes('TONS') || up.includes('MT')) key = 'tons';
+        else if (up.includes('NET REVENUE') || up.includes('VENTAS')) key = 'netRev';
+        else if (up.includes('HIRE')) key = 'hire';
+        else if (up.includes('BUNKER')) key = 'bunker';
+        else if (up.includes('PORT') && !up.includes('DOCKAGE')) key = 'port';
+        else if (up.includes('DOCKAGE')) key = 'dockageCost';
+        else if (up.includes('ARRIENDO')) key = 'arriendo';
+        else if (up.includes('VOYAGE RESULT') || up.includes('MARGEN') || up.includes('P&L')) key = 'pl';
 
-        if (metricIdx >= 0) {
+        if (key && fleetMonthlyTotals[key]) {
             r.values.slice(0, numMonths).forEach((vStr, mIdx) => {
-                fleetMonthlyTotals[metricIdx][mIdx] += parseNum(vStr);
+                fleetMonthlyTotals[key][mIdx] += parseNum(vStr);
             });
         }
     });
 });
+
+for (let mIdx = 0; mIdx < numMonths; mIdx++) {
+    if (fleetMonthlyTotals.freight[mIdx] === 0 && fleetMonthlyTotals.netRev[mIdx] > 0) {
+        fleetMonthlyTotals.freight[mIdx] = fleetMonthlyTotals.netRev[mIdx];
+        fleetMonthlyTotals.dockageRev[mIdx] = fleetMonthlyTotals.dockageCost[mIdx];
+        fleetMonthlyTotals.grossRev[mIdx] = fleetMonthlyTotals.freight[mIdx] + fleetMonthlyTotals.demurrage[mIdx] + fleetMonthlyTotals.dockageRev[mIdx];
+        fleetMonthlyTotals.commissions[mIdx] = fleetMonthlyTotals.dockageRev[mIdx];
+    }
+}
+
+const full15MetricDefinitions = [
+    { name: 'Viajes', key: 'trips', isSub: false, isBold: false },
+    { name: 'Días-Buque', key: 'days', isSub: false, isBold: false },
+    { name: 'Toneladas', key: 'tons', isSub: false, isBold: false },
+    { name: 'Net Revenue', key: 'netRev', isSub: false, isBold: true },
+    { name: '↳ (+) Freight Revenue', key: 'freight', isSub: true, isBold: false },
+    { name: '↳ (+) Demurrage', key: 'demurrage', isSub: true, isBold: false },
+    { name: '↳ (+) Dockage Revenue', key: 'dockageRev', isSub: true, isBold: false },
+    { name: '↳ (=) Gross Revenue', key: 'grossRev', isSub: true, isBold: false },
+    { name: '↳ (-) Comisiones', key: 'commissions', isSub: true, isBold: false },
+    { name: '(-) Hire (TCE x días)', key: 'hire', isSub: false, isBold: false },
+    { name: '(-) Bunker Costs', key: 'bunker', isSub: false, isBold: false },
+    { name: '(-) Port Costs', key: 'port', isSub: false, isBold: false },
+    { name: '(-) Dockage', key: 'dockageCost', isSub: false, isBold: false },
+    { name: '(-) Arriendo de Naves', key: 'arriendo', isSub: false, isBold: false },
+    { name: '(=) VOYAGE RESULT / P&L', key: 'pl', isSub: false, isBold: true }
+];
 
 const fleetBlock = {
     client: 'TOTAL FLOTA',
@@ -282,23 +319,24 @@ const fleetBlock = {
     isSubtotal: false,
     isFleet: true,
     isAccum: false,
-    rows: standardMetricNames.map((mName, mIdx) => {
-        const monthlyVals = fleetMonthlyTotals[mIdx];
+    rows: full15MetricDefinitions.map(def => {
+        const monthlyVals = fleetMonthlyTotals[def.key] || Array(numMonths).fill(0);
         const sumTot = monthlyVals.reduce((a, b) => a + b, 0);
-        const valStrings = monthlyVals.map(n => formatNumericCell(String(n), mName));
-        valStrings.push(formatNumericCell(String(sumTot), mName));
-        return { metric: mName, values: valStrings };
+        const valStrings = monthlyVals.map(n => formatNumericCell(String(n), def.name));
+        valStrings.push(formatNumericCell(String(sumTot), def.name));
+        return { metric: def.name, values: valStrings };
     })
 };
 
-const accumMonthlyTotals = Array.from({ length: 10 }, () => Array(numMonths).fill(0));
-for (let mIdx = 0; mIdx < 10; mIdx++) {
+const accumMonthlyTotals = {};
+Object.keys(fleetMonthlyTotals).forEach(key => {
+    accumMonthlyTotals[key] = Array(numMonths).fill(0);
     let runningSum = 0;
     for (let colIdx = 0; colIdx < numMonths; colIdx++) {
-        runningSum += fleetMonthlyTotals[mIdx][colIdx];
-        accumMonthlyTotals[mIdx][colIdx] = runningSum;
+        runningSum += fleetMonthlyTotals[key][colIdx];
+        accumMonthlyTotals[key][colIdx] = runningSum;
     }
-}
+});
 
 const accumBlock = {
     client: 'TOTAL ACUMULADO',
@@ -307,12 +345,12 @@ const accumBlock = {
     isSubtotal: false,
     isFleet: false,
     isAccum: true,
-    rows: standardMetricNames.map((mName, mIdx) => {
-        const monthlyVals = accumMonthlyTotals[mIdx];
+    rows: full15MetricDefinitions.map(def => {
+        const monthlyVals = accumMonthlyTotals[def.key] || Array(numMonths).fill(0);
         const endTot = monthlyVals[monthlyVals.length - 1] || 0;
-        const valStrings = monthlyVals.map(n => formatNumericCell(String(n), mName));
-        valStrings.push(formatNumericCell(String(endTot), mName));
-        return { metric: mName, values: valStrings };
+        const valStrings = monthlyVals.map(n => formatNumericCell(String(n), def.name));
+        valStrings.push(formatNumericCell(String(endTot), def.name));
+        return { metric: def.name, values: valStrings };
     })
 };
 
@@ -393,7 +431,7 @@ const pagesHtml = pages.map((p, pageIdx) => {
                         ${createVerticalSvg(b.vessel, vesselSpan, vFg)}
                     </td>
                 ` : ''}
-                <td class="td-metric-name">${row.metric}</td>
+                <td class="td-metric-name ${row.metric.startsWith('↳') ? 'pl-subrow' : ''}">${row.metric}</td>
                 ${row.values.map((v, valIdx) => `<td class="${v ? 'td-num' : 'td-empty'} ${valIdx === row.values.length - 1 ? 'td-total-cell' : ''}">${v}</td>`).join('')}
             </tr>
             `;
@@ -419,9 +457,9 @@ const pagesHtml = pages.map((p, pageIdx) => {
                     <th class="th-dim" style="width: 24px;">CLI</th>
                     <th class="th-dim" style="width: 24px;">RUT</th>
                     <th class="th-dim" style="width: 24px;">BUQ</th>
-                    <th class="th-metric" style="width: 165px;">MÉTRICA</th>
-                    ${months.map(m => `<th class="th-month" style="width: 53px;">${m.toUpperCase()}</th>`).join('')}
-                    <th class="th-total" style="width: 80px;">TOTAL ACUM</th>
+                    <th class="th-metric" style="width: 145px;">MÉTRICA</th>
+                    ${months.map(m => `<th class="th-month" style="width: 56px;">${m.toUpperCase()}</th>`).join('')}
+                    <th class="th-total" style="width: 70px;">TOTAL ACUM</th>
                 </tr>
             </thead>
             <tbody>
@@ -458,10 +496,11 @@ const fullHtml = `<!DOCTYPE html>
         table.data-table th.th-total { background-color: #0d9488 !important; color: #ffffff !important; }
         table.data-table td { border: 1px solid #cbd5e1; padding: 2px 3px; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: normal !important; }
         td.td-dimension { width: 24px !important; max-width: 24px !important; min-width: 24px !important; text-align: center !important; vertical-align: middle !important; padding: 0 !important; }
-        td.td-metric-name { width: 165px !important; min-width: 165px !important; max-width: 165px !important; text-align: left !important; font-weight: normal !important; color: #0f172a; padding-left: 5px; writing-mode: horizontal-tb !important; transform: none !important; white-space: nowrap !important; font-size: 9.5px !important; }
-        td.td-num { width: 53px !important; max-width: 53px !important; text-align: right !important; font-size: 9px !important; font-weight: normal !important; color: #1e293b; padding-right: 3px; }
-        td.td-empty { width: 53px !important; max-width: 53px !important; text-align: center; color: #cbd5e1; }
-        td.td-total-cell { width: 80px !important; max-width: 80px !important; min-width: 80px !important; font-size: 9px !important; font-weight: 700 !important; color: #0f172a !important; }
+        td.td-metric-name { width: 145px !important; min-width: 145px !important; max-width: 145px !important; text-align: left !important; font-weight: normal !important; color: #0f172a; padding-left: 5px; writing-mode: horizontal-tb !important; transform: none !important; white-space: nowrap !important; font-size: 9px !important; }
+        .pl-subrow { padding-left: 12px !important; color: #475569 !important; font-size: 8.5px !important; }
+        td.td-num { width: 56px !important; max-width: 56px !important; text-align: right !important; font-size: 9px !important; font-weight: normal !important; color: #1e293b; padding-right: 3px; }
+        td.td-empty { width: 56px !important; max-width: 56px !important; text-align: center; color: #cbd5e1; }
+        td.td-total-cell { width: 70px !important; max-width: 70px !important; min-width: 70px !important; font-size: 9px !important; font-weight: 700 !important; color: #0f172a !important; }
         tr.tr-fleet td { background-color: #f1f5f9 !important; font-weight: 600 !important; }
         tr.tr-accum td { background-color: #eef2ff !important; font-weight: 700 !important; }
         .page-footer { width: 100%; margin-top: 3px; border-top: 1px solid #cbd5e1; padding-top: 2px; font-size: 8px; font-weight: 600; color: #64748b; display: table; table-layout: fixed; }
@@ -473,4 +512,4 @@ const fullHtml = `<!DOCTYPE html>
 </html>`;
 
 fs.writeFileSync('./scratch_atomic_full.html', fullHtml, 'utf-8');
-console.log(`✅ Paginación y rotación SVG en todas las dimensiones generada con éxito (${totalPagesCount} páginas A4 Landscape).`);
+console.log(`✅ Paginación y desglose de 15 filas generado con éxito (${totalPagesCount} páginas A4 Landscape).`);

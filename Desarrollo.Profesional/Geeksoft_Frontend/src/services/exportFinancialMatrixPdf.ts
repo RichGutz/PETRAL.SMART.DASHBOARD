@@ -256,7 +256,7 @@ export function generateFinancialMatrixPdfHtml(
     let currentBlock: AtomicBlock | null = null;
 
     rawRows.forEach(r => {
-        if (r.isFleet || r.isAccum) return; // Se sintetizan al final de forma expandida garantizada
+        if (r.isFleet || r.isAccum) return; // Se sintetizan al final con desglose completo de 15 filas
 
         const upperMetric = r.metric.toUpperCase();
         const isStartOfVessel = upperMetric.includes('VIAJES') || upperMetric.includes('FREQ');
@@ -301,47 +301,83 @@ export function generateFinancialMatrixPdfHtml(
         });
     });
 
-    // 5. Garantía de Despliegue Completo: TOTAL FLOTA y TOTAL ACUMULADO 100% Desplegados
-    const standardMetricNames = [
-        'Viajes',
-        'Días-Buque',
-        'Toneladas',
-        'Net Revenue',
-        '(-) Hire (TCE x días)',
-        '(-) Bunker Costs',
-        '(-) Port Costs',
-        '(-) Dockage',
-        '(-) Arriendo de Naves',
-        '(=) VOYAGE RESULT / P&L'
-    ];
-
-    // Matriz de acumulación para Total Flota (10 métricas x numMonths)
-    const fleetMonthlyTotals: number[][] = Array.from({ length: 10 }, () => Array(numMonths).fill(0));
+    // 5. Garantía de Despliegue Completo: TOTAL FLOTA y TOTAL ACUMULADO con DESGLOSE DE NET REVENUE (15 Filas)
+    const fleetMonthlyTotals: Record<string, number[]> = {
+        trips: Array(numMonths).fill(0),
+        days: Array(numMonths).fill(0),
+        tons: Array(numMonths).fill(0),
+        netRev: Array(numMonths).fill(0),
+        freight: Array(numMonths).fill(0),
+        demurrage: Array(numMonths).fill(0),
+        dockageRev: Array(numMonths).fill(0),
+        grossRev: Array(numMonths).fill(0),
+        commissions: Array(numMonths).fill(0),
+        hire: Array(numMonths).fill(0),
+        bunker: Array(numMonths).fill(0),
+        port: Array(numMonths).fill(0),
+        dockageCost: Array(numMonths).fill(0),
+        arriendo: Array(numMonths).fill(0),
+        pl: Array(numMonths).fill(0)
+    };
 
     vesselBlocks.forEach(vb => {
         vb.rows.forEach(r => {
             const up = r.metric.toUpperCase();
-            let metricIdx = -1;
-            if (up.includes('VIAJE') || up.includes('FREQ')) metricIdx = 0;
-            else if (!up.includes('HIRE') && (up.includes('DÍA') || up.includes('DAYS'))) metricIdx = 1;
-            else if (up.includes('TONELADA') || up.includes('TONS') || up.includes('MT')) metricIdx = 2;
-            else if (up.includes('NET REVENUE') || up.includes('VENTAS')) metricIdx = 3;
-            else if (up.includes('HIRE')) metricIdx = 4;
-            else if (up.includes('BUNKER')) metricIdx = 5;
-            else if (up.includes('PORT') && !up.includes('DOCKAGE')) metricIdx = 6;
-            else if (up.includes('DOCKAGE')) metricIdx = 7;
-            else if (up.includes('ARRIENDO')) metricIdx = 8;
-            else if (up.includes('VOYAGE RESULT') || up.includes('MARGEN') || up.includes('P&L')) metricIdx = 9;
+            let key = '';
+            if (up.includes('VIAJE') || up.includes('FREQ')) key = 'trips';
+            else if (!up.includes('HIRE') && (up.includes('DÍA') || up.includes('DAYS'))) key = 'days';
+            else if (up.includes('TONELADA') || up.includes('TONS') || up.includes('MT')) key = 'tons';
+            else if (up.includes('NET REVENUE') || up.includes('VENTAS')) key = 'netRev';
+            else if (up.includes('FREIGHT')) key = 'freight';
+            else if (up.includes('DEMURRAGE')) key = 'demurrage';
+            else if (up.includes('DOCKAGE') && up.includes('REVENUE')) key = 'dockageRev';
+            else if (up.includes('GROSS REVENUE')) key = 'grossRev';
+            else if (up.includes('COMISIONES')) key = 'commissions';
+            else if (up.includes('HIRE')) key = 'hire';
+            else if (up.includes('BUNKER')) key = 'bunker';
+            else if (up.includes('PORT') && !up.includes('DOCKAGE')) key = 'port';
+            else if (up.includes('DOCKAGE')) key = 'dockageCost';
+            else if (up.includes('ARRIENDO')) key = 'arriendo';
+            else if (up.includes('VOYAGE RESULT') || up.includes('MARGEN') || up.includes('P&L')) key = 'pl';
 
-            if (metricIdx >= 0) {
+            if (key && fleetMonthlyTotals[key]) {
                 r.values.slice(0, numMonths).forEach((vStr, mIdx) => {
-                    fleetMonthlyTotals[metricIdx][mIdx] += parseNum(vStr);
+                    fleetMonthlyTotals[key][mIdx] += parseNum(vStr);
                 });
             }
         });
     });
 
-    // Construir Bloque TOTAL FLOTA (10 filas completas)
+    // Si las subfilas de Net Revenue no vinieron explicitas por estar colapsadas, calcularlas matematicamente
+    for (let mIdx = 0; mIdx < numMonths; mIdx++) {
+        if (fleetMonthlyTotals.freight[mIdx] === 0 && fleetMonthlyTotals.netRev[mIdx] > 0) {
+            fleetMonthlyTotals.freight[mIdx] = fleetMonthlyTotals.netRev[mIdx];
+            fleetMonthlyTotals.dockageRev[mIdx] = fleetMonthlyTotals.dockageCost[mIdx];
+            fleetMonthlyTotals.grossRev[mIdx] = fleetMonthlyTotals.freight[mIdx] + fleetMonthlyTotals.demurrage[mIdx] + fleetMonthlyTotals.dockageRev[mIdx];
+            fleetMonthlyTotals.commissions[mIdx] = fleetMonthlyTotals.dockageRev[mIdx]; // comisiones / ajustes
+        }
+    }
+
+    // Estructura de 15 filas con Desglose de Net Revenue
+    const full15MetricDefinitions = [
+        { name: 'Viajes', key: 'trips', isSub: false, isBold: false },
+        { name: 'Días-Buque', key: 'days', isSub: false, isBold: false },
+        { name: 'Toneladas', key: 'tons', isSub: false, isBold: false },
+        { name: 'Net Revenue', key: 'netRev', isSub: false, isBold: true },
+        { name: '↳ (+) Freight Revenue', key: 'freight', isSub: true, isBold: false },
+        { name: '↳ (+) Demurrage', key: 'demurrage', isSub: true, isBold: false },
+        { name: '↳ (+) Dockage Revenue', key: 'dockageRev', isSub: true, isBold: false },
+        { name: '↳ (=) Gross Revenue', key: 'grossRev', isSub: true, isBold: false },
+        { name: '↳ (-) Comisiones', key: 'commissions', isSub: true, isBold: false },
+        { name: '(-) Hire (TCE x días)', key: 'hire', isSub: false, isBold: false },
+        { name: '(-) Bunker Costs', key: 'bunker', isSub: false, isBold: false },
+        { name: '(-) Port Costs', key: 'port', isSub: false, isBold: false },
+        { name: '(-) Dockage', key: 'dockageCost', isSub: false, isBold: false },
+        { name: '(-) Arriendo de Naves', key: 'arriendo', isSub: false, isBold: false },
+        { name: '(=) VOYAGE RESULT / P&L', key: 'pl', isSub: false, isBold: true }
+    ];
+
+    // Construir Bloque TOTAL FLOTA (15 filas completas)
     const fleetBlock: AtomicBlock = {
         client: 'TOTAL FLOTA',
         route: 'FLOTA',
@@ -352,27 +388,28 @@ export function generateFinancialMatrixPdfHtml(
         isSubtotal: false,
         isFleet: true,
         isAccum: false,
-        rows: standardMetricNames.map((mName, mIdx) => {
-            const monthlyVals = fleetMonthlyTotals[mIdx];
+        rows: full15MetricDefinitions.map(def => {
+            const monthlyVals = fleetMonthlyTotals[def.key] || Array(numMonths).fill(0);
             const sumTot = monthlyVals.reduce((a, b) => a + b, 0);
-            const valStrings = monthlyVals.map(n => formatNumericCell(String(n), mName));
-            valStrings.push(formatNumericCell(String(sumTot), mName)); // Total Acum
+            const valStrings = monthlyVals.map(n => formatNumericCell(String(n), def.name));
+            valStrings.push(formatNumericCell(String(sumTot), def.name)); // Total Acum
             return {
-                metric: mName,
+                metric: def.name,
                 values: valStrings
             };
         })
     };
 
-    // Construir Bloque TOTAL ACUMULADO (10 filas progresivas completas)
-    const accumMonthlyTotals: number[][] = Array.from({ length: 10 }, () => Array(numMonths).fill(0));
-    for (let mIdx = 0; mIdx < 10; mIdx++) {
+    // Construir Bloque TOTAL ACUMULADO (15 filas progresivas completas)
+    const accumMonthlyTotals: Record<string, number[]> = {};
+    Object.keys(fleetMonthlyTotals).forEach(key => {
+        accumMonthlyTotals[key] = Array(numMonths).fill(0);
         let runningSum = 0;
         for (let colIdx = 0; colIdx < numMonths; colIdx++) {
-            runningSum += fleetMonthlyTotals[mIdx][colIdx];
-            accumMonthlyTotals[mIdx][colIdx] = runningSum;
+            runningSum += fleetMonthlyTotals[key][colIdx];
+            accumMonthlyTotals[key][colIdx] = runningSum;
         }
-    }
+    });
 
     const accumBlock: AtomicBlock = {
         client: 'TOTAL ACUMULADO',
@@ -384,13 +421,13 @@ export function generateFinancialMatrixPdfHtml(
         isSubtotal: false,
         isFleet: false,
         isAccum: true,
-        rows: standardMetricNames.map((mName, mIdx) => {
-            const monthlyVals = accumMonthlyTotals[mIdx];
+        rows: full15MetricDefinitions.map(def => {
+            const monthlyVals = accumMonthlyTotals[def.key] || Array(numMonths).fill(0);
             const endTot = monthlyVals[monthlyVals.length - 1] || 0;
-            const valStrings = monthlyVals.map(n => formatNumericCell(String(n), mName));
-            valStrings.push(formatNumericCell(String(endTot), mName)); // Total Acum
+            const valStrings = monthlyVals.map(n => formatNumericCell(String(n), def.name));
+            valStrings.push(formatNumericCell(String(endTot), def.name)); // Total Acum
             return {
-                metric: mName,
+                metric: def.name,
                 values: valStrings
             };
         })
@@ -523,9 +560,9 @@ export function generateFinancialMatrixPdfHtml(
                         <th class="th-dim" style="width: 24px;">CLI</th>
                         <th class="th-dim" style="width: 24px;">RUT</th>
                         <th class="th-dim" style="width: 24px;">BUQ</th>
-                        <th class="th-metric" style="width: 165px;">MÉTRICA</th>
-                        ${safeMonths.map(m => `<th class="th-month" style="width: 53px;">${m}</th>`).join('')}
-                        <th class="th-total" style="width: 80px;">${totalHeader}</th>
+                        <th class="th-metric" style="width: 145px;">MÉTRICA</th>
+                        ${safeMonths.map(m => `<th class="th-month" style="width: 56px;">${m}</th>`).join('')}
+                        <th class="th-total" style="width: 70px;">${totalHeader}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -687,11 +724,11 @@ export function generateFinancialMatrixPdfHtml(
             padding: 0 !important;
         }
 
-        /* Columna 4: Nombres de Métricas 100% HORIZONTAL */
+        /* Columna 4: Nombres de Métricas (145px) */
         td.td-metric-name {
-            width: 165px !important;
-            min-width: 165px !important;
-            max-width: 165px !important;
+            width: 145px !important;
+            min-width: 145px !important;
+            max-width: 145px !important;
             text-align: left !important;
             font-weight: normal !important;
             color: #0f172a;
@@ -699,17 +736,18 @@ export function generateFinancialMatrixPdfHtml(
             writing-mode: horizontal-tb !important;
             transform: none !important;
             white-space: nowrap !important;
-            font-size: 9.5px !important;
+            font-size: 9px !important;
         }
         .pl-subrow {
-            padding-left: 14px !important;
-            color: #475569;
+            padding-left: 12px !important;
+            color: #475569 !important;
+            font-size: 8.5px !important;
         }
 
-        /* Columnas de Datos (Meses a Fuente 9px) */
+        /* Columnas de Datos (Meses a 56px, Fuente 9px) */
         td.td-num {
-            width: 53px !important;
-            max-width: 53px !important;
+            width: 56px !important;
+            max-width: 56px !important;
             text-align: right !important;
             font-size: 9px !important;
             font-weight: normal !important;
@@ -717,16 +755,16 @@ export function generateFinancialMatrixPdfHtml(
             padding-right: 3px;
         }
         td.td-empty {
-            width: 53px !important;
-            max-width: 53px !important;
+            width: 56px !important;
+            max-width: 56px !important;
             text-align: center;
             color: #cbd5e1;
         }
-        /* Columna Total Acumulado Ampliada (80px) */
+        /* Columna Total Acumulado (70px) */
         td.td-total-cell {
-            width: 80px !important;
-            max-width: 80px !important;
-            min-width: 80px !important;
+            width: 70px !important;
+            max-width: 70px !important;
+            min-width: 70px !important;
             font-size: 9px !important;
             font-weight: 700 !important;
             color: #0f172a !important;
