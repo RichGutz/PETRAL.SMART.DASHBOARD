@@ -39,6 +39,43 @@ const getColumnHeaderLabel = (type: 'client' | 'route' | 'vessel') => {
     return 'Buque';
 };
 
+const TariffInputCell: React.FC<{
+    value: number | string | null | undefined;
+    onSave: (val: number) => void;
+}> = ({ value, onSave }) => {
+    const formattedInitial = (value !== null && value !== undefined && value !== '' && Number(value) > 0) ? String(value) : '';
+    const [localVal, setLocalVal] = useState<string>(formattedInitial);
+
+    useEffect(() => {
+        setLocalVal((value !== null && value !== undefined && value !== '' && Number(value) > 0) ? String(value) : '');
+    }, [value]);
+
+    const commit = () => {
+        const parsed = parseFloat(localVal);
+        if (!isNaN(parsed) && parsed >= 0) {
+            onSave(parsed);
+        }
+    };
+
+    return (
+        <input 
+            type="number"
+            min="0"
+            step="0.01"
+            value={localVal}
+            onChange={(e) => setLocalVal(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    commit();
+                    (e.target as HTMLInputElement).blur();
+                }
+            }}
+            className="w-16 p-1 text-right text-xs font-bold border border-slate-300 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white text-petral-blue"
+        />
+    );
+};
+
 interface ForecastGridProps {
     data: any;
     months: string[];
@@ -1745,16 +1782,11 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
                                                 className="w-12 p-1 text-center text-xs font-bold border border-slate-300 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white text-petral-blue"
                                             />
                                         ) : (row.metric.name === "Flete (USD/MT)" || row.metric.name.includes("Tarifa Flete Base P")) && !row.isClientSubtotal && !row.isGlobalTotal ? (
-                                            <input 
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                value={v || ''}
-                                                onChange={(e) => {
-                                                    const val = parseFloat(e.target.value) || 0;
-                                                    onTariffChange && onTariffChange(row.clientName, row.routeName, row.vesselName, months[origColIdx], val);
+                                            <TariffInputCell 
+                                                value={v}
+                                                onSave={(newVal) => {
+                                                    onTariffChange && onTariffChange(row.clientName, row.routeName, row.vesselName, months[origColIdx], newVal);
                                                 }}
-                                                className="w-16 p-1 text-right text-xs font-bold border border-slate-300 rounded focus:border-petral-teal focus:ring-1 focus:ring-petral-teal bg-white text-petral-blue"
                                             />
                                         ) : row.metric.isTceDiff ? (
                                             <span className={`font-mono text-xs font-bold ${v > 0 ? 'text-emerald-700' : v < 0 ? 'text-rose-600' : 'text-slate-500'}`}>
