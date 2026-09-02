@@ -219,10 +219,50 @@ Se ejecutó el inspector automatizado [`qc_pdf_inspector.py`](file:///c:/Users/r
 
 ---
 
-## 14. 📝 DICTAMEN FINAL Y SELLADO PERICIAL RONDA 5
+## 15. 🕵️‍♂️ RONDA 6: GARANTÍA ATÓMICA DE 9 FILAS POR BUQUE, TOTAL ACUMULADO (80PX) Y FUENTE A 9PX
 
-* **Compilación Frontend**: `npx vite build` completado en **41.40s (exit code 0)** con 1089 módulos.
-* **Estado de la Solución**: 100% convergencia con los requerimientos de diseño del usuario.
+**Fecha:** 02 de Septiembre de 2026 (12:35 PM)  
+**Safe Point:** `PRE.PDF.BLOQUE9.TOTAL80.2.9.26` (Branch y Tag sincronizados en GitHub)  
+**Evidencia Física Evaluada:** Capturas `media_1788370247335.png`, `media_1788370281678.png`, `media_1788370306229.png`, `media_1788370358702.png`.
+
+### 15.1. El Hallazgo del "Smoking Gun" en la Autopsia de Bloques y Celdas
+```
++-----+----------------------------+------------------------------------------------------+------------------------------------------------+
+| #   | LUGAR DEL CRIMEN           | EVIDENCIA FORENSE EXTRAÍDA                           | CAUSA TÉCNICA RAÍZ                             |
++-----+----------------------------+------------------------------------------------------+------------------------------------------------+
+| 1   | Fila 9 Huérfana (Métricas) | `► Métricas TCE ($/d)` salía sola al inicio de pág.3 | Row 7 (`VOYAGE RESULT`) se catalogó como sub   |
+| 2   | Fragmentación de Buque     | `BUQ (MOQUE)` tenía 3 celdas separadas (7+1+1 filas) | El parser partía el buque en 3 piezas          |
+| 3   | Texto Vertical Incompleto  | Letras horizontales apretadas en 24px (`CALLA`)      | Faltaba rotación vertical a lo largo de celda  |
+| 4   | Total Acumulado Truncado   | Cifras de 8 dígitos salían con `...` (`$6,355,7...`) | Ancho de columna `TOTAL ACUM` insuficiente     |
++-----+----------------------------+------------------------------------------------------+------------------------------------------------+
+```
+
+### 15.2. Cirugía Forense Aplicada
+1. **Unidad Atómica Indivisible de 9 Filas por Buque**:
+   * Cada buque es estrictamente **1 bloque de 9 filas indivisibles** desde `Viajes (freq)` hasta `Métricas TCE ($/d)`.
+   * `(=) VOYAGE RESULT / P&L` se procesa como fila interna del buque (no como corte de subtotal).
+   * **Cero Filas Huérfanas**: Si una página no puede alojar las 9 filas completas de un buque, el bloque entero se traslada a la siguiente hoja.
+2. **Ampliación de Columna TOTAL ACUM a 80px**:
+   * `TOTAL ACUM` ampliado a **80px rígidos**. Cero truncamientos o puntos suspensivos en cifras millonarias de 8 dígitos (ej. `$22,290,645`, `$6,355,785`).
+3. **Escala Numérica a 9px**:
+   * Cifras de los meses calibradas a `font-size: 9px !important;` en columnas de `53px`.
+4. **Orientación Vertical a lo Largo de la Columna**:
+   * Texto de dimensiones corre verticalmente a lo largo de la columna (`writing-mode: vertical-rl; transform: rotate(180deg)`), aprovechando toda la altura de la celda fusionada.
+
+### 15.3. Loop QC de Análisis Forense de PDF Binario
+* **Script Inspector**: [`qc_pdf_inspector.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/qc_pdf_inspector.py) ejecutado con `PyMuPDF (fitz)` y `WeasyPrint`.
+* **Resultado**:
+  * 4 páginas A4 Landscape (`841.9pt x 595.3pt`) 100% homogéneas.
+  * Cero filas huérfanas de métricas. Cada buque preserva sus 9 filas unificadas con `BUQ (rowspan=9)`.
+  * Cifras de 8 dígitos en Total Acumulado 100% legibles.
+  * Fuente de meses a 9px.
+
+---
+
+## 16. 📝 DICTAMEN FINAL Y SELLADO PERICIAL RONDA 6
+
+* **Compilación Frontend**: `npx vite build` completado en **24.05s (exit code 0)** con 1089 módulos.
+* **Estado de la Solución**: 100% de convergencia con las especificaciones del usuario.
 
 ---
 *Firma Pericial: Benoit Blanc - Detective Auditor*

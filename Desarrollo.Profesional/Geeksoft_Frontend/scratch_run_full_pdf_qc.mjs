@@ -103,11 +103,6 @@ clients.forEach(client => {
 });
 
 // Importar dinámicamente o aplicar la lógica de exportFinancialMatrixPdf.ts
-const COLOR_MAP = {
-    'NEXA': { bg: '#0f4c81', fg: '#ffffff' },
-    'SPCC': { bg: '#0369a1', fg: '#ffffff' }
-};
-
 const occupied = [];
 const setOccupied = (r, c, rSpan, cSpan) => {
     for (let row = r; row < r + rSpan; row++) {
@@ -200,8 +195,19 @@ const blocks = [];
 let currentBlock = null;
 
 rawRows.forEach(r => {
-    const isNew = !currentBlock || r.client !== currentBlock.client || r.route !== currentBlock.route || r.vessel !== currentBlock.vessel;
-    if (isNew) {
+    const upperMetric = r.metric.toUpperCase();
+    const isStartOfVessel = upperMetric.includes('VIAJES') || upperMetric.includes('FREQ');
+
+    let shouldStart = false;
+    if (!currentBlock) {
+        shouldStart = true;
+    } else if (isStartOfVessel && currentBlock.rows.length >= 7) {
+        shouldStart = true;
+    } else if (r.vessel !== currentBlock.vessel || r.route !== currentBlock.route || r.client !== currentBlock.client) {
+        shouldStart = true;
+    }
+
+    if (shouldStart) {
         currentBlock = {
             client: r.client,
             route: r.route,
@@ -216,7 +222,7 @@ rawRows.forEach(r => {
     });
 });
 
-const MAX_ROWS_PER_PAGE = 21;
+const MAX_ROWS_PER_PAGE = 20;
 const pages = [];
 let activePage = { blocks: [], totalRows: 0 };
 
@@ -303,12 +309,12 @@ const pagesHtml = pages.map((p, pageIdx) => {
         <table class="data-table">
             <thead>
                 <tr>
-                    <th class="th-dim" style="width: 22px;">CLI</th>
-                    <th class="th-dim" style="width: 22px;">RUT</th>
-                    <th class="th-dim" style="width: 22px;">BUQ</th>
-                    <th class="th-metric" style="width: 170px;">MÉTRICA</th>
-                    ${months.map(m => `<th class="th-month" style="width: 58px;">${m.toUpperCase()}</th>`).join('')}
-                    <th class="th-total" style="width: 62px;">TOTAL ACUM</th>
+                    <th class="th-dim" style="width: 24px;">CLI</th>
+                    <th class="th-dim" style="width: 24px;">RUT</th>
+                    <th class="th-dim" style="width: 24px;">BUQ</th>
+                    <th class="th-metric" style="width: 165px;">MÉTRICA</th>
+                    ${months.map(m => `<th class="th-month" style="width: 53px;">${m.toUpperCase()}</th>`).join('')}
+                    <th class="th-total" style="width: 80px;">TOTAL ACUM</th>
                 </tr>
             </thead>
             <tbody>
@@ -330,26 +336,26 @@ const fullHtml = `<!DOCTYPE html>
     <meta charset="UTF-8">
     <title>NAVIERA PETRAL S.A. - Matriz Financiera</title>
     <style>
-        @page { size: A4 landscape !important; margin: 4mm 6mm !important; }
+        @page { size: A4 landscape !important; margin: 4mm 5mm !important; }
         * { box-sizing: border-box; font-family: 'Consolas', 'Courier New', monospace !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        html, body { margin: 0 !important; padding: 0 !important; background-color: #ffffff !important; color: #0f172a; font-size: 10px !important; font-weight: normal !important; line-height: 1.15; }
+        html, body { margin: 0 !important; padding: 0 !important; background-color: #ffffff !important; color: #0f172a; font-size: 9px !important; font-weight: normal !important; line-height: 1.15; }
         .report-page { width: 100%; margin: 0; padding: 0; page-break-after: always; page-break-inside: avoid; box-sizing: border-box; }
         .report-page:last-child { page-break-after: avoid; }
         .top-header-table { width: 100%; border-collapse: collapse; margin-bottom: 3px; }
         .top-header-table td { border: none !important; padding: 0 !important; vertical-align: middle; }
         .report-main-title { font-weight: 700; font-size: 13px; color: #0f172a; margin: 0; text-transform: uppercase; text-align: center; }
         .report-sub-title { font-size: 9.5px; font-weight: 600; color: #334155; text-align: center; margin-top: 1px; }
-        .scenario-badge-banner { background-color: #0f4c81; color: #ffffff; font-weight: 700; font-size: 9.5px; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; text-align: center; margin: 2px auto 3px auto; width: fit-content; }
-        table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 2px; table-layout: fixed; font-size: 10px !important; font-weight: normal !important; line-height: 1.15; }
+        .scenario-badge-banner { background-color: #0f4c81; color: #ffffff; font-weight: 700; font-size: 9px; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; text-align: center; margin: 2px auto 3px auto; width: fit-content; }
+        table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 2px; table-layout: fixed; font-size: 9px !important; font-weight: normal !important; line-height: 1.15; }
         table.data-table th { background-color: #1e293b !important; color: #ffffff !important; font-weight: 700; text-transform: uppercase; font-size: 9px; padding: 3px 2px; border: 1px solid #334155; text-align: center; }
         table.data-table th.th-total { background-color: #0d9488 !important; color: #ffffff !important; }
         table.data-table td { border: 1px solid #cbd5e1; padding: 2px 3px; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: normal !important; }
-        td.td-dimension { width: 22px !important; max-width: 22px !important; min-width: 22px !important; text-align: center !important; vertical-align: middle !important; padding: 0 !important; }
-        .pdf-vertical-text { writing-mode: vertical-rl; text-orientation: mixed; font-weight: 600; font-size: 8.5px; letter-spacing: 0.3px; text-align: center; margin: auto; white-space: nowrap; line-height: 1; }
-        td.td-metric-name { width: 170px !important; min-width: 170px !important; max-width: 170px !important; text-align: left !important; font-weight: normal !important; color: #0f172a; padding-left: 5px; writing-mode: horizontal-tb !important; transform: none !important; white-space: nowrap !important; font-size: 10px !important; }
-        td.td-num { width: 58px !important; max-width: 58px !important; text-align: right !important; font-size: 10px !important; font-weight: normal !important; color: #1e293b; padding-right: 3px; }
-        td.td-empty { width: 58px !important; max-width: 58px !important; text-align: center; color: #cbd5e1; }
-        td.td-total-cell { font-weight: 600 !important; }
+        td.td-dimension { width: 24px !important; max-width: 24px !important; min-width: 24px !important; text-align: center !important; vertical-align: middle !important; padding: 0 !important; }
+        .pdf-vertical-text { writing-mode: vertical-rl !important; transform: rotate(180deg) !important; font-weight: 700; font-size: 8.5px; letter-spacing: 0.5px; text-align: center; margin: auto; white-space: nowrap; display: inline-block; line-height: 1; }
+        td.td-metric-name { width: 165px !important; min-width: 165px !important; max-width: 165px !important; text-align: left !important; font-weight: normal !important; color: #0f172a; padding-left: 5px; writing-mode: horizontal-tb !important; transform: none !important; white-space: nowrap !important; font-size: 9.5px !important; }
+        td.td-num { width: 53px !important; max-width: 53px !important; text-align: right !important; font-size: 9px !important; font-weight: normal !important; color: #1e293b; padding-right: 3px; }
+        td.td-empty { width: 53px !important; max-width: 53px !important; text-align: center; color: #cbd5e1; }
+        td.td-total-cell { width: 80px !important; max-width: 80px !important; min-width: 80px !important; font-size: 9px !important; font-weight: 700 !important; color: #0f172a !important; }
         .page-footer { width: 100%; margin-top: 3px; border-top: 1px solid #cbd5e1; padding-top: 2px; font-size: 8px; font-weight: 600; color: #64748b; display: table; table-layout: fixed; }
     </style>
 </head>
@@ -359,4 +365,4 @@ const fullHtml = `<!DOCTYPE html>
 </html>`;
 
 fs.writeFileSync('./scratch_atomic_full.html', fullHtml, 'utf-8');
-console.log(`✅ Paginación y combinación jerárquica generada con éxito (${totalPagesCount} páginas A4 Landscape).`);
+console.log(`✅ Paginación y bloques atómicos de 9 filas validados (${totalPagesCount} páginas A4 Landscape).`);

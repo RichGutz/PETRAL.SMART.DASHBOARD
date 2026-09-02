@@ -86,7 +86,7 @@ export function generateFinancialMatrixPdfHtml(
     ];
     const totalHeader = headerCols[headerCols.length - 1] || 'TOTAL ACUM';
 
-    // 2. Extraer todas las filas con la Matriz de Ocupación para evitar descalces por rowSpan
+    // 2. Extraer todas las filas con Matriz de Ocupación para resolver rowSpan
     const occupied: boolean[][] = [];
     const setOccupied = (r: number, c: number, rSpan: number, cSpan: number) => {
         for (let row = r; row < r + rSpan; row++) {
@@ -113,9 +113,6 @@ export function generateFinancialMatrixPdfHtml(
         trs.forEach(tr => {
             let currentCol = 1;
             const tds = tr.querySelectorAll('td');
-            const trClass = tr.className || '';
-            const isSubtotalRow = trClass.includes('font-semibold') || trClass.includes('bg-amber-50') || trClass.includes('bg-slate-100');
-            const isGlobalTotalRow = trClass.includes('bg-indigo-50') || trClass.includes('TOTAL ACUMULADO') || trClass.includes('TOTAL FLOTA');
 
             let rowClient = '';
             let rowRoute = '';
@@ -171,9 +168,9 @@ export function generateFinancialMatrixPdfHtml(
             if (rowRoute) { lastRoute = rowRoute; lastRouteCls = routeCls; }
             if (rowVessel) { lastVessel = rowVessel; lastVesselCls = vesselCls; }
 
-            const isSub = isSubtotalRow || lastRoute.toUpperCase().includes('SUBTOTAL') || lastVessel.toUpperCase().includes('TOTAL CLIENT');
-            const isFleet = isGlobalTotalRow && lastClient.toUpperCase().includes('TOTAL FLOTA');
-            const isAccum = isGlobalTotalRow && lastClient.toUpperCase().includes('TOTAL ACUMULADO');
+            const isSub = lastRoute.toUpperCase().includes('SUBTOTAL') || lastVessel.toUpperCase().includes('TOTAL CLIENT') || lastClient.toUpperCase().includes('SUBTOTAL');
+            const isFleet = lastClient.toUpperCase().includes('TOTAL FLOTA');
+            const isAccum = lastClient.toUpperCase().includes('TOTAL ACUMULADO');
 
             rawRows.push({
                 client: lastClient,
@@ -223,8 +220,7 @@ export function generateFinancialMatrixPdfHtml(
         return '$' + Math.round(parsedNum).toLocaleString('en-US');
     };
 
-    // 4. Paginación Atómica por Bloques (Límite: 21 filas/hoja)
-    // Agrupamos en bloques atómicos indivisibles
+    // 4. Agrupación Atómica Estricta: Cada buque es UN SOLO BLOQUE indivisible de 9 filas
     interface AtomicBlock {
         client: string;
         route: string;
@@ -242,15 +238,26 @@ export function generateFinancialMatrixPdfHtml(
     let currentBlock: AtomicBlock | null = null;
 
     rawRows.forEach(r => {
-        const isNewBlock = !currentBlock ||
-            r.client !== currentBlock.client ||
-            r.route !== currentBlock.route ||
-            r.vessel !== currentBlock.vessel ||
-            r.isSubtotal !== currentBlock.isSubtotal ||
-            r.isFleet !== currentBlock.isFleet ||
-            r.isAccum !== currentBlock.isAccum;
+        const upperMetric = r.metric.toUpperCase();
+        const isStartOfVessel = upperMetric.includes('VIAJES') || upperMetric.includes('FREQ');
+        const isSubtotalBlock = r.isSubtotal;
+        const isFleetBlock = r.isFleet;
+        const isAccumBlock = r.isAccum;
 
-        if (isNewBlock) {
+        let shouldStartNewBlock = false;
+        if (!currentBlock) {
+            shouldStartNewBlock = true;
+        } else if (isAccumBlock !== currentBlock.isAccum || isFleetBlock !== currentBlock.isFleet || isSubtotalBlock !== currentBlock.isSubtotal) {
+            shouldStartNewBlock = true;
+        } else if (!isSubtotalBlock && !isFleetBlock && !isAccumBlock) {
+            if (isStartOfVessel && currentBlock.rows.length >= 7) {
+                shouldStartNewBlock = true;
+            } else if (r.vessel !== currentBlock.vessel || r.route !== currentBlock.route || r.client !== currentBlock.client) {
+                shouldStartNewBlock = true;
+            }
+        }
+
+        if (shouldStartNewBlock) {
             currentBlock = {
                 client: r.client,
                 route: r.route,
@@ -258,9 +265,9 @@ export function generateFinancialMatrixPdfHtml(
                 clientCls: r.clientCls,
                 routeCls: r.routeCls,
                 vesselCls: r.vesselCls,
-                isSubtotal: r.isSubtotal,
-                isFleet: r.isFleet,
-                isAccum: r.isAccum,
+                isSubtotal: isSubtotalBlock,
+                isFleet: isFleetBlock,
+                isAccum: isAccumBlock,
                 rows: []
             };
             blocks.push(currentBlock);
@@ -272,7 +279,8 @@ export function generateFinancialMatrixPdfHtml(
         });
     });
 
-    const MAX_ROWS_PER_PAGE = 21;
+    // 5. Paginación Atómica: Ningún bloque de 9 filas se parte (Límite: 20 filas por hoja)
+    const MAX_ROWS_PER_PAGE = 20;
     interface PageStructure {
         blocks: AtomicBlock[];
         totalRows: number;
@@ -295,9 +303,8 @@ export function generateFinancialMatrixPdfHtml(
     const totalPagesCount = pages.length;
     const formattedDate = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-    // 5. Renderizado de Páginas con Combinación Jerárquica Vertical de Empresa y Ruta (rowspan en cada página)
+    // 6. Renderizado de Páginas con Fusión Vertical Jerárquica y Textos Verticales
     const pagesHtml = pages.map((p, pageIdx) => {
-        // En cada página, calcular los rowspans jerárquicos exactos para Cliente y Ruta
         const clientSpanMap = new Map<string, number>();
         const routeSpanMap = new Map<string, number>();
 
@@ -389,12 +396,12 @@ export function generateFinancialMatrixPdfHtml(
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th class="th-dim" style="width: 22px;">CLI</th>
-                        <th class="th-dim" style="width: 22px;">RUT</th>
-                        <th class="th-dim" style="width: 22px;">BUQ</th>
-                        <th class="th-metric" style="width: 170px;">MÉTRICA</th>
-                        ${safeMonths.map(m => `<th class="th-month" style="width: 58px;">${m}</th>`).join('')}
-                        <th class="th-total" style="width: 62px;">${totalHeader}</th>
+                        <th class="th-dim" style="width: 24px;">CLI</th>
+                        <th class="th-dim" style="width: 24px;">RUT</th>
+                        <th class="th-dim" style="width: 24px;">BUQ</th>
+                        <th class="th-metric" style="width: 165px;">MÉTRICA</th>
+                        ${safeMonths.map(m => `<th class="th-month" style="width: 53px;">${m}</th>`).join('')}
+                        <th class="th-total" style="width: 80px;">${totalHeader}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -427,7 +434,7 @@ export function generateFinancialMatrixPdfHtml(
     <style>
         @page {
             size: A4 landscape !important;
-            margin: 4mm 6mm !important;
+            margin: 4mm 5mm !important;
         }
         * {
             box-sizing: border-box;
@@ -440,7 +447,7 @@ export function generateFinancialMatrixPdfHtml(
             padding: 0 !important;
             background-color: #ffffff !important;
             color: #0f172a;
-            font-size: 10px !important;
+            font-size: 9px !important;
             font-weight: normal !important;
             line-height: 1.15;
         }
@@ -469,7 +476,7 @@ export function generateFinancialMatrixPdfHtml(
             vertical-align: middle;
         }
         .logo-geeksoft {
-            height: 48px;
+            height: 44px;
             width: auto;
             object-fit: contain;
         }
@@ -500,7 +507,7 @@ export function generateFinancialMatrixPdfHtml(
             background-color: #0f4c81;
             color: #ffffff;
             font-weight: 700;
-            font-size: 9.5px;
+            font-size: 9px;
             text-transform: uppercase;
             padding: 2px 8px;
             border-radius: 3px;
@@ -517,7 +524,7 @@ export function generateFinancialMatrixPdfHtml(
             border-collapse: collapse;
             margin-bottom: 2px;
             table-layout: fixed;
-            font-size: 10px !important;
+            font-size: 9px !important;
             font-weight: normal !important;
             line-height: 1.15;
         }
@@ -548,30 +555,31 @@ export function generateFinancialMatrixPdfHtml(
         
         /* Celdas de Dimensiones Verticales (CLI, RUT, BUQ) */
         td.td-dimension {
-            width: 22px !important;
-            max-width: 22px !important;
-            min-width: 22px !important;
+            width: 24px !important;
+            max-width: 24px !important;
+            min-width: 24px !important;
             text-align: center !important;
             vertical-align: middle !important;
             padding: 0 !important;
         }
         .pdf-vertical-text {
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            font-weight: 600;
+            writing-mode: vertical-rl !important;
+            transform: rotate(180deg) !important;
+            font-weight: 700;
             font-size: 8.5px;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.5px;
             text-align: center;
             margin: auto;
             white-space: nowrap;
+            display: inline-block;
             line-height: 1;
         }
 
         /* Columna 4: Nombres de Métricas 100% HORIZONTAL */
         td.td-metric-name {
-            width: 170px !important;
-            min-width: 170px !important;
-            max-width: 170px !important;
+            width: 165px !important;
+            min-width: 165px !important;
+            max-width: 165px !important;
             text-align: left !important;
             font-weight: normal !important;
             color: #0f172a;
@@ -579,31 +587,37 @@ export function generateFinancialMatrixPdfHtml(
             writing-mode: horizontal-tb !important;
             transform: none !important;
             white-space: nowrap !important;
-            font-size: 10px !important;
+            font-size: 9.5px !important;
         }
         .pl-subrow {
             padding-left: 14px !important;
             color: #475569;
         }
 
-        /* Columnas de Datos (Meses y Totales) Calibradas al Dígito Máximo */
+        /* Columnas de Datos (Meses a Fuente 9px) */
         td.td-num {
-            width: 58px !important;
-            max-width: 58px !important;
+            width: 53px !important;
+            max-width: 53px !important;
             text-align: right !important;
-            font-size: 10px !important;
+            font-size: 9px !important;
             font-weight: normal !important;
             color: #1e293b;
             padding-right: 3px;
         }
         td.td-empty {
-            width: 58px !important;
-            max-width: 58px !important;
+            width: 53px !important;
+            max-width: 53px !important;
             text-align: center;
             color: #cbd5e1;
         }
+        /* Columna Total Acumulado Ampliada (80px) */
         td.td-total-cell {
-            font-weight: 600 !important;
+            width: 80px !important;
+            max-width: 80px !important;
+            min-width: 80px !important;
+            font-size: 9px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
         }
 
         /* Filas Especiales */
