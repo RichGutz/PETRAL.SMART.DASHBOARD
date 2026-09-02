@@ -457,9 +457,9 @@ const pagesHtml = pages.map((p, pageIdx) => {
                     <th class="th-dim" style="width: 24px;">CLI</th>
                     <th class="th-dim" style="width: 24px;">RUT</th>
                     <th class="th-dim" style="width: 24px;">BUQ</th>
-                    <th class="th-metric" style="width: 145px;">MÉTRICA</th>
-                    ${months.map(m => `<th class="th-month" style="width: 56px;">${m.toUpperCase()}</th>`).join('')}
-                    <th class="th-total" style="width: 70px;">TOTAL ACUM</th>
+                    <th class="th-metric" style="width: 128px;">MÉTRICA</th>
+                    ${months.map(m => `<th class="th-month" style="width: 58px;">${m.toUpperCase()}</th>`).join('')}
+                    <th class="th-total" style="width: 66px;">TOTAL ACUM</th>
                 </tr>
             </thead>
             <tbody>
@@ -496,11 +496,11 @@ const fullHtml = `<!DOCTYPE html>
         table.data-table th.th-total { background-color: #0d9488 !important; color: #ffffff !important; }
         table.data-table td { border: 1px solid #cbd5e1; padding: 2px 3px; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: normal !important; }
         td.td-dimension { width: 24px !important; max-width: 24px !important; min-width: 24px !important; text-align: center !important; vertical-align: middle !important; padding: 0 !important; }
-        td.td-metric-name { width: 145px !important; min-width: 145px !important; max-width: 145px !important; text-align: left !important; font-weight: normal !important; color: #0f172a; padding-left: 5px; writing-mode: horizontal-tb !important; transform: none !important; white-space: nowrap !important; font-size: 9px !important; }
+        td.td-metric-name { width: 128px !important; min-width: 128px !important; max-width: 128px !important; text-align: left !important; font-weight: normal !important; color: #0f172a; padding-left: 5px; writing-mode: horizontal-tb !important; transform: none !important; white-space: nowrap !important; font-size: 9px !important; }
         .pl-subrow { padding-left: 12px !important; color: #475569 !important; font-size: 8.5px !important; }
-        td.td-num { width: 56px !important; max-width: 56px !important; text-align: right !important; font-size: 9px !important; font-weight: normal !important; color: #1e293b; padding-right: 3px; }
-        td.td-empty { width: 56px !important; max-width: 56px !important; text-align: center; color: #cbd5e1; }
-        td.td-total-cell { width: 70px !important; max-width: 70px !important; min-width: 70px !important; font-size: 9px !important; font-weight: 700 !important; color: #0f172a !important; }
+        td.td-num { width: 58px !important; max-width: 58px !important; text-align: right !important; font-size: 9px !important; font-weight: normal !important; color: #1e293b; padding-right: 3px; }
+        td.td-empty { width: 58px !important; max-width: 58px !important; text-align: center; color: #cbd5e1; }
+        td.td-total-cell { width: 66px !important; max-width: 66px !important; min-width: 66px !important; font-size: 9px !important; font-weight: 700 !important; color: #0f172a !important; }
         tr.tr-fleet td { background-color: #f1f5f9 !important; font-weight: 600 !important; }
         tr.tr-accum td { background-color: #eef2ff !important; font-weight: 700 !important; }
         .page-footer { width: 100%; margin-top: 3px; border-top: 1px solid #cbd5e1; padding-top: 2px; font-size: 8px; font-weight: 600; color: #64748b; display: table; table-layout: fixed; }

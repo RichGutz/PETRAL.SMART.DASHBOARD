@@ -560,9 +560,9 @@ export function generateFinancialMatrixPdfHtml(
                         <th class="th-dim" style="width: 24px;">CLI</th>
                         <th class="th-dim" style="width: 24px;">RUT</th>
                         <th class="th-dim" style="width: 24px;">BUQ</th>
-                        <th class="th-metric" style="width: 145px;">MÉTRICA</th>
-                        ${safeMonths.map(m => `<th class="th-month" style="width: 56px;">${m}</th>`).join('')}
-                        <th class="th-total" style="width: 70px;">${totalHeader}</th>
+                        <th class="th-metric" style="width: 128px;">MÉTRICA</th>
+                        ${safeMonths.map(m => `<th class="th-month" style="width: 58px;">${m}</th>`).join('')}
+                        <th class="th-total" style="width: 66px;">${totalHeader}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -724,11 +724,11 @@ export function generateFinancialMatrixPdfHtml(
             padding: 0 !important;
         }
 
-        /* Columna 4: Nombres de Métricas (145px) */
+        /* Columna 4: Nombres de Métricas (128px) */
         td.td-metric-name {
-            width: 145px !important;
-            min-width: 145px !important;
-            max-width: 145px !important;
+            width: 128px !important;
+            min-width: 128px !important;
+            max-width: 128px !important;
             text-align: left !important;
             font-weight: normal !important;
             color: #0f172a;
@@ -744,10 +744,10 @@ export function generateFinancialMatrixPdfHtml(
             font-size: 8.5px !important;
         }
 
-        /* Columnas de Datos (Meses a 56px, Fuente 9px) */
+        /* Columnas de Datos (Meses a 58px, Fuente 9px) */
         td.td-num {
-            width: 56px !important;
-            max-width: 56px !important;
+            width: 58px !important;
+            max-width: 58px !important;
             text-align: right !important;
             font-size: 9px !important;
             font-weight: normal !important;
@@ -755,16 +755,16 @@ export function generateFinancialMatrixPdfHtml(
             padding-right: 3px;
         }
         td.td-empty {
-            width: 56px !important;
-            max-width: 56px !important;
+            width: 58px !important;
+            max-width: 58px !important;
             text-align: center;
             color: #cbd5e1;
         }
-        /* Columna Total Acumulado (70px) */
+        /* Columna Total Acumulado (66px) */
         td.td-total-cell {
-            width: 70px !important;
-            max-width: 70px !important;
-            min-width: 70px !important;
+            width: 66px !important;
+            max-width: 66px !important;
+            min-width: 66px !important;
             font-size: 9px !important;
             font-weight: 700 !important;
             color: #0f172a !important;

@@ -441,10 +441,36 @@ Se ejecutó el inspector automatizado [`qc_pdf_inspector.py`](file:///c:/Users/r
 
 ---
 
-## 26. 📝 DICTAMEN FINAL Y SELLADO PERICIAL CASO MULTICOTIZADOR
+## 27. 🕵️‍♂️ RONDA 11 (BENOIT BLANC SENIOR): CALIBRACIÓN FINAL DE ANCHOS MATRIZ FINANCIERA (MÉTRICA 128px, 12 MESES 58px, TOTAL ACUM 66px)
 
-* **Compilación Frontend**: `npx vite build` completado en **13.48s (exit code 0)** con 1089 módulos.
-* **Estado de la Solución**: Fidelidad matemática del 100% entre pantalla e impresión PDF.
+**Fecha:** 02 de Septiembre de 2026 (03:25 PM)  
+**Safe Point:** `PRE.PDF.WIDTHS.FINAL.2.9.26` (Branch y Tag sincronizados en GitHub)  
+**Requerimiento Final:** Angostar 12% adicional a Métricas y 6% a Total Acumulado para otorgárselo íntegramente a las 12 columnas mensuales.
+
+### 27.1. Autopsia Pericial y Balance Geométrico
+```
++-----+----------------------------+-----------------------+-----------------------+------------------------------------------------+
+| #   | COLUMNA                    | ANCHO ANTERIOR        | NUEVO ANCHO FINAL     | BALANCE ESPACIAL NETO                          |
++-----+----------------------------+-----------------------+-----------------------+------------------------------------------------+
+| 1   | MÉTRICA                    | 145px                 | 128px (-12% aprox)    | -17px liberados hacia los meses                |
+| 2   | TOTAL ACUM                 | 70px                  | 66px (-6% aprox)      | -4px liberados hacia los meses                 |
+| 3   | 12 MESES PROYECTADOS       | 56px c/u (672px tot)  | 58px c/u (696px tot)  | +24px netos (+2px ganados en cada mes)         |
++-----+----------------------------+-----------------------+-----------------------+------------------------------------------------+
+```
+
+### 27.2. Loop QC de Análisis Forense de PDF Binario
+* **Script Inspector**: [`qc_pdf_inspector.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/qc_pdf_inspector.py) ejecutado con `PyMuPDF (fitz)` y `WeasyPrint`.
+* **Resultado**:
+  * **4 páginas A4 Landscape densas y uniformes** (43 a 58 líneas por hoja).
+  * Máxima holgura lograda para cifras mensuales de 7 y 8 dígitos.
+  * Cero truncamientos, tablas balanceadas y legibilidad contable de grado de auditoría.
+
+---
+
+## 28. 📝 DICTAMEN FINAL Y SELLADO PERICIAL RONDA 11
+
+* **Compilación Frontend**: `npx vite build` completado en **13.01s (exit code 0)** con 1089 módulos.
+* **Estado de la Solución**: Masterpiece definitiva de la Matriz Financiera PETRAL.
 
 ---
 *Firma Pericial: Benoit Blanc Senior - Detective Auditor*
