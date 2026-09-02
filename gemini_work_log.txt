@@ -500,3 +500,4 @@ CONCURRENCY & QC SUMMARY:
 - Sesion pericial finalizada y sellada con 100% de exito.
 [2026-09-02 09:58] Safe Point: Creado branch y tag PRE.PFDs.IZ.2.9.26 y sincronizado con origin. Rama activa: main.
 [2026-09-02 10:10] Corrección forense en exportFinancialMatrixExcel.ts: Fila (-) Hire (TCE x días) formateada como monto monetario global ($#,##0) con separador de miles. Compilación Vite limpia y 6 escenarios auditados.
+[2026-09-02 10:15] Despliegue completado al VPS de producción (91.108.125.253) con SSL activo en https://forecast.geeksoft.tech. Fix formato monetario Hire ($#,##0) publicado en vivo.

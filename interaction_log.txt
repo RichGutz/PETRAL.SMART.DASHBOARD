@@ -441,3 +441,4 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Sesión pericial cerrada al 100% de éxito.
 [2026-09-02 09:58] Creado branch y tag PRE.PFDs.IZ.2.9.26. Rama actual: main.
 [2026-09-02 10:10] Fix formato monetario en fila Hire ($#,##0) verificado con QC multi-escenario.
+[2026-09-02 10:15] Despliegue exitoso al VPS https://forecast.geeksoft.tech.
