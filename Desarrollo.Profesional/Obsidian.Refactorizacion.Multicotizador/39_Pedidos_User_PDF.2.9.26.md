@@ -176,10 +176,53 @@ Se ejecutó el inspector automatizado [`qc_pdf_inspector.py`](file:///c:/Users/r
 
 ---
 
-## 12. 📝 DICTAMEN FINAL RONDA 4
+## 13. 🕵️‍♂️ RONDA 5: JERARQUÍA VERTICAL (CLI, RUT, BUQ), CERO CENTAVOS Y TEXTO VERTICAL DERECHO
 
-* **Compilación Frontend**: `npx vite build` completado en **9.84s (exit code 0)** con 1089 módulos.
-* **Estado de la Solución**: Cero errores de Sharing Violation garantizados.
+**Fecha:** 02 de Septiembre de 2026 (12:15 PM)  
+**Safe Point:** `PRE.PDF.COMBINADO.NO.CABEZA.2.9.26` (Branch y Tag sincronizados en GitHub)  
+**Evidencia Física Evaluada:** Captura `texto_de_cabeza_y_combinacion_02_09_2026.png` que mostraba texto vertical invertido a 180° y fragmentación de celdas en las últimas filas de buques.
+
+### 13.1. Autopsia de las 4 Anomalías Reportadas
+```
++-----+----------------------------+------------------------------------------------------+------------------------------------------------+
+| #   | LUGAR DEL CRIMEN           | EVIDENCIA FORENSE                                    | CAUSA TÉCNICA RAÍZ                             |
++-----+----------------------------+------------------------------------------------------+------------------------------------------------+
+| 1   | Orientación de Texto       | Texto de dimensiones "de cabeza" (glifos invertidos) | `transform: rotate(180deg)` invertía letras    |
+| 2   | Agrupación Vertical        | Celdas de empresa y ruta separadas en filas 8 y 9    | Falta de `rowspan` jerárquico por página       |
+| 3   | Formato de Centavos        | Cifras con `.00` o `.XX` en tarifas y TCE            | Formateadores con decimales en fletes/TCE      |
+| 4   | Peso Tipográfico           | Todo el reporte lucía en negrita pesada              | `font-weight: 800/700` generalizado            |
++-----+----------------------------+------------------------------------------------------+------------------------------------------------+
+```
+
+### 13.2. Cirugía Forense Aplicada
+1. **Encabezados Compactos Oficiales**:
+   * Las tres primeras columnas se titulan exactamente: `CLI`, `RUT`, `BUQ`.
+2. **Orientación Vertical Natural (Derecha y Upright)**:
+   * Reemplazado por: `writing-mode: vertical-rl; text-orientation: mixed;` eliminando todo `transform: rotate(180deg)`. Las letras se leen de arriba a abajo de forma nítida y recta sin estar de cabeza.
+3. **Combinación Jerárquica Vertical por Página**:
+   * En cada página independiente, se calcula el `rowspan` total de cada Cliente y de cada Ruta.
+   * `CLI` se fusiona verticalmente cubriendo todas las rutas y buques de ese cliente en esa página.
+   * `RUT` se fusiona verticalmente cubriendo todos los buques de esa ruta en esa página.
+   * `BUQ` se fusiona verticalmente cubriendo las 9 filas del buque.
+4. **Erradicación Total de Centavos (`$#,##0`)**:
+   * Todas las cifras monetarias (Net Revenue, Bunker, Port, Hire, P/L, TCE y Tarifas) se redondean estrictamente a entero con separador de miles: `$Math.round(val).toLocaleString('en-US')`.
+5. **Tipografía Consolas 10 Normal**:
+   * `font-size: 10px !important; font-weight: normal !important;` en todas las celdas de métricas y datos, otorgando balance visual y legibilidad contable.
+
+### 13.3. Loop QC de Análisis Forense de PDF Binario
+* **Script Inspector**: [`qc_pdf_inspector.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/qc_pdf_inspector.py) ejecutado con `PyMuPDF (fitz)` y `WeasyPrint`.
+* **Resultado**:
+  * 4 páginas A4 Landscape (`841.9pt x 595.3pt`) 100% verificadas.
+  * Jerarquía vertical `CLI` $\rightarrow$ `RUT` $\rightarrow$ `BUQ` perfectamente combinada con `rowspan`.
+  * Cero centavos en todas las cifras monetarias.
+  * Texto vertical con glifos derechos y sin inversión.
+
+---
+
+## 14. 📝 DICTAMEN FINAL Y SELLADO PERICIAL RONDA 5
+
+* **Compilación Frontend**: `npx vite build` completado en **41.40s (exit code 0)** con 1089 módulos.
+* **Estado de la Solución**: 100% convergencia con los requerimientos de diseño del usuario.
 
 ---
 *Firma Pericial: Benoit Blanc - Detective Auditor*

@@ -102,18 +102,11 @@ clients.forEach(client => {
     });
 });
 
-// Extraer bloques y generar HTML idéntico a exportFinancialMatrixPdf.ts
-const headerCols = [];
-document.querySelectorAll('#forecast-grid-table thead th').forEach(th => {
-    headerCols.push(th.textContent.trim().toUpperCase());
-});
-
-const safeHeaderCols = headerCols.length >= 5 ? headerCols : [
-    'CLIENTE', 'RUTA', 'BUQUE', 'MÉTRICA',
-    'ENE 2027', 'FEB 2027', 'MAR 2027', 'ABR 2027', 'MAY 2027', 'JUN 2027',
-    'JUL 2027', 'AGO 2027', 'SET 2027', 'OCT 2027', 'NOV 2027', 'DIC 2027',
-    'TOTAL ACUM'
-];
+// Importar dinámicamente o aplicar la lógica de exportFinancialMatrixPdf.ts
+const COLOR_MAP = {
+    'NEXA': { bg: '#0f4c81', fg: '#ffffff' },
+    'SPCC': { bg: '#0369a1', fg: '#ffffff' }
+};
 
 const occupied = [];
 const setOccupied = (r, c, rSpan, cSpan) => {
@@ -127,11 +120,10 @@ const setOccupied = (r, c, rSpan, cSpan) => {
 const isOccupied = (r, c) => !!(occupied[r] && occupied[r][c]);
 
 let currentRow = 1;
-const blocks = [];
-let currentBlock = null;
-let lastClientName = '';
-let lastRouteName = '';
-let lastVesselName = '';
+const rawRows = [];
+let lastClient = '';
+let lastRoute = '';
+let lastVessel = '';
 
 document.querySelectorAll('#forecast-grid-table tbody tr').forEach(tr => {
     let currentCol = 1;
@@ -140,9 +132,6 @@ document.querySelectorAll('#forecast-grid-table tbody tr').forEach(tr => {
     let rowRoute = '';
     let rowVessel = '';
     let rowMetric = '';
-    let clientCls = '';
-    let routeCls = '';
-    let vesselCls = '';
     const rowValues = [];
 
     tds.forEach(td => {
@@ -151,12 +140,11 @@ document.querySelectorAll('#forecast-grid-table tbody tr').forEach(tr => {
         }
         const rSpan = parseInt(td.getAttribute('rowspan') || '1', 10);
         const cSpan = parseInt(td.getAttribute('colspan') || '1', 10);
-        const tdClass = td.className || '';
         const textValue = td.textContent?.trim() || '';
 
-        if (currentCol === 1 && textValue) { rowClient = textValue; clientCls = tdClass; }
-        else if (currentCol === 2 && textValue) { rowRoute = textValue; routeCls = tdClass; }
-        else if (currentCol === 3 && textValue) { rowVessel = textValue; vesselCls = tdClass; }
+        if (currentCol === 1 && textValue) { rowClient = textValue; }
+        else if (currentCol === 2 && textValue) { rowRoute = textValue; }
+        else if (currentCol === 3 && textValue) { rowVessel = textValue; }
         else if (currentCol === 4) { rowMetric = textValue; }
         else if (currentCol >= 5) { rowValues.push(textValue); }
 
@@ -164,43 +152,70 @@ document.querySelectorAll('#forecast-grid-table tbody tr').forEach(tr => {
         currentCol += cSpan;
     });
 
-    if (rowClient) lastClientName = rowClient;
-    if (rowRoute) lastRouteName = rowRoute;
-    if (rowVessel) lastVesselName = rowVessel;
+    if (rowClient) lastClient = rowClient;
+    if (rowRoute) lastRoute = rowRoute;
+    if (rowVessel) lastVessel = rowVessel;
 
-    const isNewBlock = !currentBlock || (rowVessel !== '' || rowRoute !== '' || rowClient !== '');
-    if (isNewBlock) {
-        currentBlock = {
-            type: 'vessel',
-            clientName: lastClientName,
-            routeName: lastRouteName,
-            vesselName: lastVesselName,
-            clientColor: lastClientName.includes('NEXA') ? { bg: '#0f4c81', fg: '#fff' } : { bg: '#0369a1', fg: '#fff' },
-            routeColor: { bg: '#a855f7', fg: '#fff' },
-            vesselColor: { bg: '#16a34a', fg: '#fff' },
-            rows: []
-        };
-        blocks.push(currentBlock);
-    }
-
-    const formattedVals = [];
-    let formattedTot = '';
-    rowValues.forEach((valStr, idx) => {
-        if (idx === rowValues.length - 1) formattedTot = valStr === '-' ? '' : valStr;
-        else formattedVals.push(valStr === '-' ? '' : valStr);
-    });
-
-    currentBlock.rows.push({
-        name: rowMetric,
-        formattedValues: formattedVals,
-        formattedTotal: formattedTot,
-        isNumeric: true
+    rawRows.push({
+        client: lastClient,
+        route: lastRoute,
+        vessel: lastVessel,
+        metric: rowMetric,
+        values: rowValues
     });
 
     currentRow++;
 });
 
-// Paginación atómica
+// Formateo estricto: cero centavos en cifras monetarias
+const formatNumericCell = (valStr, metricName) => {
+    const rawClean = valStr.replace(/[\$,\s]/g, '');
+    const upperMetric = metricName.toUpperCase();
+    const isPercent = valStr.includes('%') || upperMetric.includes('%') || upperMetric.includes('MARGEN') || upperMetric.includes('YIELD');
+    const cleanNumStr = rawClean.replace('%', '');
+
+    if (valStr === '-' || valStr === '' || isNaN(Number(cleanNumStr)) || cleanNumStr === '') {
+        return '';
+    }
+
+    const parsedNum = parseFloat(cleanNumStr);
+    if (parsedNum === 0) return '';
+
+    if (isPercent) {
+        return (parsedNum > 1 ? parsedNum : parsedNum * 100).toFixed(1) + '%';
+    }
+    if (upperMetric.includes('VIAJE') || upperMetric.includes('FREQ')) {
+        return Number.isInteger(parsedNum) ? parsedNum.toLocaleString('en-US') : parsedNum.toFixed(1);
+    }
+    if (!upperMetric.includes('HIRE') && (upperMetric.includes('DÍA') || upperMetric.includes('DAYS') || upperMetric.includes('DURACIÓN'))) {
+        return Number.isInteger(parsedNum) ? String(parsedNum) : parsedNum.toFixed(1);
+    }
+    if (upperMetric.includes('TONELADA') || upperMetric.includes('TONS') || upperMetric.includes('MT') || upperMetric.includes('CARGA')) {
+        return Math.round(parsedNum).toLocaleString('en-US');
+    }
+    return '$' + Math.round(parsedNum).toLocaleString('en-US');
+};
+
+const blocks = [];
+let currentBlock = null;
+
+rawRows.forEach(r => {
+    const isNew = !currentBlock || r.client !== currentBlock.client || r.route !== currentBlock.route || r.vessel !== currentBlock.vessel;
+    if (isNew) {
+        currentBlock = {
+            client: r.client,
+            route: r.route,
+            vessel: r.vessel,
+            rows: []
+        };
+        blocks.push(currentBlock);
+    }
+    currentBlock.rows.push({
+        metric: r.metric,
+        values: r.values.map(v => formatNumericCell(v, r.metric))
+    });
+});
+
 const MAX_ROWS_PER_PAGE = 21;
 const pages = [];
 let activePage = { blocks: [], totalRows: 0 };
@@ -218,70 +233,96 @@ if (activePage.blocks.length > 0) pages.push(activePage);
 
 const totalPagesCount = pages.length;
 
-const pagesHtml = pages.map((p, pageIdx) => `
-<div class="report-page">
-    <table class="top-header-table">
-        <tr>
-            <td style="width: 25%; text-align: left;">
-                <div style="font-weight: 900; font-size: 14px; color: #0284c7;">GEEKSOFT FORECAST</div>
-            </td>
-            <td style="width: 50%; text-align: center;">
-                <div class="report-main-title">NAVIERA PETRAL S.A.</div>
-                <div class="report-sub-title">MATRIZ FINANCIERA • VOYAGE CALCULATOR & PROYECCIÓN COMERCIAL</div>
-            </td>
-            <td style="width: 25%; text-align: right;">
-                <div style="font-weight: 800; font-size: 11px; color: #0f4c81;">PETRAL S.A.</div>
-            </td>
-        </tr>
-    </table>
+const pagesHtml = pages.map((p, pageIdx) => {
+    const clientSpanMap = new Map();
+    const routeSpanMap = new Map();
 
-    <div class="scenario-badge-banner">
-        ESCENARIO: PB 2027 (Jose de los Heros) &bull; MONEDA: USD &bull; (Parte ${pageIdx + 1} de ${totalPagesCount})
-    </div>
+    p.blocks.forEach(b => {
+        const rowCount = b.rows.length;
+        const cKey = b.client;
+        const rKey = `${b.client}____${b.route}`;
+        clientSpanMap.set(cKey, (clientSpanMap.get(cKey) || 0) + rowCount);
+        routeSpanMap.set(rKey, (routeSpanMap.get(rKey) || 0) + rowCount);
+    });
 
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th class="th-dim" style="width: 22px;">CLI</th>
-                <th class="th-dim" style="width: 22px;">RUTA</th>
-                <th class="th-dim" style="width: 22px;">BUQ</th>
-                <th class="th-metric" style="width: 170px;">MÉTRICA</th>
-                ${safeHeaderCols.slice(4, -1).map(h => `<th class="th-month" style="width: 58px;">${h}</th>`).join('')}
-                <th class="th-total" style="width: 62px;">TOTAL ACUM</th>
+    const renderedClients = new Set();
+    const renderedRoutes = new Set();
+
+    const tbodyHtml = p.blocks.map(b => {
+        const cKey = b.client;
+        const rKey = `${b.client}____${b.route}`;
+        const clientSpan = clientSpanMap.get(cKey) || b.rows.length;
+        const routeSpan = routeSpanMap.get(rKey) || b.rows.length;
+        const vesselSpan = b.rows.length;
+
+        const isClientFirst = !renderedClients.has(cKey);
+        if (isClientFirst) renderedClients.add(cKey);
+
+        const isRouteFirst = !renderedRoutes.has(rKey);
+        if (isRouteFirst) renderedRoutes.add(rKey);
+
+        return b.rows.map((row, rIdx) => {
+            const isVesselFirst = rIdx === 0;
+            return `
+            <tr class="tr-data-row">
+                ${isClientFirst && rIdx === 0 ? `
+                    <td rowspan="${clientSpan}" class="td-dimension" style="background-color: #0369a1 !important; color: #fff !important;">
+                        <div class="pdf-vertical-text">${b.client}</div>
+                    </td>
+                ` : ''}
+                ${isRouteFirst && rIdx === 0 ? `
+                    <td rowspan="${routeSpan}" class="td-dimension" style="background-color: #a855f7 !important; color: #fff !important;">
+                        <div class="pdf-vertical-text">${b.route}</div>
+                    </td>
+                ` : ''}
+                ${isVesselFirst ? `
+                    <td rowspan="${vesselSpan}" class="td-dimension" style="background-color: #16a34a !important; color: #fff !important;">
+                        <div class="pdf-vertical-text">${b.vessel}</div>
+                    </td>
+                ` : ''}
+                <td class="td-metric-name">${row.metric}</td>
+                ${row.values.map((v, valIdx) => `<td class="${v ? 'td-num' : 'td-empty'} ${valIdx === row.values.length - 1 ? 'td-total-cell' : ''}">${v}</td>`).join('')}
             </tr>
-        </thead>
-        <tbody>
-            ${p.blocks.map(b => {
-                const rowCount = b.rows.length;
-                return b.rows.map((row, rIdx) => `
-                <tr class="tr-data-row">
-                    ${rIdx === 0 ? `
-                        <td rowspan="${rowCount}" class="td-dimension" style="background-color: ${b.clientColor.bg} !important; color: ${b.clientColor.fg} !important;">
-                            <div class="pdf-vertical-text">${b.clientName}</div>
-                        </td>
-                        <td rowspan="${rowCount}" class="td-dimension" style="background-color: ${b.routeColor.bg} !important; color: ${b.routeColor.fg} !important;">
-                            <div class="pdf-vertical-text">${b.routeName}</div>
-                        </td>
-                        <td rowspan="${rowCount}" class="td-dimension" style="background-color: ${b.vesselColor.bg} !important; color: ${b.vesselColor.fg} !important;">
-                            <div class="pdf-vertical-text">${b.vesselName}</div>
-                        </td>
-                    ` : ''}
-                    <td class="td-metric-name">${row.name}</td>
-                    ${row.formattedValues.map(v => `<td class="${v ? 'td-num' : 'td-empty'}">${v}</td>`).join('')}
-                    <td class="${row.formattedTotal ? 'td-num font-bold' : 'td-empty'}">${row.formattedTotal}</td>
-                </tr>
-                `).join('');
-            }).join('')}
-        </tbody>
-    </table>
+            `;
+        }).join('');
+    }).join('');
 
-    <div class="page-footer">
-        <div style="display: table-cell; text-align: left;">Petral Forecast Engine &copy; 2026</div>
-        <div style="display: table-cell; text-align: center;">Página ${pageIdx + 1} de ${totalPagesCount}</div>
-        <div style="display: table-cell; text-align: right;">Documento Oficial de Auditoría</div>
+    return `
+    <div class="report-page">
+        <table class="top-header-table">
+            <tr>
+                <td style="width: 25%; text-align: left;"><div style="font-weight: 700; font-size: 13px; color: #0284c7;">GEEKSOFT FORECAST</div></td>
+                <td style="width: 50%; text-align: center;">
+                    <div class="report-main-title">NAVIERA PETRAL S.A.</div>
+                    <div class="report-sub-title">MATRIZ FINANCIERA • VOYAGE CALCULATOR & PROYECCIÓN COMERCIAL</div>
+                </td>
+                <td style="width: 25%; text-align: right;"><div style="font-weight: 700; font-size: 11px; color: #0f4c81;">PETRAL S.A.</div></td>
+            </tr>
+        </table>
+        <div class="scenario-badge-banner">ESCENARIO: PB 2027 (Jose de los Heros) &bull; MONEDA: USD &bull; (Parte ${pageIdx + 1} de ${totalPagesCount})</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="th-dim" style="width: 22px;">CLI</th>
+                    <th class="th-dim" style="width: 22px;">RUT</th>
+                    <th class="th-dim" style="width: 22px;">BUQ</th>
+                    <th class="th-metric" style="width: 170px;">MÉTRICA</th>
+                    ${months.map(m => `<th class="th-month" style="width: 58px;">${m.toUpperCase()}</th>`).join('')}
+                    <th class="th-total" style="width: 62px;">TOTAL ACUM</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tbodyHtml}
+            </tbody>
+        </table>
+        <div class="page-footer">
+            <div style="display: table-cell; text-align: left;">Petral Forecast Engine © 2026</div>
+            <div style="display: table-cell; text-align: center;">Página ${pageIdx + 1} de ${totalPagesCount}</div>
+            <div style="display: table-cell; text-align: right;">Documento Oficial de Auditoría</div>
+        </div>
     </div>
-</div>
-`).join('');
+    `;
+}).join('');
 
 const fullHtml = `<!DOCTYPE html>
 <html lang="es">
@@ -289,169 +330,27 @@ const fullHtml = `<!DOCTYPE html>
     <meta charset="UTF-8">
     <title>NAVIERA PETRAL S.A. - Matriz Financiera</title>
     <style>
-        @page {
-            size: A4 landscape !important;
-            margin: 4mm 6mm !important;
-        }
-        * {
-            box-sizing: border-box;
-            font-family: 'Consolas', 'Courier New', 'Lucida Console', ui-monospace, monospace !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-        }
-        html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            background-color: #ffffff !important;
-            color: #0f172a;
-            font-size: 10px !important;
-            line-height: 1.15;
-        }
-        .report-page {
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            page-break-after: always;
-            page-break-inside: avoid;
-            box-sizing: border-box;
-        }
-        .report-page:last-child {
-            page-break-after: avoid;
-        }
-        .top-header-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 3px;
-        }
-        .top-header-table td {
-            border: none !important;
-            padding: 0 !important;
-            vertical-align: middle;
-        }
-        .report-main-title {
-            font-weight: 900;
-            font-size: 13px;
-            color: #0f172a;
-            margin: 0;
-            text-transform: uppercase;
-            text-align: center;
-            letter-spacing: 0.4px;
-            line-height: 1.1;
-        }
-        .report-sub-title {
-            font-size: 9.5px;
-            font-weight: 700;
-            color: #334155;
-            text-align: center;
-            margin-top: 1px;
-            letter-spacing: 0.2px;
-        }
-        .scenario-badge-banner {
-            background-color: #0f4c81;
-            color: #ffffff;
-            font-weight: 800;
-            font-size: 9.5px;
-            text-transform: uppercase;
-            padding: 2px 8px;
-            border-radius: 3px;
-            text-align: center;
-            margin: 2px auto 3px auto;
-            width: fit-content;
-            max-width: 95%;
-            letter-spacing: 0.2px;
-        }
-        table.data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 2px;
-            table-layout: fixed;
-            font-size: 10px !important;
-            line-height: 1.15;
-        }
-        table.data-table th {
-            background-color: #1e293b !important;
-            color: #ffffff !important;
-            font-weight: 800;
-            text-transform: uppercase;
-            font-size: 9px;
-            padding: 3px 2px;
-            border: 1px solid #334155;
-            text-align: center;
-            letter-spacing: 0.1px;
-        }
-        table.data-table th.th-total {
-            background-color: #0d9488 !important;
-            color: #ffffff !important;
-        }
-        table.data-table td {
-            border: 1px solid #cbd5e1;
-            padding: 2px 3px;
-            vertical-align: middle;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        td.td-dimension {
-            width: 22px !important;
-            max-width: 22px !important;
-            min-width: 22px !important;
-            text-align: center !important;
-            vertical-align: middle !important;
-            padding: 0 !important;
-        }
-        .pdf-vertical-text {
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
-            font-weight: 800;
-            font-size: 8.5px;
-            letter-spacing: 0.2px;
-            text-align: center;
-            margin: auto;
-            white-space: nowrap;
-            line-height: 1;
-        }
-        td.td-metric-name {
-            width: 170px !important;
-            min-width: 170px !important;
-            max-width: 170px !important;
-            text-align: left !important;
-            font-weight: 700;
-            color: #0f172a;
-            padding-left: 5px;
-            writing-mode: horizontal-tb !important;
-            transform: none !important;
-            white-space: nowrap !important;
-            font-size: 10px !important;
-        }
-        td.td-num {
-            width: 58px !important;
-            max-width: 58px !important;
-            text-align: right !important;
-            font-size: 10px !important;
-            font-weight: 600;
-            color: #1e293b;
-            padding-right: 3px;
-        }
-        td.td-empty {
-            width: 58px !important;
-            max-width: 58px !important;
-            text-align: center;
-            color: #cbd5e1;
-        }
-        tr.tr-data-row:nth-child(even) td:not(.td-dimension) {
-            background-color: #f8fafc;
-        }
-        .page-footer {
-            width: 100%;
-            margin-top: 3px;
-            border-top: 1px solid #cbd5e1;
-            padding-top: 2px;
-            font-size: 8px;
-            font-weight: 700;
-            color: #64748b;
-            display: table;
-            table-layout: fixed;
-        }
+        @page { size: A4 landscape !important; margin: 4mm 6mm !important; }
+        * { box-sizing: border-box; font-family: 'Consolas', 'Courier New', monospace !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        html, body { margin: 0 !important; padding: 0 !important; background-color: #ffffff !important; color: #0f172a; font-size: 10px !important; font-weight: normal !important; line-height: 1.15; }
+        .report-page { width: 100%; margin: 0; padding: 0; page-break-after: always; page-break-inside: avoid; box-sizing: border-box; }
+        .report-page:last-child { page-break-after: avoid; }
+        .top-header-table { width: 100%; border-collapse: collapse; margin-bottom: 3px; }
+        .top-header-table td { border: none !important; padding: 0 !important; vertical-align: middle; }
+        .report-main-title { font-weight: 700; font-size: 13px; color: #0f172a; margin: 0; text-transform: uppercase; text-align: center; }
+        .report-sub-title { font-size: 9.5px; font-weight: 600; color: #334155; text-align: center; margin-top: 1px; }
+        .scenario-badge-banner { background-color: #0f4c81; color: #ffffff; font-weight: 700; font-size: 9.5px; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; text-align: center; margin: 2px auto 3px auto; width: fit-content; }
+        table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 2px; table-layout: fixed; font-size: 10px !important; font-weight: normal !important; line-height: 1.15; }
+        table.data-table th { background-color: #1e293b !important; color: #ffffff !important; font-weight: 700; text-transform: uppercase; font-size: 9px; padding: 3px 2px; border: 1px solid #334155; text-align: center; }
+        table.data-table th.th-total { background-color: #0d9488 !important; color: #ffffff !important; }
+        table.data-table td { border: 1px solid #cbd5e1; padding: 2px 3px; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: normal !important; }
+        td.td-dimension { width: 22px !important; max-width: 22px !important; min-width: 22px !important; text-align: center !important; vertical-align: middle !important; padding: 0 !important; }
+        .pdf-vertical-text { writing-mode: vertical-rl; text-orientation: mixed; font-weight: 600; font-size: 8.5px; letter-spacing: 0.3px; text-align: center; margin: auto; white-space: nowrap; line-height: 1; }
+        td.td-metric-name { width: 170px !important; min-width: 170px !important; max-width: 170px !important; text-align: left !important; font-weight: normal !important; color: #0f172a; padding-left: 5px; writing-mode: horizontal-tb !important; transform: none !important; white-space: nowrap !important; font-size: 10px !important; }
+        td.td-num { width: 58px !important; max-width: 58px !important; text-align: right !important; font-size: 10px !important; font-weight: normal !important; color: #1e293b; padding-right: 3px; }
+        td.td-empty { width: 58px !important; max-width: 58px !important; text-align: center; color: #cbd5e1; }
+        td.td-total-cell { font-weight: 600 !important; }
+        .page-footer { width: 100%; margin-top: 3px; border-top: 1px solid #cbd5e1; padding-top: 2px; font-size: 8px; font-weight: 600; color: #64748b; display: table; table-layout: fixed; }
     </style>
 </head>
 <body>
@@ -460,4 +359,4 @@ const fullHtml = `<!DOCTYPE html>
 </html>`;
 
 fs.writeFileSync('./scratch_atomic_full.html', fullHtml, 'utf-8');
-console.log(`✅ Generadas ${totalPagesCount} páginas A4 Landscape independientes con bloques atómicos indivisibles.`);
+console.log(`✅ Paginación y combinación jerárquica generada con éxito (${totalPagesCount} páginas A4 Landscape).`);
