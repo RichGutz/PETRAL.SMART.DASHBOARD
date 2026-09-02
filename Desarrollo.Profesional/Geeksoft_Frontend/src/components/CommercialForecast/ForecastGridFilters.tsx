@@ -3,8 +3,7 @@ import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 import { Download, FileText, RotateCcw, Filter, UserCheck, Navigation, Anchor, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { exportFinancialMatrixExcel } from '../../services/exportFinancialMatrixExcel';
-import logoPetral from '../../assets/Logo.Petral.png';
-import logoGeeksoft from '../../assets/Logo.Geeksoft.png';
+import { exportFinancialMatrixPdf } from '../../services/exportFinancialMatrixPdf';
 
 export const ForecastGridFilters: React.FC = () => {
     const { 
@@ -116,168 +115,13 @@ export const ForecastGridFilters: React.FC = () => {
         }
     };
 
-    const handlePrintPDF = (orientation: 'portrait' | 'landscape') => {
-        const table = document.getElementById('forecast-grid-table');
-        if (!table) return alert('No se encontró la tabla para imprimir.');
-
-        const clone = table.cloneNode(true) as HTMLTableElement;
-        
-        const inputs = clone.querySelectorAll('input');
-        inputs.forEach(input => {
-            const val = input.value;
-            const parent = input.parentElement;
-            if (parent) parent.textContent = val;
-        });
-
-        const buttons = clone.querySelectorAll('button');
-        buttons.forEach(btn => {
-            const val = btn.textContent || '';
-            const span = document.createElement('span');
-            span.textContent = val;
-            btn.parentNode?.replaceChild(span, btn);
-        });
-
-        const visibleMonthsCount = months.filter(m => !hiddenMonths.includes(m)).length;
-        const trs = clone.querySelectorAll('tr');
-        trs.forEach(tr => {
-            const ths = tr.querySelectorAll('th');
-            if (ths.length > 0) {
-                if (ths.length >= 4) {
-                    ths[0].classList.add('col-header-client');
-                    ths[1].classList.add('col-header-route');
-                    ths[2].classList.add('col-header-vessel');
-                    ths[3].classList.add('col-header-metric');
-                }
-                if (ths.length >= 1) {
-                    ths[ths.length - 1].classList.add('col-header-total');
-                }
-                for (let j = 1; j <= visibleMonthsCount; j++) {
-                    const idx = ths.length - 1 - j;
-                    if (idx >= 0) {
-                        ths[idx].classList.add('col-header-month');
-                    }
-                }
-            }
-
-            const tds = tr.querySelectorAll('td');
-            if (tds.length === 0) return;
-            
-            tds[tds.length - 1].classList.add('col-total');
-            
-            for (let j = 1; j <= visibleMonthsCount; j++) {
-                const idx = tds.length - 1 - j;
-                if (idx >= 0) {
-                    tds[idx].classList.add('col-month');
-                }
-            }
-            
-            const metricIdx = tds.length - visibleMonthsCount - 2;
-            if (metricIdx >= 0) {
-                tds[metricIdx].classList.add('col-metric');
-            }
-            
-            for (let idx = 0; idx < metricIdx; idx++) {
-                tds[idx].classList.add('col-nav-cell');
-            }
-        });
-
-        const getAbsoluteUrl = (path: string) => {
-            if (!path) return '';
-            if (path.startsWith('http://') || path.startsWith('https://')) {
-                return path;
-            }
-            const cleanPath = path.startsWith('/') ? path : '/' + path;
-            return window.location.origin + cleanPath;
-        };
-        const absolutePetralLogo = getAbsoluteUrl(logoPetral);
-        const absoluteGeeksoftLogo = getAbsoluteUrl(logoGeeksoft);
-
-        const html = `
-            <html>
-            <head>
-                <title>Matriz Comercial - PDF</title>
-                <style>
-                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; font-size: 9px; }
-                    .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #0f172a; padding-bottom: 10px; }
-                    .title { font-size: 18px; font-weight: bold; color: #0f172a; }
-                    .subtitle { font-size: 10px; color: #475569; margin-top: 4px; }
-                    .logo-img { height: 35px; object-fit: contain; }
-                    
-                    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 7px; table-layout: fixed; }
-                    th, td { border: 1px solid #cbd5e1; padding: 3px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-                    th { background-color: #1e293b; color: white; text-transform: uppercase; font-size: 7px; text-align: center; }
-                    .text-left { text-align: left; }
-                    .text-center { text-align: center; }
-                    .font-bold { font-weight: bold; }
-                    
-                    .vertical-text {
-                        writing-mode: vertical-rl;
-                        transform: rotate(180deg);
-                        font-weight: bold;
-                        white-space: nowrap;
-                        margin: auto;
-                        font-size: 7px;
-                        line-height: 1;
-                        padding: 4px 0;
-                    }
-                    
-                    td[class*="border-t-2"], td[class*="border-b-2"] { border-top: 2px solid #334155 !important; border-bottom: 2px solid #334155 !important; }
-                    .bg-slate-100 { background-color: #f1f5f9 !important; }
-                    .bg-slate-50 { background-color: #f8fafc !important; }
-                    .bg-blue-50 { background-color: #eff6ff !important; }
-                    .bg-amber-50 { background-color: #fffbeb !important; }
-                    .bg-emerald-50 { background-color: #ecfdf5 !important; }
-                    .bg-slate-800 { background-color: #1e293b !important; color: white !important; }
-                    .text-slate-900 { color: #0f172a !important; }
-                    
-                    /* Anchos fijos por tipo de columna */
-                    .col-header-client, .col-header-route, .col-header-vessel { width: 35px !important; max-width: 35px !important; }
-                    .col-header-metric { width: 120px !important; min-width: 120px !important; }
-                    .col-header-month { width: auto !important; }
-                    .col-header-total { width: 65px !important; min-width: 65px !important; }
-                    
-                    .col-nav-cell { width: 35px !important; max-width: 35px !important; }
-                    .col-metric { width: 120px !important; min-width: 120px !important; }
-                    .col-month { width: auto !important; }
-                    .col-total { width: 65px !important; min-width: 65px !important; }
-                    
-                    @media print {
-                        @page { size: ${orientation}; margin: 10mm; }
-                        body { padding: 0; }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="header-container">
-                    <div>
-                        <div class="title">NAVIERA PETRAL S.A.</div>
-                        <div class="subtitle">MATRIZ COMERCIAL DE ESTIMACIONES Y PROYECCIÓN FINANCIERA</div>
-                    </div>
-                    <div>
-                        <img src="${absolutePetralLogo}" class="logo-img" alt="Logo Petral" />
-                    </div>
-                </div>
-                ${clone.outerHTML}
-                <div style="margin-top: 20px; font-size: 8px; color: #64748b; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 8px;">
-                    Reporte generado automáticamente por Geeksoft Forecast Platform &bull; PETRAL S.A.
-                </div>
-                <script>
-                    window.onload = function() {
-                        window.print();
-                        setTimeout(function() { window.close(); }, 500);
-                    };
-                </script>
-            </body>
-            </html>
-        `;
-
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-            printWindow.document.open();
-            printWindow.document.write(html);
-            printWindow.document.close();
-        } else {
-            alert('Por favor, permite las ventanas emergentes para poder imprimir el PDF.');
+    const handlePrintPDF = async (orientation: 'portrait' | 'landscape') => {
+        try {
+            const scenarioName = data?.name || data?.scenario_name || 'Escenario Base 2027';
+            await exportFinancialMatrixPdf('forecast-grid-table', orientation, scenarioName);
+        } catch (err: any) {
+            console.error('Error generando PDF de la Matriz Financiera:', err);
+            alert(`Error al generar PDF: ${err?.message || err}`);
         }
     };
 

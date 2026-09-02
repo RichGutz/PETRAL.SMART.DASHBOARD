@@ -442,3 +442,5 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-09-02 09:58] Creado branch y tag PRE.PFDs.IZ.2.9.26. Rama actual: main.
 [2026-09-02 10:10] Fix formato monetario en fila Hire ($#,##0) verificado con QC multi-escenario.
 [2026-09-02 10:15] Despliegue exitoso al VPS https://forecast.geeksoft.tech.
+[2026-09-02 10:16] Guía maestra del Método Benoit Blanc creada en Obsidian (38_Metodo_Benoit_Blanc_LEG.CLON.DIFF.QC.md).
+[2026-09-02 10:28] Generador de PDF de Matriz Financiera homologado con el Excel y documentado bajo protocolo Benoit Blanc.
