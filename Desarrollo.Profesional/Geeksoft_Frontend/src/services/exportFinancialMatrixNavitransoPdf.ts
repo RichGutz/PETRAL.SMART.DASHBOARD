@@ -1,11 +1,8 @@
 /**
  * SERVICIO DEDICADO DE EXPORTACIÓN A PDF PARA MATRIZ NAVITRANSO (100% AISLADO)
  * 
- * Genera el documento PDF A4 Horizontal para la estructura contable NAVITRANSO:
- * - 4 Bloques Contables (Ingresos de Operación, Costos Directos de Viaje, TCE y Margen Bruto).
- * - Agrupación atómica por nodo (Cliente / Ruta / Buque).
- * - Paginación inteligente y micro-anchos calibrados con motor WeasyPrint.
- * - Cero interferencia con la Matriz PETRAL.
+ * Basado en la arquitectura de matriz 2D ocupada para resolución perfecta de rowSpan/colSpan,
+ * formateo de 12 meses A4 Landscape, rotación SVG y paginación atómica sin desbordes.
  */
 
 import { LOGO_PETRAL_BASE64, LOGO_GEEKSOFT_BASE64 } from '../assets/logosBase64';
@@ -48,7 +45,7 @@ function getNavitransoDimensionColor(className: string, text: string): { bg: str
     if (upper.includes('HUEMUL')) return { bg: '#4f46e5', fg: '#ffffff' };
     if (upper.includes('TOTAL ACUMULADO')) return { bg: '#0d9488', fg: '#ffffff' };
     if (upper.includes('TOTAL FLOTA') || upper.includes('TOTAL GENERAL')) return { bg: '#1e293b', fg: '#ffffff' };
-    if (upper.includes('SUBTOTAL') || upper.includes('TOTAL CLIENT')) return { bg: '#1e293b', fg: '#fbbf24' };
+    if (upper.includes('SUBTOTAL') || upper.includes('TOTAL CLIENT') || upper.includes('TOTAL ')) return { bg: '#1e293b', fg: '#fbbf24' };
     return null;
 }
 
@@ -62,7 +59,21 @@ function createVerticalSvg(text: string, rowSpan: number, fill: string = '#fffff
     `;
 }
 
-interface NavitransoAtomicBlock {
+interface RawNavRow {
+    client: string;
+    route: string;
+    vessel: string;
+    clientCls: string;
+    routeCls: string;
+    vesselCls: string;
+    metric: string;
+    values: string[];
+    isSubtotal: boolean;
+    isFleet: boolean;
+    isAccum: boolean;
+}
+
+interface NavAtomicBlock {
     client: string;
     route: string;
     vessel: string;
@@ -85,7 +96,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         throw new Error('No se encontró la tabla de Matriz Financiera NAVITRANSO en el DOM.');
     }
 
-    // 1. Extraer Cabeceras
+    // 1. Extraer Columnas del THEAD y formatear nombres de meses
     const headerCols: string[] = [];
     const thead = table.querySelector('thead');
     if (thead) {
@@ -94,15 +105,33 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             const span = th.querySelector('span');
             let clean = (span && span.textContent ? span.textContent : th.textContent || '').trim().toUpperCase();
             clean = clean.replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ');
+
+            // Formatear meses "2027-01" -> "ENE 27"
+            if (/^\d{4}-\d{2}$/.test(clean)) {
+                const [year, month] = clean.split('-');
+                const monthNames = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SET', 'OCT', 'NOV', 'DIC'];
+                const mIdx = parseInt(month, 10) - 1;
+                clean = `${monthNames[mIdx]} ${year.slice(2)}`;
+            }
             headerCols.push(clean);
         });
     }
 
     const monthCols = headerCols.slice(4);
 
-    // 2. Extraer Filas y Agrupar en Bloques Atómicos
-    const atomicBlocks: NavitransoAtomicBlock[] = [];
-    let currentBlock: NavitransoAtomicBlock | null = null;
+    // 2. Matriz de Ocupación 2D para Extracción Celda por Celda Robusta
+    const occupied: boolean[][] = [];
+    const setOccupied = (r: number, c: number, rSpan: number, cSpan: number) => {
+        for (let row = r; row < r + rSpan; row++) {
+            if (!occupied[row]) occupied[row] = [];
+            for (let col = c; col < c + cSpan; col++) {
+                occupied[row][col] = true;
+            }
+        }
+    };
+    const isOccupied = (r: number, c: number) => !!(occupied[r] && occupied[r][c]);
+
+    let currentRow = 1;
     let lastClient = '';
     let lastRoute = '';
     let lastVessel = '';
@@ -110,109 +139,155 @@ export function generateFinancialMatrixNavitransoPdfHtml(
     let lastRouteCls = '';
     let lastVesselCls = '';
 
+    const rawRows: RawNavRow[] = [];
+
     const tbody = table.querySelector('tbody');
     if (tbody) {
         const trs = tbody.querySelectorAll('tr');
         trs.forEach(tr => {
+            let currentCol = 1;
             const tds = tr.querySelectorAll('td');
-            const trClass = tr.className || '';
-            const rowText = tr.textContent || '';
 
-            const isFleet = rowText.includes('TOTAL FLOTA') || trClass.includes('TOTAL FLOTA');
-            const isAccum = rowText.includes('TOTAL ACUMULADO') || trClass.includes('TOTAL ACUMULADO');
-            const isSubtotal = rowText.includes('SUBTOTAL') || trClass.includes('subtotal') || isFleet || isAccum;
+            let rowClient = '';
+            let rowRoute = '';
+            let rowVessel = '';
+            let rowMetric = '';
+            let clientCls = '';
+            let routeCls = '';
+            let vesselCls = '';
+            const rowValues: string[] = [];
 
-            let metricName = '';
-            const vals: string[] = [];
+            tds.forEach(td => {
+                while (isOccupied(currentRow, currentCol)) {
+                    currentCol++;
+                }
 
-            if (tds.length >= 4 + monthCols.length) {
-                // Fila inicial de un nodo
-                const cText = (tds[0]?.querySelector('.vertical-text')?.textContent || tds[0]?.textContent || '').trim();
-                const rText = (tds[1]?.querySelector('.vertical-text')?.textContent || tds[1]?.textContent || '').trim();
-                
-                let vText = '';
-                const vSel = tds[2]?.querySelector('select');
-                if (vSel && (vSel as HTMLSelectElement).value) {
-                    vText = (vSel as HTMLSelectElement).value;
+                const rSpan = parseInt(td.getAttribute('rowspan') || '1', 10);
+                const cSpan = parseInt(td.getAttribute('colspan') || '1', 10);
+                const tdClass = td.className || '';
+
+                let textValue = '';
+                const selectEl = td.querySelector('select');
+                const inputEl = td.querySelector('input');
+                const vertDiv = td.querySelector('.vertical-text');
+                const btnEl = td.querySelector('button');
+
+                if (selectEl) {
+                    textValue = selectEl.value || (vertDiv ? vertDiv.textContent?.trim() : '') || '';
+                } else if (inputEl) {
+                    textValue = inputEl.value;
+                } else if (vertDiv) {
+                    textValue = vertDiv.textContent?.trim() || '';
+                } else if (btnEl) {
+                    const btnClone = btnEl.cloneNode(true) as HTMLElement;
+                    btnClone.querySelectorAll('svg, select, input').forEach(el => el.remove());
+                    textValue = btnClone.textContent?.trim() || '';
                 } else {
-                    vText = (tds[2]?.querySelector('.vertical-text')?.textContent || tds[2]?.textContent || '').trim();
+                    const cellClone = td.cloneNode(true) as HTMLElement;
+                    cellClone.querySelectorAll('svg, select, input').forEach(el => el.remove());
+                    textValue = cellClone.textContent?.trim() || '';
                 }
 
-                lastClient = cText || lastClient;
-                lastRoute = rText || lastRoute;
-                lastVessel = vText || lastVessel;
+                if (currentCol === 1 && textValue) { rowClient = textValue; clientCls = tdClass; }
+                else if (currentCol === 2 && textValue) { rowRoute = textValue; routeCls = tdClass; }
+                else if (currentCol === 3 && textValue) { rowVessel = textValue; vesselCls = tdClass; }
+                else if (currentCol === 4) { rowMetric = textValue; }
+                else if (currentCol >= 5) { rowValues.push(textValue); }
 
-                lastClientCls = tds[0]?.className || '';
-                lastRouteCls = tds[1]?.className || '';
-                lastVesselCls = tds[2]?.className || '';
+                setOccupied(currentRow, currentCol, rSpan, cSpan);
+                currentCol += cSpan;
+            });
 
-                const extractCleanCell = (cellEl: Element) => {
-                    const input = cellEl.querySelector('input');
-                    if (input) return (input as HTMLInputElement).value || '';
-                    return (cellEl.textContent || '').trim();
-                };
+            if (rowClient) { lastClient = rowClient; lastClientCls = clientCls; }
+            if (rowRoute) { lastRoute = rowRoute; lastRouteCls = routeCls; }
+            if (rowVessel) { lastVessel = rowVessel; lastVesselCls = vesselCls; }
 
-                metricName = (tds[3]?.textContent || '').trim();
-                for (let i = 4; i < tds.length; i++) {
-                    vals.push(extractCleanCell(tds[i]));
-                }
+            const isSub = lastRoute.toUpperCase().includes('SUBTOTAL') || lastVessel.toUpperCase().includes('TOTAL ') || lastClient.toUpperCase().includes('SUBTOTAL');
+            const isFleet = lastClient.toUpperCase().includes('TOTAL FLOTA');
+            const isAccum = lastClient.toUpperCase().includes('TOTAL ACUMULADO');
 
-                if (currentBlock) {
-                    atomicBlocks.push(currentBlock);
-                }
+            rawRows.push({
+                client: lastClient,
+                route: lastRoute,
+                vessel: lastVessel,
+                clientCls: lastClientCls,
+                routeCls: lastRouteCls,
+                vesselCls: lastVesselCls,
+                metric: rowMetric,
+                values: rowValues,
+                isSubtotal: isSub,
+                isFleet,
+                isAccum
+            });
 
-                currentBlock = {
-                    client: lastClient,
-                    route: lastRoute,
-                    vessel: lastVessel,
-                    clientCls: lastClientCls,
-                    routeCls: lastRouteCls,
-                    vesselCls: lastVesselCls,
-                    isSubtotal,
-                    isFleet,
-                    isAccum,
-                    rows: [{ metric: metricName, values: vals }]
-                };
-            } else if (tds.length > 0) {
-                // Fila subsiguiente dentro del mismo nodo
-                const extractCleanCell = (cellEl: Element) => {
-                    const input = cellEl.querySelector('input');
-                    if (input) return (input as HTMLInputElement).value || '';
-                    return (cellEl.textContent || '').trim();
-                };
-
-                metricName = (tds[0]?.textContent || '').trim();
-                for (let i = 1; i < tds.length; i++) {
-                    vals.push(extractCleanCell(tds[i]));
-                }
-
-                if (!currentBlock) {
-                    currentBlock = {
-                        client: lastClient,
-                        route: lastRoute,
-                        vessel: lastVessel,
-                        clientCls: lastClientCls,
-                        routeCls: lastRouteCls,
-                        vesselCls: lastVesselCls,
-                        isSubtotal,
-                        isFleet,
-                        isAccum,
-                        rows: []
-                    };
-                }
-                currentBlock.rows.push({ metric: metricName, values: vals });
-            }
+            currentRow++;
         });
-
-        if (currentBlock) {
-            atomicBlocks.push(currentBlock);
-        }
     }
 
-    // 3. Paginación Atómica
-    const MAX_ROWS_PER_PAGE = 36;
-    const pages: NavitransoAtomicBlock[][] = [];
-    let currentPage: NavitransoAtomicBlock[] = [];
+    // 3. Formateador Numérico Estricto
+    const formatNumericCell = (valStr: string, metricName: string): string => {
+        if (!valStr || valStr === '-' || valStr.trim() === '') return '-';
+        const rawClean = valStr.replace(/[\$,\s]/g, '');
+        const upperMetric = metricName.toUpperCase();
+        const isPercent = valStr.includes('%') || upperMetric.includes('%') || upperMetric.includes('MARGEN') && upperMetric.includes('%');
+        const cleanNumStr = rawClean.replace('%', '');
+
+        if (isNaN(Number(cleanNumStr)) || cleanNumStr === '') return valStr;
+
+        const parsedNum = parseFloat(cleanNumStr);
+        if (parsedNum === 0) return '-';
+
+        if (isPercent) {
+            return (parsedNum > 1 ? parsedNum : parsedNum * 100).toFixed(1) + '%';
+        }
+        if (upperMetric.includes('VIAJE') || upperMetric.includes('FREQ')) {
+            return Number.isInteger(parsedNum) ? parsedNum.toLocaleString('en-US') : parsedNum.toFixed(1);
+        }
+        if (upperMetric.includes('BASE FLETE') || upperMetric.includes('TONELADA') || upperMetric.includes('TONS') || upperMetric.includes('CARGA')) {
+            return Math.round(parsedNum).toLocaleString('en-US');
+        }
+        if (parsedNum < 0) {
+            return '-$' + Math.round(Math.abs(parsedNum)).toLocaleString('en-US');
+        }
+        return '$' + Math.round(parsedNum).toLocaleString('en-US');
+    };
+
+    // 4. Agrupación en Bloques Atómicos
+    const atomicBlocks: NavAtomicBlock[] = [];
+    let currentBlock: NavAtomicBlock | null = null;
+    let blockKey = '';
+
+    rawRows.forEach(r => {
+        const key = `${r.client}|${r.route}|${r.vessel}|${r.isSubtotal}|${r.isFleet}|${r.isAccum}`;
+        if (key !== blockKey) {
+            if (currentBlock) atomicBlocks.push(currentBlock);
+            blockKey = key;
+            currentBlock = {
+                client: r.client,
+                route: r.route,
+                vessel: r.vessel,
+                clientCls: r.clientCls,
+                routeCls: r.routeCls,
+                vesselCls: r.vesselCls,
+                isSubtotal: r.isSubtotal,
+                isFleet: r.isFleet,
+                isAccum: r.isAccum,
+                rows: []
+            };
+        }
+        if (currentBlock) {
+            currentBlock.rows.push({
+                metric: r.metric,
+                values: r.values.map(v => formatNumericCell(v, r.metric))
+            });
+        }
+    });
+    if (currentBlock) atomicBlocks.push(currentBlock);
+
+    // 5. Paginación Atómica Cuidadosa (Máx 24 filas por página A4 Horizontal)
+    const MAX_ROWS_PER_PAGE = 24;
+    const pages: NavAtomicBlock[][] = [];
+    let currentPage: NavAtomicBlock[] = [];
     let currentCount = 0;
 
     atomicBlocks.forEach(b => {
@@ -226,14 +301,11 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             currentCount += bRows;
         }
     });
-
-    if (currentPage.length > 0) {
-        pages.push(currentPage);
-    }
+    if (currentPage.length > 0) pages.push(currentPage);
 
     const totalPages = pages.length;
 
-    // 4. Construir HTML Paginado
+    // 6. Construir HTML Paginado
     const pagesHtml = pages.map((pageBlocks, pageIdx) => {
         let tbodyHtml = '';
 
@@ -247,29 +319,36 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                 const isFirstRow = rIdx === 0;
                 const isMargenBruto = r.metric.toUpperCase().includes('MARGEN BRUTO');
                 const isHeaderBlock = r.metric.toUpperCase().includes('INGRESOS DE OPERACIÓN') || 
+                                      r.metric.toUpperCase().includes('VENTAS') ||
                                       r.metric.toUpperCase().includes('COSTOS DIRECTOS') || 
                                       r.metric.toUpperCase().includes('TIME CHARTER EQUIVALENT');
                 const isSubRow = r.metric.includes('↳') || r.metric.startsWith('  ');
 
                 let rowStyle = 'height: 18px;';
-                if (isMargenBruto) rowStyle += ' background-color: #eef2ff; font-weight: bold; color: #312e81;';
-                else if (isHeaderBlock) rowStyle += ' background-color: #f8fafc; font-weight: bold; color: #0f172a;';
+                if (isMargenBruto) rowStyle += ' background-color: #eef2ff; font-weight: 700; color: #312e81;';
+                else if (isHeaderBlock) rowStyle += ' background-color: #f8fafc; font-weight: 700; color: #0f172a;';
                 else if (b.isAccum) rowStyle += ' background-color: #f0fdfa; font-weight: 600;';
-                else if (b.isFleet) rowStyle += ' background-color: #f8fafc; font-weight: 600;';
-                else if (b.isSubtotal) rowStyle += ' background-color: #f1f5f9; font-weight: 600;';
+                else if (b.isFleet) rowStyle += ' background-color: #f1f5f9; font-weight: 600;';
+                else if (b.isSubtotal) rowStyle += ' background-color: #fffbeb; font-weight: 600;';
 
                 let dimCellsHtml = '';
                 if (isFirstRow) {
                     if (b.isFleet) {
                         dimCellsHtml = `
                         <td rowspan="${blockRowCount}" class="dim-cell" style="background-color: #1e293b; color: #ffffff; width: 72px;" colspan="3">
-                            <div class="horizontal-text" style="color: #ffffff; font-weight: 900; font-size: 8.5px; text-align: center;">TOTAL FLOTA</div>
+                            <div style="color: #ffffff; font-weight: 900; font-size: 8.5px; text-align: center;">TOTAL FLOTA</div>
                         </td>
                         `;
                     } else if (b.isAccum) {
                         dimCellsHtml = `
                         <td rowspan="${blockRowCount}" class="dim-cell" style="background-color: #0d9488; color: #ffffff; width: 72px;" colspan="3">
-                            <div class="horizontal-text" style="color: #ffffff; font-weight: 900; font-size: 8.5px; text-align: center;">TOTAL ACUMULADO</div>
+                            <div style="color: #ffffff; font-weight: 900; font-size: 8.5px; text-align: center;">TOTAL ACUMULADO</div>
+                        </td>
+                        `;
+                    } else if (b.isSubtotal) {
+                        dimCellsHtml = `
+                        <td rowspan="${blockRowCount}" class="dim-cell" style="background-color: #1e293b; color: #fbbf24; width: 72px;" colspan="3">
+                            <div style="color: #fbbf24; font-weight: 900; font-size: 8.5px; text-align: center;">Σ SUBTOTAL ${b.client}</div>
                         </td>
                         `;
                     } else {
@@ -287,13 +366,13 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                     }
                 }
 
-                const metricIndent = isSubRow ? 'padding-left: 10px; color: #475569; font-size: 7.5px;' : 'font-size: 8px; font-weight: 600;';
-                const metricCellHtml = `<td class="metric-cell" style="${metricIndent} width: 140px; text-align: left;">${r.metric}</td>`;
+                const metricIndent = isSubRow ? 'padding-left: 12px; color: #475569; font-size: 7.5px;' : 'font-size: 8px; font-weight: 600; padding-left: 4px;';
+                const metricCellHtml = `<td class="metric-cell" style="${metricIndent} width: 135px; text-align: left;">${r.metric}</td>`;
 
                 const valCellsHtml = r.values.map((v, valIdx) => {
                     const isTotalCol = valIdx === r.values.length - 1;
-                    const totalStyle = isTotalCol ? 'background-color: #e0f2fe; font-weight: bold; color: #0369a1;' : '';
-                    return `<td class="val-cell" style="${totalStyle} text-align: right; width: ${isTotalCol ? '64px' : '56px'};">${v || '-'}</td>`;
+                    const totalStyle = isTotalCol ? 'background-color: #e0f2fe; font-weight: 700; color: #0369a1;' : '';
+                    return `<td class="val-cell" style="${totalStyle} text-align: right; width: ${isTotalCol ? '64px' : '56px'}; padding-right: 3px;">${v}</td>`;
                 }).join('');
 
                 tbodyHtml += `
@@ -307,44 +386,44 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         });
 
         const headerColsHtml = `
-        <tr style="background-color: #0f172a; color: #ffffff; height: 22px; font-size: 8px; font-weight: bold;">
+        <tr style="background-color: #1e293b; color: #ffffff; height: 22px; font-size: 8px; font-weight: bold;">
             <th style="width: 24px; text-align: center; border: 1px solid #334155;">CLI</th>
             <th style="width: 24px; text-align: center; border: 1px solid #334155;">RUT</th>
             <th style="width: 24px; text-align: center; border: 1px solid #334155;">BUQ</th>
-            <th style="width: 140px; text-align: left; padding-left: 6px; border: 1px solid #334155;">MÉTRICA NAVITRANSO</th>
+            <th style="width: 135px; text-align: left; padding-left: 6px; border: 1px solid #334155;">MÉTRICA NAVITRANSO</th>
             ${monthCols.map((m, mIdx) => {
                 const isTotal = mIdx === monthCols.length - 1;
-                const bg = isTotal ? '#0d9488' : '#0f172a';
+                const bg = isTotal ? '#0d9488' : '#1e293b';
                 return `<th style="width: ${isTotal ? '64px' : '56px'}; text-align: center; background-color: ${bg}; border: 1px solid #334155;">${m}</th>`;
             }).join('')}
         </tr>
         `;
 
         return `
-        <div class="page" style="page-break-after: ${pageIdx === totalPages - 1 ? 'auto' : 'always'};">
+        <div class="report-page">
             <div class="page-header">
-                <table style="width: 100%; border-collapse: collapse;">
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 2px;">
                     <tr>
                         <td style="width: 20%; text-align: left; vertical-align: middle;">
-                            <img src="${LOGO_PETRAL_BASE64}" style="height: 24px; width: auto; object-fit: contain;" alt="Petral Logo" />
+                            <img src="${LOGO_PETRAL_BASE64}" style="height: 20px; width: auto; object-fit: contain;" alt="Petral Logo" />
                         </td>
                         <td style="width: 60%; text-align: center; vertical-align: middle;">
-                            <div style="font-size: 13px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <div style="font-size: 12px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.4px;">
                                 MATRIZ FINANCIERA — FORMATO NAVITRANSO
                             </div>
-                            <div style="font-size: 9px; font-weight: 600; color: #0284c7; margin-top: 1px;">
+                            <div style="font-size: 8.5px; font-weight: 600; color: #0284c7; margin-top: 1px;">
                                 ${scenarioName}
                             </div>
                         </td>
                         <td style="width: 20%; text-align: right; vertical-align: middle;">
-                            <img src="${LOGO_GEEKSOFT_BASE64}" style="height: 20px; width: auto; object-fit: contain;" alt="Geeksoft Logo" />
+                            <img src="${LOGO_GEEKSOFT_BASE64}" style="height: 18px; width: auto; object-fit: contain;" alt="Geeksoft Logo" />
                         </td>
                     </tr>
                 </table>
             </div>
 
-            <div class="table-wrapper" style="margin-top: 5px;">
-                <table class="matrix-table" style="width: 100%; border-collapse: collapse;">
+            <div class="table-wrapper">
+                <table class="matrix-table" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
                     <thead>
                         ${headerColsHtml}
                     </thead>
@@ -378,35 +457,41 @@ export function generateFinancialMatrixNavitransoPdfHtml(
     <style>
         @page {
             size: A4 landscape;
-            margin: 6mm 6mm 6mm 6mm;
+            margin: 8mm 6mm 8mm 6mm;
         }
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            font-family: 'Consolas', 'Courier New', ui-monospace, monospace !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            color: #1e293b;
-            background-color: #ffffff;
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background-color: #ffffff !important;
+            color: #0f172a;
             font-size: 8px;
+            line-height: 1.15;
         }
-        .page {
+        .report-page {
             width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            page-break-after: always;
+            page-break-inside: avoid;
+            box-sizing: border-box;
+        }
+        .report-page:last-child {
+            page-break-after: avoid;
         }
         .matrix-table {
             border: 1px solid #cbd5e1;
             table-layout: fixed;
+            width: 100%;
         }
         .matrix-table th, .matrix-table td {
-            border: 1px solid #e2e8f0;
-            padding: 1px 3px;
+            border: 1px solid #cbd5e1;
+            padding: 1px 2px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -424,10 +509,10 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         }
         .page-footer {
             width: 100%;
-            margin-top: 3px;
+            margin-top: 4px;
             border-top: 1px solid #cbd5e1;
             padding-top: 2px;
-            font-size: 8px;
+            font-size: 7.5px;
             font-weight: 600;
             color: #64748b;
             display: table;
