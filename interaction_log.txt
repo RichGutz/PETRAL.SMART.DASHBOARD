@@ -470,3 +470,4 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-09-02 15:20] Tag y Branch MULTICOTIZADOR.PDF.DECIMALES.2.9.26 creados exitosamente.
 [2026-09-02 15:27] Ronda 11 PDF Matriz Financiera validada con QC inspector PyMuPDF (4 paginas densas de anchos calibrados).
 [2026-09-02 15:31] Despliegue exitoso de Ronda 11 PDF Matriz Financiera al VPS https://forecast.geeksoft.tech.
+[2026-09-02 15:52] Caso Edicion de Flete en Caliente validado con test_tariff_override_qc.py y npx vite build.

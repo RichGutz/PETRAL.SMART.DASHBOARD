@@ -467,10 +467,47 @@ Se ejecutó el inspector automatizado [`qc_pdf_inspector.py`](file:///c:/Users/r
 
 ---
 
-## 28. 📝 DICTAMEN FINAL Y SELLADO PERICIAL RONDA 11
+## 29. 🕵️‍♂️ CASO PERICIAL: EDICIÓN EN CALIENTE DE TARIFA FLETE BASE P (USD/MT) (PROTOCOLO BEN / LEG / CLON / DIFF / QC / NOTA)
 
-* **Compilación Frontend**: `npx vite build` completado en **13.01s (exit code 0)** con 1089 módulos.
-* **Estado de la Solución**: Masterpiece definitiva de la Matriz Financiera PETRAL.
+**Fecha:** 02 de Septiembre de 2026 (03:50 PM)  
+**Módulo Afectado:** Matriz Financiera PETRAL (Forecast Grid & Motor de Simulación Backend)  
+**Evidencia Física Evaluada:** Captura `media_1788381632819.png` (input de `Tarifa Flete Base P` congelado en 23.1 sin reaccionar a la edición en caliente).
+
+### 29.1. LEG (Legacy - Estado Previo / Escena del Crimen)
+1. **Backend (`forecast_service.py` L603 & L1292)**:
+   * La condición `if contract_tariff_val > 0:` evaluaba primero la tarifa del contrato base (ej. SPCC = 23.1).
+   * Al ser siempre verdadera, `custom_tariff` era ignorado y nunca sobrescribía el contrato.
+2. **Frontend (`ForecastContext_V2.tsx` L431)**:
+   * `handleTariffChange` ignoraba `_month_index` e impedía la reactividad mensual granular.
+
+### 29.2. CLON (Respaldos Físicos)
+* **Safe Point Git:** `PRE.EDIT.FLETE.HOT.2.9.26`
+* **Backup Backend:** `backend/services/forecast_service_backup_pre_tariff_fix.py`
+* **Backup Frontend:** `src/context/ForecastContext_V2_backup_pre_tariff_fix.tsx`
+
+### 29.3. DIFF (Diferencial Quirúrgico Aplicado)
+```
++-----------------------------------+--------------------------------------------+--------------------------------------------+
+| COMPONENTE                        | COMPORTAMIENTO LEGACY (ERRÓNEO)            | COMPORTAMIENTO CORRECTO                    |
++-----------------------------------+--------------------------------------------+--------------------------------------------+
+| Prioridad de Tarifa en Backend    | Contrato prevalecía sobre la edición       | custom_tariff SOBRESCRIBE el contrato     |
+| Asignación Mensual de Tarifa      | _month_index ignorado en el context        | Se actualiza la tarifa del mes exacto      |
+| Recálculo Financiero Instantáneo  | Bloqueado al valor fijo de 23.1            | Gatilla recálculo de Gross & Net Revenue   |
++-----------------------------------+--------------------------------------------+--------------------------------------------+
+```
+
+### 29.4. QC (Control de Calidad en Terminal)
+* **Prueba Headless Backend**: [`test_tariff_override_qc.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/test_tariff_override_qc.py) ejecutada en terminal:
+  * Base Contrato: `Flete $/MT = 23.10`
+  * Edición Custom: `Flete $/MT = 28.50` $\rightarrow$ `Gross Revenue = $384,750.00` ($28.50 \times 13,500\text{ MT}$).
+  * Resultado: **100% Exitoso (exit code 0)**.
+* **Compilación Frontend**: `npx vite build` completada en **25.10s (exit code 0)** con 1089 módulos.
+
+---
+
+## 30. 📝 DICTAMEN FINAL Y SELLADO PERICIAL EDICIÓN DE FLETE
+
+* **Estado de la Solución**: Edición en caliente de fletes 100% operativa y reactiva.
 
 ---
 *Firma Pericial: Benoit Blanc Senior - Detective Auditor*

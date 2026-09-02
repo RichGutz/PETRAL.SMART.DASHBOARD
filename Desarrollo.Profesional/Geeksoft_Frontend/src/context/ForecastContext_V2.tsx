@@ -428,12 +428,19 @@ export const ForecastProvider_V2 = ({ children }: { children: ReactNode }) => {
         });
     };
 
-    const handleTariffChange = (client_id: string, route_key: string, vessel_id: string, _month_index: string, newTariff: number) => {
+    const handleTariffChange = (client_id: string, route_key: string, vessel_id: string, month_index: string, newTariff: number) => {
         setIsDirty(true);
         setProjectionLines(prev => {
-            const destination_port_id = route_key.split('-')[1];
+            const dest = route_key?.includes('-') ? route_key.split('-')[1] : route_key;
             return prev.map(p => {
-                if (p.client_id === client_id && p.vessel_id === vessel_id && p.destination_port_id === destination_port_id) {
+                const matchClient = p.client_id === client_id;
+                const matchVessel = p.vessel_id === vessel_id;
+                const matchRoute = !route_key || route_key === 'Todas las Rutas' || 
+                    p.destination_port_id === dest || 
+                    `${p.origin_port_id}-${p.destination_port_id}` === route_key;
+                const matchMonth = !month_index || p.month_index === month_index;
+
+                if (matchClient && matchVessel && matchRoute && matchMonth) {
                     return { ...p, custom_tariff: newTariff };
                 }
                 return p;

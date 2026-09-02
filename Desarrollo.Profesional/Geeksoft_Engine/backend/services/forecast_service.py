@@ -600,10 +600,10 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 highest_bracket = max(matching_tariffs, key=lambda x: x.get("max_tonnage", 0))
                 contract_tariff_val = float(highest_bracket.get("freight_rate", 0))
 
-        if contract_tariff_val > 0:
-            freight_rate = contract_tariff_val
-        elif getattr(line, 'custom_tariff', None) is not None:
+        if getattr(line, 'custom_tariff', None) is not None and float(line.custom_tariff) > 0:
             freight_rate = float(line.custom_tariff)
+        elif contract_tariff_val > 0:
+            freight_rate = contract_tariff_val
         else:
             freight_rate = 0
         
@@ -1289,10 +1289,10 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                 highest_bracket = max(matching_tariffs, key=lambda x: float(x.get("max_tonnage", 0)))
                 contract_tariff_val = float(highest_bracket.get("freight_rate", 0))
 
-        if contract_tariff_val > 0:
-            freight_rate = contract_tariff_val
-        elif getattr(line, 'custom_tariff', None) is not None:
+        if getattr(line, 'custom_tariff', None) is not None and float(line.custom_tariff) > 0:
             freight_rate = float(line.custom_tariff)
+        elif contract_tariff_val > 0:
+            freight_rate = contract_tariff_val
         else:
             freight_rate = 0
         
