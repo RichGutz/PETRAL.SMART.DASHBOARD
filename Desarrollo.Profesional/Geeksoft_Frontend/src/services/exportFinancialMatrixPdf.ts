@@ -57,6 +57,19 @@ interface ParsedRow {
     isAccum: boolean;
 }
 
+interface AtomicBlock {
+    client: string;
+    route: string;
+    vessel: string;
+    clientCls: string;
+    routeCls: string;
+    vesselCls: string;
+    isSubtotal: boolean;
+    isFleet: boolean;
+    isAccum: boolean;
+    rows: { metric: string; values: string[] }[];
+}
+
 export function generateFinancialMatrixPdfHtml(
     tableId: string = 'forecast-grid-table',
     _orientation: 'portrait' | 'landscape' = 'landscape',
@@ -85,6 +98,7 @@ export function generateFinancialMatrixPdfHtml(
         'JUL 2027', 'AGO 2027', 'SET 2027', 'OCT 2027', 'NOV 2027', 'DIC 2027'
     ];
     const totalHeader = headerCols[headerCols.length - 1] || 'TOTAL ACUM';
+    const numMonths = safeMonths.length;
 
     // 2. Extraer todas las filas con Matriz de Ocupación
     const occupied: boolean[][] = [];
@@ -219,36 +233,31 @@ export function generateFinancialMatrixPdfHtml(
         return '$' + Math.round(parsedNum).toLocaleString('en-US');
     };
 
-    // 4. Agrupación Atómica Estricta: Cada buque es UN SOLO BLOQUE indivisible de 9 a 11 filas
-    interface AtomicBlock {
-        client: string;
-        route: string;
-        vessel: string;
-        clientCls: string;
-        routeCls: string;
-        vesselCls: string;
-        isSubtotal: boolean;
-        isFleet: boolean;
-        isAccum: boolean;
-        rows: { metric: string; values: string[] }[];
-    }
+    const parseNum = (valStr: string): number => {
+        if (!valStr || valStr === '-') return 0;
+        const clean = valStr.replace(/[\$,\s]/g, '').replace('%', '');
+        const n = parseFloat(clean);
+        return isNaN(n) ? 0 : n;
+    };
 
-    const blocks: AtomicBlock[] = [];
+    // 4. Agrupación Atómica: Buques Estándar y Subtotales
+    const vesselBlocks: AtomicBlock[] = [];
+    const subtotalBlocks: AtomicBlock[] = [];
     let currentBlock: AtomicBlock | null = null;
 
     rawRows.forEach(r => {
+        if (r.isFleet || r.isAccum) return; // Se procesan al final de forma expandida garantizada
+
         const upperMetric = r.metric.toUpperCase();
         const isStartOfVessel = upperMetric.includes('VIAJES') || upperMetric.includes('FREQ');
         const isSubtotalBlock = r.isSubtotal;
-        const isFleetBlock = r.isFleet;
-        const isAccumBlock = r.isAccum;
 
         let shouldStartNewBlock = false;
         if (!currentBlock) {
             shouldStartNewBlock = true;
-        } else if (isAccumBlock !== currentBlock.isAccum || isFleetBlock !== currentBlock.isFleet || isSubtotalBlock !== currentBlock.isSubtotal) {
+        } else if (isSubtotalBlock !== currentBlock.isSubtotal) {
             shouldStartNewBlock = true;
-        } else if (!isSubtotalBlock && !isFleetBlock && !isAccumBlock) {
+        } else if (!isSubtotalBlock) {
             if (isStartOfVessel && currentBlock.rows.length >= 7) {
                 shouldStartNewBlock = true;
             } else if (r.vessel !== currentBlock.vessel || r.route !== currentBlock.route || r.client !== currentBlock.client) {
@@ -265,11 +274,15 @@ export function generateFinancialMatrixPdfHtml(
                 routeCls: r.routeCls,
                 vesselCls: r.vesselCls,
                 isSubtotal: isSubtotalBlock,
-                isFleet: isFleetBlock,
-                isAccum: isAccumBlock,
+                isFleet: false,
+                isAccum: false,
                 rows: []
             };
-            blocks.push(currentBlock);
+            if (isSubtotalBlock) {
+                subtotalBlocks.push(currentBlock);
+            } else {
+                vesselBlocks.push(currentBlock);
+            }
         }
 
         currentBlock.rows.push({
@@ -278,7 +291,105 @@ export function generateFinancialMatrixPdfHtml(
         });
     });
 
-    // 5. Paginación Óptima: 2 a 3 buques completos por hoja (Límite: 30 filas por hoja)
+    // 5. Garantía de Despliegue Completo: TOTAL FLOTA y TOTAL ACUMULADO 100% Desplegados
+    const standardMetricNames = [
+        'Viajes',
+        'Días-Buque',
+        'Toneladas',
+        'Net Revenue',
+        '(-) Hire (TCE x días)',
+        '(-) Bunker Costs',
+        '(-) Port Costs',
+        '(-) Dockage',
+        '(-) Arriendo de Naves',
+        '(=) VOYAGE RESULT / P&L'
+    ];
+
+    // Matriz de acumulación para Total Flota (10 métricas x numMonths)
+    const fleetMonthlyTotals: number[][] = Array.from({ length: 10 }, () => Array(numMonths).fill(0));
+
+    vesselBlocks.forEach(vb => {
+        vb.rows.forEach(r => {
+            const up = r.metric.toUpperCase();
+            let metricIdx = -1;
+            if (up.includes('VIAJE') || up.includes('FREQ')) metricIdx = 0;
+            else if (!up.includes('HIRE') && (up.includes('DÍA') || up.includes('DAYS'))) metricIdx = 1;
+            else if (up.includes('TONELADA') || up.includes('TONS') || up.includes('MT')) metricIdx = 2;
+            else if (up.includes('NET REVENUE') || up.includes('VENTAS')) metricIdx = 3;
+            else if (up.includes('HIRE')) metricIdx = 4;
+            else if (up.includes('BUNKER')) metricIdx = 5;
+            else if (up.includes('PORT') && !up.includes('DOCKAGE')) metricIdx = 6;
+            else if (up.includes('DOCKAGE')) metricIdx = 7;
+            else if (up.includes('ARRIENDO')) metricIdx = 8;
+            else if (up.includes('VOYAGE RESULT') || up.includes('MARGEN') || up.includes('P&L')) metricIdx = 9;
+
+            if (metricIdx >= 0) {
+                r.values.slice(0, numMonths).forEach((vStr, mIdx) => {
+                    fleetMonthlyTotals[metricIdx][mIdx] += parseNum(vStr);
+                });
+            }
+        });
+    });
+
+    // Construir Bloque TOTAL FLOTA (10 filas completas)
+    const fleetBlock: AtomicBlock = {
+        client: 'TOTAL FLOTA',
+        route: '',
+        vessel: '',
+        clientCls: 'bg-slate-800 text-white',
+        routeCls: 'bg-slate-800 text-white',
+        vesselCls: 'bg-slate-800 text-white',
+        isSubtotal: false,
+        isFleet: true,
+        isAccum: false,
+        rows: standardMetricNames.map((mName, mIdx) => {
+            const monthlyVals = fleetMonthlyTotals[mIdx];
+            const sumTot = monthlyVals.reduce((a, b) => a + b, 0);
+            const valStrings = monthlyVals.map(n => formatNumericCell(String(n), mName));
+            valStrings.push(formatNumericCell(String(sumTot), mName)); // Total Acum
+            return {
+                metric: mName,
+                values: valStrings
+            };
+        })
+    };
+
+    // Construir Bloque TOTAL ACUMULADO (10 filas progresivas completas)
+    const accumMonthlyTotals: number[][] = Array.from({ length: 10 }, () => Array(numMonths).fill(0));
+    for (let mIdx = 0; mIdx < 10; mIdx++) {
+        let runningSum = 0;
+        for (let colIdx = 0; colIdx < numMonths; colIdx++) {
+            runningSum += fleetMonthlyTotals[mIdx][colIdx];
+            accumMonthlyTotals[mIdx][colIdx] = runningSum;
+        }
+    }
+
+    const accumBlock: AtomicBlock = {
+        client: 'TOTAL ACUMULADO',
+        route: '',
+        vessel: '',
+        clientCls: 'bg-petral-teal text-white',
+        routeCls: 'bg-petral-teal text-white',
+        vesselCls: 'bg-petral-teal text-white',
+        isSubtotal: false,
+        isFleet: false,
+        isAccum: true,
+        rows: standardMetricNames.map((mName, mIdx) => {
+            const monthlyVals = accumMonthlyTotals[mIdx];
+            const endTot = monthlyVals[monthlyVals.length - 1] || 0;
+            const valStrings = monthlyVals.map(n => formatNumericCell(String(n), mName));
+            valStrings.push(formatNumericCell(String(endTot), mName)); // Total Acum
+            return {
+                metric: mName,
+                values: valStrings
+            };
+        })
+    };
+
+    // Unir todos los bloques en el orden contable correcto
+    const allBlocks: AtomicBlock[] = [...vesselBlocks, ...subtotalBlocks, fleetBlock, accumBlock];
+
+    // 6. Paginación Óptima (Límite: 30 filas por hoja)
     const MAX_ROWS_PER_PAGE = 30;
     interface PageStructure {
         blocks: AtomicBlock[];
@@ -288,7 +399,7 @@ export function generateFinancialMatrixPdfHtml(
     const pages: PageStructure[] = [];
     let activePage: PageStructure = { blocks: [], totalRows: 0 };
 
-    blocks.forEach(block => {
+    allBlocks.forEach(block => {
         const count = block.rows.length;
         if (activePage.totalRows + count > MAX_ROWS_PER_PAGE && activePage.blocks.length > 0) {
             pages.push(activePage);
@@ -302,7 +413,7 @@ export function generateFinancialMatrixPdfHtml(
     const totalPagesCount = pages.length;
     const formattedDate = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-    // 6. Renderizado de Páginas con Fusión Vertical Jerárquica y Rotación Vertical Sin De Cabeza
+    // 7. Renderizado de Páginas con Centrado Horizontal (sideways-lr) y Fusión Vertical
     const pagesHtml = pages.map((p, pageIdx) => {
         const clientSpanMap = new Map<string, number>();
         const routeSpanMap = new Map<string, number>();
@@ -552,7 +663,7 @@ export function generateFinancialMatrixPdfHtml(
             font-weight: normal !important;
         }
         
-        /* Celdas de Dimensiones Verticales (CLI, RUT, BUQ) */
+        /* Celdas de Dimensiones Verticales (CLI, RUT, BUQ) con CENTRADO HORIZONTAL PERFECTO */
         td.td-dimension {
             width: 24px !important;
             max-width: 24px !important;
@@ -562,14 +673,13 @@ export function generateFinancialMatrixPdfHtml(
             padding: 0 !important;
         }
         .pdf-vertical-text {
-            transform: rotate(-90deg) !important;
-            display: inline-block !important;
-            white-space: nowrap !important;
+            writing-mode: sideways-lr !important;
+            text-align: center !important;
+            margin: 0 auto !important;
+            width: 100% !important;
             font-weight: 700;
             font-size: 8.5px;
             letter-spacing: 0.5px;
-            text-align: center;
-            margin: auto;
             line-height: 1;
         }
 

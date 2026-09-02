@@ -156,7 +156,10 @@ document.querySelectorAll('#forecast-grid-table tbody tr').forEach(tr => {
         route: lastRoute,
         vessel: lastVessel,
         metric: rowMetric,
-        values: rowValues
+        values: rowValues,
+        isSubtotal: false,
+        isFleet: false,
+        isAccum: false
     });
 
     currentRow++;
@@ -191,7 +194,15 @@ const formatNumericCell = (valStr, metricName) => {
     return '$' + Math.round(parsedNum).toLocaleString('en-US');
 };
 
-const blocks = [];
+const parseNum = (valStr) => {
+    if (!valStr || valStr === '-') return 0;
+    const clean = valStr.replace(/[\$,\s]/g, '').replace('%', '');
+    const n = parseFloat(clean);
+    return isNaN(n) ? 0 : n;
+};
+
+const vesselBlocks = [];
+const subtotalBlocks = [];
 let currentBlock = null;
 
 rawRows.forEach(r => {
@@ -214,7 +225,7 @@ rawRows.forEach(r => {
             vessel: r.vessel,
             rows: []
         };
-        blocks.push(currentBlock);
+        vesselBlocks.push(currentBlock);
     }
     currentBlock.rows.push({
         metric: r.metric,
@@ -222,11 +233,86 @@ rawRows.forEach(r => {
     });
 });
 
+const numMonths = months.length;
+const standardMetricNames = [
+    'Viajes', 'Días-Buque', 'Toneladas', 'Net Revenue',
+    '(-) Hire (TCE x días)', '(-) Bunker Costs', '(-) Port Costs',
+    '(-) Dockage', '(-) Arriendo de Naves', '(=) VOYAGE RESULT / P&L'
+];
+
+const fleetMonthlyTotals = Array.from({ length: 10 }, () => Array(numMonths).fill(0));
+
+vesselBlocks.forEach(vb => {
+    vb.rows.forEach(r => {
+        const up = r.metric.toUpperCase();
+        let metricIdx = -1;
+        if (up.includes('VIAJE') || up.includes('FREQ')) metricIdx = 0;
+        else if (!up.includes('HIRE') && (up.includes('DÍA') || up.includes('DAYS'))) metricIdx = 1;
+        else if (up.includes('TONELADA') || up.includes('TONS') || up.includes('MT')) metricIdx = 2;
+        else if (up.includes('NET REVENUE') || up.includes('VENTAS')) metricIdx = 3;
+        else if (up.includes('HIRE')) metricIdx = 4;
+        else if (up.includes('BUNKER')) metricIdx = 5;
+        else if (up.includes('PORT') && !up.includes('DOCKAGE')) metricIdx = 6;
+        else if (up.includes('DOCKAGE')) metricIdx = 7;
+        else if (up.includes('ARRIENDO')) metricIdx = 8;
+        else if (up.includes('VOYAGE RESULT') || up.includes('MARGEN') || up.includes('P&L')) metricIdx = 9;
+
+        if (metricIdx >= 0) {
+            r.values.slice(0, numMonths).forEach((vStr, mIdx) => {
+                fleetMonthlyTotals[metricIdx][mIdx] += parseNum(vStr);
+            });
+        }
+    });
+});
+
+const fleetBlock = {
+    client: 'TOTAL FLOTA',
+    route: '',
+    vessel: '',
+    isSubtotal: false,
+    isFleet: true,
+    isAccum: false,
+    rows: standardMetricNames.map((mName, mIdx) => {
+        const monthlyVals = fleetMonthlyTotals[mIdx];
+        const sumTot = monthlyVals.reduce((a, b) => a + b, 0);
+        const valStrings = monthlyVals.map(n => formatNumericCell(String(n), mName));
+        valStrings.push(formatNumericCell(String(sumTot), mName));
+        return { metric: mName, values: valStrings };
+    })
+};
+
+const accumMonthlyTotals = Array.from({ length: 10 }, () => Array(numMonths).fill(0));
+for (let mIdx = 0; mIdx < 10; mIdx++) {
+    let runningSum = 0;
+    for (let colIdx = 0; colIdx < numMonths; colIdx++) {
+        runningSum += fleetMonthlyTotals[mIdx][colIdx];
+        accumMonthlyTotals[mIdx][colIdx] = runningSum;
+    }
+}
+
+const accumBlock = {
+    client: 'TOTAL ACUMULADO',
+    route: '',
+    vessel: '',
+    isSubtotal: false,
+    isFleet: false,
+    isAccum: true,
+    rows: standardMetricNames.map((mName, mIdx) => {
+        const monthlyVals = accumMonthlyTotals[mIdx];
+        const endTot = monthlyVals[monthlyVals.length - 1] || 0;
+        const valStrings = monthlyVals.map(n => formatNumericCell(String(n), mName));
+        valStrings.push(formatNumericCell(String(endTot), mName));
+        return { metric: mName, values: valStrings };
+    })
+};
+
+const allBlocks = [...vesselBlocks, ...subtotalBlocks, fleetBlock, accumBlock];
+
 const MAX_ROWS_PER_PAGE = 30;
 const pages = [];
 let activePage = { blocks: [], totalRows: 0 };
 
-blocks.forEach(block => {
+allBlocks.forEach(block => {
     const count = block.rows.length;
     if (activePage.totalRows + count > MAX_ROWS_PER_PAGE && activePage.blocks.length > 0) {
         pages.push(activePage);
@@ -267,24 +353,31 @@ const pagesHtml = pages.map((p, pageIdx) => {
         const isRouteFirst = !renderedRoutes.has(rKey);
         if (isRouteFirst) renderedRoutes.add(rKey);
 
+        const isFleet = b.isFleet;
+        const isAccum = b.isAccum;
+        const trClass = isAccum ? 'tr-accum' : (isFleet ? 'tr-fleet' : 'tr-data-row');
+
         return b.rows.map((row, rIdx) => {
             const isVesselFirst = rIdx === 0;
             return `
-            <tr class="tr-data-row">
+            <tr class="${trClass}">
                 ${isClientFirst && rIdx === 0 ? `
-                    <td rowspan="${clientSpan}" class="td-dimension" style="background-color: #0369a1 !important; color: #fff !important;">
+                    <td rowspan="${clientSpan}" class="td-dimension" style="background-color: ${isAccum ? '#0d9488' : (isFleet ? '#1e293b' : '#0369a1')} !important; color: #fff !important;">
                         <div class="pdf-vertical-text">${b.client}</div>
                     </td>
                 ` : ''}
-                ${isRouteFirst && rIdx === 0 ? `
+                ${!isFleet && !isAccum && isRouteFirst && rIdx === 0 ? `
                     <td rowspan="${routeSpan}" class="td-dimension" style="background-color: #a855f7 !important; color: #fff !important;">
                         <div class="pdf-vertical-text">${b.route}</div>
                     </td>
                 ` : ''}
-                ${isVesselFirst ? `
+                ${!isFleet && !isAccum && isVesselFirst ? `
                     <td rowspan="${vesselSpan}" class="td-dimension" style="background-color: #16a34a !important; color: #fff !important;">
                         <div class="pdf-vertical-text">${b.vessel}</div>
                     </td>
+                ` : ''}
+                ${(isFleet || isAccum) && rIdx === 0 ? `
+                    <td rowspan="${vesselSpan}" colspan="2" class="td-dimension" style="background-color: ${isAccum ? '#0d9488' : '#1e293b'} !important;"></td>
                 ` : ''}
                 <td class="td-metric-name">${row.metric}</td>
                 ${row.values.map((v, valIdx) => `<td class="${v ? 'td-num' : 'td-empty'} ${valIdx === row.values.length - 1 ? 'td-total-cell' : ''}">${v}</td>`).join('')}
@@ -351,11 +444,13 @@ const fullHtml = `<!DOCTYPE html>
         table.data-table th.th-total { background-color: #0d9488 !important; color: #ffffff !important; }
         table.data-table td { border: 1px solid #cbd5e1; padding: 2px 3px; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: normal !important; }
         td.td-dimension { width: 24px !important; max-width: 24px !important; min-width: 24px !important; text-align: center !important; vertical-align: middle !important; padding: 0 !important; }
-        .pdf-vertical-text { transform: rotate(-90deg) !important; display: inline-block !important; white-space: nowrap !important; font-weight: 700; font-size: 8.5px; letter-spacing: 0.5px; text-align: center; margin: auto; line-height: 1; }
+        .pdf-vertical-text { writing-mode: sideways-lr !important; text-align: center !important; margin: 0 auto !important; width: 100% !important; font-weight: 700; font-size: 8.5px; letter-spacing: 0.5px; line-height: 1; }
         td.td-metric-name { width: 165px !important; min-width: 165px !important; max-width: 165px !important; text-align: left !important; font-weight: normal !important; color: #0f172a; padding-left: 5px; writing-mode: horizontal-tb !important; transform: none !important; white-space: nowrap !important; font-size: 9.5px !important; }
         td.td-num { width: 53px !important; max-width: 53px !important; text-align: right !important; font-size: 9px !important; font-weight: normal !important; color: #1e293b; padding-right: 3px; }
         td.td-empty { width: 53px !important; max-width: 53px !important; text-align: center; color: #cbd5e1; }
         td.td-total-cell { width: 80px !important; max-width: 80px !important; min-width: 80px !important; font-size: 9px !important; font-weight: 700 !important; color: #0f172a !important; }
+        tr.tr-fleet td { background-color: #f1f5f9 !important; font-weight: 600 !important; }
+        tr.tr-accum td { background-color: #eef2ff !important; font-weight: 700 !important; }
         .page-footer { width: 100%; margin-top: 3px; border-top: 1px solid #cbd5e1; padding-top: 2px; font-size: 8px; font-weight: 600; color: #64748b; display: table; table-layout: fixed; }
     </style>
 </head>
@@ -365,4 +460,4 @@ const fullHtml = `<!DOCTYPE html>
 </html>`;
 
 fs.writeFileSync('./scratch_atomic_full.html', fullHtml, 'utf-8');
-console.log(`✅ Paginación de 30 filas por hoja validada (${totalPagesCount} páginas A4 Landscape).`);
+console.log(`✅ Paginación y expansión completa de totales generada con éxito (${totalPagesCount} páginas A4 Landscape).`);
