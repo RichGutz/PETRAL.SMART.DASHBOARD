@@ -1,15 +1,17 @@
 import React, { useMemo, useState } from 'react';
 import { useForecastContext_V2 } from '../../context/ForecastContext_V2';
 import { Download, FileText, RotateCcw, Filter, UserCheck, Navigation, Anchor, Calendar, Loader2 } from 'lucide-react';
-import * as XLSX from 'xlsx';
 import { exportFinancialMatrixExcel } from '../../services/exportFinancialMatrixExcel';
 import { exportFinancialMatrixPdf } from '../../services/exportFinancialMatrixPdf';
+import { exportFinancialMatrixNavitransoExcel } from '../../services/exportFinancialMatrixNavitransoExcel';
+import { exportFinancialMatrixNavitransoPdf } from '../../services/exportFinancialMatrixNavitransoPdf';
 
 export const ForecastGridFilters: React.FC = () => {
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const { 
         data, 
         dynamicMonths: months = [],
+        matrixFormat = 'PETRAL',
         hiddenClients = [], setHiddenClients = (() => {}),
         hiddenRoutes = [], setHiddenRoutes = (() => {}),
         hiddenVessels = [], setHiddenVessels = (() => {}),
@@ -109,7 +111,11 @@ export const ForecastGridFilters: React.FC = () => {
 
     const handleExportExcel = async () => {
         try {
-            await exportFinancialMatrixExcel('forecast-grid-table');
+            if (matrixFormat === 'NAVITRANSO') {
+                await exportFinancialMatrixNavitransoExcel('forecast-grid-table');
+            } else {
+                await exportFinancialMatrixExcel('forecast-grid-table');
+            }
         } catch (err: any) {
             console.error('Error exportando Excel con ExcelJS:', err);
             alert(`Error al exportar Excel: ${err?.message || err}`);
@@ -120,8 +126,12 @@ export const ForecastGridFilters: React.FC = () => {
         if (isGeneratingPdf) return;
         setIsGeneratingPdf(true);
         try {
-            const scenarioName = data?.name || data?.scenario_name || 'Escenario Base 2027';
-            await exportFinancialMatrixPdf('forecast-grid-table', orientation, scenarioName);
+            const scenarioName = data?.name || data?.scenario_name || (matrixFormat === 'NAVITRANSO' ? 'Escenario Base NAVITRANSO' : 'Escenario Base PETRAL');
+            if (matrixFormat === 'NAVITRANSO') {
+                await exportFinancialMatrixNavitransoPdf('forecast-grid-table', orientation, scenarioName);
+            } else {
+                await exportFinancialMatrixPdf('forecast-grid-table', orientation, scenarioName);
+            }
         } catch (err: any) {
             console.error('Error generando PDF de la Matriz Financiera:', err);
             alert(`Error al generar PDF: ${err?.message || err}`);
