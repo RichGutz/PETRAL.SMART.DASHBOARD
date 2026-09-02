@@ -146,9 +146,15 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                 lastRouteCls = tds[1]?.className || '';
                 lastVesselCls = tds[2]?.className || '';
 
+                const extractCleanCell = (cellEl: Element) => {
+                    const input = cellEl.querySelector('input');
+                    if (input) return (input as HTMLInputElement).value || '';
+                    return (cellEl.textContent || '').trim();
+                };
+
                 metricName = (tds[3]?.textContent || '').trim();
                 for (let i = 4; i < tds.length; i++) {
-                    vals.push((tds[i]?.textContent || '').trim());
+                    vals.push(extractCleanCell(tds[i]));
                 }
 
                 if (currentBlock) {
@@ -169,9 +175,15 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                 };
             } else if (tds.length > 0) {
                 // Fila subsiguiente dentro del mismo nodo
+                const extractCleanCell = (cellEl: Element) => {
+                    const input = cellEl.querySelector('input');
+                    if (input) return (input as HTMLInputElement).value || '';
+                    return (cellEl.textContent || '').trim();
+                };
+
                 metricName = (tds[0]?.textContent || '').trim();
                 for (let i = 1; i < tds.length; i++) {
-                    vals.push((tds[i]?.textContent || '').trim());
+                    vals.push(extractCleanCell(tds[i]));
                 }
 
                 if (!currentBlock) {

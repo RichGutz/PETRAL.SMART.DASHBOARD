@@ -147,11 +147,14 @@ export async function exportFinancialMatrixNavitransoExcel(tableId: string = 'fo
                 const cSpan = parseInt(td.getAttribute('colspan') || '1', 10);
                 const tdClass = td.className || '';
 
-                // Extraer texto limpio ignorando selects/dropdowns
+                // Extraer texto limpio ignorando selects/dropdowns y soportando inputs
                 let textValue = '';
                 const vertDiv = td.querySelector('.vertical-text');
+                const inputEl = td.querySelector('input');
                 if (vertDiv) {
                     textValue = vertDiv.textContent?.trim() || '';
+                } else if (inputEl) {
+                    textValue = (inputEl as HTMLInputElement).value || '';
                 } else {
                     const clone = td.cloneNode(true) as HTMLElement;
                     clone.querySelectorAll('select, button, svg').forEach(el => el.remove());

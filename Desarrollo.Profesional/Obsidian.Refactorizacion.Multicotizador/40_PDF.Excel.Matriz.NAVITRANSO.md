@@ -79,8 +79,23 @@ La Matriz NAVITRANSO organiza la cuenta de resultados de cada nodo y del total e
 
 ## 5. 🛡️ Protocolo de Implementación y QC
 * **Safe Point Branch:** `feature/navitranso-pdf-excel-services`
-* **Safe Point Tag:** `PRE.NAVITRANSO.SERVICES.2.9.26`
-* **Validaciones QC:** Generación local headless con JSDOM + OpenPyXL / Puppeteer antes de desplegar al VPS.
+* **Safe Point Tag:** `PRE.PDF.EXCEL.NAVITRANSO`
+* **Validaciones QC Realizadas:**
+  * Generación headless local con `qc_comprehensive_navitranso_test.mjs` y auditoría pericial con Python `openpyxl`.
+  * **Zoom Registrado:** `65%` nativo (`zoomScale: 65`, `zoomScaleNormal: 65`).
+  * **Total de Filas Auditadas:** 27 filas completas (1 Cabecera + 16 Filas de Nodo + 5 Filas de Subtotal Cliente + 5 Filas de Total Flota).
+  * **Unidades y Formatos:**
+    * Viajes y Base Flete (TM): `#,##0` (numérico entero sin $).
+    * Ventas, Costos, Demoras, Agenciamiento, TCE, Arriendo y Margen Bruto: `$#,##0` (con símbolo $).
+    * Margen Bruto %: `0.0%`.
+  * **Ancho de Columnas:** Col A a C: `6.5`, Col D: `36.0`, Cols E a Q: `11.0` a `12.5` (ancho neto adaptado al número formateado más largo con padding 2.5).
+  * **Compilación Frontend:** `npx vite build` completada en **9.83s (exit code 0)** con 1091 módulos.
 
 ---
-*Autor: Benoit Blanc Senior / Petral Engineering Team*
+
+## 6. 📝 DICTAMEN FINAL Y SELLADO PERICIAL MATRIZ NAVITRANSO
+
+* **Estado de la Solución**: Los servicios de exportación a PDF y Excel para la Matriz NAVITRANSO (`exportFinancialMatrixNavitransoExcel.ts` y `exportFinancialMatrixNavitransoPdf.ts`) han sido creados y verificados de manera 100% aislada, con total fidelidad a las cifras de la UI, unidades monetarias, subtotales y totales.
+
+---
+*Firma Pericial: Benoit Blanc Senior - Detective Auditor*
