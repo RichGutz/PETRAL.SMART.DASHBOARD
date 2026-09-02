@@ -485,3 +485,4 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-09-02 18:08] Despliegue exitoso de homologación de PDF NAVITRANSO al VPS.
 [2026-09-02 18:28] Despliegue exitoso de desglose completo NAVITRANSO y compaginación de 2 combos al VPS.
 [2026-09-02 18:42] Despliegue exitoso de correcciones críticas Excel y PDF NAVITRANSO al VPS.
+[2026-09-02 18:55] Despliegue exitoso de compaginacion y dimensiones PDF NAVITRANSO al VPS.
