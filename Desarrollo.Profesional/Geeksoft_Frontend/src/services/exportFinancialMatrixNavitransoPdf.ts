@@ -291,8 +291,8 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         });
     });
 
-    // 5. Paginación Óptima (Límite: 30 filas por hoja para albergar exactamente 2 COMBOS por página)
-    const MAX_ROWS_PER_PAGE = 30;
+    // 5. Paginación Óptima (Límite: 35 filas por hoja para albergar exactamente 2 COMBOS por página)
+    const MAX_ROWS_PER_PAGE = 35;
     interface PageStructure {
         blocks: NavAtomicBlock[];
         totalRows: number;
@@ -661,11 +661,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             padding: 1px 2px;
             vertical-align: middle;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
             font-weight: normal !important;
-            height: 16px !important;
-            max-height: 16px !important;
         }
         
         /* Celdas de Dimensiones Verticales (CLI, RUT, BUQ) */
@@ -676,6 +672,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             text-align: center !important;
             vertical-align: middle !important;
             padding: 0 !important;
+            overflow: visible !important;
         }
 
         /* Columna 4: Nombres de Métricas */
