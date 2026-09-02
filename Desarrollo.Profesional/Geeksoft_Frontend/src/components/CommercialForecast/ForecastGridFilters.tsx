@@ -373,14 +373,8 @@ export const ForecastGridFilters: React.FC = () => {
                     <div className="flex items-center gap-2">
                         <button 
                             type="button"
-                            onClick={() => handlePrintPDF('portrait')}
-                            className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-extrabold shadow-2xs transition-all cursor-pointer"
-                        >
-                            <FileText size={13} /> PDF Vertical
-                        </button>
-                        <button 
-                            type="button"
                             onClick={() => handlePrintPDF('landscape')}
+                            id="btn-export-pdf"
                             className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-extrabold shadow-2xs transition-all cursor-pointer"
                         >
                             <FileText size={13} /> PDF Horizontal

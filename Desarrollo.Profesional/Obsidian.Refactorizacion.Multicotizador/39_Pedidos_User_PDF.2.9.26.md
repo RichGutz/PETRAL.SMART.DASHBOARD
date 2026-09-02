@@ -86,20 +86,36 @@ Previo a la intervención quirúrgica en el frontend, se establecieron los Safe 
 
 ---
 
-## 5. 🧪 QC (Control de Calidad en Terminal)
+## 7. 🕵️‍♂️ RONDA 2: AUTONOMÍA FORENSE Y RESOLUCIÓN DEL SMOKING GUN DE MÉTRICAS
 
-1. **Compilación de Bundle**:
-   - `npx vite build` ejecutado en `Geeksoft_Frontend`.
-   - **Resultado**: `✓ built in 10.00s (exit code 0) — 1089 modules transformed`.
-2. **Validación de Tipos y Rutas**:
-   - Cero errores de TypeScript en los nuevos módulos `logosBase64.ts` y `exportFinancialMatrixPdf.ts`.
+**Fecha:** 02 de Septiembre de 2026 (10:50 AM)  
+**Safe Point:** `PRE.PDF.HORIZ.CONSOLE11.2.9.26` (Branch y Tag pusheados a GitHub)  
+**Evidencia Física Evaluada:** Documento PDF descargado de 7 páginas (`media_1788363380070.pdf`).
+
+### 7.1. El Hallazgo del "Smoking Gun" en la Autopsia de la Grilla
+1. **El Descalce**: En las filas 2 en adelante de cada buque/ruta, las celdas de la Columna Métrica (`Días-Buque`, `Toneladas`, `Net Revenue`, etc.) aparecían rotadas a 90° verticalmente.
+2. **Causa Raíz**: Las filas subsecuentes no contienen las etiquetas `<td>` de Cliente, Ruta ni Buque (absorbidas por `rowSpan`). Al evaluar `colIdx < 3` ciegamente, el código catalogaba la celda de Métrica como dimensión y le inyectaba la clase `.pdf-vertical-text`.
+3. **Cirugía**: Se implementó el algoritmo de **Matriz de Ocupación (`occupied[r][c]`)** en [`exportFinancialMatrixPdf.ts`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixPdf.ts). Ahora `currentCol === 4` garantiza que la columna de métricas sea **100% HORIZONTAL** (`writing-mode: horizontal-tb; transform: none; font-weight: 700`).
+
+### 7.2. Ajustes de Diseño Aplicados (Consolas 11 & Landscape)
+* **Tipografía**: Fuente de consola `'Consolas', 'Courier New', monospace !important`.
+* **Escala de Fuente**: Tamaño 11 (`11px` con padding optimizado).
+* **Orientación Forzada**: `@page { size: A4 landscape !important; margin: 4mm 6mm !important; }`.
+* **Simplificación UI**: Eliminado el botón `PDF Vertical` en [`ForecastGridFilters.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/components/CommercialForecast/ForecastGridFilters.tsx). Queda únicamente el botón oficial **PDF Horizontal**.
+
+### 7.3. Loop QC de Análisis Forense de PDF Binario
+Se ejecutó el inspector automatizado [`qc_pdf_inspector.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/qc_pdf_inspector.py) con `WeasyPrint` y `PyMuPDF (fitz)`:
+* **Archivo Generado**: [`QC_Matriz_Financiera_Landscape_Verified.pdf`](file:///C:/Users/rguti/PETRAL.SMART.DASHBOARD/Exceles.Petral/QC_Auditoria_Escenarios/QC_Matriz_Financiera_Landscape_Verified.pdf) (30.2 KB).
+* **Dimensiones**: `841.9pt x 595.3pt` $\rightarrow$ **100% LANDSCAPE (Horizontal)** confirmado.
+* **Páginas**: Reducido de 7 páginas dispersas a **2 páginas compactas y ordenadas**.
+* **Texto Extraído**: Título `NAVIERA PETRAL S.A.`, `Net Revenue`, `(-) Hire (TCE x días)`, `Bunker Costs` y `VOYAGE RESULT / P&L` verificados en horizontal.
 
 ---
 
-## 6. 📝 NOTA (Dictamen Final y Cierre Pericial)
+## 8. 📝 DICTAMEN FINAL RONDA 2
 
-* **Estado**: Generador de PDF Vectorial completado e integrado en los botones **PDF Vertical** y **PDF Horizontal** de la Matriz Financiera.
-* **Fidelidad**: 100% de convergencia estética y de datos con la exportación Excel.
+* **Compilación Frontend**: `npx vite build` completado en **20.43s (exit code 0)** con 1089 módulos.
+* **Estado de la Exportación**: 100% convergencia con la solicitud del usuario (Landscape forzado, Consolas 11, métricas en horizontal, 1 solo botón PDF en UI).
 
 ---
 *Firma Pericial: Benoit Blanc - Detective Auditor*
