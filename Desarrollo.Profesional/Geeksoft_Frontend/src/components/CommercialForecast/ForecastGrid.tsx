@@ -108,7 +108,10 @@ export const ForecastGrid: React.FC<ForecastGridProps> = ({
     
     const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
     const [expandedDemurrages, setExpandedDemurrages] = useState<Record<string, boolean>>({});
-    const [expandedGrossRevenue, setExpandedGrossRevenue] = useState<Record<string, boolean>>({});
+    const [expandedGrossRevenue, setExpandedGrossRevenue] = useState<Record<string, boolean>>({
+        'global-total-gross': true,
+        'global-acum-gross': true
+    });
     const [expandedTce, setExpandedTce] = useState<Record<string, boolean>>({});
     const [collapsedSubtotals, setCollapsedSubtotals] = useState<Record<string, boolean>>({});
     const [groupOrder, setGroupOrder] = useState<('client' | 'route' | 'vessel')[]>(['client', 'route', 'vessel']);

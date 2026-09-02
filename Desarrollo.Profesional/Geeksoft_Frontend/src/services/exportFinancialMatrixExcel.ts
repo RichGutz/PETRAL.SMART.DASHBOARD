@@ -67,7 +67,7 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
     wb.created = new Date();
 
     const ws = wb.addWorksheet('Matriz Financiera', {
-        views: [{ showGridLines: true, state: 'frozen', ySplit: 1, xSplit: 0 }]
+        views: [{ showGridLines: true, state: 'frozen', ySplit: 1, xSplit: 0, zoomScale: 65 }]
     });
 
     // Matriz de ocupación para resolver rowSpan y colSpan
@@ -324,20 +324,45 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
         });
     }
 
-    // 3. Ajustar Ancho Automático de Columnas
+    // 3. Ajustar Ancho Automático de Columnas (Calibrado al dígito más ancho)
     ws.columns.forEach((col, colIdx) => {
-        let maxLen = 10;
+        let maxVisualLen = 0;
         col.eachCell?.({ includeEmpty: false }, (cell, rowIdx) => {
             if (rowIdx === 1) {
-                // Header
-                maxLen = Math.max(maxLen, String(cell.value || '').length + 4);
+                // Header (ej. "ENE 2027" -> 8 caracteres)
+                maxVisualLen = Math.max(maxVisualLen, String(cell.value || '').trim().length);
             } else {
-                const str = String(cell.value || '');
-                // No expandir excesivamente por celdas combinadas de dimensiones
-                if (colIdx < 3 && str.length > 20) {
-                    maxLen = Math.max(maxLen, 8);
+                let visualLen = 0;
+                if (typeof cell.value === 'number') {
+                    const num = cell.value;
+                    const fmt = cell.numFmt || '';
+                    if (fmt.includes('$') && fmt.includes('.00')) {
+                        visualLen = `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`.length;
+                    } else if (fmt.includes('$')) {
+                        visualLen = `$${Math.round(num).toLocaleString('en-US')}`.length;
+                    } else if (fmt.includes('%')) {
+                        visualLen = `${(num * 100).toFixed(1)}%`.length;
+                    } else if (fmt.includes('.0')) {
+                        visualLen = num.toFixed(1).length;
+                    } else {
+                        visualLen = `${Math.round(num).toLocaleString('en-US')}`.length;
+                    }
                 } else {
-                    maxLen = Math.max(maxLen, str.length + 3);
+                    const str = String(cell.value || '').trim();
+                    if (colIdx >= 4 && (str === '-' || str === '')) {
+                        visualLen = 0;
+                    } else {
+                        visualLen = str.length;
+                    }
+                }
+
+                // Las dimensiones verticales no deben agrandar las columnas de meses
+                if (colIdx < 3 && visualLen > 15) {
+                    maxVisualLen = Math.max(maxVisualLen, 6.5);
+                } else if (colIdx === 3) {
+                    maxVisualLen = Math.max(maxVisualLen, visualLen);
+                } else {
+                    maxVisualLen = Math.max(maxVisualLen, visualLen);
                 }
             }
         });
@@ -345,9 +370,10 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
         if (colIdx < 3) {
             col.width = 6.5; // Columnas de dimensiones verticales compactas
         } else if (colIdx === 3) {
-            col.width = 34;  // Columna de Nombres de Métricas
+            col.width = 33;  // Columna de Nombres de Métricas
         } else {
-            col.width = Math.max(maxLen, 14); // Columnas de Meses y Total Acum
+            // Ancho neto calibrado exactamente al número de dígitos más largo + padding ergonómico de 2.5
+            col.width = Math.max(maxVisualLen + 2.5, 11);
         }
     });
 

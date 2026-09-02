@@ -512,9 +512,53 @@ Se ejecutó el inspector automatizado [`qc_pdf_inspector.py`](file:///c:/Users/r
 
 ---
 
-## 30. 📝 DICTAMEN FINAL Y SELLADO PERICIAL EDICIÓN DE FLETE
+---
 
-* **Estado de la Solución**: Recálculo dinámico instantáneo de fletes e ingresos brutos al 100% tanto en contratos como en cotizaciones de Multicotizador.
+## 31. 🕵️‍♂️ CASO PERICIAL: EXPORTACIÓN EXCEL MATRIZ PETRAL (TOTALES DESPLEGADOS, ZOOM 65% Y ANCHO NETO) (PROTOCOLO BEN / LEG / CLON / DIFF / QC / NOTA)
+
+**Fecha:** 02 de Septiembre de 2026 (04:28 PM)  
+**Módulo Afectado:** Exportador a Excel (`exportFinancialMatrixExcel.ts` & `ForecastGrid.tsx`)  
+**Requerimiento del Usuario:**
+1. Las 2 secciones de totales (`TOTAL FLOTA` y `TOTAL ACUMULADO`) deben aparecer completamente desplegadas (con sus 5 métricas hijas de desglose de Gross Revenue) al descargar el Excel.
+2. El archivo debe abrirse con un **zoom del 65%** por defecto.
+3. El ancho de las columnas debe calibrarse al ancho neto exacto de la cifra con más dígitos formateados.
+
+### 31.1. LEG (Legacy - Estado Previo / Escena del Crimen)
+1. **Colapso de Sub-métricas de Totales**:
+   * En `ForecastGrid.tsx`, `expandedGrossRevenue` iniciaba vacío `{}`. Si el usuario no hacía clic manual en los acordeones de la UI, las 5 métricas hijas no se renderizaban en el DOM y el Excel salía sin ese desglose.
+2. **Zoom por Defecto**:
+   * `views` en `addWorksheet` no definía `zoomScale`, por lo que Excel abría al 100%.
+3. **Ancho de Columnas**:
+   * Se utilizaban anchos fijos o aproximados con padding excesivo (`Math.max(maxLen, 14)`), generando columnas más anchas de lo necesario.
+
+### 31.2. CLON (Respaldos Físicos)
+* **Safe Point Git:** `PRE.EXCEL.MATRIX.UNCOLLAPSE.2.9.26`
+* **Backup Exportador:** `src/services/exportFinancialMatrixExcel_backup_pre_uncollapse.ts`
+
+### 31.3. DIFF (Diferencial Quirúrgico Aplicado)
+```
++-----------------------------------+--------------------------------------------+--------------------------------------------+
+| COMPONENTE                        | COMPORTAMIENTO LEGACY                      | COMPORTAMIENTO MEJORADO                    |
++-----------------------------------+--------------------------------------------+--------------------------------------------+
+| Despliegue de Totales             | Ocultos/colapsados por defecto             | Desplegados ('global-total-gross': true,   |
+|                                   |                                            |  'global-acum-gross': true)                |
+| Zoom Inicial en Excel             | 100% estándar                              | zoomScale: 65 (visión panorámica completa) |
+| Calibración de Ancho de Columnas  | Padding genérico de 14 caracteres          | Cálculo visual real del número formateado  |
+|                                   |                                            | con mayor cantidad de dígitos + 2.5 pad    |
++-----------------------------------+--------------------------------------------+--------------------------------------------+
+```
+
+### 31.4. QC (Control de Calidad en Terminal)
+* **Prueba Headless Node.js**:
+  * `WS zoomScale`: **65** ✅
+  * `WS cols`: `[ 6.5, 6.5, 6.5, 33, 14.5, 15.2 ]` ✅
+* **Compilación Frontend**: `npx vite build` completada en **9.57s (exit code 0)** con 1089 módulos.
+
+---
+
+## 32. 📝 DICTAMEN FINAL Y SELLADO PERICIAL EXCEL MATRIZ PETRAL
+
+* **Estado de la Solución**: Exportación a Excel de Matriz PETRAL perfeccionada con zoom al 65%, 15 métricas de totales desplegadas y columnas con ancho neto exacto.
 
 ---
 *Firma Pericial: Benoit Blanc Senior - Detective Auditor*
