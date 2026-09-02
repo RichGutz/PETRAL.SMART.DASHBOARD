@@ -498,18 +498,23 @@ Se ejecutó el inspector automatizado [`qc_pdf_inspector.py`](file:///c:/Users/r
 +-----------------------------------+--------------------------------------------+--------------------------------------------+
 ```
 
-### 29.4. QC (Control de Calidad en Terminal)
+### 29.4. QC (Control de Calidad en Terminal con Evidencia Visible)
 * **Prueba Headless Backend**: [`test_tariff_override_qc.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Engine/test_tariff_override_qc.py) ejecutada en terminal:
-  * Base Contrato: `Flete $/MT = 23.10`
-  * Edición Custom: `Flete $/MT = 28.50` $\rightarrow$ `Gross Revenue = $384,750.00` ($28.50 \times 13,500\text{ MT}$).
-  * Resultado: **100% Exitoso (exit code 0)**.
-* **Compilación Frontend**: `npx vite build` completada en **13.06s (exit code 0)** con 1089 módulos.
+  * **Test 1 (Ruta de Contrato Estándar)**:
+    * Base Contrato: `Flete $/MT = 23.10`
+    * Edición Custom: `Flete $/MT = 28.50` $\rightarrow$ `Gross Revenue = $384,750.00` ($28.50 \times 13,500\text{ MT}$).
+    * Resultado: ✅ APROBADO (100%).
+  * **Test 2 (Ruta de Cotización Multicotizador / Cierres)**:
+    * Base Cotización: `Flete $/MT = 24.50`
+    * Edición Custom: `Flete $/MT = 40.00` $\rightarrow$ `Gross Revenue = $540,000.00` ($40.00 \times 13,500\text{ MT}$).
+    * Resultado: ✅ APROBADO (100%).
+* **Compilación Frontend**: `npx vite build` completada en **12.83s (exit code 0)** con 1089 módulos.
 
 ---
 
 ## 30. 📝 DICTAMEN FINAL Y SELLADO PERICIAL EDICIÓN DE FLETE
 
-* **Estado de la Solución**: Edición en caliente de fletes 100% operativa, fluida y reactiva en Matriz PETRAL.
+* **Estado de la Solución**: Recálculo dinámico instantáneo de fletes e ingresos brutos al 100% tanto en contratos como en cotizaciones de Multicotizador.
 
 ---
 *Firma Pericial: Benoit Blanc Senior - Detective Auditor*

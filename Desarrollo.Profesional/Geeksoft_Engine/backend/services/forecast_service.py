@@ -774,12 +774,12 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
 
                     tipo = tr.get("type", "").upper()
                     if tipo == "LADEN":
-                        # Preservar flete cotizado original del tramo si existe (> 0)
-                        if float(tr.get("freight_rate", 0)) <= 0:
+                        # Si el usuario editó la tarifa en caliente (custom_tariff), SOBRESCRIBE el flete del tramo
+                        if line.custom_tariff is not None and float(line.custom_tariff) > 0:
+                            tr["freight_rate"] = float(line.custom_tariff)
+                        elif float(tr.get("freight_rate", 0)) <= 0:
                             if contract_tariff_val > 0:
                                 tr["freight_rate"] = float(contract_tariff_val)
-                            elif line.custom_tariff is not None and float(line.custom_tariff) > 0:
-                                tr["freight_rate"] = float(line.custom_tariff)
                             elif freight_rate > 0:
                                 tr["freight_rate"] = float(freight_rate)
                         # Acumular para yield ponderado
@@ -860,10 +860,11 @@ def run_forecast_simulation(request: ForecastRequest) -> Dict[str, Any]:
                 # --- FIDELIDAD AL SNAPSHOT (Axioma 1: La Foto no se reinventa) ---
                 is_same_vessel = bool(vessel and original_vessel_id and vessel.strip().upper() == str(original_vessel_id).strip().upper())
                 has_bunker_override = bool((line.forecast_bunker_price_ifo and float(line.forecast_bunker_price_ifo) > 0) or (line.forecast_bunker_price_mdo and float(line.forecast_bunker_price_mdo) > 0))
+                has_tariff_override = bool(line.custom_tariff is not None and float(line.custom_tariff) > 0)
                 fin_summary = legs_data.get("financial_summary") or {}
                 has_valid_snapshot = bool(fin_summary and float(fin_summary.get("grandBunkerTotal", 0)) > 0)
 
-                if is_same_vessel and not has_bunker_override and has_valid_snapshot:
+                if is_same_vessel and not has_bunker_override and not has_tariff_override and has_valid_snapshot:
                     # Consumo directo e inmaculado de la Foto del Multicotizador
                     tot_freight_rev = float(fin_summary.get("totalFreight", consolidated.get("total_freight_revenue", 0)))
                     tot_refact_muell = float(fin_summary.get("refacturacionMuellaje", sum_muellaje))
@@ -1369,10 +1370,10 @@ def run_forecast_simulation_universal(request: ForecastRequest) -> Dict[str, Any
                     tr["bunker_price_mdo"] = final_p_mdo
                     tipo = tr.get("type", "").upper()
                     if tipo == "LADEN":
-                        if contract_tariff_val > 0:
-                            tr["freight_rate"] = float(contract_tariff_val)
-                        elif line.custom_tariff is not None:
+                        if line.custom_tariff is not None and float(line.custom_tariff) > 0:
                             tr["freight_rate"] = float(line.custom_tariff)
+                        elif contract_tariff_val > 0:
+                            tr["freight_rate"] = float(contract_tariff_val)
                         elif freight_rate > 0:
                             tr["freight_rate"] = float(freight_rate)
                         total_laden_qty += float(tr.get("quantity", 0))
