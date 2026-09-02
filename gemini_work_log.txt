@@ -530,3 +530,4 @@ CONCURRENCY & QC SUMMARY:
 [2026-09-02 15:27] Ronda 11 Benoit Blanc Senior: Calibración final de anchos en Matriz Financiera PDF (Métrica a 128px, Total Acum a 66px, y 12 meses expandidos a 58px cada uno).
 [2026-09-02 15:31] Despliegue completado al VPS de producción (91.108.125.253) en https://forecast.geeksoft.tech. Ronda 11 (Benoit Blanc Senior: anchos finales calibrados: Metrica 128px, 12 meses 58px, Total Acum 66px) publicada en vivo.
 [2026-09-02 15:52] Caso Pericial Edición de Flete en Caliente: Corrección en backend (forecast_service.py) priorizando custom_tariff sobre contrato base y en frontend (ForecastContext_V2.tsx).
+[2026-09-02 15:55] Despliegue completado al VPS de producción (91.108.125.253) en https://forecast.geeksoft.tech. Caso Edición de Flete en Caliente (custom_tariff sobrescribe contrato) publicado en vivo con backend FastAPI reiniciado y bundle actualizado.

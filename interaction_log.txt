@@ -471,3 +471,4 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-09-02 15:27] Ronda 11 PDF Matriz Financiera validada con QC inspector PyMuPDF (4 paginas densas de anchos calibrados).
 [2026-09-02 15:31] Despliegue exitoso de Ronda 11 PDF Matriz Financiera al VPS https://forecast.geeksoft.tech.
 [2026-09-02 15:52] Caso Edicion de Flete en Caliente validado con test_tariff_override_qc.py y npx vite build.
+[2026-09-02 15:55] Despliegue exitoso de Caso Edición de Flete en Caliente al VPS https://forecast.geeksoft.tech.
