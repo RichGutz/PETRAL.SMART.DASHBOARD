@@ -478,3 +478,4 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 [2026-09-02 16:28] Exportación Excel Matriz PETRAL validada con QC Node.js y npx vite build (9.57s).
 [2026-09-02 16:31] Despliegue exitoso de Caso Exportación Excel Matriz PETRAL al VPS https://forecast.geeksoft.tech.
 [2026-09-02 16:51] Despliegue exitoso de Exportación Excel Matriz PETRAL al VPS https://forecast.geeksoft.tech.
+[2026-09-02 17:09] Despliegue exitoso de corrección accumGross al VPS https://forecast.geeksoft.tech.
