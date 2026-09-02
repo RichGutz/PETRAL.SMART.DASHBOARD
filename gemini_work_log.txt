@@ -498,3 +498,5 @@ CONCURRENCY & QC SUMMARY:
 - Documentacion: Sellado Caso N° 15 en 31_Reporte_MEC_Matriz_Matrices.md.
 - Despliegue: VPS Produccion https://forecast.geeksoft.tech (Commit a7dbd2e).
 - Sesion pericial finalizada y sellada con 100% de exito.
+[2026-09-02 09:58] Safe Point: Creado branch y tag PRE.PFDs.IZ.2.9.26 y sincronizado con origin. Rama activa: main.
+[2026-09-02 10:10] Corrección forense en exportFinancialMatrixExcel.ts: Fila (-) Hire (TCE x días) formateada como monto monetario global ($#,##0) con separador de miles. Compilación Vite limpia y 6 escenarios auditados.

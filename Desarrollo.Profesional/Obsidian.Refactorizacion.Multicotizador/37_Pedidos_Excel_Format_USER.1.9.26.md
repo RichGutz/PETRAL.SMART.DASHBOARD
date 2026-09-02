@@ -90,13 +90,19 @@ Previo a cualquier intervención en el código fuente, se ejecutaron las directi
   - **Columnas 1..4 (Dimensiones y Métricas):** Inmunes a limpieza (`cell.value = textValue`).
   - **Columnas 5..17 (Datos):** Todo valor `0`, `0.0`, `$0` o `"-"` se convierte en celda vacía (`""`).
 
+### Iteración 6: Corrección Pericial de Formato Monetario en Fila (-) Hire (TCE x días)
+- **El Fallo Detectado:** La fila `(-) Hire (TCE x días)` en subtotales y totales de flota/acumulado se renderizaba como número flotante sin formato (`649342.0`, `550411.0`, etc.) sin signo monetario ni separador de miles.
+- **Causa Raíz:** La presencia de la palabra "días" o "TCE" en el título de la métrica activaba erróneamente la regla no monetaria de días de operación (`numFmt = '0.0'`) o la regla unitaria.
+- **La Solución Quirúrgica:** Exclusión explícita de `HIRE` (`!currentMetricName.includes('HIRE')`) de las reglas de días y unitarios en [`exportFinancialMatrixExcel.ts`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixExcel.ts), asegurando que se formatee limpiamente como monto monetario global (`$#,##0`).
+- **Impacto Aislado:** Únicamente afecta a las filas que contienen `HIRE`, manteniendo 100% intactas todas las demás métricas (`Viajes`, `Días-Buque`, `Toneladas`, `Net Revenue`, `Bunker Costs`, `Port Costs`, etc.).
+
 ---
 
 ## 5. LOCALIZACIÓN EXHAUSTIVA DE SCRIPTS Y RECURSOS FORENSES
 
 | Script / Archivo | Ruta Absoluta Local | Propósito y Tecnología | Salida / Artefacto |
 |---|---|---|---|
-| **Motor Exportación Frontend** | [`Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixExcel.ts`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixExcel.ts) | Servicio TypeScript con `ExcelJS` que lee el DOM `#forecast-grid-table` y genera el XLSX. | Archivo descargado en browser |
+| **Motor Exportación Frontend** | [`Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixExcel.ts`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/services/exportFinancialMatrixExcel.ts) | Servicio TypeScript con `ExcelJS` que lee el DOM `#forecast-grid-table` y genera el XLSX con formateo monetario $#,##0 en Hire. | Archivo descargado en browser |
 | **Componente de Filtros UI** | [`Desarrollo.Profesional/Geeksoft_Frontend/src/components/CommercialForecast/ForecastGridFilters.tsx`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/Desarrollo.Profesional/Geeksoft_Frontend/src/components/CommercialForecast/ForecastGridFilters.tsx) | Botón verde "Exportar Excel" conectado al servicio `exportFinancialMatrixExcel`. | Evento click de usuario |
 | **Script Auditor Multi-Escenario** | [`audit_all_scenarios_qc.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/audit_all_scenarios_qc.py) | Script Python con `requests` y `openpyxl` que descarga los 6 escenarios de la BD, simula y genera 6 excels completos. | 6 archivos en `Exceles.Petral/QC_Auditoria_Escenarios/` |
 | **Script Auditor de Métricas** | [`audit_metrics_qc.py`](file:///c:/Users/rguti/PETRAL.SMART.DASHBOARD/audit_metrics_qc.py) | Script Python de auditoría pericial fila por fila (96 filas) para verificar que no haya métricas vacías ni dólares indebidos. | Reporte terminal con 0 fallos |
@@ -123,9 +129,9 @@ A continuación, la evidencia irrefutable de los 6 escenarios de producción aud
 
 ## 7. DICTAMEN FINAL Y CIERRE PERICIAL
 
-1. **Estado Git:** Tag y Branch `EXCEL.PEDIDO.IZ.1.9.26` sincronizados en GitHub; rama `main` al día.
+1. **Estado Git:** Tag y Branch `EXCEL.PEDIDO.IZ.1.9.26` y safe-point `PRE.PFDs.IZ.2.9.26`; rama `main` al día.
 2. **Estado Producción:** Desplegado con SSL y activo en [https://forecast.geeksoft.tech](https://forecast.geeksoft.tech).
-3. **Calidad de Salida:** Celdas combinadas perfectas, rotación vertical a 90°, colores de ruta/buque idénticos a la web, subtotales, totales de flota, acumulados anuales, nombres de métricas completos y ceros/guiones eliminados de los meses inactivos.
+3. **Calidad de Salida:** Celdas combinadas perfectas, rotación vertical a 90°, colores de ruta/buque idénticos a la web, subtotales, totales de flota, acumulados anuales, nombres de métricas completos, ceros/guiones eliminados de los meses inactivos y formateo monetario `$#,##0` en Hire.
 
 ---
 *Firma Pericial: Benoit Blanc - Detective Auditor*

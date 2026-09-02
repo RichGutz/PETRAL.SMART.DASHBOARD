@@ -232,8 +232,10 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                             cell.value = parsedNum;
                             cell.numFmt = Number.isInteger(parsedNum) ? '#,##0' : '0.0';
                         } else if (
-                            currentMetricName.includes('DÍA') || currentMetricName.includes('DAYS') || 
-                            currentMetricName.includes('DÍAS') || currentMetricName.includes('DURACIÓN')
+                            !currentMetricName.includes('HIRE') && (
+                                currentMetricName.includes('DÍA') || currentMetricName.includes('DAYS') || 
+                                currentMetricName.includes('DÍAS') || currentMetricName.includes('DURACIÓN')
+                            )
                         ) {
                             // NO MONETARIO: Días de operación
                             cell.value = parsedNum;
@@ -247,15 +249,17 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                             cell.value = parsedNum;
                             cell.numFmt = '#,##0';
                         } else if (
-                            currentMetricName.includes('USD/MT') || currentMetricName.includes('TARIFA') || 
-                            currentMetricName.includes('TCE') || currentMetricName.includes('TCY') || 
-                            currentMetricName.includes('$/D') || currentMetricName.includes('$/DÍA')
+                            !currentMetricName.includes('HIRE') && (
+                                currentMetricName.includes('USD/MT') || currentMetricName.includes('TARIFA') || 
+                                currentMetricName.includes('TCE') || currentMetricName.includes('TCY') || 
+                                currentMetricName.includes('$/D') || currentMetricName.includes('$/DÍA')
+                            )
                         ) {
                             // MONETARIO UNITARIO: Tarifas y TCE con centavos
                             cell.value = parsedNum;
                             cell.numFmt = '$#,##0.00';
                         } else {
-                            // MONETARIO GLOBAL: Net Revenue, Bunker, Puertos, P&L, etc.
+                            // MONETARIO GLOBAL: Net Revenue, Hire, Bunker, Puertos, P&L, etc.
                             cell.value = parsedNum;
                             cell.numFmt = '$#,##0';
                         }

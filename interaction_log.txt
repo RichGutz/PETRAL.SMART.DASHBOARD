@@ -439,3 +439,5 @@ TAREAS Y MODIFICACIONES REALIZADAS:
 - Documentado en `31_Reporte_MEC_Matriz_Matrices.md` (Caso N° 15).
 - Desplegado a Producción VPS https://forecast.geeksoft.tech (Commit a7dbd2e).
 - Sesión pericial cerrada al 100% de éxito.
+[2026-09-02 09:58] Creado branch y tag PRE.PFDs.IZ.2.9.26. Rama actual: main.
+[2026-09-02 10:10] Fix formato monetario en fila Hire ($#,##0) verificado con QC multi-escenario.
