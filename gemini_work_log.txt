@@ -536,3 +536,4 @@ CONCURRENCY & QC SUMMARY:
 [2026-09-02 16:19] Despliegue completado al VPS de producción (91.108.125.253) en https://forecast.geeksoft.tech. Caso Recálculo de Ingresos en Cotizaciones Multicotizador (has_tariff_override y tramo freight_rate) publicado en vivo con FastAPI reiniciado.
 [2026-09-02 16:28] Caso Pericial Exportación Excel Matriz PETRAL: zoomScale 65%, 15 métricas de totales desplegadas por defecto y columnas auto-fit al dígito más largo.
 [2026-09-02 16:31] Despliegue completado al VPS de producción (91.108.125.253) en https://forecast.geeksoft.tech. Caso Exportación Excel Matriz PETRAL (zoomScale 65%, totales desplegados y ancho neto) publicado en vivo.
+[2026-09-02 16:51] Despliegue completado al VPS de producción (91.108.125.253) en https://forecast.geeksoft.tech. Caso Exportación Excel Matriz PETRAL (zoomScale 65%, 15 filas totales y anchos netos) auditado y publicado en vivo.
