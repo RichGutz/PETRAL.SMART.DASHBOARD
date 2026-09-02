@@ -301,20 +301,20 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return (Number(mD.gross_income) || (Number(mD.carga_unit || 13500) * Number(mD.flete_unit || 30) * freq));
+                        return (Number(mD.gross_income || mD.hire || mD.freight_revenue) || (Number(mD.carga_unit || 13500) * Number(mD.flete_unit || 30) * freq));
                     });
                     const ventaTerc = new Array(months.length).fill(0);
                     const demRev = months.map((m, i) => {
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return (Number(mD.demurrage_revenue) || 0) * freq;
+                        return Number(mD.demurrage_revenue || mD.demurrage_income || mD.demurrage || 0) * freq;
                     });
                     const ingPto = months.map((m, i) => {
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return (Number(mD.port_rebate_income) || (Number(mD.costos_puerto_total || 0) * 0.10)) * freq;
+                        return Number(mD.refacturacion_muellaje || mD.dockage_revenue || mD.port_rebate_income || (Number(mD.total_port_costs || mD.port_costs || 0) * 0.10)) * (mD.total_port_costs_unit ? freq : 1);
                     });
                     const otrosIng = new Array(months.length).fill(0);
 
@@ -325,21 +325,28 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return -Number(mD.bunker_cost || 0) * freq;
+                        const val = Number(mD.total_bunker_costs || mD.bunker_costs || mD.bunker_cost || 0);
+                        return -val * (mD.total_bunker_costs_unit ? freq : (val > 50000 && freq === 1 ? 1 : freq));
                     });
                     const gastosPuerto = months.map((m, i) => {
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return -Number(mD.costos_puerto_total || 0) * freq;
+                        const val = Number(mD.total_port_costs || mD.port_costs || mD.costos_puerto_total || 0);
+                        return -val * (mD.total_port_costs_unit ? freq : (val > 30000 && freq === 1 ? 1 : freq));
                     });
                     const costosDemora = months.map((m, i) => {
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return -Number(mD.demurrage_cost || 0) * freq;
+                        return -Number(mD.demurrage_hire_cost || mD.costos_demora || mD.demurrage_cost || 0) * freq;
                     });
-                    const comisiones = new Array(months.length).fill(0);
+                    const comisiones = months.map((m, i) => {
+                        const mD = monthData[m] || {};
+                        const freq = trips[i] || 0;
+                        if (freq <= 0) return 0;
+                        return -Number(mD.commissions_cost || mD.total_commissions || 0) * freq;
+                    });
                     const otrosCostos = new Array(months.length).fill(0);
 
                     const subtotalCostosDirectos = months.map((_, i) => combustible[i] + gastosPuerto[i] + costosDemora[i] + comisiones[i] + otrosCostos[i]);
@@ -350,7 +357,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return -Number(mD.charter_hire_cost || 0) * freq;
+                        return -Number(mD.charter_hire || mD.charter_hire_cost || 0) * freq;
                     });
                     const margenBruto = months.map((_, i) => tce[i] + arriendo[i]);
 

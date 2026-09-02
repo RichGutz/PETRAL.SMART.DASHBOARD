@@ -53,11 +53,11 @@ function getDimensionColor(className: string, text: string): { bg: string; fg: s
 }
 
 function createVerticalSvg(text: string, rowSpan: number, fill: string = '#ffffff'): string {
-    const height = Math.max(30, rowSpan * 15);
+    const height = Math.max(35, rowSpan * 18);
     const midY = -height / 2;
     return `
-    <svg width="20" height="${height}" viewBox="0 0 20 ${height}" style="display: block; margin: 0 auto; overflow: visible;">
-        <text x="${midY}" y="13.5" transform="rotate(-90)" text-anchor="middle" fill="${fill}" font-family="Consolas, 'Courier New', monospace" font-size="8" font-weight="bold" letter-spacing="0.4">${text}</text>
+    <svg width="24" height="${height}" viewBox="0 0 24 ${height}" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="${midY}" y="15" transform="rotate(-90)" text-anchor="middle" fill="${fill}" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">${text}</text>
     </svg>
     `;
 }
@@ -291,8 +291,8 @@ export function generateFinancialMatrixNavitransoPdfHtml(
         });
     });
 
-    // 5. Paginación Óptima (Límite: 35 filas por hoja para albergar exactamente 2 COMBOS por página)
-    const MAX_ROWS_PER_PAGE = 35;
+    // 5. Paginación Óptima (Límite: 30 filas por hoja para albergar exactamente 2 COMBOS por página)
+    const MAX_ROWS_PER_PAGE = 30;
     interface PageStructure {
         blocks: NavAtomicBlock[];
         totalRows: number;
@@ -353,7 +353,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                     return `
                     <tr class="${trClass}">
                         ${isFirst ? `
-                            <td colspan="3" rowspan="${rowCount}" class="td-dimension" style="background-color: #1e293b !important; color: #ffffff !important; font-weight: 900; font-size: 8px; text-align: center; vertical-align: middle;">
+                            <td colspan="3" rowspan="${rowCount}" class="td-dimension" style="background-color: #1e293b !important; color: #ffffff !important; font-weight: 900; font-size: 8.5px; text-align: center; vertical-align: middle;">
                                 TOTAL FLOTA
                             </td>
                         ` : ''}
@@ -379,7 +379,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
                     return `
                     <tr class="${trClass}">
                         ${isFirst ? `
-                            <td colspan="3" rowspan="${rowCount}" class="td-dimension" style="background-color: #0d9488 !important; color: #ffffff !important; font-weight: 900; font-size: 8px; text-align: center; vertical-align: middle;">
+                            <td colspan="3" rowspan="${rowCount}" class="td-dimension" style="background-color: #0d9488 !important; color: #ffffff !important; font-weight: 900; font-size: 8.5px; text-align: center; vertical-align: middle;">
                                 TOTAL ACUMULADO
                             </td>
                         ` : ''}
@@ -509,10 +509,10 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th class="th-dim" style="width: 20px;">CLI</th>
-                        <th class="th-dim" style="width: 20px;">RUT</th>
-                        <th class="th-dim" style="width: 20px;">BUQ</th>
-                        <th class="th-metric" style="width: 140px;">MÉTRICA NAVITRANSO</th>
+                        <th class="th-dim" style="width: 24px;">CLI</th>
+                        <th class="th-dim" style="width: 24px;">RUT</th>
+                        <th class="th-dim" style="width: 24px;">BUQ</th>
+                        <th class="th-metric" style="width: 135px;">MÉTRICA NAVITRANSO</th>
                         ${safeMonths.map(m => `<th class="th-month" style="width: 58px;">${m}</th>`).join('')}
                         <th class="th-total" style="width: 66px;">${totalHeader}</th>
                     </tr>
@@ -560,7 +560,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             padding: 0 !important;
             background-color: #ffffff !important;
             color: #0f172a;
-            font-size: 8px !important;
+            font-size: 8.5px !important;
             font-weight: normal !important;
             line-height: 1.15;
         }
@@ -637,7 +637,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             border-collapse: collapse;
             margin-bottom: 2px;
             table-layout: fixed;
-            font-size: 8px !important;
+            font-size: 8.5px !important;
             font-weight: normal !important;
             line-height: 1.1;
         }
@@ -646,7 +646,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             color: #ffffff !important;
             font-weight: 700;
             text-transform: uppercase;
-            font-size: 8px;
+            font-size: 8.5px;
             padding: 2px 1px;
             border: 1px solid #334155;
             text-align: center;
@@ -664,15 +664,15 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             overflow: hidden;
             text-overflow: ellipsis;
             font-weight: normal !important;
-            height: 15px !important;
-            max-height: 15px !important;
+            height: 16px !important;
+            max-height: 16px !important;
         }
         
         /* Celdas de Dimensiones Verticales (CLI, RUT, BUQ) */
         td.td-dimension {
-            width: 20px !important;
-            max-width: 20px !important;
-            min-width: 20px !important;
+            width: 24px !important;
+            max-width: 24px !important;
+            min-width: 24px !important;
             text-align: center !important;
             vertical-align: middle !important;
             padding: 0 !important;
@@ -680,9 +680,9 @@ export function generateFinancialMatrixNavitransoPdfHtml(
 
         /* Columna 4: Nombres de Métricas */
         td.td-metric-name {
-            width: 140px !important;
-            min-width: 140px !important;
-            max-width: 140px !important;
+            width: 135px !important;
+            min-width: 135px !important;
+            max-width: 135px !important;
             text-align: left !important;
             font-weight: normal !important;
             color: #0f172a;
@@ -690,12 +690,12 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             writing-mode: horizontal-tb !important;
             transform: none !important;
             white-space: nowrap !important;
-            font-size: 7.5px !important;
+            font-size: 8.5px !important;
         }
         .pl-subrow {
             padding-left: 10px !important;
             color: #475569 !important;
-            font-size: 7px !important;
+            font-size: 7.5px !important;
         }
 
         /* Columnas de Datos */
@@ -703,7 +703,7 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             width: 58px !important;
             max-width: 58px !important;
             text-align: right !important;
-            font-size: 7.5px !important;
+            font-size: 8.5px !important;
             font-weight: normal !important;
             color: #1e293b;
             padding-right: 2px;
