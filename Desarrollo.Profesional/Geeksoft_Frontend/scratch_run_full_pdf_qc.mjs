@@ -102,6 +102,16 @@ clients.forEach(client => {
     });
 });
 
+function createVerticalSvg(text, rowSpan, fill = '#ffffff') {
+    const height = Math.max(35, rowSpan * 18);
+    const midY = -height / 2;
+    return `
+    <svg width="24" height="${height}" viewBox="0 0 24 ${height}" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="${midY}" y="15" transform="rotate(-90)" text-anchor="middle" fill="${fill}" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">${text}</text>
+    </svg>
+    `;
+}
+
 // Importar dinámicamente o aplicar la lógica de exportFinancialMatrixPdf.ts
 const occupied = [];
 const setOccupied = (r, c, rSpan, cSpan) => {
@@ -267,8 +277,8 @@ vesselBlocks.forEach(vb => {
 
 const fleetBlock = {
     client: 'TOTAL FLOTA',
-    route: '',
-    vessel: '',
+    route: 'FLOTA',
+    vessel: 'TODOS',
     isSubtotal: false,
     isFleet: true,
     isAccum: false,
@@ -292,8 +302,8 @@ for (let mIdx = 0; mIdx < 10; mIdx++) {
 
 const accumBlock = {
     client: 'TOTAL ACUMULADO',
-    route: '',
-    vessel: '',
+    route: 'PROGRESIVO',
+    vessel: 'YTD',
     isSubtotal: false,
     isFleet: false,
     isAccum: true,
@@ -357,27 +367,31 @@ const pagesHtml = pages.map((p, pageIdx) => {
         const isAccum = b.isAccum;
         const trClass = isAccum ? 'tr-accum' : (isFleet ? 'tr-fleet' : 'tr-data-row');
 
+        const cBg = isAccum ? '#0d9488' : (isFleet ? '#1e293b' : '#0369a1');
+        const cFg = isFleet ? '#fbbf24' : '#ffffff';
+        const rBg = isAccum ? '#0d9488' : (isFleet ? '#1e293b' : '#a855f7');
+        const rFg = isFleet ? '#94a3b8' : '#ffffff';
+        const vBg = isAccum ? '#0d9488' : (isFleet ? '#1e293b' : '#16a34a');
+        const vFg = isFleet ? '#94a3b8' : '#ffffff';
+
         return b.rows.map((row, rIdx) => {
             const isVesselFirst = rIdx === 0;
             return `
             <tr class="${trClass}">
                 ${isClientFirst && rIdx === 0 ? `
-                    <td rowspan="${clientSpan}" class="td-dimension" style="background-color: ${isAccum ? '#0d9488' : (isFleet ? '#1e293b' : '#0369a1')} !important; color: #fff !important;">
-                        <div class="pdf-vertical-text">${b.client}</div>
+                    <td rowspan="${clientSpan}" class="td-dimension" style="background-color: ${cBg} !important;">
+                        ${createVerticalSvg(b.client, clientSpan, cFg)}
                     </td>
                 ` : ''}
-                ${!isFleet && !isAccum && isRouteFirst && rIdx === 0 ? `
-                    <td rowspan="${routeSpan}" class="td-dimension" style="background-color: #a855f7 !important; color: #fff !important;">
-                        <div class="pdf-vertical-text">${b.route}</div>
+                ${isRouteFirst && rIdx === 0 ? `
+                    <td rowspan="${routeSpan}" class="td-dimension" style="background-color: ${rBg} !important;">
+                        ${createVerticalSvg(b.route, routeSpan, rFg)}
                     </td>
                 ` : ''}
-                ${!isFleet && !isAccum && isVesselFirst ? `
-                    <td rowspan="${vesselSpan}" class="td-dimension" style="background-color: #16a34a !important; color: #fff !important;">
-                        <div class="pdf-vertical-text">${b.vessel}</div>
+                ${isVesselFirst ? `
+                    <td rowspan="${vesselSpan}" class="td-dimension" style="background-color: ${vBg} !important;">
+                        ${createVerticalSvg(b.vessel, vesselSpan, vFg)}
                     </td>
-                ` : ''}
-                ${(isFleet || isAccum) && rIdx === 0 ? `
-                    <td rowspan="${vesselSpan}" colspan="2" class="td-dimension" style="background-color: ${isAccum ? '#0d9488' : '#1e293b'} !important;"></td>
                 ` : ''}
                 <td class="td-metric-name">${row.metric}</td>
                 ${row.values.map((v, valIdx) => `<td class="${v ? 'td-num' : 'td-empty'} ${valIdx === row.values.length - 1 ? 'td-total-cell' : ''}">${v}</td>`).join('')}
@@ -444,7 +458,6 @@ const fullHtml = `<!DOCTYPE html>
         table.data-table th.th-total { background-color: #0d9488 !important; color: #ffffff !important; }
         table.data-table td { border: 1px solid #cbd5e1; padding: 2px 3px; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: normal !important; }
         td.td-dimension { width: 24px !important; max-width: 24px !important; min-width: 24px !important; text-align: center !important; vertical-align: middle !important; padding: 0 !important; }
-        .pdf-vertical-text { writing-mode: sideways-lr !important; text-align: center !important; margin: 0 auto !important; width: 100% !important; font-weight: 700; font-size: 8.5px; letter-spacing: 0.5px; line-height: 1; }
         td.td-metric-name { width: 165px !important; min-width: 165px !important; max-width: 165px !important; text-align: left !important; font-weight: normal !important; color: #0f172a; padding-left: 5px; writing-mode: horizontal-tb !important; transform: none !important; white-space: nowrap !important; font-size: 9.5px !important; }
         td.td-num { width: 53px !important; max-width: 53px !important; text-align: right !important; font-size: 9px !important; font-weight: normal !important; color: #1e293b; padding-right: 3px; }
         td.td-empty { width: 53px !important; max-width: 53px !important; text-align: center; color: #cbd5e1; }
@@ -460,4 +473,4 @@ const fullHtml = `<!DOCTYPE html>
 </html>`;
 
 fs.writeFileSync('./scratch_atomic_full.html', fullHtml, 'utf-8');
-console.log(`✅ Paginación y expansión completa de totales generada con éxito (${totalPagesCount} páginas A4 Landscape).`);
+console.log(`✅ Paginación y rotación SVG en todas las dimensiones generada con éxito (${totalPagesCount} páginas A4 Landscape).`);

@@ -43,6 +43,16 @@ function getDimensionColor(className: string, text: string): { bg: string; fg: s
     return null;
 }
 
+function createVerticalSvg(text: string, rowSpan: number, fill: string = '#ffffff'): string {
+    const height = Math.max(35, rowSpan * 18);
+    const midY = -height / 2;
+    return `
+    <svg width="24" height="${height}" viewBox="0 0 24 ${height}" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="${midY}" y="15" transform="rotate(-90)" text-anchor="middle" fill="${fill}" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">${text}</text>
+    </svg>
+    `;
+}
+
 interface ParsedRow {
     client: string;
     route: string;
@@ -246,7 +256,7 @@ export function generateFinancialMatrixPdfHtml(
     let currentBlock: AtomicBlock | null = null;
 
     rawRows.forEach(r => {
-        if (r.isFleet || r.isAccum) return; // Se procesan al final de forma expandida garantizada
+        if (r.isFleet || r.isAccum) return; // Se sintetizan al final de forma expandida garantizada
 
         const upperMetric = r.metric.toUpperCase();
         const isStartOfVessel = upperMetric.includes('VIAJES') || upperMetric.includes('FREQ');
@@ -334,8 +344,8 @@ export function generateFinancialMatrixPdfHtml(
     // Construir Bloque TOTAL FLOTA (10 filas completas)
     const fleetBlock: AtomicBlock = {
         client: 'TOTAL FLOTA',
-        route: '',
-        vessel: '',
+        route: 'FLOTA',
+        vessel: 'TODOS',
         clientCls: 'bg-slate-800 text-white',
         routeCls: 'bg-slate-800 text-white',
         vesselCls: 'bg-slate-800 text-white',
@@ -366,8 +376,8 @@ export function generateFinancialMatrixPdfHtml(
 
     const accumBlock: AtomicBlock = {
         client: 'TOTAL ACUMULADO',
-        route: '',
-        vessel: '',
+        route: 'PROGRESIVO',
+        vessel: 'YTD',
         clientCls: 'bg-petral-teal text-white',
         routeCls: 'bg-petral-teal text-white',
         vesselCls: 'bg-petral-teal text-white',
@@ -413,7 +423,7 @@ export function generateFinancialMatrixPdfHtml(
     const totalPagesCount = pages.length;
     const formattedDate = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-    // 7. Renderizado de Páginas con Centrado Horizontal (sideways-lr) y Fusión Vertical
+    // 7. Renderizado de Páginas con Rotación Vectorial SVG y Fusión Vertical Jerárquica
     const pagesHtml = pages.map((p, pageIdx) => {
         const clientSpanMap = new Map<string, number>();
         const routeSpanMap = new Map<string, number>();
@@ -437,9 +447,13 @@ export function generateFinancialMatrixPdfHtml(
             const routeSpan = routeSpanMap.get(rKey) || b.rows.length;
             const vesselSpan = b.rows.length;
 
-            const cColor = getDimensionColor(b.clientCls, b.client) || { bg: '#0369a1', fg: '#ffffff' };
-            const rColor = getDimensionColor(b.routeCls, b.route) || { bg: '#a855f7', fg: '#ffffff' };
-            const vColor = getDimensionColor(b.vesselCls, b.vessel) || { bg: '#16a34a', fg: '#ffffff' };
+            const isFleet = b.isFleet;
+            const isAccum = b.isAccum;
+            const isSub = b.isSubtotal;
+
+            const cColor = isAccum ? { bg: '#0d9488', fg: '#ffffff' } : (isFleet ? { bg: '#1e293b', fg: '#fbbf24' } : (getDimensionColor(b.clientCls, b.client) || { bg: '#0369a1', fg: '#ffffff' }));
+            const rColor = isAccum ? { bg: '#0d9488', fg: '#ccfbf1' } : (isFleet ? { bg: '#1e293b', fg: '#94a3b8' } : (getDimensionColor(b.routeCls, b.route) || { bg: '#a855f7', fg: '#ffffff' }));
+            const vColor = isAccum ? { bg: '#0d9488', fg: '#ccfbf1' } : (isFleet ? { bg: '#1e293b', fg: '#94a3b8' } : (getDimensionColor(b.vesselCls, b.vessel) || { bg: '#16a34a', fg: '#ffffff' }));
 
             const isClientFirst = !renderedClients.has(cKey);
             if (isClientFirst) renderedClients.add(cKey);
@@ -449,23 +463,23 @@ export function generateFinancialMatrixPdfHtml(
 
             return b.rows.map((row, rIdx) => {
                 const isVesselFirst = rIdx === 0;
-                const trClass = b.isAccum ? 'tr-global-accum' : (b.isFleet ? 'tr-fleet-total' : (b.isSubtotal ? 'tr-subtotal' : 'tr-data-row'));
+                const trClass = isAccum ? 'tr-global-accum' : (isFleet ? 'tr-fleet-total' : (isSub ? 'tr-subtotal' : 'tr-data-row'));
 
                 return `
                 <tr class="${trClass}">
                     ${isClientFirst && rIdx === 0 ? `
-                        <td rowspan="${clientSpan}" class="td-dimension" style="background-color: ${cColor.bg} !important; color: ${cColor.fg} !important;">
-                            <div class="pdf-vertical-text">${b.client}</div>
+                        <td rowspan="${clientSpan}" class="td-dimension" style="background-color: ${cColor.bg} !important;">
+                            ${createVerticalSvg(b.client, clientSpan, cColor.fg)}
                         </td>
                     ` : ''}
                     ${isRouteFirst && rIdx === 0 ? `
-                        <td rowspan="${routeSpan}" class="td-dimension" style="background-color: ${rColor.bg} !important; color: ${rColor.fg} !important;">
-                            <div class="pdf-vertical-text">${b.route}</div>
+                        <td rowspan="${routeSpan}" class="td-dimension" style="background-color: ${rColor.bg} !important;">
+                            ${createVerticalSvg(b.route, routeSpan, rColor.fg)}
                         </td>
                     ` : ''}
                     ${isVesselFirst ? `
-                        <td rowspan="${vesselSpan}" class="td-dimension" style="background-color: ${vColor.bg} !important; color: ${vColor.fg} !important;">
-                            <div class="pdf-vertical-text">${b.vessel}</div>
+                        <td rowspan="${vesselSpan}" class="td-dimension" style="background-color: ${vColor.bg} !important;">
+                            ${createVerticalSvg(b.vessel, vesselSpan, vColor.fg)}
                         </td>
                     ` : ''}
                     <td class="td-metric-name ${row.metric.startsWith('↳') ? 'pl-subrow' : ''}">
@@ -663,7 +677,7 @@ export function generateFinancialMatrixPdfHtml(
             font-weight: normal !important;
         }
         
-        /* Celdas de Dimensiones Verticales (CLI, RUT, BUQ) con CENTRADO HORIZONTAL PERFECTO */
+        /* Celdas de Dimensiones Verticales (CLI, RUT, BUQ) con ROTACIÓN VECTORIAL SVG 100% BLINDADA */
         td.td-dimension {
             width: 24px !important;
             max-width: 24px !important;
@@ -671,16 +685,6 @@ export function generateFinancialMatrixPdfHtml(
             text-align: center !important;
             vertical-align: middle !important;
             padding: 0 !important;
-        }
-        .pdf-vertical-text {
-            writing-mode: sideways-lr !important;
-            text-align: center !important;
-            margin: 0 auto !important;
-            width: 100% !important;
-            font-weight: 700;
-            font-size: 8.5px;
-            letter-spacing: 0.5px;
-            line-height: 1;
         }
 
         /* Columna 4: Nombres de Métricas 100% HORIZONTAL */
