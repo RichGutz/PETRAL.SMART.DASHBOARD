@@ -53,7 +53,7 @@ function getDimensionColor(className: string, text: string): { bg: string; fg: s
 }
 
 function createVerticalSvg(text: string, rowSpan: number, fill: string = '#ffffff'): string {
-    const height = Math.max(35, rowSpan * 18);
+    const height = Math.max(25, rowSpan * 14);
     const midY = -height / 2;
     return `
     <svg width="24" height="${height}" viewBox="0 0 24 ${height}" style="display: block; margin: 0 auto; overflow: visible;">
