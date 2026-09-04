@@ -547,3 +547,5 @@ CONCURRENCY & QC SUMMARY:
 [2026-09-02 18:55] Despliegue completado al VPS de producción (91.108.125.253) en https://forecast.geeksoft.tech. Corrección definitiva de compaginación de 2 combos por página (MAX_ROWS_PER_PAGE = 35) y renderizado completo y visible sin clipping en dimensiones CLI, RUT y BUQ para el PDF NAVITRANSO.
 [2026-09-02 19:01] Creación y subida exitosa de branch y tag 'PDF.NAVITRANSO.95.PERCENT' al repositorio remoto de GitHub. Retorno a branch 'main'.
 [2026-09-02 19:20] Despliegue completado al VPS de producción (91.108.125.253) en https://forecast.geeksoft.tech. Ajuste de altura de SVG (rowSpan * 14) para eliminar sobre-dimensionado vertical en fila de Margen Bruto y asegurar 2 combos compactos por página en PDF NAVITRANSO.
+
+[2026-09-04 08:48] [Favicon Transparency] - Generado favicon transparente PNG y ICO multi-resolución a partir de LOGO.DELFOS.NUEVO.BLANCO.3.jpg eliminando fondo blanco con anti-aliasing y des-premultiplicación alfa. Actualizado index.html y validado build con Vite.
