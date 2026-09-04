@@ -195,8 +195,11 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                 const freq = Number(mVal.freq || 0);
                                 if (freq <= 0) continue;
                                 const qtyUnit = Number(mVal.carga_unit || 13500);
-                                const pnl = Number(mVal.voyage_result || 0);
                                 const dur = Number(mVal.total_duration || 0);
+                                const tceReq = Number(mVal.tce_required_unit || mVal.tce_required || 13000);
+                                const tceCost = tceReq * dur;
+                                const rawPnl = Number(mVal.voyage_result || 0);
+                                const pnl = rawPnl - tceCost;
 
                                 totTrips += freq;
                                 totTm += (qtyUnit * freq);
