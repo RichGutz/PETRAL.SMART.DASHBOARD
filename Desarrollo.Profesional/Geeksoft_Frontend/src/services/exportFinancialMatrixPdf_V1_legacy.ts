@@ -83,8 +83,7 @@ interface AtomicBlock {
 export function generateFinancialMatrixPdfHtml(
     tableId: string = 'forecast-grid-table',
     _orientation: 'portrait' | 'landscape' = 'landscape',
-    scenarioName: string = 'Escenario de Proyección',
-    scenarioData?: any
+    scenarioName: string = 'Escenario de Proyección'
 ): string {
     const table = document.getElementById(tableId) as HTMLTableElement;
     if (!table) {
@@ -349,66 +348,13 @@ export function generateFinancialMatrixPdfHtml(
         });
     });
 
-    // Enriquecer y rescatar Demurrage / Freight / Dockage desde aggregated_data si no vinieron explícitas en el DOM por estar colapsadas
-    const rawAgg = scenarioData?.aggregated_data;
-    if (rawAgg && typeof rawAgg === 'object') {
-        const globalMonthlyDem = Array(numMonths).fill(0);
-        const globalMonthlyFreight = Array(numMonths).fill(0);
-        const globalMonthlyDockage = Array(numMonths).fill(0);
-        const globalMonthlyGross = Array(numMonths).fill(0);
-        const globalMonthlyComm = Array(numMonths).fill(0);
-
-        Object.entries(rawAgg).forEach(([_, routes]: [string, any]) => {
-            Object.entries(routes || {}).forEach(([_, vessels]: [string, any]) => {
-                Object.entries(vessels || {}).forEach(([_, monthsData]: [string, any]) => {
-                    const mKeys = Object.keys(monthsData || {}).sort();
-                    mKeys.forEach((mK, mIdx) => {
-                        if (mIdx < numMonths) {
-                            const mVal = monthsData[mK] || {};
-                            const freq = Number(mVal.freq || 0);
-                            const demVal = Number(mVal.demurrage_revenue ?? mVal.demurrage_income ?? (Number(mVal.demurrage_revenue_unit || 0) * freq) ?? 0);
-                            const fleteUnit = Number(mVal.flete_unit || mVal.freight_rate || 0);
-                            const cargaUnit = Number(mVal.carga_unit || 13500);
-                            const freightVal = Number(mVal.gross_income_unit ? Number(mVal.gross_income_unit) * freq : fleteUnit * cargaUnit * freq);
-                            const dockVal = Number(mVal.dockage_revenue ?? (Number(mVal.dockage_revenue_unit || 0) * freq) ?? mVal.refacturacion_muellaje ?? 0);
-                            const commVal = Number(mVal.commissions ?? mVal.total_commissions ?? 0);
-                            const grossVal = freightVal + demVal + dockVal;
-
-                            globalMonthlyDem[mIdx] += demVal;
-                            globalMonthlyFreight[mIdx] += freightVal;
-                            globalMonthlyDockage[mIdx] += dockVal;
-                            globalMonthlyGross[mIdx] += grossVal;
-                            globalMonthlyComm[mIdx] += commVal;
-                        }
-                    });
-                });
-            });
-        });
-
-        if (globalMonthlyDem.some(v => v > 0)) {
-            fleetMonthlyTotals.demurrage = globalMonthlyDem;
-        }
-        if (globalMonthlyFreight.some(v => v > 0)) {
-            fleetMonthlyTotals.freight = globalMonthlyFreight;
-        }
-        if (globalMonthlyDockage.some(v => v > 0)) {
-            fleetMonthlyTotals.dockageRev = globalMonthlyDockage;
-        }
-        if (globalMonthlyGross.some(v => v > 0)) {
-            fleetMonthlyTotals.grossRev = globalMonthlyGross;
-        }
-        if (globalMonthlyComm.some(v => v > 0)) {
-            fleetMonthlyTotals.commissions = globalMonthlyComm;
-        }
-    }
-
-    // Fallback matemático secundario si no hubo aggregated_data
+    // Si las subfilas de Net Revenue no vinieron explicitas por estar colapsadas, calcularlas matematicamente
     for (let mIdx = 0; mIdx < numMonths; mIdx++) {
         if (fleetMonthlyTotals.freight[mIdx] === 0 && fleetMonthlyTotals.netRev[mIdx] > 0) {
-            fleetMonthlyTotals.freight[mIdx] = fleetMonthlyTotals.netRev[mIdx] - fleetMonthlyTotals.demurrage[mIdx];
+            fleetMonthlyTotals.freight[mIdx] = fleetMonthlyTotals.netRev[mIdx];
             fleetMonthlyTotals.dockageRev[mIdx] = fleetMonthlyTotals.dockageCost[mIdx];
             fleetMonthlyTotals.grossRev[mIdx] = fleetMonthlyTotals.freight[mIdx] + fleetMonthlyTotals.demurrage[mIdx] + fleetMonthlyTotals.dockageRev[mIdx];
-            fleetMonthlyTotals.commissions[mIdx] = fleetMonthlyTotals.dockageRev[mIdx];
+            fleetMonthlyTotals.commissions[mIdx] = fleetMonthlyTotals.dockageRev[mIdx]; // comisiones / ajustes
         }
     }
 
@@ -886,10 +832,9 @@ export function generateFinancialMatrixPdfHtml(
 export async function exportFinancialMatrixPdf(
     tableId: string = 'forecast-grid-table',
     orientation: 'portrait' | 'landscape' = 'landscape',
-    scenarioName: string = 'Escenario de Proyección',
-    scenarioData?: any
+    scenarioName: string = 'Escenario de Proyección'
 ): Promise<void> {
-    const htmlContent = generateFinancialMatrixPdfHtml(tableId, orientation, scenarioName, scenarioData);
+    const htmlContent = generateFinancialMatrixPdfHtml(tableId, orientation, scenarioName);
     
     // 1. Nombre único con timestamp exacto (YYYYMMDD_HHMMSS) para evitar bloqueos por archivo abierto
     const now = new Date();

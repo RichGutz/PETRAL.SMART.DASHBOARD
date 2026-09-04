@@ -130,7 +130,7 @@ export const ForecastGridFilters: React.FC = () => {
             if (matrixFormat === 'NAVITRANSO') {
                 await exportFinancialMatrixNavitransoPdf('forecast-grid-table', orientation, scenarioName);
             } else {
-                await exportFinancialMatrixPdf('forecast-grid-table', orientation, scenarioName);
+                await exportFinancialMatrixPdf('forecast-grid-table', orientation, scenarioName, data);
             }
         } catch (err: any) {
             console.error('Error generando PDF de la Matriz Financiera:', err);
