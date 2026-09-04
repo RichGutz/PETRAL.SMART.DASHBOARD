@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>NAVIERA PETRAL S.A. - Matriz Financiera</title>
+    <style>
+        @page { size: A4 landscape !important; margin: 4mm 5mm !important; }
+        * { box-sizing: border-box; font-family: 'Consolas', 'Courier New', monospace !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        html, body { margin: 0 !important; padding: 0 !important; background-color: #ffffff !important; color: #0f172a; font-size: 9px !important; font-weight: normal !important; line-height: 1.15; }
+        .report-page { width: 100%; margin: 0; padding: 0; page-break-after: always; page-break-inside: avoid; box-sizing: border-box; }
+        .report-page:last-child { page-break-after: avoid; }
+        .top-header-table { width: 100%; border-collapse: collapse; margin-bottom: 3px; }
+        .top-header-table td { border: none !important; padding: 0 !important; vertical-align: middle; }
+        .report-main-title { font-weight: 700; font-size: 13px; color: #0f172a; margin: 0; text-transform: uppercase; text-align: center; }
+        .report-sub-title { font-size: 9.5px; font-weight: 600; color: #334155; text-align: center; margin-top: 1px; }
+        .scenario-badge-banner { background-color: #0f4c81; color: #ffffff; font-weight: 700; font-size: 9px; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; text-align: center; margin: 2px auto 3px auto; width: fit-content; }
+        table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 2px; table-layout: fixed; font-size: 9px !important; font-weight: normal !important; line-height: 1.15; }
+        table.data-table th { background-color: #1e293b !important; color: #ffffff !important; font-weight: 700; text-transform: uppercase; font-size: 9px; padding: 3px 2px; border: 1px solid #334155; text-align: center; }
+        table.data-table th.th-total { background-color: #0d9488 !important; color: #ffffff !important; }
+        table.data-table td { border: 1px solid #cbd5e1; padding: 2px 3px; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: normal !important; }
+        td.td-dimension { width: 24px !important; max-width: 24px !important; min-width: 24px !important; text-align: center !important; vertical-align: middle !important; padding: 0 !important; }
+        td.td-metric-name { width: 128px !important; min-width: 128px !important; max-width: 128px !important; text-align: left !important; font-weight: normal !important; color: #0f172a; padding-left: 5px; writing-mode: horizontal-tb !important; transform: none !important; white-space: nowrap !important; font-size: 9px !important; }
+        .pl-subrow { padding-left: 12px !important; color: #475569 !important; font-size: 8.5px !important; }
+        td.td-num { width: 58px !important; max-width: 58px !important; text-align: right !important; font-size: 9px !important; font-weight: normal !important; color: #1e293b; padding-right: 3px; }
+        td.td-empty { width: 58px !important; max-width: 58px !important; text-align: center; color: #cbd5e1; }
+        td.td-total-cell { width: 66px !important; max-width: 66px !important; min-width: 66px !important; font-size: 9px !important; font-weight: 700 !important; color: #0f172a !important; }
+        tr.tr-fleet td { background-color: #f1f5f9 !important; font-weight: 600 !important; }
+        tr.tr-accum td { background-color: #eef2ff !important; font-weight: 700 !important; }
+        .page-footer { width: 100%; margin-top: 3px; border-top: 1px solid #cbd5e1; padding-top: 2px; font-size: 8px; font-weight: 600; color: #64748b; display: table; table-layout: fixed; }
+    </style>
+</head>
+<body>
+    
+    <div class="report-page">
+        <table class="top-header-table">
+            <tr>
+                <td style="width: 25%; text-align: left;"><div style="font-weight: 700; font-size: 13px; color: #0284c7;">GEEKSOFT FORECAST</div></td>
+                <td style="width: 50%; text-align: center;">
+                    <div class="report-main-title">NAVIERA PETRAL S.A.</div>
+                    <div class="report-sub-title">MATRIZ FINANCIERA • VOYAGE CALCULATOR & PROYECCIÓN COMERCIAL</div>
+                </td>
+                <td style="width: 25%; text-align: right;"><div style="font-weight: 700; font-size: 11px; color: #0f4c81;">PETRAL S.A.</div></td>
+            </tr>
+        </table>
+        <div class="scenario-badge-banner">ESCENARIO: PB 2027 (Jose de los Heros) &bull; MONEDA: USD &bull; (Parte 1 de 4)</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="th-dim" style="width: 24px;">CLI</th>
+                    <th class="th-dim" style="width: 24px;">RUT</th>
+                    <th class="th-dim" style="width: 24px;">BUQ</th>
+                    <th class="th-metric" style="width: 128px;">MÉTRICA</th>
+                    <th class="th-month" style="width: 58px;">ENE 2027</th><th class="th-month" style="width: 58px;">FEB 2027</th><th class="th-month" style="width: 58px;">MAR 2027</th><th class="th-month" style="width: 58px;">ABR 2027</th><th class="th-month" style="width: 58px;">MAY 2027</th><th class="th-month" style="width: 58px;">JUN 2027</th><th class="th-month" style="width: 58px;">JUL 2027</th><th class="th-month" style="width: 58px;">AGO 2027</th><th class="th-month" style="width: 58px;">SET 2027</th><th class="th-month" style="width: 58px;">OCT 2027</th><th class="th-month" style="width: 58px;">NOV 2027</th><th class="th-month" style="width: 58px;">DIC 2027</th>
+                    <th class="th-total" style="width: 66px;">TOTAL ACUM</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr class="tr-data-row">
+                
+                    <td rowspan="27" class="td-dimension" style="background-color: #0369a1 !important;">
+                        
+    <svg width="24" height="486" viewBox="0 0 24 486" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-243" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">SPCC</text>
+    </svg>
+    
+                    </td>
+                
+                
+                    <td rowspan="18" class="td-dimension" style="background-color: #a855f7 !important;">
+                        
+    <svg width="24" height="324" viewBox="0 0 24 324" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-162" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">ILO-MATARANI</text>
+    </svg>
+    
+                    </td>
+                
+                
+                    <td rowspan="9" class="td-dimension" style="background-color: #16a34a !important;">
+                        
+    <svg width="24" height="162" viewBox="0 0 24 162" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-81" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">MOQUEGUAMOQUEGUA</text>
+    </svg>
+    
+                    </td>
+                
+                <td class="td-metric-name ">Viajes (freq)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Días-Buque</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Toneladas</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Net Revenue</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Hire (TCE x días)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Bunker Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Port Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(=) VOYAGE RESULT / P&L</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Métricas TCE ($/d)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                    <td rowspan="9" class="td-dimension" style="background-color: #16a34a !important;">
+                        
+    <svg width="24" height="162" viewBox="0 0 24 162" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-81" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">TABLONESTABLONES</text>
+    </svg>
+    
+                    </td>
+                
+                <td class="td-metric-name ">Viajes (freq)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Días-Buque</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Toneladas</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Net Revenue</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Hire (TCE x días)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Bunker Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Port Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(=) VOYAGE RESULT / P&L</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Métricas TCE ($/d)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                    <td rowspan="9" class="td-dimension" style="background-color: #a855f7 !important;">
+                        
+    <svg width="24" height="162" viewBox="0 0 24 162" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-81" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">ILO-MARCONA</text>
+    </svg>
+    
+                    </td>
+                
+                
+                    <td rowspan="9" class="td-dimension" style="background-color: #16a34a !important;">
+                        
+    <svg width="24" height="162" viewBox="0 0 24 162" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-81" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">MOQUEGUAMOQUEGUA</text>
+    </svg>
+    
+                    </td>
+                
+                <td class="td-metric-name ">Viajes (freq)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Días-Buque</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Toneladas</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Net Revenue</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Hire (TCE x días)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Bunker Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Port Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(=) VOYAGE RESULT / P&L</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Métricas TCE ($/d)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            </tbody>
+        </table>
+        <div class="page-footer">
+            <div style="display: table-cell; text-align: left;">Petral Forecast Engine © 2026</div>
+            <div style="display: table-cell; text-align: center;">Página 1 de 4</div>
+            <div style="display: table-cell; text-align: right;">Documento Oficial de Auditoría</div>
+        </div>
+    </div>
+    
+    <div class="report-page">
+        <table class="top-header-table">
+            <tr>
+                <td style="width: 25%; text-align: left;"><div style="font-weight: 700; font-size: 13px; color: #0284c7;">GEEKSOFT FORECAST</div></td>
+                <td style="width: 50%; text-align: center;">
+                    <div class="report-main-title">NAVIERA PETRAL S.A.</div>
+                    <div class="report-sub-title">MATRIZ FINANCIERA • VOYAGE CALCULATOR & PROYECCIÓN COMERCIAL</div>
+                </td>
+                <td style="width: 25%; text-align: right;"><div style="font-weight: 700; font-size: 11px; color: #0f4c81;">PETRAL S.A.</div></td>
+            </tr>
+        </table>
+        <div class="scenario-badge-banner">ESCENARIO: PB 2027 (Jose de los Heros) &bull; MONEDA: USD &bull; (Parte 2 de 4)</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="th-dim" style="width: 24px;">CLI</th>
+                    <th class="th-dim" style="width: 24px;">RUT</th>
+                    <th class="th-dim" style="width: 24px;">BUQ</th>
+                    <th class="th-metric" style="width: 128px;">MÉTRICA</th>
+                    <th class="th-month" style="width: 58px;">ENE 2027</th><th class="th-month" style="width: 58px;">FEB 2027</th><th class="th-month" style="width: 58px;">MAR 2027</th><th class="th-month" style="width: 58px;">ABR 2027</th><th class="th-month" style="width: 58px;">MAY 2027</th><th class="th-month" style="width: 58px;">JUN 2027</th><th class="th-month" style="width: 58px;">JUL 2027</th><th class="th-month" style="width: 58px;">AGO 2027</th><th class="th-month" style="width: 58px;">SET 2027</th><th class="th-month" style="width: 58px;">OCT 2027</th><th class="th-month" style="width: 58px;">NOV 2027</th><th class="th-month" style="width: 58px;">DIC 2027</th>
+                    <th class="th-total" style="width: 66px;">TOTAL ACUM</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr class="tr-data-row">
+                
+                    <td rowspan="27" class="td-dimension" style="background-color: #0369a1 !important;">
+                        
+    <svg width="24" height="486" viewBox="0 0 24 486" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-243" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">SPCC</text>
+    </svg>
+    
+                    </td>
+                
+                
+                    <td rowspan="9" class="td-dimension" style="background-color: #a855f7 !important;">
+                        
+    <svg width="24" height="162" viewBox="0 0 24 162" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-81" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">ILO-MARCONA</text>
+    </svg>
+    
+                    </td>
+                
+                
+                    <td rowspan="9" class="td-dimension" style="background-color: #16a34a !important;">
+                        
+    <svg width="24" height="162" viewBox="0 0 24 162" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-81" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">TABLONESTABLONES</text>
+    </svg>
+    
+                    </td>
+                
+                <td class="td-metric-name ">Viajes (freq)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Días-Buque</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Toneladas</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Net Revenue</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Hire (TCE x días)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Bunker Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Port Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(=) VOYAGE RESULT / P&L</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Métricas TCE ($/d)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                    <td rowspan="18" class="td-dimension" style="background-color: #a855f7 !important;">
+                        
+    <svg width="24" height="324" viewBox="0 0 24 324" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-162" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">ILO-MEJILLONES</text>
+    </svg>
+    
+                    </td>
+                
+                
+                    <td rowspan="9" class="td-dimension" style="background-color: #16a34a !important;">
+                        
+    <svg width="24" height="162" viewBox="0 0 24 162" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-81" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">MOQUEGUAMOQUEGUA</text>
+    </svg>
+    
+                    </td>
+                
+                <td class="td-metric-name ">Viajes (freq)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Días-Buque</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Toneladas</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Net Revenue</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Hire (TCE x días)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Bunker Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Port Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(=) VOYAGE RESULT / P&L</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Métricas TCE ($/d)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                    <td rowspan="9" class="td-dimension" style="background-color: #16a34a !important;">
+                        
+    <svg width="24" height="162" viewBox="0 0 24 162" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-81" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">TABLONESTABLONES</text>
+    </svg>
+    
+                    </td>
+                
+                <td class="td-metric-name ">Viajes (freq)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Días-Buque</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Toneladas</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Net Revenue</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Hire (TCE x días)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Bunker Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Port Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(=) VOYAGE RESULT / P&L</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Métricas TCE ($/d)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            </tbody>
+        </table>
+        <div class="page-footer">
+            <div style="display: table-cell; text-align: left;">Petral Forecast Engine © 2026</div>
+            <div style="display: table-cell; text-align: center;">Página 2 de 4</div>
+            <div style="display: table-cell; text-align: right;">Documento Oficial de Auditoría</div>
+        </div>
+    </div>
+    
+    <div class="report-page">
+        <table class="top-header-table">
+            <tr>
+                <td style="width: 25%; text-align: left;"><div style="font-weight: 700; font-size: 13px; color: #0284c7;">GEEKSOFT FORECAST</div></td>
+                <td style="width: 50%; text-align: center;">
+                    <div class="report-main-title">NAVIERA PETRAL S.A.</div>
+                    <div class="report-sub-title">MATRIZ FINANCIERA • VOYAGE CALCULATOR & PROYECCIÓN COMERCIAL</div>
+                </td>
+                <td style="width: 25%; text-align: right;"><div style="font-weight: 700; font-size: 11px; color: #0f4c81;">PETRAL S.A.</div></td>
+            </tr>
+        </table>
+        <div class="scenario-badge-banner">ESCENARIO: PB 2027 (Jose de los Heros) &bull; MONEDA: USD &bull; (Parte 3 de 4)</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="th-dim" style="width: 24px;">CLI</th>
+                    <th class="th-dim" style="width: 24px;">RUT</th>
+                    <th class="th-dim" style="width: 24px;">BUQ</th>
+                    <th class="th-metric" style="width: 128px;">MÉTRICA</th>
+                    <th class="th-month" style="width: 58px;">ENE 2027</th><th class="th-month" style="width: 58px;">FEB 2027</th><th class="th-month" style="width: 58px;">MAR 2027</th><th class="th-month" style="width: 58px;">ABR 2027</th><th class="th-month" style="width: 58px;">MAY 2027</th><th class="th-month" style="width: 58px;">JUN 2027</th><th class="th-month" style="width: 58px;">JUL 2027</th><th class="th-month" style="width: 58px;">AGO 2027</th><th class="th-month" style="width: 58px;">SET 2027</th><th class="th-month" style="width: 58px;">OCT 2027</th><th class="th-month" style="width: 58px;">NOV 2027</th><th class="th-month" style="width: 58px;">DIC 2027</th>
+                    <th class="th-total" style="width: 66px;">TOTAL ACUM</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr class="tr-data-row">
+                
+                    <td rowspan="9" class="td-dimension" style="background-color: #0369a1 !important;">
+                        
+    <svg width="24" height="162" viewBox="0 0 24 162" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-81" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">NEXA</text>
+    </svg>
+    
+                    </td>
+                
+                
+                    <td rowspan="9" class="td-dimension" style="background-color: #a855f7 !important;">
+                        
+    <svg width="24" height="162" viewBox="0 0 24 162" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-81" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">CALLAO-MARCONA</text>
+    </svg>
+    
+                    </td>
+                
+                
+                    <td rowspan="9" class="td-dimension" style="background-color: #16a34a !important;">
+                        
+    <svg width="24" height="162" viewBox="0 0 24 162" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-81" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">MOQUEGUAMOQUEGUA</text>
+    </svg>
+    
+                    </td>
+                
+                <td class="td-metric-name ">Viajes (freq)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Días-Buque</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Toneladas</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Net Revenue</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Hire (TCE x días)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Bunker Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(-) Port Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">(=) VOYAGE RESULT / P&L</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-data-row">
+                
+                
+                
+                <td class="td-metric-name ">Métricas TCE ($/d)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-fleet">
+                
+                    <td rowspan="15" class="td-dimension" style="background-color: #1e293b !important;">
+                        
+    <svg width="24" height="270" viewBox="0 0 24 270" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-135" y="15" transform="rotate(-90)" text-anchor="middle" fill="#fbbf24" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">TOTAL FLOTA</text>
+    </svg>
+    
+                    </td>
+                
+                
+                    <td rowspan="15" class="td-dimension" style="background-color: #1e293b !important;">
+                        
+    <svg width="24" height="270" viewBox="0 0 24 270" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-135" y="15" transform="rotate(-90)" text-anchor="middle" fill="#94a3b8" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">FLOTA</text>
+    </svg>
+    
+                    </td>
+                
+                
+                    <td rowspan="15" class="td-dimension" style="background-color: #1e293b !important;">
+                        
+    <svg width="24" height="270" viewBox="0 0 24 270" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-135" y="15" transform="rotate(-90)" text-anchor="middle" fill="#94a3b8" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">TODOS</text>
+    </svg>
+    
+                    </td>
+                
+                <td class="td-metric-name ">Viajes</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-fleet">
+                
+                
+                
+                <td class="td-metric-name ">Días-Buque</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-fleet">
+                
+                
+                
+                <td class="td-metric-name ">Toneladas</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-fleet">
+                
+                
+                
+                <td class="td-metric-name ">Net Revenue</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-fleet">
+                
+                
+                
+                <td class="td-metric-name pl-subrow">↳ (+) Freight Revenue</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-fleet">
+                
+                
+                
+                <td class="td-metric-name pl-subrow">↳ (+) Demurrage</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-fleet">
+                
+                
+                
+                <td class="td-metric-name pl-subrow">↳ (+) Dockage Revenue</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-fleet">
+                
+                
+                
+                <td class="td-metric-name pl-subrow">↳ (=) Gross Revenue</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-fleet">
+                
+                
+                
+                <td class="td-metric-name pl-subrow">↳ (-) Comisiones</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-fleet">
+                
+                
+                
+                <td class="td-metric-name ">(-) Hire (TCE x días)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-fleet">
+                
+                
+                
+                <td class="td-metric-name ">(-) Bunker Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-fleet">
+                
+                
+                
+                <td class="td-metric-name ">(-) Port Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-fleet">
+                
+                
+                
+                <td class="td-metric-name ">(-) Dockage</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-fleet">
+                
+                
+                
+                <td class="td-metric-name ">(-) Arriendo de Naves</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-fleet">
+                
+                
+                
+                <td class="td-metric-name ">(=) VOYAGE RESULT / P&L</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            </tbody>
+        </table>
+        <div class="page-footer">
+            <div style="display: table-cell; text-align: left;">Petral Forecast Engine © 2026</div>
+            <div style="display: table-cell; text-align: center;">Página 3 de 4</div>
+            <div style="display: table-cell; text-align: right;">Documento Oficial de Auditoría</div>
+        </div>
+    </div>
+    
+    <div class="report-page">
+        <table class="top-header-table">
+            <tr>
+                <td style="width: 25%; text-align: left;"><div style="font-weight: 700; font-size: 13px; color: #0284c7;">GEEKSOFT FORECAST</div></td>
+                <td style="width: 50%; text-align: center;">
+                    <div class="report-main-title">NAVIERA PETRAL S.A.</div>
+                    <div class="report-sub-title">MATRIZ FINANCIERA • VOYAGE CALCULATOR & PROYECCIÓN COMERCIAL</div>
+                </td>
+                <td style="width: 25%; text-align: right;"><div style="font-weight: 700; font-size: 11px; color: #0f4c81;">PETRAL S.A.</div></td>
+            </tr>
+        </table>
+        <div class="scenario-badge-banner">ESCENARIO: PB 2027 (Jose de los Heros) &bull; MONEDA: USD &bull; (Parte 4 de 4)</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="th-dim" style="width: 24px;">CLI</th>
+                    <th class="th-dim" style="width: 24px;">RUT</th>
+                    <th class="th-dim" style="width: 24px;">BUQ</th>
+                    <th class="th-metric" style="width: 128px;">MÉTRICA</th>
+                    <th class="th-month" style="width: 58px;">ENE 2027</th><th class="th-month" style="width: 58px;">FEB 2027</th><th class="th-month" style="width: 58px;">MAR 2027</th><th class="th-month" style="width: 58px;">ABR 2027</th><th class="th-month" style="width: 58px;">MAY 2027</th><th class="th-month" style="width: 58px;">JUN 2027</th><th class="th-month" style="width: 58px;">JUL 2027</th><th class="th-month" style="width: 58px;">AGO 2027</th><th class="th-month" style="width: 58px;">SET 2027</th><th class="th-month" style="width: 58px;">OCT 2027</th><th class="th-month" style="width: 58px;">NOV 2027</th><th class="th-month" style="width: 58px;">DIC 2027</th>
+                    <th class="th-total" style="width: 66px;">TOTAL ACUM</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr class="tr-accum">
+                
+                    <td rowspan="15" class="td-dimension" style="background-color: #0d9488 !important;">
+                        
+    <svg width="24" height="270" viewBox="0 0 24 270" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-135" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">TOTAL ACUMULADO</text>
+    </svg>
+    
+                    </td>
+                
+                
+                    <td rowspan="15" class="td-dimension" style="background-color: #0d9488 !important;">
+                        
+    <svg width="24" height="270" viewBox="0 0 24 270" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-135" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">PROGRESIVO</text>
+    </svg>
+    
+                    </td>
+                
+                
+                    <td rowspan="15" class="td-dimension" style="background-color: #0d9488 !important;">
+                        
+    <svg width="24" height="270" viewBox="0 0 24 270" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="-135" y="15" transform="rotate(-90)" text-anchor="middle" fill="#ffffff" font-family="Consolas, 'Courier New', monospace" font-size="8.5" font-weight="bold" letter-spacing="0.5">YTD</text>
+    </svg>
+    
+                    </td>
+                
+                <td class="td-metric-name ">Viajes</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-accum">
+                
+                
+                
+                <td class="td-metric-name ">Días-Buque</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-accum">
+                
+                
+                
+                <td class="td-metric-name ">Toneladas</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-accum">
+                
+                
+                
+                <td class="td-metric-name ">Net Revenue</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-accum">
+                
+                
+                
+                <td class="td-metric-name pl-subrow">↳ (+) Freight Revenue</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-accum">
+                
+                
+                
+                <td class="td-metric-name pl-subrow">↳ (+) Demurrage</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-accum">
+                
+                
+                
+                <td class="td-metric-name pl-subrow">↳ (+) Dockage Revenue</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-accum">
+                
+                
+                
+                <td class="td-metric-name pl-subrow">↳ (=) Gross Revenue</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-accum">
+                
+                
+                
+                <td class="td-metric-name pl-subrow">↳ (-) Comisiones</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-accum">
+                
+                
+                
+                <td class="td-metric-name ">(-) Hire (TCE x días)</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-accum">
+                
+                
+                
+                <td class="td-metric-name ">(-) Bunker Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-accum">
+                
+                
+                
+                <td class="td-metric-name ">(-) Port Costs</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-accum">
+                
+                
+                
+                <td class="td-metric-name ">(-) Dockage</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-accum">
+                
+                
+                
+                <td class="td-metric-name ">(-) Arriendo de Naves</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            <tr class="tr-accum">
+                
+                
+                
+                <td class="td-metric-name ">(=) VOYAGE RESULT / P&L</td>
+                <td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty "></td><td class="td-empty td-total-cell"></td>
+            </tr>
+            
+            </tbody>
+        </table>
+        <div class="page-footer">
+            <div style="display: table-cell; text-align: left;">Petral Forecast Engine © 2026</div>
+            <div style="display: table-cell; text-align: center;">Página 4 de 4</div>
+            <div style="display: table-cell; text-align: right;">Documento Oficial de Auditoría</div>
+        </div>
+    </div>
+    
+</body>
+</html>

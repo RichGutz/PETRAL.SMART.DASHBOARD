@@ -833,7 +833,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                     <div class="header-box">
                         <div>
                             <h1 class="header-title">NAVIERA PETRAL S.A.</h1>
-                            <p class="header-subtitle">REPORTE EJECUTIVO DE CONTROL PRESUPUESTAL & ASIGNACIÓN DE CAPACIDAD (FORMATO MEC)</p>
+                            <p class="header-subtitle">REPORTE EJECUTIVO DE CONTROL PRESUPUESTAL & ASIGNACIÓN DE CAPACIDAD (FORMATO CONSOLIDADO)</p>
                         </div>
                         <div style="text-align: right;">
                             <div class="badge-pill">AÑO ${scenario.year} - PROYECTADO</div>
@@ -1583,7 +1583,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                             📊 {scenario.name}
                                                                         </span>
                                                                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 bg-emerald-100 text-emerald-800">
-                                                                            <CheckCircle2 size={10} /> FORMATO MEC
+                                                                            <CheckCircle2 size={10} /> FORMATO CONSOLIDADO
                                                                         </span>
                                                                     </div>
                                                                     <div className="text-xs font-semibold text-slate-600 mt-1 flex items-center gap-3">
@@ -1629,7 +1629,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                     className="text-slate-500 font-bold hover:underline cursor-pointer px-1 text-xs"
                                                                     onClick={() => toggleScenarioExpansion(scenario.id)}
                                                                 >
-                                                                    {isExpanded ? '▲ Ocultar Formato MEC' : '▼ Ver Formato MEC'}
+                                                                    {isExpanded ? '▲ Ocultar Formato Consolidado' : '▼ Ver Formato Consolidado'}
                                                                 </span>
 
                                                                 <button
@@ -1669,7 +1669,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                                                                         <button
                                                                             onClick={() => handleExportMecPDF(scenario)}
                                                                             className="flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-3 py-1.5 rounded transition-colors cursor-pointer shadow-xs"
-                                                                            title="Descargar o Imprimir en PDF formato MEC"
+                                                                            title="Descargar o Imprimir en PDF formato Consolidado"
                                                                         >
                                                                             <Printer size={14} />
                                                                             <span>Descargar PDF</span>
@@ -1860,7 +1860,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
             </div>
 
             {/* ========================================================================= */}
-            {/* BLOQUE 2: INFORME MULTI-ESCENARIO CONSOLIDADO (FORMATO MEC CONSOLIDADO)   */}
+            {/* BLOQUE 2: INFORME MULTI-ESCENARIO CONSOLIDADO                             */}
             {/* ========================================================================= */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden p-6 space-y-6">
                 
@@ -1869,7 +1869,7 @@ export const FinancialProjectionsMaster: React.FC = () => {
                         <div>
                             <h3 className="text-base font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
                                 <BookOpen size={20} className="text-indigo-600" />
-                                INFORME EJECUTIVO MULTI-ESCENARIO (FORMATO MEC CONSOLIDADO)
+                                INFORME EJECUTIVO MULTI-ESCENARIO (FORMATO CONSOLIDADO)
                             </h3>
                             <p className="text-xs text-slate-500 mt-0.5">
                                 Consolida y apila varios escenarios anuales en un solo reporte ejecutivo para visualización continua y exportación Foxit Ready.
