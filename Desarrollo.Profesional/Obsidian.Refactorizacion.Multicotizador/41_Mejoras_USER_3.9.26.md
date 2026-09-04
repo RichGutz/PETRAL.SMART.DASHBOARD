@@ -8,15 +8,23 @@
 
 ---
 
-## 📋 Resumen Ejecutivo del Backlog
+## 📋 Resumen Ejecutivo del Backlog Canónico de Mejoras
 
-| # | Tarea / Caso | Módulo Afectado | Safepoint Git | Estado |
+| # | Ronda / Caso | Módulo Afectado | Safepoint Git / Commit | Estado |
 |:---:|---|---|---|:---:|
-| **P1** | Renombrar `FORMATO MEC` ➔ `FORMATO CONSOLIDADO` | Frontend (Badges, Headers, Botones) | `PRE.P1.FORMATO_CONSOLIDADO` | ✅ **RESUELTO** |
-| **P2** | Discrepancia de Demurrage en Matriz Petral | Engine (`forecast_service.py`) | `PRE.P2.DEMURRAGE_MATRIZ_PETRAL` | ✅ **RESUELTO** |
-| **P3** | Loop QC Triangular E2E (Multicotizador ➔ Matriz ➔ Consolidado) | Engine & Script Headless (`run_qc_e2e_mec_consolidado_loop.py`) | `PRE.P3.LOOP_QC_CONSOLIDADO` | ✅ **RESUELTO** |
-| **P4** | Columnas `C`, `R`, `B` y redistribución de ancho a los 12 meses | Generador de Reportes (PDF / Matriz) | `PRE.P4.COLUMNAS_CRB_ANCHO` | ✅ **RESUELTO** |
-| **P5** | Transparencia al 75% en celdas de color para ahorro de tinta | Exportador PDF (HTML) y Excel (ARGB) | `PRE.P5.TRANSPARENCIA_75` | ✅ **RESUELTO** |
+| **P1** | Renombrar `FORMATO MEC` ➔ `FORMATO CONSOLIDADO` | Frontend (Badges, Headers, Botones) | `PRE.P1.FORMATO_CONSOLIDADO`<br>`21eac85` | ✅ **RESUELTO** |
+| **P2** | Discrepancia de Demurrage en Matriz Petral | Engine (`forecast_service.py`) | `PRE.P2.DEMURRAGE_MATRIZ_PETRAL`<br>`e68fbff` | ✅ **RESUELTO** |
+| **P3** | Loop QC Triangular E2E (4/4 escenarios cuadrando al centavo) | Engine & Script (`run_qc_e2e_mec_consolidado_loop.py`) | `PRE.P3.LOOP_QC_CONSOLIDADO`<br>`2f02fec` | ✅ **RESUELTO** |
+| **P4** | Columnas `C`, `R`, `B` y redistribución de ancho a los 12 meses | Generador de Reportes (PDF Petral y Navitranso) | `PRE.P4.COLUMNAS_CRB_ANCHO`<br>`34ef42c` | ✅ **RESUELTO** |
+| **P5** | Transparencia al 75% en celdas de color para ahorro de tinta | Exportador PDF (HTML) y Excel (ARGB) | `PRE.P5.TRANSPARENCIA_75`<br>`9d955b7` | ✅ **RESUELTO** |
+| **R2.1** | Reducción 20% cols C, R, B ➔ Ancho transferido a MÉTRICA | `exportFinancialMatrixPdf.ts` | `PRE.R2_1.CRB_ANCHO_METRICA`<br>`62b9c99` | ✅ **RESUELTO** |
+| **R2.2** | Ribbon azul de escenario al 100% exacto del ancho de la tabla | `exportFinancialMatrixPdf.ts`<br>`exportFinancialMatrixNavitransoPdf.ts` | `PRE.R2_2.RIBBON_ESCENARIO_100`<br>`45a9c7f` | ✅ **RESUELTO** |
+| **R2.3** | Excel Petral: Cabeceras C, R, B, fuente 10pt y Zoom inicial al 75% | `exportFinancialMatrixExcel.ts` | `PRE.R2_3.EXCEL_PETRAL_CRB_F10_Z75`<br>`8db92e8` | ✅ **RESUELTO** |
+| **R2.4** | Excel Navitranso: Cabeceras C, R, B, fuente 10pt, Zoom 75% y Paleta Ink-Save | `exportFinancialMatrixNavitransoExcel.ts` | `PRE.R2_4.EXCEL_NAVITRANSO_CRB_F10_Z75`<br>`66a95f9` | ✅ **RESUELTO** |
+| **R3** | QC Universal: Convergencia Bidireccional Matriz ↔ Multicotizador (48/48 rutas) | `forecast_service.py` & `test_convergence_all_routes.py` | `PRE.R3.QC_CONVERGENCIA_BIDIRECCIONAL`<br>`59b0a5e` | ✅ **RESUELTO** |
+| **R4.1** | Matriz Navitranso: Número de Viajes en solo lectura puro (sin inputs) | `FinancialMatrixNavitransoGridTable.tsx` | `PRE.R4.NAVITRANSO_READONLY_PETRAL_DECIMALES`<br>`160b033` | ✅ **RESUELTO** |
+| **R4.2** | Matriz Petral: Flete base en caliente por defecto a 2 decimales (`toFixed(2)`) | `ForecastGrid.tsx` | `PRE.R4.NAVITRANSO_READONLY_PETRAL_DECIMALES`<br>`160b033` | ✅ **RESUELTO** |
+| **VPS** | Despliegue Automatizado a Producción en Vivo (`forecast.geeksoft.tech`) | VPS Producción (`91.108.125.253`) | `deploy_forecast_kickoff.py` | 🚀 **PUBLICADO EN VIVO** |
 
 ---
 
