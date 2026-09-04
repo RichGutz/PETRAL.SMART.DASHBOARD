@@ -44,11 +44,11 @@ function getDimensionColor(className: string, text: string): { bg: string; fg: s
 }
 
 function createVerticalSvg(text: string, rowSpan: number, fill: string = '#ffffff'): string {
-    const height = Math.max(30, rowSpan * 16);
+    const height = Math.max(26, rowSpan * 15);
     const midY = -height / 2;
     return `
-    <svg width="16" height="${height}" viewBox="0 0 16 ${height}" style="display: block; margin: 0 auto; overflow: visible;">
-        <text x="${midY}" y="11" transform="rotate(-90)" text-anchor="middle" fill="${fill}" font-family="Consolas, 'Courier New', monospace" font-size="8" font-weight="bold" letter-spacing="0.3">${text}</text>
+    <svg width="13" height="${height}" viewBox="0 0 13 ${height}" style="display: block; margin: 0 auto; overflow: visible;">
+        <text x="${midY}" y="9" transform="rotate(-90)" text-anchor="middle" fill="${fill}" font-family="Consolas, 'Courier New', monospace" font-size="7.5" font-weight="bold" letter-spacing="0.2">${text}</text>
     </svg>
     `;
 }
@@ -557,10 +557,10 @@ export function generateFinancialMatrixPdfHtml(
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th class="th-dim" style="width: 16px;">C</th>
-                        <th class="th-dim" style="width: 16px;">R</th>
-                        <th class="th-dim" style="width: 16px;">B</th>
-                        <th class="th-metric" style="width: 120px;">MÉTRICA</th>
+                        <th class="th-dim" style="width: 13px;">C</th>
+                        <th class="th-dim" style="width: 13px;">R</th>
+                        <th class="th-dim" style="width: 13px;">B</th>
+                        <th class="th-metric" style="width: 129px;">MÉTRICA</th>
                         ${safeMonths.map(m => `<th class="th-month" style="width: 63px;">${m}</th>`).join('')}
                         <th class="th-total" style="width: 70px;">${totalHeader}</th>
                     </tr>
@@ -716,19 +716,19 @@ export function generateFinancialMatrixPdfHtml(
         
         /* Celdas de Dimensiones Verticales (C, R, B) con ROTACIÓN VECTORIAL SVG 100% BLINDADA */
         td.td-dimension {
-            width: 16px !important;
-            max-width: 16px !important;
-            min-width: 16px !important;
+            width: 13px !important;
+            max-width: 13px !important;
+            min-width: 13px !important;
             text-align: center !important;
             vertical-align: middle !important;
             padding: 0 !important;
         }
 
-        /* Columna 4: Nombres de Métricas (120px) */
+        /* Columna 4: Nombres de Métricas (129px) */
         td.td-metric-name {
-            width: 120px !important;
-            min-width: 120px !important;
-            max-width: 120px !important;
+            width: 129px !important;
+            min-width: 129px !important;
+            max-width: 129px !important;
             text-align: left !important;
             font-weight: normal !important;
             color: #0f172a;

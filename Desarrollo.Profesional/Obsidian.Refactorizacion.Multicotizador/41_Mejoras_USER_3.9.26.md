@@ -390,12 +390,15 @@ Todas las 5 mejoras solicitadas en la primera ronda han sido ejecutadas, validad
 ## 🎯 Ronda 2 de Pequeñas Mejoras (En Espera de Orden de Ejecución)
 
 ### 🔹 Punto R2.1: Reducción del 20% en Columnas C, R y B ➔ Transferir Ancho Ganado a MÉTRICA (PDF Matriz Petral)
-- **Módulo:** `exportFinancialMatrixPdf.ts` (y evaluable para `exportFinancialMatrixNavitransoPdf.ts`).
-- **Requerimiento:**
-  - **Columnas C, R y B:** Reducir su ancho actual (16px) en un 20% ➔ Pasan de **16px a ~13px** (ahorro de ~3px por columna × 3 = 9px ganados).
-  - **Renderizado SVG:** Adaptar `createVerticalSvg` a `width="13"` y viewBox `0 0 13 ${height}` con posición centrada.
-  - **Columna MÉTRICA:** Transferirle el ancho total ganado (9px) ➔ Pasa de **120px a 129px**.
-- **Estado:** 📝 **ANOTADO Y EN ESPERA**.
+- **Módulo:** `exportFinancialMatrixPdf.ts`.
+- **Safepoint Git:** `PRE.R2_1.CRB_ANCHO_METRICA`.
+- **Cirugía Quirúrgica (DIFF):**
+  1. `createVerticalSvg`: Ancho reducido a `width="13"`, viewBox `0 0 13 ${height}`, posición centrada `y="9"`, fuente `7.5px`.
+  2. Thead: `C`, `R`, `B` a `13px`; `MÉTRICA` ampliada a `129px`.
+  3. CSS: `td.td-dimension` a `13px`; `td.td-metric-name` a `129px`.
+- **Control de Calidad (QC):**
+  - Compilación Frontend: `npx vite build` completado con `exit code 0` (1091 módulos transformados, 0 errores).
+- **Estado:** ✅ **RESUELTO**
 
 ---
 
