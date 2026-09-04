@@ -420,4 +420,14 @@ Todas las 5 mejoras solicitadas en la primera ronda han sido ejecutadas, validad
 - **Estado:** 📝 **ANOTADO Y EN ESPERA**.
 
 ---
+
+### 🔹 Punto R2.4: Homologación de Cabeceras C, R, B, Tipografía Tamaño 10 y Zoom 75% en Excel (Matriz Navitranso)
+- **Módulo:** `exportFinancialMatrixNavitransoExcel.ts`.
+- **Requerimiento:**
+  1. **Cabeceras C, R y B:** Reemplazar los textos de cabecera de las 3 primeras columnas en la fila 1 de Excel por **`C`**, **`R`** y **`B`** (en lugar de `Cliente`, `Ruta`, `Buque`).
+  2. **Tamaño de Fuente 10 pt:** Establecer `size: 10` en todas las celdas de nombres de métricas de los 4 bloques Navitranso y en todos los valores numéricos (Meses 1-12 y Total Acumulado).
+  3. **Apertura con Zoom al 75%:** Cambiar `zoomScale: 65` por `zoomScale: 75` en `ws.views` para inicialización visual optimizada.
+- **Estado:** 📝 **ANOTADO Y EN ESPERA**.
+
+---
 *Documento canónico actualizado por Detective Benoit Blanc - 03/09/2026.*
