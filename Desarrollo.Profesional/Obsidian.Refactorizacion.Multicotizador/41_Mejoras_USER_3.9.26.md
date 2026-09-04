@@ -440,11 +440,34 @@ Todas las 5 mejoras solicitadas en la primera ronda han sido ejecutadas, validad
 
 ### 🔹 Punto R2.4: Homologación de Cabeceras C, R, B, Tipografía Tamaño 10 y Zoom 75% en Excel (Matriz Navitranso)
 - **Módulo:** `exportFinancialMatrixNavitransoExcel.ts`.
-- **Requerimiento:**
-  1. **Cabeceras C, R y B:** Reemplazar los textos de cabecera de las 3 primeras columnas en la fila 1 de Excel por **`C`**, **`R`** y **`B`** (en lugar de `Cliente`, `Ruta`, `Buque`).
-  2. **Tamaño de Fuente 10 pt:** Establecer `size: 10` en todas las celdas de nombres de métricas de los 4 bloques Navitranso y en todos los valores numéricos (Meses 1-12 y Total Acumulado).
-  3. **Apertura con Zoom al 75%:** Cambiar `zoomScale: 65` por `zoomScale: 75` en `ws.views` para inicialización visual optimizada.
-- **Estado:** 📝 **ANOTADO Y EN ESPERA**.
+- **Safepoint Git:** `PRE.R2_4.EXCEL_NAVITRANSO_CRB_F10_Z75`.
+- **Cirugía Quirúrgica (DIFF):**
+  1. **Cabeceras Fila 1:**
+     - `headerValues[1] = 'C'`
+     - `headerValues[2] = 'R'`
+     - `headerValues[3] = 'B'`
+  2. **Tipografía Tamaño 10 pt:**
+     - Aplicado `size: 10` a los nombres de métricas en los 4 bloques Navitranso (Operacional, Estado de Resultados, Indicadores Financieros, Días y Eficiencia).
+     - Aplicado `size: 10` a todas las celdas numéricas mensuales (Meses 1-12) y Total Acumulado en todos los bloques.
+     - Altura de fila calibrada en `row.height = 20`.
+  3. **Apertura con Zoom al 75%:**
+     - `ws.views = [{ showGridLines: true, state: 'frozen', ySplit: 1, xSplit: 0, zoomScale: 75, zoomScaleNormal: 75 }]`.
+  4. **Paleta de Ahorro de Tinta (75% Transparencia):**
+     - Homologación de colores pastel ARGB al 25% tint (`FFC0DAE8`, `FFC3D2E0`, `FFC1EDF4`, `FFE9D5FD`, `FFF6D1FB`, `FFF6C9C9`, `FFC5E8D2`, `FFD1D5DA`, `FFD3D1F9`, `FFC3E4E1`, `FFC7CACE`, `FFFEF3C7`) con textos oscuros de alto contraste.
+- **Control de Calidad (QC):**
+  - Compilación Frontend: `npx vite build` completado con `exit code 0` (1091 módulos transformados, 0 errores).
+- **Estado:** ✅ **RESUELTO**
+
+---
+
+## 🏆 Resumen Final de la Ronda 2 (R2.1 a R2.4)
+
+| Punto | Descripción | Módulo(s) | Safepoint Git | Estado |
+| :--- | :--- | :--- | :--- | :---: |
+| **R2.1** | Reducción 20% cols C, R, B ➔ Ancho a MÉTRICA | `exportFinancialMatrixPdf.ts` | `PRE.R2_1.CRB_ANCHO_METRICA` | ✅ **RESUELTO** |
+| **R2.2** | Ribbon azul de escenario al 100% exacto de la tabla | `exportFinancialMatrixPdf.ts`<br>`exportFinancialMatrixNavitransoPdf.ts` | `PRE.R2_2.RIBBON_ESCENARIO_100` | ✅ **RESUELTO** |
+| **R2.3** | Excel Petral: Cabeceras C, R, B, fuente 10pt y Zoom 75% | `exportFinancialMatrixExcel.ts` | `PRE.R2_3.EXCEL_PETRAL_CRB_F10_Z75` | ✅ **RESUELTO** |
+| **R2.4** | Excel Navitranso: Cabeceras C, R, B, fuente 10pt y Zoom 75% | `exportFinancialMatrixNavitransoExcel.ts` | `PRE.R2_4.EXCEL_NAVITRANSO_CRB_F10_Z75` | ✅ **RESUELTO** |
 
 ---
 *Documento canónico actualizado por Detective Benoit Blanc - 03/09/2026.*

@@ -15,7 +15,7 @@
 
 import ExcelJS from 'exceljs';
 
-// Colores ARGB para estructura contable NAVITRANSO
+// Colores ARGB con 75% de transparencia (25% tint pastel) para ahorro de tinta
 function getNavitransoCellArgb(className: string, text: string, isHeader = false, isTotalAcum = false) {
     if (isHeader) {
         if (isTotalAcum) {
@@ -39,25 +39,28 @@ function getNavitransoCellArgb(className: string, text: string, isHeader = false
     if (upper.includes('TIME CHARTER EQUIVALENT') || upper.includes('TCE')) {
         return { bg: 'FFEFF6FF', fg: 'FF1E3A8A' }; // Blue 900
     }
+    if (upper.includes('TOTAL FLOTA')) {
+        return { bg: 'FFC7CACE', fg: 'FF0F172A' };
+    }
     if (upper.includes('TOTAL') || upper.includes('SUBTOTAL')) {
-        return { bg: 'FF1E293B', fg: 'FFFBBF24' }; // Slate 800 + Amber
+        return { bg: 'FFFEF3C7', fg: 'FF78350F' }; // Amber soft
     }
 
-    // Colores de Clientes
-    if (upper.includes('SPCC')) return { bg: 'FF0284C7', fg: 'FFFFFFFF' };
-    if (upper.includes('SPOT')) return { bg: 'FFF97316', fg: 'FFFFFFFF' };
-    if (upper.includes('NEXA')) return { bg: 'FF0F4C81', fg: 'FFFFFFFF' };
+    // Colores de Clientes (75% transparencia / 25% tint)
+    if (upper.includes('SPCC')) return { bg: 'FFC0DAE8', fg: 'FF0369A1' };
+    if (upper.includes('SPOT')) return { bg: 'FFFEDCC5', fg: 'FFC2410C' };
+    if (upper.includes('NEXA')) return { bg: 'FFC3D2E0', fg: 'FF0F4C81' };
 
-    // Colores de Rutas
-    if (upper.includes('MATARANI')) return { bg: 'FF06B6D4', fg: 'FFFFFFFF' };
-    if (upper.includes('MARCONA')) return { bg: 'FFA855F7', fg: 'FFFFFFFF' };
-    if (upper.includes('MEJILLONES')) return { bg: 'FFD946EF', fg: 'FFFFFFFF' };
+    // Colores de Rutas (75% transparencia / 25% tint)
+    if (upper.includes('MATARANI')) return { bg: 'FFC1EDF4', fg: 'FF0E7490' };
+    if (upper.includes('MARCONA')) return { bg: 'FFE9D5FD', fg: 'FF6B21A8' };
+    if (upper.includes('MEJILLONES')) return { bg: 'FFF6D1FB', fg: 'FF86198F' };
 
-    // Colores de Buques
-    if (upper.includes('TABLONES')) return { bg: 'FFDC2626', fg: 'FFFFFFFF' };
-    if (upper.includes('MOQUEGUA')) return { bg: 'FF16A34A', fg: 'FFFFFFFF' };
-    if (upper.includes('CONCON')) return { bg: 'FF475569', fg: 'FFFFFFFF' };
-    if (upper.includes('HUEMUL')) return { bg: 'FF4F46E5', fg: 'FFFFFFFF' };
+    // Colores de Buques (75% transparencia / 25% tint)
+    if (upper.includes('TABLONES')) return { bg: 'FFF6C9C9', fg: 'FF991B1B' };
+    if (upper.includes('MOQUEGUA')) return { bg: 'FFC5E8D2', fg: 'FF166534' };
+    if (upper.includes('CONCON')) return { bg: 'FFD1D5DA', fg: 'FF1E293B' };
+    if (upper.includes('HUEMUL')) return { bg: 'FFD3D1F9', fg: 'FF3730A3' };
 
     return null;
 }
@@ -73,9 +76,9 @@ export async function exportFinancialMatrixNavitransoExcel(tableId: string = 'fo
     wb.created = new Date();
 
     const ws = wb.addWorksheet('Matriz NAVITRANSO', {
-        views: [{ showGridLines: true, state: 'frozen', ySplit: 1, xSplit: 0, zoomScale: 65, zoomScaleNormal: 65 }]
+        views: [{ showGridLines: true, state: 'frozen', ySplit: 1, xSplit: 0, zoomScale: 75, zoomScaleNormal: 75 }]
     });
-    ws.views = [{ showGridLines: true, state: 'frozen', ySplit: 1, xSplit: 0, zoomScale: 65, zoomScaleNormal: 65 }];
+    ws.views = [{ showGridLines: true, state: 'frozen', ySplit: 1, xSplit: 0, zoomScale: 75, zoomScaleNormal: 75 }];
 
     // Matriz de ocupación para resolver rowSpan y colSpan
     const occupied: boolean[][] = [];
@@ -102,14 +105,19 @@ export async function exportFinancialMatrixNavitransoExcel(tableId: string = 'fo
                 while (isOccupied(currentRow, currentCol)) currentCol++;
                 const rSpan = parseInt(th.getAttribute('rowspan') || '1', 10);
                 const cSpan = parseInt(th.getAttribute('colspan') || '1', 10);
-                const cleanText = th.textContent?.trim() || '';
+                let cleanText = th.textContent?.trim() || '';
+
+                if (currentCol === 1) cleanText = 'C';
+                else if (currentCol === 2) cleanText = 'R';
+                else if (currentCol === 3) cleanText = 'B';
 
                 const cell = ws.getCell(currentRow, currentCol);
                 cell.value = cleanText.toUpperCase();
+                
                 const isTotalAcum = cleanText.toUpperCase().includes('TOTAL ACUM');
                 const colors = getNavitransoCellArgb(th.className, cleanText, true, isTotalAcum);
 
-                cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: colors?.fg || 'FFFFFFFF' } };
+                cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: colors?.fg || 'FFFFFFFF' } };
                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: colors?.bg || 'FF0F172A' } };
                 cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
                 cell.border = {
@@ -216,25 +224,25 @@ export async function exportFinancialMatrixNavitransoExcel(tableId: string = 'fo
                 // Estilos por tipo de celda
                 if (isDimensionCol) {
                     const colors = getNavitransoCellArgb(tdClass, textValue, false, false);
-                    cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: colors?.fg || 'FFFFFFFF' } };
-                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: colors?.bg || 'FF0F4C81' } };
+                    cell.font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: colors?.fg || 'FF0F172A' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: colors?.bg || 'FFC0DAE8' } };
                     cell.alignment = { vertical: 'middle', horizontal: 'center', textRotation: 90, wrapText: true };
                 } else if (currentMetricName.includes('MARGEN BRUTO')) {
                     // Fila de Margen Bruto (Destacada)
-                    cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF312E81' } };
+                    cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF312E81' } };
                     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEF2FF' } };
                     cell.alignment = { vertical: 'middle', horizontal: isNumeric ? 'right' : 'left' };
                 } else if (currentMetricName.includes('INGRESOS DE OPERACIÓN') || currentMetricName.includes('COSTOS DIRECTOS') || currentMetricName.includes('TIME CHARTER EQUIVALENT')) {
                     // Cabeceras de Bloques Contables
-                    cell.font = { name: 'Segoe UI', size: 8.5, bold: true, color: { argb: 'FF1E293B' } };
+                    cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF1E293B' } };
                     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
                     cell.alignment = { vertical: 'middle', horizontal: isNumeric ? 'right' : 'left' };
                 } else if (isSubtotalRow) {
-                    cell.font = { name: 'Segoe UI', size: 8.5, bold: true, color: { argb: 'FF1E293B' } };
+                    cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF1E293B' } };
                     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
                     cell.alignment = { vertical: 'middle', horizontal: isNumeric ? 'right' : 'left' };
                 } else {
-                    cell.font = { name: 'Segoe UI', size: 8.5, color: { argb: 'FF334155' } };
+                    cell.font = { name: 'Segoe UI', size: 10, color: { argb: 'FF334155' } };
                     cell.alignment = { vertical: 'middle', horizontal: isNumeric ? 'right' : 'left' };
                 }
 
