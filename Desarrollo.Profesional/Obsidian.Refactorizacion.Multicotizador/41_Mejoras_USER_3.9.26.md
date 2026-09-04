@@ -427,11 +427,14 @@ Todas las 5 mejoras solicitadas en la primera ronda han sido ejecutadas, validad
 
 ### 🔹 Punto R2.3: Homologación de Cabeceras C, R, B, Tipografía Tamaño 10 y Zoom 75% en Excel (Matriz Petral)
 - **Módulo:** `exportFinancialMatrixExcel.ts`.
-- **Requerimiento:**
-  1. **Cabeceras C, R y B:** Reemplazar los textos de cabecera de las tres primeras columnas de dimensiones en la fila 1 de Excel por **`C`**, **`R`** y **`B`** (en lugar de `CLIENTE`, `RUTA`, `BUQUE`).
-  2. **Tamaño de Fuente 10 pt:** Establecer `size: 10` en todas las celdas de nombres de métricas y valores numéricos (`cell.font = { name: 'Segoe UI', size: 10, ... }`), tanto en filas de datos normales como en subtotales y totales.
-  3. **Apertura de Hoja con Zoom al 75%:** Configurar en la vista de la hoja (`ws.views = [{ state: 'normal', zoomScale: 75 }]`) para que al abrir el archivo descargado en Microsoft Excel se inicialice automáticamente con el zoom al **75%**, permitiendo abarcar toda la proyección de 12 meses + Total Acumulado en pantalla completa.
-- **Estado:** 📝 **ANOTADO Y EN ESPERA**.
+- **Safepoint Git:** `PRE.R2_3.EXCEL_PETRAL_CRB_F10_Z75`.
+- **Cirugía Quirúrgica (DIFF):**
+  1. Fila 1 Cabeceras: Asignación forzada de `C`, `R`, `B` en las columnas 1, 2 y 3.
+  2. Tipografía: Tamaño `size: 10` aplicado en cabeceras, nombres de métricas y celdas numéricas.
+  3. Vista inicial: `ws.views = [{ showGridLines: true, state: 'frozen', ySplit: 1, xSplit: 0, zoomScale: 75, zoomScaleNormal: 75 }]`.
+- **Control de Calidad (QC):**
+  - Compilación Frontend: `npx vite build` completado con `exit code 0` (1091 módulos transformados, 0 errores).
+- **Estado:** ✅ **RESUELTO**
 
 ---
 

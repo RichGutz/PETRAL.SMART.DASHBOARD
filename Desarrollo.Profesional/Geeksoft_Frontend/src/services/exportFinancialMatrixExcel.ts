@@ -67,9 +67,9 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
     wb.created = new Date();
 
     const ws = wb.addWorksheet('Matriz Financiera', {
-        views: [{ showGridLines: true, state: 'frozen', ySplit: 1, xSplit: 0, zoomScale: 65, zoomScaleNormal: 65 }]
+        views: [{ showGridLines: true, state: 'frozen', ySplit: 1, xSplit: 0, zoomScale: 75, zoomScaleNormal: 75 }]
     });
-    ws.views = [{ showGridLines: true, state: 'frozen', ySplit: 1, xSplit: 0, zoomScale: 65, zoomScaleNormal: 65 }];
+    ws.views = [{ showGridLines: true, state: 'frozen', ySplit: 1, xSplit: 0, zoomScale: 75, zoomScaleNormal: 75 }];
 
     // Matriz de ocupación para resolver rowSpan y colSpan
     const occupied: boolean[][] = [];
@@ -115,13 +115,17 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                     cleanText = clone.textContent?.trim() || '';
                 }
 
+                if (currentCol === 1) cleanText = 'C';
+                else if (currentCol === 2) cleanText = 'R';
+                else if (currentCol === 3) cleanText = 'B';
+
                 const cell = ws.getCell(currentRow, currentCol);
                 cell.value = cleanText.toUpperCase();
                 
                 const isTotalAcum = cleanText.toUpperCase().includes('TOTAL ACUM');
                 const colors = getCellArgb(th.className, cleanText, true, isTotalAcum);
 
-                cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: colors?.fg || 'FFFFFFFF' } };
+                cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: colors?.fg || 'FFFFFFFF' } };
                 cell.fill = {
                     type: 'pattern',
                     pattern: 'solid',
@@ -275,16 +279,16 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                 // Aplicar estilos según tipo de celda
                 if (isDimensionCol) {
                     const colors = getCellArgb(tdClass, textValue, false, false);
-                    cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: colors?.fg || 'FFFFFFFF' } };
+                    cell.font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: colors?.fg || 'FF0F172A' } };
                     cell.fill = {
                         type: 'pattern',
                         pattern: 'solid',
-                        fgColor: { argb: colors?.bg || 'FF0F4C81' }
+                        fgColor: { argb: colors?.bg || 'FFC0DAE8' }
                     };
                     // Rotación de texto vertical a 90 grados
                     cell.alignment = { vertical: 'middle', horizontal: 'center', textRotation: 90, wrapText: true };
                 } else if (isGlobalTotalRow) {
-                    cell.font = { name: 'Segoe UI', size: 8.5, bold: true, color: { argb: 'FF1E1B4B' } };
+                    cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF1E1B4B' } };
                     cell.fill = {
                         type: 'pattern',
                         pattern: 'solid',
@@ -292,7 +296,7 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                     };
                     cell.alignment = { vertical: 'middle', horizontal: isNumeric ? 'right' : 'left' };
                 } else if (isSubtotalRow) {
-                    cell.font = { name: 'Segoe UI', size: 8.5, bold: true, color: { argb: 'FF1E293B' } };
+                    cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF1E293B' } };
                     cell.fill = {
                         type: 'pattern',
                         pattern: 'solid',
@@ -300,7 +304,7 @@ export async function exportFinancialMatrixExcel(tableId: string = 'forecast-gri
                     };
                     cell.alignment = { vertical: 'middle', horizontal: isNumeric ? 'right' : 'left' };
                 } else {
-                    cell.font = { name: 'Segoe UI', size: 8.5, color: { argb: 'FF334155' } };
+                    cell.font = { name: 'Segoe UI', size: 10, color: { argb: 'FF334155' } };
                     cell.alignment = { vertical: 'middle', horizontal: isNumeric ? 'right' : 'left' };
                 }
 
