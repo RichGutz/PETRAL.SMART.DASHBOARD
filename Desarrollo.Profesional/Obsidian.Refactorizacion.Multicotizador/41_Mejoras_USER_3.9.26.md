@@ -404,15 +404,26 @@ Todas las 5 mejoras solicitadas en la primera ronda han sido ejecutadas, validad
 
 ### 🔹 Punto R2.2: Ribbon Azul de Escenario al 100% Exacto del Ancho de la Tabla (PDF Petral y Navitranso - Todas las Páginas)
 - **Módulo:** `exportFinancialMatrixPdf.ts` (Formato Petral) y `exportFinancialMatrixNavitransoPdf.ts` (Formato Navitranso).
+- **Safepoint Git:** `PRE.R2_2.RIBBON_ESCENARIO_100`.
 - **Evidencias Visuales Respaldadas:**
   1. Captura Matriz Petral: `media_1788493123798.png` (respaldada en `PNGs/` y `PORT.COSTS.PATRICIA/`).
   2. Captura Matriz Navitranso: `media_1788493394833.png` (respaldada en `PNGs/` y `PORT.COSTS.PATRICIA/`).
-- **Diagnóstico:**
-  En ambos reportes, `.scenario-badge-banner` usaba `width: fit-content; max-width: 95%; margin: 2px auto; border-radius: 3px;`, lo que generaba un banner flotante centrado con esquinas redondeadas y márgenes vacíos a los costados, desalineado del 100% del ancho de la grilla contable.
-- **Solución Quirúrgica:**
-  Configurar en el CSS de ambos exportadores:
-  `width: 100% !important; margin: 2px 0 3px 0 !important; border-radius: 0 !important; box-sizing: border-box !important;` para que calce exactamente de borde a borde con la tabla contable en todas las páginas.
-- **Estado:** 📝 **ANOTADO Y EN ESPERA**.
+- **Cirugía Quirúrgica (DIFF):**
+  En el CSS de ambos exportadores:
+  ```diff
+  - width: fit-content;
+  - max-width: 95%;
+  - margin: 2px auto 3px auto;
+  - border-radius: 3px;
+  + width: 100% !important;
+  + margin: 2px 0 3px 0 !important;
+  + border-radius: 0 !important;
+  + box-sizing: border-box !important;
+  + letter-spacing: 0.3px;
+  ```
+- **Control de Calidad (QC):**
+  - Compilación Frontend: `npx vite build` completado con `exit code 0` (1091 módulos transformados, 0 errores).
+- **Estado:** ✅ **RESUELTO**
 
 ### 🔹 Punto R2.3: Homologación de Cabeceras C, R, B, Tipografía Tamaño 10 y Zoom 75% en Excel (Matriz Petral)
 - **Módulo:** `exportFinancialMatrixExcel.ts`.

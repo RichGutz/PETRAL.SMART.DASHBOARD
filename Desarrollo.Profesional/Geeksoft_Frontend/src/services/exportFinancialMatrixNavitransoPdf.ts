@@ -620,15 +620,15 @@ export function generateFinancialMatrixNavitransoPdfHtml(
             background-color: #0f4c81;
             color: #ffffff;
             font-weight: 700;
-            font-size: 8px;
+            font-size: 8.5px;
             text-transform: uppercase;
-            padding: 2px 8px;
-            border-radius: 3px;
+            padding: 3px 6px;
+            border-radius: 0 !important;
             text-align: center;
-            margin: 2px auto 2px auto;
-            width: fit-content;
-            max-width: 95%;
-            letter-spacing: 0.2px;
+            margin: 2px 0 2px 0 !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            letter-spacing: 0.3px;
         }
 
         /* 2. Tabla Contable Matriz 100% Nativa */
