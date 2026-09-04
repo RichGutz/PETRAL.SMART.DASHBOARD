@@ -301,20 +301,29 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return (Number(mD.gross_income || mD.hire || mD.freight_revenue) || (Number(mD.carga_unit || 13500) * Number(mD.flete_unit || 30) * freq));
+                        const uFreight = Number(mD.freight_revenue_unit ?? mD.gross_income_unit ?? ((mD.carga_unit || 13500) * (mD.flete_unit || 0)));
+                        return uFreight > 0 ? (uFreight * freq) : Number(mD.freight_revenue || mD.gross_income || 0);
                     });
                     const ventaTerc = new Array(months.length).fill(0);
                     const demRev = months.map((m, i) => {
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return Number(mD.demurrage_revenue || mD.demurrage_income || mD.demurrage || 0) * freq;
+                        const uDem = mD.demurrage_revenue_unit ?? mD.demurrage_income_unit;
+                        if (uDem !== undefined && uDem !== null && Number(uDem) > 0) {
+                            return Number(uDem) * freq;
+                        }
+                        return Number(mD.demurrage_revenue || mD.demurrage_income || 0);
                     });
                     const ingPto = months.map((m, i) => {
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return Number(mD.refacturacion_muellaje || mD.dockage_revenue || mD.port_rebate_income || (Number(mD.total_port_costs || mD.port_costs || 0) * 0.10)) * (mD.total_port_costs_unit ? freq : 1);
+                        const uMuell = mD.dockage_revenue_unit ?? mD.refacturacion_muellaje_unit;
+                        if (uMuell !== undefined && uMuell !== null && Number(uMuell) > 0) {
+                            return Number(uMuell) * freq;
+                        }
+                        return Number(mD.dockage_revenue || mD.refacturacion_muellaje || 0);
                     });
                     const otrosIng = new Array(months.length).fill(0);
 
@@ -325,27 +334,41 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        const val = Number(mD.total_bunker_costs || mD.bunker_costs || mD.bunker_cost || 0);
-                        return -val * (mD.total_bunker_costs_unit ? freq : (val > 50000 && freq === 1 ? 1 : freq));
+                        const uBunk = mD.total_bunker_costs_unit ?? mD.bunker_costs_unit;
+                        const val = (uBunk !== undefined && uBunk !== null && Number(uBunk) > 0)
+                            ? Number(uBunk) * freq
+                            : Number(mD.total_bunker_costs || mD.bunker_costs || 0);
+                        return -val;
                     });
                     const gastosPuerto = months.map((m, i) => {
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        const val = Number(mD.total_port_costs || mD.port_costs || mD.costos_puerto_total || 0);
-                        return -val * (mD.total_port_costs_unit ? freq : (val > 30000 && freq === 1 ? 1 : freq));
+                        const uPort = mD.total_port_costs_unit ?? mD.port_costs_unit;
+                        const val = (uPort !== undefined && uPort !== null && Number(uPort) > 0)
+                            ? Number(uPort) * freq
+                            : Number(mD.total_port_costs || mD.port_costs || 0);
+                        return -val;
                     });
                     const costosDemora = months.map((m, i) => {
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return -Number(mD.demurrage_hire_cost || mD.costos_demora || mD.demurrage_cost || 0) * freq;
+                        const uCostDem = mD.demurrage_hire_cost_unit;
+                        const val = (uCostDem !== undefined && uCostDem !== null && Number(uCostDem) > 0)
+                            ? Number(uCostDem) * freq
+                            : Number(mD.demurrage_hire_cost || mD.costos_demora || 0);
+                        return -val;
                     });
                     const comisiones = months.map((m, i) => {
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return -Number(mD.commissions_cost || mD.total_commissions || 0) * freq;
+                        const uComm = mD.total_commissions_unit;
+                        const val = (uComm !== undefined && uComm !== null && Number(uComm) > 0)
+                            ? Number(uComm) * freq
+                            : Number(mD.total_commissions || mD.commissions_cost || 0);
+                        return -val;
                     });
                     const otrosCostos = new Array(months.length).fill(0);
 
@@ -357,7 +380,11 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                         const mD = monthData[m] || {};
                         const freq = trips[i] || 0;
                         if (freq <= 0) return 0;
-                        return -Number(mD.charter_hire || mD.charter_hire_cost || 0) * freq;
+                        const uChart = mD.charter_hire_cost_unit ?? mD.charter_hire_unit;
+                        const val = (uChart !== undefined && uChart !== null && Number(uChart) > 0)
+                            ? Number(uChart) * freq
+                            : Number(mD.charter_hire_cost || mD.charter_hire || 0);
+                        return -val;
                     });
                     const margenBruto = months.map((_, i) => tce[i] + arriendo[i]);
 

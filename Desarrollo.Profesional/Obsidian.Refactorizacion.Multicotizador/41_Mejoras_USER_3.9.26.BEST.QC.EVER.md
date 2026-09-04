@@ -652,4 +652,160 @@ Todos los scripts han sido creados y quedan como activos periciales permanentes 
 - **Estado:** ✅ **RESUELTO**.
 
 ---
-*Documento canónico actualizado por Detective Benoit Blanc - 03/09/2026.*
+
+## 🎯 Ronda 5: Cuadratura Matemática Espejo Matriz Petral ↔ Matriz Navitranso (Loop QC Cuadripolar)
+
+### 🔹 Caso R5.1: Normalización de Fórmulas Financieras en Matriz Navitranso
+- **Auditor:** Detective Benoit Blanc
+- **Fecha:** 04 de Septiembre, 2026
+- **Módulo Afectado:** `FinancialMatrixNavitransoGridTable.tsx` (Matriz Petral intacta e inmutable).
+- **El Misterio (La Escena del Crimen / LEG):**
+  - La Matriz Navitranso es un espejo contable que reclasifica la Matriz Petral en 4 bloques operativos:
+    1. **INGRESOS DE OPERACIÓN** (Hire, Demoras, Ingresos de Puerto).
+    2. **COSTOS DIRECTOS DE VIAJE** (Combustible, Gastos de Puerto, Costos Demora, Comisiones).
+    3. **TIME CHARTER EQUIVALENT (TCE)** (Ventas + Costos Directos).
+    4. **MARGEN BRUTO (P&L)** (TCE + Arriendo de Naves).
+  - En la implementación previa, las métricas de la Matriz Navitranso multiplicaban por `freq` campos agregados que ya venían totalizados desde el backend (`demurrage_revenue`, `total_bunker_costs`, `total_port_costs`, `total_commissions`, `charter_hire_cost`), provocando multiplicaciones al cuadrado (`freq²`) y discrepancias millonarias en escenarios con múltiples viajes (`freq > 1`).
+  - Adicionalmente, el fallback de Hire asumía una tarifa default de `$30` sobre meses vacíos, distorsionando el Gross Revenue.
+
+- **Evidencias Previas de la Discrepancia (LEGACY):**
+  - **Escenario 1 (SPCC con Demoras 2028):**
+    - Flete / Hire: Petral = `$1,755,000.00` │ Navitranso Legacy = `$9,045,000.00` ❌ (+$7,290,000)
+    - Margen Bruto: Petral = `$1,699,411.90` │ Navitranso Legacy = `$8,989,411.90` ❌
+  - **Escenario 2 (PB Base Jose de los Heros Multi-Buque 2027):**
+    - Muellaje / Ing. Puerto: Petral = `$879,000.00` │ Navitranso Legacy = `$1,421,000.00` ❌
+    - Combustible: Petral = `$2,079,254.19` │ Navitranso Legacy = `$3,231,780.81` ❌
+    - Gastos Puerto: Petral = `$3,788,000.00` │ Navitranso Legacy = `$5,706,000.00` ❌
+    - Margen Bruto: Petral = `$12,168,490.81` │ Navitranso Legacy = `$10,044,964.19` ❌ (-$2,123,526)
+  - **Escenario 4 (Multi-Cliente 4 Buques 2027):**
+    - Flete / Hire: Petral = `$6,303,150.00` │ Navitranso Legacy = `$14,403,150.00` ❌
+    - Margen Bruto: Petral = `$4,782,070.74` │ Navitranso Legacy = `$12,906,910.74` ❌
+
+- **Cirugía Quirúrgica Mínima Aplicada (DIFF):**
+  En `Desarrollo.Profesional/Geeksoft_Frontend/src/components/CommercialForecast/financialMatrix/FinancialMatrixNavitransoGridTable.tsx` (Líneas 300-363):
+  ```typescript
+  // 1. VENTAS
+  const hire = months.map((m, i) => {
+      const mD = monthData[m] || {};
+      const freq = trips[i] || 0;
+      if (freq <= 0) return 0;
+      const uFreight = Number(mD.freight_revenue_unit ?? mD.gross_income_unit ?? ((mD.carga_unit || 13500) * (mD.flete_unit || 0)));
+      return uFreight > 0 ? (uFreight * freq) : Number(mD.freight_revenue || mD.gross_income || 0);
+  });
+  const demRev = months.map((m, i) => {
+      const mD = monthData[m] || {};
+      const freq = trips[i] || 0;
+      if (freq <= 0) return 0;
+      const uDem = mD.demurrage_revenue_unit ?? mD.demurrage_income_unit;
+      if (uDem !== undefined && uDem !== null && Number(uDem) > 0) {
+          return Number(uDem) * freq;
+      }
+      return Number(mD.demurrage_revenue || mD.demurrage_income || 0);
+  });
+  const ingPto = months.map((m, i) => {
+      const mD = monthData[m] || {};
+      const freq = trips[i] || 0;
+      if (freq <= 0) return 0;
+      const uMuell = mD.dockage_revenue_unit ?? mD.refacturacion_muellaje_unit;
+      if (uMuell !== undefined && uMuell !== null && Number(uMuell) > 0) {
+          return Number(uMuell) * freq;
+      }
+      return Number(mD.dockage_revenue || mD.refacturacion_muellaje || 0);
+  });
+
+  // 2. COSTOS DIRECTOS
+  const combustible = months.map((m, i) => {
+      const mD = monthData[m] || {};
+      const freq = trips[i] || 0;
+      if (freq <= 0) return 0;
+      const uBunk = mD.total_bunker_costs_unit ?? mD.bunker_costs_unit;
+      const val = (uBunk !== undefined && uBunk !== null && Number(uBunk) > 0)
+          ? Number(uBunk) * freq
+          : Number(mD.total_bunker_costs || mD.bunker_costs || 0);
+      return -val;
+  });
+  const gastosPuerto = months.map((m, i) => {
+      const mD = monthData[m] || {};
+      const freq = trips[i] || 0;
+      if (freq <= 0) return 0;
+      const uPort = mD.total_port_costs_unit ?? mD.port_costs_unit;
+      const val = (uPort !== undefined && uPort !== null && Number(uPort) > 0)
+          ? Number(uPort) * freq
+          : Number(mD.total_port_costs || mD.port_costs || 0);
+      return -val;
+  });
+  const costosDemora = months.map((m, i) => {
+      const mD = monthData[m] || {};
+      const freq = trips[i] || 0;
+      if (freq <= 0) return 0;
+      const uCostDem = mD.demurrage_hire_cost_unit;
+      const val = (uCostDem !== undefined && uCostDem !== null && Number(uCostDem) > 0)
+          ? Number(uCostDem) * freq
+          : Number(mD.demurrage_hire_cost || mD.costos_demora || 0);
+      return -val;
+  });
+  const comisiones = months.map((m, i) => {
+      const mD = monthData[m] || {};
+      const freq = trips[i] || 0;
+      if (freq <= 0) return 0;
+      const uComm = mD.total_commissions_unit;
+      const val = (uComm !== undefined && uComm !== null && Number(uComm) > 0)
+          ? Number(uComm) * freq
+          : Number(mD.total_commissions || mD.commissions_cost || 0);
+      return -val;
+  });
+  const arriendo = months.map((m, i) => {
+      const mD = monthData[m] || {};
+      const freq = trips[i] || 0;
+      if (freq <= 0) return 0;
+      const uChart = mD.charter_hire_cost_unit ?? mD.charter_hire_unit;
+      const val = (uChart !== undefined && uChart !== null && Number(uChart) > 0)
+          ? Number(uChart) * freq
+          : Number(mD.charter_hire_cost || mD.charter_hire || 0);
+      return -val;
+  });
+  ```
+
+- **Script de Control de Calidad Creado:**
+  - `Desarrollo.Profesional/Geeksoft_Engine/run_qc_e2e_petral_vs_navitranso_convergence.py`
+
+- **Resultados de Cuadratura en Terminal (QC):**
+  ```text
+  ==========================================================================================
+  🕵️‍♂️ AUDITORÍA PERICIAL BENOIT BLANC: MATRIZ PETRAL ↔ MATRIZ NAVITRANSO
+  ==========================================================================================
+  [ESCENARIO 1: Año 2028 - SPCC con Demoras (Moquegua)]
+  • Flete / Hire:           Matriz Petral = $1,755,000.00 │ Navitranso = $1,755,000.00 │ Diff = $0.00 ✅
+  • Demoras / Demurrage:    Matriz Petral = $438,400.00   │ Navitranso = $438,400.00   │ Diff = $0.00 ✅
+  • Muellaje / Ing. Puerto: Matriz Petral = $64,000.00    │ Navitranso = $64,000.00    │ Diff = $0.00 ✅
+  • Ventas / Gross Rev:     Matriz Petral = $2,257,400.00 │ Navitranso = $2,257,400.00 │ Diff = $0.00 ✅
+  • Combustible (Bunker):   Matriz Petral = $226,988.10   │ Navitranso = $226,988.10   │ Diff = $0.00 ✅
+  • Gastos Puerto:          Matriz Petral = $331,000.00   │ Navitranso = $331,000.00   │ Diff = $0.00 ✅
+  • Margen / Voyage Result: Matriz Petral = $1,699,411.90 │ Navitranso = $1,699,411.90 │ Diff = $0.00 ✅
+
+  [ESCENARIO 2: Año 2027 - PB Base Jose de los Heros (Multi-Buque)]
+  • Flete / Hire:           Matriz Petral = $17,156,745.00 │ Navitranso = $17,156,745.00 │ Diff = $0.00 ✅
+  • Muellaje / Ing. Puerto: Matriz Petral = $879,000.00    │ Navitranso = $879,000.00    │ Diff = $0.00 ✅
+  • Combustible (Bunker):   Matriz Petral = $2,079,254.19  │ Navitranso = $2,079,254.19  │ Diff = $0.00 ✅
+  • Gastos Puerto:          Matriz Petral = $3,788,000.00  │ Navitranso = $3,788,000.00  │ Diff = $0.00 ✅
+  • Margen / Voyage Result: Matriz Petral = $12,168,490.81 │ Navitranso = $12,168,490.81 │ Diff = $0.00 ✅
+
+  [ESCENARIO 3: Año 2026 - NEXA Triangular (IZ)]
+  • Flete / Hire:           Matriz Petral = $4,860,000.00 │ Navitranso = $4,860,000.00 │ Diff = $0.00 ✅
+  • Muellaje / Ing. Puerto: Matriz Petral = $156,000.00   │ Navitranso = $156,000.00   │ Diff = $0.00 ✅
+  • Combustible (Bunker):   Matriz Petral = $895,283.76   │ Navitranso = $895,283.76   │ Diff = $0.00 ✅
+  • Gastos Puerto:          Matriz Petral = $576,000.00   │ Navitranso = $576,000.00   │ Diff = $0.00 ✅
+  • Margen / Voyage Result: Matriz Petral = $3,544,716.24 │ Navitranso = $3,544,716.24 │ Diff = $0.00 ✅
+
+  [ESCENARIO 4: Año 2027 - Multi-Cliente (SPCC + NEXA) Flota Completa 4 Buques]
+  • Flete / Hire:           Matriz Petral = $6,303,150.00 │ Navitranso = $6,303,150.00 │ Diff = $0.00 ✅
+  • Demoras / Demurrage:    Matriz Petral = $847,200.00   │ Navitranso = $847,200.00   │ Diff = $0.00 ✅
+  • Muellaje / Ing. Puerto: Matriz Petral = $274,000.00   │ Navitranso = $274,000.00   │ Diff = $0.00 ✅
+  • Margen / Voyage Result: Matriz Petral = $4,782,070.74 │ Navitranso = $4,782,070.74 │ Diff = $0.00 ✅
+  ==========================================================================================
+  ```
+
+- **Estado:** ✅ **100% CUADRADO AL CENTAVO ($0.00 DE DISCREPANCIA EN TODOS LOS ESCENARIOS)**.
+
+---
+*Documento canónico actualizado por Detective Benoit Blanc - 04/09/2026.*
