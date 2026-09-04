@@ -501,7 +501,62 @@ Si se selecciona una ruta grabada en la base de datos (con su snapshot de tramos
 3. **Aclaración de Dominio de Negocio (UI Matriz Financiera):**
    - *Nota de Diseño:* En la interfaz visual de usuario (UI), la Matriz Financiera ya no expone la edición manual de precios de búnker; el costo de búnker respeta estrictamente la foto grabada de la cotización (`grandBunkerTotal`), garantizando consistencia inmutable con el Multicotizador.
 
-#### 5. Evidencias Empíricas de Terminal (Auditoría Universal):
+---
+
+### 🔬 5. Mecánica Forense de Demoras en Caliente: Días Directos vs. % de Ventas
+
+El impacto de las demoras no es meramente un ingreso contable adicional; representa **tiempo físico del buque consumiendo recursos en fondeo o espera en muelle**. El algoritmo traslada matemáticamente ambas modalidades a la física operativa del viaje:
+
+#### A. Demora en Días Directos:
+$$\text{Ingreso Demurrage} = \text{Días Demora} \times \text{Tarifa Diaria de Demurrage (\$/día)}$$
+$$\text{Búnker Idle Adicional} = \text{Días Demora} \times \text{Consumo Idle MT/día (IFO + MDO)}$$
+$$\text{Costo HIRE Adicional} = \text{Días Demora} \times \text{TCE Requerido (\$/día)}$$
+$$\text{Días Totales} = \text{Días Mar} + \text{Días Puerto} + \text{Días Demora}$$
+
+#### B. Demora en % de Ventas (% sobre Flete Base):
+$$\text{Monto Extra en USD} = \text{Ingreso Flete Base} \times \left(\frac{\% \text{ Demora}}{100}\right)$$
+$$\text{Días Equivalentes de Fondeo} = \frac{\text{Monto Extra en USD}}{\text{Tarifa Diaria de Demurrage (\$/día)}}$$
+*Esos días equivalentes incrementan automáticamente el Búnker Idle, el Costo HIRE y la duración del viaje, diluyendo el TCE diario realizado.*
+
+---
+
+### 📊 6. Tabla Pericial de Cuadratura de Escenarios (Ruta Moquegua Dem)
+
+Evaluado sobre la ruta `SPCC.ILO.MATARANI.ILO.2028 13,500 Moquegua Dem` con Flete Base en Caliente a **$28.50 / TM** (Venta Flete = $384,750.00, Demurrage Rate = $20,000/d, TCE Req = $13,000/d):
+
+| Métrica / Variable | 1. Escenario Base<br>(Sin Demora Adicional) | 2. Demora en Días Directos<br>(**+3.00 días directos**) | 3. Demora en % de Ventas<br>(**+15% sobre Flete**) |
+| :--- | :---: | :---: | :---: |
+| **Mecanismo de Conversión** | Snapshot original | Directo: $+3.00\text{ d}$ | $\frac{\$384,750 \times 15\%}{\$20,000/\text{d}} = \mathbf{+2.89\text{ d}}$ |
+| **Días de Demora Totales** | **3.53 d** | **6.53 d** ($+3.00\text{ d}$) | **6.42 d** ($+2.89\text{ d}$) |
+| **Ingresos por Demurrage** | **$70,600.00** | **$130,600.00** ($+$60,000.00) | **$128,312.50** ($+$57,712.50) |
+| **Ingresos Brutos Totales** | **$458,850.00** | **$518,850.00** | **$516,562.50** |
+| **Días Totales de Ocupación** | **7.61 d** | **10.61 d** | **10.50 d** |
+| **Consumo Búnker IFO** | **26.76 MT** | **33.96 MT** ($+7.20\text{ MT}$ idle) | **33.69 MT** ($+6.93\text{ MT}$ idle) |
+| **Costo Total de Búnker** | **$28,176.00** | **$35,140.28** ($+$6,964.28) | **$34,874.76** ($+$6,698.76) |
+| **Costo HIRE de Ocupación** | **$98,930.98** | **$137,930.98** ($+$39,000.00) | **$136,444.11** ($+$37,513.13) |
+| **Costos de Puerto (Fijos)** | **$42,500.00** | **$42,500.00** | **$42,500.00** |
+| **Margen Operativo (P&L)** | **$388,174.00** | **$441,209.72** | **$439,187.74** |
+| **TCE Realizado ($/día)** | **$51,007.90 / d** | **$41,584.03 / d** | **$41,844.54 / d** |
+
+---
+
+### 📂 7. Inventario y Rutas de los Scripts de Auditoría E2E
+
+Todos los scripts han sido creados y quedan como activos periciales permanentes en el repositorio:
+
+1. **Auditoría de Ruta Única con Overrides en Caliente:**
+   - **Ruta Absoluta:** `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine\test_convergence_single_route.py`
+   - **Propósito:** Audita métrica por métrica la ruta `SPCC.ILO.MATARANI.ILO.2028 13,500 Moquegua Dem` con tarifa de $28.50/TM y búnker $550/MT contra el Multicotizador.
+2. **Auditoría Universal sobre todas las 48 Rutas de Base de Datos:**
+   - **Ruta Absoluta:** `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine\test_convergence_all_routes.py`
+   - **Propósito:** Loop automatizado que ejecuta simulación en Matriz vs Multicotizador sobre las 48 cotizaciones grabadas en Supabase (`routes_quotes`).
+3. **Auditoría de Demoras What-If (Días Directos vs % Ventas):**
+   - **Ruta Absoluta:** `C:\Users\rguti\PETRAL.SMART.DASHBOARD\Desarrollo.Profesional\Geeksoft_Engine\test_demurrage_whatif_convergence.py`
+   - **Propósito:** Demuestra y valida matemáticamente la traslación de demoras directas y en porcentaje de ventas a días de fondeo, combustible idle, costo HIRE y TCE.
+
+---
+
+### 🏆 8. Evidencias Empíricas del Loop Universal en Terminal
 
 ```text
 ====================================================================================================
@@ -512,7 +567,46 @@ Si se selecciona una ruta grabada en la base de datos (con su snapshot de tramos
 [03/48] 🟢 EXACTO ($0.00) │ Ruta: NEXA.ILO.CALLAO.MATARANI.ILO.FX 2026.05.12    │ Buque: TABLONES     │ PnL: $399,610.20
 [04/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.BARQUITO.ILO.2025 Tablones COA Dem   │ Buque: TABLONES     │ PnL: $258,247.40
 [05/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MARCONA.ILO.2028 13,500 tm Moquegua  │ Buque: MOQUEGUA     │ PnL: $300,370.65
-...
+[06/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.ILO.BARQUITO.ILO.2025-2027 COA MOQUE │ Buque: MOQUEGUA     │ PnL: $229,575.54
+[07/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MATARANI.ILO.2025 Tablones COA Dem   │ Buque: TABLONES     │ PnL: $338,475.61
+[08/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.BARQUITO.ILO.2025 Moquegua COA       │ Buque: MOQUEGUA     │ PnL: $230,031.29
+[09/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MATARANI.ILO.DM 2026 TABLONES        │ Buque: TABLONES     │ PnL: $338,475.61
+[10/48] 🟢 EXACTO ($0.00) │ Ruta: NEXA.MARCONA.CALLAO.MEJILLONES.ILO.2027       │ Buque: TABLONES     │ PnL: $414,185.21
+[11/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MARCONA.ILO.2028 13,500 tm Moquegua  │ Buque: MOQUEGUA     │ PnL: $379,879.13
+[12/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MATARANI.ILO.2025 Moquegua COA       │ Buque: MOQUEGUA     │ PnL: $278,130.38
+[13/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.ILO.BARQUITO.ILO.2025-2027 COA TABLO │ Buque: TABLONES     │ PnL: $224,590.70
+[14/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MEJILLONES.ILO.2025 Tablones COA     │ Buque: TABLONES     │ PnL: $268,102.96
+[15/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.BARQUITO.ILO.2025 Moquegua COA Dem   │ Buque: MOQUEGUA     │ PnL: $264,910.01
+[16/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.BARQUITO.ILO.DM 2026 MOQUEGUA        │ Buque: MOQUEGUA     │ PnL: $264,454.26
+[17/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.BARQUITO.ILO.RG.NOCHE.18.08          │ Buque: MOQUEGUA     │ PnL: $230,031.29
+[18/48] 🟢 EXACTO ($0.00) │ Ruta: NEXA.MARCONA.CALLAO.MARCONA.ILO.02.02.2026    │ Buque: MOQUEGUA     │ PnL: $436,117.73
+[19/48] 🟢 EXACTO ($0.00) │ Ruta: NEXA.ILO.CALLAO.MATARANI.ILO.2026 MOQUEGUA +  │ Buque: MOQUEGUA     │ PnL: $510,496.41
+[20/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MARCONA.ILO.2028 13,500 tm Tablones  │ Buque: TABLONES     │ PnL: $370,082.12
+[21/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MATARANI.ILO.2025 Moquegua COA Dem   │ Buque: MOQUEGUA     │ PnL: $344,324.94
+[22/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MEJILLONES.ILO.2025 Tablones COA Dem │ Buque: TABLONES     │ PnL: $338,673.46
+[23/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MEJILLONES.ILO.Tablones v.058 Dem    │ Buque: TABLONES     │ PnL: $682,377.98
+[24/48] 🟢 EXACTO ($0.00) │ Ruta: NEXA.ILO.CALLAO.MATARANI.ILO.FX 2026.02.02    │ Buque: MOQUEGUA     │ PnL: $404,172.57
+[25/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MATARANI.ILO.2028 13,500 tm Moquegua │ Buque: MOQUEGUA     │ PnL: $287,715.38
+[26/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MEJILLONES.ILO.2025 Moguegua COA     │ Buque: MOQUEGUA     │ PnL: $271,629.97
+[27/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MARCONA.ILO.2025 Tablones COA        │ Buque: TABLONES     │ PnL: $287,959.32
+[28/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MEJILLONES.ILO.Tablones v.058        │ Buque: TABLONES     │ PnL: $237,060.03
+[29/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MARCONA.ILO.DM 2026 MOQUEGUA         │ Buque: MOQUEGUA     │ PnL: $374,479.13
+[30/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MARCONA.CALLAO.ILO.BUNKER TABLONES   │ Buque: TABLONES     │ PnL: $266,611.03
+[31/48] 🟢 EXACTO ($0.00) │ Ruta: NEXA.ILO.CALLAO.MATARANI.ILO.2026 (IZ)        │ Buque: TABLONES     │ PnL: $399,610.20
+[32/48] 🟢 EXACTO ($0.00) │ Ruta: NEXA.MARCONA.CALLAO.MARCONA.ILO.2026 (IZ)     │ Buque: TABLONES     │ PnL: $407,415.78
+[33/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MEJILLONES.ILO.2028 13,500 tm Moqueg │ Buque: MOQUEGUA     │ PnL: $296,604.97
+[34/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MATARANI.ILO.2028 13,500 Moquegua De │ Buque: MOQUEGUA     │ PnL: $360,659.94
+[35/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MEJILLONES.ILO.2025 Moquegua COA Dem │ Buque: MOQUEGUA     │ PnL: $344,762.77
+[36/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MARCONA.ILO.2025 Tablones COA Dem    │ Buque: TABLONES     │ PnL: $364,682.12
+[37/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MEJILLONES.ILO.DM 2026 TABLONES      │ Buque: TABLONES     │ PnL: $338,673.46
+[38/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MATARANI.ILO.2028 13,500 tm Tablones │ Buque: TABLONES     │ PnL: $284,185.26
+[39/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MEJILLONES.ILO.2028 13,500 tm Moqueg │ Buque: MOQUEGUA     │ PnL: $383,237.77
+[40/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MARCONA.ILO.2025 Moquegua COA        │ Buque: MOQUEGUA     │ PnL: $294,970.65
+[41/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MARCONA.ILO.2028 13,500 tm Tablones  │ Buque: TABLONES     │ PnL: $293,359.32
+[42/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MARCONA.CALLAO.ILO.2026 DM MOQUEGUA  │ Buque: MOQUEGUA     │ PnL: $354,440.66
+[43/48] 🟢 EXACTO ($0.00) │ Ruta: NEXA.ILO.CALLAO.MARCONA.ILO.2027 SPOT MOQUEGU │ Buque: MOQUEGUA     │ PnL: $378,160.13
+[44/48] 🟢 EXACTO ($0.00) │ Ruta: NEXA.ILO.CALLAO.MATARANI.ILO.2027 SPOT TABLON │ Buque: TABLONES     │ PnL: $401,610.20
+[45/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MEJILLONES.ILO.2028 13,500 tm Tablon │ Buque: TABLONES     │ PnL: $292,358.76
 [46/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MATARANI.ILO.2028 13,500 Tablones De │ Buque: TABLONES     │ PnL: $354,810.61
 [47/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MEJILLONES.ILO.2028 13,500 tm Tablon │ Buque: TABLONES     │ PnL: $376,429.26
 [48/48] 🟢 EXACTO ($0.00) │ Ruta: SPCC.ILO.MARCONA.ILO.2025 Moquegua COA Dem    │ Buque: MOQUEGUA     │ PnL: $374,479.13
