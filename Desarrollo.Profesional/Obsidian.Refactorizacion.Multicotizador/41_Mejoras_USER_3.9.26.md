@@ -619,7 +619,29 @@ Todos los scripts han sido creados y quedan como activos periciales permanentes 
 ====================================================================================================
 ```
 
-- **Estado:** ✅ **RESUELTO Y CERTIFICADO AL 100%**.
+---
+
+## 🎯 Ronda 4: Ajustes de Interfaz de Usuario (UI) en Matrices Navitranso y Petral
+
+### 🔹 Punto R4.1: Matriz NAVITRANSO 100% de Lectura / Reporting en Número de Viajes
+- **Módulo:** `FinancialMatrixNavitransoGridTable.tsx`.
+- **Safepoint Git:** `PRE.R4.NAVITRANSO_READONLY_PETRAL_DECIMALES`.
+- **Cirugía Quirúrgica (DIFF):**
+  - Se eliminó el `<input type="number">` editable de la fila de frecuencia mensual (`N° VIAJES`).
+  - Ahora se renderiza como un **número plano de solo lectura** (`formatNumber(val)` / `formatCurrency(val)`), consolidando la Matriz NAVITRANSO como espejo puro de reporting financiero.
+  - Se preservaron intactos los demás controles de vista y ordenamiento de buques.
+- **Control de Calidad (QC):**
+  - Compilación Frontend: `npx vite build` completado con `exit code 0`.
+- **Estado:** ✅ **RESUELTO**.
+
+### 🔹 Punto R4.2: Matriz PETRAL - Visualización del Flete por Defecto con 2 Decimales
+- **Módulo:** `ForecastGrid.tsx`.
+- **Safepoint Git:** `PRE.R4.NAVITRANSO_READONLY_PETRAL_DECIMALES`.
+- **Cirugía Quirúrgica (DIFF):**
+  - En `TariffInputCell`: Se calibró la función de formateo para presentar por defecto el valor numérico con dos decimales exactos (`Number(v).toFixed(2)`), homologándolo con el estándar del Multicotizador (ej. `$28.50`, `$23.10`, `$19.29`).
+- **Control de Calidad (QC):**
+  - Compilación Frontend: `npx vite build` completado con `exit code 0`.
+- **Estado:** ✅ **RESUELTO**.
 
 ---
 *Documento canónico actualizado por Detective Benoit Blanc - 03/09/2026.*

@@ -43,17 +43,23 @@ const TariffInputCell: React.FC<{
     value: number | string | null | undefined;
     onSave: (val: number) => void;
 }> = ({ value, onSave }) => {
-    const formattedInitial = (value !== null && value !== undefined && value !== '' && Number(value) > 0) ? String(value) : '';
-    const [localVal, setLocalVal] = useState<string>(formattedInitial);
+    const formatValue = (v: number | string | null | undefined) => {
+        if (v !== null && v !== undefined && v !== '' && !isNaN(Number(v)) && Number(v) > 0) {
+            return Number(v).toFixed(2);
+        }
+        return '';
+    };
+    const [localVal, setLocalVal] = useState<string>(formatValue(value));
 
     useEffect(() => {
-        setLocalVal((value !== null && value !== undefined && value !== '' && Number(value) > 0) ? String(value) : '');
+        setLocalVal(formatValue(value));
     }, [value]);
 
     const commit = () => {
         const parsed = parseFloat(localVal);
         if (!isNaN(parsed) && parsed >= 0) {
             onSave(parsed);
+            setLocalVal(parsed > 0 ? parsed.toFixed(2) : '');
         }
     };
 

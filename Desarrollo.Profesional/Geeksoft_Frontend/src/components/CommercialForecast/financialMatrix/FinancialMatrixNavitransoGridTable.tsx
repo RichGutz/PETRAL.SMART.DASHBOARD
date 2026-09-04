@@ -995,17 +995,7 @@ export const FinancialMatrixNavitransoGridTable: React.FC<FinancialMatrixNavitra
                                         const val = row.metric.values ? row.metric.values[idx] : undefined;
                                         return (
                                             <td key={idx} className={`py-1 px-2 border border-slate-200 text-right tabular-nums ${row.isSubRow ? 'text-xs text-slate-500' : val === 0 ? 'text-slate-400' : 'text-slate-800'} ${row.metric.isNavSubtotal ? 'font-bold' : ''}`}>
-                                                {row.metric.isFrequencyEditable && onFrequencyChange ? (
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        value={val !== undefined ? val : 0}
-                                                        onChange={(e) => onFrequencyChange(row.clientName, row.routeName, row.vesselName, m, parseInt(e.target.value) || 0)}
-                                                        className="w-12 text-center text-xs font-bold border border-slate-200 rounded py-0.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-sky-500"
-                                                    />
-                                                ) : (
-                                                    row.metric.isCurrency ? formatCurrency(val) : formatNumber(val)
-                                                )}
+                                                {row.metric.isCurrency ? formatCurrency(val) : formatNumber(val)}
                                             </td>
                                         );
                                     })}
