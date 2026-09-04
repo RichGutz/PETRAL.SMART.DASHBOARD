@@ -45,16 +45,11 @@ export const Login: React.FC = () => {
             {/* 2. Tarjeta Flotante Central (Glassmorphism Premium Original) */}
             <div className="relative w-full max-w-[420px] mx-4 bg-[#F8FAFC]/15 border border-white/30 rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.35),0_30px_60px_-30px_rgba(0,0,0,0.4)] p-8 md:p-10 z-10 flex flex-col justify-between">
                 <div>
-                    {/* Logos Petral y Delfos Favicon */}
-                    <div className="flex items-center justify-center gap-3 mb-6">
+                    {/* Logo Petral Centrado */}
+                    <div className="flex items-center justify-center mb-6">
                         <img 
                             src="/Logo.Petral.png" 
                             alt="Naviera Petral" 
-                            className="h-10 object-contain" 
-                        />
-                        <img 
-                            src="/favicon.png" 
-                            alt="DELFOS" 
                             className="h-10 object-contain" 
                         />
                     </div>
@@ -117,14 +112,25 @@ export const Login: React.FC = () => {
                     </form>
                 </div>
 
-                {/* Footer Geeksoft */}
-                <div className="flex flex-col items-center pt-6 mt-8 border-t border-slate-100/60">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0">
+                {/* Footer Delfos & Geeksoft */}
+                <div className="flex flex-col items-center pt-5 mt-6 border-t border-slate-100/60">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-2">
                         Desarrollado por
                     </span>
-                    <a href="https://geeksoft.tech" target="_blank" rel="noopener noreferrer" className="mt-[-18px]">
-                        <img src="/Logo.Geeksoft.png" alt="Geeksoft Logo" className="h-24 object-contain opacity-75 hover:opacity-100 transition-opacity" />
-                    </a>
+                    <div className="flex items-center justify-center gap-6">
+                        <img 
+                            src="/favicon.png" 
+                            alt="DELFOS" 
+                            className="h-14 object-contain opacity-85 hover:opacity-100 transition-opacity" 
+                        />
+                        <a href="https://geeksoft.tech" target="_blank" rel="noopener noreferrer" className="flex items-center">
+                            <img 
+                                src="/Logo.Geeksoft.png" 
+                                alt="Geeksoft Logo" 
+                                className="h-14 object-contain opacity-85 hover:opacity-100 transition-opacity" 
+                            />
+                        </a>
+                    </div>
                 </div>
             </div>
 
