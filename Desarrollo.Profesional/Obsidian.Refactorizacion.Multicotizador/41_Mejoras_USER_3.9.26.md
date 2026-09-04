@@ -382,7 +382,20 @@ if __name__ == "__main__":
 
 ---
 
-## 🏆 Conclusión Final de la Auditoría Benoit Blanc
-Todas las 5 mejoras solicitadas el 03/09/2026 han sido ejecutadas, validadas con safepoints Git, compiladas en terminal y documentadas exhaustivamente con total rigor forense.
+## 🏆 Conclusión de la Ronda 1 (P1 a P5)
+Todas las 5 mejoras solicitadas en la primera ronda han sido ejecutadas, validadas con safepoints Git, compiladas en terminal y documentadas exhaustivamente con total rigor forense.
 
-*Documento canónico cerrado y certificado al 100% por Detective Benoit Blanc - 03/09/2026.*
+---
+
+## 🎯 Ronda 2 de Pequeñas Mejoras (En Espera de Orden de Ejecución)
+
+### 🔹 Punto R2.1: Reducción del 20% en Columnas C, R y B ➔ Transferir Ancho Ganado a MÉTRICA (PDF Matriz Petral)
+- **Módulo:** `exportFinancialMatrixPdf.ts` (y evaluable para `exportFinancialMatrixNavitransoPdf.ts`).
+- **Requerimiento:**
+  - **Columnas C, R y B:** Reducir su ancho actual (16px) en un 20% ➔ Pasan de **16px a ~13px** (ahorro de ~3px por columna × 3 = 9px ganados).
+  - **Renderizado SVG:** Adaptar `createVerticalSvg` a `width="13"` y viewBox `0 0 13 ${height}` con posición centrada.
+  - **Columna MÉTRICA:** Transferirle el ancho total ganado (9px) ➔ Pasa de **120px a 129px**.
+- **Estado:** 📝 **ANOTADO Y EN ESPERA** (No se tocará código hasta que el usuario dé la orden).
+
+---
+*Documento canónico actualizado por Detective Benoit Blanc - 03/09/2026.*
